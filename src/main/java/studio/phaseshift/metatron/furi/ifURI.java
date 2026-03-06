@@ -43,11 +43,11 @@ public interface ifURI {
         return null != this.scheme();
     }
 
-    default String authority() {
+   /* default String authority() {
         if (this.hasHost())
             return this.hasPort() ? this.host() + ":" + this.port() : this.host();
         return null;
-    }
+    }*/
 
     String host();
 
@@ -101,6 +101,12 @@ public interface ifURI {
 
     boolean hasPostfix(final String postfix);
 
+    boolean hasPattern();
+
+    ifURI basePath();
+
+    List<String> poly();
+
     int pathLength();
 
 
@@ -123,7 +129,7 @@ public interface ifURI {
     String qString();
 
     Map<String, String> qMap();
-    
+
     ifURI q(final Map<String, String> query);
 
     <T> T qValue(final String key, final Class<T> valueClass);
@@ -176,7 +182,13 @@ public interface ifURI {
 
     /// ////////////////////////////////////////////////
 
+    static ifURI empty() {
+        return XXXXXfURI.INSTANCE;
+    }
+
     static ifURI of(final String furi) {
+        if (null == furi)
+            return empty();
         String scheme = null;
         String host = null;
         int port = -1;
@@ -184,7 +196,7 @@ public interface ifURI {
         cInt coefficient = cInt.ONE();
         Map<String, String> query = Map.of();
 
-        Pattern pattern = Pattern.compile("((?<scheme>[^:/.]+):)?(//((?<host>[^:/]+)(:(?<port>\\d+))?))?(?<path>[^?{]+)(\\{(?<coefficient>[^}]+)})?(\\?(?<query>.+))?");
+        Pattern pattern = Pattern.compile("((?<scheme>[^:/.]+):)?(//((?<host>[^:/]+)(:(?<port>\\d+))?))?(?<path>[^?{]+)?(\\{(?<coefficient>[^}]+)})?(\\?(?<query>[^#+]+))?");
         Matcher matcher = pattern.matcher(furi);
         if (!matcher.matches()) {
             throw new IllegalArgumentException("Invalid URI: " + furi);
@@ -197,8 +209,8 @@ public interface ifURI {
         coefficient = matcher.group("coefficient") == null ? cInt.ONE() : cInt.of(matcher.group("coefficient").replace("{", "").replace("}", ""));
         String queryStr = matcher.group("query");
         query = queryStr == null ? Map.of() : parseQuery(queryStr);
-        List<String> path = new ArrayList<>(Arrays.asList(pathStr.split("/")));
-        if (pathStr.endsWith("/"))
+        List<String> path = null == pathStr ? List.of() : new ArrayList<>(Arrays.asList(pathStr.split("/")));
+        if (pathStr != null && pathStr.endsWith("/"))
             path.add("");
         return ifURI.of(scheme, host, port, path, coefficient, List.of(), query);
         
@@ -319,7 +331,7 @@ public interface ifURI {
                     else
                         return new SAPXXfURI(scheme, host, port, path);
                 } else {
-                    return new XXPXXfURI(path);
+                    return host == null ? new XXPXXfURI(path) : new SAPXXfURI(null, host, port, path);
                 }
             } else {
                 return new SAPCQfURI(scheme, host, port, path, coefficient, query);

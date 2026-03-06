@@ -26,7 +26,7 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.furi.ifURI.parseQuery;
 
 
@@ -35,38 +35,135 @@ import static studio.phaseshift.metatron.furi.ifURI.parseQuery;
  */
 public class ifURITest extends AbstractMetatronTest {
 
+    @ParameterizedTest
+    @CsvSource(value = {
+            "http://fhatos.org/a         | 1   | http://fhatos.org/",
+          //  "http://fhatos.org/a/        | 2   | http://fhatos.org",
+            "http://fhatos.org/a/b       | 2   | http://fhatos.org/",
+            "http://fhatos.org/a/b/      | 2   | http://fhatos.org/a",
+            "http://fhatos.org/a/b       | 2   | http://fhatos.org/",
+            "http://fhatos.org/a/b       | 3   | http://fhatos.org",
+            "http://fhatos.org:81/a      | 1   | http://fhatos.org:81/",
+            "http://fhatos.org:81/a      | 2   | http://fhatos.org:81", 
+            "http://fhatos.org:81/a/b/   | 1   | http://fhatos.org:81/a/b", 
+            "http://fhatos.org:81/a/b    | 1   | http://fhatos.org:81/a",
+            "http://fhatos.org:81/a/b    | 2   | http://fhatos.org:81/",
+            "http://fhatos.org:81/a/b    | 3   | http://fhatos.org:81",
+            "/fhat.org/a/b               | 1   | /fhat.org/a",
+            "fhat.org/a/b                | 1   | fhat.org/a",
+            "fhat.org/a/b                | 3   | null",
+            "/a/b/c?a=b&c=d              | 1   | /a/b?a=b&c=d",
+            "/a/b/c?a=b&c=d              | 2   | /a?a=b&c=d",
+            "/a/b/c/?a=b&c=d             | 3   | /a?a=b&c=d",
+            "/a/b/c{*}?a=b&c=d           | 1   | /a/b{*}?a=b&c=d",
+            "/a/b/c{2,3}?a=b&c=d         | 2   | /a{2,3}?a=b&c=d",
+            // "/a/b/c/[0]?a=b&c=d          | 2   | /a/[0]?a=b&c=d",
+            // "/a/b/c/{?}?a=b&c=d          | 2   | /a/{?}?a=b&c=d",
+            // "/a/b?a=b&c=d                | 2   | ?a=b&c=d",
+    }, delimiter = '|', nullValues = "null")
+    public void testRetract(final String furi, final int steps, final String expected) {
+        final ifURI start = ifURI.of(furi);
+        final ifURI end = ifURI.of(expected);
+        assertEquals(end, start.retract(steps));
+        LOG.debug("testing %s retracted %d steps is %s", start, steps, expected);
+    }
 
     @ParameterizedTest
     @CsvSource(value = {
-            "a                             | null | null | -1  | a       | 1  | null | null",
-            "mtron:                        | null | null | -1  | mtron:   | 1  | null | null",
-            "mtron:abc                     | mtron| null | -1  | abc   | 1  | null | null",
-            "a/b                           | null | null | -1 | a/b     | 1  | null | null",
-            "a/b/c                         | null | null | -1 | a/b/c   | 1  | null | null",
-            "a/b/c/d                       | null | null | -1 | a/b/c/d | 1  | null | null",
-            "/a/b/c                        | null | null | -1 | /a/b/c   | 1  | null | null",
-            "/a/b/c{2,3}                   | null | null | -1 | /a/b/c   | 2,3  | null | null",
-            "/a/b/c{?}                     | null | null | -1 | /a/b/c   | 0,1  | null | null",
-            "/a/b/c{*}                     | null | null | -1 | /a/b/c   | 0,  | null | null",
-            "/a/b/c{**}                    | null | null | -1 | /a/b/c   | ,  | null  | null",
-            "/a/b/c{**}?a=b                | null | null | -1 | /a/b/c   | ,  | null  | a=b",
-            "mtron:/a/b/c{**}?a=b          | mtron | null | -1 | /a/b/c   | ,  | null | a=b",
-            "mtron://a/b/c{**}?a=b         | mtron | a    | -1 | /b/c     | ,  | null | a=b",
-            "mtron:a/b/c                   | mtron | null | -1 | a/b/c    | 1  | null | null",
-            "mtron://a/b/c{?}?a=b&c=d      | mtron | a    | -1 | /b/c     | 0,1 | null | a=b&c=d",
-            "mtron://a:34/b/c{?}?a=b&c=d   | mtron | a    | 34| /b/c      | 0,1 | null | a=b&c=d",
-            "mtron://a:34/b/c{-10,100}?a=b&c=d   | mtron | a    | 34| /b/c      | -10,100  | null | a=b&c=d",
-            "mtron://a:34/b/c?a=b&c=d            | mtron | a    | 34| /b/c      | 1        | null | a=b&c=d",
-            "mtron:/b/c?a=b&c=d                  | mtron | null | -1 | /b/c     | 1        | null | a=b&c=d"},
+            "http://fhatos.org/a         | 1   | http://fhatos.org",
+            //    "http://fhatos.org/a/         | 1   | http://fhatos.org/",
+            "http://fhatos.org/a/b       | 1   | http://fhatos.org/b",
+            "http://fhatos.org/a/b/      | 1   | http://fhatos.org/b/",
+            "http://fhatos.org/a/b       | 2   | http://fhatos.org",
+            "http://fhatos.org/a/b       | 3   | http://fhatos.org",
+            "http://fhatos.org:81/a      | 1   | http://fhatos.org:81",
+            "http://fhatos.org:81/a/b    | 1   | http://fhatos.org:81/b",
+            "http://fhatos.org:81/a/b    | 2   | http://fhatos.org:81",
+            "http://fhatos.org:81/a/b    | 3   | http://fhatos.org:81",
+            "/fhat.org/a/b               | 1   | /a/b",
+            "fhat.org/a/b                | 1   | a/b",
+            "/a/b/c?a=b&c=d              | 1   | /b/c?a=b&c=d",
+            "/a/b/c?a=b&c=d              | 2   | /c?a=b&c=d",
+            "/a/b/c/?a=b&c=d             | 2   | /c/?a=b&c=d",
+            "/a/b/c{*}?a=b&c=d           | 1   | /b/c{*}?a=b&c=d",
+            "/a/b/c{2,3}?a=b&c=d         | 2   | /c{2,3}?a=b&c=d",
+    }, delimiter = '|')
+    public void testPretract(final String furi, final int steps, final String expected) {
+        final fURI start = fURI.of(furi);
+        final fURI end = fURI.of(expected);
+        assertEquals(end, start.pretract(steps));
+        LOG.debug("testing %s pretracted %d steps is %s", start, steps, expected);
+    }
 
+
+    @ParameterizedTest
+    @CsvSource({"http://fhatos.org/a,fhatos.org,-1",
+            "http://fhatos.org:80/a,fhatos.org,80",
+            "http://fhatos.org/a,fhatos.org,-1",
+            "http://fhatos.org/a/b,fhatos.org,-1",
+            "http://+/a/b/c,+,-1",
+            "http://#/a/b/c,#,-1",
+            "http://#:12/a/b/c,#,12",
+            "/a/b/c,null,-1",
+            "/a/b/c,null,-1",
+            "/a/b/c/,null,-1",
+            "a/b/c,null,-1",
+            "a/b/c,null,-1",
+            "b/#,null,-1",
+            ",null,-1"
+    })
+    void testAuthority(final String furi, final String host, final int port) {
+        final fURI f = fURI.of(furi);
+        if (host.equals("null"))
+            assertNull(f.host());
+        else
+            assertEquals(host, f.host());
+        assertEquals(port, f.port());
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "http://a/b/c{1}|1",
+            "/mtron/int{1,5}|1,5",
+            "http://a/b/c{*}|*",
+            "/mtron/int{0}?rng=/mtron/int{23}|0",
+            "/mtron/+/plus{3}?rng=/mtron/int{23}|3",
+            "/mtron/+/plus{?}?rng=/mtron/int{0,23}|?"
+    }, delimiter = '|')
+    void testCoefficients(final String furi, final String coefficient) {
+        assertEquals(coefficient, fURI.of(furi).c());
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "a                                   | null | null  | -1  | a        | 1        | null | null",
+            "mtron:                              | mtron| null  | -1  | null     | 1        | null | null",
+            "mtron:abc                           | mtron| null  | -1  | abc      | 1        | null | null",
+            "a/b                                 | null | null  | -1  | a/b      | 1        | null | null",
+            "a/b/c                               | null | null  | -1  | a/b/c    | 1        | null | null",
+            "a/b/c/d                             | null | null  | -1  | a/b/c/d  | 1        | null | null",
+            "/a/b/c                              | null | null  | -1  | /a/b/c   | 1        | null | null",
+            "/a/b/c{2,3}                         | null | null  | -1  | /a/b/c   | 2,3      | null | null",
+            "/a/b/c{?}                           | null | null  | -1  | /a/b/c   | 0,1      | null | null",
+            "/a/b/c{*}                           | null | null  | -1  | /a/b/c   | 0,       | null | null",
+            "/a/b/c{**}                          | null | null  | -1  | /a/b/c   | ,        | null | null",
+            "/a/b/c{**}?a=b                      | null | null  | -1  | /a/b/c   | ,        | null | a=b",
+            "mtron:/a/b/c{**}?a=b                | mtron | null | -1  | /a/b/c   | ,        | null | a=b",
+            "mtron://a/b/c{**}?a=b               | mtron | a    | -1  | /b/c     | ,        | null | a=b",
+            "mtron:a/b/c                         | mtron | null | -1  | a/b/c    | 1        | null | null",
+            "mtron://a/b/c{?}?a=b&c=d            | mtron | a    | -1  | /b/c     | 0,1      | null | a=b&c=d",
+            "mtron://a:34/b/c{?}?a=b&c=d         | mtron | a    | 34  | /b/c     | 0,1      | null | a=b&c=d",
+            "mtron://a:34/b/c{-10,100}?a=b&c=d   | mtron | a    | 34  | /b/c     | -10,100  | null | a=b&c=d",
+            "mtron://a:34/b/c?a=b&c=d            | mtron | a    | 34  | /b/c     | 1        | null | a=b&c=d",
+            "mtron:/b/c?a=b&c=d                  | mtron | null | -1  | /b/c     | 1        | null | a=b&c=d"},
             delimiter = '|', nullValues = "null")
     public void testParse(final String furi, final String scheme, final String host, final int port, final String path, final String coefficient, final String poly, final String query) {
         final ifURI parse = ifURI.of(furi);
-        final ifURI components = ifURI.of(scheme, host, port, null == path ? null : Arrays.asList(path.split("/")), cInt.of(coefficient), List.of(), parseQuery(query));
+        final ifURI components = ifURI.of(scheme, host, port, null == path ? List.of() : Arrays.asList(path.split("/")), cInt.of(coefficient), List.of(), parseQuery(query));
         LOG.error("testing:" +
                 "\n\tparse    : {{b}}%s{{X}} " +
                 "\n\tcomponent: {{b}}%s{{X}}", parse, components);
-        checkfURI(parse, components);
+        checkEquals(parse, components);
     }
 
 
@@ -89,17 +186,18 @@ public class ifURITest extends AbstractMetatronTest {
     @CsvSource(value = {
             "/a/b/c                     |  ",
             "a/b/c                      |  ",
-         //   "//x.com/a/b/c              |  x.com",
-         //   "//x/a/b/c                  |  x",
-       //     "//x:8080/a/b/c             |  x",
-         //   "//x.com                    |  x.com",
-          //  "//x                        |  x",
+            "//x.com/a/b/c              |  x.com",
+            "//x/a/b/c                  |  x",
+            "//x:8080/a/b/c             |  x",
+            "//x.com                    |  x.com",
+            "//x                        |  x",
             "http://x.com/a/b/c         |  x.com",
             "http://x.com:80/a/b/c      |  x.com",
             "mtron://lang/obj           |  lang",
             "mtron:lang/obj             |  "
     }, delimiter = '|')
     public void testHostOrSegment(final String a, final String b) {
+        printComponents(ifURI.of(a));
         assertEquals(ifURI.of(a).host(), b);
     }
 
@@ -166,7 +264,7 @@ public class ifURITest extends AbstractMetatronTest {
     public void testNeg(final String f1, final String expected) {
         final ifURI furi1 = ifURI.of(f1);
         final ifURI furi2 = ifURI.of(f1);
-        checkfURI(furi1, furi2);
+        checkEquals(furi1, furi2);
     }
 
     @ParameterizedTest
@@ -192,7 +290,7 @@ public class ifURITest extends AbstractMetatronTest {
         //assertEquals(computedHead,furi.retract(furi.segments().size()-steps));
         assertEquals(furi.path().size(), computedHead.path().size() + (furi.path().size() - steps));
         assertEquals(steps, computedHead.path().size());
-        checkfURI(furi.head(steps), expectedHead);
+        checkEquals(furi.head(steps), expectedHead);
     }
 
     @ParameterizedTest
@@ -212,7 +310,7 @@ public class ifURITest extends AbstractMetatronTest {
             delimiter = '|')
     public void testPrepend(final String base, final String prepend, final String expected) {
         assertEquals(ifURI.of(expected), ifURI.of(base).prepend(prepend));
-        checkfURI(ifURI.of(base).prepend(prepend), ifURI.of(expected));
+        checkEquals(ifURI.of(base).prepend(prepend), ifURI.of(expected));
     }
 
     @ParameterizedTest
@@ -233,11 +331,266 @@ public class ifURITest extends AbstractMetatronTest {
     public void testExtend(final String base, final String prepend, final String expected) {
         LOG.error("testing {{b}}%s{{X}} extend {{b}}%s{{X}} [expected: %s]", ifURI.of(base), ifURI.of(prepend), ifURI.of(expected));
         assertEquals(ifURI.of(expected), ifURI.of(base).extend(prepend));
-        checkfURI(ifURI.of(base).extend(prepend), ifURI.of(expected));
+        checkEquals(ifURI.of(base).extend(prepend), ifURI.of(expected));
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "a|a|true",
+            "a|+|true",
+            "a|+/|false",
+            "a|/+|false",
+            "+|a|false",
+            "null|a|false",
+            "#|a|false",
+            "a|#|true",
+            "#|#|true",
+            "a|null|false",
+            "null|/|false",
+            "{0}|a/b{*}|true",
+            "/a/b{0}|/a/b{*}|true",
+            "/{0}|/{*}|true",
+            "null|null|true",
+            "http://fhatos.org/a|http://fhatos.org/a|true",
+            "http://fhatos.org/a|http://fhatos.org/a/b|false",
+            "http://fhatos.org/a/b|http://fhatos.org/a|false",
+            "http://fhatos.org/a/b|http://fhatos.org/a/+|true",
+            "http://fhatos.org/a/b|http://fhatos.org/a/#|true",
+            "http://fhatos.org/a/b/c|http://fhatos.org/a/#|true",
+            "http://fhatos.org/a/b/c|http://fhatos.org/a/+/c|true",
+            "http://fhatos.org/a/b/c|http://fhatos.org/a/+/+|true",
+            "http://fhatos.org/a/b/c|http://fhatos.org/+/+/+|true",
+            "http://fhatos.org/a/b/c|http://+/a/b/c|true",
+            //  "http://fhatos.org/a/b/c|http://#|true", matching on authority
+            "http://fhatos.org/a/b/c|http://fhatos.org/#|true",
+            "/a/b/c|/a/b/+|true",
+            "/a/b/c|/a/+/c|true",
+            "/a/b/c|/a/b/#|true",
+            "/a/b/c|/a/#|true",
+            "/a/b/c|#|true",
+            "a/b/c|a/b/+|true",
+            "a/b/c|a/+/c|true",
+            "a/b/c|a/b/#|true",
+            "a/b/c|a/#|true",
+            "a/b/c|#|true",
+            "b|b/#|true",
+            "http://fhatos.org/a/b/c|http://fhatos.org/+/c/+|false",
+            "http://fhatos.org/a/b/c|http://fhatos.org/+/b|false",
+            "http://fhatos.org/a/b/c|http://fhatos.com/a/b/c|false",
+            "http://fhatos.org/a/b/c|http://fhatos.org/b/#|false",
+            "b|/sys/#|false",
+            "/sys/#|b|false",
+            "b|b/c|false",
+            "b|b/c/+|false",
+            "b|b/c/#|false",
+            "b|b/+|false",
+            "a|b/c/+|false",
+            "a|b/c/#|false",
+            "a/b/c|/a/b/+|false",
+            "a/b/c|/a/+/c|false",
+            "a/b/c|/a/b/#|false",
+            "a/b/c|/a/#|false",
+            "a/b/c|/#|false",
+            "null|#|true",
+            "null|+|false",
+            "abc|+|true",
+            "abc/a|+|false",
+            "abc/a|+/+|true",
+            "abc/a/c|+/+|false",
+            "abc/a/c|+/+/+|true",
+            "abc/a/c|abc/+/+|true",
+            "abc/a/c|abc/+/c|true",
+            "abc/a/c|+/+/#|true",
+            "abc/a/c|abc/+/c|true",
+            "abc/a|#|true",
+            "abc/a{1}|abc/a{0}|false",
+            "abc/a{1}|abc/a{?}|true",
+            "abc/a{1}|abc/a{*}|true",
+            "abc/a{1}|#{*}|true",
+            "abc/a{1}|+{*}|false",
+            "abc/a{1}|abc/+{*}|true",
+            "abc/a{1}|+/+{*}|true",
+            "abc/a{0}|#{*}|true",
+            "abc/a{0}|+{+}|false",
+            "abc/a{2}|abc/a{?}|false",
+            "abc/a{2}|abc/a{0,3}|true",
+            "abc/a{*}|abc/a{*}|true",
+            "abc/a{0}|abc/a{0}|true",
+            "abc/a{1,1}|abc/a{1}|true",
+            "abc/a{+}|abc/a{1,}|true",
+            "abc/a{*}|abc/a{0,}|true",
+            "abc/a{?}|abc/a{0,1}|true",
+            "/mtron/rec|#|true",
+            "/mtron/inst/plus{4}|/mtron/+/+{4}|true",
+            "/mtron/inst/plus{4}|/mtron/+/+/+{4}|false",
+            "/mtron/inst/plus{4}|/+/inst/+{4}|true",
+            "/mtron/inst/plus|/mtron/+/plus|true",
+            "/mtron/inst/plus|/mtron/+/plus{?}|true",
+            "/mtron/inst/plus{1}|/mtron/#{?}|true",
+            "/mtron/+/plus{1}|/mtron/#{?}|true",
+            "/mtron/+/plus{1}|/mtron/+/+{?}|true",
+            "/mtron/+/plus{1}|/mtron/+/#{?}|true",
+            "/mtron/inst/plus|/mtron/+/plus{?}|true",
+            "/mtron/inst/+{1}|/mtron/+/+{?}|true",
+            "/mtron/+/+{1}|/mtron/+/+{?}|true",
+            "/mtron/+/+{1}|/mtron/+/#{?}|true",
+            "/mtron/inst/plus{1}|/mtron/inst/#{?}|true",
+            "/mtron/inst/plus{1}|/mtron/+/#{?}|true",
+            //"/mtron/inst/plus/|/mtron/+/plus/{?}|true",
+            "/mtron/+/+|/mtron/+/+{?}|true",
+            //"/+/+/+|/mtron/+/+{?}|true",
+            "/mtron/+/plus|/mtron/+/plus{?}|true",
+            "/mtron/inst/plus|/mtron/+/plus{?}|true",
+            "ws://metatron.org:1234/abc|ws://metatron.org:1234/abc|true",
+            "ws://metatron.org:1234/abc|ws://metatron.org:1234/#|true",
+            "ws://metatron.org:1234/abc|ws://+/abc|true",
+            "ws://metatron.org:1234/abc|ws://+:0/abc|true",
+            "ws://metatron.org:1234/abc|ws://+:1234/abc|true",
+            "ws://metatron.org:1234/abc|ws://another.org/abc|false",
+            "ws://metatron.org:1234/abc|//another.org/abc|false",
+            "ws://metatron.org:1234/abc|//metatron.org/abc|false",
+            "ws://metatron.org:1234/abc|//metatron.org:1234/abc|false",
+            "ws://metatron.org:1234/abc|http://metatron.org:1234/abc|false",
+            "ws://metatron.org:1234/abc|ws://metatron.org:1234/abc|true",
+            "ws://metatron.org:1234/abc|ws://metatron.org:4567/abc|false",
+            "metatron.org:1234|metatron.org:4567|false",
+            //"metatron.org:1234|metatron.org:+|true",
+            "metatron.org:1234|+:+|true",
+            "ws://metatron.org:1234|ws://+:1234|true",
+            "ws://metatron.org:1234|http://metatron.org:1234|false",
+            "ws://metatron.org:1234|//metatron.org:1234|false",
+            "ws://metatron.org:1234|metatron.org:1234|false",
+            "metatron.org:1234|+:8888|false",
+            "ws://metatron.org:1234|ws://metatron.org:8888|false",
+            "ws://metatron.org:1234|+://+|true",
+            "//metatron.org:1234|//+|true",
+            "//metatron.org:1234|//+:1234|true",
+            "ws://metatron.org:1234|ws://+:1234|true",
+            "ws://metatron.org:1234|ws://+:5678|false",
+            "ws://metatron.org:1234|http://+:5678|false",
+            "ws://metatron.org:1234/abc|+://+/abc|true",
+            "a/plus{4}|+/+{4}|true",
+            "a/plus{4}|+/+|false",
+            //"a/plus{4}|+/plus{4}|true", // TODO:?!? STRANGE!?!?
+            //"/mtron/inst/plus{4}|/mtron/+/plus{4}|true" // TODO:?!? STRANGE!?!?
+            "/m/lst[A,B]|/m/lst[A,B]|true",
+           /* "xxx[A,B]|xxx[#,+]|true",
+            "xxx[ab,cd]|xxx[ab,cd{?}]|true",
+            "xxx[ab,cd]|xxx[ab{*},cd{?}]{?}|true",
+            "xxx[ab,cd{0}]|xxx[ab{*},cd{+}]{?}|false",
+            "xxx[ab,cd{0}]|xxx[ab{2},cd{0}]{?}|false",
+            "xxx[ab,cd]|xxx[ab{*},cd]{+}|true",
+            "/m/lst[ab,cd]|/m/lst[ab{*},cd]{+}|true",
+            "xxx[ab{2},cd{0}]|xxx[ab{1,3},cd{0}]{1,5}|true",
+            "xxx[ab{2},cd{1,3}]{2,3}|xxx[ab{1,3},cd{0,100}]{1,5}|true",
+            "xxx[ab{2},cd{1,3}]{2,3}|xxx[ab{1,3},cd{0,2}]{1,5}|false",*/
+            "http://localhost:8080/abc|http://#|true",
+            "http://localhost:8080/abc|http://+:8081/+|false",
+            "http://localhost:8080/abc|http://+:8080/+|true",
+            "http://localhost:8080/abc|http://+:8081|false",
+            "http://localhost:8080/abc|http://+:8080|false",
+            "http://localhost:8080/abc|http://+/+|true",
+            "http://localhost:8080/abc|http://+/abc|true",
+            "http://localhost:8080/abc|http://+/xyz|false",
+            "http://localhost:8080/abc|http://localhost:8081|false",
+            "http://localhost:8080/abc|http://localhost:8080/#|true",
+            "http://localhost:8080/abc|//localhost:8080/#|false",
+            "/shared|http://#|false",
+            "http://localhost:8080|http://#|true",
+            "http://localhost:8080/|http://#|true",
+            "http://localhost:8080/abc|http://+/abc|true",
+            "http://localhost:8080|http://+/abc|false",
+            "x:abc|+:abc|true",
+            "http://localhost:8080/abc|+://localhost:8080/abc|true",
+            "http://localhost:8080/abc|+://+/abc|true",
+            "http://localhost:8080|+://#|true"
+    }, delimiter = '|', nullValues = "null")
+    void testMatches(final String a, final String b, final boolean shouldMatch) {
+        final ifURI furi1a = ifURI.of(a);
+        final ifURI furi1b = ifURI.of(b);
+       /* final boolean doObjParser = null != a && null != b && !a.equals("{0}");
+        final fURI furi2a = doObjParser ? mParser.m_furi().parse(a).get() : fURI.of(a);
+        final fURI furi2b = doObjParser ? mParser.m_furi().parse(b).get() : fURI.of(b);
+        LOG.trace("testing: {{b}}%s{{/b}} %s {{b}}%s{{/b}}", furi1a, shouldMatch ? "{{g}}should match{{/g}}" : "{{r}}should not match{{/r}}", furi1b);
+        LOG.trace("testing: {{b}}%s{{/b}} %s {{b}}%s{{/b}}", furi2a, shouldMatch ? "{{g}}should match{{/g}}" : "{{r}}should not match{{/r}}", furi2b);
+        LOG.trace("testing: {{b}}%s{{/b}} %s {{b}}%s{{/b}}", furi1a, shouldMatch ? "{{g}}should match{{/g}}" : "{{r}}should not match{{/r}}", furi2b);
+        LOG.trace("testing: {{b}}%s{{/b}} %s {{b}}%s{{/b}}", furi2a, shouldMatch ? "{{g}}should match{{/g}}" : "{{r}}should not match{{/r}}", furi1b);
+        assertEquals(furi1a, furi2a);
+        if (shouldMatch) {
+            assertTrue(furi1a.test(furi1b));
+            assertTrue(furi2a.test(furi2b));
+            assertTrue(furi1a.test(furi2b));
+            assertTrue(furi2a.test(furi1b));
+        } else {
+            assertFalse(furi1a.test(furi1b));
+            assertFalse(furi2a.test(furi2b));
+            assertFalse(furi1a.test(furi2b));
+            assertFalse(furi2a.test(furi1b));
+        }*/
+        printComponents(ifURI.of(b));
+        checkMatches(ifURI.of(a), ifURI.of(b), shouldMatch);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "a/b/c{2}                |c",
+            "a/b/c                   |c",
+            "a/b/c{*}                |c",
+            "c{*}                    |c",
+            "+                       |+",
+            "{2}                     |\'\'",
+            "a/b/..                  |..",
+            "a/b/.                   |.",
+    }, delimiter = '|')
+    void testName(final String furi, final String name) {
+        assertEquals(name, ifURI.of(furi).name());
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "a/b/c{2}                |false",
+            "a/b/c                   |false",
+            "a/b/c{*}                |false",
+            "c{*}                    |false",
+            "+                       |true",
+            "{2}                     |false",
+            "a/b/..                  |false",
+            "a/b/.                   |false",
+            "a/b/+                   |true",
+            "a/b/+/c                 |true",
+            "#                       |true",
+            "+{2,3}                  |true",
+            "#{?}                    |true",
+            "#{0}                    |true",
+            "#{1}                    |true",
+            "a/b/c{+}                |false",
+            "a/b/c{?}                |false"
+    }, delimiter = '|')
+    void testHasPattern(final String furi, final boolean pattern) {
+        assertEquals(pattern, ifURI.of(furi).hasPattern());
     }
 
 
-    private void checkfURI(final ifURI furiA, final ifURI furiB) {
+    private void checkMatches(final ifURI furiA, final ifURI furiB, final boolean matches) {
+        LOG.error("testing equality:" +
+                "\n\tparse    : {{b}}%s{{X}} " +
+                "\n\tcomponent: {{b}}%s{{X}}", furiA, furiB);
+        LOG.error("parse class    : %s", furiA.getClass().getSimpleName());
+        LOG.error("component class: %s", furiB.getClass().getSimpleName());
+        if (false && matches) {
+
+            assertTrue(ifURI.of(furiA.scheme()).test(ifURI.of(furiB.scheme())), "schemas don't match");
+            assertTrue(ifURI.of(furiA.host()).test(ifURI.of(furiB.host())), "hosts don't match");
+            assertEquals(furiA.port(), furiB.port(), "ports don't match");
+            assertTrue(ifURI.of(furiA.pathString()).test(ifURI.of(furiB.pathString())), "paths don't match");
+            assertTrue(((C) furiA.c()).within(furiB.c()), "coefficients don't match");
+            assertEquals(furiA.qMap(), furiB.qMap(), "queries don't match");
+        }
+        /// /
+        assertEquals(matches, furiA.test(furiB), "furis " + (matches ? "don't" : "shouldn't") + " match");
+    }
+
+    private void checkEquals(final ifURI furiA, final ifURI furiB) {
         LOG.error("testing equality:" +
                 "\n\tparse    : {{b}}%s{{X}} " +
                 "\n\tcomponent: {{b}}%s{{X}}", furiA, furiB);
@@ -252,6 +605,18 @@ public class ifURITest extends AbstractMetatronTest {
         /// /
         assertEquals(furiA, furiB, "furis don't match");
 
+    }
+
+    private void printComponents(final ifURI furi) {
+        LOG.error("parse: {{b}}%s{{X}}", furi);
+        LOG.error("class:  %s", furi.getClass().getSimpleName());
+        LOG.error("schema: %s", furi.scheme());
+        LOG.error("host:   %s", furi.host());
+        LOG.error("port:   %s", furi.port());
+        LOG.error("path:   %s", furi.pathString());
+        LOG.error("  path: %s", furi.path());
+        LOG.error("coeff:  %s", furi.c());
+        LOG.error("query:  %s", furi.qMap());
     }
 
 }

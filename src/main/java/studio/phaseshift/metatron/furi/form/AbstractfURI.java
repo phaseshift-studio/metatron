@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public abstract class AbstractfURI implements ifURI {
-
+    
     @Override
     public ifURI scheme(final String scheme) {
         return ifURI.of(scheme, this.host(), this.port(), this.path(), this.c(), List.of(), this.qMap());
@@ -94,10 +94,109 @@ public abstract class AbstractfURI implements ifURI {
         return ifURI.of(this.scheme(), this.host(), this.port(), this.path(), this.c(), List.of(), query);
     }
 
+    @Override
+    public ifURI dom(final ifURI dom) {
+        return this;
+    }
 
     @Override
-    public boolean test(ifURI lhs) {
-        return false;
+    public ifURI rng(final ifURI rng) {
+        return this;
+    }
+
+    @Override
+    public boolean hasPattern() {
+        if (Objects.equals(this.scheme(), "#") || Objects.equals(this.scheme(), "+"))
+            return true;
+        if (Objects.equals(this.host(), "#") || Objects.equals(this.host(), "+"))
+            return true;
+        for (String segment : this.path()) {
+            if (segment.equals("#") || segment.equals("+"))
+                return true;
+        }
+        return this.qMap().entrySet().stream().anyMatch(kv -> {
+            if (kv.getValue().equals("#") || kv.getValue().equals("+"))
+                return true;
+            if (kv.getKey().equals("#") || kv.getKey().equals("+"))
+                return true;
+            return false;
+        });
+    }
+
+    @Override
+    public List<String> poly() {
+        return List.of();
+    }
+
+
+    @Override
+    public ifURI basePath() {
+        return ifURI.of(this.scheme(), this.host(), this.port(), this.path(), cInt.ONE(), List.of(), Map.of());
+    }
+
+    @Override
+    public boolean test(final ifURI lhs) {
+        final C c = this.c();
+        final C d = lhs.c();
+        //if (c.isZero() && d.isZero())
+        //    return true;
+        if (c.within(d)) { // no need to check path as its noobj
+            if (c.isZero())
+                return true;
+        } else
+            return false;
+        if (!lhs.hasPattern() && !this.hasPattern()) {
+            if (!this.name().equals(lhs.name()))
+                return false;
+        }
+        /*if (!Objects.equals(this.poly(), lhs.poly())) {
+            if (null != this.poly() && null != lhs.poly()) {
+                for (int i = 0; i < lhs.poly().size(); i++) {
+                    final ifURI rp = ifURI.of(lhs.poly().get(i));
+                    if (rp.toString().equals("#"))
+                        break;
+                    if (i >= this.poly().size())
+                        return false;
+                    final ifURI lp = ifURI.of(this.poly().get(i));
+                    if (!lp.test(rp))
+                        return false;
+                }
+            }
+        }*/
+        if (lhs.toString().equals("#"))
+            return true;
+        if (Objects.equals(lhs.scheme(), "#"))
+            return true;
+        if (!Objects.equals(this.scheme(), lhs.scheme()) && !Objects.equals(lhs.scheme(), "+"))
+            return false;
+        if (Objects.equals(lhs.host(), "#"))
+            return true;
+        if (!Objects.equals(this.host(), lhs.host()) &&  !Objects.equals(lhs.host(), "+"))
+            return false;
+        if (!(lhs.port() == -1) || !Objects.equals(lhs.host(), "+"))
+            if (this.port() != -1 && (lhs.port() == -1 || (lhs.port() != 0 && this.port() != lhs.port())))
+                return false;
+        if (!lhs.hasPattern())
+            return this.path().equals(lhs.path());
+        if (this.isAbsolute() != lhs.isAbsolute())
+            return false;
+        // if (this.path().getFirst().isEmpty() != lhs.path().getFirst().isEmpty())
+        //    return false;
+        //if (!Objects.equals(this.host, other.host) && !Objects.equals(other.host, ONE_WILD_STRING))
+        //    return false;
+        //if (this.path.isEmpty() && other.toString().contains("#"))
+        //   return true;
+        for (int i = 0; i < lhs.path().size(); i++) {
+            if (lhs.path().get(i).equals("#")) // #
+                return true;
+            if (!lhs.path().get(i).equals("+")) {
+                if (this.pathLength() <= i) // a/b a/b/c
+                    return false;
+                else if (!this.path().get(i).equals(lhs.path().get(i))) // a a
+                    return false;
+            }  // +
+        }
+        return this.path().size() == lhs.path().size();// && this.path().getLast().isEmpty() == lhs.path().getLast().isEmpty();
     }
 
     @Override
@@ -177,19 +276,13 @@ public abstract class AbstractfURI implements ifURI {
 
     @Override
     public ifURI pretract(final int steps) {
-        return ifURI.of(this.scheme(), this.host(), this.port(), new ArrayList<>(this.path().subList(0, Math.max(0, this.path().size() - steps))), this.c(), List.of(), this.qMap());
+        return ifURI.of(this.scheme(), this.host(), this.port(), this.path().subList(0, Math.max(0, this.path().size() - steps)), this.c(), List.of(), this.qMap());
     }
 
 
     @Override
     public ifURI retract(int steps) {
-        if (steps <= 0)
-            return this;
-        if (steps > this.path().size())
-            return ifURI.of(this.scheme(), this.host(), this.port(), Collections.emptyList(), this.c(), List.of(), this.qMap());
-        final List<String> newPath = new ArrayList<>(this.path());
-        newPath.remove(newPath.size() - steps);
-        return ifURI.of(this.scheme(), this.host(), this.port(), newPath, this.c(), List.of(), this.qMap());
+        return ifURI.of(this.scheme(), this.host(), this.port(), this.path().subList(0, this.pathLength() - steps), this.c(), List.of(), this.qMap());
     }
 
     @Override
@@ -203,8 +296,8 @@ public abstract class AbstractfURI implements ifURI {
 
     @Override
     public ifURI retract(final String segment) {
-        if (segment.isEmpty() && this.path().getLast().isEmpty())
-            return ifURI.of(this.scheme(), this.host(), this.port(), this.path().subList(0, this.path().size() - 1), this.c(), List.of(), this.qMap());
+     //   if (segment.isEmpty() && this.path().getLast().isEmpty())
+        //    return ifURI.of(this.scheme(), this.host(), this.port(), this.path().subList(0, this.path().size() - 1), this.c(), List.of(), this.qMap());
         if (this.hasPrefix(segment))
             return ifURI.of(this.scheme(), this.host(), this.port(), this.path().subList(0, this.path().size() - segment.split("/").length), this.c(), List.of(), this.qMap());
         return this;

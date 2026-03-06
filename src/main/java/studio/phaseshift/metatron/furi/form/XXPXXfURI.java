@@ -39,14 +39,6 @@ public class XXPXXfURI extends AbstractfURI {
         return this.path;
     }
 
-    
-    @Override
-    public boolean test(final ifURI lhs) {
-        if(lhs instanceof XXPXXfURI)
-            return this.path.equals(((XXPXXfURI) lhs).path);
-        return false;
-    }
-
     @Override
     public ifURI dom(final ifURI dom) {
         return null; // TODO
