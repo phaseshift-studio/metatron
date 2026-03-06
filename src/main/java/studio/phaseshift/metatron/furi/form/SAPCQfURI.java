@@ -41,12 +41,4 @@ public class SAPCQfURI extends SAPCXfURI {
     public Map<String, String> qMap() {
         return this.query;
     }
-
-    @Override
-    public ifURI q(final String key, final Object value) {
-        final Map<String, String> newQuery = new LinkedHashMap<>(this.query);
-        newQuery.put(key, value.toString());
-        return new SAPCQfURI(this.scheme, this.host, this.port, this.path, this.coefficient, newQuery);
-    }
-
 }

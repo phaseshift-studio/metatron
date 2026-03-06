@@ -35,6 +35,8 @@ import java.util.stream.Collectors;
  */
 public interface ifURI {
 
+    ifURI resolve();
+
     String scheme();
 
     ifURI scheme(final String scheme);
@@ -210,100 +212,14 @@ public interface ifURI {
         String queryStr = matcher.group("query");
         query = queryStr == null ? Map.of() : parseQuery(queryStr);
         List<String> path = null == pathStr ? List.of() : new ArrayList<>(Arrays.asList(pathStr.split("/")));
-        if (pathStr != null && pathStr.endsWith("/"))
-            path.add("");
-        return ifURI.of(scheme, host, port, path, coefficient, List.of(), query);
-        
-        /*String uri = furi;
-        String scheme = null;
-        String host = null;
-        int port = -1;
-        List<String> path;
-        Map<String, String> query = Map.of();
-        C<?, ?> coefficient = cInt.ONE();
-        boolean sstart = false;
-        boolean send = false;
-        List<String> poly = null;
-
-        ///  PARSE AWAY QUERY BACKEND
-        int queryPosition = uri.lastIndexOf("?");
-        if (queryPosition == -1 || uri.charAt(queryPosition - 1) == '{')
-            queryPosition = -1;
-        if (queryPosition == uri.length() - 1) {
-            uri = uri.substring(0, uri.length() - 1);
-            queryPosition = -1;
-        }
-        final String tempQuery = queryPosition == -1 ? null : uri.substring(queryPosition + 1);
-        query = null == tempQuery ? Map.of() : Arrays.stream(tempQuery.split("&")).map(s -> s.split("=")).collect(Collectors.toMap(a -> a[0], a -> a.length > 1 ? a[1] : ""));
-        if (!query.isEmpty())
-            uri = uri.substring(0, queryPosition);
-        /// PARSE SEGMENTS
-        send = uri.charAt(uri.length() - 1) == '/';
-        int position = 0;
-        int i = uri.indexOf(":");
-        int j = uri.indexOf("/");
-        if (j != -1 && j < i) i = -1;
-        int temp = uri.indexOf("//");
-        if (temp == j && (i != -1 && (temp == -1 || i < temp))) {
-            scheme = 0 == i ? null : uri.substring(0, i);
-            position = i + 1;
-        } else {
-            if (i != -1 && (temp == -1 || j != temp)) {
-                scheme = uri.substring(0, i);
-                position = i;
-                temp = -1;
-                i = 0;
-            } else {
-                i = 0;
-                scheme = null;
+        if (null != pathStr) {
+            if (pathStr.endsWith("/"))
+                path.add("");
+            if (path.stream().allMatch(String::isEmpty)) {
+                path.clear();
             }
         }
-        //   if(temp != j)
-        ///  PARSE AUTHORITY
-        if (temp != -1) {
-            position = position + 2;
-            temp = uri.indexOf('/', position + 1);
-            final String[] authority = uri.substring(position, -1 == temp ? uri.length() : temp).split(SCHEMA_END);
-            if (temp == -1)
-                temp = uri.length() - 1;
-            host = authority[0];
-            port = authority.length == 2 ? Integer.parseInt(authority[1]) : -1;
-        } else {
-            temp = uri.charAt(0) == '/' ? i + 1 : i;
-            host = null;
-            port = -1;
-        }
-        // PARSE EMPTY PATH
-        sstart = (host == null && scheme == null) && (uri.charAt(temp) == '/' || uri.charAt(0) == '/');
-        position = scheme != null ? temp + 1 : temp;
-        if (position == uri.length()) {
-            path = Collections.emptyList();
-            send = false;
-            poly = null;
-            return ifURI.of(scheme, host, port, path, coefficient, poly, query);
-        }
-        /// POLY AND PATH
-        final int polyStart = uri.indexOf('[');
-        final int polyEnd = polyStart == -1 ? -1 : uri.indexOf(']');
-        path = new ArrayList<>(Arrays.asList((polyStart == -1 ? uri.substring(position) : uri.substring(position, polyStart)).split("/")));
-        if (polyStart != -1 && polyEnd != -1) {
-            final String remaining = uri.substring(polyStart + 1, polyEnd);
-            final String[] splits = remaining.split("(?<!\\d),(?!\\d)");
-            poly = Arrays.asList(splits);
-            path.set(path.size() - 1, path.getLast() + uri.substring(polyEnd + 1));
-        } else {
-            poly = null;
-        }
-        /// PARSE COEFFICIENT
-        if (path.get(path.size() - 1).contains("{")) {
-            coefficient = cInt.of(path.get(path.size() - 1).substring(path.get(path.size() - 1).indexOf("{") + 1, path.get(path.size() - 1).indexOf("}")));
-            path.set(path.size() - 1, path.get(path.size() - 1).substring(0, path.get(path.size() - 1).indexOf("{")));
-        }
-        if (sstart)
-            path.add(0, "");
-        if (send)
-            path.add("");
-        return of(scheme, host, port, path, coefficient, poly, query);*/
+        return ifURI.of(scheme, host, port, path, coefficient, List.of(), query);
     }
 
     static Map<String, String> parseQuery(final String query) {

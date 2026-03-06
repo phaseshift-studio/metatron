@@ -375,8 +375,12 @@ public class fURITest extends AbstractMetatronTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "/test.com?a=1&b=2|/test.com|a|1|b|2"},
-            delimiter = '|')
+            "/test.com?a=1&b=2|/test.com|a|1|b|2",
+            "/test.com?a=7|/test.com|a|1|a|7",
+            "/test.com?monad|/test.com|monad|null|monad|null",
+            "/test.com?monad&a=7|/test.com|monad|null|a|7",
+            "/test.com?c=abc|/test.com|c|abc|c|abc"},
+            delimiter = '|',nullValues = "null")
     public void testQueryWrite(final String expected, final String base, final String k1, final String v1, final String k2, final String v2) {
         final fURI expectedfURI = fURI.of(expected);
         final fURI resultfURI = fURI.of(base).query(k1, v1).query(k2, v2);
@@ -469,7 +473,7 @@ public class fURITest extends AbstractMetatronTest {
     @ParameterizedTest
     @CsvSource(value = {
             "http://fhatos.org/a         | 1   | http://fhatos.org",
-            //    "http://fhatos.org/a/         | 1   | http://fhatos.org/",
+           // "http://fhatos.org/a/        | 1   | http://fhatos.org/",
             "http://fhatos.org/a/b       | 1   | http://fhatos.org/a",
             "http://fhatos.org/a/b/      | 1   | http://fhatos.org/a/",
             "http://fhatos.org/a/b       | 2   | http://fhatos.org",
@@ -486,9 +490,10 @@ public class fURITest extends AbstractMetatronTest {
             "/a/b/c/?a=b&c=d             | 2   | /a/?a=b&c=d",
             "/a/b/c{*}?a=b&c=d           | 1   | /a/b{*}?a=b&c=d",
             "/a/b/c{2,3}?a=b&c=d         | 2   | /a{2,3}?a=b&c=d",
-            // "/a/b/c/[0]?a=b&c=d          | 2   | /a/[0]?a=b&c=d",
-            // "/a/b/c/{?}?a=b&c=d          | 2   | /a/{?}?a=b&c=d",
-            // "/a/b?a=b&c=d                | 2   | ?a=b&c=d",
+            // TODO: "/a/b/c/{2,3}?a=b&c=d         | 2   | /a/{2,3}?a=b&c=d",
+             "/a/b/c/[0]?a=b&c=d          | 2   | /a/[0]?a=b&c=d",
+             //"/a/b/c/{?}?a=b&c=d          | 2   | /a/{?}?a=b&c=d",
+             //"/a/b?a=b&c=d                | 2   | ?a=b&c=d",
     }, delimiter = '|')
     public void testRetract(final String furi, final int steps, final String expected) {
         final fURI start = fURI.of(furi);
@@ -499,8 +504,8 @@ public class fURITest extends AbstractMetatronTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "http://fhatos.org/a         | 1   | http://fhatos.org",
-            //    "http://fhatos.org/a/         | 1   | http://fhatos.org/",
+            "http://fhatos.org/a         | 1   | http://fhatos.org", 
+        //    "http://fhatos.org/a/        | 1   | http://fhatos.org/",
             "http://fhatos.org/a/b       | 1   | http://fhatos.org/b",
             "http://fhatos.org/a/b/      | 1   | http://fhatos.org/b/",
             "http://fhatos.org/a/b       | 2   | http://fhatos.org",
