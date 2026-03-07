@@ -77,7 +77,7 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
                         uri(Tokens.SPACE), rec(new ConcurrentHashMap<>(Map.of(uri("+/#"), new stackSpace(f("+/#"))))))),
                 ROUTER_TID,
                 vid);
-        this.at(uri(REWRITE), this.smallToBigRoutes.toRec(), MUTABLE);
+        this.at(uri(ROUTE), this.smallToBigRoutes.toRec(), MUTABLE);
         //LOG.info("local router at %s", this.vid.toUri());
     }
 
@@ -181,6 +181,8 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
         space.at(uri(SPACE), subSpaces, MUTABLE);
         this.spaces().jvm().put(null == space.vid() ? space.pattern().toUri() : space.vid().toUri(), space);
         Space.Helper.spaceOpenLog(this, space);
+        // save routes registered by spaceS
+        this.at(uri(ROUTE), this.smallToBigRoutes.toRec(), MUTABLE);
     }
 
     @Override

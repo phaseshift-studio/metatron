@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.furi;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.form.*;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -184,34 +185,38 @@ public interface ifURI {
 
     /// ////////////////////////////////////////////////
 
-    static ifURI empty() {
-        return XXXXXfURI.INSTANCE;
+    class Singleton {
+        private static final ifURI INSTANCE = new XXXXXfURI();
+
+        public static ifURI empty() {
+            return INSTANCE;
+        }
+        
+       /* public static ifURI f(final String furi) {
+            return of(furi);
+        }*/
+        
+        public static ifURI of(final String furi) {
+            return ifURI.of(furi);
+        }
+
+        public static final Pattern FURI_PATTERN = Pattern.compile("((?<scheme>[^:/.]+):)?(//((?<host>[^:/]+)(:(?<port>\\d+))?))?(?<path>[^?{]+)?(\\{(?<coefficient>[^}]+)})?(\\?(?<query>.+))?");
     }
 
     static ifURI of(final String furi) {
-        if (null == furi)
-            return empty();
-        String scheme = null;
-        String host = null;
-        int port = -1;
-        String pathStr = null;
-        cInt coefficient = cInt.ONE();
-        Map<String, String> query = Map.of();
-
-        Pattern pattern = Pattern.compile("((?<scheme>[^:/.]+):)?(//((?<host>[^:/]+)(:(?<port>\\d+))?))?(?<path>[^?{]+)?(\\{(?<coefficient>[^}]+)})?(\\?(?<query>[^#+]+))?");
-        Matcher matcher = pattern.matcher(furi);
-        if (!matcher.matches()) {
-            throw new IllegalArgumentException("Invalid URI: " + furi);
-        }
-
-        scheme = matcher.group("scheme");
-        host = matcher.group("host");
-        port = matcher.group("port") == null ? -1 : Integer.parseInt(matcher.group("port"));
-        pathStr = matcher.group("path");
-        coefficient = matcher.group("coefficient") == null ? cInt.ONE() : cInt.of(matcher.group("coefficient").replace("{", "").replace("}", ""));
-        String queryStr = matcher.group("query");
-        query = queryStr == null ? Map.of() : parseQuery(queryStr);
-        List<String> path = null == pathStr ? List.of() : new ArrayList<>(Arrays.asList(pathStr.split("/")));
+        if (null == furi || furi.isEmpty())
+            return Singleton.empty();
+        final Matcher matcher = Singleton.FURI_PATTERN.matcher(furi);
+        if (!matcher.matches())
+            throw MTronException.of("unable to parse %s to a furi", furi);
+        final String scheme = matcher.group("scheme");
+        final String host = matcher.group("host");
+        final int port = matcher.group("port") == null ? -1 : Integer.parseInt(matcher.group("port"));
+        final String pathStr = matcher.group("path");
+        final cInt coefficient = matcher.group("coefficient") == null ? cInt.ONE() : cInt.of(matcher.group("coefficient").replace("{", "").replace("}", ""));
+        final String queryStr = matcher.group("query");
+        final Map<String, String> query = queryStr == null ? Map.of() : parseQuery(queryStr);
+        final List<String> path = null == pathStr ? List.of() : new ArrayList<>(Arrays.asList(pathStr.split("/")));
         if (null != pathStr) {
             if (pathStr.endsWith("/"))
                 path.add("");

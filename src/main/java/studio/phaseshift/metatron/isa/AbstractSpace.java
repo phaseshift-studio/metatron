@@ -23,8 +23,6 @@ import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.type.MStats;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.Stats;
@@ -58,7 +56,7 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
         else
             this.routes.put(temp.asRel().first().asUri(), temp.asRel().second().asUri());
         LOG = Graphitty.log(this);
-        if (Router.loaded() && !this.pattern.equals(f("+/#")) && !(this instanceof Router))
+        if (Router.loaded() && !this.pattern.equals(STACK_PATTERN) && !(this instanceof Router))
             Router.global().addSpace(this);
     }
 
@@ -93,30 +91,17 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
         return this.sjvm;
     }
 
-    /*@Override
-    public Rec vid(final fURI vid) {
-        if (null != vid) {
-            this.vid = vid;
-            Router.global().addSpace(this);
-            Router.writeToSpace(vid, this);
-            // LOG.trace("registering: %s", this);
-            //this.qs.register(new PubSubQ());
-            return this;
-        } else
-            return super.vid(vid);
-    }*/
-
-    /*@Override
-    public Rec tid(final fURI tid) {
-        Space.Helper.noCloneWarning(this);
+    @Override
+    public Space tid(final fURI tid) {
+        //Space.Helper.noCloneWarning(this);
         return this;
     }
 
     @Override
-    public Rec clone() {
-        Space.Helper.noCloneWarning(this);
+    public Space clone() {
+        //Space.Helper.noCloneWarning(this);
         return this;
-    }*/
+    }
 
     @Override
     public String toString() {

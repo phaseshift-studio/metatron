@@ -135,7 +135,7 @@ public class Console extends JRec implements Closeable, Runnable {
                     .terminal(terminal)
                     .appName("metatron")
                     .history(new DefaultHistory())
-                    .highlighter(Highlighter.create()) // TODO: command/args/lang
+                    .highlighter(new Highlighter(new ObjConsoleSerializer()))
                     .parser(parser)
                     .variable(LineReader.HISTORY_FILE, HISTORY_FILE)
                     .option(LineReader.Option.AUTO_FRESH_LINE, true)
@@ -168,7 +168,7 @@ public class Console extends JRec implements Closeable, Runnable {
     }
 
     public void write(final Object object) {
-        terminal.writer().write(((Highlighter) reader.getHighlighter()).format(object));
+        terminal.writer().write(((Highlighter) this.reader.getHighlighter()).write(object));
     }
 
     public static Terminal getTerminal() {

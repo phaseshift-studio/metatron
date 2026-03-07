@@ -586,7 +586,70 @@ public class ifURITest extends AbstractMetatronTest {
             "x:abc|+:abc|true",
             "http://localhost:8080/abc|+://localhost:8080/abc|true",
             "http://localhost:8080/abc|+://+/abc|true",
-            "http://localhost:8080|+://#|true"
+            "http://localhost:8080|+://#|true",
+            "x|+/#|true",
+            "x/y|+/#|true",
+            "x/y|+/+|true",
+            "x/y/z|+/#|true",
+            "x/y/z|+/+/+|true",
+            "x/y/z|+/+|false",
+            "/x/y/z|+/+|false",
+            "/x/y/z|+/#|false",
+            "/x/y/z|+/+/+|false",
+            "x:y/z|+/+|false",
+            "x:y/z|+/+/+|false",
+            "x:y/z|+:+/+|true",
+            "/x/y/z|+/+/+|false",
+            "/x/y/z|+/+|false",
+            "/x/y/z|+/#|false",
+            "x:y/z|+:/#|false",
+            "x:y/z|+:#|true",
+            "x:/y/z|+:/#|true",
+            "x:y/z|+:/+/+|false",
+            "x:y/z|+:/+/+/+|false",
+            "x:y/z|+:+/+|true",
+            "x:y|+:+/+|false",
+            "x:y/z|+/+|false",
+            "/x/y/z|+/+/+|false",
+            "/x/y/z|+/+|false",
+            "/x/y/z|+/#|false",
+            "x://y/z|+:+|false",
+            "x://y/z|+://+/+|true",
+            "x://y/z|+://+|false",
+            "x://y/z|+://#|true",
+            "x://y.com/z|+://#|true",
+            "x://y.com:97/z|+://#|true",
+            "x://y.com/z|+://+/+|true",
+            "x://y.com/z|+://+/z|true",
+            "x://y.com/z|+://+/y|false",
+            "z://y.com/z|a://+/+|false",
+            "z://y.com/z|a://y.com/z|false",
+            "x://y.com:87/z|x://y.com:97/z|false",
+            "x://y.com:87/z|x://y.com:87/z|true",
+            "x://y.com:87/z|x://y.org:87/z|false",
+            "x://y.com:87/z|x://y.org:87/#|false",
+            "x://y.com:87/z|x://y.com:87/#|true",
+            "x://y.com:97/z|+://+/+|true",
+            "x://y.com/z|+://+/+|true",
+            "x:a|+:+|true",
+            "x:a|+|false",
+            "x:|+|false",
+            "x:y|+:y|true",
+            "x:y|x:+|true",
+            "+:+|x:y|false",
+            "+:+|+:#|true",
+            "a/b/c?a=2|+/+/+?a=+|true",
+            "a/b/c?a=2|+/+/+?a=3|false",
+            "a/b/c?a=2|a/b/c/?a=2|false",
+            "a/b/c?a=2|a/b/c/?#|false",
+            "a/b/c?a=2|+/+/+?b=2|false",
+            "a/b/c?a=2|+/+/+?b=+|false",
+            "a/b/c?a=2|a/+/c?+|true",
+            "a/b/c?a=2|a/b/c?#|true",
+            "a/b/c?a=2|a/#|true",
+            "#|#|true"
+    //":y|+:+|false",       why are these wrong? they are inverses of each other.
+    //        ":y|:+|true",
     }, delimiter = '|', nullValues = "null")
     void testMatches(final String a, final String b, final boolean shouldMatch) {
         final ifURI furi1a = ifURI.of(a);
@@ -610,8 +673,7 @@ public class ifURITest extends AbstractMetatronTest {
             assertFalse(furi1a.test(furi2b));
             assertFalse(furi2a.test(furi1b));
         }*/
-        printComponents(ifURI.of(b));
-        checkMatches(ifURI.of(a), ifURI.of(b), shouldMatch);
+        checkMatches(furi1a, furi1b, shouldMatch);
     }
 
     @ParameterizedTest

@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.furi.form;
 
-import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.C;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.ifURI;
@@ -26,6 +25,8 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static studio.phaseshift.metatron.furi.fURI.f;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -45,7 +46,7 @@ public abstract class AbstractfURI implements ifURI {
         }
         return this.path(newSegments);
     }
-    
+
     @Override
     public ifURI scheme(final String scheme) {
         return ifURI.of(scheme, this.host(), this.port(), this.path(), this.c(), List.of(), this.qMap());
@@ -210,7 +211,17 @@ public abstract class AbstractfURI implements ifURI {
                     return false;
             }  // +
         }
-        return this.path().size() == lhs.path().size();// && this.path().getLast().isEmpty() == lhs.path().getLast().isEmpty();
+        if (this.path().size() != lhs.path().size()) // && this.path().getLast().isEmpty() == lhs.path().getLast().isEmpty();
+            return false;
+        // TODO: this is a later addition to the matching semantics of furi. 
+        // currently this behavior is handled specially for inst sets (dom/rng-selection).
+        // by having it here, this allows any space to leverage query pattern matching.
+        for (final Map.Entry<String, String> kv : lhs.qMap().entrySet()) {
+            if (this.qMap().entrySet().stream().noneMatch(xy -> f(xy.getKey()).test(f(kv.getKey())) &&
+                    (kv.getValue().isEmpty() || kv.getValue().equals("+") || Objects.equals(xy.getValue(), kv.getValue()))))
+                return false;
+        }
+        return true;
     }
 
     @Override
@@ -433,11 +444,11 @@ public abstract class AbstractfURI implements ifURI {
             return this;
         boolean hasBlankRight = this.hasBlankCap(false);
         boolean hasBlankLeft = this.hasBlankCap(true);
-        final List<String> newPath =  new ArrayList<>(this.path().subList(0,steps + (hasBlankLeft ? 1 : 0)));
-        if(hasBlankRight && !newPath.isEmpty() && !newPath.getLast().isEmpty())
+        final List<String> newPath = new ArrayList<>(this.path().subList(0, steps + (hasBlankLeft ? 1 : 0)));
+        if (hasBlankRight && !newPath.isEmpty() && !newPath.getLast().isEmpty())
             newPath.addLast("");
         return ifURI.of(this.scheme(), this.host(), this.port(), newPath, this.c(), List.of(), this.qMap());
-       // return ifURI.of(this.scheme(), this.host(), this.port(), this.path().subList(0, steps + (hasBlank ? 1 : 0)), this.c(), List.of(), this.qMap());
+        // return ifURI.of(this.scheme(), this.host(), this.port(), this.path().subList(0, steps + (hasBlank ? 1 : 0)), this.c(), List.of(), this.qMap());
     }
 
     @Override
@@ -448,8 +459,8 @@ public abstract class AbstractfURI implements ifURI {
             return this;
         boolean hasBlankRight = this.hasBlankCap(false);
         boolean hasBlankLeft = this.hasBlankCap(true);
-        final List<String> newPath =  new ArrayList<>(this.path().subList(((this.path().size()-steps) - (hasBlankRight ? 1 : 0)),this.path().size()));
-        if(hasBlankLeft && !newPath.isEmpty() && !newPath.getFirst().isEmpty())
+        final List<String> newPath = new ArrayList<>(this.path().subList(((this.path().size() - steps) - (hasBlankRight ? 1 : 0)), this.path().size()));
+        if (hasBlankLeft && !newPath.isEmpty() && !newPath.getFirst().isEmpty())
             newPath.addFirst("");
         return ifURI.of(this.scheme(), this.host(), this.port(), newPath, this.c(), List.of(), this.qMap());
     }

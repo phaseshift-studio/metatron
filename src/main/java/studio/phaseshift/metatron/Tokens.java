@@ -18,6 +18,10 @@
 
 package studio.phaseshift.metatron;
 
+import studio.phaseshift.metatron.furi.fURI;
+
+import static studio.phaseshift.metatron.furi.fURI.f;
+
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -28,6 +32,11 @@ public final class Tokens {
         // do nothing
     }
 
+    public static final fURI HASH = f("#");
+    public static final fURI PLUS = f("+");
+    public static final fURI STACK_PATTERN = f("+/#");
+    
+    
     public static final String DOM = "dom";
     public static final String RNG = "rng";
     public static final String LOOP = "loop";

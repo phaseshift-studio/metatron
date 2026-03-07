@@ -1,0 +1,59 @@
+/*
+ * Metatron: A Distributed Computing Language and Virtual Machine
+ *  Copyright (C) 2025- PhaseShift Studio, LLC
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package studio.phaseshift.metatron.isa.mach.type.ui.console;
+
+import org.jline.builtins.Commands;
+import studio.phaseshift.metatron.isa.m.type.Lst;
+import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjCleanStringSerializer;
+import studio.phaseshift.metatron.util.CommonUtil;
+import studio.phaseshift.metatron.util.MTronException;
+
+import java.io.ByteArrayInputStream;
+import java.io.PrintStream;
+import java.nio.file.Paths;
+
+/*
+ * @author Marko A. Rodriguez (http://markorodriguez.com)
+ */
+public class ObjConsoleSerializer extends ObjCleanStringSerializer {
+
+    private String clipString(final String string, final int maxLength) {
+        final int count = string.split("\n").length;
+        if (count > maxLength) {
+            try {
+                Commands.less(Console.getTerminal(), new ByteArrayInputStream(Highlighter.format(string).getBytes()), new PrintStream(Console.getTerminal().output()), System.err, Paths.get(""), new String[0]);
+                return string;
+            } catch (final Exception e) {
+                throw MTronException.of(e);
+            }
+        }
+        return string;
+    }
+
+    @Override
+    public String writeRec(final Rec obj) {
+        return clipString(super.writeRec(obj), 20);
+    }
+
+    @Override
+    public String writeLst(final Lst obj) {
+        return clipString(super.writeLst(obj), 20);
+    }
+}

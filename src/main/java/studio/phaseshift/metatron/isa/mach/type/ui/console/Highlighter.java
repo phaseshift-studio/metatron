@@ -24,6 +24,7 @@ import org.jline.reader.LineReader;
 import org.jline.utils.AttributedString;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjCleanStringSerializer;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 
 import java.io.ByteArrayOutputStream;
@@ -44,7 +45,7 @@ public class Highlighter implements org.jline.reader.Highlighter {
             Paths.get("conf"),                                     // application-wide settings
             Paths.get(System.getProperty("user.home"), ".metatron") // user-specific settings
     );
-    private ObjCleanStringSerializer serializer;
+    private ObjSerializer<String> serializer;
 
     private static final Highlighter INSTANCE = new Highlighter(SyntaxHighlighter.build(Highlighter.configurations.getConfig("jnanorc"), "mtron"));
 
@@ -58,14 +59,23 @@ public class Highlighter implements org.jline.reader.Highlighter {
 
     private Highlighter(final SyntaxHighlighter syntaxHighlighter) {
         this.syntaxHighlighter = syntaxHighlighter;
-        final ByteArrayOutputStream out = new ByteArrayOutputStream();
-        this.graphitty = new Graphitty(Map.of(), out);
+        this.graphitty = new Graphitty(Map.of(), new ByteArrayOutputStream());
         this.serializer = new ObjCleanStringSerializer(true);
+    }
+
+    public Highlighter(final ObjSerializer<String> serializer) {
+        this.syntaxHighlighter = SyntaxHighlighter.build(Highlighter.configurations.getConfig("jnanorc"), "mtron");
+        this.graphitty = new Graphitty(Map.of(), new ByteArrayOutputStream());
+        this.serializer = serializer;
     }
 
     public Highlighter justify(final boolean leftJustify) {
         this.serializer = new ObjCleanStringSerializer(leftJustify);
         return this;
+    }
+
+    public String write(final Object object) {
+        return this.highlight(object);
     }
 
     public static String format(final Object object) {
@@ -87,15 +97,6 @@ public class Highlighter implements org.jline.reader.Highlighter {
     public String highlight(final Object object) {
         try {
             if (object instanceof Obj) {
-                /*String preprocess = this.serializer.write((Obj) object);
-                if (preprocess.length() > 550 && object instanceof Rec r) {
-                    preprocess = "[" + r.jvm().entrySet()
-                            .stream()
-                            .map(kv -> (kv.getKey().toString() + "=>" + stringClip(kv.getValue().toString(), 40, true))).reduce("\n ", (a, b) -> a +N b + ",\n ");
-                    preprocess = preprocess.substring(0, preprocess.length() - 2);
-                    preprocess += "]";
-                }*/
-
                 return this.highlight(null, this.serializer.write((Obj) object)).toAnsi();
             } else return this.graphitty.writeToString(this.highlight(null, object.toString()).toAnsi());
         } catch (final Exception e) {
@@ -111,17 +112,5 @@ public class Highlighter implements org.jline.reader.Highlighter {
         } else {
             return this.syntaxHighlighter.highlight(buffer);
         }
-    }
-
-    public String strip(final String string) {
-        return Graphitty.strip(AttributedString.stripAnsi(string));
-    }
-
-    private String stringClip(final String s, final int clipSize, final boolean removeNewLines) {
-        if (true || s.length() < clipSize)
-            return s;
-        String ret = s.substring(0, clipSize) + "...";
-        return removeNewLines ? ret.replaceAll("\n", "") : ret;
-
     }
 }
