@@ -37,7 +37,9 @@ public final class Tokens {
     public static final String MEMORY = "memory";
     public static final String HISTORY = "history";
     public static final String TOOL = "tool";
+    public static final String TYPE = "type";
     public static final String THINKING = "thinking";
+    public static final String TEXT = "text";
     public static final String MONAD = "monad";
     public static final String ONLINE = "online";
     public static final String OFFLINE = "offline";

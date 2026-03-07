@@ -54,8 +54,7 @@ import static studio.phaseshift.metatron.furi.q.DocQ.Doc.docWrap;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_ISA_TID;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_TID;
 import static studio.phaseshift.metatron.isa.llm.ollama.space.ollamaSpace.OLLAMA_SPACE_TYPE;
-import static studio.phaseshift.metatron.isa.m.mInstSet.INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
@@ -91,6 +90,43 @@ public class ollamaInstSet extends AbstractInstSet {
         TokenStream chat(final String userMessage);
 
     }
+
+    /*
+     [
+   text                 =>'The file permission `rwxr-xr-x` corresp'...,
+   thinking             =>'Okay, the user is asking about the file'...,
+   toolExecutionRequests=>[,],
+   attributes           =>[=>],
+   type                 =>AI],
+  [
+
+     */
+    public static final fURI OLLM_MEMORY_TID = OLLAMA_TID.extend("memory");
+    public static Type OLLM_MEMORY = Type.Builder.build()
+            .tid(LST_TID)
+            .vid(OLLM_MEMORY_TID)
+            .isaPredicate(lst())
+            .create(TYPES, INSTS);
+    public static final fURI OLLM_AI_MEMORY_TID = OLLM_MEMORY_TID.extend("ai");
+    public static Type OLLM_AI_MEMORY = Type.Builder.build()
+            .tid(REC_TID)
+            .vid(OLLM_AI_MEMORY_TID)
+            .isaPredicate(rec(
+                    uri(TEXT), STR_TYPE,
+                    uri(THINKING), INT_TYPE,
+                    uri("attributes"), REC_TYPE,
+                    uri(TYPE), uri("AI")))
+            .create(TYPES, INSTS);
+    public static final fURI OLLM_USER_MEMORY_TID = OLLAMA_TID.extend("memory").extend("user");
+    public static Type OLLM_USER_MEMORY = Type.Builder.build()
+            .tid(REC_TID)
+            .vid(OLLM_USER_MEMORY_TID)
+            .isaPredicate(rec(
+                    uri(TEXT), STR_TYPE,
+                    uri(THINKING), INT_TYPE,
+                    uri("attributes"), REC_TYPE,
+                    uri(TYPE), uri("AI")))
+            .create(TYPES, INSTS);
 
     public static Type OLLM_TYPE = docWrap(Type.Builder.build()
             .tid(LLM_TID)
