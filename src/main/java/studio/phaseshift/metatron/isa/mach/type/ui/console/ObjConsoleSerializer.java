@@ -19,8 +19,7 @@
 package studio.phaseshift.metatron.isa.mach.type.ui.console;
 
 import org.jline.builtins.Commands;
-import studio.phaseshift.metatron.isa.m.type.Lst;
-import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjCleanStringSerializer;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -53,12 +52,7 @@ public class ObjConsoleSerializer extends ObjCleanStringSerializer {
     }
 
     @Override
-    public String writeRec(final Rec obj) {
-        return clipString(super.writeRec(obj), 20);
-    }
-
-    @Override
-    public String writeLst(final Lst obj) {
-        return clipString(super.writeLst(obj), 20);
+    public String write(final Obj obj) {
+        return clipString(super.write(obj), 20);
     }
 }
