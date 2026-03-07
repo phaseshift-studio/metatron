@@ -22,23 +22,28 @@ import org.jline.builtins.Commands;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjCleanStringSerializer;
-import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.ByteArrayInputStream;
 import java.io.PrintStream;
 import java.nio.file.Paths;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class ObjConsoleSerializer extends ObjCleanStringSerializer {
 
+    public ObjConsoleSerializer() {
+        super(true);
+    }
+
     private String clipString(final String string, final int maxLength) {
         final int count = string.split("\n").length;
         if (count > maxLength) {
             try {
-                Commands.less(Console.getTerminal(), new ByteArrayInputStream(Highlighter.format(string).getBytes()), new PrintStream(Console.getTerminal().output()), System.err, Paths.get(""), new String[0]);
+                Commands.less(Console.getTerminal(), new ByteArrayInputStream(Highlighter.format(string).getBytes(UTF_8)), new PrintStream(Console.getTerminal().output()), System.err, Paths.get(""), new String[]{"--ignorercfiles"});
                 return string;
             } catch (final Exception e) {
                 throw MTronException.of(e);
