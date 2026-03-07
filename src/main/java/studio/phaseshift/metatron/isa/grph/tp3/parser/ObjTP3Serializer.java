@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.AbstractObjSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjByteBufferSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.nio.ByteBuffer;
@@ -65,4 +66,56 @@ public class ObjTP3Serializer extends AbstractObjSerializer<Element> {
     public fURI vid() {
         return OBJ_TP3_SERIALIZER_VID;
     }
+
+/*
+private Map<Obj, Obj> createProperties(final Element element) {
+        final Map<Obj, Obj> props = new LinkedHashMap<>();
+        element.properties().forEachRemaining(tpP -> props.put(uri(tpP.key()), MObjFactory.of().toObj(tpP.value())));
+        return props;
+    }
+
+    private Rec createEdge(final Edge tpEdge) {
+        final Map<Obj, Obj> props = createProperties(tpEdge);
+        return rec(Map.of(uri(LABEL), uri(tpEdge.label()),
+                        uri(PROPS), props.isEmpty() ? noobj() : rec(props),
+                        uri(Direction.OUT.name()), auto(this.builder.root.extend("V").extend(tpEdge.outVertex().id().toString())),
+                        uri(Direction.IN.name()), auto(this.builder.root.extend("V").extend(tpEdge.inVertex().id().toString()))),
+                EDGE_TID, fURI.fnull);
+        //this.builder.root.extend("E").extend(tpEdge.id().toString()));
+    }
+
+    @Override
+    public Obj translate(final Graph graph) {
+        graph.vertices().forEachRemaining(tpV -> {
+            final Map<Obj, Obj> out = mutableMap();
+            tpV.edges(Direction.OUT).forEachRemaining(tpE -> out.compute(uri(tpE.label()), (k, v) -> null == v ? createEdge(tpE) : v.append(createEdge(tpE))));
+            final Map<Obj, Obj> in = mutableMap();
+            tpV.edges(Direction.IN).forEachRemaining(tpE -> in.compute(uri(tpE.label()), (k, v) -> null == v ? createEdge(tpE) : v.append(createEdge(tpE))));
+            final Map<Obj, Obj> props = createProperties(tpV);
+            Router.writeToSpace(this.builder.root.extend("V").extend(tpV.id().toString()), rec(
+                    Map.of(uri(ID), uri(tpV.id().toString()),
+                            uri(LABEL), uri(tpV.label()),
+                            uri(PROPS), props.isEmpty() ? noobj() : rec(props),
+                            uri(Direction.OUT.name()), out.isEmpty() ? noobj() : rec(out),
+                            uri(Direction.IN.name()), in.isEmpty() ? noobj() : rec(in)),
+                    VRTX_TID,
+                    fURI.fnull));
+            //this.builder.root.extend("V").extend(tpV.id().toString()));
+        });
+        
+              graph.edges().forEachRemaining(tpE -> {
+            Router.writeToSpace(Router.readFromSpace(this.builder.root.extend("V").extend(tpE.outVertex().id().toString()))
+                    .stream()
+                    .map(v -> v.as(RVertex.class))
+                    .map(v -> {
+                        v.edge(tpE.label(), this.builder.root.extend("V").extend(tpE.inVertex().id().toString()),
+                                IteratorUtil.stream(tpE.properties()).map(p -> rel(uri(p.key()), MObjFactory.of().create(p.value()))).collect(new Common.RecCollector()));
+                        return v;
+                    }).iterator().next());
+        });
+         
+        return Router.readFromSpace(this.builder.root.extend("+"));
+}
+ */
+
 }

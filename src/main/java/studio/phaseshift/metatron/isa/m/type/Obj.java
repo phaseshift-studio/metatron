@@ -34,6 +34,7 @@ import studio.phaseshift.metatron.util.*;
 
 import java.nio.ByteBuffer;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -44,7 +45,6 @@ import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.furi.q.DocQ.Doc.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.mInstSet.FORK_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.Bool.*;
 import static studio.phaseshift.metatron.isa.m.type.Bytes.BYTES_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Code.CODE_TYPE;
@@ -340,6 +340,13 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
 
     default <O extends Obj> O orElse(final O other) {
         return this.isNoObj() ? other : (O) this;
+    }
+
+    default <O extends Obj> boolean ifPresent(final Consumer<O> consumer) {
+        if (this.isNoObj())
+            return false;
+        consumer.accept((O) this);
+        return true;
     }
 
     default <O extends Obj> O orSupply(final Supplier<O> other) {

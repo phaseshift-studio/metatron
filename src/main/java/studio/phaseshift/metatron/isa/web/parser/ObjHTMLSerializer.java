@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.web.parser;
 
 import org.jsoup.Jsoup;
+import org.jsoup.nodes.DataNode;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import studio.phaseshift.metatron.furi.fURI;
@@ -32,6 +33,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -44,6 +46,8 @@ public class ObjHTMLSerializer extends AbstractObjSerializer<Document> {
 
     private static final String TEXT = "text";
     private static final String DATA = "data";
+    private static final fURI FTEXT = f(TEXT);
+    private static final fURI FDATA = f(DATA);
 
     public static final fURI OBJ_HTML_SERIALIZER_VID = OBJ_SERIALIZER_TID.extend("html");
 
@@ -61,11 +65,22 @@ public class ObjHTMLSerializer extends AbstractObjSerializer<Document> {
     }
 
     private Element writeElement(final Rec rec, final Element element) {
-        //Graphitty.log(this).warn(rec);
-        rec.elements().forEach(e -> {
-            final Element newElement = new Element(e.first().uriValue().toString());
-            element.appendChild(e.second().isRec() ? writeElement(e.second().as(), newElement) : newElement);
+        rec.at(uri(DATA)).ifPresent(data -> {
+            final DataNode dataNode = new DataNode(data.strValue());
+            element.appendChild(dataNode);
         });
+        rec.at(uri(TEXT)).ifPresent(text -> element.text(text.strValue()));
+        rec.elements()
+                .filter(e -> !e.first().uriValue().equals(FTEXT) && !e.first().uriValue().equals(FDATA))
+                .forEach(e -> {
+                    if (!e.second().isRec()) {
+                        final String attrValue = e.second().isStr() ? e.second().strValue() : e.second().toString();
+                        element.attr(e.first().uriValue().toString(), attrValue);
+                    } else {
+                        final Element newElement = new Element(e.first().uriValue().toString());
+                        element.appendChild(writeElement(e.second().as(), newElement));
+                    }
+                });
         return element;
     }
 

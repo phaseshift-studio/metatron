@@ -38,17 +38,13 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjByteBufferSerializer;
-import studio.phaseshift.metatron.isa.web.parser.AudioTranslator;
 import studio.phaseshift.metatron.isa.web.parser.ObjHTMLSerializer;
 import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -57,6 +53,7 @@ import java.net.http.HttpResponse;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -67,7 +64,6 @@ import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
-import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -75,7 +71,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.web.parser.Audio.AUDIO_TID;
 import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
 
 /*
@@ -146,7 +141,6 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                     lst(T(REC_TID, isa_(CONFIG))), (lhs, inst) -> httpSpace.of(inst.arg(0).asRec(), inst.arg(0).vid()))).create();
     private static final ObjHTMLSerializer HTML_SERIALIZER = new ObjHTMLSerializer();
     private static final ObjJSONSerializer JSON_TRANSLATOR = new ObjJSONSerializer();
-    private static final AudioTranslator AUDIO_TRANSLATOR = new AudioTranslator();
 
     protected httpSpace(final HttpServer server, final Map<Obj, Obj> config, final fURI vid) {
         super(server, config, HTTP_SPACE_TID, vid);
@@ -155,46 +149,84 @@ public class httpSpace extends AbstractSpace<HttpServer> {
             this.at(ROUTE).orElse(rec()).elements().forEach(r -> {
                 final HttpContext context = server.createContext(r.first().uriValue().toString(),
                         exchange -> {
-                            final fURI requestURI = r.second().uriValue().extend(f(exchange.getRequestURI().getPath()));
-                            final File base = locateBaseFile(requestURI);
-                            final Path filePath = null == base ? null : base.toPath(); //Files.isRegularFile(path) ? path : Path.of(path + "/" + INDEX_HTML);
-                            if (null != base) {
-                                LOG.debug("resolving context to absolute path: %s => %s", uri(exchange.getRequestURI().toString()), uri(filePath.toAbsolutePath().toString()));
-                                // fURI toRemove = f(filePath.toString());
-                                final fURI pretractedURI = f(exchange.getRequestURI().getPath()).removeSubpath(f(INDEX_HTML)).asRelative();
-                                LOG.info("remaining steps in request uri: %s", pretractedURI);
-                                if (pretractedURI.pathLength() == 0) {
-                                    // send the full html document
-                                    final String contentType = exchange.getRequestURI().getPath().endsWith("mtron") ?
-                                            ContentType.APPLICATION_MTRON.value :
-                                            Files.probeContentType(filePath);
-                                    exchange.getResponseHeaders().set(ContentType.VALUE, contentType == null ? ContentType.APPLICATION_OCTET_STREAM.value : contentType);
-                                    try (final InputStream input = Files.newInputStream(filePath)) {
-                                        sendResponse(ByteBuffer.wrap(input.readAllBytes()), exchange);
+                            if (exchange.getRequestMethod().equalsIgnoreCase("GET")) {
+                                final fURI requestURI = r.second().uriValue().extend(f(exchange.getRequestURI().getPath()));
+                                final File base = locateBaseFile(requestURI);
+                                final Path filePath = null == base ? null : base.toPath(); //Files.isRegularFile(path) ? path : Path.of(path + "/" + INDEX_HTML);
+                                if (null != base) {
+                                    LOG.debug("resolving context to absolute path: %s => %s", uri(exchange.getRequestURI().toString()), uri(filePath.toAbsolutePath().toString()));
+                                    // fURI toRemove = f(filePath.toString());
+                                    final fURI pretractedURI = f(exchange.getRequestURI().getPath()).removeSubpath(f(INDEX_HTML)).asRelative();
+                                    LOG.info("remaining steps in request uri: %s", pretractedURI);
+                                    if (pretractedURI.pathLength() == 0) {
+                                        // send the full html document
+                                        final String contentType = exchange.getRequestURI().getPath().endsWith("mtron") ?
+                                                ContentType.APPLICATION_MTRON.value :
+                                                Files.probeContentType(filePath);
+                                        exchange.getResponseHeaders().set(ContentType.VALUE, contentType == null ? ContentType.APPLICATION_OCTET_STREAM.value : contentType);
+                                        try (final InputStream input = Files.newInputStream(filePath)) {
+                                            sendResponse(ByteBuffer.wrap(input.readAllBytes()), exchange);
+                                        }
+                                    } else {
+                                        // send a subset of larger html document
+                                        final String contentType = ContentType.APPLICATION_MTRON.value;
+                                        exchange.getResponseHeaders().set(ContentType.VALUE,
+                                                contentType == null ? ContentType.APPLICATION_OCTET_STREAM.value : contentType);
+                                        sendResponse(ByteBuffer.wrap(
+                                                new ObjByteBufferSerializer().write(HTML_SERIALIZER.read(
+                                                        Jsoup.parse(filePath)).asRec().at(pretractedURI)).array()), exchange);
                                     }
                                 } else {
-                                    // send a subset of larger html document
-                                    final String contentType = ContentType.APPLICATION_MTRON.value;
-                                    exchange.getResponseHeaders().set(ContentType.VALUE,
-                                            contentType == null ? ContentType.APPLICATION_OCTET_STREAM.value : contentType);
-                                    sendResponse(ByteBuffer.wrap(
-                                            new ObjByteBufferSerializer().write(HTML_SERIALIZER.read(
-                                                    Jsoup.parse(filePath)).asRec().at(pretractedURI)).array()), exchange);
+                                    String response = "<html><body><h1>404 Not Found</h1></body></html>";
+                                    exchange.getResponseHeaders().set(ContentType.VALUE, ContentType.TEXT_HTML.value);
+                                    exchange.sendResponseHeaders(404, response.length());
+                                    try (final OutputStream os = exchange.getResponseBody()) {
+                                        os.write(response.getBytes());
+                                        os.flush();
+                                    }
                                 }
-                            } else {
-                                exchange.sendResponseHeaders(404, 0);
-                            }
-                            /// //////////////////////////////////////////////////////////////////////////////////////
-                          /*  if (exchange.getRequestMethod().toUpperCase().equals("POST")) {
+                            } else if (exchange.getRequestMethod().equalsIgnoreCase("POST")) {
                                 LOG.info("POST request received for %s", exchange.getRequestURI());
                                 final String post = new BufferedReader(new InputStreamReader(exchange.getRequestBody())).lines().reduce("", (a, b) -> a + b + "\n");
-                                LOG.info("POST request body: %s", mParser.parse(post));
+                                final Obj obj = mParser.parse(post);
+                                LOG.info("POST request body: %s", obj);
+                                final File file = locateBaseFile(r.second().uriValue().extend(f(exchange.getRequestURI().getPath())));
+                                if (file == null) {
+                                    String response = "<html><body><h1>404 Not Found</h1></body></html>";
+                                    exchange.getResponseHeaders().set(ContentType.VALUE, ContentType.TEXT_HTML.value);
+                                    exchange.sendResponseHeaders(404, response.length());
+                                    try (final OutputStream os = exchange.getResponseBody()) {
+                                        os.write(response.getBytes());
+                                        os.flush();
+                                    }
+                                } else {
+                                    try {
+                                        String fileContent = Files.readString(file.toPath());
+                                        Rec htmlObj = ObjHTMLSerializer.parse(fileContent).asRec();
+                                        final fURI reference = f(exchange.getRequestURI().getPath()).removePrefix(f(file.toPath().toString()));
+                                        LOG.info("remaining: %s", reference);
+                                        htmlObj.at(reference, obj);
+                                        LOG.info("htmlObj: %s", htmlObj);
+                                        final Path newPath = Paths.get(file.toPath().toString() + "-temp.html");
+                                        Files.writeString(newPath, HTML_SERIALIZER.writeRec(htmlObj).toString());
+                                        exchange.getResponseHeaders().set(ContentType.VALUE, ContentType.TEXT_HTML.value);
+                                        sendResponse(ByteBuffer.wrap(
+                                                new ObjByteBufferSerializer().write(HTML_SERIALIZER.read(
+                                                        Jsoup.parse(newPath)).asRec().at(reference)).array()), exchange);
 
-                                //new ObjHTMLSerializer().read(mParser.parse(post));
-                                return;
+                                    } catch (final Exception e) {
+                                        throw MTronException.of(e);
+                                    }
+                                }
+
+                                this.directWriter().apply(r.second().uriValue().extend(f(exchange.getRequestURI().getPath())), mParser.parse(post));
+                                try (final OutputStream os = exchange.getResponseBody()) {
+                                    os.write(post.getBytes());
+                                    os.flush();
+                                }
                             } else {
                                 //LOG.debug("using http context %s => %s => %s", exchange.getRequestURI(), exchange.getHttpContext().getPath(), r.second());
-                                final String contentType = exchange.getRequestURI().getPath().endsWith("mtron") ? ContentType.APPLICATION_MTRON.value : Files.probeContentType(filePath);
+                                /*final String contentType = exchange.getRequestURI().getPath().endsWith("mtron") ? ContentType.APPLICATION_MTRON.value : Files.probeContentType(filePath);
                                 LOG.debug("content-type: %s", contentType);
                                 exchange.getResponseHeaders().set(ContentType.VALUE, contentType == null ? ContentType.APPLICATION_OCTET_STREAM.value : contentType);
                                 exchange.sendResponseHeaders(200, Files.size(filePath));
@@ -207,8 +239,8 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                                         os.write(buffer, 0, bytesRead);
                                         os.flush();
                                     }
-                                }
-                            }*/
+                                }*/
+                            }
                         });
                 LOG.debug("http route attached: %s", rel(uri(context.getPath()), r.second()));
             });
@@ -304,9 +336,7 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                                                 JSON_TRANSLATOR.parse(response.body()) :
                                                 (contentType.isXml() ?
                                                         HTML_SERIALIZER.read(response.parse()) :
-                                                        (contentType.isAudio() ?
-                                                                AUDIO_TRANSLATOR.translate(response.bodyStream()) :
-                                                                str(response.body())))));
+                                                        str(response.body()))));
                         final Uri key = uri(pattern.scheme(null).authority(null).tail(steps).asRelative());
                         LOG.debug("page found -- searching for %s in %s", key, runningPattern);
                         final Obj subDocObj = key.uriValue().toString().isEmpty() ? docObj : docObj.asRec().at(key);
@@ -333,14 +363,15 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                         .POST(HttpRequest.BodyPublishers.ofString(json.toString()))
                         .build();
                 final HttpResponse<byte[]> response = ((HttpClient) client).send(request, HttpResponse.BodyHandlers.ofByteArray());
-                LOG.info("%s", response.headers().firstValue(ContentType.VALUE));
+                LOG.debug("%s", response.headers().firstValue(ContentType.VALUE));
                 final Optional<String> contentType = response.headers().firstValue(ContentType.VALUE);
                 if (contentType.isPresent()) {
-                    if (contentType.get().startsWith("audio/")) {
-                        return rec(uri("location"), bytes(ByteBuffer.wrap(response.body()))).tid(AUDIO_TID);
-                    } else if (contentType.get().equals(ContentType.APPLICATION_JSON.value)) {
+                    if (contentType.get().equals(ContentType.APPLICATION_JSON.value))
                         return JSON_TRANSLATOR.parse(new String(response.body()));
-                    }
+                    else if (contentType.get().equals(ContentType.TEXT_HTML.value))
+                        return HTML_SERIALIZER.read(Jsoup.parse(new String(response.body())));
+                    else if (contentType.get().equals(ContentType.APPLICATION_MTRON.value))
+                        return mParser.parse(new String(response.body()));
                 }
                 return jnt(response.statusCode());
             } catch (final Exception e) {
