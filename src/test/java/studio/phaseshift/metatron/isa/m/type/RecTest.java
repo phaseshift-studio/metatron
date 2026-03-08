@@ -33,7 +33,6 @@ import static studio.phaseshift.metatron.algebra.Form.PLUS_MONOID;
 import static studio.phaseshift.metatron.isa.m.type.Poly.IMMUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
-import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -42,7 +41,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 public class RecTest extends AbstractAlgebraTest<Rec> {
 
     public RecTest() {
-        super(rec(uri("a"),jnt(1), uri("b"), jnt(2), uri("c"), jnt(3)), Set.of(PLUS_MONOID));
+        super(rec(uri("a"), jnt(1), uri("b"), jnt(2), uri("c"), jnt(3)), Set.of(PLUS_MONOID));
     }
 
     @ParameterizedTest
@@ -172,7 +171,7 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
             "{2}[a=>1,b=>2,c=>3]>>{a,{23}b/,c}                                          % {2}[{1,{23}b=>2,3}]>-",
             "{2}[a=>1,b=>2,c=>3]>>{a,b,c}.<<                                            % {6}[a=>1,b=>2,c=>3]",
             "{2}[a=>1,b=>2,c=>{4}3]>>c                                                  % {8}3",
-           // "{2}[a=>1,b=>2,c=>3]>>{a,{23}b/,c}.<<                                       % {25}[a=>1,b=>2,c=>3]", // TODO: review: is this the semantics we want?
+            // "{2}[a=>1,b=>2,c=>3]>>{a,{23}b/,c}.<<                                       % {25}[a=>1,b=>2,c=>3]", // TODO: review: is this the semantics we want?
     }, delimiter = '%')
     public void testAt(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
@@ -181,7 +180,17 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
     @ParameterizedTest
     @CsvSource(value = {
             "[a=>[knows=>[b=>[knows=>c]]]]../<a/+/b/knows>                                           % c",
-            "(a=>(knows=>(b=>(knows=>c))))../<a/+/b/knows>                                           % c"
+            "(a=>(knows=>(b=>(knows=>c))))../<a/+/b/knows>                                           % c",
+            "[a=>[knows=>[b=>[knows=>c]]]]>><a/+/b/knows>                                            % c",
+            "(a=>(knows=>(b=>(knows=>c))))>><a/+/b/knows>                                            % c",
+            "[a=>[knows=>[b=>[knows=>c]]]]>><a/+/b>                                                  % [knows=>c]",
+            "(a=>(knows=>(b=>(knows=>c))))>><a/+/b>                                                  % knows=>c",
+            "[a=>[knows=>[b=>[knows=>c]]]]>><a/+>                                                    % [b=>[knows=>c]]",
+            "(a=>(knows=>(b=>(knows=>c))))>><a/+>                                                    % b=>knows=>c",
+            "[a=>[knows=>[b=>[knows=>c]]]]>><a>                                                      % [knows=>[b=>[knows=>c]]]",
+            "(a=>(knows=>(b=>(knows=>c))))>><a>                                                      % knows=>b=>knows=>c",
+
+
     }, delimiter = '%')
     public void testRecRelBehaviors(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);

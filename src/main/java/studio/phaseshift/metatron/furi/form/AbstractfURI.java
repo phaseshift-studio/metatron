@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.furi.form;
 
+import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.C;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
@@ -334,15 +335,15 @@ public abstract class AbstractfURI implements fURI {
 
     @Override
     public boolean hasPrefix(String prefix) {
-        final List<String> prefixSegments = Arrays.asList(prefix.split("/"));
-        if (prefixSegments.size() > this.path().size())
+        final fURI prefixURI = f(prefix);
+        if (prefixURI.hasScheme() && (!this.hasScheme() || !this.scheme().equals(prefixURI.scheme())))
             return false;
-        for (int i = 0; i < prefixSegments.size(); i++) {
-            final String prefixSegment = prefixSegments.get(i);
-            //if (prefixSegment.equals("#") || prefixSegment.equals("+"))
-            //    continue;
-            final String pathSegment = this.path().get(i);
-            if (!Objects.equals(prefixSegment, pathSegment))
+        if (prefixURI.hasAuthority() && (!this.hasAuthority() || !this.authority().equals(prefixURI.authority())))
+            return false;
+        for (int i = 0; i < prefixURI.pathLength(); i++) {
+            if (this.pathLength() <= i)
+                return false;
+            if (!this.path().get(i).equals(prefixURI.path().get(i)))
                 return false;
         }
         return true;
@@ -389,6 +390,8 @@ public abstract class AbstractfURI implements fURI {
 
     @Override
     public boolean hasPostfix(final String postfix) {
+        return this.toString().endsWith(postfix);
+        /*
         final List<String> postfixSegments = new ArrayList<>();
         Collections.addAll(postfixSegments, postfix.split("/"));
         if (postfix.endsWith("/"))
@@ -397,13 +400,13 @@ public abstract class AbstractfURI implements fURI {
             return false;
         for (int i = 0; i < postfixSegments.size(); i++) {
             final String postfixSegment = postfixSegments.get(i);
-           // if (postfixSegment.equals("#") || postfixSegment.equals("+"))
-           //     continue;
+            // if (postfixSegment.equals("#") || postfixSegment.equals("+"))
+            //     continue;
             final String pathSegment = this.path().get(this.path().size() - postfixSegments.size() + i);
             if (!Objects.equals(postfixSegment, pathSegment))
                 return false;
         }
-        return true;
+        return true;*/
     }
 
     @Override
@@ -411,7 +414,7 @@ public abstract class AbstractfURI implements fURI {
         if (segment.isEmpty() && !this.path().isEmpty() && this.path().getFirst().isEmpty())
             return fURI.of(this.scheme(), this.host(), this.port(), this.path().subList(1, this.path().size()), this.c(), List.of(), this.qMap());
         if (this.hasPrefix(segment))
-            return fURI.of(this.scheme(), this.host(), this.port(), this.path().subList(segment.split("/").length, this.path().size()), this.c(), List.of(), this.qMap());
+            return this.pretract(segment.split("/").length);
         return this;
     }
 
@@ -428,13 +431,10 @@ public abstract class AbstractfURI implements fURI {
         boolean hasBlank = this.hasBlankCap(true);
         List<String> newPath = new ArrayList<>(this.path());
         if (hasBlank) newPath.removeFirst();
-        for (int i = steps; i < newPath.size(); i++) {
+        for (int i = 0; i < steps; i++) {
             newPath.removeFirst();
         }
-        if (hasBlank) newPath.addFirst("");
-        if (newPath.stream().allMatch(String::isEmpty)) {
-            newPath.clear();
-        }
+        if (hasBlank && !newPath.isEmpty() && !newPath.getFirst().isEmpty()) newPath.addFirst("");
         return fURI.of(this.scheme(), this.host(), this.port(), newPath, this.c(), List.of(), this.qMap());
     }
 
@@ -491,7 +491,7 @@ public abstract class AbstractfURI implements fURI {
     @Override
     public fURI dom() {
         if (this.hasQ(DOM))
-            return Singleton.of(this.q(DOM));
+            return this.qValue(DOM, fURI.class);
         return ALL;
     }
 
@@ -499,7 +499,7 @@ public abstract class AbstractfURI implements fURI {
     @Override
     public fURI rng() {
         if (this.hasQ(RNG))
-            return Singleton.of(this.q(RNG));
+            return this.qValue(RNG, fURI.class);
         return ALL;
     }
 
@@ -525,6 +525,8 @@ public abstract class AbstractfURI implements fURI {
     public <T> T qValue(final String key, final Class<T> valueClass) {
         if (String.class.isAssignableFrom(valueClass))
             return (T) this.qMap().get(key);
+        else if (fURI.class.isAssignableFrom(valueClass))
+            return (T) f(this.qMap().get(key));
         else if (Integer.class.isAssignableFrom(valueClass))
             return (T) Integer.valueOf(this.qMap().get(key));
         else if (Long.class.isAssignableFrom(valueClass))

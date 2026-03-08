@@ -37,7 +37,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import static studio.phaseshift.metatron.Tokens.MONAD;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
@@ -457,18 +457,24 @@ public interface Inst extends Call {
             // do nothing
         }
 
-        public static Optional<Obj> alignLHSType(final Obj lhs, final Obj rhs) {
+        public static <O extends Obj> Optional<O> alignLHSType(final Obj lhs, final O rhs) {
             if (!lhs.c().within(rhs.c()))
                 return Optional.empty();
             if (lhs.type().equals(rhs.type()))
-                return Optional.of(lhs);
+                return Optional.of((O) lhs);
             else {
                 try {
-                    return Optional.of(lhs.as(rhs.type()));
+                    return Optional.of((O) lhs.as(rhs.type()));
                 } catch (final Exception e) {
                     return Optional.empty();
                 }
             }
+        }
+
+        public static <O extends Obj> O alignRHSType(final O lhs, final Obj rhs) {
+            return (O) (lhs.type().equals(rhs.type()) ? rhs : rhs.as(lhs.type()));
+
+
         }
 
         public static Inst applyArgs(final Obj lhs, final Inst inst) {

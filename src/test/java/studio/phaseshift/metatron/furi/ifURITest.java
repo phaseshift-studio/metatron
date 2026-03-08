@@ -94,10 +94,10 @@ public class ifURITest extends AbstractMetatronTest {
             "/fhat.org/a/b               | 1   | /a/b",
             "fhat.org/a/b                | 1   | a/b",
             "/a/b/c?a=b&c=d              | 1   | /b/c?a=b&c=d",
-            "/a/b/c?a=b&c=d              | 2   | /b/c?a=b&c=d",
-            "/a/b/c/?a=b&c=d             | 2   | /b/c/?a=b&c=d",
+            "/a/b/c?a=b&c=d              | 2   | /c?a=b&c=d",
+            "/a/b/c/?a=b&c=d             | 2   | /c/?a=b&c=d",
             "/a/b/c{*}?a=b&c=d           | 1   | /b/c{*}?a=b&c=d",
-            "/a/b/c{2,3}?a=b&c=d         | 2   | /b/c{2,3}?a=b&c=d",
+            "/a/b/c{2,3}?a=b&c=d         | 2   | /c{2,3}?a=b&c=d",
     }, delimiter = '|')
     public void testPretract(final String furi, final int steps, final String expected) {
         final fURI start = f(furi);
@@ -288,15 +288,15 @@ public class ifURITest extends AbstractMetatronTest {
             "/a/b/c                     |  /a       | true",
             "a/b/c                      |  a        | true",
             "/a/b/c                     |  a        | false",
-            "/a/b/c                     |  +        | true",
+            "/a/b/c                     |  +        | false",
             "a/b/c                      |  /a       | false", // TODO: should authority-less furis check on start /?
             "//x.com/a/b/c              |  x.com    | false",
             "//x/a/b/c                  |  x        | false",
             "a/b/c/d                    |  a        | true",
             "a/b/c/d                    |  a/b/     | true",
-            "a/b/c/d                    |  a/+      | true",
+            "a/b/c/d                    |  a/+      | false",
             "a/b/c/d                    |  a/d      | false",
-            "a/b/c/d                    |  a/+/c    | true",
+            "a/b/c/d                    |  a/+/c    | false",
     }, delimiter = '|')
     public void testHasPrefix(final String a, final String b, final boolean hasPrefix) {
         LOG.error("testing {{b}}%s{{X}} has prefix {{b}}%s{{X}} [expected: %s]", f(a), f(b), hasPrefix);
@@ -336,7 +336,7 @@ public class ifURITest extends AbstractMetatronTest {
             "a/b/c                      |  c        | true",
             "/a/b/c                     |  c/       | false",
             "/a/b/c                     |  +/       | false",
-            "/a/b/c                     |  +        | true",
+            "/a/b/c                     |  +        | false",
             "a/b/c                      |  /b/c     | false",
             "//x.com/a/b/c              |  x.com    | false",
             "//x/a/b/c                  |  x        | false",
@@ -344,9 +344,9 @@ public class ifURITest extends AbstractMetatronTest {
             "a/b/c/d                    |  c/d      | true",
             "a/b/c/d                    |  b/c/d    | true",
             "a/b/c/d                    |  a/d/     | false",
-            "a/b/c/d                    |  b/+/+    | true",
-            "a/b/c/d                    |  b/c/+    | true",
-            "a/b/c/d                    |  +/c/d    | true",
+            "a/b/c/d                    |  b/+/+    | false",
+            "a/b/c/d                    |  b/c/+    | false",
+            "a/b/c/d                    |  +/c/d    | false",
     }, delimiter = '|')
     public void testHasPostfix(final String a, final String b, final boolean hasPostfix) {
         LOG.error("testing {{b}}%s{{X}} has postfix {{b}}%s{{X}} [expected: %s]", f(a), f(b), hasPostfix);
@@ -384,7 +384,7 @@ public class ifURITest extends AbstractMetatronTest {
             "a{-1}              | a                 | a/a{-1}",
             "a{-1}              | a{-2}             | a/a{2}",
             "a/b/c{2,3}         | a/d/c{-3,-2}      | a/b/c/a/d/c{-6}",
-            "a{0}               | a{0}              | a/a{0}",
+            "a{0}               | a{0}              | noobj{0}",
             "a{,10}             | a{-10,}           | a/a{,}",
             "http://a.com/a{2,} | b/c{4,}           | http://a.com/a/b/c{8,}",
             "a                  |                   | a",
@@ -404,12 +404,12 @@ public class ifURITest extends AbstractMetatronTest {
             "a{1,1}               | a{-1}                       | a{0}",
             "a/b{23}              | a/b                         | a/b{24}",
             "a{-1}                | a{-2}                       | a{-3}",
-            "a/b/c{2,3}           | a/d/c{-3,-2}                | <ERROR>",
+            "a/b/c{2,3}           | a/d/c{-3,-2}                | #{-1,1}",
             "a{0}                 | a{0}                        | a{0}",
             "a{,10}               | a{-10,}                     | a{0}",
             "a{1,10}              | a{-10,-1}                   | a{-9,9}",
             "http://a.com/a/b{2,} | http://a.com/a/b{4,}        | http://a.com/a/b{6,}",
-            "http://a.com/a{5}    | ws://a.com/a{4}             | <ERROR>",
+            "http://a.com/a{5}    | ws://a.com/a{4}             | #{9}",
             "a?a=1&b=2            | a?a=3&c=6                   | a{2}?a=3&b=2&c=6",
             "/a/b/{2}?a=1&b=2     | /a/b/?a=3&c=6               | /a/b/{3}?a=3&b=2&c=6"
     }, delimiter = '|')

@@ -53,6 +53,6 @@ public class ObjConsoleSerializer extends ObjCleanStringSerializer {
 
     @Override
     public String write(final Obj obj) {
-        return clipString(super.write(obj), 20);
+        return clipString(super.write(obj), Console.getTerminal().getHeight());
     }
 }

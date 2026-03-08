@@ -349,6 +349,13 @@ public class Console extends JRec implements Closeable, Runnable {
                         reader.getBuffer().write("\n");
                         return true;
                     }, alt('w'));
+            /// TURN ON/OFF TYPE CHECKING
+            getKeyMap().bind((Widget)
+                    () -> {
+                        BootLoader.TYPE_CHECK = !BootLoader.TYPE_CHECK;
+                        //LOG.info("type checking %s", BootLoader.TYPE_CHECK ? "{{g}}enabled{{X}}" : "{{r}}disabled{{X}}");
+                        return true;
+                    }, ctrl('t'));
             /// CREATE NEW LINE BELOW CURRENT LOCATION
             getKeyMap().bind((Widget)
                     () -> {

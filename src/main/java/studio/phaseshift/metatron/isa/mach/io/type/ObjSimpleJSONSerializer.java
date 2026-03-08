@@ -130,9 +130,9 @@ public class ObjSimpleJSONSerializer extends AbstractObjSerializer<JsonElement> 
                     final String jpstr = jp.getAsString();
                     if (jpstr.startsWith("<") && jpstr.endsWith(">"))
                         return uri(jpstr.substring(1, jpstr.length() - 1));
-                    else if (!jpstr.contains(" ") && jpstr.contains("/"))
+                    else if (!jpstr.contains(" ") && jpstr.contains("/") && !jpstr.contains("^") && !jpstr.contains("|"))
                         return uri(jpstr);
-                    else if (this.biasTowardsURI && !jpstr.contains(" "))
+                    else if (this.biasTowardsURI && !jpstr.contains(" ") && !jpstr.contains("^") && !jpstr.contains("|"))
                         return uri(jpstr);
                     try {
                         final Result r = mParser.parse(jpstr);

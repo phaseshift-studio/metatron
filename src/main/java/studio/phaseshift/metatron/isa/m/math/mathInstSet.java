@@ -21,10 +21,7 @@ package studio.phaseshift.metatron.isa.m.math;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
-import studio.phaseshift.metatron.isa.m.type.Inst;
-import studio.phaseshift.metatron.isa.m.type.Int;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.type.*;
 
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -90,7 +87,7 @@ public class mathInstSet extends AbstractInstSet {
     }
 
     public static final Type DATA_SIZE_TYPE = Type.Builder.build()
-            .tid(INT_TID)
+            .tid(REAL_TID)
             .vid(MATH_DATA_SIZE_TID)
             .create();
 
@@ -98,14 +95,14 @@ public class mathInstSet extends AbstractInstSet {
             .tid(MATH_DATA_SIZE_TID)
             .vid(MATH_BYTE_TID)
             .constructor(lhs -> {
-                final Int arg = lhs.asInt();
+                final Real arg = lhs.asReal();
                 final String tid = arg.tid().toString();
                 return switch (tid) {
-                    case MATH_KBYTE_STRING -> arg.jvm(arg.asInt().jvm() * 1024);
-                    case MATH_MBYTE_STRING -> arg.jvm(arg.asInt().jvm() * 1024 * 1024);
-                    case MATH_GBYTE_STRING -> arg.jvm(arg.asInt().jvm() * 1024 * 1024 * 1024);
-                    case MATH_TBYTE_STRING -> arg.jvm(arg.asInt().jvm() * 1024L * 1024 * 1024 * 1024);
-                    case MATH_PBYTE_STRING -> arg.jvm(arg.asInt().jvm() * 1024L * 1024 * 1024 * 1024 * 1024);
+                    case MATH_KBYTE_STRING -> arg.jvm(arg.asReal().jvm() * 1024.0d);
+                    case MATH_MBYTE_STRING -> arg.jvm(arg.asReal().jvm() * 1024.0d * 1024.0d);
+                    case MATH_GBYTE_STRING -> arg.jvm(arg.asReal().jvm() * 1024.0d * 1024.0d * 1024.0d);
+                    case MATH_TBYTE_STRING -> arg.jvm(arg.asReal().jvm() * 1024.0d * 1024.0d * 1024.0d * 1024.0d);
+                    case MATH_PBYTE_STRING -> arg.jvm(arg.asReal().jvm() * 1024.0d * 1024.0d * 1024.0d * 1024.0d * 1024.0d);
                     default -> arg;
                 };
             }).create();
@@ -114,14 +111,14 @@ public class mathInstSet extends AbstractInstSet {
             .tid(MATH_DATA_SIZE_TID)
             .vid(MATH_KBYTE_TID)
             .constructor(lhs -> {
-                final Int arg = lhs.asInt();
+                final Real arg = lhs.asReal();
                 final String tid = arg.tid().toString();
                 return switch (tid) {
-                    case MATH_BYTE_STRING -> arg.jvm(arg.asInt().jvm() / 1024);
-                    case MATH_MBYTE_STRING -> arg.jvm(arg.asInt().jvm() * 1024);
-                    case MATH_GBYTE_STRING -> arg.jvm(arg.asInt().jvm() * 1024 * 1024);
-                    case MATH_TBYTE_STRING -> arg.jvm(arg.asInt().jvm() * 1024L * 1024 * 1024);
-                    case MATH_PBYTE_STRING -> arg.jvm(arg.asInt().jvm() * 1024L * 1024 * 1024 * 1024);
+                    case MATH_BYTE_STRING -> arg.jvm(arg.asReal().jvm() / 1024.0d);
+                    case MATH_MBYTE_STRING -> arg.jvm(arg.asReal().jvm() * 1024.0d);
+                    case MATH_GBYTE_STRING -> arg.jvm(arg.asReal().jvm() * 1024.0d * 1024.0d);
+                    case MATH_TBYTE_STRING -> arg.jvm(arg.asReal().jvm() * 1024.0d * 1024.0d * 1024.0d);
+                    case MATH_PBYTE_STRING -> arg.jvm(arg.asReal().jvm() * 1024.0d * 1024.0d * 1024.0d * 1024.0d);
                     default -> arg;
                 };
             }).create();
@@ -130,14 +127,14 @@ public class mathInstSet extends AbstractInstSet {
             .tid(MATH_DATA_SIZE_TID)
             .vid(MATH_MBYTE_TID)
             .constructor(lhs -> {
-                final Int arg = lhs.asInt();
+                final Real arg = lhs.asReal();
                 final String tid = arg.tid().toString();
                 return switch (tid) {
-                    case MATH_BYTE_STRING -> arg.jvm(arg.asInt().jvm() / 1024 / 1024);
-                    case MATH_KBYTE_STRING -> arg.jvm(arg.asInt().jvm() / 1024);
-                    case MATH_GBYTE_STRING -> arg.jvm(arg.asInt().jvm() * 1024);
-                    case MATH_TBYTE_STRING -> arg.jvm(arg.asInt().jvm() * 1024L * 1024);
-                    case MATH_PBYTE_STRING -> arg.jvm(arg.asInt().jvm() * 1024L * 1024 * 1024);
+                    case MATH_BYTE_STRING -> arg.jvm(arg.asReal().jvm() / 1024.0d / 1024.0d);
+                    case MATH_KBYTE_STRING -> arg.jvm(arg.asReal().jvm() / 1024.0d);
+                    case MATH_GBYTE_STRING -> arg.jvm(arg.asReal().jvm() * 1024.0d);
+                    case MATH_TBYTE_STRING -> arg.jvm(arg.asReal().jvm() * 1024.0d * 1024.0d);
+                    case MATH_PBYTE_STRING -> arg.jvm(arg.asReal().jvm() * 1024.0d * 1024.0d * 1024.0d);
                     default -> arg;
                 };
             }).create();
@@ -146,14 +143,14 @@ public class mathInstSet extends AbstractInstSet {
             .tid(MATH_DATA_SIZE_TID)
             .vid(MATH_GBYTE_TID)
             .constructor(lhs -> {
-                final Int arg = lhs.asInt();
+                final Real arg = lhs.asReal();
                 final String tid = arg.tid().toString();
                 return switch (tid) {
-                    case MATH_BYTE_STRING -> arg.jvm(arg.asInt().jvm() / 1024L / 1024L / 1024L);
-                    case MATH_KBYTE_STRING -> arg.jvm(arg.asInt().jvm() / 1024L / 1024L);
-                    case MATH_MBYTE_STRING -> arg.jvm(arg.asInt().jvm() / 1024L);
-                    case MATH_TBYTE_STRING -> arg.jvm(arg.asInt().jvm() * 1024L);
-                    case MATH_PBYTE_STRING -> arg.jvm(arg.asInt().jvm() * 1024L * 1024L);
+                    case MATH_BYTE_STRING -> arg.jvm(arg.asReal().jvm() / 1024.0d / 1024.0d / 1024.0d);
+                    case MATH_KBYTE_STRING -> arg.jvm(arg.asReal().jvm() / 1024.0d / 1024.0d);
+                    case MATH_MBYTE_STRING -> arg.jvm(arg.asReal().jvm() / 1024.0d);
+                    case MATH_TBYTE_STRING -> arg.jvm(arg.asReal().jvm() * 1024.0d);
+                    case MATH_PBYTE_STRING -> arg.jvm(arg.asReal().jvm() * 1024.0d * 1024.0d);
                     default -> arg;
                 };
             }).create();
@@ -162,14 +159,14 @@ public class mathInstSet extends AbstractInstSet {
             .tid(MATH_DATA_SIZE_TID)
             .vid(MATH_TBYTE_TID)
             .constructor(lhs -> {
-                final Int arg = lhs.asInt();
+                final Real arg = lhs.asReal();
                 final String tid = arg.tid().toString();
                 return switch (tid) {
-                    case MATH_BYTE_STRING -> arg.jvm(arg.asInt().jvm() / 1024L / 1024L / 1024L / 1024L);
-                    case MATH_KBYTE_STRING -> arg.jvm(arg.asInt().jvm() / 1024L / 1024L / 1024L);
-                    case MATH_MBYTE_STRING -> arg.jvm(arg.asInt().jvm() / 1024L / 1024L);
-                    case MATH_GBYTE_STRING -> arg.jvm(arg.asInt().jvm() / 1024L);
-                    case MATH_PBYTE_STRING -> arg.jvm(arg.asInt().jvm() * 1024L);
+                    case MATH_BYTE_STRING -> arg.jvm(arg.asReal().jvm() / 1024.0d / 1024.0d / 1024.0d / 1024.0d);
+                    case MATH_KBYTE_STRING -> arg.jvm(arg.asReal().jvm() / 1024.0d / 1024.0d / 1024.0d);
+                    case MATH_MBYTE_STRING -> arg.jvm(arg.asReal().jvm() / 1024.0d / 1024.0d);
+                    case MATH_GBYTE_STRING -> arg.jvm(arg.asReal().jvm() / 1024.0d);
+                    case MATH_PBYTE_STRING -> arg.jvm(arg.asReal().jvm() * 1024.0d);
                     default -> arg;
                 };
             }).create();
@@ -178,14 +175,14 @@ public class mathInstSet extends AbstractInstSet {
             .tid(MATH_DATA_SIZE_TID)
             .vid(MATH_PBYTE_TID)
             .constructor(lhs -> {
-                final Int arg = lhs.asInt();
+                final Real arg = lhs.asReal();
                 final String tid = arg.tid().toString();
                 return switch (tid) {
-                    case MATH_BYTE_STRING -> arg.jvm(lhs.asInt().jvm() / 1024L / 1024L / 1024L / 1024L / 1024L);
-                    case MATH_KBYTE_STRING -> arg.jvm(lhs.asInt().jvm() / 1024L / 1024L / 1024L / 1024L);
-                    case MATH_MBYTE_STRING -> arg.jvm(lhs.asInt().jvm() / 1024L / 1024L / 1024L);
-                    case MATH_GBYTE_STRING -> arg.jvm(lhs.asInt().jvm() / 1024L / 1024L);
-                    case MATH_TBYTE_STRING -> arg.jvm(lhs.asInt().jvm() / 1024L);
+                    case MATH_BYTE_STRING -> arg.jvm(arg.asReal().jvm() / 1024.0d / 1024.0d / 1024.0d / 1024.0d / 1024.0d);
+                    case MATH_KBYTE_STRING -> arg.jvm(arg.asReal().jvm() / 1024.0d / 1024.0d / 1024.0d / 1024.0d);
+                    case MATH_MBYTE_STRING -> arg.jvm(arg.asReal().jvm() / 1024.0d / 1024.0d / 1024.0d);
+                    case MATH_GBYTE_STRING -> arg.jvm(arg.asReal().jvm() / 1024.0d / 1024.0d);
+                    case MATH_TBYTE_STRING -> arg.jvm(arg.asReal().jvm() / 1024.0d);
                     default -> arg;
                 };
             }).create();

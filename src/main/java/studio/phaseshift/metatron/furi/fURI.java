@@ -58,7 +58,7 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
     }
 
     default boolean hasAuthority() {
-        return this.hasHost();
+        return null != this.host() && -1 != this.port();
     }
 
     default boolean isGeneric() {
@@ -207,11 +207,11 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
     fURI dom(final fURI dom);
 
     default boolean hasDom() {
-        return !this.dom().equals(Singleton.ALL);
+        return this.hasQ(DOM);
     }
 
     default boolean hasRng() {
-        return !this.rng().equals(Singleton.ALL);
+        return this.hasQ(RNG);
     }
 
     fURI rng();

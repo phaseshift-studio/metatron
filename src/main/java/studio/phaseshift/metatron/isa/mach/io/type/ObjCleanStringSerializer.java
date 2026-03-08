@@ -127,7 +127,7 @@ public class ObjCleanStringSerializer extends AbstractObjSerializer<String> {
 
     @Override
     public String writeReal(final Real real) {
-        return handleIds(real, real.jvm().toString());
+        return handleIds(real, String.format("%.2f",real.jvm()));
     }
 
     @Override
@@ -180,7 +180,7 @@ public class ObjCleanStringSerializer extends AbstractObjSerializer<String> {
                 .map(this::write)
                 .reduce(",", (a, b) -> a + b + ",");
         return handleIds(inst, "(" +
-                (inst.args().isEmpty() ? "" : internal.substring(1, internal.length() - 1)) + ")" + (inst.f() == null ? "" : "{" + inst.f() + "}"));
+                (inst.args().isEmpty() || inst.args().isNoObj() ? "" : internal.substring(1, internal.length() - 1)) + ")" + (inst.f() == null ? "" : "{" + inst.f() + "}"));
     }
 
     @Override

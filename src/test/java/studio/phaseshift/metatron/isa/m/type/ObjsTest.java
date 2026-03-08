@@ -90,4 +90,5 @@ public class ObjsTest extends AbstractObjTest {
     public void testMerge(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
+    
 }

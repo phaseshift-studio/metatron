@@ -162,6 +162,7 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>>, Obj {
                     instC(RNG_INST_TID.dom(REL_TID).rng(ALL.some()), lst(), (lhs, inst) -> lhs.relValue().get1()),
                     instC(LSHIFT_INST_TID.dom(REL_TID).rng(ALL_STAR), lst(), (lhs, inst) -> lhs.<Rel>as().first()),
                     instC(RSHIFT_INST_TID.dom(REL_TID).rng(ALL_STAR), lst(), (lhs, inst) -> lhs.<Rel>as().second()),
+                    instC(RSHIFT_INST_TID.dom(REL_TID).rng(ALL_STAR), lst(T(ALL)), (lhs, inst) -> lhs.asRel().at(inst.arg(0))),
                     instC(GET_INST_TID.dom(REL_TID).rng(A.maybe()), lst(T(ALL)), (lhs, inst) -> lhs.<Rel>as().at(inst.arg(0))),
                     instC(SELECT_INST_TID.dom(REL_TID).rng(REL_TID.maybe()), lst(T(REL_TID)), (lhs, inst) -> selectRelRecursion(lhs.asRel(), inst.arg(0).asRel()))
             ));

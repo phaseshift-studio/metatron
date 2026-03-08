@@ -55,9 +55,11 @@ import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_ISA_TID;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_TID;
 import static studio.phaseshift.metatron.isa.llm.ollama.space.ollamaSpace.OLLAMA_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.BYTE_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Real.REAL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
@@ -135,7 +137,7 @@ public class ollamaInstSet extends AbstractInstSet {
                     uri(NAME), URI_TYPE,
                     uri(HOST), URI_TYPE,
                     uri(THINK).c(cInt::maybe), BOOL_TYPE,
-                    uri(SIZE), INT_TYPE,
+                    uri(SIZE), BYTE_TYPE,
                     uri(MEMORY).maybe(), URI_TYPE,
                     uri(SKILL).maybe(), LST_TYPE,
                     uri(TOOL).maybe(), LST_TYPE))
@@ -238,7 +240,7 @@ public class ollamaInstSet extends AbstractInstSet {
             uri(NAME), "the name of the model",
             uri(HOST), "the ollama host endpoint",
             uri(THINK).c(cInt::maybe), "whether to think before responding",
-            uri(SIZE), "the size of the model",
+            uri(SIZE), "the size of the model in bytes",
             uri(MEMORY).maybe(), "a pointer to the llm's memory",
             uri(SKILL).maybe(), "the skills to use",
             uri(TOOL).maybe(), "the tools to use"), "an ollama backed large language model");
