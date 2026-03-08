@@ -22,10 +22,10 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.c.cInt;
-import studio.phaseshift.metatron.isa.m.parser.mParser;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.furi.ifURI.parseQuery;
@@ -248,14 +248,14 @@ public class ifURITest extends AbstractMetatronTest {
     public void testResolve(final String f1, final String f2) {
         final ifURI furi1a = ifURI.of(f1);
         final ifURI furi1b = ifURI.of(f2);
-      //  final ifURI furi2a = mParser.m_furi().parse(f1).get();
-      //  final ifURI furi2b = mParser.m_furi().parse(f2).get();
-       // LOG.info("testing {{b}}%s{{/b}} {{g}}=>{{/g}} {{b}}%s{{b}} resolution", furi1a, furi2b);
+        //  final ifURI furi2a = mParser.m_furi().parse(f1).get();
+        //  final ifURI furi2b = mParser.m_furi().parse(f2).get();
+        // LOG.info("testing {{b}}%s{{/b}} {{g}}=>{{/g}} {{b}}%s{{b}} resolution", furi1a, furi2b);
         //assertEquals(furi1a.resolve(), furi2b);
         //assertEquals(furi2a.resolve(), furi1b);
         assertEquals(furi1a.resolve(), furi1b);
     }
-    
+
     @ParameterizedTest
     @CsvSource(value = {
             "/a/b/c                     |  /a       | false",
@@ -648,8 +648,8 @@ public class ifURITest extends AbstractMetatronTest {
             "a/b/c?a=2|a/b/c?#|true",
             "a/b/c?a=2|a/#|true",
             "#|#|true"
-    //":y|+:+|false",       why are these wrong? they are inverses of each other.
-    //        ":y|:+|true",
+            //":y|+:+|false",       why are these wrong? they are inverses of each other.
+            //        ":y|:+|true",
     }, delimiter = '|', nullValues = "null")
     void testMatches(final String a, final String b, final boolean shouldMatch) {
         final ifURI furi1a = ifURI.of(a);
@@ -713,6 +713,34 @@ public class ifURITest extends AbstractMetatronTest {
     }, delimiter = '|')
     void testHasPattern(final String furi, final boolean pattern) {
         assertEquals(pattern, ifURI.of(furi).hasPattern());
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "temp{32}?a<=b                                         | temp                      | a         | b       | 32   |",
+            "temp{32}?a<=b                                         | temp                      | a         | b       | 32   |",
+            "temp{2,32}?/m/int<=/m/str                             | temp                      | /m/int    | /m/str  | 2,32 |",
+            "temp{2,32}?int{?}<=str{*}                             | temp                      | int{0,1}  | str{0,} | 2,32 |",
+            "http://test.com:56/temp{?}?int{2,35}<=str{**}         | http://test.com:56/temp   | int{2,35} | str{,}  | 0,1  |",
+            "#{*}?int{2,35}<=str{**}                               | #                         | int{2,35} | str{,}  | 0,   |",
+            "temp{*}?int{2,35}<=str{**}&a=b&c=d                    | temp                      | int{2,35} | str{,}  | 0,   |a=b&c=d",
+            "/temp{*}?int{2,35}<=str{**}&a=2&c&g=/m/int            | /temp                     | int{2,35} | str{,}  | 0,   |a=2&c&g=/m/int",
+            "/temp{*}?rng=int{2,35}&dom=str{**}&a=2&c&g=/m/int     | /temp                     | int{2,35} | str{,}  | 0,   |a=2&c&g=/m/int",
+    }, delimiter = '|')
+    void testDomRng(final String furi, final String base, final String rng, final String dom, final String coefficient, final String query) {
+        final ifURI furiObj = ifURI.of(furi);
+        final ifURI baseObj = ifURI.of(base);
+        final ifURI domObj = ifURI.of(dom);
+        final ifURI rngObj = ifURI.of(rng);
+        final C<?, ?> cObj = cInt.of(coefficient);
+        assertEquals(baseObj, furiObj.basePath());
+        assertEquals(cObj, furiObj.c());
+        assertEquals(domObj, furiObj.dom());
+        assertEquals(rngObj, furiObj.rng());
+        Map<String, String> queryMap = parseQuery(query);
+        queryMap.forEach((k, v) -> assertEquals(v, furiObj.q(k)));
+        //System.out.println(queryMap + "---" + furiObj.qMap());
+        assertEquals(furiObj.qMap().size(), queryMap.size() + 2); // every test case must have a dom<=rng 
     }
 
 

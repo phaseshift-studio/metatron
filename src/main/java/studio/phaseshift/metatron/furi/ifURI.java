@@ -23,13 +23,13 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.form.*;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import static studio.phaseshift.metatron.Tokens.DOM;
+import static studio.phaseshift.metatron.Tokens.RNG;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -46,11 +46,11 @@ public interface ifURI {
         return null != this.scheme();
     }
 
-   /* default String authority() {
+    default String authority() {
         if (this.hasHost())
             return this.hasPort() ? this.host() + ":" + this.port() : this.host();
         return null;
-    }*/
+    }
 
     String host();
 
@@ -112,22 +112,17 @@ public interface ifURI {
 
     int pathLength();
 
-
     C<?, ?> c();
 
     ifURI c(final C<?, ?> coefficient);
 
-    //default ifURI dom() {
-    //    return this.q(DOM);
-    //}
-
     ifURI dom();
 
-    ifURI dom(ifURI dom);
+    ifURI dom(final ifURI dom);
 
     ifURI rng();
 
-    ifURI rng(ifURI rng);
+    ifURI rng(final ifURI rng);
 
     String qString();
 
@@ -140,6 +135,8 @@ public interface ifURI {
     String q(final String key);
 
     ifURI q(final String key, final Object value);
+
+    boolean hasQ(final String key);
 
     boolean isRelative();
 
@@ -183,9 +180,14 @@ public interface ifURI {
         return this.c().isMaybeSome();
     }
 
+
     /// ////////////////////////////////////////////////
 
     class Singleton {
+
+        public static final ifURI WILD_ALL = new XXPXXfURI(List.of("#"));
+        public static final ifURI WILD_ONE = new XXPXXfURI(List.of("+"));
+
         private static final ifURI INSTANCE = new XXXXXfURI();
 
         public static ifURI empty() {
@@ -195,12 +197,19 @@ public interface ifURI {
        /* public static ifURI f(final String furi) {
             return of(furi);
         }*/
-        
+
         public static ifURI of(final String furi) {
             return ifURI.of(furi);
         }
 
-        public static final Pattern FURI_PATTERN = Pattern.compile("((?<scheme>[^:/.]+):)?(//((?<host>[^:/]+)(:(?<port>\\d+))?))?(?<path>[^?{]+)?(\\{(?<coefficient>[^}]+)})?(\\?(?<query>.+))?");
+        public static final Pattern FURI_PATTERN = Pattern.compile("(" +
+                "(?<scheme>[^:/.]+):)?" +
+                "(//((?<host>[^:/]+)(:(?<port>\\d+))?))?" +
+                "(?<path>[^?{]+)?(\\{(?<coefficient>[^}]+)})?" +
+                "(\\?" +
+                "((?<rng>[^<&]+)<=(?<dom>[^&?]+))?" +
+                "&?" +
+                "(?<query>(([^&=]+(=[^&=]+)?&?)+))?)?");
     }
 
     static ifURI of(final String furi) {
@@ -215,7 +224,8 @@ public interface ifURI {
         final String pathStr = matcher.group("path");
         final cInt coefficient = matcher.group("coefficient") == null ? cInt.ONE() : cInt.of(matcher.group("coefficient").replace("{", "").replace("}", ""));
         final String queryStr = matcher.group("query");
-        final Map<String, String> query = queryStr == null ? Map.of() : parseQuery(queryStr);
+        final String dom = matcher.group("dom");
+        final String rng = matcher.group("rng");
         final List<String> path = null == pathStr ? List.of() : new ArrayList<>(Arrays.asList(pathStr.split("/")));
         if (null != pathStr) {
             if (pathStr.endsWith("/"))
@@ -223,6 +233,18 @@ public interface ifURI {
             if (path.stream().allMatch(String::isEmpty)) {
                 path.clear();
             }
+        }
+        final Map<String, String> query;
+        if (dom != null || rng != null || queryStr != null) {
+            query = new LinkedHashMap<>();
+            if (dom != null)
+                query.put(DOM, dom);
+            if (rng != null)
+                query.put(RNG, rng);
+            if (queryStr != null)
+                query.putAll(parseQuery(queryStr));
+        } else {
+            query = Map.of();
         }
         return ifURI.of(scheme, host, port, path, coefficient, List.of(), query);
     }

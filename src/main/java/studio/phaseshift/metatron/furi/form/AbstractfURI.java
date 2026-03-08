@@ -26,6 +26,8 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static studio.phaseshift.metatron.Tokens.DOM;
+import static studio.phaseshift.metatron.Tokens.RNG;
 import static studio.phaseshift.metatron.furi.fURI.f;
 
 /*
@@ -353,10 +355,6 @@ public abstract class AbstractfURI implements ifURI {
 
     @Override
     public ifURI retract(final String segment) {
-
-
-        //   if (segment.isEmpty() && this.path().getLast().isEmpty())
-        //    return ifURI.of(this.scheme(), this.host(), this.port(), this.path().subList(0, this.path().size() - 1), this.c(), List.of(), this.qMap());
         if (this.hasPrefix(segment))
             return ifURI.of(this.scheme(), this.host(), this.port(), this.path().subList(0, this.path().size() - segment.split("/").length), this.c(), List.of(), this.qMap());
         return this;
@@ -368,16 +366,24 @@ public abstract class AbstractfURI implements ifURI {
         return cInt.ONE();
     }
 
+    @Override
+    public boolean hasQ(final String key) {
+        return this.qMap().containsKey(key);
+    }
 
     @Override
     public ifURI dom() {
-        return null;
+        if (this.hasQ(DOM))
+            return ifURI.of(this.q(DOM));
+        return Singleton.WILD_ALL;
     }
 
 
     @Override
     public ifURI rng() {
-        return null;
+        if (this.hasQ(RNG))
+            return ifURI.of(this.q(RNG));
+        return Singleton.WILD_ALL;
     }
 
 
