@@ -29,7 +29,8 @@ import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.*;
 
-import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.NOOBJ_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -61,7 +62,7 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
 
     public AbstractInstSet(final fURI tid, final fURI vid) {
         super(new LinkedHashMap<>(), mutableMap(
-                uri(Tokens.PATTERN), uri(tid.extend(fURI.ALL))), tid, vid);
+                uri(Tokens.PATTERN), uri(tid.extend(ALL))), tid, vid);
         this.at(uri(Tokens.Q), lst(new DocQ()), MUTABLE);
         if (Router.loaded()) {
             this.sugars().forEach(mParser::addSugar);
@@ -161,7 +162,7 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
                 if (inst.dom().isCode()) {
                     REWRITE_TABLE.put(inst.tid(), inst);
                 } else {
-                    Router.global().registerRewrite(fURI.of(vid.name()), vid);
+                    Router.global().registerRewrite(f(vid.name()), vid);
                     INST_TABLE.computeIfAbsent(inst.tid().basePath(), k -> new LinkedHashSet<>()).add(inst);
                 }
             } else if (obj.isType()) {

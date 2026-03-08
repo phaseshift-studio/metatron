@@ -20,7 +20,7 @@ package studio.phaseshift.metatron;
 
 import studio.phaseshift.metatron.furi.fURI;
 
-import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)

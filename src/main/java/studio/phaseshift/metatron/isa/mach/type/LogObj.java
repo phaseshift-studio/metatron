@@ -35,6 +35,7 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.lang.reflect.Field;
 import java.util.Map;
 
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_ISA_TID;
 
@@ -43,7 +44,7 @@ public class LogObj extends MRec {
     public static final fURI LOG_TID = MACH_ISA_TID.extend("log");
 
     public LogObj(final Obj log) {
-        super(log.recValue(), LOG_TID, fURI.fnull);
+        super(log.recValue(), LOG_TID,null);
     }
 
     protected LogObj(final Rec levels, final fURI vid) {
@@ -78,7 +79,7 @@ public class LogObj extends MRec {
                         } catch (final Exception e) {
                             throw MTronException.of(e);
                         }
-                    }).findFirst().orElse("TRACE"), fURI.dotPath(root.getClass().getCanonicalName()));
+                    }).findFirst().orElse("TRACE"), f(root.getClass().getCanonicalName().replace(".", "/")));
         } else {
             final Appender<?> appender = root.getAppender("STDOUT");
             if (null != appender)

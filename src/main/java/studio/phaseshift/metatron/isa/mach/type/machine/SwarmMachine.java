@@ -64,7 +64,7 @@ public class SwarmMachine extends AbstractMachine implements Machine {
     }
 
     public static SwarmMachine of(final Call code) {
-        return new SwarmMachine(Map.of(uri(CODE), code.isCode() ? code.as() : new MCode(code.insts(), CODE_TID, fURI.fnull)), MACH_ISA_TID, fURI.fnull);
+        return new SwarmMachine(Map.of(uri(CODE), code.isCode() ? code.as() : new MCode(code.insts(), CODE_TID,null)), MACH_ISA_TID,null);
     }
 
     public static SwarmMachine machine(final Map<Obj, Obj> machineState, final fURI tid, final fURI vid) {
@@ -86,7 +86,7 @@ public class SwarmMachine extends AbstractMachine implements Machine {
             final List<Inst> prepended = new ArrayList<>();
             prepended.add(MInst.instB(mInstSet.START_INST_TID, lst(start)));
             prepended.addAll(code.codeValue());
-            return new SwarmMachine(Map.of(uri(CODE), MCode.of(prepended)), MACH_ISA_TID, fURI.fnull);
+            return new SwarmMachine(Map.of(uri(CODE), MCode.of(prepended)), MACH_ISA_TID,null);
         } else {
             return SwarmMachine.of(code);
         }

@@ -34,13 +34,13 @@ public class MRel extends MObj implements Rel {
     }
 
     public MRel(final Pair<Obj, Obj> value) {
-        this(value, REL_TID, fURI.fnull);
+        this(value, REL_TID,null);
         if (value.get0().isNoObj() || value.get1().isNoObj())
-            this.tid = this.tid().c("0");
+            this.tid = this.tid().zero();
     }
 
     public static Rel rel(final Obj dom, final Obj rng) {
-        return rel(dom, rng, REL_TID, fURI.fnull);
+        return rel(dom, rng, REL_TID,null);
     }
 
     public static Rel rel(final Obj dom, final Obj rng, final fURI tid, final fURI vid) {
@@ -59,7 +59,7 @@ public class MRel extends MObj implements Rel {
     public Rel clone(final Object jvm, final fURI tid, final fURI vid) {
         final MRel temp = super.clone(jvm, tid, vid);
         if (temp.jvm().get0().isNoObj() || temp.jvm().get1().isNoObj())
-            temp.tid = temp.tid().c("0");
+            temp.tid = temp.tid().zero();
         return temp;
     }
 

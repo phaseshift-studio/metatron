@@ -43,8 +43,8 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.fURI.ALL;
-import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.failure_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
@@ -153,7 +153,7 @@ public class tp3Space extends grphSpace<Graph> {
     @Override
     public Obj read(final fURI vid) {
         return studio.phaseshift.metatron.furi.Q.Helper.processPreRead(this.qs(), vid, vid).orElseGet(() -> {
-            final Obj result = vid.hasPostfix(f("V/+")) || vid.hasPostfix(f("V/#")) ?
+            final Obj result = vid.hasPostfix("V/+") || vid.hasPostfix("V/#") ?
                     objs(IteratorUtil.stream(this.sjvm.vertices()).map(v -> VertexMap.vertexToRec(v, this))) :
                     Space.Helper.resolveRead(this, vid.basePath(), directReader());
             return studio.phaseshift.metatron.furi.Q.Helper.processPostRead(this.qs(), vid, vid, result).orElse(result);
@@ -174,10 +174,10 @@ public class tp3Space extends grphSpace<Graph> {
     @Override
     public Function<fURI, Iterator<Tuple.Pair<fURI, Obj>>> directReader() {
         return (pattern) -> {
-            if (pattern.equals(fURI.ALL)) {
+            if (pattern.equals(ALL)) {
                 throw MTronException.of("cannot read all tp3 space");
             } else {
-                if (pattern.hasPrefix(f(this.schemaPrefix))) {
+                if (pattern.hasPrefix(this.schemaPrefix)) {
                     return (pattern.equals(f(this.schemaPrefix)) ? IteratorUtil.of(Tuple.Pair.with(f(this.schemaPrefix), this.schema)) : IteratorUtil.of());
                 } else if (pattern.pathLength() < 3) {
                     return IteratorUtil.of();

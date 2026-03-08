@@ -20,7 +20,6 @@ package studio.phaseshift.metatron.furi.form;
 
 import studio.phaseshift.metatron.furi.C;
 import studio.phaseshift.metatron.furi.c.cInt;
-import studio.phaseshift.metatron.furi.ifURI;
 
 import java.util.List;
 
@@ -32,7 +31,7 @@ public class SAPCXfURI extends SAPXXfURI {
     
     public SAPCXfURI(final String scheme, final String host, final int port, final List<String> path, final C<?, ?> coefficient) {
         super(scheme, host, port, path);
-        this.coefficient = (cInt) coefficient;
+        this.coefficient = null == coefficient ? cInt.ONE() : (cInt) coefficient;
     }
 
     @Override

@@ -28,7 +28,7 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 
 import java.util.Map;
 
-import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.*;
 import static studio.phaseshift.metatron.isa.grph.tp3.space.VertexMap.lazyVertexToRec;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
@@ -86,7 +86,7 @@ public class EdgeMap extends ElementMap {
     }
 
     public static Rec edgeToRec(final Edge edge, final Rec lhs) {
-        return rec().self(new EdgeMap(edge, lhs.<ElementMap>jvmAs().space), f(edge.label()).c(lhs.c().toString()), lhs.<ElementMap>jvmAs().space.elementVID(edge)).parent(lhs);
+        return rec().self(new EdgeMap(edge, lhs.<ElementMap>jvmAs().space), f(edge.label()).c(lhs.c()), lhs.<ElementMap>jvmAs().space.elementVID(edge)).parent(lhs);
     }
 
     public static Rec edgeToRec(final Edge edge, final tp3Space lhs) {

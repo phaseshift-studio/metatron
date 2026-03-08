@@ -36,8 +36,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.fURI.ALL;
-import static studio.phaseshift.metatron.furi.fURI.fnull;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
@@ -75,7 +74,7 @@ public class metaSpace extends AbstractSpace<MServer> {
     protected metaSpace(final MServer sjvm, final Map<Obj, Obj> jvm, final fURI vid) {
         super(sjvm, jvm, META_SPACE_TID, vid);
         this.host = this.at(uri(HOST)).uriValue();
-        this.cache = memSpace.of(rec(jvm), fnull);
+        this.cache = memSpace.of(rec(jvm), null);
         this.at(uri(PEERS)).orElse(lst(uri(this.host))).elements().forEach(e -> this.peers.add(e.uriValue()));
         this.selfIndex = IteratorUtil.indexedStream(this.peers.iterator()).filter(p -> Objects.equals(p.get1().host(), this.host.host())).findFirst().map(Tuple.Pair::get0).orElse(-1);
         if (this.selfIndex == -1)

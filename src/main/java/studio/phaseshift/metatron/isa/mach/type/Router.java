@@ -36,7 +36,8 @@ import java.util.List;
 import java.util.Set;
 
 import static studio.phaseshift.metatron.Tokens.SPACE;
-import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -88,25 +89,25 @@ public interface Router extends Space {
     Obj read(final fURI vid);
 
     default Obj read(final String vid) {
-        return this.read(fURI.of(vid));
+        return this.read(f(vid));
     }
 
     @Override
     default fURI pattern() {
-        return fURI.ALL;
+        return ALL;
     }
 
     Obj write(final fURI vid, final Obj obj);
     
     default Obj write(final String vid, final Obj obj) {
-        return this.write(fURI.of(vid), obj);
+        return this.write(f(vid), obj);
     }
 
     default Obj[] write(final Object... vidObj) {
         int count = (int) ((double) vidObj.length / 2.0d);
         final Obj[] result = new Obj[count];
         for (int i = 0; i < vidObj.length; i = i + 2) {
-            result[--count] = this.write(fURI.of(vidObj[i]), (Obj) vidObj[i + 1]);
+            result[--count] = this.write(f(vidObj[i].toString()), (Obj) vidObj[i + 1]);
         }
         return result;
     }

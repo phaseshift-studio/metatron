@@ -26,7 +26,7 @@ import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.util.Tuple;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /*
@@ -39,7 +39,7 @@ public abstract class AbstractObjTest extends AbstractMetatronTest {
         final fURI removeF = f(remove);
         final Obj retrievedF = mParser.m_obj().parse(retrieved).get();
         final Obj remainingF = mParser.m_obj().parse(remaining).get();
-        assertEquals(Tuple.Pair.with(retrievedF, remainingF), currentF.take(removeF.cV()));
+        assertEquals(Tuple.Pair.with(retrievedF, remainingF), currentF.take(removeF.c()));
         Router.global().at(uri("primary"), uri("/m"));
     }
 }

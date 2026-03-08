@@ -35,7 +35,7 @@ public class MBool extends MObj implements Bool {
     }
 
     public static Bool bool(final Boolean jvm) {
-        return bool(jvm, null, fURI.fnull);
+        return bool(jvm, null,null);
     }
 
     @Override

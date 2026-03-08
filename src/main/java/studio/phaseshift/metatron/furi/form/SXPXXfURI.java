@@ -18,8 +18,6 @@
 
 package studio.phaseshift.metatron.furi.form;
 
-import studio.phaseshift.metatron.furi.ifURI;
-
 import java.util.List;
 
 /*

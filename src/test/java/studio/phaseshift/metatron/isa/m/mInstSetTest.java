@@ -42,7 +42,7 @@ import studio.phaseshift.metatron.util.Tuple;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 
 

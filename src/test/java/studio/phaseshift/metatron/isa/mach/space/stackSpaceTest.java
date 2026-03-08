@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.isa.mach.space;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
 import studio.phaseshift.metatron.isa.m.space.stackSpace;
 
-import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)

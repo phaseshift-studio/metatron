@@ -21,12 +21,12 @@ package studio.phaseshift.metatron.isa.m.type.impl;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 
-import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TID;
 
 public class MUri extends MObj implements Uri {
 
-    private static final Uri EMPTY_URI = new MUri(f(""), URI_TID, fURI.fnull);
+    private static final Uri EMPTY_URI = new MUri(f(""), URI_TID,null);
 
     public MUri(final fURI jvm, final fURI tid, final fURI vid) {
         super(jvm.resolve(), tid, vid);
@@ -35,7 +35,7 @@ public class MUri extends MObj implements Uri {
     }
 
     public static Uri uri(final String jvm) {
-        return uri(f(jvm), URI_TID, fURI.fnull);
+        return uri(f(jvm), URI_TID,null);
     }
 
     public static Uri uri() {
@@ -43,11 +43,11 @@ public class MUri extends MObj implements Uri {
     }
 
     public static Uri uri(final fURI jvm) {
-        return uri(jvm, URI_TID, fURI.fnull);
+        return uri(jvm, URI_TID,null);
     }
 
     public static Uri uri(final fURI jvm, final fURI tid) {
-        return uri(jvm, tid, fURI.fnull);
+        return uri(jvm, tid,null);
     }
 
     public static Uri uri(final fURI jvm, final fURI tid, final fURI vid) {
@@ -55,7 +55,7 @@ public class MUri extends MObj implements Uri {
     }
 
     public static Uri uri(final String jvm, final fURI tid) {
-        return uri(f(jvm), tid, fURI.fnull);
+        return uri(f(jvm), tid,null);
     }
 
     @Override

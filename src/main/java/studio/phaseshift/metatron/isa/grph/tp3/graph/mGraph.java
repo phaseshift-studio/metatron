@@ -41,7 +41,7 @@ import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.Tokens.SPACE;
-import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -119,14 +119,14 @@ public class mGraph implements Graph, WrappedGraph<tp3Space> {
         if (id instanceof Vertex)
             return f(((Vertex) id).id().toString());
         final fURI temp = id instanceof fURI ? (fURI) id : (id instanceof Uri ? ((Uri) id).uriValue() : f(Highlighter.unformat(id.toString())));
-        return temp.hasPrefix(this.baseVertexURI) ? temp : this.baseVertexURI.extend(temp);
+        return temp.hasPrefix(this.baseVertexURI.toString()) ? temp : this.baseVertexURI.extend(temp);
     }
 
     protected final fURI makeEdgeID(final Object id) {
         if (id instanceof Edge)
             return f(((Edge) id).id().toString());
         final fURI temp = id instanceof fURI ? (fURI) id : (id instanceof Uri ? ((Uri) id).uriValue() : f(Highlighter.unformat(id.toString())));
-        return temp.hasPrefix(this.baseEdgeURI) ? temp : this.baseEdgeURI.extend(temp);
+        return temp.hasPrefix(this.baseEdgeURI.toString()) ? temp : this.baseEdgeURI.extend(temp);
     }
 
     @Override

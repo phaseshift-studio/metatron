@@ -74,7 +74,7 @@ public interface Call extends Obj, Ring<Call> {
         if (this.isCode())
             return (Code) this;
         else
-            return new MCode(List.of(this.as()), CODE_TID, fURI.fnull);
+            return new MCode(List.of(this.as()), CODE_TID,null);
     }
 
     default boolean isAuto() {

@@ -33,7 +33,7 @@ public class DocQTest extends AbstractMetatronTest {
 
     public void analyzeDocs(final InstSet instSet) {
         for (final Inst inst : instSet.insts()) {
-            Obj doc = instSet.read(inst.tid().qLess().cLess().query("doc"));
+            Obj doc = instSet.read(inst.tid().noQ().one().q("doc"));
             // LOG.info("HERE %s:", doc.type());
             if (doc.c().equals(cInt.ONE())) {
                 LOG.warn("%s has no associated documentation %s", inst, doc.<DocQ.Doc>as().at(DESC));

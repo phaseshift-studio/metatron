@@ -22,7 +22,6 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Bool;
 import studio.phaseshift.metatron.isa.m.type.Int;
 
-import static studio.phaseshift.metatron.furi.fURI.fnull;
 import static studio.phaseshift.metatron.isa.m.mInstSet.INT_TID;
 
 public class MInt extends MObj implements Int {
@@ -32,7 +31,7 @@ public class MInt extends MObj implements Int {
     }
 
     public static Int jnt(final long jvm) {
-        return jnt(jvm, INT_TID, fnull);
+        return jnt(jvm, INT_TID, null);
     }
 
     public static Int jnt(final long jvm, final fURI tid, final fURI vid) {

@@ -34,7 +34,7 @@ public class MCode extends MObj implements Code {
     }
 
     public static Code of(final List<Inst> insts) {
-        return new MCode(insts, CODE_TID, fURI.fnull);
+        return new MCode(insts, CODE_TID,null);
     }
 
     public static Code of(final List<Inst> insts, final fURI tid, final fURI vid) {

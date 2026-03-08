@@ -256,12 +256,12 @@ public class MObjs implements Objs {
                     .stream()
                     .map(Obj::tid)
                     .reduce(fURI::plus)
-                    .orElse(fURI.NOOBJ);
+                    .orElse(fURI.Singleton.NOOBJ);
         } catch (final Exception e) {
             return this.jvm
                     .stream()
-                    .map(Obj::tid).reduce(fURI::commonRoot)
-                    .orElse(fURI.NOOBJ);
+                    .map(Obj::tid).reduce(fURI::plus)
+                    .orElse(fURI.Singleton.NOOBJ);
         }
     }
 

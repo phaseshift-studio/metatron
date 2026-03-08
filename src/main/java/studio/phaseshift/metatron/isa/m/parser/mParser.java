@@ -22,6 +22,7 @@ import org.petitparser.context.Result;
 import org.petitparser.parser.Parser;
 import org.petitparser.parser.combinators.*;
 import org.petitparser.parser.primitive.CharacterParser;
+import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.Call;
@@ -51,8 +52,7 @@ import static org.petitparser.parser.primitive.CharacterParser.digit;
 import static org.petitparser.parser.primitive.CharacterParser.of;
 import static org.petitparser.parser.primitive.CharacterParser.word;
 import static org.petitparser.parser.primitive.StringParser.of;
-import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.furi.fURI.fnull;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.from_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -92,9 +92,9 @@ public class mParser {
                         anyOf(REDUCED_FURI_CHARS))).plus().flatten(),
                 opt(m_furi_poly_type(), null),
                 opt(m_furi_coefficient(), null),
-                opt(none(), null)).map(t -> new fURI(pick(t, 0)).poly(pick(t, 1)).c(pick(t, 2)).query(pick(t, 3))));
+                opt(none(), null)).map(t ->  f(pick(t, 0)).poly(pick(t, 1)).c(cInt.of((String)pick(t, 2))).qString(pick(t, 3))));
 
-        rel_parser.set(seq(m_type_prefix(REL_TID), m_paren_wrap(seq(obj_rel_back_parser, of("=>").trim(), m_obj()))).map(t -> rel(Tuple.Pair.with(pick(pick(t, 1), 0), pick(pick(t, 1), 2)), pick(t, 0), fnull)));
+        rel_parser.set(seq(m_type_prefix(REL_TID), m_paren_wrap(seq(obj_rel_back_parser, of("=>").trim(), m_obj()))).map(t -> rel(Tuple.Pair.with(pick(pick(t, 1), 0), pick(pick(t, 1), 2)), pick(t, 0), null)));
         obj_no_code_parser.set(choice(
                 m_comment(),
                 m_type(),
@@ -291,7 +291,7 @@ public class mParser {
         return seq(of('-').not(), seq(word().or(seq(of("::").not(), anyOf(furiCharacterSet)))).plus().flatten(),
                 opt(polynomial ? m_furi_poly_type() : none(), null),
                 opt(coefficient ? m_furi_coefficient() : none(), null),
-                opt(query ? m_furi_query() : none(), null)).map(t -> new fURI(pick(t, 1)).poly(pick(t, 2)).c(pick(t, 3)).query(pick(t, 4)));
+                opt(query ? m_furi_query() : none(), null)).map(t -> f(pick(t, 1)).poly(pick(t, 2)).c(cInt.of((String)pick(t, 3))).qString(pick(t, 4)));
     }
 
     public static Parser m_furi(final String furiCharacterSet, final boolean polynomial, final boolean coefficient, final boolean query) {
@@ -355,7 +355,7 @@ public class mParser {
 
     public static Parser m_inst_furi() {
         return seq(m_furi(REDUCED_FURI_CHARS, true, true, false), opt(m_furi_query(), ""), opt(of("::").trim(), "::"))
-                .map(t -> mParser.<fURI>pick(t, 0).query(mParser.pick(t, 1)));
+                .map(t -> mParser.<fURI>pick(t, 0).qString(mParser.pick(t, 1)));
     }
 
     public static Parser m_obj(final boolean allowParens) {
@@ -381,7 +381,7 @@ public class mParser {
         return (null == baseType) ? opt(seq(m_furi(REDUCED_FURI_CHARS, true, true, true), of("://").not(), of("::")).pick(0), baseType) :
                 opt(choice(seq(m_furi(REDUCED_FURI_CHARS, true, true, true), of("://").not(), of("::")).pick(0), m_furi_coefficient().map(t -> {
                     try {
-                        return baseType.c(t.toString());
+                        return baseType.c(cInt.of((String)t));
                     } catch (Exception e) {
                         return null;
                     }
@@ -497,17 +497,17 @@ public class mParser {
             return null == endToken ? generate_sugar_parser(instChain.getFirst(), startToken, argCount) : generate_sugar_parser(instChain.getFirst(), startToken, argCount, endToken);
         }
         return (argCount == 0 ?
-                seq(startToken.trim(), opt(seq(of('?'), m_furi_inst_dom_rng()).map(t -> pick(t, 1)), null)).map(t -> instB(instChain.getFirst(), lst(MInst.instA(instChain.get(1).query(pick(t, 1)))))) :
+                seq(startToken.trim(), opt(seq(of('?'), m_furi_inst_dom_rng()).map(t -> pick(t, 1)), null)).map(t -> instB(instChain.getFirst(), lst(MInst.instA(instChain.get(1).qString(pick(t, 1)))))) :
                 seq(startToken.trim(), opt(seq(of('?'), m_furi_inst_dom_rng()).map(t -> pick(t, 1)), null), m_paren_wrap(obj_rel_back_parser), null == endToken ? of("") : endToken.trim())
-                        .map(t -> instB(instChain.getFirst(), lst(instB(instChain.get(1).query(pick(t, 1)), lst(mParser.<Obj>pick(t, 2))))))).trim();
+                        .map(t -> instB(instChain.getFirst(), lst(instB(instChain.get(1).qString(pick(t, 1)), lst(mParser.<Obj>pick(t, 2))))))).trim();
     }
 
     private static Parser generate_sugar_parser(final fURI tid, final Parser startToken, final int argCount, final Parser endToken) {
         // TODO: look into ExpressionBuilder for handling paren wrapping properly.
         return (argCount == 0 ?
-                seq(startToken.trim(), opt(seq(of('?'), m_furi_inst_dom_rng()).map(t -> pick(t, 1)), null)).map(t -> MInst.instA(tid.query(pick(t, 1)))) :
+                seq(startToken.trim(), opt(seq(of('?'), m_furi_inst_dom_rng()).map(t -> pick(t, 1)), null)).map(t -> MInst.instA(tid.qString(pick(t, 1)))) :
                 seq(startToken.trim(), opt(seq(of('?'), m_furi_inst_dom_rng()).map(t -> pick(t, 1)), null), m_paren_wrap(obj_rel_back_parser), null == endToken ? of("") : endToken.trim())
-                        .map(t -> instB(tid.query(pick(t, 1)), lst(mParser.<Obj>pick(t, 2)))));
+                        .map(t -> instB(tid.qString(pick(t, 1)), lst(mParser.<Obj>pick(t, 2)))));
     }
 
 

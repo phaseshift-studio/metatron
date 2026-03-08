@@ -29,7 +29,7 @@ public class MStr extends MObj implements Str {
     private static final Str ZERO = str("");
 
     public static Str str(final String jvm) {
-        return str(jvm, STR_TID, fURI.fnull);
+        return str(jvm, STR_TID,null);
     }
 
     public static Str str(final String jvm, final fURI tid, final fURI vid) {
@@ -41,7 +41,7 @@ public class MStr extends MObj implements Str {
     }
 
     public MStr(final String value) {
-        this(value, STR_TID, fURI.fnull);
+        this(value, STR_TID,null);
     }
 
     @Override

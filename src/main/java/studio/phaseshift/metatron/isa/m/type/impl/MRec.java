@@ -47,7 +47,7 @@ public class MRec extends MObj implements Rec {
             if (!kvs[i].isNoObj() && !kvs[i].isNoObj())
                 map.put(kvs[i], kvs[i + 1]);
         }
-        return rec(map, REC_TID, fURI.fnull);
+        return rec(map, REC_TID,null);
     }
 
     public static Rec rec(final String key, final Obj value, final Object... kvs) {
@@ -58,7 +58,7 @@ public class MRec extends MObj implements Rec {
             final Obj valueO = kvs[i + 1] instanceof Obj ? (Obj) kvs[i + 1] : (kvs[i + 1] instanceof String || kvs[i + 1] instanceof fURI ? uri(kvs[i + 1].toString()) : MObjFactory.of().toObj(kvs[i + 1]));
             map.put(keyO, valueO);
         }
-        return rec(map, REC_TID, fURI.fnull);
+        return rec(map, REC_TID,null);
     }
 
     public static Rec rec0() {
@@ -70,15 +70,15 @@ public class MRec extends MObj implements Rec {
     }
 
     public static Rec rec(final Map<Obj, Obj> map) {
-        return rec(map, null, fURI.fnull);
+        return rec(map, null,null);
     }
 
     public static Rec rec() {
-        return rec(new LinkedHashMap<>(), null, fURI.fnull);
+        return rec(new LinkedHashMap<>(), null,null);
     }
 
     public static Rec rec(final Stream<Rel> stream) {
-        return stream.collect(new CommonUtil.RecCollector(REC_TID, fURI.fnull));
+        return stream.collect(new CommonUtil.RecCollector(REC_TID,null));
     }
 
     public static <K, V> Rec rec(final Map<K, V> map, final ObjFactory factory) {

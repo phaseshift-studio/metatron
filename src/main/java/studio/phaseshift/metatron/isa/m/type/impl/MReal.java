@@ -32,7 +32,7 @@ public class MReal extends MObj implements Real {
     }
 
     public static Real real(final Double jvm) {
-        return new MReal(jvm, REAL_TID, fURI.fnull);
+        return new MReal(jvm, REAL_TID,null);
     }
 
     public static Real real(final Float jvm) {
@@ -48,7 +48,7 @@ public class MReal extends MObj implements Real {
     }
 
     public static Real of(final double jvm) {
-        return new MReal(jvm, REAL_TID, fURI.fnull);
+        return new MReal(jvm, REAL_TID,null);
     }
 
     @Override

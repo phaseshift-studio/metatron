@@ -45,6 +45,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import static studio.phaseshift.metatron.BootLoader.BOOTING;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -58,7 +59,7 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
 
     public static final Uri PRIMARY = uri("primary");
     public static final fURI ROUTER_TID = MACH_ISA_TID.extend("router");
-    private static final Set<fURI> READ_AS_NOOBJ = Set.of(fURI.ALL.maybeSome(), fURI.ALL.maybe(), fURI.ALL);
+    private static final Set<fURI> READ_AS_NOOBJ = Set.of(ALL.maybeSome(), ALL.maybe(), ALL);
     private final GraphittyLogger LOG = Graphitty.log(this);
     @ObjFieldReflection(tid = "/m/str")
     public static final String test = "testes";
@@ -139,10 +140,10 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
         fURI temp;
         if (big) {
             final Set<fURI> set = this.smallToBigRoutes.getOrDefaultRaw(furi.basePath(), Set.of(furi));
-            if (false && set.isEmpty()) {
+            if (set.isEmpty()) {
                 temp = this.getSpace(furi).rewrite(furi, big);
             } else if (set.size() > 1) {
-                final Iterator<fURI> furis = set.stream().filter(f -> f.hasPrefix(this.primary)).iterator();
+                final Iterator<fURI> furis = set.stream().filter(f -> f.hasPrefix(this.primary.toString())).iterator();
                 temp = furis.hasNext() ? furis.next() : set.iterator().next();
             } else {
                 temp = set.iterator().next();
@@ -150,7 +151,7 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
         } else {
             temp = this.bigToSmallRoutes.getOrDefaultRaw(furi.basePath(), furi);
         }
-        temp = temp.c(furi.c()).queryMap(furi.queryMap());
+        temp = temp.c(furi.c()).q(furi.qMap());
         temp = temp.hasDom() ? temp.dom(this.rewrite(temp.dom(), big)) : temp;
         temp = temp.hasRng() ? temp.rng(this.rewrite(temp.rng(), big)) : temp;
         return temp.resolve();
@@ -224,7 +225,7 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
             return noobj();
         // if (vid.hasAuthority())
         //   return this.server().sendRecv((a, b) -> a.authority().matches(b.remoteHost().authority()), vid, from_(vid.localize().toUri()).tryToInst());
-        final fURI readableVID = vid.cLess();
+        final fURI readableVID = vid.one();
         /// ///////////////////
         if (readableVID.isGeneric())
             return T(readableVID);
@@ -250,7 +251,7 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
             this.server().send((a, b) -> a.authority().matches(b.remoteHost().authority()), vid, start_(obj.vid(null)).to_(vid.localize().toUri()).tryToInst());
             return obj;
         }*/
-        final fURI writableVID = vid.cLess();
+        final fURI writableVID = vid.one();
         /// ///////////////
         final Space space = this.getSpace(writableVID);
         LOG.trace("writing %s {{g}}=>{{b}} %s{{X}} in %s", obj, vid, space);

@@ -48,8 +48,8 @@ import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.SCRIPT;
 import static studio.phaseshift.metatron.Tokens.USER_HOME;
-import static studio.phaseshift.metatron.furi.fURI.ALL;
-import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
@@ -130,7 +130,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
         try {
             final File file = Paths.get(path.uriValue().basePath().toString()).toFile();
             final fsSpace space = Router.global().getSpace(this.rewrite(f(file.getPath()), false)).as();
-            return uri(this.rewrite(fURI.f(file.getPath()), false).query("p", PosixFilePermissions.toString(Files.getPosixFilePermissions(file.toPath()))), file.isDirectory() ? DIR_TID : FILE_TID, null);
+            return uri(this.rewrite(f(file.getPath()), false).q("p", PosixFilePermissions.toString(Files.getPosixFilePermissions(file.toPath()))), file.isDirectory() ? DIR_TID : FILE_TID, null);
         } catch (final Exception e) {
             throw MTronException.of(e);
         }
@@ -139,7 +139,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
 
     public static Uri makeFile(final Path path) {
         try {
-            return uri(f(path.toString()).query("p", PosixFilePermissions.toString(Files.getPosixFilePermissions(path))), path.endsWith("/") ? DIR_TID : FILE_TID, null);
+            return uri(f(path.toString()).q("p", PosixFilePermissions.toString(Files.getPosixFilePermissions(path))), path.endsWith("/") ? DIR_TID : FILE_TID, null);
         } catch (final NoSuchFileException e) {
             return uri("").c(cInt.ZERO()).asUri();
         } catch (final Exception e) {
@@ -154,7 +154,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
                 throw MTronException.of("infinite nested walks on file system not allowed");
             else {
                 if (key.hasPattern()) {
-                    try (final Stream<Path> walk = Files.walk(Path.of(Space.Helper.routeFromSpace(key.retractPattern(), this.routes).toString()), vid.hasPattern() ? Integer.MAX_VALUE : vid.segments().size() + 1, FileVisitOption.FOLLOW_LINKS)) {
+                    try (final Stream<Path> walk = Files.walk(Path.of(Space.Helper.routeFromSpace(key.retractPattern(), this.routes).toString()), vid.hasPattern() ? Integer.MAX_VALUE : vid.path().size() + 1, FileVisitOption.FOLLOW_LINKS)) {
                         return walk
                                 .filter(p -> Space.Helper.routeToSpace(f(p.toString()), this.routes).test(key))
                                 .map(fsSpace::makeFile)
@@ -170,12 +170,12 @@ public class fsSpace extends AbstractSpace<FileSystem> {
 
                 } else {
                     try {
-                        final Path vidPath = Path.of(Space.Helper.routeFromSpace(key.name().equals("apply") ? key.retract() : key, this.routes).toString());
+                        final Path vidPath = Path.of(Space.Helper.routeFromSpace(key.name().equals("apply") ? key.retract(1) : key, this.routes).toString());
                         if (Files.isDirectory(vidPath)) {
                             return Files.list(vidPath).map(fsSpace::makeFile).map(p -> Pair.<fURI, Obj>with(p.uriValue(), resolveObj(p))).iterator();
                         } else {
                             return IteratorUtil.of(Pair.with(Space.Helper.routeToSpace(f(vidPath.toString()), this.routes), key.name().equals("apply") ?
-                                    instC(key.retract().dom(ALL.maybe()).rng(ALL_STAR), lst(T(ALL_STAR)), (lhs, inst) -> {
+                                    instC(key.retract(1).dom(ALL.maybe()).rng(ALL_STAR), lst(T(ALL_STAR)), (lhs, inst) -> {
                                         LOG.debug("applying: %s => %s", lhs, inst);
                                         final Uri toExec = makeFile(vidPath);
                                         if (!vidPath.toFile().canExecute())
@@ -287,9 +287,9 @@ public class fsSpace extends AbstractSpace<FileSystem> {
                             writer.write(Highlighter.unformat(obj.toString()).getBytes(StandardCharsets.UTF_8));
                         writer.flush();
                         writer.close();
-                        if (pattern.hasQuery("p")) {
+                        if (pattern.hasQ("p")) {
                             final Set<PosixFilePermission> currentP = PosixFilePermissions.fromString(Files.getPosixFilePermissions(path).toString());
-                            final Set<PosixFilePermission> newP = PosixFilePermissions.fromString(pattern.queryValue(f("p"), String.class));
+                            final Set<PosixFilePermission> newP = PosixFilePermissions.fromString(pattern.qValue("p", String.class));
                             if (!currentP.equals(newP))
                                 Files.setPosixFilePermissions(file.toPath(), newP);
                         }

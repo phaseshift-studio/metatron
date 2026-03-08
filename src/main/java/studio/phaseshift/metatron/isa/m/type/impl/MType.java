@@ -56,7 +56,7 @@ public class MType extends MObj implements Type {
         if (!checkID.hasPattern() && !BASE_TYPES.contains(checkID.basePath()) && !checkID.isGeneric() && Router.loaded()) { // TODO: remove the pattern constraint - why not a type be the set of other types?
             final Obj obj = Router.readFromSpace(checkID);
             if (obj.isType()) {
-                if (checkID.cV().equals(obj.c()) &&
+                if (checkID.c().equals(obj.c()) &&
                         Objects.equals(obj.asType().predicate(), predicate) &&
                         Objects.equals(obj.asType().constructor(), constructor))
                     return obj.asType();

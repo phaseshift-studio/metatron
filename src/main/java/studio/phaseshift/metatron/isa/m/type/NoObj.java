@@ -176,7 +176,7 @@ public final class NoObj implements Obj, Inst {
 
     @Override
     public fURI uriValue() {
-        return fURI.NOOBJ;
+        return fURI.Singleton.NOOBJ;
     }
 
     @Override
@@ -202,7 +202,7 @@ public final class NoObj implements Obj, Inst {
     public static final class NoObjType {
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
-                    docWrap(instC(START_INST_TID.dom(fURI.NOOBJ.zero()).rng(A.any()), lst(T(A.any())), (lhs, inst) -> inst.arg(0)),
+                    docWrap(instC(START_INST_TID.dom(fURI.Singleton.NOOBJ).rng(A.any()), lst(T(A.any())), (lhs, inst) -> inst.arg(0)),
                             "noobj", "initial objs", Map.of(jnt(0), "initial objs"), "the initial function f()->x")
             ));
         }

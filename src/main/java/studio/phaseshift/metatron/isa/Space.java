@@ -36,7 +36,7 @@ import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
@@ -67,13 +67,13 @@ public interface Space extends Rec, Closeable {
     Stats stats();
 
     default Obj read(final String vid) {
-        return this.read(fURI.of(vid));
+        return this.read(f(vid));
     }
 
     Obj read(final fURI vid);
 
     default Obj write(final String vid, final Obj obj) {
-        return this.write(fURI.of(vid), obj);
+        return this.write(f(vid), obj);
     }
 
     Obj write(final fURI vid, final Obj obj);
@@ -198,7 +198,7 @@ public interface Space extends Rec, Closeable {
             if (listing.isEmpty()) {
                 if (pattern.isBranch() && !pattern.hasPattern()) {
                     final Rec nestRec = rec();
-                    directReader.apply(pattern.extend(fURI.ONE_WILD_STRING)).forEachRemaining(kv -> {
+                    directReader.apply(pattern.extend(fURI.Singleton.WILD_ONE)).forEachRemaining(kv -> {
                         if (CommonUtil.isInt(kv.get0().name()))
                             listing.add(Pair.with(kv.get0().toUri(), kv.get1()));
                         else
@@ -207,7 +207,7 @@ public interface Space extends Rec, Closeable {
                     if (!nestRec.isEmpty())
                         listing.add(Pair.with(uri(pattern), nestRec));
                 } else {
-                    directReader.apply((pattern.isBranch() ? pattern.extend(fURI.ONE_WILD_STRING) : pattern.asBranch())).forEachRemaining(kv -> {
+                    directReader.apply((pattern.isBranch() ? pattern.extend(fURI.Singleton.WILD_ONE) : pattern.asBranch())).forEachRemaining(kv -> {
                         listing.add(Pair.with(kv.get0().toUri(), kv.get1()));
                     });
                 }
@@ -282,7 +282,7 @@ public interface Space extends Rec, Closeable {
                         return directWriter.apply(vid, obj);
                     }
                 } else if (base.get1().isLst()) {
-                    Lst newLst = base.get1().<Lst>as().at(uri(vid.removePrefix(base.get0()).pretract()), obj, Lst.IMMUTABLE);
+                    Lst newLst = base.get1().<Lst>as().at(uri(vid.removePrefix(base.get0()).pretract(1)), obj, Lst.IMMUTABLE);
                     Helper.resolveWrite(LOG, space, vid, newLst, directWriter, directReader);
                 }
             }
@@ -296,15 +296,15 @@ public interface Space extends Rec, Closeable {
 
 
         public static Pair<fURI, Poly<?, ?>> locateBasePoly(final Space space, final fURI furi) {
-            boolean last = furi.segments().isEmpty();
-            fURI newFuri = furi.retract().asNode();
+            boolean last = furi.path().isEmpty();
+            fURI newFuri = furi.retract(1).asNode();
             Obj obj = noobj();
             while (!last) {
                 obj = space.read(newFuri);
                 if (!obj.isNoObj())
                     break;
-                last = newFuri.segments().isEmpty();
-                newFuri = newFuri.retract().asNode();
+                last = newFuri.path().isEmpty();
+                newFuri = newFuri.retract(1).asNode();
 
             }
             return obj.isPoly() ? Pair.with(newFuri.retractPattern(), obj.as()) : null;

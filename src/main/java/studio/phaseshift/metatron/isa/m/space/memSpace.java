@@ -48,7 +48,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.PERSIST;
-import static studio.phaseshift.metatron.furi.fURI.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
@@ -116,7 +116,7 @@ public class memSpace extends AbstractSpace<Map<fURI, Obj>> {
     @Override
     public Function<fURI, Iterator<Tuple.Pair<fURI, Obj>>> directReader() {
         return (pattern) -> {
-            if (pattern.equals(fURI.ALL))
+            if (pattern.equals(ALL))
                 return this.sjvm().entrySet().stream().map(kv -> Tuple.Pair.with(kv.getKey(), kv.getValue())).iterator();
             else {
                 if (pattern.hasPattern()) {

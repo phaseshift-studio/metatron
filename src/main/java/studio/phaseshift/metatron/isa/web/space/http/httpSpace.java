@@ -60,8 +60,8 @@ import java.util.function.Function;
 
 import static studio.phaseshift.metatron.Tokens.HOST;
 import static studio.phaseshift.metatron.Tokens.ROUTE;
-import static studio.phaseshift.metatron.furi.fURI.ALL;
-import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -282,7 +282,7 @@ public class httpSpace extends AbstractSpace<HttpServer> {
             LOG.info("checking %s", path);
             if (path.toFile().exists() && path.toFile().isFile())
                 return path.toFile();
-            temp = temp.retract().asNode();
+            temp = temp.retract(1).asNode();
             if (temp.pathLength() == 0)
                 return null;
         }
@@ -314,7 +314,7 @@ public class httpSpace extends AbstractSpace<HttpServer> {
         return (pattern) -> {
             LOG.debug("retrieving %s", pattern);
             try {
-                fURI runningPattern = pattern.clone();
+                fURI runningPattern = pattern;
                 int steps = 0;
                 while (true) {
                     LOG.debug("fetching %s", runningPattern.toString());
@@ -324,7 +324,7 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                         if (runningPattern.pathLength() == 0)
                             return IteratorUtil.of();
                         steps++;
-                        runningPattern = runningPattern.retract();
+                        runningPattern = runningPattern.retract(1);
                     } else {
                         final ContentType contentType = ContentType.of(response.contentType());
                         LOG.debug("content-type: %s => %s", response.contentType(), contentType);
@@ -337,7 +337,7 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                                                 (contentType.isXml() ?
                                                         HTML_SERIALIZER.read(response.parse()) :
                                                         str(response.body()))));
-                        final Uri key = uri(pattern.scheme(null).authority(null).tail(steps).asRelative());
+                        final Uri key = uri(pattern.scheme(null).host(null).tail(steps).asRelative());
                         LOG.debug("page found -- searching for %s in %s", key, runningPattern);
                         final Obj subDocObj = key.uriValue().toString().isEmpty() ? docObj : docObj.asRec().at(key);
                         return subDocObj.isNoObj() ? IteratorUtil.of() : IteratorUtil.of(Tuple.Pair.with(pattern, subDocObj));

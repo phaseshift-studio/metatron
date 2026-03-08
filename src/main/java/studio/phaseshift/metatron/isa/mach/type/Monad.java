@@ -166,7 +166,7 @@ public interface Monad extends Lst {
     default Monad apply() {
         if (this.halted())
             return this;
-        final boolean monadicInst = this.inst().tid().hasQuery(MONAD);
+        final boolean monadicInst = this.inst().tid().hasQ(MONAD);
         final Obj nextObj = this.inst().apply(monadicInst ?
                 this :
                 this.obj());
@@ -179,7 +179,7 @@ public interface Monad extends Lst {
         }
 
         public static int monadHashCode(final Monad monad) {
-            return Objects.hash(monad.tid().cLess(), monad.jvm());
+            return Objects.hash(monad.tid().one(), monad.jvm());
         }
 
         public static boolean monadEquals(final Monad monad, final Object other) {

@@ -30,6 +30,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static studio.phaseshift.metatron.furi.fURI.Singleton.NOOBJ;
 import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.CODE_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -145,11 +146,11 @@ public interface Code extends Call {
 
     @Override
     default Type dom() {
-        return this.jvm().isEmpty() ? T(fURI.NOOBJ.zero()) : T(this.jvm().get(0).dom().tid()); // TODO: if unresolved, it's maybe.. is that good?
+        return this.jvm().isEmpty() ? T(NOOBJ) : T(this.jvm().get(0).dom().tid()); // TODO: if unresolved, it's maybe.. is that good?
     }
 
     default Type rng() {
-        return this.jvm().isEmpty() ? T(fURI.NOOBJ.zero()) : T(this.jvm().get(this.jvm().size() - 1).rng().tid());
+        return this.jvm().isEmpty() ? T(NOOBJ) : T(this.jvm().get(this.jvm().size() - 1).rng().tid());
     }
 
     @Override

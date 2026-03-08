@@ -41,7 +41,7 @@ import java.util.function.Supplier;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static studio.phaseshift.metatron.Tokens.PATTERN;
-import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -71,7 +71,7 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
     @BeforeEach
     protected void setup() {
         if (!Router.global().hasSpaceFor(this.baseURI))
-            this.spaceStorage = memSpace.of(rec(uri(PATTERN), uri(this.baseURI.retract().extend("#"))), f("/sys/space").extend(this.baseURI.retractPattern().name()));
+            this.spaceStorage = memSpace.of(rec(uri(PATTERN), uri(this.baseURI.retract(1).extend("#"))), f("/sys/space").extend(this.baseURI.retractPattern().name()));
         this.space = this.spaceSupplier.get();
         if (null == this.space)
             Assertions.fail("space supplier yielded a null space");

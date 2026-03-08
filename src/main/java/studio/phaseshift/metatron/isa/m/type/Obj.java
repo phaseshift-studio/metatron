@@ -41,8 +41,8 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.MONAD;
-import static studio.phaseshift.metatron.furi.fURI.ALL;
-import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.DocQ.Doc.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.Bool.*;
@@ -136,7 +136,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     }
 
     default cInt c() {
-        return this.tid().cV();
+        return this.tid().c();
     }
 
     default Obj c(final cInt c) {
@@ -146,7 +146,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     default Obj c(final Function<cInt, cInt> func) {
         final cInt oldC = this.c();
         final cInt newC = func.apply(oldC);
-        return Objects.equals(oldC, newC) ? this : this.tid(this.tid().c(null == newC || newC.isOne() ? null : newC.toString()));
+        return Objects.equals(oldC, newC) ? this : this.tid(this.tid().c(null == newC || newC.isOne() ? null : newC));
     }
 
     default Obj c(final Long exact) {
@@ -159,7 +159,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
 
     default Obj take() {
         final Obj clone = this.clone();
-        this.self(this.jvm(), this.tid().c("0"), this.vid());
+        this.self(this.jvm(), this.tid().zero(), this.vid());
         return clone;
     }
 
@@ -251,9 +251,9 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
             return true;
         if (rhs.isType() && !rhs.asType().isBaseType() && this.tid().test(rhs.tid()))
             return !rhs.asType().hasPredicate() || !rhs.asType().predicate().apply(this).isNoObj();
-        else if (this.isNoObj() && (rhs.tid().cV().isZeroable() || rhs.tid().equals(NOOBJ_TID)))
+        else if (this.isNoObj() && (rhs.tid().c().isZeroable() || rhs.tid().equals(NOOBJ_TID)))
             return true;
-        else if (this.tid().cV().isZeroable() && rhs.isNoObj())
+        else if (this.tid().c().isZeroable() && rhs.isNoObj())
             return true;
         else if (rhs.isNoObj())
             return false;
@@ -279,7 +279,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
             return false;
         }
         if (this.isCall())
-            return this.tid().cV().within(rhs.tid().cV()); // TODO: this is really flimsy.
+            return this.tid().c().within(rhs.tid().c()); // TODO: this is really flimsy.
         if (rhs.isCall())
             return this.test(rhs.dom()) && rhs.apply(this).test(rhs.rng());
         if (!this.c().within(rhs.c()))
@@ -289,7 +289,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                 return true;
             if (this.isObjs() && this.stream().anyMatch(Obj::isCall)) // TODO: a hack (see RecTest requirements vs. TypeTest requirements)
                 return false;
-            if (this.isObjs() && this.stream().allMatch(o -> o.test(rhs.tid(rhs.tid().c(o.c().toString())))))
+            if (this.isObjs() && this.stream().allMatch(o -> o.test(rhs.tid(rhs.tid().c(o.c())))))
                 return true;
             if (rhs.asType().isBaseType() && !this.baseType().test(rhs.tid()))
                 return false;
@@ -305,7 +305,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     }
 
     default Type dom() {
-        return T(fURI.ALL.maybe());
+        return T(ALL.maybe());
     }
 
     default Type rng() {
@@ -313,19 +313,19 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     }
 
     default fURI baseType() {
-        if (this.isBool()) return BOOL_TID.c(this.c().toString());
-        else if (this.isBytes()) return BYTES_TID.c(this.c().toString());
-        else if (this.isInt()) return INT_TID.c(this.c().toString());
-        else if (this.isReal()) return REAL_TID.c(this.c().toString());
-        else if (this.isStr()) return STR_TID.c(this.c().toString());
-        else if (this.isUri()) return URI_TID.c(this.c().toString());
-        else if (this.isLst()) return LST_TID.c(this.c().toString());
-        else if (this.isRec()) return REC_TID.c(this.c().toString());
-        else if (this.isRel()) return REL_TID.c(this.c().toString());
-        else if (this.isInst()) return INST_TID.c(this.c().toString()).dom(this.dom().tid()).rng(this.rng().tid());
-        else if (this.isCode()) return CODE_TID.c(this.c().toString());
-        else if (this.isNoObj()) return NOOBJ_TID.c(this.c().toString());
-        else if (this.isFail()) return FAIL_TID.c(this.c().toString());
+        if (this.isBool()) return BOOL_TID.c(this.c());
+        else if (this.isBytes()) return BYTES_TID.c(this.c());
+        else if (this.isInt()) return INT_TID.c(this.c());
+        else if (this.isReal()) return REAL_TID.c(this.c());
+        else if (this.isStr()) return STR_TID.c(this.c());
+        else if (this.isUri()) return URI_TID.c(this.c());
+        else if (this.isLst()) return LST_TID.c(this.c());
+        else if (this.isRec()) return REC_TID.c(this.c());
+        else if (this.isRel()) return REL_TID.c(this.c());
+        else if (this.isInst()) return INST_TID.c(this.c()).dom(this.dom().tid()).rng(this.rng().tid());
+        else if (this.isCode()) return CODE_TID.c(this.c());
+        else if (this.isNoObj()) return NOOBJ_TID.c(this.c());
+        else if (this.isFail()) return FAIL_TID.c(this.c());
        /* else if (this.isType()) {
             if(null != this.vid()) {
                 final Obj temp = Router.readFromSpace(this.vid());
@@ -680,7 +680,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         }
 
         public static int objHashCode(final Obj obj) {
-            return Objects.hash((Object) obj.jvm()); /*obj.isNoObj() ? noobj().hashCode() : obj.isInst() ? obj.tid().hashCode() : Objects.hash(obj.jvm(), obj.tid().cLess());*/
+            return Objects.hash((Object) obj.jvm()); /*obj.isNoObj() ? noobj().hashCode() : obj.isInst() ? obj.tid().hashCode() : Objects.hash(obj.jvm(), obj.tid().one());*/
         }
 
         public static boolean objEquals(final Obj obj, final Object other) {
@@ -700,7 +700,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         public static boolean objcLessEquals(final Obj obj, final Object other) {
             return other instanceof Obj &&
                     ((obj.isNoObj() && ((Obj) other).isNoObj()) ||
-                            (Objects.equals(obj.tid().cLess(), ((Obj) other).tid().cLess()) && // TODO: no vid checked ...
+                            (Objects.equals(obj.tid().one(), ((Obj) other).tid().one()) && // TODO: no vid checked ...
                                     Objects.equals(obj.jvm(), ((Obj) other).jvm())));
         }
 
@@ -827,7 +827,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                     instC(BARRIER_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(), (lhs, inst) -> lhs),
                     instC(BARRIER_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(A.maybeSome())), (lhs, inst) -> inst.arg(0).append(lhs)),
                     instC(AS_INST_TID.dom(A).rng(A), lst(T(A)), (lhs, inst) -> lhs.as(inst.arg(0).asType())),
-                    instC(REPEAT_INST_TID.dom(A).rng(A.maybeSome()).query(MONAD, null), lst(T(ALL), T(ALL)), (lhs, inst) -> {
+                    instC(REPEAT_INST_TID.dom(A).rng(A.maybeSome()).q(MONAD, null), lst(T(ALL), T(ALL)), (lhs, inst) -> {
                         try {
                             Obj current = lhs.asMonad().obj();
                             if (current.isNoObj()) return lhs.asMonad().nextInst();
@@ -927,11 +927,11 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                                                     "host", nullOrElse(z.host(), NoObj::noobj, MUri::uri),
                                                     "port", nullOrElse(z.port() == -1 ? null : (long) lhs.tid().port(), NoObj::noobj, MInt::jnt)
                                             )),
-                                            "path", uri(lhs.tid().path()),
+                                            "path", uri(lhs.tid().pathString()),
                                             "c", rec(
-                                                    "min", jnt(lhs.tid().cV().min()),
-                                                    "max", jnt(lhs.tid().cV().max())),
-                                            "q", nullOrElse(lhs.tid().query() == null ? null : lhs.tid().queryMap(), NoObj::noobj,
+                                                    "min", jnt(lhs.tid().c().min()),
+                                                    "max", jnt(lhs.tid().c().max())),
+                                            "q", nullOrElse(lhs.tid().qMap() == null ? null : lhs.tid().qMap(), NoObj::noobj,
                                                     q -> rec(q.entrySet().stream().map(kv -> rel(uri(kv.getKey()), uri(kv.getValue())))))),
                                     "obj", rec(
                                             "value", lhs.type(),

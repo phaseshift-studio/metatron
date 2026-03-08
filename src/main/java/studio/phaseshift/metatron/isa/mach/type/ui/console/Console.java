@@ -61,7 +61,7 @@ import java.util.function.Supplier;
 
 import static org.jline.keymap.KeyMap.*;
 import static studio.phaseshift.metatron.BootLoader.BOOTING;
-import static studio.phaseshift.metatron.furi.fURI.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.start_;

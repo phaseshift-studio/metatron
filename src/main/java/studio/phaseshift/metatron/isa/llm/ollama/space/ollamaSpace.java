@@ -32,8 +32,7 @@ import studio.phaseshift.metatron.util.Tuple;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.fURI.ALL;
-import static studio.phaseshift.metatron.furi.fURI.fnull;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.llm.ollama.ollamaInstSet.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_BYTE_TID;
@@ -72,7 +71,7 @@ public class ollamaSpace extends AbstractSpace<OllamaModels> {
 
     public ollamaSpace(final OllamaModels models, final Map<Obj, Obj> config, final fURI vid) {
         super(models, config, OLLAMA_TID, vid);
-        this.cache = memSpace.of(this.pattern(), fnull);
+        this.cache = memSpace.of(this.pattern(), null);
         this.refreshModels();
     }
 
@@ -85,8 +84,8 @@ public class ollamaSpace extends AbstractSpace<OllamaModels> {
                                 uri(NAME), uri(m.get0().getName()),
                                 uri(THINK), bool(m.get1().getCapabilities().contains(THINKING)),
                                 uri(SKILL), lst(m.get1().getCapabilities().stream().map(MUri::uri)),
-                                uri(SIZE), jnt(m.get0().getSize(), MATH_BYTE_TID, fnull)), OLLAMA_OLLM_TID, fnull)).forEach(m -> {
-                    this.write(this.pattern.retract().extend(m.at(NAME).uriValue()), m);
+                                uri(SIZE), jnt(m.get0().getSize(), MATH_BYTE_TID, null)), OLLAMA_OLLM_TID, null)).forEach(m -> {
+                    this.write(this.pattern.retract(1).extend(m.at(NAME).uriValue()), m);
                 });
     }
 

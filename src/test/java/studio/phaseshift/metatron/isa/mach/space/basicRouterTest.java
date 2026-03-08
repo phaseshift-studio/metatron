@@ -26,7 +26,7 @@ import studio.phaseshift.metatron.isa.m.type.NoObj;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 
 /*

@@ -35,6 +35,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.furi.fURI.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -87,8 +88,8 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
         return key.isInt() ? this.jvm().size() > key.intValue().intValue() :
                 key.isUri() &&
                         !key.uriValue().isEmpty() &&
-                        CommonUtil.isInt(key.uriValue().segments().getFirst()) &&
-                        this.jvm().size() > Integer.valueOf(key.uriValue().segments().getFirst());
+                        CommonUtil.isInt(key.uriValue().path().getFirst()) &&
+                        this.jvm().size() > Integer.valueOf(key.uriValue().path().getFirst());
     }
 
     default <OBJ extends Obj> Stream<OBJ> elements() {
@@ -114,13 +115,13 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
                 newList.set(key.intValue().intValue(), value);
             return this.clone(newList, this.tid(), this.vid());
         } else if (key.isUri()) {
-            final Int k = jnt(Long.parseLong(key.uriValue().segments().get(0)));
-            if (key.uriValue().segments().size() == 1) {
+            final Int k = jnt(Long.parseLong(key.uriValue().path().get(0)));
+            if (key.uriValue().path().size() == 1) {
                 return this.at(k, value, operation);
             } else {
                 final Obj v = this.jvm().get(k.intValue().intValue());
                 if (v.isPoly()) {
-                    return this.at(k, v.<Poly<?, ?>>as().at(uri(key.<Uri>as().uriValue().pretract()), value, operation), operation).as();
+                    return this.at(k, v.<Poly<?, ?>>as().at(uri(key.<Uri>as().uriValue().pretract(1)), value, operation), operation).as();
                 } else {
                     throw MTronException.of("unknown key value for lst: %s => %s", key, value);
                 }
@@ -143,14 +144,14 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
             // if (key.uriValue().isEmpty())
             //            return this.c(c -> c.mult(cKey)).as();
 
-            if (key.uriValue().segments().isEmpty())
+            if (key.uriValue().path().isEmpty())
                 return (OBJ) noobj();
             final boolean singleSegment = key.uriValue().pathLength() == 1;
-            final String step = singleSegment ? key.uriValue().asNode().toString() : key.uriValue().segments().getFirst();
+            final String step = singleSegment ? key.uriValue().asNode().toString() : key.uriValue().path().getFirst();
             final Uri asNode = uri(key.uriValue().asNode());
             final boolean isBranch = key.uriValue().isBranch();
             Stream<Obj> result;
-            if (step.equals(ONE_WILD_STRING) || step.equals(ALL_WILD_STRING)) {
+            if (step.equals(Singleton.WILD_ONE.toString()) || step.equals(ALL.toString())) {
                 result = isBranch ? (Stream) this.indexedStream() : this.elements();
             } else {
                 if (!CommonUtil.isInt(step))
@@ -161,10 +162,10 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
                     return (OBJ) noobj();
                 result = isBranch ? Stream.of(rel(uri(step), this.at(k.intValue().intValue()))) : Stream.of(this.at(k.intValue().intValue()));
             }
-            if (key.uriValue().segments().size() == 1) {
+            if (key.uriValue().path().size() == 1) {
                 return (OBJ) objs(result.filter(x -> !x.isNoObj()).map(x -> x.c(c -> c.mult(cKey)).parent(this)));
             } else {
-                return (OBJ) objs(result.filter(x -> !x.isNoObj()).filter(Obj::isPoly).map(x -> (Poly<?, ?>) x.c(c -> c.mult(cKey)).parent(this)).map(r -> r.at(uri(key.<Uri>as().uriValue().pretract()))));
+                return (OBJ) objs(result.filter(x -> !x.isNoObj()).filter(Obj::isPoly).map(x -> (Poly<?, ?>) x.c(c -> c.mult(cKey)).parent(this)).map(r -> r.at(uri(key.<Uri>as().uriValue().pretract(1)))));
             }
         } else {
             throw MTronException.of("unknown key for lst: %s", key);
@@ -211,11 +212,11 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
                     instC(AS_INST_TID.dom(LST_TID).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> lhs.tid(inst.arg(0).vidOrTid())), // TODO: vidOrTid -- sketchy
-                    instC(AS_INST_TID.dom(LST_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> Poly.Helper.transformLstToRec(lhs.asLst(), inst.arg(0).vidOrTid(), fnull)),
+                    instC(AS_INST_TID.dom(LST_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> Poly.Helper.transformLstToRec(lhs.asLst(), inst.arg(0).vidOrTid(), null)),
                     instC(REVERSE_INST_TID.dom(LST_TID).rng(LST_TID), lst(), (lhs, inst) -> lhs.jvm(lhs.asLst().jvm().reversed())),
                     instC(PLUS_INST_TID.dom(LST_TID).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> lhs.jvm(Stream.concat(lhs.elements(), inst.arg(0).elements()).toList())),
                     instC(MULT_INST_TID.dom(LST_TID).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> lhs.jvm(lhs.elements().flatMap(a -> inst.arg(0).elements().map(b -> rel(a, b))).toList())),
-                    instC(RSHIFT_INST_TID.dom(LST_TID).rng(ALL_STAR), lst(T(ALL.maybeSome())), (lhs, inst) -> objs(inst.arg(0).orElse((Obj) uri(ONE_WILD_STRING)).stream().map(k -> lhs.asLst().at(k)))),
+                    instC(RSHIFT_INST_TID.dom(LST_TID).rng(ALL_STAR), lst(T(ALL.maybeSome())), (lhs, inst) -> objs(inst.arg(0).orElse((Obj) uri(Singleton.WILD_ONE.toString())).stream().map(k -> lhs.asLst().at(k)))),
                     // instC(LSHIFT_INST_TID.dom(LST_TID).rng(ALL_STAR), lst(isa_(INT_TYPE).else_(jnt(1))), (lhs, inst) -> lhs.parent()),
                     instC(ZERO_INST_TID.dom(LST_TID).rng(LST_TID), lst(), (lhs, inst) -> lhs.asLst().zero()),
                     instC(SPLIT_INST_TID.dom(ALL).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> lst(inst.arg(0).elements().map(e -> e.apply(lhs)).toList())),

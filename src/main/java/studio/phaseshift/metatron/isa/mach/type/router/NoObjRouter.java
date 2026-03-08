@@ -31,7 +31,7 @@ import studio.phaseshift.metatron.isa.mach.type.net.MServer;
 
 import java.util.Map;
 
-import static studio.phaseshift.metatron.furi.fURI.NOOBJ;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.NOOBJ;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.ROUTER_TID;
 

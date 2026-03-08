@@ -33,11 +33,11 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TID;
 public class MLst extends MObj implements Lst {
 
     public static Lst lst(final Obj... objs) {
-        return lst(Arrays.stream(objs).collect(Collectors.toCollection(ArrayList::new)), LST_TID, fURI.fnull);
+        return lst(Arrays.stream(objs).collect(Collectors.toCollection(ArrayList::new)), LST_TID,null);
     }
 
     public static Lst lst(final List<Obj> objs) {
-        return lst(objs, LST_TID, fURI.fnull);
+        return lst(objs, LST_TID,null);
     }
 
     public static Lst lst(final List<Obj> objs, final fURI tid, final fURI vid) {
@@ -71,6 +71,6 @@ public class MLst extends MObj implements Lst {
         return this.clone(jvm, this.tid(), this.vid());
     }
 
-    private static final Lst EMPTY_LST = new MLst(List.of(), LST_TID, fURI.fnull);
+    private static final Lst EMPTY_LST = new MLst(List.of(), LST_TID,null);
 
 }

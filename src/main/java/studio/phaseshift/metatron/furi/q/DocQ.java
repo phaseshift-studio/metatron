@@ -37,7 +37,7 @@ import java.util.Optional;
 
 import static studio.phaseshift.metatron.Tokens.DESC;
 import static studio.phaseshift.metatron.Tokens.PATTERN;
-import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.Inst.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -71,7 +71,7 @@ public class DocQ extends BaseQ {
             Type.Builder.build()
                     .tid(REC_TID)
                     .vid(DOC_TID)
-                    .constructor(arg0 -> new Doc(arg0.recValue(), DOC_TID, fURI.fnull))
+                    .constructor(arg0 -> new Doc(arg0.recValue(), DOC_TID, null))
                     .inst(AS_INST_TID.dom(DOC_TID).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> str(lhs.toString()))
                     .create();
 
@@ -180,7 +180,7 @@ public class DocQ extends BaseQ {
         }
 
         public static Doc empty(final Obj obj) {
-            return new Doc(Map.of(uri("name"), obj), DOC_TID, fURI.fnull);
+            return new Doc(Map.of(uri("name"), obj), DOC_TID,null);
         }
 
         public Poly<?, ?> args() {
@@ -276,7 +276,7 @@ public class DocQ extends BaseQ {
                     uri(DOM), str(domDesc),
                     uri(RNG), str(rngDesc),
                     uri(ARGS), rec(argDescription.entrySet().stream().map(kv -> rel(kv.getKey(), str(kv.getValue())))),
-                    uri(DESC), str(description)).jvm(), DOC_TID, fURI.fnull);
+                    uri(DESC), str(description)).jvm(), DOC_TID, null);
         }
 
         public static Doc doc(final Type type, final String domDesc, final String rngDesc, final Map<Obj, String> argDescription, final String description) {
@@ -285,7 +285,7 @@ public class DocQ extends BaseQ {
                     uri(DOM), null == domDesc ? noobj() : str(domDesc),
                     uri(RNG), null == rngDesc ? noobj() : str(rngDesc),
                     uri(ARGS), null == argDescription ? noobj() : rec(argDescription.entrySet().stream().map(kv -> rel(kv.getKey(), str(kv.getValue())))),
-                    uri(DESC), str(description)).jvm(), DOC_TID, fURI.fnull);
+                    uri(DESC), str(description)).jvm(), DOC_TID, null);
         }
 
         public static Inst docWrap(final Inst inst, final String domDesc, final String rngDesc, final Map<Obj, String> argDescription, final String description) {

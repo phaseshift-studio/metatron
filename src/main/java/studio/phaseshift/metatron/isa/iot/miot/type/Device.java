@@ -30,7 +30,7 @@ import java.util.Set;
 
 import static studio.phaseshift.metatron.Tokens.OFFLINE;
 import static studio.phaseshift.metatron.Tokens.ONLINE;
-import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.iot.miot.miotInstSet.MIOT_DEVICE_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
@@ -57,9 +57,9 @@ public final class Device {
                 .constructor(lhs -> {
                     final fURI toVID = miotInstSet.deduceVID(lhs, f("+").extend(lhs.tid().name()));
                     if (toVID != null) {
-                        final Obj sub = Router.readFromSpace(toVID.extend("status").query("sub"));
+                        final Obj sub = Router.readFromSpace(toVID.extend("status").q("sub"));
                         if (sub.isNoObj())
-                            Router.writeToSpace(toVID.extend("status").query("sub"), print_(uri(toVID), str(" {{g}}status{{X}}: {{y}}"), get_(uri("" + 1))));
+                            Router.writeToSpace(toVID.extend("status").q("sub"), print_(uri(toVID), str(" {{g}}status{{X}}: {{y}}"), get_(uri("" + 1))));
                     }
                     return lhs;
                 })

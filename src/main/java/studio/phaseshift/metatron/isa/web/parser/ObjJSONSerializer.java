@@ -38,8 +38,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.furi.fURI.fnull;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
@@ -86,24 +85,24 @@ public class ObjJSONSerializer extends AbstractObjSerializer<JsonElement> {
         if (value.isJsonPrimitive()) {
             final JsonPrimitive jp = (JsonPrimitive) value;
             if (jp.isBoolean())
-                obj = bool(jp.getAsBoolean(), tid, fnull);
+                obj = bool(jp.getAsBoolean(), tid, null);
             else if (jp.isNumber()) {
                 if (jp.getAsString().contains("."))
-                    obj = real(jp.getAsDouble(), tid, fnull);
+                    obj = real(jp.getAsDouble(), tid, null);
                 else
-                    obj = jnt(jp.getAsLong(), tid, fnull);
+                    obj = jnt(jp.getAsLong(), tid, null);
             } else if (jp.isString()) {
                 final String jpstr = jp.getAsString();
                 try {
                     if (null != bid) {
                         if (bid.equals(BYTES_TID)) {
-                            obj = bytes(ByteBuffer.wrap(jpstr.getBytes()), tid, fnull);
+                            obj = bytes(ByteBuffer.wrap(jpstr.getBytes()), tid, null);
                         } else if (bid.equals(STR_TID)) {
-                            obj = str(jpstr, tid, fnull);
+                            obj = str(jpstr, tid, null);
                         } else if (bid.equals(CODE_TID)) {
                             obj = mParser.parse(jpstr);
                         } else if (bid.equals(INST_TID)) {
-                            obj = mParser.parse(jpstr).<Call>as().tryToInst().vid(fnull);
+                            obj = mParser.parse(jpstr).<Call>as().tryToInst().vid(null);
                             if (null != tid) {
                                 if (tid.equals(AUTO_FROM_INST_TID)) {
                                     obj = auto_from_(obj.asUri()).tryToInst();
@@ -117,9 +116,9 @@ public class ObjJSONSerializer extends AbstractObjSerializer<JsonElement> {
                     }
                     if (null == obj) {
                         if (jpstr.contains(" ") || jpstr.contains(")") || jpstr.contains("("))
-                            obj = str(jpstr, tid, fnull);
+                            obj = str(jpstr, tid, null);
                         else
-                            obj = uri(f(jpstr), tid, fnull);
+                            obj = uri(f(jpstr), tid, null);
                     }
                 } catch (Exception e) {
                     LOG.debug("ignoring unparseable element: %s", jp);
@@ -129,7 +128,7 @@ public class ObjJSONSerializer extends AbstractObjSerializer<JsonElement> {
         } else if (value.isJsonArray()) {
             final JsonArray jp = (JsonArray) value;
             if (null != bid && bid.equals(REL_TID)) {
-                obj = rel(read(jp.get(0)), read(jp.get(1)), tid, fnull);
+                obj = rel(read(jp.get(0)), read(jp.get(1)), tid, null);
             } else if (null != bid && bid.equals(TYPE_TID)) {
                 obj = T(tid, null, (Call) read(jp.get(0)), (Call) read(jp.get(1)));
             } else {
@@ -139,7 +138,7 @@ public class ObjJSONSerializer extends AbstractObjSerializer<JsonElement> {
                 }
                 obj = null != bid && bid.equals(OBJS_TID) ?
                         objs(list) :
-                        lst(list, tid, fnull);
+                        lst(list, tid, null);
             }
         } else if (value.isJsonObject()) {
             final JsonObject jp = (JsonObject) value;
@@ -150,7 +149,7 @@ public class ObjJSONSerializer extends AbstractObjSerializer<JsonElement> {
                 if (!k.isNoObj() && !v.isNoObj())
                     map.put(k, v);
             }
-            obj = rec(map, tid, fnull);
+            obj = rec(map, tid, null);
         }
         if (null == obj)
             throw new IllegalStateException("unknown type: " + json + "::" + json.getAsInt());

@@ -29,8 +29,8 @@ import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static studio.phaseshift.metatron.furi.fURI.ALL;
-import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -104,8 +104,8 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>>, Obj {
 
     default <O extends Obj> O at(final Obj key) {
         if (key.isUri()) {
-            final boolean singleSegment = key.uriValue().segments().size() == 1;
-            final String step = singleSegment ? key.uriValue().toString() : key.uriValue().segments().getFirst();
+            final boolean singleSegment = key.uriValue().path().size() == 1;
+            final String step = singleSegment ? key.uriValue().toString() : key.uriValue().path().getFirst();
             O result;
             final Uri asNode = uri(key.uriValue().asNode());
             if (this.jvm().get0().test(asNode))
@@ -118,7 +118,7 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>>, Obj {
             if (singleSegment) {
                 return result;
             } else {
-                final fURI nextKey = key.uriValue().isBranch() ? key.uriValue().pretract().asBranch() : key.uriValue().pretract();
+                final fURI nextKey = key.uriValue().isBranch() ? key.uriValue().pretract(1).asBranch() : key.uriValue().pretract(1);
                 return (O) (this.jvm().get1().isPoly() ? this.jvm().get1().<Poly>as().at(uri(nextKey)) : noobj());
             }
         } else {

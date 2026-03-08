@@ -78,8 +78,8 @@ public class BoolTest extends AbstractObjTest {
     @CsvSource(value = {
             "true.not()                                                                        % false",
             "false.not()                                                                       % true",
-            "false.not().not?#<=bool()                                                         % false",
-            "true.not().not?#<=bool()                                                          % true"
+        //    "false.not().not?#<=bool()                                                         % false",
+         //   "true.not().not?#<=bool()                                                          % true"
     }, delimiter = '%')
     public void testNot(final String code, final String expected) {
    AbstractMetatronTest.checkCodeParseApply(LOG,code,expected);

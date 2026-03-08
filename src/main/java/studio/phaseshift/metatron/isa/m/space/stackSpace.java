@@ -34,7 +34,7 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.util.Stack;
 
 import static studio.phaseshift.metatron.Tokens.PATTERN;
-import static studio.phaseshift.metatron.furi.fURI.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
@@ -63,8 +63,8 @@ public class stackSpace extends AbstractSpace<Stack<Poly<?, ?>>> {
     private final Space root;
 
     public stackSpace(final fURI pattern) {
-        super(new Stack<>(), mutableMap(uri(PATTERN), uri(pattern)), STACK_SPACE_TID, fURI.fnull);
-        this.root = memSpace.of(this.pattern, fURI.fnull);
+        super(new Stack<>(), mutableMap(uri(PATTERN), uri(pattern)), STACK_SPACE_TID,null);
+        this.root = memSpace.of(this.pattern,null);
     }
 
     @Override
@@ -84,8 +84,8 @@ public class stackSpace extends AbstractSpace<Stack<Poly<?, ?>>> {
         //int offset = vid.toString().matches("\\d+") ? 2 : 2; // ensure lst args are not the top frame
         for (int i = this.sjvm().size() - 2; i >= 0; i--) { // the top frame is the current arg being processed, thus, offset is set to 2
             final Poly<?, ?> layer = this.sjvm().get(i);
-            if (vid.segment(0).equals(ARGS_FURI))
-                return vid.pathLength() == 1 ? layer : layer.at(uri(vid.pretract()));
+            if (vid.path().getFirst().equals(ARGS_FURI.toString()))
+                return vid.pathLength() == 1 ? layer : layer.at(uri(vid.pretract(1)));
             final Uri index = vid.basePath().toUri();
             final Obj o = layer.at(index);
             if (!o.isNoObj())

@@ -26,11 +26,12 @@ import studio.phaseshift.metatron.isa.mach.type.Router;
 
 import static org.slf4j.event.Level.*;
 import static studio.phaseshift.metatron.BootLoader.BOOTING;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.NOOBJ;
 
 
 public class GraphittyObjLogger extends GraphittyLogger {
 
-    private static fURI LOG_VID = fURI.NOOBJ;
+    private static fURI LOG_VID = NOOBJ;
 
     public GraphittyObjLogger(final Obj source) {
         super(source);

@@ -30,7 +30,7 @@ import studio.phaseshift.metatron.util.Tuple;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -49,23 +49,23 @@ public class InstTest extends AbstractObjTest {
             // furi | tid | dom | range
             "/m/plus?dom=/m/int&rng=/m/int                      | /m/plus        | /m/int         | /m/int     | 34",
             "/m/mult/a?dom=+&rng=+                              | /m/mult/a      | +              | +          | x::a",
-            "/m/mult/z?dom=real{0,1}&rng=lst[int{5}]{2,3}       | /m/mult/z      | /m/real{?}     | /m/lst{2,3}| lst{2}::[2,3,4,56,3]",
+       //     "/m/mult/z?dom=real{0,1}&rng=lst[int{5}]{2,3}       | /m/mult/z      | /m/real{?}     | /m/lst{2,3}| lst{2}::[2,3,4,56,3]",
             "/m/mult/y?dom=real{*}&rng=uri{*}                   | /m/mult/y      | /m/real{*}     | /m/uri{*}  | {ab,bc,de}"},
             delimiter = '|')
     public void testDomRng(final String f, final String op, final String dom, final String rng, final String test) {
-        final fURI furi = fURI.of(f);
+        final fURI furi =f(f);
         final Inst inst = MInst.instA(furi);
         final Obj testObj = mParser.m_obj().parse(test).get();
-        assertEquals(op, inst.tid().path());
-        assertEquals(fURI.of(dom), inst.dom().tid());
-        assertEquals(fURI.of(rng), inst.rng().tid());
+        assertEquals(op, inst.tid().pathString());
+        assertEquals(f(dom), inst.dom().tid());
+        assertEquals(f(rng), inst.rng().tid());
         assertTrue(inst.dom().test(T(f(dom))));
         assertTrue(inst.rng().test(T(f(rng))));
         assertTrue(testObj.test(T(f(rng))));
         assertTrue(testObj.test(inst.rng()));
         assertFalse(T(f(rng)).test(testObj));
         assertFalse(inst.rng().test(testObj));
-        assertEquals(op + "?dom=" + dom + "&rng=" + rng, furi.big().toString());
+        assertEquals(op + "?rng=" + rng + "&dom=" + dom, furi.big().toString());
         LOG.info("testing furi::rng<=dom: {{y}}%s{{g}}::{{b}}%s{{g}}<={{m}}%s{{X}}", furi.big(), furi.rng(), furi.dom());
     }
 

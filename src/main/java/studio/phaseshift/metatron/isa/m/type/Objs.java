@@ -30,7 +30,6 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import static studio.phaseshift.metatron.furi.fURI.fnull;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -110,7 +109,7 @@ public interface Objs extends Obj, PlusMonoid.O<Objs> {
     class ObjsType {
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
-                    instC(AS_INST_TID.dom(ALL_STAR).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> lst(lhs.stream().toList(), inst.arg(0).tid(), fnull))
+                    instC(AS_INST_TID.dom(ALL_STAR).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> lst(lhs.stream().toList(), inst.arg(0).tid(), null))
             ));
         }
     }

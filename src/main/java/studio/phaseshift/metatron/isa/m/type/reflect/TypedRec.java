@@ -50,6 +50,6 @@ public class TypedRec<A extends Obj, B extends Obj> extends MRec {
     }
 
     public static <A extends Obj, B extends Obj> TypedRec<A, B> typedRec() {
-        return new TypedRec<>(new LinkedHashMap<>(), REC_TID, fURI.fnull);
+        return new TypedRec<>(new LinkedHashMap<>(), REC_TID,null);
     }
 }

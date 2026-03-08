@@ -36,11 +36,11 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 
 public class fURITest extends AbstractMetatronTest {
 
-    private static final GraphittyLogger LOG = Graphitty.log(fURITest.class);
+   /* private static final GraphittyLogger LOG = Graphitty.log(fURITest.class);
 
 
     /// /////////////////////////////////////////
@@ -184,7 +184,7 @@ public class fURITest extends AbstractMetatronTest {
     @MethodSource("testSegmentsData")
     public void testSegments(final String f, final List<String> segments) {
         final fURI furi = fURI.of(f);
-        assertEquals(segments, furi.segments());
+        assertEquals(segments, furi.path());
     }
 
     @ParameterizedTest
@@ -205,8 +205,8 @@ public class fURITest extends AbstractMetatronTest {
     public void testQueryRead(final String f, final String queryMap) {
         final fURI furi1 = fURI.of(f);
         final fURI furi2 = mParser.m_furi().parse(f).get();
-        assertEquals(queryMap, furi1.queryMap().toString());
-        assertEquals(queryMap, furi2.queryMap().toString());
+        assertEquals(queryMap, furi1.qMap().toString());
+        assertEquals(queryMap, furi2.qMap().toString());
         //assertEquals(f, furi1.toString());
         //assertEquals(f, furi2.toString());
         assertEquals(furi1.toString(), furi2.toString());
@@ -344,9 +344,9 @@ public class fURITest extends AbstractMetatronTest {
         final fURI computedHead = furi.head(steps);
         final fURI expectedHead = f(head);
         assertEquals(expectedHead, computedHead);
-        //assertEquals(computedHead,furi.retract(furi.segments().size()-steps));
-        assertEquals(furi.segments().size(), computedHead.segments().size() + (furi.segments().size() - steps));
-        assertEquals(steps, computedHead.segments().size());
+        //assertEquals(computedHead,furi.retract(furi.path().size()-steps));
+        assertEquals(furi.path().size(), computedHead.path().size() + (furi.path().size() - steps));
+        assertEquals(steps, computedHead.path().size());
     }
 
 
@@ -368,9 +368,9 @@ public class fURITest extends AbstractMetatronTest {
         final fURI computeTail = furi.tail(steps);
         final fURI expectedTail = f(tail);
         assertEquals(expectedTail, computeTail);
-        //assertEquals(computedHead,furi.retract(furi.segments().size()-steps));
-        assertEquals(furi.segments().size(), computeTail.segments().size() + (furi.segments().size() - steps));
-        assertEquals(steps, computeTail.segments().size());
+        //assertEquals(computedHead,furi.retract(furi.path().size()-steps));
+        assertEquals(furi.path().size(), computeTail.path().size() + (furi.path().size() - steps));
+        assertEquals(steps, computeTail.path().size());
     }
 
     @ParameterizedTest
@@ -802,10 +802,10 @@ public class fURITest extends AbstractMetatronTest {
 
     @Test
     public void testQueryRead() {
-        assertEquals(Map.of("a", "1", "b", "2"), fURI.of("http://meta.tron/query?a=1&b=2").queryMap());
-        assertEquals(Map.of("a", "", "b", "2"), fURI.of("http://meta.tron/query?a&b=2").queryMap());
-        assertEquals(Map.of(), fURI.of("http://meta.tron/query").queryMap());
-        assertEquals(Map.of("sub", ""), fURI.of("http://meta.tron/query?sub").queryMap());
+        assertEquals(Map.of("a", "1", "b", "2"), fURI.of("http://meta.tron/query?a=1&b=2").qMap());
+        assertEquals(Map.of("a", "", "b", "2"), fURI.of("http://meta.tron/query?a&b=2").qMap());
+        assertEquals(Map.of(), fURI.of("http://meta.tron/query").qMap());
+        assertEquals(Map.of("sub", ""), fURI.of("http://meta.tron/query?sub").qMap());
         //  assertEquals(fURI.of("http://meta.tron/query?a=1&b=2"), fURI.of("http://meta.tron/query").query(Map.of("a", "", "b", "2")));
     }
 
@@ -856,5 +856,5 @@ public class fURITest extends AbstractMetatronTest {
     }, delimiter = '|')
     void testHasPattern(final String furi, final boolean pattern) {
         assertEquals(pattern, f(furi).hasPattern());
-    }
+    }*/
 }

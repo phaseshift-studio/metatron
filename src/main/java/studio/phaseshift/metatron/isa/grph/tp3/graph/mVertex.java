@@ -34,7 +34,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.IN;
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.OUT;
 import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;

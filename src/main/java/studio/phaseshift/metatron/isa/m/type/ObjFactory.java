@@ -33,6 +33,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+import static studio.phaseshift.metatron.furi.fURI.Singleton.NOOBJ;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -98,12 +99,12 @@ public interface ObjFactory extends Rec {
         else if (Fail.class.isAssignableFrom(objClass))
             tid = FAIL_TID;
         else if (NoObj.class.isAssignableFrom(objClass))
-            tid = fURI.NOOBJ;
+            tid = NOOBJ;
         else if (Monad.class.isAssignableFrom(objClass))
             tid = MACH_MONAD_TID;
         else
             throw MTronException.of("unable to convert to requested obj class: %s", objClass);
-        return this.toObj(value, tid, fURI.fnull, objClass);
+        return this.toObj(value, tid,null, objClass);
     }
 
     /// //////////////////////////////////////////////////////////////////////////////////////////////////////

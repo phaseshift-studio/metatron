@@ -23,7 +23,7 @@ import org.apache.tinkerpop.gremlin.structure.VertexProperty;
 
 import java.lang.reflect.InvocationTargetException;
 
-import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)

@@ -44,8 +44,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.fURI.ALL;
-import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.iot.iotInstSet.IOT_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TID;
@@ -113,7 +113,7 @@ public class mqttSpace extends AbstractSpace<Mqtt5Client> {
     protected mqttSpace(final Mqtt5Client client, final Map<Obj, Obj> config, final fURI tid, final fURI vid) {
         super(client, config, null == tid ? MQTT_SPACE_TID : tid, vid);
         LOG.info("{{y}}mtron{{g}}<=>{{y}}mqtt{{X}} route established: %s {{g}}<=> ({{b}}%s {{g}}<=>{{X}} %s{{g}}){{X}}", this.pattern().toUri(), config.getOrDefault(uri(ROUTE), rec()), uri(this.rewrite(this.pattern(), false)));
-        this.cache = memSpace.of(this.pattern(), fURI.fnull);
+        this.cache = memSpace.of(this.pattern(),null);
         this.at(uri(Tokens.Q), lst(List.of(new MqttPubSubQ(this))), MUTABLE);
         this.serializer = this.at(SERIALIZER).orElse(new ObjSimpleJSONSerializer());
         LOG.info("%s serializer loaded: %s", this.tid(), this.serializer);
@@ -169,7 +169,7 @@ public class mqttSpace extends AbstractSpace<Mqtt5Client> {
     @Override
     public Obj read(final fURI vid) {
         return studio.phaseshift.metatron.furi.Q.Helper.processPreRead(this.qs(), vid, vid).orElseGet(() -> {
-            final Obj result = this.cache.read(vid.qLess());
+            final Obj result = this.cache.read(vid.one());
             return studio.phaseshift.metatron.furi.Q.Helper.processPostRead(this.qs(), vid, vid, result).orElse(result);
         });
     }
@@ -194,7 +194,7 @@ public class mqttSpace extends AbstractSpace<Mqtt5Client> {
     private void send(final fURI vid, final Obj obj) {
         try {
             final byte[] payload = obj.isNoObj() ? new byte[0] : this.serializer.outputBytes(obj).array();
-            if (vid.hasQuery(Tokens.SUB))
+            if (vid.hasQ(Tokens.SUB))
                 return;
             this.sjvm
                     .toAsync()

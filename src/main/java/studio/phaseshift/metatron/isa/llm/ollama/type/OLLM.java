@@ -41,7 +41,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static dev.langchain4j.internal.Json.fromJson;
-import static studio.phaseshift.metatron.furi.fURI.DOM;
+import static studio.phaseshift.metatron.Tokens.DOM;
 import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
@@ -112,7 +112,7 @@ public class OLLM {
     /// /////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public static Tools.Tool mtronInstTool(final Inst inst) {
-        final DocQ.Doc doc = Router.readFromSpace(inst.tid().query("doc", null))
+        final DocQ.Doc doc = Router.readFromSpace(inst.tid().q("doc", null))
                 .orSupply(() -> DocQ.Doc.doc(inst,
                         inst.dom().tid().toString(),
                         inst.rng().tid().toString(),
@@ -180,7 +180,7 @@ public class OLLM {
     }
 
     public static Tuple.Pair<ToolSpecification, ToolExecutor> mtronInstToolSpecification(final Inst inst) {
-        final DocQ.Doc doc = Router.readFromSpace(inst.tid().query("doc", null))
+        final DocQ.Doc doc = Router.readFromSpace(inst.tid().q("doc", null))
                 .orSupply(() -> DocQ.Doc.doc(inst,
                         inst.dom().tid().toString(),
                         inst.rng().tid().toString(),
@@ -193,7 +193,7 @@ public class OLLM {
         JsonObjectSchema.Builder parameters = new JsonObjectSchema.Builder();
         List<String> required = new ArrayList<>();
         parameters.addProperty("lhs", objToSchema(inst.dom(), Type.Helper.polyTypePredicateObj(inst.dom()), doc.at(DOM).orElse(str("<no description>")).strValue()));
-        if (!inst.tid().dom().cV().isZeroable())
+        if (!inst.tid().dom().c().isZeroable())
             required.add("lhs");
         final boolean recArgs = doc.args().isRec();
         final AtomicInteger counter = new AtomicInteger(0);

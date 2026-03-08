@@ -32,6 +32,8 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static studio.phaseshift.metatron.furi.fURI.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.DocQ.Doc.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
@@ -174,7 +176,7 @@ public interface Type extends Obj {
 
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
-                    instC(RSHIFT_INST_TID.dom(TYPE_TID).rng(ALL_STAR), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(inst.arg(0).orElse((Obj) uri(ONE_WILD_STRING)).stream().flatMap(u -> rec(
+                    instC(RSHIFT_INST_TID.dom(TYPE_TID).rng(ALL_STAR), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(inst.arg(0).orElse((Obj) uri(ALL)).stream().flatMap(u -> rec(
                             uri("pred"), lhs.asType().hasPredicate() ? lhs.asType().predicate() : noobj(),
                             uri("cons"), lhs.asType().hasConstructor() ? lhs.asType().constructor() : noobj()).at(u).stream())))
             ));

@@ -31,6 +31,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -73,11 +74,11 @@ public abstract class AbstractInstSetTest extends AbstractMetatronTest {
             if (inst.hasDom() && inst.hasRng()) {
                 hasDomRng.getAndIncrement();
                 long d = Router.readFromSpace(inst.tid().dom(null)).stream().filter(i -> Objects.equals(i.tid().basePath(), inst.tid().basePath())).count();
-                long dash = Router.readFromSpace(inst.tid().dom(fURI.ALL)).stream().filter(i -> Objects.equals(i.tid().basePath(), inst.tid().basePath())).count();
+                long dash = Router.readFromSpace(inst.tid().dom(ALL)).stream().filter(i -> Objects.equals(i.tid().basePath(), inst.tid().basePath())).count();
                 long r = Router.readFromSpace(inst.tid().rng(null)).stream().filter(i -> Objects.equals(i.tid().basePath(), inst.tid().basePath())).count();
-                long rash = Router.readFromSpace(inst.tid().rng(fURI.ALL)).stream().filter(i -> Objects.equals(i.tid().basePath(), inst.tid().basePath())).count();
+                long rash = Router.readFromSpace(inst.tid().rng(ALL)).stream().filter(i -> Objects.equals(i.tid().basePath(), inst.tid().basePath())).count();
                 long dr = Router.readFromSpace(inst.tid().rng(null).dom(null)).stream().filter(i -> Objects.equals(i.tid().basePath(), inst.tid().basePath())).count();
-                long drash = Router.readFromSpace(inst.tid().rng(fURI.ALL).dom(fURI.ALL)).stream().filter(i -> Objects.equals(i.tid().basePath(), inst.tid().basePath())).count();
+                long drash = Router.readFromSpace(inst.tid().rng(ALL).dom(ALL)).stream().filter(i -> Objects.equals(i.tid().basePath(), inst.tid().basePath())).count();
                 LOG.debug("inst [%s] dom [%s] rng [%s] domRng [%s]", inst.tid().basePath(), d, r, dr);
                 assertTrue(d > 0);
                 if (!inst.dom().c().isZeroable())

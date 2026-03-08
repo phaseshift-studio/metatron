@@ -39,7 +39,7 @@ import studio.phaseshift.metatron.util.Tuple;
 import static org.apache.tinkerpop.gremlin.LoadGraphWith.GraphData.GRATEFUL;
 import static org.apache.tinkerpop.gremlin.LoadGraphWith.GraphData.MODERN;
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.GRPH_ISA_TID;
 import static studio.phaseshift.metatron.isa.grph.tp3.tp3InstSet.TP3_ISA_TID;
 import static studio.phaseshift.metatron.isa.iot.iotInstSet.IOT_ISA_TID;

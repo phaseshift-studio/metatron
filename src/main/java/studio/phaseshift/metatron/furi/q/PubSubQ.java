@@ -33,8 +33,8 @@ import java.util.Optional;
 import java.util.Queue;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.fURI.ALL;
-import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -97,14 +97,14 @@ public class PubSubQ extends BaseQ {
     public static class Subscription extends MRec {
 
         public Subscription(final Rec prerec) {
-            super(prerec.jvm(), SUBSCRIPTION_TID, fURI.fnull);
+            super(prerec.jvm(), SUBSCRIPTION_TID, null);
         }
 
         public Subscription(final fURI source, final fURI target, final Call call) {
             super(CommonUtil.immutableOrderedMap(
                     uri(SRC), uri(source),
                     uri(TGT), uri(target),
-                    uri(ON_RECV), call), SUBSCRIPTION_TID, fURI.fnull);
+                    uri(ON_RECV), call), SUBSCRIPTION_TID, null);
         }
 
         public fURI source() {
@@ -128,7 +128,7 @@ public class PubSubQ extends BaseQ {
 
         @Override
         public Optional<Obj> preRead(final fURI source, final fURI vid) {
-            if (vid.hasQuery(SUB)) {
+            if (vid.hasQ(SUB)) {
                 LOG.trace("evaluating {{y}}preread{{/y}}: %s", vid);
                 return Optional.of(subscriptions.elements().map(Rel::second).map(Obj::<Subscription>as).filter(s -> vid.basePath().bimatches(s.target())).map(Obj::<Obj>as).reduce(Obj::append).orElse(noobj()));
             }
@@ -164,7 +164,7 @@ public class PubSubQ extends BaseQ {
         @Override
         public Optional<Obj> postWrite(final fURI source, final fURI vid, final Obj obj, final Obj obj2) {
             LOG.debug("evaluating {{y}}postwrite{{/y}}: %s => %s", obj, vid);
-            if (vid.hasQuery(SUB)) {
+            if (vid.hasQ(SUB)) {
                 if (obj.isNoObj()) {
                     subscriptions.jvm().remove(vid.basePath().toUri());
                 } else if (obj.tid().basePath().equals(SUBSCRIPTION_TID)) {

@@ -29,7 +29,7 @@ import studio.phaseshift.metatron.isa.mach.type.Router;
 
 import java.util.function.Function;
 
-import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.iot.haos.haosInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;

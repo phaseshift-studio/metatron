@@ -34,7 +34,7 @@ import studio.phaseshift.metatron.util.IteratorUtil;
 
 import java.util.Map;
 
-import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.*;
 import static studio.phaseshift.metatron.isa.grph.tp3.space.EdgeMap.lazyEdgeToRec;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
@@ -105,7 +105,7 @@ public class VertexMap extends ElementMap {
     }
 
     public static Rec vertexToRec(final Vertex vertex, final Rec lhs) {
-        return rec().self(new VertexMap(vertex, lhs.<ElementMap>jvmAs().space), f(vertex.label()).c(lhs.c().toString()), lhs.<ElementMap>jvmAs().space.elementVID(vertex)).parent(lhs);
+        return rec().self(new VertexMap(vertex, lhs.<ElementMap>jvmAs().space), f(vertex.label()).c(lhs.c()), lhs.<ElementMap>jvmAs().space.elementVID(vertex)).parent(lhs);
     }
 
     public static Rec vertexToRec(final Vertex vertex) {

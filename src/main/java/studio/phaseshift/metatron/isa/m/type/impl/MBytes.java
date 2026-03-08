@@ -35,11 +35,11 @@ public class MBytes extends MObj implements Bytes {
     }
 
     public static Bytes bytes(final ByteBuffer jvm) {
-        return bytes(jvm, BYTES_TID, fURI.fnull);
+        return bytes(jvm, BYTES_TID,null);
     }
 
     public static Bytes bytes(final byte[] jvm) {
-        return bytes(ByteBuffer.wrap(jvm), BYTES_TID, fURI.fnull);
+        return bytes(ByteBuffer.wrap(jvm), BYTES_TID,null);
     }
 
     public static Bytes bytes(final ByteBuffer jvm, final fURI tid, final fURI vid) {

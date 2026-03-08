@@ -40,7 +40,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static studio.phaseshift.metatron.furi.fURI.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.grph.tp3.space.tp3Space.FACTORY;
 import static studio.phaseshift.metatron.isa.m.mInstSet.AUTO_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.INST_TID;
@@ -155,7 +155,7 @@ public abstract class ElementMap extends AbstractMap<Uri, Obj> {
         private final E map;
 
         public LazyAutoElmnt(final E map) {
-            super(Tuple.Triplet.with(lst(List.of()), null, noobj()), INST_TID, fURI.fnull);
+            super(Tuple.Triplet.with(lst(List.of()), null, noobj()), INST_TID,null);
             this.map = map;
         }
 

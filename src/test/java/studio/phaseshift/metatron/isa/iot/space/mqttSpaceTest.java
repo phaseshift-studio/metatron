@@ -38,6 +38,7 @@ import studio.phaseshift.metatron.util.MTronException;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.PubSubQ.SUBSCRIPTION_TID;
 import static studio.phaseshift.metatron.isa.iot.iotInstSet.IOT_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -58,7 +59,7 @@ public class mqttSpaceTest extends AbstractSpaceTest {
                 return mqttSpace.of(rec(
                         uri(HOST), uri("mqtt://127.0.0.1:" + PORT),
                         uri(PATTERN), uri("/t/#"),
-                        uri(REWRITE), rel(uri("/t"), uri("/t"))), fURI.of("/sys/router/space/t"));
+                        uri(REWRITE), rel(uri("/t"), uri("/t"))), f("/sys/router/space/t"));
                 //space.directWriter().apply(f("#"), noobj());
             } catch (Exception e) {
                 throw MTronException.of(e);

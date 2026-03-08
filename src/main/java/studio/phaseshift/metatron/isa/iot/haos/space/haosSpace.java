@@ -33,7 +33,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.fURI.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.iot.haos.haosInstSet.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.BASE_TYPES;
 import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TID;
@@ -74,7 +74,7 @@ public class haosSpace extends mqttSpace {
         }
 
         public static EntityType inferFrom(final fURI id) {
-            final String path = id.path();
+            final String path = id.pathString();
             if (path.startsWith("sensor")) return SENSOR;
             else if (path.startsWith("switch")) return SWITCH;
             else if (path.startsWith("button")) return BUTTON;
@@ -89,7 +89,7 @@ public class haosSpace extends mqttSpace {
     public static final Type HAOS_SPACE_TYPE = Type.Builder.build()
             .tid(MQTT_SPACE_TID)
             .vid(HAOS_SPACE_TID)
-            .constructor(instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(HAOS_SPACE_TID),
+            .constructor(instC(mInstSet.INST_TID.dom(ALL).rng(HAOS_SPACE_TID),
                     lst(isa_(rec(uri(PATTERN), URI_TYPE)).tryToInst()), (lhs, inst) -> {
                         final Space space = haosSpace.of(inst.arg(0).asRec(), inst.arg(0).vid());
                         Router.global().addSpace(space);

@@ -47,7 +47,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)

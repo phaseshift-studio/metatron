@@ -33,8 +33,8 @@ import java.util.stream.Stream;
 import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.Tokens.Q;
 import static studio.phaseshift.metatron.furi.Q.Q_TYPE;
-import static studio.phaseshift.metatron.furi.fURI.ALL;
-import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.space.memSpace.MEM_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.space.metaSpace.META_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.space.stackSpace.STACK_SPACE_TYPE;
@@ -74,7 +74,7 @@ public class mInstSet extends AbstractInstSet {
     public static final fURI OBJS_TID = M_ISA_TID.extend("objs");
     public static final fURI TYPE_TID = M_ISA_TID.extend("type");
     public static final fURI CODE_TID = M_ISA_TID.extend("code");
-    public static final fURI NOOBJ_TID = fURI.of("noobj");
+    public static final fURI NOOBJ_TID = f("noobj");
     public static final fURI ALL_STAR = ALL.maybeSome();
     public static final fURI SPACE_TID = M_ISA_TID.extend("space");
     /// ////////////////////////////////////////////////////////

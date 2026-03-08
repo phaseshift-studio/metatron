@@ -78,7 +78,7 @@ public class miotInstSet extends AbstractInstSet {
             if (obj.parent().vid() != null) {
                 return obj.parent().vid().extend(childVID);
             } else {
-                return deduceVID(obj.parent(), childVID.retract());
+                return deduceVID(obj.parent(), childVID.retract(1));
             }
         }
         return null;

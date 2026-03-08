@@ -80,7 +80,7 @@ private Map<Obj, Obj> createProperties(final Element element) {
                         uri(PROPS), props.isEmpty() ? noobj() : rec(props),
                         uri(Direction.OUT.name()), auto(this.builder.root.extend("V").extend(tpEdge.outVertex().id().toString())),
                         uri(Direction.IN.name()), auto(this.builder.root.extend("V").extend(tpEdge.inVertex().id().toString()))),
-                EDGE_TID, fURI.fnull);
+                EDGE_TID,null);
         //this.builder.root.extend("E").extend(tpEdge.id().toString()));
     }
 
@@ -99,7 +99,7 @@ private Map<Obj, Obj> createProperties(final Element element) {
                             uri(Direction.OUT.name()), out.isEmpty() ? noobj() : rec(out),
                             uri(Direction.IN.name()), in.isEmpty() ? noobj() : rec(in)),
                     VRTX_TID,
-                    fURI.fnull));
+                   null));
             //this.builder.root.extend("V").extend(tpV.id().toString()));
         });
         

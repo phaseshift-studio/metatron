@@ -26,8 +26,7 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.lang.reflect.Field;
 import java.util.Map;
 
-import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.furi.fURI.fnull;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TID;
 
@@ -72,6 +71,6 @@ public class JObjFactory extends MObjFactory {
         } catch (final MTronException e) {
             // do nothing
         }
-        return new JRec(value, Map.of(), null == tid ? f(value.getClass().getCanonicalName().replace(".", "/")) : tid, fnull);
+        return new JRec(value, Map.of(), null == tid ? f(value.getClass().getCanonicalName().replace(".", "/")) : tid, null);
     }
 }

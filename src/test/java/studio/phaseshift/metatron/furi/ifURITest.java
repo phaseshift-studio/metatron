@@ -30,7 +30,8 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.DOM;
 import static studio.phaseshift.metatron.Tokens.RNG;
-import static studio.phaseshift.metatron.furi.ifURI.parseQuery;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.parseQuery;
 
 
 /*
@@ -71,8 +72,8 @@ public class ifURITest extends AbstractMetatronTest {
             // "/a/b?a=b&c=d                | 2   | ?a=b&c=d",
     }, delimiter = '|', nullValues = "null")
     public void testRetract(final String furi, final int steps, final String expected) {
-        final ifURI start = ifURI.of(furi);
-        final ifURI end = ifURI.of(expected);
+        final fURI start = f(furi);
+        final fURI end = f(expected);
         assertEquals(end, start.retract(steps), printComponents(start.retract(steps)) + printComponents(end));
         LOG.error("testing %s retracted %d steps is %s", start, steps, expected);
         printComponents(start);
@@ -93,14 +94,14 @@ public class ifURITest extends AbstractMetatronTest {
             "/fhat.org/a/b               | 1   | /a/b",
             "fhat.org/a/b                | 1   | a/b",
             "/a/b/c?a=b&c=d              | 1   | /b/c?a=b&c=d",
-            "/a/b/c?a=b&c=d              | 2   | /c?a=b&c=d",
-            "/a/b/c/?a=b&c=d             | 2   | /c/?a=b&c=d",
+            "/a/b/c?a=b&c=d              | 2   | /b/c?a=b&c=d",
+            "/a/b/c/?a=b&c=d             | 2   | /b/c/?a=b&c=d",
             "/a/b/c{*}?a=b&c=d           | 1   | /b/c{*}?a=b&c=d",
-            "/a/b/c{2,3}?a=b&c=d         | 2   | /c{2,3}?a=b&c=d",
+            "/a/b/c{2,3}?a=b&c=d         | 2   | /b/c{2,3}?a=b&c=d",
     }, delimiter = '|')
     public void testPretract(final String furi, final int steps, final String expected) {
-        final fURI start = fURI.of(furi);
-        final fURI end = fURI.of(expected);
+        final fURI start = f(furi);
+        final fURI end = f(expected);
         assertEquals(end, start.pretract(steps));
         LOG.debug("testing %s pretracted %d steps is %s", start, steps, expected);
     }
@@ -123,7 +124,7 @@ public class ifURITest extends AbstractMetatronTest {
             ",null,-1"
     })
     void testAuthority(final String furi, final String host, final int port) {
-        final fURI f = fURI.of(furi);
+        final fURI f = f(furi);
         if (host.equals("null"))
             assertNull(f.host());
         else
@@ -132,7 +133,7 @@ public class ifURITest extends AbstractMetatronTest {
     }
 
     @ParameterizedTest
-    @CsvSource(value={
+    @CsvSource(value = {
             "http://fhatos.org/a     | false | false",
             "http://fhatos.org:80/a/ | false | true",
             "http://fhatos.org/      | false | true",
@@ -141,17 +142,48 @@ public class ifURITest extends AbstractMetatronTest {
             "http://#/a/b/c          | false | false",
             "http://#:29/a/b/c       | false | false",
             "/a/b/c/                 | false | true"
-    },delimiter = '|')
+    }, delimiter = '|')
     void testSlashes(final String furi, final boolean isRelative, final boolean isBranch) {
-        final ifURI f = ifURI.of(furi);
-        assertEquals(isRelative,f.isRelative());
-        assertEquals(isBranch,f.isBranch());
-        assertEquals(!isRelative,f.isAbsolute());
-        assertEquals(!isBranch,f.isNode());
+        final fURI f = f(furi);
+        assertEquals(isRelative, f.isRelative());
+        assertEquals(isBranch, f.isBranch());
+        assertEquals(!isRelative, f.isAbsolute());
+        assertEquals(!isBranch, f.isNode());
     }
 
     @ParameterizedTest
-    @CsvSource(value={
+    @CsvSource(value = {
+            "/    | /",
+            "http://fhatos.org/a     | http://fhatos.org/a",
+            "http://fhatos.org:80/a/ | http://fhatos.org:80/a/",
+            "http://fhatos.org/      | http://fhatos.org",
+            "http://fhatos.org/a/b   | http://fhatos.org/a/b",
+            "+/a/b/c/                | +/a/b/c/",
+            "http://#/a/b/c          | http://#/a/b/c",
+            "http://#:29/a/b/c       | http://#:29/a/b/c",
+            "/a/b/c/                 | /a/b/c/"
+    }, delimiter = '|')
+    void testString(final String furi, final String furiString) {
+        final fURI f = f(furi);
+        assertEquals(furiString, f.toString());
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "int     | /m/int",
+            "int{3}  | /m/int{3}",
+            "str{+}  | /m/str{1,}",
+            "plus    | /m/inst/plus",
+            "plus?int<=int | /m/inst/plus?/m/int<=/m/int"
+    }, delimiter = '|')
+    void testBig(final String furi, final String fURIBig) {
+        final fURI f = f(furi);
+        assertEquals(f(fURIBig), f.big());
+    }
+
+
+    @ParameterizedTest
+    @CsvSource(value = {
             "http://fhatos.org/a     | 2",
             "http://fhatos.org:80/a/ | 3",
             "http://fhatos.org/      | 0", // TODO: shouldn't this be 1?
@@ -162,10 +194,10 @@ public class ifURITest extends AbstractMetatronTest {
             "http://#:29/a/b/c       | 4",
             "http://#:29/a/b/c/      | 5",
             "/a/b/c/                 | 5"
-    },delimiter = '|')
+    }, delimiter = '|')
     void testPathLength(final String furi, final int length) {
-        final ifURI f = ifURI.of(furi);
-        assertEquals(length,f.pathLength());
+        final fURI f = f(furi);
+        assertEquals(length, f.pathLength());
     }
 
     @ParameterizedTest
@@ -178,7 +210,8 @@ public class ifURITest extends AbstractMetatronTest {
             "/mtron/+/plus{?}?rng=/mtron/int{0,23}|?"
     }, delimiter = '|')
     void testCoefficients(final String furi, final String coefficient) {
-        assertEquals(coefficient, fURI.of(furi).c());
+        assertEquals(cInt.of(coefficient), f(furi).c());
+        assertEquals(coefficient, f(furi).c().toString());
     }
 
     @ParameterizedTest
@@ -207,8 +240,8 @@ public class ifURITest extends AbstractMetatronTest {
             "mtron:/b/c?xyz{+}<=abc{2}&a=b&c=d   | mtron | null | -1  | /b/c     | 1        | null | rng=xyz{+}&dom=abc{2}&a=b&c=d"},
             delimiter = '|', nullValues = "null")
     public void testParse(final String furi, final String scheme, final String host, final int port, final String path, final String coefficient, final String poly, final String query) {
-        final ifURI parse = ifURI.of(furi);
-        final ifURI components = ifURI.of(scheme, host, port, null == path ? List.of() : Arrays.asList(path.split("/")), cInt.of(coefficient), List.of(), parseQuery(query));
+        final fURI parse = f(furi);
+        final fURI components = fURI.of(scheme, host, port, null == path ? List.of() : Arrays.asList(path.split("/")), cInt.of(coefficient), List.of(), parseQuery(query));
         LOG.error("testing:" +
                 "\n\tparse    : {{b}}%s{{X}} " +
                 "\n\tcomponent: {{b}}%s{{X}}", parse, components);
@@ -228,7 +261,7 @@ public class ifURITest extends AbstractMetatronTest {
             "m:m:m:m                 | m"
     }, delimiter = '|', nullValues = "null")
     public void testScheme(final String furi, final String scheme) {
-        assertEquals(scheme, ifURI.of(furi).scheme());
+        assertEquals(scheme, f(furi).scheme());
     }
 
     @ParameterizedTest
@@ -246,8 +279,8 @@ public class ifURITest extends AbstractMetatronTest {
             "mtron:lang/obj             |  "
     }, delimiter = '|')
     public void testHostOrSegment(final String a, final String b) {
-        printComponents(ifURI.of(a));
-        assertEquals(ifURI.of(a).host(), b);
+        printComponents(f(a));
+        assertEquals(f(a).host(), b);
     }
 
     @ParameterizedTest
@@ -266,8 +299,8 @@ public class ifURITest extends AbstractMetatronTest {
             "a/b/c/d                    |  a/+/c    | true",
     }, delimiter = '|')
     public void testHasPrefix(final String a, final String b, final boolean hasPrefix) {
-        LOG.error("testing {{b}}%s{{X}} has prefix {{b}}%s{{X}} [expected: %s]", ifURI.of(a), ifURI.of(b), hasPrefix);
-        assertEquals(hasPrefix, ifURI.of(a).hasPrefix(b));
+        LOG.error("testing {{b}}%s{{X}} has prefix {{b}}%s{{X}} [expected: %s]", f(a), f(b), hasPrefix);
+        assertEquals(hasPrefix, f(a).hasPrefix(b));
     }
 
     @ParameterizedTest
@@ -287,10 +320,10 @@ public class ifURITest extends AbstractMetatronTest {
             "a/./z/../b    | a/b",
     }, delimiter = '|')
     public void testResolve(final String f1, final String f2) {
-        final ifURI furi1a = ifURI.of(f1);
-        final ifURI furi1b = ifURI.of(f2);
-        //  final ifURI furi2a = mParser.m_furi().parse(f1).get();
-        //  final ifURI furi2b = mParser.m_furi().parse(f2).get();
+        final fURI furi1a = f(f1);
+        final fURI furi1b = f(f2);
+        //  final fURI furi2a = mParser.m_furi().parse(f1).get();
+        //  final fURI furi2b = mParser.m_furi().parse(f2).get();
         // LOG.info("testing {{b}}%s{{/b}} {{g}}=>{{/g}} {{b}}%s{{b}} resolution", furi1a, furi2b);
         //assertEquals(furi1a.resolve(), furi2b);
         //assertEquals(furi2a.resolve(), furi1b);
@@ -316,8 +349,8 @@ public class ifURITest extends AbstractMetatronTest {
             "a/b/c/d                    |  +/c/d    | true",
     }, delimiter = '|')
     public void testHasPostfix(final String a, final String b, final boolean hasPostfix) {
-        LOG.error("testing {{b}}%s{{X}} has postfix {{b}}%s{{X}} [expected: %s]", ifURI.of(a), ifURI.of(b), hasPostfix);
-        assertEquals(hasPostfix, ifURI.of(a).hasPostfix(b));
+        LOG.error("testing {{b}}%s{{X}} has postfix {{b}}%s{{X}} [expected: %s]", f(a), f(b), hasPostfix);
+        assertEquals(hasPostfix, f(a).hasPostfix(b));
     }
 
 
@@ -339,8 +372,8 @@ public class ifURITest extends AbstractMetatronTest {
             "a{10,}             | a{,-10}"
     }, delimiter = '|')
     public void testNeg(final String f1, final String expected) {
-        final ifURI furi1 = ifURI.of(f1);
-        final ifURI furi2 = ifURI.of(expected);
+        final fURI furi1 = f(f1);
+        final fURI furi2 = f(expected);
         checkEquals(furi2, furi1.neg());
     }
 
@@ -359,9 +392,9 @@ public class ifURITest extends AbstractMetatronTest {
             "/a/?a=1&b=2          | /b/?a=3&c=6         | /a/b/?a=3&b=2&c=6"
     }, delimiter = '|')
     public void testMult(final String f1, final String f2, final String expected) {
-        final ifURI furi1 = ifURI.of(f1);
-        final ifURI furi2 = ifURI.of(f2);
-        final ifURI result = ifURI.of(expected);
+        final fURI furi1 = f(f1);
+        final fURI furi2 = f(f2);
+        final fURI result = f(expected);
         checkEquals(result, furi1.mult(furi2));
     }
 
@@ -381,9 +414,9 @@ public class ifURITest extends AbstractMetatronTest {
             "/a/b/{2}?a=1&b=2     | /a/b/?a=3&c=6               | /a/b/{3}?a=3&b=2&c=6"
     }, delimiter = '|')
     public void testPlus(final String f1, final String f2, final String expected) {
-        final ifURI furi1 = ifURI.of(f1);
-        final ifURI furi2 = ifURI.of(f2);
-        final ifURI result = ifURI.of(expected);
+        final fURI furi1 = f(f1);
+        final fURI furi2 = f(f2);
+        final fURI result = f(expected);
         if (result.toString().equals("<ERROR>")) {
             try {
                 furi1.plus(furi2);
@@ -404,8 +437,8 @@ public class ifURITest extends AbstractMetatronTest {
             "/test.com?c=abc|/test.com|c|abc|c|abc"},
             delimiter = '|', nullValues = "null")
     public void testQueryWrite(final String expected, final String base, final String k1, final String v1, final String k2, final String v2) {
-        final ifURI expectedfURI = ifURI.of(expected);
-        final ifURI resultfURI = ifURI.of(base).q(k1, v1).q(k2, v2);
+        final fURI expectedfURI = f(expected);
+        final fURI resultfURI = f(base).q(k1, v1).q(k2, v2);
         assertEquals(expectedfURI, resultfURI);
     }
 
@@ -430,9 +463,9 @@ public class ifURITest extends AbstractMetatronTest {
     },
             delimiter = '|')
     public void testHead(final String f, final int steps, final String head) {
-        final ifURI furi = ifURI.of(f);
-        final ifURI computedHead = furi.head(steps);
-        final ifURI expectedHead = ifURI.of(head);
+        final fURI furi = f(f);
+        final fURI computedHead = furi.head(steps);
+        final fURI expectedHead = f(head);
         assertEquals(expectedHead, computedHead);
     }
 
@@ -457,9 +490,9 @@ public class ifURITest extends AbstractMetatronTest {
     },
             delimiter = '|')
     public void testTail(final String f, final int steps, final String tail) {
-        final ifURI furi = ifURI.of(f);
-        final ifURI computedHead = furi.tail(steps);
-        final ifURI expectedHead = ifURI.of(tail);
+        final fURI furi = f(f);
+        final fURI computedHead = furi.tail(steps);
+        final fURI expectedHead = f(tail);
         assertEquals(expectedHead, computedHead);
         checkEquals(furi.tail(steps), expectedHead);
     }
@@ -481,8 +514,8 @@ public class ifURITest extends AbstractMetatronTest {
     },
             delimiter = '|')
     public void testPrepend(final String base, final String prepend, final String expected) {
-        assertEquals(ifURI.of(expected), ifURI.of(base).prepend(prepend));
-        checkEquals(ifURI.of(base).prepend(prepend), ifURI.of(expected));
+        assertEquals(f(expected), f(base).prepend(prepend));
+        checkEquals(f(base).prepend(prepend), f(expected));
     }
 
     @ParameterizedTest
@@ -501,9 +534,9 @@ public class ifURITest extends AbstractMetatronTest {
             "mtron://www.com/b/c/d{2}    | /a/b/c  |  mtron://www.com/b/c/d//a/b/c{2}",
     }, delimiter = '|')
     public void testExtend(final String base, final String prepend, final String expected) {
-        LOG.error("testing {{b}}%s{{X}} extend {{b}}%s{{X}} [expected: %s]", ifURI.of(base), ifURI.of(prepend), ifURI.of(expected));
-        assertEquals(ifURI.of(expected), ifURI.of(base).extend(prepend));
-        checkEquals(ifURI.of(base).extend(prepend), ifURI.of(expected));
+        LOG.error("testing {{b}}%s{{X}} extend {{b}}%s{{X}} [expected: %s]", f(base), f(prepend), f(expected));
+        assertEquals(f(expected), f(base).extend(prepend));
+        checkEquals(f(base).extend(prepend), f(expected));
     }
 
     @ParameterizedTest
@@ -741,11 +774,11 @@ public class ifURITest extends AbstractMetatronTest {
             //        ":y|:+|true",
     }, delimiter = '|', nullValues = "null")
     void testMatches(final String a, final String b, final boolean shouldMatch) {
-        final ifURI furi1a = ifURI.of(a);
-        final ifURI furi1b = ifURI.of(b);
+        final fURI furi1a = f(a);
+        final fURI furi1b = f(b);
        /* final boolean doObjParser = null != a && null != b && !a.equals("{0}");
-        final fURI furi2a = doObjParser ? mParser.m_furi().parse(a).get() : fURI.of(a);
-        final fURI furi2b = doObjParser ? mParser.m_furi().parse(b).get() : fURI.of(b);
+        final fURI furi2a = doObjParser ? mParser.m_furi().parse(a).get() : f(a);
+        final fURI furi2b = doObjParser ? mParser.m_furi().parse(b).get() : f(b);
         LOG.trace("testing: {{b}}%s{{/b}} %s {{b}}%s{{/b}}", furi1a, shouldMatch ? "{{g}}should match{{/g}}" : "{{r}}should not match{{/r}}", furi1b);
         LOG.trace("testing: {{b}}%s{{/b}} %s {{b}}%s{{/b}}", furi2a, shouldMatch ? "{{g}}should match{{/g}}" : "{{r}}should not match{{/r}}", furi2b);
         LOG.trace("testing: {{b}}%s{{/b}} %s {{b}}%s{{/b}}", furi1a, shouldMatch ? "{{g}}should match{{/g}}" : "{{r}}should not match{{/r}}", furi2b);
@@ -777,7 +810,7 @@ public class ifURITest extends AbstractMetatronTest {
             "a/b/.                   |.",
     }, delimiter = '|')
     void testName(final String furi, final String name) {
-        assertEquals(name, ifURI.of(furi).name());
+        assertEquals(name, f(furi).name());
     }
 
     @ParameterizedTest
@@ -801,7 +834,7 @@ public class ifURITest extends AbstractMetatronTest {
             "a/b/c{?}                |false"
     }, delimiter = '|')
     void testHasPattern(final String furi, final boolean pattern) {
-        assertEquals(pattern, ifURI.of(furi).hasPattern());
+        assertEquals(pattern, f(furi).hasPattern());
     }
 
     @ParameterizedTest
@@ -817,10 +850,10 @@ public class ifURITest extends AbstractMetatronTest {
             "/temp{*}?rng=int{2,35}&dom=str{**}&a=2&c&g=/m/int     | /temp                     | int{2,35} | str{,}  | 0,   |a=2&c&g=/m/int",
     }, delimiter = '|')
     void testDomRng(final String furi, final String base, final String rng, final String dom, final String coefficient, final String query) {
-        final ifURI furiObj = ifURI.of(furi);
-        final ifURI baseObj = ifURI.of(base);
-        final ifURI domObj = ifURI.of(dom);
-        final ifURI rngObj = ifURI.of(rng);
+        final fURI furiObj = f(furi);
+        final fURI baseObj = f(base);
+        final fURI domObj = f(dom);
+        final fURI rngObj = f(rng);
         final C<?, ?> cObj = cInt.of(coefficient);
         assertEquals(baseObj, furiObj.basePath());
         assertEquals(cObj, furiObj.c());
@@ -840,7 +873,7 @@ public class ifURITest extends AbstractMetatronTest {
     }
 
 
-    private void checkMatches(final ifURI furiA, final ifURI furiB, final boolean matches) {
+    private void checkMatches(final fURI furiA, final fURI furiB, final boolean matches) {
         LOG.error("testing equality:" +
                 "\n\tparse    : {{b}}%s{{X}} " +
                 "\n\tcomponent: {{b}}%s{{X}}", furiA, furiB);
@@ -848,10 +881,10 @@ public class ifURITest extends AbstractMetatronTest {
         LOG.error("component class: %s", furiB.getClass().getSimpleName());
         if (false && matches) {
 
-            assertTrue(ifURI.of(furiA.scheme()).test(ifURI.of(furiB.scheme())), "schemas don't match");
-            assertTrue(ifURI.of(furiA.host()).test(ifURI.of(furiB.host())), "hosts don't match");
+            assertTrue(f(furiA.scheme()).test(f(furiB.scheme())), "schemas don't match");
+            assertTrue(f(furiA.host()).test(f(furiB.host())), "hosts don't match");
             assertEquals(furiA.port(), furiB.port(), "ports don't match");
-            assertTrue(ifURI.of(furiA.pathString()).test(ifURI.of(furiB.pathString())), "paths don't match");
+            assertTrue(f(furiA.pathString()).test(f(furiB.pathString())), "paths don't match");
             assertTrue(((C) furiA.c()).within(furiB.c()), "coefficients don't match");
             assertEquals(furiA.qMap(), furiB.qMap(), "queries don't match");
         }
@@ -859,7 +892,7 @@ public class ifURITest extends AbstractMetatronTest {
         assertEquals(matches, furiA.test(furiB), "furis " + (matches ? "don't" : "shouldn't") + " match");
     }
 
-    private void checkEquals(final ifURI furiA, final ifURI furiB) {
+    private void checkEquals(final fURI furiA, final fURI furiB) {
         LOG.error("testing equality:" +
                 "\n\tparse    : {{b}}%s{{X}} " +
                 "\n\tcomponent: {{b}}%s{{X}}", furiA, furiB);
@@ -876,7 +909,7 @@ public class ifURITest extends AbstractMetatronTest {
 
     }
 
-    private String printComponents(final ifURI furi) {
+    private String printComponents(final fURI furi) {
         LOG.error("parse: {{b}}%s{{X}}", furi);
         LOG.error("class:  %s", furi.getClass().getSimpleName());
         LOG.error("schema: %s", furi.scheme());
