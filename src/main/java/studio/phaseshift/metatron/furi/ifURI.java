@@ -112,6 +112,12 @@ public interface ifURI {
 
     int pathLength();
 
+    ifURI neg();
+
+    ifURI mult(final ifURI other);
+
+    ifURI plus(final ifURI other);
+
     C<?, ?> c();
 
     ifURI c(final C<?, ?> coefficient);

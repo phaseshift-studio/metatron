@@ -39,9 +39,4 @@ public class SXPCXfURI extends XXPCXfURI {
     public String scheme() {
         return this.scheme;
     }
-
-    @Override
-    public ifURI scheme(final String scheme) {
-        return new SXPCXfURI(scheme, this.path, this.coefficient);
-    }
 }

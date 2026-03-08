@@ -38,10 +38,5 @@ public class SXPXXfURI extends XXPXXfURI {
     public String scheme() {
         return this.scheme;
     }
-
-    @Override
-    public ifURI scheme(final String scheme) {
-        return new SXPXXfURI(scheme, this.path);
-    }
 }
 

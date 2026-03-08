@@ -38,14 +38,4 @@ public class XXPXXfURI extends AbstractfURI {
     public List<String> path() {
         return this.path;
     }
-
-    @Override
-    public ifURI dom(final ifURI dom) {
-        return null; // TODO
-    }
-
-    @Override
-    public ifURI rng(final ifURI rng) {
-        return null; // TODO    
-    }
 }

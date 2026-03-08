@@ -274,6 +274,38 @@ public abstract class AbstractfURI implements ifURI {
     }
 
     @Override
+    public ifURI neg() {
+        return ifURI.of(this.scheme(), this.host(), this.port(), this.path(), this.c().neg(), List.of(), this.qMap());
+    }
+
+    @Override
+    public ifURI mult(final ifURI other) {
+        final List<String> newPath = new ArrayList<>(this.path());
+        if (!other.path().isEmpty()) {
+            if (!newPath.isEmpty() && newPath.getLast().isEmpty())
+                newPath.removeLast();
+            newPath.addAll(other.path().getFirst().isEmpty() ? other.path().subList(1, other.path().size()) : other.path());
+        }
+        final Map<String, String> newQ = new LinkedHashMap<>(this.qMap());
+        newQ.putAll(other.qMap());
+        return ifURI.of(this.scheme(), this.host(), this.port(), newPath, ((C) this.c()).mult(other.c()), List.of(), newQ);
+    }
+
+    @Override
+    public ifURI plus(final ifURI other) {
+        if (Objects.equals(this.scheme(), other.scheme()) &&
+                Objects.equals(this.host(), other.host()) &&
+                Objects.equals(this.port(), other.port()) &&
+                Objects.equals(this.path(), other.path())) {
+            final Map<String, String> newQ = new LinkedHashMap<>(this.qMap());
+            newQ.putAll(other.qMap());
+            return ifURI.of(this.scheme(), this.host(), this.port(), this.path(), ((C) this.c()).plus(other.c()), List.of(), newQ);
+        } else {
+            throw MTronException.of("unable to add %s to %s", other, this);
+        }
+    }
+
+    @Override
     public boolean hasPostfix(String postfix) {
         final List<String> postfixSegments = new ArrayList<>();
         Collections.addAll(postfixSegments, postfix.split("/"));

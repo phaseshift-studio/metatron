@@ -39,9 +39,4 @@ public class SAPCXfURI extends SAPXXfURI {
     public cInt c() {
         return this.coefficient;
     }
-
-    @Override
-    public ifURI c(final C<?, ?> coefficient) {
-        return new SAPCXfURI(this.scheme, this.host, this.port, this.path, coefficient);
-    }
 }

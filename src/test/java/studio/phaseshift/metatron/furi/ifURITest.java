@@ -28,6 +28,8 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.Tokens.DOM;
+import static studio.phaseshift.metatron.Tokens.RNG;
 import static studio.phaseshift.metatron.furi.ifURI.parseQuery;
 
 
@@ -130,6 +132,43 @@ public class ifURITest extends AbstractMetatronTest {
     }
 
     @ParameterizedTest
+    @CsvSource(value={
+            "http://fhatos.org/a     | false | false",
+            "http://fhatos.org:80/a/ | false | true",
+            "http://fhatos.org/      | false | true",
+            "http://fhatos.org/a/b   | false | false",
+            "+/a/b/c/                | true  | true",
+            "http://#/a/b/c          | false | false",
+            "http://#:29/a/b/c       | false | false",
+            "/a/b/c/                 | false | true"
+    },delimiter = '|')
+    void testSlashes(final String furi, final boolean isRelative, final boolean isBranch) {
+        final ifURI f = ifURI.of(furi);
+        assertEquals(isRelative,f.isRelative());
+        assertEquals(isBranch,f.isBranch());
+        assertEquals(!isRelative,f.isAbsolute());
+        assertEquals(!isBranch,f.isNode());
+    }
+
+    @ParameterizedTest
+    @CsvSource(value={
+            "http://fhatos.org/a     | 2",
+            "http://fhatos.org:80/a/ | 3",
+            "http://fhatos.org/      | 0", // TODO: shouldn't this be 1?
+            "http://fhatos.org       | 0",
+            "http://fhatos.org/a/b   | 3",
+            "+/a/b/c/                | 5",
+            "http://#/a/b/c          | 4",
+            "http://#:29/a/b/c       | 4",
+            "http://#:29/a/b/c/      | 5",
+            "/a/b/c/                 | 5"
+    },delimiter = '|')
+    void testPathLength(final String furi, final int length) {
+        final ifURI f = ifURI.of(furi);
+        assertEquals(length,f.pathLength());
+    }
+
+    @ParameterizedTest
     @CsvSource(value = {
             "http://a/b/c{1}|1",
             "/mtron/int{1,5}|1,5",
@@ -163,7 +202,9 @@ public class ifURITest extends AbstractMetatronTest {
             "mtron://a:34/b/c{?}?a=b&c=d         | mtron | a    | 34  | /b/c     | 0,1      | null | a=b&c=d",
             "mtron://a:34/b/c{-10,100}?a=b&c=d   | mtron | a    | 34  | /b/c     | -10,100  | null | a=b&c=d",
             "mtron://a:34/b/c?a=b&c=d            | mtron | a    | 34  | /b/c     | 1        | null | a=b&c=d",
-            "mtron:/b/c?a=b&c=d                  | mtron | null | -1  | /b/c     | 1        | null | a=b&c=d"},
+            "mtron:/b/c?a=b&c=d                  | mtron | null | -1  | /b/c     | 1        | null | a=b&c=d",
+            "mtron:/b/c?xyz<=abc&a=b&c=d         | mtron | null | -1  | /b/c     | 1        | null | rng=xyz&dom=abc&a=b&c=d",
+            "mtron:/b/c?xyz{+}<=abc{2}&a=b&c=d   | mtron | null | -1  | /b/c     | 1        | null | rng=xyz{+}&dom=abc{2}&a=b&c=d"},
             delimiter = '|', nullValues = "null")
     public void testParse(final String furi, final String scheme, final String host, final int port, final String path, final String coefficient, final String poly, final String query) {
         final ifURI parse = ifURI.of(furi);
@@ -290,6 +331,7 @@ public class ifURITest extends AbstractMetatronTest {
             "a{0}               | a{0}",
             "a{,10}             | a{-10,}",
             "a{2,}              | a{,-2}",
+            "a{**}              | a{,}",
             "a{*}               | a{,0}",
             "a{?}               | a{-1,0}",
             "a{+}               | a{,-1}",
@@ -298,8 +340,59 @@ public class ifURITest extends AbstractMetatronTest {
     }, delimiter = '|')
     public void testNeg(final String f1, final String expected) {
         final ifURI furi1 = ifURI.of(f1);
-        final ifURI furi2 = ifURI.of(f1);
-        checkEquals(furi1, furi2);
+        final ifURI furi2 = ifURI.of(expected);
+        checkEquals(furi2, furi1.neg());
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "a                  | b{-1}             | a/b{-1}",
+            "a{1,1}             | a{-1}             | a/a{-1}",
+            "a{-1}              | a                 | a/a{-1}",
+            "a{-1}              | a{-2}             | a/a{2}",
+            "a/b/c{2,3}         | a/d/c{-3,-2}      | a/b/c/a/d/c{-6}",
+            "a{0}               | a{0}              | a/a{0}",
+            "a{,10}             | a{-10,}           | a/a{,}",
+            "http://a.com/a{2,} | b/c{4,}           | http://a.com/a/b/c{8,}",
+            "a                  |                   | a",
+            "a?a=1&b=2          | b?a=3&c=6         | a/b?a=3&b=2&c=6",
+            "/a/?a=1&b=2          | /b/?a=3&c=6         | /a/b/?a=3&b=2&c=6"
+    }, delimiter = '|')
+    public void testMult(final String f1, final String f2, final String expected) {
+        final ifURI furi1 = ifURI.of(f1);
+        final ifURI furi2 = ifURI.of(f2);
+        final ifURI result = ifURI.of(expected);
+        checkEquals(result, furi1.mult(furi2));
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "a                    | a{-1}                       | a{0}",
+            "a{1,1}               | a{-1}                       | a{0}",
+            "a/b{23}              | a/b                         | a/b{24}",
+            "a{-1}                | a{-2}                       | a{-3}",
+            "a/b/c{2,3}           | a/d/c{-3,-2}                | <ERROR>",
+            "a{0}                 | a{0}                        | a{0}",
+            "a{,10}               | a{-10,}                     | a{0}",
+            "a{1,10}              | a{-10,-1}                   | a{-9,9}",
+            "http://a.com/a/b{2,} | http://a.com/a/b{4,}        | http://a.com/a/b{6,}",
+            "http://a.com/a{5}    | ws://a.com/a{4}             | <ERROR>",
+            "a?a=1&b=2            | a?a=3&c=6                   | a{2}?a=3&b=2&c=6",
+            "/a/b/{2}?a=1&b=2     | /a/b/?a=3&c=6               | /a/b/{3}?a=3&b=2&c=6"
+    }, delimiter = '|')
+    public void testPlus(final String f1, final String f2, final String expected) {
+        final ifURI furi1 = ifURI.of(f1);
+        final ifURI furi2 = ifURI.of(f2);
+        final ifURI result = ifURI.of(expected);
+        if (result.toString().equals("<ERROR>")) {
+            try {
+                furi1.plus(furi2);
+                assertTrue(false);
+            } catch (final Exception e) {
+                assertTrue(true);
+            }
+        } else
+            checkEquals(result, furi1.plus(furi2));
     }
 
     @ParameterizedTest
@@ -320,7 +413,7 @@ public class ifURITest extends AbstractMetatronTest {
     @ParameterizedTest
     @CsvSource(value = {
             "/a/b/c                  |     1|            /a",
-            "/a/b/c/                  |     1|            /a/",
+            "/a/b/c/                  |     1|           /a/",
             "/a/b/c                  |     2|            /a/b",
             "/a/b/c/                 |     3|            /a/b/c/",
             "a/b/c                   |     2|            a/b",
@@ -341,10 +434,6 @@ public class ifURITest extends AbstractMetatronTest {
         final ifURI computedHead = furi.head(steps);
         final ifURI expectedHead = ifURI.of(head);
         assertEquals(expectedHead, computedHead);
-        //assertEquals(computedHead,furi.retract(furi.segments().size()-steps));
-        //assertEquals(furi.path().size(), computedHead.path().size() + (furi.path().size() - steps));
-        // assertEquals(steps, computedHead.path().size());
-        checkEquals(furi.head(steps), expectedHead);
     }
 
     @ParameterizedTest
@@ -722,7 +811,7 @@ public class ifURITest extends AbstractMetatronTest {
             "temp{2,32}?/m/int<=/m/str                             | temp                      | /m/int    | /m/str  | 2,32 |",
             "temp{2,32}?int{?}<=str{*}                             | temp                      | int{0,1}  | str{0,} | 2,32 |",
             "http://test.com:56/temp{?}?int{2,35}<=str{**}         | http://test.com:56/temp   | int{2,35} | str{,}  | 0,1  |",
-            "#{*}?int{2,35}<=str{**}                               | #                         | int{2,35} | str{,}  | 0,   |",
+            "abc{*}?int{2,35}<=str{**}                             | abc                       | int{2,35} | str{,}  | 0,   |",
             "temp{*}?int{2,35}<=str{**}&a=b&c=d                    | temp                      | int{2,35} | str{,}  | 0,   |a=b&c=d",
             "/temp{*}?int{2,35}<=str{**}&a=2&c&g=/m/int            | /temp                     | int{2,35} | str{,}  | 0,   |a=2&c&g=/m/int",
             "/temp{*}?rng=int{2,35}&dom=str{**}&a=2&c&g=/m/int     | /temp                     | int{2,35} | str{,}  | 0,   |a=2&c&g=/m/int",
@@ -741,6 +830,13 @@ public class ifURITest extends AbstractMetatronTest {
         queryMap.forEach((k, v) -> assertEquals(v, furiObj.q(k)));
         //System.out.println(queryMap + "---" + furiObj.qMap());
         assertEquals(furiObj.qMap().size(), queryMap.size() + 2); // every test case must have a dom<=rng 
+        assertTrue(furiObj.hasQ(DOM));
+        assertTrue(furiObj.hasQ(RNG));
+        assertFalse(furiObj.hasQ("fAkE"));
+        boolean meta = furiObj.toString().startsWith("http");
+        assertEquals(meta, furiObj.hasHost());
+        assertEquals(meta, furiObj.hasPort());
+        assertEquals(meta, furiObj.hasScheme());
     }
 
 

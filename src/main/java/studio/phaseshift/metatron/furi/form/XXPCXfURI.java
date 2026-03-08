@@ -40,9 +40,4 @@ public class XXPCXfURI extends XXPXXfURI {
     public cInt c() {
         return this.coefficient;
     }
-
-    @Override
-    public ifURI c(final C<?, ?> coefficient) {
-        return new XXPCXfURI(this.path, coefficient);
-    }
 }
