@@ -29,6 +29,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 
 public class MTronException extends RuntimeException {
 
+    public static final int MAX_STACK_TRACE = 5;
+
     private MTronException(final String message, final Throwable cause) {
         super(Graphitty.string(message), cause);
         //this.printStackTrace();
@@ -52,8 +54,8 @@ public class MTronException extends RuntimeException {
     }
 
     public static MTronException of(final Object throwableOrformat, final Object... args) {
-        if (throwableOrformat instanceof Throwable)
-            ((Throwable) throwableOrformat).printStackTrace();
+        //if (throwableOrformat instanceof Throwable)
+         //   ((Throwable) throwableOrformat).printStackTrace();
         return throwableOrformat instanceof Throwable ?
                 new MTronException(Graphitty.string(((String) args[0]).formatted(Arrays.copyOfRange(args, 1, args.length))),
                         convert((Throwable) throwableOrformat)) :
@@ -72,7 +74,7 @@ public class MTronException extends RuntimeException {
             return new MTronException("unable to convert " + convertName(leftClass.substring(leftClass.lastIndexOf('.') + 1)) + " to " + convertName(rightClass.substring(rightClass.lastIndexOf('.') + 1)), throwable);
         } else {
             final StringBuilder stack = new StringBuilder();
-            for (int i = 0; i < throwable.getStackTrace().length; i++)
+            for (int i = 0; i < Math.min(throwable.getStackTrace().length, MAX_STACK_TRACE); i++)
                 stack.append("\t")
                         .append(throwable.getStackTrace()[i].getClassName())
                         .append(" [line ").append(throwable.getStackTrace()[i].getLineNumber()).append("]\n");
@@ -134,10 +136,10 @@ public class MTronException extends RuntimeException {
     }
 
     public MTronException cause(final Throwable cause) {
-        if(cause instanceof MTronException)
+        if (cause instanceof MTronException)
             return this;
         final MTronException m = convert(cause);
-        if(null != m) this.initCause(m);
+        if (null != m) this.initCause(m);
         return this;
     }
 

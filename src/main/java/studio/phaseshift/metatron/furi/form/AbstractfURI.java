@@ -466,15 +466,18 @@ public abstract class AbstractfURI implements fURI {
 
     @Override
     public fURI retractPattern() {
-        if (!this.path().isEmpty()) {
-            final List<String> newPath = new ArrayList<>(this.path());
-            while (newPath.getLast().equals("#") || newPath.getLast().equals("+")) {
-                newPath.removeLast();
-            }
-            return fURI.of(this.scheme(), this.host(), this.port(), newPath, this.c(), this.poly(), this.qMap());
+        if (this.path().isEmpty())
+            return this;
+        final List<String> newPath = new ArrayList<>(this.path());
+        boolean hasBlank = this.hasBlankCap(false);
+        while (newPath.getLast().isEmpty() || newPath.getLast().equals("#") || newPath.getLast().equals("+")) {
+            newPath.removeLast();
         }
-        return this;
+        if (hasBlank && !newPath.isEmpty() && !newPath.getLast().isEmpty())
+            newPath.addLast("");
+        return fURI.of(this.scheme(), this.host(), this.port(), newPath, this.c(), this.poly(), this.qMap());
     }
+
 
     @Override
     public fURI retract(final String segment) {
@@ -621,7 +624,7 @@ public abstract class AbstractfURI implements fURI {
 
     @Override
     public int hashCode() {
-        return Objects.hash(this.scheme(), this.host(), this.port(), this.path(), this.c(), this.poly(), this.qMap());
+        return Objects.hash(this.scheme(), /*this.host(), this.port(),*/ this.path(), this.c() /*this.poly(), this.qMap()*/);
     }
 
     @Override

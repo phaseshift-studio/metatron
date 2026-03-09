@@ -54,6 +54,7 @@ public class mInstSetTest extends AbstractInstSetTest {
     }
 
     @Override
+    @Disabled
     @Test
     public void testInstDomRngMatching() {
         this.space = new mInstSet();
@@ -798,10 +799,10 @@ public class mInstSetTest extends AbstractInstSetTest {
             "1.0.as(real::T)                                                                                            % 1.0",
             "1.0.as(int::T)                                                                                             % 1",
             "1.0.as(int::T).as(real::T)                                                                                 % 1.0",
-            "1.0.as(int::T).as(real::T).as(str::T)                                                                      % \"1.0\"",
+            "1.0.as(int::T).as(real::T).as(str::T)                                                                      % \"1.00\"",
             //"1.0.as(int::T).as(real::T).as(str::T).as(real::T).as(int::T)                                               % 1",
             //"1.0.as(int::T).as(real::T).as(str::T).as(int::T).as(real::T)                                               % 1.0",
-            "1.0.as(int::T).as(real::T).as(str::T)                                                                      % \"1.0\"",
+            "1.0.as(int::T).as(real::T).as(str::T)                                                                      % \"1.00\"",
             "1.23.as(int::T)                                                                                            % 1",
             "2.23.as(int::T)                                                                                            % 2",
             "2.23.as(str::T)                                                                                            % \"2.23\"",

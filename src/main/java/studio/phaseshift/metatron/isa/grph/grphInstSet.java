@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.grph;
 
+import org.apache.tinkerpop.gremlin.structure.Direction;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.m.type.Inst;
@@ -60,8 +61,9 @@ public class grphInstSet extends AbstractInstSet {
     //
     public static final fURI GREMLIN_INST_TID = GRPH_INST_TID.extend("gremlin");
 
-    public static final Uri OUT = uri("OUT");
-    public static final Uri IN = uri("IN");
+    public static final Uri OUT = uri(Direction.OUT.name());
+    public static final Uri IN = uri(Direction.IN.name());
+    public static final Uri BOTH = uri(Direction.BOTH.name());
     public static final Uri LABEL = uri("LABEL");
     public static final Uri ID = uri("ID");
 

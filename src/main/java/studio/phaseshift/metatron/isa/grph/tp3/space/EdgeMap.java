@@ -18,13 +18,15 @@
 
 package studio.phaseshift.metatron.isa.grph.tp3.space;
 
+import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.apache.tinkerpop.gremlin.structure.Edge;
-import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.util.IteratorUtil;
 
 import java.util.Map;
 
@@ -32,6 +34,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.*;
 import static studio.phaseshift.metatron.isa.grph.tp3.space.VertexMap.lazyVertexToRec;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -47,29 +50,22 @@ public class EdgeMap extends ElementMap {
     }
 
     @Override
+    public boolean containsKey(final Object key) {
+        return key.equals(IN) || key.equals(OUT) || key.equals(BOTH) || super.containsKey(key);
+    }
+
+    @Override
     public Edge getBase() {
         return (Edge) this.base;
     }
 
     @Override
     public Obj get(final Object key) {
-        if (key.equals(IN))
-            return auto_from_(uri(this.space.elementVID(this.getBase().inVertex())), lazyVertexToRec(this.getBase().inVertex(), this.space)).tryToInst();
-        if (key.equals(OUT))
-            return auto_from_(uri(this.space.elementVID(this.getBase().outVertex())), lazyVertexToRec(this.getBase().outVertex(), this.space)).tryToInst();
-        if (key.equals(LABEL))
-            return uri(this.getBase().label());
-        else
-            return super.get(key);
+        if (key.equals(IN) || key.equals(OUT) || key.equals(BOTH))
+            return objs(IteratorUtil.stream(this.getBase().vertices(Direction.valueOf(((Uri) key).uriValue().toString())))
+                    .map(v -> auto_from_(uri(this.space.elementVID(v)), lazyVertexToRec(v, this.space)).tryToInst()));
+        return super.get(key);
     }
-
-   /* @Override
-    public Set<Entry<Uri, Obj>> entrySet() {
-        final Set<Entry<Uri, Obj>> entries = new LinkedHashSet<>(super.entrySet().stream().collect(Collectors.toSet()));
-        entries.add(new SimpleEntry<>(IN, this.get(IN)));
-        entries.add(new SimpleEntry<>(OUT, this.get(OUT)));
-        return entries;
-    }*/
 
     @Override
     public Rec asRec() {
@@ -80,7 +76,7 @@ public class EdgeMap extends ElementMap {
     public Rec selfRec() {
         return rec((Map) this, f(this.getBase().label()), null).selfVID(this.space.elementVID(this.base)).asRec();
     }
-    
+
     public static Rec edgeToRec(final Edge edge) {
         return edgeToRec(edge, tp3Space.from(edge));
     }
@@ -99,7 +95,6 @@ public class EdgeMap extends ElementMap {
 
     public static Inst lazyEdgeToRec(final Edge base, final tp3Space lhs) {
         return new LazyAutoElmnt(new EdgeMap(base, lhs));
-        //return (Inst) auto_(instC(INST_TID.dom(ALL.maybe()).rng(EDGE_TID), lst(), (lhs, inst) -> new EdgeMap(base).asRec())).tryToInst();
     }
 
 }

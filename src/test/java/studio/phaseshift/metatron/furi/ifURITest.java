@@ -522,6 +522,31 @@ public class ifURITest extends AbstractMetatronTest {
 
     @ParameterizedTest
     @CsvSource(value = {
+            "http://fhatos.org/b/#        |  http://fhatos.org/b",
+            "http://fhatos.org/b/#/       |  http://fhatos.org/b/",
+            "http://fhatos.org/b/#/       |  http://fhatos.org/b/",
+            "a/b/#/                       |  a/b/",
+            "a/b/+/+/+                    |  a/b",
+            "/a/b/+/+/#/                  | /a/b/",
+            "/a/b/+/+/+/                  | /a/b/",
+            "a/b/+/+/+/?a=b               | a/b/?a=b",
+            "a/b/+/+/+/+/{2,4}            | a/b/{2,4}",
+            "a/b/+/+/+/+/+                | a/b",
+            "a/b/+/+/+/+/+/+/[A,B]{*}     | a/b/[A,B]{*}",
+            "a/b/+/+/+/+/+/+/+            | a/b",
+            "/a/b/+/+/+/+/+/+/+/+/        | /a/b/",
+            "a/b/+/+/+/+/+/+/+/+/+/       | a/b/",
+            "/a/b/+/+/+/+/+/+/+/+/+/+     | /a/b",
+            "a/b/+/+/+/+/+/+/+/+/+/+/+/   | a/b/",
+            "a/b/+/+/+/+/+/+/+/+/+/+/+/+/ | a/b/",
+    }, delimiter = '|')
+    public void testRetractPattern(final String pattern, final String retraction) {
+        LOG.error("testing {{b}}%s{{X}} retractPattern {{b}}%s{{X}}", f(pattern), f(retraction));
+        assertEquals(f(retraction), f(pattern).retractPattern());
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
             "http://fhatos.org/b         | a       |  http://fhatos.org/b/a",
             "http://fhatos.org/b/c/d     | a       |  http://fhatos.org/b/c/d/a",
             "/b/c/d                      | a       |  /b/c/d/a",
@@ -781,8 +806,8 @@ public class ifURITest extends AbstractMetatronTest {
         final fURI furi1b = f(b);
         final fURI furi2a = null == a ? fURI.Singleton.empty() : mParser.m_furi().parse(a).get();
         final fURI furi2b = null == b ? fURI.Singleton.empty() : mParser.m_furi().parse(b).get();
-        assertEquals(furi1a,furi2a);
-        assertEquals(furi1b,furi2b);
+        assertEquals(furi1a, furi2a);
+        assertEquals(furi1b, furi2b);
        /* final boolean doObjParser = null != a && null != b && !a.equals("{0}");
         final fURI furi2a = doObjParser ? mParser.m_furi().parse(a).get() : f(a);
         final fURI furi2b = doObjParser ? mParser.m_furi().parse(b).get() : f(b);

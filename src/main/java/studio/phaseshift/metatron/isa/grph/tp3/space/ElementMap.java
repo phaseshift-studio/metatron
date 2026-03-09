@@ -20,7 +20,6 @@ package studio.phaseshift.metatron.isa.grph.tp3.space;
 
 import org.apache.tinkerpop.gremlin.structure.Element;
 import org.apache.tinkerpop.gremlin.structure.Property;
-import org.apache.tinkerpop.gremlin.structure.util.ElementHelper;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -41,6 +40,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.isa.grph.grphInstSet.LABEL;
 import static studio.phaseshift.metatron.isa.grph.tp3.space.tp3Space.FACTORY;
 import static studio.phaseshift.metatron.isa.m.mInstSet.AUTO_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.INST_TID;
@@ -70,6 +70,8 @@ public abstract class ElementMap extends AbstractMap<Uri, Obj> {
 
     @Override
     public Obj get(final Object key) {
+        if (key.equals(LABEL))
+            return uri(this.getBase().label());
         Property<?> property = this.base.property(((Uri) key).uriValue().toString());
         if (property.isPresent()) {
             return MObjFactory.of().toObj(property.value());
@@ -138,14 +140,14 @@ public abstract class ElementMap extends AbstractMap<Uri, Obj> {
 
     @Override
     public boolean equals(final Object o) {
-        return o instanceof ElementMap && ElementHelper.areEqual(this.base, ((ElementMap) o).getBase());
+        return o instanceof ElementMap && this.base.equals(((ElementMap) o).getBase());
     }
 
     public abstract Rec selfRec();
 
     @Override
     public int hashCode() {
-        return ElementHelper.hashCode(this.base);
+        return this.base.hashCode();
     }
 
     public abstract Rec asRec();
@@ -155,7 +157,7 @@ public abstract class ElementMap extends AbstractMap<Uri, Obj> {
         private final E map;
 
         public LazyAutoElmnt(final E map) {
-            super(Tuple.Triplet.with(lst(List.of()), null, noobj()), INST_TID,null);
+            super(Tuple.Triplet.with(lst(List.of()), null, noobj()), INST_TID, null);
             this.map = map;
         }
 
