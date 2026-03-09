@@ -196,17 +196,19 @@ public class ObjCleanStringSerializer extends AbstractObjSerializer<String> {
 
     @Override
     public String writeType(final Type type) {
-        String typeString = (Router.loaded() ? Router.global().rewrite(type.tid(), false) : type.tid()) + "::T";
+        StringBuilder typeString = new StringBuilder(
+                (Router.loaded() ? Router.global().rewrite(type.tid(), false) : type.tid()).toString())
+                .append("::T");
         if (type.hasPredicate())
-            typeString += ("[" + type.predicate() + "]");
+            typeString.append("[").append(type.predicate()).append("]");
         if (type.hasConstructor()) {
             if (!type.hasPredicate())
-                typeString += "[]";
-            typeString += ("[" + type.constructor() + "]");
+                typeString.append("[]");
+            typeString.append("[").append(type.constructor()).append("]");
         }
         if (type.vid() != null && !type.tid().equals(type.vid()))
-            typeString += ("@" + type.vid());
-        return typeString;
+            typeString.append("@").append(type.vid());
+        return typeString.toString();
     }
 
     @Override

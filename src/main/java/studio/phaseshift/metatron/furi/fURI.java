@@ -384,6 +384,8 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
             if (null == furi || furi.isEmpty())
                 return Singleton.empty();
             final String furiParse = furi.startsWith("<") && furi.endsWith(">") ? furi.substring(1, furi.length() - 1) : furi;
+            if (furiParse.isEmpty())
+                return Singleton.empty();
             if ("{0}".equals(furiParse))
                 return Singleton.NOOBJ;
             if ("/".equals(furiParse))

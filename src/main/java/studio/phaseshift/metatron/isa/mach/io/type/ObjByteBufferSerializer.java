@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.mach.io.type;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -151,6 +152,21 @@ public class ObjByteBufferSerializer extends AbstractObjSerializer<ByteBuffer> {
     public ByteBuffer writeObjs(final Objs objs) {
         final String internal = IteratorUtil.stream(objs.objsValue()).map(o -> new String(this.write(o).array())).reduce(",", (a, b) -> a + b + ",");
         return ByteBuffer.wrap(("{" + internal.substring(1, internal.length() - 1) + "}").getBytes());
+    }
+    
+    @Override
+    public ByteBuffer writeType(final Type type) {
+        String typeString = (Router.loaded() ? Router.global().rewrite(type.tid(), false) : type.tid()) + "::T";
+        if (type.hasPredicate())
+            typeString += ("[" + type.predicate() + "]");
+        if (type.hasConstructor()) {
+            if (!type.hasPredicate())
+                typeString += "[]";
+            typeString += ("[" + type.constructor() + "]");
+        }
+        if (type.vid() != null && !type.tid().equals(type.vid()))
+            typeString += ("@" + type.vid());
+        return ByteBuffer.wrap(typeString.getBytes());
     }
 
     @Override

@@ -69,9 +69,9 @@ public class ifURITest extends AbstractMetatronTest {
             "/a/b/c{2,3}?a=b&c=d         | 2   | /a{2,3}?a=b&c=d",
             "a/b/c{2,3}?a=b&c=d          | 2   | a{2,3}?a=b&c=d",
             ".//a/b/c{2,3}?a=b&c=d       | 2   | .//a{2,3}?a=b&c=d",
-            // "/a/b/c/[0]?a=b&c=d          | 2   | /a/[0]?a=b&c=d",
-            // "/a/b/c/{?}?a=b&c=d          | 2   | /a/{?}?a=b&c=d",
-            // "/a/b?a=b&c=d                | 2   | ?a=b&c=d",
+            "/a/b/c/[0]?a=b&c=d          | 2   | /a/[0]?a=b&c=d",
+            "/a/b/c/{?}?a=b&c=d          | 2   | /a/{?}?a=b&c=d",
+            "/a/b?a=b&c=d                | 2   | ?a=b&c=d",
     }, delimiter = '|', nullValues = "null")
     public void testRetract(final String furi, final int steps, final String expected) {
         final fURI start = f(furi);
@@ -110,7 +110,7 @@ public class ifURITest extends AbstractMetatronTest {
 
 
     @ParameterizedTest
-    @CsvSource({"http://fhatos.org/a,fhatos.org,-1",
+    @CsvSource(value = {"http://fhatos.org/a,fhatos.org,-1",
             "http://fhatos.org:80/a,fhatos.org,80",
             "http://fhatos.org/a,fhatos.org,-1",
             "http://fhatos.org/a/b,fhatos.org,-1",
@@ -123,15 +123,18 @@ public class ifURITest extends AbstractMetatronTest {
             "a/b/c,null,-1",
             "a/b/c,null,-1",
             "b/#,null,-1",
-            ",null,-1"
-    })
+            "null,null,-1"
+    }, nullValues = "")
     void testAuthority(final String furi, final String host, final int port) {
-        final fURI f = f(furi);
-        if (host.equals("null"))
-            assertNull(f.host());
-        else
-            assertEquals(host, f.host());
-        assertEquals(port, f.port());
+        for (final fURI parse : Arrays.asList(f(furi), mParser.m_furi().parse(furi).<fURI>get())) {
+            if (null == parse)
+                continue;
+            if (host.equals("null"))
+                assertNull(parse.host());
+            else
+                assertEquals(host, parse.host());
+            assertEquals(port, parse.port());
+        }
     }
 
     @ParameterizedTest
@@ -242,12 +245,13 @@ public class ifURITest extends AbstractMetatronTest {
             "mtron:/b/c?xyz{+}<=abc{2}&a=b&c=d   | mtron | null | -1  | /b/c     | 1        | null | rng=xyz{+}&dom=abc{2}&a=b&c=d"},
             delimiter = '|', nullValues = "null")
     public void testParse(final String furi, final String scheme, final String host, final int port, final String path, final String coefficient, final String poly, final String query) {
-        final fURI parse = f(furi);
-        final fURI components = fURI.of(scheme, host, port, null == path ? List.of() : Arrays.asList(path.split("/")), cInt.of(coefficient), List.of(), parseQuery(query));
-        LOG.error("testing:" +
-                "\n\tparse    : {{b}}%s{{X}} " +
-                "\n\tcomponent: {{b}}%s{{X}}", parse, components);
-        checkEquals(parse, components);
+        for (final fURI parse : Arrays.asList(f(furi), mParser.m_furi().parse(furi).<fURI>get())) {
+            final fURI components = fURI.of(scheme, host, port, null == path ? List.of() : Arrays.asList(path.split("/")), cInt.of(coefficient), List.of(), parseQuery(query));
+            LOG.error("testing:" +
+                    "\n\tparse    : {{b}}%s{{X}} " +
+                    "\n\tcomponent: {{b}}%s{{X}}", parse, components);
+            checkEquals(parse, components);
+        }
     }
 
 
@@ -601,7 +605,7 @@ public class ifURITest extends AbstractMetatronTest {
         assertEquals(isGeneric, furi1.isGeneric());
         assertEquals(isGeneric, furi2.isGeneric());
     }
-    
+
     @ParameterizedTest
     @CsvSource(value = {
             "A             |  A             | true",
@@ -668,7 +672,7 @@ public class ifURITest extends AbstractMetatronTest {
             //"null|/|false",
             "{0}|a/b{*}|true",
             "/a/b{0}|/a/b{*}|true",
-       // TODO:     "/{0}|/{*}|true",
+            // TODO:     "/{0}|/{*}|true",
             "null|null|true",
             "http://fhatos.org/a|http://fhatos.org/a|true",
             "http://fhatos.org/a|http://fhatos.org/a/b|false",
@@ -795,10 +799,10 @@ public class ifURITest extends AbstractMetatronTest {
             "/m/lst[AA,BB]{2}|/m/lst[AA,BB]{2}|true",
             "/m/lst[AA,BB]{2}|/m/lst[AA,BB]{1,6}|true",
             "/m/lst[AA,BB]{2}|/m/lst[AA,BB]{-6,-1}|false",
-       //     "/m/lst[A,B]|/m/lst[A,B]|true",
+            //     "/m/lst[A,B]|/m/lst[A,B]|true",
             "/m/lst[aa,bb]|/m/lst[aa,bb]|true",
             "/m/lst[AA,BB]|/m/lst[AA,BB]|true",
-        //    "xxx[A,B]|xxx[A,B]|true",
+            //    "xxx[A,B]|xxx[A,B]|true",
             "xxx[a/b/c,b/c/d]|xxx[a/b/c,b/c/d]|true",
           /*  "xxx[a/b/c,b/c/d]|xxx[a/+/+,b/c/#]|true",
             "xxx[a/b/c,b/c/d]|xxx[a/+/c,b/c/d]|true",
@@ -936,7 +940,7 @@ public class ifURITest extends AbstractMetatronTest {
         assertEquals(typeParams, furiA.poly().toString());
     }
 
-    
+
     @ParameterizedTest
     @CsvSource(value = {
             "a/b/c{2}                |c",
@@ -978,37 +982,42 @@ public class ifURITest extends AbstractMetatronTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "temp{32}?a<=b                                         | temp                      | a         | b       | 32   |",
-            "temp{32}?a<=b                                         | temp                      | a         | b       | 32   |",
-            "temp{2,32}?/m/int<=/m/str                             | temp                      | /m/int    | /m/str  | 2,32 |",
-            "temp{2,32}?int{?}<=str{*}                             | temp                      | int{0,1}  | str{0,} | 2,32 |",
-            "http://test.com:56/temp{?}?int{2,35}<=str{**}         | http://test.com:56/temp   | int{2,35} | str{,}  | 0,1  |",
-            "abc{*}?int{2,35}<=str{**}                             | abc                       | int{2,35} | str{,}  | 0,   |",
-            "temp{*}?int{2,35}<=str{**}&a=b&c=d                    | temp                      | int{2,35} | str{,}  | 0,   |a=b&c=d",
-            "/temp{*}?int{2,35}<=str{**}&a=2&c&g=/m/int            | /temp                     | int{2,35} | str{,}  | 0,   |a=2&c&g=/m/int",
-            "/temp{*}?rng=int{2,35}&dom=str{**}&a=2&c&g=/m/int     | /temp                     | int{2,35} | str{,}  | 0,   |a=2&c&g=/m/int",
+            "temp{32}?a<=b                                         | temp                      | a              | b            | 32   |",
+            "temp{32}?a<=b                                         | temp                      | a              | b            | 32   |",
+            "temp{2,32}?/m/int<=/m/str                             | temp                      | /m/int         | /m/str       | 2,32 |",
+            "temp{2,32}?int{?}<=str{*}                             | temp                      | int{0,1}       | str{0,}      | 2,32 |",
+            "http://test.com:56/temp{?}?int{2,35}<=str{**}         | http://test.com:56/temp   | int{2,35}      | str{,}       | 0,1  |",
+            "abc{*}?int{2,35}<=str{**}                             | abc                       | int{2,35}      | str{,}       | 0,   |",
+            "temp{*}?int{2,35}<=str{**}&a=b&c=d                    | temp                      | int{2,35}      | str{,}       | 0,   |a=b&c=d",
+            "/temp{*}?int{2,35}<=str{**}&a=2&c&g=/m/int            | /temp                     | int{2,35}      | str{,}       | 0,   |a=2&c&g=/m/int",
+            "/temp{*}?lst[int{2,35}]<=lst[str{**}]&a=2&c&g=/m/int  | /temp                     | lst[int{2,35}] | lst[str{,}]  | 0,   |a=2&c&g=/m/int",
+            "/temp{*}?rng=int{2,35}&dom=str{**}&a=2&c&g=/m/int     | /temp                     | int{2,35}      | str{,}       | 0,   |a=2&c&g=/m/int",
+            "/temp{*}?rng=+&dom=#&a=2&c&g=/m/int                   | /temp                     | +              | #            | 0,   |a=2&c&g=/m/int",
+            "temp_abc{2,3}?rng=+&dom=#&a=2&c&g=/m/int              | temp_abc                  | +              | #            | 2,3  |a=2&c&g=/m/int",
+            "temp_abc{,3}?rng=+/#&dom=abc/#&a=2&c&d                | temp_abc                  | +/#            | abc/#        | ,3   |a=2&c&d",
     }, delimiter = '|')
     void testDomRng(final String furi, final String base, final String rng, final String dom, final String coefficient, final String query) {
-        final fURI furiObj = f(furi);
-        final fURI baseObj = f(base);
-        final fURI domObj = f(dom);
-        final fURI rngObj = f(rng);
-        final C<?, ?> cObj = cInt.of(coefficient);
-        assertEquals(baseObj, furiObj.basePath());
-        assertEquals(cObj, furiObj.c());
-        assertEquals(domObj, furiObj.dom());
-        assertEquals(rngObj, furiObj.rng());
-        Map<String, String> queryMap = parseQuery(query);
-        queryMap.forEach((k, v) -> assertEquals(v, furiObj.q(k)));
-        //System.out.println(queryMap + "---" + furiObj.qMap());
-        assertEquals(furiObj.qMap().size(), queryMap.size() + 2); // every test case must have a dom<=rng 
-        assertTrue(furiObj.hasQ(DOM));
-        assertTrue(furiObj.hasQ(RNG));
-        assertFalse(furiObj.hasQ("fAkE"));
-        boolean meta = furiObj.toString().startsWith("http");
-        assertEquals(meta, furiObj.hasHost());
-        assertEquals(meta, furiObj.hasPort());
-        assertEquals(meta, furiObj.hasScheme());
+        for (final fURI furiObj : Arrays.asList(f(furi).big(), mParser.m_furi().parse(furi).<fURI>get().big())) {
+            final fURI baseObj = f(base).big();
+            final fURI domObj = f(dom).big();
+            final fURI rngObj = f(rng).big();
+            final C<?, ?> cObj = cInt.of(coefficient);
+            assertEquals(baseObj, furiObj.basePath());
+            assertEquals(cObj, furiObj.c());
+            assertEquals(domObj, furiObj.dom());
+            assertEquals(rngObj, furiObj.rng());
+            Map<String, String> queryMap = parseQuery(query);
+            queryMap.forEach((k, v) -> assertEquals(v, furiObj.q(k)));
+            //System.out.println(queryMap + "---" + furiObj.qMap());
+            assertEquals(furiObj.qMap().size(), queryMap.size() + 2); // every test case must have a dom<=rng 
+            assertTrue(furiObj.hasQ(DOM));
+            assertTrue(furiObj.hasQ(RNG));
+            assertFalse(furiObj.hasQ("fAkE"));
+            boolean meta = furiObj.toString().startsWith("http");
+            assertEquals(meta, furiObj.hasHost());
+            assertEquals(meta, furiObj.hasPort());
+            assertEquals(meta, furiObj.hasScheme());
+        }
     }
 
 
