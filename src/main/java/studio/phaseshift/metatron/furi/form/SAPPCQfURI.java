@@ -19,24 +19,25 @@
 package studio.phaseshift.metatron.furi.form;
 
 import studio.phaseshift.metatron.furi.C;
-import studio.phaseshift.metatron.furi.c.cInt;
 
 import java.util.List;
+import java.util.Map;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class XXPCXfURI extends XXPXXfURI {
+public class SAPPCQfURI extends SAPXCQfURI {
 
-    final cInt coefficient;
+    protected final List<String> poly;
 
-    public XXPCXfURI(final List<String> path, final C<?, ?> coefficient) {
-        super(path);
-        this.coefficient = (cInt) coefficient;
+    public SAPPCQfURI(final String scheme, final String host, final int port, final List<String> path, final List<String> poly, final C<?, ?> coefficient, final Map<String, String> query) {
+        super(scheme, host, port, path, coefficient, query);
+        this.poly = null == poly ? List.of() : poly;
     }
 
     @Override
-    public cInt c() {
-        return this.coefficient;
+    public List<String> poly() {
+        return this.poly;
     }
+    
 }

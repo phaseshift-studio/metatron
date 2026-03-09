@@ -26,12 +26,12 @@ import java.util.Map;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class SAPCQfURI extends SAPCXfURI {
+public class SAPXCQfURI extends SAPXCXfURI {
     protected final Map<String, String> query;
 
-    public SAPCQfURI(final String scheme, final String host, final int port, final List<String> path, final C<?, ?> coefficient, final Map<String, String> query) {
+    public SAPXCQfURI(final String scheme, final String host, final int port, final List<String> path, final C<?, ?> coefficient, final Map<String, String> query) {
         super(scheme, host, port, path, coefficient);
-        this.query = query;
+        this.query = null == query ? Map.of() : query;
     }
     
     @Override

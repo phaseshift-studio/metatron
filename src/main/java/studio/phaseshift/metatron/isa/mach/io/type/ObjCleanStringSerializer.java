@@ -127,23 +127,20 @@ public class ObjCleanStringSerializer extends AbstractObjSerializer<String> {
 
     @Override
     public String writeReal(final Real real) {
-        return handleIds(real, String.format("%.2f",real.jvm()));
+        return handleIds(real, String.format("%.2f", real.jvm()));
     }
 
     @Override
     public String writeUri(final Uri uri) {
         final String uriString = uri.jvm().toString();
         final char startChar = uriString.isEmpty() ? ' ' : uriString.charAt(0);
-        //final char endChar = uriString.isEmpty() ? ' ' : uriString.charAt(uriString.length() - 1);
         final boolean wrap =
                 uriString.isEmpty() ||
                         CommonUtil.isInt(uriString.substring(0, 1)) ||
                         uriString.contains(" ") ||
-                        startChar == '+' || startChar == '#' ||
-                        uriString.contains(".") ||
-                        uriString.contains(",") ||
-                        uriString.contains("(") ||
-                        uriString.contains(")");
+                        startChar == '+' ||
+                        startChar == '#' ||
+                        uriString.contains(".");
         return handleIds(uri, wrap ? ("<" + uriString + ">") : uriString);
     }
 
@@ -232,7 +229,7 @@ public class ObjCleanStringSerializer extends AbstractObjSerializer<String> {
     }
 
     private StringBuilder handleTID(final StringBuilder sb, final Obj obj, final boolean hideBaseTID) {
-        if (!obj.isFail() && !obj.isCaughtFail() && hideBaseTID) {
+        if (!obj.isFail() && !obj.isCaughtFail() && hideBaseTID && !obj.tid().hasPoly()) {
             if (BASE_TYPES.contains(obj.tid()))
                 return sb;
             else if (BASE_TYPES.contains(obj.tid().basePath())) {
@@ -331,10 +328,10 @@ public class ObjCleanStringSerializer extends AbstractObjSerializer<String> {
             sb.append(write(bytes(ByteBuffer.wrap(bb))));
             sb.append("...");
         } else if (obj.isFail()) {
-            if(obj.failValue().get1() != null)
+            if (obj.failValue().get1() != null)
                 writeClip(sb, obj.failValue().get1());
             else {
-               sb.append(writeFail(fail(obj.asFail().message().getMessage().split("\n")[0])));
+                sb.append(writeFail(fail(obj.asFail().message().getMessage().split("\n")[0])));
             }
         } else {
             sb.append(write(obj));

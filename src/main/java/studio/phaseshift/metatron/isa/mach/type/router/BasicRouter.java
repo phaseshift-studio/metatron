@@ -44,7 +44,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static studio.phaseshift.metatron.BootLoader.BOOTING;
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.fURI.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
@@ -135,13 +134,13 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
 
     @Override
     public fURI rewrite(final fURI furi, final boolean big) {
-        if (furi.isGeneric())
+        if (!furi.hasPoly() && furi.isGeneric())
             return furi;
         fURI temp;
         if (big) {
             final Set<fURI> set = this.smallToBigRoutes.getOrDefaultRaw(furi.basePath(), Set.of(furi));
             if (set.isEmpty()) {
-                temp = this.getSpace(furi).rewrite(furi, big);
+                temp = this.getSpace(furi).rewrite(furi, true);
             } else if (set.size() > 1) {
                 final Iterator<fURI> furis = set.stream().filter(f -> f.hasPrefix(this.primary.toString())).iterator();
                 temp = furis.hasNext() ? furis.next() : set.iterator().next();
@@ -151,9 +150,10 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
         } else {
             temp = this.bigToSmallRoutes.getOrDefaultRaw(furi.basePath(), furi);
         }
+        temp = furi.hasPoly() ? temp.poly(furi.poly().stream().map(x -> this.rewrite(f(x), big)).map(fURI::toString).toList()) : temp;
         temp = temp.c(furi.c()).q(furi.qMap());
-        temp = temp.hasDom() ? temp.dom(this.rewrite(temp.dom(), big)) : temp;
-        temp = temp.hasRng() ? temp.rng(this.rewrite(temp.rng(), big)) : temp;
+        temp = furi.hasDom() ? temp.dom(this.rewrite(furi.dom(), big)) : temp;
+        temp = furi.hasRng() ? temp.rng(this.rewrite(furi.rng(), big)) : temp;
         return temp.resolve();
     }
 

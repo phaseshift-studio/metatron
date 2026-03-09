@@ -25,13 +25,13 @@ import java.util.List;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class SXPCXfURI extends XXPCXfURI {
+public class SXPXCXfURI extends XXPXCXfURI {
 
     protected final String scheme;
 
-    public SXPCXfURI(final String scheme, final List<String> path, final C<?, ?> coefficient) {
+    public SXPXCXfURI(final String scheme, final List<String> path, final C<?, ?> coefficient) {
         super(path, coefficient);
-        this.scheme = scheme;
+        this.scheme = null != scheme && scheme.isEmpty() ? null : scheme;
     }
 
     @Override

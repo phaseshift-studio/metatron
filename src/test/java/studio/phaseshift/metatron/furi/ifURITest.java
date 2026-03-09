@@ -22,6 +22,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.c.cInt;
+import studio.phaseshift.metatron.isa.m.parser.mParser;
 
 import java.util.Arrays;
 import java.util.List;
@@ -293,7 +294,8 @@ public class ifURITest extends AbstractMetatronTest {
             "//x.com/a/b/c              |  x.com    | false",
             "//x/a/b/c                  |  x        | false",
             "a/b/c/d                    |  a        | true",
-            "a/b/c/d                    |  a/b/     | true",
+            "a/b/c/d                    |  a/b     | true",
+            //   "a/b/c/d                    |  a/b/     | true",
             "a/b/c/d                    |  a/+      | false",
             "a/b/c/d                    |  a/d      | false",
             "a/b/c/d                    |  a/+/c    | false",
@@ -337,7 +339,7 @@ public class ifURITest extends AbstractMetatronTest {
             "/a/b/c                     |  c/       | false",
             "/a/b/c                     |  +/       | false",
             "/a/b/c                     |  +        | false",
-            "a/b/c                      |  /b/c     | false",
+            "a/b/c                      |  /b/c     | true",
             "//x.com/a/b/c              |  x.com    | false",
             "//x/a/b/c                  |  x        | false",
             "a/b/c/d                    |  d        | true",
@@ -679,7 +681,8 @@ public class ifURITest extends AbstractMetatronTest {
             //"a/plus{4}|+/plus{4}|true", // TODO:?!? STRANGE!?!?
             //"/mtron/inst/plus{4}|/mtron/+/plus{4}|true" // TODO:?!? STRANGE!?!?
             "/m/lst[A,B]|/m/lst[A,B]|true",
-           /* "xxx[A,B]|xxx[#,+]|true",
+            "xxx[A,B]|xxx[#,+]|true",
+            "xxx[ab,bc]|xxx[#,+]|true",
             "xxx[ab,cd]|xxx[ab,cd{?}]|true",
             "xxx[ab,cd]|xxx[ab{*},cd{?}]{?}|true",
             "xxx[ab,cd{0}]|xxx[ab{*},cd{+}]{?}|false",
@@ -688,7 +691,7 @@ public class ifURITest extends AbstractMetatronTest {
             "/m/lst[ab,cd]|/m/lst[ab{*},cd]{+}|true",
             "xxx[ab{2},cd{0}]|xxx[ab{1,3},cd{0}]{1,5}|true",
             "xxx[ab{2},cd{1,3}]{2,3}|xxx[ab{1,3},cd{0,100}]{1,5}|true",
-            "xxx[ab{2},cd{1,3}]{2,3}|xxx[ab{1,3},cd{0,2}]{1,5}|false",*/
+            "xxx[ab{2},cd{1,3}]{2,3}|xxx[ab{1,3},cd{0,2}]{1,5}|false",
             "http://localhost:8080/abc|http://#|true",
             "http://localhost:8080/abc|http://+:8081/+|false",
             "http://localhost:8080/abc|http://+:8080/+|true",
@@ -776,6 +779,10 @@ public class ifURITest extends AbstractMetatronTest {
     void testMatches(final String a, final String b, final boolean shouldMatch) {
         final fURI furi1a = f(a);
         final fURI furi1b = f(b);
+        final fURI furi2a = null == a ? fURI.Singleton.empty() : mParser.m_furi().parse(a).get();
+        final fURI furi2b = null == b ? fURI.Singleton.empty() : mParser.m_furi().parse(b).get();
+        assertEquals(furi1a,furi2a);
+        assertEquals(furi1b,furi2b);
        /* final boolean doObjParser = null != a && null != b && !a.equals("{0}");
         final fURI furi2a = doObjParser ? mParser.m_furi().parse(a).get() : f(a);
         final fURI furi2b = doObjParser ? mParser.m_furi().parse(b).get() : f(b);

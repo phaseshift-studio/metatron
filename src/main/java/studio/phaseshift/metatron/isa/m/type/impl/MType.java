@@ -23,11 +23,12 @@ import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.Objects;
 
-import static studio.phaseshift.metatron.isa.m.mInstSet.BASE_TYPES;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 
 
 public class MType extends MObj implements Type {
@@ -53,6 +54,8 @@ public class MType extends MObj implements Type {
         final fURI bigVID = null == vid ? null : vid.big();
         final fURI checkID = null == bigVID ? bigTID : bigVID;
         assert checkID != null;
+        if(!checkID.basePath().equals(REL_TID) && !checkID.basePath().equals(LST_TID) && !checkID.basePath().equals(REC_TID) && !checkID.poly().isEmpty())
+            throw MTronException.of("only poly types can have polynomials: %s {{r}}X=>{{X}} %s", checkID.basePath(), checkID.poly());
         if (!checkID.hasPattern() && !BASE_TYPES.contains(checkID.basePath()) && !checkID.isGeneric() && Router.loaded()) { // TODO: remove the pattern constraint - why not a type be the set of other types?
             final Obj obj = Router.readFromSpace(checkID);
             if (obj.isType()) {

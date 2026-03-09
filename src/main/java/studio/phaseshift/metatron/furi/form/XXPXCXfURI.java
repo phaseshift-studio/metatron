@@ -26,11 +26,12 @@ import java.util.List;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class SAPCXfURI extends SAPXXfURI {
+public class XXPXCXfURI extends XXPXXXfURI {
+
     final cInt coefficient;
-    
-    public SAPCXfURI(final String scheme, final String host, final int port, final List<String> path, final C<?, ?> coefficient) {
-        super(scheme, host, port, path);
+
+    public XXPXCXfURI(final List<String> path, final C<?, ?> coefficient) {
+        super(path);
         this.coefficient = null == coefficient ? cInt.ONE() : (cInt) coefficient;
     }
 

@@ -16,31 +16,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.furi.form;
+package studio.phaseshift.metatron.isa.m.type;
 
-import java.util.List;
+import org.javatuples.Pair;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class SAPXXfURI extends SXPXXfURI {
-
-    protected final String host;
-    protected final int port;
-
-    public SAPXXfURI(final String scheme, final String host, final int port, final List<String> path) {
-        super(scheme, path);
-        this.host = host;
-        this.port = port;
-    }
-
-    @Override
-    public String host() {
-        return this.host;
-    }
-
-    @Override
-    public int port() {
-        return this.port;
-    }
+public interface Either extends Poly<Either, Pair<Obj, Obj>> {
 }

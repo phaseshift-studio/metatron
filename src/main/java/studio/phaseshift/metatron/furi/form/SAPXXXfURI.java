@@ -23,18 +23,24 @@ import java.util.List;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class SXPXXfURI extends XXPXXfURI {
+public class SAPXXXfURI extends SXPXXXfURI {
 
-    protected final String scheme;
+    protected final String host;
+    protected final int port;
 
-    public SXPXXfURI(final String scheme, final List<String> path) {
-        super(path);
-        this.scheme = scheme;
+    public SAPXXXfURI(final String scheme, final String host, final int port, final List<String> path) {
+        super(scheme, path);
+        this.host = null != host && host.isEmpty() ? null : host;
+        this.port = null == this.host ? -1 : port;
     }
 
     @Override
-    public String scheme() {
-        return this.scheme;
+    public String host() {
+        return this.host;
+    }
+
+    @Override
+    public int port() {
+        return this.port;
     }
 }
-

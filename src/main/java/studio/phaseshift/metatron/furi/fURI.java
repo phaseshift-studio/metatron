@@ -98,13 +98,6 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
         return Router.loaded() ? Router.global().rewrite(this, false) : this;
     }
 
-    default fURI poly(final List<String> poly) {
-        if (null == poly || poly.isEmpty() || Objects.equals(this.poly(), poly))
-            return this;
-        return fURI.of(this.scheme(), this.host(), this.port(), this.path(), this.c(), poly, this.qMap());
-
-    }
-
     default boolean isEmpty() {
         return this.toString().isEmpty();
     }
@@ -177,6 +170,9 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
         return newURI;
     }
 
+    default boolean hasPoly() {
+        return null != this.poly() && !this.poly().isEmpty();
+    }
 
     boolean hasPrefix(final String prefix);
 
@@ -191,6 +187,8 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
     List<String> poly();
 
     int pathLength();
+
+    fURI poly(final List<String> poly);
 
     fURI neg();
 
@@ -331,19 +329,23 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
     /// ////////////////////////////////////////////////
 
     class Singleton {
-        public static final Pattern FURI_PATTERN = Pattern.compile("(" +
-                "(?<scheme>[^:/.]+):)?" +
-                "(//((?<host>[^:/]+)(:(?<port>\\d+))?))?" +
-                "(?<path>[^?{]+)?(\\{(?<coefficient>[^}]+)})?" +
-                "(\\?" +
-                "((?<rng>[^<&]+)<=(?<dom>[^&?]+))?" +
-                "&?" +
-                "(?<query>(([^&=]+(=[^&=]+)?&?)+))?)?");
-        public static final fURI ALL = new XXPXXfURI(List.of("#"));
-        public static final fURI WILD_ONE = new XXPXXfURI(List.of("+"));
+        public static final Pattern POLY_PATTERN = Pattern.compile(
+                "(?<poly>[^\\[{?&*+},]+(\\{([^}\\]]+))?}?[^,])");
+        public static final Pattern FURI_PATTERN = Pattern.compile(
+                "((?<scheme>[^:/.]+):)?" +
+                        "(//((?<host>[^:/]+)(:(?<port>\\d+))?))?" +
+                        "(?<path>[^\\[{?&]+)?" +
+                        "(\\[(?<poly>[^]]+)])?" +
+                        "(\\{(?<coefficient>[^}\\]]+)})?" +
+                        "(\\?" +
+                        "((?<rng>[^<&]+)<=(?<dom>[^&?]+))?" +
+                        "&?" +
+                        "(?<query>(([^&=]+(=[^&=]+)?&?)+))?)?");
+        public static final fURI ALL = new XXPXXXfURI(List.of("#"));
+        public static final fURI WILD_ONE = new XXPXXXfURI(List.of("+"));
         public static final fURI NOOBJ = f("noobj").zero();
 
-        private static final fURI INSTANCE = new XXXXXfURI();
+        private static final fURI INSTANCE = new XXXXXXfURI();
 
         public final static fURI empty() {
             return INSTANCE;
@@ -367,7 +369,18 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
             final String host = matcher.group("host");
             final int port = matcher.group("port") == null ? -1 : Integer.parseInt(matcher.group("port"));
             final String pathStr = matcher.group("path");
-            final cInt coefficient = matcher.group("coefficient") == null ? cInt.ONE() : cInt.of(matcher.group("coefficient").replace("{", "").replace("}", ""));
+            final String polyStr = matcher.group("poly");
+            List<String> poly = null;
+            if (null != polyStr) {
+                final Matcher polyMatcher = Singleton.POLY_PATTERN.matcher(polyStr);
+                while (polyMatcher.find()) {
+                    if (null == poly) poly = new ArrayList<>();
+                    if (null != polyMatcher.group("poly")) {
+                        poly.add(polyMatcher.group("poly"));
+                    }
+                }
+            }
+            final cInt coefficient = matcher.group("coefficient") == null ? cInt.ONE() : cInt.of(matcher.group("coefficient"));
             final String queryStr = matcher.group("query");
             final String dom = matcher.group("dom");
             final String rng = matcher.group("rng");
@@ -391,7 +404,7 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
             } else {
                 query = Map.of();
             }
-            return fURI.of(scheme, host, port, path, coefficient, List.of(), query);
+            return fURI.of(scheme, host, port, path, coefficient, poly, query);
         }
 
         static Map<String, String> parseQuery(final String query) {
@@ -401,29 +414,34 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
 
 
     static fURI of(final String scheme, final String host, final int port, final List<String> path, final C<?, ?> coefficient, final List<String> poly, final Map<String, String> query) {
+        if (null != poly && !poly.isEmpty())
+            return new SAPPCQfURI(scheme, host, port, path, poly, coefficient, query);
         if (null != coefficient && !coefficient.isOne()) {
             if (!query.isEmpty()) {
-                return new SAPCQfURI(scheme, host, port, path, coefficient, query);
+                if (null != poly && !poly.isEmpty())
+                    return new SAPPCQfURI(scheme, host, port, path, poly, coefficient, query);
+                else
+                    return new SAPXCQfURI(scheme, host, port, path, coefficient, query);
             } else {
                 if (null == scheme && null == host)
-                    return new XXPCXfURI(path, coefficient);
+                    return new XXPXCXfURI(path, coefficient);
                 else if (null == host)
-                    return new SXPCXfURI(scheme, path, coefficient);
+                    return new SXPXCXfURI(scheme, path, coefficient);
                 else
-                    return new SAPCXfURI(scheme, host, port, path, coefficient);
+                    return new SAPXCXfURI(scheme, host, port, path, coefficient);
             }
         } else {
             if (query.isEmpty()) {
                 if (null != scheme) {
                     if (null == host)
-                        return new SXPXXfURI(scheme, path);
+                        return new SXPXXXfURI(scheme, path);
                     else
-                        return new SAPXXfURI(scheme, host, port, path);
+                        return new SAPXXXfURI(scheme, host, port, path);
                 } else {
-                    return host == null ? new XXPXXfURI(path) : new SAPXXfURI(null, host, port, path);
+                    return host == null ? new XXPXXXfURI(path) : new SAPXXXfURI(null, host, port, path);
                 }
             } else {
-                return new SAPCQfURI(scheme, host, port, path, coefficient, query);
+                return new SAPXCQfURI(scheme, host, port, path, coefficient, query);
             }
         }
     }

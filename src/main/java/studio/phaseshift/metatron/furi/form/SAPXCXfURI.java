@@ -18,11 +18,24 @@
 
 package studio.phaseshift.metatron.furi.form;
 
+import studio.phaseshift.metatron.furi.C;
+import studio.phaseshift.metatron.furi.c.cInt;
+
+import java.util.List;
+
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class XXXXXfURI extends AbstractfURI {
+public class SAPXCXfURI extends SAPXXXfURI {
+    final cInt coefficient;
+    
+    public SAPXCXfURI(final String scheme, final String host, final int port, final List<String> path, final C<?, ?> coefficient) {
+        super(scheme, host, port, path);
+        this.coefficient = null == coefficient ? cInt.ONE() : (cInt) coefficient;
+    }
 
-    public static final XXXXXfURI INSTANCE = new XXXXXfURI();
-
+    @Override
+    public cInt c() {
+        return this.coefficient;
+    }
 }

@@ -18,21 +18,23 @@
 
 package studio.phaseshift.metatron.furi.form;
 
-import java.util.*;
+import java.util.List;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class XXPXXfURI extends AbstractfURI {
+public class SXPXXXfURI extends XXPXXXfURI {
 
-    final List<String> path;
+    protected final String scheme;
 
-    public XXPXXfURI(final List<String> path) {
-        this.path = path;
+    public SXPXXXfURI(final String scheme, final List<String> path) {
+        super(path);
+        this.scheme = null != scheme && scheme.isEmpty() ? null : scheme;
     }
 
     @Override
-    public List<String> path() {
-        return this.path;
+    public String scheme() {
+        return this.scheme;
     }
 }
+

@@ -122,7 +122,7 @@ public class MqttIndexedSchema implements TableSchema {
         final String patternStr = pattern.toString();
 
         // Check if this is an MQTT pattern
-        if (patternStr.contains("+") || patternStr.contains("#")) {
+        if (pattern.hasPattern()) {
             return readMqttPattern(conn, pattern);
         }
 
@@ -151,7 +151,6 @@ public class MqttIndexedSchema implements TableSchema {
      */
     private Iterator<FuriObjPair> readMqttPattern(final Connection conn, final fURI pattern) throws SQLException {
         final String patternStr = pattern.toString();
-        final String[] segments = patternStr.split("/");
 
         // Build WHERE clause based on pattern segments
         final StringBuilder whereClause = new StringBuilder();
@@ -159,8 +158,8 @@ public class MqttIndexedSchema implements TableSchema {
         boolean hasMultiLevelWildcard = false;
         int segmentIndex = 1; // Database columns are seg1, seg2, etc.
 
-        for (int i = 0; i < Math.min(segments.length, MAX_SEGMENTS + 1); i++) {
-            final String seg = segments[i];
+        for (int i = 0; i < Math.min(pattern.pathLength(), MAX_SEGMENTS + 1); i++) {
+            final String seg = pattern.path().get(i);
 
             if (seg.isEmpty()) {
                 continue; // Skip empty segments (leading slash)
@@ -249,14 +248,13 @@ public class MqttIndexedSchema implements TableSchema {
      * @return true if topic matches pattern
      */
     public static boolean matchesMqttPattern(final String topic, final String pattern) {
-        final String[] topicSegs = topic.split("/");
-        final String[] patternSegs = pattern.split("/");
+        final fURI topicfURI = f(topic);
+        final fURI patternfURI = f(pattern);
 
         int ti = 0, pi = 0;
 
-        while (ti < topicSegs.length && pi < patternSegs.length) {
-            final String patternSeg = patternSegs[pi];
-
+        while (ti < topicfURI.pathLength() && pi < patternfURI.pathLength()) {
+            final String patternSeg = patternfURI.path().get(pi);
             if (patternSeg.equals("#")) {
                 // Multi-level wildcard matches everything remaining
                 return true;
@@ -264,7 +262,7 @@ public class MqttIndexedSchema implements TableSchema {
                 // Single-level wildcard matches one segment
                 ti++;
                 pi++;
-            } else if (topicSegs[ti].equals(patternSeg)) {
+            } else if (topicfURI.path().get(ti).equals(patternSeg)) {
                 // Exact match
                 ti++;
                 pi++;
@@ -276,10 +274,10 @@ public class MqttIndexedSchema implements TableSchema {
 
         // Check if we consumed both topic and pattern
         // Special case: pattern ending with # can match shorter topics
-        if (pi < patternSegs.length && patternSegs[pi].equals("#")) {
+        if (pi < patternfURI.pathLength() && patternfURI.path().get(pi).equals("#")) {
             return true;
         }
 
-        return ti == topicSegs.length && pi == patternSegs.length;
+        return ti == topicfURI.pathLength() && pi == patternfURI.pathLength();
     }
 }

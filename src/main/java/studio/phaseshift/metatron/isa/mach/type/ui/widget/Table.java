@@ -31,11 +31,22 @@ public class Table extends AbstractWidget<Table> {
 
     protected final List<String> headers;
     protected final List<List<Object>> table;
+    protected final List<Integer> maxColWidth;
 
 
     public Table(final List<String> headers) {
         this.headers = headers;
         this.table = new ArrayList<>();
+        this.maxColWidth = new ArrayList<>();
+        for (int i = 0; i < headers.size(); i++) {
+            this.maxColWidth.add(Integer.MAX_VALUE);
+        }
+    }
+
+    public Table(final List<String> headers, final List<Integer> maxColWidth) {
+        this.headers = headers;
+        this.table = new ArrayList<>();
+        this.maxColWidth = maxColWidth;
     }
 
     public Table addRow(final List<Object> entries) {
@@ -74,7 +85,7 @@ public class Table extends AbstractWidget<Table> {
         final List<Integer> widths = new ArrayList<>();
         for (int i = 0; i < rowesque.size(); i++) {
             final int ii = i;
-            widths.add(Math.max(rowesque.get(i).length(), this.table.stream().map(row -> Highlighter.unformat(row.size() > ii ? row.get(ii).toString() : "")).flatMap(s -> Arrays.stream(s.split("\n"))).map(String::length).max(Integer::compareTo).orElse(0)));
+            widths.add(Math.min(this.maxColWidth.get(i), Math.max(rowesque.get(i).length(), this.table.stream().map(row -> Highlighter.unformat(row.size() > ii ? row.get(ii).toString() : "")).flatMap(s -> Arrays.stream(s.split("\n"))).map(String::length).max(Integer::compareTo).orElse(0))));
         }
         return widths;
     }
@@ -98,10 +109,17 @@ public class Table extends AbstractWidget<Table> {
         return sb.toString();
     }
 
+    private String clip(final String str, final int amount) {
+        if (amount > 0)
+            return str.substring(amount);
+        else
+            return str.substring(0, str.length() + amount) + "...";
+    }
+
     public List<String> formattedRows() {
         final List<String> frows = new ArrayList<>();
         for (int i = 0; i < this.table.size(); i++) {
-            frows.add(this.formattedRow(i));
+            frows.add(this.clip(this.formattedRow(i), this.maxColWidth.get(i)));
         }
         return frows;
     }
