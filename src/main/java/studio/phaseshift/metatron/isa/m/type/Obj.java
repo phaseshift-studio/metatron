@@ -285,15 +285,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         if (!this.c().within(rhs.c()))
             return false;
         if (BootLoader.TYPE_CHECK && rhs.isType()) {
-            if (rhs.tid().isGeneric() || rhs.test(T(CODE_TID)) || rhs.test(T(INST_TID)))
-                return true;
-            if (this.isObjs() && this.stream().anyMatch(Obj::isCall)) // TODO: a hack (see RecTest requirements vs. TypeTest requirements)
-                return false;
-            if (this.isObjs() && this.stream().allMatch(o -> o.test(rhs.tid(rhs.tid().c(o.c())))))
-                return true;
-            if (rhs.asType().isBaseType() && !this.baseType().test(rhs.tid()))
-                return false;
-            return !rhs.asType().hasPredicate() || rhs.apply(this).booleanCheck();
+           return Type.Helper.typeCheck(this, rhs);
         }
         return this.tid().test(rhs.tid()) &&
                 Objects.equals(this.jvm(), rhs.jvm());

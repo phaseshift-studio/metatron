@@ -52,7 +52,7 @@ import static org.petitparser.parser.primitive.CharacterParser.digit;
 import static org.petitparser.parser.primitive.CharacterParser.of;
 import static org.petitparser.parser.primitive.CharacterParser.word;
 import static org.petitparser.parser.primitive.StringParser.of;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.from_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -80,7 +80,7 @@ public class mParser {
     public static final SettableParser inst_parser = SettableParser.undefined();
     private static final SettableParser rel_parser = SettableParser.undefined();
     private static final SettableParser obj_rel_back_parser = SettableParser.undefined();
-    private static final SettableParser branch_parser = SettableParser.undefined();
+    // private static final SettableParser branch_parser = SettableParser.undefined();
     private static final LinkedHashSet<Parser> PARSERS = new LinkedHashSet<>(List.of(seq(of('*').trim(), digit().plus().flatten()).map(t -> from_(uri(pick(t, 1).toString()))))); // sugar for *0 vs. *<0>
 
     private static final String REDUCED_FURI_CHARS = "~/%$!#_-@+:*";
@@ -92,7 +92,7 @@ public class mParser {
                         anyOf(REDUCED_FURI_CHARS))).plus().flatten(),
                 opt(m_furi_poly_type(), null),
                 opt(m_furi_coefficient(), null),
-                opt(none(), null)).map(t ->  f(pick(t, 0)).poly(pick(t, 1)).c(cInt.of((String)pick(t, 2))).qString(pick(t, 3))));
+                opt(none(), null)).map(t -> f(pick(t, 0)).poly(pick(t, 1)).c(cInt.of((String) pick(t, 2))).qString(pick(t, 3))));
 
         rel_parser.set(seq(m_type_prefix(REL_TID), m_paren_wrap(seq(obj_rel_back_parser, of("=>").trim(), m_obj()))).map(t -> rel(Tuple.Pair.with(pick(pick(t, 1), 0), pick(pick(t, 1), 2)), pick(t, 0), null)));
         obj_no_code_parser.set(choice(
@@ -291,13 +291,14 @@ public class mParser {
         return seq(of('-').not(), seq(word().or(seq(of("::").not(), anyOf(furiCharacterSet)))).plus().flatten(),
                 opt(polynomial ? m_furi_poly_type() : none(), null),
                 opt(coefficient ? m_furi_coefficient() : none(), null),
-                opt(query ? m_furi_query() : none(), null)).map(t -> f(pick(t, 1)).poly(pick(t, 2)).c(cInt.of((String)pick(t, 3))).qString(pick(t, 4)));
+                opt(query ? m_furi_query() : none(), null)).map(t -> f(pick(t, 1)).poly(pick(t, 2)).c(cInt.of((String) pick(t, 3))).qString(pick(t, 4)));
     }
 
     public static Parser m_furi(final String furiCharacterSet, final boolean polynomial, final boolean coefficient, final boolean query) {
         return choice(
+                of("{0}").trim().map(t -> NOOBJ),
                 seq(of('<'), m_furi_internal(FULL_FURI_CHARS, polynomial, coefficient, query), of('>')).pick(1),
-                seq(of("<>")).map(_ -> f("")),
+                seq(of("<>").trim()).map(_ -> empty()),
                 m_furi_internal(furiCharacterSet, polynomial, coefficient, query));
     }
 
@@ -326,7 +327,7 @@ public class mParser {
         return seq(of('?'), seq(
                 opt(m_furi_inst_dom_rng(), ""),
                 opt(of('&'), ""),
-                opt(seq(word().plus(), opt(seq(of('='), choice(m_furi_no_query(), word().or(anyOf(FULL_FURI_CHARS)).star())), "")).separatedBy(of('&')), "").flatten())
+                opt(seq((word().or(of("+")).or(of("#"))).plus(), opt(seq(of('='), choice(m_furi_no_query(), word().or(anyOf(FULL_FURI_CHARS)).star())), "")).separatedBy(of('&')), "").flatten())
         ).map(t -> mParser.<List<String>>pick(t, 1).stream().reduce((a, b) -> a + b).orElse(""));
     }
 
@@ -381,7 +382,7 @@ public class mParser {
         return (null == baseType) ? opt(seq(m_furi(REDUCED_FURI_CHARS, true, true, true), of("://").not(), of("::")).pick(0), baseType) :
                 opt(choice(seq(m_furi(REDUCED_FURI_CHARS, true, true, true), of("://").not(), of("::")).pick(0), m_furi_coefficient().map(t -> {
                     try {
-                        return baseType.c(cInt.of((String)t));
+                        return baseType.c(cInt.of((String) t));
                     } catch (Exception e) {
                         return null;
                     }

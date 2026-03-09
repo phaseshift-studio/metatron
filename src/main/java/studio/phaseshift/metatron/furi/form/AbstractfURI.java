@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.furi.form;
 
-import studio.phaseshift.metatron.furi.C;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.util.MTronException;
@@ -28,8 +27,7 @@ import java.util.stream.Collectors;
 
 import static studio.phaseshift.metatron.Tokens.DOM;
 import static studio.phaseshift.metatron.Tokens.RNG;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.*;
 
 
 /*
@@ -132,7 +130,7 @@ public abstract class AbstractfURI implements fURI {
 
     @Override
     public fURI path(final String path) {
-        return fURI.of(this.scheme(), this.host(), this.port(), List.of(path.split("/")), this.c(), List.of(), this.qMap());
+        return fURI.of(this.scheme(), this.host(), this.port(), List.of(path.split("/")), this.c(), this.poly(), this.qMap());
     }
 
     @Override
@@ -203,7 +201,7 @@ public abstract class AbstractfURI implements fURI {
     public fURI poly(final List<String> poly) {
         if (Objects.equals(this.poly(), poly))
             return this;
-        return fURI.of(this.scheme(), this.host(), this.port(), this.path(), this.c(), null == poly ? List.of() : poly, this.qMap());
+        return fURI.of(this.scheme(), this.host(), this.port(), this.path(), this.c(), poly, this.qMap());
     }
 
 
@@ -214,6 +212,8 @@ public abstract class AbstractfURI implements fURI {
         if (Objects.equals(this.host(), "#"))
             return 1;
         if (!Objects.equals(this.host(), furi.host()) && !Objects.equals(this.host(), "+"))
+            return -1;
+        if (!Objects.equals(this.poly(), furi.poly()))
             return -1;
         for (int i = 0; i < this.path().size(); i++) {
             final String segment = this.path().get(i);
@@ -234,73 +234,71 @@ public abstract class AbstractfURI implements fURI {
     }
 
     @Override
-    public boolean test(final fURI lhs) {
-        final C c = this.c();
-        final C d = lhs.c();
-        //if (c.isZero() && d.isZero())
-        //    return true;
+    public boolean test(final fURI rhs) {
+        final cInt c = this.c();
+        final cInt d = rhs.c();
+        if (c.isZero() && d.isZero())
+            return true;
         if (c.within(d)) { // no need to check path as its noobj
             if (c.isZero())
                 return true;
         } else
             return false;
-        if (!lhs.hasPattern() && !this.hasPattern()) {
-            if (!this.name().equals(lhs.name()))
+        if (rhs.equals(ALL))
+            return true;
+        if (!rhs.hasPattern() && !this.hasPattern()) {
+            if (!this.name().equals(rhs.name()))
                 return false;
         }
-        if (!Objects.equals(this.poly(), lhs.poly())) {
-            if (null != this.poly() && null != lhs.poly()) {
-                for (int i = 0; i < lhs.poly().size(); i++) {
-                    final fURI rp = f(lhs.poly().get(i));
-                    if (rp.toString().equals("#"))
-                        break;
-                    if (i >= this.poly().size())
-                        return false;
-                    final fURI lp = f(this.poly().get(i));
-                    if (!lp.test(rp))
-                        return false;
+        if (!this.poly().isEmpty()) {
+            if (!Objects.equals(this.poly(), rhs.poly())) {
+                if (null != this.poly() && null != rhs.poly()) {
+                    for (int i = 0; i < rhs.poly().size(); i++) {
+                        final fURI rp = f(rhs.poly().get(i));
+                        if (rp.equals(ALL))
+                            break;
+                        if (i >= this.poly().size())
+                            return false;
+                        if (rp.equals(WILD_ONE))
+                            continue;
+                        final fURI lp = f(this.poly().get(i));
+                        if (!lp.test(rp))
+                            return false;
+                    }
                 }
             }
         }
-        if (lhs.equals(ALL))
+        if (Objects.equals(rhs.scheme(), "#"))
             return true;
-        if (Objects.equals(lhs.scheme(), "#"))
-            return true;
-        if (!Objects.equals(this.scheme(), lhs.scheme()) && !Objects.equals(lhs.scheme(), "+"))
+        if (!Objects.equals(this.scheme(), rhs.scheme()) && !Objects.equals(rhs.scheme(), "+"))
             return false;
-        if (Objects.equals(lhs.host(), "#"))
+        if (Objects.equals(rhs.host(), "#"))
             return true;
-        if (!Objects.equals(this.host(), lhs.host()) && !Objects.equals(lhs.host(), "+"))
+        if (!Objects.equals(this.host(), rhs.host()) && !Objects.equals(rhs.host(), "+"))
             return false;
-        if (!(lhs.port() == -1) || !Objects.equals(lhs.host(), "+"))
-            if (this.port() != -1 && (lhs.port() == -1 || (lhs.port() != 0 && this.port() != lhs.port())))
+        if (!(rhs.port() == -1) || !Objects.equals(rhs.host(), "+"))
+            if (this.port() != -1 && (rhs.port() == -1 || (rhs.port() != 0 && this.port() != rhs.port())))
                 return false;
-        if (!lhs.hasPattern())
-            return this.path().equals(lhs.path());
-        if (this.isAbsolute() != lhs.isAbsolute())
+        if (!rhs.hasPattern())
+            return this.path().equals(rhs.path());
+        if (this.isAbsolute() != rhs.isAbsolute())
             return false;
-        // if (this.path().getFirst().isEmpty() != lhs.path().getFirst().isEmpty())
-        //    return false;
-        //if (!Objects.equals(this.host, other.host) && !Objects.equals(other.host, ONE_WILD_STRING))
-        //    return false;
-        //if (this.path.isEmpty() && other.toString().contains("#"))
-        //   return true;
-        for (int i = 0; i < lhs.path().size(); i++) {
-            if (lhs.path().get(i).equals("#")) // #
+        for (int i = 0; i < rhs.path().size(); i++) {
+            if (rhs.path().get(i).equals("#")) // #
                 return true;
-            if (!lhs.path().get(i).equals("+")) {
+            if (!rhs.path().get(i).equals("+")) {
                 if (this.pathLength() <= i) // a/b a/b/c
                     return false;
-                else if (!this.path().get(i).equals(lhs.path().get(i))) // a a
+                else if (!this.path().get(i).equals(rhs.path().get(i))) // a a
                     return false;
             }  // +
         }
-        if (this.path().size() != lhs.path().size()) // && this.path().getLast().isEmpty() == lhs.path().getLast().isEmpty();
+        if (this.path().size() != rhs.path().size()) // && this.path().getLast().isEmpty() == rhs.path().getLast().isEmpty();
             return false;
         // TODO: this is a later addition to the matching semantics of furi. 
         // currently this behavior is handled specially for inst sets (dom/rng-selection).
         // by having it here, this allows any space to leverage query pattern matching.
-        for (final Map.Entry<String, String> kv : lhs.qMap().entrySet()) {
+        for (final Map.Entry<String, String> kv : rhs.qMap().entrySet()) {
             if (this.qMap().entrySet().stream().noneMatch(xy -> f(xy.getKey()).test(f(kv.getKey())) &&
                     (kv.getValue().isEmpty() || kv.getValue().equals("+") || Objects.equals(xy.getValue(), kv.getValue()))))
                 return false;
@@ -372,7 +370,7 @@ public abstract class AbstractfURI implements fURI {
         }
         final Map<String, String> newQ = new LinkedHashMap<>(this.qMap());
         newQ.putAll(other.qMap());
-        return fURI.of(this.scheme(), this.host(), this.port(), newPath, ((C) this.c()).mult(other.c()), this.poly(), newQ).resolve();
+        return fURI.of(this.scheme(), this.host(), this.port(), newPath, this.c().mult(other.c()), this.poly(), newQ).resolve();
     }
 
     @Override
@@ -385,11 +383,11 @@ public abstract class AbstractfURI implements fURI {
                 Objects.equals(this.path(), other.path())) {
             final Map<String, String> newQ = new LinkedHashMap<>(this.qMap());
             newQ.putAll(other.qMap());
-            return fURI.of(this.scheme(), this.host(), this.port(), this.path(), ((C) this.c()).plus(other.c()), this.poly(), newQ).resolve();
+            return fURI.of(this.scheme(), this.host(), this.port(), this.path(), this.c().plus(other.c()), this.poly(), newQ).resolve();
         } else {
             final Map<String, String> newQ = new LinkedHashMap<>(this.qMap());
             newQ.putAll(other.qMap());
-            return fURI.of(null, null, -1, List.of("#"), ((C) this.c()).plus(other.c()), this.poly(), newQ).resolve();
+            return fURI.of(null, null, -1, List.of("#"), this.c().plus(other.c()), this.poly(), newQ).resolve();
             // throw MTronException.of("unable to add %s to %s", other, this);
         }
     }

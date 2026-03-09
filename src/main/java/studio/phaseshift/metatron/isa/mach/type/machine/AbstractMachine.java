@@ -154,6 +154,12 @@ public abstract class AbstractMachine implements Machine {
     protected Monad split(final Monad monad) {
         if (monad.obj().unique() && (monad.inst().dom().c().isOne() || monad.inst().dom().c().isAny()))
             return monad;
+        if(monad.inst().dom().c().isZero() && !monad.obj().c().isZeroable()) // TODO: create a less than window c.ltFull()
+            throw MTronException.of("monad obj coefficient is greater than inst domain coefficient: " +
+                    "\n\tobj       => %s" +
+                    "\n\t\\_c       => %s" +
+                    "\n\tinst     X=> %s" +
+                    "\n\t\\_dom_c  X=> %s", monad.obj(), monad.obj().c(), monad.inst(), monad.inst().dom().c());
         final Tuple.Pair<Obj, Obj> pair =
                 monad.obj().c().gte(monad.inst().dom().c()) ?
                         monad.obj().take(monad.inst().dom().c().most()) :

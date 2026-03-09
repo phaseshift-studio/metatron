@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
-import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.mach.type.Router;
@@ -31,7 +30,6 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static studio.phaseshift.metatron.furi.fURI.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.DocQ.Doc.docWrap;
@@ -90,13 +88,13 @@ public interface Type extends Obj {
         final List<Call> result = new ArrayList<>();
         Type type = this;
         while (null != type) {
-            if(type.hasPredicate())
+            if (type.hasPredicate())
                 result.add(type.predicate());
             type = type.parentType();
         }
         return result;
     }
-    
+
     default Type parentType() {
         if (this.tid().equals(this.vid()))
             return null;
@@ -170,6 +168,57 @@ public interface Type extends Obj {
                 return type.predicate().insts().getFirst().arg(0).isPoly() ? type.predicate().insts().getFirst().arg(0).as() : null;
             return null;
         }
+
+        public static boolean typeCheck(final Obj lhs, final Obj rhs) {
+            if (lhs.isType()) {
+                /// /////////////////////////
+                /// TYPE <=> OBJ or TYPE ///
+                /// ////////////////////////
+                if (Obj.Helper.isAuto(rhs))
+                    return true;
+                if (rhs.isNoObj() && lhs.c().isZeroable())
+                    return true;
+                if (rhs.isCall())
+                    return lhs.test(rhs.dom());
+                if (!rhs.isType())
+                    return false;
+                if (!lhs.c().within(rhs.c()))
+                    return false;
+                // if(rhs.asType().parentType()!= null && !this.test(rhs.asType().parentType()))
+                //     return false;
+                if (lhs.asType().isBaseType())
+                    return lhs.baseType().test(rhs.tid()) && (!rhs.asType().hasPredicate() || Objects.equals(lhs.asType().predicate(), rhs.asType().predicate())); // matches any abstract type to it's base type as long as within the coefficient boundaries
+                if (rhs.tid().isGeneric())
+                    return !lhs.tid().isGeneric() || (lhs.c().within(rhs.c()) && lhs.tid().basePath().equals(rhs.tid().basePath()));
+                return !rhs.asType().hasPredicate() || Objects.equals(lhs.asType().predicate(), rhs.asType().predicate());// || !rhs.asType().predicate().apply(this).isNoObj();
+            } else if (rhs.isType()) {
+                /// //////////////////
+                /// OBJ <=> TYPE ///
+                /// //////////////////
+                if (rhs.tid().isGeneric() || rhs.test(T(CODE_TID)) || rhs.test(T(INST_TID)))
+                    return true;
+                if (rhs.tid().hasPoly()) {
+                    if (!lhs.isPoly())
+                        return false;
+                    // System.out.println(this + "---" + rhs.tid().poly());
+                    if (rhs.tid().poly().size() != lhs.asLst().count())
+                        return false;
+                    for (int i = 0; i < rhs.tid().poly().size(); i++) {
+                        if (!lhs.asLst().at(i).test(T(f(rhs.tid().poly().get(i)))))
+                            return false;
+                    }
+                }
+                if (lhs.isObjs() && lhs.stream().anyMatch(Obj::isCall)) // TODO: a hack (see RecTest requirements vs. TypeTest requirements)
+                    return false;
+                if (lhs.isObjs() && lhs.stream().allMatch(o -> o.test(rhs.tid(rhs.tid().c(o.c())))))
+                    return true;
+                if (rhs.asType().isBaseType() && !lhs.baseType().test(rhs.tid()))
+                    return false;
+                return !rhs.asType().hasPredicate() || rhs.apply(lhs).booleanCheck();
+            } else {
+                return lhs.test(rhs);
+            }
+        }
     }
 
     final class TypeType {
@@ -214,27 +263,27 @@ public interface Type extends Obj {
             this.zero = zero;
             return this;
         }
-        
+
         public Builder one(final Obj one) {
             this.one = one;
             return this;
         }
-        
+
         public Builder plus(final Inst plus) {
             this.plus = plus;
             return this;
         }
-        
+
         public Builder mult(final Inst mult) {
             this.mult = mult;
             return this;
         }
-        
+
         public Builder neg(final Inst neg) {
             this.neg = neg;
             return this;
         }
-        
+
         public Builder predicate(final Call predicate) {
             this.predicate = predicate;
             return this;
@@ -291,6 +340,4 @@ public interface Type extends Obj {
             return T(Tuple.Pair.with(this.predicate, this.constructor), this.tid, this.vid);
         }
     }
-
-
 }

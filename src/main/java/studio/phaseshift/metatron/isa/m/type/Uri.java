@@ -191,9 +191,9 @@ public interface Uri extends Mono, Ring.O<Uri> {
                     instC(POW_INST_TID.dom(URI_TID).rng(URI_TID), lst(T(INT_TID)), (lhs, inst) -> {
                         final int pow = inst.arg(0).intValue().intValue();
                         if (0 == pow) return lhs.jvm(f(""));
-                        fURI u = f(".");
+                        fURI u = null;
                         for (int i = 0; i < pow; i++) {
-                            u = u.mult(lhs.uriValue());
+                            u = null == u ? lhs.uriValue() : u.mult(lhs.uriValue());
                         }
                         return lhs.jvm(u);
                     }),

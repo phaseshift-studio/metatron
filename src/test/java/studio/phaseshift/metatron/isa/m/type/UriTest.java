@@ -123,12 +123,12 @@ public class UriTest extends AbstractMetatronTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "/a/b/c.reverse()                 % /c/b/a",
+            "/a/b/c.reverse()                 % c/b/a/",
             "aaa/bbb/ccc.reverse()            % ccc/bbb/aaa",
             "<http://m.com/a/b/c>.reverse()   % <http://m.com/c/b/a>",
             "a.reverse()                      % a",
             "a/b.reverse()                    % b/a",
-            "/a.reverse()                     % /a",
+            "/a.reverse()                     % a/",
     }, delimiter = '%')
     public void testReverse(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);

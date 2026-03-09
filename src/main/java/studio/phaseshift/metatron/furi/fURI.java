@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.form.*;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
@@ -81,6 +82,28 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
     }
 
     fURI resolve();
+
+    default fURI resolve(final Map<fURI, fURI> generics) {
+        final fURI cless = this.one();
+        Graphitty.log(this).trace("resolving generics: %s", generics);
+        if (cless.isGeneric()) {
+            fURI lhs = cless.basePath().isGeneric() ?
+                    cless.basePath().path(cless.basePath().path().stream().map(s -> generics.computeIfAbsent(Singleton.f(s), k -> Singleton.f(s)).toString()).reduce("", (a, b) -> a + "/" + b).substring(1)) :
+                    cless.basePath();
+            if (cless.hasDom())
+                lhs = cless.dom().isGeneric() ?
+                        lhs.dom(cless.dom().path(cless.dom().path().stream().map(s -> generics.computeIfAbsent(Singleton.f(s), k -> Singleton.f(s)).toString()).reduce("", (a, b) -> a + "/" + b).substring(1))) :
+                        lhs.dom(cless.dom());
+            if (cless.hasRng())
+                lhs = cless.rng().isGeneric() ?
+                        lhs.rng(cless.rng().path(cless.rng().path().stream().map(s -> generics.computeIfAbsent(Singleton.f(s), k -> Singleton.f(s)).toString()).reduce("", (a, b) -> a + "/" + b).substring(1))) :
+                        lhs.rng(cless.rng());
+            Graphitty.log(this).trace("generics after resolution: %s", generics);
+            return lhs.qString(this.hasQ() ? this.qString() : null).c(this.c());
+        } else {
+            return this;
+        }
+    }
 
     String scheme();
 
@@ -360,11 +383,14 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
         public static fURI of(final String furi) {
             if (null == furi || furi.isEmpty())
                 return Singleton.empty();
-            if ("/".equals(furi))
+            final String furiParse = furi.startsWith("<") && furi.endsWith(">") ? furi.substring(1, furi.length() - 1) : furi;
+            if ("{0}".equals(furiParse))
+                return Singleton.NOOBJ;
+            if ("/".equals(furiParse))
                 return fURI.of(null, null, -1, List.of("", ""), cInt.ONE(), List.of(), Map.of());
-            final Matcher matcher = Singleton.FURI_PATTERN.matcher(furi);
+            final Matcher matcher = Singleton.FURI_PATTERN.matcher(furiParse);
             if (!matcher.matches())
-                throw MTronException.of("unable to parse %s to a furi", furi);
+                throw MTronException.of("unable to parse %s to a furi", furiParse);
             final String scheme = matcher.group("scheme");
             final String host = matcher.group("host");
             final int port = matcher.group("port") == null ? -1 : Integer.parseInt(matcher.group("port"));
@@ -414,8 +440,9 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
 
 
     static fURI of(final String scheme, final String host, final int port, final List<String> path, final C<?, ?> coefficient, final List<String> poly, final Map<String, String> query) {
-        if (null != poly && !poly.isEmpty())
+        if (null != poly && !poly.isEmpty()) {
             return new SAPPCQfURI(scheme, host, port, path, poly, coefficient, query);
+        }
         if (null != coefficient && !coefficient.isOne()) {
             if (!query.isEmpty()) {
                 if (null != poly && !poly.isEmpty())

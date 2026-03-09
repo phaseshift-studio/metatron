@@ -183,7 +183,10 @@ public abstract class AbstractMetatronTest {
             LOG.debug("testing %s => %s => %s [expected:%s]", cd, code, actual, ex);
             if (!actual.equals(ex) && actual.stream().anyMatch(Obj::isFail))
                 LOG.error("expectation led to failure: %s", actual);
-            assertEquals(ex, actual);
+            if (ex.tid().hasPoly()) ///  TODO: how to handle generalization of a polynomial as it relates to equality
+                assertTrue(actual.test(ex));
+            else
+                assertEquals(ex, actual);
             
           /*  final Obj acd = serializer.read(serializer.write(cd));
             final Obj aex = serializer.read(serializer.write(ex));

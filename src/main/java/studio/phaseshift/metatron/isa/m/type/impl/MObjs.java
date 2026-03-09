@@ -175,6 +175,7 @@ public class MObjs implements Objs {
         this.jvm.stream().map(x -> Tuple.Pair.with(x.c(cInt.ONE()), x.c())).filter(x -> !x.get1().isZero()).forEach(x -> map.compute(x.get0(), (k, v) -> v == null ? x.get1() : v.plus(x.get1())));
         this.jvm.clear();
         map.forEach((k, v) -> this.jvm.add(k.c(v)));*/
+        attemptBulk(true);
         return cInt.of(this.jvm.size());
     }
 
