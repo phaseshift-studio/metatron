@@ -285,7 +285,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         if (!this.c().within(rhs.c()))
             return false;
         if (BootLoader.TYPE_CHECK && rhs.isType()) {
-           return Type.Helper.typeCheck(this, rhs);
+            return Type.Helper.typeCheck(this, rhs);
         }
         return this.tid().test(rhs.tid()) &&
                 Objects.equals(this.jvm(), rhs.jvm());
@@ -685,6 +685,11 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
             //final BiPredicate<Obj, Obj> opt = Optimizations.optimizedEquals.get(obj.tid().basePath());
             //if (null != opt)
             //    return opt.test(obj, (Obj) other);
+            if (obj.isObjs() && ((Obj) other).isObjs()) {
+                final Set<Obj> objSet = new HashSet<>(obj.jvm());
+                final Set<Obj> otherSet = new HashSet<>(((Obj) other).jvm());
+                return objSet.equals(otherSet);
+            }
             return Objects.equals(obj.tid(), ((Obj) other).tid()) &&
                     Objects.equals(obj.jvm(), ((Obj) other).jvm());
         }
