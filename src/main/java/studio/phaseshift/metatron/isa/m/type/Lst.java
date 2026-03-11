@@ -142,7 +142,7 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
         if (key.isInt())
             return (OBJ) ((this.jvm().size() > key.intValue()) ? this.jvm().get(key.<Int>as().intValue().intValue()).autoResolve(this) : noobj()).parent(this).c(c -> c.mult(cKey));
         else if (key.isUri()) {
-            LOG.info("key: %s", key);
+           // LOG.info("key: %s", key);
             // if (key.uriValue().isEmpty())
             //            return this.c(c -> c.mult(cKey)).as();
 
@@ -151,7 +151,7 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
             final String step = key.uriValue().path().getFirst();
             final boolean isBranch = key.uriValue().isBranch();
             Stream<Obj> result;
-            LOG.info("step: %s", step);
+           // LOG.info("step: %s", step);
             if (step.equals(Singleton.WILD_ONE.toString()) || step.equals(ALL.toString())) {
                 result = isBranch ? (Stream) this.indexedStream() : this.elements();
             } else {
