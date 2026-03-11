@@ -139,6 +139,7 @@ public abstract class AbstractSerializerTest<T> extends AbstractMetatronTest {
             "rec{0}::[a,[b,12,'abc'],[a=>b,c=>[c=>d]]]",
             "{1,2,3,4,5}",
             "{true, false, 1,0, -100, 12.355, -12.35}",
+            "{[1,2],[3,4],[5,6]}",
             "{true, false, {1,0}, {-100, 12.355, -12.35}}",
             "{,}"
     }, delimiter = '|')
@@ -158,6 +159,7 @@ public abstract class AbstractSerializerTest<T> extends AbstractMetatronTest {
                     LOG.debug("ignoring fail for %s <=> %s", objString, obj);
             } else {
                 assertEquals(obj, obj2);
+                assertEquals(obj.type(),obj2.type());
             }
 
         }

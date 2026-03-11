@@ -125,7 +125,7 @@ public class webInstSet extends AbstractInstSet {
                         final String source = lhs.strValue();
                         final Obj result = mParser.parse(source).apply();
                         final String resultString = result.isObjs() ?
-                                result.elements()
+                                result.stream()
                                         .map(Obj::toCleanString)
                                         //.map(Highlighter::unformat)
                                         .reduce((a, b) -> a + "%%%" + b)

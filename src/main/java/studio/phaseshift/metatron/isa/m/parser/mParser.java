@@ -372,11 +372,10 @@ public class mParser {
     }
 
     public static Parser m_objs() {
-        return seq(m_type_prefix(ALL.some()), choice(
-                        seq(of('{').trim(), of(',').trim(), of('}').trim()),
-                        seq(of('{').trim(), m_call_prefix(MAP_INST_TID).separatedBy(of(',').trim()), of('}').trim()).pick(1)),
-                m_vid_postfix())
-                .map(t -> objs(mParser.<List>pick(t, 1).stream().filter(x -> x instanceof Obj).toList(), pick(t, 0), pick(t, 2)));
+        return choice(
+                seq(of('{').trim(), of(',').trim(), of('}').trim()),
+                seq(of('{').trim(), m_call_prefix(MAP_INST_TID).separatedBy(of(',').trim()), of('}').trim()).pick(1))
+                .map(t -> objs(((List) t).stream().filter(x -> x instanceof Obj).toList()));
     }
 
     public static Parser m_type_prefix(final fURI baseType) {

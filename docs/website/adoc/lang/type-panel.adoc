@@ -1,10 +1,10 @@
 =====
 
-metatron objs are typed.
-Types are organized into instruction sets that encapsulate the structures and processes necessary to effect domain-specific views of the underlying data space.
-The type system supports refinement types, optional/maybe types, generic/polymorphic types, recursive/self-referential types, dependent types, type cardinality, and more.
+metatron `objs` are typed. Types are organized into instruction sets that encapsulate the structures and processes necessary to effect domain-specific views of the underlying data space. The type system supports refinement types, optional/maybe types, generic/polymorphic types, recursive/self-referential types, dependent types, type cardinality, and more.
 
 ## mtron core types
+
+The fundamental types are organized into the 5 categories presented in the table below.
 
 [cols="1a,1a,4a",separator=🧱,options=header]
 |===
@@ -14,20 +14,61 @@ The type system supports refinement types, optional/maybe types, generic/polymor
 🧱poly types      🧱             🧱 rel::T, lst::T, rec::T
 🧱call types      🧱             🧱 inst::T, code::T
 🧱error types     🧱             🧱 fail::T, caught::T
+🧱machine types   🧱             🧱 monad::T, machine::T
 |===
 
-[source,mtron]
-----
-nat    -> int::T[?>0]
-age    -> nat::T[?<120]
-name   -> str::T[-<''>-count().?<30]
+=====
 
-person -> rec::T[
- name  => str::T,
- age   => age::T,
- knows => person{*}::T
- tools => [uri::T => call?#{*}<=person::T]
-----
+=====
+
+A natural number is a positive integer greater than zero. In order to constrain an `int` to this definition, a **refinement type** can be constructed.
+
+++++
+<!-- 🐖
+nat -> int::T[?>0]
+nat::10
+nat::-10
+int::-10.as(nat::T)
+-->
+++++
+
+Type inheritance is possible through type chaining. In the example below, the `age` type has a value id of `age`, but a type id of `nat`. Moreover, `nat` has a value id of `nat` and a type id of `int`. In this way, when `age` is resolved, its associated predicate (`?<120`) and inherited predicates (`?>0`) must hold for the respective value to be considered an `age`.
+
+++++
+<!-- 🐖
+age -> nat::T[?<120]
+age::T
+nat::T
+int::T
+-->
+++++
+
+++++
+<!-- 🐖
+nat:125
+age:125
+nat:125.as(age::T)
+125.as(nat::T).as(age::T)
+-->
+++++
+
+=====
+
+=====
+
+++++
+<!-- 🐖
+name   -> str::T[-<''>-count().?<30]
+personx -> rec::T[?[name  => str::T, /
+                    age   => age::T, /
+                    knows => personx{*}::T]]
+marko -> personx::[name=>'marko',age=>29,knows=>!*grant]
+grant -> personx::[name=>'grant',age=>23,knows=>!*marko]
+*marko>>knows>>name
+*marko>>knows>>knows>>name
+*marko>>knows>>knows
+-->
+++++
 
 ## instruction set architecture types
 
