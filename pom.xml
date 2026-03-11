@@ -397,8 +397,8 @@
                                 <argument>docs/python/docs-code-parser.py</argument>
                                 <argument>--verbose</argument>
                                 <argument>-o</argument>
-                                <argument>${project.build.directory}/temp</argument>
-                                <argument>${project.basedir}/docs</argument>
+                                <argument>${project.build.directory}/temp/website</argument>
+                                <argument>${project.build.directory}/temp/website/adoc/lang</argument>
                             </arguments>
                         </configuration>
                     </execution>
@@ -478,7 +478,11 @@
                                 <include>javascript/**</include>
                                 <include>highlight/**</include>
                                 <include>images/**</include>
+                                <include>website/**</include>
                             </includes>
+                            <excludes>
+                                <exclude>index.adoc</exclude>
+                            </excludes>
                             <filtering>true</filtering>
                         </resource>
                     </resources>
@@ -534,13 +538,13 @@
                 <artifactId>asciidoctor-maven-plugin</artifactId>
                 <version>${asciidoctor.version}</version>
                 <configuration>
-                    <sourceDirectory>${project.build.directory}/temp</sourceDirectory>
-                    <sourceDocumentName>index.adoc</sourceDocumentName>
-                    <outputDirectory>${project.build.directory}/docs</outputDirectory>
+                    <sourceDirectory>${project.build.directory}/temp/website</sourceDirectory>
+                    <sourceDocumentName>adoc/index.adoc</sourceDocumentName>
+                    <outputDirectory>${project.build.directory}/docs/website</outputDirectory>
                     <resources>
                         <resource>
-                            <directory>${project.build.directory}/temp</directory>
-                            <targetPath>${project.build.directory}/docs</targetPath>
+                            <directory>${project.build.directory}/temp/website</directory>
+                            <targetPath>${project.build.directory}/docs/website</targetPath>
                             <excludes>
                                 <exclude>**/.txt</exclude>
                                 <exclude>**/.py</exclude>

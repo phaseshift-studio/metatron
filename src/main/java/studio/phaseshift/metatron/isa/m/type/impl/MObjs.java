@@ -23,7 +23,9 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Objs;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.util.IteratorUtil;
+import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.*;
@@ -32,6 +34,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.isa.m.mInstSet.ALL_STAR;
+import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 
 public class MObjs implements Objs {
@@ -51,6 +54,8 @@ public class MObjs implements Objs {
         this.jvm = flatten(jvm);
         this.vid = vid;
         this.tid = tid;
+        if (null != vid)
+            Router.writeToSpace(vid, this);
     }
 
     @Override
@@ -143,7 +148,11 @@ public class MObjs implements Objs {
     public static Obj objs(final List<Obj> objs, final fURI tid, final fURI vid) {
         if (objs.isEmpty()) return noobj();
         if (objs.size() == 1) return objs.getFirst();
-        return new MObjs(objs, objs.stream().map(Obj::tid).distinct().count() > 1 ? tid : objs.getFirst().tid(), null).attemptBulk(true).tryToShrink();
+        final fURI bigTID = tid.big();
+        final fURI newTID = objs.stream().map(Obj::tid).reduce(fURI::plus).orElse(NOOBJ_TID);
+        if (!newTID.test(bigTID))
+            throw MTronException.of("tid does not match objs tid: %s != %s", bigTID, newTID);
+        return new MObjs(objs, bigTID, vid).attemptBulk(true).tryToShrink();
     }
 
     public static Obj objs(final Stream<Obj> objs) {

@@ -1,3 +1,5 @@
+=====
+
 metatron objs are typed.
 Types are organized into instruction sets that encapsulate the structures and processes necessary to effect domain-specific views of the underlying data space.
 The type system supports refinement types, optional/maybe types, generic/polymorphic types, recursive/self-referential types, dependent types, type cardinality, and more.
@@ -65,3 +67,5 @@ mtron> *#.as[name      => _,
              coauthor  => >>knows.where[>>age.?>21]>>name]
 ==>[name=>'enki', coauthor=>'enoch']
 ----
+
+=====

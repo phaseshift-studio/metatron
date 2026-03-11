@@ -37,7 +37,7 @@
 <script src="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js"></script>
 <link rel="stylesheet" href="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.css"/>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
-<script src="javascript/metatron-docs.js"></script>
+<script src="../javascript/metatron-docs.js"></script>
 ++++
 
     mtron> ring-oriented computing
@@ -49,11 +49,6 @@ include::space.adoc[]
 == instruction sets
 
 include::m.adoc[]
-include::mkv.adoc[]
-include::mweb.adoc[]
-include::mgrph.adoc[]
-include::mvec.adoc[]
-include::mllm.adoc[]
 include::mach.adoc[]
 
 ++++

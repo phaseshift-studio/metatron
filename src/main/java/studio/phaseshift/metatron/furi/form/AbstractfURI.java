@@ -244,7 +244,7 @@ public abstract class AbstractfURI implements fURI {
                 return true;
         } else
             return false;
-        if (rhs.equals(ALL))
+        if (rhs.one().equals(ALL))
             return true;
         if (!rhs.hasPattern() && !this.hasPattern()) {
             if (!this.name().equals(rhs.name()))

@@ -6,13 +6,13 @@
 /* Change the values in root for quick customisation. If you want even more fine grain... venture further. */
 :root {
     /*------------------------*/
-    --mblue: #2652e5;
+    --mblue: #002394;
     --mmagenta: #825181;
-    --mred: #970207;
-    --mgreen: #4d8813;
+    --mred: #6b0004;
+    --mgreen: #335c00;
     --mdarkgray: #494554;
     --mlightgray: #797585;
-    --myellow: #bac008;
+    --myellow: #7b8000;
     --maqua: #167a96;
     /*------------------------*/
     --maincolor: #282c34;
@@ -20,10 +20,10 @@
     --secondarycolor: #191C24;
     --light: #6C7293;
     --dark: #000000;
-    --tertiarycolor: #4db6ac;
+    --tertiarycolor: #006259;
     --sidebarbackground: #191C24;
     --linkcolor: var(--mmagenta);
-    --linkcoloralternate: #2652e5;
+    --linkcoloralternate: #002dc5;
     --white: #FFFFFF;
 }
 
