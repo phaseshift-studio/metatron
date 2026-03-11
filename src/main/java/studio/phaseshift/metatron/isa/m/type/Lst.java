@@ -40,6 +40,7 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Type.LOG;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -141,16 +142,16 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
         if (key.isInt())
             return (OBJ) ((this.jvm().size() > key.intValue()) ? this.jvm().get(key.<Int>as().intValue().intValue()).autoResolve(this) : noobj()).parent(this).c(c -> c.mult(cKey));
         else if (key.isUri()) {
+            LOG.info("key: %s", key);
             // if (key.uriValue().isEmpty())
             //            return this.c(c -> c.mult(cKey)).as();
 
-            if (key.uriValue().path().isEmpty())
+            if (key.uriValue().pathLength() == 0)
                 return (OBJ) noobj();
-            final boolean singleSegment = key.uriValue().pathLength() == 1;
-            final String step = singleSegment ? key.uriValue().asNode().toString() : key.uriValue().path().getFirst();
-            final Uri asNode = uri(key.uriValue().asNode());
+            final String step = key.uriValue().path().getFirst();
             final boolean isBranch = key.uriValue().isBranch();
             Stream<Obj> result;
+            LOG.info("step: %s", step);
             if (step.equals(Singleton.WILD_ONE.toString()) || step.equals(ALL.toString())) {
                 result = isBranch ? (Stream) this.indexedStream() : this.elements();
             } else {
@@ -162,10 +163,13 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
                     return (OBJ) noobj();
                 result = isBranch ? Stream.of(rel(uri(step), this.at(k.intValue().intValue()))) : Stream.of(this.at(k.intValue().intValue()));
             }
-            if (key.uriValue().path().size() == 1) {
+            if (key.uriValue().pathLength() == 1) {
                 return (OBJ) objs(result.filter(x -> !x.isNoObj()).map(x -> x.c(c -> c.mult(cKey)).parent(this)));
             } else {
-                return (OBJ) objs(result.filter(x -> !x.isNoObj()).filter(Obj::isPoly).map(x -> (Poly<?, ?>) x.c(c -> c.mult(cKey)).parent(this)).map(r -> r.at(uri(key.<Uri>as().uriValue().pretract(1)))));
+                return (OBJ) objs(result.filter(x -> !x.isNoObj()).filter(Obj::isPoly).map(x -> (Poly<?, ?>) x.c(c -> c.mult(cKey)).parent(this))
+                        .map(r -> isBranch ?
+                                r.at(uri(key.<Uri>as().uriValue().pretract(1).asBranch())) :
+                                r.at(uri(key.<Uri>as().uriValue().pretract(1)))));
             }
         } else {
             throw MTronException.of("unknown key for lst: %s", key);

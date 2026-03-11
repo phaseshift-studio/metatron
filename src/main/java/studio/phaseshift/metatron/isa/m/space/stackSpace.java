@@ -85,7 +85,7 @@ public class stackSpace extends AbstractSpace<Stack<Poly<?, ?>>> {
         for (int i = this.sjvm().size() - 2; i >= 0; i--) { // the top frame is the current arg being processed, thus, offset is set to 2
             final Poly<?, ?> layer = this.sjvm().get(i);
             if (vid.path().getFirst().equals(ARGS_FURI.toString()))
-                return vid.pathLength() == 1 ? layer : layer.at(uri(vid.pretract(1)));
+                return vid.asNode().segmentLength() == 1 ? layer : layer.at(uri(vid.pretract(1)));
             final Uri index = vid.basePath().toUri();
             final Obj o = layer.at(index);
             if (!o.isNoObj())

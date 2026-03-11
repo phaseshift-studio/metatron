@@ -202,7 +202,7 @@ public interface Space extends Rec, Closeable {
                         if (CommonUtil.isInt(kv.get0().name()))
                             listing.add(Pair.with(kv.get0().toUri(), kv.get1()));
                         else
-                            nestRec.at(kv.get0().pretract(pattern.pathLength()).toUri(), kv.get1(), MUTABLE);
+                            nestRec.at(kv.get0().pretract(pattern.segmentLength()).toUri(), kv.get1(), MUTABLE);
                     });
                     if (!nestRec.isEmpty())
                         listing.add(Pair.with(uri(pattern), nestRec));

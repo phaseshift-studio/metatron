@@ -138,7 +138,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
         else {
             //if (key.uriValue().isEmpty())
             //   return this.c(c -> c.mult(key.c())).as();
-            final boolean singleSegment = key.uriValue().pathLength() == 1;
+            final boolean singleSegment = key.uriValue().segmentLength() == 1;
             final String step = singleSegment ? key.uriValue().asNode().toString() : key.uriValue().path().getFirst();
             Obj result;
             final Uri asNode = uri(key.uriValue().asNode());

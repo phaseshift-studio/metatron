@@ -65,7 +65,7 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
     default boolean isGeneric() {
         if (this.path().isEmpty())
             return false;
-        if (this.pathLength() == 1 && (this.path().getFirst().equals("#") || this.path().getFirst().equals("+")))
+        if (this.segmentLength() == 1 && (this.path().getFirst().equals("#") || this.path().getFirst().equals("+")))
             return false;
         boolean hasCapitalGeneric = false;
         for (final String seg : this.one().path()) { // TODO: this is necessary because {} is appended to final segment (needs to be fixed ASAP!).
@@ -210,6 +210,14 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
     List<String> poly();
 
     int pathLength();
+
+    default int segmentLength() {
+        return this.asNode().asRelative().path().size();
+    }
+    
+    default fURI asRelativeNode() {
+        return this.asNode().asRelative();
+    }
 
     fURI poly(final List<String> poly);
 

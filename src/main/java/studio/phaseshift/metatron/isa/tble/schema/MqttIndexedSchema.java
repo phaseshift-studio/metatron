@@ -25,6 +25,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 
@@ -158,8 +159,8 @@ public class MqttIndexedSchema implements TableSchema {
         boolean hasMultiLevelWildcard = false;
         int segmentIndex = 1; // Database columns are seg1, seg2, etc.
 
-        for (int i = 0; i < Math.min(pattern.pathLength(), MAX_SEGMENTS + 1); i++) {
-            final String seg = pattern.path().get(i);
+        for (int i = 0; i < Math.min(pattern.segmentLength(), MAX_SEGMENTS + 1); i++) {
+            final String seg = pattern.asRelativeNode().path().get(i);
 
             if (seg.isEmpty()) {
                 continue; // Skip empty segments (leading slash)
@@ -248,6 +249,8 @@ public class MqttIndexedSchema implements TableSchema {
      * @return true if topic matches pattern
      */
     public static boolean matchesMqttPattern(final String topic, final String pattern) {
+        if(Objects.equals(topic, pattern))
+            return true;
         final fURI topicfURI = f(topic);
         final fURI patternfURI = f(pattern);
 

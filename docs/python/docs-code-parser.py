@@ -241,15 +241,18 @@ class ProcessingState:
     def _process_chicken_code(self, *, verbose: bool) -> None:
         to_header = []
         to_execute = []
+        running_line = ""
         for line in self.code:
-            if line.startswith("[HEADER]"):
+            if line.rstrip().endswith("/"):
+                running_line += line.rstrip().removesuffix("/") + "\n       " # add spaces to shift right due to mtron> 
+            elif line.startswith("[HEADER]"):
                 to_header.append(line)
             else:
-                to_execute.append(line)
+                to_execute.append(running_line + line)
+                running_line = ""
         self.output = []
         self.output.extend(to_header)
         result = []
-        to_execute.pop(0)
         final_code = []
         current = ""
         for line in to_execute:

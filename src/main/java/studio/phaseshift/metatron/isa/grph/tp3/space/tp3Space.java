@@ -179,7 +179,7 @@ public class tp3Space extends grphSpace<Graph> {
             } else {
                 if (pattern.hasPrefix(this.schemaPrefix)) {
                     return (pattern.equals(f(this.schemaPrefix)) ? IteratorUtil.of(Tuple.Pair.with(f(this.schemaPrefix), this.schema)) : IteratorUtil.of());
-                } else if (pattern.pathLength() < 3) {
+                } else if (pattern.segmentLength() < 3) {
                     return IteratorUtil.of();
                 } else if (pattern.equals(f(this.vertexPrefix).extend("#"))) {
                     return (Iterator) IteratorUtil.stream(this.sjvm.vertices()).map(v -> Tuple.Pair.with(f(this.vertexPrefix).extend(v.id().toString()), VertexMap.vertexToRec(v, this))).iterator();

@@ -190,7 +190,7 @@ public class MqttIndexedSchemaTest extends AbstractMetatronTest {
     public void testMqttPatternMatching(final String pattern, final String topic, final boolean shouldMatch) {
         final boolean matches = MqttIndexedSchema.matchesMqttPattern(topic.trim(), pattern.trim());
         LOG.debug("pattern: %s, topic: %s, matches: %s (expected: %s)", pattern.trim(), topic.trim(), matches, shouldMatch);
-        assertEquals(shouldMatch, matches);
+        assertEquals(shouldMatch, matches, String.format("Pattern %s does not match topic %s", pattern.trim(), topic.trim()));
     }
 
     @Test

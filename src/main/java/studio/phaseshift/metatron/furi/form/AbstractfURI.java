@@ -37,14 +37,18 @@ public abstract class AbstractfURI implements fURI {
 
     @Override
     public fURI asAbsolute() {
+        if(!this.path().isEmpty() && this.path().getFirst().isEmpty())
+            return this;
         final List<String> newPath = new ArrayList<>(this.path());
         if (!newPath.isEmpty() && !newPath.getFirst().isEmpty())
-            newPath.add("");
+            newPath.addFirst("");
         return fURI.of(this.scheme(), this.host(), this.port(), newPath, this.c(), this.poly(), this.qMap());
     }
 
     @Override
     public fURI asRelative() {
+        if(this.path().isEmpty() || !this.path().getFirst().isEmpty())
+            return this;
         final List<String> newPath = new ArrayList<>(this.path());
         if (!newPath.isEmpty() && newPath.getFirst().isEmpty())
             newPath.removeFirst();
@@ -53,6 +57,8 @@ public abstract class AbstractfURI implements fURI {
 
     @Override
     public fURI asNode() {
+        if(this.path().isEmpty() || !this.path().getLast().isEmpty())
+            return this;
         final List<String> newPath = new ArrayList<>(this.path());
         if (!newPath.isEmpty() && newPath.getLast().isEmpty())
             newPath.removeLast();
@@ -61,6 +67,8 @@ public abstract class AbstractfURI implements fURI {
 
     @Override
     public fURI asBranch() {
+        if(!this.path().isEmpty() && this.path().getLast().isEmpty())
+            return this;
         final List<String> newPath = new ArrayList<>(this.path());
         if (!newPath.isEmpty() && !newPath.getLast().isEmpty())
             newPath.add("");

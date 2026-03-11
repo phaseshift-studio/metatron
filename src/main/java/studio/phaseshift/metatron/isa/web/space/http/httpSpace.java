@@ -158,7 +158,7 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                                     // fURI toRemove = f(filePath.toString());
                                     final fURI pretractedURI = f(exchange.getRequestURI().getPath()).removeSubpath(f(INDEX_HTML)).asRelative();
                                     LOG.info("remaining steps in request uri: %s", pretractedURI);
-                                    if (pretractedURI.pathLength() == 0) {
+                                    if (pretractedURI.segmentLength() == 0) {
                                         // send the full html document
                                         final String contentType = exchange.getRequestURI().getPath().endsWith("mtron") ?
                                                 ContentType.APPLICATION_MTRON.value :
@@ -283,7 +283,7 @@ public class httpSpace extends AbstractSpace<HttpServer> {
             if (path.toFile().exists() && path.toFile().isFile())
                 return path.toFile();
             temp = temp.retract(1).asNode();
-            if (temp.pathLength() == 0)
+            if (temp.asNode().segmentLength() == 0)
                 return null;
         }
     }
@@ -321,10 +321,10 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                     final Connection.Response response = Jsoup.connect(runningPattern.toString()).ignoreContentType(true).ignoreHttpErrors(true).execute();
                     LOG.debug("code: %d (%s)", response.statusCode(), runningPattern);
                     if (response.statusCode() == 404) {
-                        if (runningPattern.pathLength() == 0)
+                        if (runningPattern.segmentLength() == 0)
                             return IteratorUtil.of();
                         steps++;
-                        runningPattern = runningPattern.retract(1);
+                        runningPattern = runningPattern.asRelativeNode().retract(1);
                     } else {
                         final ContentType contentType = ContentType.of(response.contentType());
                         LOG.debug("content-type: %s => %s", response.contentType(), contentType);
