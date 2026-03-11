@@ -105,7 +105,7 @@ public abstract class AbstractSerializerTest<T> extends AbstractMetatronTest {
             //obj
             "noobj",
             "int{0}::3",
-            "real::2.123",
+            "real::2.12",
             "true",
             "false",
             "bool::true",
@@ -113,7 +113,7 @@ public abstract class AbstractSerializerTest<T> extends AbstractMetatronTest {
             "1",
             "0",
             "-100",
-            "12.355",
+            "12.25",
             "-12.35",
             "\"this is a string\"",
             "\"\"\"this is a multilinestring\"\"\"",
@@ -138,9 +138,9 @@ public abstract class AbstractSerializerTest<T> extends AbstractMetatronTest {
             "[a,[b,12,'abc'],[a=>b,c=>[c=>d]]]",
             "rec{0}::[a,[b,12,'abc'],[a=>b,c=>[c=>d]]]",
             "{1,2,3,4,5}",
-            "{true, false, 1,0, -100, 12.355, -12.35}",
+            "{true, false, 1,0, -100, 12.55, -12.35}",
             "{[1,2],[3,4],[5,6]}",
-            "{true, false, {1,0}, {-100, 12.355, -12.35}}",
+            "{true, false, {1,0}, {-100, 12.35, -12.35}}",
             "{,}"
     }, delimiter = '|')
     public void testSerializeDeserializeObj(final String objString) {
