@@ -13,7 +13,7 @@
 	--dark: #000000;
 	/*------------------------*/
 	--mblue: #4669dd;
-	--mmagenta: #9c0202; /*#825181;*/
+	--mmagenta: #9f4040; /*#825181;*/
 	--mred: #6b0004;
 	--mgreen: #457b02;
 	--mdarkgray: #494554;
@@ -528,7 +528,6 @@ body {
 .hljs-mtron-bool,
 .hljs-mtron-furi-query,
 .hljs-mtron-sugar-inst,
-.hljs-mtron-query,
 .hljs-mtron-sys-furi,
 .hljs-mtron-log-warn{
 	color: var(--myellow);
@@ -539,7 +538,8 @@ body {
 	font-weight: bold !important;
 }
 
-.hljs-mtron-rec-key {
+.hljs-mtron-rec-key,
+.hljs-mtron-query {
 	color: var(--maqua);
 }
 
@@ -548,15 +548,15 @@ body {
 .hljs-punctuation,
 .hljs-mtron-rec,
 .hljs-mtron-result-prefix,
-.hljs-mtron-type-prefix,
+
 .hljs-mtron-prompt-end,
-.hljs-mtron-log-info {
+.hljs-mtron-log-info,
+.hljs-mtron-T {
 	color: var(--mgreen);
 }
 
 .hljs-mtron-prompt-begin,
-.hljs-mtron-noobj,
-.hljs-mtron-T {
+.hljs-mtron-noobj {
 	color: var(--mmagenta);
 }
 
@@ -579,6 +579,7 @@ body {
 }
 
 .hljs-mtron-uri,
+.hljs-mtron-type-prefix,
 .hljs-mtron-type,
 .hljs-mtron-inst-f-jvm {
 	color: var(--mblue);
