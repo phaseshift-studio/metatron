@@ -24,9 +24,9 @@
  * <p>
  * Available schemas:
  * <ul>
- *   <li>{@link studio.phaseshift.metatron.isa.tble.schema.MqttIndexedSchema} -
+ *   <li>{@link studio.phaseshift.metatron.isa.tble.schema.fURIAwareIndexedSchema} -
  *       MQTT-indexed schema with virtual generated columns for efficient pattern matching</li>
- *   <li>{@link studio.phaseshift.metatron.isa.tble.schema.SimpleSchema} -
+ *   <li>{@link studio.phaseshift.metatron.isa.tble.schema.SimpleKeyValueSchema} -
  *       Basic schema with furi/obj table and no special indexing</li>
  * </ul>
  * <p>

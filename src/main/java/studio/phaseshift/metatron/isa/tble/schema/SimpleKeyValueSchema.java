@@ -35,7 +35,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class SimpleSchema implements TableSchema {
+public class SimpleKeyValueSchema implements TableSchema {
 
     private static final String TABLE_NAME = "objs";
 
@@ -116,7 +116,7 @@ public class SimpleSchema implements TableSchema {
     }
 
     @Override
-    public boolean supportsMqttPatterns() {
+    public boolean supportsfURIPatterns() {
         return false;
     }
 

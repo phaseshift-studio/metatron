@@ -79,7 +79,7 @@ public interface TableSchema {
      *
      * @return true if MQTT patterns (+/#) are supported
      */
-    default boolean supportsMqttPatterns() {
+    default boolean supportsfURIPatterns() {
         return false;
     }
 

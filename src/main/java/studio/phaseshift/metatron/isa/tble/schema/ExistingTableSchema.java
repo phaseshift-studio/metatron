@@ -22,8 +22,8 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Router;
-import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.tble.tbleSpace;
+import studio.phaseshift.metatron.util.Tuple;
 
 import java.sql.*;
 import java.util.*;
@@ -51,42 +51,21 @@ import static studio.phaseshift.metatron.isa.tble.tbleInstSet.REC_ROW_TID;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class ExistingTableSchema implements TableSchema {
-
-    private static final GraphittyLogger LOG = Graphitty.log(ExistingTableSchema.class);
-
+    private final tbleSpace space;
     private final Map<String, TableMetadata> tableSchemas = new LinkedHashMap<>();
     private final String excludeTableName;
 
     /**
      * Metadata about a SQL table
      */
-    public static class TableMetadata {
-        public final String dbName;
-        public final String tableName;
-        public final List<ColumnMetadata> columns;
-        public final List<String> primaryKeys;
-
-        public TableMetadata(String dbName, String tableName, List<ColumnMetadata> columns, List<String> primaryKeys) {
-            this.dbName = dbName;
-            this.tableName = tableName;
-            this.columns = columns;
-            this.primaryKeys = primaryKeys;
-        }
+    public record TableMetadata(String dbName, String tableName, List<ColumnMetadata> columns,
+                                List<String> primaryKeys) {
     }
 
     /**
      * Metadata about a SQL column
      */
-    public static class ColumnMetadata {
-        public final String name;
-        public final int sqlType;
-        public final String typeName;
-
-        public ColumnMetadata(String name, int sqlType, String typeName) {
-            this.name = name;
-            this.sqlType = sqlType;
-            this.typeName = typeName;
-        }
+    public record ColumnMetadata(String name, int sqlType, String typeName) {
     }
 
     /**
@@ -94,34 +73,32 @@ public class ExistingTableSchema implements TableSchema {
      *
      * @param excludeTableName name of table to exclude from discovery (e.g., the key-value store table)
      */
-    public ExistingTableSchema(String excludeTableName) {
+    public ExistingTableSchema(final tbleSpace space, final String excludeTableName) {
         this.excludeTableName = excludeTableName;
+        this.space = space;
     }
 
     @Override
-    public void initialize(Connection conn) throws SQLException {
+    public void initialize(final Connection conn) throws SQLException {
         discoverTableSchemas(conn);
     }
 
     /**
      * Discover all tables in the database and their schemas
      */
-    private void discoverTableSchemas(Connection conn) throws SQLException {
-        DatabaseMetaData metaData = conn.getMetaData();
-
+    private void discoverTableSchemas(final Connection conn) throws SQLException {
+        final DatabaseMetaData metaData = conn.getMetaData();
         // Get all tables (excluding system tables)
-        try (ResultSet tables = metaData.getTables(conn.getCatalog(), null, "%", new String[]{"TABLE"})) {
+        try (final ResultSet tables = metaData.getTables(conn.getCatalog(), null, "%", new String[]{"TABLE"})) {
             while (tables.next()) {
-                String tableName = tables.getString("TABLE_NAME");
-
+                final String tableName = tables.getString("TABLE_NAME");
                 // Skip the key-value store table
-                if (tableName.equals(excludeTableName)) {
+                if (tableName.equals(this.excludeTableName)) {
                     continue;
                 }
-
                 // Get columns for this table
-                List<ColumnMetadata> columns = new ArrayList<>();
-                try (ResultSet cols = metaData.getColumns(null, null, tableName, "%")) {
+                final List<ColumnMetadata> columns = new ArrayList<>();
+                try (final ResultSet cols = metaData.getColumns(null, null, tableName, "%")) {
                     while (cols.next()) {
                         String columnName = cols.getString("COLUMN_NAME");
                         int sqlType = cols.getInt("DATA_TYPE");
@@ -129,21 +106,19 @@ public class ExistingTableSchema implements TableSchema {
                         columns.add(new ColumnMetadata(columnName, sqlType, typeName));
                     }
                 }
-
                 // Get primary keys for this table
-                List<String> primaryKeys = new ArrayList<>();
-                try (ResultSet pks = metaData.getPrimaryKeys(null, null, tableName)) {
+                final List<String> primaryKeys = new ArrayList<>();
+                try (final ResultSet pks = metaData.getPrimaryKeys(null, null, tableName)) {
                     while (pks.next()) {
                         primaryKeys.add(pks.getString("COLUMN_NAME"));
                     }
                 }
-
-                tableSchemas.put(tableName.toLowerCase(), new TableMetadata(conn.getCatalog(), tableName, columns, primaryKeys));
-                LOG.debug("discovered table: %s with %s columns and %s primary keys",
+                this.tableSchemas.put(tableName.toLowerCase(), new TableMetadata(conn.getCatalog(), tableName, columns, primaryKeys));
+                this.space.logger().debug("discovered table: %s with %s columns and %s primary keys",
                         tableName, columns.size(), primaryKeys.size());
             }
         }
-        LOG.info("discovered {{b}}%s{{X}} tables: %s", tableSchemas.size(), tableSchemas.keySet());
+        this.space.logger().info("discovered {{b}}%s{{X}} tables: %s", tableSchemas.size(), tableSchemas.keySet());
     }
 
     /**
@@ -151,30 +126,24 @@ public class ExistingTableSchema implements TableSchema {
      * Format: /table_name/row_id or /table_name/+ for all rows
      * Returns null if not a table path
      */
-    private org.javatuples.Pair<String, String> parseTablePath(final fURI furi) {
+    private Tuple.Pair<String, String> parseTablePath(final fURI furi) {
         // Use segments() to get only the named segments (no empty strings from slashes)
-        List<String> segments = furi.segments();
-
-        if (segments.isEmpty()) {
+        final List<String> segments = furi.segments();
+        if (segments.isEmpty())
             return null;
-        }
-
         // First segment should be the table name
-        String tableName = segments.get(0);
-
-        if (!tableSchemas.containsKey(tableName.toLowerCase())) {
+        final String tableName = segments.get(0);
+        if (!this.tableSchemas.containsKey(tableName.toLowerCase()))
             return null;
-        }
-
         // Get row identifier (if present)
-        String rowId = segments.size() > 1 ? segments.get(1) : null;
-        return org.javatuples.Pair.with(tableName, rowId);
+        final String rowId = segments.size() > 1 ? segments.get(1) : null;
+        return Tuple.Pair.with(tableName, rowId);
     }
 
     /**
      * Convert a SQL value to a Metatron object
      */
-    private Obj sqlValueToObj(Object value, int sqlType) {
+    private Obj sqlValueToObj(final Object value, final int sqlType) {
         if (value == null) {
             return noobj();
         }
@@ -192,11 +161,11 @@ public class ExistingTableSchema implements TableSchema {
     /**
      * Read a row from a SQL table and convert it to a Metatron list
      */
-    private Obj readTableRow(ResultSet rs, TableMetadata metadata) throws SQLException {
+    private Obj readTableRow(final ResultSet rs, final TableMetadata metadata) throws SQLException {
         //    List<Obj> values = new ArrayList<>();
-        Map<Obj, Obj> labeledValues = new LinkedHashMap<>();
-        for (ColumnMetadata col : metadata.columns) {
-            Object value = rs.getObject(col.name);
+       final Map<Obj, Obj> labeledValues = new LinkedHashMap<>();
+        for (final ColumnMetadata col : metadata.columns) {
+            final Object value = rs.getObject(col.name);
             //  values.add(sqlValueToObj(value, col.sqlType));
             labeledValues.put(uri(col.name), sqlValueToObj(value, col.sqlType));
             if (null != value)
@@ -210,13 +179,13 @@ public class ExistingTableSchema implements TableSchema {
     /**
      * Build a row identifier from primary keys or row number
      */
-    private String buildRowId(ResultSet rs, TableMetadata metadata) throws SQLException {
+    private String buildRowId(final ResultSet rs, final TableMetadata metadata) throws SQLException {
         if (!metadata.primaryKeys.isEmpty()) {
             // Use primary key value(s)
-            StringBuilder id = new StringBuilder();
+            final StringBuilder id = new StringBuilder();
             for (int i = 0; i < metadata.primaryKeys.size(); i++) {
                 if (i > 0) id.append("_");
-                Object value = rs.getObject(metadata.primaryKeys.get(i));
+                final Object value = rs.getObject(metadata.primaryKeys.get(i));
                 id.append(value != null ? value.toString() : "null");
             }
             return id.toString();
@@ -227,75 +196,65 @@ public class ExistingTableSchema implements TableSchema {
     }
 
     @Override
-    public int write(Connection conn, fURI furi, String objJson) throws SQLException {
+    public int write(final Connection conn, final fURI furi, final String objJson) throws SQLException {
         // ExistingTableSchema is read-only
         throw new UnsupportedOperationException("ExistingTableSchema is read-only. Cannot write to existing tables.");
     }
 
     @Override
-    public Iterator<Space.IdObj> read(Connection conn, fURI pattern) throws SQLException {
-        org.javatuples.Pair<String, String> tablePath = parseTablePath(pattern.asNode());
-        if (tablePath == null) {
-            // Not a table path
+    public Iterator<Space.IdObj> read(final Connection conn, final fURI pattern) throws SQLException {
+        final Tuple.Pair<String, String> tablePath = parseTablePath(pattern.asNode());
+        if (tablePath == null)
             return Collections.emptyIterator();
-        }
-
-        String tableName = tablePath.getValue0();
-        String rowId = tablePath.getValue1();
-        TableMetadata metadata = tableSchemas.get(tableName.toLowerCase());
-
-        if (metadata == null) {
+        final String tableName = tablePath.get0();
+        final String rowId = tablePath.get1();
+        final TableMetadata metadata = tableSchemas.get(tableName.toLowerCase());
+        if (metadata == null)
             return Collections.emptyIterator();
-        }
-
-        List<Space.IdObj> results = new ArrayList<>();
-
+        final List<Space.IdObj> results = new ArrayList<>();
         if (rowId == null || rowId.equals("+") || pattern.hasPattern()) {
             // Read all rows
-            String sql = String.format("SELECT * FROM %s", metadata.tableName);
-            try (Statement stmt = conn.createStatement();
-                 ResultSet rs = stmt.executeQuery(sql)) {
-
+            final String sql = String.format("SELECT * FROM %s", metadata.tableName);
+            try (final Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(sql)) {
                 while (rs.next()) {
                     // Build row identifier from primary keys or use row number
-                    String id = buildRowId(rs, metadata);
+                    final String id = buildRowId(rs, metadata);
                     fURI rowFuri = fURI.Singleton.f("/" + tableName + "/" + id);
-                    Obj obj = readTableRow(rs, metadata);
+                    final Obj obj = readTableRow(rs, metadata);
                     results.add(Space.IdObj.of(rowFuri, obj));
                 }
             }
         } else {
             // Read specific row by primary key
             if (metadata.primaryKeys.isEmpty()) {
-                LOG.warn("table %s has no primary key, cannot read specific row", tableName);
+                this.space.logger().warn("table %s has no primary key, cannot read specific row", tableName);
                 return Collections.emptyIterator();
             }
 
-            String pkColumn = metadata.primaryKeys.get(0);
-            String sql = String.format("SELECT * FROM %s WHERE %s = ?", metadata.tableName, pkColumn);
-            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            final String pkColumn = metadata.primaryKeys.getFirst();
+            final String sql = String.format("SELECT * FROM %s WHERE %s = ?", metadata.tableName, pkColumn);
+            try (final PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setString(1, rowId);
-                try (ResultSet rs = stmt.executeQuery()) {
+                try (final ResultSet rs = stmt.executeQuery()) {
                     if (rs.next()) {
-                        fURI rowFuri = fURI.Singleton.f("/" + tableName + "/" + rowId);
-                        Obj row = readTableRow(rs, metadata);
+                        final fURI rowFuri = fURI.Singleton.f("/" + tableName + "/" + rowId);
+                        final Obj row = readTableRow(rs, metadata);
                         results.add(Space.IdObj.of(rowFuri, row));
                     }
                 }
             }
         }
-
         return results.iterator();
     }
 
     @Override
-    public int delete(Connection conn, fURI furi) throws SQLException {
+    public int delete(final Connection conn, final fURI furi) throws SQLException {
         // ExistingTableSchema is read-only
         throw new UnsupportedOperationException("ExistingTableSchema is read-only. Cannot delete from existing tables.");
     }
 
     @Override
-    public boolean supportsMqttPatterns() {
+    public boolean supportsfURIPatterns() {
         return false; // Basic pattern support only
     }
 
@@ -307,7 +266,7 @@ public class ExistingTableSchema implements TableSchema {
     /**
      * Check if a fURI path refers to a table managed by this schema
      */
-    public boolean isTablePath(fURI furi) {
+    public boolean isTablePath(final fURI furi) {
         return parseTablePath(furi.asNode()) != null;
     }
 
@@ -317,8 +276,8 @@ public class ExistingTableSchema implements TableSchema {
     public Set<String> getTableNames() {
         return tableSchemas.keySet();
     }
-    
-   public List<TableMetadata> getTableMetadata() {
+
+    public List<TableMetadata> getTableMetadata() {
         return new ArrayList<>(tableSchemas.values());
-   }
+    }
 }

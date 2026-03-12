@@ -40,11 +40,11 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
- * Test suite for MqttIndexedSchema.
+ * Test suite for fURIAwareIndexedSchema.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class MqttIndexedSchemaTest extends AbstractMetatronTest {
+public class fURIAwareIndexedSchemaTest extends AbstractMetatronTest {
 
     private static final String DB_PATH = "target/test-mqtt-schema.db";
     private static final String JDBC_URL = "jdbc:sqlite:" + DB_PATH;
@@ -65,8 +65,8 @@ public class MqttIndexedSchemaTest extends AbstractMetatronTest {
         conn = DriverManager.getConnection(JDBC_URL);
 
         // Note: SQLite doesn't support generated columns like MariaDB
-        // For testing, we'll use SimpleSchema instead
-        schema = new SimpleSchema();
+        // For testing, we'll use SimpleKeyValueSchema instead
+        schema = new SimpleKeyValueSchema();
         schema.initialize(conn);
     }
 
@@ -191,7 +191,7 @@ public class MqttIndexedSchemaTest extends AbstractMetatronTest {
             "/sensor/+/temperature/#         | /sensor/kitchen/humidity        | false",
     }, delimiter = '|')
     public void testMqttPatternMatching(final String pattern, final String topic, final boolean shouldMatch) {
-        final boolean matches = MqttIndexedSchema.matchesMqttPattern(topic.trim(), pattern.trim());
+        final boolean matches = fURIAwareIndexedSchema.matchesMqttPattern(topic.trim(), pattern.trim());
         LOG.debug("pattern: %s, topic: %s, matches: %s (expected: %s)", pattern.trim(), topic.trim(), matches, shouldMatch);
         assertEquals(shouldMatch, matches, String.format("Pattern %s does not match topic %s", pattern.trim(), topic.trim()));
     }
@@ -199,24 +199,24 @@ public class MqttIndexedSchemaTest extends AbstractMetatronTest {
     @Test
     public void testMqttPatternEdgeCases() {
         // Empty segments
-        assertTrue(MqttIndexedSchema.matchesMqttPattern("/a/b", "/a/b"));
-        assertFalse(MqttIndexedSchema.matchesMqttPattern("/a/b", "/a/b/c"));
+        assertTrue(fURIAwareIndexedSchema.matchesMqttPattern("/a/b", "/a/b"));
+        assertFalse(fURIAwareIndexedSchema.matchesMqttPattern("/a/b", "/a/b/c"));
 
         // Multi-level wildcard at end
-        assertTrue(MqttIndexedSchema.matchesMqttPattern("/a/b/c", "/a/#"));
-        assertTrue(MqttIndexedSchema.matchesMqttPattern("/a", "/a/#"));
+        assertTrue(fURIAwareIndexedSchema.matchesMqttPattern("/a/b/c", "/a/#"));
+        assertTrue(fURIAwareIndexedSchema.matchesMqttPattern("/a", "/a/#"));
 
         // Single-level wildcard
-        assertTrue(MqttIndexedSchema.matchesMqttPattern("/a/b/c", "/a/+/c"));
-        assertFalse(MqttIndexedSchema.matchesMqttPattern("/a/b/c/d", "/a/+/c"));
+        assertTrue(fURIAwareIndexedSchema.matchesMqttPattern("/a/b/c", "/a/+/c"));
+        assertFalse(fURIAwareIndexedSchema.matchesMqttPattern("/a/b/c/d", "/a/+/c"));
 
         // Multiple single-level wildcards
-        assertTrue(MqttIndexedSchema.matchesMqttPattern("/a/b/c/d", "/+/+/+/+"));
-        assertFalse(MqttIndexedSchema.matchesMqttPattern("/a/b/c", "/+/+/+/+"));
+        assertTrue(fURIAwareIndexedSchema.matchesMqttPattern("/a/b/c/d", "/+/+/+/+"));
+        assertFalse(fURIAwareIndexedSchema.matchesMqttPattern("/a/b/c", "/+/+/+/+"));
 
         // Combination
-        assertTrue(MqttIndexedSchema.matchesMqttPattern("/a/b/c/d/e", "/a/+/c/#"));
-        assertFalse(MqttIndexedSchema.matchesMqttPattern("/a/b/d/e", "/a/+/c/#"));
+        assertTrue(fURIAwareIndexedSchema.matchesMqttPattern("/a/b/c/d/e", "/a/+/c/#"));
+        assertFalse(fURIAwareIndexedSchema.matchesMqttPattern("/a/b/d/e", "/a/+/c/#"));
     }
 
     private double extractValue(final String json) {

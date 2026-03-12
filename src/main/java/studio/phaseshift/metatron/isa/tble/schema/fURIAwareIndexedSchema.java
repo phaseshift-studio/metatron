@@ -21,7 +21,6 @@ package studio.phaseshift.metatron.isa.tble.schema;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
-import studio.phaseshift.metatron.util.MTronException;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -41,7 +40,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class MqttIndexedSchema implements TableSchema {
+public class fURIAwareIndexedSchema implements TableSchema {
 
     private static final int MAX_SEGMENTS = 5;
     private static final String TABLE_NAME = "objs";
@@ -233,7 +232,7 @@ public class MqttIndexedSchema implements TableSchema {
     }
 
     @Override
-    public boolean supportsMqttPatterns() {
+    public boolean supportsfURIPatterns() {
         return true;
     }
 

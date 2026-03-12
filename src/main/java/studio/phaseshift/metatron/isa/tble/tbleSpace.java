@@ -22,18 +22,14 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mInstSet;
-import studio.phaseshift.metatron.isa.m.type.Bool;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
-import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.tble.schema.ExistingTableSchema;
-import studio.phaseshift.metatron.isa.tble.schema.MqttIndexedSchema;
-import studio.phaseshift.metatron.isa.tble.schema.SimpleSchema;
+import studio.phaseshift.metatron.isa.tble.schema.SimpleKeyValueSchema;
 import studio.phaseshift.metatron.isa.tble.schema.TableSchema;
-import studio.phaseshift.metatron.util.CommonUtil;
+import studio.phaseshift.metatron.isa.tble.schema.fURIAwareIndexedSchema;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.sql.Connection;
@@ -61,7 +57,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * <p>Provides two modes of operation:
  * <ol>
  *   <li><b>Key-Value Store Mode:</b> Stores arbitrary Metatron objects as JSON using pluggable schemas
- *       (MqttIndexedSchema for MariaDB/MySQL, SimpleSchema for others)</li>
+ *       (fURIAwareIndexedSchema for MariaDB/MySQL, SimpleKeyValueSchema for others)</li>
  *   <li><b>Table Mapping Mode:</b> Maps existing SQL tables to Metatron objects automatically</li>
  * </ol>
  *
@@ -123,7 +119,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  */
 public class tbleSpace extends AbstractSpace<Connection> {
 
-    private final GraphittyLogger LOG = Graphitty.log(this);
     public static fURI TABL_SPACE_TID = tbleInstSet.TBLE_ISA_TID.extend(SPACE).extend("tble");
     public static final Type TABL_SPACE_TYPE =
             Type.Builder.build()
@@ -139,7 +134,7 @@ public class tbleSpace extends AbstractSpace<Connection> {
                             lst(REC_TYPE),
                             (_, inst) -> tbleSpace.of(inst.arg(0).asRec().jvm(), inst.arg(0).vid()))).create();
 
-    protected ObjSerializer serializer;
+    protected ObjSerializer<?> serializer;
     protected TableSchema schema;
     protected ExistingTableSchema existingTableSchema;
 
@@ -153,8 +148,7 @@ public class tbleSpace extends AbstractSpace<Connection> {
         }
     }
 
-
-    public tbleSpace(final Connection sjvm, final Map<Obj, Obj> config, final fURI tid, final fURI vid) {
+    protected tbleSpace(final Connection sjvm, final Map<Obj, Obj> config, final fURI tid, final fURI vid) {
         super(sjvm, config, tid, vid);
         LOG.info("connected {{b}}%s{{X}}", config.get(uri(HOST)));
         this.serializer = this.at(uri(SERIALIZER)).orElse(new ObjSimpleJSONSerializer());
@@ -163,10 +157,10 @@ public class tbleSpace extends AbstractSpace<Connection> {
         try {
             final String dbProductName = sjvm.getMetaData().getDatabaseProductName().toLowerCase();
             if (dbProductName.contains("mariadb") || dbProductName.contains("mysql")) {
-                this.schema = new MqttIndexedSchema();
+                this.schema = new fURIAwareIndexedSchema();
                 LOG.info("detected {{b}}mariadb/mysql{{X}} - using {{g}}mqtt schema");
             } else {
-                this.schema = new SimpleSchema();
+                this.schema = new SimpleKeyValueSchema();
                 LOG.info("detected {{b}}%s{{X}} - using {{y}}simple schema", dbProductName);
             }
             this.schema.initialize(sjvm);
@@ -178,11 +172,11 @@ public class tbleSpace extends AbstractSpace<Connection> {
             final boolean enableTableMapping = config.getOrDefault(uri(TABLE), null) != null;
 
             if (enableTableMapping) {
-                this.existingTableSchema = new ExistingTableSchema("objs");
+                this.existingTableSchema = new ExistingTableSchema(this, "objs");
                 this.existingTableSchema.initialize(sjvm);
                 LOG.info("initialized {{g}}existing table schema{{X}} - discovered %s tables",
                         this.existingTableSchema.getTableNames().size());
-                this.at(uri(TABLE), lst(this.existingTableSchema.getTableMetadata().stream().map(t -> (Obj) uri(t.tableName)).toList()),MUTABLE);
+                this.at(uri(TABLE), lst(this.existingTableSchema.getTableMetadata().stream().map(t -> (Obj) uri(t.tableName())).toList()), MUTABLE);
 
             } else {
                 this.existingTableSchema = null;
@@ -192,13 +186,6 @@ public class tbleSpace extends AbstractSpace<Connection> {
             throw MTronException.of(ex);
         }
     }
-
-
-    @Override
-    public void close() {
-        CommonUtil.close(this.sjvm());
-    }
-
 
     @Override
     public BiFunction<fURI, Obj, Obj> directWriter() {
@@ -219,6 +206,7 @@ public class tbleSpace extends AbstractSpace<Connection> {
         };
     }
 
+    @Override
     public Function<fURI, Iterator<IdObj>> directReader() {
         return (pattern) -> {
             try {
@@ -229,7 +217,7 @@ public class tbleSpace extends AbstractSpace<Connection> {
                     return tableResults;
                 }
 
-                // Use key-value schema (MqttIndexedSchema or SimpleSchema)
+                // Use key-value schema (fURIAwareIndexedSchema or SimpleKeyValueSchema)
                 final Iterator<IdObj> schemaResults = this.schema.read(this.sjvm(), pattern);
                 final List<IdObj> objs = new ArrayList<>();
 
@@ -255,6 +243,7 @@ public class tbleSpace extends AbstractSpace<Connection> {
         };
     }
 
+    @Override
     public Obj read(final fURI vid) {
         final fURI newVID = this.rewrite(vid, true);
         LOG.debug("reading %s => %s", vid, newVID);
@@ -264,6 +253,7 @@ public class tbleSpace extends AbstractSpace<Connection> {
         });
     }
 
+    @Override
     public Obj write(final fURI vid, final Obj obj) {
         final fURI newVID = this.rewrite(vid, true);
         LOG.debug("writing %s => %s", vid, newVID);
