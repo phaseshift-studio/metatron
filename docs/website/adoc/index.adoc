@@ -38,15 +38,19 @@ include::adoc/header.html[]
 ++++
 
 ++++
-<div class="container">
-<div class="row">
-<p class="d-inline-flex gap-1">
-  <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-0" aria-expanded="false" aria-controls="card-0">Data Manipulation Techniques</a>
-  <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-1" aria-expanded="false" aria-controls="card-1">The Mechanics of an Instruction</a>
-  <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-2" aria-expanded="false" aria-controls="card-2">The Structure of Types</button>
-  <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target=".multi-collapse" aria-expanded="false" aria-controls="card-1 card-2">The Entire Collection</button>
-</p>
-</div>
+<div class="carousel-item">
+<div class="container-xxl py-5">
+    <div class="container">
+        <p class="text-primary subtitle">Tractatus Algebraicus Metatronicus</p>
+        <div class="container">
+        <div class="row">
+            <p class="d-inline-flex gap-1">
+              <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-0" aria-expanded="false" aria-controls="card-0">Data Manipulation Techniques</a>
+              <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-1" aria-expanded="false" aria-controls="card-1">The Mechanics of an Instruction</a>
+              <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-2" aria-expanded="false" aria-controls="card-2">The Structure of Types</button>
+              <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target=".multi-collapse" aria-expanded="false" aria-controls="card-1 card-2">The Entire Collection</button>
+            </p>
+        </div>
 ++++
 
 ++++

@@ -36,6 +36,35 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.*;
 public abstract class AbstractfURI implements fURI {
 
     @Override
+    public List<String> segments(){
+        final List<String> path = this.path();
+        if(path.isEmpty() || (!path.getFirst().isEmpty() && !path.getLast().isEmpty()))
+            return path;
+        if(path.getFirst().isEmpty() && path.getLast().isEmpty())
+            return path.subList(1, path.size() - 1);
+        if(path.getFirst().isEmpty())
+            return path.subList(1, path.size());
+        if(path.getLast().isEmpty())
+            return path.subList(0, path.size() - 1);
+        throw MTronException.of("invalid path: %s", path);
+    }
+    
+    @Override
+    public int segmentLength() {
+        final List<String> path = this.path();
+        if(path.isEmpty() || (!path.getFirst().isEmpty() && !path.getLast().isEmpty()))
+            return path.size();
+        if(path.getFirst().isEmpty() && path.getLast().isEmpty())
+            return path.size()-2;
+        if(path.getFirst().isEmpty())
+            return path.size()-1;
+        if(path.getLast().isEmpty())
+            return path.size()-1;
+        throw MTronException.of("invalid path: %s", path);
+    }
+    
+    
+    @Override
     public fURI asAbsolute() {
         if(!this.path().isEmpty() && this.path().getFirst().isEmpty())
             return this;
@@ -133,6 +162,11 @@ public abstract class AbstractfURI implements fURI {
 
     @Override
     public fURI path(final List<String> path) {
+        if(this.host() != null && (!path.isEmpty() && !path.getFirst().isEmpty())) {
+            final List<String> newPath = new ArrayList<>(path);
+            newPath.addFirst("");
+            return fURI.of(this.scheme(), this.host(), this.port(), newPath, this.c(), this.poly(), this.qMap());
+        }
         return fURI.of(this.scheme(), this.host(), this.port(), path, this.c(), this.poly(), this.qMap());
     }
 

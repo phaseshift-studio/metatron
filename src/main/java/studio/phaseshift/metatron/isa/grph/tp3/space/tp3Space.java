@@ -36,7 +36,6 @@ import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
-import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.*;
 import java.util.function.BiFunction;
@@ -172,27 +171,27 @@ public class tp3Space extends grphSpace<Graph> {
     }
 
     @Override
-    public Function<fURI, Iterator<Tuple.Pair<fURI, Obj>>> directReader() {
+    public Function<fURI, Iterator<IdObj>> directReader() {
         return (pattern) -> {
             if (pattern.equals(ALL)) {
                 throw MTronException.of("cannot read all tp3 space");
             } else {
                 if (pattern.hasPrefix(this.schemaPrefix)) {
-                    return (pattern.equals(f(this.schemaPrefix)) ? IteratorUtil.of(Tuple.Pair.with(f(this.schemaPrefix), this.schema)) : IteratorUtil.of());
+                    return (pattern.equals(f(this.schemaPrefix)) ? IteratorUtil.of(IdObj.of(f(this.schemaPrefix), this.schema)) : IteratorUtil.of());
                 } else if (pattern.segmentLength() < 3) {
                     return IteratorUtil.of();
                 } else if (pattern.equals(f(this.vertexPrefix).extend("#"))) {
-                    return (Iterator) IteratorUtil.stream(this.sjvm.vertices()).map(v -> Tuple.Pair.with(f(this.vertexPrefix).extend(v.id().toString()), VertexMap.vertexToRec(v, this))).iterator();
+                    return (Iterator) IteratorUtil.stream(this.sjvm.vertices()).map(v -> IdObj.of(f(this.vertexPrefix).extend(v.id().toString()), VertexMap.vertexToRec(v, this))).iterator();
                 } else if (pattern.test(f(this.vertexPrefix).extend("+"))) {
                     final String suffix = pattern.name();
                     LOG.info("reading vertices %s => %s", vid, suffix);
                     Iterator<Vertex> vertices = (suffix.equals("+") || suffix.equals("#")) ? this.sjvm.vertices() : this.sjvm.vertices(Integer.parseInt(suffix));
-                    return IteratorUtil.map(vertices, v -> Tuple.Pair.with(f(this.vertexPrefix).extend(v.id().toString()), VertexMap.vertexToRec(v, this)));
+                    return IteratorUtil.map(vertices, v -> IdObj.of(f(this.vertexPrefix).extend(v.id().toString()), VertexMap.vertexToRec(v, this)));
                 } else if (pattern.test(f(this.edgePrefix).extend("+"))) {
                     final String suffix = pattern.name();
                     LOG.info("reading edges %s => %s", vid, suffix);
                     Iterator<Edge> edges = (suffix.equals("+") || suffix.equals("#")) ? this.sjvm.edges() : this.sjvm.edges(Integer.parseInt(suffix));
-                    return IteratorUtil.map(edges, e -> Tuple.Pair.with(f(this.edgePrefix).extend(e.id().toString()), EdgeMap.edgeToRec(e, this)));
+                    return IteratorUtil.map(edges, e -> IdObj.of(f(this.edgePrefix).extend(e.id().toString()), EdgeMap.edgeToRec(e, this)));
                 } else {
                     LOG.warn("unknown tp3 vid: %s", pattern);
                     return IteratorUtil.of();

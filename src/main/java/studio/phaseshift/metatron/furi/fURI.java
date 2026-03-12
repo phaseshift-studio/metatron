@@ -42,6 +42,24 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  */
 public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate<fURI> {
 
+    default fURI segments(final List<String> segments) {
+        final List<String> newPath = new ArrayList<>(segments);
+        if (!this.path().isEmpty()) {
+            if (this.path().getFirst().isEmpty()) {
+                if (!newPath.getFirst().isEmpty())
+                    newPath.addFirst("");
+            } else if (newPath.getFirst().isEmpty())
+                newPath.removeFirst();
+            if (this.path().getLast().isEmpty()) {
+                if (!newPath.getLast().isEmpty())
+                    newPath.addLast("");
+            } else if (newPath.getLast().isEmpty())
+                newPath.removeLast();
+        }
+        return this.path(newPath);
+    }
+
+
     default fURI removeSubpath(final fURI subpath) {
         String newPath = this.toString();
         return Singleton.of(newPath.replace(subpath.asBranch().toString(), Tokens.EMPTY));
@@ -211,10 +229,11 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
 
     int pathLength();
 
-    default int segmentLength() {
-        return this.asNode().asRelative().path().size();
-    }
-    
+
+    List<String> segments();
+
+    int segmentLength();
+
     default fURI asRelativeNode() {
         return this.asNode().asRelative();
     }

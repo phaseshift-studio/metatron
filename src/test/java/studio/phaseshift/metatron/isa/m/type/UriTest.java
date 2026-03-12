@@ -93,8 +93,8 @@ public class UriTest extends AbstractMetatronTest {
             "abc.-</                          % [abc]",
             "-</abc                           % <ERROR>",
             "<http://www.com/a/b/c>.-</       % [http:,<>,<www.com>,a,b,c]",
-            "<////>.-</                       % [,]",
-            "<////a>.-</                      % [<>,<>,<>,<>,<>,a]",
+            "<////>.-</                       % [<>]",
+            "<////a>.-</                      % [<>,<>,<>,<>,a]",
     }, delimiter = '%')
     public void testSplit(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
@@ -125,7 +125,7 @@ public class UriTest extends AbstractMetatronTest {
     @CsvSource(value = {
             "/a/b/c.reverse()                 % c/b/a/",
             "aaa/bbb/ccc.reverse()            % ccc/bbb/aaa",
-            "<http://m.com/a/b/c>.reverse()   % <http://m.com/c/b/a>",
+            "<http://m.com/a/b/c>.reverse()   % <http://m.com/c/b/a/>",
             "a.reverse()                      % a",
             "a/b.reverse()                    % b/a",
             "/a.reverse()                     % a/",

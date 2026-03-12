@@ -42,7 +42,6 @@ import studio.phaseshift.metatron.isa.web.parser.ObjHTMLSerializer;
 import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
-import studio.phaseshift.metatron.util.Tuple;
 
 import java.io.*;
 import java.net.InetSocketAddress;
@@ -310,7 +309,7 @@ public class httpSpace extends AbstractSpace<HttpServer> {
     }
 
     @Override
-    public Function<fURI, Iterator<Tuple.Pair<fURI, Obj>>> directReader() {
+    public Function<fURI, Iterator<IdObj>> directReader() {
         return (pattern) -> {
             LOG.debug("retrieving %s", pattern);
             try {
@@ -340,7 +339,7 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                         final Uri key = uri(pattern.scheme(null).host(null).tail(steps).asRelative());
                         LOG.debug("page found -- searching for %s in %s", key, runningPattern);
                         final Obj subDocObj = key.uriValue().toString().isEmpty() ? docObj : docObj.asRec().at(key);
-                        return subDocObj.isNoObj() ? IteratorUtil.of() : IteratorUtil.of(Tuple.Pair.with(pattern, subDocObj));
+                        return subDocObj.isNoObj() ? IteratorUtil.of() : IteratorUtil.of(IdObj.of(pattern, subDocObj));
                     }
                 }
             } catch (final Exception e) {

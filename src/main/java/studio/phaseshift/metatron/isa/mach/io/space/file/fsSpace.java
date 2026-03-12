@@ -31,8 +31,6 @@ import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
-import studio.phaseshift.metatron.util.Tuple;
-import studio.phaseshift.metatron.util.Tuple.Pair;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -148,7 +146,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
     }
 
     @Override
-    public Function<fURI, Iterator<Tuple.Pair<fURI, Obj>>> directReader() {
+    public Function<fURI, Iterator<IdObj>> directReader() {
         return (key) -> {
             if (key.equals(ALL))
                 throw MTronException.of("infinite nested walks on file system not allowed");
@@ -162,7 +160,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
                                 .collect(Collectors.toMap(p -> p, p -> p, Obj::append, LinkedHashMap::new))
                                 .entrySet()
                                 .stream()
-                                .map(kv -> Pair.with(kv.getKey().uriValue(), kv.getValue()))
+                                .map(kv -> IdObj.of(kv.getKey().uriValue(), kv.getValue()))
                                 .iterator();
                     } catch (IOException e) {
                         throw MTronException.of(e);
@@ -172,9 +170,9 @@ public class fsSpace extends AbstractSpace<FileSystem> {
                     try {
                         final Path vidPath = Path.of(Space.Helper.routeFromSpace(key.name().equals("apply") ? key.retract(1) : key, this.routes).toString());
                         if (Files.isDirectory(vidPath)) {
-                            return Files.list(vidPath).map(fsSpace::makeFile).map(p -> Pair.<fURI, Obj>with(p.uriValue(), resolveObj(p))).iterator();
+                            return Files.list(vidPath).map(fsSpace::makeFile).map(p -> IdObj.of(p.uriValue(), resolveObj(p))).iterator();
                         } else {
-                            return IteratorUtil.of(Pair.with(Space.Helper.routeToSpace(f(vidPath.toString()), this.routes), key.name().equals("apply") ?
+                            return IteratorUtil.of(IdObj.of(Space.Helper.routeToSpace(f(vidPath.toString()), this.routes), key.name().equals("apply") ?
                                     instC(key.retract(1).dom(ALL.maybe()).rng(ALL_STAR), lst(T(ALL_STAR)), (lhs, inst) -> {
                                         LOG.debug("applying: %s => %s", lhs, inst);
                                         final Uri toExec = makeFile(vidPath);
@@ -267,7 +265,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
     public BiFunction<fURI, Obj, Obj> directWriter() {
         return (pattern, obj) -> {
             if (pattern.hasPattern()) {
-                this.directReader().apply(pattern).forEachRemaining(kv -> this.write(kv.get0(), kv.get1()));
+                this.directReader().apply(pattern).forEachRemaining(kv -> this.write(kv.furi(), kv.obj()));
             } else {
                 try {
                     if (obj.isNoObj()) {

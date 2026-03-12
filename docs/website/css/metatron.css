@@ -12,13 +12,13 @@
 	--light: #6C7293;
 	--dark: #000000;
 	/*------------------------*/
-	--mblue: #002394;
-	--mmagenta: #825181;
+	--mblue: #4669dd;
+	--mmagenta: #9c0202; /*#825181;*/
 	--mred: #6b0004;
-	--mgreen: #335c00;
+	--mgreen: #457b02;
 	--mdarkgray: #494554;
 	--mlightgray: #797585;
-	--myellow: #7b8000;
+	--myellow: #9ba201;
 	--maqua: #167a96;
 }
 

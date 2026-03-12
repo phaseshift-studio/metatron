@@ -681,6 +681,12 @@ public class mInstSetTest extends AbstractInstSetTest {
             "b -> [a=>1,b=>[c=>2,d=>!*a]]"
     })
     @CsvSource(value = {
+            "*b                                                  % [a=>1,b=>[c=>2,d=>!*a]]",
+            "*b/b                                                % [c=>2,d=>!*a]",
+            "*b>>b                                               % [c=>2,d=>!*a]",
+            "*b/b/d                                              % *a",
+            "*b>>b>>d                                            % *a",
+            "*b>>b>>d>>                                          % *a>>",
             "*a>>b/d/0                                           % e",
             "*a.>>.>>.>>.>>                                      % {g,h}",
             "*a.>>.>>.>>.>>.<<.<<.<<.<<                          % *a.-<[_,_]>-",
@@ -697,6 +703,7 @@ public class mInstSetTest extends AbstractInstSetTest {
             "*b.>>b>>d                                           % *a",
             "*b.>>b>>d.>>.<<.dedup()                             % *a",
             "*b.>>b>>d.>>.<<.<<.dedup()                          % *b/b",
+            "*b/b/d.>>.<<.<<.dedup()                             % *b/b",
             "*b.>>b>>d.>>.<<.<<.<<.dedup()                       % *b",
             "*a.>>b>>d>>2                                        % [g,h]",
             "*a.>>b>>d>>2>>1                                     % h",
@@ -799,10 +806,10 @@ public class mInstSetTest extends AbstractInstSetTest {
             "1.0.as(real::T)                                                                                            % 1.0",
             "1.0.as(int::T)                                                                                             % 1",
             "1.0.as(int::T).as(real::T)                                                                                 % 1.0",
-            "1.0.as(int::T).as(real::T).as(str::T)                                                                      % \"1.0\"",
+            "1.0.as(int::T).as(real::T).as(str::T)                                                                      % \"1.00\"",
             //"1.0.as(int::T).as(real::T).as(str::T).as(real::T).as(int::T)                                               % 1",
             //"1.0.as(int::T).as(real::T).as(str::T).as(int::T).as(real::T)                                               % 1.0",
-            "1.0.as(int::T).as(real::T).as(str::T)                                                                      % \"1.0\"",
+            "1.0.as(int::T).as(real::T).as(str::T)                                                                      % \"1.00\"",
             "1.23.as(int::T)                                                                                            % 1",
             "2.23.as(int::T)                                                                                            % 2",
             "2.23.as(str::T)                                                                                            % \"2.23\"",

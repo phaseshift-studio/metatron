@@ -33,7 +33,6 @@ import studio.phaseshift.metatron.isa.mach.io.type.ObjByteBufferSerializer;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
-import studio.phaseshift.metatron.util.Tuple;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -114,22 +113,22 @@ public class memSpace extends AbstractSpace<Map<fURI, Obj>> {
     }
 
     @Override
-    public Function<fURI, Iterator<Tuple.Pair<fURI, Obj>>> directReader() {
+    public Function<fURI, Iterator<IdObj>> directReader() {
         return (pattern) -> {
             if (pattern.equals(ALL))
-                return this.sjvm().entrySet().stream().map(kv -> Tuple.Pair.with(kv.getKey(), kv.getValue())).iterator();
+                return this.sjvm().entrySet().stream().map(kv -> IdObj.of(kv.getKey(), kv.getValue())).iterator();
             else {
                 if (pattern.hasPattern()) {
                     return this.sjvm().entrySet().stream().flatMap(kv -> Stream.concat(
                             kv.getKey().test(pattern.asNode()) ?
-                                    Stream.of(Tuple.Pair.with(kv.getKey(), kv.getValue())) :
+                                    Stream.of(IdObj.of(kv.getKey(), kv.getValue())) :
                                     Stream.empty(),
                             kv.getValue().isPoly() ?
                                     Space.Helper.unrollPoly(kv.getKey(), kv.getValue().as(), pattern.asNode()).stream() :
                                     Stream.empty())).iterator();
                 } else {
                     final Obj value = this.sjvm().get(pattern);
-                    return null == value ? IteratorUtil.of() : IteratorUtil.of(Tuple.Pair.with(pattern, value));
+                    return null == value ? IteratorUtil.of() : IteratorUtil.of(IdObj.of(pattern, value));
                 }
             }
         };
@@ -139,7 +138,7 @@ public class memSpace extends AbstractSpace<Map<fURI, Obj>> {
     public BiFunction<fURI, Obj, Obj> directWriter() {
         return (pattern, obj) -> {
             if (pattern.hasPattern()) {
-                this.directReader().apply(pattern).forEachRemaining(kv -> this.write(kv.get0(), obj));
+                this.directReader().apply(pattern).forEachRemaining(kv -> this.write(kv.furi(), obj));
             } else {
                 final Obj current = this.sjvm().get(pattern);
                 if (obj.isNoObj()) {

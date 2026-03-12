@@ -142,15 +142,15 @@ public class metaSpace extends AbstractSpace<MServer> {
     }
 
     @Override
-    public Function<fURI, Iterator<Tuple.Pair<fURI, Obj>>> directReader() {
+    public Function<fURI, Iterator<IdObj>> directReader() {
         /*return (pattern) -> {
             final fURI lowerPattern = Space.Helper.toRewrite(pattern, this.rewrite);
             final int peerIndex = fURIHasher.getNodeIndex(lowerPattern.toString(), this.peers.size());
             if (this.selfIndex == peerIndex) {
                 LOG.info("{{y}}%s{{X}} [{{c}}reading{{X}}]:  {{y}}%s {{g}}=> {{y}}%s", this.host, pattern, lowerPattern);
                 return Router.readFromSpace(lowerPattern).stream().map(x -> lowerPattern.isBranch() ?
-                        Tuple.Pair.with(Space.Helper.fromRewrite(x.asRel().first().uriValue(), this.rewrite), x.asRel().second()) :
-                        Tuple.Pair.with(lowerPattern, x)).iterator();
+                        Space.furiObj.of(Space.Helper.fromRewrite(x.asRel().first().uriValue(), this.rewrite), x.asRel().second()) :
+                        Space.furiObj.of(lowerPattern, x)).iterator();
             } else {
                 final fURI peer = this.peers.get(peerIndex);
                 try {
@@ -159,8 +159,8 @@ public class metaSpace extends AbstractSpace<MServer> {
                         LOG.info("{{y}}%s {{g}}=> {{y}}%s{{g}}: %s", this.host, peer, toSend);
                         final Obj result = this.server.sendRecv(peer, toSend);
                         return result.stream().map(x -> lowerPattern.isBranch() ?
-                                Tuple.Pair.with(Space.Helper.fromRewrite(x.asRel().first().uriValue(), this.rewrite), x.asRel().second()) :
-                                Tuple.Pair.with(lowerPattern, x)).iterator();
+                                Space.furiObj.of(Space.Helper.fromRewrite(x.asRel().first().uriValue(), this.rewrite), x.asRel().second()) :
+                                Space.furiObj.of(lowerPattern, x)).iterator();
                     }
                     return Collections.emptyIterator();
                 } catch (final Exception e) {

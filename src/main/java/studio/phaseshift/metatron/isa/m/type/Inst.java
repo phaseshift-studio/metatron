@@ -113,6 +113,8 @@ public interface Inst extends Call {
                     LOG.error(apiInst.arg(i) + " is a future");*/
                 final Obj usrArg = Optional.ofNullable(userInst.arg(i)).orElse(noobj()); //FutureObj.resolveFuture(userInst.arg(i));
                 final Obj apiArg = Optional.ofNullable(apiInst.arg(i)).orElse(noobj()); // FutureObj.resolveFuture(apiInst.arg(i));
+                if(!usrArg.c().within(apiArg.c()))
+                    return null;
                 if (userInst.isBlocking()) {
                     resolvedArgs.add(usrArg);
                 } else if (apiArg.isCall() && usrArg.isNoObj()) { // used for default args (when user arg is noobj)

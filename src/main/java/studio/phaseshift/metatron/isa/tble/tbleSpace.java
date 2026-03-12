@@ -35,7 +35,6 @@ import studio.phaseshift.metatron.isa.tble.schema.SimpleSchema;
 import studio.phaseshift.metatron.isa.tble.schema.TableSchema;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
-import studio.phaseshift.metatron.util.Tuple;
 
 import java.io.StringReader;
 import java.sql.*;
@@ -48,7 +47,6 @@ import java.util.function.Function;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TID;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -125,7 +123,7 @@ public class tbleSpace extends AbstractSpace<Connection> {
             try {
                 if (pattern.hasPattern()) {
                     // Pattern write - write to all matching fURIs
-                    this.directReader().apply(pattern).forEachRemaining(kv -> this.write(kv.get0(), obj));
+                    this.directReader().apply(pattern).forEachRemaining(kv -> this.write(kv.furi(), obj));
                 } else {
                     // Direct write using schema
                     final String objJson = obj.isNoObj() ? null : this.serializer.write(obj).toString();
@@ -138,12 +136,12 @@ public class tbleSpace extends AbstractSpace<Connection> {
         };
     }
 
-    public Function<fURI, Iterator<Tuple.Pair<fURI, Obj>>> directReader() {
+    public Function<fURI, Iterator<IdObj>> directReader() {
         return (pattern) -> {
             try {
                 // Use schema to read objects
                 final Iterator<TableSchema.FuriObjPair> schemaResults = this.schema.read(this.sjvm(), pattern);
-                final List<Tuple.Pair<fURI, Obj>> objs = new ArrayList<>();
+                final List<IdObj> objs = new ArrayList<>();
 
                 // Convert schema results to Obj pairs and unroll polys if pattern matching
                 while (schemaResults.hasNext()) {
@@ -153,13 +151,13 @@ public class tbleSpace extends AbstractSpace<Connection> {
 
                     // Add the direct match
                     if (pair.furi().test(pattern.asNode())) {
-                        objs.add(Tuple.Pair.with(pair.furi(), obj));
+                        objs.add(IdObj.of(pair.furi(), obj));
                     }
 
                     // If pattern matching and obj is a poly, unroll it
                     if (pattern.hasPattern() && obj.isPoly()) {
                         Space.Helper.unrollPoly(pair.furi(), obj.as(), pattern.asNode())
-                                .forEach(kv -> objs.add(Tuple.Pair.with(kv.get0(), kv.get1())));
+                                .forEach(kv -> objs.add(kv));
                     }
                 }
 

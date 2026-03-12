@@ -102,7 +102,7 @@ public interface Space extends Rec, Closeable {
         }
     }
 
-    default Function<fURI, Iterator<Pair<fURI, Obj>>> directReader() {
+    default Function<fURI, Iterator<IdObj>> directReader() {
         return f -> IteratorUtil.of();
     }
 
@@ -178,37 +178,37 @@ public interface Space extends Rec, Closeable {
             return Tuple.Pair.with(prefix, prepend);
         }
 
-        public static List<Pair<fURI, Obj>> unrollPoly(final fURI polyvid, final Poly<?, ?> poly, final fURI pattern) {
-            final List<Pair<fURI, Obj>> results = new ArrayList<>();
+        public static List<IdObj> unrollPoly(final fURI polyvid, final Poly<?, ?> poly, final fURI pattern) {
+            final List<IdObj> results = new ArrayList<>();
             poly.indexedStream()
                     .filter(r -> r.jvm().get1().isPoly() || polyvid.extend(f(r.jvm().get0().jvm().toString())).test(pattern))
                     .forEach(r -> {
                         final fURI key = polyvid.extend(f(r.jvm().get0().jvm().toString()));
                         if (!r.jvm().get1().isPoly() || key.test(pattern))
-                            results.add(Pair.with(key, r.jvm().get1()));
+                            results.add(IdObj.of(key, r.jvm().get1()));
                         else if (r.jvm().get1().isPoly())
                             results.addAll(unrollPoly(key, r.jvm().get1().as(), pattern));
                     });
             return results;
         }
 
-        public static Obj resolveRead(final Space space, final fURI pattern, final Function<fURI, Iterator<Tuple.Pair<fURI, Obj>>> directReader) { //final Map<fURI, Obj> store) {
-            final Set<Pair<Uri, Obj>> listing = new HashSet<>();
-            directReader.apply(pattern).forEachRemaining(kv -> listing.add(Pair.with(kv.get0().toUri(), kv.get1())));
+        public static Obj resolveRead(final Space space, final fURI pattern, final Function<fURI, Iterator<IdObj>> directReader) { //final Map<fURI, Obj> store) {
+            final Set<UriObj> listing = new HashSet<>();
+            directReader.apply(pattern).forEachRemaining(kv -> listing.add(UriObj.of(kv.furi().toUri(), kv.obj())));
             if (listing.isEmpty()) {
                 if (pattern.isBranch() && !pattern.hasPattern()) {
                     final Rec nestRec = rec();
                     directReader.apply(pattern.extend(fURI.Singleton.WILD_ONE)).forEachRemaining(kv -> {
-                        if (CommonUtil.isInt(kv.get0().name()))
-                            listing.add(Pair.with(kv.get0().toUri(), kv.get1()));
+                        if (CommonUtil.isInt(kv.furi().name()))
+                            listing.add(UriObj.of(kv.furi().toUri(), kv.obj()));
                         else
-                            nestRec.at(kv.get0().pretract(pattern.segmentLength()).toUri(), kv.get1(), MUTABLE);
+                            nestRec.at(kv.furi().pretract(pattern.segmentLength()).toUri(), kv.obj(), MUTABLE);
                     });
                     if (!nestRec.isEmpty())
-                        listing.add(Pair.with(uri(pattern), nestRec));
+                        listing.add(UriObj.of(uri(pattern), nestRec));
                 } else {
                     directReader.apply((pattern.isBranch() ? pattern.extend(fURI.Singleton.WILD_ONE) : pattern.asBranch())).forEachRemaining(kv -> {
-                        listing.add(Pair.with(kv.get0().toUri(), kv.get1()));
+                        listing.add(UriObj.of(kv.furi().toUri(), kv.obj()));
                     });
                 }
             }
@@ -217,12 +217,12 @@ public interface Space extends Rec, Closeable {
                 if (null != base) {
                     final Poly<?, ?> poly = base.get1();
                     Graphitty.log(space).trace("base poly found at %s: %s", base.get0(), poly);
-                    unrollPoly(base.get0(), poly, pattern).forEach(kv -> listing.add(Pair.with(kv.get0().toUri(), kv.get1())));
+                    unrollPoly(base.get0(), poly, pattern).forEach(kv -> listing.add(UriObj.of(kv.furi().toUri(), kv.obj())));
                 }
             }
             return pattern.isNode() ?
-                    objs(listing.stream().map(Pair::get1).map(o -> o.autoResolve(o)).toList()) :
-                    objs(listing.stream().map(kv -> rel(kv.get0(), kv.get1())));
+                    objs(listing.stream().map(UriObj::obj).map(o -> o.autoResolve(o)).toList()) :
+                    objs(listing.stream().map(kv -> rel(kv.uri(), kv.obj())));
         }
 
         private static Obj writeComplete(final fURI writePattern, final Obj newObj, final Obj currentObj) {
@@ -234,15 +234,15 @@ public interface Space extends Rec, Closeable {
 
         }
 
-        public static Obj resolveWrite(final GraphittyLogger LOG, final Space space, final fURI vid, Obj obj, final BiFunction<fURI, Obj, Obj> directWriter, final Function<fURI, Iterator<Tuple.Pair<fURI, Obj>>> directReader) {
+        public static Obj resolveWrite(final GraphittyLogger LOG, final Space space, final fURI vid, Obj obj, final BiFunction<fURI, Obj, Obj> directWriter, final Function<fURI, Iterator<IdObj>> directReader) {
             if (Obj.Helper.isAuto(obj)) {
                 LOG.info("evaluating auto %s and yielding result to: %s", obj, vid);
                 obj = obj.apply();
             }
 
-            final Iterator<Tuple.Pair<fURI, Obj>> current = directReader.apply(vid);
+            final Iterator<IdObj> current = directReader.apply(vid);
             if (current.hasNext() && vid.isNode()) {
-                writeComplete(vid, obj, current.next().get1());
+                writeComplete(vid, obj, current.next().obj());
                 return directWriter.apply(vid, obj);
             } else {
                 final Pair<fURI, Poly<?, ?>> base = Helper.locateBasePoly(space, vid);
@@ -318,6 +318,18 @@ public interface Space extends Rec, Closeable {
                     //instC(SPLIT_INST_TID.dom(URI_TID).rng(LST_TID), lst(T(URI_TID)), (lhs, inst) -> lst(Arrays.stream(lhs.uriValue().toString().split(inst.arg(0).uriValue().toString())).map(MUri::uri))),
                     //instC(CLOSE_INST_TID.dom(REC_TID).rng(NOOBJ_TID), lst(), (lhs, inst) -> Stream.of(noobj()).peek(o -> lhs.<Space>as().close()).findFirst().orElse(noobj()))
             ));
+        }
+    }
+
+     record IdObj(fURI furi, Obj obj) {
+        public static IdObj of(final fURI furi, final Obj obj) {
+            return new IdObj(furi, obj);
+        }
+    }
+
+    record UriObj(Uri uri, Obj obj) {
+        public static UriObj of(final Uri uri, final Obj obj) {
+            return new UriObj(uri, obj);
         }
     }
 }
