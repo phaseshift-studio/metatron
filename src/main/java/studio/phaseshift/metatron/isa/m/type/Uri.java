@@ -151,7 +151,7 @@ public interface Uri extends Mono, Ring.O<Uri> {
                             "a uri to check", "whether the domain matches arg regex", Map.of(jnt(0), "the regex for matching"), "check whether the lhs str matches the regex arg"),
                     instC(SPLIT_INST_TID.dom(URI_TID).rng(LST_TID), lst(T(URI_TID)), (lhs, inst) -> lst(Arrays.stream(lhs.uriValue().toString().split(inst.arg(0).uriValue().toString())).map(MUri::uri))),
                     instC(MERGE_INST_TID.dom(URI_TID.maybeSome()).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(lhs.stream().map(Obj::uriValue).reduce((a, b) -> a.extend(inst.arg(0).uriValue()).extend(b)).orElse(f("noobj")))),
-                    instC(RSHIFT_INST_TID.dom(URI_TID).rng(ALL.maybeSome()), lst(T(ALL.some())), (lhs, inst) ->
+                    instC(RSHIFT_INST_TID.dom(URI_TID).rng(ALL.maybeSome()), lst(T(ALL.maybeSome())), (lhs, inst) ->
                             objs(inst.arg(0).stream().map(u -> {
                                 if (u.isInt()) {
                                     return lhs.uriValue().segmentLength() > u.intValue().intValue() ? uri(lhs.uriValue().asRelativeNode().segments().get(u.intValue().intValue())) : noobj();
