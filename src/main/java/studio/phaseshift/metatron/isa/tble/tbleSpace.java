@@ -30,6 +30,7 @@ import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.tble.schema.ExistingTableSchema;
 import studio.phaseshift.metatron.isa.tble.schema.MqttIndexedSchema;
 import studio.phaseshift.metatron.isa.tble.schema.SimpleSchema;
 import studio.phaseshift.metatron.isa.tble.schema.TableSchema;
@@ -53,7 +54,70 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
-/*
+/**
+ * tbleSpace - A dual-mode SQL database connector for Metatron with pluggable schema support
+ *
+ * <p>Provides two modes of operation:
+ * <ol>
+ *   <li><b>Key-Value Store Mode:</b> Stores arbitrary Metatron objects as JSON using pluggable schemas
+ *       (MqttIndexedSchema for MariaDB/MySQL, SimpleSchema for others)</li>
+ *   <li><b>Table Mapping Mode:</b> Maps existing SQL tables to Metatron objects automatically</li>
+ * </ol>
+ *
+ * <p>Supports any JDBC-compatible database (PostgreSQL, MySQL, MariaDB, SQLite, etc.)
+ *
+ * <h2>Features</h2>
+ * <ul>
+ *   <li>Pluggable schema architecture for different database backends</li>
+ *   <li>MQTT-style pattern matching with indexed segments (MariaDB/MySQL)</li>
+ *   <li>Automatic discovery and mapping of existing SQL tables</li>
+ *   <li>Read SQL table rows as Metatron lists</li>
+ *   <li>Primary key-based row identification</li>
+ *   <li>Automatic SQL type to Metatron type conversion</li>
+ * </ul>
+ *
+ * <h2>Configuration</h2>
+ * <pre>{@code
+ * tbleSpace space = tbleSpace.of(
+ *     rec(
+ *         uri(PATTERN), uri("/tble/#"),
+ *         uri(HOST), uri("postgresql://localhost:5432/mydb"),  // Note: no "jdbc:" prefix
+ *         uri(DRIVER), uri("org.postgresql.Driver"),
+ *         uri("table_mapping"), uri("true")      // optional, default: "true"
+ *     ).jvm(),
+ *     f("/sys/space/tble")
+ * );
+ * }</pre>
+ *
+ * <h2>Table Mapping Mode</h2>
+ * <p>When table mapping is enabled (default), tbleSpace automatically discovers existing SQL tables
+ * and makes them accessible via fURIs:
+ *
+ * <pre>{@code
+ * // Read a specific row by primary key
+ * Obj row = space.read(f("/users/123"));  // Returns a list of column values
+ *
+ * // Read all rows from a table
+ * Obj allRows = space.read(f("/users/+"));  // Returns a list of lists
+ *
+ * // Pattern matching
+ * Obj rows = space.read(f("/users/#"));  // Returns all rows and nested data
+ * }</pre>
+ *
+ * <p>SQL rows are converted to Metatron lists with values in column order.
+ * Primary keys are used to identify individual rows.
+ *
+ * <h2>Key-Value Store Mode</h2>
+ * <p>For paths that don't match existing tables, tbleSpace uses its key-value store:
+ *
+ * <pre>{@code
+ * // Store arbitrary objects
+ * space.write(f("/my/data"), rec(uri("name"), str("Alice")));
+ *
+ * // Read them back
+ * Obj data = space.read(f("/my/data"));
+ * }</pre>
+ *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class tbleSpace extends AbstractSpace<Connection> {
@@ -75,6 +139,7 @@ public class tbleSpace extends AbstractSpace<Connection> {
 
     protected ObjSerializer serializer;
     protected TableSchema schema;
+    protected ExistingTableSchema existingTableSchema;
 
     public static tbleSpace of(final Map<Obj, Obj> config, final fURI vid) {
         MTronException.wrap(() -> Class.forName(config.get(uri(DRIVER)).uriValue().toString()));
@@ -105,6 +170,21 @@ public class tbleSpace extends AbstractSpace<Connection> {
             this.schema.initialize(sjvm);
             LOG.info("initialized schema {{b}}%s{{X}} (version: %s)",
                      this.schema.getClass().getSimpleName(), this.schema.version());
+
+            // Initialize existing table schema for table mapping
+            // Check if table mapping is enabled (default: true)
+            final boolean enableTableMapping = config.getOrDefault(uri("table_mapping"), uri("true"))
+                    .uriValue().toString().equals("true");
+
+            if (enableTableMapping) {
+                this.existingTableSchema = new ExistingTableSchema("objs");
+                this.existingTableSchema.initialize(sjvm);
+                LOG.info("initialized {{g}}existing table schema{{X}} - discovered {} tables",
+                        this.existingTableSchema.getTableNames().size());
+            } else {
+                this.existingTableSchema = null;
+                LOG.info("table mapping {{y}}disabled{{X}}");
+            }
         } catch (final SQLException ex) {
             throw MTronException.of(ex);
         }
@@ -139,7 +219,23 @@ public class tbleSpace extends AbstractSpace<Connection> {
     public Function<fURI, Iterator<IdObj>> directReader() {
         return (pattern) -> {
             try {
-                // Use schema to read objects
+                // Check if this is a table mapping path (existing table)
+                if (this.existingTableSchema != null && this.existingTableSchema.isTablePath(pattern.asNode())) {
+                    // Use existing table schema
+                    final Iterator<TableSchema.FuriObjPair> tableResults = this.existingTableSchema.read(this.sjvm(), pattern);
+                    final List<IdObj> objs = new ArrayList<>();
+
+                    while (tableResults.hasNext()) {
+                        final TableSchema.FuriObjPair pair = tableResults.next();
+                        final JsonElement json = JsonParser.parseReader(new StringReader(pair.objJson()));
+                        final Obj obj = this.serializer.read(json);
+                        objs.add(IdObj.of(pair.furi(), obj));
+                    }
+
+                    return objs.iterator();
+                }
+
+                // Use key-value schema (MqttIndexedSchema or SimpleSchema)
                 final Iterator<TableSchema.FuriObjPair> schemaResults = this.schema.read(this.sjvm(), pattern);
                 final List<IdObj> objs = new ArrayList<>();
 

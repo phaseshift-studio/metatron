@@ -224,49 +224,4 @@ public class OLLM {
         };
         return Tuple.Pair.with(toolSpecBuilder.build(), toolExecutor);
     }
-    
-    /*public OLLM(final Tuple.Pair<OllamaModel, OllamaModelCard> model, final fURI tid, final fURI vid) {
-        super(modelToRec(model), tid, vid);
-    }
-    
-
-    public static OLLM ollm(final fURI host, final Tuple.Pair<OllamaModel, OllamaModelCard> model, final fURI tid, final fURI vid) {
-        final OLLM ollm = new OLLM(model, tid, vid);
-        return ollm.at(uri(HOST), uri(host), MUTABLE).as();
-    }
-
-    public String name() {
-        return this.at(NAME).uriValue().toString();
-    }
-
-    public OLLM clone() {
-        return this;
-    }
-
-    public OLLM clone(final Object model, fURI tid, final fURI vid) {
-        return (OLLM) super.clone(model, tid, vid);
-    }
-
-    public static final ToolSpecification toolSpecification = ToolSpecification.builder()
-            .name("mtron")
-            .description("evaluate an metatron expression")
-            .parameters(JsonObjectSchema.builder()
-                    .addStringProperty("code", "metatron code to evaluate")
-                    .required("code")
-                    .build())
-            .build();
-
-    public static class MetatronTools {
-
-        public MetatronTools() {
-
-        }
-
-        @Tool("executes metatron code and returns an obj result")
-        Obj evaluate(
-                @P("the metatron code to evaluate") String code
-        ) {
-            return mParser.eval(code);
-        }
-    }*/
 }

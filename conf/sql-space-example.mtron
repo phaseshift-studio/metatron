@@ -1,0 +1,137 @@
+%% sqlSpace Configuration Examples
+%% Simple SQL database connector for Metatron
+
+%% ============================================================================
+%% PostgreSQL Example
+%% ============================================================================
+
+[pattern => </db/pg/#>,
+ host => <jdbc:postgresql://localhost:5432/metatron?user=postgres&password=secret>,
+ driver => <org.postgresql.Driver>,
+ route => [</db/pg/*> => </*>]
+].from(<</m/sql/space>>);
+
+
+%% ============================================================================
+%% MySQL/MariaDB Example
+%% ============================================================================
+
+[pattern => </db/mysql/#>,
+ host => <jdbc:mysql://localhost:3306/metatron?user=root&password=secret>,
+ driver => <com.mysql.cj.jdbc.Driver>,
+ route => [</db/mysql/*> => </*>]
+].from(<</m/sql/space>>);
+
+
+%% ============================================================================
+%% SQLite Example (File-based)
+%% ============================================================================
+
+[pattern => </db/sqlite/#>,
+ host => <jdbc:sqlite:/home/user/metatron.db>,
+ driver => <org.sqlite.JDBC>,
+ route => [</db/sqlite/*> => </*>]
+].from(<</m/sql/space>>);
+
+
+%% ============================================================================
+%% SQLite Example (In-Memory)
+%% ============================================================================
+
+[pattern => </db/mem/#>,
+ host => <:memory:>,
+ driver => <org.sqlite.JDBC>,
+ route => [</db/mem/*> => </*>]
+].from(<</m/sql/space>>);
+
+
+%% ============================================================================
+%% Custom Table and Column Names
+%% ============================================================================
+
+[pattern => </db/custom/#>,
+ host => <jdbc:postgresql://localhost:5432/mydb>,
+ driver => <org.postgresql.Driver>,
+ table => <my_objects>,
+ key_column => <object_id>,
+ value_column => <object_data>,
+ route => [</db/custom/*> => </*>]
+].from(<</m/sql/space>>);
+
+
+%% ============================================================================
+%% Usage Examples
+%% ============================================================================
+
+%% Write a user object
+</db/pg/users/alice> -> [name => 'Alice', age => 30, email => 'alice@example.com'];
+
+%% Read a user object
+</db/pg/users/alice>.from();
+
+%% Update a user object
+</db/pg/users/alice> -> [name => 'Alice Smith', age => 31];
+
+%% Delete a user object
+</db/pg/users/alice> -> noobj;
+
+
+%% ============================================================================
+%% Raw SQL Query Examples
+%% ============================================================================
+
+%% Execute SELECT query
+</db/pg>.query('SELECT * FROM objs WHERE furi LIKE \'/users/%\'');
+
+%% Execute UPDATE
+</db/pg>.update('UPDATE objs SET obj = \'{"status":"active"}\' WHERE furi = \'/users/alice\'');
+
+%% Execute DELETE
+</db/pg>.update('DELETE FROM objs WHERE furi LIKE \'/temp/%\'');
+
+
+%% ============================================================================
+%% Multiple Database Connections
+%% ============================================================================
+
+%% PostgreSQL for users
+[pattern => </users/#>,
+ host => <jdbc:postgresql://localhost:5432/users_db>,
+ driver => <org.postgresql.Driver>,
+ table => <users>
+].from(<</m/sql/space>>);
+
+%% MySQL for products
+[pattern => </products/#>,
+ host => <jdbc:mysql://localhost:3306/products_db>,
+ driver => <com.mysql.cj.jdbc.Driver>,
+ table => <products>
+].from(<</m/sql/space>>);
+
+%% SQLite for cache
+[pattern => </cache/#>,
+ host => <jdbc:sqlite:/tmp/cache.db>,
+ driver => <org.sqlite.JDBC>,
+ table => <cache>
+].from(<</m/sql/space>>);
+
+
+%% ============================================================================
+%% Production Configuration with Connection Parameters
+%% ============================================================================
+
+[pattern => </db/prod/#>,
+ host => <jdbc:postgresql://db.example.com:5432/production?
+          user=metatron&
+          password=secret&
+          ssl=true&
+          sslmode=require&
+          connectTimeout=10&
+          socketTimeout=30&
+          loginTimeout=10&
+          prepareThreshold=5&
+          preparedStatementCacheQueries=256&
+          preparedStatementCacheSizeMiB=5>,
+ driver => <org.postgresql.Driver>,
+ route => [</db/prod/*> => </*>]
+].from(<</m/sql/space>>);

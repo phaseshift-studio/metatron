@@ -75,6 +75,7 @@ public class MClient extends WebSocketClient implements MConnection {
                 .findAny()
                 .orElseGet(() -> {
                     final MClient client = new MClient(clientAuthority, defaultSerializer);
+                    client.setConnectionLostTimeout(2000);
                     client.start();
                     return client;
                 });

@@ -40,6 +40,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import static studio.phaseshift.metatron.Tokens.BLOCK;
 import static studio.phaseshift.metatron.Tokens.MONAD;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -814,7 +815,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                         });
                         return lhs;
                     }),
-                    instC(ORDER_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(ALL)), (lhs, inst) -> objs(lhs.stream().sorted(new ObjSelectComparator(inst.arg(0))))),
+                    instC(ORDER_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()).q(BLOCK,null), lst(T(ALL)), (lhs, inst) -> objs(lhs.stream().sorted(new ObjSelectComparator(inst.arg(0))))),
                     instC(AS_INST_TID.dom(A).rng(B), lst(T(ALL)), (lhs, inst) -> inst.arg(0).isType() ? lhs.as(inst.arg(0).asType()) : fail(MTronException.of("%s is not a %s", lhs, inst.arg(0)))),
                     instC(IMPORT_INST_TID.dom(ALL.maybe()).rng(SPACE_TID.maybeSome()), lst(URI_TYPE), (lhs, inst) -> MTronException.wrap(() -> objs((Stream) BootLoader.importInstSet(inst.arg(0).uriValue())))),
                     instC(DEDUP_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(), (lhs, inst) -> objs(lhs.stream().map(o -> o.c().gt(cInt.ZERO()) ? o.c(cInt::one) : o.c(c -> cInt.of(-1))).distinct())),
@@ -972,7 +973,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                     docWrap(instC(EVAL_INST_TID.dom(ALL.maybe()).rng(ALL_STAR), lst(STR_TYPE), (lhs, inst) -> mParser.eval(inst.arg(0).strValue())),
                             "can be any obj as long as the arg generated is a str", "the result of evaluating the source str arg", Map.of(jnt(0), "the mtron source code to evaluate"), "evaluates mtron source code"),
                     instC(SWAP_TID.dom(A).rng(A), lst(T(B)), (lhs, inst) -> lhs.apply(inst.arg(0))),
-                    instC(RSHIFT_INST_TID.dom(A).rng(B.maybe()), lst(), (lhs, _) -> lhs.isPoly() ? lhs.<Poly<?, ?>>as().at(uri("+")) : noobj()),
+                  //  instC(RSHIFT_INST_TID.dom(A).rng(B.maybe()), lst(), (lhs, _) -> lhs.isPoly() ? lhs.<Poly<?, ?>>as().at(uri("+")) : noobj()),
                     instC(LSHIFT_INST_TID.dom(A).rng(B.maybe()), lst(), (lhs, _) -> lhs.parent())));
         }
     }
@@ -1001,7 +1002,13 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
 
         @Override
         public int compare(final Obj o1, final Obj o2) {
-            return ((Comparable) this.selector.apply(o1).jvm()).compareTo((Comparable) this.selector.apply(o2).jvm());
+            final Object v1 = this.selector.apply(o1).jvm();
+            final Object v2 = this.selector.apply(o2).jvm();
+            if (!(v1 instanceof Comparable))
+                throw MTronException.of("selector %s does not return a comparable value for %s", this.selector, v1);
+            if (!(v2 instanceof Comparable))
+                throw MTronException.of("selector %s does not return a comparable value for %s", this.selector, v2);
+            return ((Comparable) v1).compareTo(v2);
         }
     }
 }

@@ -154,7 +154,7 @@ public interface Uri extends Mono, Ring.O<Uri> {
                     instC(RSHIFT_INST_TID.dom(URI_TID).rng(ALL.maybeSome()), lst(T(ALL.some())), (lhs, inst) ->
                             objs(inst.arg(0).stream().map(u -> {
                                 if (u.isInt()) {
-                                    return lhs.uriValue().segmentLength() > u.intValue().intValue() ? uri(lhs.uriValue().asRelativeNode().path().get(u.intValue().intValue())) : noobj();
+                                    return lhs.uriValue().segmentLength() > u.intValue().intValue() ? uri(lhs.uriValue().asRelativeNode().segments().get(u.intValue().intValue())) : noobj();
                                 } else {
                                     final String component = u.uriValue().toString();
                                     final Object result = switch (component) {

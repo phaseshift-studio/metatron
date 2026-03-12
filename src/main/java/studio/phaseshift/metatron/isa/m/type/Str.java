@@ -49,6 +49,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 public interface Str extends Mono, PlusMonoid.O<Str> {
 
     Type STR_TYPE = Type.Builder.build().tid(STR_TID).vid(STR_TID).create();
+    Str ZERO = str("");
 
     @Override
     Str clone(final Object jvm, final fURI tid, final fURI vid);
@@ -66,6 +67,11 @@ public interface Str extends Mono, PlusMonoid.O<Str> {
 
     default Str vid(final fURI vid) {
         return this.clone(this.jvm(), this.tid(), vid);
+    }
+    
+    @Override
+    default Str zero() {
+        return ZERO;
     }
 
     class StrType {

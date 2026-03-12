@@ -25,9 +25,7 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TID;
 
 
 public class MStr extends MObj implements Str {
-
-    private static final Str ZERO = str("");
-
+    
     public static Str str(final String jvm) {
         return str(jvm, STR_TID,null);
     }
@@ -57,10 +55,5 @@ public class MStr extends MObj implements Str {
     @Override
     public Str plus(final Str obj) {
         return this.jvm(this.jvm() + obj.jvm());
-    }
-
-    @Override
-    public Str zero() {
-        return ZERO;
     }
 }

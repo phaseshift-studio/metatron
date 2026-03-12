@@ -42,6 +42,16 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  */
 public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate<fURI> {
 
+    default boolean classAgnosticEquals(final Object other) {
+        if (other instanceof fURI)
+            return this.equals(other);
+        if (other instanceof Uri)
+            return this.equals(((Uri) other).uriValue());
+        if (other instanceof String)
+            return this.toString().equals(other);
+        throw MTronException.of("unable to compare %s to %s", this, other);
+    }
+
     default fURI segments(final List<String> segments) {
         final List<String> newPath = new ArrayList<>(segments);
         if (!this.path().isEmpty()) {

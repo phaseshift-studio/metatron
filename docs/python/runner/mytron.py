@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 async def submit(ws, code):
     async with ws as websocket:
         await websocket.send(code)
-        result = await websocket.recv()
+        result = await asyncio.wait_for(websocket.recv(), timeout=2000)
         return result
 
 

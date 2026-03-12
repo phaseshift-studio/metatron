@@ -48,13 +48,14 @@ include::adoc/header.html[]
               <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-0" aria-expanded="false" aria-controls="card-0">Data Manipulation Techniques</a>
               <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-1" aria-expanded="false" aria-controls="card-1">The Mechanics of an Instruction</a>
               <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-2" aria-expanded="false" aria-controls="card-2">The Structure of Types</button>
-              <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target=".multi-collapse" aria-expanded="false" aria-controls="card-1 card-2">The Entire Collection</button>
+              <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-3" aria-expanded="false" aria-controls="card-3">Interacting with LLMs</button>
+             <!-- <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target=".multi-collapse" aria-expanded="false" aria-controls="card-1 card-2">The Entire Collection</button> -->
             </p>
         </div>
+        <div class="row">
 ++++
 
 ++++
-<div class="row">
 <div style="min-height: 120px;">
   <div class="collapse multi-collapse" id="card-0">
     <div style="width: 100%;">
@@ -70,7 +71,6 @@ include::data_manipulation.adoc[]
 
 
 ++++
-<div class="row">
 <div style="min-height: 120px;">
   <div class="collapse multi-collapse" id="card-1">
     <div style="width: 100%;">
@@ -91,6 +91,20 @@ include::mechanics_inst.adoc[]
 ++++
 
 include::type-panel.adoc[]
+
+++++
+    </div>
+  </div>
+</div>
+++++
+
+++++
+<div style="min-height: 120px;">
+  <div class="collapse multi-collapse" id="card-3">
+    <div style="width: 100%;">
+++++
+
+include::llm-panel.adoc[]
 
 ++++
     </div>

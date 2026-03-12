@@ -35,8 +35,9 @@ public final class Tokens {
     public static final fURI HASH = f("#");
     public static final fURI PLUS = f("+");
     public static final fURI STACK_PATTERN = f("+/#");
-    
-    
+
+    public static final String BLOCK = "block";
+    public static final String AI = "AI";
     public static final String DOM = "dom";
     public static final String RNG = "rng";
     public static final String LOOP = "loop";
@@ -79,6 +80,7 @@ public final class Tokens {
     public static final String SERIALIZER = "serializer";
     public static final String LOGG = "log";
     public static final String DRIVER = "driver";
+    public static final String TABLE = "table";
     public static final String FURI = "furi";
     public static final String OBJ = "obj";
     public static final String JDBC = "jdbc:";

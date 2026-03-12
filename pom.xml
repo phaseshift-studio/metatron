@@ -46,6 +46,7 @@
         <maven.compiler.release>22</maven.compiler.release>
         <java.version>22</java.version>
         <skipTests>false</skipTests>
+        <skipDocker>true</skipDocker>
         <main.class>studio.phaseshift.metatron.BootLoader</main.class>
         <!-- DEPENDENCY VERSIONS -->
         <java-websocket.version>1.6.0</java-websocket.version>
@@ -526,7 +527,7 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <skip>${skipTests}</skip>
+                    <skip>${skipDocker}</skip>
                     <repository>${project.artifactId}</repository>
                     <tag>${project.version}</tag>
                     <contextDirectory>${project.basedir}</contextDirectory>

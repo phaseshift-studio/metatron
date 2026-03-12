@@ -146,9 +146,9 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
             // if (key.uriValue().isEmpty())
             //            return this.c(c -> c.mult(cKey)).as();
 
-            if (key.uriValue().pathLength() == 0)
+            if (key.uriValue().segmentLength() == 0)
                 return (OBJ) noobj();
-            final String step = key.uriValue().path().getFirst();
+            final String step = key.uriValue().segments().getFirst();
             final boolean isBranch = key.uriValue().isBranch();
             Stream<Obj> result;
            // LOG.info("step: %s", step);
@@ -163,7 +163,7 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
                     return (OBJ) noobj();
                 result = isBranch ? Stream.of(rel(uri(step), this.at(k.intValue().intValue()))) : Stream.of(this.at(k.intValue().intValue()));
             }
-            if (key.uriValue().pathLength() == 1) {
+            if (key.uriValue().segmentLength() == 1) {
                 return (OBJ) objs(result.filter(x -> !x.isNoObj()).map(x -> x.c(c -> c.mult(cKey)).parent(this)));
             } else {
                 return (OBJ) objs(result.filter(x -> !x.isNoObj()).filter(Obj::isPoly).map(x -> (Poly<?, ?>) x.c(c -> c.mult(cKey)).parent(this))

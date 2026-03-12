@@ -124,10 +124,8 @@ public class ollamaInstSet extends AbstractInstSet {
             .tid(REC_TID)
             .vid(OLLM_USER_MEMORY_TID)
             .isaPredicate(rec(
-                    uri(TEXT), STR_TYPE,
-                    uri(THINKING), INT_TYPE,
-                    uri("attributes"), REC_TYPE,
-                    uri(TYPE), uri("AI")))
+                    uri("contents"), LST_TYPE,
+                    uri(TYPE), uri("USER")))
             .create(TYPES, INSTS);
 
     public static Type OLLM_TYPE = docWrap(Type.Builder.build()

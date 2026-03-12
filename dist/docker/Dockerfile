@@ -43,6 +43,7 @@ COPY target/metatron-${METATRON}-jar-with-dependencies.jar target/metatron-${MET
 RUN chmod +x target/metatron-${METATRON}-jar-with-dependencies.jar
 COPY examples/ examples/
 COPY conf/ conf/
+COPY boot/ boot/
 RUN touch .metatron.history
 RUN chmod 775 .metatron.history
 COPY bin/metatron bin/metatron

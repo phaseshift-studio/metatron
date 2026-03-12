@@ -34,8 +34,12 @@ import java.util.stream.Collectors;
 
 import static dev.langchain4j.data.message.ChatMessageDeserializer.messageFromJson;
 import static dev.langchain4j.data.message.ChatMessageSerializer.messagesToJson;
+import static studio.phaseshift.metatron.Tokens.AI;
+import static studio.phaseshift.metatron.Tokens.TYPE;
+import static studio.phaseshift.metatron.isa.llm.ollama.ollamaInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst0;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -65,9 +69,13 @@ public class SpaceChatMemoryStore implements ChatMemoryStore {
     @Override
     public void updateMessages(final Object memoryId, final List<ChatMessage> messages) {
         final String json = messagesToJson(messages);
-        final Obj obj = ObjSimpleJSONSerializer.parse(json);
+        final Obj obj = ObjSimpleJSONSerializer.parse(json);//.as(OLLM_AI_MEMORY);
         LOG.debug("updating messages for %s: %s", memoryId, obj);
-        Router.writeToSpace((fURI) memoryId, obj);
+        //obj.clone(obj.asLst().elements().map(e -> e.asRec().at(TYPE).equals(uri(AI)) ? e.as(OLLM_AI_MEMORY) : e.as(OLLM_USER_MEMORY)).toList(),LST_TID,(fURI))
+        Router.writeToSpace((fURI) memoryId, obj);/* obj.tid(
+                obj.asRec().at(TYPE).uriValue().classAgnosticEquals(AI) ?
+                        OLLM_AI_MEMORY_TID :
+                        OLLM_USER_MEMORY_TID));*/
     }
 
     @Override
