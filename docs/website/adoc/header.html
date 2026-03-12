@@ -32,6 +32,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="images/favicon-16x16.png">
     <link rel="mask-icon" href="images/safari-pinned-tab.svg" color="#5bbad5">
     <!-- CSS PACKAGES -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">   
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
     <link href="lib/animate/animate.min.css" rel="stylesheet">
@@ -39,6 +40,7 @@
     <link href="css/termynal.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/styles/night-owl.min.css" rel="stylesheet">
     <!-- JAVASCRIPT PACKAGES -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
     <script src="./highlight/highlight.min.js"></script>
     <script src="./highlight/languages/mtron.min.js"></script>
     <script src="./highlight/languages/json.min.js"></script>
@@ -129,13 +131,13 @@
 </nav>
 <main class="container my-4 flex-grow-1">
     <!-- MAIN CAROUSEL BODY -->
-    <div id="slideshow_pages" class="carousel slide" data-bs-ride="carousel" data-bs-interval="false">
+    <div id="carousel-body" class="carousel slide" data-bs-ride="carousel">
         <!-- Carousel Indicators -->
-        <div class="carousel-indicators">
+        <ol class="carousel-indicators">
             <button type="button" data-bs-target="#carousel-body" data-bs-slide-to="0" class="active"></button>
             <button type="button" data-bs-target="#carousel-body" data-bs-slide-to="1"></button>
            <!-- <button type="button" data-bs-target="#carousel-body" data-bs-slide-to="2"></button> -->
-        </div>
+        </ol>
         <div class="carousel-inner">
             <div class="carousel-item active">
                 <!--------------------->
