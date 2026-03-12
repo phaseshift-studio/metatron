@@ -1,0 +1,33 @@
+=====
+
+There are 3 ways to access data.
+
+. **direct reference**: every piece of data is associated with a unique URI.
+. **pattern matching**: pattern based URIs enable accessing entire branches of a URI address space.
+. **indirect reference**: data can reference other data either through container or URI pointers.
+
+++++
+<!-- 🐖
+x -> [a=>1,b=>[c=>2,d=>[3,4,5]],e=>6]
+*x
+*x/b/+
+*x>>b>>d>>+
+-->
+++++
+
+=====
+
+=====
+
+Numerous instructions exist for extracting substructures within larger structures.
+
+++++
+<!-- 🐖
+x -> [a=>1,b=>[c=>2,d=>[3,4,5]],e=>6]
+*x.where[a=>?>0,_=>[_=>lst::T],e=>?int::T]
+*x.where[a=>?>0,_=>[_=>lst::T],e=>?int::T].select[a=>_]
+*x.where[a=>?>0,_=>[_=>lst::T],e=>?int::T].select[a=>+2,b=>[d=>>-.sum()]]
+-->
+++++
+
+=====

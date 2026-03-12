@@ -248,7 +248,7 @@ class ProcessingState:
             elif line.startswith("[HEADER]"):
                 to_header.append(line)
             else:
-                to_execute.append(running_line + line)
+                to_execute.append(line if running_line is "" else running_line + line)
                 running_line = ""
         self.output = []
         self.output.extend(to_header)
