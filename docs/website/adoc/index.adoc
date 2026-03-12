@@ -46,9 +46,15 @@ include::adoc/header.html[]
         <div class="row">
             <p class="d-inline-flex gap-1">
               <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-0" aria-expanded="false" aria-controls="card-0">Data Manipulation Techniques</a>
-              <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-1" aria-expanded="false" aria-controls="card-1">The Mechanics of an Instruction</a>
-              <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-2" aria-expanded="false" aria-controls="card-2">The Structure of Types</button>
-              <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-3" aria-expanded="false" aria-controls="card-3">Interacting with LLMs</button>
+              <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-1" aria-expanded="false" aria-controls="card-1">The Function of an Instruction</a>
+              <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-2" aria-expanded="false" aria-controls="card-2">Structured Types</button>
+              <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-3" aria-expanded="false" aria-controls="card-3">Twisted Tangled Graphs</button>
+              <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-4" aria-expanded="false" aria-controls="card-4">A Seat at the Relational Table</button>
+              <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-5" aria-expanded="false" aria-controls="card-5">In The Mind of an LLM</button>
+              <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-6" aria-expanded="false" aria-controls="card-6">The Macro Microprocessor</button>
+              <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-7" aria-expanded="false" aria-controls="card-7">Brokering an MQTT Deal</button>
+              <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-8" aria-expanded="false" aria-controls="card-8">The File Cabinet of Tomorrow</button> 
+              <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-9" aria-expanded="false" aria-controls="card-9">Serial for Breakfast</button> 
              <!-- <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target=".multi-collapse" aria-expanded="false" aria-controls="card-1 card-2">The Entire Collection</button> -->
             </p>
         </div>

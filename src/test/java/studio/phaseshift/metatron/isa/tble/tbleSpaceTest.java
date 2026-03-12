@@ -23,6 +23,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
+import studio.phaseshift.metatron.isa.m.type.Bool;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 
 import java.io.File;
@@ -33,6 +34,7 @@ import java.sql.Statement;
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -99,7 +101,7 @@ public class tbleSpaceTest extends AbstractSpaceTest {
                         uri(HOST), uri("sqlite:" + DB_PATH),
                         uri(DRIVER), uri("org.sqlite.JDBC"),
                         uri(ROUTE), rec(uri(""), uri("")),
-                        uri("table_mapping"), uri("true")
+                        uri(TABLE), lst()
                 ).jvm(),
                 f("/sys/space/tble/test2")
         );

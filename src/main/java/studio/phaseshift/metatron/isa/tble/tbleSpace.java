@@ -18,12 +18,11 @@
 
 package studio.phaseshift.metatron.isa.tble;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mInstSet;
+import studio.phaseshift.metatron.isa.m.type.Bool;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
@@ -37,8 +36,9 @@ import studio.phaseshift.metatron.isa.tble.schema.TableSchema;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.io.StringReader;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -49,6 +49,7 @@ import java.util.function.Function;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TID;
+import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -132,7 +133,8 @@ public class tbleSpace extends AbstractSpace<Connection> {
                             uri(PATTERN), URI_TYPE,
                             uri(HOST), URI_TYPE,
                             uri(DRIVER), URI_TYPE,
-                            uri(ROUTE), rec(URI_TYPE, URI_TYPE)))
+                            uri(ROUTE), rec(URI_TYPE, URI_TYPE),
+                            uri(TABLE).maybe(), LST_TYPE))
                     .constructor(instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(TABL_SPACE_TID),
                             lst(REC_TYPE),
                             (_, inst) -> tbleSpace.of(inst.arg(0).asRec().jvm(), inst.arg(0).vid()))).create();
@@ -169,18 +171,19 @@ public class tbleSpace extends AbstractSpace<Connection> {
             }
             this.schema.initialize(sjvm);
             LOG.info("initialized schema {{b}}%s{{X}} (version: %s)",
-                     this.schema.getClass().getSimpleName(), this.schema.version());
+                    this.schema.getClass().getSimpleName(), this.schema.version());
 
             // Initialize existing table schema for table mapping
             // Check if table mapping is enabled (default: true)
-            final boolean enableTableMapping = config.getOrDefault(uri("table_mapping"), uri("true"))
-                    .uriValue().toString().equals("true");
+            final boolean enableTableMapping = config.getOrDefault(uri(TABLE), null) != null;
 
             if (enableTableMapping) {
                 this.existingTableSchema = new ExistingTableSchema("objs");
                 this.existingTableSchema.initialize(sjvm);
-                LOG.info("initialized {{g}}existing table schema{{X}} - discovered {} tables",
+                LOG.info("initialized {{g}}existing table schema{{X}} - discovered %s tables",
                         this.existingTableSchema.getTableNames().size());
+                this.at(uri(TABLE), lst(this.existingTableSchema.getTableMetadata().stream().map(t -> (Obj) uri(t.tableName)).toList()),MUTABLE);
+
             } else {
                 this.existingTableSchema = null;
                 LOG.info("table mapping {{y}}disabled{{X}}");
@@ -222,37 +225,25 @@ public class tbleSpace extends AbstractSpace<Connection> {
                 // Check if this is a table mapping path (existing table)
                 if (this.existingTableSchema != null && this.existingTableSchema.isTablePath(pattern.asNode())) {
                     // Use existing table schema
-                    final Iterator<TableSchema.FuriObjPair> tableResults = this.existingTableSchema.read(this.sjvm(), pattern);
-                    final List<IdObj> objs = new ArrayList<>();
-
-                    while (tableResults.hasNext()) {
-                        final TableSchema.FuriObjPair pair = tableResults.next();
-                        final JsonElement json = JsonParser.parseReader(new StringReader(pair.objJson()));
-                        final Obj obj = this.serializer.read(json);
-                        objs.add(IdObj.of(pair.furi(), obj));
-                    }
-
-                    return objs.iterator();
+                    final Iterator<IdObj> tableResults = this.existingTableSchema.read(this.sjvm(), pattern);
+                    return tableResults;
                 }
 
                 // Use key-value schema (MqttIndexedSchema or SimpleSchema)
-                final Iterator<TableSchema.FuriObjPair> schemaResults = this.schema.read(this.sjvm(), pattern);
+                final Iterator<IdObj> schemaResults = this.schema.read(this.sjvm(), pattern);
                 final List<IdObj> objs = new ArrayList<>();
 
                 // Convert schema results to Obj pairs and unroll polys if pattern matching
                 while (schemaResults.hasNext()) {
-                    final TableSchema.FuriObjPair pair = schemaResults.next();
-                    final JsonElement json = JsonParser.parseReader(new StringReader(pair.objJson()));
-                    final Obj obj = this.serializer.read(json);
-
+                    final IdObj pair = schemaResults.next();
                     // Add the direct match
                     if (pair.furi().test(pattern.asNode())) {
-                        objs.add(IdObj.of(pair.furi(), obj));
+                        objs.add(IdObj.of(pair.furi(), pair.obj()));
                     }
 
                     // If pattern matching and obj is a poly, unroll it
-                    if (pattern.hasPattern() && obj.isPoly()) {
-                        Space.Helper.unrollPoly(pair.furi(), obj.as(), pattern.asNode())
+                    if (pattern.hasPattern() && pair.obj().isPoly()) {
+                        Space.Helper.unrollPoly(pair.furi(), pair.obj().as(), pattern.asNode())
                                 .forEach(kv -> objs.add(kv));
                     }
                 }

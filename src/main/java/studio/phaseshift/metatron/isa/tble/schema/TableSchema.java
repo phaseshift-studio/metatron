@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.tble.schema;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.Space;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -61,7 +62,7 @@ public interface TableSchema {
      * @return iterator of matching fURIs and their JSON objects
      * @throws SQLException if read fails
      */
-    Iterator<FuriObjPair> read(Connection conn, fURI pattern) throws SQLException;
+    Iterator<Space.IdObj> read(Connection conn, fURI pattern) throws SQLException;
 
     /**
      * Delete an object at the given fURI.
@@ -90,10 +91,5 @@ public interface TableSchema {
     default String version() {
         return "1.0";
     }
-
-    /**
-     * Simple pair class for fURI and JSON object.
-     */
-    record FuriObjPair(fURI furi, String objJson) {
-    }
+    
 }

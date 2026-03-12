@@ -19,6 +19,8 @@
 package studio.phaseshift.metatron.isa.tble.schema;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.Space;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.sql.*;
@@ -119,7 +121,7 @@ public class MqttIndexedSchema implements TableSchema {
     }
 
     @Override
-    public Iterator<FuriObjPair> read(final Connection conn, final fURI pattern) throws SQLException {
+    public Iterator<Space.IdObj> read(final Connection conn, final fURI pattern) throws SQLException {
         final String patternStr = pattern.toString();
 
         // Check if this is an MQTT pattern
@@ -133,9 +135,9 @@ public class MqttIndexedSchema implements TableSchema {
         stmt.setString(1, patternStr);
         final ResultSet rs = stmt.executeQuery();
 
-        final List<FuriObjPair> results = new ArrayList<>();
+        final List<Space.IdObj> results = new ArrayList<>();
         while (rs.next()) {
-            results.add(new FuriObjPair(f(rs.getString("furi")), rs.getString("obj")));
+            results.add(new Space.IdObj(f(rs.getString("furi")), ObjSimpleJSONSerializer.parse(rs.getString("obj"))));
         }
         rs.close();
         stmt.close();
@@ -150,7 +152,7 @@ public class MqttIndexedSchema implements TableSchema {
      * - /sensor/# -> matches /sensor/kitchen, /sensor/kitchen/temperature, etc.
      * - /sensor/+/# -> matches /sensor/kitchen/temperature, /sensor/bedroom/humidity/current
      */
-    private Iterator<FuriObjPair> readMqttPattern(final Connection conn, final fURI pattern) throws SQLException {
+    private Iterator<Space.IdObj> readMqttPattern(final Connection conn, final fURI pattern) throws SQLException {
         final String patternStr = pattern.toString();
 
         // Build WHERE clause based on pattern segments
@@ -205,13 +207,13 @@ public class MqttIndexedSchema implements TableSchema {
         }
 
         final ResultSet rs = stmt.executeQuery();
-        final List<FuriObjPair> results = new ArrayList<>();
+        final List<Space.IdObj> results = new ArrayList<>();
 
         while (rs.next()) {
             final String furiStr = rs.getString("furi");
             // Double-check pattern match (for patterns beyond MAX_SEGMENTS)
             if (matchesMqttPattern(furiStr, patternStr)) {
-                results.add(new FuriObjPair(f(furiStr), rs.getString("obj")));
+                results.add(Space.IdObj.of(f(furiStr), ObjSimpleJSONSerializer.parse(rs.getString("obj"))));
             }
         }
 

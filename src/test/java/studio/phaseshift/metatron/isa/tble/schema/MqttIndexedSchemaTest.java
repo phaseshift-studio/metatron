@@ -24,17 +24,20 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.isa.Space;
 
 import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
  * Test suite for MqttIndexedSchema.
@@ -85,12 +88,12 @@ public class MqttIndexedSchemaTest extends AbstractMetatronTest {
         assertEquals(1, rows);
 
         // Read it back
-        final Iterator<TableSchema.FuriObjPair> results = schema.read(conn, f("/sensor/kitchen/temperature"));
+        final Iterator<Space.IdObj> results = schema.read(conn, f("/sensor/kitchen/temperature"));
         assertTrue(results.hasNext());
 
-        final TableSchema.FuriObjPair pair = results.next();
-        assertEquals("/sensor/kitchen/temperature", pair.furi().toString());
-        assertEquals("{\"value\": 22.5}", pair.objJson());
+        final Space.IdObj pair = results.next();
+        assertEquals(f("/sensor/kitchen/temperature"), pair.furi());
+        assertEquals(rec(uri("value"), real(22.5)), pair.obj());
         assertFalse(results.hasNext());
     }
 
@@ -103,11 +106,11 @@ public class MqttIndexedSchemaTest extends AbstractMetatronTest {
         schema.write(conn, f("/test/value"), "{\"v\": 2}");
 
         // Read back - should have updated value
-        final Iterator<TableSchema.FuriObjPair> results = schema.read(conn, f("/test/value"));
+        final Iterator<Space.IdObj> results = schema.read(conn, f("/test/value"));
         assertTrue(results.hasNext());
 
-        final TableSchema.FuriObjPair pair = results.next();
-        assertEquals("{\"v\": 2}", pair.objJson());
+        final Space.IdObj pair = results.next();
+        assertEquals(rec(uri("v"), jnt(2)), pair.obj());
         assertFalse(results.hasNext());
     }
 
@@ -117,7 +120,7 @@ public class MqttIndexedSchemaTest extends AbstractMetatronTest {
         schema.write(conn, f("/test/delete"), "{\"value\": 123}");
 
         // Verify it exists
-        Iterator<TableSchema.FuriObjPair> results = schema.read(conn, f("/test/delete"));
+        Iterator<Space.IdObj> results = schema.read(conn, f("/test/delete"));
         assertTrue(results.hasNext());
 
         // Delete it
@@ -135,7 +138,7 @@ public class MqttIndexedSchemaTest extends AbstractMetatronTest {
         schema.write(conn, f("/test/null"), "{\"value\": 456}");
 
         // Verify it exists
-        Iterator<TableSchema.FuriObjPair> results = schema.read(conn, f("/test/null"));
+        Iterator<Space.IdObj> results = schema.read(conn, f("/test/null"));
         assertTrue(results.hasNext());
 
         // Write null to delete
@@ -154,17 +157,17 @@ public class MqttIndexedSchemaTest extends AbstractMetatronTest {
         schema.write(conn, f("/sensor/kitchen/humidity"), "{\"value\": 45}");
 
         // Read each one
-        Iterator<TableSchema.FuriObjPair> results = schema.read(conn, f("/sensor/kitchen/temperature"));
+        Iterator<Space.IdObj> results = schema.read(conn, f("/sensor/kitchen/temperature"));
         assertTrue(results.hasNext());
-        assertEquals(22.5, extractValue(results.next().objJson()));
+        assertEquals(rec(uri("value"), real(22.5)), results.next().obj());
 
         results = schema.read(conn, f("/sensor/bedroom/temperature"));
         assertTrue(results.hasNext());
-        assertEquals(20.1, extractValue(results.next().objJson()));
+        assertEquals(rec(uri("value"), real(20.1)), results.next().obj());
 
         results = schema.read(conn, f("/sensor/kitchen/humidity"));
         assertTrue(results.hasNext());
-        assertEquals(45.0, extractValue(results.next().objJson()));
+        assertEquals(rec(uri("value"), jnt(45)), results.next().obj());
     }
 
     @ParameterizedTest

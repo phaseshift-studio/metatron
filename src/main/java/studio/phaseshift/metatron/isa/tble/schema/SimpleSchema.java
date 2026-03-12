@@ -19,6 +19,8 @@
 package studio.phaseshift.metatron.isa.tble.schema;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.Space;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -76,7 +78,7 @@ public class SimpleSchema implements TableSchema {
     }
 
     @Override
-    public Iterator<FuriObjPair> read(final Connection conn, final fURI pattern) throws SQLException {
+    public Iterator<Space.IdObj> read(final Connection conn, final fURI pattern) throws SQLException {
         final String sql;
         final PreparedStatement stmt;
 
@@ -92,10 +94,10 @@ public class SimpleSchema implements TableSchema {
         }
 
         final ResultSet rs = stmt.executeQuery();
-        final List<FuriObjPair> results = new ArrayList<>();
+        final List<Space.IdObj> results = new ArrayList<>();
 
         while (rs.next()) {
-            results.add(new FuriObjPair(f(rs.getString("furi")), rs.getString("obj")));
+            results.add(Space.IdObj.of(f(rs.getString("furi")), ObjSimpleJSONSerializer.parse(rs.getString("obj"))));
         }
 
         rs.close();

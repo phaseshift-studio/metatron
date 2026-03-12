@@ -19,7 +19,9 @@
 package studio.phaseshift.metatron.isa.tble.schema;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 
@@ -29,9 +31,11 @@ import java.util.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
-import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.tble.tbleInstSet.REC_ROW_TID;
 
 /**
  * Schema for mapping existing SQL tables to Metatron objects.
@@ -57,11 +61,13 @@ public class ExistingTableSchema implements TableSchema {
      * Metadata about a SQL table
      */
     public static class TableMetadata {
+        public final String dbName;
         public final String tableName;
         public final List<ColumnMetadata> columns;
         public final List<String> primaryKeys;
 
-        public TableMetadata(String tableName, List<ColumnMetadata> columns, List<String> primaryKeys) {
+        public TableMetadata(String dbName, String tableName, List<ColumnMetadata> columns, List<String> primaryKeys) {
+            this.dbName = dbName;
             this.tableName = tableName;
             this.columns = columns;
             this.primaryKeys = primaryKeys;
@@ -104,7 +110,7 @@ public class ExistingTableSchema implements TableSchema {
         DatabaseMetaData metaData = conn.getMetaData();
 
         // Get all tables (excluding system tables)
-        try (ResultSet tables = metaData.getTables(null, null, "%", new String[]{"TABLE"})) {
+        try (ResultSet tables = metaData.getTables(conn.getCatalog(), null, "%", new String[]{"TABLE"})) {
             while (tables.next()) {
                 String tableName = tables.getString("TABLE_NAME");
 
@@ -132,12 +138,12 @@ public class ExistingTableSchema implements TableSchema {
                     }
                 }
 
-                tableSchemas.put(tableName.toLowerCase(), new TableMetadata(tableName, columns, primaryKeys));
-                LOG.debug("Discovered table: {} with {} columns and {} primary keys",
+                tableSchemas.put(tableName.toLowerCase(), new TableMetadata(conn.getCatalog(), tableName, columns, primaryKeys));
+                LOG.debug("discovered table: %s with %s columns and %s primary keys",
                         tableName, columns.size(), primaryKeys.size());
             }
         }
-        LOG.info("Discovered {{b}}{}{{X}} tables: {}", tableSchemas.size(), tableSchemas.keySet());
+        LOG.info("discovered {{b}}%s{{X}} tables: %s", tableSchemas.size(), tableSchemas.keySet());
     }
 
     /**
@@ -174,30 +180,31 @@ public class ExistingTableSchema implements TableSchema {
         }
 
         return switch (sqlType) {
-            case Types.INTEGER, Types.BIGINT, Types.SMALLINT, Types.TINYINT ->
-                    jnt(((Number) value).longValue());
+            case Types.INTEGER, Types.BIGINT, Types.SMALLINT, Types.TINYINT -> jnt(((Number) value).longValue());
             case Types.REAL, Types.FLOAT, Types.DOUBLE, Types.DECIMAL, Types.NUMERIC ->
                     real(((Number) value).doubleValue());
-            case Types.BOOLEAN, Types.BIT ->
-                    bool((Boolean) value);
-            case Types.VARCHAR, Types.CHAR, Types.LONGVARCHAR, Types.NVARCHAR, Types.NCHAR ->
-                    str(value.toString());
-            default ->
-                    str(value.toString());
+            case Types.BOOLEAN, Types.BIT -> bool((Boolean) value);
+            case Types.VARCHAR, Types.CHAR, Types.LONGVARCHAR, Types.NVARCHAR, Types.NCHAR -> str(value.toString());
+            default -> str(value.toString());
         };
     }
 
     /**
      * Read a row from a SQL table and convert it to a Metatron list
      */
-    private String readTableRow(ResultSet rs, TableMetadata metadata) throws SQLException {
-        List<Obj> values = new ArrayList<>();
+    private Obj readTableRow(ResultSet rs, TableMetadata metadata) throws SQLException {
+        //    List<Obj> values = new ArrayList<>();
+        Map<Obj, Obj> labeledValues = new LinkedHashMap<>();
         for (ColumnMetadata col : metadata.columns) {
             Object value = rs.getObject(col.name);
-            values.add(sqlValueToObj(value, col.sqlType));
+            //  values.add(sqlValueToObj(value, col.sqlType));
+            labeledValues.put(uri(col.name), sqlValueToObj(value, col.sqlType));
+            if (null != value)
+                Router.global().stats().ioStats().incrBytesRecv(value.toString().getBytes().length);
         }
         // Convert to JSON string for consistency with TableSchema interface
-        return lst(values).toString();
+        // return rec(Map.of(uri(TABLE),uri(metadata.tableName),uri(VALUE),lst(values)),ROW_TID,null);
+        return rec(labeledValues, REC_ROW_TID, null);
     }
 
     /**
@@ -226,7 +233,7 @@ public class ExistingTableSchema implements TableSchema {
     }
 
     @Override
-    public Iterator<FuriObjPair> read(Connection conn, fURI pattern) throws SQLException {
+    public Iterator<Space.IdObj> read(Connection conn, fURI pattern) throws SQLException {
         org.javatuples.Pair<String, String> tablePath = parseTablePath(pattern.asNode());
         if (tablePath == null) {
             // Not a table path
@@ -241,7 +248,7 @@ public class ExistingTableSchema implements TableSchema {
             return Collections.emptyIterator();
         }
 
-        List<FuriObjPair> results = new ArrayList<>();
+        List<Space.IdObj> results = new ArrayList<>();
 
         if (rowId == null || rowId.equals("+") || pattern.hasPattern()) {
             // Read all rows
@@ -253,14 +260,14 @@ public class ExistingTableSchema implements TableSchema {
                     // Build row identifier from primary keys or use row number
                     String id = buildRowId(rs, metadata);
                     fURI rowFuri = fURI.Singleton.f("/" + tableName + "/" + id);
-                    String rowJson = readTableRow(rs, metadata);
-                    results.add(new FuriObjPair(rowFuri, rowJson));
+                    Obj obj = readTableRow(rs, metadata);
+                    results.add(Space.IdObj.of(rowFuri, obj));
                 }
             }
         } else {
             // Read specific row by primary key
             if (metadata.primaryKeys.isEmpty()) {
-                LOG.warn("Table {} has no primary key, cannot read specific row", tableName);
+                LOG.warn("table %s has no primary key, cannot read specific row", tableName);
                 return Collections.emptyIterator();
             }
 
@@ -271,8 +278,8 @@ public class ExistingTableSchema implements TableSchema {
                 try (ResultSet rs = stmt.executeQuery()) {
                     if (rs.next()) {
                         fURI rowFuri = fURI.Singleton.f("/" + tableName + "/" + rowId);
-                        String rowJson = readTableRow(rs, metadata);
-                        results.add(new FuriObjPair(rowFuri, rowJson));
+                        Obj row = readTableRow(rs, metadata);
+                        results.add(Space.IdObj.of(rowFuri, row));
                     }
                 }
             }
@@ -310,4 +317,8 @@ public class ExistingTableSchema implements TableSchema {
     public Set<String> getTableNames() {
         return tableSchemas.keySet();
     }
+    
+   public List<TableMetadata> getTableMetadata() {
+        return new ArrayList<>(tableSchemas.values());
+   }
 }
