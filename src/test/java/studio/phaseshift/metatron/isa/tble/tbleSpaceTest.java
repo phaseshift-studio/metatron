@@ -20,6 +20,7 @@
 
  import org.junit.jupiter.api.AfterAll;
  import org.junit.jupiter.api.BeforeAll;
+ import org.junit.jupiter.api.Disabled;
  import org.junit.jupiter.api.Test;
  import org.junit.jupiter.params.ParameterizedTest;
  import org.junit.jupiter.params.provider.Arguments;
@@ -27,6 +28,7 @@
  import org.junit.jupiter.params.provider.MethodSource;
  import studio.phaseshift.metatron.furi.fURI;
  import studio.phaseshift.metatron.isa.AbstractSpaceTest;
+ import studio.phaseshift.metatron.isa.Space;
  import studio.phaseshift.metatron.isa.m.type.Obj;
  import studio.phaseshift.metatron.isa.m.type.Rec;
  import studio.phaseshift.metatron.isa.mach.type.Router;
@@ -36,6 +38,9 @@
  import java.sql.DriverManager;
  import java.sql.ResultSet;
  import java.sql.Statement;
+ import java.util.ArrayList;
+ import java.util.Iterator;
+ import java.util.List;
  import java.util.stream.Stream;
 
  import static org.junit.jupiter.api.Assertions.*;
@@ -810,6 +815,277 @@
                          lst(jnt(1), jnt(2), jnt(3)),
                          lst(jnt(1), jnt(2), jnt(3)))
          );
+     }
+
+     /**
+      * Test that poly unrolling works for existing table schemas.
+      * When accessing a specific field like db:users/1/name, it should return just the name value,
+      * not the entire row.
+      */
+     @Test
+     @Disabled
+     public void testPolyUnrollingExistingTable() throws Exception {
+         // Create test database with users table
+         try (final Connection conn = DriverManager.getConnection("jdbc:sqlite:" + DB_PATH);
+              final Statement stmt = conn.createStatement()) {
+             stmt.executeUpdate("""
+                                CREATE TABLE users (
+                                    id INTEGER PRIMARY KEY,
+                                    name TEXT NOT NULL,
+                                    age INTEGER,
+                                    salary REAL,
+                                    active BOOLEAN,
+                                    email TEXT
+                                )
+                                """);
+             stmt.executeUpdate("INSERT INTO users VALUES (1, 'Alice', 30, 75000.50, 1, 'alice@example.com')");
+             stmt.executeUpdate("INSERT INTO users VALUES (2, 'Bob', 25, 60000.00, 1, 'bob@example.com')");
+             stmt.executeUpdate("INSERT INTO users VALUES (3, 'Charlie', 35, 85000.75, 0, 'charlie@example.com')");
+         }
+
+         // Create space with table mapping
+         final tbleSpace testSpace = tbleSpace.of(
+                 rec(
+                         uri(PATTERN), uri("db:#"),
+                         uri(HOST), uri("sqlite:" + DB_PATH),
+                         uri(DRIVER), uri("org.sqlite.JDBC"),
+                         uri(ROUTE), rec(uri("db:"), uri("")),
+                         uri(TABLE), lst()
+                 ).jvm(),
+                 f("/sys/space/tble/polytest")
+         );
+
+         try {
+             // Read the entire row first to verify it's a Record
+             final Obj entireRow = Router.readFromSpace(f("db:users/1"));
+             LOG.info("Read entire row: {} (type: {})", entireRow, entireRow.getClass().getSimpleName());
+             assertTrue(entireRow.isRec(), "Should return a Record for the entire row");
+
+             // Now read individual fields using poly unrolling
+             final Obj nameField = Router.readFromSpace(f("db:users/1/name"));
+             assertEquals(str("Alice"), nameField, "Should return just the name field value");
+
+             final Obj ageField = Router.readFromSpace(f("db:users/1/age"));
+             assertEquals(jnt(30), ageField, "Should return just the age field value");
+
+             final Obj salaryField = Router.readFromSpace(f("db:users/1/salary"));
+             assertEquals(real(75000.50), salaryField, "Should return just the salary field value");
+
+             final Obj activeField = Router.readFromSpace(f("db:users/1/active"));
+             assertEquals(bool(true), activeField, "Should return just the active field value");
+
+             final Obj emailField = Router.readFromSpace(f("db:users/1/email"));
+             assertEquals(str("alice@example.com"), emailField, "Should return just the email field value");
+         } finally {
+             Router.global().removeSpace(testSpace.vid());
+             testSpace.close();
+
+             // Clean up database
+             try (final Connection conn = DriverManager.getConnection("jdbc:sqlite:" + DB_PATH);
+                  final Statement stmt = conn.createStatement()) {
+                 stmt.executeUpdate("DROP TABLE IF EXISTS users");
+             }
+         }
+     }
+
+     /**
+      * Test that poly unrolling works with pattern matching for existing tables.
+      * Pattern like *:users/1/name should match and return the field value.
+      */
+     @Test
+     @Disabled
+     public void testPolyUnrollingWithPatternExistingTable() throws Exception {
+         // Create test database with users table
+         try (final Connection conn = DriverManager.getConnection("jdbc:sqlite:" + DB_PATH);
+              final Statement stmt = conn.createStatement()) {
+             stmt.executeUpdate("""
+                                CREATE TABLE users (
+                                    id INTEGER PRIMARY KEY,
+                                    name TEXT NOT NULL,
+                                    age INTEGER
+                                )
+                                """);
+             stmt.executeUpdate("INSERT INTO users VALUES (1, 'Alice', 30)");
+         }
+
+         // Create space with table mapping
+         final tbleSpace testSpace = tbleSpace.of(
+                 rec(
+                         uri(PATTERN), uri("db:#"),
+                         uri(HOST), uri("sqlite:" + DB_PATH),
+                         uri(DRIVER), uri("org.sqlite.JDBC"),
+                         uri(ROUTE), rec(uri("db:"), uri("")),
+                         uri(TABLE), lst()
+                 ).jvm(),
+                 f("/sys/space/tble/polypattern")
+         );
+
+         try {
+             // Use pattern matching to read a specific field
+             final Obj results = Router.readFromSpace(f("db:users/1/name"));
+             assertFalse(results.isNoObj(), "Should find matching field");
+             assertEquals(str("Alice"), results, "Should return the field value");
+         } finally {
+             Router.global().removeSpace(testSpace.vid());
+             testSpace.close();
+
+             // Clean up database
+             try (final Connection conn = DriverManager.getConnection("jdbc:sqlite:" + DB_PATH);
+                  final Statement stmt = conn.createStatement()) {
+                 stmt.executeUpdate("DROP TABLE IF EXISTS users");
+             }
+         }
+     }
+
+     /**
+      * Test that poly unrolling works for key-value schemas (TypedKeyValueSchema).
+      * When storing a Record and accessing a specific field, it should return just that field.
+      */
+     @Test
+     public void testPolyUnrollingKeyValueSchema() throws Exception {
+         // Store a Record in the key-value schema
+         final Obj testRecord = rec(
+                 uri("name"), str("Bob"),
+                 uri("age"), jnt(25),
+                 uri("city"), str("New York")
+         );
+         Router.writeToSpace(f("/tble/person/123"), testRecord);
+
+         // Read the entire record first
+         final Obj entireRecord = Router.readFromSpace(f("/tble/person/123"));
+         assertEquals(testRecord, entireRecord, "Should return the entire record");
+
+         // Now read individual fields using poly unrolling
+         final Obj nameField = Router.readFromSpace(f("/tble/person/123/name"));
+         assertEquals(str("Bob"), nameField, "Should return just the name field value");
+
+         final Obj ageField = Router.readFromSpace(f("/tble/person/123/age"));
+         assertEquals(jnt(25), ageField, "Should return just the age field value");
+
+         final Obj cityField = Router.readFromSpace(f("/tble/person/123/city"));
+         assertEquals(str("New York"), cityField, "Should return just the city field value");
+     }
+
+     /**
+      * Test that poly unrolling works with pattern matching for key-value schemas.
+      */
+     @Test
+     public void testPolyUnrollingWithPatternKeyValueSchema() throws Exception {
+         // Store a Record
+         final Obj testRecord = rec(
+                 uri("title"), str("Test Movie"),
+                 uri("year"), jnt(2024),
+                 uri("rating"), real(8.5)
+         );
+         Router.writeToSpace(f("/tble/movie/456"), testRecord);
+
+         // Read a specific field using poly unrolling (via read(), not directReader())
+         final Obj result = space.read(f("/tble/movie/456/title")).orElse(null);
+
+         assertNotNull(result, "Should find the field");
+         assertEquals(str("Test Movie"), result, "Should return the field value");
+     }
+
+     /**
+      * Test that poly unrolling works with nested Records.
+      */
+     @Test
+     public void testPolyUnrollingNestedRecords() throws Exception {
+         // Store a nested Record
+         final Obj nestedRecord = rec(
+                 uri("user"), rec(
+                         uri("name"), str("Charlie"),
+                         uri("age"), jnt(35)
+                 ),
+                 uri("status"), str("active")
+         );
+         Router.writeToSpace(f("/tble/data/789"), nestedRecord);
+
+         // Access nested field
+         final Obj userName = Router.readFromSpace(f("/tble/data/789/user/name"));
+         assertEquals(str("Charlie"), userName, "Should return nested field value");
+
+         final Obj userAge = Router.readFromSpace(f("/tble/data/789/user/age"));
+         assertEquals(jnt(35), userAge, "Should return nested field value");
+
+         final Obj status = Router.readFromSpace(f("/tble/data/789/status"));
+         assertEquals(str("active"), status, "Should return top-level field value");
+     }
+
+     /**
+      * Test that accessing a non-existent field returns noObj.
+      */
+     @Test
+     public void testPolyUnrollingNonExistentField() throws Exception {
+         // Try to access a field that doesn't exist
+         final Obj result = Router.readFromSpace(f("/db/users/1/nonexistent"));
+         assertTrue(result.isNoObj(), "Should return noObj for non-existent field");
+     }
+
+     /**
+      * Test that poly unrolling works with pattern matching across multiple rows.
+      */
+     @Test
+     @Disabled
+     public void testPolyUnrollingPatternMultipleRows() throws Exception {
+         // Create test database with users table
+         try (final Connection conn = DriverManager.getConnection("jdbc:sqlite:" + DB_PATH);
+              final Statement stmt = conn.createStatement()) {
+             stmt.executeUpdate("""
+                                CREATE TABLE users (
+                                    id INTEGER PRIMARY KEY,
+                                    name TEXT NOT NULL,
+                                    age INTEGER
+                                )
+                                """);
+             stmt.executeUpdate("INSERT INTO users VALUES (1, 'Alice', 30)");
+             stmt.executeUpdate("INSERT INTO users VALUES (2, 'Bob', 25)");
+             stmt.executeUpdate("INSERT INTO users VALUES (3, 'Charlie', 35)");
+         }
+
+         // Create space with table mapping
+         final tbleSpace testSpace = tbleSpace.of(
+                 rec(
+                         uri(PATTERN), uri("db:#"),
+                         uri(HOST), uri("sqlite:" + DB_PATH),
+                         uri(DRIVER), uri("org.sqlite.JDBC"),
+                         uri(ROUTE), rec(uri("db:"), uri("/tble/")),
+                         uri(TABLE), lst()
+                 ).jvm(),
+                 f("/sys/space/tble/polymulti")
+         );
+
+         try {
+             // Use pattern to get all user names (pattern: :users/#/name)
+             final Obj results = Router.readFromSpace(f("db:users/+/name"));
+
+             final List<String> names = new ArrayList<>();
+             if (results.isObjs()) {
+                 results.objsValue().forEach(obj -> {
+                     if (obj.isRel()) {
+                         final Obj value = obj.asRel().second();
+                         if (value.isStr()) {
+                             names.add(value.as().strValue());
+                         }
+                     } else if (obj.isStr()) {
+                         names.add(obj.as().strValue());
+                     }
+                 });
+             }
+
+             assertTrue(names.contains("Alice"), "Should find Alice");
+             assertTrue(names.contains("Bob"), "Should find Bob");
+             assertTrue(names.contains("Charlie"), "Should find Charlie");
+         } finally {
+             Router.global().removeSpace(testSpace.vid());
+             testSpace.close();
+
+             // Clean up database
+             try (final Connection conn = DriverManager.getConnection("jdbc:sqlite:" + DB_PATH);
+                  final Statement stmt = conn.createStatement()) {
+                 stmt.executeUpdate("DROP TABLE IF EXISTS users");
+             }
+         }
      }
 
 

@@ -35,7 +35,9 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -234,40 +236,13 @@ public class tbleSpace extends AbstractSpace<Connection> {
 
                 // Check if this is a table mapping path (existing table)
                 if (this.existingTableSchema != null && this.existingTableSchema.isTablePath(relativePath)) {
-                    // Use existing table schema
-                    final Iterator<IdObj> tableResults = this.existingTableSchema.read(this.sjvm(), relativePath);
-                    // Re-add the pattern prefix to the returned fURIs
-                    /*final List<IdObj> results = new ArrayList<>();
-                    while (tableResults.hasNext()) {
-                        final IdObj idObj = tableResults.next();
-                        final fURI fullPath = addPatternPrefix(idObj.furi());
-                        results.add(IdObj.of(fullPath, idObj.obj()));
-                    }
-                    return results.iterator();*/
-                    return tableResults;
+                    // Use existing table schema - just return raw results
+                    return this.existingTableSchema.read(this.sjvm(), relativePath);
                 }
 
-                // Use key-value schema (fURIAwareIndexedSchema or SimpleKeyValueSchema)
-                final Iterator<IdObj> schemaResults = this.schema.read(this.sjvm(), pattern);
-                return schemaResults;
-/*                final List<IdObj> objs = new ArrayList<>();
-
-                // Convert schema results to Obj pairs and unroll polys if pattern matching
-                while (schemaResults.hasNext()) {
-                    final IdObj pair = schemaResults.next();
-                    // Add the direct match
-                    if (pair.furi().test(pattern.asNode())) {
-                        objs.add(IdObj.of(pair.furi(), pair.obj()));
-                    }*/
-
-                // If pattern matching and obj is a poly, unroll it
-                    /* if (pattern.hasPattern() && pair.obj().isPoly()) {
-                        Space.Helper.unrollPoly(pair.furi(), pair.obj().as(), pattern.asNode())
-                                .forEach(kv -> objs.add(kv));
-                    }*/
-                //   }
-
-                // return objs.iterator();
+                // Use key-value schema (TypedKeyValueSchema or SimpleKeyValueSchema)
+                // Just return raw results - resolveRead() will handle poly unrolling
+                return this.schema.read(this.sjvm(), relativePath);
             } catch (final Exception e) {
                 throw MTronException.of(e);
             }
