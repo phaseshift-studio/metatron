@@ -33,8 +33,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static studio.phaseshift.metatron.Tokens.DOM;
-import static studio.phaseshift.metatron.Tokens.RNG;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /*
@@ -405,10 +404,8 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
         public static final fURI WILD_ONE = new XXPXXXfURI(List.of("+"));
         public static final fURI NOOBJ = f("noobj").zero();
 
-        private static final fURI INSTANCE = new XXXXXXfURI();
-
         public final static fURI empty() {
-            return INSTANCE;
+            return XXXXXXfURI.INSTANCE;
         }
 
 
@@ -430,25 +427,10 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
             final Matcher matcher = Singleton.FURI_PATTERN.matcher(furiParse);
             if (!matcher.matches())
                 throw MTronException.of("unable to parse %s to a furi", furiParse);
-            final String scheme = matcher.group("scheme");
-            final String host = matcher.group("host");
-            final int port = matcher.group("port") == null ? -1 : Integer.parseInt(matcher.group("port"));
-            final String pathStr = matcher.group("path");
-            final String polyStr = matcher.group("poly");
-            List<String> poly = null;
-            if (null != polyStr) {
-                final Matcher polyMatcher = Singleton.POLY_PATTERN.matcher(polyStr);
-                while (polyMatcher.find()) {
-                    if (null == poly) poly = new ArrayList<>();
-                    if (null != polyMatcher.group("poly")) {
-                        poly.add(polyMatcher.group("poly"));
-                    }
-                }
-            }
-            final cInt coefficient = matcher.group("coefficient") == null ? cInt.ONE() : cInt.of(matcher.group("coefficient"));
-            final String queryStr = matcher.group("query");
-            final String dom = matcher.group("dom");
-            final String rng = matcher.group("rng");
+            final String scheme = matcher.group(SCHEME);
+            final String host = matcher.group(HOST);
+            final int port = matcher.group(PORT) == null ? -1 : Integer.parseInt(matcher.group(PORT));
+            final String pathStr = matcher.group(PATH);
             final List<String> path = null == pathStr ? List.of() : new ArrayList<>(Arrays.asList(pathStr.split("/")));
             if (null != pathStr) {
                 if (pathStr.endsWith("/"))
@@ -457,6 +439,21 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
                     path.clear();
                 }
             }
+            final String polyStr = matcher.group(POLY);
+            List<String> poly = null;
+            if (null != polyStr) {
+                final Matcher polyMatcher = Singleton.POLY_PATTERN.matcher(polyStr);
+                while (polyMatcher.find()) {
+                    if (null == poly) poly = new ArrayList<>();
+                    if (null != polyMatcher.group(POLY)) {
+                        poly.add(polyMatcher.group(POLY));
+                    }
+                }
+            }
+            final cInt coefficient = matcher.group(COEFFICIENT) == null ? cInt.ONE() : cInt.of(matcher.group(COEFFICIENT));
+            final String queryStr = matcher.group(QUERY);
+            final String dom = matcher.group(DOM);
+            final String rng = matcher.group(RNG);
             final Map<String, String> query;
             if (dom != null || rng != null || queryStr != null) {
                 query = new HashMap<>();
@@ -478,7 +475,13 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
     }
 
 
-    static fURI of(final String scheme, final String host, final int port, final List<String> path, final C<?, ?> coefficient, final List<String> poly, final Map<String, String> query) {
+    static fURI of(final String scheme, 
+                   final String host, 
+                   final int port, 
+                   final List<String> path,
+                   final C<?, ?> coefficient, 
+                   final List<String> poly, 
+                   final Map<String, String> query) {
         if (null != poly && !poly.isEmpty()) {
             return new SAPPCQfURI(scheme, host, port, path, poly, coefficient, query);
         }

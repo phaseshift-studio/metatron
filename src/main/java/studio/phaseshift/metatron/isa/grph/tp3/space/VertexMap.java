@@ -49,7 +49,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class VertexMap extends ElementMap {
-
+    
     protected static final GraphittyLogger LOG = Graphitty.log(VertexMap.class);
 
     public VertexMap(final Vertex base, final tp3Space tp3Space) {

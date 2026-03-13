@@ -21,6 +21,9 @@ package studio.phaseshift.metatron.isa.tble.schema;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjSQLSerializer;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.tble.tbleSpace;
 import studio.phaseshift.metatron.util.Tuple;
@@ -28,29 +31,34 @@ import studio.phaseshift.metatron.util.Tuple;
 import java.sql.*;
 import java.util.*;
 
+import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
-import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.tble.tbleInstSet.REC_ROW_TID;
 
 /**
  * Schema for mapping existing SQL tables to Metatron objects.
  * Discovers tables in the database and makes them accessible via fURIs.
  * <p>
- * Path format: /table_name/row_id
- * - /users/123 → reads row with primary key 123 from users table
+ * Path format: /table_name/row_id[/field_name]
+ * <p>
+ * <b>Read operations:</b>
+ * - /users/123 → reads row with primary key 123 from users table as a record
  * - /users/+ → reads all rows from users table
  * <p>
- * SQL rows are converted to Metatron lists with values in column order.
- * This schema is read-only and does not support writes.
+ * <b>Write operations:</b>
+ * - /users/123 → [name=>marko,age=>29] (update/insert entire row)
+ * - /users/123/name → marko (update single field)
+ * <p>
+ * SQL rows are converted to Metatron records where column names are keys.
+ * Writes support both full row updates and individual field updates.
+ * The Space.Helper.resolveWrite() method handles poly unrolling automatically.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class ExistingTableSchema implements TableSchema {
+public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema {
     private final tbleSpace space;
     private final Map<String, TableMetadata> tableSchemas = new LinkedHashMap<>();
     private final String excludeTableName;
@@ -141,39 +149,17 @@ public class ExistingTableSchema implements TableSchema {
     }
 
     /**
-     * Convert a SQL value to a Metatron object
-     */
-    private Obj sqlValueToObj(final Object value, final int sqlType) {
-        if (value == null) {
-            return noobj();
-        }
-
-        return switch (sqlType) {
-            case Types.INTEGER, Types.BIGINT, Types.SMALLINT, Types.TINYINT -> jnt(((Number) value).longValue());
-            case Types.REAL, Types.FLOAT, Types.DOUBLE, Types.DECIMAL, Types.NUMERIC ->
-                    real(((Number) value).doubleValue());
-            case Types.BOOLEAN, Types.BIT -> bool((Boolean) value);
-            case Types.VARCHAR, Types.CHAR, Types.LONGVARCHAR, Types.NVARCHAR, Types.NCHAR -> str(value.toString());
-            default -> str(value.toString());
-        };
-    }
-
-    /**
-     * Read a row from a SQL table and convert it to a Metatron list
+     * Read a row from a SQL table and convert it to a Metatron record
      */
     private Obj readTableRow(final ResultSet rs, final TableMetadata metadata) throws SQLException {
-        //    List<Obj> values = new ArrayList<>();
-       final Map<Obj, Obj> labeledValues = new LinkedHashMap<>();
+        final Map<Obj, Obj> labeledValues = new LinkedHashMap<>();
         for (final ColumnMetadata col : metadata.columns) {
-            final Object value = rs.getObject(col.name);
-            //  values.add(sqlValueToObj(value, col.sqlType));
-            labeledValues.put(uri(col.name), sqlValueToObj(value, col.sqlType));
-            if (null != value)
+            final Obj value = readColumn(rs, col.name, col.sqlType);
+            labeledValues.put(uri(col.name), value);
+            if (!value.isNoObj())
                 Router.global().stats().ioStats().incrBytesRecv(value.toString().getBytes().length);
         }
-        // Convert to JSON string for consistency with TableSchema interface
-        // return rec(Map.of(uri(TABLE),uri(metadata.tableName),uri(VALUE),lst(values)),ROW_TID,null);
-        return rec(labeledValues, REC_ROW_TID, null);
+        return rec(labeledValues, REC_TID, null);
     }
 
     /**
@@ -197,8 +183,244 @@ public class ExistingTableSchema implements TableSchema {
 
     @Override
     public int write(final Connection conn, final fURI furi, final String objJson) throws SQLException {
-        // ExistingTableSchema is read-only
-        throw new UnsupportedOperationException("ExistingTableSchema is read-only. Cannot write to existing tables.");
+        // Parse the object from JSON
+        final Obj obj = objJson == null ? noobj() : ObjSimpleJSONSerializer.parse(objJson);
+        return write(conn, furi, obj);
+    }
+
+    /**
+     * Write an Obj directly to the database without JSON serialization
+     */
+    public int write(final Connection conn, final fURI furi, final Obj obj) throws SQLException {
+        final Tuple.Pair<String, String> tablePath = parseTablePath(furi.asNode());
+        if (tablePath == null) {
+            throw new SQLException("Invalid table path: " + furi);
+        }
+
+        final String tableName = tablePath.get0();
+        final String rowId = tablePath.get1();
+        final TableMetadata metadata = tableSchemas.get(tableName.toLowerCase());
+
+        if (metadata == null) {
+            throw new SQLException("Table not found: " + tableName);
+        }
+
+        if (rowId == null || rowId.equals("+")) {
+            throw new SQLException("Cannot write without specific row ID: " + furi);
+        }
+
+        if (metadata.primaryKeys.isEmpty()) {
+            throw new SQLException("Table " + tableName + " has no primary key, cannot write");
+        }
+
+        // Check if this is a field-level write (e.g., /table/123/name)
+        final List<String> segments = furi.segments();
+        if (segments.size() > 2) {
+            // Field-level write: /table/rowId/fieldName
+            final String fieldName = segments.get(2);
+            return writeField(conn, metadata, rowId, fieldName, obj);
+        } else {
+            // Row-level write: /table/rowId
+            if (!obj.isRec()) {
+                throw new SQLException("Expected record for row write, got: " + obj.tid());
+            }
+            return writeRow(conn, metadata, rowId, obj.asRec());
+        }
+    }
+
+    /**
+     * Write a single field value to a row
+     */
+    private int writeField(final Connection conn, final TableMetadata metadata, final String rowId,
+                           final String fieldName, final Obj value) throws SQLException {
+        // Verify the field exists in the table
+        final ColumnMetadata column = metadata.columns.stream()
+                .filter(c -> c.name.equalsIgnoreCase(fieldName))
+                .findFirst()
+                .orElseThrow(() -> new SQLException("Column not found: " + fieldName));
+
+        final String pkColumn = metadata.primaryKeys.getFirst();
+        final String sql = String.format("UPDATE %s SET %s = ? WHERE %s = ?",
+                metadata.tableName, column.name, pkColumn);
+
+        try (final PreparedStatement stmt = conn.prepareStatement(sql)) {
+            writeParameter(stmt, 1, value, column.sqlType);
+            stmt.setString(2, rowId);
+            final int updated = stmt.executeUpdate();
+            this.space.logger().debug("updated field %s.%s for row %s: %s rows affected",
+                    metadata.tableName, fieldName, rowId, updated);
+            return updated;
+        }
+    }
+
+    /**
+     * Write an entire row (update existing or insert new)
+     */
+    private int writeRow(final Connection conn, final TableMetadata metadata, final String rowId,
+                         final studio.phaseshift.metatron.isa.m.type.Rec rec) throws SQLException {
+        // Check if row exists
+        final String pkColumn = metadata.primaryKeys.getFirst();
+        final String checkSql = String.format("SELECT COUNT(*) FROM %s WHERE %s = ?", metadata.tableName, pkColumn);
+
+        final boolean exists;
+        try (final PreparedStatement stmt = conn.prepareStatement(checkSql)) {
+            // Use proper type for primary key parameter
+            final ColumnMetadata pkColMeta = metadata.columns.stream()
+                    .filter(c -> c.name.equals(pkColumn))
+                    .findFirst()
+                    .orElseThrow();
+            if (pkColMeta.sqlType == Types.INTEGER || pkColMeta.sqlType == Types.BIGINT ||
+                pkColMeta.sqlType == Types.SMALLINT || pkColMeta.sqlType == Types.TINYINT) {
+                stmt.setLong(1, Long.parseLong(rowId));
+            } else {
+                stmt.setString(1, rowId);
+            }
+            try (final ResultSet rs = stmt.executeQuery()) {
+                exists = rs.next() && rs.getInt(1) > 0;
+            }
+        }
+
+        if (exists) {
+            return updateRow(conn, metadata, rowId, rec);
+        } else {
+            return insertRow(conn, metadata, rowId, rec);
+        }
+    }
+
+    /**
+     * Update an existing row
+     */
+    private int updateRow(final Connection conn, final TableMetadata metadata, final String rowId,
+                          final studio.phaseshift.metatron.isa.m.type.Rec rec) throws SQLException {
+        final List<String> setClauses = new ArrayList<>();
+        final List<Tuple.Pair<Obj, ColumnMetadata>> values = new ArrayList<>();
+
+        // Build SET clauses for each field in the record
+        for (final Map.Entry<Obj, Obj> entry : rec.recValue().entrySet()) {
+            // Skip non-Uri keys
+            if (!entry.getKey().isUri()) {
+                this.space.logger().warn("skipping non-Uri key in record: %s", entry.getKey());
+                continue;
+            }
+
+            final String fieldName = entry.getKey().asUri().uriValue().name();
+
+            // Skip empty field names
+            if (fieldName == null || fieldName.isEmpty()) {
+                this.space.logger().warn("skipping empty field name for key: %s", entry.getKey());
+                continue;
+            }
+
+            final ColumnMetadata column = metadata.columns.stream()
+                    .filter(c -> c.name.equalsIgnoreCase(fieldName))
+                    .findFirst()
+                    .orElse(null);
+
+            if (column != null) {
+                setClauses.add(column.name + " = ?");
+                values.add(Tuple.Pair.with(entry.getValue(), column));
+            } else {
+                this.space.logger().warn("column %s not found in table %s, skipping", fieldName, metadata.tableName);
+            }
+        }
+
+        if (setClauses.isEmpty()) {
+            this.space.logger().warn("no valid columns to update for table %s", metadata.tableName);
+            return 0;
+        }
+
+        final String pkColumn = metadata.primaryKeys.getFirst();
+        final String sql = String.format("UPDATE %s SET %s WHERE %s = ?",
+                metadata.tableName, String.join(", ", setClauses), pkColumn);
+
+        try (final PreparedStatement stmt = conn.prepareStatement(sql)) {
+            for (int i = 0; i < values.size(); i++) {
+                final Tuple.Pair<Obj, ColumnMetadata> pair = values.get(i);
+                writeParameter(stmt, i + 1, pair.get0(), pair.get1().sqlType);
+            }
+            stmt.setString(values.size() + 1, rowId);
+
+            final int updated = stmt.executeUpdate();
+            this.space.logger().debug("updated row in %s with id %s: %s rows affected",
+                    metadata.tableName, rowId, updated);
+            return updated;
+        }
+    }
+
+    /**
+     * Insert a new row
+     */
+    private int insertRow(final Connection conn, final TableMetadata metadata, final String rowId,
+                          final studio.phaseshift.metatron.isa.m.type.Rec rec) throws SQLException {
+        final List<String> columnNames = new ArrayList<>();
+        final List<Tuple.Pair<Obj, ColumnMetadata>> values = new ArrayList<>();
+
+        // Add primary key first
+        final String pkColumn = metadata.primaryKeys.getFirst();
+        columnNames.add(pkColumn);
+        final ColumnMetadata pkColMeta = metadata.columns.stream()
+                .filter(c -> c.name.equals(pkColumn))
+                .findFirst()
+                .orElseThrow();
+        // Convert rowId string to appropriate type based on column type
+        final Obj pkValue;
+        if (pkColMeta.sqlType == Types.INTEGER || pkColMeta.sqlType == Types.BIGINT ||
+            pkColMeta.sqlType == Types.SMALLINT || pkColMeta.sqlType == Types.TINYINT) {
+            pkValue = jnt(Long.parseLong(rowId));
+        } else {
+            pkValue = str(rowId);
+        }
+        values.add(Tuple.Pair.with(pkValue, pkColMeta));
+
+        // Add other fields from the record
+        for (final Map.Entry<Obj, Obj> entry : rec.recValue().entrySet()) {
+            // Skip non-Uri keys
+            if (!entry.getKey().isUri()) {
+                this.space.logger().warn("skipping non-Uri key in record: %s", entry.getKey());
+                continue;
+            }
+
+            final String fieldName = entry.getKey().asUri().uriValue().name();
+
+            // Skip empty field names
+            if (fieldName == null || fieldName.isEmpty()) {
+                this.space.logger().warn("skipping empty field name for key: %s", entry.getKey());
+                continue;
+            }
+
+            // Skip if this is the primary key (already added)
+            if (fieldName.equalsIgnoreCase(pkColumn)) {
+                continue;
+            }
+
+            final ColumnMetadata column = metadata.columns.stream()
+                    .filter(c -> c.name.equalsIgnoreCase(fieldName))
+                    .findFirst()
+                    .orElse(null);
+
+            if (column != null) {
+                columnNames.add(column.name);
+                values.add(Tuple.Pair.with(entry.getValue(), column));
+            } else {
+                this.space.logger().warn("column %s not found in table %s, skipping", fieldName, metadata.tableName);
+            }
+        }
+
+        final String placeholders = String.join(", ", Collections.nCopies(columnNames.size(), "?"));
+        final String sql = String.format("INSERT INTO %s (%s) VALUES (%s)",
+                metadata.tableName, String.join(", ", columnNames), placeholders);
+
+        try (final PreparedStatement stmt = conn.prepareStatement(sql)) {
+            for (int i = 0; i < values.size(); i++) {
+                final Tuple.Pair<Obj, ColumnMetadata> pair = values.get(i);
+                writeParameter(stmt, i + 1, pair.get0(), pair.get1().sqlType);
+            }
+
+            final int inserted = stmt.executeUpdate();
+            this.space.logger().debug("inserted row into %s with id %s: %s rows affected",
+                    metadata.tableName, rowId, inserted);
+            return inserted;
+        }
     }
 
     @Override
@@ -234,7 +456,17 @@ public class ExistingTableSchema implements TableSchema {
             final String pkColumn = metadata.primaryKeys.getFirst();
             final String sql = String.format("SELECT * FROM %s WHERE %s = ?", metadata.tableName, pkColumn);
             try (final PreparedStatement stmt = conn.prepareStatement(sql)) {
-                stmt.setString(1, rowId);
+                // Set the parameter with the correct type based on the primary key column type
+                final ColumnMetadata pkColMeta = metadata.columns.stream()
+                        .filter(c -> c.name.equals(pkColumn))
+                        .findFirst()
+                        .orElseThrow();
+                if (pkColMeta.sqlType == Types.INTEGER || pkColMeta.sqlType == Types.BIGINT ||
+                    pkColMeta.sqlType == Types.SMALLINT || pkColMeta.sqlType == Types.TINYINT) {
+                    stmt.setLong(1, Long.parseLong(rowId));
+                } else {
+                    stmt.setString(1, rowId);
+                }
                 try (final ResultSet rs = stmt.executeQuery()) {
                     if (rs.next()) {
                         final fURI rowFuri = fURI.Singleton.f("/" + tableName + "/" + rowId);

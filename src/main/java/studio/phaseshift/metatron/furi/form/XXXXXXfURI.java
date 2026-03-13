@@ -23,6 +23,14 @@ package studio.phaseshift.metatron.furi.form;
  */
 public class XXXXXXfURI extends AbstractfURI {
 
+    private static final int SINGLETON_HASH = 1343246577;
     public static final XXXXXXfURI INSTANCE = new XXXXXXfURI();
 
+    private XXXXXXfURI() {
+    }
+
+    @Override
+    public int hashCode() {
+        return SINGLETON_HASH;
+    }
 }

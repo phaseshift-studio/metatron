@@ -21,10 +21,9 @@ package studio.phaseshift.metatron.isa;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.mach.type.Router;
-import studio.phaseshift.metatron.AbstractMetatronTest;
 
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;

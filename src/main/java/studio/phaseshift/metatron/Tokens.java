@@ -38,6 +38,8 @@ public final class Tokens {
 
     public static final String BLOCK = "block";
     public static final String AI = "AI";
+    public static final String COEFFICIENT = "coefficient";
+    public static final String QUERY = "query";
     public static final String DOM = "dom";
     public static final String RNG = "rng";
     public static final String LOOP = "loop";
@@ -72,6 +74,7 @@ public final class Tokens {
     public static final String MIN = "min";
     public static final String MAX = "max";
     public static final String PATH = "path";
+    public static final String POLY = "poly";
     public static final String PERSIST = "persist";
     public static final String SCHEME = "scheme";
     public static final String AUTHORITY = "authority";

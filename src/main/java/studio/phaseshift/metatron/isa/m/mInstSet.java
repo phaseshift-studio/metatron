@@ -120,6 +120,7 @@ public class mInstSet extends AbstractInstSet {
     public static final fURI FILL_TID = INST_TID.extend("fill");
     public static final fURI FIND_TID = INST_TID.extend("find");
     public static final fURI RMERGE_TID = INST_TID.extend("rmerge");
+    public static final fURI RANGE_INST_TID = INST_TID.extend("range");
     public static final fURI WITHIN_INST_TID = INST_TID.extend("within");
     public static final fURI LIFT_INST_TID = INST_TID.extend("lift");
     public static final fURI AUTO_INST_TID = INST_TID.extend("auto");

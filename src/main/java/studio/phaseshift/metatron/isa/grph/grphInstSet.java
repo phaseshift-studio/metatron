@@ -58,6 +58,8 @@ public class grphInstSet extends AbstractInstSet {
     public static final fURI VALUES_INST_TID = GRPH_INST_TID.extend("values");
     public static final fURI LABEL_INST_TID = GRPH_INST_TID.extend("label");
     public static final fURI PROPERTIES_INST_TID = GRPH_INST_TID.extend("properties");
+    public static final fURI ADDE_INST_TID = GRPH_INST_TID.extend("addE");
+    
     //
     public static final fURI GREMLIN_INST_TID = GRPH_INST_TID.extend("gremlin");
 

@@ -61,6 +61,11 @@
 	block-size: 0 !important;
 }
 
+.carousel-control-prev,.carousel-control-next {
+	width: 2%;
+}
+
+
 /*** RIBBON CORNERS ***/
 .ribbon {
 	position: absolute;

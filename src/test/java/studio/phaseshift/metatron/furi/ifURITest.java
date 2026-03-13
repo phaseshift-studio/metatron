@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.furi;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
@@ -106,6 +107,35 @@ public class ifURITest extends AbstractMetatronTest {
         final fURI end = f(expected);
         assertEquals(end, start.pretract(steps));
         LOG.debug("testing %s pretracted %d steps is %s", start, steps, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "http://fhatos.org/a         | a",
+            "http://fhatos.org/a/b       | a/b",
+            "http://fhatos.org/a/b/      | /a/b",
+            "http://fhatos.org/a/b       | /a",
+            "http://fhatos.org/a/b       | /a/",
+            "http://fhatos.org:81/a      | /a",
+            "http://fhatos.org:81/a/b    | a/b/",
+            "http://fhatos.org:81/a/b    | a/b",
+            "http://fhatos.org:81/a/b    | /a/b",
+            "/fhat.org/a/b               | a/b",
+            "fhat.org/a/b                | /a/b",
+            "/a/b/c?a=b&c=d              | a",
+            "/a/b/c?a=b&c=d              | /a",
+            "/a/b/c/?a=b&c=d             | /a/b",
+            "/a/b/c{*}?a=b&c=d           | /a/b/c",
+            "/a/b/c{2,3}?a=b&c=d         | /a/b/"
+    }, delimiter = '|')
+    @Disabled
+    public void testPretractPrefix(final String furi, final String pretraction) {
+        final fURI a = f(furi);
+        final fURI pa = a.pretract(pretraction);
+        final fURI b = pa.prepend(pretraction);
+        LOG.error("testing %s pretracted by %s is %s and then prepended is %s", a, pretraction, pa, b);
+        //assertNotEquals(a, pa);
+        assertEquals(a, b);
     }
 
 

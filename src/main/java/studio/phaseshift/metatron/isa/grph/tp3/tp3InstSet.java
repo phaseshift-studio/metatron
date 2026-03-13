@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.grph.tp3;
 
 import org.apache.tinkerpop.gremlin.structure.Direction;
+import org.apache.tinkerpop.gremlin.structure.Edge;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.grph.tp3.parser.ObjTP3Serializer;
@@ -59,6 +60,7 @@ public class tp3InstSet extends AbstractInstSet {
 
     public static final fURI TP3_ISA_TID = GRPH_ISA_TID.extend("tp3");
     public static final fURI GRPH_TID = TP3_ISA_TID.extend("grph");
+
     protected static final Set<Type> TYPES = new LinkedHashSet<>();
     protected static final Set<Inst> INSTS = new LinkedHashSet<>();
 
@@ -123,6 +125,20 @@ public class tp3InstSet extends AbstractInstSet {
             .doc("a vertex", "in adjacent edges", Map.of(jnt(0), "zero or more edge labels"), "returns the lhs vertex arg-adjacent incoming edges")
             .inst(BOTHE_INST_TID.dom(VRTX_TID).rng(EDGE_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_E_FUNCTION(Direction.BOTH))
             .doc("a vertex", "both adjacent edges", Map.of(jnt(0), "zero or more edge labels"), "returns the lhs vertex arg-adjacent incoming and outgoing edges")
+            .inst(ADDE_INST_TID.dom(VRTX_TID).rng(EDGE_TID), lst(URI_TYPE, T(VRTX_TID), T(REC_TID.maybe())), (lhs, inst) -> objs(inst.arg(1).stream().map(e -> {
+                //if (e.test(T(VRTX_TID))) {
+                final Edge edge = ((VertexMap) lhs.jvm()).getBase().addEdge(inst.arg(0).uriValue().big().toString(),
+                        ((VertexMap) e.jvm()).getBase());
+                if (inst.arg(2).isRec()) {
+                    inst.arg(2).asRec().elements().forEach(kv -> {
+                        edge.property(kv.first().uriValue().toString(), kv.second().jvm());
+                    });
+                }
+                return EdgeMap.edgeToRec(edge, lhs.asRec()).tid(inst.arg(0).uriValue().big());
+                //} else {
+                //    throw MTronException.of("invalid edge vertex: %s", e);
+                //}
+            })))
             .create(TYPES, INSTS);
     public static final Type EDGE_TYPE = Type.Builder.build()
             .tid(ELMT_TID)

@@ -92,17 +92,24 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *
  * <pre>{@code
  * // Read a specific row by primary key
- * Obj row = space.read(f("/users/123"));  // Returns a list of column values
+ * Obj row = space.read(f("/users/123"));  // Returns a record: [name=>marko,age=>29]
  *
  * // Read all rows from a table
- * Obj allRows = space.read(f("/users/+"));  // Returns a list of lists
+ * Obj allRows = space.read(f("/users/+"));  // Returns multiple records
  *
  * // Pattern matching
  * Obj rows = space.read(f("/users/#"));  // Returns all rows and nested data
+ *
+ * // Write an entire row (update or insert)
+ * space.write(f("/users/123"), rec(uri("name"), str("marko"), uri("age"), jnt(29)));
+ *
+ * // Write a single field
+ * space.write(f("/users/123/name"), str("marko"));
  * }</pre>
  *
- * <p>SQL rows are converted to Metatron lists with values in column order.
+ * <p>SQL rows are converted to Metatron records where column names are keys.
  * Primary keys are used to identify individual rows.
+ * The Space.Helper.resolveWrite() method automatically handles poly unrolling for nested writes.
  *
  * <h2>Key-Value Store Mode</h2>
  * <p>For paths that don't match existing tables, tbleSpace uses its key-value store:
@@ -152,7 +159,6 @@ public class tbleSpace extends AbstractSpace<Connection> {
         super(sjvm, config, tid, vid);
         LOG.info("connected {{b}}%s{{X}}", config.get(uri(HOST)));
         this.serializer = this.at(uri(SERIALIZER)).orElse(new ObjSimpleJSONSerializer());
-
         // Initialize schema - auto-detect based on database type
         try {
             final String dbProductName = sjvm.getMetaData().getDatabaseProductName().toLowerCase();
@@ -174,8 +180,8 @@ public class tbleSpace extends AbstractSpace<Connection> {
             if (enableTableMapping) {
                 this.existingTableSchema = new ExistingTableSchema(this, "objs");
                 this.existingTableSchema.initialize(sjvm);
-                LOG.info("initialized {{g}}existing table schema{{X}} - discovered %s tables",
-                        this.existingTableSchema.getTableNames().size());
+                LOG.info("initialized {{g}}existing table schema{{X}} - discovered %s tables for database %s",
+                        this.existingTableSchema.getTableNames().size(), this.sjvm().getCatalog());
                 this.at(uri(TABLE), lst(this.existingTableSchema.getTableMetadata().stream().map(t -> (Obj) uri(t.tableName())).toList()), MUTABLE);
 
             } else {
@@ -195,9 +201,19 @@ public class tbleSpace extends AbstractSpace<Connection> {
                     // Pattern write - write to all matching fURIs
                     this.directReader().apply(pattern).forEachRemaining(kv -> this.write(kv.furi(), obj));
                 } else {
-                    // Direct write using schema
-                    final String objJson = obj.isNoObj() ? null : this.serializer.write(obj).toString();
-                    this.schema.write(this.sjvm(), pattern, objJson);
+                    // Strip the space's pattern prefix to get the relative path
+                    final fURI relativePath = stripPatternPrefix(pattern);
+
+                    // Check if this is a table mapping path (existing table)
+                    if (this.existingTableSchema != null && this.existingTableSchema.isTablePath(relativePath)) {
+                        this.existingTableSchema.write(this.sjvm(), relativePath, obj);
+                    } else {
+                        // Use key-value schema (fURIAwareIndexedSchema or SimpleKeyValueSchema)
+                        // For now, serialize to JSON for key-value storage
+                        // TODO: Update key-value schema to accept Obj directly
+                        final String objJson = obj.isNoObj() ? null : this.serializer.write(obj).toString();
+                        this.schema.write(this.sjvm(), pattern, objJson);
+                    }
                 }
             } catch (final SQLException e) {
                 throw MTronException.of(e);
@@ -210,16 +226,28 @@ public class tbleSpace extends AbstractSpace<Connection> {
     public Function<fURI, Iterator<IdObj>> directReader() {
         return (pattern) -> {
             try {
+                // Strip the space's pattern prefix to get the relative path
+                final fURI relativePath = stripPatternPrefix(pattern);
+
                 // Check if this is a table mapping path (existing table)
-                if (this.existingTableSchema != null && this.existingTableSchema.isTablePath(pattern.asNode())) {
+                if (this.existingTableSchema != null && this.existingTableSchema.isTablePath(relativePath)) {
                     // Use existing table schema
-                    final Iterator<IdObj> tableResults = this.existingTableSchema.read(this.sjvm(), pattern);
+                    final Iterator<IdObj> tableResults = this.existingTableSchema.read(this.sjvm(), relativePath);
+                    // Re-add the pattern prefix to the returned fURIs
+                    /*final List<IdObj> results = new ArrayList<>();
+                    while (tableResults.hasNext()) {
+                        final IdObj idObj = tableResults.next();
+                        final fURI fullPath = addPatternPrefix(idObj.furi());
+                        results.add(IdObj.of(fullPath, idObj.obj()));
+                    }
+                    return results.iterator();*/
                     return tableResults;
                 }
 
                 // Use key-value schema (fURIAwareIndexedSchema or SimpleKeyValueSchema)
                 final Iterator<IdObj> schemaResults = this.schema.read(this.sjvm(), pattern);
-                final List<IdObj> objs = new ArrayList<>();
+                return schemaResults;
+/*                final List<IdObj> objs = new ArrayList<>();
 
                 // Convert schema results to Obj pairs and unroll polys if pattern matching
                 while (schemaResults.hasNext()) {
@@ -227,16 +255,16 @@ public class tbleSpace extends AbstractSpace<Connection> {
                     // Add the direct match
                     if (pair.furi().test(pattern.asNode())) {
                         objs.add(IdObj.of(pair.furi(), pair.obj()));
-                    }
+                    }*/
 
                     // If pattern matching and obj is a poly, unroll it
-                    if (pattern.hasPattern() && pair.obj().isPoly()) {
+                    /* if (pattern.hasPattern() && pair.obj().isPoly()) {
                         Space.Helper.unrollPoly(pair.furi(), pair.obj().as(), pattern.asNode())
                                 .forEach(kv -> objs.add(kv));
-                    }
-                }
+                    }*/
+             //   }
 
-                return objs.iterator();
+               // return objs.iterator();
             } catch (final Exception e) {
                 throw MTronException.of(e);
             }
@@ -248,7 +276,7 @@ public class tbleSpace extends AbstractSpace<Connection> {
         final fURI newVID = this.rewrite(vid, true);
         LOG.debug("reading %s => %s", vid, newVID);
         return studio.phaseshift.metatron.furi.Q.Helper.processPreRead(this.qs(), vid, vid).orElseGet(() -> {
-            Obj result = Space.Helper.resolveRead(this, newVID, directReader());
+            Obj result = Space.Helper.resolveRead(this, newVID.basePath(), directReader());
             return studio.phaseshift.metatron.furi.Q.Helper.processPostRead(this.qs(), vid, vid, result).orElse(result);
         });
     }
@@ -258,8 +286,48 @@ public class tbleSpace extends AbstractSpace<Connection> {
         final fURI newVID = this.rewrite(vid, true);
         LOG.debug("writing %s => %s", vid, newVID);
         return studio.phaseshift.metatron.furi.Q.Helper.processPreWrite(this.qs(), vid, vid, obj).orElseGet(() -> {
-            Space.Helper.resolveWrite(LOG, this, newVID, obj, this.directWriter(), this.directReader());
+            Space.Helper.resolveWrite(LOG, this, newVID.basePath(), obj, this.directWriter(), this.directReader());
             return studio.phaseshift.metatron.furi.Q.Helper.processPostWrite(this.qs(), vid, vid, obj).orElse(obj);
         });
+    }
+
+    /**
+     * Strip the space's route prefix from a fURI to get the relative path.
+     * For example, if route maps db: to /tble/ and fURI is /tble/users/1, returns /users/1
+     */
+    private fURI stripPatternPrefix(final fURI furi) {
+        // If there are routes, use the route target as the prefix to strip
+        if (!this.routes().isEmpty()) {
+            // Get the first route's target (e.g., /tble/)
+            final studio.phaseshift.metatron.isa.m.type.Uri routeTarget = this.routes().values().iterator().next();
+            final fURI prefix = routeTarget.asUri().uriValue().asNode();
+            // Only use the route if it's not empty (has actual path segments)
+            if (!prefix.path().isEmpty() && prefix.path().stream().anyMatch(s -> !s.isEmpty())) {
+                return furi.removePrefix(prefix);
+            }
+        }
+        // Fallback to using the pattern if no routes or route is empty
+        final fURI patternBase = this.pattern().asNode();
+        return furi.removePrefix(patternBase);
+    }
+
+    /**
+     * Add the space's route prefix to a relative fURI.
+     * For example, if route maps db: to /tble/ and fURI is /users/1, returns /tble/users/1
+     */
+    private fURI addPatternPrefix(final fURI furi) {
+        // If there are routes, use the route target as the prefix to add
+        if (!this.routes().isEmpty()) {
+            // Get the first route's target (e.g., /tble/)
+            final studio.phaseshift.metatron.isa.m.type.Uri routeTarget = this.routes().values().iterator().next();
+            final fURI prefix = routeTarget.asUri().uriValue().asNode();
+            // Only use the route if it's not empty (has actual path segments)
+            if (!prefix.path().isEmpty() && prefix.path().stream().anyMatch(s -> !s.isEmpty())) {
+                return prefix.extend(furi);
+            }
+        }
+        // Fallback to using the pattern if no routes or route is empty
+        final fURI patternBase = this.pattern().asNode();
+        return patternBase.extend(furi);
     }
 }

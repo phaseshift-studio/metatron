@@ -43,7 +43,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.util.Tuple.Pair;
 
 public interface Space extends Rec, Closeable {
 
@@ -145,7 +144,7 @@ public interface Space extends Rec, Closeable {
         public static void noCloneWarning(final Space space) {
             space.logger().warn("the clone of a space is the space itself");
         }
-        
+
         public static fURI routeToSpace(final fURI vid, Map<Uri, Uri> routes) {
             return routes.entrySet().stream()
                     .filter(e -> vid.toString().contains(e.getValue().uriValue().toString()))
@@ -213,11 +212,11 @@ public interface Space extends Rec, Closeable {
                 }
             }
             if (listing.isEmpty() || pattern.hasPattern()) {
-                final Pair<fURI, Poly<?, ?>> base = Helper.locateBasePoly(space, pattern);
+                final IdObj base = Helper.locateBasePoly(space, pattern);
                 if (null != base) {
-                    final Poly<?, ?> poly = base.get1();
-                    Graphitty.log(space).trace("base poly found at %s: %s", base.get0(), poly);
-                    unrollPoly(base.get0(), poly, pattern).forEach(kv -> listing.add(UriObj.of(kv.furi().toUri(), kv.obj())));
+                    final Poly<?, ?> poly = base.obj().as();
+                    Graphitty.log(space).trace("base poly found at %s: %s", base.furi(), poly);
+                    unrollPoly(base.furi(), poly, pattern).forEach(kv -> listing.add(UriObj.of(kv.furi().toUri(), kv.obj())));
                 }
             }
             return pattern.isNode() ?
@@ -245,7 +244,7 @@ public interface Space extends Rec, Closeable {
                 writeComplete(vid, obj, current.next().obj());
                 return directWriter.apply(vid, obj);
             } else {
-                final Pair<fURI, Poly<?, ?>> base = Helper.locateBasePoly(space, vid);
+                final IdObj base = Helper.locateBasePoly(space, vid);
                 if (null == base) {
                     if (vid.isNode() || !obj.isPoly()) {
                         return directWriter.apply(vid, obj);
@@ -257,16 +256,16 @@ public interface Space extends Rec, Closeable {
                         }
                     }
                 } else if (vid.isNode() || !obj.isPoly()) {
-                    if (base.get1().isRec())
-                        Helper.resolveWrite(LOG, space, base.get0(), base.get1().<Rec>as().at(uri(vid.removePrefix(base.get0())), obj), directWriter, directReader);
-                    else if (base.get1().isLst())
-                        Helper.resolveWrite(LOG, space, base.get0(), base.get1().<Lst>as().append(obj), directWriter, directReader);
+                    if (base.obj().isRec())
+                        Helper.resolveWrite(LOG, space, base.furi(), base.obj().asRec().at(uri(vid.removePrefix(base.furi())), obj), directWriter, directReader);
+                    else if (base.obj().isLst())
+                        Helper.resolveWrite(LOG, space, base.furi(), base.obj().asLst().append(obj), directWriter, directReader);
                     else {
                         //throw MTronException.of("unknown poly: %s %s %s", base.get1(), vid, obj);
-                        writeComplete(vid, obj, base.get1());
+                        writeComplete(vid, obj, base.obj());
                         return directWriter.apply(vid, obj);
                     }
-                } else if (base.get1().isRec()) {
+                } else if (base.obj().isRec()) {
                     if (obj.isRec()) {
                         obj.recValue()
                                 .entrySet()
@@ -278,11 +277,11 @@ public interface Space extends Rec, Closeable {
                         // resolveWriter.accept(nextStepAddr, new MRec(submap, value.tid(), fURI.NULL));
 
                     } else {
-                        writeComplete(vid, obj, base.get1());
+                        writeComplete(vid, obj, base.obj());
                         return directWriter.apply(vid, obj);
                     }
-                } else if (base.get1().isLst()) {
-                    Lst newLst = base.get1().<Lst>as().at(uri(vid.removePrefix(base.get0()).pretract(1)), obj, Lst.IMMUTABLE);
+                } else if (base.obj().isLst()) {
+                    Lst newLst = base.obj().asLst().at(uri(vid.removePrefix(base.furi()).pretract(1)), obj, Lst.IMMUTABLE);
                     Helper.resolveWrite(LOG, space, vid, newLst, directWriter, directReader);
                 }
             }
@@ -295,19 +294,15 @@ public interface Space extends Rec, Closeable {
         }
 
 
-        public static Pair<fURI, Poly<?, ?>> locateBasePoly(final Space space, final fURI furi) {
-            boolean last = furi.path().isEmpty();
+        public static IdObj locateBasePoly(final Space space, final fURI furi) {
             fURI newFuri = furi.retract(1).asNode();
-            Obj obj = noobj();
-            while (!last) {
-                obj = space.read(newFuri);
-                if (!obj.isNoObj())
-                    break;
-                last = newFuri.path().isEmpty();
+            while (!newFuri.segments().isEmpty()) {
+                Obj obj = space.read(newFuri);
+                if (obj.isPoly())
+                    return IdObj.of(newFuri, obj.as());
                 newFuri = newFuri.retract(1).asNode();
-
             }
-            return obj.isPoly() ? Pair.with(newFuri.retractPattern(), obj.as()) : null;
+            return null;
         }
     }
 
@@ -321,7 +316,7 @@ public interface Space extends Rec, Closeable {
         }
     }
 
-     record IdObj(fURI furi, Obj obj) {
+    record IdObj(fURI furi, Obj obj) {
         public static IdObj of(final fURI furi, final Obj obj) {
             return new IdObj(furi, obj);
         }
