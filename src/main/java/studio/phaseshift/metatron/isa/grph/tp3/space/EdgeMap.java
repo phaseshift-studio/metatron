@@ -28,11 +28,15 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.*;
 import static studio.phaseshift.metatron.isa.grph.tp3.space.VertexMap.lazyVertexToRec;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -66,6 +70,14 @@ public class EdgeMap extends ElementMap {
                     .map(v -> auto_from_(uri(this.space.elementVID(v)), lazyVertexToRec(v, this.space)).tryToInst()));
         return super.get(key);
     }
+
+   /* @Override
+    public Set<Entry<Uri, Obj>> entrySet() {
+        final Set<Entry<Uri, Obj>> entries = new LinkedHashSet<>(super.entrySet().stream().collect(Collectors.toSet()));
+        entries.add(new SimpleEntry<Uri,Obj>(OUT, auto_(()->this.get(OUT)).tryToInst()));
+        entries.add(new SimpleEntry<Uri,Obj>(IN, auto_(()->this.get(IN)).tryToInst()));
+        return entries;
+    }*/
 
     @Override
     public Rec asRec() {

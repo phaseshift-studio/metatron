@@ -311,7 +311,7 @@ public class MObjs implements Objs {
         } else {
             b = (Obj) other;
         }
-        if (a instanceof MObjs && b instanceof MObjs) {
+        if (a instanceof Objs && b instanceof Objs) {
             return new HashSet<>(a.jvm()).equals(new HashSet<>(b.jvm()));
         }/* else if (a instanceof MObjs) {
             return b.equals(((MObjs) a).attemptBulk(true).tryToShrink());

@@ -33,6 +33,7 @@ import org.jline.utils.InfoCmp;
 import org.jline.widget.Widgets;
 import org.slf4j.event.Level;
 import studio.phaseshift.metatron.BootLoader;
+import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -229,9 +230,15 @@ public class Console extends JRec implements Closeable, Runnable {
                 } else if (line.startsWith(":log")) {
                     LogObj.setSLF4J(line.substring(4));
                 } else if (line.startsWith(":check")) {
-                    if (!line.substring(6).trim().isEmpty())
-                        BootLoader.TYPE_CHECK = Boolean.parseBoolean(line.substring(6).trim());
-                    LOG.info("type checking %s", BootLoader.TYPE_CHECK ? "{{g}}enabled{{X}}" : "{{r}}disabled{{X}}");
+                    Arrays.stream(line.substring(6).trim().split(" ")).forEach(s -> {
+                        if(!s.trim().isEmpty()) {
+                            if (s.startsWith("-"))
+                                TypeCheck.disable(TypeCheck.valueOf(s.substring(1).toUpperCase()));
+                            else
+                                TypeCheck.enable(TypeCheck.valueOf(s.toUpperCase()));
+                        }   
+                    });
+                    LOG.info("type checking %s", TypeCheck.getEnabled());
                 } else if (line.startsWith(":card")) {
                     final List<studio.phaseshift.metatron.isa.mach.type.ui.Widget<?>> widgets = new ArrayList<>();
                     Router.global().spaces().elements().map(Rel::second).forEach(s ->
@@ -352,8 +359,10 @@ public class Console extends JRec implements Closeable, Runnable {
             /// TURN ON/OFF TYPE CHECKING
             getKeyMap().bind((Widget)
                     () -> {
-                        BootLoader.TYPE_CHECK = !BootLoader.TYPE_CHECK;
-                        //LOG.info("type checking %s", BootLoader.TYPE_CHECK ? "{{g}}enabled{{X}}" : "{{r}}disabled{{X}}");
+                        if (TypeCheck.level() == 0)
+                            TypeCheck.enable(TypeCheck.values());
+                        else
+                            TypeCheck.disable(TypeCheck.getEnabled().stream().toList().getFirst());
                         return true;
                     }, ctrl('t'));
             /// CREATE NEW LINE BELOW CURRENT LOCATION

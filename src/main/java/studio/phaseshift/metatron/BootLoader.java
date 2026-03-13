@@ -40,8 +40,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Map;
-import java.util.ServiceLoader;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Stream;
@@ -67,8 +66,8 @@ public class BootLoader implements Rec, Feature.SelfClone {
     private static final GraphittyLogger LOG;
     public static Router ROUTER;
     public static Rec ARGS;
-    public static boolean TYPE_CHECK = true;
     private static final ExecutorService EXECUTOR;
+
 
     static {
         LOG = Graphitty.log(new BootLoader());

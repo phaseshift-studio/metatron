@@ -27,17 +27,15 @@ import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 import studio.phaseshift.metatron.isa.tble.schema.ExistingTableSchema;
-import studio.phaseshift.metatron.isa.tble.schema.SimpleKeyValueSchema;
 import studio.phaseshift.metatron.isa.tble.schema.TableSchema;
+import studio.phaseshift.metatron.isa.tble.schema.TypedKeyValueSchema;
 import studio.phaseshift.metatron.isa.tble.schema.fURIAwareIndexedSchema;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -166,8 +164,9 @@ public class tbleSpace extends AbstractSpace<Connection> {
                 this.schema = new fURIAwareIndexedSchema();
                 LOG.info("detected {{b}}mariadb/mysql{{X}} - using {{g}}mqtt schema");
             } else {
-                this.schema = new SimpleKeyValueSchema();
-                LOG.info("detected {{b}}%s{{X}} - using {{y}}simple schema", dbProductName);
+                // Use TypedKeyValueSchema for isomorphic type-preserving storage
+                this.schema = new TypedKeyValueSchema();
+                LOG.info("detected {{b}}%s{{X}} - using {{g}}typed schema", dbProductName);
             }
             this.schema.initialize(sjvm);
             LOG.info("initialized schema {{b}}%s{{X}} (version: %s)",
@@ -208,11 +207,15 @@ public class tbleSpace extends AbstractSpace<Connection> {
                     if (this.existingTableSchema != null && this.existingTableSchema.isTablePath(relativePath)) {
                         this.existingTableSchema.write(this.sjvm(), relativePath, obj);
                     } else {
-                        // Use key-value schema (fURIAwareIndexedSchema or SimpleKeyValueSchema)
-                        // For now, serialize to JSON for key-value storage
-                        // TODO: Update key-value schema to accept Obj directly
-                        final String objJson = obj.isNoObj() ? null : this.serializer.write(obj).toString();
-                        this.schema.write(this.sjvm(), pattern, objJson);
+                        // Use key-value schema
+                        if (this.schema instanceof TypedKeyValueSchema) {
+                            // TypedKeyValueSchema can write Obj directly without JSON serialization
+                            ((TypedKeyValueSchema) this.schema).write(this.sjvm(), pattern, obj);
+                        } else {
+                            // Other schemas need JSON serialization
+                            final String objJson = obj.isNoObj() ? null : this.serializer.write(obj).toString();
+                            this.schema.write(this.sjvm(), pattern, objJson);
+                        }
                     }
                 }
             } catch (final SQLException e) {
@@ -257,14 +260,14 @@ public class tbleSpace extends AbstractSpace<Connection> {
                         objs.add(IdObj.of(pair.furi(), pair.obj()));
                     }*/
 
-                    // If pattern matching and obj is a poly, unroll it
+                // If pattern matching and obj is a poly, unroll it
                     /* if (pattern.hasPattern() && pair.obj().isPoly()) {
                         Space.Helper.unrollPoly(pair.furi(), pair.obj().as(), pattern.asNode())
                                 .forEach(kv -> objs.add(kv));
                     }*/
-             //   }
+                //   }
 
-               // return objs.iterator();
+                // return objs.iterator();
             } catch (final Exception e) {
                 throw MTronException.of(e);
             }
@@ -273,20 +276,18 @@ public class tbleSpace extends AbstractSpace<Connection> {
 
     @Override
     public Obj read(final fURI vid) {
-        final fURI newVID = this.rewrite(vid, true);
-        LOG.debug("reading %s => %s", vid, newVID);
+        LOG.debug("reading %s => %s", vid, vid);
         return studio.phaseshift.metatron.furi.Q.Helper.processPreRead(this.qs(), vid, vid).orElseGet(() -> {
-            Obj result = Space.Helper.resolveRead(this, newVID.basePath(), directReader());
+            Obj result = Space.Helper.resolveRead(this, vid.basePath(), directReader());
             return studio.phaseshift.metatron.furi.Q.Helper.processPostRead(this.qs(), vid, vid, result).orElse(result);
         });
     }
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
-        final fURI newVID = this.rewrite(vid, true);
-        LOG.debug("writing %s => %s", vid, newVID);
+        LOG.debug("writing %s => %s", vid, vid);
         return studio.phaseshift.metatron.furi.Q.Helper.processPreWrite(this.qs(), vid, vid, obj).orElseGet(() -> {
-            Space.Helper.resolveWrite(LOG, this, newVID.basePath(), obj, this.directWriter(), this.directReader());
+            Space.Helper.resolveWrite(LOG, this, vid.basePath(), obj, this.directWriter(), this.directReader());
             return studio.phaseshift.metatron.furi.Q.Helper.processPostWrite(this.qs(), vid, vid, obj).orElse(obj);
         });
     }

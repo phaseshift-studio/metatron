@@ -1,314 +1,886 @@
  /*
- * Metatron: A Distributed Computing Language and Virtual Machine
- *  Copyright (C) 2025- PhaseShift Studio, LLC
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+  * Metatron: A Distributed Computing Language and Virtual Machine
+  *  Copyright (C) 2025- PhaseShift Studio, LLC
+  *
+  * This program is free software: you can redistribute it and/or modify
+  * it under the terms of the GNU Affero General Public License as published by
+  * the Free Software Foundation, either version 3 of the License, or
+  * (at your option) any later version.
+  *
+  * This program is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  * GNU Affero General Public License for more details.
+  *
+  * You should have received a copy of the GNU Affero General Public License
+  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  */
 
-package studio.phaseshift.metatron.isa.tble;
+ package studio.phaseshift.metatron.isa.tble;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.AbstractSpaceTest;
-import studio.phaseshift.metatron.isa.m.type.Bool;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+ import org.junit.jupiter.api.AfterAll;
+ import org.junit.jupiter.api.BeforeAll;
+ import org.junit.jupiter.api.Test;
+ import org.junit.jupiter.params.ParameterizedTest;
+ import org.junit.jupiter.params.provider.Arguments;
+ import org.junit.jupiter.params.provider.CsvSource;
+ import org.junit.jupiter.params.provider.MethodSource;
+ import studio.phaseshift.metatron.furi.fURI;
+ import studio.phaseshift.metatron.isa.AbstractSpaceTest;
+ import studio.phaseshift.metatron.isa.m.type.Obj;
+ import studio.phaseshift.metatron.isa.m.type.Rec;
+ import studio.phaseshift.metatron.isa.mach.type.Router;
 
-import java.io.File;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.Statement;
+ import java.io.File;
+ import java.sql.Connection;
+ import java.sql.DriverManager;
+ import java.sql.ResultSet;
+ import java.sql.Statement;
+ import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
-import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
-import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
-import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
-import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+ import static org.junit.jupiter.api.Assertions.*;
+ import static studio.phaseshift.metatron.Tokens.*;
+ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+ import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
+ import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+ import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
+ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
+ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
-/**
- * Test suite for tbleSpace with MQTT-indexed schema.
- *
- * @author Marko A. Rodriguez (http://markorodriguez.com)
- */
-public class tbleSpaceTest extends AbstractSpaceTest {
+ /**
+  * Test suite for tbleSpace with MQTT-indexed schema.
+  *
+  * @author Marko A. Rodriguez (http://markorodriguez.com)
+  */
+ public class tbleSpaceTest extends AbstractSpaceTest {
 
-    private static final String DB_PATH = "target/test-tble-space.db";
-    private static final fURI SPACE_VID = f("/sys/space/tble/test");
+     private static final String DB_PATH = "target/test-tble-space.db";
+     private static final fURI SPACE_VID = f("/sys/space/tble/test");
 
-    public tbleSpaceTest() {
-        super( () -> tbleSpace.of(
-                rec(
-                        uri(PATTERN), uri("/tble/#"),
-                        uri(HOST), uri("sqlite:" + DB_PATH),
-                        uri(DRIVER), uri("org.sqlite.JDBC")
-                ).jvm(),
-                SPACE_VID
-        ));
-    }
+     public tbleSpaceTest() {
+         super(() -> tbleSpace.of(
+                 rec(
+                         uri(PATTERN), uri("/tble/#"),
+                         uri(HOST), uri("sqlite:" + DB_PATH),
+                         uri(DRIVER), uri("org.sqlite.JDBC")
+                 ).jvm(),
+                 SPACE_VID
+         ));
+     }
 
-    @BeforeAll
-    public static void setupDatabase() throws Exception {
-        // Load SQLite JDBC driver
-        Class.forName("org.sqlite.JDBC");
+     @BeforeAll
+     public static void setupDatabase() throws Exception {
+         // Load SQLite JDBC driver
+         Class.forName("org.sqlite.JDBC");
 
-        // Delete existing test database
-        final File dbFile = new File(DB_PATH);
-        if (dbFile.exists()) {
-            dbFile.delete();
-        }
-    }
+         // Delete existing test database
+         final File dbFile = new File(DB_PATH);
+         if (dbFile.exists()) {
+             dbFile.delete();
+         }
+     }
 
-    @AfterAll
-    public static void cleanupDatabase() {
-        final File dbFile = new File(DB_PATH);
-        if (dbFile.exists()) {
-            dbFile.delete();
-        }
-    }
+     @AfterAll
+     public static void cleanupDatabase() {
+         final File dbFile = new File(DB_PATH);
+         if (dbFile.exists()) {
+             dbFile.delete();
+         }
+     }
 
-    @Test
-    public void testTableMapping() throws Exception {
-        LOG.info("Testing table mapping feature");
+     @Test
+     public void testTableMapping() throws Exception {
+         LOG.info("Testing table mapping feature");
 
-        // Create a test table with some data directly in the database
-        try (Connection conn = DriverManager.getConnection("jdbc:sqlite:" + DB_PATH);
-             Statement stmt = conn.createStatement()) {
+         // Create a test table with some data directly in the database
+         try (Connection conn = DriverManager.getConnection("jdbc:sqlite:" + DB_PATH);
+              Statement stmt = conn.createStatement()) {
 
-            stmt.executeUpdate("CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT, age INTEGER)");
-            stmt.executeUpdate("INSERT INTO users (id, name, age) VALUES (1, 'Alice', 30)");
-            stmt.executeUpdate("INSERT INTO users (id, name, age) VALUES (2, 'Bob', 25)");
-            stmt.executeUpdate("INSERT INTO users (id, name, age) VALUES (3, 'Charlie', 35)");
-        }
+             stmt.executeUpdate("CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT, age INTEGER)");
+             stmt.executeUpdate("INSERT INTO users (id, name, age) VALUES (1, 'Alice', 30)");
+             stmt.executeUpdate("INSERT INTO users (id, name, age) VALUES (2, 'Bob', 25)");
+             stmt.executeUpdate("INSERT INTO users (id, name, age) VALUES (3, 'Charlie', 35)");
+         }
 
-        // Create a new space instance to pick up the new table
-        final tbleSpace testSpace = tbleSpace.of(
-                rec(
-                        uri(PATTERN), uri("/t/#"),
-                        uri(HOST), uri("sqlite:" + DB_PATH),
-                        uri(DRIVER), uri("org.sqlite.JDBC"),
-                        uri(ROUTE), rec(uri(""), uri("")),
-                        uri(TABLE), lst()
-                ).jvm(),
-                f("/sys/space/tble/test2")
-        );
+         // Create a new space instance to pick up the new table
+         final tbleSpace testSpace = tbleSpace.of(
+                 rec(
+                         uri(PATTERN), uri("/t/#"),
+                         uri(HOST), uri("sqlite:" + DB_PATH),
+                         uri(DRIVER), uri("org.sqlite.JDBC"),
+                         uri(ROUTE), rec(uri(""), uri("")),
+                         uri(TABLE), lst()
+                 ).jvm(),
+                 f("/sys/space/tble/test2")
+         );
 
-        try {
-            // Check if table was discovered
-            if (testSpace.existingTableSchema != null) {
-                LOG.info("Discovered tables: {}", testSpace.existingTableSchema.getTableNames());
-            } else {
-                LOG.warn("ExistingTableSchema is null!");
-            }
+         try {
+             // Check if table was discovered
+             if (testSpace.existingTableSchema != null) {
+                 LOG.info("Discovered tables: {}", testSpace.existingTableSchema.getTableNames());
+             } else {
+                 LOG.warn("ExistingTableSchema is null!");
+             }
 
-            // Use directReader to test table mapping (avoids poly resolution)
-            // Note: directReader receives the rewritten path (without /t/ prefix)
-            final var row1Iter = testSpace.directReader().apply(f("/users/1"));
-            assertTrue(row1Iter.hasNext(), "Should read row 1");
-            final var row1 = row1Iter.next();
-            LOG.info("Read row 1: {}", row1.obj());
-            assertFalse(row1.obj().isNoObj(), "Row 1 should not be noobj");
+             // Use directReader to test table mapping (avoids poly resolution)
+             // Note: directReader receives the rewritten path (without /t/ prefix)
+             final var row1Iter = testSpace.directReader().apply(f("/users/1"));
+             assertTrue(row1Iter.hasNext(), "Should read row 1");
+             final var row1 = row1Iter.next();
+             LOG.info("Read row 1: {}", row1.obj());
+             assertFalse(row1.obj().isNoObj(), "Row 1 should not be noobj");
 
-            // Read all rows
-            final var allRowsIter = testSpace.directReader().apply(f("/users/+"));
-            final var allRows = new java.util.ArrayList<>();
-            allRowsIter.forEachRemaining(allRows::add);
-            LOG.info("Read {} rows", allRows.size());
-            assertEquals(3, allRows.size(), "Should read 3 rows");
-        } finally {
-            testSpace.close();
-        }
+             // Read all rows
+             final var allRowsIter = testSpace.directReader().apply(f("/users/+"));
+             final var allRows = new java.util.ArrayList<>();
+             allRowsIter.forEachRemaining(allRows::add);
+             LOG.info("Read {} rows", allRows.size());
+             assertEquals(3, allRows.size(), "Should read 3 rows");
+         } finally {
+             testSpace.close();
+         }
 
-        // Clean up
-        try (Connection conn = DriverManager.getConnection("jdbc:sqlite:" + DB_PATH);
-             Statement stmt = conn.createStatement()) {
-            stmt.executeUpdate("DROP TABLE users");
-        }
-    }
+         // Clean up
+         try (Connection conn = DriverManager.getConnection("jdbc:sqlite:" + DB_PATH);
+              Statement stmt = conn.createStatement()) {
+             stmt.executeUpdate("DROP TABLE users");
+         }
+     }
 
-    @Test
-    public void testComprehensiveTableOperations() throws Exception {
-        LOG.info("Testing comprehensive table operations with multiple data types");
+     @Test
+     public void testComprehensiveTableOperations() throws Exception {
+         LOG.info("Testing comprehensive table operations with multiple data types");
 
-        // Create synthetic dataset with two tables and various data types
-        try (final Connection conn = DriverManager.getConnection("jdbc:sqlite:" + DB_PATH);
-             final Statement stmt = conn.createStatement()) {
+         // Create synthetic dataset with two tables and various data types
+         try (final Connection conn = DriverManager.getConnection("jdbc:sqlite:" + DB_PATH);
+              final Statement stmt = conn.createStatement()) {
 
-            // Table 1: users - testing int, text, real, boolean
-            stmt.executeUpdate("""
-                CREATE TABLE users (
-                    id INTEGER PRIMARY KEY,
-                    name TEXT NOT NULL,
-                    age INTEGER,
-                    salary REAL,
-                    active BOOLEAN,
-                    email TEXT
-                )
-                """);
+             // Table 1: users - testing int, text, real, boolean
+             stmt.executeUpdate("""
+                                CREATE TABLE users (
+                                    id INTEGER PRIMARY KEY,
+                                    name TEXT NOT NULL,
+                                    age INTEGER,
+                                    salary REAL,
+                                    active BOOLEAN,
+                                    email TEXT
+                                )
+                                """);
 
-            // Insert 10 rows into users table
-            stmt.executeUpdate("INSERT INTO users VALUES (1, 'Alice', 30, 75000.50, 1, 'alice@example.com')");
-            stmt.executeUpdate("INSERT INTO users VALUES (2, 'Bob', 25, 60000.00, 1, 'bob@example.com')");
-            stmt.executeUpdate("INSERT INTO users VALUES (3, 'Charlie', 35, 85000.75, 0, 'charlie@example.com')");
-            stmt.executeUpdate("INSERT INTO users VALUES (4, 'Diana', 28, 70000.25, 1, 'diana@example.com')");
-            stmt.executeUpdate("INSERT INTO users VALUES (5, 'Eve', 42, 95000.00, 1, 'eve@example.com')");
-            stmt.executeUpdate("INSERT INTO users VALUES (6, 'Frank', 31, 68000.50, 0, 'frank@example.com')");
-            stmt.executeUpdate("INSERT INTO users VALUES (7, 'Grace', 27, 72000.00, 1, 'grace@example.com')");
-            stmt.executeUpdate("INSERT INTO users VALUES (8, 'Henry', 38, 88000.75, 1, 'henry@example.com')");
-            stmt.executeUpdate("INSERT INTO users VALUES (9, 'Iris', 33, 79000.25, 0, 'iris@example.com')");
-            stmt.executeUpdate("INSERT INTO users VALUES (10, 'Jack', 29, 65000.00, 1, 'jack@example.com')");
+             // Insert 10 rows into users table
+             stmt.executeUpdate("INSERT INTO users VALUES (1, 'Alice', 30, 75000.50, 1, 'alice@example.com')");
+             stmt.executeUpdate("INSERT INTO users VALUES (2, 'Bob', 25, 60000.00, 1, 'bob@example.com')");
+             stmt.executeUpdate("INSERT INTO users VALUES (3, 'Charlie', 35, 85000.75, 0, 'charlie@example.com')");
+             stmt.executeUpdate("INSERT INTO users VALUES (4, 'Diana', 28, 70000.25, 1, 'diana@example.com')");
+             stmt.executeUpdate("INSERT INTO users VALUES (5, 'Eve', 42, 95000.00, 1, 'eve@example.com')");
+             stmt.executeUpdate("INSERT INTO users VALUES (6, 'Frank', 31, 68000.50, 0, 'frank@example.com')");
+             stmt.executeUpdate("INSERT INTO users VALUES (7, 'Grace', 27, 72000.00, 1, 'grace@example.com')");
+             stmt.executeUpdate("INSERT INTO users VALUES (8, 'Henry', 38, 88000.75, 1, 'henry@example.com')");
+             stmt.executeUpdate("INSERT INTO users VALUES (9, 'Iris', 33, 79000.25, 0, 'iris@example.com')");
+             stmt.executeUpdate("INSERT INTO users VALUES (10, 'Jack', 29, 65000.00, 1, 'jack@example.com')");
 
-            // Table 2: products - testing different column types
-            stmt.executeUpdate("""
-                CREATE TABLE products (
-                    product_id INTEGER PRIMARY KEY,
-                    product_name TEXT NOT NULL,
-                    price REAL,
-                    in_stock BOOLEAN,
-                    quantity INTEGER,
-                    category TEXT
-                )
-                """);
+             // Table 2: products - testing different column types
+             stmt.executeUpdate("""
+                                CREATE TABLE products (
+                                    product_id INTEGER PRIMARY KEY,
+                                    product_name TEXT NOT NULL,
+                                    price REAL,
+                                    in_stock BOOLEAN,
+                                    quantity INTEGER,
+                                    category TEXT
+                                )
+                                """);
 
-            // Insert 10 rows into products table
-            stmt.executeUpdate("INSERT INTO products VALUES (101, 'Laptop', 1299.99, 1, 15, 'Electronics')");
-            stmt.executeUpdate("INSERT INTO products VALUES (102, 'Mouse', 29.99, 1, 50, 'Electronics')");
-            stmt.executeUpdate("INSERT INTO products VALUES (103, 'Keyboard', 79.99, 1, 30, 'Electronics')");
-            stmt.executeUpdate("INSERT INTO products VALUES (1, 'Monitor', 399.99, 0, 0, 'Electronics')");
-            stmt.executeUpdate("INSERT INTO products VALUES (105, 'Desk Chair', 249.99, 1, 20, 'Furniture')");
-            stmt.executeUpdate("INSERT INTO products VALUES (106, 'Desk', 499.99, 1, 10, 'Furniture')");
-            stmt.executeUpdate("INSERT INTO products VALUES (107, 'Notebook', 4.99, 1, 100, 'Stationery')");
-            stmt.executeUpdate("INSERT INTO products VALUES (108, 'Pen Set', 12.99, 1, 75, 'Stationery')");
-            stmt.executeUpdate("INSERT INTO products VALUES (109, 'Webcam', 89.99, 0, 0, 'Electronics')");
-            stmt.executeUpdate("INSERT INTO products VALUES (110, 'Headphones', 149.99, 1, 25, 'Electronics')");
-        }
+             // Insert 10 rows into products table
+             stmt.executeUpdate("INSERT INTO products VALUES (101, 'Laptop', 1299.99, 1, 15, 'Electronics')");
+             stmt.executeUpdate("INSERT INTO products VALUES (102, 'Mouse', 29.99, 1, 50, 'Electronics')");
+             stmt.executeUpdate("INSERT INTO products VALUES (103, 'Keyboard', 79.99, 1, 30, 'Electronics')");
+             stmt.executeUpdate("INSERT INTO products VALUES (1, 'Monitor', 399.99, 0, 0, 'Electronics')");
+             stmt.executeUpdate("INSERT INTO products VALUES (105, 'Desk Chair', 249.99, 1, 20, 'Furniture')");
+             stmt.executeUpdate("INSERT INTO products VALUES (106, 'Desk', 499.99, 1, 10, 'Furniture')");
+             stmt.executeUpdate("INSERT INTO products VALUES (107, 'Notebook', 4.99, 1, 100, 'Stationery')");
+             stmt.executeUpdate("INSERT INTO products VALUES (108, 'Pen Set', 12.99, 1, 75, 'Stationery')");
+             stmt.executeUpdate("INSERT INTO products VALUES (109, 'Webcam', 89.99, 0, 0, 'Electronics')");
+             stmt.executeUpdate("INSERT INTO products VALUES (110, 'Headphones', 149.99, 1, 25, 'Electronics')");
+         }
 
-        // Create space instance with table mapping enabled - will be picked up by Router
-        final tbleSpace testSpace = tbleSpace.of(
-                rec(
-                        uri(PATTERN), uri("db:#"),
-                        uri(HOST), uri("sqlite:" + DB_PATH),
-                        uri(DRIVER), uri("org.sqlite.JDBC"),
-                        uri(ROUTE), rec(uri("db:"), uri("/tble/")),
-                        uri(TABLE), lst()
-                ).jvm(),
-                f("/sys/space/tble/comprehensive")
-        );
+         // Create space instance with table mapping enabled - will be picked up by Router
+         final tbleSpace testSpace = tbleSpace.of(
+                 rec(
+                         uri(PATTERN), uri("db:#"),
+                         uri(HOST), uri("sqlite:" + DB_PATH),
+                         uri(DRIVER), uri("org.sqlite.JDBC"),
+                         uri(ROUTE), rec(uri("db:"), uri("/tble/")),
+                         uri(TABLE), lst()
+                 ).jvm(),
+                 f("/sys/space/tble/comprehensive")
+         );
 
-        try {
-            LOG.info("Discovered tables: %s", testSpace.existingTableSchema.getTableNames());
+         try {
+             LOG.info("Discovered tables: %s", testSpace.existingTableSchema.getTableNames());
 
-            // TEST 1: Read specific rows as records using Router
-            LOG.info("TEST 1: Reading specific rows");
-            final Obj user1 = Router.readFromSpace(f("db:users/1"));
-            LOG.info("User 1: %s", user1);
-            assertTrue(user1.isRec(), "Should return a record");
-            final Rec user1Rec = user1.asRec();
-            assertEquals(str("Alice"), user1Rec.at(uri("name")), "Name should be Alice");
-            assertEquals(jnt(30), user1Rec.at(uri("age")), "Age should be 30");
+             // TEST 1: Read specific rows as records using Router
+             LOG.info("TEST 1: Reading specific rows");
+             final Obj user1 = Router.readFromSpace(f("db:users/1"));
+             LOG.info("User 1: %s", user1);
+             assertTrue(user1.isRec(), "Should return a record");
+             final Rec user1Rec = user1.asRec();
+             assertEquals(str("Alice"), user1Rec.at(uri("name")), "Name should be Alice");
+             assertEquals(jnt(30), user1Rec.at(uri("age")), "Age should be 30");
 
-            final Obj product101 = Router.readFromSpace(f("db:products/101"));
-            LOG.info("Product 101: %s", product101);
-            assertTrue(product101.isRec(), "Should return a record");
-            final Rec product101Rec = product101.asRec();
-            assertEquals(str("Laptop"), product101Rec.at(uri("product_name")), "Product name should be Laptop");
+             final Obj product101 = Router.readFromSpace(f("db:products/101"));
+             LOG.info("Product 101: %s", product101);
+             assertTrue(product101.isRec(), "Should return a record");
+             final Rec product101Rec = product101.asRec();
+             assertEquals(str("Laptop"), product101Rec.at(uri("product_name")), "Product name should be Laptop");
 
-            // TEST 2: Write entire row (update existing)
-            LOG.info("TEST 2: Updating entire row");
-            Router.writeToSpace(f("db:users/1"), rec(
-                    uri("name"), str("Alice Smith"),
-                    uri("age"), jnt(31),
-                    uri("salary"), real(80000.00),
-                    uri("active"), bool(true),
-                    uri("email"), str("alice.smith@example.com")
-            ));
+             // TEST 2: Write entire row (update existing)
+             LOG.info("TEST 2: Updating entire row");
+             Router.writeToSpace(f("db:users/1"), rec(
+                     uri("name"), str("Alice Smith"),
+                     uri("age"), jnt(31),
+                     uri("salary"), real(80000.00),
+                     uri("active"), bool(true),
+                     uri("email"), str("alice.smith@example.com")
+             ));
 
-            final Obj updatedUser1 = Router.readFromSpace(f("db:users/1"));
-            LOG.info("Updated User 1: %s", updatedUser1);
-            final Rec updatedUser1Rec = updatedUser1.asRec();
-            assertEquals(str("Alice Smith"), updatedUser1Rec.at(uri("name")), "Name should be updated");
-            assertEquals(jnt(31), updatedUser1Rec.at(uri("age")), "Age should be updated");
+             final Obj updatedUser1 = Router.readFromSpace(f("db:users/1"));
+             LOG.info("Updated User 1: %s", updatedUser1);
+             final Rec updatedUser1Rec = updatedUser1.asRec();
+             assertEquals(str("Alice Smith"), updatedUser1Rec.at(uri("name")), "Name should be updated");
+             assertEquals(jnt(31), updatedUser1Rec.at(uri("age")), "Age should be updated");
 
-            // TEST 3: Write single field
-            LOG.info("TEST 3: Updating single field");
-            Router.writeToSpace(f("db:users/2/age"), jnt(26));
-            Router.writeToSpace(f("db:users/2/salary"), real(62000.00));
+             // TEST 3: Write single field
+             LOG.info("TEST 3: Updating single field");
+             Router.writeToSpace(f("db:users/2/age"), jnt(26));
+             Router.writeToSpace(f("db:users/2/salary"), real(62000.00));
 
-            final Obj updatedUser2 = Router.readFromSpace(f("db:users/2"));
-            LOG.info("Updated User 2: %s", updatedUser2);
-            final Rec updatedUser2Rec = updatedUser2.asRec();
-            assertEquals(jnt(26), updatedUser2Rec.at(uri("age")), "Age should be updated to 26");
-            assertEquals(real(62000.00), updatedUser2Rec.at(uri("salary")), "Salary should be updated");
+             final Obj updatedUser2 = Router.readFromSpace(f("db:users/2"));
+             LOG.info("Updated User 2: %s", updatedUser2);
+             final Rec updatedUser2Rec = updatedUser2.asRec();
+             assertEquals(jnt(26), updatedUser2Rec.at(uri("age")), "Age should be updated to 26");
+             assertEquals(real(62000.00), updatedUser2Rec.at(uri("salary")), "Salary should be updated");
 
-            /*// TEST 4: Insert new row
-            LOG.info("TEST 4: Inserting new row");
-            Router.writeToSpace(f("db:users/11"), rec(
-                    uri("name"), str("Karen"),
-                    uri("age"), jnt(34),
-                    uri("salary"), real(82000.00),
-                    uri("active"), bool(true),
-                    uri("email"), str("karen@example.com")
-            ));
+             // TEST 4: Insert new row
+             LOG.info("TEST 4: Inserting new row");
+             Router.writeToSpace(f("db:users/11"), rec(
+                     uri("name"), str("Karen"),
+                     uri("age"), jnt(34),
+                     uri("salary"), real(82000.00),
+                     uri("active"), bool(true),
+                     uri("email"), str("karen@example.com")
+             ));
 
-            final Obj newUser = Router.readFromSpace(f("db:users/11"));
-            LOG.info("New User 11: %s", newUser);
-            assertTrue(newUser.isRec(), "Should return a record");
-            assertEquals(str("Karen"), newUser.asRec().at(uri("name")), "Name should be Karen");*/
+             final Obj newUser = Router.readFromSpace(f("db:users/11"));
+             LOG.info("New User 11: %s", newUser);
+             assertTrue(newUser.isRec(), "Should return a record");
+             assertEquals(str("Karen"), newUser.asRec().at(uri("name")), "Name should be Karen");
 
-            // TEST 5: Update product with different types
-            LOG.info("TEST 5: Updating product fields");
-            Router.writeToSpace(f("db:products/1/in_stock"), bool(true));
-            Router.writeToSpace(f("db:products/1/quantity"), jnt(5));
+             // TEST 5: Update product with different types
+             LOG.info("TEST 5: Updating product fields");
+             Router.writeToSpace(f("db:products/1/in_stock"), bool(true));
+             Router.writeToSpace(f("db:products/1/quantity"), jnt(5));
 
-            final Obj updatedProduct = Router.readFromSpace(f("db:products/1"));
-            LOG.info("Updated Product 1: %s", updatedProduct);
-            final Rec updatedProductRec = updatedProduct.asRec();
-            assertEquals(bool(true), updatedProductRec.at(uri("in_stock")), "Should be in stock");
-            assertEquals(jnt(5), updatedProductRec.at(uri("quantity")), "Quantity should be 5");
+             final Obj updatedProduct = Router.readFromSpace(f("db:products/1"));
+             LOG.info("Updated Product 1: %s", updatedProduct);
+             final Rec updatedProductRec = updatedProduct.asRec();
+             assertEquals(bool(true), updatedProductRec.at(uri("in_stock")), "Should be in stock");
+             assertEquals(jnt(5), updatedProductRec.at(uri("quantity")), "Quantity should be 5");
 
-            // TEST 6: Verify data in database directly
-            LOG.info("TEST 6: Verifying data in database");
-            try (final Connection conn = DriverManager.getConnection("jdbc:sqlite:" + DB_PATH);
-                 final Statement stmt = conn.createStatement();
-                 final ResultSet rs = stmt.executeQuery("SELECT name, age FROM users WHERE id = 1")) {
-                if (rs.next()) {
-                    assertEquals("Alice Smith", rs.getString("name"), "DB should have updated name");
-                    assertEquals(31, rs.getInt("age"), "DB should have updated age");
-                }
-            }
+             // TEST 6: Verify data in database directly
+             LOG.info("TEST 6: Verifying data in database");
+             try (final Connection conn = DriverManager.getConnection("jdbc:sqlite:" + DB_PATH);
+                  final Statement stmt = conn.createStatement();
+                  final ResultSet rs = stmt.executeQuery("SELECT name, age FROM users WHERE id = 1")) {
+                 if (rs.next()) {
+                     assertEquals("Alice Smith", rs.getString("name"), "DB should have updated name");
+                     assertEquals(31, rs.getInt("age"), "DB should have updated age");
+                 }
+             }
 
-            LOG.info("All comprehensive tests passed!");
+             LOG.info("All comprehensive tests passed!");
 
-        } finally {
-            Router.global().removeSpace(testSpace.vid());
-            testSpace.close();
-        }
+         } finally {
+             Router.global().removeSpace(testSpace.vid());
+             testSpace.close();
+         }
 
-        // Clean up
-        try (final Connection conn = DriverManager.getConnection("jdbc:sqlite:" + DB_PATH);
-             final Statement stmt = conn.createStatement()) {
-            stmt.executeUpdate("DROP TABLE IF EXISTS users");
-            stmt.executeUpdate("DROP TABLE IF EXISTS products");
-        }
-    }
-}
+         // Clean up
+         try (final Connection conn = DriverManager.getConnection("jdbc:sqlite:" + DB_PATH);
+              final Statement stmt = conn.createStatement()) {
+             stmt.executeUpdate("DROP TABLE IF EXISTS users");
+             stmt.executeUpdate("DROP TABLE IF EXISTS products");
+         }
+     }
+
+     // ========== Parameterized Tests ==========
+
+     /**
+      * Test reading individual fields from database rows.
+      * This makes it easy to add more test cases for different data types and edge cases.
+      */
+     @ParameterizedTest(name = "[{index}] Read {0}")
+     @MethodSource("provideFieldReadTestCases")
+     public void testReadIndividualFields(String description, String tableRowUri, String fieldName, Obj expectedValue) throws Exception {
+         // Setup database with test data
+         setupTestDatabase();
+
+         final tbleSpace testSpace = createTestSpace();
+         try {
+             // Read the entire row
+             final Obj row = Router.readFromSpace(f(tableRowUri));
+             assertTrue(row.isRec(), "Should return a record");
+
+             // Extract the specific field
+             final Obj actualValue = row.asRec().at(uri(fieldName));
+             assertEquals(expectedValue, actualValue, description);
+         } finally {
+             Router.global().removeSpace(testSpace.vid());
+             testSpace.close();
+         }
+
+         cleanupTestDatabase();
+     }
+
+     private static Stream<Arguments> provideFieldReadTestCases() {
+         return Stream.of(
+                 // String fields
+                 Arguments.of("String field from users", "db:users/1", "name", str("Alice")),
+                 Arguments.of("String field from products", "db:products/101", "product_name", str("Laptop")),
+                 Arguments.of("Email field", "db:users/2", "email", str("bob@example.com")),
+                 Arguments.of("Category field", "db:products/105", "category", str("Furniture")),
+
+                 // Integer fields
+                 Arguments.of("Integer age field", "db:users/1", "age", jnt(30)),
+                 Arguments.of("Integer quantity field", "db:products/102", "quantity", jnt(50)),
+                 Arguments.of("Primary key field", "db:users/3", "id", jnt(3)),
+
+                 // Real/Double fields
+                 Arguments.of("Real salary field", "db:users/1", "salary", real(75000.50)),
+                 Arguments.of("Real price field", "db:products/101", "price", real(1299.99)),
+                 Arguments.of("Small price value", "db:products/102", "price", real(29.99)),
+
+                 // Boolean fields
+                 Arguments.of("Boolean true value", "db:users/1", "active", bool(true)),
+                 Arguments.of("Boolean false value", "db:users/3", "active", bool(false)),
+                 Arguments.of("Product in stock true", "db:products/101", "in_stock", bool(true)),
+                 Arguments.of("Product in stock false", "db:products/1", "in_stock", bool(false))
+         );
+     }
+
+     /**
+      * Test writing individual fields to database rows.
+      * This makes it easy to add more test cases for different data types and update scenarios.
+      */
+     @ParameterizedTest(name = "[{index}] Write {2} to {0}/{1}")
+     @MethodSource("provideFieldWriteTestCases")
+     public void testWriteIndividualFields(String table, String rowId, String field, Obj newValue, Obj expectedValue) throws Exception {
+         setupTestDatabase();
+
+         final tbleSpace testSpace = createTestSpace();
+         try {
+             // Write the new value
+             final String writeUri = String.format("db:%s/%s/%s", table, rowId, field);
+             Router.writeToSpace(f(writeUri), newValue);
+
+             // Read back the entire row and extract the field
+             final String rowUri = String.format("db:%s/%s", table, rowId);
+             final Obj row = Router.readFromSpace(f(rowUri));
+             assertTrue(row.isRec(), "Should return a record");
+
+             final Obj actualValue = row.asRec().at(uri(field));
+             assertEquals(expectedValue, actualValue, String.format("Field %s should be updated", field));
+         } finally {
+             Router.global().removeSpace(testSpace.vid());
+             testSpace.close();
+         }
+
+         cleanupTestDatabase();
+     }
+
+     private static Stream<Arguments> provideFieldWriteTestCases() {
+         return Stream.of(
+                 // String updates
+                 Arguments.of("users", "1", "name", str("Alice Updated"), str("Alice Updated")),
+                 Arguments.of("users", "2", "email", str("bob.new@example.com"), str("bob.new@example.com")),
+                 Arguments.of("products", "101", "product_name", str("Gaming Laptop"), str("Gaming Laptop")),
+
+                 // Integer updates
+                 Arguments.of("users", "1", "age", jnt(31), jnt(31)),
+                 Arguments.of("users", "2", "age", jnt(26), jnt(26)),
+                 Arguments.of("products", "102", "quantity", jnt(100), jnt(100)),
+
+                 // Real updates - use jvm() comparison for floating point
+                 Arguments.of("users", "1", "salary", real(80000.00), real(80000.00)),
+                 Arguments.of("products", "101", "price", real(999.00), real(999.00)),
+
+                 // Boolean updates
+                 Arguments.of("users", "3", "active", bool(true), bool(true)),
+                 Arguments.of("users", "1", "active", bool(false), bool(false)),
+                 Arguments.of("products", "1", "in_stock", bool(true), bool(true)),
+                 Arguments.of("products", "103", "in_stock", bool(false), bool(false))
+         );
+     }
+
+     /**
+      * Test reading entire rows as records.
+      */
+     @ParameterizedTest(name = "[{index}] Read row {0}")
+     @CsvSource({
+             "db:users/1, name, Alice",
+             "db:users/2, name, Bob",
+             "db:users/5, name, Eve",
+             "db:products/101, product_name, Laptop",
+             "db:products/105, product_name, Desk Chair"
+     })
+     public void testReadEntireRow(String uri, String fieldName, String expectedFieldValue) throws Exception {
+         setupTestDatabase();
+
+         final tbleSpace testSpace = createTestSpace();
+         try {
+             final Obj row = Router.readFromSpace(f(uri));
+             assertTrue(row.isRec(), "Should return a record");
+
+             final Rec rec = row.asRec();
+             final Obj fieldValue = rec.at(uri(fieldName));
+             assertEquals(str(expectedFieldValue), fieldValue, String.format("Field %s should match", fieldName));
+         } finally {
+             Router.global().removeSpace(testSpace.vid());
+             testSpace.close();
+         }
+
+         cleanupTestDatabase();
+     }
+
+     /**
+      * Test updating entire rows using Rec (record with named fields).
+      * Keys in the record correspond to column names.
+      */
+     @ParameterizedTest(name = "[{index}] Update row with Rec: {0}")
+     @MethodSource("provideRecRowUpdateTestCases")
+     public void testUpdateRowWithRec(String description, String table, String rowId, Rec updateData,
+                                      String verifyField, Obj expectedValue) throws Exception {
+         setupTestDatabase();
+
+         final tbleSpace testSpace = createTestSpace();
+         try {
+             // Update the row with a record
+             final String writeUri = String.format("db:%s/%s", table, rowId);
+             Router.writeToSpace(f(writeUri), updateData);
+
+             // Read it back and verify
+             final Obj row = Router.readFromSpace(f(writeUri));
+             assertTrue(row.isRec(), "Should return a record");
+
+             final Obj fieldValue = row.asRec().at(uri(verifyField));
+             assertEquals(expectedValue, fieldValue, String.format("Field %s should match", verifyField));
+         } finally {
+             Router.global().removeSpace(testSpace.vid());
+             testSpace.close();
+         }
+
+         cleanupTestDatabase();
+     }
+
+     private static Stream<Arguments> provideRecRowUpdateTestCases() {
+         return Stream.of(
+                 // Update user with partial fields (only name and age)
+                 Arguments.of(
+                         "Partial update with Rec",
+                         "users", "1",
+                         rec(
+                                 uri("name"), str("Alice Updated"),
+                                 uri("age"), jnt(35)
+                         ),
+                         "name", str("Alice Updated")
+                 ),
+                 // Update all fields in a user row
+                 Arguments.of(
+                         "Full update with Rec",
+                         "users", "2",
+                         rec(
+                                 uri("name"), str("Robert"),
+                                 uri("age"), jnt(30),
+                                 uri("salary"), real(70000.00),
+                                 uri("active"), bool(false),
+                                 uri("email"), str("robert@example.com")
+                         ),
+                         "name", str("Robert")
+                 ),
+                 // Update product with partial fields
+                 Arguments.of(
+                         "Update product price and stock",
+                         "products", "101",
+                         rec(
+                                 uri("price"), real(1199.00),
+                                 uri("in_stock"), bool(false)
+                         ),
+                         "price", real(1199.00)
+                 )
+         );
+     }
+
+     /**
+      * Test updating entire rows using Lst (list with positional values).
+      * Values in the list correspond to ALL columns in their natural order (including primary key).
+      */
+     @ParameterizedTest(name = "[{index}] Update row with Lst: {0}")
+     @MethodSource("provideLstRowUpdateTestCases")
+     public void testUpdateRowWithLst(String description, String table, String rowId,
+                                      studio.phaseshift.metatron.isa.m.type.Lst updateData,
+                                      String verifyField, Obj expectedValue, String readRowId) throws Exception {
+         setupTestDatabase();
+
+         final tbleSpace testSpace = createTestSpace();
+         try {
+             // Update the row with a list (positional values)
+             final String writeUri = String.format("db:%s/%s", table, rowId);
+             Router.writeToSpace(f(writeUri), updateData);
+
+             // Read it back and verify (use readRowId which may differ from rowId if PK is in list)
+             final String readUri = String.format("db:%s/%s", table, readRowId);
+             final Obj row = Router.readFromSpace(f(readUri));
+             assertTrue(row.isRec(), "Should return a record");
+
+             final Obj fieldValue = row.asRec().at(uri(verifyField));
+             assertEquals(expectedValue, fieldValue, String.format("Field %s should match", verifyField));
+         } finally {
+             Router.global().removeSpace(testSpace.vid());
+             testSpace.close();
+         }
+
+         cleanupTestDatabase();
+     }
+
+     private static Stream<Arguments> provideLstRowUpdateTestCases() {
+         return Stream.of(
+                 // Update user with positional values: [id, name, age, salary, active, email]
+                 // Note: ALL columns in natural order (including primary key)
+                 Arguments.of(
+                         "Update user with Lst (all fields including PK)",
+                         "users", "1",
+                         lst(
+                                 jnt(1),                      // id (primary key)
+                                 str("Alice Positional"),     // name
+                                 jnt(40),                     // age
+                                 real(85000.00),              // salary
+                                 bool(true),                  // active
+                                 str("alice.pos@example.com") // email
+                         ),
+                         "name", str("Alice Positional"),
+                         "1"  // Read from same ID
+                 ),
+                 // Update product with positional values: [product_id, product_name, price, in_stock, quantity, category]
+                 // Note: ALL columns in natural order (including primary key)
+                 Arguments.of(
+                         "Update product with Lst (all fields including PK)",
+                         "products", "101",
+                         lst(
+                                 jnt(101),                  // product_id (primary key)
+                                 str("Gaming Laptop Pro"),  // product_name
+                                 real(1599.00),             // price
+                                 bool(true),                // in_stock
+                                 jnt(25),                   // quantity
+                                 str("Gaming")              // category
+                         ),
+                         "product_name", str("Gaming Laptop Pro"),
+                         "101"  // Read from same ID
+                 ),
+                 // Partial update - fewer values than columns (should update only provided fields)
+                 // This updates only the first 4 columns: [id, name, age, salary]
+                 Arguments.of(
+                         "Partial update with Lst (first 4 fields)",
+                         "users", "3",
+                         lst(
+                                 jnt(3),                    // id (primary key)
+                                 str("Charlie Updated"),    // name
+                                 jnt(36),                   // age
+                                 real(90000.00)             // salary
+                                 // active and email will keep their existing values
+                         ),
+                         "age", jnt(36),
+                         "3"  // Read from same ID
+                 ),
+                 // Insert new row using Lst with primary key from list (not URI)
+                 // The URI has a placeholder, but the actual PK comes from the list
+                 Arguments.of(
+                         "Insert with Lst using PK from list",
+                         "users", "999",  // URI has 999, but list has 50
+                         lst(
+                                 jnt(50),                   // id (primary key) - this overrides URI
+                                 str("New User"),           // name
+                                 jnt(28),                   // age
+                                 real(55000.00),            // salary
+                                 bool(true),                // active
+                                 str("newuser@example.com") // email
+                         ),
+                         "id", jnt(50),  // Verify the PK from list was used, not from URI
+                         "50"  // Read from the actual ID that was inserted (from list, not URI)
+                 )
+         );
+     }
+
+     /**
+      * Test inserting new rows with various data types.
+      */
+     @ParameterizedTest(name = "[{index}] Insert new row into {0}")
+     @MethodSource("provideRowInsertTestCases")
+     public void testInsertNewRows(String table, String rowId, Rec rowData, String verifyField, Obj expectedValue) throws Exception {
+         setupTestDatabase();
+
+         final tbleSpace testSpace = createTestSpace();
+         try {
+             // Insert new row
+             final String writeUri = String.format("db:%s/%s", table, rowId);
+             Router.writeToSpace(f(writeUri), rowData);
+
+             // Read it back
+             final Obj insertedRow = Router.readFromSpace(f(writeUri));
+             assertTrue(insertedRow.isRec(), "Should return a record");
+
+             // Verify specific field
+             final Obj fieldValue = insertedRow.asRec().at(uri(verifyField));
+             assertEquals(expectedValue, fieldValue, String.format("Field %s should match", verifyField));
+         } finally {
+             Router.global().removeSpace(testSpace.vid());
+             testSpace.close();
+         }
+
+         cleanupTestDatabase();
+     }
+
+     private static Stream<Arguments> provideRowInsertTestCases() {
+         return Stream.of(
+                 Arguments.of(
+                         "users", "100",
+                         rec(
+                                 uri("name"), str("Test User"),
+                                 uri("age"), jnt(25),
+                                 uri("salary"), real(50000.00),
+                                 uri("active"), bool(true),
+                                 uri("email"), str("test@example.com")
+                         ),
+                         "name", str("Test User")
+                 ),
+                 Arguments.of(
+                         "users", "101",
+                         rec(
+                                 uri("name"), str("Another User"),
+                                 uri("age"), jnt(40),
+                                 uri("salary"), real(90000.00),
+                                 uri("active"), bool(false),
+                                 uri("email"), str("another@example.com")
+                         ),
+                         "age", jnt(40)
+                 ),
+                 Arguments.of(
+                         "products", "200",
+                         rec(
+                                 uri("product_name"), str("New Product"),
+                                 uri("price"), real(199.99),
+                                 uri("in_stock"), bool(true),
+                                 uri("quantity"), jnt(10),
+                                 uri("category"), str("Test Category")
+                         ),
+                         "product_name", str("New Product")
+                 ),
+                 Arguments.of(
+                         "products", "201",
+                         rec(
+                                 uri("product_name"), str("Another Product"),
+                                 uri("price"), real(49.99),
+                                 uri("in_stock"), bool(false),
+                                 uri("quantity"), jnt(0),
+                                 uri("category"), str("Electronics")
+                         ),
+                         "in_stock", bool(false)
+                 )
+         );
+     }
+
+     /**
+      * Test type conversions and edge cases.
+      */
+     @ParameterizedTest(name = "[{index}] {0}")
+     @MethodSource("provideTypeConversionTestCases")
+     public void testTypeConversions(String description, String table, String rowId, String field, Obj writeValue, Obj expectedReadValue) throws Exception {
+         setupTestDatabase();
+
+         final tbleSpace testSpace = createTestSpace();
+         try {
+             // Write value
+             final String writeUri = String.format("db:%s/%s/%s", table, rowId, field);
+             Router.writeToSpace(f(writeUri), writeValue);
+
+             // Read back the entire row and extract the field
+             final String rowUri = String.format("db:%s/%s", table, rowId);
+             final Obj row = Router.readFromSpace(f(rowUri));
+             assertTrue(row.isRec(), "Should return a record");
+
+             final Obj actualValue = row.asRec().at(uri(field));
+             assertEquals(expectedReadValue, actualValue, description);
+         } finally {
+             Router.global().removeSpace(testSpace.vid());
+             testSpace.close();
+         }
+
+         cleanupTestDatabase();
+     }
+
+     private static Stream<Arguments> provideTypeConversionTestCases() {
+         return Stream.of(
+                 // Boolean to INTEGER conversion (SQLite stores BOOLEAN as INTEGER)
+                 Arguments.of("Boolean true converts to 1 and back", "users", "1", "active", bool(true), bool(true)),
+                 Arguments.of("Boolean false converts to 0 and back", "users", "1", "active", bool(false), bool(false)),
+
+                 // Real number precision - use round numbers to avoid floating point precision issues
+                 Arguments.of("Real number with decimals", "users", "1", "salary", real(12345.00), real(12345.00)),
+                 Arguments.of("Real number zero", "users", "1", "salary", real(0.0), real(0.0)),
+
+                 // Integer boundaries
+                 Arguments.of("Integer zero", "users", "1", "age", jnt(0), jnt(0)),
+                 Arguments.of("Integer large value", "users", "1", "age", jnt(999), jnt(999)),
+
+                 // String edge cases
+                 Arguments.of("Empty string", "users", "1", "name", str(""), str("")),
+                 Arguments.of("String with spaces", "users", "1", "name", str("  Test  "), str("  Test  ")),
+                 Arguments.of("String with special chars", "users", "1", "email", str("test+tag@example.com"), str("test+tag@example.com"))
+         );
+     }
+
+     // Add this test to tbleSpaceTest.java before the "Helper Methods" section
+
+     /**
+      * Test that TypedKeyValueSchema preserves types correctly (isomorphic mapping).
+      * This verifies we're not losing type information through JSON conversion.
+      */
+     @ParameterizedTest(name = "[{index}] Type preservation: {0}")
+     @MethodSource("provideTypedStorageTestCases")
+     public void testTypedStoragePreservation(String description, String uri, Obj writeValue, Obj expectedValue) throws Exception {
+         final tbleSpace testSpace = tbleSpace.of(
+                 rec(
+                         uri(PATTERN), uri("/tble/#"),
+                         uri(HOST), uri("sqlite:target/test-typed-storage.db"),
+                         uri(DRIVER), uri("org.sqlite.JDBC")
+                 ).jvm(),
+                 f("/sys/space/tble/typed")
+         );
+
+         try {
+             // Write the value
+             Router.writeToSpace(f(uri), writeValue);
+
+             // Read it back
+             final Obj actualValue = Router.readFromSpace(f(uri));
+
+             // Verify exact type preservation
+             assertEquals(expectedValue, actualValue, description);
+             assertEquals(expectedValue.getClass(), actualValue.getClass(),
+                     "Type class should be preserved: " + description);
+         } finally {
+             Router.global().removeSpace(testSpace.vid());
+             testSpace.close();
+         }
+     }
+
+     private static Stream<Arguments> provideTypedStorageTestCases() {
+         return Stream.of(
+                 // Primitive types should be stored natively, not as JSON
+                 Arguments.of("Boolean true", "/tble/test/bool1", bool(true), bool(true)),
+                 Arguments.of("Boolean false", "/tble/test/bool2", bool(false), bool(false)),
+                 Arguments.of("Integer zero", "/tble/test/int1", jnt(0), jnt(0)),
+                 Arguments.of("Integer positive", "/tble/test/int2", jnt(42), jnt(42)),
+                 Arguments.of("Integer negative", "/tble/test/int3", jnt(-999), jnt(-999)),
+                 Arguments.of("Integer large", "/tble/test/int4", jnt(9223372036854775807L), jnt(9223372036854775807L)),
+                 Arguments.of("Real zero", "/tble/test/real1", real(0.0), real(0.0)),
+                 Arguments.of("Real positive", "/tble/test/real2", real(3.14159), real(3.14159)),
+                 Arguments.of("Real negative", "/tble/test/real3", real(-273.15), real(-273.15)),
+                 Arguments.of("String empty", "/tble/test/str1", str(""), str("")),
+                 Arguments.of("String simple", "/tble/test/str2", str("hello"), str("hello")),
+                 Arguments.of("String with spaces", "/tble/test/str3", str("hello world"), str("hello world")),
+                 Arguments.of("String with special chars", "/tble/test/str4", str("test@example.com"), str("test@example.com")),
+
+                 // Complex types should use ObjCleanStringSerializer
+                 Arguments.of("Record", "/tble/test/rec1",
+                         rec(uri("name"), str("Alice"), uri("age"), jnt(30)),
+                         rec(uri("name"), str("Alice"), uri("age"), jnt(30))),
+                 Arguments.of("List", "/tble/test/lst1",
+                         lst(jnt(1), jnt(2), jnt(3)),
+                         lst(jnt(1), jnt(2), jnt(3)))
+         );
+     }
+
+
+     // ========== Helper Methods ==========
+
+     private void setupTestDatabase() throws Exception {
+         try (final Connection conn = DriverManager.getConnection("jdbc:sqlite:" + DB_PATH);
+              final Statement stmt = conn.createStatement()) {
+
+             // Drop tables if they exist
+             stmt.executeUpdate("DROP TABLE IF EXISTS users");
+             stmt.executeUpdate("DROP TABLE IF EXISTS products");
+
+             // Create users table
+             stmt.executeUpdate("""
+                                CREATE TABLE users (
+                                    id INTEGER PRIMARY KEY,
+                                    name TEXT NOT NULL,
+                                    age INTEGER,
+                                    salary REAL,
+                                    active BOOLEAN,
+                                    email TEXT
+                                )
+                                """);
+
+             // Insert test data
+             stmt.executeUpdate("INSERT INTO users VALUES (1, 'Alice', 30, 75000.50, 1, 'alice@example.com')");
+             stmt.executeUpdate("INSERT INTO users VALUES (2, 'Bob', 25, 60000.00, 1, 'bob@example.com')");
+             stmt.executeUpdate("INSERT INTO users VALUES (3, 'Charlie', 35, 85000.75, 0, 'charlie@example.com')");
+             stmt.executeUpdate("INSERT INTO users VALUES (4, 'Diana', 28, 70000.25, 1, 'diana@example.com')");
+             stmt.executeUpdate("INSERT INTO users VALUES (5, 'Eve', 42, 95000.00, 1, 'eve@example.com')");
+
+             // Create products table
+             stmt.executeUpdate("""
+                                CREATE TABLE products (
+                                    product_id INTEGER PRIMARY KEY,
+                                    product_name TEXT NOT NULL,
+                                    price REAL,
+                                    in_stock BOOLEAN,
+                                    quantity INTEGER,
+                                    category TEXT
+                                )
+                                """);
+
+             // Insert test data
+             stmt.executeUpdate("INSERT INTO products VALUES (101, 'Laptop', 1299.99, 1, 15, 'Electronics')");
+             stmt.executeUpdate("INSERT INTO products VALUES (102, 'Mouse', 29.99, 1, 50, 'Electronics')");
+             stmt.executeUpdate("INSERT INTO products VALUES (103, 'Keyboard', 79.99, 1, 30, 'Electronics')");
+             stmt.executeUpdate("INSERT INTO products VALUES (1, 'Monitor', 399.99, 0, 0, 'Electronics')");
+             stmt.executeUpdate("INSERT INTO products VALUES (105, 'Desk Chair', 249.99, 1, 20, 'Furniture')");
+         }
+     }
+
+     private void cleanupTestDatabase() throws Exception {
+         try (final Connection conn = DriverManager.getConnection("jdbc:sqlite:" + DB_PATH);
+              final Statement stmt = conn.createStatement()) {
+             stmt.executeUpdate("DROP TABLE IF EXISTS users");
+             stmt.executeUpdate("DROP TABLE IF EXISTS products");
+         }
+     }
+
+     private tbleSpace createTestSpace() {
+         return tbleSpace.of(
+                 rec(
+                         uri(PATTERN), uri("db:#"),
+                         uri(HOST), uri("sqlite:" + DB_PATH),
+                         uri(DRIVER), uri("org.sqlite.JDBC"),
+                         uri(ROUTE), rec(uri("db:"), uri("/tble/")),
+                         uri(TABLE), lst()
+                 ).jvm(),
+                 f("/sys/space/tble/parameterized")
+         );
+     }
+ }

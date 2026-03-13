@@ -18,7 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
-import studio.phaseshift.metatron.BootLoader;
+import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.furi.C;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
@@ -113,7 +113,7 @@ public interface Inst extends Call {
                     LOG.error(apiInst.arg(i) + " is a future");*/
                 final Obj usrArg = Optional.ofNullable(userInst.arg(i)).orElse(noobj()); //FutureObj.resolveFuture(userInst.arg(i));
                 final Obj apiArg = Optional.ofNullable(apiInst.arg(i)).orElse(noobj()); // FutureObj.resolveFuture(apiInst.arg(i));
-                if(!usrArg.c().within(apiArg.c()))
+                if (!usrArg.c().within(apiArg.c()))
                     return null;
                 if (userInst.isBlocking()) {
                     resolvedArgs.add(usrArg);
@@ -345,7 +345,7 @@ public interface Inst extends Call {
 
         Obj rhs;
         boolean modulateC = false;
-        if (BootLoader.TYPE_CHECK && !lhs.isFail() && !lhs.isCaughtFail() && !clhs.test(cinst.dom()) && clhs.unique()) {
+        if (TypeCheck.INST_DOM.enabled() && !lhs.isFail() && !lhs.isCaughtFail() && !clhs.test(cinst.dom()) && clhs.unique()) {
             // if (clhs.uniqueC().isOne() && !clhs.c().isOne()) { // && cinst.dom().c().within(cInt.SOME())) {
             clhs = clhs.c(cInt::one);
             cinst = this.resolve(clhs);
@@ -389,7 +389,7 @@ public interface Inst extends Call {
                 if (e.getCause() != null)
                     rhs = fail(e.getCause(), (Fail) rhs);
             }
-            if (BootLoader.TYPE_CHECK && !rhs.isType() && !rhs.isFail() && !lhs.isCaughtFail() && !rhs.test(cinst.rng()))
+            if (TypeCheck.INST_RNG.enabled() && !rhs.isType() && !rhs.isFail() && !lhs.isCaughtFail() && !rhs.test(cinst.rng()))
                 //rhs = fail(MTronException.of("inst resolution failure: %s", cinst, fail(MTronException.of("rhs does not match inst range:\n\t%s", Poly.Helper.diffObjRecursion(rhs, cinst.rng())))));
                 rhs = fail(MTronException.of("rhs does not match inst range:\n\t%s", Poly.Helper.diffObjRecursion(rhs, cinst.rng())));
         } else {

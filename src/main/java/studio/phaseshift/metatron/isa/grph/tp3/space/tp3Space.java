@@ -66,7 +66,7 @@ public class tp3Space extends grphSpace<Graph> {
 
     protected static ObjFactory FACTORY = null;
 
-    public static final fURI TP3_SPACE_TID = GRPH_ISA_TID.extend("space").extend("tp3");
+    public static final fURI TP3_SPACE_TID = GRPH_ISA_TID.extend(SPACE).extend("tp3");
     public static final Type TP3_SPACE_TYPE = Type.Builder.build()
             .tid(GRPH_SPACE_TID)
             .vid(TP3_SPACE_TID)
@@ -78,9 +78,7 @@ public class tp3Space extends grphSpace<Graph> {
                                     throw inst.arg(0).asFail().asException();
                                 return tp3Space.of(inst.arg(0).asRec(), inst.arg(0).vid());
                             })).create();
-
-
-    //  protected final Tuple.Pair<String, String> rewrite;
+    
     protected final String vertexPrefix;
     protected final String edgePrefix;
     protected final String schemaPrefix;
@@ -132,19 +130,19 @@ public class tp3Space extends grphSpace<Graph> {
             }
         });
         // this.put(uri("native/factory"), FACTORY, MUTABLE);
-        this.at(uri("native"), rec(
+        this.at(uri(NATIVE), rec(
                 uri("factory"), FACTORY,
-                uri("config"), tp3Config,
+                uri(CONFIG), tp3Config,
                 uri("id"), rec(
-                        uri("vertex"), uri(IteratorUtil.findFirst(this.sjvm.vertices()).map(i -> i.id().getClass().getSimpleName()).orElse("unknown")),
-                        uri("edge"), uri(IteratorUtil.findFirst(this.sjvm.edges()).map(i -> i.id().getClass().getSimpleName()).orElse("unknown")))), MUTABLE);
+                        uri(VERTEX), uri(IteratorUtil.findFirst(this.sjvm.vertices()).map(i -> i.id().getClass().getSimpleName()).orElse("unknown")),
+                        uri(EDGE), uri(IteratorUtil.findFirst(this.sjvm.edges()).map(i -> i.id().getClass().getSimpleName()).orElse("unknown")))), MUTABLE);
         this.vertexPrefix = this.pattern.retractPattern().extend("V").toString();
         this.edgePrefix = this.pattern.retractPattern().extend("E").toString();
         this.schemaPrefix = this.pattern.retractPattern().extend("S").toString();
-        this.at(uri("rewrite"), rec(
-                uri("vertex"), uri(this.vertexPrefix),
-                uri("edge"), uri(this.edgePrefix),
-                uri("schema"), uri(this.schemaPrefix)), MUTABLE);
+        this.at(uri(ROUTE), rec(
+                uri(VERTEX), uri(this.vertexPrefix),
+                uri(EDGE), uri(this.edgePrefix),
+                uri(SCHEMA), uri(this.schemaPrefix)), MUTABLE);
         LOG.debug("tp3 prefixes: %s %s %s", this.vertexPrefix, this.edgePrefix, this.schemaPrefix);
         this.schema = this.at(uri(SCHEMA));
     }

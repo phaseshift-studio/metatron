@@ -29,10 +29,14 @@ import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static studio.phaseshift.metatron.isa.m.mInstSet.ID_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 
 public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Code {
@@ -680,6 +684,10 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
 
         public static <F extends mFluent<F>> F auto_(final Obj obj) {
             return new mFluent<F>().auto_(obj);
+        }
+
+        public static <F extends mFluent<F>> F auto_(final Supplier<Obj> function) {
+            return new mFluent<F>().auto_(instC(INST_TID, lst(), (_, _) -> function.get()));
         }
 
         public static <F extends mFluent<F>> F auto_from_(final Uri uri, final Obj defaultObj) {

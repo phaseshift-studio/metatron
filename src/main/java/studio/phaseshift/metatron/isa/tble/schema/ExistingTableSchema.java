@@ -154,12 +154,33 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
     private Obj readTableRow(final ResultSet rs, final TableMetadata metadata) throws SQLException {
         final Map<Obj, Obj> labeledValues = new LinkedHashMap<>();
         for (final ColumnMetadata col : metadata.columns) {
-            final Obj value = readColumn(rs, col.name, col.sqlType);
+            final Obj value = readColumnWithMetadata(rs, col);
             labeledValues.put(uri(col.name), value);
             if (!value.isNoObj())
                 Router.global().stats().ioStats().incrBytesRecv(value.toString().getBytes().length);
         }
         return rec(labeledValues, REC_TID, null);
+    }
+
+    /**
+     * Read a column value using metadata to handle type conversions properly.
+     * This is especially important for SQLite which stores BOOLEAN as INTEGER.
+     */
+    private Obj readColumnWithMetadata(final ResultSet rs, final ColumnMetadata col) throws SQLException {
+        // Check if this is a BOOLEAN column that SQLite reports as INTEGER
+        if ("BOOLEAN".equalsIgnoreCase(col.typeName) &&
+            (col.sqlType == Types.INTEGER || col.sqlType == Types.TINYINT ||
+             col.sqlType == Types.SMALLINT || col.sqlType == Types.BIT)) {
+            final Object value = rs.getObject(col.name);
+            if (value == null || rs.wasNull()) {
+                return noobj();
+            }
+            // Convert 0/1 to boolean
+            final int intValue = rs.getInt(col.name);
+            return studio.phaseshift.metatron.isa.m.type.impl.MBool.bool(intValue != 0);
+        }
+        // Use standard column reading for other types
+        return readColumn(rs, col.name, col.sqlType);
     }
 
     /**
@@ -221,10 +242,88 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
             return writeField(conn, metadata, rowId, fieldName, obj);
         } else {
             // Row-level write: /table/rowId
-            if (!obj.isRec()) {
-                throw new SQLException("Expected record for row write, got: " + obj.tid());
+            if (obj.isRec()) {
+                // Record with named fields (keys are column names)
+                return writeRow(conn, metadata, rowId, obj.asRec());
+            } else if (obj.isLst()) {
+                // List with positional values (indices correspond to column order)
+                return writeRowFromList(conn, metadata, rowId, obj.asLst());
+            } else {
+                throw new SQLException("Expected record or list for row write, got: " + obj.tid());
             }
-            return writeRow(conn, metadata, rowId, obj.asRec());
+        }
+    }
+
+    /**
+     * Write an entire row from a list (positional values matching column order).
+     *
+     * The list values correspond to ALL columns in their natural order (as returned by the database).
+     * This allows working with existing tables created by other programs.
+     *
+     * If the list includes the primary key value(s), they will be used.
+     * If the list is shorter than the number of columns, remaining columns will not be updated.
+     */
+    private int writeRowFromList(final Connection conn, final TableMetadata metadata, final String rowId,
+                                  final studio.phaseshift.metatron.isa.m.type.Lst lst) throws SQLException {
+        // Convert list to record using column names as keys
+        final Map<Obj, Obj> recMap = new LinkedHashMap<>();
+        final List<Obj> values = lst.jvm();
+
+        // Map list values to columns by position (INCLUDING primary key)
+        // This allows the list to specify all columns in their natural order
+        for (int i = 0; i < Math.min(values.size(), metadata.columns.size()); i++) {
+            final ColumnMetadata column = metadata.columns.get(i);
+            recMap.put(uri(column.name), values.get(i));
+        }
+
+        if (values.size() > metadata.columns.size()) {
+            this.space.logger().warn("list has more values (%d) than columns (%d) in table %s - extra values ignored",
+                    values.size(), metadata.columns.size(), metadata.tableName);
+        }
+
+        // Create a record from the map and use existing writeRow logic
+        final studio.phaseshift.metatron.isa.m.type.Rec rec = rec(recMap);
+
+        // Determine the primary key value to check if row exists
+        // Priority: 1) value from list, 2) value from URI
+        final String pkColumn = metadata.primaryKeys.getFirst();
+        final Obj pkValueFromList = recMap.get(uri(pkColumn));
+        final String pkValue;
+
+        if (pkValueFromList != null && !pkValueFromList.isNoObj()) {
+            // Use primary key from the list
+            pkValue = pkValueFromList.toString();
+            this.space.logger().debug("using primary key from list: %s = %s", pkColumn, pkValue);
+        } else {
+            // Fall back to rowId from URI
+            pkValue = rowId;
+            this.space.logger().debug("using primary key from URI: %s = %s", pkColumn, pkValue);
+        }
+
+        // Check if row exists
+        final String checkSql = String.format("SELECT COUNT(*) FROM %s WHERE %s = ?", metadata.tableName, pkColumn);
+
+        final boolean exists;
+        try (final PreparedStatement stmt = conn.prepareStatement(checkSql)) {
+            final ColumnMetadata pkColMeta = metadata.columns.stream()
+                    .filter(c -> c.name.equals(pkColumn))
+                    .findFirst()
+                    .orElseThrow();
+            if (pkColMeta.sqlType == Types.INTEGER || pkColMeta.sqlType == Types.BIGINT ||
+                pkColMeta.sqlType == Types.SMALLINT || pkColMeta.sqlType == Types.TINYINT) {
+                stmt.setLong(1, Long.parseLong(pkValue));
+            } else {
+                stmt.setString(1, pkValue);
+            }
+            try (final ResultSet rs = stmt.executeQuery()) {
+                exists = rs.next() && rs.getInt(1) > 0;
+            }
+        }
+
+        if (exists) {
+            return updateRow(conn, metadata, pkValue, rec);
+        } else {
+            return insertRow(conn, metadata, pkValue, rec);
         }
     }
 

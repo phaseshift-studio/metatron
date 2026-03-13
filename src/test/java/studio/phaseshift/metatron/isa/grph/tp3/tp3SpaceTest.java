@@ -26,7 +26,6 @@ import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.TestSkip;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
-import studio.phaseshift.metatron.isa.grph.grphInstSet;
 import studio.phaseshift.metatron.isa.grph.tp3.space.tp3Space;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Inst;
@@ -36,15 +35,12 @@ import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.Tuple;
 
-import static org.apache.tinkerpop.gremlin.LoadGraphWith.GraphData.GRATEFUL;
 import static org.apache.tinkerpop.gremlin.LoadGraphWith.GraphData.MODERN;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.GRPH_ISA_TID;
 import static studio.phaseshift.metatron.isa.grph.tp3.tp3InstSet.TP3_ISA_TID;
-import static studio.phaseshift.metatron.isa.iot.iotInstSet.IOT_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /*
@@ -69,13 +65,13 @@ public class tp3SpaceTest extends AbstractSpaceTest {
                     NATIVE, rec(uri("factory"), MObjFactory.single(),
                             uri(LOAD), uri(MODERN.name().toLowerCase()))), f("/sys/space/test")); // GRATEFUL.name().toLowerCase()
         });
-       tp3Space.TP3SpaceType.insts().forEach(i -> Router.writeToSpace(i.tid(),(Inst)i));
+        tp3Space.TP3SpaceType.insts().forEach(i -> Router.writeToSpace(i.tid(), (Inst) i));
     }
 
     @Test
     @Disabled
     public void testProfiling() {
-        BootLoader.TYPE_CHECK = false;
+        //  BootLoader.TYPE_CHECK = false;
         final Tuple.Pair<Obj, Long> mtronResult = CommonUtil.clock(() -> {
             final Obj result = mParser.eval("*/g/V/+.out().>|.out().>|.out().>|.out().count()");
             // Force any lazy evaluation by consuming the result
@@ -89,7 +85,7 @@ public class tp3SpaceTest extends AbstractSpaceTest {
             return result;
         });
         LOG.error("gremlin> %s [%s ms]", gremlinResult.get0(), gremlinResult.get1());
-        BootLoader.TYPE_CHECK = true;
+        // BootLoader.TYPE_CHECK = true;
     }
 
     @ParameterizedTest
@@ -107,17 +103,31 @@ public class tp3SpaceTest extends AbstractSpaceTest {
     @ParameterizedTest
     @CsvSource(value = {
             "*/g/V/#../name                                                                 % {\"marko\",\"josh\",\"peter\",\"lop\",\"vadas\",\"ripple\"}",
-            "*/g/V/+../OUT/+/IN/name                                                        % {\"josh\",str{3}::\"lop\",\"vadas\",\"ripple\"}",
+            "*/g/V/+>>OUT/+/IN/name                                                         % {\"josh\",str{3}::\"lop\",\"vadas\",\"ripple\"}",
+            "*/g/V/+>>OUT/+>>IN/name                                                        % {\"josh\",str{3}::\"lop\",\"vadas\",\"ripple\"}",
             "*/g/V/+/OUT/+/IN/name                                                          % {\"josh\",str{3}::\"lop\",\"vadas\",\"ripple\"}",
             "*/g/V/1/name                                                                   % \"marko\"",
-            "*/g/V/1/OUT                                                                    % \"marko\"",
+            "*/g/V/1/OUT.dom()                                                              % {created,{2}knows}",
+            "*/g/V/1/OUT/created.count()                                                    % 1",
+            "*/g/V/1/OUT/knows.count()                                                      % 2",
+            "*/g/V/1/OUT/+.count()                                                          % 3",
+            "*/g/V/1/OUT/knows.>>IN.count()                                                 % 2",
+            "*/g/V/1/OUT/knows.>>IN>>name                                                   % {\"vadas\",\"josh\"}",
+            "*/g/V/1/OUT/knows.>>IN/name                                                    % {\"vadas\",\"josh\"}",
             "*/g/V/+.count()                                                                % 6",
             "*/g/V/+.outE().count()                                                         % 6",
-            "*/g/V/1../OUT/+/IN.count()                                                     % 3",
+            "*/g/V/1>>OUT/+.>>IN.count()                                                    % 3",
+            "*/g/V/1>>OUT/+/IN.count()                                                      % 3",
+            "*/g/V/1>>OUT/+>>IN.count()                                                      % 3",
+            "*/g/V/1/OUT/+>>IN.count()                                                      % 3",
+            "*/g/V/1/OUT/created/IN.count()                                                 % 1",
             "*/g/V/1/OUT/+/IN.count()                                                       % 3",
-            "*/g/V/1../OUT/+/IN/OUT/+/IN.count()                                            % 2",
+            "*/g/V/1>>OUT/+.>>IN/OUT/+.>>IN.count()                                         % 2",
+            "*/g/V/1>>OUT/+/IN/OUT/+/IN.count()                                             % 2",
+            "*/g/V/1>>OUT/+>>IN/OUT/+>>IN.count()                                             % 2",
             "*/g/V/1/OUT/+/IN/OUT/+/IN.count()                                              % 2",
-            "*/g/V/1../OUT/+/IN/OUT/+/IN/OUT/+/IN.count()                                   % 0",
+            "*/g/V/1/OUT/+>>IN/OUT/+>>IN.count()                                            % 2",
+            "*/g/V/1>>OUT/+/IN/OUT/+/IN/OUT/+/IN.count()                                   % 0",
             "*/g/V/1/OUT/+/IN/OUT/+/IN/OUT/+/IN.count()                                     % 0",
             "*/g/V/#.count()                                                                % 6",
             "*/g/E/+.count()                                                                % 6",
@@ -125,7 +135,8 @@ public class tp3SpaceTest extends AbstractSpaceTest {
             "*/g/V/1.count()                                                                % 1",
             "*/g/E/#.count()                                                                % 6",
             "*/g/E/1.count()                                                                % 0",
-            "*/g/V/+../OUT/+/+.count()                                                      % 6",
+            "*/g/V/+>>OUT/+/+.count()                                                       % 6",
+            "*/g/V/+>>OUT/+>>+.count()                                                      % 6",
             "/g/V/1 -> noobj; /g.-<[mult(V/+).*(_).count(),mult(E/+).*(_).count()]          % [5,3]",
             "*/g/V/1.update[name=>'dr.marko']                                               % person::[name=>'dr.marko',age=>29]",
             "*/g/V/1.update[name=>123]                                                      % <ERROR>",

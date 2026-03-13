@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -19,17 +19,21 @@
 package studio.phaseshift.metatron.isa.m;
 
 import org.junit.jupiter.api.Test;
-import studio.phaseshift.metatron.isa.m.type.NoObj;
+import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.furi.c.cInt;
+import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Bytes;
+import studio.phaseshift.metatron.isa.m.type.NoObj;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.HexFormat;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.BOOL_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.BYTES_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mParser.m_bool;
@@ -53,7 +57,7 @@ public class mParserTest extends AbstractMetatronTest {
         assertThrows(Exception.class, () -> mParser.parse("-- a comment\n\n --"));
         assertEquals(NoObj.noobj(), mParser.parse("[--- a comment\n\n ---]"));
     }
-    
+
     @Test
     public void testBoolParse() {
         assertEquals(BOOL_TID, m_bool().parse("true").<Obj>get().tid());
@@ -66,7 +70,7 @@ public class mParserTest extends AbstractMetatronTest {
         assertEquals(BYTES_TID, m_bytes().parse("0xabc123").<Bytes>get().tid());
         assertArrayEquals(HexFormat.of().parseHex("abc123"), m_bytes().parse("0xabc123").<Bytes>get().jvm().array());
     }
-    
+
 
     @Test
     public void testIntParse() {
@@ -97,7 +101,29 @@ public class mParserTest extends AbstractMetatronTest {
 
     @Test
     public void testUriParse() {
-        assertEquals(uri("http://metatron.com?a=2&b=3"), mParser.parse("<http://metatron.com?a=2&b=3>"));
+        assertEquals(
+                f("http://metatron.com?a=2&b=3"), 
+                uri("http://metatron.com?a=2&b=3").uriValue());
+        assertEquals(
+                uri("http://metatron.com?a=2&b=3").uriValue(),
+                mParser.parse("<http://metatron.com?a=2&b=3>").uriValue());
+        assertEquals(
+                f("http://metatron.com?a=2&b=3"),
+                mParser.parse("<http://metatron.com?a=2&b=3>").uriValue());
+        for (fURI x : List.of(
+                mParser.parse("<http://metatron.com?a=2&b=3>").uriValue(),
+                f("http://metatron.com?a=2&b=3"),
+                uri("http://metatron.com?a=2&b=3").uriValue())) {
+            assertEquals("http", x.scheme());
+            assertEquals("metatron.com", x.host());
+            assertEquals(-1, x.port());
+            assertEquals(List.of(), x.path());
+            assertEquals(cInt.ONE(), x.c());
+            assertEquals(List.of(), x.poly());
+            assertEquals(Map.of("a", "2", "b", "3"), x.qMap());
+        }
+        /// ///////////////////////////////////
+        assertEquals(uri("http://metatron.com?a&b").uriValue(), mParser.parse("<http://metatron.com?a&b>").uriValue());
         assertEquals(uri("http://metatron.com?a&b"), mParser.parse("<http://metatron.com?a&b>"));
         assertEquals(uri("http://metatron.com?a=a/b/c&b=a"), mParser.parse("<http://metatron.com?a=a/b/c&b=a>"));
         assertThrows(MTronException.class, () -> mParser.parse("/metatron.com?a&b")); // TODO: this will be needed moving forward with monad distribution and uri authorities
@@ -106,8 +132,8 @@ public class mParserTest extends AbstractMetatronTest {
 
     @Test
     public void testRelParse() {
-        assertEquals(rel(uri("a"),uri("b")).jvm(), mParser.parse("a => b").jvm());
-        assertEquals(rel(jnt(1),uri("b")).jvm(), mParser.parse("1 => b").jvm());
-        assertEquals(rel(jnt(1),real(4.3)).jvm(), mParser.parse("1 => 4.3").jvm());
+        assertEquals(rel(uri("a"), uri("b")).jvm(), mParser.parse("a => b").jvm());
+        assertEquals(rel(jnt(1), uri("b")).jvm(), mParser.parse("1 => b").jvm());
+        assertEquals(rel(jnt(1), real(4.3)).jvm(), mParser.parse("1 => 4.3").jvm());
     }
 }

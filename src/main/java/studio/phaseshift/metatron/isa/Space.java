@@ -179,15 +179,24 @@ public interface Space extends Rec, Closeable {
 
         public static List<IdObj> unrollPoly(final fURI polyvid, final Poly<?, ?> poly, final fURI pattern) {
             final List<IdObj> results = new ArrayList<>();
-            poly.indexedStream()
-                    .filter(r -> r.jvm().get1().isPoly() || polyvid.extend(f(r.jvm().get0().jvm().toString())).test(pattern))
-                    .forEach(r -> {
-                        final fURI key = polyvid.extend(f(r.jvm().get0().jvm().toString()));
-                        if (!r.jvm().get1().isPoly() || key.test(pattern))
-                            results.add(IdObj.of(key, r.jvm().get1()));
-                        else if (r.jvm().get1().isPoly())
-                            results.addAll(unrollPoly(key, r.jvm().get1().as(), pattern));
-                    });
+            if(!pattern.hasPattern()) {
+                final Obj value = poly.at(pattern.removePrefix(polyvid));
+                if (!value.isNoObj()) {
+                    results.add(IdObj.of(pattern, value));
+                }
+            }
+            if(results.isEmpty()) {
+                poly.indexedStream()
+                        .filter(r -> r.jvm().get1().isPoly() || polyvid.extend(f(r.jvm().get0().jvm().toString())).test(pattern))
+                        .forEach(r -> {
+                            final fURI key = polyvid.extend(f(r.jvm().get0().jvm().toString()));
+                            if (!r.jvm().get1().isPoly() || key.test(pattern))
+                                results.add(IdObj.of(key, r.jvm().get1()));
+                            else if (r.jvm().get1().isPoly())
+                                results.addAll(unrollPoly(key, r.jvm().get1().as(), pattern));
+                        });
+            }
+            //poly.logger().error("unrolled poly %s %s %s => %s", polyvid, pattern, poly, results);
             return results;
         }
 

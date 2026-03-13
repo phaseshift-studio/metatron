@@ -392,8 +392,8 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
                 "(?<poly>[^\\[{?&*+},]+(\\{([^}\\]]+))?}?[^,])");
         public static final Pattern FURI_PATTERN = Pattern.compile(
                 "((?<scheme>[^:/.]+):)?" +
-                        "(//((?<host>[^:/]+)(:(?<port>\\d+))?))?" +
-                        "(?<path>[^\\[{?&]+)?" +
+                        "(//((?<host>[^?\\[&<>:/]+)(:(?<port>\\d+))?))?" +
+                        "(?<path>[^?\\[{&]+)?" +
                         "(\\[(?<poly>[^]]+)])?" +
                         "(\\{(?<coefficient>[^}\\]]+)})?" +
                         "(\\?" +

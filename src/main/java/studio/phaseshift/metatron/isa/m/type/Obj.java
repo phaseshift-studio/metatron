@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.m.type;
 
 import studio.phaseshift.metatron.BootLoader;
+import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.algebra.MultMonoid;
 import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.algebra.Ring;
@@ -286,7 +287,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
             return this.test(rhs.dom()) && rhs.apply(this).test(rhs.rng());
         if (!this.c().within(rhs.c()))
             return false;
-        if (BootLoader.TYPE_CHECK && rhs.isType()) {
+        if (rhs.isType()) {
             return Type.Helper.typeCheck(this, rhs);
         }
         return this.tid().test(rhs.tid()) &&
@@ -708,7 +709,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         }
 
         public static void objCheckAndSave(final Obj obj) {
-            if (BootLoader.TYPE_CHECK) {
+            if (TypeCheck.OBJ_WRITE.enabled()) {
                 if (Router.loaded() && !obj.isInstSet() && !obj.isNoObj() && !obj.isType() && !obj.test(obj.type())) {
                     if (obj.isPoly()) {
                         final String matchDiffString = Poly.Helper.diffTypeRecursion(obj, obj.type()).toString();
@@ -751,7 +752,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                                                   final fURI vid) {
             if (null != tid) {
                 final fURI bigTID = tid.big();
-                if (BootLoader.TYPE_CHECK && !BASE_TYPES.contains(bigTID.basePath()) && Router.loaded()) {
+                if (TypeCheck.TYPE_CONS.enabled() && !BASE_TYPES.contains(bigTID.basePath()) && Router.loaded()) {
                     Obj type = Router.readFromSpace(bigTID);
                     if (!type.isNoObj() && type.isType() && type.asType().hasConstructor()) {
                         final Obj protoObj = MObjFactory.of().toObj(jvm, null, vid, clazz);

@@ -39,6 +39,7 @@ import java.util.stream.Collectors;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.*;
 import static studio.phaseshift.metatron.isa.grph.tp3.space.EdgeMap.lazyEdgeToRec;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -49,7 +50,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class VertexMap extends ElementMap {
-    
+
     protected static final GraphittyLogger LOG = Graphitty.log(VertexMap.class);
 
     public VertexMap(final Vertex base, final tp3Space tp3Space) {
@@ -74,11 +75,11 @@ public class VertexMap extends ElementMap {
         return super.get(key);
     }
 
-   /* @Override
+    /*@Override
     public Set<Entry<Uri, Obj>> entrySet() {
         final Set<Entry<Uri, Obj>> entries = new LinkedHashSet<>(super.entrySet().stream().collect(Collectors.toSet()));
-        entries.add(new SimpleEntry<>(OUT, this.get(OUT)));
-        entries.add(new SimpleEntry<>(IN, this.get(IN)));
+        entries.add(new SimpleEntry<Uri, Obj>(OUT, auto_(() -> this.get(OUT)).tryToInst()));
+        entries.add(new SimpleEntry<Uri, Obj>(IN, auto_(() -> this.get(IN)).tryToInst()));
         return entries;
     }*/
 

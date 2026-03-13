@@ -22,7 +22,7 @@ import org.jline.utils.AttributedString;
 import org.jline.utils.AttributedStringBuilder;
 import org.jline.utils.Status;
 import org.slf4j.event.Level;
-import studio.phaseshift.metatron.BootLoader;
+import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.Uri;
@@ -64,7 +64,7 @@ public class StatusLine implements Runnable {
     public StatusLine(final Console console) {
         this.line = new ArrayList<>();
         this.status = Status.getStatus(Console.getTerminal());
-        this.addWidget(f("type_check_"), () -> BootLoader.TYPE_CHECK ? "{{w&[g]}} T {{X}}" : "{{w&[r]}} T {{X}}");
+        this.addWidget(f("type_check_"), () -> "{{w&[%s]}} T {{X}}".formatted(TypeCheck.colorLevel()));
         this.addWidget(f("host"), () -> "{{w}}%s".formatted(Router.global().server().isRunning() ? Router.global().server().host() : "{{r}}<node down>"));
         //this.addWidget(f("spaces"), () -> "{{w}}spaces:{{y}}%d".formatted(Router.global().spaces().count()));
         //this.addWidget(f("nodes"), () -> "{{w}}nodes:{{y}}%d".formatted(Router.global().server().nodes().size()));
