@@ -510,7 +510,7 @@ public abstract class AbstractfURI implements fURI {
             return this;
         final List<String> newPath = new ArrayList<>(this.path());
         boolean hasBlank = this.hasBlankCap(false);
-        while (newPath.getLast().isEmpty() || newPath.getLast().equals("#") || newPath.getLast().equals("+")) {
+        while (!newPath.isEmpty() && (newPath.getLast().isEmpty() || newPath.getLast().equals("#") || newPath.getLast().equals("+"))) {
             newPath.removeLast();
         }
         if (hasBlank && !newPath.isEmpty() && !newPath.getLast().isEmpty())

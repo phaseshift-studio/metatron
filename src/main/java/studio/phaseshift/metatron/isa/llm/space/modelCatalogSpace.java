@@ -16,34 +16,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.llm.ollama.space;
+package studio.phaseshift.metatron.isa.llm.space;
 
-import dev.langchain4j.model.ollama.OllamaModels;
-import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractSpace;
+import studio.phaseshift.metatron.isa.llm.LLMFactory;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.m.type.impl.MUri;
-import studio.phaseshift.metatron.isa.mach.type.Router;
-import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
-import static studio.phaseshift.metatron.isa.llm.ollama.ollamaInstSet.*;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SPACE_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.math.mathInstSet.GBYTE_TYPE;
-import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_BYTE_TID;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -51,35 +42,33 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 
-public class ollamaSpace extends AbstractSpace<OllamaModels> {
+public class modelCatalogSpace<CATALOG> extends AbstractSpace<CATALOG> {
 
-    public static final Type OLLAMA_SPACE_TYPE = Type.Builder.build()
+    public static final fURI LLM_CATALOG_SPACE_TID = LLM_SPACE_TID.extend("catalog");
+    public static final Type LLM_CATALOG_SPACE_TYPE = Type.Builder.build()
             .tid(SPACE_TID)
-            .vid(OLLAMA_SPACE_TID)
+            .vid(LLM_CATALOG_SPACE_TID)
             .isaPredicate(rec(
+                    uri(PROVIDER), is_(or_(eq_(uri("openai")), eq_(uri("ollama")))),
                     uri(PATTERN), URI_TYPE,
                     uri(HOST), URI_TYPE,
                     uri(ROUTE), rec(URI_TYPE, URI_TYPE)))
-            .constructor(instC(INST_TID.dom(ALL.maybe()).rng(OLLAMA_TID), lst(T(REC_TID)), (lhs, inst) ->
-                    ollamaSpace.of(new OllamaModels.OllamaModelsBuilder()
-                            .baseUrl(inst.arg(0).<Rec>as().at(HOST)
-                                    .uriValue().toString()).build(), inst.arg(0).jvm(), inst.arg(0).vid())
-            )).create();
+            .constructor(instC(INST_TID.dom(ALL.maybe()).rng(LLM_CATALOG_SPACE_TID), lst(T(REC_TID)), (_, inst) -> LLMFactory.createModelCatalog(inst.arg(0).asRec()))).create();
 
     private final memSpace cache;
 
-    public static ollamaSpace of(final OllamaModels models, final Map<Obj, Obj> config, final fURI vid) {
-        return new ollamaSpace(models, config, vid);
+    public static <CATALOG> modelCatalogSpace<CATALOG> of(final CATALOG models, final Map<Obj, Obj> config, final fURI vid) {
+        return new modelCatalogSpace<>(models, config, vid);
     }
 
-    public ollamaSpace(final OllamaModels models, final Map<Obj, Obj> config, final fURI vid) {
-        super(models, config, OLLAMA_TID, vid);
+    public modelCatalogSpace(final CATALOG models, final Map<Obj, Obj> config, final fURI vid) {
+        super(models, config, LLM_SPACE_TID, vid);
         this.cache = memSpace.of(this.pattern(), null);
-        Router.writeToSpace(rec(Map.of(uri(NAME), uri("ollama"), uri(HOST),  this.at(HOST)),OLLAMA_TID,this.vid.extend("ollama")));
         this.refreshModels();
     }
 
     protected void refreshModels() {
+        /*
         final OllamaModels models = this.sjvm;
         models.availableModels().content().stream()
                 .map(m -> Tuple.Pair.with(m, models.modelCard(m.getName()).content()))
@@ -92,6 +81,8 @@ public class ollamaSpace extends AbstractSpace<OllamaModels> {
                                 uri(SIZE), real(Long.valueOf(m.get0().getSize()).doubleValue(), MATH_BYTE_TID, null).as(GBYTE_TYPE)), OLLAMA_OLLM_TID, null)).forEach(m -> {
                     this.write(this.pattern.retract(1).extend(m.at(NAME).uriValue()), m);
                 });
+              
+         */
     }
 
     @Override

@@ -22,7 +22,6 @@ import(/m/iot/miot);
 import(/m/grph);
 import(/m/grph/tp3);
 import(/m/llm);
-import(/m/llm/ollama);
 import(/m/tble);
 [== global settings store in boot ==]
 print("{{y}}mqtt broker location{{X}}: ", <boot/args/mqtt>.else(boot/args/mqtt -> [broker => <mqtt://chibi.local:1883>]),"\n");
@@ -82,9 +81,10 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
           script  => !*boot/script]@/sys/space/fs;
  serial::[pattern => <serial:#>,
           route   => [serial:=><>]]@/sys/space/serial;
- ollama::[host    => <http://localhost:11434>,
-          pattern => <ollama:#>,
-          route   => [ollama:=><>]]@/sys/space/ollama;
+ catalog::[host    => <http://localhost:11434>,
+       pattern => <ollama:#>,
+       provider => <ollama>,
+       route   => [ollama:=><>]]@/sys/space/ollama;
  tble::[pattern    => netflix:#,
         host       => <mariadb://localhost:3306/netflix?user=mtron&password=mtron>,
         route      => [<netflix:>=><>],

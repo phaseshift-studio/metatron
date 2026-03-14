@@ -19,28 +19,79 @@
 package studio.phaseshift.metatron.isa.llm;
 
 import dev.langchain4j.model.chat.StreamingChatModel;
+import dev.langchain4j.model.ollama.OllamaModels;
 import dev.langchain4j.model.ollama.OllamaStreamingChatModel;
+import dev.langchain4j.model.openai.OpenAiModelCatalog;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.Space;
+import studio.phaseshift.metatron.isa.llm.space.modelCatalogSpace;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Str;
+import studio.phaseshift.metatron.isa.m.type.impl.MUri;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.util.Tuple;
+
+import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.MODEL_TID;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.GBYTE_TYPE;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_BYTE_TID;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class LLMFactory {
+
+public final class LLMFactory {
 
     private LLMFactory() {
+        // do nothing
+    }
+
+    public static Space createModelCatalog(final Rec spaceRec) {
+        return switch (spaceRec.at(PROVIDER).uriValue().toString()) {
+            case "ollama" -> {
+                final OllamaModels models = OllamaModels.builder().baseUrl(spaceRec.at(HOST).uriValue().toString()).build();
+                final modelCatalogSpace<?> catalogSpace = modelCatalogSpace.of(models, spaceRec.jvm(), spaceRec.vid());
+                models.availableModels().content().stream()
+                        .map(m -> Tuple.Pair.with(m, models.modelCard(m.getName()).content()))
+                        .forEach(m -> rec(
+                                Map.of(uri(PROVIDER), auto_from_(spaceRec.vid()).tryToInst(),
+                                        uri(HOST), auto_from_(spaceRec.vid().extend(HOST)).tryToInst(),
+                                        uri(NAME), uri(m.get0().getName()),
+                                        uri(THINK), bool(m.get1().getCapabilities().contains(THINKING)),
+                                        uri(SKILL), lst(m.get1().getCapabilities().stream().map(MUri::uri)),
+                                        uri(SIZE), real(Long.valueOf(m.get0().getSize()).doubleValue(), MATH_BYTE_TID, null).as(GBYTE_TYPE)),
+                                MODEL_TID, catalogSpace.pattern().retractPattern().extend(m.get0().getName())));
+                yield catalogSpace;
+            }
+            case "openai" -> {
+                final OpenAiModelCatalog models = OpenAiModelCatalog.builder().apiKey(spaceRec.at(API_KEY).strValue()).build();
+                final modelCatalogSpace<?> catalogSpace = modelCatalogSpace.of(models, spaceRec.jvm(), spaceRec.vid());
+                models.listModels().forEach(m -> rec(Map.of(
+                                uri(NAME), uri(m.name()),
+                                uri(CREATOR), str(m.provider().name()),
+                                uri(DESC), str(m.description()),
+                                uri(PROVIDER), auto_from_(spaceRec.vid()).tryToInst()),
+                        MODEL_TID, catalogSpace.pattern().retractPattern().extend(m.name())));
+                yield catalogSpace;
+            }
+            default -> throw new IllegalArgumentException("unsupported LLM provider: " + spaceRec.at(PROVIDER));
+        };
     }
 
     public static StreamingChatModel createModel(final Rec llm, String modelName) {
-        final fURI provider = llm.at(f(PROVIDER).extend(NAME)).uriValue();
-        final String host = llm.at(HOST).uriValue().toString();
+        final fURI provider = llm.at(f(PROVIDER)).asRec().at(PROVIDER).uriValue();
+        final String host = llm.at(f(PROVIDER)).asRec().at(HOST).uriValue().toString();
         //   final boolean toolUse = !llm.at(TOOL).isNoObj();
         final boolean thinking = llm.at(THINK).orElse(bool(false)).boolValue();
         // final Uri memory = llm.at(MEMORY).orElse(null);
