@@ -1,4 +1,4 @@
-# metatron: a distributed virtual machine
+# metatron: ring-oriented computing
 
 [![Java CI with Maven](https://github.com/phaseshift-studio/metatron/actions/workflows/maven.yml/badge.svg)](https://github.com/phaseshift-studio/metatron/actions/workflows/maven.yml)
 

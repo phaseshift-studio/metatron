@@ -51,6 +51,18 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
         throw MTronException.of("unable to compare %s to %s", this, other);
     }
 
+    static boolean isPattern(final String piece) {
+        return piece.equals("#") || piece.equals("+");
+    }
+
+    static boolean isOnePattern(final String piece) {
+        return piece.equals("+");
+    }
+
+    static boolean isAllPattern(final String piece) {
+        return piece.equals("#");
+    }
+
     default fURI segments(final List<String> segments) {
         final List<String> newPath = new ArrayList<>(segments);
         if (!this.path().isEmpty()) {
@@ -281,6 +293,8 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
 
     fURI q(final Map<String, String> query);
 
+    fURI removeQ(final String key);
+
     default fURI qString(final String query) {
         if (null == query || query.isEmpty())
             return fURI.of(this.scheme(), this.host(), this.port(), this.path(), this.c(), this.poly(), Map.of());
@@ -475,12 +489,12 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
     }
 
 
-    static fURI of(final String scheme, 
-                   final String host, 
-                   final int port, 
+    static fURI of(final String scheme,
+                   final String host,
+                   final int port,
                    final List<String> path,
-                   final C<?, ?> coefficient, 
-                   final List<String> poly, 
+                   final C<?, ?> coefficient,
+                   final List<String> poly,
                    final Map<String, String> query) {
         if (null != poly && !poly.isEmpty()) {
             return new SAPPCQfURI(scheme, host, port, path, poly, coefficient, query);

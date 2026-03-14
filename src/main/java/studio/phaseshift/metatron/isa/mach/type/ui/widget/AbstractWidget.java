@@ -48,6 +48,10 @@ public abstract class AbstractWidget<W extends AbstractWidget<W>> implements Wid
         this.display.resize(this.size.getRows(), this.size.getColumns());
         this.cursor = new Cursor(0, 0);
     }
+    
+    public Style<W> getStyle() {
+        return this.style;
+    }
 
     public W cursor(final Cursor cursor) {
         this.cursor = cursor;

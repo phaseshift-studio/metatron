@@ -36,37 +36,37 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.*;
 public abstract class AbstractfURI implements fURI {
 
     @Override
-    public List<String> segments(){
+    public List<String> segments() {
         final List<String> path = this.path();
-        if(path.isEmpty() || (!path.getFirst().isEmpty() && !path.getLast().isEmpty()))
+        if (path.isEmpty() || (!path.getFirst().isEmpty() && !path.getLast().isEmpty()))
             return path;
-        if(path.getFirst().isEmpty() && path.getLast().isEmpty())
+        if (path.getFirst().isEmpty() && path.getLast().isEmpty())
             return path.subList(1, path.size() - 1);
-        if(path.getFirst().isEmpty())
+        if (path.getFirst().isEmpty())
             return path.subList(1, path.size());
-        if(path.getLast().isEmpty())
+        if (path.getLast().isEmpty())
             return path.subList(0, path.size() - 1);
         throw MTronException.of("invalid path: %s", path);
     }
-    
+
     @Override
     public int segmentLength() {
         final List<String> path = this.path();
-        if(path.isEmpty() || (!path.getFirst().isEmpty() && !path.getLast().isEmpty()))
+        if (path.isEmpty() || (!path.getFirst().isEmpty() && !path.getLast().isEmpty()))
             return path.size();
-        if(path.getFirst().isEmpty() && path.getLast().isEmpty())
-            return path.size()-2;
-        if(path.getFirst().isEmpty())
-            return path.size()-1;
-        if(path.getLast().isEmpty())
-            return path.size()-1;
+        if (path.getFirst().isEmpty() && path.getLast().isEmpty())
+            return path.size() - 2;
+        if (path.getFirst().isEmpty())
+            return path.size() - 1;
+        if (path.getLast().isEmpty())
+            return path.size() - 1;
         throw MTronException.of("invalid path: %s", path);
     }
-    
-    
+
+
     @Override
     public fURI asAbsolute() {
-        if(!this.path().isEmpty() && this.path().getFirst().isEmpty())
+        if (!this.path().isEmpty() && this.path().getFirst().isEmpty())
             return this;
         final List<String> newPath = new ArrayList<>(this.path());
         if (!newPath.isEmpty() && !newPath.getFirst().isEmpty())
@@ -76,7 +76,7 @@ public abstract class AbstractfURI implements fURI {
 
     @Override
     public fURI asRelative() {
-        if(this.path().isEmpty() || !this.path().getFirst().isEmpty())
+        if (this.path().isEmpty() || !this.path().getFirst().isEmpty())
             return this;
         final List<String> newPath = new ArrayList<>(this.path());
         if (!newPath.isEmpty() && newPath.getFirst().isEmpty())
@@ -86,7 +86,7 @@ public abstract class AbstractfURI implements fURI {
 
     @Override
     public fURI asNode() {
-        if(this.path().isEmpty() || !this.path().getLast().isEmpty())
+        if (this.path().isEmpty() || !this.path().getLast().isEmpty())
             return this;
         final List<String> newPath = new ArrayList<>(this.path());
         if (!newPath.isEmpty() && newPath.getLast().isEmpty())
@@ -96,7 +96,7 @@ public abstract class AbstractfURI implements fURI {
 
     @Override
     public fURI asBranch() {
-        if(!this.path().isEmpty() && this.path().getLast().isEmpty())
+        if (!this.path().isEmpty() && this.path().getLast().isEmpty())
             return this;
         final List<String> newPath = new ArrayList<>(this.path());
         if (!newPath.isEmpty() && !newPath.getLast().isEmpty())
@@ -162,7 +162,7 @@ public abstract class AbstractfURI implements fURI {
 
     @Override
     public fURI path(final List<String> path) {
-        if(this.host() != null && (!path.isEmpty() && !path.getFirst().isEmpty())) {
+        if (this.host() != null && (!path.isEmpty() && !path.getFirst().isEmpty())) {
             final List<String> newPath = new ArrayList<>(path);
             newPath.addFirst("");
             return fURI.of(this.scheme(), this.host(), this.port(), newPath, this.c(), this.poly(), this.qMap());
@@ -413,6 +413,15 @@ public abstract class AbstractfURI implements fURI {
         final Map<String, String> newQ = new LinkedHashMap<>(this.qMap());
         newQ.putAll(other.qMap());
         return fURI.of(this.scheme(), this.host(), this.port(), newPath, this.c().mult(other.c()), this.poly(), newQ).resolve();
+    }
+
+    @Override
+    public fURI removeQ(final String key) {
+        if (this.qMap().isEmpty() || !this.qMap().containsKey(key))
+            return this;
+        final Map<String, String> newQ = new LinkedHashMap<>(this.qMap());
+        newQ.remove(key);
+        return fURI.of(this.scheme(), this.host(), this.port(), this.path(), this.c(), this.poly(), newQ);
     }
 
     @Override

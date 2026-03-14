@@ -31,22 +31,13 @@ public class Table extends AbstractWidget<Table> {
 
     protected final List<String> headers;
     protected final List<List<Object>> table;
-    protected final List<Integer> maxColWidth;
+    protected final List<List<Object>> metadata;
 
 
     public Table(final List<String> headers) {
         this.headers = headers;
         this.table = new ArrayList<>();
-        this.maxColWidth = new ArrayList<>();
-        for (int i = 0; i < headers.size(); i++) {
-            this.maxColWidth.add(Integer.MAX_VALUE);
-        }
-    }
-
-    public Table(final List<String> headers, final List<Integer> maxColWidth) {
-        this.headers = headers;
-        this.table = new ArrayList<>();
-        this.maxColWidth = maxColWidth;
+        this.metadata = new ArrayList<>();
     }
 
     public Table addRow(final List<Object> entries) {
@@ -54,9 +45,19 @@ public class Table extends AbstractWidget<Table> {
         return this;
     }
 
+    public Table addMetadata(final List<Object> metadata) {
+        this.metadata.add(metadata);
+        return this;
+    }
+
     public Table clear() {
         this.table.clear();
+        this.metadata.clear();
         return this;
+    }
+
+    public String header(final int column) {
+        return this.headers.get(column);
     }
 
     public List<Object> row(final int index) {
@@ -66,6 +67,14 @@ public class Table extends AbstractWidget<Table> {
     public List<List<Object>> rows() {
         return null == this.table ? List.of() : this.table;
     }
+    
+    public List<Object> rowMetadata(final int index) {
+        return this.metadata.get(index);
+    }
+
+    public List<List<Object>> metadata() {
+        return null == this.metadata ? List.of() : this.metadata;
+    }   
 
     public List<Object> column(int col) {
         final List<Object> column = new ArrayList<>();
@@ -85,7 +94,7 @@ public class Table extends AbstractWidget<Table> {
         final List<Integer> widths = new ArrayList<>();
         for (int i = 0; i < rowesque.size(); i++) {
             final int ii = i;
-            widths.add(Math.min(this.maxColWidth.get(i), Math.max(rowesque.get(i).length(), this.table.stream().map(row -> Highlighter.unformat(row.size() > ii ? row.get(ii).toString() : "")).flatMap(s -> Arrays.stream(s.split("\n"))).map(String::length).max(Integer::compareTo).orElse(0))));
+            widths.add(Math.max(rowesque.get(i).length(), this.table.stream().map(row -> Highlighter.unformat(row.size() > ii ? row.get(ii).toString() : "")).flatMap(s -> Arrays.stream(s.split("\n"))).map(String::length).max(Integer::compareTo).orElse(0)));
         }
         return widths;
     }
@@ -109,23 +118,20 @@ public class Table extends AbstractWidget<Table> {
         return sb.toString();
     }
 
-    private String clip(final String str, final int amount) {
-        if (amount > 0)
-            return str.substring(amount);
-        else
-            return str.substring(0, str.length() + amount) + "...";
-    }
-
     public List<String> formattedRows() {
         final List<String> frows = new ArrayList<>();
         for (int i = 0; i < this.table.size(); i++) {
-            frows.add(this.clip(this.formattedRow(i), this.maxColWidth.get(i)));
+            frows.add(this.formattedRow(i));
         }
         return frows;
     }
 
     public Object entry(final int row, final int col) {
         return this.row(row).get(col);
+    }
+
+    public Object entryMetadata(final int row, final int col) {
+        return this.rowMetadata(row).get(col);
     }
 
     private String addSpace(final List<Integer> widths, final int index, final Object entry) {

@@ -7,7 +7,7 @@
 :highlightjsdir: highlight
 :source-highlighter: ./highlight.js
 :highlightjs-languages: mtron,bash,json
-:stylesheet: ../css/metatron.css
+:stylesheet: ./css/metatron.css
 :highlightjs-theme: monokai
 :icons: font
 :icon-set: fas
@@ -44,97 +44,93 @@ include::adoc/header.html[]
 <div class="carousel-item">
 <div class="container-xxl py-5">
     <div class="container">
-        <p class="text-primary subtitle">Tractatus Algebraicus Metatronicus</p>
-        <div class="container">
-        <div class="row">
-            <p class="d-inline-flex gap-1">
-              <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-0" aria-expanded="false" aria-controls="card-0">Data Manipulation Techniques</a>
-              <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-1" aria-expanded="false" aria-controls="card-1">The Function of an Instruction</a>
-              <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-2" aria-expanded="false" aria-controls="card-2">Structured Types</button>
-              <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-3" aria-expanded="false" aria-controls="card-3">Twisted Tangled Graphs</button>
-              <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-4" aria-expanded="false" aria-controls="card-4">A Seat at the Relational Table</button>
-              <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-5" aria-expanded="false" aria-controls="card-5">In The Mind of an LLM</button>
-              <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-6" aria-expanded="false" aria-controls="card-6">The Macro Microprocessor</button>
-              <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-7" aria-expanded="false" aria-controls="card-7">Brokering an MQTT Deal</button>
-              <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-8" aria-expanded="false" aria-controls="card-8">The File Cabinet of Tomorrow</button> 
-              <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-9" aria-expanded="false" aria-controls="card-9">Serial for Breakfast</button> 
-             <!-- <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target=".multi-collapse" aria-expanded="false" aria-controls="card-1 card-2">The Entire Collection</button> -->
+        <h1 class="text-primary text-center p-5 glow-text">Tractatus Algebraicus Metatronicus</h1>
+        <hr/>
+            <p>
+            <div class="row mt-4 gap-4">
+                  <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-0" aria-expanded="false" aria-controls="card-0">Data Manipulation Techniques</button>
+                  <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-1" aria-expanded="false" aria-controls="card-1">The Function of an Instruction</button>
+                  <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-2" aria-expanded="false" aria-controls="card-2">Structured Types</button>
+                  <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-3" aria-expanded="false" aria-controls="card-3">Twisted Tangled Graphs</button>
+            </div>
+            <div class="row mt-3 gap-3">
+                  <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-4" aria-expanded="false" aria-controls="card-4">A Seat at the Relational Table</button>
+                  <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-5" aria-expanded="false" aria-controls="card-5">In The Mind of an LLM</button>
+                  <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-6" aria-expanded="false" aria-controls="card-6">The Macro Microprocessor</button>
+                  <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-7" aria-expanded="false" aria-controls="card-7">Brokering an MQTT Deal</button>
+            </div>
+            <div class="row mt-3 gap-3">
+                <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-8" aria-expanded="false" aria-controls="card-8">The File Cabinet of Tomorrow</button> 
+                <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-9" aria-expanded="false" aria-controls="card-9">Serial for Breakfast</button> 
+                <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-10" aria-expanded="false" aria-controls="card-10">Ringoid Machine</button> 
+                <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-11" aria-expanded="false" aria-controls="card-11">Auto From Referencing</button>
+            </div>
             </p>
-        </div>
         <div class="row">
 ++++
 
 ++++
-<div style="min-height: 120px;">
-  <div class="collapse multi-collapse" id="card-0">
+  <div class="collapse" id="card-0">
     <div style="width: 100%;">
 ++++
 
-include::data_manipulation.adoc[]
+include::adoc/data-manipulation-panel.adoc[]
 
 ++++
     </div>
   </div>
-</div>
 ++++
 
 
 ++++
-<div style="min-height: 120px;">
   <div class="collapse multi-collapse" id="card-1">
     <div style="width: 100%;">
 ++++
 
-include::mechanics_inst.adoc[]
+include::adoc/mechanics-inst.adoc[]
 
 ++++
-    </div>
   </div>
 </div>
 ++++
 
 ++++
-<div style="min-height: 120px;">
   <div class="collapse multi-collapse" id="card-2">
     <div style="width: 100%;">
 ++++
 
-include::type-panel.adoc[]
+include::adoc/type-panel.adoc[]
 
 ++++
-    </div>
   </div>
 </div>
 ++++
 
 ++++
-<div style="min-height: 120px;">
   <div class="collapse multi-collapse" id="card-3">
     <div style="width: 100%;">
 ++++
-////
-include::llm-panel.adoc[]
-////
+
+include::adoc/llm-panel.adoc[]
+
 ++++
-    </div>
   </div>
 </div>
 ++++
 
-
 ++++
 </div>
 </div>
-<script src="./highlight/highlight.min.js"></script>
-<script src="./highlight/languages/mtron.min.js"></script>
-<script src="./highlight/languages/bash.min.js"></script>
-<script src="./highlight/languages/json.min.js"></script>
-<script>
-if (!hljs.initHighlighting.called) {
-hljs.initHighlighting.called = true
-;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) { hljs.highlightBlock(el) })
-}
-</script>
+</div>
+</div>
+    <button class="carousel-control-prev" type="button" data-bs-target="#carousel-body" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Previous</span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#carousel-body" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Next</span>
+    </button>
 ++++
 
 ++++

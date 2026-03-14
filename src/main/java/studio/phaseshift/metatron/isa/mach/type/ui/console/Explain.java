@@ -24,17 +24,11 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.ui.Border;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
-import studio.phaseshift.metatron.isa.mach.type.ui.widget.AbstractWidget;
-import studio.phaseshift.metatron.isa.mach.type.ui.widget.Grid;
-import studio.phaseshift.metatron.isa.mach.type.ui.widget.Selector;
-import studio.phaseshift.metatron.isa.mach.type.ui.widget.Separator;
+import studio.phaseshift.metatron.isa.mach.type.ui.widget.*;
 
 import java.util.List;
 
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.eq_;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.is_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -68,24 +62,29 @@ public class Explain extends AbstractWidget<Explain> {
                     }*/
                 })
                 .onSelect((s, r, c) -> {
-                    final Inst sr = code.codeValue().get(r - 2);
-                    if (sr.args().values().anyMatch(Obj::isCode)) {
-                        Graphitty.out(Console.getTerminal().output(), "\n".repeat(this.profile.height() + 2));
-                        Graphitty.out(Console.getTerminal().output(), "{{^%d}}", 1);
-                        final Separator sep = new Separator("{{r}}-", this);
-                        Graphitty.out(Console.getTerminal().output(), sep.toString());
-                        Graphitty.out(Console.getTerminal().output(), "{{v%d}}", 1);
-                        sep.display();
-                        sr.args().values().filter(Obj::isCode).findFirst().ifPresent(o -> {
-                            this.close();
-                            final Explain nest = new Explain(o.asCode());
-                            nest.run();
-                            nest.close();
-                            Graphitty.out(Console.getTerminal().output(), "{{^%d}}", nest.profile.height() + 2);
-                            this.run();
-                            this.style().attachment.display();
-                        });
-                        
+                    final Table table = s.getStyle().<Profile>attachment().instTable;
+                    Graphitty.out(Console.getTerminal().output(), " {{v%d}} clicked on: %s {{^%d}}", (table.height()+r)+5, table.entry(r - 2, c), (table.height()+r)+5);
+                    if (table.header(c).equals("op")) {
+                     //  LOG.info("{{v%d}}clicked on: %s {{^%d}}", table.height()+1, table.entry(r - 2, c), table.height()+1);
+                    } else if (table.header(c).equals("args")) {
+                        final Inst sr = code.codeValue().get(r - 2);
+                        if (sr.args().values().anyMatch(Obj::isCode)) {
+                            Graphitty.out(Console.getTerminal().output(), "\n".repeat(this.profile.height() + 2));
+                            Graphitty.out(Console.getTerminal().output(), "{{^%d}}", 1);
+                            final Separator sep = new Separator("{{r}}-", this);
+                            Graphitty.out(Console.getTerminal().output(), sep.toString());
+                            Graphitty.out(Console.getTerminal().output(), "{{v%d}}", 1);
+                            sep.display();
+                            sr.args().values().filter(Obj::isCode).findFirst().ifPresent(o -> {
+                                this.close();
+                                final Explain nest = new Explain(o.asCode());
+                                nest.run();
+                                nest.close();
+                                Graphitty.out(Console.getTerminal().output(), "{{^%d}}", nest.profile.height() + 2);
+                                this.run();
+                                this.style().attachment.display();
+                            });
+                        }
                     }
                 });
         this.grid = new Grid(List.of(this.selector), 1);

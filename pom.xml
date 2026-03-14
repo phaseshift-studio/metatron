@@ -47,6 +47,8 @@
         <java.version>22</java.version>
         <skipTests>false</skipTests>
         <skipDocker>true</skipDocker>
+        <skipRunner>false</skipRunner>
+        <skipAdoc>false</skipAdoc>
         <main.class>studio.phaseshift.metatron.BootLoader</main.class>
         <!-- DEPENDENCY VERSIONS -->
         <java-websocket.version>1.6.0</java-websocket.version>
@@ -404,12 +406,13 @@
                         </goals>
                         <configuration>
                             <executable>python</executable>
+                            <skip>${skipRunner}</skip>
                             <arguments>
                                 <argument>docs/python/docs-code-parser.py</argument>
                                 <argument>--verbose</argument>
                                 <argument>-o</argument>
-                                <argument>${project.build.directory}/temp/website</argument>
-                                <argument>${project.build.directory}/temp/website/adoc/lang</argument>
+                                <argument>${project.build.directory}/temp</argument>
+                                <argument>${project.build.directory}/temp/adoc</argument>
                             </arguments>
                         </configuration>
                     </execution>
@@ -481,19 +484,13 @@
                             <outputDirectory>${project.build.directory}/temp</outputDirectory>
                             <resources>
                                 <resource>
-                                    <directory>${project.basedir}/docs</directory>
+                                    <directory>${project.basedir}/docs/website</directory>
                                     <includes>
-                                        <include>css/**</include>
-                                        <include>javascript/**</include>
-                                        <include>highlight/**</include>
-                                        <include>images/**</include>
-                                        <include>website/**</include>
+                                        <include>*/**</include>
                                     </includes>
                                     <excludes>
-                                        <exclude>index.adoc</exclude>
                                         <exclude>index.html</exclude>
                                     </excludes>
-                                    <filtering>true</filtering>
                                 </resource>
                             </resources>
                         </configuration>
@@ -568,12 +565,13 @@
                 <artifactId>asciidoctor-maven-plugin</artifactId>
                 <version>${asciidoctor.version}</version>
                 <configuration>
-                    <sourceDirectory>${project.build.directory}/temp/website</sourceDirectory>
+                    <sourceDirectory>${project.build.directory}/temp</sourceDirectory>
                     <sourceDocumentName>adoc/index.adoc</sourceDocumentName>
                     <outputDirectory>${project.build.directory}/docs/website</outputDirectory>
+                    <skip>${skipAdoc}</skip>
                     <resources>
                         <resource>
-                            <directory>${project.build.directory}/temp/website</directory>
+                            <directory>${project.build.directory}/temp</directory>
                             <targetPath>${project.build.directory}/docs/website</targetPath>
                             <excludes>
                                 <exclude>**/.txt</exclude>

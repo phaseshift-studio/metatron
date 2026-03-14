@@ -36,7 +36,7 @@ public class Profile extends AbstractWidget<Profile> {
     protected Table instTable;
 
     public Profile(final Call call) {
-        this.instTable = new Table(List.of("op", "dom", "rng", "f", "args", "desc", "c_dom", "c_rng"), List.of(10, 10,10,20, 5,10, 5, 5));
+        this.instTable = new Table(List.of("op", "dom", "rng", "f", "args", "desc", "c_dom", "c_rng"));
         cInt dom = cInt.ONE();
         cInt rng = cInt.ONE();
         boolean first = true;
@@ -55,6 +55,7 @@ public class Profile extends AbstractWidget<Profile> {
                     "{{m}}" + Inst.Form.of(i).toString(),
                     "{{g}}{{{" + (inDom ? "y" : "r") + "}}" + dom.toString() + "{{g}}}{{X}}",
                     "{{g}}{{{y}}" + rng.toString() + "{{g}}}{{X}}")).style().background("{{[b]}}").foreground("{{y}}").divider("{{r}}|").apply();
+            this.instTable.addMetadata(List.of(i, i.dom(), i.rng(), i.f(), i.args(), Router.global().read(i.tid().q("doc", null)), i.dom().c(), i.rng().c()));
         }
         this.style().attachment(this.instTable, true).apply();
     }

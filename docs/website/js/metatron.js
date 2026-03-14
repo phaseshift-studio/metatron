@@ -32,7 +32,7 @@
 })(jQuery);
 
 function slideShowPage(id) {
-    $('#slideshow_pages').carousel(id);
+    $('#carousel-body').carousel(id);
     Object.keys(termynals).forEach(key => refreshTermynal(key));
 }
 

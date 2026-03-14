@@ -11,270 +11,518 @@
 <link rel="icon" type="image/x-icon" href="./favicon.ico">
 <title>metatron</title>
 <style>
-/* Asciidoctor default stylesheet | MIT License | https://asciidoctor.org */
-
-@import url(https://cdn.jsdelivr.net/gh/asciidoctor/asciidoctor@2.0/data/stylesheets/asciidoctor-default.css); /* Default asciidoc style framework - important */
-
-/* CUSTOMISATIONS */
-/* Change the values in root for quick customisation. If you want even more fine grain... venture further. */
 :root {
-    /*------------------------*/
-    --mblue: #002394;
-    --mmagenta: #825181;
-    --mred: #6b0004;
-    --mgreen: #335c00;
-    --mdarkgray: #494554;
-    --mlightgray: #797585;
-    --myellow: #7b8000;
-    --maqua: #167a96;
-    /*------------------------*/
-    --maincolor: #282c34;
-    --primarycolor: var(--mred);
-    --secondarycolor: #191C24;
-    --light: #6C7293;
-    --dark: #000000;
-    --tertiarycolor: #006259;
-    --sidebarbackground: #191C24;
-    --linkcolor: var(--mmagenta);
-    --linkcoloralternate: #002dc5;
-    --white: #FFFFFF;
+	--maincolor: #282c34;
+	--primarycolor: #c80000;
+	--secondarycolor: #191C24;
+	--tertiarycolor: #4db6ac;
+	--sidebarbackground: #191C24;
+	--linkcolor: var(--mmagenta);
+	--linkcoloralternate: #2652e5;
+	--white: #FFFFFF;
+	--primary: #c80000;
+	--secondary: #191C24;
+	--light: #6C7293;
+	--dark: #000000;
+	/*------------------------*/
+	--mblue: #4669dd;
+	--mmagenta: #9f4040; /*#825181;*/
+	--mred: #6b0004;
+	--mgreen: #457b02;
+	--mdarkgray: #494554;
+	--mlightgray: #797585;
+	--myellow: #9ba201;
+	--maqua: #167a96;
 }
 
-/* roles */
-
-.red {
-    color: var(--mred);
+.terminal-box {
+	border: 1px solid #444;
+	background-color: #000;
+	color: #0F0;
+	font-family: 'Courier New', monospace;
+	padding: 1px;
+	margin: 1px 0;
+	border-radius: 4px;
+	box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
 }
 
-.metatron:before {
-    content: 'metatron';
-    mask-image: linear-gradient(to bottom, var(--primarycolor), var(--tertiarycolor));
+.terminal-box code {
+	font-size: 12px;
+	/*white-space: pre;*/
 }
 
-/* Text styles */
-
-html {
-    font-size: 18px;
-    font-family: sans-serif;
+.icon-color {
+	/* #EB1616 */
+	filter: invert(17%) sepia(67%) saturate(5238%) hue-rotate(356deg) brightness(97%) contrast(91%);
 }
 
-body {
-    background-color: var(--maincolor);
-    color: var(--white);
+.logo-text {
+	-webkit-text-stroke: 0.5px gray;
 }
 
-strong {
-    color: var(--myellow);
+.page-header {
+	font-size: 1.35rem;
+}
+
+.table {
+	vertical-align: middle;
+	padding: 0 !important;
+	margin: 0 !important;
+}
+
+.table-borderless {
+	block-size: 0 !important;
+}
+
+.carousel-control-prev,.carousel-control-next {
+	width: 2%;
+}
+
+.glow-text {
+	text-shadow: 0 0 1px rgba(255, 255, 255, 0.7), 0 0 5px rgba(255, 255, 255, 0.5), 0 0 8px rgba(255, 255, 255, 0.3);
+}
+
+/*** TERMINAL LOOK-AND-FEEL ***/
+[data-termynal] {
+    width: 100%;
+    height: 1000px;
+    max-height: 100%;
+    background: #191C24;
+    color: var(--primary);
+    font-size: 12px;
+    font-family: 'Fira Mono', Consolas, Menlo, Monaco, 'Courier New', Courier, monospace;
+    border-radius: 4px;
+    padding: 15px 15px 15px;
+    position: relative;
+    -webkit-box-sizing: border-box;
+            box-sizing: border-box;
+}
+
+[data-ty="input"]:before {
+    content: 'metatron>';
+}
+
+[data-termynal]:before {
+    content: '';
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    display: inline-block;
+    width: 0px;
+    height: 0px;
+    border-radius: 0%;
+    /* A little hack to display the window buttons in one pseudo element. */
+    -webkit-box-shadow: 0px 0 0 #f4c025, 0px 0 0 #3ec930;
+            box-shadow: 0px 0 0 #f4c025, 0px 0 0 #3ec930;
+}
+
+[data-termynal]:after {
+    content: '';
+    position: absolute;
+    color: var(--color-text-subtle);
+    top: 0px;
+    left: 0;
+    width: 100%;
+    text-align: center;
+}
+
+/*** ROTATING FEATURE BOXES ***/
+.flip-box {
+  background-color: transparent;
+  perspective: 1000px; /* Remove this if you don't want the 3D effect */
+    height: 250px;
+}
+
+/* This container is needed to position the front and back side */
+.flip-box-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.8s;
+  transform-style: preserve-3d;
+}
+
+/* Do an horizontal flip when you move the mouse over the flip box container */
+.flip-box:hover .flip-box-inner {
+  transform: rotateY(180deg);
+}
+
+/* Position the front and back side */
+.flip-box-front, .flip-box-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  -webkit-backface-visibility: hidden; /* Safari */
+  backface-visibility: hidden;
+}
+
+/* Style the front side */
+.flip-box-front {
+
+}
+
+/* Style the back side */
+.flip-box-back {
+  transform: rotateY(180deg);
+}
+
+/* TERMNYNAL TABS */
+
+.tabrow {
+	text-align: right;
+	list-style: none;
+	margin: 0px 0 1px;
+	padding: 0px 140px;
+	line-height: 24px;
+	height: 26px;
+	overflow: hidden;
+	font-size: 12px;
+	/*font-family: verdana;*/
+	position: relative;
+}
+
+.tabrow li {
+	border: 1px solid #AAA;
+	background: #D1D1D1;
+	background: -o-linear-gradient(top, #ECECEC 50%, #D1D1D1 100%);
+	background: -ms-linear-gradient(top, #ECECEC 50%, #D1D1D1 100%);
+	background: -moz-linear-gradient(top, #ECECEC 50%, #D1D1D1 100%);
+	background: -webkit-linear-gradient(top, #ECECEC 50%, #D1D1D1 100%);
+	background: linear-gradient(top, #ECECEC 50%, #D1D1D1 100%);
+	display: inline-block;
+	position: relative;
+	z-index: 0;
+	border-top-left-radius: 6px;
+	border-top-right-radius: 6px;
+	box-shadow: 0 3px 3px rgba(0, 0, 0, 0.4), inset 0 1px 0 #FFF;
+	text-shadow: 0 1px #FFF;
+	margin: 0 -5px;
+	padding: 0 50px; /* adjust tab size */
+}
+
+.tabrow a {
+	color: #555;
+	text-decoration: none;
+}
+
+.tabrow li.selected {
+	background: #FFF;
+	color: #333;
+	z-index: 2;
+	border-bottom-color: #FFF;
+}
+
+.tabrow:before {
+	position: absolute;
+	content: " ";
+	width: 100%;
+	bottom: 0;
+	left: 0;
+	/*border-bottom: 1px solid #AAA;*/
+	z-index: 1;
+}
+
+.tabrow li:before,
+.tabrow li:after {
+	border: 1px solid #AAA;
+	position: absolute;
+	bottom: -1px;
+	width: 5px;
+	height: 5px;
+	content: " ";
+}
+
+.tabrow li:before {
+	left: -6px;
+	border-bottom-right-radius: 6px;
+	border-width: 0 1px 1px 0;
+	box-shadow: 2px 2px 0 #D1D1D1;
+}
+
+.tabrow li:after {
+	right: -6px;
+	border-bottom-left-radius: 6px;
+	border-width: 0 0 1px 1px;
+	box-shadow: -2px 2px 0 #D1D1D1;
+}
+
+.tabrow li.selected:before {
+	box-shadow: 2px 2px 0 #FFF;
+}
+
+.tabrow li.selected:after {
+	box-shadow: -2px 2px 0 #FFF;
+}
+
+.code {
+	font-family: 'Courier', Courier, monospace;
+	font-size: 1.3rem;
 }
 
 h1 {
-    color: var(--primarycolor) !important;
-    font-family: sans-serif;
+	font-size: 3.5rem;
+	line-height: 0.1rem;
 }
 
-h2, h3, h4, h5, h6 {
-    color: var(--primarycolor) !important;
-    font-family: sans-serif;
+.subtitle {
+	font-size: 1.5rem;
+	margin-bottom: 0.75rem;
 }
 
-.title {
-    color: var(--mred) !important;
-    font-family: sans-serif;
-    font-style: normal;
-    font-weight: bold
+/*** Spinner ***/
+
+#spinner {
+	opacity: 0;
+	visibility: hidden;
+	transition: opacity 1.0s ease-out, visibility 0s linear .5s;
+	z-index: 99999;
 }
 
-#toc.toc2 a:link {
-    color: var(--linkcolor);
+#spinner.show {
+	transition: opacity 1.0s ease-out, visibility 0s linear 0s;
+	visibility: visible;
+	opacity: 1;
 }
 
-blockquote {
-    color: var(--tertiarycolor) !important
-}
+/*** Image Growth Effect ***/
 
-.quoteblock {
-    color: var(--white)
-}
-
-code {
-    color: var(--linkcoloralternate);
-    background-color: var(--sidebarbackground) !important;
-    border-radius: 0px;
-}
-
-
-/* Table styles */
-th {
-    background-color: var(--maincolor);
-    color: var(--white) !important;
-}
-
-.td-text {
-    background-color: var(--maincolor) !important;
-}
-
-td {
-    background-color: var(--sidebarbackground);
-    color: var(--linkcoloralternate) !important
-}
-
-#toc.toc2 {
-    background-color: var(--sidebarbackground);
-}
-
-#toctitle {
-    mask-image: linear-gradient(to bottom, var(--primarycolor), var(--tertiarycolor));
-}
-
-/* Responsiveness fixes */
-video {
-    max-width: 100%;
-}
-
-@media all and (max-width: 600px) {
-    table {
-        width: 55vw !important;
-        font-size: 3vw;
+    .overlap-layers{
+        position: relative;
+        display: inline-block; /* Make the width of box same as image */
     }
-}
-
-.exampleblock > .content {
-    background-color: var(--maincolor);
-}
-
-a {
-    color: var(--linkcoloralternate);
-}
-
-.admonitionblock td.icon .icon-tip::before {
-    text-shadow: none;
-    color: var(--white);
-}
-
-.admonitionblock td.icon .icon-note::before {
-    color: var(--tertiarycolor);
-}
-
-.admonitionblock td.icon .icon-important::before {
-    color: var(--linkcolor);
-}
-
-/*.admonitionblock td.icon .icon-caution::before {
-  color: var(--linkcoloralternate);
-}*/
-.admonitionblock td.icon .icon-warning::before {
-    color: var(--primarycolor);
-}
-
-#preamble > .sectionbody > .paragraph:first-of-type p {
-    color: var(--white);
-}
-
-.quoteblock blockquote::before {
-    color: var(--primarycolor);
-}
-
-.quoteblock .attribution cite, .verseblock .attribution cite {
-    color: var(--white);
-}
-
-.verseblock pre {
-    color: var(--white);
-}
-
-.quoteblock blockquote, .quoteblock blockquote p {
-    color: var(--white);
-}
-
-.sidebarblock {
-    background: var(--sidebarbackground);
-}
-
-pre code {
-    color: var(--linkcoloralternate);
-}
-
-.literalblock pre, .listingblock pre:not(.highlight), .listingblock pre[class="highlight"], .listingblock pre[class^="highlight "], .listingblock pre.CodeRay, .listingblock pre.prettyprint {
-    background: var(--sidebarbackground);
-    color: var(--primarycolor);
-}
-
-
-.literalblock pre, .listingblock > .content > pre:not(.highlight), .listingblock > .content > pre[class=highlight], .listingblock > .content > pre[class^="highlight "] {
-    background: var(--sidebarbackground);
-    color: var(--primarycolor);
-    margin: 0em !important;
-    padding: 0.5em !important;
-    /*font-size: 120%*/;
-    overflow: hidden !important; /* or else there is a y scrollbar on code blocks ?? */
-}
-
-.title {
-    color: var(--linkcoloralternate);
-    font-size: 120%;
-}
-
-#header span.email a {
-    color: var(--linkcoloralternate);
-}
-
-.parchment {
-    position: relative;
-    display: flex;
-    /*width: 25%;
-    min-height: 200);*/
-    /* center page with absolute position */
-    /*top: 0%; left: 50%; transform: translate(-50%, 0);*/
-    margin: 0.15em 0;
-    padding: 0.15em;
-    box-shadow: 1px 2px 5px black, 0 0 60px #8a4d0f inset;
-    background: #fffef0;
-    filter: url(#wavy2);
-}
-
-/* Marker styling */
-.circle {
-    position: relative;
-    margin: 0 40px;
-    color: #333;
-    text-decoration: none;
-    /* line-height: 1em; */
-
-    & svg {
+    .overlap-layers .top-layer{
         position: absolute;
+        margin: 0 auto;
         left: 0;
-        top: -50%;
         right: 0;
-        margin-left: auto;
-        margin-right: auto;
-        pointer-events: none;
+        top: -3%; /* Adjust this value to move the positioned div up and down */
+        text-align: center;
+        width: 100%; /* Set the width of the positioned div */
     }
 
-    & path {
-        transition: stroke-dashoffset 300ms linear;
-        stroke-width: 3.0;
-        stroke: darkgreen;
-        fill: none;
-        stroke-linecap: round;
-    }
+.c0  { opacity : 1; transition:opacity 4s;}
+.c0:hover{opacity:0;}
 
-    &:hover path {
-        stroke-dashoffset: 0;
-    }
+
+.grow {
+transition: all 4s ease-in-out;
+z-index:999;
+}
+
+.grow:hover {
+z-index:999;
+transform: scale(2.0);
 }
 
 
+/*** Button ***/
+
+.btn {
+	font-weight: 500;
+	transition: .5s;
+}
+
+.btn-square {
+	width: 38px;
+	height: 38px;
+}
+
+.btn-sm-square {
+	width: 32px;
+	height: 32px;
+}
+
+.btn-lg-square {
+	width: 48px;
+	height: 48px;
+}
+
+.btn-square,
+.btn-sm-square,
+.btn-lg-square {
+	padding: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-weight: normal;
+}
+
+.neon-text {
+	color: #fff !important;
+	text-shadow: 0 0 5px #fff, 0 0 5px var(--primary), 0 0 5px var(--primary);
+	/* #0fa neat green color */
+}
+
+.neon-box {
+	box-shadow: 0 0 5px #fff, 0 0 5px var(--primary), 0 0 5px var(--primary);
+	/* #0fa neat green color */
+}
+
+
+/*** Navbar ***/
+
+.navbar {
+	min-height: 50px;
+	max-height: 50px;
+	padding: 2rem 2rem;
+	padding-bottom: 1rem;
+	background-color:var(--dark);
+}
+
+.dropdown {
+	position: unset;
+}
+
+.navbar .dropdown-toggle::after {
+	border: none;
+	content: "\f107";
+	font-family: "Font Awesome 5 Free";
+	font-weight: 900;
+	vertical-align: middle;
+	margin-left: 8px;
+}
+
+.navbar .navbar-nav .nav-link {
+	margin-right: 30px;
+	padding: 40px 0;
+	color: var(--light);
+	font-family: 'Oswald', sans-serif;
+	font-size: 18px;
+	font-weight: 600;
+	text-transform: uppercase;
+	outline: none;
+}
+
+.navbar .navbar-nav .nav-link:hover,
+.navbar .navbar-nav .nav-link.active {
+	color: var(--primary);
+}
+
+.metatron-name {
+	color: var(--primary);
+	font-weight: bolder;
+}
+
+.navbar.sticky-top {
+	top: -100px;
+	transition: .5s;
+}
+
+@media (max-width: 991.98px) {
+	.navbar .navbar-nav .nav-link,
+	.navbar.shadow-sm .navbar-nav .nav-link {
+		margin-right: 0;
+	}
+	.navbar .navbar-nav {
+		margin-top: 8px;
+		border-top: 1px solid var(--light);
+	}
+}
+
+@media (min-width: 992px) {
+	.navbar.shadow-sm .navbar-nav .nav-link {
+	}
+	.navbar .nav-item .dropdown-menu {
+		display: block;
+		border: none;
+		margin-top: 0;
+		top: 150%;
+		opacity: 0;
+		visibility: hidden;
+		transition: .5s;
+	}
+	.navbar .nav-item:hover .dropdown-menu {
+		top: 100%;
+		visibility: visible;
+		transition: .5s;
+		opacity: 1;
+	}
+}
+
+.page-header {
+	background: linear-gradient(rgba(0, 0, 0, .875), rgba(0, 0, 0, .875)), url(../images/angel-wings.png) center center no-repeat;
+	background-size: cover;
+}
+
+.breadcrumb-item+.breadcrumb-item::before {
+	color: var(--light);
+}
+
+body {
+	margin: 0;
+	padding: 0;
+	height: 100vh;
+	background-image: linear-gradient(rgba(0, 0, 0, .875), rgba(0, 0, 0, .875)), url(../images/angel-wings.png);
+	background-size: cover;
+	background-position: center;
+	background-attachment: fixed;
+}
+
+/*** Footer ***/
+
+.footer .btn.btn-link {
+	display: block;
+	margin-bottom: 5px;
+	padding: 0;
+	text-align: left;
+	color: var(--light);
+	font-size: 15px;
+	font-weight: normal;
+	text-transform: capitalize;
+	transition: .3s;
+}
+
+.footer .btn.btn-link::before {
+	position: relative;
+	content: "\f105";
+	font-family: "Font Awesome 5 Free";
+	font-weight: 900;
+	margin-right: 10px;
+}
+
+.footer .btn.btn-link:hover {
+	color: var(--primary);
+	letter-spacing: 1px;
+	box-shadow: none;
+}
+
+.footer .copyright {
+	padding: 1.5rem;
+	font-size: 15px;
+	background: var(--dark);
+}
+
+.footer .copyright a {
+	color: var(--light);
+}
+
+.footer .copyright a:hover {
+	color: var(--primary);
+}
+
+.modal-content {
+	width: unset;
+}
+
+.modal-text {
+	font-size: 1.3rem;
+}
+
+/******************************************************************/
+/******************************************************************/
+/************************* HIGHLIGHT-JS ***************************/
+/******************************************************************/
 /******************************************************************/
 
 .hljs {
-    font-size: 95%;
-    display: block;
-    padding: 0.5em;
+	font-size: 1.0rem;
+	display: block;
+	background: #191C24
 }
 
 .hljs-phaseshift-studio-header {
-    color: var(--secondarycolor) !important;
-    font-weight: bolder;
+	color: var(--secondarycolor) !important;
+	font-weight: bolder;
 }
 
 .hljs-mtron-real,
@@ -284,19 +532,19 @@ pre code {
 .hljs-mtron-bool,
 .hljs-mtron-furi-query,
 .hljs-mtron-sugar-inst,
-.hljs-mtron-query,
 .hljs-mtron-sys-furi,
 .hljs-mtron-log-warn{
-    color: var(--myellow);
+	color: var(--myellow);
 }
 
 .h {
-    color: #d4de68;
-    font-weight: bold !important;
+	color: #d4de68;
+	font-weight: bold !important;
 }
 
-.hljs-mtron-rec-key {
-    color: var(--maqua);
+.hljs-mtron-rec-key,
+.hljs-mtron-query {
+	color: var(--maqua);
 }
 
 #header,
@@ -304,16 +552,16 @@ pre code {
 .hljs-punctuation,
 .hljs-mtron-rec,
 .hljs-mtron-result-prefix,
-.hljs-mtron-type-prefix,
+
 .hljs-mtron-prompt-end,
-.hljs-mtron-log-info {
-    color: var(--mgreen);
+.hljs-mtron-log-info,
+.hljs-mtron-T {
+	color: var(--mgreen);
 }
 
 .hljs-mtron-prompt-begin,
-.hljs-mtron-noobj,
-.hljs-mtron-T {
-    color: var(--mmagenta);
+.hljs-mtron-noobj {
+	color: var(--mmagenta);
 }
 
 .hljs-mtron-pipe,
@@ -322,46 +570,47 @@ pre code {
 .hljs-mtron-fail,
 .hljs-mtron-fail-bar,
 .hljs-mtron-thrown {
-    color: var(--mred);
+	color: var(--mred);
 }
 
 .hljs-comment {
-    color: var(--mlightgray);
+	color: var(--mlightgray);
 }
 
 .hljs-mtron-keyword,
 .hljs-mtron-inst {
-    color: var(--tertiarycolor);
+	color: var(--tertiarycolor);
 }
 
 .hljs-mtron-uri,
+.hljs-mtron-type-prefix,
 .hljs-mtron-type,
 .hljs-mtron-inst-f-jvm {
-    color: var(--mblue);
+	color: var(--mblue);
 }
 
 .hljs-mtron-doc-callout, .conum {
-    display: inline-block;
-    color: var(--tertiarycolor);
-    background: var(--mmagenta) !important;
-    -webkit-border-radius: 100px;
-    -moz-border-radius: 100px;
-    -o-border-radius: 100px;
-    border-radius: 100px;
-    text-align: center;
-    margin-right: 40px;
-    float: right;
-    width: 25px;
-    height: 25px;
-    font-size: 16px;
-    font-weight: bold;
-    line-height: 25px;
-    /*font-family: Arial;*/
+	display: inline-block;
+	color: var(--tertiarycolor);
+	background: var(--mmagenta) !important;
+	-webkit-border-radius: 100px;
+	-moz-border-radius: 100px;
+	-o-border-radius: 100px;
+	border-radius: 100px;
+	text-align: center;
+	margin-right: 40px;
+	float: right;
+	width: 25px;
+	height: 25px;
+	font-size: 16px;
+	font-weight: bold;
+	line-height: 25px;
+	/*font-family: Arial;*/
 }
 
 .hljs-fos-docs-if-else-then-case-do,
 .hljs-mtron-comment {
-    color: #797979;
+	color: #797979;
 }
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
@@ -407,7 +656,6 @@ pre code {
     <link rel="icon" type="image/png" sizes="16x16" href="images/favicon-16x16.png">
     <link rel="mask-icon" href="images/safari-pinned-tab.svg" color="#5bbad5">
     <!-- CSS PACKAGES -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
     <link href="lib/animate/animate.min.css" rel="stylesheet">
@@ -493,6 +741,9 @@ bin/metatron</code></pre>
                     <li><a class="code dropdown-item" href="#" onclick="slideShowPage(1);">/m/sys</a></li>
                 </ul>
             </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" onclick="slideShowPage(2);" role="button">the tractatus</a>
+            </li>
             <li class="nav-item dropdown">
                 <a id="guild_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
                    aria-expanded="false">
@@ -548,7 +799,8 @@ bin/metatron</code></pre>
                         <div class="row g-4">
                             <div class="col-lg-8 wow fadeIn" data-wow-delay="0.5s">
                                 <h1 class="text-uppercase mb-4 neon-text">metatron&trade;</h1>
-                                <p class="text-primary subtitle">Interconnect Heterogeneous Data Sources and Processes</p>
+                                <p class="text-primary subtitle">Interconnect Heterogeneous Data Sources and
+                                    Processes</p>
                                 <div class="row g-4">
                                     <div class="col-md-6">
                                         <p class="mb-0"><b class="metatron-name">metatron</b> offers a concise,
@@ -608,6 +860,17 @@ bin/metatron</code></pre>
                                     "images/icons/link-icon.svg",
                                     "metatron <b class=\"metatron-name\">objs</b> exist in a single, unified uri address space where process can seamless traverse across a variegated data space",
                                     "images/modal/furi-modal.svg");
+                            </script>
+                        </div>
+                        <!-- URI -->
+                        <div id="ring_feature">
+                            <script type="text/javascript">
+                                featurePanel(
+                                    "ring_feature",
+                                    "ring",
+                                    "images/icons/ring-icon.svg",
+                                    "the typical functional programming monad/monoid is extended with a <b class=\"metatron-name\">\"ringad\"/ringoid</b> processor, where <b class=\"metatron-name\">*</b> is function composition and <b class=\"metatron-name\">+</b> is function branching",
+                                    "images/modal/ring-modal.svg");
                             </script>
                         </div>
                         <!-- EMBED -->
@@ -726,26 +989,30 @@ bin/metatron</code></pre>
 <div class="carousel-item">
 <div class="container-xxl py-5">
     <div class="container">
-        <p class="text-primary subtitle">Tractatus Algebraicus Metatronicus</p>
-        <div class="container">
-        <div class="row">
-            <p class="d-inline-flex gap-1">
-              <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-0" aria-expanded="false" aria-controls="card-0">Data Manipulation Techniques</a>
-              <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-1" aria-expanded="false" aria-controls="card-1">The Function of an Instruction</a>
-              <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-2" aria-expanded="false" aria-controls="card-2">Structured Types</button>
-              <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-3" aria-expanded="false" aria-controls="card-3">Twisted Tangled Graphs</button>
-              <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-4" aria-expanded="false" aria-controls="card-4">A Seat at the Relational Table</button>
-              <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-5" aria-expanded="false" aria-controls="card-5">In The Mind of an LLM</button>
-              <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-6" aria-expanded="false" aria-controls="card-6">The Macro Microprocessor</button>
-              <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-7" aria-expanded="false" aria-controls="card-7">Brokering an MQTT Deal</button>
-              <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-8" aria-expanded="false" aria-controls="card-8">The File Cabinet of Tomorrow</button>
-              <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-9" aria-expanded="false" aria-controls="card-9">Serial for Breakfast</button>
-             <!-- <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target=".multi-collapse" aria-expanded="false" aria-controls="card-1 card-2">The Entire Collection</button> -->
+        <h1 class="text-primary text-center p-5 glow-text">Tractatus Algebraicus Metatronicus</h1>
+        <hr/>
+            <p>
+            <div class="row mt-4 gap-4">
+                  <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-0" aria-expanded="false" aria-controls="card-0">Data Manipulation Techniques</button>
+                  <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-1" aria-expanded="false" aria-controls="card-1">The Function of an Instruction</button>
+                  <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-2" aria-expanded="false" aria-controls="card-2">Structured Types</button>
+                  <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-3" aria-expanded="false" aria-controls="card-3">Twisted Tangled Graphs</button>
+            </div>
+            <div class="row mt-3 gap-3">
+                  <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-4" aria-expanded="false" aria-controls="card-4">A Seat at the Relational Table</button>
+                  <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-5" aria-expanded="false" aria-controls="card-5">In The Mind of an LLM</button>
+                  <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-6" aria-expanded="false" aria-controls="card-6">The Macro Microprocessor</button>
+                  <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-7" aria-expanded="false" aria-controls="card-7">Brokering an MQTT Deal</button>
+            </div>
+            <div class="row mt-3 gap-3">
+                <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-8" aria-expanded="false" aria-controls="card-8">The File Cabinet of Tomorrow</button>
+                <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-9" aria-expanded="false" aria-controls="card-9">Serial for Breakfast</button>
+                <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-10" aria-expanded="false" aria-controls="card-10">Ringoid Machine</button>
+                <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-11" aria-expanded="false" aria-controls="card-11">Auto From Referencing</button>
+            </div>
             </p>
-        </div>
         <div class="row">
-<div style="min-height: 120px;">
-  <div class="collapse multi-collapse" id="card-0">
+  <div class="collapse" id="card-0">
     <div style="width: 100%;">
 <div class="exampleblock">
 <div class="content">
@@ -765,32 +1032,12 @@ bin/metatron</code></pre>
 </li>
 </ol>
 </div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
-mtron&gt; x -&gt; [a=&gt;1,b=&gt;[c=&gt;2,d=&gt;[3,4,5]],e=&gt;6]
-==&gt;[
- a=&gt;1,
- b=&gt;[
-   c=&gt;2,
-   d=&gt;[3,4,5]],
- e=&gt;6]
-mtron&gt; *x
-==&gt;[
- a=&gt;1,
- b=&gt;[
-   c=&gt;2,
-   d=&gt;[3,4,5]],
- e=&gt;6]
-mtron&gt; *x/b/+
-==&gt;2
-==&gt;[3,4,5]
-mtron&gt; *x&gt;&gt;b&gt;&gt;d&gt;&gt;+
-==&gt;3
-==&gt;4
-==&gt;5</code></pre>
-</div>
-</div>
+<!-- 🐖
+x -> [a=>1,b=>[c=>2,d=>[3,4,5]],e=>6]
+*x
+*x/b/+
+*x>>b>>d>>+
+-->
 </div>
 </div>
 <div class="exampleblock">
@@ -798,37 +1045,16 @@ mtron&gt; *x&gt;&gt;b&gt;&gt;d&gt;&gt;+
 <div class="paragraph">
 <p>Numerous instructions exist for extracting substructures within larger structures.</p>
 </div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
-mtron&gt; x -&gt; [a=&gt;1,b=&gt;[c=&gt;2,d=&gt;[3,4,5]],e=&gt;6]
-==&gt;[
- a=&gt;1,
- b=&gt;[
-   c=&gt;2,
-   d=&gt;[3,4,5]],
- e=&gt;6]
-mtron&gt; *x.where[a=&gt;?&gt;0,_=&gt;[_=&gt;lst::T],e=&gt;?int::T]
-==&gt;[
- a=&gt;1,
- b=&gt;[
-   c=&gt;2,
-   d=&gt;[3,4,5]],
- e=&gt;6]
-mtron&gt; *x.where[a=&gt;?&gt;0,_=&gt;[_=&gt;lst::T],e=&gt;?int::T].select[a=&gt;_]
-==&gt;[a=&gt;1]
-mtron&gt; *x.where[a=&gt;?&gt;0,_=&gt;[_=&gt;lst::T],e=&gt;?int::T].select[a=&gt;+2,b=&gt;[d=&gt;&gt;-.sum()]]
-==&gt;[
- a=&gt;3,
- b=&gt;[d=&gt;12]]</code></pre>
-</div>
-</div>
+<!-- 🐖
+x -> [a=>1,b=>[c=>2,d=>[3,4,5]],e=>6]
+*x.where[a=>?>0,_=>[_=>lst::T],e=>?int::T]
+*x.where[a=>?>0,_=>[_=>lst::T],e=>?int::T].select[a=>_]
+*x.where[a=>?>0,_=>[_=>lst::T],e=>?int::T].select[a=>+2,b=>[d=>>-.sum()]]
+-->
 </div>
 </div>
     </div>
   </div>
-</div>
-<div style="min-height: 120px;">
   <div class="collapse multi-collapse" id="card-1">
     <div style="width: 100%;">
 <!--
@@ -863,16 +1089,10 @@ mtron&gt; *x.where[a=&gt;?&gt;0,_=&gt;[_=&gt;lst::T],e=&gt;?int::T].select[a=&gt
 <div class="paragraph">
 <p>An <code>inst</code> to create <code>int</code> triples can be written:</p>
 </div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
-mtron&gt; triple -&gt; |inst?lst&lt;=int{3}(){&gt;-[,]}
-==&gt;inst?rng=lst&amp;dom=int{3}(noobj){merge([,])}
-mtron&gt; {1,2,3,4,5,6}.triple()
-==&gt;[1,2,3]
-==&gt;[4,5,6]</code></pre>
-</div>
-</div>
+<!-- 🐖
+triple -> |inst?lst<=int{3}(){>-[,]}
+{1,2,3,4,5,6}.triple()
+-->
 <div class="admonitionblock note">
 <table>
 <tr>
@@ -884,15 +1104,10 @@ mtron&gt; {1,2,3,4,5,6}.triple()
 <p>The <code>|</code> token is synatic sugar for the <code>block</code> inst. A blocked instruction prevents the application of the <code>lhs</code> to the <code>inst</code> args and <code>inst</code> code.
 This ensures the uri <code>triple</code> is not applied to the <code>inst</code> prior to the uri being bound as the reference (<code>&#8594;</code>). Without block, the result of applying <code>triple</code> to <code>inst</code> would be what <code>triple</code> is bound to. In this particular instance, <code>triple</code> would reference a <code>fail</code> obj.</p>
 </div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
-mtron&gt; triple -&gt; inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}
-==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}]]
-mtron&gt; *triple
-==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}]]</code></pre>
-</div>
-</div>
+<!-- 🐖
+triple -> inst?lst[int,int,int]<=int{3}(){>-[,]}
+*triple
+-->
 </td>
 </tr>
 </table>
@@ -904,16 +1119,10 @@ mtron&gt; *triple
 <div class="paragraph">
 <p>A stricter representation leveraging polymorphic type constructions is expressed as follows:</p>
 </div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
-mtron&gt; triple -&gt; |inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}
-==&gt;inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}
-mtron&gt; {1,2,3,4,5,6}.triple()
-==&gt;[1,2,3]
-==&gt;[4,5,6]</code></pre>
-</div>
-</div>
+<!-- 🐖
+triple -> |inst?lst[int,int,int]<=int{3}(){>-[,]}
+{1,2,3,4,5,6}.triple()
+-->
 <div class="admonitionblock note">
 <table>
 <tr>
@@ -931,13 +1140,9 @@ mtron&gt; {1,2,3,4,5,6}.triple()
 <div class="paragraph">
 <p>An instruction is evaluated by applying a left-hand side <code>obj</code> as follows:</p>
 </div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
-mtron&gt; sum -&gt; reduce?int&lt;=int{*}(){fold(0,plus(_))}
-==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{*}::T [reduce?rng=int&amp;dom=int{*}(noobj){fold(0,plus(id()))}]]</code></pre>
-</div>
-</div>
+<!-- 🐖
+sum -> reduce?int<=int{*}(){fold(0,plus(_))}
+-->
 <div class="paragraph">
 <p>An instruction is evaluated by applying a left-hand side <code>obj</code> as follows:</p>
 </div>
@@ -997,10 +1202,8 @@ primary_planets =&gt; &gt;&gt;planets.order(&gt;&gt;mass).take(1).&gt;&gt;name]<
 </div>
 </div>
 </div>
-    </div>
   </div>
 </div>
-<div style="min-height: 120px;">
   <div class="collapse multi-collapse" id="card-2">
     <div style="width: 100%;">
 <div class="exampleblock">
@@ -1091,97 +1294,42 @@ primary_planets =&gt; &gt;&gt;planets.order(&gt;&gt;mass).take(1).&gt;&gt;name]<
 <div class="paragraph">
 <p>A natural number is a positive integer greater than zero. In order to constrain an <code>int</code> to this definition, a <strong>refinement type</strong> can be constructed.</p>
 </div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
-mtron&gt; nat -&gt; int::T[?&gt;0]
-==&gt;int::T[is(gt(0))]
-mtron&gt; nat::10
-==&gt;nat::10
-mtron&gt; nat::-10
-==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat]
-mtron&gt; int::-10.as(nat::T)
-==&gt;fail::[-10 is not a is(gt(0))
-  -10=&gt;(X=&gt;is(gt(0)))]
-    \_fail::[apply failure:
-	[lhs]    | -10
-	 \_type  | /m/int
-	  \_pred | []
-	[inst]   | as?rng=int&amp;dom=int(int::T[is(gt(0))]@nat){&lt;j&gt;}
-	 \_dom   | int::T
-	 \_args  | [int::T[is(gt(0))]@nat]]
-    \_fail::[unable to evaluate inst: as?rng=int&amp;dom=int(int::T[is(gt(0))]@nat){&lt;j&gt;}]</code></pre>
-</div>
-</div>
+<!-- 🐖
+nat -> int::T[?>0]
+nat::10
+nat::-10
+int::-10.as(nat::T)
+-->
 <div class="paragraph">
 <p>Type inheritance is possible through type chaining. In the example below, the <code>age</code> type has a value id of <code>age</code>, but a type id of <code>nat</code>. Moreover, <code>nat</code> has a value id of <code>nat</code> and a type id of <code>int</code>. In this way, when <code>age</code> is resolved, its associated predicate (<code>?&lt;120</code>) and inherited predicates (<code>?&gt;0</code>) must hold for the respective value to be considered an <code>age</code>.</p>
 </div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
-mtron&gt; age -&gt; nat::T[?&lt;120]
-==&gt;int::T[is(lt(120))]@nat
-mtron&gt; age::T
-mtron&gt; nat::T
-mtron&gt; int::T</code></pre>
-</div>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
-mtron&gt; nat:125
-==&gt;nat:125
-mtron&gt; age:125
-==&gt;age:125
-mtron&gt; nat:125.as(age::T)
-==&gt;fail::[nat:125 is not a is(lt(120))
-  nat:125=&gt;(==&gt;is(lt(120)))]
-    \_fail::[apply failure:
-	[lhs]    | nat:125
-	 \_type  | /m/uri
-	  \_pred | []
-	[inst]   | as?rng=nat&amp;dom=uri(nat::T[is(lt(120))]@age){&lt;j&gt;}
-	 \_dom   | uri::T
-	 \_args  | [nat::T[is(lt(120))]@age]]
-    \_fail::[unable to evaluate inst: as?rng=nat&amp;dom=uri(nat::T[is(lt(120))]@age){&lt;j&gt;}]
-mtron&gt; 125.as(nat::T).as(age::T)
-==&gt;fail::[nat::125 is not a is(lt(120))
-  nat::125=&gt;(X=&gt;is(lt(120)))]
-    \_fail::[apply failure:
-	[lhs]    | nat::125
-	 \_type  | nat
-	  \_pred | [is(gt(0))]
-	[inst]   | as?rng=nat&amp;dom=int(nat::T[is(lt(120))]@age){&lt;j&gt;}
-	 \_dom   | int::T
-	 \_args  | [nat::T[is(lt(120))]@age]]
-    \_fail::[unable to evaluate inst: as?rng=nat&amp;dom=int(nat::T[is(lt(120))]@age){&lt;j&gt;}]</code></pre>
-</div>
-</div>
+<!-- 🐖
+age -> nat::T[?<120]
+age::T
+nat::T
+int::T
+-->
+<!-- 🐖
+nat:125
+age:125
+nat:125.as(age::T)
+125.as(nat::T).as(age::T)
+-->
 </div>
 </div>
 <div class="exampleblock">
 <div class="content">
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
-mtron&gt; name   -&gt; str::T[-&lt;''&gt;-count().?&lt;30]
-==&gt;str::T[split('').merge(count(noobj).is(lt(30)))]
-mtron&gt; personx -&gt; rec::T[?[name  =&gt; str::T,
-                           age   =&gt; age::T,
-                           knows =&gt; personx{*}::T]]
-==&gt;rec::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;personx{*}::T])]
-mtron&gt; marko -&gt; personx::[name=&gt;'marko',age=&gt;29,knows=&gt;!*grant]
-==&gt;personx::[name=&gt;'marko',age=&gt;29,knows=&gt;!*grant]
-mtron&gt; grant -&gt; personx::[name=&gt;'grant',age=&gt;23,knows=&gt;!*marko]
-==&gt;personx::[name=&gt;'grant',age=&gt;23,knows=&gt;!*marko]
-mtron&gt; *marko&gt;&gt;knows&gt;&gt;name
-==&gt;grant
-mtron&gt; *marko&gt;&gt;knows&gt;&gt;knows&gt;&gt;name
-==&gt;marko
-mtron&gt; *marko&gt;&gt;knows&gt;&gt;knows
-==&gt;personx::[name=&gt;'marko',age=&gt;29,knows=&gt;!*grant]</code></pre>
-</div>
-</div>
+<!-- 🐖
+name   -> str::T[-<''>-count().?<30]
+personx -> rec::T[?[name  => str::T, /
+                    age   => age::T, /
+                    knows => personx{*}::T]]
+marko -> personx::[name=>'marko',age=>29,knows=>!*grant]
+grant -> personx::[name=>'grant',age=>23,knows=>!*marko]
+*marko>>knows>>name
+*marko>>knows>>knows>>name
+*marko>>knows>>knows
+-->
 <div class="paragraph">
 <p>## instruction set architecture types</p>
 </div>
@@ -1282,10 +1430,8 @@ mtron&gt; *#.as[name      =&gt; _,
 </div>
 </div>
 </div>
-    </div>
   </div>
 </div>
-<div style="min-height: 120px;">
   <div class="collapse multi-collapse" id="card-3">
     <div style="width: 100%;">
 <div class="exampleblock">
@@ -1304,89 +1450,9 @@ mtron&gt; *#.as[name      =&gt; _,
         {?}tool=&gt;?lst::T]]</code></pre>
 </div>
 </div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
-mtron&gt; *ollama:+
-==&gt;model::[
- host    =&gt;!*/sys/space/ollama/host,
- name    =&gt;qwen3-coder-next:latest,
- think   =&gt;false,
- provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion,tools],
- size    =&gt;gB::48.19]@ollama:qwen3-coder-next:latest
-==&gt;model::[
- host    =&gt;!*/sys/space/ollama/host,
- name    =&gt;&lt;deepseek-v3.2:cloud&gt;,
- think   =&gt;true,
- provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion,tools,thinking],
- size    =&gt;gB::0.00]@ollama:deepseek-v3.2:cloud
-==&gt;model::[
- host    =&gt;!*/sys/space/ollama/host,
- name    =&gt;qwen3:8b,
- think   =&gt;true,
- provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion,tools,thinking],
- size    =&gt;gB::4.87]@ollama:qwen3:8b
-==&gt;model::[
- host    =&gt;!*/sys/space/ollama/host,
- name    =&gt;deepcoder:latest,
- think   =&gt;false,
- provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion],
- size    =&gt;gB::8.37]@ollama:deepcoder:latest
-==&gt;model::[
- host    =&gt;!*/sys/space/ollama/host,
- name    =&gt;llava:latest,
- think   =&gt;false,
- provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion,vision],
- size    =&gt;gB::4.41]@ollama:llava:latest
-==&gt;model::[
- host    =&gt;!*/sys/space/ollama/host,
- name    =&gt;qwen3:latest,
- think   =&gt;true,
- provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion,tools,thinking],
- size    =&gt;gB::4.87]@ollama:qwen3:latest
-==&gt;model::[
- host    =&gt;!*/sys/space/ollama/host,
- name    =&gt;gpt-oss:latest,
- think   =&gt;true,
- provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion,tools,thinking],
- size    =&gt;gB::12.85]@ollama:gpt-oss:latest
-==&gt;model::[
- host    =&gt;!*/sys/space/ollama/host,
- name    =&gt;&lt;minimax-m2.5:cloud&gt;,
- think   =&gt;true,
- provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion,tools,thinking],
- size    =&gt;gB::0.00]@ollama:minimax-m2.5:cloud
-==&gt;model::[
- host    =&gt;!*/sys/space/ollama/host,
- name    =&gt;deepseek-coder:latest,
- think   =&gt;false,
- provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion],
- size    =&gt;gB::0.72]@ollama:deepseek-coder:latest
-==&gt;model::[
- host    =&gt;!*/sys/space/ollama/host,
- name    =&gt;tinyllama:latest,
- think   =&gt;false,
- provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion],
- size    =&gt;gB::0.59]@ollama:tinyllama:latest
-==&gt;model::[
- host    =&gt;!*/sys/space/ollama/host,
- name    =&gt;llama3-groq-tool-use:latest,
- think   =&gt;false,
- provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion,tools],
- size    =&gt;gB::4.34]@ollama:llama3-groq-tool-use:latest</code></pre>
-</div>
-</div>
+<!-- 🐖
+*ollama:+
+-->
 </div>
 </div>
 <div class="exampleblock">
@@ -1394,28 +1460,15 @@ mtron&gt; *ollama:+
 <div class="paragraph">
 <p>The following example demonstrates how to search for an appropriate LLM for the given task, then query it, and finally, have it&#8217;s memory of the interaction stored in space for future use as a stabilizing content.</p>
 </div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
-mtron&gt; ai -&gt; *ollama:+
-              .where([think=&gt;true,size=&gt;?&lt;mB::5000.0])
-              .order(&gt;&gt;?real&lt;=rec(size).mult(-1.0))
-              .take(1)
-==&gt;model::[
- host    =&gt;!*/sys/space/ollama/host,
- name    =&gt;qwen3:8b,
- think   =&gt;true,
- provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion,tools,thinking],
- size    =&gt;gB::4.87]@ollama:qwen3:8b
-mtron&gt; ai/think  -&gt; false
-==&gt;false
-mtron&gt; ai/memory -&gt; /usr/mem
-==&gt;/usr/mem
-mtron&gt; *ai.chat("Remember the word 'metatron'. I'll ask you to recall this word later.")
-==&gt;I remember the word "metatron." Please feel free to ask me about it whenever you're ready.</code></pre>
-</div>
-</div>
+<!-- 🐖
+ai -> *ollama:+                            /
+       .where([think=>true,size=>?<mB::5000.0]) /
+       .order(>>?real<=rec(size).mult(-1.0))    /
+       .take(1)
+ai/think  -> false
+ai/memory -> /usr/mem
+*ai.chat("Remember the word 'metatron'. I'll ask you to recall this word later.")
+-->
 <div class="admonitionblock note">
 <table>
 <tr>
@@ -1427,13 +1480,9 @@ mtron&gt; *ai.chat("Remember the word 'metatron'. I'll ask you to recall this wo
 <p>The <code>size</code> relation maps to a <code>gB::T</code> (gigabytes) while the <code>where()</code> clause filtered on <code>mB::T</code> (megabytes). The conversion between the various data size units is handled automatically by the type constructors of the various data type sizes distributed in the <code>/m/math</code> instruction set.</p>
 </div>
 */m/math/+/
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
-mtron&gt; gB::500.0.as(mB::T)
-==&gt;mB::512000.00</code></pre>
-</div>
-</div>
+<!-- 🐖
+gB::500.0.as(mB::T)
+-->
 </td>
 </tr>
 </table>
@@ -1445,74 +1494,55 @@ mtron&gt; gB::500.0.as(mB::T)
 <div class="paragraph">
 <p>The content and metadata associated with the chat interaction is stored at the specified location and is accessible via a <code>uri</code> dereference.</p>
 </div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
-mtron&gt; */usr/mem
-==&gt;[[
-   contents=&gt;[[text=&gt;"Remember the word 'metatron'. I'll ask "...,type=&gt;TEXT]],
-   type    =&gt;USER],
-  [
-   text                 =&gt;'I remember the word "metatron." Please '...,
-   toolExecutionRequests=&gt;[,],
-   attributes           =&gt;[=&gt;],
-   type                 =&gt;AI]]</code></pre>
-</div>
-</div>
+<!-- 🐖
+*/usr/mem
+-->
 <div class="paragraph">
 <p>The memory is referenced again below, where it is both read (the previous interaction) and written to (the current interaction).</p>
 </div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
-mtron&gt; *ollama:+
-         .where([think=&gt;true,size=&gt;?&lt;mB::5000.0])
-         .order(&gt;&gt;?real&lt;=rec(size).mult(-1.0))
-         .take(1)
-         .plus?rec&lt;=rec([memory=&gt;/usr/mem])
-         .chat("What was the special word I needed you to recall?")
-==&gt;The special word you asked me to recall was **"metatron"**. Let me know if you'd like to discuss it further!</code></pre>
+<!-- 🐖
+*ollama:+                                  /
+  .where([think=>true,size=>?<mB::5000.0]) /
+  .order(>>?real<=rec(size).mult(-1.0))    /
+  .take(1)                                 /
+  .plus?rec<=rec([memory=>/usr/mem])       /
+  .chat("What was the special word I needed you to recall?")
+-->
 </div>
 </div>
-</div>
-</div>
-    </div>
   </div>
 </div>
 </div>
 </div>
+</div>
+</div>
+    <button class="carousel-control-prev" type="button" data-bs-target="#carousel-body" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Previous</span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#carousel-body" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Next</span>
+    </button>
+</main>
+<footer class="container-fluid bg-secondary fixed-bottom text-light footer wow fadeIn" data-wow-delay="0.1s">
+    <div class="d-flex pt-1 mb-0">
+        <a class="btn btn-lg-square btn-dark text-primary m-1" href="mailto:info@phaseshift.studio"><i
+                class="fa fa-envelope-open text-primary"></i></a>
+    </div>
+</footer>
 <script src="./highlight/highlight.min.js"></script>
 <script src="./highlight/languages/mtron.min.js"></script>
 <script src="./highlight/languages/bash.min.js"></script>
 <script src="./highlight/languages/json.min.js"></script>
 <script>
-if (!hljs.initHighlighting.called) {
-hljs.initHighlighting.called = true
-;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) { hljs.highlightBlock(el) })
-}
+    if (!hljs.initHighlighting.called) {
+        hljs.initHighlighting.called = true
+        ;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) {
+            hljs.highlightBlock(el)
+        })
+    }
 </script>
-</div>
-</div>
-</div>
-</div>
-        <button class="carousel-control-prev" type="button" data-bs-target="#carousel-body" data-bs-slide="prev">
-            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-            <span class="visually-hidden">Previous</span>
-        </button>
-        <button class="carousel-control-next" type="button" data-bs-target="#carousel-body" data-bs-slide="next">
-            <span class="carousel-control-next-icon" aria-hidden="true"></span>
-            <span class="visually-hidden">Next</span>
-        </button>
-</div>
-</main>
-
-<!-- FOOTER BAR 
-<footer class="container-fluid bg-secondary text-light footer wow fadeIn" data-wow-delay="0.1s">
-    <div class="d-flex pt-1 mb-0">
-        <a class="btn btn-lg-square btn-dark text-primary m-1" href="mailto:info@phaseshift.studio"><i
-                class="fa fa-envelope-open text-primary"></i></a>
-    </div>
-</footer>-->
 </body>
 </html>
 

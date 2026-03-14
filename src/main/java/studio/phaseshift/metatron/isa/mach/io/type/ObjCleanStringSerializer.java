@@ -107,8 +107,12 @@ public class ObjCleanStringSerializer extends AbstractObjSerializer<String> {
     @Override
     public String writeFail(final Fail fail) {
         final StringBuilder sb = new StringBuilder();
-        sb.append(handleIds(fail, "[" + fail.message().getMessage() + "]"));
-        fail.cause().ifPresent(c -> sb.append("\n    \\_").append(this.writeFail(c)));
+        if (fail.vid() != null) {
+            sb.append(handleIds(fail, "[" + fail.message().getMessage() + "][...]"));
+        } else {
+            sb.append(handleIds(fail, "[" + fail.message().getMessage() + "]"));
+            fail.cause().ifPresent(c -> sb.append("\n    \\_").append(this.writeFail(c)));
+        }
         return sb.toString();
     }
 

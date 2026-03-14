@@ -28,6 +28,8 @@ public interface Stylable<T extends Stylable<T>> {
     }
 
     T style(final Style<T> style);
+    
+    Style<T> getStyle();
 
     class Style<T extends Stylable<T>> {
         public T stylable;
@@ -92,6 +94,10 @@ public interface Stylable<T extends Stylable<T>> {
             return this;
         }
 
+
+        public <R extends Widget<R>> R attachment() {
+            return (R) this.attachment;
+        }
 
         public Style<T> attachment(final Widget attachment, final boolean overlap) {
             this.attachment = attachment;
