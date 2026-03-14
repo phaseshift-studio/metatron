@@ -8,7 +8,7 @@
 <meta name="application-name" content="metatron">
 <meta name="author" content="Marko A. Rodriguez">
 <meta name="copyright" content="PhaseShift Studio">
-<link rel="icon" type="image/x-icon" href="../images/favicon.ico">
+<link rel="icon" type="image/x-icon" href="./images/favicon.ico">
 <title>Untitled</title>
 <style>
 /* Asciidoctor default stylesheet | MIT License | https://asciidoctor.org */
@@ -1170,7 +1170,7 @@ mtron&gt; name   -&gt; str::T[-&lt;''&gt;-count().?&lt;30]
 mtron&gt; personx -&gt; rec::T[?[name  =&gt; str::T,
                            age   =&gt; age::T,
                            knows =&gt; personx{*}::T]]
-==&gt;rec::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;personx{*}::T])]@personx{*}])]@personx{*}])]
+==&gt;rec::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;personx{*}::T])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]
 mtron&gt; marko -&gt; personx::[name=&gt;'marko',age=&gt;29,knows=&gt;!*grant]
 ==&gt;personx::[name=&gt;'marko',age=&gt;29,knows=&gt;!*grant]
 mtron&gt; grant -&gt; personx::[name=&gt;'grant',age=&gt;23,knows=&gt;!*marko]
@@ -1397,17 +1397,6 @@ mtron&gt; gB::500.0.as(mB::T)
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
 mtron&gt; */usr/mem
 ==&gt;[[
-   contents=&gt;[[text=&gt;"Remember the word 'metatron'. I'll ask "...,type=&gt;TEXT]],
-   type    =&gt;USER],
-  [
-   text                 =&gt;"Understood. I'll be here when you need "...,
-   toolExecutionRequests=&gt;[,],
-   attributes           =&gt;[=&gt;],
-   type                 =&gt;AI],
-  [
-   contents=&gt;[[text=&gt;'What was the special word I needed you '...,type=&gt;TEXT]],
-   type    =&gt;USER],
-  [
    text                 =&gt;'The special word you asked me to recall'...,
    thinking             =&gt;'Okay, the user asked, "What was the spe'...,
    toolExecutionRequests=&gt;[,],
@@ -1437,6 +1426,40 @@ mtron&gt; */usr/mem
    text                 =&gt;"Understood. I'll be here when you need "...,
    toolExecutionRequests=&gt;[,],
    attributes           =&gt;[=&gt;],
+   type                 =&gt;AI],
+  [
+   contents=&gt;[[text=&gt;'What was the special word I needed you '...,type=&gt;TEXT]],
+   type    =&gt;USER],
+  [
+   text                 =&gt;'The special word you needed me to recal'...,
+   thinking             =&gt;'Okay, the user has asked multiple times'...,
+   toolExecutionRequests=&gt;[,],
+   attributes           =&gt;[=&gt;],
+   type                 =&gt;AI],
+  [
+   contents=&gt;[[text=&gt;"Remember the word 'metatron'. I'll ask "...,type=&gt;TEXT]],
+   type    =&gt;USER],
+  [
+   text                 =&gt;"Understood. I'll be here when you need "...,
+   toolExecutionRequests=&gt;[,],
+   attributes           =&gt;[=&gt;],
+   type                 =&gt;AI],
+  [
+   contents=&gt;[[text=&gt;'What was the special word I needed you '...,type=&gt;TEXT]],
+   type    =&gt;USER],
+  [
+   text                 =&gt;'The special word you needed me to recal'...,
+   thinking             =&gt;'Okay, the user is asking again what the'...,
+   toolExecutionRequests=&gt;[,],
+   attributes           =&gt;[=&gt;],
+   type                 =&gt;AI],
+  [
+   contents=&gt;[[text=&gt;"Remember the word 'metatron'. I'll ask "...,type=&gt;TEXT]],
+   type    =&gt;USER],
+  [
+   text                 =&gt;"Understood. I'll be here when you need "...,
+   toolExecutionRequests=&gt;[,],
+   attributes           =&gt;[=&gt;],
    type                 =&gt;AI]]</code></pre>
 </div>
 </div>
@@ -1452,7 +1475,7 @@ mtron&gt; *ollama:+
          .take(1)
          .plus?rec&lt;=rec([memory=&gt;/usr/mem])
          .chat("What was the special word I needed you to recall?")
-==&gt;The special word you needed me to recall was **"metatron"**. Let me know if you need further clarification or assistance!</code></pre>
+==&gt;The special word you needed me to recall was **"metatron"**. Let me know if you'd like more details or clarification!</code></pre>
 </div>
 </div>
 </div>
