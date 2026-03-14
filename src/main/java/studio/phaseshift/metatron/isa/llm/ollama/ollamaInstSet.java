@@ -23,7 +23,6 @@ import dev.langchain4j.invocation.InvocationParameters;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
-import dev.langchain4j.model.ollama.OllamaStreamingChatModel;
 import dev.langchain4j.service.AiServices;
 import dev.langchain4j.service.TokenStream;
 import dev.langchain4j.service.UserMessage;
@@ -31,6 +30,7 @@ import dev.langchain4j.service.tool.ToolExecutor;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
+import studio.phaseshift.metatron.isa.llm.LLMFactory;
 import studio.phaseshift.metatron.isa.llm.ollama.space.SpaceChatMemoryStore;
 import studio.phaseshift.metatron.isa.llm.ollama.type.OLLM;
 import studio.phaseshift.metatron.isa.m.type.*;
@@ -56,10 +56,10 @@ import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_TID;
 import static studio.phaseshift.metatron.isa.llm.ollama.space.ollamaSpace.OLLAMA_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.BYTE_TYPE;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Real.REAL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
@@ -132,6 +132,7 @@ public class ollamaInstSet extends AbstractInstSet {
             .tid(LLM_TID)
             .vid(OLLAMA_OLLM_TID).
             isaPredicate(rec(
+                    uri(PROVIDER), is_(or_(eq_(uri("openai")), eq_(uri("ollama")))),
                     uri(NAME), URI_TYPE,
                     uri(HOST), URI_TYPE,
                     uri(THINK).c(cInt::maybe), BOOL_TYPE,
@@ -165,12 +166,7 @@ public class ollamaInstSet extends AbstractInstSet {
                                     .map(i -> OLLM.mtronInstToolSpecification(i.asInst()))
                                     .collect(Collectors.toMap(Tuple.Pair::get0, Tuple.Pair::get1));
                             /// ///////////////////////////////////////////////////////////////////////////////////////
-                            final StreamingChatModel streamingChatModel = OllamaStreamingChatModel.builder()
-                                    .baseUrl(host)
-                                    .modelName(model)
-                                    .think(thinking)
-                                    .returnThinking(thinking)
-                                    .build();
+                            final StreamingChatModel streamingChatModel = LLMFactory.createModel(lhs.asRec(), model);
                             final AiServices<Assistant> service = AiServices.builder(Assistant.class)
                                     .streamingChatModel(streamingChatModel);
                             if (null != memory) {

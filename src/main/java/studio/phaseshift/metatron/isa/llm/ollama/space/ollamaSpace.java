@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.MUri;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.Map;
@@ -37,6 +38,7 @@ import static studio.phaseshift.metatron.isa.llm.ollama.ollamaInstSet.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.GBYTE_TYPE;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_BYTE_TID;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -73,6 +75,7 @@ public class ollamaSpace extends AbstractSpace<OllamaModels> {
     public ollamaSpace(final OllamaModels models, final Map<Obj, Obj> config, final fURI vid) {
         super(models, config, OLLAMA_TID, vid);
         this.cache = memSpace.of(this.pattern(), null);
+        Router.writeToSpace(rec(Map.of(uri(NAME), uri("ollama"), uri(HOST),  this.at(HOST)),OLLAMA_TID,this.vid.extend("ollama")));
         this.refreshModels();
     }
 
@@ -81,7 +84,8 @@ public class ollamaSpace extends AbstractSpace<OllamaModels> {
         models.availableModels().content().stream()
                 .map(m -> Tuple.Pair.with(m, models.modelCard(m.getName()).content()))
                 .map(m -> rec(
-                        Map.of(uri(HOST), this.at(Tokens.HOST),
+                        Map.of(uri(PROVIDER), auto_from_(this.vid.extend("ollama")).tryToInst(),
+                                uri(HOST), this.at(Tokens.HOST),
                                 uri(NAME), uri(m.get0().getName()),
                                 uri(THINK), bool(m.get1().getCapabilities().contains(THINKING)),
                                 uri(SKILL), lst(m.get1().getCapabilities().stream().map(MUri::uri)),
