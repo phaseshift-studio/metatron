@@ -349,7 +349,7 @@ transform: scale(2.0);
 }
 
 .neon-text {
-	color: #fff;
+	color: #fff !important;
 	text-shadow: 0 0 5px #fff, 0 0 5px var(--primary), 0 0 5px var(--primary);
 	/* #0fa neat green color */
 }
