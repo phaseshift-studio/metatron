@@ -1,0 +1,1514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.23">
+<meta name="application-name" content="metatron">
+<meta name="author" content="Marko A. Rodriguez">
+<meta name="copyright" content="PhaseShift Studio">
+<link rel="icon" type="image/x-icon" href="../images/favicon.ico">
+<title>Untitled</title>
+<style>
+/* Asciidoctor default stylesheet | MIT License | https://asciidoctor.org */
+
+@import url(https://cdn.jsdelivr.net/gh/asciidoctor/asciidoctor@2.0/data/stylesheets/asciidoctor-default.css); /* Default asciidoc style framework - important */
+
+/* CUSTOMISATIONS */
+/* Change the values in root for quick customisation. If you want even more fine grain... venture further. */
+:root {
+    /*------------------------*/
+    --mblue: #002394;
+    --mmagenta: #825181;
+    --mred: #6b0004;
+    --mgreen: #335c00;
+    --mdarkgray: #494554;
+    --mlightgray: #797585;
+    --myellow: #7b8000;
+    --maqua: #167a96;
+    /*------------------------*/
+    --maincolor: #282c34;
+    --primarycolor: var(--mred);
+    --secondarycolor: #191C24;
+    --light: #6C7293;
+    --dark: #000000;
+    --tertiarycolor: #006259;
+    --sidebarbackground: #191C24;
+    --linkcolor: var(--mmagenta);
+    --linkcoloralternate: #002dc5;
+    --white: #FFFFFF;
+}
+
+/* roles */
+
+.red {
+    color: var(--mred);
+}
+
+.metatron:before {
+    content: 'metatron';
+    mask-image: linear-gradient(to bottom, var(--primarycolor), var(--tertiarycolor));
+}
+
+/* Text styles */
+
+html {
+    font-size: 18px;
+    font-family: sans-serif;
+}
+
+body {
+    background-color: var(--maincolor);
+    color: var(--white);
+}
+
+strong {
+    color: var(--myellow);
+}
+
+h1 {
+    color: var(--primarycolor) !important;
+    font-family: sans-serif;
+}
+
+h2, h3, h4, h5, h6 {
+    color: var(--primarycolor) !important;
+    font-family: sans-serif;
+}
+
+.title {
+    color: var(--mred) !important;
+    font-family: sans-serif;
+    font-style: normal;
+    font-weight: bold
+}
+
+#toc.toc2 a:link {
+    color: var(--linkcolor);
+}
+
+blockquote {
+    color: var(--tertiarycolor) !important
+}
+
+.quoteblock {
+    color: var(--white)
+}
+
+code {
+    color: var(--linkcoloralternate);
+    background-color: var(--sidebarbackground) !important;
+    border-radius: 0px;
+}
+
+
+/* Table styles */
+th {
+    background-color: var(--maincolor);
+    color: var(--white) !important;
+}
+
+.td-text {
+    background-color: var(--maincolor) !important;
+}
+
+td {
+    background-color: var(--sidebarbackground);
+    color: var(--linkcoloralternate) !important
+}
+
+#toc.toc2 {
+    background-color: var(--sidebarbackground);
+}
+
+#toctitle {
+    mask-image: linear-gradient(to bottom, var(--primarycolor), var(--tertiarycolor));
+}
+
+/* Responsiveness fixes */
+video {
+    max-width: 100%;
+}
+
+@media all and (max-width: 600px) {
+    table {
+        width: 55vw !important;
+        font-size: 3vw;
+    }
+}
+
+.exampleblock > .content {
+    background-color: var(--maincolor);
+}
+
+a {
+    color: var(--linkcoloralternate);
+}
+
+.admonitionblock td.icon .icon-tip::before {
+    text-shadow: none;
+    color: var(--white);
+}
+
+.admonitionblock td.icon .icon-note::before {
+    color: var(--tertiarycolor);
+}
+
+.admonitionblock td.icon .icon-important::before {
+    color: var(--linkcolor);
+}
+
+/*.admonitionblock td.icon .icon-caution::before {
+  color: var(--linkcoloralternate);
+}*/
+.admonitionblock td.icon .icon-warning::before {
+    color: var(--primarycolor);
+}
+
+#preamble > .sectionbody > .paragraph:first-of-type p {
+    color: var(--white);
+}
+
+.quoteblock blockquote::before {
+    color: var(--primarycolor);
+}
+
+.quoteblock .attribution cite, .verseblock .attribution cite {
+    color: var(--white);
+}
+
+.verseblock pre {
+    color: var(--white);
+}
+
+.quoteblock blockquote, .quoteblock blockquote p {
+    color: var(--white);
+}
+
+.sidebarblock {
+    background: var(--sidebarbackground);
+}
+
+pre code {
+    color: var(--linkcoloralternate);
+}
+
+.literalblock pre, .listingblock pre:not(.highlight), .listingblock pre[class="highlight"], .listingblock pre[class^="highlight "], .listingblock pre.CodeRay, .listingblock pre.prettyprint {
+    background: var(--sidebarbackground);
+    color: var(--primarycolor);
+}
+
+
+.literalblock pre, .listingblock > .content > pre:not(.highlight), .listingblock > .content > pre[class=highlight], .listingblock > .content > pre[class^="highlight "] {
+    background: var(--sidebarbackground);
+    color: var(--primarycolor);
+    margin: 0em !important;
+    padding: 0.5em !important;
+    /*font-size: 120%*/;
+    overflow: hidden !important; /* or else there is a y scrollbar on code blocks ?? */
+}
+
+.title {
+    color: var(--linkcoloralternate);
+    font-size: 120%;
+}
+
+#header span.email a {
+    color: var(--linkcoloralternate);
+}
+
+.parchment {
+    position: relative;
+    display: flex;
+    /*width: 25%;
+    min-height: 200);*/
+    /* center page with absolute position */
+    /*top: 0%; left: 50%; transform: translate(-50%, 0);*/
+    margin: 0.15em 0;
+    padding: 0.15em;
+    box-shadow: 1px 2px 5px black, 0 0 60px #8a4d0f inset;
+    background: #fffef0;
+    filter: url(#wavy2);
+}
+
+/* Marker styling */
+.circle {
+    position: relative;
+    margin: 0 40px;
+    color: #333;
+    text-decoration: none;
+    /* line-height: 1em; */
+
+    & svg {
+        position: absolute;
+        left: 0;
+        top: -50%;
+        right: 0;
+        margin-left: auto;
+        margin-right: auto;
+        pointer-events: none;
+    }
+
+    & path {
+        transition: stroke-dashoffset 300ms linear;
+        stroke-width: 3.0;
+        stroke: darkgreen;
+        fill: none;
+        stroke-linecap: round;
+    }
+
+    &:hover path {
+        stroke-dashoffset: 0;
+    }
+}
+
+
+/******************************************************************/
+
+.hljs {
+    font-size: 95%;
+    display: block;
+    padding: 0.5em;
+}
+
+.hljs-phaseshift-studio-header {
+    color: var(--secondarycolor) !important;
+    font-weight: bolder;
+}
+
+.hljs-mtron-real,
+.hljs-mtron-bytes,
+.hljs-mtron-int,
+.hljs-mtron-str,
+.hljs-mtron-bool,
+.hljs-mtron-furi-query,
+.hljs-mtron-sugar-inst,
+.hljs-mtron-query,
+.hljs-mtron-sys-furi,
+.hljs-mtron-log-warn{
+    color: var(--myellow);
+}
+
+.h {
+    color: #d4de68;
+    font-weight: bold !important;
+}
+
+.hljs-mtron-rec-key {
+    color: var(--maqua);
+}
+
+#header,
+.hljs-mtron-form,
+.hljs-punctuation,
+.hljs-mtron-rec,
+.hljs-mtron-result-prefix,
+.hljs-mtron-type-prefix,
+.hljs-mtron-prompt-end,
+.hljs-mtron-log-info {
+    color: var(--mgreen);
+}
+
+.hljs-mtron-prompt-begin,
+.hljs-mtron-noobj,
+.hljs-mtron-T {
+    color: var(--mmagenta);
+}
+
+.hljs-mtron-pipe,
+.hljs-mtron-log-error,
+.hljs-mtron-match-fail,
+.hljs-mtron-fail,
+.hljs-mtron-fail-bar,
+.hljs-mtron-thrown {
+    color: var(--mred);
+}
+
+.hljs-comment {
+    color: var(--mlightgray);
+}
+
+.hljs-mtron-keyword,
+.hljs-mtron-inst {
+    color: var(--tertiarycolor);
+}
+
+.hljs-mtron-uri,
+.hljs-mtron-type,
+.hljs-mtron-inst-f-jvm {
+    color: var(--mblue);
+}
+
+.hljs-mtron-doc-callout, .conum {
+    display: inline-block;
+    color: var(--tertiarycolor);
+    background: var(--mmagenta) !important;
+    -webkit-border-radius: 100px;
+    -moz-border-radius: 100px;
+    -o-border-radius: 100px;
+    border-radius: 100px;
+    text-align: center;
+    margin-right: 40px;
+    float: right;
+    width: 25px;
+    height: 25px;
+    font-size: 16px;
+    font-weight: bold;
+    line-height: 25px;
+    /*font-family: Arial;*/
+}
+
+.hljs-fos-docs-if-else-then-case-do,
+.hljs-mtron-comment {
+    color: #797979;
+}
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<body class="article">
+<div id="header" style="max-width: 100%;">
+</div>
+<div id="content" style="max-width: 100%;">
+<script src="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.css"/>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+<script src="javascript/metatron-docs.js"></script>
+<!--
+  ~ Metatron: A Distributed Computing Language and Virtual Machine
+  ~  Copyright (C) 2025- PhaseShift Studio, LLC
+  ~  
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~  
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>PhaseShift Studio</title>
+    <!-- METADATA -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="keywords" content="metatron database kv graph document programming">
+    <meta name="description" content="Next Generation Data Technologies">
+    <meta name="theme-color" content="#ffffff">
+    <!-- FAVICON -->
+    <link rel="apple-touch-icon" sizes="114x114" href="images/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="images/favicon-16x16.png">
+    <link rel="mask-icon" href="images/safari-pinned-tab.svg" color="#5bbad5">
+    <!-- CSS PACKAGES -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="lib/animate/animate.min.css" rel="stylesheet">
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/termynal.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/styles/night-owl.min.css" rel="stylesheet">
+    <!-- JAVASCRIPT PACKAGES -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="./highlight/highlight.min.js"></script>
+    <script src="./highlight/languages/mtron.min.js"></script>
+    <script src="./highlight/languages/json.min.js"></script>
+    <script src="./highlight/languages/bash.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="lib/wow/wow.min.js"></script>
+    <script src="lib/easing/easing.min.js"></script>
+    <script src="lib/waypoints/waypoints.min.js"></script>
+    <script src="lib/termynal/termynal.js"></script>
+    <!-- <script src="data/console.txt"></script>-->
+    <!-- CUSTOM CSS/JAVASCRIPT -->
+    <link href="css/metatron.css" rel="stylesheet">
+    <script src="js/metatron.js"></script>
+</head>
+<body class="d-flex flex-column min-vh-100">
+<!-- THIS IS THE FIX FOR BOOSTRAP(5) BUG AROUND MODALS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
+<!------------------------------------------------------->
+<!-- LOADING WIDGET -->
+<div id="spinner"
+     class="show bg-dark position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
+    <div class="spinner-grow text-primary" style="width: 3rem; height: 3rem;" role="status">
+        <span class="sr-only">Loading...</span>
+    </div>
+</div>
+<!-- NAVIGATION BAR -->
+<nav class="navbar navbar-expand-lg bg-secondary navbar-dark sticky-top py-lg-0 px-lg-5 wow fadeIn"
+     data-wow-delay="0.1s">
+    <a href="index.html" class="navbar-brand ms-4 ms-lg-0">
+        <h2 class="mb-0 text-primary logo-text">
+            <i class="bi bi-soundwave me-3"></i>
+            PhaseShift Studio
+        </h2>
+    </a>
+    <div class="collapse navbar-collapse" id="navbarCollapse">
+        <div class="navbar-nav ms-auto p-4 p-lg-0">
+            <li class="nav-item dropdown">
+                <a id="download_dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">
+                    download
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="download_dropdown">
+                    <li>
+                        <div class="terminal-box">
+                            <pre><code>docker pull docker.phaseshift.studio/metatron:0.1-SNAPSHOT</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="terminal-box">
+                            <pre><code>git clone https://github.com/phaseshift-studio/metatron.git
+mvn clean install -DskipTests=true
+bin/metatron</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="terminal-box">
+                            <pre><code>curl -L https://github.com/phaseshift-studio/metatron.git</code></pre>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <li class="nav-item dropdown">
+                <a id="isa_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    instruction sets
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="isa_dropdown">
+                    <li><a class="code dropdown-item" href="#" onclick="slideShowPage(0);">/m</a></li>
+                    <li><a class="code dropdown-item" href="#" onclick="slideShowPage(1);">/m/mach</a></li>
+                    <li><a class="code dropdown-item" href="#" onclick="slideShowPage(1);">/m/grph</a></li>
+                    <li><a class="code dropdown-item" href="#" onclick="slideShowPage(1);">/m/grph/tp3</a></li>
+                    <li><a class="code dropdown-item" href="#" onclick="slideShowPage(1);">/m/vec</a></li>
+                    <li><a class="code dropdown-item" href="#" onclick="slideShowPage(1);">/m/web</a></li>
+                    <li><a class="code dropdown-item" href="#" onclick="slideShowPage(1);">/m/iot</a></li>
+                    <li><a class="code dropdown-item" href="#" onclick="slideShowPage(1);">/m/sys</a></li>
+                </ul>
+            </li>
+            <li class="nav-item dropdown">
+                <a id="guild_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    software guild
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="guild_dropdown">
+                    <li><a class="dropdown-item" href="#"
+                           onclick="location.href='https://opencollective.com/metatron';">open collective</a></li>
+                    <li><a class="dropdown-item" href="#"
+                           onclick="location.href='https://github.com/phaseshift-studio/metatron';">github</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="slideShowPage(1);">mailing list</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="slideShowPage(1);">live coding</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="slideShowPage(1);">artifacts</a></li>
+                </ul>
+            </li>
+            <!--<li class="nav-item dropdown">
+                <a id="services_dropdown" class="nav-link dropdown-toggle" href="#"  role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Services
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="products_dropdown">
+                    <li><a class="dropdown-item" href="#" onclick="slideShowPage(2);">Consulting</a></li>
+                </ul>
+            </li>-->
+        </div>
+    </div>
+    <div>
+        <div class="d-flex pt-1 m-n1">
+            <a class="btn btn-lg-square btn-dark text-primary m-1" href="mailto:info@phaseshift.studio">
+                <i class="fa fa-envelope-open text-primary"></i>
+            </a>
+            <a class="btn btn-lg-square btn-dark text-primary m-1" href="">
+                <i class="fab fa-twitter"></i>
+            </a>
+        </div>
+    </div>
+</nav>
+<main class="container my-4 flex-grow-1">
+    <!-- MAIN CAROUSEL BODY -->
+    <div id="carousel-body" class="carousel slide" data-bs-ride="carousel" data-bs-interval="1000000">
+        <!-- Carousel Indicators -->
+        <ol class="carousel-indicators">
+            <button type="button" data-bs-target="#carousel-body" data-bs-slide-to="0" class="active"></button>
+            <button type="button" data-bs-target="#carousel-body" data-bs-slide-to="1"></button>
+            <!-- <button type="button" data-bs-target="#carousel-body" data-bs-slide-to="2"></button> -->
+        </ol>
+        <div class="carousel-inner">
+            <div class="carousel-item active">
+                <!--------------------->
+                <!----- METATRON ------>
+                <!--------------------->
+                <div class="container-xxl py-5">
+                    <div class="container">
+                        <div class="row g-4">
+                            <div class="col-lg-8 wow fadeIn" data-wow-delay="0.5s">
+                                <h1 class="text-uppercase mb-4 neon-text">metatron&trade;</h1>
+                                <p class="text-primary subtitle">Interconnect Heterogeneous Data Sources and Processes</p>
+                                <div class="row g-4">
+                                    <div class="col-md-6">
+                                        <p class="mb-0"><b class="metatron-name">metatron</b> offers a concise,
+                                            expressive, and efficient way to
+                                            define and manipulate data structures encoded within and between data
+                                            sources.
+                                            It is designed to be used across a wide range of applications, from the
+                                            enthusiast's home automation project to an organization's large-scale master
+                                            data
+                                            management
+                                            system.
+                                        </p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p class="mb-0"><b class="metatron-name">metatron</b> is founded on a
+                                            referential record-oriented data model and schema. Higher-order
+                                            structures are captured across a cluster of relational databases, graph
+                                            databases,
+                                            web servers, JSON documents, MQTT brokers, AI vectors, IoT microprocessors,
+                                            file systems,
+                                            and more.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-4 wow fadeIn" data-wow-delay="0.5s">
+                                <img src="images/metatron-character.png" width="100%"/>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                <!-- METATRON FEATURES -->
+                <div class="container">
+                    <div class="text-center mx-auto wow fadeInUp" data-wow-delay="0.1s">
+                        <h2 class="text-uppercase" style="background-color: var(--maincolor);">Features</h2>
+                    </div>
+                    <div class="row g-5">
+                        <!-- MTRON -->
+                        <div id="mtron_feature">
+                            <script type="text/javascript">
+                                featurePanel(
+                                    "mtron_feature",
+                                    "mtron",
+                                    "images/icons/mtron-icon.svg",
+                                    "<b class=\"metatron-name\">mtron</b> is a functional, type-safe, data flow language capable of expressing complex data " +
+                                    "transformations within a multi-model data environment",
+                                    "images/modal/mtron-modal.svg");
+                            </script>
+                        </div>
+                        <!-- URI -->
+                        <div id="uri_feature">
+                            <script type="text/javascript">
+                                featurePanel(
+                                    "uri_feature",
+                                    "fURI",
+                                    "images/icons/link-icon.svg",
+                                    "metatron <b class=\"metatron-name\">objs</b> exist in a single, unified uri address space where process can seamless traverse across a variegated data space",
+                                    "images/modal/furi-modal.svg");
+                            </script>
+                        </div>
+                        <!-- EMBED -->
+                        <div id="embed_feature">
+                            <script type="text/javascript">
+                                featurePanel(
+                                    "embed_feature",
+                                    "Embed",
+                                    "images/icons/storage-icon.svg",
+                                    "inter- and intra-space <b class=\"metatron-name\">embedded</b> data structures can account for the respective time and space tradeoffs of the underlying storage systems",
+                                    "images/modal/embed-modal.svg");
+                            </script>
+                        </div>
+                        <!-- SCHEMA -->
+                        <div id="schema_features">
+                            <script type="text/javascript">
+                                featurePanel(
+                                    "schema_features",
+                                    "Schema",
+                                    "images/icons/schema-icon.svg",
+                                    "obj structures are constrained using a <b class=\"metatron-name\">a structural type system</b> that can express inherited, refined, dependent, and recursive types",
+                                    "images/schema-diagram.svg");
+                            </script>
+                        </div>
+                        <!-- SPACE -->
+                        <div id="space_features">
+                            <script type="text/javascript">
+                                featurePanel(
+                                    "space_features",
+                                    "Space",
+                                    "images/icons/cluster-icon.svg",
+                                    "data sources are logically abstracted as <b class=\"metatron-name\">spaces</b>, where each datum has a uri address enabling the stitching together of database, file system, event, and peripheral data",
+                                    "images/modal/space-modal.svg");
+                            </script>
+                        </div>
+                        <!-- MONAD -->
+                        <div id="monad_features">
+                            <script type="text/javascript">
+                                featurePanel(
+                                    "monad_features",
+                                    "Monad",
+                                    "images/icons/cluster-icon.svg",
+                                    "processes are realized as the propagation of atomic <b class=\"metatron-name\">monads</b>  through instruction graphs which guide them over the underlying data spaces",
+                                    "images/modal/monad-modal.svg");
+                            </script>
+                        </div>
+                        <!-- OLTP -->
+                        <div id="oltp_features">
+                            <script type="text/javascript">
+                                featurePanel(
+                                    "oltp_features",
+                                    "OLTP",
+                                    "images/icons/oltp-icon.svg",
+                                    "a <b class=\"metatron-name\">monad iterator</b> machine supports speedy traversals over localized regions of space",
+                                    "images/modal/oltp-modal.svg");
+                            </script>
+                        </div>
+                        <!-- OLRP -->
+                        <div id="olrp_features">
+                            <script type="text/javascript">
+                                featurePanel(
+                                    "olrp_features",
+                                    "OLRP",
+                                    "images/icons/olrp-icon.svg",
+                                    "a <b class=\"metatron-name\">monad swarm</b> machine supports asynchronous, parallel, distributed traversals over large regions of space",
+                                    "images/modal/olrp-modal.svg");
+                            </script>
+                        </div>
+                        <!-- OLAP -->
+                        <div id="olap_features">
+                            <script type="text/javascript">
+                                featurePanel(
+                                    "olap_features",
+                                    "OLAP",
+                                    "images/icons/olap-icon.svg",
+                                    "a <b class=\"metatron-name\">monad vector</b> machine supports stateful bulk synchronous processing of massive regions of space",
+                                    "images/modal/olap-modal.svg");
+                            </script>
+                        </div>
+                        <!-- WEB -->
+                        <div id="web_features">
+                            <script type="text/javascript">
+                                featurePanel(
+                                    "web_features",
+                                    "Web",
+                                    "images/icons/web-icon.svg",
+                                    "a space-aware <b class=\"metatron-name\">web server/router</b> supports the selective access, referencing, and manipulation of html, xml, and json documents",
+                                    "images/enoch-character.png")
+                            </script>
+                        </div>
+                        <!-- IOT COMPATIBLE -->
+                        <div id="iot_features">
+                            <script type="text/javascript">
+                                featurePanel(
+                                    "iot_features",
+                                    "IoT",
+                                    "images/icons/graphql-icon.svg",
+                                    "a <b class=\"metatron-name\">micropython implementation</b> provides space-aware iot processors that can naturally provide and access data within the larger data space",
+                                    "images/enoch-character.png")
+                            </script>
+                        </div>
+                        <!-- LLM COMPATIBLE -->
+                        <div id="llm_features">
+                            <script type="text/javascript">
+                                featurePanel(
+                                    "llm_features",
+                                    "LLM",
+                                    "images/icons/llm-icon.svg",
+                                    "<b class=\"metatron-name\">large language models</b> are objs in space whose internals are accessible through uri dereferencing.",
+                                    "images/modal/llm-modal.svg")
+                            </script>
+                        </div>
+                    </div>
+                </div>
+            </div>
+<div class="carousel-item">
+<div class="container-xxl py-5">
+    <div class="container">
+        <p class="text-primary subtitle">Tractatus Algebraicus Metatronicus</p>
+        <div class="container">
+        <div class="row">
+            <p class="d-inline-flex gap-1">
+              <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-0" aria-expanded="false" aria-controls="card-0">Data Manipulation Techniques</a>
+              <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-1" aria-expanded="false" aria-controls="card-1">The Function of an Instruction</a>
+              <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-2" aria-expanded="false" aria-controls="card-2">Structured Types</button>
+              <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-3" aria-expanded="false" aria-controls="card-3">Twisted Tangled Graphs</button>
+              <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-4" aria-expanded="false" aria-controls="card-4">A Seat at the Relational Table</button>
+              <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-5" aria-expanded="false" aria-controls="card-5">In The Mind of an LLM</button>
+              <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-6" aria-expanded="false" aria-controls="card-6">The Macro Microprocessor</button>
+              <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-7" aria-expanded="false" aria-controls="card-7">Brokering an MQTT Deal</button>
+              <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-8" aria-expanded="false" aria-controls="card-8">The File Cabinet of Tomorrow</button>
+              <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-9" aria-expanded="false" aria-controls="card-9">Serial for Breakfast</button>
+             <!-- <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target=".multi-collapse" aria-expanded="false" aria-controls="card-1 card-2">The Entire Collection</button> -->
+            </p>
+        </div>
+        <div class="row">
+<div style="min-height: 120px;">
+  <div class="collapse multi-collapse" id="card-0">
+    <div style="width: 100%;">
+<div class="exampleblock">
+<div class="content">
+<div class="paragraph">
+<p>There are 3 ways to access data.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>direct reference</strong>: every piece of data is associated with a unique URI.</p>
+</li>
+<li>
+<p><strong>pattern matching</strong>: pattern based URIs enable accessing entire branches of a URI address space.</p>
+</li>
+<li>
+<p><strong>indirect reference</strong>: data can reference other data either through container or URI pointers.</p>
+</li>
+</ol>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
+mtron&gt; x -&gt; [a=&gt;1,b=&gt;[c=&gt;2,d=&gt;[3,4,5]],e=&gt;6]
+==&gt;[
+ a=&gt;1,
+ b=&gt;[
+   c=&gt;2,
+   d=&gt;[3,4,5]],
+ e=&gt;6]
+mtron&gt; *x
+==&gt;[
+ a=&gt;1,
+ b=&gt;[
+   c=&gt;2,
+   d=&gt;[3,4,5]],
+ e=&gt;6]
+mtron&gt; *x/b/+
+==&gt;2
+==&gt;[3,4,5]
+mtron&gt; *x&gt;&gt;b&gt;&gt;d&gt;&gt;+
+==&gt;3
+==&gt;4
+==&gt;5</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="paragraph">
+<p>Numerous instructions exist for extracting substructures within larger structures.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
+mtron&gt; x -&gt; [a=&gt;1,b=&gt;[c=&gt;2,d=&gt;[3,4,5]],e=&gt;6]
+==&gt;[
+ a=&gt;1,
+ b=&gt;[
+   c=&gt;2,
+   d=&gt;[3,4,5]],
+ e=&gt;6]
+mtron&gt; *x.where[a=&gt;?&gt;0,_=&gt;[_=&gt;lst::T],e=&gt;?int::T]
+==&gt;[
+ a=&gt;1,
+ b=&gt;[
+   c=&gt;2,
+   d=&gt;[3,4,5]],
+ e=&gt;6]
+mtron&gt; *x.where[a=&gt;?&gt;0,_=&gt;[_=&gt;lst::T],e=&gt;?int::T].select[a=&gt;_]
+==&gt;[a=&gt;1]
+mtron&gt; *x.where[a=&gt;?&gt;0,_=&gt;[_=&gt;lst::T],e=&gt;?int::T].select[a=&gt;+2,b=&gt;[d=&gt;&gt;-.sum()]]
+==&gt;[
+ a=&gt;3,
+ b=&gt;[d=&gt;12]]</code></pre>
+</div>
+</div>
+</div>
+</div>
+    </div>
+  </div>
+</div>
+<div style="min-height: 120px;">
+  <div class="collapse multi-collapse" id="card-1">
+    <div style="width: 100%;">
+<!--
+┌ ├ ┐ └ ┘ │ ┤ ─ ⋰ ⋱ ⮝ ⮞ ⮜ ⮟
+-->
+<div class="exampleblock">
+<div class="content">
+<div class="paragraph">
+<p>mtron programs are composed using computational primitives called <strong>instructions</strong> (<code>inst</code>). Instructions are organized into libraries called <strong>instruction sets</strong> (<code>instset</code>)&#8201;&#8212;&#8201;domains of discourse. Mathematically, every instruction is a <strong>function</strong> written according to the form:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">tid?rng&lt;=dom(args){ code }@vid
+│  │ │  │ │ │  │   │    │   │
+│  └─┘  └─┘ └──┘   └────┘   │
+│   │    │    │      │      └───⮞ location: instance location
+│   │    │    │      └──────────⮞ code: a nested chain of instructions
+│   │    │    └─────────────────⮞ arguments: dynamic parameterizations (rhs)
+│   │    └──────────────────────⮞ domain: the incoming obj (lhs)
+│   └───────────────────────────⮞ range: the outgoing obj (return)
+└───────────────────────────────⮞ the id of the instruction</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Every instruction maps a <strong>left hand side</strong> <code>obj</code> (<code>lhs</code>) to a <strong>right hand side</strong> <code>obj</code> (rhs). Many-to-one, one to many, and many-to-many mappings are possible as an <code>obj</code> is an element in the power set of all <code>objs</code>. Thus, <code>{1,2,3}</code> is an <code>obj</code> with type <code>int{3}</code>.</p>
+</div>
+<div class="paragraph">
+<p>\begin{align*}
+\text{obj} \in \mathcal{P}(\text{obj})
+\end{align*}</p>
+</div>
+<div class="paragraph">
+<p>An <code>inst</code> to create <code>int</code> triples can be written:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
+mtron&gt; triple -&gt; |inst?lst&lt;=int{3}(){&gt;-[,]}
+==&gt;inst?rng=lst&amp;dom=int{3}(noobj){merge([,])}
+mtron&gt; {1,2,3,4,5,6}.triple()
+==&gt;[1,2,3]
+==&gt;[4,5,6]</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>The <code>|</code> token is synatic sugar for the <code>block</code> inst. A blocked instruction prevents the application of the <code>lhs</code> to the <code>inst</code> args and <code>inst</code> code.
+This ensures the uri <code>triple</code> is not applied to the <code>inst</code> prior to the uri being bound as the reference (<code>&#8594;</code>). Without block, the result of applying <code>triple</code> to <code>inst</code> would be what <code>triple</code> is bound to. In this particular instance, <code>triple</code> would reference a <code>fail</code> obj.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
+mtron&gt; triple -&gt; inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}
+==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}]]
+mtron&gt; *triple
+==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}]]</code></pre>
+</div>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="paragraph">
+<p>A stricter representation leveraging polymorphic type constructions is expressed as follows:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
+mtron&gt; triple -&gt; |inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}
+==&gt;inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}
+mtron&gt; {1,2,3,4,5,6}.triple()
+==&gt;[1,2,3]
+==&gt;[4,5,6]</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>The <code>triple</code> instruction code is composed of a single instruction: <code>&gt;-[,]</code>. This syntactic sugar resolves <code>merge([,])</code>. The instruction signature of <code>merge</code> is  <code>A&lt;=<mark>{*}(A::T)</code>. This states that <code>merge</code> is a <strong>barrier instruction</strong> that maps the entire lhs stream of objs (<code></mark>{*}</code>) to a single <code>A</code>, where <code>A</code> is a generic bound to <code>lst</code> given the resolution of the argument <code>A::T</code>. Thus, this instance of <code>merge</code> yields a single <code>lst</code> whose elements are the instructions three (<code>int{3}</code>) incoming lhs objs.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>An instruction is evaluated by applying a left-hand side <code>obj</code> as follows:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
+mtron&gt; sum -&gt; reduce?int&lt;=int{*}(){fold(0,plus(_))}
+==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{*}::T [reduce?rng=int&amp;dom=int{*}(noobj){fold(0,plus(id()))}]]</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>An instruction is evaluated by applying a left-hand side <code>obj</code> as follows:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">lhs =&gt; ?dom        [-- verify the lhs obj in the inst domain --]
+=&gt; arg0        [--  ┐                                    --]
+=&gt; ...         [--  ├── resolve arguments by applying the lhs to each
+=&gt; argN        [--  ┘                                    --]
+=&gt; code        [-- apply the lhs the first inst of the code block with args accessible on the stack --]
+=&gt; rhs         [-- the out of the code block is the result of the instruction --]
+rhs =&gt; ?rng [-- verify the result is in the inst range --]</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>\begin{align*}
+\texttt{inst} \in (\underbrace{\texttt{obj}}_{\text{the lhs object}} \times \underbrace{\texttt{inst}}_{\text{the instruction}}) \rightarrow \underbrace{\texttt{obj}}_{\text{the rhs object}}
+\end{align*}</p>
+</div>
+<div class="paragraph">
+<p>An instruction set is defined as a <strong>record</strong> (<code>rec</code>) of the form:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">instset -&gt; rec::T[?[type  =&gt; T{*}::T,                        [-- type definitions                   --]
+inst  =&gt; inst{*}::T,                     [-- instruction definitions            --]
+const =&gt; #::T,                           [-- constant definitions:              --]
+sugar =&gt; rec::T[?[str::T=&gt;uri::T]]]]     [-- syntactic sugar: token to inst tid --]</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>\begin{align*}
+\texttt{inst} \in (\underbrace{\texttt{obj}}_{\text{the lhs object}} \times \underbrace{\texttt{inst}}_{\text{the instruction}}) \rightarrow \underbrace{\texttt{obj}}_{\text{the rhs object}}
+\end{align*}</p>
+</div>
+<div class="paragraph">
+<p>that is used to write programs that form an a</p>
+</div>
+<div class="paragraph">
+<p>for composing data flow instructions.
+The language draws inspiration from the referential constructs of C, the data selection and push-down predicates of SQL, the structural typing of TypeScript, the tersenes of form and underlying navigation perspective realized in Gremlin, the self-reflective URI addressable scheme of NenoFhat and RDF/OWL, and the record-oriented foundation of JavaScript.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">*milky_way&gt;&gt;bodies.?star::T.where(&gt;&gt;planets.count().?&gt;(0)).-&lt;[
+name            =&gt; &gt;&gt;name,
+stats           =&gt; -&lt;[kilos =&gt; &gt;&gt;mass.as(kg::T),
+area  =&gt; _(s=&gt;?star::T){ *pi.mult(*s.&gt;&gt;radius.pow(2.0)).as(km::T) }],
+primary_planets =&gt; &gt;&gt;planets.order(&gt;&gt;mass).take(1).&gt;&gt;name]</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Instructions, like the data it operates on, exist within the URI address space so that meta-programming concepts such as reflection, memoization, and serialization of the computational state can be naturally expressed and leveraged.</p>
+</div>
+<div class="paragraph">
+<p>An instruction set packages types, constants, instructions, and syntax sugars and can be imported and used to effect domain-specific views the underlying data.</p>
+</div>
+</div>
+</div>
+    </div>
+  </div>
+</div>
+<div style="min-height: 120px;">
+  <div class="collapse multi-collapse" id="card-2">
+    <div style="width: 100%;">
+<div class="exampleblock">
+<div class="content">
+<div class="paragraph">
+<p>metatron <code>objs</code> are typed. Types are organized into instruction sets that encapsulate the structures and processes necessary to effect domain-specific views of the underlying data space. The type system supports refinement types, optional/maybe types, generic/polymorphic types, recursive/self-referential types, dependent types, type cardinality, and more.</p>
+</div>
+<div class="paragraph">
+<p>## mtron core types</p>
+</div>
+<div class="paragraph">
+<p>The fundamental types are organized into the 5 categories presented in the table below.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 16.6666%;">
+<col style="width: 66.6668%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">kind</th>
+<th class="tableblock halign-left valign-top">description</th>
+<th class="tableblock halign-left valign-top">examples</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>universal types</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>noobj::T, #::T</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>mono types</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>bytes::T, bool::T, int::T, real::T, str::T, uri::T</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>poly types</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>rel::T, lst::T, rec::T</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>call types</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>inst::T, code::T</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>error types</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>fail::T, caught::T</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>machine types</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>monad::T, machine::T</p>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="paragraph">
+<p>A natural number is a positive integer greater than zero. In order to constrain an <code>int</code> to this definition, a <strong>refinement type</strong> can be constructed.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
+mtron&gt; nat -&gt; int::T[?&gt;0]
+==&gt;int::T[is(gt(0))]
+mtron&gt; nat::10
+==&gt;nat::10
+mtron&gt; nat::-10
+==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat]
+mtron&gt; int::-10.as(nat::T)
+==&gt;fail::[-10 is not a is(gt(0))
+  -10=&gt;(X=&gt;is(gt(0)))]
+    \_fail::[apply failure:
+	[lhs]    | -10
+	 \_type  | /m/int
+	  \_pred | []
+	[inst]   | as?rng=int&amp;dom=int(int::T[is(gt(0))]@nat){&lt;j&gt;}
+	 \_dom   | int::T
+	 \_args  | [int::T[is(gt(0))]@nat]]
+    \_fail::[unable to evaluate inst: as?rng=int&amp;dom=int(int::T[is(gt(0))]@nat){&lt;j&gt;}]</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Type inheritance is possible through type chaining. In the example below, the <code>age</code> type has a value id of <code>age</code>, but a type id of <code>nat</code>. Moreover, <code>nat</code> has a value id of <code>nat</code> and a type id of <code>int</code>. In this way, when <code>age</code> is resolved, its associated predicate (<code>?&lt;120</code>) and inherited predicates (<code>?&gt;0</code>) must hold for the respective value to be considered an <code>age</code>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
+mtron&gt; age -&gt; nat::T[?&lt;120]
+==&gt;int::T[is(lt(120))]@nat
+mtron&gt; age::T
+mtron&gt; nat::T
+mtron&gt; int::T</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
+mtron&gt; nat:125
+==&gt;nat:125
+mtron&gt; age:125
+==&gt;age:125
+mtron&gt; nat:125.as(age::T)
+==&gt;fail::[nat:125 is not a is(lt(120))
+  nat:125=&gt;(==&gt;is(lt(120)))]
+    \_fail::[apply failure:
+	[lhs]    | nat:125
+	 \_type  | /m/uri
+	  \_pred | []
+	[inst]   | as?rng=nat&amp;dom=uri(nat::T[is(lt(120))]@age){&lt;j&gt;}
+	 \_dom   | uri::T
+	 \_args  | [nat::T[is(lt(120))]@age]]
+    \_fail::[unable to evaluate inst: as?rng=nat&amp;dom=uri(nat::T[is(lt(120))]@age){&lt;j&gt;}]
+mtron&gt; 125.as(nat::T).as(age::T)
+==&gt;fail::[nat::125 is not a is(lt(120))
+  nat::125=&gt;(X=&gt;is(lt(120)))]
+    \_fail::[apply failure:
+	[lhs]    | nat::125
+	 \_type  | nat
+	  \_pred | [is(gt(0))]
+	[inst]   | as?rng=nat&amp;dom=int(nat::T[is(lt(120))]@age){&lt;j&gt;}
+	 \_dom   | int::T
+	 \_args  | [nat::T[is(lt(120))]@age]]
+    \_fail::[unable to evaluate inst: as?rng=nat&amp;dom=int(nat::T[is(lt(120))]@age){&lt;j&gt;}]</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
+mtron&gt; name   -&gt; str::T[-&lt;''&gt;-count().?&lt;30]
+==&gt;str::T[split('').merge(count(noobj).is(lt(30)))]
+mtron&gt; personx -&gt; rec::T[?[name  =&gt; str::T,
+                           age   =&gt; age::T,
+                           knows =&gt; personx{*}::T]]
+==&gt;rec::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;personx{*}::T])]@personx{*}])]
+mtron&gt; marko -&gt; personx::[name=&gt;'marko',age=&gt;29,knows=&gt;!*grant]
+==&gt;personx::[name=&gt;'marko',age=&gt;29,knows=&gt;!*grant]
+mtron&gt; grant -&gt; personx::[name=&gt;'grant',age=&gt;23,knows=&gt;!*marko]
+==&gt;personx::[name=&gt;'grant',age=&gt;23,knows=&gt;!*marko]
+mtron&gt; *marko&gt;&gt;knows&gt;&gt;name
+==&gt;grant
+mtron&gt; *marko&gt;&gt;knows&gt;&gt;knows&gt;&gt;name
+==&gt;marko
+mtron&gt; *marko&gt;&gt;knows&gt;&gt;knows
+==&gt;personx::[name=&gt;'marko',age=&gt;29,knows=&gt;!*grant]</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>## instruction set architecture types</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 16.6666%;">
+<col style="width: 66.6668%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">instruction set</th>
+<th class="tableblock halign-left valign-top">description</th>
+<th class="tableblock halign-left valign-top">examples</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>mach</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>monad::T, machine::T</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>math</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>bB::T, kB::T, mB::T, gB::T, tB::T, pB::T</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>web</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>html::T, json::T, xml::T</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>iot</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>device::T, entity::T</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>llm</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>llm::T, memory::T</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>grph</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>elmnt::T, vrtx::T, edge::T</p>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">nat    -&gt; int::T[?&gt;0]
+person -&gt; rec::T[?[name        =&gt;str::T,
+                   uri{?}::age =&gt;nat::T,
+                   knows       =&gt;person{*}::T]]
+people  -&gt; person{*}::T</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">sumer -&gt; people::{
+ enoch -&gt; person::[name=&gt;'enoch',age=&gt;29],
+ enki  -&gt; person::[name=&gt;'enki',knows=&gt;!*enoch]}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *enki&gt;&gt;knows&gt;&gt;name
+==&gt;'enoch'
+mtron&gt; *#.as[name      =&gt; _,
+             coauthor  =&gt; &gt;&gt;knows.where[&gt;&gt;age.?&gt;21]&gt;&gt;name]
+==&gt;[name=&gt;'enki', coauthor=&gt;'enoch']</code></pre>
+</div>
+</div>
+</div>
+</div>
+    </div>
+  </div>
+</div>
+<div style="min-height: 120px;">
+  <div class="collapse multi-collapse" id="card-3">
+    <div style="width: 100%;">
+<div class="exampleblock">
+<div class="content">
+<div class="paragraph">
+<p>Large language models (LLM) can be embedded in space. An LLM is a <code>rec</code> with the following type definition:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">llm -&gt; rec::T[?[name=&gt;?uri::T,
+        host=&gt;?uri::T,
+        think=&gt;?bool::T,
+        size=&gt;?gB::T,
+        {?}memory=&gt;?uri::T,
+        {?}skill=&gt;?lst::T,
+        {?}tool=&gt;?lst::T]]</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
+mtron&gt; *ollama:+
+==&gt;ollm::[
+ size =&gt;gB::0.00,
+ host =&gt;http://localhost:11434,
+ name =&gt;&lt;deepseek-v3.2:cloud&gt;,
+ think=&gt;true,
+ skill=&gt;[completion,tools,thinking]]
+==&gt;ollm::[
+ size =&gt;gB::12.85,
+ host =&gt;http://localhost:11434,
+ name =&gt;gpt-oss:latest,
+ think=&gt;true,
+ skill=&gt;[completion,tools,thinking]]
+==&gt;ollm::[
+ size =&gt;gB::0.00,
+ host =&gt;http://localhost:11434,
+ name =&gt;&lt;minimax-m2.5:cloud&gt;,
+ think=&gt;true,
+ skill=&gt;[completion,tools,thinking]]
+==&gt;ollm::[
+ size =&gt;gB::4.87,
+ host =&gt;http://localhost:11434,
+ name =&gt;qwen3:8b,
+ think=&gt;true,
+ skill=&gt;[completion,tools,thinking]]</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="paragraph">
+<p>The following example demonstrates how to search for an appropriate LLM for the given task, then query it, and finally, have it&#8217;s memory of the interaction stored in space for future use as a stabilizing content.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
+mtron&gt; ai -&gt; *ollama:+
+              .where([think=&gt;true,size=&gt;?&lt;mB::5000.0])
+              .order(&gt;&gt;?real&lt;=rec(size).mult(-1.0))
+              .take(1)
+==&gt;ollm::[
+ size =&gt;gB::4.87,
+ host =&gt;http://localhost:11434,
+ name =&gt;qwen3:8b,
+ think=&gt;true,
+ skill=&gt;[completion,tools,thinking]]
+mtron&gt; ai/think  -&gt; false
+==&gt;false
+mtron&gt; ai/memory -&gt; /usr/mem
+==&gt;/usr/mem
+mtron&gt; *ai.chat("Remember the word 'metatron'. I'll ask you to recall this word later.")
+==&gt;Understood. I'll be here when you need to recall the word **"metatron"**. Let me know when you're ready!</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>The <code>size</code> relation maps to a <code>gB::T</code> (gigabytes) while the <code>where()</code> clause filtered on <code>mB::T</code> (megabytes). The conversion between the various data size units is handled automatically by the type constructors of the various data type sizes distributed in the <code>/m/math</code> instruction set.</p>
+</div>
+*/m/math/+/
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
+mtron&gt; gB::500.0.as(mB::T)
+==&gt;mB::512000.00</code></pre>
+</div>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="paragraph">
+<p>The content and metadata associated with the chat interaction is stored at the specified location and is accessible via a <code>uri</code> dereference.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
+mtron&gt; */usr/mem
+==&gt;[[
+   contents=&gt;[[text=&gt;"Remember the word 'metatron'. I'll ask "...,type=&gt;TEXT]],
+   type    =&gt;USER],
+  [
+   text                 =&gt;"Understood. I'll be here when you need "...,
+   toolExecutionRequests=&gt;[,],
+   attributes           =&gt;[=&gt;],
+   type                 =&gt;AI],
+  [
+   contents=&gt;[[text=&gt;'What was the special word I needed you '...,type=&gt;TEXT]],
+   type    =&gt;USER],
+  [
+   text                 =&gt;'The special word you asked me to recall'...,
+   thinking             =&gt;'Okay, the user asked, "What was the spe'...,
+   toolExecutionRequests=&gt;[,],
+   attributes           =&gt;[=&gt;],
+   type                 =&gt;AI],
+  [
+   contents=&gt;[[text=&gt;"Remember the word 'metatron'. I'll ask "...,type=&gt;TEXT]],
+   type    =&gt;USER],
+  [
+   text                 =&gt;"Understood. I'll be here when you need "...,
+   toolExecutionRequests=&gt;[,],
+   attributes           =&gt;[=&gt;],
+   type                 =&gt;AI]]</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The memory is referenced again below, where it is both read (the previous interaction) and written to (the current interaction).</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
+mtron&gt; *ollama:+
+         .where([think=&gt;true,size=&gt;?&lt;mB::5000.0])
+         .order(&gt;&gt;?real&lt;=rec(size).mult(-1.0))
+         .take(1)
+         .plus?rec&lt;=rec([memory=&gt;/usr/mem])
+         .chat("What was the special word I needed you to recall?")
+==&gt;The special word you needed me to recall was **"metatron"**. Let me know if you need further clarification!</code></pre>
+</div>
+</div>
+</div>
+</div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+<script src="./highlight/highlight.min.js"></script>
+<script src="./highlight/languages/mtron.min.js"></script>
+<script src="./highlight/languages/bash.min.js"></script>
+<script src="./highlight/languages/json.min.js"></script>
+<script>
+if (!hljs.initHighlighting.called) {
+hljs.initHighlighting.called = true
+;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) { hljs.highlightBlock(el) })
+}
+</script>
+</div>
+</div>
+</div>
+</div>
+        <button class="carousel-control-prev" type="button" data-bs-target="#carousel-body" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Previous</span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#carousel-body" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Next</span>
+        </button>
+</div>
+</main>
+
+<!-- FOOTER BAR 
+<footer class="container-fluid bg-secondary text-light footer wow fadeIn" data-wow-delay="0.1s">
+    <div class="d-flex pt-1 mb-0">
+        <a class="btn btn-lg-square btn-dark text-primary m-1" href="mailto:info@phaseshift.studio"><i
+                class="fa fa-envelope-open text-primary"></i></a>
+    </div>
+</footer>-->
+</body>
+</html>
+
+<!-- RECOMMENDED TO STAY OUTSIDE HTML TAG -->
+<!------------ FEATURES MODAL -------------->
+<div id="modalPanel" class="modal fade" tabindex="-1"/>
+<!------------------------------------------>
+<!------------------------------------------>
+</div>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  messageStyle: "none",
+  tex2jax: {
+    inlineMath: [["\\(", "\\)"]],
+    displayMath: [["\\[", "\\]"]],
+    ignoreClass: "nostem|nolatexmath"
+  },
+  asciimath2jax: {
+    delimiters: [["\\$", "\\$"]],
+    ignoreClass: "nostem|noasciimath"
+  },
+  TeX: { equationNumbers: { autoNumber: "none" } }
+})
+MathJax.Hub.Register.StartupHook("AsciiMath Jax Ready", function () {
+  MathJax.InputJax.AsciiMath.postfilterHooks.Add(function (data, node) {
+    if ((node = data.script.parentNode) && (node = node.parentNode) && node.classList.contains("stemblock")) {
+      data.math.root.display = "block"
+    }
+    return data
+  })
+})
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-MML-AM_HTMLorMML"></script>
+</body>
+</html>

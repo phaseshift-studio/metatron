@@ -462,32 +462,51 @@
                 <version>3.4.0</version>
                 <executions>
                     <execution>
-                        <id>copy-resources</id>
+                        <id>copy-resources-pre-site</id>
                         <phase>pre-site</phase>
                         <goals>
                             <goal>copy-resources</goal>
                         </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/temp</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.basedir}/docs</directory>
+                                    <includes>
+                                        <include>css/**</include>
+                                        <include>javascript/**</include>
+                                        <include>highlight/**</include>
+                                        <include>images/**</include>
+                                        <include>website/**</include>
+                                    </includes>
+                                    <excludes>
+                                        <exclude>index.adoc</exclude>
+                                        <exclude>index.html</exclude>
+                                    </excludes>
+                                    <filtering>true</filtering>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>copy-resources-post-site</id>
+                        <phase>site</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.basedir}/docs/website</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.build.directory}/docs/website</directory>
+                                    <includes>
+                                        <include>index.html</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
                     </execution>
                 </executions>
-                <configuration>
-                    <outputDirectory>${project.build.directory}/temp</outputDirectory>
-                    <resources>
-                        <resource>
-                            <directory>${project.basedir}/docs</directory>
-                            <includes>
-                                <include>css/**</include>
-                                <include>javascript/**</include>
-                                <include>highlight/**</include>
-                                <include>images/**</include>
-                                <include>website/**</include>
-                            </includes>
-                            <excludes>
-                                <exclude>index.adoc</exclude>
-                            </excludes>
-                            <filtering>true</filtering>
-                        </resource>
-                    </resources>
-                </configuration>
             </plugin>
             <!--<plugin>
                 <groupId>uk.bot-by.maven-plugin</groupId>
