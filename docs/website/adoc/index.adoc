@@ -112,9 +112,9 @@ include::type-panel.adoc[]
   <div class="collapse multi-collapse" id="card-3">
     <div style="width: 100%;">
 ++++
-
+////
 include::llm-panel.adoc[]
-
+////
 ++++
     </div>
   </div>

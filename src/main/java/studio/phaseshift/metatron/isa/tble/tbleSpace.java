@@ -35,9 +35,7 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -231,18 +229,15 @@ public class tbleSpace extends AbstractSpace<Connection> {
     public Function<fURI, Iterator<IdObj>> directReader() {
         return (pattern) -> {
             try {
-                // Strip the space's pattern prefix to get the relative path
-                final fURI relativePath = stripPatternPrefix(pattern);
-
                 // Check if this is a table mapping path (existing table)
-                if (this.existingTableSchema != null && this.existingTableSchema.isTablePath(relativePath)) {
+                if (this.existingTableSchema != null && this.existingTableSchema.isTablePath(pattern)) {
                     // Use existing table schema - just return raw results
-                    return this.existingTableSchema.read(this.sjvm(), relativePath);
+                    return this.existingTableSchema.read(this.sjvm(), pattern);
                 }
 
                 // Use key-value schema (TypedKeyValueSchema or SimpleKeyValueSchema)
                 // Just return raw results - resolveRead() will handle poly unrolling
-                return this.schema.read(this.sjvm(), relativePath);
+                return this.schema.read(this.sjvm(), pattern);
             } catch (final Exception e) {
                 throw MTronException.of(e);
             }

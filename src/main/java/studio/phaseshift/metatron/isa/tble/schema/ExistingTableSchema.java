@@ -22,7 +22,6 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSQLSerializer;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.tble.tbleSpace;
@@ -34,6 +33,7 @@ import java.util.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -134,32 +134,37 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
      * Format: /table_name/row_id or /table_name/+ for all rows
      * Returns null if not a table path
      */
-    private Tuple.Pair<String, String> parseTablePath(final fURI furi) {
+    private List<String> parseTablePath(final fURI furi) {
         // Use segments() to get only the named segments (no empty strings from slashes)
         final List<String> segments = furi.segments();
         if (segments.isEmpty())
             return null;
         // First segment should be the table name
-        final String tableName = segments.get(0);
+        final String tableName = segments.getFirst();
         if (!this.tableSchemas.containsKey(tableName.toLowerCase()))
             return null;
-        // Get row identifier (if present)
-        final String rowId = segments.size() > 1 ? segments.get(1) : null;
-        return Tuple.Pair.with(tableName, rowId);
+        final List<String> tablePath = new ArrayList<>(segments);
+        if (segments.size() == 1)
+            tablePath.add("+");
+        if (segments.size() == 2)
+            tablePath.add("+");
+        return tablePath;
     }
 
     /**
      * Read a row from a SQL table and convert it to a Metatron record
      */
-    private Obj readTableRow(final ResultSet rs, final TableMetadata metadata) throws SQLException {
+    private Obj readTableRow(final ResultSet rs, final TableMetadata metadata, final String... rowNames) throws SQLException {
         final Map<Obj, Obj> labeledValues = new LinkedHashMap<>();
         for (final ColumnMetadata col : metadata.columns) {
-            final Obj value = readColumnWithMetadata(rs, col);
-            labeledValues.put(uri(col.name), value);
-            if (!value.isNoObj())
-                Router.global().stats().ioStats().incrBytesRecv(value.toString().getBytes().length);
+            if (rowNames.length == 0 || Arrays.asList(rowNames).contains(col.name)) {
+                final Obj value = readColumnWithMetadata(rs, col);
+                labeledValues.put(uri(col.name), value);
+                if (!value.isNoObj())
+                    Router.global().stats().ioStats().incrBytesRecv(value.toString().getBytes().length);
+            }
         }
-        return rec(labeledValues, REC_TID, null);
+        return rowNames.length == 1 ? objs(labeledValues.values()) : rec(labeledValues, REC_TID, null);
     }
 
     /**
@@ -213,13 +218,13 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
      * Write an Obj directly to the database without JSON serialization
      */
     public int write(final Connection conn, final fURI furi, final Obj obj) throws SQLException {
-        final Tuple.Pair<String, String> tablePath = parseTablePath(furi.asNode());
+        final List<String> tablePath = parseTablePath(furi.asNode());
         if (tablePath == null) {
             throw new SQLException("Invalid table path: " + furi);
         }
 
-        final String tableName = tablePath.get0();
-        final String rowId = tablePath.get1();
+        final String tableName = tablePath.getFirst();
+        final String rowId = tablePath.get(1);
         final TableMetadata metadata = tableSchemas.get(tableName.toLowerCase());
 
         if (metadata == null) {
@@ -256,15 +261,15 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
 
     /**
      * Write an entire row from a list (positional values matching column order).
-     *
+     * <p>
      * The list values correspond to ALL columns in their natural order (as returned by the database).
      * This allows working with existing tables created by other programs.
-     *
+     * <p>
      * If the list includes the primary key value(s), they will be used.
      * If the list is shorter than the number of columns, remaining columns will not be updated.
      */
     private int writeRowFromList(final Connection conn, final TableMetadata metadata, final String rowId,
-                                  final studio.phaseshift.metatron.isa.m.type.Lst lst) throws SQLException {
+                                 final studio.phaseshift.metatron.isa.m.type.Lst lst) throws SQLException {
         // Convert list to record using column names as keys
         final Map<Obj, Obj> recMap = new LinkedHashMap<>();
         final List<Obj> values = lst.jvm();
@@ -310,7 +315,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                     .findFirst()
                     .orElseThrow();
             if (pkColMeta.sqlType == Types.INTEGER || pkColMeta.sqlType == Types.BIGINT ||
-                pkColMeta.sqlType == Types.SMALLINT || pkColMeta.sqlType == Types.TINYINT) {
+                    pkColMeta.sqlType == Types.SMALLINT || pkColMeta.sqlType == Types.TINYINT) {
                 stmt.setLong(1, Long.parseLong(pkValue));
             } else {
                 stmt.setString(1, pkValue);
@@ -369,7 +374,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                     .findFirst()
                     .orElseThrow();
             if (pkColMeta.sqlType == Types.INTEGER || pkColMeta.sqlType == Types.BIGINT ||
-                pkColMeta.sqlType == Types.SMALLINT || pkColMeta.sqlType == Types.TINYINT) {
+                    pkColMeta.sqlType == Types.SMALLINT || pkColMeta.sqlType == Types.TINYINT) {
                 stmt.setLong(1, Long.parseLong(rowId));
             } else {
                 stmt.setString(1, rowId);
@@ -464,7 +469,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         // Convert rowId string to appropriate type based on column type
         final Obj pkValue;
         if (pkColMeta.sqlType == Types.INTEGER || pkColMeta.sqlType == Types.BIGINT ||
-            pkColMeta.sqlType == Types.SMALLINT || pkColMeta.sqlType == Types.TINYINT) {
+                pkColMeta.sqlType == Types.SMALLINT || pkColMeta.sqlType == Types.TINYINT) {
             pkValue = jnt(Long.parseLong(rowId));
         } else {
             pkValue = str(rowId);
@@ -524,25 +529,41 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
 
     @Override
     public Iterator<Space.IdObj> read(final Connection conn, final fURI pattern) throws SQLException {
-        final Tuple.Pair<String, String> tablePath = parseTablePath(pattern.asNode());
+        final List<String> tablePath = parseTablePath(pattern);
         if (tablePath == null)
             return Collections.emptyIterator();
-        final String tableName = tablePath.get0();
-        final String rowId = tablePath.get1();
+        final String tableName = tablePath.getFirst();
+        final String rowId = tablePath.get(1);
         final TableMetadata metadata = tableSchemas.get(tableName.toLowerCase());
         if (metadata == null)
             return Collections.emptyIterator();
         final List<Space.IdObj> results = new ArrayList<>();
-        if (rowId == null || rowId.equals("+") || pattern.hasPattern()) {
-            // Read all rows
-            final String sql = String.format("SELECT * FROM %s", metadata.tableName);
-            try (final Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(sql)) {
-                while (rs.next()) {
-                    // Build row identifier from primary keys or use row number
-                    final String id = buildRowId(rs, metadata);
-                    fURI rowFuri = fURI.Singleton.f("/" + tableName + "/" + id);
-                    final Obj obj = readTableRow(rs, metadata);
-                    results.add(Space.IdObj.of(rowFuri, obj));
+        if (rowId.equals("+") || rowId.equals("#")) {
+            if (tablePath.size() > 2 && !tablePath.get(2).equals("+")) {
+                // Read all rows with specific field - need to include primary keys for buildRowId
+                final String pkColumns = String.join(", ", metadata.primaryKeys);
+                final String fieldName = tablePath.get(2);
+                final String sql = String.format("SELECT %s, %s FROM %s", pkColumns, fieldName, metadata.tableName);
+                try (final Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(sql)) {
+                    while (rs.next()) {
+                        // Build row identifier from primary keys or use row number
+                        final String id = buildRowId(rs, metadata);
+                        fURI rowFuri = fURI.Singleton.f(tableName).extend(id).extend(fieldName);
+                        final Obj obj = readTableRow(rs, metadata, fieldName);
+                        results.add(Space.IdObj.of(rowFuri, obj));
+                    }
+                }
+            } else {
+                // Read all rows
+                final String sql = String.format("SELECT * FROM %s", metadata.tableName);
+                try (final Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(sql)) {
+                    while (rs.next()) {
+                        // Build row identifier from primary keys or use row number
+                        final String id = buildRowId(rs, metadata);
+                        fURI rowFuri = fURI.Singleton.f(tableName).extend(id);
+                        final Obj obj = readTableRow(rs, metadata);
+                        results.add(Space.IdObj.of(rowFuri, obj));
+                    }
                 }
             }
         } else {
@@ -551,26 +572,52 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                 this.space.logger().warn("table %s has no primary key, cannot read specific row", tableName);
                 return Collections.emptyIterator();
             }
-
-            final String pkColumn = metadata.primaryKeys.getFirst();
-            final String sql = String.format("SELECT * FROM %s WHERE %s = ?", metadata.tableName, pkColumn);
-            try (final PreparedStatement stmt = conn.prepareStatement(sql)) {
-                // Set the parameter with the correct type based on the primary key column type
-                final ColumnMetadata pkColMeta = metadata.columns.stream()
-                        .filter(c -> c.name.equals(pkColumn))
-                        .findFirst()
-                        .orElseThrow();
-                if (pkColMeta.sqlType == Types.INTEGER || pkColMeta.sqlType == Types.BIGINT ||
-                    pkColMeta.sqlType == Types.SMALLINT || pkColMeta.sqlType == Types.TINYINT) {
-                    stmt.setLong(1, Long.parseLong(rowId));
-                } else {
-                    stmt.setString(1, rowId);
+            if (tablePath.size() > 2 && !tablePath.get(2).equals("+")) {
+                final String pkColumn = metadata.primaryKeys.getFirst();
+                final String pkColumns = String.join(", ", metadata.primaryKeys);
+                final String fieldName = tablePath.get(2);
+                final String sql = String.format("SELECT %s, %s FROM %s WHERE %s = ?", pkColumns, fieldName, metadata.tableName, pkColumn);
+                try (final PreparedStatement stmt = conn.prepareStatement(sql)) {
+                    // Set the parameter with the correct type based on the primary key column type
+                    final ColumnMetadata pkColMeta = metadata.columns.stream()
+                            .filter(c -> c.name.equals(pkColumn))
+                            .findFirst()
+                            .orElseThrow();
+                    if (pkColMeta.sqlType == Types.INTEGER || pkColMeta.sqlType == Types.BIGINT ||
+                            pkColMeta.sqlType == Types.SMALLINT || pkColMeta.sqlType == Types.TINYINT) {
+                        stmt.setLong(1, Long.parseLong(rowId));
+                    } else {
+                        stmt.setString(1, rowId);
+                    }
+                    try (final ResultSet rs = stmt.executeQuery()) {
+                        if (rs.next()) {
+                            final fURI rowFuri = fURI.Singleton.f(tableName).extend(rowId).extend(fieldName);
+                            final Obj row = readTableRow(rs, metadata, fieldName);
+                            results.add(Space.IdObj.of(rowFuri, row));
+                        }
+                    }
                 }
-                try (final ResultSet rs = stmt.executeQuery()) {
-                    if (rs.next()) {
-                        final fURI rowFuri = fURI.Singleton.f("/" + tableName + "/" + rowId);
-                        final Obj row = readTableRow(rs, metadata);
-                        results.add(Space.IdObj.of(rowFuri, row));
+            } else {
+                final String pkColumn = metadata.primaryKeys.getFirst();
+                final String sql = String.format("SELECT * FROM %s WHERE %s = ?", metadata.tableName, pkColumn);
+                try (final PreparedStatement stmt = conn.prepareStatement(sql)) {
+                    // Set the parameter with the correct type based on the primary key column type
+                    final ColumnMetadata pkColMeta = metadata.columns.stream()
+                            .filter(c -> c.name.equals(pkColumn))
+                            .findFirst()
+                            .orElseThrow();
+                    if (pkColMeta.sqlType == Types.INTEGER || pkColMeta.sqlType == Types.BIGINT ||
+                            pkColMeta.sqlType == Types.SMALLINT || pkColMeta.sqlType == Types.TINYINT) {
+                        stmt.setLong(1, Long.parseLong(rowId));
+                    } else {
+                        stmt.setString(1, rowId);
+                    }
+                    try (final ResultSet rs = stmt.executeQuery()) {
+                        if (rs.next()) {
+                            final fURI rowFuri = fURI.Singleton.f(tableName).extend(rowId);
+                            final Obj row = readTableRow(rs, metadata);
+                            results.add(Space.IdObj.of(rowFuri, row));
+                        }
                     }
                 }
             }

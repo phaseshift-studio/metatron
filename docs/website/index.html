@@ -367,13 +367,12 @@ pre code {
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 </head>
 <body class="article">
-<div id="header" style="max-width: 100%;">
-</div>
 <div id="content" style="max-width: 100%;">
 <script src="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js"></script>
 <link rel="stylesheet" href="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.css"/>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
 <script src="javascript/metatron-docs.js"></script>
+<link rel="stylesheet" href="css/metatron.css"/>
 <!--
   ~ Metatron: A Distributed Computing Language and Virtual Machine
   ~  Copyright (C) 2025- PhaseShift Studio, LLC
@@ -1170,7 +1169,7 @@ mtron&gt; name   -&gt; str::T[-&lt;''&gt;-count().?&lt;30]
 mtron&gt; personx -&gt; rec::T[?[name  =&gt; str::T,
                            age   =&gt; age::T,
                            knows =&gt; personx{*}::T]]
-==&gt;rec::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;personx{*}::T])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]
+==&gt;rec::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;personx{*}::T])]
 mtron&gt; marko -&gt; personx::[name=&gt;'marko',age=&gt;29,knows=&gt;!*grant]
 ==&gt;personx::[name=&gt;'marko',age=&gt;29,knows=&gt;!*grant]
 mtron&gt; grant -&gt; personx::[name=&gt;'grant',age=&gt;23,knows=&gt;!*marko]
@@ -1309,30 +1308,83 @@ mtron&gt; *#.as[name      =&gt; _,
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
 mtron&gt; *ollama:+
-==&gt;ollm::[
- size =&gt;gB::0.00,
- host =&gt;http://localhost:11434,
- name =&gt;&lt;deepseek-v3.2:cloud&gt;,
- think=&gt;true,
- skill=&gt;[completion,tools,thinking]]
-==&gt;ollm::[
- size =&gt;gB::12.85,
- host =&gt;http://localhost:11434,
- name =&gt;gpt-oss:latest,
- think=&gt;true,
- skill=&gt;[completion,tools,thinking]]
-==&gt;ollm::[
- size =&gt;gB::0.00,
- host =&gt;http://localhost:11434,
- name =&gt;&lt;minimax-m2.5:cloud&gt;,
- think=&gt;true,
- skill=&gt;[completion,tools,thinking]]
-==&gt;ollm::[
- size =&gt;gB::4.87,
- host =&gt;http://localhost:11434,
- name =&gt;qwen3:8b,
- think=&gt;true,
- skill=&gt;[completion,tools,thinking]]</code></pre>
+==&gt;model::[
+ host    =&gt;!*/sys/space/ollama/host,
+ name    =&gt;qwen3-coder-next:latest,
+ think   =&gt;false,
+ provider=&gt;!*/sys/space/ollama,
+ skill   =&gt;[completion,tools],
+ size    =&gt;gB::48.19]@ollama:qwen3-coder-next:latest
+==&gt;model::[
+ host    =&gt;!*/sys/space/ollama/host,
+ name    =&gt;&lt;deepseek-v3.2:cloud&gt;,
+ think   =&gt;true,
+ provider=&gt;!*/sys/space/ollama,
+ skill   =&gt;[completion,tools,thinking],
+ size    =&gt;gB::0.00]@ollama:deepseek-v3.2:cloud
+==&gt;model::[
+ host    =&gt;!*/sys/space/ollama/host,
+ name    =&gt;qwen3:8b,
+ think   =&gt;true,
+ provider=&gt;!*/sys/space/ollama,
+ skill   =&gt;[completion,tools,thinking],
+ size    =&gt;gB::4.87]@ollama:qwen3:8b
+==&gt;model::[
+ host    =&gt;!*/sys/space/ollama/host,
+ name    =&gt;deepcoder:latest,
+ think   =&gt;false,
+ provider=&gt;!*/sys/space/ollama,
+ skill   =&gt;[completion],
+ size    =&gt;gB::8.37]@ollama:deepcoder:latest
+==&gt;model::[
+ host    =&gt;!*/sys/space/ollama/host,
+ name    =&gt;llava:latest,
+ think   =&gt;false,
+ provider=&gt;!*/sys/space/ollama,
+ skill   =&gt;[completion,vision],
+ size    =&gt;gB::4.41]@ollama:llava:latest
+==&gt;model::[
+ host    =&gt;!*/sys/space/ollama/host,
+ name    =&gt;qwen3:latest,
+ think   =&gt;true,
+ provider=&gt;!*/sys/space/ollama,
+ skill   =&gt;[completion,tools,thinking],
+ size    =&gt;gB::4.87]@ollama:qwen3:latest
+==&gt;model::[
+ host    =&gt;!*/sys/space/ollama/host,
+ name    =&gt;gpt-oss:latest,
+ think   =&gt;true,
+ provider=&gt;!*/sys/space/ollama,
+ skill   =&gt;[completion,tools,thinking],
+ size    =&gt;gB::12.85]@ollama:gpt-oss:latest
+==&gt;model::[
+ host    =&gt;!*/sys/space/ollama/host,
+ name    =&gt;&lt;minimax-m2.5:cloud&gt;,
+ think   =&gt;true,
+ provider=&gt;!*/sys/space/ollama,
+ skill   =&gt;[completion,tools,thinking],
+ size    =&gt;gB::0.00]@ollama:minimax-m2.5:cloud
+==&gt;model::[
+ host    =&gt;!*/sys/space/ollama/host,
+ name    =&gt;deepseek-coder:latest,
+ think   =&gt;false,
+ provider=&gt;!*/sys/space/ollama,
+ skill   =&gt;[completion],
+ size    =&gt;gB::0.72]@ollama:deepseek-coder:latest
+==&gt;model::[
+ host    =&gt;!*/sys/space/ollama/host,
+ name    =&gt;tinyllama:latest,
+ think   =&gt;false,
+ provider=&gt;!*/sys/space/ollama,
+ skill   =&gt;[completion],
+ size    =&gt;gB::0.59]@ollama:tinyllama:latest
+==&gt;model::[
+ host    =&gt;!*/sys/space/ollama/host,
+ name    =&gt;llama3-groq-tool-use:latest,
+ think   =&gt;false,
+ provider=&gt;!*/sys/space/ollama,
+ skill   =&gt;[completion,tools],
+ size    =&gt;gB::4.34]@ollama:llama3-groq-tool-use:latest</code></pre>
 </div>
 </div>
 </div>
@@ -1349,18 +1401,19 @@ mtron&gt; ai -&gt; *ollama:+
               .where([think=&gt;true,size=&gt;?&lt;mB::5000.0])
               .order(&gt;&gt;?real&lt;=rec(size).mult(-1.0))
               .take(1)
-==&gt;ollm::[
- size =&gt;gB::4.87,
- host =&gt;http://localhost:11434,
- name =&gt;qwen3:8b,
- think=&gt;true,
- skill=&gt;[completion,tools,thinking]]
+==&gt;model::[
+ host    =&gt;!*/sys/space/ollama/host,
+ name    =&gt;qwen3:8b,
+ think   =&gt;true,
+ provider=&gt;!*/sys/space/ollama,
+ skill   =&gt;[completion,tools,thinking],
+ size    =&gt;gB::4.87]@ollama:qwen3:8b
 mtron&gt; ai/think  -&gt; false
 ==&gt;false
 mtron&gt; ai/memory -&gt; /usr/mem
 ==&gt;/usr/mem
 mtron&gt; *ai.chat("Remember the word 'metatron'. I'll ask you to recall this word later.")
-==&gt;Understood. I'll be here when you need to recall the word **"metatron"**. Let me know when you're ready!</code></pre>
+==&gt;I remember the word "metatron." Please feel free to ask me about it whenever you're ready.</code></pre>
 </div>
 </div>
 <div class="admonitionblock note">
@@ -1397,67 +1450,10 @@ mtron&gt; gB::500.0.as(mB::T)
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
 mtron&gt; */usr/mem
 ==&gt;[[
-   text                 =&gt;'The special word you needed me to recal'...,
-   thinking             =&gt;'Okay, the user has asked multiple times'...,
-   toolExecutionRequests=&gt;[,],
-   attributes           =&gt;[=&gt;],
-   type                 =&gt;AI],
-  [
    contents=&gt;[[text=&gt;"Remember the word 'metatron'. I'll ask "...,type=&gt;TEXT]],
    type    =&gt;USER],
   [
-   text                 =&gt;"Understood. I'll be here when you need "...,
-   toolExecutionRequests=&gt;[,],
-   attributes           =&gt;[=&gt;],
-   type                 =&gt;AI],
-  [
-   contents=&gt;[[text=&gt;'What was the special word I needed you '...,type=&gt;TEXT]],
-   type    =&gt;USER],
-  [
-   text                 =&gt;'The special word you needed me to recal'...,
-   thinking             =&gt;'Okay, the user is asking again what the'...,
-   toolExecutionRequests=&gt;[,],
-   attributes           =&gt;[=&gt;],
-   type                 =&gt;AI],
-  [
-   contents=&gt;[[text=&gt;"Remember the word 'metatron'. I'll ask "...,type=&gt;TEXT]],
-   type    =&gt;USER],
-  [
-   text                 =&gt;"Understood. I'll be here when you need "...,
-   toolExecutionRequests=&gt;[,],
-   attributes           =&gt;[=&gt;],
-   type                 =&gt;AI],
-  [
-   contents=&gt;[[text=&gt;'What was the special word I needed you '...,type=&gt;TEXT]],
-   type    =&gt;USER],
-  [
-   text                 =&gt;'The special word you needed me to recal'...,
-   thinking             =&gt;'Okay, the user is asking again what the'...,
-   toolExecutionRequests=&gt;[,],
-   attributes           =&gt;[=&gt;],
-   type                 =&gt;AI],
-  [
-   contents=&gt;[[text=&gt;"Remember the word 'metatron'. I'll ask "...,type=&gt;TEXT]],
-   type    =&gt;USER],
-  [
-   text                 =&gt;"Understood. I'll be here when you need "...,
-   toolExecutionRequests=&gt;[,],
-   attributes           =&gt;[=&gt;],
-   type                 =&gt;AI],
-  [
-   contents=&gt;[[text=&gt;'What was the special word I needed you '...,type=&gt;TEXT]],
-   type    =&gt;USER],
-  [
-   text                 =&gt;'The special word you needed me to recal'...,
-   thinking             =&gt;'Okay, the user is asking again what the'...,
-   toolExecutionRequests=&gt;[,],
-   attributes           =&gt;[=&gt;],
-   type                 =&gt;AI],
-  [
-   contents=&gt;[[text=&gt;"Remember the word 'metatron'. I'll ask "...,type=&gt;TEXT]],
-   type    =&gt;USER],
-  [
-   text                 =&gt;"Understood. I'll be here when you need "...,
+   text                 =&gt;'I remember the word "metatron." Please '...,
    toolExecutionRequests=&gt;[,],
    attributes           =&gt;[=&gt;],
    type                 =&gt;AI]]</code></pre>
@@ -1475,7 +1471,7 @@ mtron&gt; *ollama:+
          .take(1)
          .plus?rec&lt;=rec([memory=&gt;/usr/mem])
          .chat("What was the special word I needed you to recall?")
-==&gt;The special word you needed me to recall was **"metatron"**. Let me know if you need further clarification!</code></pre>
+==&gt;The special word you asked me to recall was **"metatron"**. Let me know if you'd like to discuss it further!</code></pre>
 </div>
 </div>
 </div>

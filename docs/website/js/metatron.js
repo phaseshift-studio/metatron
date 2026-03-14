@@ -90,9 +90,6 @@ function refreshTermynal(id) {
 function modalPanel(title, subtitle, icon, htmlBody) {
     $(document).ready(function () {
         $("#modalPanel").replaceWith(`
-<div id="modalPanel" class="modal fade" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content bg-secondary text-light neon-box">
             <div class="modal-header">
                 <div class="bg-dark d-flex flex-shrink-0 align-items-center justify-content-center" style="width: 50px; height: 50px;">
                     <img src="${icon}" alt="${title}" width="32" height="32" class="icon-color">
@@ -100,9 +97,12 @@ function modalPanel(title, subtitle, icon, htmlBody) {
                 <div class="d-flex justify-content-left align-items-left">
                     <h4 class="modal-title">${title}: ${subtitle}</h4>
                 </div>
-                <!--<button type="button" class="btn-close" data-bs-dismiss="modal"></button>-->
+        
             </div>
-             <div id="modalContent"></div>
+            <div class="spinner-border text-primary" role="status">
+  <span class="visually-hidden">generating documentation about ${title}</span>
+</div>
+            <!-- <div id="modalContent"></div> -->
         </div>
     </div>
 </div>
@@ -140,7 +140,7 @@ function featurePanel(id, title, icon, frontHTML, backImage) {
          </div>
       </div>
       <div class="flip-box-back">
-        <div class="justify-content-center overflow-hidden bg-secondary h-100 p-1 ps-1">
+        <div class="d-flex justify-content-center align-items-center overflow-hidden bg-secondary h-100">
             <div class="row">
                 <a onclick="modalText('${title}')" href="javascript:void(0);">
                     <img src="${backImage}" alt="${title}" class="icon-color" width="100%" height="100%"/>
