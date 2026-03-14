@@ -24,13 +24,16 @@
 :version-label: ring-oriented computing
 :docname: metatron documentation
 :L: latexmath
+:title: metatron
 :nofooter:
+:noheader:
 
 ++++
 <script src="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js"></script>
 <link rel="stylesheet" href="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.css"/>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
 <script src="javascript/metatron-docs.js"></script>
+<link rel="stylesheet" href="css/metatron.css"/>
 ++++
 
 ++++
