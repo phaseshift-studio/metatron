@@ -583,7 +583,7 @@
                 <executions>
                     <execution>
                         <id>convert-to-html</id>
-                        <phase>site</phase>
+                        <phase>pre-site</phase>
                         <goals>
                             <goal>process-asciidoc</goal>
                         </goals>

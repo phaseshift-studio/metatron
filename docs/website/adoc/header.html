@@ -55,8 +55,6 @@
     <script src="js/metatron.js"></script>
 </head>
 <body class="d-flex flex-column min-vh-100">
-<!-- THIS IS THE FIX FOR BOOSTRAP(5) BUG AROUND MODALS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
 <!------------------------------------------------------->
 <!-- LOADING WIDGET -->
 <div id="spinner"
@@ -113,12 +111,13 @@ bin/metatron</code></pre>
                     <li><a class="code dropdown-item" href="#" onclick="slideShowPage(1);">/m/grph/tp3</a></li>
                     <li><a class="code dropdown-item" href="#" onclick="slideShowPage(1);">/m/vec</a></li>
                     <li><a class="code dropdown-item" href="#" onclick="slideShowPage(1);">/m/web</a></li>
+                    <li><a class="code dropdown-item" href="#" onclick="slideShowPage(1);">/m/llm</a></li>
                     <li><a class="code dropdown-item" href="#" onclick="slideShowPage(1);">/m/iot</a></li>
                     <li><a class="code dropdown-item" href="#" onclick="slideShowPage(1);">/m/sys</a></li>
                 </ul>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="#" onclick="slideShowPage(2);" role="button">the tractatus</a>
+                <a class="nav-link" type="button" data-bs-target="#carousel-body" href="#" data-bs-slide-to="1">the tractatus</a>
             </li>
             <li class="nav-item dropdown">
                 <a id="guild_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
@@ -149,9 +148,6 @@ bin/metatron</code></pre>
         <div class="d-flex pt-1 m-n1">
             <a class="btn btn-lg-square btn-dark text-primary m-1" href="mailto:info@phaseshift.studio">
                 <i class="fa fa-envelope-open text-primary"></i>
-            </a>
-            <a class="btn btn-lg-square btn-dark text-primary m-1" href="">
-                <i class="fab fa-twitter"></i>
             </a>
         </div>
     </div>
