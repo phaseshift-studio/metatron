@@ -227,7 +227,7 @@ bin/metatron</code></pre>
                 <!-- METATRON FEATURES -->
                 <div class="container">
                     <div class="text-center mx-auto wow fadeInUp" data-wow-delay="0.1s">
-                        <h2 class="text-uppercase" style="background-color: var(--maincolor);">Features</h2>
+                        <h2 class="text-uppercase text-primary" style="background-color: var(--maincolor);">Features</h2>
                     </div>
                     <div class="row g-5">
                         <!-- MTRON -->
@@ -508,6 +508,315 @@ While the reader searches for some unbeknownst depth in the previous sentence, a
 \text{obj} \in \mathcal{P}(\text{obj})
 \end{align*}</p>
 </div>
+<div class="exampleblock">
+<div class="content">
+<div class="dlist">
+<dl>
+<dt class="hdlist1">positional args</dt>
+<dd>
+<div class="openblock">
+<div class="content">
+<div class="stemblock">
+<div class="content">
+\[\tt{obj}_\tt{in}.f(\color{yellow}{\__{0}}, \color{yellow}{\__{1}},\ldots,\color{yellow}{\__{n}}) \mapsto \tt{obj}_\tt{out}\]
+</div>
+</div>
+<div class="paragraph">
+<p>An <code>inst</code> frame is defined by the <code>inst</code> <a href="https://en.wikipedia.org/wiki/Parameter_(computer_programming)">arguments</a>.
+These arguments can be accessed within the <code>inst</code> via their <code>lst</code> position as a fURI.
+For example, <code>*&lt;0&gt;</code> references the first argument, <code>*&lt;1&gt;</code> the second argument, so on and so forth.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
+mtron&gt; band -&gt; |band?int{?}&lt;=int(int::T,int::T){ is(and(gte(*0),lte(*1)) )}
+==&gt;band?rng=int{?}&amp;dom=int(int::T,int::T){is(and(gte(*&lt;0&gt;),lte(*&lt;1&gt;)))}
+mtron&gt; 3.band(2,8)                                ​1​ --]
+==&gt;3
+mtron&gt; 10.band(2,8)                               ​2​ --]</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td><code>3</code> is within the band <code>[2,8]</code> and thus, <code>3</code> is the result, satisfying the <code>inst</code> range <code>int{?}</code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td><code>10</code> is not within the band <code>[2,8]</code> and thus, <code>noobj</code> is the result, satisfying the <code>inst</code> range <code>int{?}</code>.</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</dd>
+<dt class="hdlist1">named args</dt>
+<dd>
+<div class="openblock">
+<div class="content">
+<div class="stemblock">
+<div class="content">
+\[\tt{obj}_\tt{in}.f(\color{yellow}{a_1} \Rightarrow x, \color{yellow}{a_2} \Rightarrow y,\ldots,a_n) \mapsto \tt{obj}_\tt{out}\]
+</div>
+</div>
+<div class="paragraph">
+<p>A <a href="https://en.wikipedia.org/wiki/Named_parameter">named argument</a> is a fURI that references an <code>obj</code> in the router&#8217;s frame structure.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
+mtron&gt; band -&gt; |band?int{?}&lt;=int(min=&gt;_,max=&gt;_){ is(and(gte(*min),lte(*max))) }
+==&gt;band?rng=int{?}&amp;dom=int(min=&gt;id(),max=&gt;id()){is(and(gte(*min),lte(*max)))}
+mtron&gt; 3.band(2,8)                           ​1​
+==&gt;3
+mtron&gt; 3.band(max=&gt;8,min=&gt;2)                 ​2​
+==&gt;3
+mtron&gt; 'abc'.band(2,8)                       ​3​</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>If the argument name isn&#8217;t provided, then it&#8217;s position in the argument list determines its nane,</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>When arguments are named, they can be written in any order.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>The domain of <code>band</code> is <code>int</code>.
+Note where the error is thrown when <code>str['abc']</code> is provided.</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</dd>
+<dt class="hdlist1">default args</dt>
+<dd>
+<div class="openblock">
+<div class="content">
+<div class="stemblock">
+<div class="content">
+\[\tt{obj}_\tt{in}.f(a_1 \Rightarrow \color{yellow}{else(x)},a_2 \Rightarrow \color{yellow}{else(y)},\ldots,a_n) \mapsto \tt{obj}_\tt{out}\]
+</div>
+</div>
+<div class="paragraph">
+<p>If the incoming <code>obj</code> to <code>else</code> is <code>noobj</code>, the <code>else</code> emits it&#8217;s argument, else it emits the incoming <code>obj</code>.
+This makes <code>else</code> useful for expressing <a href="https://en.wikipedia.org/wiki/Default_argument">default arguments</a>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
+mtron&gt; band -&gt; |band?int{?}&lt;=int(min=&gt;else(2),max=&gt;else(8)){ is(and(gte(*min),lte(*max))) }
+==&gt;band?rng=int{?}&amp;dom=int(min=&gt;else(2),max=&gt;else(8)){is(and(gte(*min),lte(*max)))}
+mtron&gt; 1.band(min=&gt;1)                        ​1​
+==&gt;1
+mtron&gt; 10.band()                             ​2​
+mtron&gt; {2,3,4,5}.band(min=&gt;3,max=&gt;4)         ​3​
+==&gt;3
+==&gt;4</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>No <code>max</code> is provided, so the default value of <code>8</code> is used.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>No <code>min</code> nor <code>max</code> is provided, so the defaults <code>2</code> and <code>8</code>, respectively are used.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>When arguments are provided, the default values are not used.</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</dd>
+<dt class="hdlist1">typed args</dt>
+<dd>
+<div class="openblock">
+<div class="content">
+<div class="stemblock">
+<div class="content">
+\[\tt{obj}_\tt{in}.f(a_1\color{yellow}{?type_1}, a_2\color{yellow}{?type_2},\ldots,a_n) \mapsto \tt{obj}_\tt{out}\]
+</div>
+</div>
+<div class="paragraph">
+<p>If an argument is defined with a query <a href="https://en.wikipedia.org/wiki/Data_type">type</a>, then the argument&#8217;s value must satisfy that type&#8217;s specification.
+This is a consequence of attaching a type query processor to the router frame structure and thus, is analogous to type specifications in other structures.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
+mtron&gt; nat -&gt; int::T[?&gt;0]
+==&gt;int::T[is(gt(0))]
+mtron&gt; band -&gt; |band?int{?}&lt;=int(min=&gt;?nat::T,max=&gt;?nat::T){ is(and(gte(*min),lte(*max))) }
+==&gt;band?rng=int{?}&amp;dom=int(min=&gt;isa(int::T[is(gt(0))]@nat),max=&gt;isa(int::T[is(gt(0))]@nat)){is(and(gte(*min),lte(*max)))}
+mtron&gt; 15.band(10,20)              ​1​
+==&gt;15
+mtron&gt; -15.band(-20,-10)           ​2​</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Argument name uniqueness does not consider query parameters.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>The <code>?nat</code> query parameter requires the respective argument be some \(n \in \mathbb{N}\).</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</dd>
+<dt class="hdlist1">anonymous inst args</dt>
+<dd>
+<div class="openblock">
+<div class="content">
+<div class="stemblock">
+<div class="content">
+\[\tt{obj}_\tt{in}.\color{yellow}{\lambda}(a_1 \Rightarrow x, a_2 \Rightarrow y,\ldots,a_n) \mapsto \tt{obj}_\tt{out}\]
+</div>
+</div>
+<div class="paragraph">
+<p>An untyped <code>inst</code> is an anonymous <code>inst</code> and behaves analogously to an
+<a href="https://en.wikipedia.org/wiki/Anonymous_function">anonymous function</a> in other programming environments.
+Anonymous <code>insts</code> can be both defined and evaluated in the same expression to provide
+<a href="https://en.wikipedia.org/wiki/Immediately_invoked_function_expression">immediately invoked function expression</a> semantics.
+Like any <code>inst</code>, anonymous <code>inst</code> arguments are scoped to the value of the <code>inst</code>, providing
+<a href="https://en.wikipedia.org/wiki/Scope_(computer_science)#Block_scope">block-scope</a> semantics.
+Finally, a degenerate anonymous <code>inst</code> with no specified variable frame is simply <code>bcode</code>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
+mtron&gt; 10.(min=&gt;2,max=&gt;8){ is(and(gte(*min),lte(*max))) }                ​1​
+==&gt;fail::[rhs does not match inst range:
+	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/94
+mtron&gt; 10.(min=&gt;minus(1),max=&gt;plus(1)){ is(and(gte(*min),lte(*max))) }   ​2​
+==&gt;10
+mtron&gt; 10.(){ is(and(gte(*min),lte(*max))) }                             ​3​
+==&gt;fail::[rhs does not match inst range:
+	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/96
+mtron&gt; 10.is(and(gte(minus(1)),lte(plus(1))))                            ​5​
+==&gt;10</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>The unnamed "band" <code>inst</code> is evaluated in line.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td><code>min</code> and <code>max</code> are computed dynamically relative to the input.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>The <code>inst</code> value is referencing undefined frame variables.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>An anonymous <code>inst</code> is compiled to an <code>obj</code> filter-<code>inst</code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>When arguments are embedded in the value, then the <code>inst</code> is simply <code>bcode</code>.</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</dd>
+<dt class="hdlist1">contextual args</dt>
+<dd>
+<div class="openblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
+mtron&gt; is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;_)[mod(*by).eq(0)]
+==&gt;fail::[is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;_)[mod(*by).eq(0)]
+                                      ^ end of input expected
+][...]@/sys/fail/98
+mtron&gt; 10.is_divisible(2)
+==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/100
+mtron&gt; 10.is_divisible('abc')
+==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/102</code></pre>
+</div>
+</div>
+</div>
+</div>
+</dd>
+<dt class="hdlist1">dependent args</dt>
+<dd>
+<div class="openblock">
+<div class="content">
+<div class="stemblock">
+<div class="content">
+\[\tt{obj}_\tt{in}.f(a_1 \Rightarrow x,a_2 \Rightarrow \color{yellow}{g(*a_1)},\ldots,a_n) \mapsto \tt{obj}_\tt{out}\]
+</div>
+</div>
+<div class="paragraph">
+<p>If an argument&#8217;s type is dependent on the value of another argument, then the argument is a <a href="https://en.m.wikipedia.org/wiki/Dependent_type">dependent argument</a>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
+mtron&gt; band -&gt; |band?int{?}&lt;=int(min=&gt;_,max=&gt;is(gt(*min)).else(*min.plus(1)))[is(gte(*min)).is(lte(*max))]
+==&gt;fail::[band -&gt; |band?int{?}&lt;=int(min=&gt;_,max=&gt;is(gt(*min)).else(*min.plus(1)))[is(gte(*min)).is(lte(*max))]
+                                                                      ^ end of input expected
+][...]@/sys/fail/104
+mtron&gt; 2.band(min=&gt;1,max=&gt;1)                 -​1​</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>&#8230;&#8203;</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</dd>
+<dt class="hdlist1">refined type</dt>
+<dd>
+<div class="openblock">
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
+mtron&gt; is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;is(neq(0)).else(print('error').map(1)))[mod(*by).eq(0)]
+==&gt;fail::[is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;is(neq(0)).else(print('error').map(1)))[mod(*by).eq(0)]
+                                      ^ end of input expected
+][...]@/sys/fail/106
+mtron&gt; 10.is_divisible(2)
+==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/108
+mtron&gt; 10.is_divisible('abc')
+==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/110</code></pre>
+</div>
+</div>
+</div>
+</div>
+</dd>
+</dl>
+</div>
+</div>
+</div>
 <div class="paragraph">
 <p>An <code>inst</code> to create <code>int</code> triples can be written:</p>
 </div>
@@ -536,9 +845,9 @@ This ensures the uri <code>triple</code> is not applied to the <code>inst</code>
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
 mtron&gt; triple -&gt; inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}
-==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}]][...]@/sys/fail/166
+==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}]][...]@/sys/fail/112
 mtron&gt; *triple
-==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}]][...]@/sys/fail/166</code></pre>
+==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}]][...]@/sys/fail/112</code></pre>
 </div>
 </div>
 </td>
@@ -579,7 +888,7 @@ mtron&gt; {1,2,3,4,5,6}.triple()
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
 mtron&gt; sum -&gt; reduce?int&lt;=int{*}(){fold(0,plus(_))}
-==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{*}::T [reduce?rng=int&amp;dom=int{*}(noobj){fold(0,plus(id()))}]][...]@/sys/fail/168</code></pre>
+==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{*}::T [reduce?rng=int&amp;dom=int{*}(noobj){fold(0,plus(id()))}]][...]@/sys/fail/114</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -730,10 +1039,10 @@ mtron&gt; nat -&gt; int::T[?&gt;0]
 mtron&gt; nat::10
 ==&gt;nat::10
 mtron&gt; nat::-10
-==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/182
+==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/128
 mtron&gt; int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/188</code></pre>
+  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/134</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -758,10 +1067,10 @@ mtron&gt; age:125
 ==&gt;age:125
 mtron&gt; nat:125.as(age::T)
 ==&gt;fail::[nat:125 is not a is(lt(120))
-  nat:125=&gt;(==&gt;is(lt(120)))][...]@/sys/fail/230
+  nat:125=&gt;(==&gt;is(lt(120)))][...]@/sys/fail/176
 mtron&gt; 125.as(nat::T).as(age::T)
 ==&gt;fail::[nat::125 is not a is(lt(120))
-  nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/236</code></pre>
+  nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/182</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -907,86 +1216,86 @@ mtron&gt; */m/llm/model
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
 mtron&gt; *ollama:+
 ==&gt;model::[
- provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion,tools],
  size    =&gt;gB::48.19,
- host    =&gt;!*/sys/space/ollama/host,
- name    =&gt;qwen3-coder-next:latest,
- think   =&gt;false]@ollama:qwen3-coder-next:latest
-==&gt;model::[
- provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion,tools,thinking],
- size    =&gt;gB::0.00,
- host    =&gt;!*/sys/space/ollama/host,
- name    =&gt;&lt;deepseek-v3.2:cloud&gt;,
- think   =&gt;true]@ollama:deepseek-v3.2:cloud
-==&gt;model::[
- provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion,tools,thinking],
- size    =&gt;gB::4.87,
- host    =&gt;!*/sys/space/ollama/host,
- name    =&gt;qwen3:8b,
- think   =&gt;true]@ollama:qwen3:8b
-==&gt;model::[
- provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion],
- size    =&gt;gB::8.37,
- host    =&gt;!*/sys/space/ollama/host,
- name    =&gt;deepcoder:latest,
- think   =&gt;false]@ollama:deepcoder:latest
-==&gt;model::[
- provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion,vision],
- size    =&gt;gB::4.41,
- host    =&gt;!*/sys/space/ollama/host,
- name    =&gt;llava:latest,
- think   =&gt;false]@ollama:llava:latest
-==&gt;model::[
- provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion,tools,thinking],
- size    =&gt;gB::4.87,
- host    =&gt;!*/sys/space/ollama/host,
- name    =&gt;qwen3:latest,
- think   =&gt;true]@ollama:qwen3:latest
-==&gt;model::[
- provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion,tools,thinking],
- size    =&gt;gB::12.85,
- host    =&gt;!*/sys/space/ollama/host,
- name    =&gt;gpt-oss:latest,
- think   =&gt;true]@ollama:gpt-oss:latest
-==&gt;model::[
- provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion,tools,thinking],
- size    =&gt;gB::0.00,
- host    =&gt;!*/sys/space/ollama/host,
- name    =&gt;&lt;minimax-m2.5:cloud&gt;,
- think   =&gt;true]@ollama:minimax-m2.5:cloud
-==&gt;model::[
- provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion],
- size    =&gt;gB::0.72,
- host    =&gt;!*/sys/space/ollama/host,
- name    =&gt;deepseek-coder:latest,
- think   =&gt;false]@ollama:deepseek-coder:latest
-==&gt;model::[
- provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion],
- size    =&gt;gB::0.59,
- host    =&gt;!*/sys/space/ollama/host,
- name    =&gt;tinyllama:latest,
- think   =&gt;false]@ollama:tinyllama:latest
-==&gt;model::[
- provider=&gt;!*/sys/space/ollama,
  skill   =&gt;[completion,tools],
+ provider=&gt;!*/sys/space/ollama,
+ think   =&gt;false,
+ name    =&gt;qwen3-coder-next:latest,
+ host    =&gt;!*/sys/space/ollama/host]@ollama:qwen3-coder-next:latest
+==&gt;model::[
+ size    =&gt;gB::0.00,
+ skill   =&gt;[completion,tools,thinking],
+ provider=&gt;!*/sys/space/ollama,
+ think   =&gt;true,
+ name    =&gt;&lt;deepseek-v3.2:cloud&gt;,
+ host    =&gt;!*/sys/space/ollama/host]@ollama:deepseek-v3.2:cloud
+==&gt;model::[
+ size    =&gt;gB::4.87,
+ skill   =&gt;[completion,tools,thinking],
+ provider=&gt;!*/sys/space/ollama,
+ think   =&gt;true,
+ name    =&gt;qwen3:8b,
+ host    =&gt;!*/sys/space/ollama/host]@ollama:qwen3:8b
+==&gt;model::[
+ size    =&gt;gB::8.37,
+ skill   =&gt;[completion],
+ provider=&gt;!*/sys/space/ollama,
+ think   =&gt;false,
+ name    =&gt;deepcoder:latest,
+ host    =&gt;!*/sys/space/ollama/host]@ollama:deepcoder:latest
+==&gt;model::[
+ size    =&gt;gB::4.41,
+ skill   =&gt;[completion,vision],
+ provider=&gt;!*/sys/space/ollama,
+ think   =&gt;false,
+ name    =&gt;llava:latest,
+ host    =&gt;!*/sys/space/ollama/host]@ollama:llava:latest
+==&gt;model::[
+ size    =&gt;gB::4.87,
+ skill   =&gt;[completion,tools,thinking],
+ provider=&gt;!*/sys/space/ollama,
+ think   =&gt;true,
+ name    =&gt;qwen3:latest,
+ host    =&gt;!*/sys/space/ollama/host]@ollama:qwen3:latest
+==&gt;model::[
+ size    =&gt;gB::12.85,
+ skill   =&gt;[completion,tools,thinking],
+ provider=&gt;!*/sys/space/ollama,
+ think   =&gt;true,
+ name    =&gt;gpt-oss:latest,
+ host    =&gt;!*/sys/space/ollama/host]@ollama:gpt-oss:latest
+==&gt;model::[
+ size    =&gt;gB::0.00,
+ skill   =&gt;[completion,tools,thinking],
+ provider=&gt;!*/sys/space/ollama,
+ think   =&gt;true,
+ name    =&gt;&lt;minimax-m2.5:cloud&gt;,
+ host    =&gt;!*/sys/space/ollama/host]@ollama:minimax-m2.5:cloud
+==&gt;model::[
+ size    =&gt;gB::0.72,
+ skill   =&gt;[completion],
+ provider=&gt;!*/sys/space/ollama,
+ think   =&gt;false,
+ name    =&gt;deepseek-coder:latest,
+ host    =&gt;!*/sys/space/ollama/host]@ollama:deepseek-coder:latest
+==&gt;model::[
+ size    =&gt;gB::0.59,
+ skill   =&gt;[completion],
+ provider=&gt;!*/sys/space/ollama,
+ think   =&gt;false,
+ name    =&gt;tinyllama:latest,
+ host    =&gt;!*/sys/space/ollama/host]@ollama:tinyllama:latest
+==&gt;model::[
  size    =&gt;gB::4.34,
- host    =&gt;!*/sys/space/ollama/host,
+ skill   =&gt;[completion,tools],
+ provider=&gt;!*/sys/space/ollama,
+ think   =&gt;false,
  name    =&gt;llama3-groq-tool-use:latest,
- think   =&gt;false]@ollama:llama3-groq-tool-use:latest</code></pre>
+ host    =&gt;!*/sys/space/ollama/host]@ollama:llama3-groq-tool-use:latest</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>The following example demonstrates how to search for an appropriate LLM for the given task, then query it, and finally, have it&#8217;s memory of the interaction stored in space for future use as a stabilizing content.</p>
+<p>The following example demonstrates how to search for an appropriate LLM for the given task, then query it, and finally, have its memory of the interaction stored in space for future use as a stabilizing content.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -996,12 +1305,12 @@ mtron&gt; ai -&gt; *ollama:+
               .order(&gt;&gt;?real&lt;=rec(size).mult(-1.0))
               .take(1)
 ==&gt;model::[
- provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion,tools,thinking],
  size    =&gt;gB::4.87,
- host    =&gt;!*/sys/space/ollama/host,
+ skill   =&gt;[completion,tools,thinking],
+ provider=&gt;!*/sys/space/ollama,
+ think   =&gt;true,
  name    =&gt;qwen3:8b,
- think   =&gt;true]@ollama:qwen3:8b
+ host    =&gt;!*/sys/space/ollama/host]@ollama:qwen3:8b
 mtron&gt; ai/think  -&gt; false
 ==&gt;false
 mtron&gt; ai/memory -&gt; /usr/mem
@@ -1065,7 +1374,7 @@ mtron&gt; *ollama:+
          .take(1)
          .plus?rec&lt;=rec([memory=&gt;/usr/mem])
          .chat("What was the special word I needed you to recall?")
-==&gt;The special word you needed me to recall was **"metatron"**. Let me know if you'd like further details!</code></pre>
+==&gt;The special word you asked me to recall was **"metatron"**. Let me know if you need further details or assistance! 😊</code></pre>
 </div>
 </div>
 </div>
@@ -1219,7 +1528,7 @@ mtron&gt; "a b c".-&lt;' '.map(capitalize).&gt;-','
 ==&gt;fail::[unable to determine inst function:
 	capitalize  =&gt; merge(',')   | [inst]
 	uri::T      =&gt; #::T         |  \_dom
-	uri::T     X=&gt; [',']        |  \_args][...]@/sys/fail/164</code></pre>
+	uri::T     X=&gt; [',']        |  \_args][...]@/sys/fail/80</code></pre>
 </div>
 </div>
 <h3 id="_pattern_matching_the_wildcards" class="discrete">Pattern Matching: The Wildcards</h3>

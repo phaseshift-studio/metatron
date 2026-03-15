@@ -28,6 +28,210 @@ Every instruction maps a **left hand side** `obj` (`lhs`) to a **right hand side
 \text{obj} \in \mathcal{P}(\text{obj})
 \end{align*}
 
+
+[tabs]
+====
+
+positional args::
++
+--
+
+[stem]
+++++
+\tt{obj}_\tt{in}.f(\color{yellow}{\__{0}}, \color{yellow}{\__{1}},\ldots,\color{yellow}{\__{n}}) \mapsto \tt{obj}_\tt{out}
+++++
+
+An `inst` frame is defined by the `inst` https://en.wikipedia.org/wiki/Parameter_(computer_programming)[arguments].
+These arguments can be accessed within the `inst` via their `lst` position as a fURI.
+For example, `\*<0>` references the first argument, `*<1>` the second argument, so on and so forth.
+
+++++
+<!-- 🐖 
+band -> |inst?int{?}<=int(int::T,int::T){ is(and(gte(*0),lte(*1))) }
+3.band(2,8)                                [-- <1>
+10.band(2,8)                               [-- <2>
+-->
+++++
+
+<1> `3` is within the band `[2,8]` and thus, `3` is the result, satisfying the `inst` range `int{?}`.
+<2> `10` is not within the band `[2,8]` and thus, `noobj` is the result, satisfying the `inst` range `int{?}`.
+
+--
+
+named args::
++
+--
+
+[stem]
+++++
+\tt{obj}_\tt{in}.f(\color{yellow}{a_1} \Rightarrow x, \color{yellow}{a_2} \Rightarrow y,\ldots,a_n) \mapsto \tt{obj}_\tt{out}
+++++
+
+A https://en.wikipedia.org/wiki/Named_parameter[named argument] is a fURI that references an `obj` in the router's frame structure.
+
+++++
+<!-- 🐖 
+band -> |inst?int{?}<=int(min=>_,max=>_){ is(and(gte(*min),lte(*max))) }
+3.band(2,8)                           [-- <1>
+3.band(max=>8,min=>2)                 [-- <2>
+'abc'.band(2,8)                       [-- <3>
+-->
+++++
+
+
+<1> If the argument name isn't provided, then it's position in the argument list determines its nane,
+<2> When arguments are named, they can be written in any order.
+<3> The domain of `band` is `int`.
+Note where the error is thrown when `str['abc']` is provided.
+
+--
+
+default args::
++
+--
+
+[stem]
+++++
+\tt{obj}_\tt{in}.f(a_1 \Rightarrow \color{yellow}{else(x)},a_2 \Rightarrow \color{yellow}{else(y)},\ldots,a_n) \mapsto \tt{obj}_\tt{out}
+++++
+
+If the incoming `obj` to `else` is `noobj`, the `else` emits it's argument, else it emits the incoming `obj`.
+This makes `else` useful for expressing https://en.wikipedia.org/wiki/Default_argument[default arguments].
+
+++++
+<!-- 🐖 
+band -> |inst?int{?}<=int(min=>else(2),max=>else(8)){ is(and(gte(*min),lte(*max))) }
+1.band(min=>1)                        [-- <1>
+10.band()                             [-- <2>
+{2,3,4,5}.band(min=>3,max=>4)         [-- <3>
+-->
+++++
+
+<1> No `max` is provided, so the default value of `8` is used.
+<2> No `min` nor `max` is provided, so the defaults `2` and `8`, respectively are used.
+<3> When arguments are provided, the default values are not used.
+
+--
+
+typed args::
++
+--
+
+[stem]
+++++
+\tt{obj}_\tt{in}.f(a_1\color{yellow}{?type_1}, a_2\color{yellow}{?type_2},\ldots,a_n) \mapsto \tt{obj}_\tt{out}
+++++
+
+If an argument is defined with a query https://en.wikipedia.org/wiki/Data_type[type], then the argument's value must satisfy that type's specification.
+This is a consequence of attaching a type query processor to the router frame structure and thus, is analogous to type specifications in other structures.
+
+++++
+<!-- 🐖 
+nat -> int::T[?>0]
+band -> |inst?int{?}<=int(min=>?nat::T,max=>?nat::T){ is(and(gte(*min),lte(*max))) }
+15.band(10,20)              [-- <1>
+-15.band(-20,-10)           [-- <2>
+-->
+++++
+
+
+<1> Argument name uniqueness does not consider query parameters.
+<2> The `?nat` query parameter requires the respective argument be some stem:[n \in \mathbb{N}].
+
+--
+
+anonymous inst args::
++
+--
+
+[stem]
+++++
+\tt{obj}_\tt{in}.\color{yellow}{\lambda}(a_1 \Rightarrow x, a_2 \Rightarrow y,\ldots,a_n) \mapsto \tt{obj}_\tt{out}
+++++
+
+An untyped `inst` is an anonymous `inst` and behaves analogously to an
+https://en.wikipedia.org/wiki/Anonymous_function[anonymous function] in other programming environments.
+Anonymous `insts` can be both defined and evaluated in the same expression to provide
+https://en.wikipedia.org/wiki/Immediately_invoked_function_expression[immediately invoked function expression] semantics.
+Like any `inst`, anonymous `inst` arguments are scoped to the value of the `inst`, providing
+https://en.wikipedia.org/wiki/Scope_(computer_science)#Block_scope[block-scope] semantics.
+Finally, a degenerate anonymous `inst` with no specified variable frame is simply `bcode`.
+
+++++
+<!-- 🐖 
+10.(min=>2,max=>8){ is(and(gte(*min),lte(*max))) }                [-- <1>
+10.(min=>minus(1),max=>plus(1)){ is(and(gte(*min),lte(*max))) }   [-- <2>
+10.(){ is(and(gte(*min),lte(*max))) }                             [-- <3>
+10.is(and(gte(minus(1)),lte(plus(1))))                            [-- <5>
+-->
+++++
+
+
+<1> The unnamed "band" `inst` is evaluated in line.
+<2> `min` and `max` are computed dynamically relative to the input.
+<3> The `inst` value is referencing undefined frame variables.
+<4> An anonymous `inst` is compiled to an `obj` filter-`inst`.
+<5> When arguments are embedded in the value, then the `inst` is simply `bcode`.
+--
+
+contextual args::
++
+--
+
+++++
+<!-- 🐖 
+is_divisible -> |is_divisble?bool<=int(by?int=>_)[mod(*by).eq(0)]
+10.is_divisible(2)
+10.is_divisible('abc')
+-->
+++++
+
+
+--
+
+dependent args::
++
+--
+
+[stem]
+++++
+\tt{obj}_\tt{in}.f(a_1 \Rightarrow x,a_2 \Rightarrow \color{yellow}{g(*a_1)},\ldots,a_n) \mapsto \tt{obj}_\tt{out}
+++++
+
+If an argument's type is dependent on the value of another argument, then the argument is a https://en.m.wikipedia.org/wiki/Dependent_type[dependent argument].
+
+++++
+<!-- 🐖 
+band -> |band?int{?}<=int(min=>_,max=>is(gt(*min)).else(*min.plus(1)))[is(gte(*min)).is(lte(*max))]
+2.band(min=>1,max=>1)                 -[-- <1>
+-->
+++++
+
+
+<1> ...
+
+--
+
+refined type::
++
+--
+
+++++
+<!-- 🐖 
+is_divisible -> |is_divisble?bool<=int(by?int=>is(neq(0)).else(print('error').map(1)))[mod(*by).eq(0)]
+10.is_divisible(2)
+10.is_divisible('abc')
+-->
+++++
+
+
+--
+====
+
+
+
+
+
 An `inst` to create `int` triples can be written:
 
 ++++
