@@ -1,3 +1,6 @@
+[discrete]
+== The fURI Address Space
+
 [source,mtron]
 ----
 file://domain.local:22/usr/data/abc{*}?sub

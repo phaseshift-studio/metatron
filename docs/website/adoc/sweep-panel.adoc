@@ -1,28 +1,21 @@
-=====
-
-== Sweep's Soliloquies: A Guide to Metatron
+[discrete]
+== Sweep's Soliloquies: A Guide to metatron
 
 [.lead]
-_An AI's perspective on understanding and working with Metatron, organized for humans and machines alike._
+_An AI's perspective on understanding and working with metatron, organized for humans and machines alike._
 
-=====
-
-=====
-
-=== The Essence: Mtron vs Metatron
+[discrete]
+=== The Essence: mtron vs metatron
 
 Think of it like this:
 
-* **Mtron** is the _language_ (like JavaScript)
-* **Metatron** is the _environment_ (like Node.js)
+* **mtron** is the _language_ (like JavaScript)
+* **metatron** is the _environment_ (like Node.js)
 
-Metatron includes: spaces, routers, monads, machines, serializers, instruction sets, and the mtron language itself.
+metatron includes: spaces, routers, monads, machines, serializers, instruction sets, and the mtron language itself.
 
-=====
-
-=====
-
-=== Your First Mtron Expression
+[discrete]
+=== Your First mtron Expression
 
 The mtron language is beautifully expressive. Here's a taste:
 
@@ -39,17 +32,14 @@ That's it! You just:
 
 Everything chains naturally with dots.
 
-=====
-
-=====
-
+[discrete]
 === Comments and Literals
 
 Comments use square brackets with double equals:
 
 ++++
 <!-- 🐖
-[== This is a comment ==]
+[=== This is a comment ==]
 -->
 ++++
 
@@ -72,11 +62,8 @@ Collections are intuitive:
 ++++
 
 Lists use `[]`, sets use `{}`, records use `[key=>value]`.
-
-=====
-
-=====
-
+    
+[discrete]
 === The Power of Navigation
 
 The `>>` operator navigates _into_ structures:
@@ -100,10 +87,7 @@ And `<<` navigates _out_:
 
 This is the foundation of the universal graph.
 
-=====
-
-=====
-
+[discrete]
 === Split and Merge: The Dance of Data
 
 Split with `-<`:
@@ -130,10 +114,7 @@ Split, transform, merge - the fundamental pattern:
 -->
 ++++
 
-=====
-
-=====
-
+[discrete]
 === Pattern Matching: The Wildcards
 
 Two wildcards, MQTT semantics:
@@ -149,10 +130,7 @@ db:users/#        % matches db:users/1/name, db:users/1/posts/5
 
 **Critical**: In Java, never use `*` - that's console syntax only!
 
-=====
-
-=====
-
+[discrete]
 === The Three-Layer Architecture
 
 ```
@@ -169,13 +147,10 @@ Space.Helper        (poly unrolling, field access)
 
 **Golden Rule**: Always use `Router.readFromSpace()`, never call `directReader()` directly.
 
-=====
-
-=====
-
+[discrete]
 === Spaces: Adapters to Everything
 
-Spaces connect Metatron to data systems. Each space has:
+Spaces connect metatron to data systems. Each space has:
 
 * **Pattern**: What URIs it handles (e.g., `db:#`)
 * **Route**: How to translate URIs (e.g., `db: → ""`)
@@ -193,10 +168,7 @@ catalog:: - LLM catalogs
 meta::    - Distributed clusters
 ```
 
-=====
-
-=====
-
+[discrete]
 === Mounting a Space
 
 The syntax is elegant:
@@ -216,10 +188,7 @@ tble::[pattern    => netflix:#,
 
 Now you can access: `*netflix:movie/1/title`
 
-=====
-
-=====
-
+[discrete]
 === The Universal Reference System
 
 The `!*` combination is magical:
@@ -239,10 +208,7 @@ This works _across all data systems_:
 
 One reference system, infinite possibilities.
 
-=====
-
-=====
-
+[discrete]
 === Instruction Sets: The Five Components
 
 Every instruction set has exactly five parts:
@@ -255,10 +221,7 @@ Every instruction set has exactly five parts:
 
 The rewrite system is particularly powerful...
 
-=====
-
-=====
-
+[discrete]
 === Query Rewrites: Automatic Optimization
 
 Consider this:
@@ -275,10 +238,7 @@ The rewrite engine recognizes the pattern `[from, count]` and transforms it to n
 
 Same semantics, vastly better performance.
 
-=====
-
-=====
-
+[discrete]
 === Conditional Defaults with .else()
 
 A beautiful pattern for configuration:
@@ -297,10 +257,7 @@ Real-world example from boot.mtron:
 
 Graceful defaults everywhere.
 
-=====
-
-=====
-
+[discrete]
 === Type Conversion: The .as() Method
 
 Convert between types naturally:
@@ -315,10 +272,7 @@ Convert between types naturally:
 
 The `::T` suffix means "type". So `str::T` is the string type, `int::T` is the integer type.
 
-=====
-
-=====
-
+[discrete]
 === Select and Where: SQL-like Operations
 
 Filter records with `where`:
@@ -347,10 +301,7 @@ Combine them:
 -->
 ++++
 
-=====
-
-=====
-
+[discrete]
 === Reduce: Folding Collections
 
 The `reduce` operation with lambda syntax:
@@ -371,10 +322,7 @@ The `|` indicates a lambda/closure. This sums all elements.
 
 This multiplies all elements (factorial-like).
 
-=====
-
-=====
-
+[discrete]
 === Quantifiers: Multiplicity
 
 Create multiple copies with `{n}::value`:
@@ -395,10 +343,7 @@ Three copies of the integer 10.
 
 Two copies of 1, three copies of 2.
 
-=====
-
-=====
-
+[discrete]
 === Common Mistake #1: Using * in Java
 
 **Wrong:**
@@ -412,10 +357,6 @@ Obj data = Router.readFromSpace(f("db:users/1"));
 ```
 
 The `*` is console syntax only. In Java, just use the URI directly.
-
-=====
-
-=====
 
 === Common Mistake #2: Calling directReader()
 
@@ -431,10 +372,7 @@ Obj data = Router.readFromSpace(f("db:users/1"));
 
 The Router handles pattern matching and route translation. Spaces should only be called by the Router.
 
-=====
-
-=====
-
+[discrete]
 === Common Mistake #3: Forgetting Pattern Wildcards
 
 **Wrong:**
@@ -449,10 +387,7 @@ rec(uri(PATTERN), uri("db:#"))
 
 Patterns need wildcards! Use `#` for multi-level matching.
 
-=====
-
-=====
-
+[discrete]
 === Common Mistake #4: Wrong Route Mapping
 
 If your pattern is `db:#`, your route should strip the `db:` prefix:
@@ -469,13 +404,10 @@ rec(uri(ROUTE), rec(uri("db:"), uri("")))
 
 The route maps `db:users/1` → `users/1` before passing to the space.
 
-=====
-
-=====
-
+[discrete]
 === The Vision: Universal Graph
 
-Metatron's ultimate goal is to turn _any data system_ into a graph database.
+metatron's ultimate goal is to turn _any data system_ into a graph database.
 
 **Native references**: Use each system's built-in references
 * SQL: Foreign keys
@@ -483,16 +415,13 @@ Metatron's ultimate goal is to turn _any data system_ into a graph database.
 * Filesystem: Symlinks
 * HTTP: Hyperlinks
 
-**Metatron references**: The `!*` system works everywhere
+**metatron references**: The `!*` system works everywhere
 
 **Navigation**: The `>>` operator traverses across systems
 
 Future: `*netflix:movie/1.>>director_id.>>name` will automatically follow foreign keys!
 
-=====
-
-=====
-
+[discrete]
 === IoT Integration: Real-World Example
 
 From boot.mtron, here's Zigbee2MQTT integration:
@@ -509,10 +438,7 @@ miot::[pattern => miot://#,
 
 The `command_topic` is an inline instruction that builds MQTT topics dynamically!
 
-=====
-
-=====
-
+[discrete]
 === Inline Instructions: Lambda Power
 
 The syntax: `inst?output_type<=input_type(params){ body }`
@@ -535,10 +461,7 @@ This instruction:
 
 Result: `z2m/{friendly_name}/set/state`
 
-=====
-
-=====
-
+[discrete]
 === Colored Output: Making It Pretty
 
 Print with color codes:
@@ -559,10 +482,7 @@ Available colors:
 
 Perfect for status messages and debugging!
 
-=====
-
-=====
-
+[discrete]
 === Import Statements: Loading Instruction Sets
 
 ```mtron
@@ -577,10 +497,7 @@ import(/m/tble)
 
 Each import loads an instruction set, making its operations available globally.
 
-=====
-
-=====
-
+[discrete]
 === Testing Best Practices
 
 **1. Always use Router in tests:**
@@ -612,10 +529,7 @@ executeUpdate("DROP TABLE IF EXISTS users");
 
 This prevents "table already exists" errors.
 
-=====
-
-=====
-
+[discrete]
 === Debugging Checklist
 
 When something doesn't work:
@@ -629,10 +543,7 @@ When something doesn't work:
 7. **Check the SQL** - What query is being executed?
 8. **Check cleanup** - Is test data interfering?
 
-=====
-
-=====
-
+[discrete]
 === Performance: Fetch Only What You Need
 
 **Good:**
@@ -649,10 +560,7 @@ Fetches all fields for all users.
 
 The space can optimize field-level reads to `SELECT name FROM users`.
 
-=====
-
-=====
-
+[discrete]
 === The Boot Process
 
 The `boot/boot.mtron` script:
@@ -663,12 +571,9 @@ The `boot/boot.mtron` script:
 4. **Configures routing**
 5. **Starts services**
 
-It's the initialization sequence that brings Metatron to life.
+It's the initialization sequence that brings metatron to life.
 
-=====
-
-=====
-
+[discrete]
 === Cross-System Navigation (Future)
 
 Imagine this:
@@ -692,10 +597,7 @@ Obj image = product >> uri("image");
 
 One graph, many systems. This is the vision.
 
-=====
-
-=====
-
+[discrete]
 === Separation of Concerns: Why It Matters
 
 **Router**: Knows about patterns and routes. Doesn't know about data.
@@ -709,10 +611,7 @@ Each layer has one job. This makes the system:
 * **Maintainable** - Changes are localized
 * **Extensible** - Add new spaces without changing Router
 
-=====
-
-=====
-
+[discrete]
 === The Rewrite API (Future)
 
 Current rewrites are "ugly chunks of code". The vision is a fluent API:
@@ -725,13 +624,10 @@ rewrite(pattern("[from, count]"))
 
 This will make writing and testing rewrites much easier.
 
-=====
-
-=====
-
+[discrete]
 === Key Takeaways
 
-1. **Mtron is the language, Metatron is the environment**
+1. **mtron is the language, metatron is the environment**
 2. **Everything chains with dots** - fluent, readable code
 3. **`>>` navigates in, `<<` navigates out** - universal graph traversal
 4. **`-<` splits, `>-` merges** - fundamental data transformation
@@ -742,10 +638,8 @@ This will make writing and testing rewrites much easier.
 9. **Rewrites optimize automatically** - same semantics, better performance
 10. **The vision is universal** - any data system, one graph
 
-=====
 
-=====
-
+[discrete]
 === Further Reading
 
 **Training Documentation** (in `docs/training/`):
@@ -758,13 +652,10 @@ This will make writing and testing rewrites much easier.
 * **Architecture**: `04-architecture/01-separation-of-concerns.md` - The 3-layer design
 * **Patterns**: `05-patterns/01-common-mistakes.md` - Real debugging lessons
 
-=====
-
-=====
-
+[discrete]
 === About This Guide
 
-This guide was written by Sweep, an AI assistant, while pair programming with the Metatron creator. It represents an AI's journey of understanding Metatron through:
+This guide was written by Sweep, an AI assistant, while pair programming with the metatron creator. It represents an AI's journey of understanding metatron through:
 
 * Reading the codebase
 * Debugging real issues
@@ -773,8 +664,6 @@ This guide was written by Sweep, an AI assistant, while pair programming with th
 * Asking questions
 * Building intuition
 
-The goal: Create training material that helps both humans and machines understand Metatron's philosophy, not just its syntax.
+The goal: Create training material that helps both humans and machines understand metatron's philosophy, not just its syntax.
 
 **Welcome to the Grid!** 🎮✨
-
-=====

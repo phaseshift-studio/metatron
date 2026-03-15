@@ -203,7 +203,7 @@ class ProcessingState:
         # remove code=> frame reference as it's an artifact of the console.eval() remote code evaluation
         c = re.sub('code=>\'.*?\',', "", c)
         # fix source code callouts
-        c = re.sub('\[-- <(?P<a>[0-9]+)>', r'​\g<a>​', c)
+        c = re.sub('\\[-- <(?P<a>[0-9]+)>', r'​\g<a>​', c)
         return c
 
     def _process_output_start(self, line: str) -> None:
@@ -244,7 +244,8 @@ class ProcessingState:
         running_line = ""
         for line in self.code:
             if line.rstrip().endswith("/"):
-                running_line += line.rstrip().removesuffix("/") + "\n       " # add spaces to shift right due to mtron> 
+                running_line += line.rstrip().removesuffix(
+                    "/") + "\n       "  # add spaces to shift right due to mtron> 
             elif line.startswith("[HEADER]"):
                 to_header.append(line)
             else:
@@ -291,6 +292,7 @@ def update_asciidoc_file(
         output_filepath: Path | str | None = None,
         *,
         verbose: bool = False,
+        copy_only: bool = False,
 ) -> None:
     if isinstance(input_filepath, str):  # pragma: no cover
         input_filepath = Path(input_filepath)
@@ -301,8 +303,8 @@ def update_asciidoc_file(
             with Path(f"{input_filepath}/{file}").open() as f:
                 original_lines = [line.rstrip("\n") for line in f.readlines()]
             if verbose:
-                print(f"processing input file: {file}")
-            new_lines = process_asciidoc(original_lines, verbose=verbose)
+                print(f"copying input file: {file}" if copy_only else f"processing input file: {file}")
+            new_lines = original_lines if copy_only else process_asciidoc(original_lines, verbose=verbose)
             updated_content = "\n".join(new_lines).rstrip()
             if verbose:
                 print(f"writing output to: {out_file}")
@@ -342,12 +344,19 @@ def main() -> None:
         action="version",
         version=f"%(prog)s {__version__}",
     )
-    print(parser)
+    parser.add_argument(
+        "-c",
+        "--copy_only",
+        type=bool,
+        default=False,
+        help="Copy input file to output file without processing (default: False)",
+    )
     args = parser.parse_args()
+    print("\n[Doc Runner v0.224-db-a345c3456.3342323]\n\targs: ", args)
     input_filepath = Path(args.input)
     output_filepath = Path(args.output) if args.output is not None else input_filepath
     print(f"{input_filepath} => {output_filepath}")
-    update_asciidoc_file(input_filepath, output_filepath, verbose=args.verbose)
+    update_asciidoc_file(input_filepath, output_filepath, verbose=args.verbose, copy_only=args.copy_only)
 
 
 if __name__ == "__main__":

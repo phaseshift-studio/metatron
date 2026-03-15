@@ -1,33 +1,48 @@
-=====
+[discrete]
+== A General Theory of Data Access
 
-There are 3 ways to access data.
+In order to access data, it is necessary to understand the _geometry of data_. That is, the extension or shape of the data.
+However, the shape we perceive is only tangentially related to the data itself. For example, three people looking at the same 
+table in a room will see three completely different objects. To the first person, floating high above, pinned to the ceiling,
+the table appears to be a large rectangle. The second person, whose eyes are level with the table, also sees a rectangle, but one that 
+approaches much more of a line, then a large bulky block. And the last, eye level as well, but 90 degrees shifted around the side 
+sees a line-ish rectangle as well, but one that is much smaller than the previous participant's description. 
 
-. **direct reference**: every piece of data is associated with a unique URI.
-. **pattern matching**: pattern based URIs enable accessing entire branches of a URI address space.
-. **indirect reference**: data can reference other data either through container or URI pointers.
+The function and purpose of perspective (more generally, the reason for the existence of agenthood in this reality we find ourselves moored to) is made apparent when one wishes to _look at_ data --- a metaphor appropriate for humans, where the more general act is that of _accessing_ data). 
+While the reader searches for some unbeknownst depth in the previous sentence, a sleight of hands on the author's part and another sort of table emerges which has our participants expressing nearly identical descriptions to those for when the "table" was in the room.
 
-++++
-<!-- 🐖
-x -> [a=>1,b=>[c=>2,d=>[3,4,5]],e=>6]
-*x
-*x/b/+
-*x>>b>>d>>+
--->
-++++
+[cols="4a,3a,4a",separator=🧱,options=header]
+|===
+^🧱 ceiling view ^🧱 eye level (long-wise) ^🧱 eye level (short-wise)
 
-=====
+🧱
 
-=====
+[source,mtron]
+----
+{ [name=>marko,age=>29],
+  [name=>josh,age=>32],
+  [name=>vadas,age=>27],
+  [name=>peter,age=>35] }
+----
 
-Numerous instructions exist for extracting substructures within larger structures.
+🧱
 
-++++
-<!-- 🐖
-x -> [a=>1,b=>[c=>2,d=>[3,4,5]],e=>6]
-*x.where[a=>?>0,_=>[_=>lst::T],e=>?int::T]
-*x.where[a=>?>0,_=>[_=>lst::T],e=>?int::T].select[a=>_]
-*x.where[a=>?>0,_=>[_=>lst::T],e=>?int::T].select[a=>+2,b=>[d=>>-.sum()]]
--->
-++++
+[source,mtron]
+----
+{ [name=>marko],
+  [name=>josh],
+  [name=>vadas],
+  [name=>peter] }
+----
 
-=====
+🧱
+
+[source,mtron]
+----
+{
+  [name=>marko, age=>29]
+
+}
+----
+
+|===

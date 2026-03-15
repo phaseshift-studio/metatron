@@ -5,10 +5,6 @@
                 class="fa fa-envelope-open text-primary"></i></a>
     </div>
 </footer>
-<script src="./highlight/highlight.min.js"></script>
-<script src="./highlight/languages/mtron.min.js"></script>
-<script src="./highlight/languages/bash.min.js"></script>
-<script src="./highlight/languages/json.min.js"></script>
 <script>
     if (!hljs.initHighlighting.called) {
         hljs.initHighlighting.called = true
@@ -16,6 +12,12 @@
             hljs.highlightBlock(el)
         })
     }
+    document.querySelectorAll('.btn[data-bs-toggle="collapse"]').forEach(button => {
+        console.log(button,"hello")
+        button.addEventListener('click', () => {
+            button.classList.toggle("active")
+        });
+    });
 </script>
 </body>
 </html>

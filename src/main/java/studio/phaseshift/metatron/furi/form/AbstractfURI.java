@@ -323,6 +323,8 @@ public abstract class AbstractfURI implements fURI {
                 return false;
         if (!rhs.hasPattern())
             return this.path().equals(rhs.path());
+        if(rhs.segments().size() == 1 && rhs.segments().getFirst().equals("#"))
+            return true;
         if (this.isAbsolute() != rhs.isAbsolute())
             return false;
         for (int i = 0; i < rhs.path().size(); i++) {

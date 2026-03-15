@@ -1,4 +1,5 @@
-=====
+[discrete]
+== Large Language Models
 
 Large language models (LLM) can be embedded in space. An LLM is a `rec` with the following type definition:
 
@@ -19,9 +20,6 @@ llm -> rec::T[?[name=>?uri::T,
 -->
 ++++
 
-=====
-
-=====
 
 The following example demonstrates how to search for an appropriate LLM for the given task, then query it, and finally, have it's memory of the interaction stored in space for future use as a stabilizing content.
 
@@ -41,9 +39,10 @@ ai/memory -> /usr/mem
 ====
 The `size` relation maps to a `gB::T` (gigabytes) while the `where()` clause filtered on `mB::T` (megabytes). The conversion between the various data size units is handled automatically by the type constructors of the various data type sizes distributed in the `/m/math` instruction set.
 
-++++
+[source,mtron]
+----
 */m/math/+/
-++++
+----
 
 ++++
 <!-- 🐖
@@ -52,9 +51,6 @@ gB::500.0.as(mB::T)
 ++++
 ====
 
-=====
-
-=====
 The content and metadata associated with the chat interaction is stored at the specified location and is accessible via a `uri` dereference.
 
 ++++
@@ -64,7 +60,6 @@ The content and metadata associated with the chat interaction is stored at the s
 ++++
 
 The memory is referenced again below, where it is both read (the previous interaction) and written to (the current interaction).
-
 
 ++++
 <!-- 🐖
@@ -76,4 +71,3 @@ The memory is referenced again below, where it is both read (the previous intera
   .chat("What was the special word I needed you to recall?")
 -->
 ++++
-=====

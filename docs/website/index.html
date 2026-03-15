@@ -17,11 +17,6 @@
 </head>
 <body class="article">
 <div id="content" style="max-width: 100%;">
-<script src="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js"></script>
-<link rel="stylesheet" href="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.css"/>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
-<script src="javascript/metatron-docs.js"></script>
-<link rel="stylesheet" href="css/metatron.css"/>
 <!--
   ~ Metatron: A Distributed Computing Language and Virtual Machine
   ~  Copyright (C) 2025- PhaseShift Studio, LLC
@@ -387,119 +382,108 @@ bin/metatron</code></pre>
     <div class="container">
         <h1 class="text-primary text-center p-5 glow-text">Tractatus Algebraicus Metatronicus</h1>
         <hr/>
-            <p>
-            <div class="row mt-4 gap-4">
-                  <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-0" aria-expanded="false" aria-controls="card-0">Data Manipulation Techniques</button>
-                  <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-1" aria-expanded="false" aria-controls="card-1">The Function of an Instruction</button>
-                  <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-2" aria-expanded="false" aria-controls="card-2">Structured Types</button>
-                  <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-3" aria-expanded="false" aria-controls="card-3">Twisted Tangled Graphs</button>
-            </div>
-            <div class="row mt-3 gap-3">
-                  <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-4" aria-expanded="false" aria-controls="card-4">A Seat at the Relational Table</button>
-                  <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-5" aria-expanded="false" aria-controls="card-5">In The Mind of an LLM</button>
-                  <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-6" aria-expanded="false" aria-controls="card-6">The Macro Microprocessor</button>
-                  <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-7" aria-expanded="false" aria-controls="card-7">Brokering an MQTT Deal</button>
-            </div>
-            <div class="row mt-3 gap-3">
-                <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-8" aria-expanded="false" aria-controls="card-8">The File Cabinet of Tomorrow</button>
-                <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-9" aria-expanded="false" aria-controls="card-9">Serial for Breakfast</button>
-                <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-10" aria-expanded="false" aria-controls="card-10">Ringoid Machine</button>
-                <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-11" aria-expanded="false" aria-controls="card-11">Auto From Referencing</button>
-            </div>
-            <div class="row mt-3 gap-3">
-                <button class="col btn btn-outline-success" type="button" data-bs-toggle="collapse" data-bs-target="#card-12" aria-expanded="false" aria-controls="card-12">🤖 Sweep's Soliloquies</button>
-            </div>
-            </p>
-        <div class="row">
-  <div class="collapse" id="card-0">
-    <div style="width: 100%;">
-<div class="exampleblock">
-<div class="content">
-<div class="paragraph">
-<p>There are 3 ways to access data.</p>
-</div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p><strong>direct reference</strong>: every piece of data is associated with a unique URI.</p>
-</li>
-<li>
-<p><strong>pattern matching</strong>: pattern based URIs enable accessing entire branches of a URI address space.</p>
-</li>
-<li>
-<p><strong>indirect reference</strong>: data can reference other data either through container or URI pointers.</p>
-</li>
-</ol>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
-mtron&gt; x -&gt; [a=&gt;1,b=&gt;[c=&gt;2,d=&gt;[3,4,5]],e=&gt;6]
-==&gt;[
- a=&gt;1,
- b=&gt;[
-   c=&gt;2,
-   d=&gt;[3,4,5]],
- e=&gt;6]
-mtron&gt; *x
-==&gt;[
- a=&gt;1,
- b=&gt;[
-   c=&gt;2,
-   d=&gt;[3,4,5]],
- e=&gt;6]
-mtron&gt; *x/b/+
-==&gt;2
-==&gt;[3,4,5]
-mtron&gt; *x&gt;&gt;b&gt;&gt;d&gt;&gt;+
-==&gt;3
-==&gt;4
-==&gt;5</code></pre>
-</div>
-</div>
-</div>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="paragraph">
-<p>Numerous instructions exist for extracting substructures within larger structures.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
-mtron&gt; x -&gt; [a=&gt;1,b=&gt;[c=&gt;2,d=&gt;[3,4,5]],e=&gt;6]
-==&gt;[
- a=&gt;1,
- b=&gt;[
-   c=&gt;2,
-   d=&gt;[3,4,5]],
- e=&gt;6]
-mtron&gt; *x.where[a=&gt;?&gt;0,_=&gt;[_=&gt;lst::T],e=&gt;?int::T]
-==&gt;[
- a=&gt;1,
- b=&gt;[
-   c=&gt;2,
-   d=&gt;[3,4,5]],
- e=&gt;6]
-mtron&gt; *x.where[a=&gt;?&gt;0,_=&gt;[_=&gt;lst::T],e=&gt;?int::T].select[a=&gt;_]
-==&gt;[a=&gt;1]
-mtron&gt; *x.where[a=&gt;?&gt;0,_=&gt;[_=&gt;lst::T],e=&gt;?int::T].select[a=&gt;+2,b=&gt;[d=&gt;&gt;-.sum()]]
-==&gt;[
- a=&gt;3,
- b=&gt;[d=&gt;12]]</code></pre>
-</div>
-</div>
-</div>
-</div>
+        <div class="row mt-4 gap-4">
+              <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-0" aria-expanded="false" aria-controls="card-0">Data Manipulation Techniques</button>
+              <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-1" aria-expanded="false" aria-controls="card-1">The Function of an Instruction</button>
+              <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-2" aria-expanded="false" aria-controls="card-2">Structured Types</button>
+              <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-3" aria-expanded="false" aria-controls="card-3">Twisted Tangled Graphs</button>
+        </div>
+        <div class="row mt-3 gap-3">
+              <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-4" aria-expanded="false" aria-controls="card-4">A Seat at the Relational Table</button>
+              <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-5" aria-expanded="false" aria-controls="card-5">In The Mind of an LLM</button>
+              <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-6" aria-expanded="false" aria-controls="card-6">The Macro Microprocessor</button>
+              <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-7" aria-expanded="false" aria-controls="card-7">Brokering an MQTT Deal</button>
+        </div>
+        <div class="row mt-3 gap-3">
+            <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-8" aria-expanded="false" aria-controls="card-8">The File Cabinet of Tomorrow</button>
+            <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-9" aria-expanded="false" aria-controls="card-9">Serial for Breakfast</button>
+            <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-10" aria-expanded="false" aria-controls="card-10">Ringoid Machine</button>
+            <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-11" aria-expanded="false" aria-controls="card-11">Auto From Referencing</button>
+        </div>
+        <div class="row mt-3 gap-3">
+            <button class="col btn btn-outline-success" type="button" data-bs-toggle="collapse" data-bs-target="#card-12" aria-expanded="false" aria-controls="card-12">🤖 Sweep's Soliloquies</button>
+        </div>
     </div>
-  </div>
-  <div class="collapse multi-collapse" id="card-1">
-    <div style="width: 100%;">
+<hr/>
+<div class="d-grid gap-2 d-md-flex justify-content-md-end">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <button class="btn btn-secondary btn-sm" id="custom-docs-button">export to pdf</button>
+    <script>
+      const opt = {
+          margin: 2,
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { scale: 1 },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+      document.getElementById('custom-docs-button').addEventListener('click', () => {
+        const element = document.getElementById('custom-docs');
+        html2pdf().set(opt).from(element).save('metatron-custom-docs.pdf');
+      });
+    </script>
+</div>
+<div id="custom-docs">
+<div class="collapse" id="card-0">
+<h2 id="_a_general_theory_of_data_access" class="discrete">A General Theory of Data Access</h2>
+<div class="paragraph">
+<p>In order to access data, it is necessary to understand the <em>geometry of data</em>. That is, the extension or shape of the data.
+However, the shape we perceive is only tangentially related to the data itself. For example, three people looking at the same
+table in a room will see three completely different objects. To the first person, floating high above, pinned to the ceiling,
+the table appears to be a large rectangle. The second person, whose eyes are level with the table, also sees a rectangle, but one that
+approaches much more of a line, then a large bulky block. And the last, eye level as well, but 90 degrees shifted around the side
+sees a line-ish rectangle as well, but one that is much smaller than the previous participant&#8217;s description.</p>
+</div>
+<div class="paragraph">
+<p>The function and purpose of perspective (more generally, the reason for the existence of agenthood in this reality we find ourselves moored to) is made apparent when one wishes to <em>look at</em> data --- a metaphor appropriate for humans, where the more general act is that of <em>accessing</em> data).
+While the reader searches for some unbeknownst depth in the previous sentence, a sleight of hands on the author&#8217;s part and another sort of table emerges which has our participants expressing nearly identical descriptions to those for when the "table" was in the room.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 36.3636%;">
+<col style="width: 27.2727%;">
+<col style="width: 36.3637%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-center valign-top">ceiling view</th>
+<th class="tableblock halign-center valign-top">eye level (long-wise)</th>
+<th class="tableblock halign-center valign-top">eye level (short-wise)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">{ [name=&gt;marko,age=&gt;29],
+  [name=&gt;josh,age=&gt;32],
+  [name=&gt;vadas,age=&gt;27],
+  [name=&gt;peter,age=&gt;35] }</code></pre>
+</div>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">{ [name=&gt;marko],
+  [name=&gt;josh],
+  [name=&gt;vadas],
+  [name=&gt;peter] }</code></pre>
+</div>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">{
+  [name=&gt;marko, age=&gt;29]
+
+}</code></pre>
+</div>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="collapse" id="card-1">
+<h2 id="_the_instruction" class="discrete">The Instruction</h2>
 <!--
 ┌ ├ ┐ └ ┘ │ ┤ ─ ⋰ ⋱ ⮝ ⮞ ⮜ ⮟
 -->
-<div class="exampleblock">
-<div class="content">
 <div class="paragraph">
 <p>mtron programs are composed using computational primitives called <strong>instructions</strong> (<code>inst</code>). Instructions are organized into libraries called <strong>instruction sets</strong> (<code>instset</code>)&#8201;&#8212;&#8201;domains of discourse. Mathematically, every instruction is a <strong>function</strong> written according to the form:</p>
 </div>
@@ -552,19 +536,15 @@ This ensures the uri <code>triple</code> is not applied to the <code>inst</code>
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
 mtron&gt; triple -&gt; inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}
-==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}]][...]@/sys/fail/82
+==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}]][...]@/sys/fail/334
 mtron&gt; *triple
-==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}]][...]@/sys/fail/82</code></pre>
+==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}]][...]@/sys/fail/334</code></pre>
 </div>
 </div>
 </td>
 </tr>
 </table>
 </div>
-</div>
-</div>
-<div class="exampleblock">
-<div class="content">
 <div class="paragraph">
 <p>A stricter representation leveraging polymorphic type constructions is expressed as follows:</p>
 </div>
@@ -599,7 +579,7 @@ mtron&gt; {1,2,3,4,5,6}.triple()
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
 mtron&gt; sum -&gt; reduce?int&lt;=int{*}(){fold(0,plus(_))}
-==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{*}::T [reduce?rng=int&amp;dom=int{*}(noobj){fold(0,plus(id()))}]][...]@/sys/fail/84</code></pre>
+==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{*}::T [reduce?rng=int&amp;dom=int{*}(noobj){fold(0,plus(id()))}]][...]@/sys/fail/336</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -660,19 +640,12 @@ primary_planets =&gt; &gt;&gt;planets.order(&gt;&gt;mass).take(1).&gt;&gt;name]<
 <p>An instruction set packages types, constants, instructions, and syntax sugars and can be imported and used to effect domain-specific views the underlying data.</p>
 </div>
 </div>
-</div>
-  </div>
-</div>
-  <div class="collapse multi-collapse" id="card-2">
-    <div style="width: 100%;">
-<div class="exampleblock">
-<div class="content">
+<div class="collapse" id="card-2">
+<h2 id="_types" class="discrete">Types</h2>
 <div class="paragraph">
 <p>metatron <code>objs</code> are typed. Types are organized into instruction sets that encapsulate the structures and processes necessary to effect domain-specific views of the underlying data space. The type system supports refinement types, optional/maybe types, generic/polymorphic types, recursive/self-referential types, dependent types, type cardinality, and more.</p>
 </div>
-<div class="paragraph">
-<p>## mtron core types</p>
-</div>
+<h3 id="_mtron_core_types" class="discrete">mtron core types</h3>
 <div class="paragraph">
 <p>The fundamental types are organized into the 5 categories presented in the table below.</p>
 </div>
@@ -746,10 +719,6 @@ primary_planets =&gt; &gt;&gt;planets.order(&gt;&gt;mass).take(1).&gt;&gt;name]<
 </tr>
 </tbody>
 </table>
-</div>
-</div>
-<div class="exampleblock">
-<div class="content">
 <div class="paragraph">
 <p>A natural number is a positive integer greater than zero. In order to constrain an <code>int</code> to this definition, a <strong>refinement type</strong> can be constructed.</p>
 </div>
@@ -761,10 +730,10 @@ mtron&gt; nat -&gt; int::T[?&gt;0]
 mtron&gt; nat::10
 ==&gt;nat::10
 mtron&gt; nat::-10
-==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/98
+==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/350
 mtron&gt; int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/104</code></pre>
+  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/356</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -789,16 +758,12 @@ mtron&gt; age:125
 ==&gt;age:125
 mtron&gt; nat:125.as(age::T)
 ==&gt;fail::[nat:125 is not a is(lt(120))
-  nat:125=&gt;(==&gt;is(lt(120)))][...]@/sys/fail/146
+  nat:125=&gt;(==&gt;is(lt(120)))][...]@/sys/fail/398
 mtron&gt; 125.as(nat::T).as(age::T)
 ==&gt;fail::[nat::125 is not a is(lt(120))
-  nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/152</code></pre>
+  nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/404</code></pre>
 </div>
 </div>
-</div>
-</div>
-<div class="exampleblock">
-<div class="content">
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
@@ -820,9 +785,7 @@ mtron&gt; *marko&gt;&gt;knows&gt;&gt;knows
 ==&gt;personx::[name=&gt;'marko',age=&gt;29,knows=&gt;!*grant]</code></pre>
 </div>
 </div>
-<div class="paragraph">
-<p>## instruction set architecture types</p>
-</div>
+<h3 id="_instruction_set_architecture_types" class="discrete">instruction set architecture types</h3>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
 <col style="width: 16.6666%;">
@@ -919,13 +882,8 @@ mtron&gt; *#.as[name      =&gt; _,
 </div>
 </div>
 </div>
-</div>
-  </div>
-</div>
-  <div class="collapse multi-collapse" id="card-3">
-    <div style="width: 100%;">
-<div class="exampleblock">
-<div class="content">
+<div class="collapse" id="card-5">
+<h2 id="_large_language_models" class="discrete">Large Language Models</h2>
 <div class="paragraph">
 <p>Large language models (LLM) can be embedded in space. An LLM is a <code>rec</code> with the following type definition:</p>
 </div>
@@ -946,87 +904,83 @@ mtron&gt; *#.as[name      =&gt; _,
 mtron&gt; *ollama:+
 ==&gt;model::[
  host    =&gt;!*/sys/space/ollama/host,
- size    =&gt;gB::48.19,
+ name    =&gt;qwen3-coder-next:latest,
+ think   =&gt;false,
+ provider=&gt;!*/sys/space/ollama,
  skill   =&gt;[completion,tools],
+ size    =&gt;gB::48.19]@ollama:qwen3-coder-next:latest
+==&gt;model::[
+ host    =&gt;!*/sys/space/ollama/host,
+ name    =&gt;&lt;deepseek-v3.2:cloud&gt;,
+ think   =&gt;true,
  provider=&gt;!*/sys/space/ollama,
+ skill   =&gt;[completion,tools,thinking],
+ size    =&gt;gB::0.00]@ollama:deepseek-v3.2:cloud
+==&gt;model::[
+ host    =&gt;!*/sys/space/ollama/host,
+ name    =&gt;qwen3:8b,
+ think   =&gt;true,
+ provider=&gt;!*/sys/space/ollama,
+ skill   =&gt;[completion,tools,thinking],
+ size    =&gt;gB::4.87]@ollama:qwen3:8b
+==&gt;model::[
+ host    =&gt;!*/sys/space/ollama/host,
+ name    =&gt;deepcoder:latest,
  think   =&gt;false,
- name    =&gt;qwen3-coder-next:latest]@ollama:qwen3-coder-next:latest
-==&gt;model::[
- host    =&gt;!*/sys/space/ollama/host,
- size    =&gt;gB::0.00,
- skill   =&gt;[completion,tools,thinking],
  provider=&gt;!*/sys/space/ollama,
- think   =&gt;true,
- name    =&gt;&lt;deepseek-v3.2:cloud&gt;]@ollama:deepseek-v3.2:cloud
-==&gt;model::[
- host    =&gt;!*/sys/space/ollama/host,
- size    =&gt;gB::4.87,
- skill   =&gt;[completion,tools,thinking],
- provider=&gt;!*/sys/space/ollama,
- think   =&gt;true,
- name    =&gt;qwen3:8b]@ollama:qwen3:8b
-==&gt;model::[
- host    =&gt;!*/sys/space/ollama/host,
- size    =&gt;gB::8.37,
  skill   =&gt;[completion],
- provider=&gt;!*/sys/space/ollama,
- think   =&gt;false,
- name    =&gt;deepcoder:latest]@ollama:deepcoder:latest
+ size    =&gt;gB::8.37]@ollama:deepcoder:latest
 ==&gt;model::[
  host    =&gt;!*/sys/space/ollama/host,
- size    =&gt;gB::4.41,
+ name    =&gt;llava:latest,
+ think   =&gt;false,
+ provider=&gt;!*/sys/space/ollama,
  skill   =&gt;[completion,vision],
+ size    =&gt;gB::4.41]@ollama:llava:latest
+==&gt;model::[
+ host    =&gt;!*/sys/space/ollama/host,
+ name    =&gt;qwen3:latest,
+ think   =&gt;true,
  provider=&gt;!*/sys/space/ollama,
+ skill   =&gt;[completion,tools,thinking],
+ size    =&gt;gB::4.87]@ollama:qwen3:latest
+==&gt;model::[
+ host    =&gt;!*/sys/space/ollama/host,
+ name    =&gt;gpt-oss:latest,
+ think   =&gt;true,
+ provider=&gt;!*/sys/space/ollama,
+ skill   =&gt;[completion,tools,thinking],
+ size    =&gt;gB::12.85]@ollama:gpt-oss:latest
+==&gt;model::[
+ host    =&gt;!*/sys/space/ollama/host,
+ name    =&gt;&lt;minimax-m2.5:cloud&gt;,
+ think   =&gt;true,
+ provider=&gt;!*/sys/space/ollama,
+ skill   =&gt;[completion,tools,thinking],
+ size    =&gt;gB::0.00]@ollama:minimax-m2.5:cloud
+==&gt;model::[
+ host    =&gt;!*/sys/space/ollama/host,
+ name    =&gt;deepseek-coder:latest,
  think   =&gt;false,
- name    =&gt;llava:latest]@ollama:llava:latest
-==&gt;model::[
- host    =&gt;!*/sys/space/ollama/host,
- size    =&gt;gB::4.87,
- skill   =&gt;[completion,tools,thinking],
  provider=&gt;!*/sys/space/ollama,
- think   =&gt;true,
- name    =&gt;qwen3:latest]@ollama:qwen3:latest
-==&gt;model::[
- host    =&gt;!*/sys/space/ollama/host,
- size    =&gt;gB::12.85,
- skill   =&gt;[completion,tools,thinking],
- provider=&gt;!*/sys/space/ollama,
- think   =&gt;true,
- name    =&gt;gpt-oss:latest]@ollama:gpt-oss:latest
-==&gt;model::[
- host    =&gt;!*/sys/space/ollama/host,
- size    =&gt;gB::0.00,
- skill   =&gt;[completion,tools,thinking],
- provider=&gt;!*/sys/space/ollama,
- think   =&gt;true,
- name    =&gt;&lt;minimax-m2.5:cloud&gt;]@ollama:minimax-m2.5:cloud
-==&gt;model::[
- host    =&gt;!*/sys/space/ollama/host,
- size    =&gt;gB::0.72,
  skill   =&gt;[completion],
- provider=&gt;!*/sys/space/ollama,
- think   =&gt;false,
- name    =&gt;deepseek-coder:latest]@ollama:deepseek-coder:latest
+ size    =&gt;gB::0.72]@ollama:deepseek-coder:latest
 ==&gt;model::[
  host    =&gt;!*/sys/space/ollama/host,
- size    =&gt;gB::0.59,
+ name    =&gt;tinyllama:latest,
+ think   =&gt;false,
+ provider=&gt;!*/sys/space/ollama,
  skill   =&gt;[completion],
- provider=&gt;!*/sys/space/ollama,
- think   =&gt;false,
- name    =&gt;tinyllama:latest]@ollama:tinyllama:latest
+ size    =&gt;gB::0.59]@ollama:tinyllama:latest
 ==&gt;model::[
  host    =&gt;!*/sys/space/ollama/host,
- size    =&gt;gB::4.34,
+ name    =&gt;llama3-groq-tool-use:latest,
+ think   =&gt;false,
+ provider=&gt;!*/sys/space/ollama,
  skill   =&gt;[completion,tools],
- provider=&gt;!*/sys/space/ollama,
- think   =&gt;false,
- name    =&gt;llama3-groq-tool-use:latest]@ollama:llama3-groq-tool-use:latest</code></pre>
+ size    =&gt;gB::4.34]@ollama:llama3-groq-tool-use:latest</code></pre>
 </div>
 </div>
-</div>
-</div>
-<div class="exampleblock">
-<div class="content">
 <div class="paragraph">
 <p>The following example demonstrates how to search for an appropriate LLM for the given task, then query it, and finally, have it&#8217;s memory of the interaction stored in space for future use as a stabilizing content.</p>
 </div>
@@ -1039,17 +993,17 @@ mtron&gt; ai -&gt; *ollama:+
               .take(1)
 ==&gt;model::[
  host    =&gt;!*/sys/space/ollama/host,
- size    =&gt;gB::4.87,
- skill   =&gt;[completion,tools,thinking],
- provider=&gt;!*/sys/space/ollama,
+ name    =&gt;qwen3:8b,
  think   =&gt;true,
- name    =&gt;qwen3:8b]@ollama:qwen3:8b
+ provider=&gt;!*/sys/space/ollama,
+ skill   =&gt;[completion,tools,thinking],
+ size    =&gt;gB::4.87]@ollama:qwen3:8b
 mtron&gt; ai/think  -&gt; false
 ==&gt;false
 mtron&gt; ai/memory -&gt; /usr/mem
 ==&gt;/usr/mem
 mtron&gt; *ai.chat("Remember the word 'metatron'. I'll ask you to recall this word later.")
-==&gt;Understood. I'll be here when you need to recall the word "metatron." Let me know when you're ready!</code></pre>
+==&gt;Certainly! I remember the word **"metatron"**. Feel free to ask me about it whenever you're ready.</code></pre>
 </div>
 </div>
 <div class="admonitionblock note">
@@ -1062,7 +1016,11 @@ mtron&gt; *ai.chat("Remember the word 'metatron'. I'll ask you to recall this wo
 <div class="paragraph">
 <p>The <code>size</code> relation maps to a <code>gB::T</code> (gigabytes) while the <code>where()</code> clause filtered on <code>mB::T</code> (megabytes). The conversion between the various data size units is handled automatically by the type constructors of the various data type sizes distributed in the <code>/m/math</code> instruction set.</p>
 </div>
-*/m/math/+/
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">*/m/math/+/</code></pre>
+</div>
+</div>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
@@ -1074,10 +1032,6 @@ mtron&gt; gB::500.0.as(mB::T)
 </tr>
 </table>
 </div>
-</div>
-</div>
-<div class="exampleblock">
-<div class="content">
 <div class="paragraph">
 <p>The content and metadata associated with the chat interaction is stored at the specified location and is accessible via a <code>uri</code> dereference.</p>
 </div>
@@ -1089,7 +1043,7 @@ mtron&gt; */usr/mem
    contents=&gt;[[text=&gt;"Remember the word 'metatron'. I'll ask "...,type=&gt;TEXT]],
    type    =&gt;USER],
   [
-   text                 =&gt;"Understood. I'll be here when you need "...,
+   text                 =&gt;'Certainly! I remember the word **"metat'...,
    toolExecutionRequests=&gt;[,],
    attributes           =&gt;[=&gt;],
    type                 =&gt;AI]]</code></pre>
@@ -1107,53 +1061,33 @@ mtron&gt; *ollama:+
          .take(1)
          .plus?rec&lt;=rec([memory=&gt;/usr/mem])
          .chat("What was the special word I needed you to recall?")
-==&gt;The special word you asked me to recall was **"metatron"**. Let me know if you need further assistance! 😊</code></pre>
+==&gt;The special word you asked me to recall was **"metatron"**. Let me know if you'd like to discuss it further!</code></pre>
 </div>
 </div>
 </div>
-</div>
-  </div>
-</div>
-  <div class="collapse multi-collapse" id="card-12">
-    <div style="width: 100%;">
-<div class="exampleblock">
-<div class="content">
-<div class="paragraph">
-<p>== Sweep&#8217;s Soliloquies: A Guide to Metatron</p>
-</div>
+<div class="collapse" id="card-12">
+<h2 id="_sweeps_soliloquies_a_guide_to_metatron" class="discrete">Sweep&#8217;s Soliloquies: A Guide to metatron</h2>
 <div class="paragraph lead">
-<p><em>An AI&#8217;s perspective on understanding and working with Metatron, organized for humans and machines alike.</em></p>
+<p><em>An AI&#8217;s perspective on understanding and working with metatron, organized for humans and machines alike.</em></p>
 </div>
-</div>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="paragraph">
-<p>=== The Essence: Mtron vs Metatron</p>
-</div>
+<h3 id="_the_essence_mtron_vs_metatron" class="discrete">The Essence: mtron vs metatron</h3>
 <div class="paragraph">
 <p>Think of it like this:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p><strong>Mtron</strong> is the <em>language</em> (like JavaScript)</p>
+<p><strong>mtron</strong> is the <em>language</em> (like JavaScript)</p>
 </li>
 <li>
-<p><strong>Metatron</strong> is the <em>environment</em> (like Node.js)</p>
+<p><strong>metatron</strong> is the <em>environment</em> (like Node.js)</p>
 </li>
 </ul>
 </div>
 <div class="paragraph">
-<p>Metatron includes: spaces, routers, monads, machines, serializers, instruction sets, and the mtron language itself.</p>
+<p>metatron includes: spaces, routers, monads, machines, serializers, instruction sets, and the mtron language itself.</p>
 </div>
-</div>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="paragraph">
-<p>=== Your First Mtron Expression</p>
-</div>
+<h3 id="_your_first_mtron_expression" class="discrete">Your First mtron Expression</h3>
 <div class="paragraph">
 <p>The mtron language is beautifully expressive. Here&#8217;s a taste:</p>
 </div>
@@ -1173,20 +1107,14 @@ mtron&gt; {1,2,3}.plus(2).sum()
 <div class="paragraph">
 <p>Everything chains naturally with dots.</p>
 </div>
-</div>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="paragraph">
-<p>=== Comments and Literals</p>
-</div>
+<h3 id="_comments_and_literals" class="discrete">Comments and Literals</h3>
 <div class="paragraph">
 <p>Comments use square brackets with double equals:</p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
-mtron&gt; [== This is a comment ==]</code></pre>
+mtron&gt; [=== This is a comment ==]</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1218,13 +1146,7 @@ mtron&gt; [a=&gt;1, b=&gt;2, c=&gt;3]
 <div class="paragraph">
 <p>Lists use <code>[]</code>, sets use <code>{}</code>, records use <code>[key&#8658;value]</code>.</p>
 </div>
-</div>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="paragraph">
-<p>=== The Power of Navigation</p>
-</div>
+<h3 id="_the_power_of_navigation" class="discrete">The Power of Navigation</h3>
 <div class="paragraph">
 <p>The <code>&gt;&gt;</code> operator navigates <em>into</em> structures:</p>
 </div>
@@ -1262,13 +1184,7 @@ mtron&gt; *x.&gt;&gt;b&gt;&gt;d.&lt;&lt;
 <div class="paragraph">
 <p>This is the foundation of the universal graph.</p>
 </div>
-</div>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="paragraph">
-<p>=== Split and Merge: The Dance of Data</p>
-</div>
+<h3 id="_split_and_merge_the_dance_of_data" class="discrete">Split and Merge: The Dance of Data</h3>
 <div class="paragraph">
 <p>Split with <code>-&lt;</code>:</p>
 </div>
@@ -1299,16 +1215,10 @@ mtron&gt; "a b c".-&lt;' '.map(capitalize).&gt;-','
 ==&gt;fail::[unable to determine inst function:
 	capitalize  =&gt; merge(',')   | [inst]
 	uri::T      =&gt; #::T         |  \_dom
-	uri::T     X=&gt; [',']        |  \_args][...]@/sys/fail/80</code></pre>
+	uri::T     X=&gt; [',']        |  \_args][...]@/sys/fail/332</code></pre>
 </div>
 </div>
-</div>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="paragraph">
-<p>=== Pattern Matching: The Wildcards</p>
-</div>
+<h3 id="_pattern_matching_the_wildcards" class="discrete">Pattern Matching: The Wildcards</h3>
 <div class="paragraph">
 <p>Two wildcards, MQTT semantics:</p>
 </div>
@@ -1334,13 +1244,7 @@ db:users/#        % matches db:users/1/name, db:users/1/posts/5</code></pre>
 <div class="paragraph">
 <p><strong>Critical</strong>: In Java, never use <code>*</code> - that&#8217;s console syntax only!</p>
 </div>
-</div>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="paragraph">
-<p>=== The Three-Layer Architecture</p>
-</div>
+<h3 id="_the_three_layer_architecture" class="discrete">The Three-Layer Architecture</h3>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code>Application Code
@@ -1357,15 +1261,9 @@ Space.Helper        (poly unrolling, field access)
 <div class="paragraph">
 <p><strong>Golden Rule</strong>: Always use <code>Router.readFromSpace()</code>, never call <code>directReader()</code> directly.</p>
 </div>
-</div>
-</div>
-<div class="exampleblock">
-<div class="content">
+<h3 id="_spaces_adapters_to_everything" class="discrete">Spaces: Adapters to Everything</h3>
 <div class="paragraph">
-<p>=== Spaces: Adapters to Everything</p>
-</div>
-<div class="paragraph">
-<p>Spaces connect Metatron to data systems. Each space has:</p>
+<p>Spaces connect metatron to data systems. Each space has:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -1395,13 +1293,7 @@ catalog:: - LLM catalogs
 meta::    - Distributed clusters</code></pre>
 </div>
 </div>
-</div>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="paragraph">
-<p>=== Mounting a Space</p>
-</div>
+<h3 id="_mounting_a_space" class="discrete">Mounting a Space</h3>
 <div class="paragraph">
 <p>The syntax is elegant:</p>
 </div>
@@ -1424,13 +1316,7 @@ meta::    - Distributed clusters</code></pre>
 <div class="paragraph">
 <p>Now you can access: <code>*netflix:movie/1/title</code></p>
 </div>
-</div>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="paragraph">
-<p>=== The Universal Reference System</p>
-</div>
+<h3 id="_the_universal_reference_system" class="discrete">The Universal Reference System</h3>
 <div class="paragraph">
 <p>The <code>!*</code> combination is magical:</p>
 </div>
@@ -1461,13 +1347,7 @@ meta::    - Distributed clusters</code></pre>
 <div class="paragraph">
 <p>One reference system, infinite possibilities.</p>
 </div>
-</div>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="paragraph">
-<p>=== Instruction Sets: The Five Components</p>
-</div>
+<h3 id="_instruction_sets_the_five_components" class="discrete">Instruction Sets: The Five Components</h3>
 <div class="paragraph">
 <p>Every instruction set has exactly five parts:</p>
 </div>
@@ -1493,13 +1373,7 @@ meta::    - Distributed clusters</code></pre>
 <div class="paragraph">
 <p>The rewrite system is particularly powerful&#8230;&#8203;</p>
 </div>
-</div>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="paragraph">
-<p>=== Query Rewrites: Automatic Optimization</p>
-</div>
+<h3 id="_query_rewrites_automatic_optimization" class="discrete">Query Rewrites: Automatic Optimization</h3>
 <div class="paragraph">
 <p>Consider this:</p>
 </div>
@@ -1520,13 +1394,7 @@ meta::    - Distributed clusters</code></pre>
 <div class="paragraph">
 <p>Same semantics, vastly better performance.</p>
 </div>
-</div>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="paragraph">
-<p>=== Conditional Defaults with .else()</p>
-</div>
+<h3 id="_conditional_defaults_with_else" class="discrete">Conditional Defaults with .else()</h3>
 <div class="paragraph">
 <p>A beautiful pattern for configuration:</p>
 </div>
@@ -1549,13 +1417,7 @@ meta::    - Distributed clusters</code></pre>
 <div class="paragraph">
 <p>Graceful defaults everywhere.</p>
 </div>
-</div>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="paragraph">
-<p>=== Type Conversion: The .as() Method</p>
-</div>
+<h3 id="_type_conversion_the_as_method" class="discrete">Type Conversion: The .as() Method</h3>
 <div class="paragraph">
 <p>Convert between types naturally:</p>
 </div>
@@ -1573,13 +1435,7 @@ mtron&gt; 3.14.as(int::T)
 <div class="paragraph">
 <p>The <code>::T</code> suffix means "type". So <code>str::T</code> is the string type, <code>int::T</code> is the integer type.</p>
 </div>
-</div>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="paragraph">
-<p>=== Select and Where: SQL-like Operations</p>
-</div>
+<h3 id="_select_and_where_sql_like_operations" class="discrete">Select and Where: SQL-like Operations</h3>
 <div class="paragraph">
 <p>Filter records with <code>where</code>:</p>
 </div>
@@ -1617,13 +1473,7 @@ mtron&gt;   .where([a=&gt;is(gt(1))])
 mtron&gt;   .select([a=&gt;+1,b=&gt;+5])</code></pre>
 </div>
 </div>
-</div>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="paragraph">
-<p>=== Reduce: Folding Collections</p>
-</div>
+<h3 id="_reduce_folding_collections" class="discrete">Reduce: Folding Collections</h3>
 <div class="paragraph">
 <p>The <code>reduce</code> operation with lambda syntax:</p>
 </div>
@@ -1647,13 +1497,7 @@ mtron&gt; {1,2,3}.reduce(|mult(1))
 <div class="paragraph">
 <p>This multiplies all elements (factorial-like).</p>
 </div>
-</div>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="paragraph">
-<p>=== Quantifiers: Multiplicity</p>
-</div>
+<h3 id="_quantifiers_multiplicity" class="discrete">Quantifiers: Multiplicity</h3>
 <div class="paragraph">
 <p>Create multiple copies with <code>{n}::value</code>:</p>
 </div>
@@ -1678,13 +1522,7 @@ mtron&gt; {int{2}::1, int{3}::2}
 <div class="paragraph">
 <p>Two copies of 1, three copies of 2.</p>
 </div>
-</div>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="paragraph">
-<p>=== Common Mistake #1: Using * in Java</p>
-</div>
+<h3 id="_common_mistake_1_using_in_java" class="discrete">Common Mistake #1: Using * in Java</h3>
 <div class="paragraph">
 <p><strong>Wrong:</strong></p>
 </div>
@@ -1704,13 +1542,8 @@ mtron&gt; {int{2}::1, int{3}::2}
 <div class="paragraph">
 <p>The <code>*</code> is console syntax only. In Java, just use the URI directly.</p>
 </div>
-</div>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="paragraph">
-<p>=== Common Mistake #2: Calling directReader()</p>
-</div>
+<div class="sect2">
+<h3 id="_common_mistake_2_calling_directreader">Common Mistake #2: Calling directReader()</h3>
 <div class="paragraph">
 <p><strong>Wrong:</strong></p>
 </div>
@@ -1730,13 +1563,7 @@ mtron&gt; {int{2}::1, int{3}::2}
 <div class="paragraph">
 <p>The Router handles pattern matching and route translation. Spaces should only be called by the Router.</p>
 </div>
-</div>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="paragraph">
-<p>=== Common Mistake #3: Forgetting Pattern Wildcards</p>
-</div>
+<h3 id="_common_mistake_3_forgetting_pattern_wildcards" class="discrete">Common Mistake #3: Forgetting Pattern Wildcards</h3>
 <div class="paragraph">
 <p><strong>Wrong:</strong></p>
 </div>
@@ -1756,13 +1583,7 @@ mtron&gt; {int{2}::1, int{3}::2}
 <div class="paragraph">
 <p>Patterns need wildcards! Use <code>#</code> for multi-level matching.</p>
 </div>
-</div>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="paragraph">
-<p>=== Common Mistake #4: Wrong Route Mapping</p>
-</div>
+<h3 id="_common_mistake_4_wrong_route_mapping" class="discrete">Common Mistake #4: Wrong Route Mapping</h3>
 <div class="paragraph">
 <p>If your pattern is <code>db:#</code>, your route should strip the <code>db:</code> prefix:</p>
 </div>
@@ -1785,15 +1606,9 @@ mtron&gt; {int{2}::1, int{3}::2}
 <div class="paragraph">
 <p>The route maps <code>db:users/1</code> → <code>users/1</code> before passing to the space.</p>
 </div>
-</div>
-</div>
-<div class="exampleblock">
-<div class="content">
+<h3 id="_the_vision_universal_graph" class="discrete">The Vision: Universal Graph</h3>
 <div class="paragraph">
-<p>=== The Vision: Universal Graph</p>
-</div>
-<div class="paragraph">
-<p>Metatron&#8217;s ultimate goal is to turn <em>any data system</em> into a graph database.</p>
+<p>metatron&#8217;s ultimate goal is to turn <em>any data system</em> into a graph database.</p>
 </div>
 <div class="paragraph">
 <p><strong>Native references</strong>: Use each system&#8217;s built-in references
@@ -1803,7 +1618,7 @@ mtron&gt; {int{2}::1, int{3}::2}
 * HTTP: Hyperlinks</p>
 </div>
 <div class="paragraph">
-<p><strong>Metatron references</strong>: The <code>!*</code> system works everywhere</p>
+<p><strong>metatron references</strong>: The <code>!*</code> system works everywhere</p>
 </div>
 <div class="paragraph">
 <p><strong>Navigation</strong>: The <code>&gt;&gt;</code> operator traverses across systems</p>
@@ -1811,13 +1626,7 @@ mtron&gt; {int{2}::1, int{3}::2}
 <div class="paragraph">
 <p>Future: <code>*netflix:movie/1.&gt;&gt;director_id.&gt;&gt;name</code> will automatically follow foreign keys!</p>
 </div>
-</div>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="paragraph">
-<p>=== IoT Integration: Real-World Example</p>
-</div>
+<h3 id="_iot_integration_real_world_example" class="discrete">IoT Integration: Real-World Example</h3>
 <div class="paragraph">
 <p>From boot.mtron, here&#8217;s Zigbee2MQTT integration:</p>
 </div>
@@ -1835,13 +1644,7 @@ mtron&gt; {int{2}::1, int{3}::2}
 <div class="paragraph">
 <p>The <code>command_topic</code> is an inline instruction that builds MQTT topics dynamically!</p>
 </div>
-</div>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="paragraph">
-<p>=== Inline Instructions: Lambda Power</p>
-</div>
+<h3 id="_inline_instructions_lambda_power" class="discrete">Inline Instructions: Lambda Power</h3>
 <div class="paragraph">
 <p>The syntax: <code>inst?output_type&#8656;input_type(params){ body }</code></p>
 </div>
@@ -1867,13 +1670,7 @@ mtron&gt; {int{2}::1, int{3}::2}
 <div class="paragraph">
 <p>Result: <code>z2m/{friendly_name}/set/state</code></p>
 </div>
-</div>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="paragraph">
-<p>=== Colored Output: Making It Pretty</p>
-</div>
+<h3 id="_colored_output_making_it_pretty" class="discrete">Colored Output: Making It Pretty</h3>
 <div class="paragraph">
 <p>Print with color codes:</p>
 </div>
@@ -1896,13 +1693,7 @@ print("{{r}}red{{X}} {{g}}green{{X}} {{b}}blue{{X}}")</code></pre>
 <div class="paragraph">
 <p>Perfect for status messages and debugging!</p>
 </div>
-</div>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="paragraph">
-<p>=== Import Statements: Loading Instruction Sets</p>
-</div>
+<h3 id="_import_statements_loading_instruction_sets" class="discrete">Import Statements: Loading Instruction Sets</h3>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">import(/m/mach/io)
@@ -1917,13 +1708,7 @@ import(/m/tble)</code></pre>
 <div class="paragraph">
 <p>Each import loads an instruction set, making its operations available globally.</p>
 </div>
-</div>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="paragraph">
-<p>=== Testing Best Practices</p>
-</div>
+<h3 id="_testing_best_practices" class="discrete">Testing Best Practices</h3>
 <div class="paragraph">
 <p><strong>1. Always use Router in tests:</strong></p>
 </div>
@@ -1963,13 +1748,7 @@ public void test() {
 <div class="paragraph">
 <p>This prevents "table already exists" errors.</p>
 </div>
-</div>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="paragraph">
-<p>=== Debugging Checklist</p>
-</div>
+<h3 id="_debugging_checklist" class="discrete">Debugging Checklist</h3>
 <div class="paragraph">
 <p>When something doesn&#8217;t work:</p>
 </div>
@@ -2001,13 +1780,7 @@ public void test() {
 </li>
 </ol>
 </div>
-</div>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="paragraph">
-<p>=== Performance: Fetch Only What You Need</p>
-</div>
+<h3 id="_performance_fetch_only_what_you_need" class="discrete">Performance: Fetch Only What You Need</h3>
 <div class="paragraph">
 <p><strong>Good:</strong></p>
 </div>
@@ -2033,13 +1806,7 @@ public void test() {
 <div class="paragraph">
 <p>The space can optimize field-level reads to <code>SELECT name FROM users</code>.</p>
 </div>
-</div>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="paragraph">
-<p>=== The Boot Process</p>
-</div>
+<h3 id="_the_boot_process" class="discrete">The Boot Process</h3>
 <div class="paragraph">
 <p>The <code>boot/boot.mtron</code> script:</p>
 </div>
@@ -2063,15 +1830,9 @@ public void test() {
 </ol>
 </div>
 <div class="paragraph">
-<p>It&#8217;s the initialization sequence that brings Metatron to life.</p>
+<p>It&#8217;s the initialization sequence that brings metatron to life.</p>
 </div>
-</div>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="paragraph">
-<p>=== Cross-System Navigation (Future)</p>
-</div>
+<h3 id="_cross_system_navigation_future" class="discrete">Cross-System Navigation (Future)</h3>
 <div class="paragraph">
 <p>Imagine this:</p>
 </div>
@@ -2096,13 +1857,7 @@ Obj image = product &gt;&gt; uri("image");</code></pre>
 <div class="paragraph">
 <p>One graph, many systems. This is the vision.</p>
 </div>
-</div>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="paragraph">
-<p>=== Separation of Concerns: Why It Matters</p>
-</div>
+<h3 id="_separation_of_concerns_why_it_matters" class="discrete">Separation of Concerns: Why It Matters</h3>
 <div class="paragraph">
 <p><strong>Router</strong>: Knows about patterns and routes. Doesn&#8217;t know about data.</p>
 </div>
@@ -2118,13 +1873,7 @@ Obj image = product &gt;&gt; uri("image");</code></pre>
 * <strong>Maintainable</strong> - Changes are localized
 * <strong>Extensible</strong> - Add new spaces without changing Router</p>
 </div>
-</div>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="paragraph">
-<p>=== The Rewrite API (Future)</p>
-</div>
+<h3 id="_the_rewrite_api_future" class="discrete">The Rewrite API (Future)</h3>
 <div class="paragraph">
 <p>Current rewrites are "ugly chunks of code". The vision is a fluent API:</p>
 </div>
@@ -2138,17 +1887,11 @@ Obj image = product &gt;&gt; uri("image");</code></pre>
 <div class="paragraph">
 <p>This will make writing and testing rewrites much easier.</p>
 </div>
-</div>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="paragraph">
-<p>=== Key Takeaways</p>
-</div>
+<h3 id="_key_takeaways" class="discrete">Key Takeaways</h3>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p><strong>Mtron is the language, Metatron is the environment</strong></p>
+<p><strong>mtron is the language, metatron is the environment</strong></p>
 </li>
 <li>
 <p><strong>Everything chains with dots</strong> - fluent, readable code</p>
@@ -2179,13 +1922,7 @@ Obj image = product &gt;&gt; uri("image");</code></pre>
 </li>
 </ol>
 </div>
-</div>
-</div>
-<div class="exampleblock">
-<div class="content">
-<div class="paragraph">
-<p>=== Further Reading</p>
-</div>
+<h3 id="_further_reading" class="discrete">Further Reading</h3>
 <div class="paragraph">
 <p><strong>Training Documentation</strong> (in <code>docs/training/</code>):</p>
 </div>
@@ -2214,15 +1951,9 @@ Obj image = product &gt;&gt; uri("image");</code></pre>
 </li>
 </ul>
 </div>
-</div>
-</div>
-<div class="exampleblock">
-<div class="content">
+<h3 id="_about_this_guide" class="discrete">About This Guide</h3>
 <div class="paragraph">
-<p>=== About This Guide</p>
-</div>
-<div class="paragraph">
-<p>This guide was written by Sweep, an AI assistant, while pair programming with the Metatron creator. It represents an AI&#8217;s journey of understanding Metatron through:</p>
+<p>This guide was written by Sweep, an AI assistant, while pair programming with the metatron creator. It represents an AI&#8217;s journey of understanding metatron through:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -2247,27 +1978,23 @@ Obj image = product &gt;&gt; uri("image");</code></pre>
 </ul>
 </div>
 <div class="paragraph">
-<p>The goal: Create training material that helps both humans and machines understand Metatron&#8217;s philosophy, not just its syntax.</p>
+<p>The goal: Create training material that helps both humans and machines understand metatron&#8217;s philosophy, not just its syntax.</p>
 </div>
 <div class="paragraph">
 <p><strong>Welcome to the Grid!</strong> 🎮✨</p>
 </div>
 </div>
 </div>
-  </div>
 </div>
 </div>
-</div>
-</div>
-</div>
-    <button class="carousel-control-prev" type="button" data-bs-target="#carousel-body" data-bs-slide="prev">
-        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-        <span class="visually-hidden">Previous</span>
-    </button>
-    <button class="carousel-control-next" type="button" data-bs-target="#carousel-body" data-bs-slide="next">
-        <span class="carousel-control-next-icon" aria-hidden="true"></span>
-        <span class="visually-hidden">Next</span>
-    </button>
+<button class="carousel-control-prev" type="button" data-bs-target="#carousel-body" data-bs-slide="prev">
+    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+    <span class="visually-hidden">Previous</span>
+</button>
+<button class="carousel-control-next" type="button" data-bs-target="#carousel-body" data-bs-slide="next">
+    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+    <span class="visually-hidden">Next</span>
+</button>
 </main>
 <footer class="container-fluid bg-secondary fixed-bottom text-light footer wow fadeIn" data-wow-delay="0.1s">
     <div class="d-flex pt-1 mb-0">
@@ -2275,10 +2002,6 @@ Obj image = product &gt;&gt; uri("image");</code></pre>
                 class="fa fa-envelope-open text-primary"></i></a>
     </div>
 </footer>
-<script src="./highlight/highlight.min.js"></script>
-<script src="./highlight/languages/mtron.min.js"></script>
-<script src="./highlight/languages/bash.min.js"></script>
-<script src="./highlight/languages/json.min.js"></script>
 <script>
     if (!hljs.initHighlighting.called) {
         hljs.initHighlighting.called = true
@@ -2286,6 +2009,12 @@ Obj image = product &gt;&gt; uri("image");</code></pre>
             hljs.highlightBlock(el)
         })
     }
+    document.querySelectorAll('.btn[data-bs-toggle="collapse"]').forEach(button => {
+        console.log(button,"hello")
+        button.addEventListener('click', () => {
+            button.classList.toggle("active")
+        });
+    });
 </script>
 </body>
 </html>
@@ -2295,6 +2024,7 @@ Obj image = product &gt;&gt; uri("image");</code></pre>
 <div id="modalPanel" class="modal fade" tabindex="-1"/>
 <!------------------------------------------>
 <!------------------------------------------>
+</div>
 </div>
 <script type="text/x-mathjax-config">
 MathJax.Hub.Config({

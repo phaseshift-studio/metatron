@@ -1,10 +1,11 @@
+[discrete]
+== The Instruction
+
 ++++
 <!--
 ┌ ├ ┐ └ ┘ │ ┤ ─ ⋰ ⋱ ⮝ ⮞ ⮜ ⮟
 -->
 ++++
-
-=====
 
 mtron programs are composed using computational primitives called **instructions** (`inst`). Instructions are organized into libraries called **instruction sets** (`instset`) -- domains of discourse. Mathematically, every instruction is a **function** written according to the form:
 
@@ -49,10 +50,6 @@ triple -> inst?lst[int,int,int]<=int{3}(){>-[,]}
 ++++
 
 ====
-
-=====
-
-=====
 
 A stricter representation leveraging polymorphic type constructions is expressed as follows:
 
@@ -107,7 +104,6 @@ sugar => rec::T[?[str::T=>uri::T]]]]     [-- syntactic sugar: token to inst tid 
 ----
 
 
-
 \begin{align*}
 \texttt{inst} \in (\underbrace{\texttt{obj}}_{\text{the lhs object}} \times \underbrace{\texttt{inst}}_{\text{the instruction}}) \rightarrow \underbrace{\texttt{obj}}_{\text{the rhs object}}
 \end{align*}
@@ -130,5 +126,3 @@ primary_planets => >>planets.order(>>mass).take(1).>>name]
 Instructions, like the data it operates on, exist within the URI address space so that meta-programming concepts such as reflection, memoization, and serialization of the computational state can be naturally expressed and leveraged.
 
 An instruction set packages types, constants, instructions, and syntax sugars and can be imported and used to effect domain-specific views the underlying data.
-
-=====

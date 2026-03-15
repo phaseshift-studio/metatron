@@ -158,3 +158,4 @@ function featurePanel(id, title, icon, frontHTML, backImage) {
 `);
 }
 
+

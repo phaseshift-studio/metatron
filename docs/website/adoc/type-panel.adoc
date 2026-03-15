@@ -1,8 +1,10 @@
-=====
+[discrete]
+== Types
 
 metatron `objs` are typed. Types are organized into instruction sets that encapsulate the structures and processes necessary to effect domain-specific views of the underlying data space. The type system supports refinement types, optional/maybe types, generic/polymorphic types, recursive/self-referential types, dependent types, type cardinality, and more.
 
-## mtron core types
+[discrete]
+=== mtron core types
 
 The fundamental types are organized into the 5 categories presented in the table below.
 
@@ -17,9 +19,6 @@ The fundamental types are organized into the 5 categories presented in the table
 🧱machine types   🧱             🧱 monad::T, machine::T
 |===
 
-=====
-
-=====
 
 A natural number is a positive integer greater than zero. In order to constrain an `int` to this definition, a **refinement type** can be constructed.
 
@@ -52,9 +51,6 @@ nat:125.as(age::T)
 -->
 ++++
 
-=====
-
-=====
 
 ++++
 <!-- 🐖
@@ -70,7 +66,8 @@ grant -> personx::[name=>'grant',age=>23,knows=>!*marko]
 -->
 ++++
 
-## instruction set architecture types
+[discrete]
+=== instruction set architecture types
 
 [cols="1a,1a,4a",separator=🧱,options=header]
 |===
@@ -108,5 +105,3 @@ mtron> *#.as[name      => _,
              coauthor  => >>knows.where[>>age.?>21]>>name]
 ==>[name=>'enki', coauthor=>'enoch']
 ----
-
-=====
