@@ -20,23 +20,27 @@ package studio.phaseshift.metatron.isa.tble;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
-import studio.phaseshift.metatron.isa.m.type.Inst;
-import studio.phaseshift.metatron.isa.m.type.InstSet;
-import studio.phaseshift.metatron.isa.m.type.Rel;
-import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.Space;
+import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.impl.MCode;
+import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.util.MTronException;
 
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
 import static studio.phaseshift.metatron.Tokens.TABLE;
-import static studio.phaseshift.metatron.Tokens.VALUE;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.furi.fURI.manyMatches;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
-import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -87,5 +91,34 @@ public class tbleInstSet extends AbstractInstSet {
                 instC(AS_INST_TID.dom(LST_ROW_TID).rng(REC_ROW_TID), lst(REC_ROW_TYPE), (lhs, inst) -> lhs.asRec().at(uri(TABLE))),
                 instC(AS_INST_TID.dom(REC_ROW_TID).rng(LST_ROW_TID), lst(LST_ROW_TYPE), (lhs, inst) -> lst(lhs.asRec().elements().map(Rel::second).toList(), LST_ROW_TID, null)
                 )));
+    }
+
+    @Override
+    public Set<Inst> rewrites() {
+        return new LinkedHashSet<>(List.of(
+                InstSet.Helper.rewriter(f("sql_native_count_rewrite"), code -> {
+                    final List<fURI> instTIDs = code.insts().stream().map(Obj::tid).toList();
+                    if (manyMatches(instTIDs, List.of(FROM_INST_TID, COUNT_INST_TID))) {
+                        final fURI oldfURI = code.codeValue().getFirst().arg(0).asUri().uriValue();
+                        final Space sqlSpace = Router.global().getSpace(oldfURI);
+                        if (sqlSpace instanceof tbleSpace) {
+                            return MCode.of(List.of(instC(f("sql_native_count").dom(ALL.zero()).rng(INT_TID), lst(), (_, _) -> {
+                                final fURI expandedfURI = sqlSpace.rewrite(oldfURI, true);
+                                LOG.debug("evaluating native sql query on table %s in space %s", expandedfURI, sqlSpace);
+                                try (final Statement stmt = ((tbleSpace) sqlSpace).sjvm().createStatement()) {
+                                    final ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM " + expandedfURI.segments().getFirst());
+                                    if (rs.next()) {
+                                        return jnt(rs.getInt(1)).c(c -> c.mult(code.codeValue().getLast().c()));
+                                    } else {
+                                        throw MTronException.of("failed to evaluate native SQL query: %s", stmt);
+                                    }
+                                } catch (final Exception e) {
+                                    throw MTronException.of(e);
+                                }
+                            })));
+                        }
+                    }
+                    return code;
+                })));
     }
 }

@@ -412,7 +412,7 @@
                                 <argument>--verbose</argument>
                                 <argument>-o</argument>
                                 <argument>${project.build.directory}/temp</argument>
-                                <argument>${project.build.directory}/temp/adoc</argument>
+                                <argument>${project.build.directory}/temp/src/adoc</argument>
                             </arguments>
                         </configuration>
                     </execution>
@@ -481,7 +481,7 @@
                             <goal>copy-resources</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>${project.build.directory}/temp</outputDirectory>
+                            <outputDirectory>${project.build.directory}/temp/src</outputDirectory>
                             <resources>
                                 <resource>
                                     <directory>${project.basedir}/docs/website</directory>
@@ -495,9 +495,9 @@
                             </resources>
                         </configuration>
                     </execution>
-                    <execution>
+                   <!-- <execution>
                         <id>copy-resources-post-site</id>
-                        <phase>site</phase>
+                        <phase>post-site</phase>
                         <goals>
                             <goal>copy-resources</goal>
                         </goals>
@@ -505,14 +505,14 @@
                             <outputDirectory>${project.basedir}/docs/website</outputDirectory>
                             <resources>
                                 <resource>
-                                    <directory>${project.build.directory}/docs/website</directory>
+                                    <directory>${project.build.directory}/temp</directory>
                                     <includes>
                                         <include>index.html</include>
                                     </includes>
                                 </resource>
                             </resources>
                         </configuration>
-                    </execution>
+                    </execution>-->
                 </executions>
             </plugin>
             <!--<plugin>
@@ -554,6 +554,7 @@
                 </executions>
                 <configuration>
                     <skip>${skipDocker}</skip>
+                    <skip>${skipDocker}</skip>
                     <repository>${project.artifactId}</repository>
                     <tag>${project.version}</tag>
                     <contextDirectory>${project.basedir}</contextDirectory>
@@ -566,24 +567,23 @@
                 <version>${asciidoctor.version}</version>
                 <configuration>
                     <sourceDirectory>${project.build.directory}/temp</sourceDirectory>
-                    <sourceDocumentName>adoc/index.adoc</sourceDocumentName>
-                    <outputDirectory>${project.build.directory}/docs/website</outputDirectory>
+                    <sourceDocumentName>index.adoc</sourceDocumentName>
+                    <outputDirectory>${project.basedir}/docs/website</outputDirectory>
                     <skip>${skipAdoc}</skip>
                     <resources>
                         <resource>
-                            <directory>${project.build.directory}/temp</directory>
-                            <targetPath>${project.build.directory}/docs/website</targetPath>
-                            <excludes>
-                                <exclude>**/.txt</exclude>
-                                <exclude>**/.py</exclude>
-                            </excludes>
+                            <directory>${project.build.directory}/temp/src/adoc</directory>
+                            <targetPath>${project.build.directory}/temp</targetPath>
+                            <includes>
+                                <include>**/*.html</include>
+                            </includes>
                         </resource>
                     </resources>
                 </configuration>
                 <executions>
                     <execution>
                         <id>convert-to-html</id>
-                        <phase>pre-site</phase>
+                        <phase>site</phase>
                         <goals>
                             <goal>process-asciidoc</goal>
                         </goals>

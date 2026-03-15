@@ -1,0 +1,49 @@
+#   metatron web console w/
+#   ░█▀▄░█▀█░█▀▀░█░█░█▀▀░█▀▄
+#   ░█░█░█░█░█░░░█▀▄░█▀▀░█▀▄
+#   ░▀▀░░▀▀▀░▀▀▀░▀░▀░▀▀▀░▀░▀
+#           PhaseShift Studio
+#
+# Web-accessible console using ttyd for interactive demos
+# Sandboxed environment with resource limits
+
+ARG METATRON_VERSION="0.1-SNAPSHOT"
+FROM docker.phaseshift.studio/metatron:${METATRON_VERSION}
+
+# Install ttyd for web terminal
+RUN apk add --no-cache ttyd
+
+# Create a restricted user for console sessions
+RUN adduser -D -s /bin/sh metatron-user && \
+    chown -R metatron-user:metatron-user /app
+
+# Switch to restricted user
+USER metatron-user
+WORKDIR /app
+
+# Expose ttyd port
+EXPOSE 7681
+
+# Run ttyd with metatron console
+# -W: Enable write access (users can type)
+# -t fontSize=14: Set terminal font size
+# -t theme={"background": "#1e1e1e"}: Dark theme
+# -c metatron-user:metatron-pass: Basic auth (optional)
+ENTRYPOINT ["ttyd", \
+    "-W", \
+    "-t", "fontSize=14", \
+    "-t", "theme={\"background\":\"#1e1e1e\",\"foreground\":\"#d4d4d4\"}", \
+    "-p", "7681", \
+    "bin/metatron"]
+
+# Usage:
+# docker build -f Dockerfile.console -t metatron-console:latest .
+# docker run -d \
+#   --name metatron-console \
+#   --restart=unless-stopped \
+#   --memory="512m" \
+#   --cpus="0.5" \
+#   --read-only \
+#   --tmpfs /tmp \
+#   -p 7681:7681 \
+#   metatron-console:latest

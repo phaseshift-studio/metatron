@@ -62,6 +62,16 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
     static boolean isAllPattern(final String piece) {
         return piece.equals("#");
     }
+    
+    static boolean manyMatches(final List<fURI> firstList, final List<fURI> secondList) {
+        if(firstList.size() != secondList.size())
+            return false;
+        for(int i=0;i<firstList.size();i++) {
+            if(!firstList.get(i).test(secondList.get(i)))
+                return false;
+        }
+        return true;
+    }
 
     default fURI segments(final List<String> segments) {
         final List<String> newPath = new ArrayList<>(segments);

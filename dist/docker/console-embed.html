@@ -1,0 +1,68 @@
+<!-- Metatron Web Console Embed -->
+<!-- Add this to the "Tractatus Algebraicus Metatronicus" section -->
+
+<div class="metatron-console-container" style="margin: 2rem 0;">
+    <div class="console-header" style="background: #2d2d2d; padding: 0.5rem 1rem; border-radius: 8px 8px 0 0; display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; gap: 0.5rem;">
+            <span style="width: 12px; height: 12px; border-radius: 50%; background: #ff5f56;"></span>
+            <span style="width: 12px; height: 12px; border-radius: 50%; background: #ffbd2e;"></span>
+            <span style="width: 12px; height: 12px; border-radius: 50%; background: #27c93f;"></span>
+        </div>
+        <span style="color: #d4d4d4; font-family: monospace; font-size: 0.9rem;">metatron console</span>
+        <button id="console-reset" style="background: #444; color: #fff; border: none; padding: 0.25rem 0.75rem; border-radius: 4px; cursor: pointer; font-size: 0.85rem;">
+            Reset
+        </button>
+    </div>
+    <iframe
+        id="metatron-console-iframe"
+        src="http://console.metatron.phaseshift.studio:7681"
+        style="width: 100%; height: 600px; border: none; border-radius: 0 0 8px 8px; background: #1e1e1e; display: block;">
+    </iframe>
+</div>
+
+<script>
+// Reset console by reloading iframe
+document.getElementById('console-reset').addEventListener('click', function() {
+    const iframe = document.getElementById('metatron-console-iframe');
+    iframe.src = iframe.src;
+});
+
+// Optional: Add example buttons
+const examples = [
+    { name: "Hello World", code: "print(\"Hello, Metatron!\\n\")" },
+    { name: "Basic Math", code: "{1,2,3}.plus(2).sum()" },
+    { name: "Navigation", code: "x -> [a=>1, b=>[c=>2, d=>[3,4,5]]]\n*x.>>b>>d" },
+    { name: "Split/Merge", code: "\"hello world\".-<' '.>-','" }
+];
+
+// You can add buttons to load examples:
+// <button onclick="loadExample(0)">Hello World</button>
+// <button onclick="loadExample(1)">Basic Math</button>
+// etc.
+
+function loadExample(index) {
+    // Note: ttyd doesn't have a direct API to inject text
+    // Users would need to copy/paste or type the examples
+    // Alternative: Use WebSocket to send commands (requires ttyd config)
+    alert("Example code:\n\n" + examples[index].code + "\n\nCopy and paste into the console!");
+}
+</script>
+
+<style>
+.metatron-console-container {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+#console-reset:hover {
+    background: #555;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .metatron-console-container iframe {
+        height: 400px;
+    }
+}
+</style>
