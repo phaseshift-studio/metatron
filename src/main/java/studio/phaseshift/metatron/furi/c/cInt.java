@@ -106,7 +106,7 @@ public class cInt implements C<Long, cInt> {
             return cInt.ONE();
         else if (parse.equals("*"))
             return cInt.of(0L, null);
-        else if (parse.equals("**"))
+        else if (parse.equals(",") || parse.equals("**"))
             return cInt.of(null, (Long) null);
         else if (parse.equals("?"))
             return cInt.of(0L, 1L);

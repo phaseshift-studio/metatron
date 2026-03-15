@@ -191,6 +191,19 @@ public abstract class AbstractfURI implements fURI {
 
     }
 
+    protected static List<String> cleanPath(final List<String> path) {
+        if (null == path || path.size() < 2)
+            return path;
+        if (path.size() == 2 && path.getFirst().isEmpty() && path.getLast().isEmpty())
+            return path.subList(0, path.size() - 1);
+        /*List<String> newPath = path;
+        if (newPath.getFirst().isEmpty() && newPath.get(1).isEmpty())
+            newPath = newPath.subList(1, newPath.size());
+        if (newPath.getLast().isEmpty() && newPath.get(newPath.size() - 2).isEmpty())
+            newPath = newPath.subList(0, newPath.size() - 1);*/
+        return path;
+    }
+
     @Override
     public fURI rng(final fURI rng) {
         return this.q(RNG, rng);
@@ -323,7 +336,7 @@ public abstract class AbstractfURI implements fURI {
                 return false;
         if (!rhs.hasPattern())
             return this.path().equals(rhs.path());
-        if(rhs.segments().size() == 1 && rhs.segments().getFirst().equals("#"))
+        if (rhs.path().size() == 1 && rhs.path().getFirst().equals("#"))
             return true;
         if (this.isAbsolute() != rhs.isAbsolute())
             return false;
@@ -663,7 +676,10 @@ public abstract class AbstractfURI implements fURI {
             if (-1 != port())
                 sb.append(":").append(port());
         }
-        sb.append(this.path().stream().collect(Collectors.joining("/")));
+        if (this.path().size() == 1 && this.path().getFirst().isEmpty())
+            sb.append("/");
+        else
+            sb.append(this.path().stream().collect(Collectors.joining("/")));
         if (!this.poly().isEmpty())
             sb.append("[").append(String.join(",", this.poly())).append("]");
         if (!this.c().isOne())

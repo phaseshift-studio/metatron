@@ -311,7 +311,7 @@ public class mParser {
         return seq(of('{'), choice(
                         seq(opt(seq(opt(of('-'), ""), digit().plus()), ""), of(','), opt(seq(opt(of('-'), ""), digit().plus()), "")).flatten(),
                         seq(opt(of('-'), ""), digit().plus()).flatten().map(t -> t + "," + t),
-                        of(','),
+                        of(","),
                         of("**"),
                         of("-*"),
                         of("-?"),

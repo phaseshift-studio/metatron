@@ -27,12 +27,9 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.Tokens.C;
-import static studio.phaseshift.metatron.furi.fURI.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.*;
 import static studio.phaseshift.metatron.furi.q.DocQ.Doc.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
@@ -69,8 +66,8 @@ public interface Uri extends Mono, Ring.O<Uri> {
             return lst(this.uriValue().path().stream().map(MUri::uri).map(Obj::<Obj>as).toList());
         else if (k.equals(f(C)))
             return rec(
-                    MIN, null == this.uriValue().c().min() ? noobj() : jnt((Long)this.uriValue().c().min()),
-                    MAX, null == this.uriValue().c().max() ? noobj() : jnt((Long)this.uriValue().c().max()));
+                    MIN, null == this.uriValue().c().min() ? noobj() : jnt((Long) this.uriValue().c().min()),
+                    MAX, null == this.uriValue().c().max() ? noobj() : jnt((Long) this.uriValue().c().max()));
         else if (k.equals(f(Q)))
             return rec(this.uriValue().qMap().entrySet().stream().map(kv -> rel(uri(kv.getKey()), uri(kv.getValue()))));
         else
@@ -140,8 +137,8 @@ public interface Uri extends Mono, Ring.O<Uri> {
                                 SCHEME, lhsUri.scheme() == null ? noobj() : uri(lhsUri.scheme()),
                                 HOST, lhsUri.host() == null ? noobj() : uri(lhsUri.host()),
                                 PORT, lhsUri.port() == -1 ? noobj() : jnt(lhsUri.port()),
-                                PATH, lhsUri.path().isEmpty() ? noobj() : lst(Stream.concat(Stream.concat((lhsUri.isAbsolute() && !lhsUri.hasAuthority()) ? Stream.of(uri()) : Stream.empty(), lhsUri.path().stream().map(MUri::uri)), lhsUri.isBranch() ? Stream.of(uri()) : Stream.empty())),
-                                C, rec(MIN, null == lhsUri.c().min() ? noobj() : jnt((Long)lhsUri.c().min()), MAX, null == lhsUri.c().max() ? noobj() : jnt((Long)lhsUri.c().max())),
+                                PATH, lhsUri.path().isEmpty() ? noobj() : lst(lhsUri.path().stream().map(MUri::uri)),
+                                C, rec(MIN, null == lhsUri.c().min() ? noobj() : jnt(lhsUri.c().min()), MAX, null == lhsUri.c().max() ? noobj() : jnt(lhsUri.c().max())),
                                 Q, lhsUri.qMap().isEmpty() ? noobj() : rec(lhsUri.qMap().entrySet().stream().map(kv -> rel(uri(kv.getKey()), uri(kv.getValue())))));
                     }),
                     instC(REVERSE_INST_TID.dom(URI_TID).rng(URI_TID), lst(), (lhs, inst) -> lhs.jvm(lhs.uriValue().path(lhs.asUri().uriValue().path().reversed()))),
@@ -186,8 +183,8 @@ public interface Uri extends Mono, Ring.O<Uri> {
                     /*   instC(URI_PORT_TID.dom(URI_TID).rng(INT_TID), lst(T(URI_TID)), (lhs, inst) -> jnt(lhs.uriValue().port())),*/
                     instC(Q_INST_TID.dom(URI_TID).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(lhs.uriValue().qValue(inst.arg(0).uriValue().toString(), fURI.class))),
                     instC(Q_INST_TID.dom(URI_TID).rng(REC_TID), lst(), (lhs, inst) -> rec(lhs.uriValue().qMap().entrySet().stream().map(kv -> rel(uri(kv.getKey()), uri(kv.getValue()))))),
-                  // TODO  instC(Q_INST_TID.dom(URI_TID).rng(URI_TID), lst(T(REC_TID)), (lhs, inst) -> lhs.jvm(lhs.uriValue().qMap(inst.arg(0).recValue().entrySet().stream().collect(Collectors.toMap(kv -> kv.getKey().uriValue().toString(), kv -> kv.getValue().uriValue().toString(), (a, b) -> b, LinkedHashMap::new))))),
-                    instC(URI_C_TID.dom(URI_TID).rng(LST_TID), lst(T(URI_TID)), (lhs, inst) -> lst(jnt((Long)lhs.uriValue().c().min()), jnt((Long)lhs.uriValue().c().max()))),
+                    // TODO  instC(Q_INST_TID.dom(URI_TID).rng(URI_TID), lst(T(REC_TID)), (lhs, inst) -> lhs.jvm(lhs.uriValue().qMap(inst.arg(0).recValue().entrySet().stream().collect(Collectors.toMap(kv -> kv.getKey().uriValue().toString(), kv -> kv.getValue().uriValue().toString(), (a, b) -> b, LinkedHashMap::new))))),
+                    instC(URI_C_TID.dom(URI_TID).rng(LST_TID), lst(T(URI_TID)), (lhs, inst) -> lst(jnt((Long) lhs.uriValue().c().min()), jnt((Long) lhs.uriValue().c().max()))),
                     instC(POW_INST_TID.dom(URI_TID).rng(URI_TID), lst(T(INT_TID)), (lhs, inst) -> {
                         final int pow = inst.arg(0).intValue().intValue();
                         if (0 == pow) return lhs.jvm(f(""));

@@ -28,7 +28,7 @@ public class XXPXXXfURI extends AbstractfURI {
     final List<String> path;
 
     public XXPXXXfURI(final List<String> path) {
-        this.path = null == path ? List.of() : path;
+        this.path = cleanPath(null == path ? List.of() : path);
     }
 
     @Override

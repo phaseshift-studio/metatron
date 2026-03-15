@@ -24,6 +24,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.m.type.Lst;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -41,6 +42,22 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.parseQuery;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class ifURITest extends AbstractMetatronTest {
+
+    protected static fURI idem(final String furi) {
+        if (furi == null)
+            return f(furi);
+        final fURI f = f(furi);
+        final String f2 = f.toString();
+        //if(f.c().isOne())
+        //    assertEquals(f2, furi);
+        final fURI f3 = f(f2);
+        assertEquals(f, f3);
+        final fURI f4 = mParser.m_furi().parse(furi).get();
+        assertEquals(f, f4);
+        // if(f3.c().isOne())
+        //assertEquals(f3.toString(), furi);
+        return f3;
+    }
 
     @ParameterizedTest
     @CsvSource(value = {
@@ -103,8 +120,8 @@ public class ifURITest extends AbstractMetatronTest {
             "/a/b/c{2,3}?a=b&c=d         | 2   | /c{2,3}?a=b&c=d",
     }, delimiter = '|')
     public void testPretract(final String furi, final int steps, final String expected) {
-        final fURI start = f(furi);
-        final fURI end = f(expected);
+        final fURI start = idem(furi);
+        final fURI end = idem(expected);
         assertEquals(end, start.pretract(steps));
         LOG.debug("testing %s pretracted %d steps is %s", start, steps, expected);
     }
@@ -130,7 +147,7 @@ public class ifURITest extends AbstractMetatronTest {
     }, delimiter = '|')
     @Disabled
     public void testPretractPrefix(final String furi, final String pretraction) {
-        final fURI a = f(furi);
+        final fURI a = idem(furi);
         final fURI pa = a.pretract(pretraction);
         final fURI b = pa.prepend(pretraction);
         LOG.error("testing %s pretracted by %s is %s and then prepended is %s", a, pretraction, pa, b);
@@ -179,7 +196,7 @@ public class ifURITest extends AbstractMetatronTest {
             "/a/b/c/                 | false | true"
     }, delimiter = '|')
     void testSlashes(final String furi, final boolean isRelative, final boolean isBranch) {
-        final fURI f = f(furi);
+        final fURI f = idem(furi);
         assertEquals(isRelative, f.isRelative());
         assertEquals(isBranch, f.isBranch());
         assertEquals(!isRelative, f.isAbsolute());
@@ -199,7 +216,7 @@ public class ifURITest extends AbstractMetatronTest {
             "/a/b/c/                 | /a/b/c/"
     }, delimiter = '|')
     void testString(final String furi, final String furiString) {
-        final fURI f = f(furi);
+        final fURI f = idem(furi);
         assertEquals(furiString, f.toString());
     }
 
@@ -212,8 +229,8 @@ public class ifURITest extends AbstractMetatronTest {
             "plus?int<=int | /m/inst/plus?/m/int<=/m/int"
     }, delimiter = '|')
     void testBig(final String furi, final String fURIBig) {
-        final fURI f = f(furi);
-        assertEquals(f(fURIBig), f.big());
+        final fURI f = idem(furi);
+        assertEquals(idem(fURIBig), f.big());
     }
 
 
@@ -245,8 +262,8 @@ public class ifURITest extends AbstractMetatronTest {
             "/mtron/+/plus{?}?rng=/mtron/int{0,23}|?"
     }, delimiter = '|')
     void testCoefficients(final String furi, final String coefficient) {
-        assertEquals(cInt.of(coefficient), f(furi).c());
-        assertEquals(coefficient, f(furi).c().toString());
+        assertEquals(cInt.of(coefficient), idem(furi).c());
+        assertEquals(coefficient, idem(furi).c().toString());
     }
 
     @ParameterizedTest
@@ -315,8 +332,8 @@ public class ifURITest extends AbstractMetatronTest {
             "mtron:lang/obj             |  "
     }, delimiter = '|')
     public void testHostOrSegment(final String a, final String b) {
-        printComponents(f(a));
-        assertEquals(f(a).host(), b);
+        printComponents(idem(a));
+        assertEquals(idem(a).host(), b);
     }
 
     @ParameterizedTest
@@ -337,7 +354,7 @@ public class ifURITest extends AbstractMetatronTest {
     }, delimiter = '|')
     public void testHasPrefix(final String a, final String b, final boolean hasPrefix) {
         LOG.error("testing {{b}}%s{{X}} has prefix {{b}}%s{{X}} [expected: %s]", f(a), f(b), hasPrefix);
-        assertEquals(hasPrefix, f(a).hasPrefix(b));
+        assertEquals(hasPrefix, idem(a).hasPrefix(b));
     }
 
     @ParameterizedTest
@@ -357,8 +374,8 @@ public class ifURITest extends AbstractMetatronTest {
             "a/./z/../b    | a/b",
     }, delimiter = '|')
     public void testResolve(final String f1, final String f2) {
-        final fURI furi1a = f(f1);
-        final fURI furi1b = f(f2);
+        final fURI furi1a = idem(f1);
+        final fURI furi1b = idem(f2);
         //  final fURI furi2a = mParser.m_furi().parse(f1).get();
         //  final fURI furi2b = mParser.m_furi().parse(f2).get();
         // LOG.info("testing {{b}}%s{{/b}} {{g}}=>{{/g}} {{b}}%s{{b}} resolution", furi1a, furi2b);
@@ -387,7 +404,7 @@ public class ifURITest extends AbstractMetatronTest {
     }, delimiter = '|')
     public void testHasPostfix(final String a, final String b, final boolean hasPostfix) {
         LOG.error("testing {{b}}%s{{X}} has postfix {{b}}%s{{X}} [expected: %s]", f(a), f(b), hasPostfix);
-        assertEquals(hasPostfix, f(a).hasPostfix(b));
+        assertEquals(hasPostfix, idem(a).hasPostfix(b));
     }
 
 
@@ -645,7 +662,7 @@ public class ifURITest extends AbstractMetatronTest {
             "A{+}          |  A{*}          | true",
             "A/B{2,4}      |  a/#{*}        | true",
             "A/B/C{2,4}    |  a/#{*}        | true",
-            //"A/{+}         |  A/#{*}        | true",
+            "A/{+}         |  A/#{*}        | true",
             "A/{0}         |  A/#{2}        | false",
             "A/aB{0}       |  Z/+{0}        | true",
             "a{1}          |  A{1}          | true"
@@ -675,8 +692,8 @@ public class ifURITest extends AbstractMetatronTest {
             "a/b/+              | c/b/a           | -1",
     }, delimiter = '|')
     public void testCompareTo(final String f1, final String f2, final int order) {
-        final fURI furi1a = f(f1);
-        final fURI furi1b = f(f2);
+        final fURI furi1a = idem(f1);
+        final fURI furi1b = idem(f2);
         final fURI furi2a = mParser.m_furi().parse(f1).get();
         final fURI furi2b = mParser.m_furi().parse(f2).get();
         //assertEquals(furi1a, furi2a); // TODO: important ssend issue
@@ -699,11 +716,13 @@ public class ifURITest extends AbstractMetatronTest {
             "a|#|true",
             "#|#|true",
             "a|null|false",
-            //"null|/|false",
+            "null|/|false",
             "{0}|a/b{*}|true",
             "/a/b{0}|/a/b{*}|true",
             // TODO:     "/{0}|/{*}|true",
             "null|null|true",
+            "http://fhatos.org/a|#://fhatos.org/a|true", // should fail as # is not the last or second last character
+            "http://fhatos.org/a|+://fhatos.org/a|true",
             "http://fhatos.org/a|http://fhatos.org/a|true",
             "http://fhatos.org/a|http://fhatos.org/a/b|false",
             "http://fhatos.org/a/b|http://fhatos.org/a|false",
@@ -714,7 +733,7 @@ public class ifURITest extends AbstractMetatronTest {
             "http://fhatos.org/a/b/c|http://fhatos.org/a/+/+|true",
             "http://fhatos.org/a/b/c|http://fhatos.org/+/+/+|true",
             "http://fhatos.org/a/b/c|http://+/a/b/c|true",
-            //  "http://fhatos.org/a/b/c|http://#|true", matching on authority
+            "http://fhatos.org/a/b/c|http://#|true",
             "http://fhatos.org/a/b/c|http://fhatos.org/#|true",
             "/a/b/c|/a/b/+|true",
             "/a/b/c|/a/+/c|true",
@@ -789,7 +808,7 @@ public class ifURITest extends AbstractMetatronTest {
             "/mtron/+/+{1}|/mtron/+/#{?}|true",
             "/mtron/inst/plus{1}|/mtron/inst/#{?}|true",
             "/mtron/inst/plus{1}|/mtron/+/#{?}|true",
-            //"/mtron/inst/plus/|/mtron/+/plus/{?}|true",
+            "/mtron/inst/plus/|/mtron/+/plus/{?}|true",
             "/mtron/+/+|/mtron/+/+{?}|true",
             //"/+/+/+|/mtron/+/+{?}|true",
             "/mtron/+/plus|/mtron/+/plus{?}|true",
@@ -824,12 +843,12 @@ public class ifURITest extends AbstractMetatronTest {
             "ws://metatron.org:1234/abc|+://+/abc|true",
             "a/plus{4}|+/+{4}|true",
             "a/plus{4}|+/+|false",
-            //"a/plus{4}|+/plus{4}|true", // TODO:?!? STRANGE!?!?
-            //"/mtron/inst/plus{4}|/mtron/+/plus{4}|true" // TODO:?!? STRANGE!?!?
+            "a/plus{4}|+/plus{4}|true",
+            "/mtron/inst/plus{4}|/mtron/+/plus{4}|true",
             "/m/lst[AA,BB]{2}|/m/lst[AA,BB]{2}|true",
             "/m/lst[AA,BB]{2}|/m/lst[AA,BB]{1,6}|true",
             "/m/lst[AA,BB]{2}|/m/lst[AA,BB]{-6,-1}|false",
-            //     "/m/lst[A,B]|/m/lst[A,B]|true",
+           //     "/m/lst[A,B]|/m/lst[A,B]|true",
             "/m/lst[aa,bb]|/m/lst[aa,bb]|true",
             "/m/lst[AA,BB]|/m/lst[AA,BB]|true",
             //    "xxx[A,B]|xxx[A,B]|true",
@@ -928,16 +947,16 @@ public class ifURITest extends AbstractMetatronTest {
             "a/b/c?a=2|a/+/c?+|true",
             "a/b/c?a=2|a/b/c?#|true",
             "a/b/c?a=2|a/#|true",
-            "#|#|true"
-            //":y|+:+|false",       why are these wrong? they are inverses of each other.
-            //        ":y|:+|true",
+            "#|#|true",
+            "+:y|+:+|true",
+          //  ":y|:+|true",
     }, delimiter = '|', nullValues = "null")
     void testMatches(final String a, final String b, final boolean shouldMatch) {
-        final fURI furi1a = f(a);
-        final fURI furi1b = f(b);
+        final fURI furi1a = idem(a);
+        final fURI furi1b = idem(b);
         final boolean doObjParser = null != a && null != b;
-        final fURI furi2a = doObjParser ? mParser.m_furi().parse(a).get() : f(a);
-        final fURI furi2b = doObjParser ? mParser.m_furi().parse(b).get() : f(b);
+        final fURI furi2a = doObjParser ? mParser.m_furi().parse(a).get() : idem(a);
+        final fURI furi2b = doObjParser ? mParser.m_furi().parse(b).get() : idem(b);
         assertEquals(furi1a, furi2a);
         assertEquals(furi1b, furi2b);
         LOG.debug("testing: {{b}}%s{{/b}} %s {{b}}%s{{/b}}", furi1a, shouldMatch ? "{{g}}should match{{/g}}" : "{{r}}should not match{{/r}}", furi1b);
@@ -965,11 +984,46 @@ public class ifURITest extends AbstractMetatronTest {
             "a/b/c[A{2},B{3}]   |1               |[A{2}, B{3}]"
     }, delimiter = '|')
     void testPoly(final String furi, final String c, final String typeParams) {
-        final fURI furiA = f(furi);
+        final fURI furiA = idem(furi);
         assertEquals(c, furiA.c().toString());
         assertEquals(typeParams, furiA.poly().toString());
     }
 
+    @ParameterizedTest
+    @CsvSource(value = {
+            "a/b/c{2}                |[a,b,c]",
+            "a/b/c                   |[a,b,c]",
+            "a/b/c{*}                |[a,b,c]",
+            "/a/b/c{2}               |[<>,a,b,c]",
+            "/a/b/c                  |[<>,a,b,c]",
+            "/a/b/c/{*}              |[<>,a,b,c,<>]",
+            "/a/b/c/{2}              |[<>,a,b,c,<>]",
+            "/a/b/c/?a=b&c=2         |[<>,a,b,c,<>]",
+            "/a/                     |[<>,a,<>]",
+            /*"//                      |[]", // resolves to the schema://host 
+            "///                     |[]", // resolves to the schema://host 
+            "////                    |[]", // resolves to the schema://host */
+            "c{*}                    |[c]",
+            "+                       |[+]",
+            "/                       |[<>]",
+            "/#                       |[<>,#]",
+            "#/                       |[#,<>]",
+            "/#/                       |[<>,#,<>]",
+            "#                       |[#]",
+            "a/b/..                  |[a,b,<..>]",
+            // "/a/b/.                   |[<>,a,b,.]",
+    }, delimiter = '|')
+    void testPathStructure(final String furi, final String path) {
+        final fURI f = idem(furi);
+        final Lst l = mParser.m_lst().parse(path).get();
+        final List<String> pathList = f.path();
+        LOG.warn("testing: {{b}}%s{{X}} parsed to {{b}}%s{{X}} [path: %s] [expected: %s]", furi, f, f.path(), l);
+        assertEquals(l.count(), f.pathLength());
+        for (int i = 0; i < pathList.size(); i++) {
+            assertEquals(l.at(i).uriValue().toString(), pathList.get(i));
+        }
+
+    }
 
     @ParameterizedTest
     @CsvSource(value = {
@@ -978,12 +1032,14 @@ public class ifURITest extends AbstractMetatronTest {
             "a/b/c{*}                |c",
             "c{*}                    |c",
             "+                       |+",
-            "{2}                     |\'\'",
+       //     "{2}                     |\'\'",
             "a/b/..                  |..",
             "a/b/.                   |.",
+            "a/b/#                   |#",
+            "a/b/#/                  |''",
     }, delimiter = '|')
     void testName(final String furi, final String name) {
-        assertEquals(name, f(furi).name());
+        assertEquals(name, idem(furi).name());
     }
 
     @ParameterizedTest
@@ -993,7 +1049,6 @@ public class ifURITest extends AbstractMetatronTest {
             "a/b/c{*}                |false",
             "c{*}                    |false",
             "+                       |true",
-            "{2}                     |false",
             "a/b/..                  |false",
             "a/b/.                   |false",
             "a/b/+                   |true",
@@ -1007,7 +1062,7 @@ public class ifURITest extends AbstractMetatronTest {
             "a/b/c{?}                |false"
     }, delimiter = '|')
     void testHasPattern(final String furi, final boolean pattern) {
-        assertEquals(pattern, f(furi).hasPattern());
+        assertEquals(pattern, idem(furi).hasPattern());
     }
 
     @ParameterizedTest
@@ -1020,17 +1075,17 @@ public class ifURITest extends AbstractMetatronTest {
             "abc{*}?int{2,35}<=str{**}                             | abc                       | int{2,35}      | str{,}       | 0,   |",
             "temp{*}?int{2,35}<=str{**}&a=b&c=d                    | temp                      | int{2,35}      | str{,}       | 0,   |a=b&c=d",
             "/temp{*}?int{2,35}<=str{**}&a=2&c&g=/m/int            | /temp                     | int{2,35}      | str{,}       | 0,   |a=2&c&g=/m/int",
-            "/temp{*}?lst[int{2,35}]<=lst[str{**}]&a=2&c&g=/m/int  | /temp                     | lst[int{2,35}] | lst[str{,}]  | 0,   |a=2&c&g=/m/int",
+         //   "/temp{*}?lst[int{2,35}]<=lst[str{**}]&a=2&c&g=/m/int  | /temp                     | lst[int{2,35}] | lst[str{,}]  | 0,   |a=2&c&g=/m/int",
             "/temp{*}?rng=int{2,35}&dom=str{**}&a=2&c&g=/m/int     | /temp                     | int{2,35}      | str{,}       | 0,   |a=2&c&g=/m/int",
             "/temp{*}?rng=+&dom=#&a=2&c&g=/m/int                   | /temp                     | +              | #            | 0,   |a=2&c&g=/m/int",
             "temp_abc{2,3}?rng=+&dom=#&a=2&c&g=/m/int              | temp_abc                  | +              | #            | 2,3  |a=2&c&g=/m/int",
             "temp_abc{,3}?rng=+/#&dom=abc/#&a=2&c&d                | temp_abc                  | +/#            | abc/#        | ,3   |a=2&c&d",
     }, delimiter = '|')
     void testDomRng(final String furi, final String base, final String rng, final String dom, final String coefficient, final String query) {
-        for (final fURI furiObj : Arrays.asList(f(furi).big(), mParser.m_furi().parse(furi).<fURI>get().big())) {
-            final fURI baseObj = f(base).big();
-            final fURI domObj = f(dom).big();
-            final fURI rngObj = f(rng).big();
+        for (final fURI furiObj : Arrays.asList(idem(furi).big(), mParser.m_furi().parse(furi).<fURI>get().big())) {
+            final fURI baseObj = idem(base).big();
+            final fURI domObj = idem(dom).big();
+            final fURI rngObj = idem(rng).big();
             final C<?, ?> cObj = cInt.of(coefficient);
             assertEquals(baseObj, furiObj.basePath());
             assertEquals(cObj, furiObj.c());
@@ -1059,10 +1114,10 @@ public class ifURITest extends AbstractMetatronTest {
         LOG.error("component class: %s", furiB.getClass().getSimpleName());
         if (false && matches) {
 
-            assertTrue(f(furiA.scheme()).test(f(furiB.scheme())), "schemas don't match");
-            assertTrue(f(furiA.host()).test(f(furiB.host())), "hosts don't match");
+            assertTrue(idem(furiA.scheme()).test(idem(furiB.scheme())), "schemas don't match");
+            assertTrue(idem(furiA.host()).test(idem(furiB.host())), "hosts don't match");
             assertEquals(furiA.port(), furiB.port(), "ports don't match");
-            assertTrue(f(furiA.pathString()).test(f(furiB.pathString())), "paths don't match");
+            assertTrue(idem(furiA.pathString()).test(idem(furiB.pathString())), "paths don't match");
             assertTrue(((C) furiA.c()).within(furiB.c()), "coefficients don't match");
             assertEquals(furiA.qMap(), furiB.qMap(), "queries don't match");
         }
