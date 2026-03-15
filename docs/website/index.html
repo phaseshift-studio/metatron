@@ -536,9 +536,9 @@ This ensures the uri <code>triple</code> is not applied to the <code>inst</code>
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
 mtron&gt; triple -&gt; inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}
-==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}]][...]@/sys/fail/334
+==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}]][...]@/sys/fail/166
 mtron&gt; *triple
-==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}]][...]@/sys/fail/334</code></pre>
+==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}]][...]@/sys/fail/166</code></pre>
 </div>
 </div>
 </td>
@@ -579,7 +579,7 @@ mtron&gt; {1,2,3,4,5,6}.triple()
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
 mtron&gt; sum -&gt; reduce?int&lt;=int{*}(){fold(0,plus(_))}
-==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{*}::T [reduce?rng=int&amp;dom=int{*}(noobj){fold(0,plus(id()))}]][...]@/sys/fail/336</code></pre>
+==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{*}::T [reduce?rng=int&amp;dom=int{*}(noobj){fold(0,plus(id()))}]][...]@/sys/fail/168</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -730,10 +730,10 @@ mtron&gt; nat -&gt; int::T[?&gt;0]
 mtron&gt; nat::10
 ==&gt;nat::10
 mtron&gt; nat::-10
-==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/350
+==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/182
 mtron&gt; int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/356</code></pre>
+  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/188</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -758,10 +758,10 @@ mtron&gt; age:125
 ==&gt;age:125
 mtron&gt; nat:125.as(age::T)
 ==&gt;fail::[nat:125 is not a is(lt(120))
-  nat:125=&gt;(==&gt;is(lt(120)))][...]@/sys/fail/398
+  nat:125=&gt;(==&gt;is(lt(120)))][...]@/sys/fail/230
 mtron&gt; 125.as(nat::T).as(age::T)
 ==&gt;fail::[nat::125 is not a is(lt(120))
-  nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/404</code></pre>
+  nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/236</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -889,13 +889,17 @@ mtron&gt; *#.as[name      =&gt; _,
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">llm -&gt; rec::T[?[name=&gt;?uri::T,
-        host=&gt;?uri::T,
-        think=&gt;?bool::T,
-        size=&gt;?gB::T,
-        {?}memory=&gt;?uri::T,
-        {?}skill=&gt;?lst::T,
-        {?}tool=&gt;?lst::T]]</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
+mtron&gt; */m/llm/model
+==&gt;rec::T[isa([
+ provider =&gt;uri::T,
+ name     =&gt;uri::T,
+ host     =&gt;uri::T,
+ {?}think =&gt;bool::T,
+ size     =&gt;data_size::T[][inst?rng=bB&amp;dom=#{?}(#::T){&lt;j&gt;}]@/m/math/bB,
+ {?}memory=&gt;uri::T,
+ {?}skill =&gt;lst::T,
+ {?}tool  =&gt;lst::T])]@/m/llm/model</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -903,82 +907,82 @@ mtron&gt; *#.as[name      =&gt; _,
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
 mtron&gt; *ollama:+
 ==&gt;model::[
+ provider=&gt;!*/sys/space/ollama,
+ skill   =&gt;[completion,tools],
+ size    =&gt;gB::48.19,
  host    =&gt;!*/sys/space/ollama/host,
  name    =&gt;qwen3-coder-next:latest,
- think   =&gt;false,
- provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion,tools],
- size    =&gt;gB::48.19]@ollama:qwen3-coder-next:latest
+ think   =&gt;false]@ollama:qwen3-coder-next:latest
 ==&gt;model::[
+ provider=&gt;!*/sys/space/ollama,
+ skill   =&gt;[completion,tools,thinking],
+ size    =&gt;gB::0.00,
  host    =&gt;!*/sys/space/ollama/host,
  name    =&gt;&lt;deepseek-v3.2:cloud&gt;,
- think   =&gt;true,
+ think   =&gt;true]@ollama:deepseek-v3.2:cloud
+==&gt;model::[
  provider=&gt;!*/sys/space/ollama,
  skill   =&gt;[completion,tools,thinking],
- size    =&gt;gB::0.00]@ollama:deepseek-v3.2:cloud
-==&gt;model::[
+ size    =&gt;gB::4.87,
  host    =&gt;!*/sys/space/ollama/host,
  name    =&gt;qwen3:8b,
- think   =&gt;true,
- provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion,tools,thinking],
- size    =&gt;gB::4.87]@ollama:qwen3:8b
+ think   =&gt;true]@ollama:qwen3:8b
 ==&gt;model::[
+ provider=&gt;!*/sys/space/ollama,
+ skill   =&gt;[completion],
+ size    =&gt;gB::8.37,
  host    =&gt;!*/sys/space/ollama/host,
  name    =&gt;deepcoder:latest,
- think   =&gt;false,
- provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion],
- size    =&gt;gB::8.37]@ollama:deepcoder:latest
+ think   =&gt;false]@ollama:deepcoder:latest
 ==&gt;model::[
- host    =&gt;!*/sys/space/ollama/host,
- name    =&gt;llava:latest,
- think   =&gt;false,
  provider=&gt;!*/sys/space/ollama,
  skill   =&gt;[completion,vision],
- size    =&gt;gB::4.41]@ollama:llava:latest
+ size    =&gt;gB::4.41,
+ host    =&gt;!*/sys/space/ollama/host,
+ name    =&gt;llava:latest,
+ think   =&gt;false]@ollama:llava:latest
 ==&gt;model::[
+ provider=&gt;!*/sys/space/ollama,
+ skill   =&gt;[completion,tools,thinking],
+ size    =&gt;gB::4.87,
  host    =&gt;!*/sys/space/ollama/host,
  name    =&gt;qwen3:latest,
- think   =&gt;true,
+ think   =&gt;true]@ollama:qwen3:latest
+==&gt;model::[
  provider=&gt;!*/sys/space/ollama,
  skill   =&gt;[completion,tools,thinking],
- size    =&gt;gB::4.87]@ollama:qwen3:latest
-==&gt;model::[
+ size    =&gt;gB::12.85,
  host    =&gt;!*/sys/space/ollama/host,
  name    =&gt;gpt-oss:latest,
- think   =&gt;true,
+ think   =&gt;true]@ollama:gpt-oss:latest
+==&gt;model::[
  provider=&gt;!*/sys/space/ollama,
  skill   =&gt;[completion,tools,thinking],
- size    =&gt;gB::12.85]@ollama:gpt-oss:latest
-==&gt;model::[
+ size    =&gt;gB::0.00,
  host    =&gt;!*/sys/space/ollama/host,
  name    =&gt;&lt;minimax-m2.5:cloud&gt;,
- think   =&gt;true,
- provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion,tools,thinking],
- size    =&gt;gB::0.00]@ollama:minimax-m2.5:cloud
+ think   =&gt;true]@ollama:minimax-m2.5:cloud
 ==&gt;model::[
+ provider=&gt;!*/sys/space/ollama,
+ skill   =&gt;[completion],
+ size    =&gt;gB::0.72,
  host    =&gt;!*/sys/space/ollama/host,
  name    =&gt;deepseek-coder:latest,
- think   =&gt;false,
+ think   =&gt;false]@ollama:deepseek-coder:latest
+==&gt;model::[
  provider=&gt;!*/sys/space/ollama,
  skill   =&gt;[completion],
- size    =&gt;gB::0.72]@ollama:deepseek-coder:latest
-==&gt;model::[
+ size    =&gt;gB::0.59,
  host    =&gt;!*/sys/space/ollama/host,
  name    =&gt;tinyllama:latest,
- think   =&gt;false,
- provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion],
- size    =&gt;gB::0.59]@ollama:tinyllama:latest
+ think   =&gt;false]@ollama:tinyllama:latest
 ==&gt;model::[
- host    =&gt;!*/sys/space/ollama/host,
- name    =&gt;llama3-groq-tool-use:latest,
- think   =&gt;false,
  provider=&gt;!*/sys/space/ollama,
  skill   =&gt;[completion,tools],
- size    =&gt;gB::4.34]@ollama:llama3-groq-tool-use:latest</code></pre>
+ size    =&gt;gB::4.34,
+ host    =&gt;!*/sys/space/ollama/host,
+ name    =&gt;llama3-groq-tool-use:latest,
+ think   =&gt;false]@ollama:llama3-groq-tool-use:latest</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -992,18 +996,18 @@ mtron&gt; ai -&gt; *ollama:+
               .order(&gt;&gt;?real&lt;=rec(size).mult(-1.0))
               .take(1)
 ==&gt;model::[
- host    =&gt;!*/sys/space/ollama/host,
- name    =&gt;qwen3:8b,
- think   =&gt;true,
  provider=&gt;!*/sys/space/ollama,
  skill   =&gt;[completion,tools,thinking],
- size    =&gt;gB::4.87]@ollama:qwen3:8b
+ size    =&gt;gB::4.87,
+ host    =&gt;!*/sys/space/ollama/host,
+ name    =&gt;qwen3:8b,
+ think   =&gt;true]@ollama:qwen3:8b
 mtron&gt; ai/think  -&gt; false
 ==&gt;false
 mtron&gt; ai/memory -&gt; /usr/mem
 ==&gt;/usr/mem
 mtron&gt; *ai.chat("Remember the word 'metatron'. I'll ask you to recall this word later.")
-==&gt;Certainly! I remember the word **"metatron"**. Feel free to ask me about it whenever you're ready.</code></pre>
+==&gt;Understood. I'll be here when you need to recall the word "metatron." Let me know when you're ready!</code></pre>
 </div>
 </div>
 <div class="admonitionblock note">
@@ -1043,7 +1047,7 @@ mtron&gt; */usr/mem
    contents=&gt;[[text=&gt;"Remember the word 'metatron'. I'll ask "...,type=&gt;TEXT]],
    type    =&gt;USER],
   [
-   text                 =&gt;'Certainly! I remember the word **"metat'...,
+   text                 =&gt;"Understood. I'll be here when you need "...,
    toolExecutionRequests=&gt;[,],
    attributes           =&gt;[=&gt;],
    type                 =&gt;AI]]</code></pre>
@@ -1061,7 +1065,7 @@ mtron&gt; *ollama:+
          .take(1)
          .plus?rec&lt;=rec([memory=&gt;/usr/mem])
          .chat("What was the special word I needed you to recall?")
-==&gt;The special word you asked me to recall was **"metatron"**. Let me know if you'd like to discuss it further!</code></pre>
+==&gt;The special word you needed me to recall was **"metatron"**. Let me know if you'd like further details!</code></pre>
 </div>
 </div>
 </div>
@@ -1215,7 +1219,7 @@ mtron&gt; "a b c".-&lt;' '.map(capitalize).&gt;-','
 ==&gt;fail::[unable to determine inst function:
 	capitalize  =&gt; merge(',')   | [inst]
 	uri::T      =&gt; #::T         |  \_dom
-	uri::T     X=&gt; [',']        |  \_args][...]@/sys/fail/332</code></pre>
+	uri::T     X=&gt; [',']        |  \_args][...]@/sys/fail/164</code></pre>
 </div>
 </div>
 <h3 id="_pattern_matching_the_wildcards" class="discrete">Pattern Matching: The Wildcards</h3>

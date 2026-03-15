@@ -3,16 +3,11 @@
 
 Large language models (LLM) can be embedded in space. An LLM is a `rec` with the following type definition:
 
-[source,mtron]
-----
-llm -> rec::T[?[name=>?uri::T,
-        host=>?uri::T,
-        think=>?bool::T,
-        size=>?gB::T,
-        {?}memory=>?uri::T,
-        {?}skill=>?lst::T,
-        {?}tool=>?lst::T]]
-----
+++++
+<!-- 🐖
+*/m/llm/model
+-->
+++++
 
 ++++
 <!-- 🐖
@@ -21,7 +16,7 @@ llm -> rec::T[?[name=>?uri::T,
 ++++
 
 
-The following example demonstrates how to search for an appropriate LLM for the given task, then query it, and finally, have it's memory of the interaction stored in space for future use as a stabilizing content.
+The following example demonstrates how to search for an appropriate LLM for the given task, then query it, and finally, have its memory of the interaction stored in space for future use as a stabilizing content.
 
 ++++
 <!-- 🐖

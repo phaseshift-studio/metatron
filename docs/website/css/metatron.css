@@ -502,9 +502,9 @@ body {
 /******************************************************************/
 
 .hljs {
-	font-size: 1.0rem;
+	font-size: 100%;
 	display: block;
-	background: #191C24
+	padding: 0.5em;
 }
 
 .hljs-phaseshift-studio-header {
@@ -512,6 +512,7 @@ body {
 	font-weight: bolder;
 }
 
+.hljs-mtron-at-vid,
 .hljs-mtron-real,
 .hljs-mtron-bytes,
 .hljs-mtron-int,
@@ -519,35 +520,36 @@ body {
 .hljs-mtron-bool,
 .hljs-mtron-furi-query,
 .hljs-mtron-sugar-inst,
+.hljs-mtron-query,
 .hljs-mtron-sys-furi,
 .hljs-mtron-log-warn{
 	color: var(--myellow);
 }
 
+.hljs-mtron-auto-from,
 .h {
 	color: #d4de68;
 	font-weight: bold !important;
 }
 
-.hljs-mtron-rec-key,
-.hljs-mtron-query {
+.hljs-mtron-rec-key {
 	color: var(--maqua);
 }
 
 #header,
+.hljs-mtron-prompt-begin,
 .hljs-mtron-form,
 .hljs-punctuation,
 .hljs-mtron-rec,
 .hljs-mtron-result-prefix,
-
+.hljs-mtron-type-prefix,
 .hljs-mtron-prompt-end,
-.hljs-mtron-log-info,
-.hljs-mtron-T {
+.hljs-mtron-log-info {
 	color: var(--mgreen);
 }
 
-.hljs-mtron-prompt-begin,
-.hljs-mtron-noobj {
+.hljs-mtron-noobj,
+.hljs-mtron-T {
 	color: var(--mmagenta);
 }
 
@@ -570,8 +572,8 @@ body {
 }
 
 .hljs-mtron-uri,
-.hljs-mtron-type-prefix,
 .hljs-mtron-type,
+.hljs-mtron-type-prefix,
 .hljs-mtron-inst-f-jvm {
 	color: var(--mblue);
 }
