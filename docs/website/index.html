@@ -27,7 +27,7 @@
     /*------------------------*/
     --mblue: #4669dd;
     --mmagenta: #9f4040; /*#825181;*/
-    --mred: #6b0004;
+    --mred: #7a2518;
     --mgreen: #457b02;
     --mdarkgray: #494554;
     --mlightgray: #797585;
@@ -538,6 +538,15 @@ pre {
     border: none;
 }
 
+details {
+    border-style: solid;
+    border-width: 1px;
+    border-color: var(--light);
+    margin: 1em;
+    padding: 1em;
+    color: var(--mred);
+}
+
 .switch ~ div:nth-of-type(2),
 .switch ~ div:nth-of-type(3),
 .switch ~ div:nth-of-type(4),
@@ -572,7 +581,15 @@ pre {
     font-size: 100%;
     display: block;
     padding: 0.5em;
+    overflow-y: scroll;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
 }
+
+.hljs::-webkit-scrollbar {
+    display: none;
+}
+
 
 .hljs-phaseshift-studio-header {
     color: var(--secondarycolor) !important;
@@ -1276,10 +1293,10 @@ While the reader searches for some unbeknownst depth in the previous sentence, a
  c=&gt;2,
  d=&gt;[3,4,5]]
 ==&gt;grant/knows=&gt;!*marko
-==&gt;band=&gt;inst?rng=int{?}&amp;dom=int(min=&gt;isa(int::T[is(gt(0))]@nat),max=&gt;isa(int::T[is(gt(0))]@nat)){is(and(gte(*min),lte(*max)))}
+==&gt;band=&gt;inst?rng=int{?}&amp;dom=int(min=&gt;isa(int::T[is(gt(0))]@nat).else(-100),max=&gt;isa(int::T[is(gt(0))]@nat).else(100)){is(and(gte(*min),lte(*max)))}
 ==&gt;boot/peers/0=&gt;ws://localhost:6666
 ==&gt;boot/args/log=&gt;info
-==&gt;personx=&gt;rec::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;personx{*}::T])]@personx{*}])]@personx{*}])]
+==&gt;personx=&gt;rec::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;personx{*}::T])]@personx{*}])]@personx{*}])]@personx{*}])]
 ==&gt;grant/age=&gt;23
 ==&gt;triple=&gt;inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}
 ==&gt;boot/peers=&gt;[ws://localhost:6666,&lt;ws://127.0.0.1:7777&gt;]
@@ -1293,7 +1310,7 @@ While the reader searches for some unbeknownst depth in the previous sentence, a
 ==&gt;boot/args/mqtt=&gt;[broker=&gt;&lt;mqtt://chibi.local:1883&gt;]
 ==&gt;fs_prefix=&gt;booger:#
 ==&gt;age=&gt;int::T[is(lt(120))]@nat
-==&gt;sum=&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{*}::T [reduce?rng=int&amp;dom=int{*}(noobj){fold(0,plus(id()))}]][...]@/sys/fail/302
+==&gt;sum=&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{*}::T [reduce?rng=int&amp;dom=int{*}(noobj){fold(0,plus(id()))}]][...]@/sys/fail/458
 ==&gt;x/a=&gt;1
 ==&gt;boot/script/mtron=&gt;/bin/mtron
 ==&gt;marko/age=&gt;29
@@ -1484,7 +1501,7 @@ mtron&gt; 15.band(10,20)              ​4​
 ==&gt;15
 mtron&gt; -15.band(-20,-10)           ​5​
 mtron&gt; band -&gt; |inst?int{?}&lt;=int(min=&gt;?nat::T.else(fail()),max=&gt;?nat::T.else(fail())){ is(and(gte(*min),lte(*max))) }
-==&gt;fail::[fail(noobj) is not a fail::T][...]@/sys/fail/424
+==&gt;fail::[fail(noobj) is not a fail::T][...]@/sys/fail/580
 mtron&gt; 15.band(10,20)              ​6​
 ==&gt;15
 mtron&gt; -15.band(-20,-10)           ​7​
@@ -1535,12 +1552,12 @@ Finally, a degenerate anonymous <code>inst</code> with no specified variable fra
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; 10.(min=&gt;2,max=&gt;8){ is(and(gte(*min),lte(*max))) }                ​1​
 ==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/438
+	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/594
 mtron&gt; 10.(min=&gt;minus(1),max=&gt;plus(1)){ is(and(gte(*min),lte(*max))) }   ​2​
 ==&gt;10
 mtron&gt; 10.(){ is(and(gte(*min),lte(*max))) }                             ​3​
 ==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/440
+	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/596
 mtron&gt; 10.is(and(gte(minus(1)),lte(plus(1))))                            ​5​
 ==&gt;10</code></pre>
 </div>
@@ -1579,11 +1596,11 @@ mtron&gt; 10.is(and(gte(minus(1)),lte(plus(1))))                            ​5
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;_)[mod(*by).eq(0)]
 ==&gt;fail::[is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;_)[mod(*by).eq(0)]
                                       ^ end of input expected
-][...]@/sys/fail/442
+][...]@/sys/fail/598
 mtron&gt; 10.is_divisible(2)
-==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/444
+==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/600
 mtron&gt; 10.is_divisible('abc')
-==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/446</code></pre>
+==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/602</code></pre>
 </div>
 </div>
 </div>
@@ -1604,7 +1621,7 @@ mtron&gt; 10.is_divisible('abc')
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; band -&gt; |band?int{?}&lt;=int(min=&gt;_,max=&gt;is(gt(*min)).else(*min.plus(1)))[is(gte(*min)).is(lte(*max))]
 ==&gt;fail::[band -&gt; |band?int{?}&lt;=int(min=&gt;_,max=&gt;is(gt(*min)).else(*min.plus(1)))[is(gte(*min)).is(lte(*max))]
                                                                       ^ end of input expected
-][...]@/sys/fail/448
+][...]@/sys/fail/604
 mtron&gt; 2.band(min=&gt;1,max=&gt;1)                 ​1​</code></pre>
 </div>
 </div>
@@ -1626,11 +1643,11 @@ mtron&gt; 2.band(min=&gt;1,max=&gt;1)                 ​1​</code></pre>
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;is(neq(0)).else(print('error').map(1)))[mod(*by).eq(0)]
 ==&gt;fail::[is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;is(neq(0)).else(print('error').map(1)))[mod(*by).eq(0)]
                                       ^ end of input expected
-][...]@/sys/fail/450
+][...]@/sys/fail/606
 mtron&gt; 10.is_divisible(2)
-==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/452
+==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/608
 mtron&gt; 10.is_divisible('abc')
-==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/454</code></pre>
+==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/610</code></pre>
 </div>
 </div>
 </div>
@@ -1661,9 +1678,9 @@ This ensures the uri <code>triple</code> is not applied to the <code>inst</code>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; triple -&gt; inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}
-==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}]][...]@/sys/fail/456
+==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}]][...]@/sys/fail/612
 mtron&gt; *triple
-==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}]][...]@/sys/fail/456</code></pre>
+==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}]][...]@/sys/fail/612</code></pre>
 </div>
 </div>
 </td>
@@ -1702,7 +1719,7 @@ mtron&gt; {1,2,3,4,5,6}.triple()
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; sum -&gt; reduce?int&lt;=int{*}(){fold(0,plus(_))}
-==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{*}::T [reduce?rng=int&amp;dom=int{*}(noobj){fold(0,plus(id()))}]][...]@/sys/fail/458</code></pre>
+==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{*}::T [reduce?rng=int&amp;dom=int{*}(noobj){fold(0,plus(id()))}]][...]@/sys/fail/614</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1852,10 +1869,10 @@ primary_planets =&gt; &gt;&gt;planets.order(&gt;&gt;mass).take(1).&gt;&gt;name]<
 mtron&gt; nat::10
 ==&gt;nat::10
 mtron&gt; nat::-10
-==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/472
+==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/628
 mtron&gt; int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/478</code></pre>
+  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/634</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1878,10 +1895,10 @@ mtron&gt; age:125
 ==&gt;age:125
 mtron&gt; nat:125.as(age::T)
 ==&gt;fail::[nat:125 is not a is(lt(120))
-  nat:125=&gt;(==&gt;is(lt(120)))][...]@/sys/fail/520
+  nat:125=&gt;(==&gt;is(lt(120)))][...]@/sys/fail/676
 mtron&gt; 125.as(nat::T).as(age::T)
 ==&gt;fail::[nat::125 is not a is(lt(120))
-  nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/526</code></pre>
+  nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/682</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -1891,7 +1908,7 @@ mtron&gt; 125.as(nat::T).as(age::T)
 mtron&gt; personx -&gt; rec::T[?[name  =&gt; str::T,
                            age   =&gt; age::T,
                            knows =&gt; personx{*}::T]]
-==&gt;rec::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;personx{*}::T])]@personx{*}])]@personx{*}])]@personx{*}])]
+==&gt;rec::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;personx{*}::T])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]
 mtron&gt; marko -&gt; personx::[name=&gt;'marko',age=&gt;29,knows=&gt;!*grant]
 ==&gt;personx::[name=&gt;'marko',age=&gt;29,knows=&gt;!*grant]
 mtron&gt; grant -&gt; personx::[name=&gt;'grant',age=&gt;23,knows=&gt;!*marko]
@@ -2452,7 +2469,7 @@ mtron&gt; *x.&gt;&gt;b&gt;&gt;d&gt;&gt;1
 ==&gt;fail::[unable to determine inst function:
 	capitalize  =&gt; merge(',')   | [inst]
 	uri::T      =&gt; #::T         |  \_dom
-	uri::T     X=&gt; [',']        |  \_args][...]@/sys/fail/398</code></pre>
+	uri::T     X=&gt; [',']        |  \_args][...]@/sys/fail/554</code></pre>
 </div>
 </div>
 <h3 id="_pattern_matching_the_wildcards" class="discrete">Pattern Matching: The Wildcards</h3>

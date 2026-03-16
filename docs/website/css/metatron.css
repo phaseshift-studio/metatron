@@ -530,7 +530,7 @@ details {
     border-width: 1px;
     border-color: var(--light);
     margin: 1em;
-    padding:1em;
+    padding: 1em;
     color: var(--mred);
 }
 
@@ -568,7 +568,15 @@ details {
     font-size: 100%;
     display: block;
     padding: 0.5em;
+    overflow-y: scroll;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
 }
+
+.hljs::-webkit-scrollbar {
+    display: none;
+}
+
 
 .hljs-phaseshift-studio-header {
     color: var(--secondarycolor) !important;
