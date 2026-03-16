@@ -7,7 +7,7 @@
 :highlightjsdir: highlight
 :source-highlighter: ./highlight.js
 :highlightjs-languages: mtron,bash,json
-:stylesheet: ./css/metatron.css
+:stylesheet: ./src/css/metatron.css
 :highlightjs-theme: monokai
 :icons: font
 :icon-set: fas
@@ -27,10 +27,9 @@
 :title: metatron
 :nofooter:
 :noheader:
+:!example-caption:
 
-include_latex_macros::macros.tex[]
-
-include::macros.tex[]
+include::macros.adoc[]
 
 ++++
 include::header.html[]
@@ -84,7 +83,7 @@ include::header.html[]
       });
     </script>
 </div>
-<div id="custom-docs">
+<div id="custom-docs" class="custom-docs" style="padding: 20px;">
 ++++
 
 ++++

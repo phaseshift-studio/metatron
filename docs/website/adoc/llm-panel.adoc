@@ -19,7 +19,7 @@ Large language models (LLM) can be embedded in space. An LLM is a `rec` with the
 The following example demonstrates how to search for an appropriate LLM for the given task, then query it, and finally, have its memory of the interaction stored in space for future use as a stabilizing content.
 
 ++++
-<!-- 🐖
+<!-- 🐖 [SKIP]
 ai -> *ollama:+                            /
        .where([think=>true,size=>?<mB::5000.0]) /
        .order(>>?real<=rec(size).mult(-1.0))    /
@@ -57,7 +57,7 @@ The content and metadata associated with the chat interaction is stored at the s
 The memory is referenced again below, where it is both read (the previous interaction) and written to (the current interaction).
 
 ++++
-<!-- 🐖
+<!-- 🐖 [SKIP]
 *ollama:+                                  /
   .where([think=>true,size=>?<mB::5000.0]) /
   .order(>>?real<=rec(size).mult(-1.0))    /

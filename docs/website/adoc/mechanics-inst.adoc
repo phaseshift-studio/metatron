@@ -29,12 +29,9 @@ Every instruction maps a **left hand side** `obj` (`lhs`) to a **right hand side
 \end{align*}
 
 
-[tabs]
-====
-
-positional args::
-+
---
+[indent=0,subs="verbatim,attributes",role="primary"]
+.positional args
+=====
 
 [stem]
 ++++
@@ -55,12 +52,11 @@ band -> |inst?int{?}<=int(int::T,int::T){ is(and(gte(*0),lte(*1))) }
 
 <1> `3` is within the band `[2,8]` and thus, `3` is the result, satisfying the `inst` range `int{?}`.
 <2> `10` is not within the band `[2,8]` and thus, `noobj` is the result, satisfying the `inst` range `int{?}`.
+=====
 
---
-
-named args::
-+
---
+[indent=0,subs="verbatim,attributes",role="secondary"]
+.named args
+=====
 
 [stem]
 ++++
@@ -83,12 +79,11 @@ band -> |inst?int{?}<=int(min=>_,max=>_){ is(and(gte(*min),lte(*max))) }
 <2> When arguments are named, they can be written in any order.
 <3> The domain of `band` is `int`.
 Note where the error is thrown when `str['abc']` is provided.
+=====
 
---
-
-default args::
-+
---
+[indent=0,subs="verbatim,attributes",role="secondary"]
+.default args
+=====
 
 [stem]
 ++++
@@ -110,12 +105,11 @@ band -> |inst?int{?}<=int(min=>else(2),max=>else(8)){ is(and(gte(*min),lte(*max)
 <1> No `max` is provided, so the default value of `8` is used.
 <2> No `min` nor `max` is provided, so the defaults `2` and `8`, respectively are used.
 <3> When arguments are provided, the default values are not used.
+=====
 
---
-
-typed args::
-+
---
+[indent=0,subs="verbatim,attributes",role="secondary"]
+.typed args
+=====
 
 [stem]
 ++++
@@ -134,15 +128,13 @@ band -> |inst?int{?}<=int(min=>?nat::T,max=>?nat::T){ is(and(gte(*min),lte(*max)
 -->
 ++++
 
-
 <1> Argument name uniqueness does not consider query parameters.
 <2> The `?nat` query parameter requires the respective argument be some stem:[n \in \mathbb{N}].
+=====
 
---
-
-anonymous inst args::
-+
---
+[indent=0,subs="verbatim,attributes",role="secondary"]
+.anonymous args
+=====
 
 [stem]
 ++++
@@ -166,17 +158,16 @@ Finally, a degenerate anonymous `inst` with no specified variable frame is simpl
 -->
 ++++
 
-
 <1> The unnamed "band" `inst` is evaluated in line.
 <2> `min` and `max` are computed dynamically relative to the input.
 <3> The `inst` value is referencing undefined frame variables.
 <4> An anonymous `inst` is compiled to an `obj` filter-`inst`.
 <5> When arguments are embedded in the value, then the `inst` is simply `bcode`.
---
+=====
 
-contextual args::
-+
---
+[indent=0,subs="verbatim,attributes",role="secondary"]
+.contextualargs
+=====
 
 ++++
 <!-- 🐖 
@@ -185,13 +176,11 @@ is_divisible -> |is_divisble?bool<=int(by?int=>_)[mod(*by).eq(0)]
 10.is_divisible('abc')
 -->
 ++++
+=====
 
-
---
-
-dependent args::
-+
---
+[indent=0,subs="verbatim,attributes",role="secondary"]
+.dependent args
+=====
 
 [stem]
 ++++
@@ -203,18 +192,16 @@ If an argument's type is dependent on the value of another argument, then the ar
 ++++
 <!-- 🐖 
 band -> |band?int{?}<=int(min=>_,max=>is(gt(*min)).else(*min.plus(1)))[is(gte(*min)).is(lte(*max))]
-2.band(min=>1,max=>1)                 -[-- <1>
+2.band(min=>1,max=>1)                 [-- <1>
 -->
 ++++
 
-
 <1> ...
+=====
 
---
-
-refined type::
-+
---
+[indent=0,subs="verbatim,attributes",role="secondary"]
+.refined args
+=====
 
 ++++
 <!-- 🐖 
@@ -223,11 +210,7 @@ is_divisible -> |is_divisble?bool<=int(by?int=>is(neq(0)).else(print('error').ma
 10.is_divisible('abc')
 -->
 ++++
-
-
---
-====
-
+=====
 
 
 

@@ -169,7 +169,7 @@ class ProcessingState:
         ################################################################################
         if (self.section == "👨‍🌾" and
                 line.lstrip().startswith("<!--") and
-                line.find("🐖") != -1):
+                line.find("🐖") != -1 and "[SKIP]" not in line):
             self.section = "🐖"
             self.new_lines = self.new_lines[:-1]  # remove the ++++ wrapper
             self.code.append(remove_html_comment(line.strip()).replace("🐖", ""))
@@ -211,14 +211,15 @@ class ProcessingState:
             self.output,
             list,
         ), f"output must be a list, not {type(self.output)}, line: {line}"
-        pre_header = [""]
-        post_header = ["[source,mtron]", "----"]
+
+        pre_header = [] if "[NO_HEADER]" in self.output[0] else [""]
+        post_header = ["----"] if "[NO_HEADER]" in self.output[0] else ["[source,mtron]", "----"]
         new_output = []
         new_header = []
         for c in self.output:
             if c.startswith("[HEADER] "):
                 new_header.append(c.removeprefix("[HEADER] "))
-            else:
+            elif "[NO_HEADER]" not in c:
                 o = self._post_process_output(c, self.in_table)
                 if o is not None and o != "":
                     new_output.append(o)

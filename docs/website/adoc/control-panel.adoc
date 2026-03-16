@@ -80,16 +80,28 @@ ultimately dependent on the incoming lhs `obj`, where
 \]
 
 
-[discrete]
-=== switch behavior 
-
+[source,mtron,indent=0,subs="verbatim,attributes",role="primary"]
+.if/else
 ++++
-<!-- 🐖 
+<!-- 🐖 [NO_HEADER]
 {1,2,3,4,5}-<[?>2 => as(str::T) + ' greater than 2', /
               ?>5 => as(str::T) + ' greater than 5', /
               _   => as(str::T) + ' is something.']
 -->
 ++++
+
+[source,mtron,indent=0,subs="verbatim,attributes",role="secondary"]
+.switch
+++++
+<!-- 🐖 [NO_HEADER]
+1.plus(10)
+-->
+++++
+
+[discrete]
+=== switch behavior 
+
+
 
 [discrete]
 === If/Then/Else 

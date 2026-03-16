@@ -67,6 +67,7 @@
         <jakarta.version>2.2.0</jakarta.version>
         <jsoup.version>1.22.1</jsoup.version>
         <asciidoctor.version>3.2.0</asciidoctor.version>
+        <asciidoctorj.version>3.0.0</asciidoctorj.version>
         <exp4j.version>0.4.8</exp4j.version>
         <llama4j.version>0.1.1</llama4j.version>
         <ollama4j.version>1.1.6</ollama4j.version>
@@ -296,6 +297,15 @@
     </dependencies>
     <repositories>
         <repository>
+            <id>central</id>
+            <name>Maven Repository Switchboard</name>
+            <url>https://repo1.maven.org/maven2</url>
+            <layout>default</layout>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <repository>
             <id>sonatype-oss-snapshots</id>
             <url>https://central.sonatype.com/repository/maven-snapshots</url>
             <snapshots>
@@ -496,24 +506,24 @@
                             </resources>
                         </configuration>
                     </execution>
-                   <!-- <execution>
-                        <id>copy-resources-post-site</id>
-                        <phase>post-site</phase>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>${project.basedir}/docs/website</outputDirectory>
-                            <resources>
-                                <resource>
-                                    <directory>${project.build.directory}/temp</directory>
-                                    <includes>
-                                        <include>index.html</include>
-                                    </includes>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>-->
+                    <!-- <execution>
+                         <id>copy-resources-post-site</id>
+                         <phase>post-site</phase>
+                         <goals>
+                             <goal>copy-resources</goal>
+                         </goals>
+                         <configuration>
+                             <outputDirectory>${project.basedir}/docs/website</outputDirectory>
+                             <resources>
+                                 <resource>
+                                     <directory>${project.build.directory}/temp</directory>
+                                     <includes>
+                                         <include>index.html</include>
+                                     </includes>
+                                 </resource>
+                             </resources>
+                         </configuration>
+                     </execution>-->
                 </executions>
             </plugin>
             <!--<plugin>
@@ -566,6 +576,20 @@
                 <groupId>org.asciidoctor</groupId>
                 <artifactId>asciidoctor-maven-plugin</artifactId>
                 <version>${asciidoctor.version}</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.asciidoctor</groupId>
+                        <artifactId>asciidoctorj</artifactId>
+                        <version>${asciidoctorj.version}</version>
+                        <scope>compile</scope>
+                    </dependency>
+                    <dependency>
+                        <groupId>com.bmuschko</groupId>
+                        <artifactId>asciidoctorj-tabbed-code-extension</artifactId>
+                        <version>0.3</version>
+                        <scope>runtime</scope>
+                    </dependency>
+                </dependencies>
                 <configuration>
                     <sourceDirectory>${project.build.directory}/temp</sourceDirectory>
                     <sourceDocumentName>index.adoc</sourceDocumentName>
