@@ -68,6 +68,7 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
     private final ObjectMap<fURI, Set<fURI>> smallToBigRoutes = new ObjectMap<>();
     @ObjFieldReflection
     private final ObjectMap<fURI, fURI> bigToSmallRoutes = new ObjectMap<>();
+    private final ObjectMap<fURI, fURI> prefixToVID = new ObjectMap<>();
     private fURI primary = M_ISA_TID;
 
     public BasicRouter(final fURI host, final fURI vid) {
@@ -125,12 +126,24 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
                 set.add(big.basePath());
                 return set;
             } else {
+                if (!v.contains(big.basePath()))
+                    LOG.warn("multiple rewrites for {{b}}%s{{X}}: {{b}}%s {{g}}+ {{b}}%s{{X}} (consider prefixing import)", small, big, v.toString().replace("[", "").replaceAll("]", ""));
                 v.add(big.basePath());
                 return v;
             }
         });
         this.bigToSmallRoutes.putRaw(big, small);
     }
+
+    @Override
+    public void registerPrefix(final fURI prefix, final fURI vid) {
+        final fURI existing =this.prefixToVID.getRaw(prefix);
+        if(existing != null && !Objects.equals(vid,existing))
+            throw MTronException.of("%s prefix already bound: %s + %s", prefix, vid, existing);
+        this.prefixToVID.putRaw(prefix, vid);
+        this.at(uri(PREFIX), this.prefixToVID.toRec(), MUTABLE);
+    }
+
 
     @Override
     public fURI rewrite(final fURI furi, final boolean big) {
@@ -219,13 +232,25 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
             return noobjSpace.single();
     }
 
+    private fURI alignPrefix(final fURI vid) {
+        final fURI readableVID = vid.one();
+        if (readableVID.hasScheme()) {
+            final fURI prefixed = this.prefixToVID.getRaw(f(readableVID.scheme() + ":"));
+            if (null != prefixed) {
+                final fURI aligned = prefixed.extend(readableVID.scheme(null));
+                return aligned;
+            }
+        }
+        return readableVID;
+    }
+
     @Override
     public Obj read(final fURI vid) {
         if (null == vid || NOOBJ.equals(vid.basePath()) || vid.isZero() || READ_AS_NOOBJ.contains(vid))
             return noobj();
         // if (vid.hasAuthority())
         //   return this.server().sendRecv((a, b) -> a.authority().matches(b.remoteHost().authority()), vid, from_(vid.localize().toUri()).tryToInst());
-        final fURI readableVID = vid.one();
+        final fURI readableVID = this.alignPrefix(vid);
         /// ///////////////////
         if (readableVID.isGeneric())
             return T(readableVID);
@@ -251,7 +276,7 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
             this.server().send((a, b) -> a.authority().matches(b.remoteHost().authority()), vid, start_(obj.vid(null)).to_(vid.localize().toUri()).tryToInst());
             return obj;
         }*/
-        final fURI writableVID = vid.one();
+        final fURI writableVID = this.alignPrefix(vid);
         /// ///////////////
         final Space space = this.getSpace(writableVID);
         LOG.trace("writing %s {{g}}=>{{b}} %s{{X}} in %s", obj, vid, space);
@@ -260,7 +285,8 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
 
     @Override
     public boolean hasSpaceFor(final fURI vid) {
-        return this.spaces().jvm().values().stream().map(Obj::<Space>as).anyMatch(s -> vid.test(s.pattern()));
+        final fURI alignedVID = this.alignPrefix(vid);
+        return this.spaces().jvm().values().stream().map(Obj::<Space>as).anyMatch(s -> alignedVID.test(s.pattern()));
     }
 
     @Override

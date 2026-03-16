@@ -119,6 +119,8 @@ public interface Router extends Space {
     void removeSpace(final fURI vid);
 
     void registerRewrite(final fURI small, final fURI big);
+    
+    void registerPrefix(final fURI prefix, final fURI vid);
 
     fURI rewrite(final fURI furi, final boolean big);
 

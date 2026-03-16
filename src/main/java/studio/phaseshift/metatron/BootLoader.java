@@ -41,7 +41,8 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.Map;
+import java.util.ServiceLoader;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Stream;
@@ -124,7 +125,6 @@ public class BootLoader implements Rec, Feature.SelfClone {
 
     public static void load(final Rec args) {
         if (BOOTING) {
-
             LOG.info("parsed boot args:\n%s", args);
             if (args.has(BOOT))
                 args.at(uri(BOOT), f(Paths.get("").toAbsolutePath().normalize().toString()).extend(args.at(BOOT).uriValue()).toUri(), MUTABLE);
@@ -246,7 +246,10 @@ public class BootLoader implements Rec, Feature.SelfClone {
                 .filter(p -> f(p.type().getAnnotation(InstSet.JREService.class).tid()).test(tid));
     }
 
-    public static Stream<InstSet> importInstSet(final fURI tid) {
+    public static Stream<InstSet> importInstSet(final fURI tid, final fURI prefix) {
+        if (null != prefix) {
+            Router.global().registerPrefix(prefix, tid);
+        }
         return BootLoader.loadInstSetProvider(tid).map(ServiceLoader.Provider::get);
     }
 }

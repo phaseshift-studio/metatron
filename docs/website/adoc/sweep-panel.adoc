@@ -358,6 +358,7 @@ Obj data = Router.readFromSpace(f("db:users/1"));
 
 The `*` is console syntax only. In Java, just use the URI directly.
 
+[discrete]
 === Common Mistake #2: Calling directReader()
 
 **Wrong:**
@@ -462,7 +463,7 @@ This instruction:
 Result: `z2m/{friendly_name}/set/state`
 
 [discrete]
-=== Colored Output: Making It Pretty
+==== Colored Output: Making It Pretty
 
 Print with color codes:
 

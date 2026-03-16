@@ -589,9 +589,9 @@ details {
 .hljs-mtron-int,
 .hljs-mtron-str,
 .hljs-mtron-bool,
-.hljs-mtron-furi-query,
 .hljs-mtron-sugar-inst,
 .hljs-mtron-query,
+.hljs-mtron-dom-rng-query,
 .hljs-mtron-sys-furi,
 .hljs-mtron-log-warn {
     color: var(--myellow);

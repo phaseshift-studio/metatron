@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.isa.AbstractRouterTest;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.NoObj;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.router.BasicRouter;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -33,6 +34,10 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class basicRouterTest extends AbstractRouterTest {
+    
+    public basicRouterTest() {
+        super(new BasicRouter(f("ws://localhost:" + generatePort()), f("/m/test")));
+    }
     
     @Test
     public void testCloseSpace() {
