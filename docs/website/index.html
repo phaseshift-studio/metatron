@@ -17,6 +17,12 @@
 </head>
 <body class="article">
 <div id="content" style="max-width: 100%;">
+<div class="paragraph">
+<p>include_latex_macros::macros.tex[]</p>
+</div>
+<div class="paragraph">
+<p>Unresolved directive in index.adoc - include::macros.tex[]</p>
+</div>
 <!--
   ~ Metatron: A Distributed Computing Language and Virtual Machine
   ~  Copyright (C) 2025- PhaseShift Studio, LLC
@@ -385,8 +391,8 @@ bin/metatron</code></pre>
         <div class="row mt-4 gap-4">
               <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-0" aria-expanded="false" aria-controls="card-0">Data Manipulation Techniques</button>
               <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-1" aria-expanded="false" aria-controls="card-1">The Function of an Instruction</button>
+              <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-3" aria-expanded="false" aria-controls="card-3">Flow Control</button>
               <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-2" aria-expanded="false" aria-controls="card-2">Structured Types</button>
-              <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-3" aria-expanded="false" aria-controls="card-3">Twisted Tangled Graphs</button>
         </div>
         <div class="row mt-3 gap-3">
               <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-4" aria-expanded="false" aria-controls="card-4">A Seat at the Relational Table</button>
@@ -529,11 +535,11 @@ For example, <code>*&lt;0&gt;</code> references the first argument, <code>*&lt;1
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
-mtron&gt; band -&gt; |band?int{?}&lt;=int(int::T,int::T){ is(and(gte(*0),lte(*1)) )}
-==&gt;band?rng=int{?}&amp;dom=int(int::T,int::T){is(and(gte(*&lt;0&gt;),lte(*&lt;1&gt;)))}
-mtron&gt; 3.band(2,8)                                ​1​ --]
+mtron&gt; band -&gt; |inst?int{?}&lt;=int(int::T,int::T){ is(and(gte(*0),lte(*1))) }
+==&gt;inst?rng=int{?}&amp;dom=int(int::T,int::T){is(and(gte(*&lt;0&gt;),lte(*&lt;1&gt;)))}
+mtron&gt; 3.band(2,8)                                ​1​
 ==&gt;3
-mtron&gt; 10.band(2,8)                               ​2​ --]</code></pre>
+mtron&gt; 10.band(2,8)                               ​2​</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -566,8 +572,8 @@ mtron&gt; 10.band(2,8)                               ​2​ --]</code></pre>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
-mtron&gt; band -&gt; |band?int{?}&lt;=int(min=&gt;_,max=&gt;_){ is(and(gte(*min),lte(*max))) }
-==&gt;band?rng=int{?}&amp;dom=int(min=&gt;id(),max=&gt;id()){is(and(gte(*min),lte(*max)))}
+mtron&gt; band -&gt; |inst?int{?}&lt;=int(min=&gt;_,max=&gt;_){ is(and(gte(*min),lte(*max))) }
+==&gt;inst?rng=int{?}&amp;dom=int(min=&gt;id(),max=&gt;id()){is(and(gte(*min),lte(*max)))}
 mtron&gt; 3.band(2,8)                           ​1​
 ==&gt;3
 mtron&gt; 3.band(max=&gt;8,min=&gt;2)                 ​2​
@@ -611,8 +617,8 @@ This makes <code>else</code> useful for expressing <a href="https://en.wikipedia
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
-mtron&gt; band -&gt; |band?int{?}&lt;=int(min=&gt;else(2),max=&gt;else(8)){ is(and(gte(*min),lte(*max))) }
-==&gt;band?rng=int{?}&amp;dom=int(min=&gt;else(2),max=&gt;else(8)){is(and(gte(*min),lte(*max)))}
+mtron&gt; band -&gt; |inst?int{?}&lt;=int(min=&gt;else(2),max=&gt;else(8)){ is(and(gte(*min),lte(*max))) }
+==&gt;inst?rng=int{?}&amp;dom=int(min=&gt;else(2),max=&gt;else(8)){is(and(gte(*min),lte(*max)))}
 mtron&gt; 1.band(min=&gt;1)                        ​1​
 ==&gt;1
 mtron&gt; 10.band()                             ​2​
@@ -658,8 +664,8 @@ This is a consequence of attaching a type query processor to the router frame st
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
 mtron&gt; nat -&gt; int::T[?&gt;0]
 ==&gt;int::T[is(gt(0))]
-mtron&gt; band -&gt; |band?int{?}&lt;=int(min=&gt;?nat::T,max=&gt;?nat::T){ is(and(gte(*min),lte(*max))) }
-==&gt;band?rng=int{?}&amp;dom=int(min=&gt;isa(int::T[is(gt(0))]@nat),max=&gt;isa(int::T[is(gt(0))]@nat)){is(and(gte(*min),lte(*max)))}
+mtron&gt; band -&gt; |inst?int{?}&lt;=int(min=&gt;?nat::T,max=&gt;?nat::T){ is(and(gte(*min),lte(*max))) }
+==&gt;inst?rng=int{?}&amp;dom=int(min=&gt;isa(int::T[is(gt(0))]@nat),max=&gt;isa(int::T[is(gt(0))]@nat)){is(and(gte(*min),lte(*max)))}
 mtron&gt; 15.band(10,20)              ​1​
 ==&gt;15
 mtron&gt; -15.band(-20,-10)           ​2​</code></pre>
@@ -703,12 +709,12 @@ Finally, a degenerate anonymous <code>inst</code> with no specified variable fra
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
 mtron&gt; 10.(min=&gt;2,max=&gt;8){ is(and(gte(*min),lte(*max))) }                ​1​
 ==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/94
+	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/178
 mtron&gt; 10.(min=&gt;minus(1),max=&gt;plus(1)){ is(and(gte(*min),lte(*max))) }   ​2​
 ==&gt;10
 mtron&gt; 10.(){ is(and(gte(*min),lte(*max))) }                             ​3​
 ==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/96
+	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/180
 mtron&gt; 10.is(and(gte(minus(1)),lte(plus(1))))                            ​5​
 ==&gt;10</code></pre>
 </div>
@@ -750,11 +756,11 @@ mtron&gt; 10.is(and(gte(minus(1)),lte(plus(1))))                            ​5
 mtron&gt; is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;_)[mod(*by).eq(0)]
 ==&gt;fail::[is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;_)[mod(*by).eq(0)]
                                       ^ end of input expected
-][...]@/sys/fail/98
+][...]@/sys/fail/182
 mtron&gt; 10.is_divisible(2)
-==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/100
+==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/184
 mtron&gt; 10.is_divisible('abc')
-==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/102</code></pre>
+==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/186</code></pre>
 </div>
 </div>
 </div>
@@ -778,7 +784,7 @@ mtron&gt; 10.is_divisible('abc')
 mtron&gt; band -&gt; |band?int{?}&lt;=int(min=&gt;_,max=&gt;is(gt(*min)).else(*min.plus(1)))[is(gte(*min)).is(lte(*max))]
 ==&gt;fail::[band -&gt; |band?int{?}&lt;=int(min=&gt;_,max=&gt;is(gt(*min)).else(*min.plus(1)))[is(gte(*min)).is(lte(*max))]
                                                                       ^ end of input expected
-][...]@/sys/fail/104
+][...]@/sys/fail/188
 mtron&gt; 2.band(min=&gt;1,max=&gt;1)                 -​1​</code></pre>
 </div>
 </div>
@@ -803,11 +809,11 @@ mtron&gt; 2.band(min=&gt;1,max=&gt;1)                 -​1​</code></pre>
 mtron&gt; is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;is(neq(0)).else(print('error').map(1)))[mod(*by).eq(0)]
 ==&gt;fail::[is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;is(neq(0)).else(print('error').map(1)))[mod(*by).eq(0)]
                                       ^ end of input expected
-][...]@/sys/fail/106
+][...]@/sys/fail/190
 mtron&gt; 10.is_divisible(2)
-==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/108
+==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/192
 mtron&gt; 10.is_divisible('abc')
-==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/110</code></pre>
+==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/194</code></pre>
 </div>
 </div>
 </div>
@@ -845,9 +851,9 @@ This ensures the uri <code>triple</code> is not applied to the <code>inst</code>
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
 mtron&gt; triple -&gt; inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}
-==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}]][...]@/sys/fail/112
+==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}]][...]@/sys/fail/196
 mtron&gt; *triple
-==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}]][...]@/sys/fail/112</code></pre>
+==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}]][...]@/sys/fail/196</code></pre>
 </div>
 </div>
 </td>
@@ -888,7 +894,7 @@ mtron&gt; {1,2,3,4,5,6}.triple()
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
 mtron&gt; sum -&gt; reduce?int&lt;=int{*}(){fold(0,plus(_))}
-==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{*}::T [reduce?rng=int&amp;dom=int{*}(noobj){fold(0,plus(id()))}]][...]@/sys/fail/114</code></pre>
+==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{*}::T [reduce?rng=int&amp;dom=int{*}(noobj){fold(0,plus(id()))}]][...]@/sys/fail/198</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1039,10 +1045,10 @@ mtron&gt; nat -&gt; int::T[?&gt;0]
 mtron&gt; nat::10
 ==&gt;nat::10
 mtron&gt; nat::-10
-==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/128
+==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/212
 mtron&gt; int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/134</code></pre>
+  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/218</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1067,10 +1073,10 @@ mtron&gt; age:125
 ==&gt;age:125
 mtron&gt; nat:125.as(age::T)
 ==&gt;fail::[nat:125 is not a is(lt(120))
-  nat:125=&gt;(==&gt;is(lt(120)))][...]@/sys/fail/176
+  nat:125=&gt;(==&gt;is(lt(120)))][...]@/sys/fail/260
 mtron&gt; 125.as(nat::T).as(age::T)
 ==&gt;fail::[nat::125 is not a is(lt(120))
-  nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/182</code></pre>
+  nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/266</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -1191,6 +1197,153 @@ mtron&gt; *#.as[name      =&gt; _,
 </div>
 </div>
 </div>
+<div class="collapse" id="card-3">
+<h2 id="_control_structures" class="discrete">Control Structures</h2>
+<div class="paragraph">
+<p>A fundamental component of general purpose computing is <em>branching</em>. This means deciding at some point in time whether
+the process should continue to execute instructions on path A or path B. Most programming language enable branching
+via constructs within the language itself and existing outside the referential scope of the data itself.</p>
+</div>
+<div class="paragraph">
+<p>Common branching motifs include:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>if/then/else</strong></p>
+</li>
+<li>
+<p><strong>switch/case</strong></p>
+</li>
+<li>
+<p><strong>for</strong></p>
+</li>
+<li>
+<p><strong>while</strong></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>mtron has no language construct for branching. Instead, branching is realized through the use of the <strong>split</strong> instruction.
+The <code>split</code> instruction is the addition operator of the mtron <code>inst</code> ring. As such, it forms an abelian group. The significance
+of its distributivity with the ring&#8217;s multiplicative operator (<code>apply</code>, sugar&#8217;d <code>.</code>) can not be overstated. However, a
+detailed discussion of this property will be discussed elsewhere. For now, when seen in isolation as a commutative group,
+the following axioms hold.
+\[
+\begin{align}
+&amp;\tt{split}(ca,noobj)           &amp;=&amp;\; \tt{ca}                      &amp; (\text{zero})\\
+&amp;\tt{split}(ca,cb)           &amp;=&amp;\; \tt{split}(cb,ca)            &amp; (\text{commutative})\\
+&amp;\tt{split}(ca,{\text{-}ca}) &amp;=&amp;\; \tt{noobj}                   &amp; (\text{inverse})\\
+&amp;\tt{split}(ca,split(cb,cd)) &amp;=&amp;\; \tt{split(split(ca,cb),cd)}  &amp; (\text{associative}).\\
+\end{align}
+\]</p>
+</div>
+<div class="paragraph">
+<p>When a <code>poly</code> is an argument to <code>split</code>, a new <code>poly</code> is constructed as detailed below.</p>
+</div>
+<div class="paragraph">
+<p>\[
+\tt{obj} \cdot \tt{split}(\tt{rec}) \equiv \left[
+\begin{align}
+\tt{obj} \cdot \tt{dom({rec}{0})}   &amp; \Rightarrow &amp; \tt{obj} \cdot \tt{rng({rec}_{0})} \\
+\tt{obj} \cdot \tt{dom({rec}_{1})}  &amp; \Rightarrow &amp; \tt{obj} \cdot \tt{rng({rec}_{1})} \\
+\tt{obj} \cdot \tt{dom({rec}_{2})}  &amp; \Rightarrow &amp; \tt{obj} \cdot \tt{rng({rec}_{2})} \\
+\vdots                              &amp; \Rightarrow &amp; \vdots \\
+\tt{obj} \cdot \tt{dom({rec}_{n})}  &amp; \Rightarrow &amp; \tt{obj} \cdot \tt{rng({rec}_{n})}
+\end{align}
+\right]
+\]</p>
+</div>
+<div class="paragraph">
+<p>\[
+\tt{obj} \cdot \tt{split}(\tt{lst}) \equiv \left[
+\begin{align}
+\tt{obj} \cdot &amp; \tt{dom({lst}_{0})} \\
+\tt{obj} \cdot &amp; \tt{rng({lst}_{1})} \\
+\vdots &amp;\\
+\tt{obj} \cdot &amp; \tt{rng({lst}_{n})} \\
+\end{align}
+\right]
+\]</p>
+</div>
+<div class="paragraph">
+<p>These constructions appear at odds with what is required for branching&#8201;&#8212;&#8201;namely, discimination. The ability to choose one branch of code over another
+is entirely absent in the semantics of <code>split</code>. Every relation in the <code>rec</code> and every element in <code>lst</code> has the lhs <code>obj</code>
+applied to it&#8201;&#8212;&#8201;indiscriminately. Selective discrimination is a consequence of the abelian monoid (commutative/associative) and zero element (<code>noobj</code>) formed by <code>split</code>.
+Given that a <code>rec</code> relation can not have a <code>noobj</code> domain nor range, then selective branching is achieved programmatically through <em>filtering</em>.
+For instance,</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
+mtron&gt; [a=&gt;1,b=&gt;noobj,noobj=&gt;3]      ​1​
+==&gt;[a=&gt;1]
+mtron&gt; {1,2}-&lt;[gte(2)      =&gt; +3]    ​2​
+==&gt;[false=&gt;4]
+==&gt;[true=&gt;5]
+mtron&gt; {1,2}-&lt;[is(gte(2))  =&gt; +3]    ​3​
+==&gt;[=&gt;]
+==&gt;[2=&gt;5]</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>all <code>poly</code> relations are unlabeled binary edges (half-edges are <code>monos</code>).</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td><code>gte?bool&lt;=int(int::T)</code> is a many-to-one function that stages a binary switch.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td><code>is?int{?}&lt;=int(bool::T)</code> is the filtering instruction as made explicit in range coefficient: <code>int{?} = int{0,1}</code>.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>While <code>gte?bool&lt;=int(int::T)</code> yields a <code>bool</code>, <code>is?int{?}&lt;=int(bool::T)</code> yields the requisite <em>switch</em> behavior in that the lhs <code>obj</code>
+is either allowed to pass or not depending on the <code>bool</code> argument. Given <code>inst</code> evaluation semantics, the value of the <code>bool::T</code> argument of <code>is</code> is
+ultimately dependent on the incoming lhs <code>obj</code>, where</p>
+</div>
+<div class="paragraph">
+<p>\[
+\tt{obj} \cdot \tt{gte}(\_ ) \cdot \tt{is}(\_ ) &#8658; obj\{?\} \in \{\tt{obj},\tt{noobj}\}.
+\]</p>
+</div>
+<h3 id="_switch_behavior" class="discrete">switch behavior</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
+mtron&gt; {1,2,3,4,5}-&lt;[?&gt;2 =&gt; as(str::T) + ' greater than 2',
+                     ?&gt;5 =&gt; as(str::T) + ' greater than 5',
+                     _   =&gt; as(str::T) + ' is something.']
+==&gt;[1=&gt;'1 is something.']
+==&gt;[2=&gt;'2 is something.']
+==&gt;[3=&gt;{'3 greater than 2','3 is something.'}]
+==&gt;[4=&gt;{'4 greater than 2','4 is something.'}]
+==&gt;[5=&gt;{'5 greater than 2','5 is something.'}]</code></pre>
+</div>
+</div>
+<h3 id="_ifthenelse" class="discrete">If/Then/Else</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
+mtron&gt; {1,2,3,4,5}-&lt;[?&gt;2 =&gt; as(str::T) + ' greater than 2',
+                     ?&gt;5 =&gt; as(str::T) + ' greater than 5',
+                     _   =&gt; as(str::T) + ' is something.'].&gt;&gt;
+==&gt;1 is something.
+==&gt;2 is something.
+==&gt;3 greater than 2
+==&gt;3 is something.
+==&gt;4 greater than 2
+==&gt;4 is something.
+==&gt;5 greater than 2
+==&gt;5 is something.</code></pre>
+</div>
+</div>
+</div>
 <div class="collapse" id="card-5">
 <h2 id="_large_language_models" class="discrete">Large Language Models</h2>
 <div class="paragraph">
@@ -1216,82 +1369,82 @@ mtron&gt; */m/llm/model
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;
 mtron&gt; *ollama:+
 ==&gt;model::[
+ provider=&gt;!*/sys/space/ollama,
+ skill   =&gt;[completion,tools],
  size    =&gt;gB::48.19,
- skill   =&gt;[completion,tools],
- provider=&gt;!*/sys/space/ollama,
- think   =&gt;false,
+ host    =&gt;!*/sys/space/ollama/host,
  name    =&gt;qwen3-coder-next:latest,
- host    =&gt;!*/sys/space/ollama/host]@ollama:qwen3-coder-next:latest
+ think   =&gt;false]@ollama:qwen3-coder-next:latest
 ==&gt;model::[
- size    =&gt;gB::0.00,
- skill   =&gt;[completion,tools,thinking],
  provider=&gt;!*/sys/space/ollama,
- think   =&gt;true,
+ skill   =&gt;[completion,tools,thinking],
+ size    =&gt;gB::0.00,
+ host    =&gt;!*/sys/space/ollama/host,
  name    =&gt;&lt;deepseek-v3.2:cloud&gt;,
- host    =&gt;!*/sys/space/ollama/host]@ollama:deepseek-v3.2:cloud
+ think   =&gt;true]@ollama:deepseek-v3.2:cloud
 ==&gt;model::[
- size    =&gt;gB::4.87,
- skill   =&gt;[completion,tools,thinking],
  provider=&gt;!*/sys/space/ollama,
- think   =&gt;true,
+ skill   =&gt;[completion,tools,thinking],
+ size    =&gt;gB::4.87,
+ host    =&gt;!*/sys/space/ollama/host,
  name    =&gt;qwen3:8b,
- host    =&gt;!*/sys/space/ollama/host]@ollama:qwen3:8b
+ think   =&gt;true]@ollama:qwen3:8b
 ==&gt;model::[
+ provider=&gt;!*/sys/space/ollama,
+ skill   =&gt;[completion],
  size    =&gt;gB::8.37,
- skill   =&gt;[completion],
- provider=&gt;!*/sys/space/ollama,
- think   =&gt;false,
+ host    =&gt;!*/sys/space/ollama/host,
  name    =&gt;deepcoder:latest,
- host    =&gt;!*/sys/space/ollama/host]@ollama:deepcoder:latest
+ think   =&gt;false]@ollama:deepcoder:latest
 ==&gt;model::[
- size    =&gt;gB::4.41,
+ provider=&gt;!*/sys/space/ollama,
  skill   =&gt;[completion,vision],
- provider=&gt;!*/sys/space/ollama,
- think   =&gt;false,
+ size    =&gt;gB::4.41,
+ host    =&gt;!*/sys/space/ollama/host,
  name    =&gt;llava:latest,
- host    =&gt;!*/sys/space/ollama/host]@ollama:llava:latest
+ think   =&gt;false]@ollama:llava:latest
 ==&gt;model::[
+ provider=&gt;!*/sys/space/ollama,
+ skill   =&gt;[completion,tools,thinking],
  size    =&gt;gB::4.87,
- skill   =&gt;[completion,tools,thinking],
- provider=&gt;!*/sys/space/ollama,
- think   =&gt;true,
+ host    =&gt;!*/sys/space/ollama/host,
  name    =&gt;qwen3:latest,
- host    =&gt;!*/sys/space/ollama/host]@ollama:qwen3:latest
+ think   =&gt;true]@ollama:qwen3:latest
 ==&gt;model::[
+ provider=&gt;!*/sys/space/ollama,
+ skill   =&gt;[completion,tools,thinking],
  size    =&gt;gB::12.85,
- skill   =&gt;[completion,tools,thinking],
- provider=&gt;!*/sys/space/ollama,
- think   =&gt;true,
+ host    =&gt;!*/sys/space/ollama/host,
  name    =&gt;gpt-oss:latest,
- host    =&gt;!*/sys/space/ollama/host]@ollama:gpt-oss:latest
+ think   =&gt;true]@ollama:gpt-oss:latest
 ==&gt;model::[
- size    =&gt;gB::0.00,
+ provider=&gt;!*/sys/space/ollama,
  skill   =&gt;[completion,tools,thinking],
- provider=&gt;!*/sys/space/ollama,
- think   =&gt;true,
+ size    =&gt;gB::0.00,
+ host    =&gt;!*/sys/space/ollama/host,
  name    =&gt;&lt;minimax-m2.5:cloud&gt;,
- host    =&gt;!*/sys/space/ollama/host]@ollama:minimax-m2.5:cloud
+ think   =&gt;true]@ollama:minimax-m2.5:cloud
 ==&gt;model::[
+ provider=&gt;!*/sys/space/ollama,
+ skill   =&gt;[completion],
  size    =&gt;gB::0.72,
- skill   =&gt;[completion],
- provider=&gt;!*/sys/space/ollama,
- think   =&gt;false,
+ host    =&gt;!*/sys/space/ollama/host,
  name    =&gt;deepseek-coder:latest,
- host    =&gt;!*/sys/space/ollama/host]@ollama:deepseek-coder:latest
+ think   =&gt;false]@ollama:deepseek-coder:latest
 ==&gt;model::[
- size    =&gt;gB::0.59,
+ provider=&gt;!*/sys/space/ollama,
  skill   =&gt;[completion],
- provider=&gt;!*/sys/space/ollama,
- think   =&gt;false,
+ size    =&gt;gB::0.59,
+ host    =&gt;!*/sys/space/ollama/host,
  name    =&gt;tinyllama:latest,
- host    =&gt;!*/sys/space/ollama/host]@ollama:tinyllama:latest
+ think   =&gt;false]@ollama:tinyllama:latest
 ==&gt;model::[
- size    =&gt;gB::4.34,
- skill   =&gt;[completion,tools],
  provider=&gt;!*/sys/space/ollama,
- think   =&gt;false,
+ skill   =&gt;[completion,tools],
+ size    =&gt;gB::4.34,
+ host    =&gt;!*/sys/space/ollama/host,
  name    =&gt;llama3-groq-tool-use:latest,
- host    =&gt;!*/sys/space/ollama/host]@ollama:llama3-groq-tool-use:latest</code></pre>
+ think   =&gt;false]@ollama:llama3-groq-tool-use:latest</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1305,12 +1458,12 @@ mtron&gt; ai -&gt; *ollama:+
               .order(&gt;&gt;?real&lt;=rec(size).mult(-1.0))
               .take(1)
 ==&gt;model::[
- size    =&gt;gB::4.87,
- skill   =&gt;[completion,tools,thinking],
  provider=&gt;!*/sys/space/ollama,
- think   =&gt;true,
+ skill   =&gt;[completion,tools,thinking],
+ size    =&gt;gB::4.87,
+ host    =&gt;!*/sys/space/ollama/host,
  name    =&gt;qwen3:8b,
- host    =&gt;!*/sys/space/ollama/host]@ollama:qwen3:8b
+ think   =&gt;true]@ollama:qwen3:8b
 mtron&gt; ai/think  -&gt; false
 ==&gt;false
 mtron&gt; ai/memory -&gt; /usr/mem
@@ -1374,7 +1527,7 @@ mtron&gt; *ollama:+
          .take(1)
          .plus?rec&lt;=rec([memory=&gt;/usr/mem])
          .chat("What was the special word I needed you to recall?")
-==&gt;The special word you asked me to recall was **"metatron"**. Let me know if you need further details or assistance! 😊</code></pre>
+==&gt;The special word you asked me to recall was **"metatron"**. Let me know if you need further details!</code></pre>
 </div>
 </div>
 </div>
@@ -1528,7 +1681,7 @@ mtron&gt; "a b c".-&lt;' '.map(capitalize).&gt;-','
 ==&gt;fail::[unable to determine inst function:
 	capitalize  =&gt; merge(',')   | [inst]
 	uri::T      =&gt; #::T         |  \_dom
-	uri::T     X=&gt; [',']        |  \_args][...]@/sys/fail/80</code></pre>
+	uri::T     X=&gt; [',']        |  \_args][...]@/sys/fail/164</code></pre>
 </div>
 </div>
 <h3 id="_pattern_matching_the_wildcards" class="discrete">Pattern Matching: The Wildcards</h3>

@@ -1,0 +1,103 @@
+[discrete]
+== Control Structures
+
+A fundamental component of general purpose computing is _branching_. This means deciding at some point in time whether
+the process should continue to execute instructions on path A or path B. Most programming language enable branching
+via constructs within the language itself and existing outside the referential scope of the data itself.
+
+Common branching motifs include: 
+
+* **if/then/else**
+* **switch/case**
+* **for**
+* **while**
+
+
+mtron has no language construct for branching. Instead, branching is realized through the use of the *split* instruction.
+The `split` instruction is the addition operator of the mtron `inst` ring. As such, it forms an abelian group. The significance
+of its distributivity with the ring's multiplicative operator (`apply`, sugar'd `.`) can not be overstated. However, a 
+detailed discussion of this property will be discussed elsewhere. For now, when seen in isolation as a commutative group,
+the following axioms hold.
+\[
+\begin{align}
+&\tt{split}(ca,noobj)           &=&\; \tt{ca}                      & (\text{zero})\\
+&\tt{split}(ca,cb)           &=&\; \tt{split}(cb,ca)            & (\text{commutative})\\
+&\tt{split}(ca,{\text{-}ca}) &=&\; \tt{noobj}                   & (\text{inverse})\\
+&\tt{split}(ca,split(cb,cd)) &=&\; \tt{split(split(ca,cb),cd)}  & (\text{associative}).\\
+\end{align}
+\]
+
+When a `poly` is an argument to `split`, a new `poly` is constructed as detailed below.
+
+\[
+\tt{obj} \cdot \tt{split}(\tt{rec}) \equiv \left[
+\begin{align}
+\tt{obj} \cdot \tt{dom({rec}{0})}   & \Rightarrow & \tt{obj} \cdot \tt{rng({rec}_{0})} \\
+\tt{obj} \cdot \tt{dom({rec}_{1})}  & \Rightarrow & \tt{obj} \cdot \tt{rng({rec}_{1})} \\
+\tt{obj} \cdot \tt{dom({rec}_{2})}  & \Rightarrow & \tt{obj} \cdot \tt{rng({rec}_{2})} \\
+\vdots                              & \Rightarrow & \vdots \\
+\tt{obj} \cdot \tt{dom({rec}_{n})}  & \Rightarrow & \tt{obj} \cdot \tt{rng({rec}_{n})}
+\end{align}
+\right]
+\]
+
+\[
+\tt{obj} \cdot \tt{split}(\tt{lst}) \equiv \left[
+\begin{align}
+\tt{obj} \cdot & \tt{dom({lst}_{0})} \\
+\tt{obj} \cdot & \tt{rng({lst}_{1})} \\
+\vdots &\\
+\tt{obj} \cdot & \tt{rng({lst}_{n})} \\
+\end{align}
+\right]
+\]
+
+These constructions appear at odds with what is required for branching -- namely, discimination. The ability to choose one branch of code over another
+is entirely absent in the semantics of `split`. Every relation in the `rec` and every element in `lst` has the lhs `obj`
+applied to it -- indiscriminately. Selective discrimination is a consequence of the abelian monoid (commutative/associative) and zero element (`noobj`) formed by `split`. 
+Given that a `rec` relation can not have a `noobj` domain nor range, then selective branching is achieved programmatically through _filtering_.
+For instance,
+
+++++
+<!-- 🐖 
+[a=>1,b=>noobj,noobj=>3]      [-- <1>
+{1,2}-<[gte(2)      => +3]    [-- <2>
+{1,2}-<[is(gte(2))  => +3]    [-- <3>
+-->
+++++
+
+<1> all `poly` relations are unlabeled binary edges (half-edges are `monos`). 
+<2> `gte?bool\<=int(int::T)` is a many-to-one function that stages a binary switch.
+<3> `is?int{?}\<=int(bool::T)` is the filtering instruction as made explicit in range coefficient: `int{?} = int{0,1}`.
+
+
+While `gte?bool\<=int(int::T)` yields a `bool`, `is?int{?}\<=int(bool::T)` yields the requisite _switch_ behavior in that the lhs `obj`
+is either allowed to pass or not depending on the `bool` argument. Given `inst` evaluation semantics, the value of the `bool::T` argument of `is` is
+ultimately dependent on the incoming lhs `obj`, where
+
+\[
+\tt{obj} \cdot \tt{gte}(\_ ) \cdot \tt{is}(\_ ) => obj\{?\} \in \{\tt{obj},\tt{noobj}\}.
+\]
+
+
+[discrete]
+=== switch behavior 
+
+++++
+<!-- 🐖 
+{1,2,3,4,5}-<[?>2 => as(str::T) + ' greater than 2', /
+              ?>5 => as(str::T) + ' greater than 5', /
+              _   => as(str::T) + ' is something.']
+-->
+++++
+
+[discrete]
+=== If/Then/Else 
+
+++++
+<!-- 🐖 
+{1,2,3,4,5}-<[?>2 => as(str::T) + ' greater than 2', /
+              ?>5 => as(str::T) + ' greater than 5', /
+              _   => as(str::T) + ' is something.'].>>
+-->
+++++

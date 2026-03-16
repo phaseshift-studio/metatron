@@ -28,6 +28,10 @@
 :nofooter:
 :noheader:
 
+include_latex_macros::macros.tex[]
+
+include::macros.tex[]
+
 ++++
 include::header.html[]
 ++++
@@ -41,8 +45,8 @@ include::header.html[]
         <div class="row mt-4 gap-4">
               <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-0" aria-expanded="false" aria-controls="card-0">Data Manipulation Techniques</button>
               <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-1" aria-expanded="false" aria-controls="card-1">The Function of an Instruction</button>
+              <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-3" aria-expanded="false" aria-controls="card-3">Flow Control</button>
               <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-2" aria-expanded="false" aria-controls="card-2">Structured Types</button>
-              <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-3" aria-expanded="false" aria-controls="card-3">Twisted Tangled Graphs</button>
         </div>
         <div class="row mt-3 gap-3">
               <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-4" aria-expanded="false" aria-controls="card-4">A Seat at the Relational Table</button>
@@ -62,7 +66,6 @@ include::header.html[]
     </div>
 <hr/>
 ++++
-
 
 ++++
 <div class="d-grid gap-2 d-md-flex justify-content-md-end">
@@ -107,6 +110,15 @@ include::type-panel.adoc[]
 ++++
 </div>
 ++++
+
+++++ 
+<div class="collapse" id="card-3">
+++++
+include::control-panel.adoc[]
+++++
+</div>
+++++
+
 
 ++++
 <div class="collapse" id="card-5">
