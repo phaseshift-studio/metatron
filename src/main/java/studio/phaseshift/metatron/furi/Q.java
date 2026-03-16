@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.furi;
 
+import studio.phaseshift.metatron.furi.q.BaseQ;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -55,18 +56,13 @@ public interface Q extends Rec {
             .tid(REC_TID)
             .vid(Q_TID)
             .constructor(instC(INST_TID.dom(ALL.maybe()).rng(Q_TID),
-                    lst(Type.Builder.build().tid(REC_TID)
-                            .isaPredicate(rec(
-                                    uri(PATTERN), T(URI_TID),
-                                    uri(ON_WRITE), rec(
-                                            uri(PRE_WRITE.maybe()), T(INST_TID),
-                                            uri(POST_WRITE.maybe()), T(INST_TID),
-                                            uri(QLESS_WRITE.maybe()), T(INST_TID)),
-                                    uri(ON_READ), rec(
-                                            uri(PRE_READ.maybe()), T(INST_TID),
-                                            uri(POST_READ.maybe()), T(INST_TID)))).create()), (lhs, inst) -> {
-                        return lhs;
-                    })).create();
+                    lst(rec(uri(PATTERN), T(URI_TID),
+                            uri(PRE_WRITE.maybe()), T(INST_TID),
+                            uri(POST_WRITE.maybe()), T(INST_TID),
+                            uri(QLESS_WRITE.maybe()), T(INST_TID),
+                            uri(PRE_READ.maybe()), T(INST_TID),
+                            uri(POST_READ.maybe()), T(INST_TID))),
+                    (_, inst) -> new BaseQ(inst.arg(0).asRec().jvm(), inst.arg(0).asRec().at(PATTERN).uriValue(), inst.arg(0).tid()))).create();
 
 
     fURI pattern();

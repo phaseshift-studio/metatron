@@ -68,10 +68,12 @@ public final class Tokens {
     public static final String ROUTE = "route";
     public static final String PEERS = "peers";
     public static final String CACHE = "cache";
+    public static final String CONST = "const";
     public static final String CLIENT = "client";
     public static final String SCRIPT = "script";
     public static final String REWRITE = "rewrite";
     public static final String Q = "q";
+    public static final String T = "T";
     public static final String C = "c";
     public static final String MIN = "min";
     public static final String MAX = "max";

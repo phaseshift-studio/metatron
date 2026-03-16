@@ -216,7 +216,7 @@ public class tp3Space extends grphSpace<Graph> {
                     final String suffix = vidString.replaceFirst(this.vertexPrefix + "/", "");
                     final Integer id = Integer.parseInt(suffix);
                     try { //  a newly created vertex from a rec
-                        final Vertex vertex = IteratorUtil.stream(this.sjvm.vertices(id)).findFirst().orElseGet(() -> this.sjvm.addVertex(T.label, obj.tid().basePath().toString(), T.id, id));
+                        final Vertex vertex = IteratorUtil.stream(this.sjvm.vertices(id)).findFirst().orElseGet(() -> this.sjvm.addVertex(org.apache.tinkerpop.gremlin.structure.T.label, obj.tid().basePath().toString(), org.apache.tinkerpop.gremlin.structure.T.id, id));
                         LOG.info("writing vertex %s => %s", vid, vertex);
                         obj.asRec().elements()
                                 .filter(e -> !e.first().equals(IN) && !e.first().equals(OUT))

@@ -27,12 +27,21 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.util.TriFunction;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.isa.m.mInstSet.INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -47,10 +56,13 @@ public class BaseQ extends MRec implements Q {
     protected final fURI queryPattern;
 
     public BaseQ(final Map<Obj, Obj> jvm, final fURI queryPattern, final fURI tid) {
-        super(jvm, tid,null);
+        super(jvm, tid, null);
         this.jvm().put(uri(Tokens.PATTERN), uri(queryPattern));
         this.queryPattern = queryPattern;
         LOG = Graphitty.log(this);
+        this.onRead = new BaseOnRead(this.at(PRE_READ).as(), this.at(POST_READ).as());
+        this.onWrite = new BaseOnWrite(this.at(PRE_WRITE).as(), this.at(POST_WRITE).as(), this.at(QLESS_WRITE).as());
+
     }
 
     @Override
@@ -100,41 +112,64 @@ public class BaseQ extends MRec implements Q {
 
     public static class BaseOnRead extends MRec implements Q.OnRead {
         public BaseOnRead(final Inst preRead, final Inst postRead) {
-            super(mutableMap(uri(PRE_READ), preRead, uri(POST_READ), postRead), REC_TID,null);
+            super(mutableMap(uri(PRE_READ), preRead, uri(POST_READ), postRead), REC_TID, null);
         }
 
         public Optional<Obj> preRead(final fURI source, final fURI vid) {
-            final Inst i = this.at(uri(PRE_READ)).as();
+            final Inst i = this.at(PRE_READ).as();
             if (i.isNoObj()) return Optional.empty();
-            final Obj result = i.apply(lst(uri(source), uri(vid)));
+            final Obj result = i.args(lst(uri(vid))).apply(vid.toUri());
             return Optional.of(result);
 
         }
 
         public Optional<Obj> postRead(final fURI source, final fURI vid, final Obj obj) {
-            return Optional.empty();
+            final Inst i = this.at(POST_READ).as();
+            if (i.isNoObj()) return Optional.empty();
+            final Obj result = i.args(lst(uri(vid), obj)).apply(vid.toUri());
+            return result.isNoObj() ? Optional.empty() : Optional.of(result);
         }
     }
 
     public static class BaseOnWrite extends MRec implements Q.OnWrite {
         public BaseOnWrite(final Inst preWrite, final Inst postWrite, final Inst qlessWrite) {
-            super(mutableMap(uri(PRE_WRITE), preWrite, uri(POST_WRITE), postWrite, uri(QLESS_WRITE), qlessWrite), REC_TID,null);
+            super(mutableMap(uri(PRE_WRITE), preWrite, uri(POST_WRITE), postWrite, uri(QLESS_WRITE), qlessWrite), REC_TID, null);
         }
 
         public Optional<Obj> preWrite(final fURI source, final fURI vid, final Obj obj) {
-            final Inst i = this.at(uri(PRE_WRITE)).as();
+            final Inst i = this.at(PRE_WRITE).as();
             if (i.isNoObj()) return Optional.empty();
-            final Obj result = i.apply(lst(uri(source), uri(vid), obj));
-            return Optional.of(result);
+            final Obj result = i.args(lst(uri(vid), obj)).apply(vid.toUri());
+            return result.isNoObj() ? Optional.empty() : Optional.of(result);
 
         }
 
         public Optional<Obj> postWrite(final fURI source, final fURI vid, final Obj oldObj, final Obj newObj) {
-            return Optional.empty();
+            final Inst i = this.at(POST_WRITE).as();
+            if (i.isNoObj()) return Optional.empty();
+            final Obj result = i.args(lst(uri(vid), oldObj, newObj)).apply(vid.toUri());
+            return result.isNoObj() ? Optional.empty() : Optional.of(result);
         }
 
         public Optional<Obj> qlessWrite(final fURI source, final fURI vid, final Obj obj) {
-            return Optional.empty();
+            final Inst i = this.at(QLESS_WRITE).as();
+            if (i.isNoObj()) return Optional.empty();
+            final Obj result = i.args(lst(uri(vid), obj)).apply(vid.toUri());
+            return result.isNoObj() ? Optional.empty() : Optional.of(result);
         }
+    }
+
+    public static Q create(final fURI tid, final fURI pattern,
+                           final Function<fURI, Obj> preRead,
+                           final BiFunction<fURI, Obj, Obj> postRead,
+                           final BiFunction<fURI, Obj, Obj> preWrite,
+                           final TriFunction<fURI, Obj, Obj, Obj> postWrite,
+                           final BiFunction<fURI, Obj, Obj> qlessWrite) {
+        return new BaseQ(mutableMap(
+                uri(PRE_READ), null == preRead ? noobj() : instC(INST_TID, lst(), (_, inst) -> preRead.apply(inst.arg(0).uriValue())),
+                uri(POST_READ), null == postRead ? noobj() : instC(INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(URI_TYPE), (_, inst) -> postRead.apply(inst.arg(0).uriValue(), inst.arg(1))),
+                uri(PRE_WRITE), null == preWrite ? noobj() : instC(INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(URI_TYPE, T(ALL)), (_, inst) -> preWrite.apply(inst.arg(0).uriValue(), inst.arg(1))),
+                uri(POST_WRITE), null == postWrite ? noobj() : instC(INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(URI_TYPE, T(ALL), T(ALL)), (_, inst) -> postWrite.apply(inst.arg(0).uriValue(), inst.arg(1), inst.arg(2))),
+                uri(QLESS_WRITE), null == qlessWrite ? noobj() : instC(INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(URI_TYPE, T(ALL)), (_, inst) -> qlessWrite.apply(inst.arg(0).uriValue(), inst.arg(1)))), pattern, tid);
     }
 }

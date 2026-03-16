@@ -18,10 +18,15 @@
 
 package studio.phaseshift.metatron.isa.m.math;
 
+import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
-import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.Inst;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Real;
+import studio.phaseshift.metatron.isa.m.type.Type;
 
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -84,6 +89,7 @@ public class mathInstSet extends AbstractInstSet {
 
     public mathInstSet() {
         super(MATH_ISA_TID, MATH_ISA_TID);
+        //this.at(Tokens.Q, this.at(Tokens.Q).asLst().add(QCollection.constQ(), MUTABLE), MUTABLE);
     }
 
     public static final Type DATA_SIZE_TYPE = Type.Builder.build()
@@ -102,7 +108,8 @@ public class mathInstSet extends AbstractInstSet {
                     case MATH_MBYTE_STRING -> arg.jvm(arg.asReal().jvm() * 1024.0d * 1024.0d);
                     case MATH_GBYTE_STRING -> arg.jvm(arg.asReal().jvm() * 1024.0d * 1024.0d * 1024.0d);
                     case MATH_TBYTE_STRING -> arg.jvm(arg.asReal().jvm() * 1024.0d * 1024.0d * 1024.0d * 1024.0d);
-                    case MATH_PBYTE_STRING -> arg.jvm(arg.asReal().jvm() * 1024.0d * 1024.0d * 1024.0d * 1024.0d * 1024.0d);
+                    case MATH_PBYTE_STRING ->
+                            arg.jvm(arg.asReal().jvm() * 1024.0d * 1024.0d * 1024.0d * 1024.0d * 1024.0d);
                     default -> arg;
                 };
             }).create();
@@ -178,7 +185,8 @@ public class mathInstSet extends AbstractInstSet {
                 final Real arg = lhs.asReal();
                 final String tid = arg.tid().toString();
                 return switch (tid) {
-                    case MATH_BYTE_STRING -> arg.jvm(arg.asReal().jvm() / 1024.0d / 1024.0d / 1024.0d / 1024.0d / 1024.0d);
+                    case MATH_BYTE_STRING ->
+                            arg.jvm(arg.asReal().jvm() / 1024.0d / 1024.0d / 1024.0d / 1024.0d / 1024.0d);
                     case MATH_KBYTE_STRING -> arg.jvm(arg.asReal().jvm() / 1024.0d / 1024.0d / 1024.0d / 1024.0d);
                     case MATH_MBYTE_STRING -> arg.jvm(arg.asReal().jvm() / 1024.0d / 1024.0d / 1024.0d);
                     case MATH_GBYTE_STRING -> arg.jvm(arg.asReal().jvm() / 1024.0d / 1024.0d);
@@ -208,8 +216,8 @@ public class mathInstSet extends AbstractInstSet {
 
     public Set<Obj> consts() {
         return new LinkedHashSet<>(List.of(
-                real(Math.E, REAL_TID, MATH_ISA_TID.extend("e")),
-                real(Math.PI, REAL_TID, MATH_ISA_TID.extend("pi"))
+                real(Math.E, REAL_TID, MATH_ISA_TID.extend("e").constant()),
+                real(Math.PI, REAL_TID, MATH_ISA_TID.extend("pi").constant())
         ));
     }
 

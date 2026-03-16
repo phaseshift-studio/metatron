@@ -62,12 +62,12 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
     static boolean isAllPattern(final String piece) {
         return piece.equals("#");
     }
-    
+
     static boolean manyMatches(final List<fURI> firstList, final List<fURI> secondList) {
-        if(firstList.size() != secondList.size())
+        if (firstList.size() != secondList.size())
             return false;
-        for(int i=0;i<firstList.size();i++) {
-            if(!firstList.get(i).test(secondList.get(i)))
+        for (int i = 0; i < firstList.size(); i++) {
+            if (!firstList.get(i).test(secondList.get(i)))
                 return false;
         }
         return true;
@@ -408,7 +408,17 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
         return this.c().isMaybeSome();
     }
 
+    /// ///////////////////////////////////////////////////
 
+    default fURI constant() {
+        return this.q(CONST,null);
+    }
+    
+    default fURI type(final fURI type) {
+        return this.q(T, type);
+    }
+    
+    
     /// ////////////////////////////////////////////////
 
     class Singleton {

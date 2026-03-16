@@ -35,6 +35,7 @@ import static studio.phaseshift.metatron.Tokens.Q;
 import static studio.phaseshift.metatron.furi.Q.Q_TYPE;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.furi.q.QCollection.CONSTQ_TYPE;
 import static studio.phaseshift.metatron.isa.m.space.memSpace.MEM_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.space.metaSpace.META_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.space.stackSpace.STACK_SPACE_TYPE;
@@ -253,7 +254,9 @@ public class mInstSet extends AbstractInstSet {
                 SPACE_TYPE,
                 MEM_SPACE_TYPE,
                 STACK_SPACE_TYPE,
-                META_SPACE_TYPE));
+                META_SPACE_TYPE,
+                /// ///////////////////////////////////
+                CONSTQ_TYPE));
     }
 
     @Override
