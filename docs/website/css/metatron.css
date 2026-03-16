@@ -14,7 +14,7 @@
     /*------------------------*/
     --mblue: #4669dd;
     --mmagenta: #9f4040; /*#825181;*/
-    --mred: #6b0004;
+    --mred: #7a2518;
     --mgreen: #457b02;
     --mdarkgray: #494554;
     --mlightgray: #797585;
@@ -525,6 +525,15 @@ pre {
     border: none;
 }
 
+details {
+    border-style: solid;
+    border-width: 1px;
+    border-color: var(--light);
+    margin: 1em;
+    padding:1em;
+    color: var(--mred);
+}
+
 .switch ~ div:nth-of-type(2),
 .switch ~ div:nth-of-type(3),
 .switch ~ div:nth-of-type(4),
@@ -634,14 +643,15 @@ pre {
 
 .hljs-mtron-doc-callout, .conum {
     display: inline-block;
-    color: var(--tertiarycolor);
-    background: var(--mmagenta) !important;
+    color: var(--mlightgray);
+    background: var(--mred) !important;
+    transform: translateX(-15px);
     -webkit-border-radius: 100px;
     -moz-border-radius: 100px;
     -o-border-radius: 100px;
     border-radius: 100px;
     text-align: center;
-    margin-right: 40px;
+    opacity: 0.5;
     float: right;
     width: 25px;
     height: 25px;

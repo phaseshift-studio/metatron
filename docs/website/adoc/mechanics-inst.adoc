@@ -28,6 +28,26 @@ Every instruction maps a **left hand side** `obj` (`lhs`) to a **right hand side
 \text{obj} \in \mathcal{P}(\text{obj})
 \end{align*}
 
+=== stackSpace and frames
+
+Every logical thread has a `/m/space/stack` with `objs` in `<+/#>`. The current stack of the mtron code processing this documentation is available in the collapsed accordian below. Note that this stack has been processing the code examples across all the documentation up to this point. Local variables from other parts of the documentation will be noticed. Furthermore, note the `boot/` branch. This stores the data provided by the user and derived by the bootloader at startup.
+
+.the objs of the doc processors stack
+[%collapsible]
+====
+
+++++
+<!-- 🐖 
+*<+/#/>
+-->
+++++
+
+====
+
+
+When an instruction is called, the associated https://en.wikipedia.org/wiki/Parameter_(computer_programming)[arguments] have the lhs `obj` applied and the result of the application is pushed onto the stack -- accessible through reference for entirety of the 
+`inst` code block. From this architecture, the following `inst` forms are made available for use.
+
 
 [indent=0,subs="verbatim,attributes",role="primary"]
 .positional args
@@ -35,23 +55,27 @@ Every instruction maps a **left hand side** `obj` (`lhs`) to a **right hand side
 
 [stem]
 ++++
-\tt{obj}_\tt{in}.f(\color{yellow}{\__{0}}, \color{yellow}{\__{1}},\ldots,\color{yellow}{\__{n}}) \mapsto \tt{obj}_\tt{out}
+\tt{obj}_\tt{lhs} \cdot f(\color{yellow}{\__{0}}, \color{yellow}{\__{1}},\ldots,\color{yellow}{\__{n}}) \mapsto \tt{obj}_\tt{rhs}
 ++++
 
-An `inst` frame is defined by the `inst` https://en.wikipedia.org/wiki/Parameter_(computer_programming)[arguments].
-These arguments can be accessed within the `inst` via their `lst` position as a fURI.
-For example, `\*<0>` references the first argument, `*<1>` the second argument, so on and so forth.
+The arguments are captured as a `lst` and are accessed via their position furi.
+For example, `\*<0>` references the first argument, `*<1>` the second argument, so on and so forth. Note that a less verbose
+form can all be used: `*0`, `*1`, etc.
+
+In the example below, the user defined instruction `band` filters out lhs `objs` not within the provided range (min/max).
+Given the filtering behavior of the instruction, the signature of `band` is `int{?}\<=int`. That is, it accepts a single
+`int` and return either `noobj` or the `int`.
 
 ++++
 <!-- 🐖 
-band -> |inst?int{?}<=int(int::T,int::T){ is(and(gte(*0),lte(*1))) }
+band -> |inst?int{?}<=int(_,_){ is(and(gte(*0),lte(*1))) }
 3.band(2,8)                                [-- <1>
 10.band(2,8)                               [-- <2>
 -->
 ++++
 
 <1> `3` is within the band `[2,8]` and thus, `3` is the result, satisfying the `inst` range `int{?}`.
-<2> `10` is not within the band `[2,8]` and thus, `noobj` is the result, satisfying the `inst` range `int{?}`.
+<2> `10` is not within the band `[2,8]` and thus, the result is `noobj` which satisfies the `inst` range `int{?}`.
 =====
 
 [indent=0,subs="verbatim,attributes",role="secondary"]
@@ -60,22 +84,24 @@ band -> |inst?int{?}<=int(int::T,int::T){ is(and(gte(*0),lte(*1))) }
 
 [stem]
 ++++
-\tt{obj}_\tt{in}.f(\color{yellow}{a_1} \Rightarrow x, \color{yellow}{a_2} \Rightarrow y,\ldots,a_n) \mapsto \tt{obj}_\tt{out}
+\tt{obj}_\tt{lhs} \cdot f(\color{yellow}{a_1} \Rightarrow x, \color{yellow}{a_2} \Rightarrow y,\ldots,a_n) \mapsto \tt{obj}_\tt{rhs}
 ++++
 
-A https://en.wikipedia.org/wiki/Named_parameter[named argument] is a fURI that references an `obj` in the router's frame structure.
+When the arguments are provided in a `rec` form, the key of each relation of the `rec` is a https://en.wikipedia.org/wiki/Named_parameter[named argument]. Named
+arguments are resolved from the stack via their furi name.
 
 ++++
 <!-- 🐖 
 band -> |inst?int{?}<=int(min=>_,max=>_){ is(and(gte(*min),lte(*max))) }
-3.band(2,8)                           [-- <1>
-3.band(max=>8,min=>2)                 [-- <2>
-'abc'.band(2,8)                       [-- <3>
+3.band(min=>2,max=>4)                 [-- <1>
+3.band(2,8)                           [-- <2>
+3.band(max=>8,min=>2)                 [-- <3>
+'abc'.band(2,8)                       [-- <4>
 -->
 ++++
 
-
-<1> If the argument name isn't provided, then it's position in the argument list determines its nane,
+<1> The argument's name is it's reference on the stack.
+<1> If the argument name isn't provided, then it's position in the argument list determines its name.
 <2> When arguments are named, they can be written in any order.
 <3> The domain of `band` is `int`.
 Note where the error is thrown when `str['abc']` is provided.
@@ -87,11 +113,13 @@ Note where the error is thrown when `str['abc']` is provided.
 
 [stem]
 ++++
-\tt{obj}_\tt{in}.f(a_1 \Rightarrow \color{yellow}{else(x)},a_2 \Rightarrow \color{yellow}{else(y)},\ldots,a_n) \mapsto \tt{obj}_\tt{out}
+\tt{obj}_\text{lhs} \cdot f(a_1 \Rightarrow \color{yellow}{else(x)},a_2 \Rightarrow \color{yellow}{else(y)},\ldots,a_n) \mapsto \tt{obj}_\tt{rhs}
 ++++
 
-If the incoming `obj` to `else` is `noobj`, the `else` emits it's argument, else it emits the incoming `obj`.
-This makes `else` useful for expressing https://en.wikipedia.org/wiki/Default_argument[default arguments].
+The `else` instruction has numerous uses. With respect to instruction arguments, the `else` instruction provides the user
+the ability to express
+https://en.wikipedia.org/wiki/Default_argument[default arguments].
+If the incoming `obj` to `else` is `noobj`, then `else` returns it's argument, otherwise it returns the incoming lhs `obj`.
 
 ++++
 <!-- 🐖 
@@ -113,32 +141,42 @@ band -> |inst?int{?}<=int(min=>else(2),max=>else(8)){ is(and(gte(*min),lte(*max)
 
 [stem]
 ++++
-\tt{obj}_\tt{in}.f(a_1\color{yellow}{?type_1}, a_2\color{yellow}{?type_2},\ldots,a_n) \mapsto \tt{obj}_\tt{out}
+\tt{obj_{\text{lhs}} \cdot f(a_1 \Rightarrow \color{yellow}{?type_1}, a_2 \Rightarrow \color{yellow}{?type_2},\ldots,a_n \Rightarrow \color{yellow}{?type_3}) \mapsto obj_{rhs}}
 ++++
 
-If an argument is defined with a query https://en.wikipedia.org/wiki/Data_type[type], then the argument's value must satisfy that type's specification.
-This is a consequence of attaching a type query processor to the router frame structure and thus, is analogous to type specifications in other structures.
+The previous examples made use of the polymorphic `id` instruction (sugar'd `_`). It's important to realize that an argument
+can be any arbitrary `obj` (thus, `code`). Type arguments are the means by which instruction arguments are typed.
 
 ++++
 <!-- 🐖 
-nat -> int::T[?>0]
+nat  -> int::T[?>0]          [-- <1>
 band -> |inst?int{?}<=int(min=>?nat::T,max=>?nat::T){ is(and(gte(*min),lte(*max))) }
-15.band(10,20)              [-- <1>
--15.band(-20,-10)           [-- <2>
+15.band(10,20)              [-- <2>
+-15.band(-20,-10)           [-- <3>
+band -> |inst?int{?}<=int(min=>as(nat::T),max=>as(nat::T)){ is(and(gte(*min),lte(*max))) }
+15.band(10,20)              [-- <4>
+-15.band(-20,-10)           [-- <5>
+band -> |inst?int{?}<=int(min=>?nat::T.else(fail()),max=>?nat::T.else(fail())){ is(and(gte(*min),lte(*max))) }
+15.band(10,20)              [-- <6>
+-15.band(-20,-10)           [-- <7>
+band -> |inst?int{?}<=int(min=>?nat::T.else(-100),max=>?nat::T.else(100)){ is(and(gte(*min),lte(*max))) }
+15.band(10,20)              [-- <6>
+-15.band(-20,-10)           [-- <7>
 -->
 ++++
 
-<1> Argument name uniqueness does not consider query parameters.
-<2> The `?nat` query parameter requires the respective argument be some stem:[n \in \mathbb{N}].
+<1> A `nat` is an `int` greater than zero.
+<2> Argument name uniqueness does not consider query parameters.
+<3> The `?nat` query parameter requires the respective argument be some stem:[n \in \mathbb{N}].
 =====
 
 [indent=0,subs="verbatim,attributes",role="secondary"]
-.anonymous args
+.anonymous inst
 =====
 
 [stem]
 ++++
-\tt{obj}_\tt{in}.\color{yellow}{\lambda}(a_1 \Rightarrow x, a_2 \Rightarrow y,\ldots,a_n) \mapsto \tt{obj}_\tt{out}
+\tt{obj}_\tt{lhs} \cdot \color{yellow}{\lambda}(a_1 \Rightarrow x, a_2 \Rightarrow y,\ldots,a_n) \mapsto \tt{obj}_\tt{rhs}
 ++++
 
 An untyped `inst` is an anonymous `inst` and behaves analogously to an

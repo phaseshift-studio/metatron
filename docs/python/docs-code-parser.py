@@ -270,7 +270,7 @@ class ProcessingState:
                 result.append(f"{self.mtron.exec(line.replace("%", ""))}")
             else:
                 self.mtron.exec(line.replace("%", "").replace("[HIDDEN]", ""))
-        self.output.extend(result)
+        self.output.extend(result[1:]) # first line is always a blank (for some reason)
         print(self.output)
         self.code = []
         self.backtick_options = {}
