@@ -90,12 +90,12 @@ public class tp3SpaceTest extends AbstractSpaceTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "*/g/S.count()                                                                  % 1",
-            "*/g/S/pattern                                                                  % /m/grph/inst/schema/modern/#",
-            "*/g/S/pattern.*(_).count()                                                       % 4",
-            "*/g/S/pattern.*_.count()                                                       % 4",
+            "*/g/schema.count()                                                                  % 1",
+            "*/g/schema/pattern                                                                  % /m/grph/inst/schema/modern/#",
+            "*/g/schema/pattern.*(_).count()                                                       % 4",
+            "*/g/schema/pattern.*_.count()                                                       % 4",
             //  "**/g/S/pattern.count()                                                       % 4",
-            "*/g/S/pattern.*(_).vid()                                                         % {/m/grph/inst/schema/modern/person,/m/grph/inst/schema/modern/software,/m/grph/inst/schema/modern/created,/m/grph/inst/schema/modern/knows}",
+            "*/g/schema/pattern.*(_).vid()                                                         % {/m/grph/inst/schema/modern/person,/m/grph/inst/schema/modern/software,/m/grph/inst/schema/modern/created,/m/grph/inst/schema/modern/knows}",
     }, delimiter = '%')
     public void testSchemaTraversal(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
@@ -132,7 +132,7 @@ public class tp3SpaceTest extends AbstractSpaceTest {
             "*/g/V/1/OUT/+/IN/OUT/+/IN/OUT/+/IN.count()                                     % 0",
             "*/g/V/#.count()                                                                % 6",
             "*/g/E/+.count()                                                                % 6",
-            "*/g/S/+.count()                                                                % 2",
+            "*/g/schema/+.count()                                                            % 2",
             "*/g/V/1.count()                                                                % 1",
             "*/g/E/#.count()                                                                % 6",
             "*/g/E/1.count()                                                                % 0",

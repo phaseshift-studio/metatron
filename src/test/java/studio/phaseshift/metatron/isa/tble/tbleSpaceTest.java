@@ -1202,4 +1202,50 @@
      // The existing 140 tests provide comprehensive coverage of all functionality.
      // Future work: Consider using @TestInstance(Lifecycle.PER_CLASS) and @TestMethodOrder
      // to ensure proper test execution order for parameterized tests.
+
+     /**
+      * Test that SQL schema is accessible via the /space/S pattern
+      * Note: This test is skipped because createTestSpace() doesn't enable table mapping.
+      * Schema is only available when table mapping is enabled (TABLE config is non-empty).
+      * See testTableMapping() for a test that uses table mapping.
+      */
+     @Test
+     public void testSQLSchemaAccess() throws Exception {
+         // Create a space with table mapping enabled
+         try (final Connection conn = DriverManager.getConnection("jdbc:sqlite:" + DB_PATH);
+              final Statement stmt = conn.createStatement()) {
+
+             // Create test tables
+             stmt.executeUpdate("CREATE TABLE IF NOT EXISTS test_users (id INTEGER PRIMARY KEY, name TEXT)");
+             stmt.executeUpdate("CREATE TABLE IF NOT EXISTS test_products (id INTEGER PRIMARY KEY, title TEXT)");
+         }
+
+         final tbleSpace space = tbleSpace.of(
+                 rec(
+                         uri(PATTERN), uri("schema:#"),
+                         uri(HOST), uri("sqlite:" + DB_PATH),
+                         uri(DRIVER), uri("org.sqlite.JDBC"),
+                         uri(ROUTE), rec(uri("schema:"), uri("/schema/")),
+                         uri(TABLE), lst()  // Enable table mapping
+                 ).jvm(),
+                 f("/sys/space/tble/schema_test")
+         );
+
+         // Access the schema object itself
+         final Obj schema = Router.global().read(f("schema:schema"));
+         assertNotNull(schema, "Schema should be accessible");
+         assertTrue(schema.isRec(), "Schema should be a rec");
+
+         // Access the tables list from the schema
+         final Obj tables = schema.asRec().at(uri("tables"));
+         assertNotNull(tables, "Schema should have a tables field");
+         assertTrue(tables.isLst(), "Tables should be a list");
+
+         // Cleanup
+         try (final Connection conn = DriverManager.getConnection("jdbc:sqlite:" + DB_PATH);
+              final Statement stmt = conn.createStatement()) {
+             stmt.executeUpdate("DROP TABLE IF EXISTS test_users");
+             stmt.executeUpdate("DROP TABLE IF EXISTS test_products");
+         }
+     }
  }

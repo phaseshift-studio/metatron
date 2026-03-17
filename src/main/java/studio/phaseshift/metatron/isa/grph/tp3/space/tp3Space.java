@@ -140,7 +140,7 @@ public class tp3Space extends grphSpace<Graph> {
                         uri(EDGE), uri(IteratorUtil.findFirst(this.sjvm.edges()).map(i -> i.id().getClass().getSimpleName()).orElse("unknown")))), MUTABLE);
         this.vertexPrefix = this.pattern.retractPattern().extend("V").toString();
         this.edgePrefix = this.pattern.retractPattern().extend("E").toString();
-        this.schemaPrefix = this.pattern.retractPattern().extend("S").toString();
+        this.schemaPrefix = this.pattern.retractPattern().extend("schema").toString();
         this.at(uri(ROUTE), rec(
                 uri(VERTEX), uri(this.vertexPrefix),
                 uri(EDGE), uri(this.edgePrefix),

@@ -25,6 +25,9 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.Space;
+import studio.phaseshift.metatron.isa.tble.schema.storage.SimpleKeyValueSchema;
+import studio.phaseshift.metatron.isa.tble.schema.storage.TableSchema;
+import studio.phaseshift.metatron.isa.tble.schema.storage.fURIAwareIndexedSchema;
 
 import java.io.File;
 import java.sql.Connection;

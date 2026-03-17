@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.tble.schema;
+package studio.phaseshift.metatron.isa.tble.schema.domain;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSQLSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.tble.schema.storage.TableSchema;
 import studio.phaseshift.metatron.isa.tble.tbleSpace;
 import studio.phaseshift.metatron.util.Tuple;
 

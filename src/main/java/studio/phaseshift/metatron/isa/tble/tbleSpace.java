@@ -26,15 +26,17 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
-import studio.phaseshift.metatron.isa.tble.schema.ExistingTableSchema;
-import studio.phaseshift.metatron.isa.tble.schema.TableSchema;
-import studio.phaseshift.metatron.isa.tble.schema.TypedKeyValueSchema;
-import studio.phaseshift.metatron.isa.tble.schema.fURIAwareIndexedSchema;
+import studio.phaseshift.metatron.isa.tble.schema.domain.ExistingTableSchema;
+import studio.phaseshift.metatron.isa.tble.schema.domain.SQLSchemaGenerator;
+import studio.phaseshift.metatron.isa.tble.schema.storage.TableSchema;
+import studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema;
+import studio.phaseshift.metatron.isa.tble.schema.storage.fURIAwareIndexedSchema;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.function.BiFunction;
@@ -42,12 +44,16 @@ import java.util.function.Function;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TID;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+
+import java.util.LinkedHashMap;
 
 /**
  * tbleSpace - A dual-mode SQL database connector for Metatron with pluggable schema support
@@ -142,6 +148,8 @@ public class tbleSpace extends AbstractSpace<Connection> {
     protected ObjSerializer<?> serializer;
     protected TableSchema schema;
     protected ExistingTableSchema existingTableSchema;
+    protected String schemaPrefix;
+    protected SQLSchemaGenerator schemaGenerator;
 
     public static tbleSpace of(final Map<Obj, Obj> config, final fURI vid) {
         MTronException.wrap(() -> Class.forName(config.get(uri(DRIVER)).uriValue().toString()));
@@ -183,8 +191,23 @@ public class tbleSpace extends AbstractSpace<Connection> {
                         this.existingTableSchema.getTableNames().size(), this.sjvm().getCatalog());
                 this.at(uri(TABLE), lst(this.existingTableSchema.getTableMetadata().stream().map(t -> (Obj) uri(t.tableName())).toList()), MUTABLE);
 
+                // Initialize SQL schema generator for type definitions (lazy - will generate types on first access)
+                this.schemaPrefix = this.pattern.retractPattern().extend("schema").toString();
+                final String dbName = sjvm.getCatalog() != null ? sjvm.getCatalog() : "db";
+                final fURI schemaPath = f(this.schemaPrefix).extend(dbName);
+
+                this.schemaGenerator = new SQLSchemaGenerator(
+                    this.existingTableSchema.getTableMetadata(),
+                    schemaPath
+                );
+
+                LOG.info("initialized {{g}}SQL schema{{X}} at %s (lazy) with %s table types",
+                    schemaPath, this.existingTableSchema.getTableNames().size());
+
             } else {
                 this.existingTableSchema = null;
+                this.schemaPrefix = null;
+                this.schemaGenerator = null;
                 LOG.info("table mapping {{y}}disabled{{X}}");
             }
         } catch (final SQLException ex) {
@@ -229,6 +252,24 @@ public class tbleSpace extends AbstractSpace<Connection> {
     public Function<fURI, Iterator<IdObj>> directReader() {
         return (pattern) -> {
             try {
+                LOG.debug("looking for tble vid: %s", pattern);
+
+                // Check if this is a schema path (e.g., */netflix/schema or */netflix/schema/movie)
+                // Only if table mapping is enabled (schemaPrefix will be non-null)
+                if (this.schemaPrefix != null && this.schemaGenerator != null) {
+                    if (f(this.schemaPrefix).test(pattern)) {
+                        // Return the schema object itself - create it lazily
+                        final Map<Obj, Obj> schemaRec = new LinkedHashMap<>();
+                        schemaRec.put(uri("pattern"), uri(this.schemaGenerator.getSchemaBasePath().extend("#")));
+                        schemaRec.put(uri("tables"), lst(this.schemaGenerator.getTableTypes().stream()
+                            .map(t -> (Obj) t).toList()));
+                        return IdObj.of(f(this.schemaPrefix), rec(schemaRec)).iterator();
+                    } else if (pattern.hasPrefix(this.schemaPrefix)) {
+                        // Schema subpath - let the schema InstSet handle it
+                        return Collections.emptyIterator();
+                    }
+                }
+
                 // Check if this is a table mapping path (existing table)
                 if (this.existingTableSchema != null && this.existingTableSchema.isTablePath(pattern)) {
                     // Use existing table schema - just return raw results
