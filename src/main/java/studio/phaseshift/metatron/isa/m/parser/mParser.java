@@ -80,6 +80,7 @@ public class mParser {
     public static final SettableParser inst_parser = SettableParser.undefined();
     private static final SettableParser rel_parser = SettableParser.undefined();
     private static final SettableParser obj_rel_back_parser = SettableParser.undefined();
+    private static final SettableParser obj_rel_back_parser2 = SettableParser.undefined();
     // private static final SettableParser branch_parser = SettableParser.undefined();
     private static final LinkedHashSet<Parser> PARSERS = new LinkedHashSet<>(List.of(seq(of('*').trim(), digit().plus().flatten()).map(t -> from_(uri(pick(t, 1).toString()))))); // sugar for *0 vs. *<0>
 
@@ -141,6 +142,22 @@ public class mParser {
                 m_int(),
                 m_str(),
                 m_code(),
+                m_lst(),
+                m_uri(),
+                m_objs()));
+        obj_rel_back_parser2.set(choice(
+                m_comment(),
+                m_type(),
+                m_rec(),
+                m_paren_wrap(m_rel(), true),
+                m_fail(),
+                m_noobj(),
+                m_bytes(),
+                m_bool(),
+                m_real(),
+                m_int(),
+                m_str(),
+                m_inst(),
                 m_lst(),
                 m_uri(),
                 m_objs()));
@@ -488,6 +505,12 @@ public class mParser {
     /// ///////////////////////////////////// SUGAR PARSERS //////////////////////////////////////
     /// //////////////////////////////////////////////////////////////////////////////////////////
 
+    private static Parser sugar_args(boolean endToken) {
+        if(endToken)
+            return m_paren_wrap(obj_rel_back_parser);
+        return choice(seq(of("(").trim(), obj_rel_back_parser, of(")").trim()).map(t -> pick(t, 1)), obj_rel_back_parser2);
+    }
+
     private static Parser generate_sugar_parser(final fURI tid, final Parser startToken, final int argCount) {
         return generate_sugar_parser(tid, startToken, argCount, null);
     }
@@ -499,7 +522,7 @@ public class mParser {
         }
         return (argCount == 0 ?
                 seq(startToken.trim(), opt(seq(of('?'), m_furi_inst_dom_rng()).map(t -> pick(t, 1)), null)).map(t -> instB(instChain.getFirst(), lst(MInst.instA(instChain.get(1).qString(pick(t, 1)))))) :
-                seq(startToken.trim(), opt(seq(of('?'), m_furi_inst_dom_rng()).map(t -> pick(t, 1)), null), m_paren_wrap(obj_rel_back_parser), null == endToken ? of("") : endToken.trim())
+                seq(startToken.trim(), opt(seq(of('?'), m_furi_inst_dom_rng()).map(t -> pick(t, 1)), null), sugar_args(null != endToken), null == endToken ? of("") : endToken.trim())
                         .map(t -> instB(instChain.getFirst(), lst(instB(instChain.get(1).qString(pick(t, 1)), lst(mParser.<Obj>pick(t, 2))))))).trim();
     }
 
@@ -507,7 +530,7 @@ public class mParser {
         // TODO: look into ExpressionBuilder for handling paren wrapping properly.
         return (argCount == 0 ?
                 seq(startToken.trim(), opt(seq(of('?'), m_furi_inst_dom_rng()).map(t -> pick(t, 1)), null)).map(t -> MInst.instA(tid.qString(pick(t, 1)))) :
-                seq(startToken.trim(), opt(seq(of('?'), m_furi_inst_dom_rng()).map(t -> pick(t, 1)), null), m_paren_wrap(obj_rel_back_parser), null == endToken ? of("") : endToken.trim())
+                seq(startToken.trim(), opt(seq(of('?'), m_furi_inst_dom_rng()).map(t -> pick(t, 1)), null), sugar_args(null != endToken), null == endToken ? of("") : endToken.trim())
                         .map(t -> instB(tid.qString(pick(t, 1)), lst(mParser.<Obj>pick(t, 2)))));
     }
 

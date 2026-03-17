@@ -381,13 +381,13 @@ public abstract class AbstractfURI implements fURI {
     @Override
     public fURI extend(final String segment) {
         if (segment.isEmpty() && !this.path().isEmpty() && this.path().getLast().isEmpty())
-            return this;
+            return this.asBranch();
         final List<String> newPath = new ArrayList<>(this.path());
-        final List<String> prefix = Arrays.asList(segment.split("/"));
-        if (!this.path().isEmpty() && this.path().getLast().isEmpty())
+        final List<String> prefix = new ArrayList<>(List.of(segment.split("/")));
+        if (!newPath.isEmpty() && newPath.getLast().isEmpty())
             newPath.removeLast();
-        if (this.path().isEmpty() && segment.startsWith("/"))
-            newPath.add("");
+        if (!newPath.isEmpty() && (!prefix.isEmpty() && prefix.getFirst().isEmpty()))
+            prefix.removeFirst();
         newPath.addAll(prefix);
         if (segment.endsWith("/"))
             newPath.add("");

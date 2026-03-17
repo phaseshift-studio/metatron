@@ -61,6 +61,9 @@ public class ifURITest extends AbstractMetatronTest {
 
     @ParameterizedTest
     @CsvSource(value = {
+            "/g/S/+                      | 1   | /g/S",
+            "/g/S/+/                     | 1   | /g/S/",
+            "/g/S/+                      | 2   | /g",
             "http://fhatos.org/a         | 1   | http://fhatos.org",
             "http://fhatos.org/a/        | 2   | http://fhatos.org/",
             "http://fhatos.org/a/b       | 2   | http://fhatos.org",
@@ -599,18 +602,27 @@ public class ifURITest extends AbstractMetatronTest {
 
     @ParameterizedTest
     @CsvSource(value = {
+            "a                           | /b/     |  a/b/",
+            "a                           | /b      |  a/b",
+            "a                           | /       |  a/",
+            "a/                          | /       |  a/",
+            "a/                          | b/      |  a/b/",
+            "a/                          | /b/     |  a/b/",
+        //    "a/                          | //b/    |  a/b/",
+        //    "/a/                         | //b//   |  /a/b/",
+            "http://fhatos.org/b         | /       |  http://fhatos.org/b/",
             "http://fhatos.org/b         | a       |  http://fhatos.org/b/a",
             "http://fhatos.org/b/c/d     | a       |  http://fhatos.org/b/c/d/a",
             "/b/c/d                      | a       |  /b/c/d/a",
             // "/b/c/d                      | /a      |  /b/c/d//a",
-            "mtron:/b/c/d                | /a      |  mtron:/b/c/d//a",
-            "mtron:/b/c/d                | #      |  mtron:/b/c/d/#",
+            "mtron:/b/c/d                | /a      |  mtron:/b/c/d/a",
+            "mtron:/b/c/d                | #       |  mtron:/b/c/d/#",
             "mtron:/b/c/d                | a       |  mtron:/b/c/d/a",
             "mtron:/b/c/d                | a/      |  mtron:/b/c/d/a/",
-            "mtron:/b/c/d                | /a/     |  mtron:/b/c/d//a/",
+            "mtron:/b/c/d                | /a/     |  mtron:/b/c/d/a/",
             "mtron://www.com:8999/b/c/d  | a/b/c   |  mtron://www.com:8999/b/c/d/a/b/c",
-            "mtron://www.com/b/c/d       | /a/b/c  |  mtron://www.com/b/c/d//a/b/c",
-            "mtron://www.com/b/c/d{2}    | /a/b/c  |  mtron://www.com/b/c/d//a/b/c{2}",
+            "mtron://www.com/b/c/d       | /a/b/c  |  mtron://www.com/b/c/d/a/b/c",
+            "mtron://www.com/b/c/d{2}    | /a/b/c  |  mtron://www.com/b/c/d/a/b/c{2}",
     }, delimiter = '|')
     public void testExtend(final String base, final String prepend, final String expected) {
         LOG.error("testing {{b}}%s{{X}} extend {{b}}%s{{X}} [expected: %s]", f(base), f(prepend), f(expected));

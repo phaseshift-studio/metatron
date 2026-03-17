@@ -1,6 +1,93 @@
 [discrete]
 == The Type
 
+Every `obj` is a triple such that
+
+\[
+\tt{obj} \in \tt{tid} \times OBJECT \times \tt{vid},
+\]
+
+where `tid` is a type identifier, `OBJECT` is a data structure outside the direct referential reaches of mtron, and `vid` is a value identifier. The shape `OBJECT` can take is constrained by the structure specified by the `obj` referenced `tid`. 
+
+[source,mtron]
+----
+    ........─►.age::T.◄─.......    
+    .            ▲            .    
+    .            │            .    
+    ▼            │            ▼    
+odd::T ....... nat::T ......even::T
+    ▲            ▲            ▲    
+    │            │            │
+    │            │            │    
+    └──────────int::T─────────┘    
+----
+
+
+++++
+<!-- 🐖
+nat  -> int::T[?>0]                 [-- <1>
+age  -> nat::T[?<120]               [-- <2>
+odd  -> int::T[is(mod(2).eq(1))]    [-- <3>
+even -> int::T[is(mod(2).eq(0))]    [-- <4>
+-->
+++++
+
+<1> A `nat` is an `int` greater than 0.
+<2> A `age` is a `nat` (is an `int` greater than 0) less than 120.
+<3> An `odd` is an `int` that is not divisible by 2.
+<4> An `even` is an `int` that is divisible by 2.
+
+[source,mtron]
+----
+   age::T
+     |   \ 
+   nat::T even::T
+     |   /
+   int::T
+----
+
+
+++++
+<!-- 🐖
+age::T[?even::T]
+-->
+++++
+
+
+nat::10
+nat::-10
+int::-10.as(nat::T)
+-->
+++++
+
+
+For instance, it is possible to define the type `nat` which represents the set of natural numbers -- integers greater than zero. In mtron, this is written:
+
+
+
+
+\[
+\tt{int::T[?>0]}
+\]
+
+The `int::T` (`int` type) is being constrained by the predicate `?>0` (or `is(gt(0))`). This constraint is a refinement of `int` (a well defined subset).
+
+
+++++
+<!-- 🐖
+nat -> int::T[?>0]
+nat::10
+nat::-10
+int::-10.as(nat::T)
+-->
+++++
+
+
+If `a` is an `obj` When a `tid` is specified for an `obj`, the `tid` is resolved to an `obj` denoting the type of `A`.
+
+
+Every mtron `obj` has a type. 
+
 metatron `objs` are typed. Types are organized into instruction sets that encapsulate the structures and processes necessary to effect domain-specific views of the underlying data space. The type system supports refinement types, optional/maybe types, generic/polymorphic types, recursive/self-referential types, dependent types, type cardinality, and more.
 
 [discrete]

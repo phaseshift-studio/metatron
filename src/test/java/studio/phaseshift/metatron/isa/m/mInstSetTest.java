@@ -130,7 +130,7 @@ public class mInstSetTest extends AbstractInstSetTest {
             "{1,1,1,1}.inst?int<=int{2}(){ sum() }                                          % int{2}::2",
             "{1,1,2,3}.inst?int<=int{2}(){ sum() }                                          % {2,5}",
             "{1,1,2,2,3,5}.inst?int<=int{2}(){ sum() }                                      % {2,4,8}",
-          //  "{1,1,2,2,3,5,7}.inst?int<=int{2}(){ sum() }.catch('X')                          % {2,4,8,\"X\"}",
+           "{1,1,2,2,3,5,7}.inst?int<=int{2}(){ sum() }.catch('X')                          % {2,4,8,\"X\"}",
             "{1,2,3,4,5,6,7,8}.inst?int<=int{4}(){ sum() }.catch('X')                        % {10,26}",
             "{1,2,3,4,5,6,7,8}.inst?int<=int{1}(){ sum() }.catch('X')                        % {1,2,3,4,5,6,7,8}",
             "{1,2,3,4,5,6,7,8}.inst?int<=int{*}(){ sum() }.catch('X')                        % 36",
@@ -313,9 +313,9 @@ public class mInstSetTest extends AbstractInstSetTest {
             "{1,2,3}>-.-<?lst<=int{*}[_,_,_]_/sum()\\_>-{,}                         % 18",
             "{1,2,3}>-.id().-<?lst<=int{*}[_,_,_]                                   % [{1,2,3},{1,2,3},{1,2,3}]",
             "{1,2,3}>-.id().-<?lst<=int{*}lst::[_,_,_]                              % [{1,2,3},{1,2,3},{1,2,3}]",
-            "{1,2,3}>-.id().-<?lst<=int{*}[_,_,_]_/sum()\\_                         % [18]",
-            "{1,2,3}>-.id().-<?lst<=int{*}[_,_,_]_/sum()\\_>-                       % 18",
-            "{1,2,3}>-.id().-<?lst<=int{*}[_,_,_]_/sum()\\_>-{,}                    % 18",
+            "{1,2,3}>-.id().-<?lst<=int{*}[_,_,_]._/sum()\\_                         % [18]",
+            "{1,2,3}>-.id().-<?lst<=int{*}[_,_,_]._/sum()\\_>-                       % 18",
+            "{1,2,3}>-.id().-<?lst<=int{*}[_,_,_]._/sum()\\_>-{,}                    % 18",
             //
             "{1,2,3}>-.barrier([,]).-<[>-,>-,>-]                                    % [{1,2,3},{1,2,3},{1,2,3}]",
             "{1,2,3}>-.barrier([,]).-<lst::[>-,>-,>-]                               % [{1,2,3},{1,2,3},{1,2,3}]",
@@ -387,7 +387,7 @@ public class mInstSetTest extends AbstractInstSetTest {
             "{[1,2],[3,4,5],[6,7,8]}>-[,]==[>-,>-,>-]>-.count()                     % 8",
             "{1,2}-<|[?>1 => +100, _=> +2]>>                                       % {3,102}",
             "{1,2}.-<|[?>1 => +100, _=> +2].rng()                                   % {3,102}",
-            //"*/m/inst/#.count()-<[is(gt(0))=>true,is(eq(0))=>false]>>-              % true",
+            "*/m/inst/#.count()-<[is(gt(0))=>true,is(eq(0))=>false]>>-              % true",
     }, delimiter = '%')
     public void testSplitMergeCode(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
@@ -712,7 +712,8 @@ public class mInstSetTest extends AbstractInstSetTest {
             "*a.>><b/d/2/1>.<<.<<.<<.<<                          % *a", // TODO: path chains should be treated as single steps?
             "*a.>>b>>d>>2>>{0,1}                                 % {g,h}",
             "*a.>>b>>d>>{1,2}                                    % {f,[g,h]}",
-            //"*a.>>b>>d-<{>>1,>>2}                                % {f,[g,h]}",
+            "*a.>>b>>d.-<[>>1,>>2]                               % [f,[g,h]]",
+            "*a.>>b>>d.-<{>>1,>>2}                               % {f,[g,h]}",
     }, delimiter = '%', quoteCharacter = '~')
     public void testLShiftRShift(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
@@ -869,7 +870,7 @@ public class mInstSetTest extends AbstractInstSetTest {
             "{1,<1>,'1'}.dedup()                       % {1,<1>,'1'}",
             //"{1,2,3}.dedup(map?int<=int(0))            % 0",
             "{[a=>1,b=>2],[a=>1,b=>3]}.dedup()         % {[a=>1,b=>2],[a=>1,b=>3]}",
-            //"{[a=>1,b=>2],[a=>1,b=>3]}.dedup(./a)      % {[a=>1,b=>2]}",
+            //"{[a=>1,b=>2],[a=>1,b=>3]}.dedup(>>a)      % {[a=>1,b=>2]}",
     }, delimiter = '%')
     public void testDedup(final String code, final String expected) throws Exception {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);

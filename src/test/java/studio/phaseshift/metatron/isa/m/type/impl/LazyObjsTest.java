@@ -51,7 +51,7 @@ public class LazyObjsTest extends AbstractMetatronTest {
         final Obj lo = lazyObjs(o.clone().iterator());
         final fURI t = f(tid).big();
         assertEquals(t, o.tid());
-        LOG.error("lazyObjs tid: %s [expected: %s]", lo.tid(), t);
+        LOG.warn("lazyObjs tid: %s [expected: %s]", lo.tid(), t);
         assertEquals(o, lo);
         // assertEquals(o.c(), lo.c()); //TODO: non-reversible
         /// ////////////////////////////////////////////////////////////////////////////////////////////

@@ -92,9 +92,10 @@ public class tp3SpaceTest extends AbstractSpaceTest {
     @CsvSource(value = {
             "*/g/S.count()                                                                  % 1",
             "*/g/S/pattern                                                                  % /m/grph/inst/schema/modern/#",
-            "*(*/g/S/pattern).count()                                                       % 4",
+            "*/g/S/pattern.*(_).count()                                                       % 4",
+            "*/g/S/pattern.*_.count()                                                       % 4",
             //  "**/g/S/pattern.count()                                                       % 4",
-            "*(*/g/S/pattern).vid()                                                         % {/m/grph/inst/schema/modern/person,/m/grph/inst/schema/modern/software,/m/grph/inst/schema/modern/created,/m/grph/inst/schema/modern/knows}",
+            "*/g/S/pattern.*(_).vid()                                                         % {/m/grph/inst/schema/modern/person,/m/grph/inst/schema/modern/software,/m/grph/inst/schema/modern/created,/m/grph/inst/schema/modern/knows}",
     }, delimiter = '%')
     public void testSchemaTraversal(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);

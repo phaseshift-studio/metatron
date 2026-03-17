@@ -233,7 +233,7 @@ public interface Space extends Rec, Closeable {
                     objs(listing.stream().map(kv -> rel(kv.uri(), kv.obj())));
         }
 
-        private static Obj writeComplete(final fURI writePattern, final Obj newObj, final Obj currentObj) {
+        private static Obj writeComplete(final Obj newObj, final Obj currentObj) {
             //Router.global().logger().info("write complete for %s: %s => %s", writePattern, currentObj, newObj);
             if (newObj.isNoObj()) {
                 currentObj.stream().forEach(CommonUtil::close);
@@ -250,7 +250,7 @@ public interface Space extends Rec, Closeable {
 
             final Iterator<IdObj> current = directReader.apply(vid);
             if (current.hasNext() && vid.isNode()) {
-                writeComplete(vid, obj, current.next().obj());
+                writeComplete(obj, current.next().obj());
                 return directWriter.apply(vid, obj);
             } else {
                 final IdObj base = Helper.locateBasePoly(space, vid);
@@ -271,7 +271,7 @@ public interface Space extends Rec, Closeable {
                         Helper.resolveWrite(LOG, space, base.furi(), base.obj().asLst().append(obj), directWriter, directReader);
                     else {
                         //throw MTronException.of("unknown poly: %s %s %s", base.get1(), vid, obj);
-                        writeComplete(vid, obj, base.obj());
+                        writeComplete(obj, base.obj());
                         return directWriter.apply(vid, obj);
                     }
                 } else if (base.obj().isRec()) {
@@ -286,7 +286,7 @@ public interface Space extends Rec, Closeable {
                         // resolveWriter.accept(nextStepAddr, new MRec(submap, value.tid(), fURI.NULL));
 
                     } else {
-                        writeComplete(vid, obj, base.obj());
+                        writeComplete(obj, base.obj());
                         return directWriter.apply(vid, obj);
                     }
                 } else if (base.obj().isLst()) {
@@ -309,7 +309,7 @@ public interface Space extends Rec, Closeable {
                 Obj obj = space.read(newFuri);
                 if (obj.isPoly())
                     return IdObj.of(newFuri, obj.as());
-                newFuri = newFuri.retract(1).asNode();
+                newFuri = newFuri.retract(1);
             }
             return null;
         }
@@ -325,15 +325,23 @@ public interface Space extends Rec, Closeable {
         }
     }
 
-    record IdObj(fURI furi, Obj obj) {
+    record IdObj(fURI furi, Obj obj) implements Iterable<IdObj> {
         public static IdObj of(final fURI furi, final Obj obj) {
             return new IdObj(furi, obj);
         }
+
+        public Iterator<IdObj> iterator() {
+            return IteratorUtil.of(this);
+        }
     }
 
-    record UriObj(Uri uri, Obj obj) {
+    record UriObj(Uri uri, Obj obj) implements Iterable<UriObj> {
         public static UriObj of(final Uri uri, final Obj obj) {
             return new UriObj(uri, obj);
+        }
+
+        public Iterator<UriObj> iterator() {
+            return IteratorUtil.of(this);
         }
     }
 }

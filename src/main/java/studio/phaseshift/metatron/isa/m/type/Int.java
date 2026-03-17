@@ -122,6 +122,7 @@ public interface Int extends Mono, Ring.O<Int> {
                     instC(SUM_INST_TID.dom(INT_TID.maybeSome()).rng(INT_TID), lst(), (lhs, inst) -> inst.seed().jvm(lhs.stream().reduce(inst.seed(), (a, b) -> ((Int) a).plus((Int) b)).intValue()), jnt(0)),
                     instC(PROD_INST_TID.dom(INT_TID.maybeSome()).rng(INT_TID), lst(), (lhs, inst) -> inst.seed().jvm(lhs.stream().reduce(inst.seed(), (a, b) -> jnt(a.intValue() * (b.intValue() * b.c().max()))).intValue()/* * inst.c().max()*/), jnt(1)),
                     instC(POW_INST_TID.dom(INT_TID).rng(INT_TID), lst(T(INT_TID)), (lhs, inst) -> jnt((long) Math.pow(lhs.intValue(), inst.arg(0).intValue()))),
+                    instC(MOD_INST_TID.dom(INT_TID).rng(INT_TID), lst(INT_TYPE), (lhs,inst) -> jnt(lhs.intValue() % inst.arg(0).intValue())),
                     instC(ORDER_INST_TID.dom(INT_TID.maybeSome()).rng(LST_TID), lst(), (lhs, inst) -> lst(lhs.stream().sorted(Comparator.comparing(a -> a.asInt().intValue()))))
             ));
         }

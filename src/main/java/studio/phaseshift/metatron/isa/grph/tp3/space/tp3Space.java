@@ -22,7 +22,10 @@ import org.apache.commons.configuration2.ConfigurationMap;
 import org.apache.tinkerpop.gremlin.jsr223.DefaultGremlinScriptEngineManager;
 import org.apache.tinkerpop.gremlin.jsr223.GremlinLangScriptEngineFactory;
 import org.apache.tinkerpop.gremlin.jsr223.GremlinScriptEngine;
-import org.apache.tinkerpop.gremlin.structure.*;
+import org.apache.tinkerpop.gremlin.structure.Edge;
+import org.apache.tinkerpop.gremlin.structure.Element;
+import org.apache.tinkerpop.gremlin.structure.Graph;
+import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
 import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph;
 import studio.phaseshift.metatron.furi.fURI;
@@ -45,8 +48,7 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.*;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.failure_;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
@@ -78,7 +80,7 @@ public class tp3Space extends grphSpace<Graph> {
                                     throw inst.arg(0).asFail().asException();
                                 return tp3Space.of(inst.arg(0).asRec(), inst.arg(0).vid());
                             })).create();
-    
+
     protected final String vertexPrefix;
     protected final String edgePrefix;
     protected final String schemaPrefix;
@@ -172,11 +174,14 @@ public class tp3Space extends grphSpace<Graph> {
     @Override
     public Function<fURI, Iterator<IdObj>> directReader() {
         return (pattern) -> {
+            LOG.debug("looking for tp3 vid: %s", pattern);
             if (pattern.equals(ALL)) {
                 throw MTronException.of("cannot read all tp3 space");
             } else {
-                if (pattern.hasPrefix(this.schemaPrefix)) {
-                    return (pattern.equals(f(this.schemaPrefix)) ? IteratorUtil.of(IdObj.of(f(this.schemaPrefix), this.schema)) : IteratorUtil.of());
+                if (f(this.schemaPrefix).test(pattern)) {
+                    return IdObj.of(f(this.schemaPrefix), this.at(SCHEMA)).iterator();
+                } else if (pattern.hasPrefix(this.schemaPrefix)) {
+                    return IteratorUtil.of();
                 } else if (pattern.segmentLength() < 3) {
                     return IteratorUtil.of();
                 } else if (pattern.equals(f(this.vertexPrefix).extend("#"))) {
