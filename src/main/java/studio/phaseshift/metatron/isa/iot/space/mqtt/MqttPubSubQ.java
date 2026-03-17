@@ -19,35 +19,48 @@
 package studio.phaseshift.metatron.isa.iot.space.mqtt;
 
 import studio.phaseshift.metatron.BootLoader;
+import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.furi.q.PubSubQ;
+import studio.phaseshift.metatron.furi.q.BaseQ;
+import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 
 import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 import static studio.phaseshift.metatron.Tokens.SUB;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.iot.space.mqtt.mqttSpace.MQTT_SPACE_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 
-public class MqttPubSubQ extends PubSubQ {
+public class MqttPubSubQ extends BaseQ {
 
     protected final mqttSpace space;
+    protected final Q subq = QCollection.subq();
 
     public MqttPubSubQ(final mqttSpace space) {
-        super();
+        super(new HashMap<>(), MQTT_SPACE_TID.extend("pubsub"), null);
         this.space = space;
         this.onWrite = new MqttPubSubQ.OnWrite();
-        this.onRead = new PubSubQ.OnRead();
+        this.onRead =   this.subq.onRead().get();
     }
 
-    public class OnWrite extends PubSubQ.OnWrite {
+    public class OnWrite extends BaseOnWrite {
+        
+        public OnWrite() {
+            super(noobj(), noobj(), noobj());
+        }
+        
         @Override
         public Optional<Obj> qlessWrite(final fURI source, final fURI vid, final Obj obj) {
             return Optional.empty();

@@ -24,10 +24,14 @@ import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.util.TriFunction;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
@@ -255,7 +259,57 @@ public interface Q extends Rec {
             // do nothing
         }
 
+        public static Builder build(final fURI tid, final fURI pattern) {
+            return new Builder(tid, pattern);
+        }
 
+
+        public static class Builder {
+
+            protected Map<fURI, Object> jvm = new LinkedHashMap<>();
+
+            protected final fURI pattern;
+            protected final fURI tid;
+
+            protected Builder(final fURI tid, final fURI pattern) {
+                this.pattern = pattern;
+                this.tid = tid;
+            }
+
+            public Builder preRead(final Function<fURI, Obj> preRead) {
+                this.jvm.put(PRE_READ, preRead);
+                return this;
+            }
+
+            public Builder postRead(final BiFunction<fURI, Obj, Obj> postRead) {
+                this.jvm.put(POST_READ, postRead);
+                return this;
+            }
+
+            public Builder preWrite(final BiFunction<fURI, Obj, Obj> preWrite) {
+                this.jvm.put(PRE_WRITE, preWrite);
+                return this;
+            }
+
+            public Builder postWrite(final TriFunction<fURI, Obj, Obj, Obj> postWrite) {
+                this.jvm.put(POST_WRITE, postWrite);
+                return this;
+            }
+
+            public Builder qlessWrite(final BiFunction<fURI, Obj, Obj> qlessWrite) {
+                this.jvm.put(QLESS_WRITE, qlessWrite);
+                return this;
+            }
+
+            public Q create() {
+                return BaseQ.create(this.tid, this.pattern,
+                        (Function<fURI, Obj>) this.jvm.get(PRE_READ),
+                        (BiFunction<fURI, Obj, Obj>) this.jvm.get(POST_READ),
+                        (BiFunction<fURI, Obj, Obj>) this.jvm.get(PRE_WRITE),
+                        (TriFunction<fURI, Obj, Obj, Obj>) this.jvm.get(POST_WRITE),
+                        (BiFunction<fURI, Obj, Obj>) this.jvm.get(QLESS_WRITE));
+            }
+        }
     }
 
 }

@@ -36,6 +36,9 @@ public final class Tokens {
     public static final fURI PLUS = f("+");
     public static final fURI STACK_PATTERN = f("+/#");
 
+    public static final String SRC = "src";
+    public static final String TGT = "tgt";
+    public static final String INCR = "incr";
     public static final String PROVIDER = "provider";
     public static final String API_KEY = "api_key";
     public static final String BLOCK = "block";
@@ -120,8 +123,6 @@ public final class Tokens {
     public static final String FROM = "FROM";
     public static final String CLUSTER = "cluster";
     public static final String BOOT = "boot";
-    public static final String SRC = "src";
-    public static final String TGT = "tgt";
     public static final String ON_RECV = "on_recv";
     public static final String HOSTNAME = "HOSTNAME";
     public static final String SCHEMA = "schema";

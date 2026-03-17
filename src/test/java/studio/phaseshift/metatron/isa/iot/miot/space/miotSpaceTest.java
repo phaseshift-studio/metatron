@@ -24,20 +24,19 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.TestSkip;
-import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.furi.q.PubSubQ;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
 import studio.phaseshift.metatron.isa.iot.MoquetteServer;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.util.MTronException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.furi.q.PubSubQ.SUBSCRIPTION_TID;
+import static studio.phaseshift.metatron.furi.q.QCollection.SUBSCRIPTION_TID;
 import static studio.phaseshift.metatron.isa.iot.iotInstSet.IOT_ISA_TID;
 import static studio.phaseshift.metatron.isa.iot.miot.miotInstSet.MIOT_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -88,7 +87,7 @@ public class miotSpaceTest extends AbstractSpaceTest {
             "/t/b?sub -> sub::[src=>a,tgt=>/t/b,on_recv=><abc>->4]                            % /t/b -> 3                       % *abc.?=4",
     }, delimiter = '%')
     public void testSubscriptions(final String subscription, final String write, final String check) {
-        final PubSubQ.Subscription sub = mParser.eval(subscription);
+        final Rec sub = mParser.eval(subscription);
         assertEquals(SUBSCRIPTION_TID, sub.tid());
         final Obj writeObj = mParser.eval(write);
         final Obj checkObj = mParser.eval(check);
