@@ -952,26 +952,16 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                     instC(WHERE_INST_TID.dom(ALL).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> lhs.test(inst.arg(0)) ? lhs : noobj()),
                     instC(GROUP_INST_TID.dom(ALL.maybeSome()).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> {
                         final Map<Obj, Obj> result = new LinkedHashMap<>();
-                        lhs.stream().forEach(e -> {
-                            inst.arg(0).asRec().elements().forEach(kv -> {
-                                if (e.isRec()) {
-                                    final Obj kk = kv.first().isCall() ? kv.first().apply(e) : e.asRec().at(kv.first());
-                                    if (!kk.isNoObj()) {
-                                        final Obj vv = kv.second().apply(kk);
-                                        if (!vv.isNoObj()) // TODO: stream through keys to get matching key for incur-append on grouping to the same key
-                                            result.compute(kk, (k, v) -> (v == null) ? vv : v.append(vv));
-                                    }
-                                } else {
-                                    final Obj kk = kv.first().isCall() ? kv.first().apply(e) : e.test(kv.first()) ? e : noobj();
-                                    if (!kk.isNoObj()) {
-                                        final Obj vv = kv.second().apply(e);
-                                        if (!vv.isNoObj()) // TODO: stream through keys to get matching key for incur-append on grouping to the same key
-                                            result.compute(kk, (k, v) -> (v == null) ? vv : v.append(vv));
-                                    }
-                                }
-                            });
-                        });
-                        return rec(result);
+                        lhs.stream().forEach(e -> inst.arg(0).asRec().elements().forEach(kv -> {
+                            final Obj kk = kv.first().isCall() ? kv.first().apply(e) : (e.isRec() ? e.asRec().at(kv.first()) : e);
+                            if (!kk.isNoObj()) // TODO: if the group value is not a barrier, then process immediately.
+                                result.compute(kk, (_, v) -> (v == null) ? lst(kv.second(), e) : v.asLst().at(jnt(1), e, MUTABLE));
+                        }));
+                        return result.entrySet().stream()
+                                .map(kv -> rel(
+                                        kv.getKey(),  // key
+                                        kv.getValue().asLst().at(0).apply(kv.getValue().asLst().at(jnt(1)))))  // compute barriered value
+                                .collect(new CommonUtil.RecCollector());
                     }),
                     docWrap(instC(EVAL_INST_TID.dom(ALL.maybe()).rng(ALL_STAR), lst(STR_TYPE), (lhs, inst) -> mParser.eval(inst.arg(0).strValue())),
                             "can be any obj as long as the arg generated is a str", "the result of evaluating the source str arg", Map.of(jnt(0), "the mtron source code to evaluate"), "evaluates mtron source code"),

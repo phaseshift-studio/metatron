@@ -98,6 +98,11 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
         return this.addInst(instB(mInstSet.BARRIER_INST_TID, lst()));
     }
 
+    public F barrier_(final Obj obj) {
+        return this.addInst(instB(mInstSet.BARRIER_INST_TID, lst(obj)));
+    }
+
+
     public F thread_(final Obj obj) {
         return this.addInst(instB(mInstSet.THREAD_INST_TID, lst(obj)));
     }
@@ -409,7 +414,7 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
     public F domrng(final fURI dom, final fURI rng) {
         final Inst last = this.insts().remove(this.insts().size() - 1);
         this.insts().add(last.tid(last.tid().dom(dom).rng(rng)));
-        this.logger().info(this.insts());
+        //this.logger().info(this.insts());
         return (F) this;
     }
 

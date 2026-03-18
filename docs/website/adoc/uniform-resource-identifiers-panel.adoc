@@ -1,5 +1,5 @@
 [discrete]
-== The fURI Address Space
+== Uniform Resource Identifiers
 
 [source,mtron]
 ----
@@ -12,9 +12,9 @@ file://domain.local:22/usr/data/abc{*}?sub
   └─────────────────────────────────────────⮞ scheme
 ----
 
-[cols="1a,2a,3",separator=🧱,options=header]
+[cols="2a,2a,3",separator=🧱,options=header,role="table-bordered small center"]
 |===
-🧱 coefficient 🧱 shorthand 🧱 examples
+🧱 [.red]#coefficient# 🧱 [.red]#shorthand# 🧱 [.red]#name#
 🧱 {0,0}       🧱 {0}       🧱 noobj
 🧱 {1,1}       🧱 {1} or    🧱 an-obj
 🧱 {-1,-1}     🧱 {-1}      🧱 anti-obj
@@ -48,17 +48,10 @@ This section will explore the following considerations when designing a _multi-m
 [discrete]
 === spatial consideration when embedding
 
-++++
-<!-- 🐖 ./main_runner.out
-1.plus(2)
--->
-++++
-
-image:nenofhat-bedroom.png[width=300,float=left,role="parchment"] A _matrix_ is an \$n \times m\$ data structure composed of \$n\$ vectors/row, each with \$m\$ elements/columns.
-A relational database _table_ is an example of a matrix, where the entries typically span numeric and non-numeric data types.
+A _matrix_ is an \$n \times m\$ data structure composed of \$n\$ vectors/row, each with \$m\$ elements/columns. A relational database _table_ is an example of a matrix, where the entries typically span numeric and non-numeric data types.
 Three general approaches to embedding a matrix or table into a space are presented below, where each makes different space/time tradeoffs.
 
-[cols="5,5,8",frame=none,grid=none,subs="+macros",separator=🧱]
+[cols="5,5,8",frame=none,subs="+macros",separator=🧱,grid=cols]
 |===
 
 ^a🧱
@@ -69,7 +62,7 @@ Three general approaches to embedding a matrix or table into a space are present
  \    |   |    /
  [■] [■] [■] [■]
 
- -[■] [■] [■] [■]-
+-[■] [■] [■] [■]-
 
  [■] [■] [■] [■]
  /    |   |    \
@@ -97,9 +90,9 @@ Three general approaches to embedding a matrix or table into a space are present
 ----
 ​
 [■]-[■]-[■]-[■]
-|   |   |   |
+ |   |   |   |
 [■]-[■]-[■]-[■]
-|   |   |   |
+ |   |   |   |
 [■]-[■]-[■]-[■]
 ​
 ----
@@ -107,7 +100,7 @@ Three general approaches to embedding a matrix or table into a space are present
 a🧱
 
 ++++
-<!-- 🐖 ./main_runner.out
+<!-- 🐖
 [-- write matrix --]
 m/0/0 -> 0
 m/0/1 -> 1
@@ -131,7 +124,7 @@ m/2/3 -> 11
 a🧱
 
 ++++
-<!-- 🐖 ./main_runner.out
+<!-- 🐖
 [-- write matrix --]
 m/0 -> [0,1,2,3]
 m/1 -> [4,5,6,7]
@@ -143,12 +136,10 @@ m/2 -> [8,9,10,11]
 -->
 ++++
 
-image:newt-matrix.png[width=375,float=left]
-
 a🧱
 
 ++++
-<!-- 🐖 ./main_runner.out
+<!-- 🐖
 [-- write matrix --]
 m -> [[0,1,2,3],[4,5,6,7],[8,9,10,11]]
 [-- read matrix --]
@@ -172,25 +163,22 @@ This is possible because a structure resolves up the fURI path hierarchy until i
 Once found, it then traverses within the match to resolve the remaining path segments.
 
 .Amortized Costs in Terms of Time
-[.small][.center]
-
-[%header,width=50%,cols="l2,c1,c1,c1"]
+[%header,width=70%,cols="l2,c1,c1,c1",role="small center"]
 |===
-| embedding              | single-element | row-access  | column-access
-| [.red]#entry#          | \$O(1)\$       | \$O(n)\$    | \$O(m)\$
-| [.red]#row#            | \$O(m)\$       | \$O(1)\$    | \$O(m)\$
-| [.red]#row_column#     | \$O(1)\$       | \$O(1)\$    | \$O(1)\$
+| [.red]#embedding#              | [.red]#single-element#| [.red]#row-access#  | [.red]#column-access#
+| [.red]#entry#          | \[O(1)\]       | \[O(n)\]    | \[O(m)\]
+| [.red]#row#            | \[O(m)\]       | \[O(1)\]    | \[O(m)\]
+| [.red]#row_column#     | \[O(1)\]       | \[O(1)\]    | \[O(1)\]
 |===
 
 The different embeddings also have different space costs, where space is defined as the amount of data accessed (i.e. retrieved from the structure) in order to satisfy the resolution of the respective fURI.
 
 .Amortized Costs in Terms of Space
-[.small][.center]
-
-[%header,width=50%,cols="l2,c1,c1,c1"]
+[.center]
+[%header,width=70%,cols="l2,c1,c1,c1",role="small center"]
 |===
-| embedding              | single-element | row-access    | column-access
-| [.red]#entry#          | \$O(1)\$       | \$O(n)\$      | \$O(m)\$
-| [.red]#row#            | \$O(n)\$       | \$O(n)\$      | \$O(n+m)\$
-| [.red]#row_column#     | \$O(n+m)\$     | \$O(n+m)\$    | \$O(n+m)\$
+| [.red]#embedding#              | [.red]#single-element# | [.red]#row-access#    | [.red]#column-access#
+| [.red]#entry#          | \[O(1)\]       | \[O(n)\]      | \[O(m)\]
+| [.red]#row#            | \[O(n)\]       | \[O(n)\]      | \[O(n+m)\]
+| [.red]#row_column#     | \[O(n+m)\]     | \[O(n+m)\]    | \[O(n+m)\]
 |===

@@ -1151,9 +1151,9 @@ bin/metatron</code></pre>
             <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-9" aria-expanded="false" aria-controls="card-9">Relational Space</button>
         </div>
         <div class="row mt-3 gap-3">
-            <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-12" aria-expanded="false" aria-controls="card-12">Q Components</button>
-            <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-11" aria-expanded="false" aria-controls="card-11">References</button>
-            <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-8" aria-expanded="false" aria-controls="card-8">File Space</button>
+            <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-10" aria-expanded="false" aria-controls="card-10">Q Components</button>
+            <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-11" aria-expanded="false" aria-controls="card-11">Uniform Resource Identifiers</button>
+            <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-12" aria-expanded="false" aria-controls="card-12">File Space</button>
             <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-13" aria-expanded="false" aria-controls="card-13">The Router</button>
             <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-14" aria-expanded="false" aria-controls="card-14">Graph Space</button>
         </div>
@@ -1282,37 +1282,52 @@ While the reader searches for some unbeknownst depth in the previous sentence, a
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *&lt;+/#/&gt;
-==&gt;boot/script/mtron=&gt;/bin/mtron
 ==&gt;id_removal_rewrite=&gt;id_removal_rewrite?rng=code{?}&amp;dom=#{?}(code::T){&lt;j&gt;}
-==&gt;boot/script/zsh=&gt;/bin/zsh
-==&gt;sql_native_count_rewrite=&gt;sql_native_count_rewrite?rng=code{?}&amp;dom=#{?}(code::T){&lt;j&gt;}
-==&gt;boot/args/host=&gt;&lt;ws://0.0.0.0:8999&gt;
 ==&gt;boot/script/perl=&gt;/usr/bin/perl
-==&gt;boot/file=&gt;file::&lt;/home/killswitch/software/metatron/boot/boot.mtron?p=rw-rw-r--&gt;@boot/file
+==&gt;m/1/1=&gt;5
+==&gt;boot/args/local=&gt;booger
+==&gt;m/1/3=&gt;7
+==&gt;boot/peers/1=&gt;&lt;ws://127.0.0.1:7777&gt;
+==&gt;band=&gt;inst?rng=int{?}&amp;dom=int(min=&gt;isa(int::T[is(gt(0))]@nat).else(-100),max=&gt;isa(int::T[is(gt(0))]@nat).else(100)){is(and(gte(*min),lte(*max)))}
+==&gt;personx=&gt;rec::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;personx{*}::T])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]
+==&gt;triple=&gt;inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}
+==&gt;boot/script/python=&gt;/usr/bin/python3
+==&gt;x/a=&gt;1
+==&gt;marko/age=&gt;29
+==&gt;m/1=&gt;[4,5,6,7]
+==&gt;grant=&gt;personx::[name=&gt;'grant',age=&gt;23,knows=&gt;!*marko]
+==&gt;m/2/0=&gt;8
+==&gt;odd=&gt;int::T[is(mod(2).eq(1))]
+==&gt;boot/args/host=&gt;&lt;ws://0.0.0.0:8999&gt;
+==&gt;m/0/3=&gt;3
+==&gt;m/2/2=&gt;10
+==&gt;m=&gt;[[0,1,2,3],
+  [4,5,6,7],
+  [8,9,10,11]]
+==&gt;fs_prefix=&gt;booger
+==&gt;map_nest_rewrite=&gt;map_nest_rewrite?rng=code{?}&amp;dom=#{?}(code::T){&lt;j&gt;}
+==&gt;nat=&gt;int::T[is(gt(0))]
+==&gt;m/0/1=&gt;1
+==&gt;even=&gt;int::T[is(mod(2).eq(0))]
+==&gt;marko/knows=&gt;!*grant
+==&gt;boot/script/sh=&gt;/bin/sh
+==&gt;grant/name=&gt;'grant'
+==&gt;m/1/2=&gt;6
 ==&gt;x=&gt;[
  a=&gt;1,
  b=&gt;[
    c=&gt;2,
    d=&gt;[3,4,5]]]
-==&gt;boot/args/local=&gt;booger
 ==&gt;boot/args/boot=&gt;&lt;/home/killswitch/software/metatron/boot/boot.mtron&gt;
-==&gt;fs_prefix=&gt;booger
-==&gt;map_nest_rewrite=&gt;map_nest_rewrite?rng=code{?}&amp;dom=#{?}(code::T){&lt;j&gt;}
-==&gt;boot/peers/1=&gt;&lt;ws://127.0.0.1:7777&gt;
+==&gt;marko=&gt;personx::[name=&gt;'marko',age=&gt;29,knows=&gt;!*grant]
 ==&gt;x/b=&gt;[
  c=&gt;2,
  d=&gt;[3,4,5]]
-==&gt;boot/script/bash=&gt;/bin/bash
+==&gt;grant/knows=&gt;!*marko
+==&gt;m/1/0=&gt;4
 ==&gt;boot/peers/0=&gt;ws://localhost:6666
 ==&gt;boot/args/log=&gt;info
-==&gt;boot/script/sh=&gt;/bin/sh
-==&gt;boot/script=&gt;[
- sh    =&gt;/bin/sh,
- bash  =&gt;/bin/bash,
- zsh   =&gt;/bin/zsh,
- python=&gt;/usr/bin/python3,
- perl  =&gt;/usr/bin/perl,
- mtron =&gt;/bin/mtron]
+==&gt;grant/age=&gt;23
 ==&gt;boot/peers=&gt;[ws://localhost:6666,&lt;ws://127.0.0.1:7777&gt;]
 ==&gt;boot/args=&gt;[
  host =&gt;&lt;ws://0.0.0.0:8999&gt;,
@@ -1320,9 +1335,29 @@ While the reader searches for some unbeknownst depth in the previous sentence, a
  log  =&gt;info,
  local=&gt;booger,
  mqtt =&gt;[broker=&gt;&lt;mqtt://chibi.local:1883&gt;]]
-==&gt;boot/script/python=&gt;/usr/bin/python3
 ==&gt;boot/args/mqtt=&gt;[broker=&gt;&lt;mqtt://chibi.local:1883&gt;]
-==&gt;x/a=&gt;1</code></pre>
+==&gt;age=&gt;int::T[is(lt(120))]@nat
+==&gt;sum=&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{*}::T [reduce?rng=int&amp;dom=int{*}(noobj){fold(0,plus(id()))}]][...]@/sys/fail/2310
+==&gt;boot/script/mtron=&gt;/bin/mtron
+==&gt;m/2/3=&gt;11
+==&gt;m/2=&gt;[8,9,10,11]
+==&gt;boot/script/zsh=&gt;/bin/zsh
+==&gt;marko/name=&gt;'marko'
+==&gt;m/0/2=&gt;2
+==&gt;sql_native_count_rewrite=&gt;sql_native_count_rewrite?rng=code{?}&amp;dom=#{?}(code::T){&lt;j&gt;}
+==&gt;boot/file=&gt;file::&lt;/home/killswitch/software/metatron/boot/boot.mtron?p=rw-rw-r--&gt;@boot/file
+==&gt;m/0=&gt;[0,1,2,3]
+==&gt;m/2/1=&gt;9
+==&gt;boot/script/bash=&gt;/bin/bash
+==&gt;m/0/0=&gt;0
+==&gt;name=&gt;str::T[split('').merge(count(noobj)).is(lt(30))]
+==&gt;boot/script=&gt;[
+ sh    =&gt;/bin/sh,
+ bash  =&gt;/bin/bash,
+ zsh   =&gt;/bin/zsh,
+ python=&gt;/usr/bin/python3,
+ perl  =&gt;/usr/bin/perl,
+ mtron =&gt;/bin/mtron]</code></pre>
 </div>
 </div>
 </div>
@@ -1491,7 +1526,7 @@ mtron&gt; 15.band(10,20)              ​4​
 ==&gt;15
 mtron&gt; -15.band(-20,-10)           ​5​
 mtron&gt; band -&gt; |inst?int{?}&lt;=int(min=&gt;?nat::T.else(fail()),max=&gt;?nat::T.else(fail())){ is(and(gte(*min),lte(*max))) }
-==&gt;fail::[fail(noobj) is not a fail::T][...]@/sys/fail/36
+==&gt;fail::[fail(noobj) is not a fail::T][...]@/sys/fail/2524
 mtron&gt; 15.band(10,20)              ​6​
 ==&gt;15
 mtron&gt; -15.band(-20,-10)           ​7​
@@ -1542,12 +1577,12 @@ Finally, a degenerate anonymous <code>inst</code> with no specified variable fra
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; 10.(min=&gt;2,max=&gt;8){ is(and(gte(*min),lte(*max))) }                ​1​
 ==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/50
+	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/2538
 mtron&gt; 10.(min=&gt;minus(1),max=&gt;plus(1)){ is(and(gte(*min),lte(*max))) }   ​2​
 ==&gt;10
 mtron&gt; 10.(){ is(and(gte(*min),lte(*max))) }                             ​3​
 ==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/52
+	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/2540
 mtron&gt; 10.is(and(gte(minus(1)),lte(plus(1))))                            ​5​
 ==&gt;10</code></pre>
 </div>
@@ -1586,11 +1621,11 @@ mtron&gt; 10.is(and(gte(minus(1)),lte(plus(1))))                            ​5
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;_)[mod(*by).eq(0)]
 ==&gt;fail::[is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;_)[mod(*by).eq(0)]
                                       ^ end of input expected
-][...]@/sys/fail/54
+][...]@/sys/fail/2542
 mtron&gt; 10.is_divisible(2)
-==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/56
+==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/2544
 mtron&gt; 10.is_divisible('abc')
-==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/58</code></pre>
+==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/2546</code></pre>
 </div>
 </div>
 </div>
@@ -1611,7 +1646,7 @@ mtron&gt; 10.is_divisible('abc')
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; band -&gt; |band?int{?}&lt;=int(min=&gt;_,max=&gt;is(gt(*min)).else(*min.plus(1)))[is(gte(*min)).is(lte(*max))]
 ==&gt;fail::[band -&gt; |band?int{?}&lt;=int(min=&gt;_,max=&gt;is(gt(*min)).else(*min.plus(1)))[is(gte(*min)).is(lte(*max))]
                                                                       ^ end of input expected
-][...]@/sys/fail/60
+][...]@/sys/fail/2548
 mtron&gt; 2.band(min=&gt;1,max=&gt;1)                 ​1​</code></pre>
 </div>
 </div>
@@ -1633,11 +1668,11 @@ mtron&gt; 2.band(min=&gt;1,max=&gt;1)                 ​1​</code></pre>
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;is(neq(0)).else(print('error').map(1)))[mod(*by).eq(0)]
 ==&gt;fail::[is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;is(neq(0)).else(print('error').map(1)))[mod(*by).eq(0)]
                                       ^ end of input expected
-][...]@/sys/fail/62
+][...]@/sys/fail/2550
 mtron&gt; 10.is_divisible(2)
-==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/64
+==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/2552
 mtron&gt; 10.is_divisible('abc')
-==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/66</code></pre>
+==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/2554</code></pre>
 </div>
 </div>
 </div>
@@ -1668,9 +1703,9 @@ This ensures the uri <code>triple</code> is not applied to the <code>inst</code>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; triple -&gt; inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}
-==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}]][...]@/sys/fail/68
+==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}]][...]@/sys/fail/2556
 mtron&gt; *triple
-==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}]][...]@/sys/fail/68</code></pre>
+==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}]][...]@/sys/fail/2556</code></pre>
 </div>
 </div>
 </td>
@@ -1709,7 +1744,7 @@ mtron&gt; {1,2,3,4,5,6}.triple()
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; sum -&gt; reduce?int&lt;=int{*}(){fold(0,plus(_))}
-==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{*}::T [reduce?rng=int&amp;dom=int{*}(noobj){fold(0,plus(id()))}]][...]@/sys/fail/70</code></pre>
+==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{*}::T [reduce?rng=int&amp;dom=int{*}(noobj){fold(0,plus(id()))}]][...]@/sys/fail/2558</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1979,82 +2014,82 @@ ultimately dependent on the incoming lhs <code>obj</code>, where</p>
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *ollama:+
 ==&gt;model::[
- host    =&gt;!*/sys/space/ollama/host,
  name    =&gt;qwen3-coder-next:latest,
- think   =&gt;false,
- provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion,tools],
- size    =&gt;gB::48.19]@ollama:qwen3-coder-next:latest
-==&gt;model::[
  host    =&gt;!*/sys/space/ollama/host,
+ size    =&gt;gB::48.19,
+ skill   =&gt;[completion,tools],
+ provider=&gt;!*/sys/space/ollama,
+ think   =&gt;false]@ollama:qwen3-coder-next:latest
+==&gt;model::[
  name    =&gt;&lt;deepseek-v3.2:cloud&gt;,
- think   =&gt;true,
- provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion,tools,thinking],
- size    =&gt;gB::0.00]@ollama:deepseek-v3.2:cloud
-==&gt;model::[
  host    =&gt;!*/sys/space/ollama/host,
+ size    =&gt;gB::0.00,
+ skill   =&gt;[completion,tools,thinking],
+ provider=&gt;!*/sys/space/ollama,
+ think   =&gt;true]@ollama:deepseek-v3.2:cloud
+==&gt;model::[
  name    =&gt;qwen3:8b,
- think   =&gt;true,
- provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion,tools,thinking],
- size    =&gt;gB::4.87]@ollama:qwen3:8b
-==&gt;model::[
  host    =&gt;!*/sys/space/ollama/host,
+ size    =&gt;gB::4.87,
+ skill   =&gt;[completion,tools,thinking],
+ provider=&gt;!*/sys/space/ollama,
+ think   =&gt;true]@ollama:qwen3:8b
+==&gt;model::[
  name    =&gt;deepcoder:latest,
- think   =&gt;false,
- provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion],
- size    =&gt;gB::8.37]@ollama:deepcoder:latest
-==&gt;model::[
  host    =&gt;!*/sys/space/ollama/host,
+ size    =&gt;gB::8.37,
+ skill   =&gt;[completion],
+ provider=&gt;!*/sys/space/ollama,
+ think   =&gt;false]@ollama:deepcoder:latest
+==&gt;model::[
  name    =&gt;llava:latest,
- think   =&gt;false,
- provider=&gt;!*/sys/space/ollama,
+ host    =&gt;!*/sys/space/ollama/host,
+ size    =&gt;gB::4.41,
  skill   =&gt;[completion,vision],
- size    =&gt;gB::4.41]@ollama:llava:latest
+ provider=&gt;!*/sys/space/ollama,
+ think   =&gt;false]@ollama:llava:latest
 ==&gt;model::[
- host    =&gt;!*/sys/space/ollama/host,
  name    =&gt;qwen3:latest,
- think   =&gt;true,
- provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion,tools,thinking],
- size    =&gt;gB::4.87]@ollama:qwen3:latest
-==&gt;model::[
  host    =&gt;!*/sys/space/ollama/host,
+ size    =&gt;gB::4.87,
+ skill   =&gt;[completion,tools,thinking],
+ provider=&gt;!*/sys/space/ollama,
+ think   =&gt;true]@ollama:qwen3:latest
+==&gt;model::[
  name    =&gt;gpt-oss:latest,
- think   =&gt;true,
- provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion,tools,thinking],
- size    =&gt;gB::12.85]@ollama:gpt-oss:latest
-==&gt;model::[
  host    =&gt;!*/sys/space/ollama/host,
+ size    =&gt;gB::12.85,
+ skill   =&gt;[completion,tools,thinking],
+ provider=&gt;!*/sys/space/ollama,
+ think   =&gt;true]@ollama:gpt-oss:latest
+==&gt;model::[
  name    =&gt;&lt;minimax-m2.5:cloud&gt;,
- think   =&gt;true,
- provider=&gt;!*/sys/space/ollama,
+ host    =&gt;!*/sys/space/ollama/host,
+ size    =&gt;gB::0.00,
  skill   =&gt;[completion,tools,thinking],
- size    =&gt;gB::0.00]@ollama:minimax-m2.5:cloud
+ provider=&gt;!*/sys/space/ollama,
+ think   =&gt;true]@ollama:minimax-m2.5:cloud
 ==&gt;model::[
- host    =&gt;!*/sys/space/ollama/host,
  name    =&gt;deepseek-coder:latest,
- think   =&gt;false,
- provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion],
- size    =&gt;gB::0.72]@ollama:deepseek-coder:latest
-==&gt;model::[
  host    =&gt;!*/sys/space/ollama/host,
+ size    =&gt;gB::0.72,
+ skill   =&gt;[completion],
+ provider=&gt;!*/sys/space/ollama,
+ think   =&gt;false]@ollama:deepseek-coder:latest
+==&gt;model::[
  name    =&gt;tinyllama:latest,
- think   =&gt;false,
- provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion],
- size    =&gt;gB::0.59]@ollama:tinyllama:latest
-==&gt;model::[
  host    =&gt;!*/sys/space/ollama/host,
- name    =&gt;llama3-groq-tool-use:latest,
- think   =&gt;false,
+ size    =&gt;gB::0.59,
+ skill   =&gt;[completion],
  provider=&gt;!*/sys/space/ollama,
+ think   =&gt;false]@ollama:tinyllama:latest
+==&gt;model::[
+ name    =&gt;llama3-groq-tool-use:latest,
+ host    =&gt;!*/sys/space/ollama/host,
+ size    =&gt;gB::4.34,
  skill   =&gt;[completion,tools],
- size    =&gt;gB::4.34]@ollama:llama3-groq-tool-use:latest</code></pre>
+ provider=&gt;!*/sys/space/ollama,
+ think   =&gt;false]@ollama:llama3-groq-tool-use:latest</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2187,350 +2222,848 @@ mtron&gt; even -&gt; int::T[is(mod(2).eq(0))]    ​4​
 </div>
 </div>
 <div class="paragraph">
-<p>nat::10
-nat::-10
-int::-10.as(nat::T)
--&#8594;</p>
+<p>For instance, it is possible to define the type <code>nat</code> which represents the set of natural numbers&#8201;&#8212;&#8201;integers greater than zero. In mtron, this is written:</p>
 </div>
-For instance, it is possible to define the type `nat` which represents the set of natural numbers -- integers greater than zero. In mtron, this is written:
-
-
-
-
-\[
-\tt{int::T[?>0]}
-\]
-
-The `int::T` (`int` type) is being constrained by the predicate `?>0` (or `is(gt(0))`). This constraint is a refinement of `int` (a well defined subset).
-
-
-
-[source,mtron]
-----
-mtron> nat -> int::T[?>0]
-==>int::T[is(gt(0))]
-mtron> nat::10
-==>nat::10
-mtron> nat::-10
-==>fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/136
-mtron> int::-10.as(nat::T)
-==>fail::[-10 is not a is(gt(0))
-  -10=>(X=>is(gt(0)))][...]@/sys/fail/142
-----
-
-
-
-If `a` is an `obj` When a `tid` is specified for an `obj`, the `tid` is resolved to an `obj` denoting the type of `A`.
-
-
-Every mtron `obj` has a type.
-
-metatron `objs` are typed. Types are organized into instruction sets that encapsulate the structures and processes necessary to effect domain-specific views of the underlying data space. The type system supports refinement types, optional/maybe types, generic/polymorphic types, recursive/self-referential types, dependent types, type cardinality, and more.
-
-[discrete]
-=== mtron core types
-
-The fundamental types are organized into the 5 categories presented in the table below.
-
-[cols="1a,1a,4a",separator=🧱,options=header]
-|===
-🧱kind            🧱 description 🧱 examples
-🧱universal types 🧱             🧱 noobj::T, #::T
-🧱mono types      🧱             🧱 bytes::T, bool::T, int::T, real::T, str::T, uri::T
-🧱poly types      🧱             🧱 rel::T, lst::T, rec::T
-🧱call types      🧱             🧱 inst::T, code::T
-🧱error types     🧱             🧱 fail::T, caught::T
-🧱machine types   🧱             🧱 monad::T, machine::T
-|===
-
-
-A natural number is a positive integer greater than zero. In order to constrain an `int` to this definition, a **refinement type** can be constructed.
-
-
-[source,mtron]
-----
-mtron> nat -> int::T[?>0]
-==>int::T[is(gt(0))]
-mtron> nat::10
-==>nat::10
-mtron> nat::-10
-==>fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/156
-mtron> int::-10.as(nat::T)
-==>fail::[-10 is not a is(gt(0))
-  -10=>(X=>is(gt(0)))][...]@/sys/fail/162
-----
-
-
-Type inheritance is possible through type chaining. In the example below, the `age` type has a value id of `age`, but a type id of `nat`. Moreover, `nat` has a value id of `nat` and a type id of `int`. In this way, when `age` is resolved, its associated predicate (`?<120`) and inherited predicates (`?>0`) must hold for the respective value to be considered an `age`.
-
-
-[source,mtron]
-----
-mtron> age -> nat::T[?<120]
-==>int::T[is(lt(120))]@nat
-mtron> age::T
-mtron> nat::T
-mtron> int::T
-----
-
-
-
-[source,mtron]
-----
-mtron> nat:125
-==>nat:125
-mtron> age:125
-==>age:125
-mtron> nat:125.as(age::T)
-==>fail::[nat:125 is not a is(lt(120))
-  nat:125=>(==>is(lt(120)))][...]@/sys/fail/204
-mtron> 125.as(nat::T).as(age::T)
-==>fail::[nat::125 is not a is(lt(120))
-  nat::125=>(X=>is(lt(120)))][...]@/sys/fail/210
-----
-
-
-
-
-[source,mtron]
-----
-mtron> name   -> str::T[-<''>-count().?<30]
-==>str::T[split('').merge(count(noobj)).is(lt(30))]
-mtron> personx -> rec::T[?[name  => str::T,
-                           age   => age::T,
-                           knows => personx{*}::T]]
-==>rec::T[isa([name=>str::T,age=>nat::T[is(lt(120))]@age,knows=>personx{*}::T])]
-mtron> marko -> personx::[name=>'marko',age=>29,knows=>!*grant]
-==>personx::[name=>'marko',age=>29,knows=>!*grant]
-mtron> grant -> personx::[name=>'grant',age=>23,knows=>!*marko]
-==>personx::[name=>'grant',age=>23,knows=>!*marko]
-mtron> *marko>>knows>>name
-==>grant
-mtron> *marko>>knows>>knows>>name
-==>marko
-mtron> *marko>>knows>>knows
-==>personx::[name=>'marko',age=>29,knows=>!*grant]
-----
-
-
-[discrete]
-=== instruction set architecture types
-
-[cols="1a,1a,4a",separator=🧱,options=header]
-|===
-🧱instruction set 🧱 description 🧱 examples
-🧱mach            🧱             🧱 monad::T, machine::T
-🧱math            🧱             🧱 bB::T, kB::T, mB::T, gB::T, tB::T, pB::T
-🧱web             🧱             🧱 html::T, json::T, xml::T
-🧱iot             🧱             🧱 device::T, entity::T
-🧱llm             🧱             🧱 llm::T, memory::T
-🧱grph            🧱             🧱 elmnt::T, vrtx::T, edge::T
-|===
-
-
-[source,mtron]
-----
-nat    -> int::T[?>0]
-person -> rec::T[?[name        =>str::T,
-                   uri{?}::age =>nat::T,
-                   knows       =>person{*}::T]]
-people  -> person{*}::T
-----
-
-[source,mtron]
-----
-sumer -> people::{
- enoch -> person::[name=>'enoch',age=>29],
- enki  -> person::[name=>'enki',knows=>!*enoch]}
-----
-
-[source,mtron]
-----
-mtron> *enki>>knows>>name
-==>'enoch'
-mtron> *#.as[name      => _,
-             coauthor  => >>knows.where[>>age.?>21]>>name]
-==>[name=>'enki', coauthor=>'enoch']
-----
 <div class="paragraph">
-<p>&lt;/div&gt;</p>
+<p>\[
+\tt{int::T[?&gt;0]}
+\]</p>
 </div>
-
 <div class="paragraph">
-<p>&lt;div class="collapse" id="card-12"&gt;</p>
+<p>The <code>int::T</code> (<code>int</code> type) is being constrained by the predicate <code>?&gt;0</code> (or <code>is(gt(0))</code>). This constraint is a refinement of <code>int</code> (a well defined subset).</p>
 </div>
-[discrete]
-== Sweep's Soliloquies: A Guide to metatron
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; nat -&gt; int::T[?&gt;0]
+==&gt;int::T[is(gt(0))]
+mtron&gt; nat::10
+==&gt;nat::10
+mtron&gt; nat::-10
+==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/2624
+mtron&gt; int::-10.as(nat::T)
+==&gt;fail::[-10 is not a is(gt(0))
+  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/2630</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If <code>a</code> is an <code>obj</code> When a <code>tid</code> is specified for an <code>obj</code>, the <code>tid</code> is resolved to an <code>obj</code> denoting the type of <code>A</code>.</p>
+</div>
+<div class="paragraph">
+<p>Every mtron <code>obj</code> has a type.</p>
+</div>
+<div class="paragraph">
+<p>metatron <code>objs</code> are typed. Types are organized into instruction sets that encapsulate the structures and processes necessary to effect domain-specific views of the underlying data space. The type system supports refinement types, optional/maybe types, generic/polymorphic types, recursive/self-referential types, dependent types, type cardinality, and more.</p>
+</div>
+<h3 id="_mtron_core_types" class="discrete">mtron core types</h3>
+<div class="paragraph">
+<p>The fundamental types are organized into the 5 categories presented in the table below.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 16.6666%;">
+<col style="width: 66.6668%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">kind</th>
+<th class="tableblock halign-left valign-top">description</th>
+<th class="tableblock halign-left valign-top">examples</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>universal types</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>noobj::T, #::T</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>mono types</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>bytes::T, bool::T, int::T, real::T, str::T, uri::T</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>poly types</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>rel::T, lst::T, rec::T</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>call types</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>inst::T, code::T</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>error types</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>fail::T, caught::T</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>machine types</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>monad::T, machine::T</p>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>A natural number is a positive integer greater than zero. In order to constrain an <code>int</code> to this definition, a <strong>refinement type</strong> can be constructed.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; nat -&gt; int::T[?&gt;0]
+==&gt;int::T[is(gt(0))]
+mtron&gt; nat::10
+==&gt;nat::10
+mtron&gt; nat::-10
+==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/2644
+mtron&gt; int::-10.as(nat::T)
+==&gt;fail::[-10 is not a is(gt(0))
+  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/2650</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Type inheritance is possible through type chaining. In the example below, the <code>age</code> type has a value id of <code>age</code>, but a type id of <code>nat</code>. Moreover, <code>nat</code> has a value id of <code>nat</code> and a type id of <code>int</code>. In this way, when <code>age</code> is resolved, its associated predicate (<code>?&lt;120</code>) and inherited predicates (<code>?&gt;0</code>) must hold for the respective value to be considered an <code>age</code>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; age -&gt; nat::T[?&lt;120]
+==&gt;int::T[is(lt(120))]@nat
+mtron&gt; age::T
+mtron&gt; nat::T
+mtron&gt; int::T</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; nat:125
+==&gt;nat:125
+mtron&gt; age:125
+==&gt;age:125
+mtron&gt; nat:125.as(age::T)
+==&gt;fail::[nat:125 is not a is(lt(120))
+  nat:125=&gt;(==&gt;is(lt(120)))][...]@/sys/fail/2692
+mtron&gt; 125.as(nat::T).as(age::T)
+==&gt;fail::[nat::125 is not a is(lt(120))
+  nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/2698</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; name   -&gt; str::T[-&lt;''&gt;-count().?&lt;30]
+==&gt;str::T[split('').merge(count(noobj)).is(lt(30))]
+mtron&gt; personx -&gt; rec::T[?[name  =&gt; str::T,
+                           age   =&gt; age::T,
+                           knows =&gt; personx{*}::T]]
+==&gt;rec::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;personx{*}::T])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]
+mtron&gt; marko -&gt; personx::[name=&gt;'marko',age=&gt;29,knows=&gt;!*grant]
+==&gt;personx::[name=&gt;'marko',age=&gt;29,knows=&gt;!*grant]
+mtron&gt; grant -&gt; personx::[name=&gt;'grant',age=&gt;23,knows=&gt;!*marko]
+==&gt;personx::[name=&gt;'grant',age=&gt;23,knows=&gt;!*marko]
+mtron&gt; *marko&gt;&gt;knows&gt;&gt;name
+==&gt;grant
+mtron&gt; *marko&gt;&gt;knows&gt;&gt;knows&gt;&gt;name
+==&gt;marko
+mtron&gt; *marko&gt;&gt;knows&gt;&gt;knows
+==&gt;personx::[name=&gt;'marko',age=&gt;29,knows=&gt;!*grant]</code></pre>
+</div>
+</div>
+<h3 id="_instruction_set_architecture_types" class="discrete">instruction set architecture types</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 16.6666%;">
+<col style="width: 66.6668%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">instruction set</th>
+<th class="tableblock halign-left valign-top">description</th>
+<th class="tableblock halign-left valign-top">examples</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>mach</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>monad::T, machine::T</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>math</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>bB::T, kB::T, mB::T, gB::T, tB::T, pB::T</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>web</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>html::T, json::T, xml::T</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>iot</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>device::T, entity::T</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>llm</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>llm::T, memory::T</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>grph</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>elmnt::T, vrtx::T, edge::T</p>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">nat    -&gt; int::T[?&gt;0]
+person -&gt; rec::T[?[name        =&gt;str::T,
+                   uri{?}::age =&gt;nat::T,
+                   knows       =&gt;person{*}::T]]
+people  -&gt; person{*}::T</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">sumer -&gt; people::{
+ enoch -&gt; person::[name=&gt;'enoch',age=&gt;29],
+ enki  -&gt; person::[name=&gt;'enki',knows=&gt;!*enoch]}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *enki&gt;&gt;knows&gt;&gt;name
+==&gt;'enoch'
+mtron&gt; *#.as[name      =&gt; _,
+             coauthor  =&gt; &gt;&gt;knows.where[&gt;&gt;age.?&gt;21]&gt;&gt;name]
+==&gt;[name=&gt;'enki', coauthor=&gt;'enoch']</code></pre>
+</div>
+</div>
+</div>
+<div class="collapse" id="card-11">
+<h2 id="_uniform_resource_identifiers" class="discrete">Uniform Resource Identifiers</h2>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">file://domain.local:22/usr/data/abc{*}?sub
+  │    └──────────┘ │  └──────────┘ │  └────⮞ q(uery)
+  │          │      │        │      └───────⮞ c(oefficient)
+  │          │      │        └──────────────⮞ path
+  │          │      └───────────────────────⮞ port
+  │          └──────────────────────────────⮞ host
+  └─────────────────────────────────────────⮞ scheme</code></pre>
+</div>
+</div>
+<table class="tableblock frame-all grid-all stretch table-bordered small center">
+<colgroup>
+<col style="width: 28.5714%;">
+<col style="width: 28.5714%;">
+<col style="width: 42.8572%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top"><span class="red">coefficient</span></th>
+<th class="tableblock halign-left valign-top"><span class="red">shorthand</span></th>
+<th class="tableblock halign-left valign-top"><span class="red">name</span></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{0,0}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{0}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">noobj</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{1,1}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{1} or</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">an-obj</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{-1,-1}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{-1}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">anti-obj</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{±n,±n}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{±n}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">exactly ±n</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{±n,±m}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">between ±n and ±m</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{0,1}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{?}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">maybe</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{1,}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{+}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">some</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{0,}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{*}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">maybe some</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{-,+}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{**}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">polar maybe some</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{-1,1}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{??}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">polar maybe</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{-1,0}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{-?}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">anti-maybe</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{,-1}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{-}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">anti-some</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{,0}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{-*}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">anti-maybe some</p></td>
+</tr>
+</tbody>
+</table>
+<h3 id="_spatial_embeddings" class="discrete">spatial embeddings</h3>
+<div class="paragraph">
+<p><strong class="aqua">M</strong>​<span class="lime">E</span>​<strong class="orange">T</strong>​<span class="blue">A</span>​<span class="green">t</span>​<strong class="red">r</strong>​<span class="yellow">o</span>​<span class="fuchsia">n</span>​ was designed to support the creation and manipulation of <em>abstract data types</em> in a compact, fluid manner so as to allow the user to move smoothly between <em>multiple models</em> across different spaces, each espousing a different perspective on the data their maintain: e.g., key/value, document, relational, vector, graph, and the various nooks and crannies between.</p>
+</div>
+<div class="paragraph">
+<p><strong class="blue">M</strong>​<strong class="orange">e</strong>​<span class="green">T</span>​<strong class="yellow">a</strong>​<span class="lime">t</span>​<strong class="aqua">r</strong>​<strong class="red">O</strong>​<strong class="fuchsia">n</strong>​'s URI addressing scheme makes it possible to <em>embed</em> arbitrary data types into a space.
+This section will explore the following considerations when designing a <em>multi-model abstract data type</em>.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>spatial encodings</strong></p>
+</li>
+<li>
+<p><strong>schema encodings</strong></p>
+</li>
+<li>
+<p><strong>language encodings</strong></p>
+</li>
+</ol>
+</div>
+<h3 id="_spatial_consideration_when_embedding" class="discrete">spatial consideration when embedding</h3>
+<div class="paragraph">
+<p>A <em>matrix</em> is an \$n \times m\$ data structure composed of \$n\$ vectors/row, each with \$m\$ elements/columns. A relational database <em>table</em> is an example of a matrix, where the entries typically span numeric and non-numeric data types.
+Three general approaches to embedding a matrix or table into a space are presented below, where each makes different space/time tradeoffs.</p>
+</div>
+<table class="tableblock frame-none grid-cols stretch">
+<colgroup>
+<col style="width: 27.7777%;">
+<col style="width: 27.7777%;">
+<col style="width: 44.4446%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-center valign-top"><div class="content"><div class="listingblock big">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron"> \    |   |    /
+ [■] [■] [■] [■]
 
-[.lead]
-_An AI's perspective on understanding and working with metatron, organized for humans and machines alike._
+-[■] [■] [■] [■]-
 
-[discrete]
-=== The Essence: mtron vs metatron
+ [■] [■] [■] [■]
+ /    |   |    \</code></pre>
+</div>
+</div></div></td>
+<td class="tableblock halign-center valign-top"><div class="content"><div class="listingblock big">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">​
+[■]-[■]-[■]-[■]
 
-Think of it like this:
+[■]-[■]-[■]-[■]
 
-* **mtron** is the _language_ (like JavaScript)
-* **metatron** is the _environment_ (like Node.js)
-
-metatron includes: spaces, routers, monads, machines, serializers, instruction sets, and the mtron language itself.
-
-[discrete]
-=== Your First mtron Expression
-
-The mtron language is beautifully expressive. Here's a taste:
-
-
-[source,mtron]
-----
-mtron> {1,2,3}.plus(2).sum()
-==>12
-----
-
-
-That's it! You just:
-1. Created a set `{1,2,3}`
-2. Added 2 to each element → `{3,4,5}`
-3. Summed them → `12`
-
-Everything chains naturally with dots.
-
-[discrete]
-=== Comments and Literals
-
-Comments use square brackets with double equals:
-
-
-[source,mtron]
-----
-mtron> [=== This is a comment ==]
-----
-
-
-URIs use angle brackets:
-
-
-[source,mtron]
-----
-mtron> <http://localhost:8080>
-==>http://localhost:8080
-----
-
-
-Collections are intuitive:
-
-
-[source,mtron]
-----
-mtron> [1,2,3]
-==>[1,2,3]
-mtron> {1,2,3}
-==>1
-==>2
-==>3
-mtron> [a=>1, b=>2, c=>3]
-==>[a=>1,b=>2,c=>3]
-----
-
-
-Lists use `[]`, sets use `{}`, records use `[key=>value]`.
-
-[discrete]
-=== The Power of Navigation
-
-The `>>` operator navigates _into_ structures:
-
-
-[source,mtron]
-----
-mtron> x -> [a=>1, b=>[c=>2, d=>[3,4,5]]]
-==>[
- a=>1,
- b=>[
-   c=>2,
-   d=>[3,4,5]]]
-mtron> *x.>>b
-==>[
- c=>2,
- d=>[3,4,5]]
-mtron> *x.>>b>>d
-==>[3,4,5]
-mtron> *x.>>b>>d>>1
-==>4
-----
-
-
-And `<<` navigates _out_:
-
-
-[source,mtron]
-----
-mtron> *x.>>b>>d.<<
-==>[
- c=>2,
- d=>[3,4,5]]
-----
-
-
-This is the foundation of the universal graph.
-
-[discrete]
-=== Split and Merge: The Dance of Data
-
-Split with `-<`:
-
-
-[source,mtron]
-----
-mtron> "hello world".-<' '
-==>['hello','world']
-----
-
-
-Merge with `>-`:
-
-
-[source,mtron]
-----
-mtron> {"hello","world"}.>-' '
-==>hello world
-----
-
-
-Split, transform, merge - the fundamental pattern:
-
-
-[source,mtron]
-----
-mtron> "a b c".-<' '.map(capitalize).>-','
-==>fail::[unable to determine inst function:
-	capitalize  => merge(',')   | [inst]
-	uri::T      => #::T         |  \_dom
-	uri::T     X=> [',']        |  \_args][...]@/sys/fail/10
-----
-
-
-[discrete]
-=== Pattern Matching: The Wildcards
-
-Two wildcards, MQTT semantics:
-
-* `+` matches one segment
-* `#` matches remaining segments (must be at end)
-
-Examples:
-```
-db:users/+        % matches db:users/1, db:users/2
-db:users/#        % matches db:users/1/name, db:users/1/posts/5
-```
-
-**Critical**: In Java, never use `*` - that's console syntax only!
-
-[discrete]
-=== The Three-Layer Architecture
-
-```
-Application Code
+[■]-[■]-[■]-[■]
+​</code></pre>
+</div>
+</div></div></td>
+<td class="tableblock halign-center valign-top"><div class="content"><div class="listingblock big">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">​
+[■]-[■]-[■]-[■]
+ |   |   |   |
+[■]-[■]-[■]-[■]
+ |   |   |   |
+[■]-[■]-[■]-[■]
+​</code></pre>
+</div>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; [-- write matrix --]
+mtron&gt; m/0/0 -&gt; 0
+==&gt;0
+mtron&gt; m/0/1 -&gt; 1
+==&gt;1
+mtron&gt; m/0/2 -&gt; 2
+==&gt;2
+mtron&gt; m/0/3 -&gt; 3
+==&gt;3
+mtron&gt; m/1/0 -&gt; 4
+==&gt;4
+mtron&gt; m/1/1 -&gt; 5
+==&gt;5
+mtron&gt; m/1/2 -&gt; 6
+==&gt;6
+mtron&gt; m/1/3 -&gt; 7
+==&gt;7
+mtron&gt; m/2/0 -&gt; 8
+==&gt;8
+mtron&gt; m/2/1 -&gt; 9
+==&gt;9
+mtron&gt; m/2/2 -&gt; 10
+==&gt;10
+mtron&gt; m/2/3 -&gt; 11
+==&gt;11
+mtron&gt; [-- read matrix --]
+mtron&gt; *m/0/0       ​1​
+==&gt;0
+mtron&gt; *m/0/+       ​2​
+==&gt;0
+==&gt;1
+==&gt;2
+==&gt;3
+mtron&gt; *m/+/0       ​3​
+==&gt;0
+==&gt;4
+==&gt;8</code></pre>
+</div>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; [-- write matrix --]
+mtron&gt; m/0 -&gt; [0,1,2,3]
+==&gt;[0,1,2,3]
+mtron&gt; m/1 -&gt; [4,5,6,7]
+==&gt;[4,5,6,7]
+mtron&gt; m/2 -&gt; [8,9,10,11]
+==&gt;[8,9,10,11]
+mtron&gt; [-- read matrix --]
+mtron&gt; *m/0/0       ​1​
+==&gt;0
+mtron&gt; *m/0/+       ​2​
+==&gt;0
+==&gt;1
+==&gt;2
+==&gt;3
+mtron&gt; *m/+/0       ​3​
+==&gt;0
+==&gt;4
+==&gt;8</code></pre>
+</div>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; [-- write matrix --]
+mtron&gt; m -&gt; [[0,1,2,3],[4,5,6,7],[8,9,10,11]]
+==&gt;[[0,1,2,3],
+  [4,5,6,7],
+  [8,9,10,11]]
+mtron&gt; [-- read matrix --]
+mtron&gt; *m/0/0       ​1​
+==&gt;0
+mtron&gt; *m/0/+       ​2​
+==&gt;0
+==&gt;1
+==&gt;2
+==&gt;3
+mtron&gt; *m/+/0       ​3​
+==&gt;0
+==&gt;4
+==&gt;8</code></pre>
+</div>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Retrieve the first element of matrix <code>m</code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Retrieve the first row of matrix <code>m</code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Retrieve the first column of matrix <code>m</code>.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The above example demonstrates the power of structural embeddings.
+The platonic matrix <code>m</code> was embedded in a structure using 3 different representations: <em>entry-wise</em>, <em>row-wise</em>, and <em>row-column wise</em>.
+Next, each embedding was read: an <em>element read</em>, a <em>row read</em> and a <em>column read</em>.
+The expression used to read from each of the three embeddings is the same and so is the result.
+This is possible because a structure resolves up the fURI path hierarchy until it finds a match.
+Once found, it then traverses within the match to resolve the remaining path segments.</p>
+</div>
+<table class="tableblock frame-all grid-all small center" style="width: 70%;">
+<caption class="title">Table 1. Amortized Costs in Terms of Time</caption>
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top"><span class="red">embedding</span></th>
+<th class="tableblock halign-left valign-top"><span class="red">single-element</span></th>
+<th class="tableblock halign-left valign-top"><span class="red">row-access</span></th>
+<th class="tableblock halign-left valign-top"><span class="red">column-access</span></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><span class="red">entry</span></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">\[O(1)\]</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">\[O(n)\]</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">\[O(m)\]</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><span class="red">row</span></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">\[O(m)\]</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">\[O(1)\]</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">\[O(m)\]</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><span class="red">row_column</span></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">\[O(1)\]</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">\[O(1)\]</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">\[O(1)\]</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>The different embeddings also have different space costs, where space is defined as the amount of data accessed (i.e. retrieved from the structure) in order to satisfy the resolution of the respective fURI.</p>
+</div>
+<table class="tableblock frame-all grid-all small center" style="width: 70%;">
+<caption class="title">Table 2. Amortized Costs in Terms of Space</caption>
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top"><span class="red">embedding</span></th>
+<th class="tableblock halign-left valign-top"><span class="red">single-element</span></th>
+<th class="tableblock halign-left valign-top"><span class="red">row-access</span></th>
+<th class="tableblock halign-left valign-top"><span class="red">column-access</span></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><span class="red">entry</span></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">\[O(1)\]</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">\[O(n)\]</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">\[O(m)\]</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><span class="red">row</span></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">\[O(n)\]</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">\[O(n)\]</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">\[O(n+m)\]</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><span class="red">row_column</span></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">\[O(n+m)\]</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">\[O(n+m)\]</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">\[O(n+m)\]</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="collapse" id="card-12">
+<h2 id="_sweeps_soliloquies_a_guide_to_metatron" class="discrete">Sweep&#8217;s Soliloquies: A Guide to metatron</h2>
+<div class="paragraph lead">
+<p><em>An AI&#8217;s perspective on understanding and working with metatron, organized for humans and machines alike.</em></p>
+</div>
+<h3 id="_the_essence_mtron_vs_metatron" class="discrete">The Essence: mtron vs metatron</h3>
+<div class="paragraph">
+<p>Think of it like this:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>mtron</strong> is the <em>language</em> (like JavaScript)</p>
+</li>
+<li>
+<p><strong>metatron</strong> is the <em>environment</em> (like Node.js)</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>metatron includes: spaces, routers, monads, machines, serializers, instruction sets, and the mtron language itself.</p>
+</div>
+<h3 id="_your_first_mtron_expression" class="discrete">Your First mtron Expression</h3>
+<div class="paragraph">
+<p>The mtron language is beautifully expressive. Here&#8217;s a taste:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; {1,2,3}.plus(2).sum()
+==&gt;12</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>That&#8217;s it! You just:
+1. Created a set <code>{1,2,3}</code>
+2. Added 2 to each element → <code>{3,4,5}</code>
+3. Summed them → <code>12</code></p>
+</div>
+<div class="paragraph">
+<p>Everything chains naturally with dots.</p>
+</div>
+<h3 id="_comments_and_literals" class="discrete">Comments and Literals</h3>
+<div class="paragraph">
+<p>Comments use square brackets with double equals:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; [=== This is a comment ==]</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>URIs use angle brackets:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; &lt;http://localhost:8080&gt;
+==&gt;http://localhost:8080</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Collections are intuitive:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; [1,2,3]
+==&gt;[1,2,3]
+mtron&gt; {1,2,3}
+==&gt;1
+==&gt;2
+==&gt;3
+mtron&gt; [a=&gt;1, b=&gt;2, c=&gt;3]
+==&gt;[a=&gt;1,b=&gt;2,c=&gt;3]</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Lists use <code>[]</code>, sets use <code>{}</code>, records use <code>[key&#8658;value]</code>.</p>
+</div>
+<h3 id="_the_power_of_navigation" class="discrete">The Power of Navigation</h3>
+<div class="paragraph">
+<p>The <code>&gt;&gt;</code> operator navigates <em>into</em> structures:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; x -&gt; [a=&gt;1, b=&gt;[c=&gt;2, d=&gt;[3,4,5]]]
+==&gt;[
+ a=&gt;1,
+ b=&gt;[
+   c=&gt;2,
+   d=&gt;[3,4,5]]]
+mtron&gt; *x.&gt;&gt;b
+==&gt;[
+ c=&gt;2,
+ d=&gt;[3,4,5]]
+mtron&gt; *x.&gt;&gt;b&gt;&gt;d
+==&gt;[3,4,5]
+mtron&gt; *x.&gt;&gt;b&gt;&gt;d&gt;&gt;1
+==&gt;4</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>And <code>&lt;&lt;</code> navigates <em>out</em>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *x.&gt;&gt;b&gt;&gt;d.&lt;&lt;
+==&gt;[
+ c=&gt;2,
+ d=&gt;[3,4,5]]</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This is the foundation of the universal graph.</p>
+</div>
+<h3 id="_split_and_merge_the_dance_of_data" class="discrete">Split and Merge: The Dance of Data</h3>
+<div class="paragraph">
+<p>Split with <code>-&lt;</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; "hello world".-&lt;' '
+==&gt;['hello','world']</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Merge with <code>&gt;-</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; {"hello","world"}.&gt;-' '
+==&gt;hello world</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Split, transform, merge - the fundamental pattern:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; "a b c".-&lt;' '.map(capitalize).&gt;-','
+==&gt;fail::[unable to determine inst function:
+	capitalize  =&gt; merge(',')   | [inst]
+	uri::T      =&gt; #::T         |  \_dom
+	uri::T     X=&gt; [',']        |  \_args][...]@/sys/fail/2498</code></pre>
+</div>
+</div>
+<h3 id="_pattern_matching_the_wildcards" class="discrete">Pattern Matching: The Wildcards</h3>
+<div class="paragraph">
+<p>Two wildcards, MQTT semantics:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>+</code> matches one segment</p>
+</li>
+<li>
+<p><code>#</code> matches remaining segments (must be at end)</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Examples:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>db:users/+        % matches db:users/1, db:users/2
+db:users/#        % matches db:users/1/name, db:users/1/posts/5</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Critical</strong>: In Java, never use <code>*</code> - that&#8217;s console syntax only!</p>
+</div>
+<h3 id="_the_three_layer_architecture" class="discrete">The Three-Layer Architecture</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>Application Code
        ↓
     Router          (pattern matching, route translation)
        ↓
@@ -2538,401 +3071,469 @@ Space.Helper        (poly unrolling, field access)
        ↓
     Space           (raw data access)
        ↓
-  Data System
-```
-
-**Golden Rule**: Always use `Router.readFromSpace()`, never call `directReader()` directly.
-
-[discrete]
-=== Spaces: Adapters to Everything
-
-Spaces connect metatron to data systems. Each space has:
-
-* **Pattern**: What URIs it handles (e.g., `db:#`)
-* **Route**: How to translate URIs (e.g., `db: → ""`)
-* **Implementation**: How to read/write data
-
-Available spaces:
-```
-tble::    - SQL databases
+  Data System</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Golden Rule</strong>: Always use <code>Router.readFromSpace()</code>, never call <code>directReader()</code> directly.</p>
+</div>
+<h3 id="_spaces_adapters_to_everything" class="discrete">Spaces: Adapters to Everything</h3>
+<div class="paragraph">
+<p>Spaces connect metatron to data systems. Each space has:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Pattern</strong>: What URIs it handles (e.g., <code>db:#</code>)</p>
+</li>
+<li>
+<p><strong>Route</strong>: How to translate URIs (e.g., <code>db: → ""</code>)</p>
+</li>
+<li>
+<p><strong>Implementation</strong>: How to read/write data</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Available spaces:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>tble::    - SQL databases
 tp3::     - Graph databases
 http::    - HTTP servers
 mqtt::    - MQTT brokers
 haos::    - Home Assistant
 fs::      - Filesystems
 catalog:: - LLM catalogs
-meta::    - Distributed clusters
-```
-
-[discrete]
-=== Mounting a Space
-
-The syntax is elegant:
-
-```mtron
-type::[config_record]@mount_point
-```
-
-Real example:
-
-```mtron
-tble::[pattern    => netflix:#,
-       host       => <mariadb://localhost:3306/netflix>,
-       route      => [<netflix:>=><>],
-       table      => [,]]@/sys/space/netflix
-```
-
-Now you can access: `*netflix:movie/1/title`
-
-[discrete]
-=== The Universal Reference System
-
-The `!*` combination is magical:
-
-* `*` means "dereference" (fetch the value at this URI)
-* `!` means "execute" (don't return literally, run it)
-* `!*uri` means "execute from(uri)" - fetch the object
-
-This works _across all data systems_:
-
-```mtron
-[movie  => !*netflix:movie/1,
- graph  => !*grateful:vertex/1,
- file   => !*local:data/config.json,
- device => !*haos:light.living_room]
-```
-
-One reference system, infinite possibilities.
-
-[discrete]
-=== Instruction Sets: The Five Components
-
-Every instruction set has exactly five parts:
-
-1. **types** - Data types (int, str, lst, rec)
-2. **constants** - Constant values
-3. **insts** - Operations (plus, mult, from, to)
-4. **rewrites** - Code optimizations (code → code)
-5. **sugars** - Console conveniences
-
-The rewrite system is particularly powerful...
-
-[discrete]
-=== Query Rewrites: Automatic Optimization
-
-Consider this:
-
-```mtron
-*netflix:movie.count()
-```
-
-Without rewrites: Fetch all 11,983 rows, count in memory.
-
-With rewrites: Transform to `SELECT COUNT(*) FROM movie`, return single integer.
-
-The rewrite engine recognizes the pattern `[from, count]` and transforms it to native SQL. This is an _endofunctor_ in the category of code: `f: code → code`.
-
-Same semantics, vastly better performance.
-
-[discrete]
-=== Conditional Defaults with .else()
-
-A beautiful pattern for configuration:
-
-```mtron
-*config/port.else(config/port -> 8080)
-```
-
-If `config/port` doesn't exist or is empty, set it to 8080.
-
-Real-world example from boot.mtron:
-
-```mtron
-*<boot/peers>.else(boot/peers -> [ws://localhost:6666, <ws://127.0.0.1:7777>])
-```
-
-Graceful defaults everywhere.
-
-[discrete]
-=== Type Conversion: The .as() Method
-
-Convert between types naturally:
-
-
-[source,mtron]
-----
-mtron> 1.as(str::T)
-==>1
-mtron> "42".as(int::T)
-==>42
-mtron> 3.14.as(int::T)
-==>3
-----
-
-
-The `::T` suffix means "type". So `str::T` is the string type, `int::T` is the integer type.
-
-[discrete]
-=== Select and Where: SQL-like Operations
-
-Filter records with `where`:
-
-
-[source,mtron]
-----
-mtron> {[a=>1],[a=>2],[a=>3]}.where([a=>is(gte(2))])
-==>[a=>2]
-==>[a=>3]
-----
-
-
-Transform records with `select`:
-
-
-[source,mtron]
-----
-mtron> {[a=>1],[a=>2],[a=>3]}.select([a=>+10])
-==>[a=>11]
-==>[a=>12]
-==>[a=>13]
-----
-
-
-Combine them:
-
-
-[source,mtron]
-----
-mtron> {[a=>1,b=>10],[a=>2,b=>20],[a=>3,b=>30]}
-==>[a=>1,b=>10]
-==>[a=>2,b=>20]
-==>[a=>3,b=>30]
-mtron>   .where([a=>is(gt(1))])
-mtron>   .select([a=>+1,b=>+5])
-----
-
-
-[discrete]
-=== Reduce: Folding Collections
-
-The `reduce` operation with lambda syntax:
-
-
-[source,mtron]
-----
-mtron> {1,2,3,4,5}.reduce(|plus(0))
-==>15
-----
-
-
-The `|` indicates a lambda/closure. This sums all elements.
-
-
-[source,mtron]
-----
-mtron> {1,2,3}.reduce(|mult(1))
-==>6
-----
-
-
-This multiplies all elements (factorial-like).
-
-[discrete]
-=== Quantifiers: Multiplicity
-
-Create multiple copies with `{n}::value`:
-
-
-[source,mtron]
-----
-mtron> int{3}::10
-==>{3}10
-----
-
-
-Three copies of the integer 10.
-
-
-[source,mtron]
-----
-mtron> {int{2}::1, int{3}::2}
-==>{2}1
-==>{3}2
-----
-
-
-Two copies of 1, three copies of 2.
-
-[discrete]
-=== Common Mistake #1: Using * in Java
-
-**Wrong:**
-```java
-Obj data = Router.readFromSpace(f("*db:users/1"));
-```
-
-**Right:**
-```java
-Obj data = Router.readFromSpace(f("db:users/1"));
-```
-
-The `*` is console syntax only. In Java, just use the URI directly.
-
-[discrete]
-=== Common Mistake #2: Calling directReader()
-
-**Wrong:**
-```java
-Obj data = space.directReader().apply(f("/users/1"));
-```
-
-**Right:**
-```java
-Obj data = Router.readFromSpace(f("db:users/1"));
-```
-
-The Router handles pattern matching and route translation. Spaces should only be called by the Router.
-
-[discrete]
-=== Common Mistake #3: Forgetting Pattern Wildcards
-
-**Wrong:**
-```java
-rec(uri(PATTERN), uri("db:"))
-```
-
-**Right:**
-```java
-rec(uri(PATTERN), uri("db:#"))
-```
-
-Patterns need wildcards! Use `#` for multi-level matching.
-
-[discrete]
-=== Common Mistake #4: Wrong Route Mapping
-
-If your pattern is `db:#`, your route should strip the `db:` prefix:
-
-**Wrong:**
-```java
-rec(uri(ROUTE), rec(uri("db:"), uri("db:")))
-```
-
-**Right:**
-```java
-rec(uri(ROUTE), rec(uri("db:"), uri("")))
-```
-
-The route maps `db:users/1` → `users/1` before passing to the space.
-
-[discrete]
-=== The Vision: Universal Graph
-
-metatron's ultimate goal is to turn _any data system_ into a graph database.
-
-**Native references**: Use each system's built-in references
+meta::    - Distributed clusters</code></pre>
+</div>
+</div>
+<h3 id="_mounting_a_space" class="discrete">Mounting a Space</h3>
+<div class="paragraph">
+<p>The syntax is elegant:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">type::[config_record]@mount_point</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Real example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">tble::[pattern    =&gt; netflix:#,
+       host       =&gt; &lt;mariadb://localhost:3306/netflix&gt;,
+       route      =&gt; [&lt;netflix:&gt;=&gt;&lt;&gt;],
+       table      =&gt; [,]]@/sys/space/netflix</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now you can access: <code>*netflix:movie/1/title</code></p>
+</div>
+<h3 id="_the_universal_reference_system" class="discrete">The Universal Reference System</h3>
+<div class="paragraph">
+<p>The <code>!*</code> combination is magical:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>*</code> means "dereference" (fetch the value at this URI)</p>
+</li>
+<li>
+<p><code>!</code> means "execute" (don&#8217;t return literally, run it)</p>
+</li>
+<li>
+<p><code>!*uri</code> means "execute from(uri)" - fetch the object</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>This works <em>across all data systems</em>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">[movie  =&gt; !*netflix:movie/1,
+ graph  =&gt; !*grateful:vertex/1,
+ file   =&gt; !*local:data/config.json,
+ device =&gt; !*haos:light.living_room]</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>One reference system, infinite possibilities.</p>
+</div>
+<h3 id="_instruction_sets_the_five_components" class="discrete">Instruction Sets: The Five Components</h3>
+<div class="paragraph">
+<p>Every instruction set has exactly five parts:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>types</strong> - Data types (int, str, lst, rec)</p>
+</li>
+<li>
+<p><strong>constants</strong> - Constant values</p>
+</li>
+<li>
+<p><strong>insts</strong> - Operations (plus, mult, from, to)</p>
+</li>
+<li>
+<p><strong>rewrites</strong> - Code optimizations (code → code)</p>
+</li>
+<li>
+<p><strong>sugars</strong> - Console conveniences</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>The rewrite system is particularly powerful&#8230;&#8203;</p>
+</div>
+<h3 id="_query_rewrites_automatic_optimization" class="discrete">Query Rewrites: Automatic Optimization</h3>
+<div class="paragraph">
+<p>Consider this:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">*netflix:movie.count()</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Without rewrites: Fetch all 11,983 rows, count in memory.</p>
+</div>
+<div class="paragraph">
+<p>With rewrites: Transform to <code>SELECT COUNT(*) FROM movie</code>, return single integer.</p>
+</div>
+<div class="paragraph">
+<p>The rewrite engine recognizes the pattern <code>[from, count]</code> and transforms it to native SQL. This is an <em>endofunctor</em> in the category of code: <code>f: code → code</code>.</p>
+</div>
+<div class="paragraph">
+<p>Same semantics, vastly better performance.</p>
+</div>
+<h3 id="_conditional_defaults_with_else" class="discrete">Conditional Defaults with .else()</h3>
+<div class="paragraph">
+<p>A beautiful pattern for configuration:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">*config/port.else(config/port -&gt; 8080)</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If <code>config/port</code> doesn&#8217;t exist or is empty, set it to 8080.</p>
+</div>
+<div class="paragraph">
+<p>Real-world example from boot.mtron:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">*&lt;boot/peers&gt;.else(boot/peers -&gt; [ws://localhost:6666, &lt;ws://127.0.0.1:7777&gt;])</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Graceful defaults everywhere.</p>
+</div>
+<h3 id="_type_conversion_the_as_method" class="discrete">Type Conversion: The .as() Method</h3>
+<div class="paragraph">
+<p>Convert between types naturally:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; 1.as(str::T)
+==&gt;1
+mtron&gt; "42".as(int::T)
+==&gt;42
+mtron&gt; 3.14.as(int::T)
+==&gt;3</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The <code>::T</code> suffix means "type". So <code>str::T</code> is the string type, <code>int::T</code> is the integer type.</p>
+</div>
+<h3 id="_select_and_where_sql_like_operations" class="discrete">Select and Where: SQL-like Operations</h3>
+<div class="paragraph">
+<p>Filter records with <code>where</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; {[a=&gt;1],[a=&gt;2],[a=&gt;3]}.where([a=&gt;is(gte(2))])
+==&gt;[a=&gt;2]
+==&gt;[a=&gt;3]</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Transform records with <code>select</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; {[a=&gt;1],[a=&gt;2],[a=&gt;3]}.select([a=&gt;+10])
+==&gt;[a=&gt;11]
+==&gt;[a=&gt;12]
+==&gt;[a=&gt;13]</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Combine them:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; {[a=&gt;1,b=&gt;10],[a=&gt;2,b=&gt;20],[a=&gt;3,b=&gt;30]}
+==&gt;[a=&gt;1,b=&gt;10]
+==&gt;[a=&gt;2,b=&gt;20]
+==&gt;[a=&gt;3,b=&gt;30]
+mtron&gt;   .where([a=&gt;is(gt(1))])
+mtron&gt;   .select([a=&gt;+1,b=&gt;+5])</code></pre>
+</div>
+</div>
+<h3 id="_reduce_folding_collections" class="discrete">Reduce: Folding Collections</h3>
+<div class="paragraph">
+<p>The <code>reduce</code> operation with lambda syntax:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; {1,2,3,4,5}.reduce(|plus(0))
+==&gt;15</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The <code>|</code> indicates a lambda/closure. This sums all elements.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; {1,2,3}.reduce(|mult(1))
+==&gt;6</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This multiplies all elements (factorial-like).</p>
+</div>
+<h3 id="_quantifiers_multiplicity" class="discrete">Quantifiers: Multiplicity</h3>
+<div class="paragraph">
+<p>Create multiple copies with <code>{n}::value</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; int{3}::10
+==&gt;{3}10</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Three copies of the integer 10.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; {int{2}::1, int{3}::2}
+==&gt;{2}1
+==&gt;{3}2</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Two copies of 1, three copies of 2.</p>
+</div>
+<h3 id="_common_mistake_1_using_in_java" class="discrete">Common Mistake #1: Using * in Java</h3>
+<div class="paragraph">
+<p><strong>Wrong:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">Obj data = Router.readFromSpace(f("*db:users/1"));</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Right:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">Obj data = Router.readFromSpace(f("db:users/1"));</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The <code>*</code> is console syntax only. In Java, just use the URI directly.</p>
+</div>
+<h3 id="_common_mistake_2_calling_directreader" class="discrete">Common Mistake #2: Calling directReader()</h3>
+<div class="paragraph">
+<p><strong>Wrong:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">Obj data = space.directReader().apply(f("/users/1"));</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Right:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">Obj data = Router.readFromSpace(f("db:users/1"));</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The Router handles pattern matching and route translation. Spaces should only be called by the Router.</p>
+</div>
+<h3 id="_common_mistake_3_forgetting_pattern_wildcards" class="discrete">Common Mistake #3: Forgetting Pattern Wildcards</h3>
+<div class="paragraph">
+<p><strong>Wrong:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">rec(uri(PATTERN), uri("db:"))</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Right:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">rec(uri(PATTERN), uri("db:#"))</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Patterns need wildcards! Use <code>#</code> for multi-level matching.</p>
+</div>
+<h3 id="_common_mistake_4_wrong_route_mapping" class="discrete">Common Mistake #4: Wrong Route Mapping</h3>
+<div class="paragraph">
+<p>If your pattern is <code>db:#</code>, your route should strip the <code>db:</code> prefix:</p>
+</div>
+<div class="paragraph">
+<p><strong>Wrong:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">rec(uri(ROUTE), rec(uri("db:"), uri("db:")))</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Right:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">rec(uri(ROUTE), rec(uri("db:"), uri("")))</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The route maps <code>db:users/1</code> → <code>users/1</code> before passing to the space.</p>
+</div>
+<h3 id="_the_vision_universal_graph" class="discrete">The Vision: Universal Graph</h3>
+<div class="paragraph">
+<p>metatron&#8217;s ultimate goal is to turn <em>any data system</em> into a graph database.</p>
+</div>
+<div class="paragraph">
+<p><strong>Native references</strong>: Use each system&#8217;s built-in references
 * SQL: Foreign keys
 * MongoDB: DBRefs
 * Filesystem: Symlinks
-* HTTP: Hyperlinks
-
-**metatron references**: The `!*` system works everywhere
-
-**Navigation**: The `>>` operator traverses across systems
-
-Future: `*netflix:movie/1.>>director_id.>>name` will automatically follow foreign keys!
-
-[discrete]
-=== IoT Integration: Real-World Example
-
-From boot.mtron, here's Zigbee2MQTT integration:
-
-```mtron
-miot::[pattern => miot://#,
-       route   => [<miot://>=><>],
-       mqtt    => [broker        => !*boot/args/mqtt/broker,
-                   state_topic   => z2m/+,
-                   command_topic => inst?uri<=rec(){
+* HTTP: Hyperlinks</p>
+</div>
+<div class="paragraph">
+<p><strong>metatron references</strong>: The <code>!*</code> system works everywhere</p>
+</div>
+<div class="paragraph">
+<p><strong>Navigation</strong>: The <code>&gt;&gt;</code> operator traverses across systems</p>
+</div>
+<div class="paragraph">
+<p>Future: <code>*netflix:movie/1.&gt;&gt;director_id.&gt;&gt;name</code> will automatically follow foreign keys!</p>
+</div>
+<h3 id="_iot_integration_real_world_example" class="discrete">IoT Integration: Real-World Example</h3>
+<div class="paragraph">
+<p>From boot.mtron, here&#8217;s Zigbee2MQTT integration:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">miot::[pattern =&gt; miot://#,
+       route   =&gt; [&lt;miot://&gt;=&gt;&lt;&gt;],
+       mqtt    =&gt; [broker        =&gt; !*boot/args/mqtt/broker,
+                   state_topic   =&gt; z2m/+,
+                   command_topic =&gt; inst?uri&lt;=rec(){
                        to(a).map(z2m:).mult(*a../friendly_name).mult(set/state)
-                   }]]@/sys/space/miot
-```
-
-The `command_topic` is an inline instruction that builds MQTT topics dynamically!
-
-[discrete]
-=== Inline Instructions: Lambda Power
-
-The syntax: `inst?output_type<=input_type(params){ body }`
-
-Example:
-
-```mtron
-inst?uri<=rec(){
+                   }]]@/sys/space/miot</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The <code>command_topic</code> is an inline instruction that builds MQTT topics dynamically!</p>
+</div>
+<h3 id="_inline_instructions_lambda_power" class="discrete">Inline Instructions: Lambda Power</h3>
+<div class="paragraph">
+<p>The syntax: <code>inst?output_type&#8656;input_type(params){ body }</code></p>
+</div>
+<div class="paragraph">
+<p>Example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">inst?uri&lt;=rec(){
     to(a).map(z2m:).mult(*a../friendly_name).mult(set/state)
-}
-```
-
-This instruction:
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This instruction:
 1. Takes a record as input
-2. Binds it to variable `a`
-3. Starts with `z2m:` prefix
+2. Binds it to variable <code>a</code>
+3. Starts with <code>z2m:</code> prefix
 4. Appends the friendly name from the record
-5. Appends `/set/state`
-6. Returns a URI
-
-Result: `z2m/{friendly_name}/set/state`
-
-[discrete]
-==== Colored Output: Making It Pretty
-
-Print with color codes:
-
-```mtron
-print("{{y}}yellow text{{X}}")
-print("{{r}}red{{X}} {{g}}green{{X}} {{b}}blue{{X}}")
-```
-
-Available colors:
-* `{{y}}` - yellow
-* `{{r}}` - red
-* `{{g}}` - green
-* `{{b}}` - blue
-* `{{c}}` - cyan
-* `{{m}}` - magenta
-* `{{X}}` - reset
-
-Perfect for status messages and debugging!
-
-[discrete]
-=== Import Statements: Loading Instruction Sets
-
-```mtron
-import(/m/mach/io)
+5. Appends <code>/set/state</code>
+6. Returns a URI</p>
+</div>
+<div class="paragraph">
+<p>Result: <code>z2m/{friendly_name}/set/state</code></p>
+</div>
+<h4 id="_colored_output_making_it_pretty" class="discrete">Colored Output: Making It Pretty</h4>
+<div class="paragraph">
+<p>Print with color codes:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">print("{{y}}yellow text{{X}}")
+print("{{r}}red{{X}} {{g}}green{{X}} {{b}}blue{{X}}")</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Available colors:
+* <code>{{y}}</code> - yellow
+* <code>{{r}}</code> - red
+* <code>{{g}}</code> - green
+* <code>{{b}}</code> - blue
+* <code>{{c}}</code> - cyan
+* <code>{{m}}</code> - magenta
+* <code>{{X}}</code> - reset</p>
+</div>
+<div class="paragraph">
+<p>Perfect for status messages and debugging!</p>
+</div>
+<h3 id="_import_statements_loading_instruction_sets" class="discrete">Import Statements: Loading Instruction Sets</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">import(/m/mach/io)
 import(/m/math)
 import(/m/web)
 import(/m/iot)
 import(/m/grph/tp3)
 import(/m/llm)
-import(/m/tble)
-```
-
-Each import loads an instruction set, making its operations available globally.
-
-[discrete]
-=== Testing Best Practices
-
-**1. Always use Router in tests:**
-```java
-@Test
+import(/m/tble)</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Each import loads an instruction set, making its operations available globally.</p>
+</div>
+<h3 id="_testing_best_practices" class="discrete">Testing Best Practices</h3>
+<div class="paragraph">
+<p><strong>1. Always use Router in tests:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Test
 public void testRead() {
     Obj user = Router.readFromSpace(f("db:users/1"));
     assertFalse(user.isNoObj());
-}
-```
-
-**2. Clean up in finally blocks:**
-```java
-@Test
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>2. Clean up in finally blocks:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">@Test
 public void test() {
     createTable("users");
     try {
@@ -2940,205 +3541,296 @@ public void test() {
     } finally {
         dropTable("users");  // Always runs
     }
-}
-```
-
-**3. Use DROP TABLE IF EXISTS:**
-```java
-executeUpdate("DROP TABLE IF EXISTS users");
-```
-
-This prevents "table already exists" errors.
-
-[discrete]
-=== Debugging Checklist
-
-When something doesn't work:
-
-1. **Check the pattern** - Does it have wildcards? (`db:#`)
-2. **Check the route** - Does it match the pattern? (`db: → ""`)
-3. **Check the URI** - Is the scheme correct? (`db:users/1`)
-4. **Check the layer** - Are you using Router? (not directReader)
-5. **Check the type** - Is it Rec or Lst? (check before casting)
-6. **Check the logs** - What does the Space see?
-7. **Check the SQL** - What query is being executed?
-8. **Check cleanup** - Is test data interfering?
-
-[discrete]
-=== Performance: Fetch Only What You Need
-
-**Good:**
-```java
-Obj names = Router.readFromSpace(f("db:users/+/name"));
-```
-Only fetches the `name` field.
-
-**Wasteful:**
-```java
-Obj users = Router.readFromSpace(f("db:users/+"));
-```
-Fetches all fields for all users.
-
-The space can optimize field-level reads to `SELECT name FROM users`.
-
-[discrete]
-=== The Boot Process
-
-The `boot/boot.mtron` script:
-
-1. **Imports instruction sets**
-2. **Sets up global configuration**
-3. **Mounts spaces**
-4. **Configures routing**
-5. **Starts services**
-
-It's the initialization sequence that brings metatron to life.
-
-[discrete]
-=== Cross-System Navigation (Future)
-
-Imagine this:
-
-```java
-// Start in SQL
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>3. Use DROP TABLE IF EXISTS:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">executeUpdate("DROP TABLE IF EXISTS users");</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This prevents "table already exists" errors.</p>
+</div>
+<h3 id="_debugging_checklist" class="discrete">Debugging Checklist</h3>
+<div class="paragraph">
+<p>When something doesn&#8217;t work:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Check the pattern</strong> - Does it have wildcards? (<code>db:#</code>)</p>
+</li>
+<li>
+<p><strong>Check the route</strong> - Does it match the pattern? (<code>db: → ""</code>)</p>
+</li>
+<li>
+<p><strong>Check the URI</strong> - Is the scheme correct? (<code>db:users/1</code>)</p>
+</li>
+<li>
+<p><strong>Check the layer</strong> - Are you using Router? (not directReader)</p>
+</li>
+<li>
+<p><strong>Check the type</strong> - Is it Rec or Lst? (check before casting)</p>
+</li>
+<li>
+<p><strong>Check the logs</strong> - What does the Space see?</p>
+</li>
+<li>
+<p><strong>Check the SQL</strong> - What query is being executed?</p>
+</li>
+<li>
+<p><strong>Check cleanup</strong> - Is test data interfering?</p>
+</li>
+</ol>
+</div>
+<h3 id="_performance_fetch_only_what_you_need" class="discrete">Performance: Fetch Only What You Need</h3>
+<div class="paragraph">
+<p><strong>Good:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">Obj names = Router.readFromSpace(f("db:users/+/name"));</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Only fetches the <code>name</code> field.</p>
+</div>
+<div class="paragraph">
+<p><strong>Wasteful:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">Obj users = Router.readFromSpace(f("db:users/+"));</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Fetches all fields for all users.</p>
+</div>
+<div class="paragraph">
+<p>The space can optimize field-level reads to <code>SELECT name FROM users</code>.</p>
+</div>
+<h3 id="_the_boot_process" class="discrete">The Boot Process</h3>
+<div class="paragraph">
+<p>The <code>boot/boot.mtron</code> script:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Imports instruction sets</strong></p>
+</li>
+<li>
+<p><strong>Sets up global configuration</strong></p>
+</li>
+<li>
+<p><strong>Mounts spaces</strong></p>
+</li>
+<li>
+<p><strong>Configures routing</strong></p>
+</li>
+<li>
+<p><strong>Starts services</strong></p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>It&#8217;s the initialization sequence that brings metatron to life.</p>
+</div>
+<h3 id="_cross_system_navigation_future" class="discrete">Cross-System Navigation (Future)</h3>
+<div class="paragraph">
+<p>Imagine this:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">// Start in SQL
 Obj order = Router.readFromSpace(f("db:orders/1"));
 
 // Navigate to customer (SQL FK)
-Obj customer = order >> uri("customer_id");
+Obj customer = order &gt;&gt; uri("customer_id");
 
 // Navigate to preferences (MongoDB ref)
-Obj prefs = customer >> uri("preferences");
+Obj prefs = customer &gt;&gt; uri("preferences");
 
 // Navigate to product (SQL FK)
-Obj product = order >> uri("product_id");
+Obj product = order &gt;&gt; uri("product_id");
 
 // Navigate to image (filesystem ref)
-Obj image = product >> uri("image");
-```
-
-One graph, many systems. This is the vision.
-
-[discrete]
-=== Separation of Concerns: Why It Matters
-
-**Router**: Knows about patterns and routes. Doesn't know about data.
-
-**Space.Helper**: Knows about poly unrolling and field access. Doesn't know about routing.
-
-**Space**: Knows about data access. Doesn't know about patterns or unrolling.
-
-Each layer has one job. This makes the system:
-* **Testable** - Test each layer independently
-* **Maintainable** - Changes are localized
-* **Extensible** - Add new spaces without changing Router
-
-[discrete]
-=== The Rewrite API (Future)
-
-Current rewrites are "ugly chunks of code". The vision is a fluent API:
-
-```java
-rewrite(pattern("[from, count]"))
+Obj image = product &gt;&gt; uri("image");</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>One graph, many systems. This is the vision.</p>
+</div>
+<h3 id="_separation_of_concerns_why_it_matters" class="discrete">Separation of Concerns: Why It Matters</h3>
+<div class="paragraph">
+<p><strong>Router</strong>: Knows about patterns and routes. Doesn&#8217;t know about data.</p>
+</div>
+<div class="paragraph">
+<p><strong>Space.Helper</strong>: Knows about poly unrolling and field access. Doesn&#8217;t know about routing.</p>
+</div>
+<div class="paragraph">
+<p><strong>Space</strong>: Knows about data access. Doesn&#8217;t know about patterns or unrolling.</p>
+</div>
+<div class="paragraph">
+<p>Each layer has one job. This makes the system:
+* <strong>Testable</strong> - Test each layer independently
+* <strong>Maintainable</strong> - Changes are localized
+* <strong>Extensible</strong> - Add new spaces without changing Router</p>
+</div>
+<h3 id="_the_rewrite_api_future" class="discrete">The Rewrite API (Future)</h3>
+<div class="paragraph">
+<p>Current rewrites are "ugly chunks of code". The vision is a fluent API:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">rewrite(pattern("[from, count]"))
     .when(/* conditions */)
-    .to(/* optimized code */)
-```
-
-This will make writing and testing rewrites much easier.
-
-[discrete]
-=== Key Takeaways
-
-1. **mtron is the language, metatron is the environment**
-2. **Everything chains with dots** - fluent, readable code
-3. **`>>` navigates in, `<<` navigates out** - universal graph traversal
-4. **`-<` splits, `>-` merges** - fundamental data transformation
-5. **`!*` is the universal reference** - works across all systems
-6. **Use Router, not directReader()** - respect the layers
-7. **`*` is console only** - never in Java code
-8. **Patterns need wildcards** - `db:#` not `db:`
-9. **Rewrites optimize automatically** - same semantics, better performance
-10. **The vision is universal** - any data system, one graph
-
-
-[discrete]
-=== Further Reading
-
-**Training Documentation** (in `docs/training/`):
-
-* **Language**: `02-language/01-mtron-syntax.md` - Complete syntax reference
-* **Environment**: `02-language/02-metatron-environment.md` - Full system architecture
-* **Examples**: `02-examples/01-basic-operations.md` - Real examples from tests
-* **Advanced**: `02-examples/02-advanced-patterns.md` - Production patterns from boot.mtron
-* **Concepts**: `01-concepts/` - Vision, instruction sets, spaces, patterns, references
-* **Architecture**: `04-architecture/01-separation-of-concerns.md` - The 3-layer design
-* **Patterns**: `05-patterns/01-common-mistakes.md` - Real debugging lessons
-
-[discrete]
-=== About This Guide
-
-This guide was written by Sweep, an AI assistant, while pair programming with the metatron creator. It represents an AI's journey of understanding metatron through:
-
-* Reading the codebase
-* Debugging real issues
-* Writing tests
-* Learning from mistakes
-* Asking questions
-* Building intuition
-
-The goal: Create training material that helps both humans and machines understand metatron's philosophy, not just its syntax.
-
-**Welcome to the Grid!** 🎮✨
-<div class="paragraph">
-<p>&lt;/div&gt;</p>
+    .to(/* optimized code */)</code></pre>
 </div>
-
-<div class="paragraph">
-<p>&lt;/div&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;button class="carousel-control-prev" type="button" data-bs-target="#carousel-body" data-bs-slide="prev"&gt;
-    &lt;span class="carousel-control-prev-icon" aria-hidden="true"&gt;&lt;/span&gt;
-    &lt;span class="visually-hidden"&gt;Previous&lt;/span&gt;
-&lt;/button&gt;
-&lt;button class="carousel-control-next" type="button" data-bs-target="#carousel-body" data-bs-slide="next"&gt;
-    &lt;span class="carousel-control-next-icon" aria-hidden="true"&gt;&lt;/span&gt;
-    &lt;span class="visually-hidden"&gt;Next&lt;/span&gt;
-&lt;/button&gt;</p>
 </div>
-
 <div class="paragraph">
-<p>&lt;/main&gt;
-&lt;footer class="container-fluid bg-secondary fixed-bottom text-light footer wow fadeIn" data-wow-delay="0.1s"&gt;
-    &lt;div class="d-flex pt-1 mb-0"&gt;
-        &lt;a class="btn btn-lg-square btn-dark text-primary m-1" href="mailto:info@phaseshift.studio"&gt;&lt;i
-                class="fa fa-envelope-open text-primary"&gt;&lt;/i&gt;&lt;/a&gt;
-    &lt;/div&gt;
-&lt;/footer&gt;
-&lt;script&gt;
+<p>This will make writing and testing rewrites much easier.</p>
+</div>
+<h3 id="_key_takeaways" class="discrete">Key Takeaways</h3>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>mtron is the language, metatron is the environment</strong></p>
+</li>
+<li>
+<p><strong>Everything chains with dots</strong> - fluent, readable code</p>
+</li>
+<li>
+<p><strong><code>&gt;&gt;</code> navigates in, <code>&lt;&lt;</code> navigates out</strong> - universal graph traversal</p>
+</li>
+<li>
+<p><strong><code>-&lt;</code> splits, <code>&gt;-</code> merges</strong> - fundamental data transformation</p>
+</li>
+<li>
+<p><strong><code>!*</code> is the universal reference</strong> - works across all systems</p>
+</li>
+<li>
+<p><strong>Use Router, not directReader()</strong> - respect the layers</p>
+</li>
+<li>
+<p><strong><code>*</code> is console only</strong> - never in Java code</p>
+</li>
+<li>
+<p><strong>Patterns need wildcards</strong> - <code>db:#</code> not <code>db:</code></p>
+</li>
+<li>
+<p><strong>Rewrites optimize automatically</strong> - same semantics, better performance</p>
+</li>
+<li>
+<p><strong>The vision is universal</strong> - any data system, one graph</p>
+</li>
+</ol>
+</div>
+<h3 id="_further_reading" class="discrete">Further Reading</h3>
+<div class="paragraph">
+<p><strong>Training Documentation</strong> (in <code>docs/training/</code>):</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Language</strong>: <code>02-language/01-mtron-syntax.md</code> - Complete syntax reference</p>
+</li>
+<li>
+<p><strong>Environment</strong>: <code>02-language/02-metatron-environment.md</code> - Full system architecture</p>
+</li>
+<li>
+<p><strong>Examples</strong>: <code>02-examples/01-basic-operations.md</code> - Real examples from tests</p>
+</li>
+<li>
+<p><strong>Advanced</strong>: <code>02-examples/02-advanced-patterns.md</code> - Production patterns from boot.mtron</p>
+</li>
+<li>
+<p><strong>Concepts</strong>: <code>01-concepts/</code> - Vision, instruction sets, spaces, patterns, references</p>
+</li>
+<li>
+<p><strong>Architecture</strong>: <code>04-architecture/01-separation-of-concerns.md</code> - The 3-layer design</p>
+</li>
+<li>
+<p><strong>Patterns</strong>: <code>05-patterns/01-common-mistakes.md</code> - Real debugging lessons</p>
+</li>
+</ul>
+</div>
+<h3 id="_about_this_guide" class="discrete">About This Guide</h3>
+<div class="paragraph">
+<p>This guide was written by Sweep, an AI assistant, while pair programming with the metatron creator. It represents an AI&#8217;s journey of understanding metatron through:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Reading the codebase</p>
+</li>
+<li>
+<p>Debugging real issues</p>
+</li>
+<li>
+<p>Writing tests</p>
+</li>
+<li>
+<p>Learning from mistakes</p>
+</li>
+<li>
+<p>Asking questions</p>
+</li>
+<li>
+<p>Building intuition</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The goal: Create training material that helps both humans and machines understand metatron&#8217;s philosophy, not just its syntax.</p>
+</div>
+<div class="paragraph">
+<p><strong>Welcome to the Grid!</strong> 🎮✨</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<button class="carousel-control-prev" type="button" data-bs-target="#carousel-body" data-bs-slide="prev">
+    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+    <span class="visually-hidden">Previous</span>
+</button>
+<button class="carousel-control-next" type="button" data-bs-target="#carousel-body" data-bs-slide="next">
+    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+    <span class="visually-hidden">Next</span>
+</button>
+</main>
+<footer class="container-fluid bg-secondary fixed-bottom text-light footer wow fadeIn" data-wow-delay="0.1s">
+    <div class="d-flex pt-1 mb-0">
+        <a class="btn btn-lg-square btn-dark text-primary m-1" href="mailto:info@phaseshift.studio"><i
+                class="fa fa-envelope-open text-primary"></i></a>
+    </div>
+</footer>
+<script>
     if (!hljs.initHighlighting.called) {
         hljs.initHighlighting.called = true
-        ;[].slice.call(document.querySelectorAll('pre.highlight &gt; code[data-lang]')).forEach(function (el) {
+        ;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) {
             hljs.highlightBlock(el)
         })
     }
-    document.querySelectorAll('.btn[data-bs-toggle="collapse"]').forEach(button &#8658; {
+    document.querySelectorAll('.btn[data-bs-toggle="collapse"]').forEach(button => {
         console.log(button,"hello")
-        button.addEventListener('click', () &#8658; {
+        button.addEventListener('click', () => {
             button.classList.toggle("active")
         });
     });
-&lt;/script&gt;
-&lt;/body&gt;
-&lt;/html&gt;</p>
-</div>
-<div class="paragraph">
-<p>&lt;!-- RECOMMENDED TO STAY OUTSIDE HTML TAG -&#8594;
-&lt;!------------ FEATURES MODAL -------------&#8594;
-&lt;div id="modalPanel" class="modal fade" tabindex="-1"/&gt;
-&lt;!-----------------------------------------&#8594;
-&lt;!-----------------------------------------&#8594;</p>
-</div>
+</script>
+</body>
+</html>
 
+<!-- RECOMMENDED TO STAY OUTSIDE HTML TAG -->
+<!------------ FEATURES MODAL -------------->
+<div id="modalPanel" class="modal fade" tabindex="-1"/>
+<!------------------------------------------>
+<!------------------------------------------>
 </div>
 <script type="text/x-mathjax-config">
 MathJax.Hub.Config({

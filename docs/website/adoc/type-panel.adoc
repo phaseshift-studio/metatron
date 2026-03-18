@@ -53,18 +53,7 @@ age::T[?even::T]
 -->
 ++++
 
-
-nat::10
-nat::-10
-int::-10.as(nat::T)
--->
-++++
-
-
 For instance, it is possible to define the type `nat` which represents the set of natural numbers -- integers greater than zero. In mtron, this is written:
-
-
-
 
 \[
 \tt{int::T[?>0]}
