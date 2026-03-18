@@ -49,7 +49,7 @@ include::header.html[]
               <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-4" aria-expanded="false" aria-controls="card-4">Space</button>
         </div>
         <div class="row mt-3 gap-3">
-            <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-5" aria-expanded="false" aria-controls="card-5">Ringoid Mechanics</button> 
+            <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-5" aria-expanded="false" aria-controls="card-5">Fail and Catch</button> 
             <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-6" aria-expanded="false" aria-controls="card-6">Types</button>  
             <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-7" aria-expanded="false" aria-controls="card-7">IoT Integration</button>
             <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-8" aria-expanded="false" aria-controls="card-8">MQTT Space</button>
@@ -124,6 +124,14 @@ include::control-structures-panel.adoc[]
 <div class="collapse" id="card-3">
 ++++
 include::llm-panel.adoc[]
+++++
+</div>
+++++
+
+++++
+<div class="collapse" id="card-5">
+++++
+include::fail-catch-panel.adoc[]
 ++++
 </div>
 ++++

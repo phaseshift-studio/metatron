@@ -18,6 +18,9 @@
             button.classList.toggle("active")
         });
     });
+    document.querySelectorAll('code').forEach(block => {
+        hljs.highlightBlock(block);
+    });
 </script>
 </body>
 </html>

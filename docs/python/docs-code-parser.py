@@ -267,9 +267,9 @@ class ProcessingState:
             if -1 == line.find("[HIDDEN]"):
                 result.append(
                     f"mtron> {'\n       '.join(line.split("%"))}")  # the spaces are to shift right due to mtron> 
-                result.append(f"{self.mtron.exec(line.replace("%", ""))}")
+                result.append(f"{self.mtron.exec(line.replace("%", "").strip())}")
             else:
-                self.mtron.exec(line.replace("%", "").replace("[HIDDEN]", ""))
+                self.mtron.exec(line.replace("%", "").replace("[HIDDEN]", "").strip())
         self.output.extend(result[1:]) # first line is always a blank (for some reason)
         print(self.output)
         self.code = []

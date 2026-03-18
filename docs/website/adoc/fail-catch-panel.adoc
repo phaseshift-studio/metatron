@@ -1,0 +1,47 @@
+== Fail and Catch
+
+The exception handling architecture of metatron leverages a fail monad with some unique features novel to metatron. The fail monad as two states: propagating and caught.
+
+++++
+<!-- 🐖 
+[HIDDEN] /sys/fail/+ -> noobj
+1.plus(b).plus(3)                 [-- <1>
+1.plus(b).catch(2).plus(3)        [-- <2>
+-->
+++++
+
+<1> (*propagating*) `plus?\<=int(b)(int::T)` is not a valid instruction and a `fail::T` monad is generated.
+<2> (*caught*) `catch?A{+*+}\<=A(A{+*+}::T)` will apply a lhs `fail::T` to its argument, else it will allow the lhs `obj` to pass through unmanipulated.
+
+When an exception happens and a fail monad is created, it is immediately recorded to the subspace identified by `boot/fail_pattern`. `/sys/fail?incr=./+` is the default should no pattern be provided. There are two reasons why uncaught `fail::T` monads are saved to space.
+
+. The exception hasn't been handled and can be resumed at a later time in a coroutine-esque manner.
+. The exception stack trace can be clipped to reduce visual clutter and only when accessed and caught from space will the stack trace be unrolled and accessible to introspection.
+
+++++
+<!-- 🐖 
+[HIDDEN] /sys/fail/+ -> noobj
+1.plus(b)                  [-- <1>
+*/sys/fail/+               [-- <2>
+*/sys/fail/+.catch(_)      [-- <3>
+*/sys/fail                 [-- <4>
+-->
+++++
+
+<1> A `fail::T` monad is generated and is not caught.
+<2> The uncaught `fail::T` is written to `/sys/fail` using the `incrq`-proc.
+<3> The uncaught `fail::T` remains uncaught until caught.
+<4> A caught `fail::T` is removed from space.
+
+Finally, the `cause()` instruction enables recursive stack walking for reflective exception handling introspection.
+
+++++
+<!-- 🐖 
+[HIDDEN] /sys/fail/+ -> noobj
+*cause                 [-- <1>
+1+b.catch(cause())     [-- <2>
+-->
+++++
+
+<1> The `cause()` instruction with domain being `fail::T` and range being `fail{?}::T`.
+<2> Once a `fail::T` is caught, is can be introspected on with `cause()`.

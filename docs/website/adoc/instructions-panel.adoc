@@ -102,9 +102,9 @@ band -> |inst?int{?}<=int(min=>_,max=>_){ is(and(gte(*min),lte(*max))) }
 ++++
 
 <1> The argument's name is it's reference on the stack.
-<1> If the argument name isn't provided, then it's position in the argument list determines its name.
-<2> When arguments are named, they can be written in any order.
-<3> The domain of `band` is `int`.
+<2> If the argument name isn't provided, then it's position in the argument list determines its name.
+<3> When arguments are named, they can be written in any order.
+<4> The domain of `band` is `int`.
 Note where the error is thrown when `str['abc']` is provided.
 =====
 
@@ -161,8 +161,8 @@ band -> |inst?int{?}<=int(min=>?nat::T.else(fail()),max=>?nat::T.else(fail())){ 
 15.band(10,20)              [-- <6>
 -15.band(-20,-10)           [-- <7>
 band -> |inst?int{?}<=int(min=>?nat::T.else(-100),max=>?nat::T.else(100)){ is(and(gte(*min),lte(*max))) }
-15.band(10,20)              [-- <6>
--15.band(-20,-10)           [-- <7>
+15.band(10,20)              [-- <8>
+-15.band(-20,-10)           [-- <9>
 -->
 ++++
 
@@ -192,7 +192,8 @@ Finally, a degenerate anonymous `inst` with no specified variable frame is simpl
 <!-- 🐖 
 10.(min=>2,max=>8){ is(and(gte(*min),lte(*max))) }                [-- <1>
 10.(min=>minus(1),max=>plus(1)){ is(and(gte(*min),lte(*max))) }   [-- <2>
-10.(){ is(and(gte(*min),lte(*max))) }                             [-- <3>
+10.(min=>2,max=>8){ is(and(gte(*bad_min),lte(*bad_max))) }        [-- <3>
+10.(){ is(and(gte(*min),lte(*max))) }                             [-- <4>
 10.is(and(gte(minus(1)),lte(plus(1))))                            [-- <5>
 -->
 ++++
