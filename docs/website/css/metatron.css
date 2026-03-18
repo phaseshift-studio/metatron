@@ -2,11 +2,11 @@
     --maincolor: #282c34;
     --primarycolor: #c80000;
     --secondarycolor: #191C24;
-    --tertiarycolor: #4db6ac;
+    --tertiarycolor: #6565f3;
     --sidebarbackground: #191C24;
     --linkcolor: var(--mmagenta);
     --linkcoloralternate: #2652e5;
-    --white: #FFFFFF;
+    --white: #c2c2c2;
     --primary: #c80000;
     --secondary: #191C24;
     --light: #6C7293;
@@ -19,7 +19,7 @@
     --mdarkgray: #494554;
     --mlightgray: #797585;
     --myellow: #9ba201;
-    --maqua: #167a96;
+    --maqua: #68a1b6;
 }
 
 .terminal-box {
@@ -608,7 +608,6 @@ details {
 }
 
 #header,
-.hljs-mtron-prompt-begin,
 .hljs-mtron-form,
 .hljs-punctuation,
 .hljs-mtron-rec,
@@ -616,7 +615,7 @@ details {
 .hljs-mtron-type-prefix,
 .hljs-mtron-prompt-end,
 .hljs-mtron-log-info {
-    color: var(--mgreen);
+    color: var(--white);
 }
 
 .hljs-mtron-noobj,
@@ -624,6 +623,7 @@ details {
     color: var(--mmagenta);
 }
 
+.hljs-mtron-prompt-begin,
 .hljs-mtron-pipe,
 .hljs-mtron-log-error,
 .hljs-mtron-match-fail,
@@ -672,4 +672,8 @@ details {
 .hljs-fos-docs-if-else-then-case-do,
 .hljs-mtron-comment {
     color: #797979;
+}
+
+.MathJax_Display {
+    color: var(--mred);
 }

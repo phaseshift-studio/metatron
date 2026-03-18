@@ -19,29 +19,32 @@ of its distributivity with the ring's multiplicative operator (`apply`, sugar'd 
 detailed discussion of this property will be discussed elsewhere. For now, when seen in isolation as a commutative group,
 the following axioms hold.
 \[
+\small
 \begin{align}
-&\tt{split}(ca,noobj)           &=&\; \tt{ca}                      & (\text{zero})\\
-&\tt{split}(ca,cb)           &=&\; \tt{split}(cb,ca)            & (\text{commutative})\\
-&\tt{split}(ca,{\text{-}ca}) &=&\; \tt{noobj}                   & (\text{inverse})\\
-&\tt{split}(ca,split(cb,cd)) &=&\; \tt{split(split(ca,cb),cd)}  & (\text{associative}).\\
+&\tt{split}(ca,noobj)        &=&\; \tt{ca} + \tt{noobj}          &=&\; \tt{ca}                             & (\text{zero})\\
+&\tt{split}(ca,cb)           &=&\; \tt{ca} + \tt{cb}             &=&\; \tt{split}(cb,ca)                   & (\text{commutative})\\
+&\tt{split}(ca,{\text{-}ca}) &=&\; \tt{ca} - \tt{ca}             &=&\; \tt{noobj}                   & (\text{inverse})\\
+&\tt{split}(ca,split(cb,cd)) &=&\; \tt{ca} + (\tt{cb} + \tt{cd}) &=&\; \tt{split(split(ca,cb),cd)}  & (\text{associative}).\\
 \end{align}
 \]
 
 When a `poly` is an argument to `split`, a new `poly` is constructed as detailed below.
 
 \[
+\small
 \tt{obj} \cdot \tt{split}(\tt{rec}) \equiv \left[
 \begin{align}
-\tt{obj} \cdot \tt{dom({rec}{0})}   & \Rightarrow & \tt{obj} \cdot \tt{rng({rec}_{0})} \\
-\tt{obj} \cdot \tt{dom({rec}_{1})}  & \Rightarrow & \tt{obj} \cdot \tt{rng({rec}_{1})} \\
-\tt{obj} \cdot \tt{dom({rec}_{2})}  & \Rightarrow & \tt{obj} \cdot \tt{rng({rec}_{2})} \\
-\vdots                              & \Rightarrow & \vdots \\
-\tt{obj} \cdot \tt{dom({rec}_{n})}  & \Rightarrow & \tt{obj} \cdot \tt{rng({rec}_{n})}
+\tt{obj} \cdot& \tt{dom({rec}{0})}   & \Rightarrow &\; \tt{obj} \cdot \tt{rng({rec}_{0})} \\
+\tt{obj} \cdot& \tt{dom({rec}_{1})}  & \Rightarrow &\; \tt{obj} \cdot \tt{rng({rec}_{1})} \\
+\tt{obj} \cdot& \tt{dom({rec}_{2})}  & \Rightarrow &\; \tt{obj} \cdot \tt{rng({rec}_{2})} \\
+\vdots        &                      & \Rightarrow &\; \vdots \\
+\tt{obj} \cdot& \tt{dom({rec}_{n})}  & \Rightarrow &\; \tt{obj} \cdot \tt{rng({rec}_{n})}
 \end{align}
 \right]
 \]
 
 \[
+\small
 \tt{obj} \cdot \tt{split}(\tt{lst}) \equiv \left[
 \begin{align}
 \tt{obj} \cdot & \tt{dom({lst}_{0})} \\
@@ -52,9 +55,9 @@ When a `poly` is an argument to `split`, a new `poly` is constructed as detailed
 \right]
 \]
 
-These constructions appear at odds with what is required for branching -- namely, discimination. The ability to choose one branch of code over another
-is entirely absent in the semantics of `split`. Every relation in the `rec` and every element in `lst` has the lhs `obj`
-applied to it -- indiscriminately. Selective discrimination is a consequence of the abelian monoid (commutative/associative) and zero element (`noobj`) formed by `split`. 
+These constructions appear at odds with what is required for branching -- namely, discrimination. The ability to choose one branch of code over another
+is entirely absent in the semantics of `split`. Every relation in a `rec` argument and every element in `lst` argument has the lhs `obj`
+applied to it -- indiscriminately. Selective discrimination is a consequence of the properties of the abelian monoid (commutative/associative) and its zero element (`noobj`). 
 Given that a `rec` relation can not have a `noobj` domain nor range, then selective branching is achieved programmatically through _filtering_.
 For instance,
 
@@ -62,13 +65,27 @@ For instance,
 <!-- 🐖 
 [a=>1,b=>noobj,noobj=>3]      [-- <1>
 {1,2}-<[gte(2)      => +3]    [-- <2>
-{1,2}-<[is(gte(2))  => +3]    [-- <3>
+{1,2}-<[?>=2        => +3]    [-- <3>
 -->
 ++++
 
-<1> all `poly` relations are unlabeled binary edges (half-edges are `monos`). 
+<1> all `rec` relations are unlabeled binary edges (half-edges are `monos`). 
 <2> `gte?bool\<=int(int::T)` is a many-to-one function that stages a binary switch.
 <3> `is?int{?}\<=int(bool::T)` is the filtering instruction as made explicit in range coefficient: `int{?} = int{0,1}`.
+
+Unlike `rec`, `lst` can have `noobj` elements. However, when merged into a single stream, `noobj` are discarded.
+
+++++
+<!-- 🐖
+{1,2}-<[gte(2),gt(3)]            [-- <1>
+{1,2}-<[?>=2,?>3]                [-- <2>
+{1,2}-<[?>=2,?>3]>-              [-- <3>
+-->
+++++
+
+<1> Each incoming `obj` is split across each "branch" (position) of the `lst`.
+<2> a `lst` can have `noobj` elements (empty positions).
+<3> The `lst` is merged into a single stream, thus, filtering out `noobj` branches.
 
 
 While `gte?bool\<=int(int::T)` yields a `bool`, `is?int{?}\<=int(bool::T)` yields the requisite _switch_ behavior in that the lhs `obj`
@@ -78,7 +95,6 @@ ultimately dependent on the incoming lhs `obj`, where
 \[
 \tt{obj} \cdot \tt{gte}(\_ ) \cdot \tt{is}(\_ ) => obj\{?\} \in \{\tt{obj},\tt{noobj}\}.
 \]
-
 
 [source,mtron,indent=0,subs="verbatim,attributes",role="primary"]
 .if/else

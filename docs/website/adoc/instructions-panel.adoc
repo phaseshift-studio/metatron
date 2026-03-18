@@ -29,9 +29,9 @@ Every instruction maps a **left hand side** `obj` (`lhs`) to a **right hand side
 \end{align*}
 
 [discrete]
-=== stackSpace and frames
+=== stacks and frames
 
-Every logical thread has a `/m/space/stack` with `objs` in `<+/#>`. The current stack of the mtron code processing this documentation is available in the collapsed accordian below. Note that this stack has been processing the code examples across all the documentation up to this point. Local variables from other parts of the documentation will be noticed. Furthermore, note the `boot/` branch. This stores the data provided by the user and derived by the bootloader at startup.
+Every logical thread has a `/m/space/stack` patterned `<+/#>`. The current stack of the mtron code processing this documentation is available in the collapsed accordian below. The state of this stack is the result of all the processing thus far up to this point in the documentation. Local variables from other parts of the documentation will be noticed. Furthermore, note the `boot/` branch. This stores the data provided by the user and derived by the bootloader at startup.
 
 .the objs of the doc processors stack
 [%collapsible]

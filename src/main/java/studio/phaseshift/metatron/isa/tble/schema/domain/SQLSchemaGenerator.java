@@ -29,7 +29,9 @@ import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Real.REAL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.tble.tbleInstSet.REC_ROW_TID;
 
@@ -39,8 +41,8 @@ import static studio.phaseshift.metatron.isa.tble.tbleInstSet.REC_ROW_TID;
  *
  * <p>This allows SQL schemas to be accessible via fURIs like:
  * <pre>
- * /netflix/S              → the schema rec
- * /netflix/S/db/movie     → the movie table type
+ * /netflix/schema              → the schema rec
+ * /netflix/schema/db/movie     → the movie table type
  * </pre>
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -150,5 +152,51 @@ public class SQLSchemaGenerator {
      */
     public fURI getSchemaBasePath() {
         return schemaBasePath;
+    }
+
+    /**
+     * Generate a complete schema object including tables and foreign keys
+     * Returns a rec with:
+     * - pattern: base pattern for table types
+     * - tables: list of table type definitions
+     * - foreign_keys: list of foreign key relationships
+     */
+    public Obj generateSchema() {
+        final Map<Obj, Obj> schemaMap = new LinkedHashMap<>();
+
+        // Add pattern
+        schemaMap.put(uri("pattern"), uri(this.schemaBasePath.extend("#")));
+
+        // Add table types
+        schemaMap.put(uri("tables"), lst(getTableTypes().stream()
+            .map(t -> (Obj) t).toList()));
+
+        // Add foreign key metadata
+        schemaMap.put(uri("foreign_keys"), generateForeignKeyList());
+
+        return rec(schemaMap);
+    }
+
+    /**
+     * Generate a list of foreign key relationships as mtron objects
+     */
+    private Obj generateForeignKeyList() {
+        final List<Obj> fkList = new ArrayList<>();
+
+        for (final ExistingTableSchema.TableMetadata table : tableMetadata) {
+            for (final ExistingTableSchema.ForeignKeyMetadata fk : table.foreignKeys()) {
+                final Map<Obj, Obj> fkRec = new LinkedHashMap<>();
+                fkRec.put(uri("table"), str(fk.fromTable()));
+                fkRec.put(uri("column"), str(fk.fromColumn()));
+                fkRec.put(uri("references"), str(fk.toTable()));
+                fkRec.put(uri("ref_column"), str(fk.toColumn()));
+                if (fk.fkName() != null) {
+                    fkRec.put(uri("name"), str(fk.fkName()));
+                }
+                fkList.add(rec(fkRec));
+            }
+        }
+
+        return lst(fkList);
     }
 }

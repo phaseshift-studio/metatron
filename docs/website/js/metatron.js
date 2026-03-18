@@ -36,6 +36,13 @@ function slideShowPage(id) {
     Object.keys(termynals).forEach(key => refreshTermynal(key));
 }
 
+$(document).ready(function () {
+    const hash = window.location.hash.substring(1);
+    if (hash) {
+        $('#carousel-body').carousel(parseInt(hash));
+    }
+});
+
 /************************
  *  TERMYNAL FUNCTIONS  *
  ************************/

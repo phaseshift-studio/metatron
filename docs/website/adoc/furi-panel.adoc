@@ -32,3 +32,165 @@ file://domain.local:22/usr/data/abc{*}?sub
 🧱 {,-1}       🧱 {-}      🧱 anti-some
 🧱 {,0}        🧱 {-*}     🧱 anti-maybe some
 |===
+
+[discrete]
+=== spatial embeddings
+
+[metatron] was designed to support the creation and manipulation of _abstract data types_ in a compact, fluid manner so as to allow the user to move smoothly between _multiple models_ across different spaces, each espousing a different perspective on the data their maintain: e.g., key/value, document, relational, vector, graph, and the various nooks and crannies between.
+
+[metatron]'s URI addressing scheme makes it possible to _embed_ arbitrary data types into a space.
+This section will explore the following considerations when designing a _multi-model abstract data type_.
+
+. **spatial encodings**
+. **schema encodings**
+. **language encodings**
+
+[discrete]
+=== spatial consideration when embedding
+
+++++
+<!-- 🐖 ./main_runner.out
+1.plus(2)
+-->
+++++
+
+image:nenofhat-bedroom.png[width=300,float=left,role="parchment"] A _matrix_ is an \$n \times m\$ data structure composed of \$n\$ vectors/row, each with \$m\$ elements/columns.
+A relational database _table_ is an example of a matrix, where the entries typically span numeric and non-numeric data types.
+Three general approaches to embedding a matrix or table into a space are presented below, where each makes different space/time tradeoffs.
+
+[cols="5,5,8",frame=none,grid=none,subs="+macros",separator=🧱]
+|===
+
+^a🧱
+
+[.big]
+[source,mtron]
+----
+ \    |   |    /
+ [■] [■] [■] [■]
+
+ -[■] [■] [■] [■]-
+
+ [■] [■] [■] [■]
+ /    |   |    \
+
+----
+
+^a🧱
+
+[.big]
+[source,mtron]
+----
+​
+[■]-[■]-[■]-[■]
+
+[■]-[■]-[■]-[■]
+
+[■]-[■]-[■]-[■]
+​
+----
+
+^a🧱
+
+[.big]
+[source,mtron]
+----
+​
+[■]-[■]-[■]-[■]
+|   |   |   |
+[■]-[■]-[■]-[■]
+|   |   |   |
+[■]-[■]-[■]-[■]
+​
+----
+
+a🧱
+
+++++
+<!-- 🐖 ./main_runner.out
+[-- write matrix --]
+m/0/0 -> 0
+m/0/1 -> 1
+m/0/2 -> 2
+m/0/3 -> 3
+m/1/0 -> 4
+m/1/1 -> 5
+m/1/2 -> 6
+m/1/3 -> 7
+m/2/0 -> 8
+m/2/1 -> 9
+m/2/2 -> 10
+m/2/3 -> 11
+[-- read matrix --]
+*m/0/0       [-- <1>
+*m/0/+       [-- <2>
+*m/+/0       [-- <3>
+-->
+++++
+
+a🧱
+
+++++
+<!-- 🐖 ./main_runner.out
+[-- write matrix --]
+m/0 -> [0,1,2,3]
+m/1 -> [4,5,6,7]
+m/2 -> [8,9,10,11]
+[-- read matrix --]
+*m/0/0       [-- <1>
+*m/0/+       [-- <2>
+*m/+/0       [-- <3>
+-->
+++++
+
+image:newt-matrix.png[width=375,float=left]
+
+a🧱
+
+++++
+<!-- 🐖 ./main_runner.out
+[-- write matrix --]
+m -> [[0,1,2,3],[4,5,6,7],[8,9,10,11]]
+[-- read matrix --]
+*m/0/0       [-- <1>
+*m/0/+       [-- <2>
+*m/+/0       [-- <3>
+-->
+++++
+
+|===
+
+<1> Retrieve the first element of matrix `m`.
+<2> Retrieve the first row of matrix `m`.
+<3> Retrieve the first column of matrix `m`.
+
+The above example demonstrates the power of structural embeddings.
+The platonic matrix `m` was embedded in a structure using 3 different representations: _entry-wise_, _row-wise_, and _row-column wise_.
+Next, each embedding was read: an _element read_, a _row read_ and a _column read_.
+The expression used to read from each of the three embeddings is the same and so is the result.
+This is possible because a structure resolves up the fURI path hierarchy until it finds a match.
+Once found, it then traverses within the match to resolve the remaining path segments.
+
+.Amortized Costs in Terms of Time
+[.small][.center]
+
+[%header,width=50%,cols="l2,c1,c1,c1"]
+|===
+| embedding              | single-element | row-access  | column-access
+| [.red]#entry#          | \$O(1)\$       | \$O(n)\$    | \$O(m)\$
+| [.red]#row#            | \$O(m)\$       | \$O(1)\$    | \$O(m)\$
+| [.red]#row_column#     | \$O(1)\$       | \$O(1)\$    | \$O(1)\$
+|===
+
+The different embeddings also have different space costs, where space is defined as the amount of data accessed (i.e. retrieved from the structure) in order to satisfy the resolution of the respective fURI.
+
+.Amortized Costs in Terms of Space
+[.small][.center]
+
+[%header,width=50%,cols="l2,c1,c1,c1"]
+|===
+| embedding              | single-element | row-access    | column-access
+| [.red]#entry#          | \$O(1)\$       | \$O(n)\$      | \$O(m)\$
+| [.red]#row#            | \$O(n)\$       | \$O(n)\$      | \$O(n+m)\$
+| [.red]#row_column#     | \$O(n+m)\$     | \$O(n+m)\$    | \$O(n+m)\$
+|===

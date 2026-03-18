@@ -258,12 +258,8 @@ public class tbleSpace extends AbstractSpace<Connection> {
                 // Only if table mapping is enabled (schemaPrefix will be non-null)
                 if (this.schemaPrefix != null && this.schemaGenerator != null) {
                     if (f(this.schemaPrefix).test(pattern)) {
-                        // Return the schema object itself - create it lazily
-                        final Map<Obj, Obj> schemaRec = new LinkedHashMap<>();
-                        schemaRec.put(uri("pattern"), uri(this.schemaGenerator.getSchemaBasePath().extend("#")));
-                        schemaRec.put(uri("tables"), lst(this.schemaGenerator.getTableTypes().stream()
-                            .map(t -> (Obj) t).toList()));
-                        return IdObj.of(f(this.schemaPrefix), rec(schemaRec)).iterator();
+                        // Return the schema object itself - includes tables and foreign keys
+                        return IdObj.of(f(this.schemaPrefix), this.schemaGenerator.generateSchema()).iterator();
                     } else if (pattern.hasPrefix(this.schemaPrefix)) {
                         // Schema subpath - let the schema InstSet handle it
                         return Collections.emptyIterator();

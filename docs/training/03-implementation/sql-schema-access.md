@@ -176,28 +176,136 @@ Both SQL and graph schemas:
 | **Discovery** | Predefined schema classes | Database introspection via JDBC |
 | **Flexibility** | Can define custom properties | Limited to SQL column types |
 
+## Foreign Key Support
+
+### Discovery
+
+Foreign keys are automatically discovered from the database metadata and included in the schema:
+
+```
+[
+  pattern => db:schema/mydb/#,
+  tables => [...],
+  foreign_keys => [
+    [table=>books, column=>author_id, references_table=>authors, references_column=>id],
+    [table=>orders, column=>customer_id, references_table=>customers, references_column=>id],
+    ...
+  ]
+]
+```
+
+### Lazy Traversal
+
+Foreign key columns use **lazy resolution** to prevent infinite recursion in graph-like structures:
+
+```java
+// When reading a row, FK columns contain auto_from instructions
+final Obj employee = Router.global().read(f("db:employees/123"));
+
+// The manager_id field is an auto_from instruction (not yet resolved)
+final Obj managerId = employee.asRec().at(uri("manager_id"));
+
+// Only when accessed does it resolve to the actual manager record
+final Obj manager = employee.asRec().at(uri("manager_id"));
+// manager is now the full employee record for the manager
+```
+
+**Key Behavior**:
+- FK columns store `auto_from(referenced_path)` instructions, not the actual referenced rows
+- Resolution only happens when the field is accessed via `at()` outside its poly container
+- This prevents infinite recursion in self-referencing tables (e.g., employees → manager → manager's manager)
+- Matches the behavior of `auto_from()` in graph schemas
+
+**Example with Self-Referencing Table**:
+
+```
+employees table:
+  id | name      | manager_id
+  1  | CEO       | NULL
+  2  | VP        | 1
+  3  | Manager   | 2
+  4  | Employee  | 3
+
+*db:employees/4 returns:
+[
+  id => 4,
+  name => 'Employee',
+  manager_id => auto_from(*db:employees/3)  // Not yet resolved
+]
+
+Accessing manager_id triggers resolution:
+*db:employees/4>>manager_id returns:
+[
+  id => 3,
+  name => 'Manager',
+  manager_id => auto_from(*db:employees/2)  // Still lazy
+]
+```
+
+This allows traversing arbitrarily deep hierarchies without loading the entire graph into memory.
+
+### Implementation
+
+Foreign key lazy resolution is implemented in `ExistingTableSchema.readColumnWithMetadata()`:
+
+```java
+// Check if this column is a foreign key
+final ForeignKeyMetadata fk = getForeignKeyForColumn(tableName, columnName);
+if (fk != null) {
+    // Build the full path to the referenced row including space pattern
+    // e.g., "acme:employees/1056" not just "employees/1056"
+    // Use retractPattern() to strip the wildcard from the pattern (acme:# -> acme:)
+    final fURI referencedPath = this.space.pattern().retractPattern()
+            .extend(fk.toTable())
+            .extend(fkValue.toString());
+    // Return auto_from instruction that will resolve lazily when accessed
+    return auto_from_(referencedPath).tryToInst();
+}
+```
+
+**Key Details:**
+- Uses `space.pattern().retractPattern()` to get the pattern prefix without the wildcard (e.g., `acme:#` → `acme:`)
+- Extends with table name and row ID to build full path (e.g., `acme:employees/1056`)
+- Returns `auto_from` instruction using `auto_from_(furi).tryToInst()`
+- The `!*` syntax in output shows the auto_from instruction (e.g., `!*acme:employees/1056`)
+- `!` is sugar for `auto`, `*` is sugar for `from`, so `!*` = `auto_from`
+
 ## Future Enhancements
 
 This schema access implementation provides the foundation for:
 
-1. **Foreign Key Traversal**: Using schema information to navigate relationships between tables
-2. **Type Validation**: Ensuring queries match table structures
-3. **Query Optimization**: Using type information for better query planning
-4. **Schema Evolution**: Tracking changes to table structures over time
+1. **Type Validation**: Ensuring queries match table structures
+2. **Query Optimization**: Using type information for better query planning
+3. **Schema Evolution**: Tracking changes to table structures over time
+4. **Composite Foreign Keys**: Support for multi-column foreign keys
 
 ## Testing
 
-Run the schema access test:
+Run the schema access tests:
 
 ```bash
+# Test basic schema access
 mvn test -Dtest=tbleSpaceTest#testSQLSchemaAccess
+
+# Test foreign key discovery
+mvn test -Dtest=tbleSpaceTest#testForeignKeyDiscovery
+
+# Test lazy FK resolution (prevents infinite recursion)
+mvn test -Dtest=tbleSpaceTest#testLazyForeignKeyResolution
+
+# Run all tbleSpace tests
+mvn test -Dtest=tbleSpaceTest
 ```
 
-All 141 tbleSpace tests pass with this implementation.
+All 146 tbleSpace tests pass with this implementation (141 original + 4 FK discovery tests + 1 lazy resolution test).
 
 ## Related Files
 
-- `/src/main/java/studio/phaseshift/metatron/isa/tble/schema/SQLSchemaGenerator.java` - Schema generation logic
+- `/src/main/java/studio/phaseshift/metatron/isa/tble/schema/domain/SQLSchemaGenerator.java` - Schema generation logic
+- `/src/main/java/studio/phaseshift/metatron/isa/tble/schema/domain/ExistingTableSchema.java` - Table discovery and FK lazy resolution
 - `/src/main/java/studio/phaseshift/metatron/isa/tble/tbleSpace.java` - Space integration
 - `/src/test/java/studio/phaseshift/metatron/isa/tble/tbleSpaceTest.java` - Test coverage
 - `/src/main/java/studio/phaseshift/metatron/isa/grph/tp3/space/tp3Space.java` - Graph schema reference
+
+- `/src/main/java/studio/phaseshift/metatron/isa/m/type/Rec.java` - Shows how `at()` calls `autoResolve()`
+- `/src/main/java/studio/phaseshift/metatron/isa/m/type/Obj.java` - Defines `autoResolve()` behavior

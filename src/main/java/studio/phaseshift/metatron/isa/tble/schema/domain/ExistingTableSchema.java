@@ -31,7 +31,9 @@ import studio.phaseshift.metatron.util.Tuple;
 import java.sql.*;
 import java.util.*;
 
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
@@ -68,13 +70,20 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
      * Metadata about a SQL table
      */
     public record TableMetadata(String dbName, String tableName, List<ColumnMetadata> columns,
-                                List<String> primaryKeys) {
+                                List<String> primaryKeys, List<ForeignKeyMetadata> foreignKeys) {
     }
 
     /**
      * Metadata about a SQL column
      */
     public record ColumnMetadata(String name, int sqlType, String typeName) {
+    }
+
+    /**
+     * Metadata about a foreign key relationship
+     */
+    public record ForeignKeyMetadata(String fromTable, String fromColumn,
+                                     String toTable, String toColumn, String fkName) {
     }
 
     /**
@@ -97,8 +106,10 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
      */
     private void discoverTableSchemas(final Connection conn) throws SQLException {
         final DatabaseMetaData metaData = conn.getMetaData();
+        final String catalog = conn.getCatalog();
+
         // Get all tables (excluding system tables)
-        try (final ResultSet tables = metaData.getTables(conn.getCatalog(), null, "%", new String[]{"TABLE"})) {
+        try (final ResultSet tables = metaData.getTables(catalog, null, "%", new String[]{"TABLE"})) {
             while (tables.next()) {
                 final String tableName = tables.getString("TABLE_NAME");
                 // Skip the key-value store table
@@ -107,7 +118,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                 }
                 // Get columns for this table
                 final List<ColumnMetadata> columns = new ArrayList<>();
-                try (final ResultSet cols = metaData.getColumns(null, null, tableName, "%")) {
+                try (final ResultSet cols = metaData.getColumns(catalog, null, tableName, "%")) {
                     while (cols.next()) {
                         String columnName = cols.getString("COLUMN_NAME");
                         int sqlType = cols.getInt("DATA_TYPE");
@@ -117,14 +128,29 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                 }
                 // Get primary keys for this table
                 final List<String> primaryKeys = new ArrayList<>();
-                try (final ResultSet pks = metaData.getPrimaryKeys(null, null, tableName)) {
+                try (final ResultSet pks = metaData.getPrimaryKeys(catalog, null, tableName)) {
                     while (pks.next()) {
                         primaryKeys.add(pks.getString("COLUMN_NAME"));
                     }
                 }
-                this.tableSchemas.put(tableName.toLowerCase(), new TableMetadata(conn.getCatalog(), tableName, columns, primaryKeys));
-                this.space.logger().debug("discovered table: %s with %s columns and %s primary keys",
-                        tableName, columns.size(), primaryKeys.size());
+
+                // Get foreign keys for this table
+                final List<ForeignKeyMetadata> foreignKeys = new ArrayList<>();
+                try (final ResultSet fks = metaData.getImportedKeys(catalog, null, tableName)) {
+                    while (fks.next()) {
+                        String fkName = fks.getString("FK_NAME");
+                        String fkColumnName = fks.getString("FKCOLUMN_NAME");
+                        String pkTableName = fks.getString("PKTABLE_NAME");
+                        String pkColumnName = fks.getString("PKCOLUMN_NAME");
+                        foreignKeys.add(new ForeignKeyMetadata(
+                            tableName, fkColumnName, pkTableName, pkColumnName, fkName
+                        ));
+                    }
+                }
+
+                this.tableSchemas.put(tableName.toLowerCase(), new TableMetadata(catalog, tableName, columns, primaryKeys, foreignKeys));
+                this.space.logger().debug("discovered table: %s with %s columns, %s primary keys, and %s foreign keys",
+                        tableName, columns.size(), primaryKeys.size(), foreignKeys.size());
             }
         }
         this.space.logger().info("discovered {{b}}%s{{X}} tables: %s", tableSchemas.size(), tableSchemas.keySet());
@@ -171,8 +197,31 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
     /**
      * Read a column value using metadata to handle type conversions properly.
      * This is especially important for SQLite which stores BOOLEAN as INTEGER.
+     * Also handles foreign key traversal - if a column is a foreign key, returns the referenced row.
      */
     private Obj readColumnWithMetadata(final ResultSet rs, final ColumnMetadata col) throws SQLException {
+        // Check if this column is a foreign key
+        final TableMetadata currentTable = getCurrentTableMetadata(rs);
+        if (currentTable != null) {
+            final ForeignKeyMetadata fk = getForeignKeyForColumn(currentTable.tableName, col.name);
+            if (fk != null) {
+                // This is a foreign key - return an auto_from instruction for lazy resolution
+                final Object fkValue = rs.getObject(col.name);
+                if (fkValue != null && !rs.wasNull()) {
+                    // Build the full path to the referenced row including space pattern
+                    // e.g., "acme:employees/1056" not just "employees/1056"
+                    // Use retractPattern() to strip the wildcard from the pattern (acme:# -> acme:)
+                    final fURI referencedPath = this.space.pattern().retractPattern()
+                            .extend(fk.toTable())
+                            .extend(fkValue.toString());
+                    // Return auto_from instruction that will resolve lazily when accessed
+                    return auto_from_(referencedPath).tryToInst();
+                }
+                // FK value is null, return noobj
+                return noobj();
+            }
+        }
+
         // Check if this is a BOOLEAN column that SQLite reports as INTEGER
         if ("BOOLEAN".equalsIgnoreCase(col.typeName) &&
             (col.sqlType == Types.INTEGER || col.sqlType == Types.TINYINT ||
@@ -188,6 +237,23 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         // Use standard column reading for other types
         return readColumn(rs, col.name, col.sqlType);
     }
+
+    /**
+     * Get the table metadata for the current ResultSet
+     */
+    private TableMetadata getCurrentTableMetadata(final ResultSet rs) throws SQLException {
+        try {
+            final String tableName = rs.getMetaData().getTableName(1);
+            if (tableName != null && !tableName.isEmpty()) {
+                return tableSchemas.get(tableName.toLowerCase());
+            }
+        } catch (SQLException e) {
+            // Some JDBC drivers don't support getTableName, ignore
+        }
+        return null;
+    }
+
+
 
     /**
      * Build a row identifier from primary keys or row number
@@ -549,7 +615,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                     while (rs.next()) {
                         // Build row identifier from primary keys or use row number
                         final String id = buildRowId(rs, metadata);
-                        fURI rowFuri = fURI.Singleton.f(tableName).extend(id).extend(fieldName);
+                        fURI rowFuri = f(tableName).extend(id).extend(fieldName);
                         final Obj obj = readTableRow(rs, metadata, fieldName);
                         results.add(Space.IdObj.of(rowFuri, obj));
                     }
@@ -561,7 +627,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                     while (rs.next()) {
                         // Build row identifier from primary keys or use row number
                         final String id = buildRowId(rs, metadata);
-                        fURI rowFuri = fURI.Singleton.f(tableName).extend(id);
+                        fURI rowFuri = f(tableName).extend(id);
                         final Obj obj = readTableRow(rs, metadata);
                         results.add(Space.IdObj.of(rowFuri, obj));
                     }
@@ -592,7 +658,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                     }
                     try (final ResultSet rs = stmt.executeQuery()) {
                         if (rs.next()) {
-                            final fURI rowFuri = fURI.Singleton.f(tableName).extend(rowId).extend(fieldName);
+                            final fURI rowFuri = f(tableName).extend(rowId).extend(fieldName);
                             final Obj row = readTableRow(rs, metadata, fieldName);
                             results.add(Space.IdObj.of(rowFuri, row));
                         }
@@ -615,7 +681,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                     }
                     try (final ResultSet rs = stmt.executeQuery()) {
                         if (rs.next()) {
-                            final fURI rowFuri = fURI.Singleton.f(tableName).extend(rowId);
+                            final fURI rowFuri = f(tableName).extend(rowId);
                             final Obj row = readTableRow(rs, metadata);
                             results.add(Space.IdObj.of(rowFuri, row));
                         }
@@ -658,5 +724,40 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
 
     public List<TableMetadata> getTableMetadata() {
         return new ArrayList<>(tableSchemas.values());
+    }
+
+    /**
+     * Get foreign key metadata for a specific column in a table
+     * Returns null if the column is not a foreign key
+     */
+    public ForeignKeyMetadata getForeignKeyForColumn(final String tableName, final String columnName) {
+        final TableMetadata metadata = tableSchemas.get(tableName.toLowerCase());
+        if (metadata == null) {
+            return null;
+        }
+        return metadata.foreignKeys().stream()
+            .filter(fk -> fk.fromColumn().equalsIgnoreCase(columnName))
+            .findFirst()
+            .orElse(null);
+    }
+
+    /**
+     * Get all foreign keys for a table
+     */
+    public List<ForeignKeyMetadata> getForeignKeysForTable(final String tableName) {
+        final TableMetadata metadata = tableSchemas.get(tableName.toLowerCase());
+        if (metadata == null) {
+            return Collections.emptyList();
+        }
+        return metadata.foreignKeys();
+    }
+
+    /**
+     * Get all foreign keys across all tables
+     */
+    public List<ForeignKeyMetadata> getAllForeignKeys() {
+        return tableSchemas.values().stream()
+            .flatMap(table -> table.foreignKeys().stream())
+            .toList();
     }
 }
