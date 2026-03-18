@@ -658,6 +658,11 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
 
     <O extends Obj> O self(final Object jvm, final fURI tid, final fURI vid);
 
+    default void delete() {
+        if (null != this.vid())
+            Router.global().write(this.vid(), noobj());
+    }
+
     default boolean booleanCheck() {
         if (this.isNoObj() || this.isFail())
             return false;
@@ -683,8 +688,8 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                 return false;
             if (obj.isNoObj() && ((Obj) other).isNoObj())
                 return true;
-            if (obj.vid() != null && Objects.equals(obj.vid(), ((Obj) other).vid()))
-                return true;
+            if (!Objects.equals(obj.vid(), ((Obj) other).vid()))
+                return false;
             //final BiPredicate<Obj, Obj> opt = Optimizations.optimizedEquals.get(obj.tid().basePath());
             //if (null != opt)
             //    return opt.test(obj, (Obj) other);

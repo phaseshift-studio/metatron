@@ -172,17 +172,15 @@ public class mInstSet extends AbstractInstSet {
     public static final fURI LSHIFT_INST_TID = INST_TID.extend("lshift");
     public static final fURI RSHIFT_INST_TID = INST_TID.extend("rshift");
     public static final fURI MATH_INST_TID = INST_TID.extend("math");
-    /*public static final fURI URI_SCHEME_TID = MTRON_TID.extend("uri:scheme");
-    public static final fURI URI_PORT_TID = MTRON_TID.extend("uri:port");
-    public static final fURI URI_HOST_TID = MTRON_TID.extend("uri:host");*/
-    public static final fURI PATH_TID = M_ISA_TID.extend("path");
+    public static final fURI PATH_TID = INST_TID.extend("path");
     public static final fURI Q_INST_TID = INST_TID.extend("q");
-    public static final fURI URI_C_TID = M_ISA_TID.extend("uri:c");
+    public static final fURI URI_C_TID = INST_TID.extend("uri:c");
     public static final fURI LCASE_INST_TID = INST_TID.extend("lcase");
     public static final fURI UCASE_INST_TID = INST_TID.extend("ucase");
-    public static final fURI SCHEME_INST_TID = M_ISA_TID.extend("scheme");
-    public static final fURI HOST_INST_TID = M_ISA_TID.extend("host");
-    public static final fURI PORT_INST_TID = M_ISA_TID.extend("port");
+    public static final fURI SCHEME_INST_TID = INST_TID.extend("scheme");
+    public static final fURI AUTHORITY_INST_TID = INST_TID.extend("authority");
+    public static final fURI HOST_INST_TID = INST_TID.extend("host");
+    public static final fURI PORT_INST_TID = INST_TID.extend("port");
     /// ////////////
     /// ////////////
     public static final fURI POLY_TID = M_ISA_TID.extend("poly");

@@ -29,6 +29,7 @@ import studio.phaseshift.metatron.isa.m.type.Feature;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.impl.MFail;
 import studio.phaseshift.metatron.isa.mach.io.space.file.fsSpace;
 import studio.phaseshift.metatron.isa.mach.machInstSet;
 import studio.phaseshift.metatron.isa.mach.type.LogObj;
@@ -159,6 +160,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
             Router.writeToSpace(new mInstSet());
             Router.writeToSpace(new machInstSet());
             Router.writeToSpace(f("boot/args"), args);
+            MFail.FAIL_STACK_PATTERN = args.at("fail_stack_pattern").orElse(uri("/sys/fail?incr=./+")).uriValue();
             ROUTER.start();
             ///////////////////////////////////////////////////////////////
             if (args.has(uri(Tokens.BOOT))) {

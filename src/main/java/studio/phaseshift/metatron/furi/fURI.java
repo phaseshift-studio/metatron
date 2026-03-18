@@ -112,7 +112,7 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
     }
 
     default boolean isGeneric() {
-        if (this.path().isEmpty())
+        if (this.hasScheme() || this.hasAuthority() || this.path().isEmpty())
             return false;
         if (this.segmentLength() == 1 && (this.path().getFirst().equals("#") || this.path().getFirst().equals("+")))
             return false;

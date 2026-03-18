@@ -63,8 +63,8 @@ public class stackSpace extends AbstractSpace<Stack<Poly<?, ?>>> {
     private final Space root;
 
     public stackSpace(final fURI pattern) {
-        super(new Stack<>(), mutableMap(uri(PATTERN), uri(pattern)), STACK_SPACE_TID,null);
-        this.root = memSpace.of(this.pattern,null);
+        super(new Stack<>(), mutableMap(uri(PATTERN), uri(pattern)), STACK_SPACE_TID, null);
+        this.root = memSpace.of(this.pattern, null);
     }
 
     @Override
@@ -75,6 +75,10 @@ public class stackSpace extends AbstractSpace<Stack<Poly<?, ?>>> {
         } catch (final Exception e) {
             throw MTronException.of(e);
         }
+    }
+
+    public void clear() {
+        this.sjvm().clear();
     }
 
     @Override

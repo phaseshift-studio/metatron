@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.q.DocQTest;
@@ -35,7 +36,6 @@ import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.NoObj;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
@@ -130,13 +130,13 @@ public class mInstSetTest extends AbstractInstSetTest {
             "{1,1,1,1}.inst?int<=int{2}(){ sum() }                                          % int{2}::2",
             "{1,1,2,3}.inst?int<=int{2}(){ sum() }                                          % {2,5}",
             "{1,1,2,2,3,5}.inst?int<=int{2}(){ sum() }                                      % {2,4,8}",
-           "{1,1,2,2,3,5,7}.inst?int<=int{2}(){ sum() }.catch('X')                          % {2,4,8,\"X\"}",
+            "{1,1,2,2,3,5,7}.inst?int<=int{2}(){ sum() }.catch('X')                          % {2,4,8,\"X\"}",
             "{1,2,3,4,5,6,7,8}.inst?int<=int{4}(){ sum() }.catch('X')                        % {10,26}",
             "{1,2,3,4,5,6,7,8}.inst?int<=int{1}(){ sum() }.catch('X')                        % {1,2,3,4,5,6,7,8}",
             "{1,2,3,4,5,6,7,8}.inst?int<=int{*}(){ sum() }.catch('X')                        % 36",
             "{1,2,3,4,5,6,7,8}.inst?int<=int{+}(){ sum() }.catch('X')                        % 36",
             "{1,2,3,4,5,6,7,8}.inst?int<=int{10}(){ sum() }.catch('X')                       % 36",
-           // "{1,2,3,4,5,6,7,8}.inst?int<=int{-10}(){ sum() }.catch('X')                       % \"X\",
+            // "{1,2,3,4,5,6,7,8}.inst?int<=int{-10}(){ sum() }.catch('X')                       % \"X\",
             //"{1,2,3,4,5,6,7,8}.inst?int{-*}<=int{3}(){ sum().take(-3) }.catch('X')                       % 36",
             //"{1,2,3,4,5,6,7,8}.inst?int<=int{1000}(){ sum() }.catch('X')                      % \"X\"",  // TODO: this is a bug
             "{1,1,2,2,3,3,4,4}.inst?int<=int{2}(){ sum() }.catch(10)                        % {2,4,6,8}",
@@ -148,14 +148,14 @@ public class mInstSetTest extends AbstractInstSetTest {
     @ParameterizedTest
     @CsvSource(value = {
             "{4}1.plus?int{5}<=int{5}(2)                                                    % <ERROR>",
-     //       "{1,4}1.plus?int{3}<=int{3}(2)                                                    % <ERROR>",
-     //       "{2,4}1.plus?int{3}<=int{3}(2)                                                  % <ERROR>",
+            //       "{1,4}1.plus?int{3}<=int{3}(2)                                                    % <ERROR>",
+            //       "{2,4}1.plus?int{3}<=int{3}(2)                                                  % <ERROR>",
     }, delimiter = '%')
     public void testUnsolvableMonads(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
-    
-    
+
+
     @ParameterizedTest
     @CsvSource(value = {
             "print(_)                                                                       % noobj",
@@ -295,7 +295,7 @@ public class mInstSetTest extends AbstractInstSetTest {
             "{1,2,3}-<1                                                             % int{3}::1",
             "{1,2,3}-<{1,2}                                                         % {int{3}::1,int{3}::2}",
             "{1,2,3}-<{1,1,1,2}                                                     % {int{9}::1,int{3}::2}",
-           // "{1,2,3}-<?rec<=int{*}[>-.is(gt(1))=>_,>-.is(gt(2))=>_].sum?rec<=rec{*}()     % [is(gt(1))=>{2,3},is(gt(2))=>3]",
+            // "{1,2,3}-<?rec<=int{*}[>-.is(gt(1))=>_,>-.is(gt(2))=>_].sum?rec<=rec{*}()     % [is(gt(1))=>{2,3},is(gt(2))=>3]",
             "{1,2,3}-<{is(gt(1)), is(gt(2))}                                        % {2,3,3}",
             "{1,2,3}.split({is(gt(1)), is(gt(2))})                                  % {int{2}::3,2}",
             "{1,2,3}.split({is(gt(1)), is(gt(2)), 3})                               % {2,int{5}::3}",
@@ -547,11 +547,11 @@ public class mInstSetTest extends AbstractInstSetTest {
     @ParameterizedTest
     @CsvSource(value = {
             "fail::['bad']['really bad']['oh no'].catch('okay now')                   % \"okay now\"",
-            "fail::['bad']['really bad']['oh no'].plus('okay now')                    % fail::['bad']['really bad']['oh no']",
-            "1.plus(1).failure('bad').plus(2).plus(3)                                 % fail::['bad']",
+            "fail::['bad']['really bad']['oh no'].plus('okay now').catch(_)           % fail::['bad']['really bad']['oh no'].catch(_)",
+            "1.plus(1).failure('bad').plus(2).plus(3).catch(_)                        % fail::['bad'].catch(_)",
             "1.plus(1).failure('bad').plus(2).catch(34).plus(3)                       % 37",
-           // "1.plus('a').catch(cause())                                               % noobj",
-            "1.plus('a').catch(failure('bad'))                                        % fail::['bad']",
+            "1.plus('a').catch(cause().cause())                                       % noobj",
+            "1.plus('a').catch(failure('bad')).catch(_)                               % fail::['bad'].catch(_)",
             "1.plus(mult(failure('bad'))).mult(23).catch(34).plus(2)                  % 36",
     }, delimiter = '%')
     public void testFailureCatch(final String code, final String expected) {
@@ -785,7 +785,7 @@ public class mInstSetTest extends AbstractInstSetTest {
     }
 
     @ParameterizedTest
-    @TestData(value = { "reck -> rec::T@reck", "lyst -> lst::T@lyst"})
+    @TestData(value = {"reck -> rec::T@reck", "lyst -> lst::T@lyst"})
     @CsvSource(value = {
             "true.as(bool::T)                                                                                            % true",
             "false.as(bool::T)                                                                                           % false",
@@ -904,7 +904,7 @@ public class mInstSetTest extends AbstractInstSetTest {
     public void testMarkerTypes(final String code, final String expected) throws Exception {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
-    
+
     @ParameterizedTest
     @CsvSource(value = {
             "20.map(30)                                   % 30",

@@ -18,10 +18,12 @@
 
 package studio.phaseshift.metatron;
 
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.extension.AfterTestExecutionCallback;
 import org.junit.jupiter.api.extension.BeforeTestExecutionCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 
@@ -55,6 +57,13 @@ public @interface TestData {
     GraphittyLogger LOG = Graphitty.log(TestData.class);
 
     /**
+     * Whether to load test data only once for the entire test class.
+     *
+     * @return true if test data should be loaded only once for the entire test class, false otherwise.
+     */
+    boolean oneTime() default false;
+
+    /**
      * The string values to parse and evaluate before test execution.
      *
      * @return an array of string values to be evaluated as test data
@@ -67,8 +76,10 @@ public @interface TestData {
      */
     class TestDataExtension implements BeforeTestExecutionCallback, AfterTestExecutionCallback {
 
-        /** Tracks whether test data was loaded for the current test. */
-        protected boolean hasTestData = false;
+        /**
+         * Tracks whether test data was loaded for the current test.
+         */
+        protected boolean testDataLoaded = false;
 
         /**
          * Parses and evaluates the test data strings before test execution.
@@ -77,12 +88,14 @@ public @interface TestData {
          * @throws MTronTestException if parsing or evaluation fails
          */
         @Override
-        public void beforeTestExecution(final ExtensionContext context) {
+        public void beforeTestExecution(final @NonNull ExtensionContext context) {
             try {
-                if (context.getRequiredTestMethod().getAnnotation(TestData.class) != null) {
+                if (context.getRequiredTestMethod().getAnnotation(TestData.class) != null &&
+                        (!this.testDataLoaded ||
+                                !context.getRequiredTestMethod().getAnnotation(TestData.class).oneTime())) {
                     Arrays.stream(context.getRequiredTestMethod().getAnnotation(TestData.class).value())
                             .peek(value -> LOG.debug("loading test data: %s", value))
-                            .peek(v -> this.hasTestData = true)
+                            .peek(v -> this.testDataLoaded = true)
                             .forEach(mParser::eval);
                 }
             } catch (Exception e) {
@@ -91,14 +104,17 @@ public @interface TestData {
         }
 
         /**
-         * Logs a debug message after test execution if test data was loaded.
+         * Clears the test data from the stack after test execution if test data was loaded and the annotation specifies one-time loading.
          *
-         * @param context the current extension context
+         * @param context the current extension context; never {@code null}
          */
         @Override
         public void afterTestExecution(final ExtensionContext context) {
-            if (this.hasTestData)
-                LOG.debug("testing state still remains from  %s", context.getRequiredTestMethod().getName());
+            if (context.getRequiredTestMethod().getAnnotation(TestData.class) != null &&
+                    context.getRequiredTestMethod().getAnnotation(TestData.class).oneTime() && this.testDataLoaded) {
+                Router.stack().clear();
+                LOG.debug("clearing %s test data from the stack", context.getRequiredTestMethod().getName());
+            }
         }
     }
 }

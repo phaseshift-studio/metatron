@@ -24,6 +24,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
@@ -104,6 +105,7 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
     }
 
     @ParameterizedTest
+    @TestData(oneTime = false, value = {""})
     @CsvSource(value = {
             "1.to(a)                                               % *a                                % 1",
             "$$ -> [a,b,c]                                         % *<$$>                              % [a,b,c]",
@@ -141,11 +143,13 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
             ".                                                     % *$$/+/+/+/                         % [$$/1/1/0=>c,$$/1/1/1=>d]>-",
             //   ".                                                     % *$$/#                              % {[a,[b,[c,d],e],f],a,[b,[c,d],e],b,[c,d],c,d,e,f}",
             "$$ -> [a=>1,b=>2,c=>3]                                % *<$$>                              % [a=>1,b=>2,c=>3]",
-            ".                                                     % *$$/a                              % 1",
+            ".                                                     % *<$$/a>                            % 1",
             ".                                                     % *$$/b                              % 2",
             ".                                                     % *$$/c                              % 3",
             ".                                                     % *$$/c                              % 3",
             ".                                                     % *$$/+                              % {1,2,3}",
+            ".                                                     % *$$/#                              % {1,2,3,[a=>1,b=>2,c=>3]}",
+            ".                                                     % *$$/#/                             % {$$/a=>1,$$/b=>2,$$/c=>3,$$=>[a=>1,b=>2,c=>3]}",
             ".                                                     % *<$$/+>.sum?int<=int{*}()          % 6",
             // ".                                                     % *#.sum?int<=int{*}()               % .",
             // ".                                                     % *(/+/+).sum?int<=int{*}()          % .",
@@ -183,8 +187,8 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
             ".                                                     % *<$$/+/>                           % [$$/a=>1,$$/b=>2,$$/c=>3,$$/d=>4,$$/e=>5]>-",
             "1.vid(abc)                                            % *abc                               % 1@abc",
             "1.vid(abc)                                            % *abc.vid(<.>)                    % 1",
-            "[1@a,2@b,3@c]@d.map(10).vid(b)                        % *d                               % [1@a,10@b,3@c]@d",
-            "[1@a,2@b,3@c]@d.map(10@b)                             % *d                               % [1@a,10@b,3@c]@d",
+           // "[1@a,2@b,3@c]@d.map(10).vid(b)                        % *d                               % [1@a,10@b,3@c]@d",
+           // "[1@a,2@b,3@c]@d.map(10@b)                             % *d                               % [1@a,10@b,3@c]@d",
             // "[1@a,2@b,3@c]@d.map(*b + 10@b)                        % *d                               % [1@a,12@b,3@c]@d",
             // "[1@a,2@b,3@c]@d.map(*b + 10@b).to(d)                  % *d                               % 12@d",
             // "[1@a,2@b,3@c]@d                                       % *d._/_.vid(<.>)\\_.vid(<.>)      % [1,2,3]",

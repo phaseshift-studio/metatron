@@ -33,9 +33,8 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.FAIL_TID;
  */
 public class MFail extends MObj implements Fail {
 
-    public static final fURI INCRQ_FAIL_PATTERN = f("/sys/fail?incr=./+");
-
-
+    public static fURI FAIL_STACK_PATTERN = f("/sys/fail?incr=./+");
+    
     protected MFail(Tuple.Pair<Throwable, Fail> jvm, final fURI tid, final fURI vid) {
         super(jvm, null == tid ? FAIL_TID : tid, vid);
     }
@@ -52,14 +51,14 @@ public class MFail extends MObj implements Fail {
     }
 
     public static Fail fail(final Throwable t, final Fail cause) {
-        return incrStackWrap(new MFail(Tuple.Pair.with(MTronException.of(t), cause), FAIL_TID, null), INCRQ_FAIL_PATTERN);
+        return incrStackWrap(new MFail(Tuple.Pair.with(MTronException.of(t), cause), FAIL_TID, null), FAIL_STACK_PATTERN);
     }
 
     public static Fail fail(final Throwable t) {
         if (t.getCause() == null || (t.getCause() instanceof MTronException))
-            return incrStackWrap(new MFail(Tuple.Pair.with(MTronException.of(t), null), FAIL_TID, null), INCRQ_FAIL_PATTERN);
+            return incrStackWrap(new MFail(Tuple.Pair.with(MTronException.of(t), null), FAIL_TID, null), FAIL_STACK_PATTERN);
         else
-            return incrStackWrap(new MFail(Tuple.Pair.with(MTronException.of(t.getCause()), fail(MTronException.of(t.getMessage()))), FAIL_TID, null), INCRQ_FAIL_PATTERN);
+            return incrStackWrap(new MFail(Tuple.Pair.with(MTronException.of(t.getCause()), fail(MTronException.of(t.getMessage()))), FAIL_TID, null), FAIL_STACK_PATTERN);
     }
 
     public static Fail fail(final Throwable t, final String format, final Object... args) {
@@ -68,6 +67,7 @@ public class MFail extends MObj implements Fail {
 
     @Override
     public Fail caught() {
+        this.delete();
         return this instanceof MCaughtFail ? this : new MCaughtFail(this);
     }
 
