@@ -56,7 +56,7 @@ include::header.html[]
             <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-9" aria-expanded="false" aria-controls="card-9">Relational Space</button>
         </div>
         <div class="row mt-3 gap-3">
-            <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-10" aria-expanded="false" aria-controls="card-10">Q Components</button>
+            <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-10" aria-expanded="false" aria-controls="card-10">Q Processors</button>
             <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-11" aria-expanded="false" aria-controls="card-11">Uniform Resource Identifiers</button>
             <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-12" aria-expanded="false" aria-controls="card-12">File Space</button>
             <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-13" aria-expanded="false" aria-controls="card-13">The Router</button>

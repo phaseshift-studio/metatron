@@ -54,7 +54,7 @@ public class fsSpaceTest extends AbstractSpaceTest {
             return fsSpace.of(FileSystems.getDefault(), rec(
                             uri(PATTERN), uri("test:#"), uri(SCRIPT), auto_from_(f("boot/script")),
                             uri(ROUTE), rec(uri("test:"), uri("src/test/resources/isa/sys/"))),
-                    f("/sys/space/mem"));
+                    f("/sys/space/fs"));
         });
     }
 
@@ -69,6 +69,7 @@ public class fsSpaceTest extends AbstractSpaceTest {
             // "<test:space/test-sh.sh>()          % \"metatron 0.1-SNAPSHOT\"",
     }, delimiter = '%')
     public void testShell(final String code, final String expected) {
+        LOG.warn("loaded: %s",this.space);
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 

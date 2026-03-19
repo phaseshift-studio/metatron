@@ -29,4 +29,5 @@ studio.phaseshift.metatron.isa.iot.haos.haosInstSet
 studio.phaseshift.metatron.isa.iot.miot.miotInstSet
 studio.phaseshift.metatron.isa.llm.llmInstSet
 studio.phaseshift.metatron.isa.tble.tbleInstSet
+studio.phaseshift.metatron.isa.doc.docInstSet
     

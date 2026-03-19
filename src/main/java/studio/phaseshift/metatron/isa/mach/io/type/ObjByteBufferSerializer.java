@@ -39,6 +39,12 @@ public class ObjByteBufferSerializer extends AbstractObjSerializer<ByteBuffer> {
 
     private static final ByteBuffer NOOBJ_BYTES = ByteBuffer.wrap("noobj".getBytes());
 
+    private static final ObjByteBufferSerializer INSTANCE = new ObjByteBufferSerializer();
+
+    public static ObjByteBufferSerializer singleton() {
+        return INSTANCE;
+    }
+
     public ObjByteBufferSerializer() {
     }
 
@@ -153,7 +159,7 @@ public class ObjByteBufferSerializer extends AbstractObjSerializer<ByteBuffer> {
         final String internal = IteratorUtil.stream(objs.objsValue()).map(o -> new String(this.write(o).array())).reduce(",", (a, b) -> a + b + ",");
         return ByteBuffer.wrap(("{" + internal.substring(1, internal.length() - 1) + "}").getBytes());
     }
-    
+
     @Override
     public ByteBuffer writeType(final Type type) {
         String typeString = (Router.loaded() ? Router.global().rewrite(type.tid(), false) : type.tid()) + "::T";

@@ -91,6 +91,7 @@ public final class Tokens {
     public static final String LOGG = "log";
     public static final String DRIVER = "driver";
     public static final String TABLE = "table";
+    public static final String COLLECTION = "collection";
     public static final String VALUE = "value";
     public static final String FURI = "furi";
     public static final String OBJ = "obj";

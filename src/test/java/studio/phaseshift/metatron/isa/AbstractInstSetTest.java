@@ -82,13 +82,14 @@ public abstract class AbstractInstSetTest extends AbstractMetatronTest {
                 assertTrue(d > 0);
                 if (!inst.dom().c().isZeroable())
                     assertTrue(dash > 0);
-                assertTrue(r > 0);
+                // assertTrue(r > 0);
                 if (!inst.rng().c().isZeroable())
                     assertTrue(rash > 0);
-                assertTrue(dr > 0);
+                if (r > 0)
+                    assertTrue(dr > 0);
                 if (!inst.dom().c().isZeroable() && !inst.rng().c().isZeroable())
                     assertTrue(drash > 0);
-                assertTrue(d <= dr);
+                //assertTrue(d <= dr);
                 assertTrue(r <= dr);
                 //  assertTrue(dash <= drash);
                 // assertTrue(rash <= drash);

@@ -524,6 +524,11 @@ body {
     font-size: 1.3rem;
 }
 
+.isa-row {
+    height: 25px;
+    margin-right: 10px;
+}
+
 /******************************************************************/
 /******************************************************************/
 /************************* HIGHLIGHT-JS ***************************/
@@ -901,7 +906,9 @@ bin/metatron</code></pre>
                 <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="isa_dropdown">
                     <li><a class="code dropdown-item" href="#" onclick="slideShowPage(0);">/m</a></li>
                     <li><a class="code dropdown-item" href="#" onclick="slideShowPage(1);">/m/mach</a></li>
-                    <li><a class="code dropdown-item" href="#" onclick="slideShowPage(1);">/m/grph</a></li>
+                    <li><a class="code dropdown-item" href="#" onclick="slideShowPage(1);"><img src="./images/icons/space/tblespace-icon.svg" class="isa-row icon-color" alt="tble"/>/m/tble</a></li>
+                    <li><a class="code dropdown-item" href="#" onclick="slideShowPage(1);"><img src="./images/icons/space/docspace-icon.svg" class="isa-row icon-color" alt="doc"/>/m/doc</a></li>
+                    <li><a class="code dropdown-item" href="#" onclick="slideShowPage(1);"><img src="./images/icons/space/grphspace-icon.svg" class="isa-row icon-color" alt="grph"/>/m/grph</a></li>
                     <li><a class="code dropdown-item" href="#" onclick="slideShowPage(1);">/m/grph/tp3</a></li>
                     <li><a class="code dropdown-item" href="#" onclick="slideShowPage(1);">/m/vec</a></li>
                     <li><a class="code dropdown-item" href="#" onclick="slideShowPage(1);">/m/web</a></li>
@@ -1172,7 +1179,7 @@ bin/metatron</code></pre>
             <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-9" aria-expanded="false" aria-controls="card-9">Relational Space</button>
         </div>
         <div class="row mt-3 gap-3">
-            <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-10" aria-expanded="false" aria-controls="card-10">Q Components</button>
+            <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-10" aria-expanded="false" aria-controls="card-10">Q Processors</button>
             <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-11" aria-expanded="false" aria-controls="card-11">Uniform Resource Identifiers</button>
             <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-12" aria-expanded="false" aria-controls="card-12">File Space</button>
             <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-13" aria-expanded="false" aria-controls="card-13">The Router</button>
@@ -1310,7 +1317,7 @@ While the reader searches for some unbeknownst depth in the previous sentence, a
 ==&gt;m/1/3=&gt;7
 ==&gt;boot/peers/1=&gt;&lt;ws://127.0.0.1:7777&gt;
 ==&gt;band=&gt;inst?rng=int{?}&amp;dom=int(min=&gt;isa(int::T[is(gt(0))]@nat).else(-100),max=&gt;isa(int::T[is(gt(0))]@nat).else(100)){is(and(gte(*min),lte(*max)))}
-==&gt;personx=&gt;rec::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;personx{*}::T])]
+==&gt;personx=&gt;rec::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;personx{*}::T])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]
 ==&gt;triple=&gt;inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}
 ==&gt;boot/script/python=&gt;/usr/bin/python3
 ==&gt;x/a=&gt;1
@@ -1358,7 +1365,7 @@ While the reader searches for some unbeknownst depth in the previous sentence, a
  mqtt =&gt;[broker=&gt;&lt;mqtt://chibi.local:1883&gt;]]
 ==&gt;boot/args/mqtt=&gt;[broker=&gt;&lt;mqtt://chibi.local:1883&gt;]
 ==&gt;age=&gt;int::T[is(lt(120))]@nat
-==&gt;sum=&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{*}::T [reduce?rng=int&amp;dom=int{*}(noobj){fold(0,plus(id()))}]][...]@/sys/fail/68
+==&gt;sum=&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{*}::T [reduce?rng=int&amp;dom=int{*}(noobj){fold(0,plus(id()))}]][...]@/sys/fail/2148
 ==&gt;boot/script/mtron=&gt;/bin/mtron
 ==&gt;m/2/3=&gt;11
 ==&gt;m/2=&gt;[8,9,10,11]
@@ -1547,7 +1554,7 @@ mtron&gt; 15.band(10,20)              ​4​
 ==&gt;15
 mtron&gt; -15.band(-20,-10)           ​5​
 mtron&gt; band -&gt; |inst?int{?}&lt;=int(min=&gt;?nat::T.else(fail()),max=&gt;?nat::T.else(fail())){ is(and(gte(*min),lte(*max))) }
-==&gt;fail::[fail(noobj) is not a fail::T][...]@/sys/fail/292
+==&gt;fail::[fail(noobj) is not a fail::T][...]@/sys/fail/2372
 mtron&gt; 15.band(10,20)              ​6​
 ==&gt;15
 mtron&gt; -15.band(-20,-10)           ​7​
@@ -1598,15 +1605,15 @@ Finally, a degenerate anonymous <code>inst</code> with no specified variable fra
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; 10.(min=&gt;2,max=&gt;8){ is(and(gte(*min),lte(*max))) }                ​1​
 ==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/306
+	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/2386
 mtron&gt; 10.(min=&gt;minus(1),max=&gt;plus(1)){ is(and(gte(*min),lte(*max))) }   ​2​
 ==&gt;10
 mtron&gt; 10.(min=&gt;2,max=&gt;8){ is(and(gte(*bad_min),lte(*bad_max))) }        ​3​
 ==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/308
+	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/2388
 mtron&gt; 10.(){ is(and(gte(*min),lte(*max))) }                             ​4​
 ==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/310
+	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/2390
 mtron&gt; 10.is(and(gte(minus(1)),lte(plus(1))))                            ​5​
 ==&gt;10</code></pre>
 </div>
@@ -1645,11 +1652,11 @@ mtron&gt; 10.is(and(gte(minus(1)),lte(plus(1))))                            ​5
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;_)[mod(*by).eq(0)]
 ==&gt;fail::[is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;_)[mod(*by).eq(0)]
                                       ^ end of input expected
-][...]@/sys/fail/312
+][...]@/sys/fail/2392
 mtron&gt; 10.is_divisible(2)
-==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/314
+==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/2394
 mtron&gt; 10.is_divisible('abc')
-==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/316</code></pre>
+==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/2396</code></pre>
 </div>
 </div>
 </div>
@@ -1670,7 +1677,7 @@ mtron&gt; 10.is_divisible('abc')
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; band -&gt; |band?int{?}&lt;=int(min=&gt;_,max=&gt;is(gt(*min)).else(*min.plus(1)))[is(gte(*min)).is(lte(*max))]
 ==&gt;fail::[band -&gt; |band?int{?}&lt;=int(min=&gt;_,max=&gt;is(gt(*min)).else(*min.plus(1)))[is(gte(*min)).is(lte(*max))]
                                                                       ^ end of input expected
-][...]@/sys/fail/318
+][...]@/sys/fail/2398
 mtron&gt; 2.band(min=&gt;1,max=&gt;1)                 ​1​</code></pre>
 </div>
 </div>
@@ -1692,11 +1699,11 @@ mtron&gt; 2.band(min=&gt;1,max=&gt;1)                 ​1​</code></pre>
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;is(neq(0)).else(print('error').map(1)))[mod(*by).eq(0)]
 ==&gt;fail::[is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;is(neq(0)).else(print('error').map(1)))[mod(*by).eq(0)]
                                       ^ end of input expected
-][...]@/sys/fail/320
+][...]@/sys/fail/2400
 mtron&gt; 10.is_divisible(2)
-==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/322
+==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/2402
 mtron&gt; 10.is_divisible('abc')
-==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/324</code></pre>
+==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/2404</code></pre>
 </div>
 </div>
 </div>
@@ -1727,9 +1734,9 @@ This ensures the uri <code>triple</code> is not applied to the <code>inst</code>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; triple -&gt; inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}
-==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}]][...]@/sys/fail/326
+==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}]][...]@/sys/fail/2406
 mtron&gt; *triple
-==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}]][...]@/sys/fail/326</code></pre>
+==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}]][...]@/sys/fail/2406</code></pre>
 </div>
 </div>
 </td>
@@ -1768,7 +1775,7 @@ mtron&gt; {1,2,3,4,5,6}.triple()
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; sum -&gt; reduce?int&lt;=int{*}(){fold(0,plus(_))}
-==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{*}::T [reduce?rng=int&amp;dom=int{*}(noobj){fold(0,plus(id()))}]][...]@/sys/fail/328</code></pre>
+==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{*}::T [reduce?rng=int&amp;dom=int{*}(noobj){fold(0,plus(id()))}]][...]@/sys/fail/2408</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2186,7 +2193,7 @@ ai/memory -> /usr/mem
 ==&gt;fail::[unable to determine inst function:
 	1           =&gt; plus(b)      | [inst]
 	int::T      =&gt; #::T         |  \_dom
-	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/332
+	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/2412
 mtron&gt; 1.plus(b).catch(2).plus(3)        ​2​
 ==&gt;5</code></pre>
 </div>
@@ -2222,18 +2229,18 @@ mtron&gt; 1.plus(b).catch(2).plus(3)        ​2​
 ==&gt;fail::[unable to determine inst function:
 	1           =&gt; plus(b)      | [inst]
 	int::T      =&gt; #::T         |  \_dom
-	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/340
+	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/2420
 mtron&gt; */sys/fail/+               ​2​
-==&gt;fail::[unable to evaluate inst: plus(b)][...]@/sys/fail/338
-==&gt;fail::[unable to evaluate inst: plus(b)][...]@/sys/fail/337
+==&gt;fail::[unable to evaluate inst: plus(b)][...]@/sys/fail/2417
 ==&gt;fail::[unable to determine inst function:
 	1           =&gt; plus(b)      | [inst]
 	int::T      =&gt; #::T         |  \_dom
-	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/339
+	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/2419
 ==&gt;fail::[unable to determine inst function:
 	1           =&gt; plus(b)      | [inst]
 	int::T      =&gt; #::T         |  \_dom
-	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/340
+	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/2420
+==&gt;fail::[unable to evaluate inst: plus(b)][...]@/sys/fail/2418
 mtron&gt; */sys/fail/+.catch(_)      ​3​
 ==&gt;fail{2}::[unable to evaluate inst: plus(b)]
 ==&gt;fail{2}::[unable to determine inst function:
@@ -2273,7 +2280,7 @@ mtron&gt; */sys/fail                 ​4​</code></pre>
 ==&gt;cause?rng=fail{?}&amp;dom=fail(){&lt;j&gt;}
 mtron&gt; 1+b.catch(cause())     ​2​
 ==&gt;fail::[rhs does not match inst range:
-	fail::[unable to evaluate inst: plus(b)]=&gt;(X=&gt;int{*}::T)][...]@/sys/fail/346</code></pre>
+	fail::[unable to evaluate inst: plus(b)]=&gt;(X=&gt;int{*}::T)][...]@/sys/fail/2426</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -2379,10 +2386,10 @@ mtron&gt; even -&gt; int::T[is(mod(2).eq(0))]    ​4​
 mtron&gt; nat::10
 ==&gt;nat::10
 mtron&gt; nat::-10
-==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/412
+==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/2492
 mtron&gt; int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/418</code></pre>
+  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/2498</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2478,10 +2485,10 @@ mtron&gt; int::-10.as(nat::T)
 mtron&gt; nat::10
 ==&gt;nat::10
 mtron&gt; nat::-10
-==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/432
+==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/2512
 mtron&gt; int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/438</code></pre>
+  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/2518</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2504,10 +2511,10 @@ mtron&gt; age:125
 ==&gt;age:125
 mtron&gt; nat:125.as(age::T)
 ==&gt;fail::[nat:125 is not a is(lt(120))
-  nat:125=&gt;(==&gt;is(lt(120)))][...]@/sys/fail/480
+  nat:125=&gt;(==&gt;is(lt(120)))][...]@/sys/fail/2560
 mtron&gt; 125.as(nat::T).as(age::T)
 ==&gt;fail::[nat::125 is not a is(lt(120))
-  nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/486</code></pre>
+  nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/2566</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -2517,7 +2524,7 @@ mtron&gt; 125.as(nat::T).as(age::T)
 mtron&gt; personx -&gt; rec::T[?[name  =&gt; str::T,
                            age   =&gt; age::T,
                            knows =&gt; personx{*}::T]]
-==&gt;rec::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;personx{*}::T])]@personx{*}])]
+==&gt;rec::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;personx{*}::T])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]
 mtron&gt; marko -&gt; personx::[name=&gt;'marko',age=&gt;29,knows=&gt;!*grant]
 ==&gt;personx::[name=&gt;'marko',age=&gt;29,knows=&gt;!*grant]
 mtron&gt; grant -&gt; personx::[name=&gt;'grant',age=&gt;23,knows=&gt;!*marko]
@@ -2773,10 +2780,10 @@ mtron&gt; *#.as[name      =&gt; _,
 </table>
 <h3 id="_spatial_embeddings" class="discrete">spatial embeddings</h3>
 <div class="paragraph">
-<p><strong class="green">m</strong>​<span class="yellow">E</span>​<strong class="aqua">t</strong>​<strong class="lime">a</strong>​<strong class="blue">t</strong>​<strong class="red">R</strong>​<strong class="fuchsia">o</strong>​<span class="orange">n</span>​ was designed to support the creation and manipulation of <em>abstract data types</em> in a compact, fluid manner so as to allow the user to move smoothly between <em>multiple models</em> across different spaces, each espousing a different perspective on the data their maintain: e.g., key/value, document, relational, vector, graph, and the various nooks and crannies between.</p>
+<p><span class="red">m</span>​<strong class="green">E</strong>​<span class="aqua">t</span>​<span class="yellow">A</span>​<span class="lime">t</span>​<span class="fuchsia">r</span>​<strong class="orange">O</strong>​<span class="blue">n</span>​ was designed to support the creation and manipulation of <em>abstract data types</em> in a compact, fluid manner so as to allow the user to move smoothly between <em>multiple models</em> across different spaces, each espousing a different perspective on the data their maintain: e.g., key/value, document, relational, vector, graph, and the various nooks and crannies between.</p>
 </div>
 <div class="paragraph">
-<p><span class="red">M</span>​<span class="lime">E</span>​<span class="fuchsia">T</span>​<span class="green">a</span>​<span class="blue">t</span>​<strong class="orange">r</strong>​<strong class="yellow">O</strong>​<span class="aqua">N</span>​'s URI addressing scheme makes it possible to <em>embed</em> arbitrary data types into a space.
+<p><strong class="fuchsia">M</strong>​<strong class="lime">e</strong>​<span class="green">T</span>​<span class="aqua">a</span>​<span class="red">t</span>​<strong class="blue">r</strong>​<span class="yellow">O</span>​<span class="orange">n</span>​'s URI addressing scheme makes it possible to <em>embed</em> arbitrary data types into a space.
 This section will explore the following considerations when designing a <em>multi-model abstract data type</em>.</p>
 </div>
 <div class="olist arabic">
@@ -3171,7 +3178,7 @@ mtron&gt; *x.&gt;&gt;b&gt;&gt;d&gt;&gt;1
 ==&gt;fail::[unable to determine inst function:
 	capitalize  =&gt; merge(',')   | [inst]
 	uri::T      =&gt; #::T         |  \_dom
-	uri::T     X=&gt; [',']        |  \_args][...]@/sys/fail/266</code></pre>
+	uri::T     X=&gt; [',']        |  \_args][...]@/sys/fail/2346</code></pre>
 </div>
 </div>
 <h3 id="_pattern_matching_the_wildcards" class="discrete">Pattern Matching: The Wildcards</h3>
