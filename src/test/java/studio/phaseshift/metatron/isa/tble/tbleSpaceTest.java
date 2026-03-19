@@ -1125,6 +1125,265 @@
          }
      }
 
+     // ========== Corner Case and Boundary Value Tests ==========
+
+     /**
+      * Test corner cases for string fields - empty strings, special characters, unicode, etc.
+      */
+     @ParameterizedTest(name = "[{index}] String corner case: {0}")
+     @CsvSource(value = {
+             "Empty string              | users | 1 | name  | ''",
+             "Single space              | users | 1 | name  | ' '",
+             "Multiple spaces           | users | 1 | name  | '   '",
+             "Leading/trailing spaces   | users | 1 | name  | '  Test  '",
+             "Special chars             | users | 1 | email | 'test+tag@example.com'",
+             "Unicode characters        | users | 1 | name  | '你好世界'",
+             "SQL injection attempt     | users | 1 | name  | 'Robert''; DROP TABLE users; --'",
+             "Single quote              | users | 1 | name  | 'O''Brien'",
+             "Very long string          | users | 1 | email | 'verylongemailaddressthatgoesonyesverylongemailaddressthatgoeson@example.com'",
+             "Mixed case                | users | 1 | name  | 'MiXeD CaSe NaMe'",
+             "Numbers in string         | users | 1 | name  | 'User123456'",
+             "Punctuation               | users | 1 | name  | 'Name, Jr.'",
+             "Ampersand                 | users | 1 | name  | 'Smith & Jones'",
+             "Percent sign              | users | 1 | name  | '100% Complete'",
+             "Underscore                | users | 1 | name  | 'user_name_123'"
+     }, delimiter = '|')
+     public void testStringCornerCases(String description, String table, String rowId,
+                                       String field, String value) throws Exception {
+         setupTestDatabase();
+         final tbleSpace testSpace = createTestSpace();
+         try {
+             final String writeUri = String.format("db:%s/%s/%s", table, rowId, field);
+             Router.writeToSpace(f(writeUri), str(value));
+
+             final String rowUri = String.format("db:%s/%s", table, rowId);
+             final Obj row = Router.readFromSpace(f(rowUri));
+             assertTrue(row.isRec(), "Should return a record");
+
+             final Obj actualValue = row.asRec().at(uri(field));
+             assertEquals(str(value), actualValue, description);
+         } finally {
+             Router.global().removeSpace(testSpace.vid());
+             testSpace.close();
+         }
+         cleanupTestDatabase();
+     }
+
+     /**
+      * Test boundary values for integer fields
+      */
+     @ParameterizedTest(name = "[{index}] Integer boundary: {0}")
+     @CsvSource(value = {
+             "Zero                      | users | 1 | age | 0",
+             "One                       | users | 1 | age | 1",
+             "Negative one              | users | 1 | age | -1",
+             "Small positive            | users | 1 | age | 42",
+             "Small negative            | users | 1 | age | -42",
+             "Large positive            | users | 1 | age | 999999",
+             "Large negative            | users | 1 | age | -999999",
+             "Max int32                 | users | 1 | age | 2147483647",
+             "Min int32                 | users | 1 | age | -2147483648",
+             "Hundred                   | users | 1 | age | 100",
+             "Thousand                  | users | 1 | age | 1000",
+             "Million                   | users | 1 | age | 1000000"
+     }, delimiter = '|')
+     public void testIntegerBoundaries(String description, String table, String rowId,
+                                       String field, int value) throws Exception {
+         setupTestDatabase();
+         final tbleSpace testSpace = createTestSpace();
+         try {
+             final String writeUri = String.format("db:%s/%s/%s", table, rowId, field);
+             Router.writeToSpace(f(writeUri), jnt(value));
+
+             final String rowUri = String.format("db:%s/%s", table, rowId);
+             final Obj row = Router.readFromSpace(f(rowUri));
+             assertTrue(row.isRec(), "Should return a record");
+
+             final Obj actualValue = row.asRec().at(uri(field));
+             assertEquals(jnt(value), actualValue, description);
+         } finally {
+             Router.global().removeSpace(testSpace.vid());
+             testSpace.close();
+         }
+         cleanupTestDatabase();
+     }
+
+     /**
+      * Test boundary values for real/double fields
+      */
+     @ParameterizedTest(name = "[{index}] Real boundary: {0}")
+     @CsvSource(value = {
+             "Zero                      | users | 1 | salary | 0.0",
+             "One                       | users | 1 | salary | 1.0",
+             "Negative one              | users | 1 | salary | -1.0",
+             "Small decimal             | users | 1 | salary | 0.01",
+             "Large decimal             | users | 1 | salary | 999999.0",
+             "Negative decimal          | users | 1 | salary | -12345.67",
+             "Very small positive       | users | 1 | salary | 0.000001",
+             "Very small negative       | users | 1 | salary | -0.000001",
+             "Pi approximation          | users | 1 | salary | 3.14159",
+             "E approximation           | users | 1 | salary | 2.71828",
+             "Large positive            | users | 1 | salary | 1000000.0",
+             "Large negative            | users | 1 | salary | -1000000.0"
+     }, delimiter = '|')
+     public void testRealBoundaries(String description, String table, String rowId,
+                                    String field, double value) throws Exception {
+         setupTestDatabase();
+         final tbleSpace testSpace = createTestSpace();
+         try {
+             final String writeUri = String.format("db:%s/%s/%s", table, rowId, field);
+             Router.writeToSpace(f(writeUri), real(value));
+
+             final String rowUri = String.format("db:%s/%s", table, rowId);
+             final Obj row = Router.readFromSpace(f(rowUri));
+             assertTrue(row.isRec(), "Should return a record");
+
+             final Obj actualValue = row.asRec().at(uri(field));
+             assertTrue(actualValue.isReal(), description + " - should be a real");
+             assertEquals(value, actualValue.asReal().jvm(), 0.01, description);
+         } finally {
+             Router.global().removeSpace(testSpace.vid());
+             testSpace.close();
+         }
+         cleanupTestDatabase();
+     }
+
+     /**
+      * Test boolean edge cases
+      */
+     @ParameterizedTest(name = "[{index}] Boolean: {0}")
+     @CsvSource(value = {
+             "True value                | users | 1 | active | true",
+             "False value               | users | 1 | active | false",
+             "Toggle true to false      | users | 1 | active | false",
+             "Toggle false to true      | users | 3 | active | true"
+     }, delimiter = '|')
+     public void testBooleanEdgeCases(String description, String table, String rowId,
+                                      String field, boolean value) throws Exception {
+         setupTestDatabase();
+         final tbleSpace testSpace = createTestSpace();
+         try {
+             final String writeUri = String.format("db:%s/%s/%s", table, rowId, field);
+             Router.writeToSpace(f(writeUri), bool(value));
+
+             final String rowUri = String.format("db:%s/%s", table, rowId);
+             final Obj row = Router.readFromSpace(f(rowUri));
+             assertTrue(row.isRec(), "Should return a record");
+
+             final Obj actualValue = row.asRec().at(uri(field));
+             assertEquals(bool(value), actualValue, description);
+         } finally {
+             Router.global().removeSpace(testSpace.vid());
+             testSpace.close();
+         }
+         cleanupTestDatabase();
+     }
+
+     /**
+      * Test reading non-existent rows and fields
+      */
+     @ParameterizedTest(name = "[{index}] Non-existent: {0}")
+     @CsvSource(value = {
+             "Non-existent row          | db:users/999",
+             "Non-existent row 2        | db:users/0",
+             "Non-existent row negative | db:users/-1",
+             "Non-existent table        | db:nonexistent/1",
+             "Very large ID             | db:users/999999999"
+     }, delimiter = '|')
+     public void testNonExistentAccess(String description, String uri) throws Exception {
+         setupTestDatabase();
+         final tbleSpace testSpace = createTestSpace();
+         try {
+             final Obj result = Router.readFromSpace(f(uri));
+             assertTrue(result.isNoObj(), description + " should return noobj");
+         } finally {
+             Router.global().removeSpace(testSpace.vid());
+             testSpace.close();
+         }
+         cleanupTestDatabase();
+     }
+
+     /**
+      * Test multiple sequential updates to the same field
+      */
+     @ParameterizedTest(name = "[{index}] Sequential updates: {0} iterations")
+     @CsvSource(value = {
+             "5",
+             "10",
+             "20"
+     })
+     public void testSequentialUpdates(int iterations) throws Exception {
+         setupTestDatabase();
+         final tbleSpace testSpace = createTestSpace();
+         try {
+             for (int i = 0; i < iterations; i++) {
+                 Router.writeToSpace(f("db:users/1/age"), jnt(30 + i));
+             }
+
+             final Obj row = Router.readFromSpace(f("db:users/1"));
+             final Obj age = row.asRec().at(uri("age"));
+             assertEquals(jnt(30 + iterations - 1), age, "Should have final iteration value");
+         } finally {
+             Router.global().removeSpace(testSpace.vid());
+             testSpace.close();
+         }
+         cleanupTestDatabase();
+     }
+
+     /**
+      * Test that deleted rows return noobj
+      */
+     @Test
+     public void testDeletedRowReturnsNoObj() throws Exception {
+         setupTestDatabase();
+         final tbleSpace testSpace = createTestSpace();
+         try {
+             Obj row = Router.readFromSpace(f("db:users/1"));
+             assertFalse(row.isNoObj(), "Row should exist initially");
+
+             try (final Connection conn = DriverManager.getConnection("jdbc:sqlite:" + DB_PATH);
+                  final Statement stmt = conn.createStatement()) {
+                 stmt.executeUpdate("DELETE FROM users WHERE id = 1");
+             }
+
+             row = Router.readFromSpace(f("db:users/1"));
+             assertTrue(row.isNoObj(), "Deleted row should return noobj");
+         } finally {
+             Router.global().removeSpace(testSpace.vid());
+             testSpace.close();
+         }
+         cleanupTestDatabase();
+     }
+
+     /**
+      * Test concurrent field updates (same row, different fields)
+      */
+     @Test
+     public void testConcurrentFieldUpdates() throws Exception {
+         setupTestDatabase();
+         final tbleSpace testSpace = createTestSpace();
+         try {
+             Router.writeToSpace(f("db:users/1/name"), str("Updated Name"));
+             Router.writeToSpace(f("db:users/1/age"), jnt(99));
+             Router.writeToSpace(f("db:users/1/salary"), real(99999.99));
+             Router.writeToSpace(f("db:users/1/active"), bool(false));
+             Router.writeToSpace(f("db:users/1/email"), str("updated@example.com"));
+
+             final Obj row = Router.readFromSpace(f("db:users/1"));
+             final Rec rowRec = row.asRec();
+
+             assertEquals(str("Updated Name"), rowRec.at(uri("name")));
+             assertEquals(jnt(99), rowRec.at(uri("age")));
+             assertEquals(99999.99, rowRec.at(uri("salary")).asReal().jvm(), 0.01);
+             assertEquals(bool(false), rowRec.at(uri("active")));
+             assertEquals(str("updated@example.com"), rowRec.at(uri("email")));
+         } finally {
+             Router.global().removeSpace(testSpace.vid());
+             testSpace.close();
+         }
+         cleanupTestDatabase();
+     }
+
 
      // ========== Helper Methods ==========
 
