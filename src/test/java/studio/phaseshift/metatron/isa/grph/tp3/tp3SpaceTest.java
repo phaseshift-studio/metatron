@@ -102,31 +102,31 @@ public class tp3SpaceTest extends AbstractSpaceTest {
     @ParameterizedTest
     @CsvSource(value = {
             "*/g/V/#../name                                                                 % {\"marko\",\"josh\",\"peter\",\"lop\",\"vadas\",\"ripple\"}",
-         //   "*/g/V/+>>OUT/+/IN/name                                                         % {\"josh\",str{3}::\"lop\",\"vadas\",\"ripple\"}",
+            //   "*/g/V/+>>OUT/+/IN/name                                                         % {\"josh\",str{3}::\"lop\",\"vadas\",\"ripple\"}",
             "*/g/V/+>>OUT/+>>IN/name                                                        % {\"josh\",str{3}::\"lop\",\"vadas\",\"ripple\"}",
-         //   "*/g/V/+/OUT/+/IN/name                                                          % {\"josh\",str{3}::\"lop\",\"vadas\",\"ripple\"}",
+            //   "*/g/V/+/OUT/+/IN/name                                                          % {\"josh\",str{3}::\"lop\",\"vadas\",\"ripple\"}",
             "*/g/V/1/name                                                                   % \"marko\"",
             "*/g/V/1/OUT.dom()                                                              % {created,{2}knows}",
             "*/g/V/1/OUT/created.count()                                                    % 1",
             "*/g/V/1/OUT/knows.count()                                                      % 2",
-         //   "*/g/V/1/OUT/+.count()                                                          % 3",
+           // "*/g/V/1/OUT/+.count()                                                          % 3",
             "*/g/V/1/OUT/knows.>>IN.count()                                                 % 2",
             "*/g/V/1/OUT/knows.>>IN>>name                                                   % {\"vadas\",\"josh\"}",
             "*/g/V/1/OUT/knows.>>IN/name                                                    % {\"vadas\",\"josh\"}",
             "*/g/V/+.count()                                                                % 6",
-        //    "*/g/V/+.outE().count()                                                         % 6",
-        //    "*/g/V/1>>OUT/+.>>IN.count()                                                    % 3",
-        //    "*/g/V/1>>OUT/+/IN.count()                                                      % 3",
+            "*/g/V/+.outE().count()                                                         % 6",
+            //    "*/g/V/1>>OUT/+.>>IN.count()                                                    % 3",
+            //    "*/g/V/1>>OUT/+/IN.count()                                                      % 3",
             "*/g/V/1>>OUT/+>>IN.count()                                                      % 3",
-          //  "*/g/V/1/OUT/+>>IN.count()                                                      % 3",
+            //  "*/g/V/1/OUT/+>>IN.count()                                                      % 3",
             "*/g/V/1/OUT/created/IN.count()                                                 % 1",
-        //    "*/g/V/1/OUT/+/IN.count()                                                       % 3",
-        //    "*/g/V/1>>OUT/+.>>IN/OUT/+.>>IN.count()                                         % 2",
-      //      "*/g/V/1>>OUT/+/IN/OUT/+/IN.count()                                             % 2",
+            //    "*/g/V/1/OUT/+/IN.count()                                                       % 3",
+            "*/g/V/1>>OUT/+.>>IN/OUT/+.>>IN.count()                                         % 2",
+            //      "*/g/V/1>>OUT/+/IN/OUT/+/IN.count()                                             % 2",
             "*/g/V/1>>OUT/+>>IN/OUT/+>>IN.count()                                             % 2",
-       //     "*/g/V/1/OUT/+/IN/OUT/+/IN.count()                                              % 2",
-         //   "*/g/V/1/OUT/+>>IN/OUT/+>>IN.count()                                            % 2",
-           "*/g/V/1>>OUT/+/IN/OUT/+/IN/OUT/+/IN.count()                                   % 0",
+            //     "*/g/V/1/OUT/+/IN/OUT/+/IN.count()                                              % 2",
+            //   "*/g/V/1/OUT/+>>IN/OUT/+>>IN.count()                                            % 2",
+            "*/g/V/1>>OUT/+/IN/OUT/+/IN/OUT/+/IN.count()                                   % 0",
             "*/g/V/1/OUT/+/IN/OUT/+/IN/OUT/+/IN.count()                                     % 0",
             "*/g/V/#.count()                                                                % 6",
             "*/g/E/+.count()                                                                % 6",
@@ -134,7 +134,7 @@ public class tp3SpaceTest extends AbstractSpaceTest {
             "*/g/V/1.count()                                                                % 1",
             "*/g/E/#.count()                                                                % 6",
             "*/g/E/1.count()                                                                % 0",
-           // "*/g/V/+>>OUT/+/+.count()                                                       % 6",
+            // "*/g/V/+>>OUT/+/+.count()                                                       % 6",
             "*/g/V/+>>OUT/+>>+.count()                                                      % 6",
             "/g/V/1 -> noobj; /g.-<[mult(V/+).*(_).count(),mult(E/+).*(_).count()]          % [5,3]",
             "*/g/V/1.update[name=>'dr.marko']                                               % person::[name=>'dr.marko',age=>29]@/g/V/1",
@@ -146,19 +146,78 @@ public class tp3SpaceTest extends AbstractSpaceTest {
     }
 
     // Disable all abstract tests - tp3Space is for graph traversals, not general CRUD
-    @Override @Disabled public void testMonoReadWrite(String writeExpression, String readExpression, String expectedExpression) {}
-    @Override @Disabled public void testStringCornerCases(String description, String value) {}
-    @Override @Disabled public void testIntegerBoundaries(String description, long value) {}
-    @Override @Disabled public void testRealBoundaries(String description, double value) {}
-    @Override @Disabled public void testBooleanValues(String description, boolean value) {}
-    @Override @Disabled public void testNonExistentAccess(String key) {}
-    @Override @Disabled public void testSequentialUpdates(int iterations) {}
-    @Override @Disabled public void testBasicCRUD(String description, String key, String valueStr) {}
-    @Override @Disabled public void testTypePreservation(String description, Obj value) {}
-    @Override @Disabled public void testNestedRecords(int depth) {}
-    @Override @Disabled public void testListHandling(String description, studio.phaseshift.metatron.isa.m.type.Lst listValue, int expectedCount) {}
-    @Override @Disabled public void testTypeChanges(String description, Obj initialValue, Obj updatedValue) {}
-    @Override @Disabled public void testMultiFieldUpdates(int fieldCount) {}
-    @Override @Disabled public void testSpecialStringValues(String description, String value) {}
-    @Override @Disabled public void testEmptyRecords(int testNumber) {}
+    @Override
+    @Disabled
+    public void testMonoReadWrite(String writeExpression, String readExpression, String expectedExpression) {
+    }
+
+    @Override
+    @Disabled
+    public void testStringCornerCases(String description, String value) {
+    }
+
+    @Override
+    @Disabled
+    public void testIntegerBoundaries(String description, long value) {
+    }
+
+    @Override
+    @Disabled
+    public void testRealBoundaries(String description, double value) {
+    }
+
+    @Override
+    @Disabled
+    public void testBooleanValues(String description, boolean value) {
+    }
+
+    @Override
+    @Disabled
+    public void testNonExistentAccess(String key) {
+    }
+
+    @Override
+    @Disabled
+    public void testSequentialUpdates(int iterations) {
+    }
+
+    @Override
+    @Disabled
+    public void testBasicCRUD(String description, String key, String valueStr) {
+    }
+
+    @Override
+    @Disabled
+    public void testTypePreservation(String description, Obj value) {
+    }
+
+    @Override
+    @Disabled
+    public void testNestedRecords(int depth) {
+    }
+
+    @Override
+    @Disabled
+    public void testListHandling(String description, studio.phaseshift.metatron.isa.m.type.Lst listValue, int expectedCount) {
+    }
+
+    @Override
+    @Disabled
+    public void testTypeChanges(String description, Obj initialValue, Obj updatedValue) {
+    }
+
+    @Override
+    @Disabled
+    public void testMultiFieldUpdates(int fieldCount) {
+    }
+
+    @Override
+    @Disabled
+    public void testSpecialStringValues(String description, String value) {
+    }
+
+    @Override
+    @Disabled
+    public void testEmptyRecords(int testNumber) {
+    }
 }

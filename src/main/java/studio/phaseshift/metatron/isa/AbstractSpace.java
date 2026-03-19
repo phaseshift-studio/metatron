@@ -33,7 +33,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 public abstract class AbstractSpace<SJVM> extends MRec implements Space {
@@ -58,6 +57,24 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
         LOG = Graphitty.log(this);
         if (Router.loaded() && !this.pattern.equals(STACK_PATTERN) && !(this instanceof Router))
             Router.global().addSpace(this);
+    }
+
+    @Override
+    public Obj read(final fURI vid) {
+        // LOG.warn("reading %s => %s", vid, Space.Helper.routeFromSpace(vid, this.routes()));
+        return studio.phaseshift.metatron.furi.Q.Helper.processPreRead(this.qs(), vid, vid).orElseGet(() -> {
+            Obj result = Space.Helper.resolveRead(this, vid.basePath(), directReader());
+            return studio.phaseshift.metatron.furi.Q.Helper.processPostRead(this.qs(), vid, vid, result).orElse(result);
+        });
+    }
+
+    @Override
+    public Obj write(final fURI vid, final Obj obj) {
+        // LOG.warn("writing %s => %s", vid, Space.Helper.routeFromSpace(vid, this.routes()));
+        return studio.phaseshift.metatron.furi.Q.Helper.processPreWrite(this.qs(), vid, vid, obj).orElseGet(() -> {
+            Space.Helper.resolveWrite(LOG, this, vid.basePath(), obj, this.directWriter(), this.directReader());
+            return studio.phaseshift.metatron.furi.Q.Helper.processPostWrite(this.qs(), vid, vid, obj).orElse(obj);
+        });
     }
 
     @Override

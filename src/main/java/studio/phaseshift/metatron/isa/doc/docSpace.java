@@ -32,7 +32,9 @@ import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.doc.schema.storage.ObjBSONSerializer;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -137,7 +139,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class docSpace extends AbstractSpace<MongoClient> {
-
+    private static final String NATIVE_CONNACK = "native/connack";
     public static final String ID_FIELD = "_id";
     public static fURI DOC_SPACE_TID = docInstSet.DOC_ISA_TID.extend(SPACE).extend("doc");
     public static final Type DOC_SPACE_TYPE =
@@ -193,8 +195,9 @@ public class docSpace extends AbstractSpace<MongoClient> {
                             .extend(refInfo.id())
             );
         }
-
-        LOG.info("connected {{b}}%s{{X}}", connectionfURI);
+        final Rec conn = MObjFactory.of().toObj(this.sjvm()).asRec();
+        LOG.debug("{{g}}connected{{X}} %s", conn);
+        this.at(uri(NATIVE_CONNACK), conn, MUTABLE);
         LOG.info("using database {{b}}%s{{X}}", this.databaseName);
         // Initialize schema prefix for schema access
         this.schemaPrefix = this.pattern.retractPattern().extend("schema").toString();
@@ -203,25 +206,6 @@ public class docSpace extends AbstractSpace<MongoClient> {
                         this.database.listCollectionNames().spliterator(), false)
                 .collect(Collectors.toList());
         LOG.info("discovered {{g}}%d collections{{X}}: %s", collections.size(), collections);
-    }
-
-
-    @Override
-    public Obj read(final fURI vid) {
-        LOG.warn("reading %s => %s", vid, Space.Helper.routeFromSpace(vid, this.routes()));
-        return studio.phaseshift.metatron.furi.Q.Helper.processPreRead(this.qs(), vid, vid).orElseGet(() -> {
-            Obj result = Space.Helper.resolveRead(this, vid.basePath(), directReader());
-            return studio.phaseshift.metatron.furi.Q.Helper.processPostRead(this.qs(), vid, vid, result).orElse(result);
-        });
-    }
-
-    @Override
-    public Obj write(final fURI vid, final Obj obj) {
-        LOG.warn("writing %s => %s", vid, vid);
-        return studio.phaseshift.metatron.furi.Q.Helper.processPreWrite(this.qs(), vid, vid, obj).orElseGet(() -> {
-            Space.Helper.resolveWrite(LOG, this, vid.basePath(), obj, this.directWriter(), this.directReader());
-            return studio.phaseshift.metatron.furi.Q.Helper.processPostWrite(this.qs(), vid, vid, obj).orElse(obj);
-        });
     }
 
     @Override

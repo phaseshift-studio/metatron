@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.isa.m.space;
 
 import studio.phaseshift.metatron.Tokens;
-import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.Space;
@@ -39,6 +38,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.AbstractMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -95,37 +95,22 @@ public class memSpace extends AbstractSpace<Map<fURI, Obj>> {
     }
 
     @Override
-    public Obj read(final fURI vid) {
-        return Q.Helper.processPreRead(this.qs(), vid, vid).orElseGet(() -> {
-            Obj result = Space.Helper.resolveRead(this, vid.basePath(), directReader());
-            //return result;
-            return Q.Helper.processPostRead(this.qs(), vid, vid, result).orElse(result);
-        });
-    }
-
-    @Override
-    public Obj write(final fURI vid, final Obj obj) {
-        return Q.Helper.processPreWrite(this.qs(), vid, vid, obj).orElseGet(() -> {
-            Space.Helper.resolveWrite(LOG, this, vid.basePath(), obj, this.directWriter(), this.directReader());
-            //return obj;
-            return Q.Helper.processPostWrite(this.qs(), vid, vid, obj).orElse(Q.Helper.processQlessWrite(this.qs(), vid, vid, obj).orElse(obj));
-        });
-    }
-
-    @Override
     public Function<fURI, Iterator<IdObj>> directReader() {
         return (pattern) -> {
             if (pattern.equals(ALL))
                 return this.sjvm().entrySet().stream().map(kv -> IdObj.of(kv.getKey(), kv.getValue())).iterator();
             else {
                 if (pattern.hasPattern()) {
-                    return this.sjvm().entrySet().stream().flatMap(kv -> Stream.concat(
-                            kv.getKey().test(pattern.asNode()) ?
-                                    Stream.of(IdObj.of(kv.getKey(), kv.getValue())) :
-                                    Stream.empty(),
-                            kv.getValue().isPoly() ?
-                                    Space.Helper.unrollPoly(kv.getKey(), kv.getValue().as(), pattern.asNode()).stream() :
-                                    Stream.empty())).iterator();
+                    return this.sjvm().entrySet()
+                            .stream()
+                            .flatMap(kv -> kv.getValue().isObjs() ? kv.getValue().stream().map(vv -> new AbstractMap.SimpleEntry<>(kv.getKey(), vv)) : Stream.of(kv))
+                            .flatMap(kv -> Stream.concat(
+                                    kv.getKey().test(pattern.asNode()) ?
+                                            Stream.of(IdObj.of(kv.getKey(), kv.getValue())) :
+                                            Stream.empty(),
+                                    kv.getValue().isPoly() ?
+                                            Space.Helper.unrollPoly(kv.getKey(), kv.getValue().as(), pattern.asNode()).stream() :
+                                            Stream.empty())).iterator();
                 } else {
                     final Obj value = this.sjvm().get(pattern);
                     return null == value ? IteratorUtil.of() : IteratorUtil.of(IdObj.of(pattern, value));

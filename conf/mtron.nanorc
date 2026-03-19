@@ -59,15 +59,13 @@ color yellow "/=>"
 color red "X=>"
 ### auto resolve
 color yellow "!\*" "\{<j>\}"
-color green "\{|\}" 
-### dir/file
-color yellow "dir"
+color green "\{|\}"
 ### str
 color yellow "[\"][^\"]*[\"]"
 color yellow "['][^']*[']"
 color yellow start="\"\"\"" end="\"\"\""
 ###  uri
-color blue "[<][^=]([^>])*[>]"
+color blue "[^-][<][^=]([^>])*[>][^-]"
 color green "<" ">"
 ### comments
 color gray start="\[--" end="--]"

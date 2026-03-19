@@ -148,18 +148,8 @@ public class tp3Space extends grphSpace<Graph> {
         LOG.debug("tp3 prefixes: %s %s %s", this.vertexPrefix, this.edgePrefix, this.schemaPrefix);
         this.schema = this.at(uri(SCHEMA));
     }
-
-    @Override
-    public Obj read(final fURI vid) {
-        return studio.phaseshift.metatron.furi.Q.Helper.processPreRead(this.qs(), vid, vid).orElseGet(() -> {
-            final Obj result = vid.hasPostfix("V/+") || vid.hasPostfix("V/#") ?
-                    objs(IteratorUtil.stream(this.sjvm.vertices()).map(v -> VertexMap.vertexToRec(v, this))) :
-                    Space.Helper.resolveRead(this, vid.basePath(), directReader());
-            return studio.phaseshift.metatron.furi.Q.Helper.processPostRead(this.qs(), vid, vid, result).orElse(result);
-        });
-    }
-
-    @Override
+    
+   /* @Override
     public Obj write(final fURI vid, final Obj obj) {
         return studio.phaseshift.metatron.furi.Q.Helper.processPreWrite(this.qs(), vid, vid, obj).orElseGet(() -> {
             if (obj.jvm() instanceof ElementMap) // underlying store has already updated the element accordingly
@@ -169,7 +159,7 @@ public class tp3Space extends grphSpace<Graph> {
             return studio.phaseshift.metatron.furi.Q.Helper.processPostWrite(this.qs(), vid, vid, obj)
                     .orElse(studio.phaseshift.metatron.furi.Q.Helper.processQlessWrite(this.qs(), vid, vid, obj).orElse(obj));
         });
-    }
+    }*/
 
     @Override
     public Function<fURI, Iterator<IdObj>> directReader() {

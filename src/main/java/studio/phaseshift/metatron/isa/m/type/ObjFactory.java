@@ -19,18 +19,18 @@
 package studio.phaseshift.metatron.isa.m.type;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.mach.type.Monad;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.util.Tuple;
 
 import java.lang.reflect.Modifier;
 import java.net.URI;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.nio.ByteBuffer;
+import java.util.*;
 import java.util.function.Function;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.NOOBJ;
@@ -67,6 +67,20 @@ public interface ObjFactory extends Rec {
         LOG.warn("extensions not supported for %s", this.getClass().getSimpleName());
         return this;
     }
+    
+    /*Int jnt(final long jvm, final fURI tid, final fURI vid);
+    Real real(final double jvm, final fURI tid, final fURI vid);
+    Bool bool(final boolean jvm, final fURI tid, final fURI vid);
+    Bytes bytes(final ByteBuffer jvm, final fURI tid, final fURI vid);
+    Uri uri(final fURI jvm, final fURI tid, final fURI vid);
+    Fail fail(final Throwable jvm, final fURI tid, final fURI vid);
+    Monad monad(final List<Obj> jvm, final fURI tid, final fURI vid);
+    Objs objs(final List<Obj> jvm, final fURI tid, final fURI vid);
+    Type type(final Tuple.Pair<Call, Call> jvm, final fURI tid, final fURI vid);
+    Space space(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid);
+    InstSet instSet(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid);
+    Inst inst(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid);
+    Code code(final List<Inst> jvm, final fURI tid, final fURI vid);*/
 
     default <OBJ extends Obj> OBJ toObj(final Object value, final Class<OBJ> objClass) {
         fURI tid;

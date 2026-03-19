@@ -83,34 +83,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
         final String prepend = this.routes.values().stream().map(objs -> objs.autoResolve(this).uriValue().toString().replace("~", System.getProperty(USER_HOME))).iterator().next();
         this.routes.put(uri(prefix), uri(prepend));
     }
-
-    @Override
-    public Obj read(final fURI vid) {
-        return Q.Helper.processPreRead(this.qs(), vid, vid).orElseGet(() -> {
-            Obj result = Space.Helper.resolveRead(this, vid.basePath(), directReader());
-            //return result;
-            return Q.Helper.processPostRead(this.qs(), vid, vid, result).orElse(result);
-        });
-
-        //return Space.Helper.resolveRead(this, vid, this.directReader());
-        // return objs(this.directReader().apply(vid).entrySet().stream().map(kv -> vid.isNode() ? kv.getValue() : rel(uri(kv.getKey()), kv.getValue())));
-    }
-
-    @Override
-    public Obj write(final fURI vid, final Obj obj) {
-        return Q.Helper.processPreWrite(this.qs(), vid, vid, obj).orElseGet(() -> {
-            Obj result = Space.Helper.resolveWrite(LOG, this, vid.basePath(), obj, this.directWriter(), this.directReader());
-            return Q.Helper.processPostWrite(this.qs(), vid, vid, obj).orElse(Q.Helper.processQlessWrite(this.qs(), vid, vid, obj).orElse(result));
-        });
-        //   return this.qs().processPreWrite(vid, vid, obj).orElseGet(() -> {
-        //  return this.directWriter().apply(vid, obj);
-
-        //Space.Helper.resolveWrite(this, vid.basePath(), obj, this.directWriter(), this.directReader());
-        //return obj;
-        //   return this.qs().processPostWrite(vid, vid, obj).orElse(this.qs().processQlessWrite(vid, vid, obj).orElse(obj));
-        // });
-    }
-
+    
     @Override
     public void close() {
     }

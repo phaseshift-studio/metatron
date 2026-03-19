@@ -281,24 +281,6 @@ public class tbleSpace extends AbstractSpace<Connection> {
         };
     }
 
-    @Override
-    public Obj read(final fURI vid) {
-        LOG.debug("reading %s => %s", vid, vid);
-        return studio.phaseshift.metatron.furi.Q.Helper.processPreRead(this.qs(), vid, vid).orElseGet(() -> {
-            Obj result = Space.Helper.resolveRead(this, vid.basePath(), directReader());
-            return studio.phaseshift.metatron.furi.Q.Helper.processPostRead(this.qs(), vid, vid, result).orElse(result);
-        });
-    }
-
-    @Override
-    public Obj write(final fURI vid, final Obj obj) {
-        LOG.debug("writing %s => %s", vid, vid);
-        return studio.phaseshift.metatron.furi.Q.Helper.processPreWrite(this.qs(), vid, vid, obj).orElseGet(() -> {
-            Space.Helper.resolveWrite(LOG, this, vid.basePath(), obj, this.directWriter(), this.directReader());
-            return studio.phaseshift.metatron.furi.Q.Helper.processPostWrite(this.qs(), vid, vid, obj).orElse(obj);
-        });
-    }
-
     /**
      * Strip the space's route prefix from a fURI to get the relative path.
      * For example, if route maps db: to /tble/ and fURI is /tble/users/1, returns /users/1

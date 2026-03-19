@@ -24,6 +24,7 @@ import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.io.BasicOutputBuffer;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.isa.mach.io.type.AbstractObjSerializer;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -60,6 +61,7 @@ public class ObjBSONSerializer extends AbstractObjSerializer<BsonValue> {
 
     // Optional: Function to build reference paths (set by docSpace)
     private Function<ReferenceInfo, fURI> referencePathBuilder = null;
+  //  private ObjFactory objFactory = MObjFactory.single();
 
     /**
      * Information about a detected reference
