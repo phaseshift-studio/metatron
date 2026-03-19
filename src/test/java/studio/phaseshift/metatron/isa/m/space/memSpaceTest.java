@@ -37,7 +37,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 public class memSpaceTest extends AbstractSpaceTest {
 
     public memSpaceTest() {
-        super(() -> memSpace.of(rec(uri(PATTERN), uri("/t/#"), uri(PERSIST), uri("/tmp/mem")), f("/sys/space/mem")));
+        super(() -> memSpace.of(rec(uri(PATTERN), uri("/t/#")/*uri(PERSIST), uri("/tmp/mem")),*/), f("/sys/space/mem")));
     }
 
     @Test

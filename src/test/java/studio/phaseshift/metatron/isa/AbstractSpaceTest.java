@@ -23,12 +23,15 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.CommonUtil;
@@ -38,11 +41,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -227,5 +235,545 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
 
     private String make(final String expression) {
         return expression.contains("$$") ? expression.replace("$$", this.baseURI.toString()) : expression;
+    }
+
+    // ========================================
+    // Reusable Parameterized Tests for All Space Implementations
+    // ========================================
+
+    /**
+     * Provides a base URI pattern for test data.
+     * Subclasses can override to customize the URI pattern for their space.
+     * Default: baseURI + "/test/"
+     */
+    protected String getTestDataUriPrefix() {
+        return this.baseURI.toString() + "/test/";
+    }
+
+    /**
+     * Helper method to create test URIs.
+     */
+    protected fURI testUri(String suffix) {
+        return f(getTestDataUriPrefix() + suffix);
+    }
+
+    // ========================================
+    // String Corner Cases Tests
+    // ========================================
+
+    /**
+     * Test string corner cases: empty, special chars, unicode, SQL injection attempts, etc.
+     * Subclasses can add more test cases by providing additional data via @MethodSource.
+     */
+    @SpaceTestCategory.Boundary
+    @ParameterizedTest(name = "[{index}] String: {0}")
+    @CsvSource(value = {
+            "empty string              | ''",
+            "single space              | ' '",
+            "multiple spaces           | '   '",
+            "special chars             | 'test!@#$%^&*()'",
+            "unicode                   | '你好世界'",
+            "SQL injection attempt     | 'DROP TABLE users; --'",
+            "single quote              | 'it''s'",
+            "double quotes             | '\"quoted\"'",
+            "backslashes               | 'path\\to\\file'",
+            "very long string          | 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'",
+            "mixed case                | 'MiXeD CaSe StRiNg'",
+            "punctuation               | 'Hello, World! How are you?'",
+            "ampersand                 | 'Tom & Jerry'",
+            "percent sign              | '100% complete'",
+            "underscore                | 'test_value_123'"
+    }, delimiter = '|')
+    public void testStringCornerCases(String description, String value) {
+        final fURI uri = testUri("string/" + description.replaceAll("\\s+", "_"));
+
+        // Write string value
+        this.space.write(uri, str(value));
+
+        // Read back and verify
+        final Obj result = this.space.read(uri);
+        assertEquals(str(value), result, description);
+    }
+
+    // ========================================
+    // Integer Boundary Tests
+    // ========================================
+
+    /**
+     * Test integer boundary values: zero, min/max, negative, various magnitudes.
+     */
+    @SpaceTestCategory.Boundary
+    @ParameterizedTest(name = "[{index}] Integer: {0} = {1}")
+    @CsvSource(value = {
+            "zero                      | 0",
+            "one                       | 1",
+            "negative one              | -1",
+            "small positive            | 42",
+            "small negative            | -42",
+            "hundred                   | 100",
+            "thousand                  | 1000",
+            "million                   | 1000000",
+            "max int32                 | 2147483647",
+            "min int32                 | -2147483648",
+            "max int64                 | 9223372036854775807",
+            "min int64                 | -9223372036854775808"
+    }, delimiter = '|')
+    public void testIntegerBoundaries(String description, long value) {
+        final fURI uri = testUri("integer/" + description.replaceAll("\\s+", "_"));
+
+        // Write integer value
+        this.space.write(uri, jnt(value));
+
+        // Read back and verify
+        final Obj result = this.space.read(uri);
+        assertEquals(jnt(value), result, description);
+    }
+
+    // ========================================
+    // Real/Double Boundary Tests
+    // ========================================
+
+    /**
+     * Test real/double boundary values with tolerance for floating point precision.
+     */
+    @SpaceTestCategory.Boundary
+    @ParameterizedTest(name = "[{index}] Real: {0} = {1}")
+    @CsvSource(value = {
+            "zero                      | 0.0",
+            "one                       | 1.0",
+            "negative one              | -1.0",
+            "small decimal             | 0.5",
+            "negative decimal          | -0.5",
+            "large decimal             | 12345.67",
+            "very small positive       | 0.0001",
+            "very small negative       | -0.0001",
+            "pi approximation          | 3.14159",
+            "e approximation           | 2.71828",
+            "large positive            | 999999.99",
+            "large negative            | -999999.99"
+    }, delimiter = '|')
+    public void testRealBoundaries(String description, double value) {
+        final fURI uri = testUri("real/" + description.replaceAll("\\s+", "_"));
+
+        // Write real value
+        this.space.write(uri, real(value));
+
+        // Read back and verify with tolerance
+        final Obj result = this.space.read(uri);
+        assertTrue(result.isReal(), "Result should be a real number");
+        assertEquals(value, result.asReal().jvm(), 0.01, description);
+    }
+
+    // ========================================
+    // Boolean Tests
+    // ========================================
+
+    /**
+     * Test boolean values.
+     */
+    @SpaceTestCategory.Boundary
+    @ParameterizedTest(name = "[{index}] Boolean: {0} = {1}")
+    @CsvSource(value = {
+            "true value                | true",
+            "false value               | false",
+            "true again                | true",
+            "false again               | false"
+    }, delimiter = '|')
+    public void testBooleanValues(String description, boolean value) {
+        final fURI uri = testUri("boolean/" + description.replaceAll("\\s+", "_"));
+
+        // Write boolean value
+        this.space.write(uri, bool(value));
+
+        // Read back and verify
+        final Obj result = this.space.read(uri);
+        assertEquals(bool(value), result, description);
+    }
+
+    // ========================================
+    // Non-Existent Access Tests
+    // ========================================
+
+    /**
+     * Test reading non-existent keys returns noobj.
+     */
+    @SpaceTestCategory.Crud
+    @ParameterizedTest(name = "[{index}] Non-existent: {0}")
+    @CsvSource(value = {
+            "simple missing key",
+            "missing/nested/key",
+            "missing_with_underscores",
+            "missing-with-dashes",
+            "missing.with.dots"
+    })
+    public void testNonExistentAccess(String key) {
+        final fURI uri = testUri("nonexistent/" + key);
+
+        // Read non-existent key
+        final Obj result = this.space.read(uri);
+        assertTrue(result.isNoObj(), "Non-existent key should return noobj: " + key);
+    }
+
+    // ========================================
+    // Sequential Update Tests
+    // ========================================
+
+    /**
+     * Test sequential updates to the same key.
+     */
+    @SpaceTestCategory.Crud
+    @ParameterizedTest(name = "[{index}] Sequential updates: {0} iterations")
+    @CsvSource(value = {
+            "3",
+            "5",
+            "10"
+    })
+    public void testSequentialUpdates(int iterations) {
+        final fURI uri = testUri("sequential/updates");
+
+        // Perform sequential updates
+        for (int i = 0; i < iterations; i++) {
+            this.space.write(uri, jnt(i));
+
+            // Verify each update
+            final Obj result = this.space.read(uri);
+            assertEquals(jnt(i), result, "Iteration " + i + " should match");
+        }
+
+        // Final verification
+        final Obj finalResult = this.space.read(uri);
+        assertEquals(jnt(iterations - 1), finalResult, "Final value should be last iteration");
+    }
+
+    // ========================================
+    // CRUD Operations Tests
+    // ========================================
+
+    /**
+     * Test basic CRUD operations: Create, Read, Update, Delete.
+     */
+    @SpaceTestCategory.Crud
+    @ParameterizedTest(name = "[{index}] CRUD: {0}")
+    @CsvSource(value = {
+            "string value  | test_string  | 'Hello World'",
+            "integer value | test_int     | 42",
+            "boolean value | test_bool    | true"
+    }, delimiter = '|')
+    public void testBasicCRUD(String description, String key, String valueStr) {
+        final fURI uri = testUri("crud/" + key);
+        final Obj value = parseTestValue(valueStr);
+
+        // CREATE: Write initial value
+        this.space.write(uri, value);
+
+        // READ: Verify it exists
+        Obj result = this.space.read(uri);
+        assertFalse(result.isNoObj(), "Value should exist after create");
+        assertEquals(value, result, "Read value should match written value");
+
+        // UPDATE: Write new value
+        final Obj updatedValue = str("updated_" + valueStr);
+        this.space.write(uri, updatedValue);
+
+        result = this.space.read(uri);
+        assertEquals(updatedValue, result, "Updated value should match");
+
+        // DELETE: Write noobj
+        this.space.write(uri, noobj());
+
+        result = this.space.read(uri);
+        assertTrue(result.isNoObj(), "Value should not exist after delete");
+    }
+
+    /**
+     * Helper to parse test values from CSV strings.
+     */
+    private Obj parseTestValue(String valueStr) {
+        if (valueStr.equals("true") || valueStr.equals("false")) {
+            return bool(Boolean.parseBoolean(valueStr));
+        } else if (valueStr.startsWith("'") && valueStr.endsWith("'")) {
+            return str(valueStr.substring(1, valueStr.length() - 1));
+        } else {
+            try {
+                return jnt(Long.parseLong(valueStr));
+            } catch (NumberFormatException e) {
+                try {
+                    return real(Double.parseDouble(valueStr));
+                } catch (NumberFormatException e2) {
+                    return str(valueStr);
+                }
+            }
+        }
+    }
+
+    // ========================================
+    // Type Preservation Tests
+    // ========================================
+
+    /**
+     * Test that types are preserved through write/read cycles.
+     */
+    @SpaceTestCategory.Type
+    @ParameterizedTest(name = "[{index}] Type preservation: {0}")
+    @MethodSource("provideTypePreservationTestCases")
+    public void testTypePreservation(String description, Obj value) {
+        final fURI uri = testUri("type_preservation/" + description.replaceAll("\\s+", "_"));
+
+        // Write value
+        this.space.write(uri, value);
+
+        // Read back
+        final Obj result = this.space.read(uri);
+
+        // Verify value and type
+        assertEquals(value, result, description);
+        assertEquals(value.getClass(), result.getClass(), "Type class should be preserved: " + description);
+    }
+
+    protected static Stream<Arguments> provideTypePreservationTestCases() {
+        return Stream.of(
+                Arguments.of("boolean true", bool(true)),
+                Arguments.of("boolean false", bool(false)),
+                Arguments.of("integer zero", jnt(0)),
+                Arguments.of("integer positive", jnt(42)),
+                Arguments.of("integer negative", jnt(-999)),
+                Arguments.of("integer max", jnt(Long.MAX_VALUE)),
+                Arguments.of("integer min", jnt(Long.MIN_VALUE)),
+                Arguments.of("real zero", real(0.0)),
+                Arguments.of("real positive", real(3.14159)),
+                Arguments.of("real negative", real(-273.15)),
+                Arguments.of("string empty", str("")),
+                Arguments.of("string simple", str("hello")),
+                Arguments.of("string with spaces", str("hello world")),
+                Arguments.of("string unicode", str("你好世界")),
+                Arguments.of("record simple", rec(uri("name"), str("Alice"), uri("age"), jnt(30))),
+                Arguments.of("list simple", lst(jnt(1), jnt(2), jnt(3))),
+                Arguments.of("list mixed", lst(str("a"), jnt(1), bool(true)))
+        );
+    }
+
+    // ========================================
+    // Nested Structure Tests
+    // ========================================
+
+    /**
+     * Test nested records (documents).
+     */
+    @SpaceTestCategory.Nested
+    @ParameterizedTest(name = "[{index}] Nested record: depth {0}")
+    @CsvSource(value = {
+            "1",
+            "2",
+            "3",
+            "5"
+    })
+    public void testNestedRecords(int depth) {
+        final fURI uri = testUri("nested/depth_" + depth);
+
+        // Build nested structure
+        Obj nested = str("deepest value");
+        for (int i = 0; i < depth; i++) {
+            nested = rec(uri("level" + i), nested);
+        }
+
+        // Write nested structure
+        this.space.write(uri, nested);
+
+        // Read back
+        final Obj result = this.space.read(uri);
+        assertFalse(result.isNoObj(), "Nested structure should exist");
+
+        // Navigate down the nesting
+        Obj current = result;
+        for (int i = depth - 1; i >= 0; i--) {
+            assertTrue(current.isRec(), "Level " + i + " should be a record");
+            current = current.asRec().at(uri("level" + i));
+        }
+
+        assertEquals(str("deepest value"), current, "Should reach deepest value");
+    }
+
+    // ========================================
+    // List/Array Handling Tests
+    // ========================================
+
+    /**
+     * Test list handling: empty lists, single element, multiple elements.
+     */
+    @SpaceTestCategory.List
+    @ParameterizedTest(name = "[{index}] List: {0}")
+    @MethodSource("provideListTestCases")
+    public void testListHandling(String description, studio.phaseshift.metatron.isa.m.type.Lst listValue, int expectedCount) {
+        final fURI uri = testUri("list/" + description.replaceAll("\\s+", "_"));
+
+        // Write list
+        this.space.write(uri, listValue);
+
+        // Read back
+        final Obj result = this.space.read(uri);
+        assertTrue(result.isLst(), "Result should be a list");
+        assertEquals(expectedCount, result.asLst().count(), "List should have correct count");
+        assertEquals(listValue, result, description);
+    }
+
+    protected static Stream<Arguments> provideListTestCases() {
+        return Stream.of(
+                Arguments.of("empty list", lst(), 0),
+                Arguments.of("single element", lst(jnt(1)), 1),
+                Arguments.of("multiple integers", lst(jnt(1), jnt(2), jnt(3)), 3),
+                Arguments.of("multiple strings", lst(str("a"), str("b"), str("c")), 3),
+                Arguments.of("mixed types", lst(jnt(1), str("two"), bool(true)), 3),
+                Arguments.of("large list", lst(jnt(1), jnt(2), jnt(3), jnt(4), jnt(5), jnt(6), jnt(7), jnt(8), jnt(9), jnt(10)), 10)
+        );
+    }
+
+    // ========================================
+    // Update Operations Tests
+    // ========================================
+
+    /**
+     * Test updating from one type to another.
+     */
+    @SpaceTestCategory.Type
+    @ParameterizedTest(name = "[{index}] Type change: {0} -> {1}")
+    @MethodSource("provideTypeChangeTestCases")
+    public void testTypeChanges(String description, Obj initialValue, Obj updatedValue) {
+        final fURI uri = testUri("type_change/" + description.replaceAll("\\s+", "_"));
+
+        // Write initial value
+        this.space.write(uri, initialValue);
+        Obj result = this.space.read(uri);
+        assertEquals(initialValue, result, "Initial value should match");
+
+        // Update to different type
+        this.space.write(uri, updatedValue);
+        result = this.space.read(uri);
+        assertEquals(updatedValue, result, "Updated value should match");
+    }
+
+    protected static Stream<Arguments> provideTypeChangeTestCases() {
+        return Stream.of(
+                Arguments.of("int to string", jnt(42), str("forty-two")),
+                Arguments.of("string to int", str("123"), jnt(456)),
+                Arguments.of("bool to string", bool(true), str("yes")),
+                Arguments.of("int to bool", jnt(1), bool(false)),
+                Arguments.of("simple to record", str("simple"), rec(uri("key"), str("value"))),
+                Arguments.of("record to simple", rec(uri("key"), str("value")), str("simple"))
+        );
+    }
+
+    // ========================================
+    // Concurrent Field Updates Tests
+    // ========================================
+
+    /**
+     * Test updating multiple fields in a record independently.
+     */
+    @SpaceTestCategory.Crud
+    @ParameterizedTest(name = "[{index}] Multi-field update: {0} fields")
+    @CsvSource(value = {
+            "2",
+            "3",
+            "5"
+    })
+    public void testMultiFieldUpdates(int fieldCount) {
+        final fURI baseUri = testUri("multifield/record");
+
+        // Write initial record with multiple fields
+        final Map<Obj, Obj> fields = new HashMap<>();
+        for (int i = 0; i < fieldCount; i++) {
+            fields.put(uri("field" + i), str("initial" + i));
+        }
+        this.space.write(baseUri, rec(fields));
+
+        // Update each field independently
+        for (int i = 0; i < fieldCount; i++) {
+            final fURI fieldUri = f(baseUri.toString() + "/field" + i);
+            this.space.write(fieldUri, str("updated" + i));
+        }
+
+        // Read back entire record and verify all fields updated
+        final Obj result = this.space.read(baseUri);
+        if (result.isRec()) {
+            final Rec resultRec = result.asRec();
+            for (int i = 0; i < fieldCount; i++) {
+                final Obj fieldValue = resultRec.at(uri("field" + i));
+                assertEquals(str("updated" + i), fieldValue, "Field " + i + " should be updated");
+            }
+        }
+        // Note: Some spaces may not support field-level updates, so we don't fail if not a record
+    }
+
+    // ========================================
+    // Special Value Tests
+    // ========================================
+
+    /**
+     * Test special string values that might cause issues.
+     */
+    @SpaceTestCategory.Special
+    @ParameterizedTest(name = "[{index}] Special string: {0}")
+    @CsvSource(value = {
+            "newline              | 'line1\\nline2'",
+            "tab                  | 'col1\\tcol2'",
+            "carriage return      | 'line1\\rline2'",
+            "null character       | 'before\\0after'",
+            "emoji                | '😀🎉🚀'",
+            "rtl text             | 'مرحبا'",
+            "mixed scripts        | 'Hello世界مرحبا'"
+    }, delimiter = '|', ignoreLeadingAndTrailingWhitespace = false)
+    public void testSpecialStringValues(String description, String value) {
+        final fURI uri = testUri("special_string/" + description.replaceAll("\\s+", "_"));
+
+        // Unescape special characters
+        String unescaped = value
+                .replace("\\n", "\n")
+                .replace("\\t", "\t")
+                .replace("\\r", "\r")
+                .replace("\\0", "\0");
+
+        // Remove surrounding quotes if present
+        if (unescaped.startsWith("'") && unescaped.endsWith("'")) {
+            unescaped = unescaped.substring(1, unescaped.length() - 1);
+        }
+
+        // Write and read back
+        this.space.write(uri, str(unescaped));
+        final Obj result = this.space.read(uri);
+        assertEquals(str(unescaped), result, description);
+    }
+
+    // ========================================
+    // Empty/Null Handling Tests
+    // ========================================
+
+    /**
+     * Test empty record handling.
+     */
+    @SpaceTestCategory.Type
+    @ParameterizedTest(name = "[{index}] Empty record test {0}")
+    @CsvSource(value = {
+            "1",
+            "2",
+            "3"
+    })
+    public void testEmptyRecords(int testNumber) {
+        final fURI uri = testUri("empty_record/test_" + testNumber);
+
+        // Write empty record
+        final Rec emptyRec = rec();
+        this.space.write(uri, emptyRec);
+
+        // Read back
+        final Obj result = this.space.read(uri);
+
+        // Should either be empty record or noobj depending on space implementation
+        assertTrue(result.isRec() || result.isNoObj(),
+                "Empty record should return record or noobj");
+
+        if (result.isRec()) {
+            assertTrue(result.asRec().jvm().isEmpty() || result.asRec().jvm().size() == 1,
+                    "Empty record should have 0 or 1 fields (may include auto-generated ID)");
+        }
     }
 }

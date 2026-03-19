@@ -29,6 +29,80 @@
             $(this).addClass("selected");
         });
     });
+
+    // CUSTOM DOCS SCROLL HANDLING
+    $(document).ready(function () {
+        // Toggle dark theme for the tutorial section based on system/user preference if needed
+        // but for now, we just ensure it's readable.
+    });
+
+    // LECTURE SEARCH FILTERING
+    $(document).ready(function () {
+        $('#lecture-search').on('keyup', function () {
+            var rawValue = $(this).val().toLowerCase();
+
+            // Show/hide clear button
+            if (rawValue.length > 0) {
+                $('#clear-search').show();
+            } else {
+                $('#clear-search').hide();
+            }
+
+            // Tokenize search input (respecting quotes for multi-word tokens)
+            var tokens = [];
+            var regex = /[^\s"']+|"([^"]*)"|'([^']*)'/g;
+            var match;
+            while ((match = regex.exec(rawValue)) !== null) {
+                // Get the captured group if it was quoted, otherwise the full match
+                tokens.push(match[1] || match[2] || match[0]);
+            }
+
+            $('.tutorial-grid button').each(function () {
+                var btnText = $(this).text().toLowerCase();
+                var targetId = $(this).attr('data-bs-target');
+                var contentText = $(targetId).text().toLowerCase();
+                var fullSearchableText = btnText + " " + contentText;
+                
+                var toggle = true;
+                if (tokens.length > 0) {
+                    // All tokens must be present (AND logic)
+                    for (var i = 0; i < tokens.length; i++) {
+                        if (fullSearchableText.indexOf(tokens[i]) === -1) {
+                            toggle = false;
+                            break;
+                        }
+                    }
+                }
+
+                $(this).toggle(toggle);
+            });
+            
+            // Hide parent rows if all buttons inside are hidden
+            $('.tutorial-grid').each(function() {
+                var buttons = $(this).find('button');
+                var hasVisible = buttons.filter(function() {
+                    return $(this).css('display') !== 'none';
+                }).length > 0;
+                $(this).toggle(hasVisible);
+            });
+        });
+
+        // Clear search button functionality
+        $('#clear-search').on('click', function() {
+            $(this).hide();
+            $('#lecture-search').val('').keyup().focus();
+        });
+
+        // REORDER PANELS BY CLICK ORDER
+        $('.tutorial-grid button').on('click', function () {
+            var targetId = $(this).attr('data-bs-target');
+            // If it's about to be shown (currently not shown or being toggled)
+            // Bootstrap's collapse plugin will handle the visibility, 
+            // but we want to move the element to the end of the container
+            // to ensure it appears in the order it was clicked.
+            $(targetId).appendTo('#custom-docs');
+        });
+    });
 })(jQuery);
 
 function slideShowPage(id) {

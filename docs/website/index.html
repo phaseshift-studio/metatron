@@ -525,8 +525,10 @@ body {
 }
 
 .isa-row {
-    height: 25px;
-    margin-right: 10px;
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    flex-shrink: 0;
 }
 
 /******************************************************************/
@@ -538,6 +540,241 @@ body {
 .custom-docs {
     padding: 20px;
     background: var(--secondarycolor);
+}
+
+/* ACADEMIC PDF EXPORT MODE (B&W) */
+.pdf-export-mode {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-family: 'Times New Roman', Times, serif !important;
+    padding: 20px !important;
+}
+
+.pdf-export-mode h1, 
+.pdf-export-mode h2, 
+.pdf-export-mode h3, 
+.pdf-export-mode h4, 
+.pdf-export-mode h5, 
+.pdf-export-mode h6 {
+    color: #000000 !important;
+    font-family: 'Times New Roman', Times, serif !important;
+    border-bottom: 1px solid #000 !important;
+    padding-bottom: 5px !important;
+    text-shadow: none !important;
+    -webkit-text-stroke: 0 !important;
+}
+
+.pdf-export-mode p, 
+.pdf-export-mode li,
+.pdf-export-mode div {
+    color: #000000 !important;
+    background: transparent !important;
+    font-size: 11pt !important;
+    line-height: 1.5 !important;
+    text-shadow: none !important;
+}
+
+.pdf-export-mode pre, 
+.pdf-export-mode code {
+    background: #f0f0f0 !important;
+    color: #000000 !important;
+    border: 1px solid #ccc !important;
+    white-space: pre-wrap !important;
+    word-wrap: break-word !important;
+    font-size: 9pt !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+}
+
+.pdf-export-mode .hljs {
+    background: #f0f0f0 !important;
+    color: #000000 !important;
+}
+
+/* Reset syntax highlighting for B&W export */
+.pdf-export-mode .hljs-comment, 
+.pdf-export-mode .hljs-quote,
+.pdf-export-mode .hljs-mtron-comment { 
+    color: #555 !important; 
+    font-style: italic !important; 
+}
+
+.pdf-export-mode .hljs-keyword, 
+.pdf-export-mode .hljs-selector-tag, 
+.pdf-export-mode .hljs-subst,
+.pdf-export-mode .hljs-mtron-keyword,
+.pdf-export-mode .hljs-mtron-inst { 
+    color: #000 !important; 
+    font-weight: bold !important; 
+}
+
+.pdf-export-mode .hljs-number, 
+.pdf-export-mode .hljs-literal, 
+.pdf-export-mode .hljs-variable, 
+.pdf-export-mode .hljs-template-variable, 
+.pdf-export-mode .hljs-tag .hljs-attr,
+.pdf-export-mode .hljs-mtron-real,
+.pdf-export-mode .hljs-mtron-int,
+.pdf-export-mode .hljs-mtron-bool { 
+    color: #000 !important; 
+}
+
+.pdf-export-mode .hljs-string, 
+.pdf-export-mode .hljs-doctag,
+.pdf-export-mode .hljs-mtron-str { 
+    color: #000 !important; 
+}
+
+.pdf-export-mode .hljs-title, 
+.pdf-export-mode .hljs-section, 
+.pdf-export-mode .hljs-selector-id,
+.pdf-export-mode .hljs-mtron-uri,
+.pdf-export-mode .hljs-mtron-type { 
+    color: #000 !important; 
+    font-weight: bold !important; 
+}
+
+.pdf-export-mode .conum + b {
+    background: #000 !important;
+    color: #fff !important;
+    border: 1px solid #000 !important;
+}
+
+/* Linearize Tabs for PDF Export */
+.pdf-export-mode .primary {
+    display: block !important;
+    margin-bottom: 2em !important;
+}
+
+.pdf-export-mode .switch {
+    display: none !important;
+}
+
+.pdf-export-mode .content.hidden {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    height: auto !important;
+}
+
+.pdf-export-mode .content {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    height: auto !important;
+    margin-bottom: 1.5em !important;
+    padding: 10px !important;
+    border: 1px solid #eee !important;
+}
+
+.pdf-export-mode hr {
+    border-top: 1px solid #000 !important;
+    opacity: 1 !important;
+}
+
+@media print {
+    .custom-docs {
+        background: #ffffff !important;
+        color: #000000 !important;
+        font-family: 'Times New Roman', Times, serif !important;
+        padding: 0 !important;
+    }
+    .custom-docs h1, .custom-docs h2, .custom-docs h3, .custom-docs h4, .custom-docs h5, .custom-docs h6 {
+        color: #000000 !important;
+        font-family: 'Times New Roman', Times, serif !important;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 5px;
+    }
+    .custom-docs p, .custom-docs li {
+        font-size: 11pt !important;
+        line-height: 1.5 !important;
+    }
+    .collapse {
+        display: block !important;
+        height: auto !important;
+        visibility: visible !important;
+        page-break-after: always;
+        break-after: page;
+        border: none !important;
+        box-shadow: none !important;
+    }
+    .collapse:last-child {
+        page-break-after: avoid;
+        break-after: avoid;
+    }
+    pre, code {
+        background: #f8f9fa !important;
+        color: #000000 !important;
+        border: 1px solid #ddd !important;
+        white-space: pre-wrap !important;
+        word-wrap: break-word !important;
+        font-size: 9pt !important;
+    }
+    .hljs {
+        background: #f8f9fa !important;
+        color: #000000 !important;
+    }
+    /* Reset syntax highlighting for a more academic look */
+    .hljs-comment, .hljs-quote { color: #666 !important; font-style: italic !important; }
+    .hljs-keyword, .hljs-selector-tag, .hljs-subst { color: #000 !important; font-weight: bold !important; }
+    .hljs-number, .hljs-literal, .hljs-variable, .hljs-template-variable, .hljs-tag .hljs-attr { color: #000 !important; }
+    .hljs-string, .hljs-doctag { color: #000 !important; }
+    .hljs-title, .hljs-section, .hljs-selector-id { color: #000 !important; font-weight: bold !important; }
+    .hljs-subst { font-weight: normal !important; }
+    .hljs-type, .hljs-class .hljs-title { color: #000 !important; font-weight: bold !important; }
+    .hljs-tag, .hljs-name, .hljs-attribute { color: #000 !important; }
+    .hljs-regexp, .hljs-link { color: #000 !important; }
+    .hljs-symbol, .hljs-bullet { color: #000 !important; }
+    .hljs-built_in, .hljs-builtin-name { color: #000 !important; }
+    .hljs-meta { color: #666 !important; font-weight: bold !important; }
+    .hljs-deletion { background: #fdd !important; }
+    .hljs-addition { background: #dfd !important; }
+    .hljs-emphasis { font-style: italic !important; }
+    .hljs-mtron-comment {
+        color: #666 !important;
+        font-style: italic !important;
+    }
+    .hljs-mtron-at-vid,
+    .hljs-mtron-real,
+    .hljs-mtron-bytes,
+    .hljs-mtron-int,
+    .hljs-mtron-str,
+    .hljs-mtron-bool,
+    .hljs-mtron-sugar-inst,
+    .hljs-mtron-dom-rng-query,
+    .hljs-mtron-sys-furi,
+    .hljs-mtron-coefficient,
+    .hljs-mtron-log-warn,
+    .hljs-mtron-auto-from,
+    .hljs-mtron-rec-key,
+    .hljs-mtron-query-key,
+    .hljs-mtron-keyword,
+    .hljs-mtron-query-value,
+    .hljs-mtron-inst,
+    .hljs-mtron-uri,
+    .hljs-mtron-type,
+    .hljs-mtron-type-prefix,
+    .hljs-mtron-form,
+    .hljs-mtron-inst-f-jvm,
+    .hljs-mtron-punctuation,
+    .hljs-mtron-rec,
+    .hljs-mtron-result-prefix,
+    .hljs-mtron-prompt-end,
+    .hljs-mtron-log-info,
+    .hljs-mtron-prompt-begin,
+    .hljs-mtron-pipe,
+    .hljs-mtron-log-error,
+    .hljs-mtron-match-fail,
+    .hljs-mtron-fail,
+    .hljs-mtron-fail-bar,
+    .hljs-mtron-thrown {
+        color: #000 !important;
+        font-weight: bold !important;
+    }
+    .conum + b {
+        background: #000 !important;
+        color: #fff !important;
+    }
 }
 
 pre {
@@ -904,17 +1141,17 @@ bin/metatron</code></pre>
                     instruction sets
                 </a>
                 <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="isa_dropdown">
-                    <li><a class="code dropdown-item" href="#" onclick="slideShowPage(0);">/m</a></li>
-                    <li><a class="code dropdown-item" href="#" onclick="slideShowPage(1);">/m/mach</a></li>
-                    <li><a class="code dropdown-item" href="#" onclick="slideShowPage(1);"><img src="./images/icons/space/tblespace-icon.svg" class="isa-row icon-color" alt="tble"/>/m/tble</a></li>
-                    <li><a class="code dropdown-item" href="#" onclick="slideShowPage(1);"><img src="./images/icons/space/docspace-icon.svg" class="isa-row icon-color" alt="doc"/>/m/doc</a></li>
-                    <li><a class="code dropdown-item" href="#" onclick="slideShowPage(1);"><img src="./images/icons/space/grphspace-icon.svg" class="isa-row icon-color" alt="grph"/>/m/grph</a></li>
-                    <li><a class="code dropdown-item" href="#" onclick="slideShowPage(1);">/m/grph/tp3</a></li>
-                    <li><a class="code dropdown-item" href="#" onclick="slideShowPage(1);">/m/vec</a></li>
-                    <li><a class="code dropdown-item" href="#" onclick="slideShowPage(1);">/m/web</a></li>
-                    <li><a class="code dropdown-item" href="#" onclick="slideShowPage(1);">/m/llm</a></li>
-                    <li><a class="code dropdown-item" href="#" onclick="slideShowPage(1);">/m/iot</a></li>
-                    <li><a class="code dropdown-item" href="#" onclick="slideShowPage(1);">/m/sys</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="slideShowPage(0);"><img src="./images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2" alt="mtron"/>/m</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="slideShowPage(1);"><img src="./images/icons/space/oltp-icon.svg" class="isa-row icon-color me-2" alt="mach"/>/m/mach</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="slideShowPage(1);"><img src="./images/icons/space/tblespace-icon.svg" class="isa-row icon-color me-2" alt="tble"/>/m/tble</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="slideShowPage(1);"><img src="./images/icons/space/docspace-icon.svg" class="isa-row icon-color me-2" alt="doc"/>/m/doc</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="slideShowPage(1);"><img src="./images/icons/space/grphspace-icon.svg" class="isa-row icon-color me-2" alt="grph"/>/m/grph</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="slideShowPage(1);"><img src="./images/icons/space/gremlin-icon.svg" class="isa-row icon-color me-2" alt="tp3"/>/m/grph/tp3</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="slideShowPage(1);"><img src="./images/icons/space/olap-icon.svg" class="isa-row icon-color me-2" alt="vec"/>/m/vec</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="slideShowPage(1);"><img src="./images/icons/space/web-icon.svg" class="isa-row icon-color me-2" alt="web"/>/m/web</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="slideShowPage(1);"><img src="./images/icons/space/llm-icon.svg" class="isa-row icon-color me-2" alt="llm"/>/m/llm</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="slideShowPage(1);"><img src="./images/icons/space/graphql-icon.svg" class="isa-row icon-color me-2" alt="iot"/>/m/iot</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="slideShowPage(1);"><img src="./images/icons/space/olrp-icon.svg" class="isa-row icon-color me-2" alt="sys"/>/m/sys</a></li>
                 </ul>
             </li>
             <li class="nav-item">
@@ -1164,35 +1401,41 @@ bin/metatron</code></pre>
     <div class="container">
         <h1 class="text-primary text-center p-5 glow-text">Tractatus Algebraicus Metatronicus</h1>
         <hr/>
-        <div class="row mt-4 gap-4">
+        <div class="row mt-3 justify-content-center">
+            <div class="col-md-6 position-relative">
+                <input type="text" id="lecture-search" class="form-control bg-dark text-light border-primary" placeholder="search lectures...">
+                <button id="clear-search" class="btn btn-link text-primary position-absolute end-0 top-50 translate-middle-y me-2" style="display: none; text-decoration: none;">&times;</button>
+            </div>
+        </div>
+        <div class="row mt-4 gap-4 tutorial-grid">
               <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-0" aria-expanded="false" aria-controls="card-0">Algebra</button>
               <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-1" aria-expanded="false" aria-controls="card-1">Instructions</button>
               <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-2" aria-expanded="false" aria-controls="card-2">Control Structures</button>
              <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-3" aria-expanded="false" aria-controls="card-3">Large Language Models</button>
               <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-4" aria-expanded="false" aria-controls="card-4">Space</button>
         </div>
-        <div class="row mt-3 gap-3">
+        <div class="row mt-3 gap-3 tutorial-grid">
             <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-5" aria-expanded="false" aria-controls="card-5">Fail and Catch</button>
             <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-6" aria-expanded="false" aria-controls="card-6">Types</button>
             <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-7" aria-expanded="false" aria-controls="card-7">IoT Integration</button>
             <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-8" aria-expanded="false" aria-controls="card-8">MQTT Space</button>
             <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-9" aria-expanded="false" aria-controls="card-9">Relational Space</button>
         </div>
-        <div class="row mt-3 gap-3">
+        <div class="row mt-3 gap-3 tutorial-grid">
             <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-10" aria-expanded="false" aria-controls="card-10">Q Processors</button>
             <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-11" aria-expanded="false" aria-controls="card-11">Uniform Resource Identifiers</button>
             <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-12" aria-expanded="false" aria-controls="card-12">File Space</button>
             <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-13" aria-expanded="false" aria-controls="card-13">The Router</button>
             <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-14" aria-expanded="false" aria-controls="card-14">Graph Space</button>
         </div>
-        <div class="row mt-3 gap-3">
+        <div class="row mt-3 gap-3 tutorial-grid">
             <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-12" aria-expanded="false" aria-controls="card-12">Coefficients</button>
             <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-13" aria-expanded="false" aria-controls="card-13">The Router</button>
             <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-14" aria-expanded="false" aria-controls="card-14">Parallelization</button>
             <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-9" aria-expanded="false" aria-controls="card-9">Serial Space</button>
             <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-15" aria-expanded="false" aria-controls="card-15">Web Space</button>
         </div>
-        <div class="row mt-3 gap-3">
+        <div class="row mt-3 gap-3 tutorial-grid">
             <button class="col btn btn-outline-success" type="button" data-bs-toggle="collapse" data-bs-target="#card-16" aria-expanded="false" aria-controls="card-16">🤖 Sweep's Soliloquies</button>
         </div>
     </div>
@@ -1202,18 +1445,61 @@ bin/metatron</code></pre>
     <button class="btn btn-secondary btn-sm" id="custom-docs-button">export to pdf</button>
     <script>
       const opt = {
-          margin: 2,
+          margin: [15, 10, 15, 10],
+          filename: 'metatron-tractatus.pdf',
           image: { type: 'jpeg', quality: 0.98 },
-          html2canvas: { scale: 1 },
-          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+          html2canvas: {
+              scale: 2,
+              useCORS: true,
+              letterRendering: true,
+              backgroundColor: '#ffffff'
+          },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+          pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
       };
       document.getElementById('custom-docs-button').addEventListener('click', () => {
         const element = document.getElementById('custom-docs');
-        html2pdf().set(opt).from(element).save('metatron-custom-docs.pdf');
+
+        // Apply PDF-specific black & white styling
+        element.classList.add('pdf-export-mode');
+
+        // Show PDF header before capture
+        const pdfHeader = document.getElementById('pdf-header');
+        pdfHeader.style.display = 'block';
+
+        html2pdf().set(opt).from(element).toPdf().get('pdf').then(function (pdf) {
+            const totalPages = pdf.internal.getNumberOfPages();
+            for (let i = 1; i <= totalPages; i++) {
+                pdf.setPage(i);
+                pdf.setFontSize(10);
+                pdf.setTextColor(100);
+                pdf.text('Page ' + i + ' of ' + totalPages, pdf.internal.pageSize.getWidth() - 30, pdf.internal.pageSize.getHeight() - 10);
+                pdf.text('PhaseShift Studio © 2026', 15, pdf.internal.pageSize.getHeight() - 10);
+            }
+        }).save().then(() => {
+            // Restore original website styling
+            element.classList.remove('pdf-export-mode');
+            pdfHeader.style.display = 'none';
+        });
       });
     </script>
 </div>
 <div id="custom-docs" class="custom-docs" style="padding: 20px;">
+<div id="pdf-header" style="display: none; border-bottom: 1px solid #333; margin-bottom: 20px; padding-bottom: 10px;">
+    <div style="display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center;">
+             <i class="bi bi-soundwave me-3" style="font-size: 2rem; color: #000;"></i>
+             <div>
+                <h2 style="margin: 0; color: #000; font-family: 'Times New Roman', serif; text-transform: uppercase; letter-spacing: 1px;">PhaseShift Studio</h2>
+                <p style="margin: 0; color: #333; font-size: 1rem; font-family: 'Times New Roman', serif; font-style: italic;">Tractatus Algebraicus Metatronicus</p>
+             </div>
+        </div>
+        <div style="text-align: right; font-family: 'Times New Roman', serif;">
+            <p style="margin: 0; color: #333; font-size: 0.9rem;">metatron documentation</p>
+            <p style="margin: 0; color: #333; font-size: 0.9rem;">rev 0.1-alpha</p>
+        </div>
+    </div>
+</div>
 <div class="collapse" id="card-0">
 <h2 id="_a_general_theory_of_data_access" class="discrete">A General Theory of Data Access</h2>
 <div class="paragraph">
@@ -1277,19 +1563,19 @@ While the reader searches for some unbeknownst depth in the previous sentence, a
 ┌ ├ ┐ └ ┘ │ ┤ ─ ⋰ ⋱ ⮝ ⮞ ⮜ ⮟
 -->
 <div class="paragraph">
-<p>mtron programs are composed using computational primitives called <strong>instructions</strong> (<code>inst</code>). Instructions are organized into libraries called <strong>instruction sets</strong> (<code>instset</code>)&#8201;&#8212;&#8201;domains of discourse. Mathematically, every instruction is a <strong>function</strong> written according to the form:</p>
+<p>mtron programs are composed using computational primitives called <strong>instructions</strong> (<code>inst</code>). Instructions are organized into libraries called <strong>instruction sets</strong> (<code>instset</code>)&#8201;&#8212;&#8201;<a href="https://en.wikipedia.org/wiki/Domain_of_discourse">domains of discourse</a>. Mathematically, every instruction is a <strong>function</strong> written according to the form:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">tid?rng&lt;=dom(args){ code }@vid
-│  │ │  │ │ │  │   │    │   │
-│  └─┘  └─┘ └──┘   └────┘   │
-│   │    │    │      │      └───⮞ location: instance location
-│   │    │    │      └──────────⮞ code: a nested chain of instructions
-│   │    │    └─────────────────⮞ arguments: dynamic parameterizations (rhs)
-│   │    └──────────────────────⮞ domain: the incoming obj (lhs)
-│   └───────────────────────────⮞ range: the outgoing obj (return)
-└───────────────────────────────⮞ the id of the instruction</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron"> tid?rng&lt;=dom(args){ code }@vid
+  │  │ │  │ │ │  │  │    │   │
+  │  └┬┘  └┬┘ └─┬┘  └─┬──┘   │
+  │   │    │    │     │      └────⮞ location: instance location (addr)
+  │   │    │    │     └───────────⮞ code: instruction body is a tree of instructions (impl)
+  │   │    │    └─────────────────⮞ arguments: dynamic parameterizations (args)
+  │   │    └──────────────────────⮞ domain: the incoming obj (lhs)
+  │   └───────────────────────────⮞ range: the outgoing obj (rhs)
+  └───────────────────────────────⮞ the type id of the instruction (opcode)</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1317,7 +1603,7 @@ While the reader searches for some unbeknownst depth in the previous sentence, a
 ==&gt;m/1/3=&gt;7
 ==&gt;boot/peers/1=&gt;&lt;ws://127.0.0.1:7777&gt;
 ==&gt;band=&gt;inst?rng=int{?}&amp;dom=int(min=&gt;isa(int::T[is(gt(0))]@nat).else(-100),max=&gt;isa(int::T[is(gt(0))]@nat).else(100)){is(and(gte(*min),lte(*max)))}
-==&gt;personx=&gt;rec::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;personx{*}::T])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]
+==&gt;personx=&gt;rec::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;personx{*}::T])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]
 ==&gt;triple=&gt;inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}
 ==&gt;boot/script/python=&gt;/usr/bin/python3
 ==&gt;x/a=&gt;1
@@ -1365,7 +1651,7 @@ While the reader searches for some unbeknownst depth in the previous sentence, a
  mqtt =&gt;[broker=&gt;&lt;mqtt://chibi.local:1883&gt;]]
 ==&gt;boot/args/mqtt=&gt;[broker=&gt;&lt;mqtt://chibi.local:1883&gt;]
 ==&gt;age=&gt;int::T[is(lt(120))]@nat
-==&gt;sum=&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{*}::T [reduce?rng=int&amp;dom=int{*}(noobj){fold(0,plus(id()))}]][...]@/sys/fail/2148
+==&gt;sum=&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{*}::T [reduce?rng=int&amp;dom=int{*}(noobj){fold(0,plus(id()))}]][...]@/sys/fail/2670
 ==&gt;boot/script/mtron=&gt;/bin/mtron
 ==&gt;m/2/3=&gt;11
 ==&gt;m/2=&gt;[8,9,10,11]
@@ -1404,8 +1690,7 @@ While the reader searches for some unbeknownst depth in the previous sentence, a
 </div>
 <div class="paragraph">
 <p>The arguments are captured as a <code>lst</code> and are accessed via their position furi.
-For example, <code>*&lt;0&gt;</code> references the first argument, <code>*&lt;1&gt;</code> the second argument, so on and so forth. Note that a less verbose
-form can all be used: <code>*0</code>, <code>*1</code>, etc.</p>
+For example, <code>*&lt;0&gt;</code> references the first argument, <code>*&lt;1&gt;</code> the second argument, so on and so forth. Note that for single digit numbers, the uri <code>&lt; &gt;</code> wrapper isn&#8217;t required and the above can be written as <code>*+0`, `*+1</code>, etc.</p>
 </div>
 <div class="paragraph">
 <p>In the example below, the user defined instruction <code>band</code> filters out lhs <code>objs</code> not within the provided range (min/max).
@@ -1554,7 +1839,7 @@ mtron&gt; 15.band(10,20)              ​4​
 ==&gt;15
 mtron&gt; -15.band(-20,-10)           ​5​
 mtron&gt; band -&gt; |inst?int{?}&lt;=int(min=&gt;?nat::T.else(fail()),max=&gt;?nat::T.else(fail())){ is(and(gte(*min),lte(*max))) }
-==&gt;fail::[fail(noobj) is not a fail::T][...]@/sys/fail/2372
+==&gt;fail::[fail(noobj) is not a fail::T][...]@/sys/fail/2894
 mtron&gt; 15.band(10,20)              ​6​
 ==&gt;15
 mtron&gt; -15.band(-20,-10)           ​7​
@@ -1605,15 +1890,15 @@ Finally, a degenerate anonymous <code>inst</code> with no specified variable fra
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; 10.(min=&gt;2,max=&gt;8){ is(and(gte(*min),lte(*max))) }                ​1​
 ==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/2386
+	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/2908
 mtron&gt; 10.(min=&gt;minus(1),max=&gt;plus(1)){ is(and(gte(*min),lte(*max))) }   ​2​
 ==&gt;10
 mtron&gt; 10.(min=&gt;2,max=&gt;8){ is(and(gte(*bad_min),lte(*bad_max))) }        ​3​
 ==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/2388
+	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/2910
 mtron&gt; 10.(){ is(and(gte(*min),lte(*max))) }                             ​4​
 ==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/2390
+	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/2912
 mtron&gt; 10.is(and(gte(minus(1)),lte(plus(1))))                            ​5​
 ==&gt;10</code></pre>
 </div>
@@ -1652,11 +1937,11 @@ mtron&gt; 10.is(and(gte(minus(1)),lte(plus(1))))                            ​5
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;_)[mod(*by).eq(0)]
 ==&gt;fail::[is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;_)[mod(*by).eq(0)]
                                       ^ end of input expected
-][...]@/sys/fail/2392
+][...]@/sys/fail/2914
 mtron&gt; 10.is_divisible(2)
-==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/2394
+==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/2916
 mtron&gt; 10.is_divisible('abc')
-==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/2396</code></pre>
+==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/2918</code></pre>
 </div>
 </div>
 </div>
@@ -1677,7 +1962,7 @@ mtron&gt; 10.is_divisible('abc')
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; band -&gt; |band?int{?}&lt;=int(min=&gt;_,max=&gt;is(gt(*min)).else(*min.plus(1)))[is(gte(*min)).is(lte(*max))]
 ==&gt;fail::[band -&gt; |band?int{?}&lt;=int(min=&gt;_,max=&gt;is(gt(*min)).else(*min.plus(1)))[is(gte(*min)).is(lte(*max))]
                                                                       ^ end of input expected
-][...]@/sys/fail/2398
+][...]@/sys/fail/2920
 mtron&gt; 2.band(min=&gt;1,max=&gt;1)                 ​1​</code></pre>
 </div>
 </div>
@@ -1699,11 +1984,11 @@ mtron&gt; 2.band(min=&gt;1,max=&gt;1)                 ​1​</code></pre>
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;is(neq(0)).else(print('error').map(1)))[mod(*by).eq(0)]
 ==&gt;fail::[is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;is(neq(0)).else(print('error').map(1)))[mod(*by).eq(0)]
                                       ^ end of input expected
-][...]@/sys/fail/2400
+][...]@/sys/fail/2922
 mtron&gt; 10.is_divisible(2)
-==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/2402
+==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/2924
 mtron&gt; 10.is_divisible('abc')
-==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/2404</code></pre>
+==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/2926</code></pre>
 </div>
 </div>
 </div>
@@ -1734,9 +2019,9 @@ This ensures the uri <code>triple</code> is not applied to the <code>inst</code>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; triple -&gt; inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}
-==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}]][...]@/sys/fail/2406
+==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}]][...]@/sys/fail/2928
 mtron&gt; *triple
-==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}]][...]@/sys/fail/2406</code></pre>
+==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}]][...]@/sys/fail/2928</code></pre>
 </div>
 </div>
 </td>
@@ -1775,7 +2060,7 @@ mtron&gt; {1,2,3,4,5,6}.triple()
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; sum -&gt; reduce?int&lt;=int{*}(){fold(0,plus(_))}
-==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{*}::T [reduce?rng=int&amp;dom=int{*}(noobj){fold(0,plus(id()))}]][...]@/sys/fail/2408</code></pre>
+==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{*}::T [reduce?rng=int&amp;dom=int{*}(noobj){fold(0,plus(id()))}]][...]@/sys/fail/2930</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2045,82 +2330,89 @@ ultimately dependent on the incoming lhs <code>obj</code>, where</p>
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *ollama:+
 ==&gt;model::[
+ name    =&gt;qwen3-coder-next:latest,
+ host    =&gt;!*/sys/space/ollama/host,
  size    =&gt;gB::48.19,
  skill   =&gt;[completion,tools],
  provider=&gt;!*/sys/space/ollama,
- think   =&gt;false,
- name    =&gt;qwen3-coder-next:latest,
- host    =&gt;!*/sys/space/ollama/host]@ollama:qwen3-coder-next:latest
+ think   =&gt;false]@ollama:qwen3-coder-next:latest
 ==&gt;model::[
+ name    =&gt;&lt;glm-4.7-flash:latest&gt;,
+ host    =&gt;!*/sys/space/ollama/host,
+ size    =&gt;gB::17.71,
+ skill   =&gt;[completion,tools,thinking],
+ provider=&gt;!*/sys/space/ollama,
+ think   =&gt;true]@ollama:glm-4.7-flash:latest
+==&gt;model::[
+ name    =&gt;&lt;deepseek-v3.2:cloud&gt;,
+ host    =&gt;!*/sys/space/ollama/host,
  size    =&gt;gB::0.00,
  skill   =&gt;[completion,tools,thinking],
  provider=&gt;!*/sys/space/ollama,
- think   =&gt;true,
- name    =&gt;&lt;deepseek-v3.2:cloud&gt;,
- host    =&gt;!*/sys/space/ollama/host]@ollama:deepseek-v3.2:cloud
+ think   =&gt;true]@ollama:deepseek-v3.2:cloud
 ==&gt;model::[
+ name    =&gt;qwen3:8b,
+ host    =&gt;!*/sys/space/ollama/host,
  size    =&gt;gB::4.87,
  skill   =&gt;[completion,tools,thinking],
  provider=&gt;!*/sys/space/ollama,
- think   =&gt;true,
- name    =&gt;qwen3:8b,
- host    =&gt;!*/sys/space/ollama/host]@ollama:qwen3:8b
+ think   =&gt;true]@ollama:qwen3:8b
 ==&gt;model::[
+ name    =&gt;deepcoder:latest,
+ host    =&gt;!*/sys/space/ollama/host,
  size    =&gt;gB::8.37,
  skill   =&gt;[completion],
  provider=&gt;!*/sys/space/ollama,
- think   =&gt;false,
- name    =&gt;deepcoder:latest,
- host    =&gt;!*/sys/space/ollama/host]@ollama:deepcoder:latest
+ think   =&gt;false]@ollama:deepcoder:latest
 ==&gt;model::[
+ name    =&gt;llava:latest,
+ host    =&gt;!*/sys/space/ollama/host,
  size    =&gt;gB::4.41,
  skill   =&gt;[completion,vision],
  provider=&gt;!*/sys/space/ollama,
- think   =&gt;false,
- name    =&gt;llava:latest,
- host    =&gt;!*/sys/space/ollama/host]@ollama:llava:latest
+ think   =&gt;false]@ollama:llava:latest
 ==&gt;model::[
+ name    =&gt;qwen3:latest,
+ host    =&gt;!*/sys/space/ollama/host,
  size    =&gt;gB::4.87,
  skill   =&gt;[completion,tools,thinking],
  provider=&gt;!*/sys/space/ollama,
- think   =&gt;true,
- name    =&gt;qwen3:latest,
- host    =&gt;!*/sys/space/ollama/host]@ollama:qwen3:latest
+ think   =&gt;true]@ollama:qwen3:latest
 ==&gt;model::[
+ name    =&gt;gpt-oss:latest,
+ host    =&gt;!*/sys/space/ollama/host,
  size    =&gt;gB::12.85,
  skill   =&gt;[completion,tools,thinking],
  provider=&gt;!*/sys/space/ollama,
- think   =&gt;true,
- name    =&gt;gpt-oss:latest,
- host    =&gt;!*/sys/space/ollama/host]@ollama:gpt-oss:latest
+ think   =&gt;true]@ollama:gpt-oss:latest
 ==&gt;model::[
+ name    =&gt;&lt;minimax-m2.5:cloud&gt;,
+ host    =&gt;!*/sys/space/ollama/host,
  size    =&gt;gB::0.00,
  skill   =&gt;[completion,tools,thinking],
  provider=&gt;!*/sys/space/ollama,
- think   =&gt;true,
- name    =&gt;&lt;minimax-m2.5:cloud&gt;,
- host    =&gt;!*/sys/space/ollama/host]@ollama:minimax-m2.5:cloud
+ think   =&gt;true]@ollama:minimax-m2.5:cloud
 ==&gt;model::[
+ name    =&gt;deepseek-coder:latest,
+ host    =&gt;!*/sys/space/ollama/host,
  size    =&gt;gB::0.72,
  skill   =&gt;[completion],
  provider=&gt;!*/sys/space/ollama,
- think   =&gt;false,
- name    =&gt;deepseek-coder:latest,
- host    =&gt;!*/sys/space/ollama/host]@ollama:deepseek-coder:latest
+ think   =&gt;false]@ollama:deepseek-coder:latest
 ==&gt;model::[
+ name    =&gt;tinyllama:latest,
+ host    =&gt;!*/sys/space/ollama/host,
  size    =&gt;gB::0.59,
  skill   =&gt;[completion],
  provider=&gt;!*/sys/space/ollama,
- think   =&gt;false,
- name    =&gt;tinyllama:latest,
- host    =&gt;!*/sys/space/ollama/host]@ollama:tinyllama:latest
+ think   =&gt;false]@ollama:tinyllama:latest
 ==&gt;model::[
+ name    =&gt;llama3-groq-tool-use:latest,
+ host    =&gt;!*/sys/space/ollama/host,
  size    =&gt;gB::4.34,
  skill   =&gt;[completion,tools],
  provider=&gt;!*/sys/space/ollama,
- think   =&gt;false,
- name    =&gt;llama3-groq-tool-use:latest,
- host    =&gt;!*/sys/space/ollama/host]@ollama:llama3-groq-tool-use:latest</code></pre>
+ think   =&gt;false]@ollama:llama3-groq-tool-use:latest</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2193,7 +2485,7 @@ ai/memory -> /usr/mem
 ==&gt;fail::[unable to determine inst function:
 	1           =&gt; plus(b)      | [inst]
 	int::T      =&gt; #::T         |  \_dom
-	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/2412
+	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/2934
 mtron&gt; 1.plus(b).catch(2).plus(3)        ​2​
 ==&gt;5</code></pre>
 </div>
@@ -2229,18 +2521,18 @@ mtron&gt; 1.plus(b).catch(2).plus(3)        ​2​
 ==&gt;fail::[unable to determine inst function:
 	1           =&gt; plus(b)      | [inst]
 	int::T      =&gt; #::T         |  \_dom
-	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/2420
+	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/2942
 mtron&gt; */sys/fail/+               ​2​
-==&gt;fail::[unable to evaluate inst: plus(b)][...]@/sys/fail/2417
+==&gt;fail::[unable to evaluate inst: plus(b)][...]@/sys/fail/2939
 ==&gt;fail::[unable to determine inst function:
 	1           =&gt; plus(b)      | [inst]
 	int::T      =&gt; #::T         |  \_dom
-	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/2419
+	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/2941
 ==&gt;fail::[unable to determine inst function:
 	1           =&gt; plus(b)      | [inst]
 	int::T      =&gt; #::T         |  \_dom
-	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/2420
-==&gt;fail::[unable to evaluate inst: plus(b)][...]@/sys/fail/2418
+	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/2942
+==&gt;fail::[unable to evaluate inst: plus(b)][...]@/sys/fail/2940
 mtron&gt; */sys/fail/+.catch(_)      ​3​
 ==&gt;fail{2}::[unable to evaluate inst: plus(b)]
 ==&gt;fail{2}::[unable to determine inst function:
@@ -2280,7 +2572,7 @@ mtron&gt; */sys/fail                 ​4​</code></pre>
 ==&gt;cause?rng=fail{?}&amp;dom=fail(){&lt;j&gt;}
 mtron&gt; 1+b.catch(cause())     ​2​
 ==&gt;fail::[rhs does not match inst range:
-	fail::[unable to evaluate inst: plus(b)]=&gt;(X=&gt;int{*}::T)][...]@/sys/fail/2426</code></pre>
+	fail::[unable to evaluate inst: plus(b)]=&gt;(X=&gt;int{*}::T)][...]@/sys/fail/2948</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -2386,10 +2678,10 @@ mtron&gt; even -&gt; int::T[is(mod(2).eq(0))]    ​4​
 mtron&gt; nat::10
 ==&gt;nat::10
 mtron&gt; nat::-10
-==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/2492
+==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/3014
 mtron&gt; int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/2498</code></pre>
+  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/3020</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2485,10 +2777,10 @@ mtron&gt; int::-10.as(nat::T)
 mtron&gt; nat::10
 ==&gt;nat::10
 mtron&gt; nat::-10
-==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/2512
+==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/3034
 mtron&gt; int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/2518</code></pre>
+  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/3040</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2511,10 +2803,10 @@ mtron&gt; age:125
 ==&gt;age:125
 mtron&gt; nat:125.as(age::T)
 ==&gt;fail::[nat:125 is not a is(lt(120))
-  nat:125=&gt;(==&gt;is(lt(120)))][...]@/sys/fail/2560
+  nat:125=&gt;(==&gt;is(lt(120)))][...]@/sys/fail/3082
 mtron&gt; 125.as(nat::T).as(age::T)
 ==&gt;fail::[nat::125 is not a is(lt(120))
-  nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/2566</code></pre>
+  nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/3088</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -2524,7 +2816,7 @@ mtron&gt; 125.as(nat::T).as(age::T)
 mtron&gt; personx -&gt; rec::T[?[name  =&gt; str::T,
                            age   =&gt; age::T,
                            knows =&gt; personx{*}::T]]
-==&gt;rec::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;personx{*}::T])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]
+==&gt;rec::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;personx{*}::T])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]
 mtron&gt; marko -&gt; personx::[name=&gt;'marko',age=&gt;29,knows=&gt;!*grant]
 ==&gt;personx::[name=&gt;'marko',age=&gt;29,knows=&gt;!*grant]
 mtron&gt; grant -&gt; personx::[name=&gt;'grant',age=&gt;23,knows=&gt;!*marko]
@@ -2780,10 +3072,10 @@ mtron&gt; *#.as[name      =&gt; _,
 </table>
 <h3 id="_spatial_embeddings" class="discrete">spatial embeddings</h3>
 <div class="paragraph">
-<p><span class="red">m</span>​<strong class="green">E</strong>​<span class="aqua">t</span>​<span class="yellow">A</span>​<span class="lime">t</span>​<span class="fuchsia">r</span>​<strong class="orange">O</strong>​<span class="blue">n</span>​ was designed to support the creation and manipulation of <em>abstract data types</em> in a compact, fluid manner so as to allow the user to move smoothly between <em>multiple models</em> across different spaces, each espousing a different perspective on the data their maintain: e.g., key/value, document, relational, vector, graph, and the various nooks and crannies between.</p>
+<p><span class="red">M</span>​<span class="aqua">e</span>​<strong class="blue">t</strong>​<strong class="yellow">a</strong>​<span class="fuchsia">T</span>​<span class="green">r</span>​<span class="orange">o</span>​<strong class="lime">N</strong>​ was designed to support the creation and manipulation of <em>abstract data types</em> in a compact, fluid manner so as to allow the user to move smoothly between <em>multiple models</em> across different spaces, each espousing a different perspective on the data their maintain: e.g., key/value, document, relational, vector, graph, and the various nooks and crannies between.</p>
 </div>
 <div class="paragraph">
-<p><strong class="fuchsia">M</strong>​<strong class="lime">e</strong>​<span class="green">T</span>​<span class="aqua">a</span>​<span class="red">t</span>​<strong class="blue">r</strong>​<span class="yellow">O</span>​<span class="orange">n</span>​'s URI addressing scheme makes it possible to <em>embed</em> arbitrary data types into a space.
+<p><strong class="yellow">m</strong>​<span class="green">E</span>​<span class="red">T</span>​<strong class="fuchsia">a</strong>​<strong class="blue">t</strong>​<span class="aqua">r</span>​<span class="orange">O</span>​<span class="lime">n</span>​'s URI addressing scheme makes it possible to <em>embed</em> arbitrary data types into a space.
 This section will explore the following considerations when designing a <em>multi-model abstract data type</em>.</p>
 </div>
 <div class="olist arabic">
@@ -3178,7 +3470,7 @@ mtron&gt; *x.&gt;&gt;b&gt;&gt;d&gt;&gt;1
 ==&gt;fail::[unable to determine inst function:
 	capitalize  =&gt; merge(',')   | [inst]
 	uri::T      =&gt; #::T         |  \_dom
-	uri::T     X=&gt; [',']        |  \_args][...]@/sys/fail/2346</code></pre>
+	uri::T     X=&gt; [',']        |  \_args][...]@/sys/fail/2868</code></pre>
 </div>
 </div>
 <h3 id="_pattern_matching_the_wildcards" class="discrete">Pattern Matching: The Wildcards</h3>

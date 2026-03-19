@@ -1148,7 +1148,7 @@
              "Percent sign              | users | 1 | name  | '100% Complete'",
              "Underscore                | users | 1 | name  | 'user_name_123'"
      }, delimiter = '|')
-     public void testStringCornerCases(String description, String table, String rowId,
+     public void testDatabaseStringCornerCases(String description, String table, String rowId,
                                        String field, String value) throws Exception {
          setupTestDatabase();
          final tbleSpace testSpace = createTestSpace();
@@ -1187,7 +1187,7 @@
              "Thousand                  | users | 1 | age | 1000",
              "Million                   | users | 1 | age | 1000000"
      }, delimiter = '|')
-     public void testIntegerBoundaries(String description, String table, String rowId,
+     public void testDatabaseIntegerBoundaries(String description, String table, String rowId,
                                        String field, int value) throws Exception {
          setupTestDatabase();
          final tbleSpace testSpace = createTestSpace();
@@ -1226,7 +1226,7 @@
              "Large positive            | users | 1 | salary | 1000000.0",
              "Large negative            | users | 1 | salary | -1000000.0"
      }, delimiter = '|')
-     public void testRealBoundaries(String description, String table, String rowId,
+     public void testDatabaseRealBoundaries(String description, String table, String rowId,
                                     String field, double value) throws Exception {
          setupTestDatabase();
          final tbleSpace testSpace = createTestSpace();
@@ -1290,7 +1290,7 @@
              "Non-existent table        | db:nonexistent/1",
              "Very large ID             | db:users/999999999"
      }, delimiter = '|')
-     public void testNonExistentAccess(String description, String uri) throws Exception {
+     public void testDatabaseNonExistentAccess(String description, String uri) throws Exception {
          setupTestDatabase();
          final tbleSpace testSpace = createTestSpace();
          try {
@@ -1312,7 +1312,7 @@
              "10",
              "20"
      })
-     public void testSequentialUpdates(int iterations) throws Exception {
+     public void testDatabaseSequentialUpdates(int iterations) throws Exception {
          setupTestDatabase();
          final tbleSpace testSpace = createTestSpace();
          try {

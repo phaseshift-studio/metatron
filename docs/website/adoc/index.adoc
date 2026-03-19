@@ -41,35 +41,41 @@ include::header.html[]
     <div class="container">
         <h1 class="text-primary text-center p-5 glow-text">Tractatus Algebraicus Metatronicus</h1>
         <hr/>
-        <div class="row mt-4 gap-4">
+        <div class="row mt-3 justify-content-center">
+            <div class="col-md-6 position-relative">
+                <input type="text" id="lecture-search" class="form-control bg-dark text-light border-primary" placeholder="search lectures...">
+                <button id="clear-search" class="btn btn-link text-primary position-absolute end-0 top-50 translate-middle-y me-2" style="display: none; text-decoration: none;">&times;</button>
+            </div>
+        </div>
+        <div class="row mt-4 gap-4 tutorial-grid">
               <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-0" aria-expanded="false" aria-controls="card-0">Algebra</button>
               <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-1" aria-expanded="false" aria-controls="card-1">Instructions</button>
               <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-2" aria-expanded="false" aria-controls="card-2">Control Structures</button>
              <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-3" aria-expanded="false" aria-controls="card-3">Large Language Models</button>
               <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-4" aria-expanded="false" aria-controls="card-4">Space</button>
         </div>
-        <div class="row mt-3 gap-3">
+        <div class="row mt-3 gap-3 tutorial-grid">
             <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-5" aria-expanded="false" aria-controls="card-5">Fail and Catch</button> 
             <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-6" aria-expanded="false" aria-controls="card-6">Types</button>  
             <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-7" aria-expanded="false" aria-controls="card-7">IoT Integration</button>
             <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-8" aria-expanded="false" aria-controls="card-8">MQTT Space</button>
             <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-9" aria-expanded="false" aria-controls="card-9">Relational Space</button>
         </div>
-        <div class="row mt-3 gap-3">
+        <div class="row mt-3 gap-3 tutorial-grid">
             <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-10" aria-expanded="false" aria-controls="card-10">Q Processors</button>
             <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-11" aria-expanded="false" aria-controls="card-11">Uniform Resource Identifiers</button>
             <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-12" aria-expanded="false" aria-controls="card-12">File Space</button>
             <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-13" aria-expanded="false" aria-controls="card-13">The Router</button>
             <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-14" aria-expanded="false" aria-controls="card-14">Graph Space</button>
         </div>
-        <div class="row mt-3 gap-3">
+        <div class="row mt-3 gap-3 tutorial-grid">
             <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-12" aria-expanded="false" aria-controls="card-12">Coefficients</button>
             <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-13" aria-expanded="false" aria-controls="card-13">The Router</button>
             <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-14" aria-expanded="false" aria-controls="card-14">Parallelization</button>
             <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-9" aria-expanded="false" aria-controls="card-9">Serial Space</button>
             <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-15" aria-expanded="false" aria-controls="card-15">Web Space</button>
         </div>
-        <div class="row mt-3 gap-3">
+        <div class="row mt-3 gap-3 tutorial-grid">
             <button class="col btn btn-outline-success" type="button" data-bs-toggle="collapse" data-bs-target="#card-16" aria-expanded="false" aria-controls="card-16">🤖 Sweep's Soliloquies</button>
         </div>
     </div>
@@ -82,18 +88,61 @@ include::header.html[]
     <button class="btn btn-secondary btn-sm" id="custom-docs-button">export to pdf</button>
     <script>
       const opt = {
-          margin: 2,
+          margin: [15, 10, 15, 10],
+          filename: 'metatron-tractatus.pdf',
           image: { type: 'jpeg', quality: 0.98 },
-          html2canvas: { scale: 1 },
-          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+          html2canvas: { 
+              scale: 2, 
+              useCORS: true, 
+              letterRendering: true,
+              backgroundColor: '#ffffff' 
+          },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+          pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
       };
       document.getElementById('custom-docs-button').addEventListener('click', () => {
         const element = document.getElementById('custom-docs');
-        html2pdf().set(opt).from(element).save('metatron-custom-docs.pdf');
+        
+        // Apply PDF-specific black & white styling
+        element.classList.add('pdf-export-mode');
+        
+        // Show PDF header before capture
+        const pdfHeader = document.getElementById('pdf-header');
+        pdfHeader.style.display = 'block';
+        
+        html2pdf().set(opt).from(element).toPdf().get('pdf').then(function (pdf) {
+            const totalPages = pdf.internal.getNumberOfPages();
+            for (let i = 1; i <= totalPages; i++) {
+                pdf.setPage(i);
+                pdf.setFontSize(10);
+                pdf.setTextColor(100);
+                pdf.text('Page ' + i + ' of ' + totalPages, pdf.internal.pageSize.getWidth() - 30, pdf.internal.pageSize.getHeight() - 10);
+                pdf.text('PhaseShift Studio © 2026', 15, pdf.internal.pageSize.getHeight() - 10);
+            }
+        }).save().then(() => {
+            // Restore original website styling
+            element.classList.remove('pdf-export-mode');
+            pdfHeader.style.display = 'none';
+        });
       });
     </script>
 </div>
 <div id="custom-docs" class="custom-docs" style="padding: 20px;">
+<div id="pdf-header" style="display: none; border-bottom: 1px solid #333; margin-bottom: 20px; padding-bottom: 10px;">
+    <div style="display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center;">
+             <i class="bi bi-soundwave me-3" style="font-size: 2rem; color: #000;"></i>
+             <div>
+                <h2 style="margin: 0; color: #000; font-family: 'Times New Roman', serif; text-transform: uppercase; letter-spacing: 1px;">PhaseShift Studio</h2>
+                <p style="margin: 0; color: #333; font-size: 1rem; font-family: 'Times New Roman', serif; font-style: italic;">Tractatus Algebraicus Metatronicus</p>
+             </div>
+        </div>
+        <div style="text-align: right; font-family: 'Times New Roman', serif;">
+            <p style="margin: 0; color: #333; font-size: 0.9rem;">metatron documentation</p>
+            <p style="margin: 0; color: #333; font-size: 0.9rem;">rev 0.1-alpha</p>
+        </div>
+    </div>
+</div>
 ++++
 
 ++++
