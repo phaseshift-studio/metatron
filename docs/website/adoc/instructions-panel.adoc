@@ -7,19 +7,19 @@
 -->
 ++++
 
-mtron programs are composed using computational primitives called **instructions** (`inst`). Instructions are organized into libraries called **instruction sets** (`instset`) -- domains of discourse. Mathematically, every instruction is a **function** written according to the form:
+mtron programs are composed using computational primitives called **instructions** (`inst`). Instructions are organized into libraries called **instruction sets** (`instset`) -- https://en.wikipedia.org/wiki/Domain_of_discourse[domains of discourse]. Mathematically, every instruction is a **function** written according to the form:
 
 [source,mtron]
 ----
-tid?rng<=dom(args){ code }@vid
-│  │ │  │ │ │  │   │    │   │
-│  └─┘  └─┘ └──┘   └────┘   │
-│   │    │    │      │      └───⮞ location: instance location
-│   │    │    │      └──────────⮞ code: a nested chain of instructions
-│   │    │    └─────────────────⮞ arguments: dynamic parameterizations (rhs)
-│   │    └──────────────────────⮞ domain: the incoming obj (lhs)
-│   └───────────────────────────⮞ range: the outgoing obj (return)
-└───────────────────────────────⮞ the id of the instruction
+ tid?rng<=dom(args){ code }@vid                                                  
+  │  │ │  │ │ │  │  │    │   │                                                   
+  │  └┬┘  └┬┘ └─┬┘  └─┬──┘   │                                                   
+  │   │    │    │     │      └────⮞ location: instance location (addr)                
+  │   │    │    │     └───────────⮞ code: instruction body is a tree of instructions (impl)        
+  │   │    │    └─────────────────⮞ arguments: dynamic parameterizations (args)    
+  │   │    └──────────────────────⮞ domain: the incoming obj (lhs)                
+  │   └───────────────────────────⮞ range: the outgoing obj (rhs)              
+  └───────────────────────────────⮞ the type id of the instruction (opcode)
 ----
 
 Every instruction maps a **left hand side** `obj` (`lhs`) to a **right hand side** `obj` (rhs). Many-to-one, one to many, and many-to-many mappings are possible as an `obj` is an element in the power set of all `objs`. Thus, `{1,2,3}` is an `obj` with type `int{3}`.
@@ -60,8 +60,7 @@ When an instruction is called, the associated https://en.wikipedia.org/wiki/Para
 ++++
 
 The arguments are captured as a `lst` and are accessed via their position furi.
-For example, `\*<0>` references the first argument, `*<1>` the second argument, so on and so forth. Note that a less verbose
-form can all be used: `*0`, `*1`, etc.
+For example, `+*+<0>` references the first argument, `+*+<1>` the second argument, so on and so forth. Note that for single digit numbers, the uri `< >` wrapper isn't required and the above can be written as `+*+0`, `+*+1`, etc.
 
 In the example below, the user defined instruction `band` filters out lhs `objs` not within the provided range (min/max).
 Given the filtering behavior of the instruction, the signature of `band` is `int{?}\<=int`. That is, it accepts a single
@@ -289,7 +288,7 @@ triple -> |inst?lst[int,int,int]<=int{3}(){>-[,]}
 
 [NOTE]
 ====
-The `triple` instruction code is composed of a single instruction: `>-[,]`. This syntactic sugar resolves `merge([,])`. The instruction signature of `merge` is  `A\<=#{\*}(A::T)`. This states that `merge` is a **barrier instruction** that maps the entire lhs stream of objs (`#{*}`) to a single `A`, where `A` is a generic bound to `lst` given the resolution of the argument `A::T`. Thus, this instance of `merge` yields a single `lst` whose elements are the instructions three (`int{3}`) incoming lhs objs.  
+The `triple` instruction code is composed of a single instruction: `>-[,]`. This syntactic sugar resolves `merge([,])`. The instruction signature of `merge` is  `A\<=#{+*+}(A::T)`. This states that `merge` is a **barrier instruction** that maps the entire lhs stream of objs (`#{+*+}`) to a single `A`, where `A` is a generic bound to `lst` given the resolution of the argument `A::T`. Thus, this instance of `merge` yields a single `lst` whose elements are the instructions three (`int{3}`) incoming lhs objs.  
 ====
 
 An instruction is evaluated by applying a left-hand side `obj` as follows:

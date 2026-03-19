@@ -172,7 +172,7 @@ public class docSpaceTest extends AbstractSpaceTest {
             assertEquals(str("alice@example.com"), user1Rec.at(uri("email")), "Email should match");
             assertEquals(bool(true), user1Rec.at(uri("active")), "Should be active");
 
-            LOG.info("Successfully read user1: {}", user1);
+            LOG.info("Successfully read user1: %s", user1);
         } finally {
             space.close();
         }
@@ -211,7 +211,7 @@ public class docSpaceTest extends AbstractSpaceTest {
             }
 
             assertEquals(3, count, "Should have 3 users");
-            LOG.info("Successfully read {} users", count);
+            LOG.info("Successfully read %s users", count);
         } finally {
             space.close();
         }
@@ -978,6 +978,478 @@ public class docSpaceTest extends AbstractSpaceTest {
     }
 
     // ========================================
+    // DateTime Tests
+    // ========================================
+
+    @Test
+    public void testDateTimeFieldHandling() {
+        try (final MongoClient client = MongoClients.create(connectionString)) {
+            final MongoDatabase db = client.getDatabase(DB_NAME);
+            final MongoCollection<Document> events = db.getCollection("events");
+            events.drop();
+
+            // Insert document with DateTime field
+            final long timestamp = System.currentTimeMillis();
+            events.insertOne(new Document()
+                    .append("_id", "event1")
+                    .append("name", "Test Event")
+                    .append("createdAt", new java.util.Date(timestamp)));
+        }
+
+        final docSpace space = (docSpace) this.spaceSupplier.get();
+        try {
+            final Obj event = space.read(f("mongo:events/event1"));
+            assertFalse(event.isNoObj(), "Event should exist");
+            assertTrue(event.isRec(), "Event should be a record");
+
+            final Rec eventRec = event.asRec();
+            assertEquals(str("Test Event"), eventRec.at(uri("name")), "Name should match");
+
+            // DateTime should be read as int (milliseconds since epoch)
+            final Obj createdAt = eventRec.at(uri("createdAt"));
+            assertTrue(createdAt.isInt(), "createdAt should be an int");
+
+            LOG.info("Event with DateTime: %s", event);
+        } finally {
+            space.close();
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "event1 | 2024-01-01 | 1704067200000",  // Jan 1, 2024 00:00:00 UTC
+            "event2 | 2024-06-15 | 1718409600000",  // Jun 15, 2024 00:00:00 UTC
+            "event3 | 2024-12-31 | 1735603200000",  // Dec 31, 2024 00:00:00 UTC
+            "event4 | 1970-01-01 | 0",              // Unix epoch
+            "event5 | 2025-01-01 | 1735689600000"   // Jan 1, 2025 00:00:00 UTC
+    }, delimiter = '|')
+    public void testDateTimeValuesParameterized(final String eventId, final String dateStr, final long expectedMillis) {
+        try (final MongoClient client = MongoClients.create(connectionString)) {
+            final MongoDatabase db = client.getDatabase(DB_NAME);
+            final MongoCollection<Document> events = db.getCollection("events");
+            events.drop();
+
+            // Insert document with specific DateTime
+            events.insertOne(new Document()
+                    .append("_id", eventId)
+                    .append("description", "Event on " + dateStr)
+                    .append("timestamp", new java.util.Date(expectedMillis)));
+        }
+
+        final docSpace space = (docSpace) this.spaceSupplier.get();
+        try {
+            final Obj event = space.read(f("mongo:events/" + eventId));
+            final Rec eventRec = event.asRec();
+
+            final Obj timestamp = eventRec.at(uri("timestamp"));
+            assertTrue(timestamp.isInt(), "timestamp should be an int");
+            assertEquals(jnt(expectedMillis), timestamp, "Timestamp should match expected milliseconds");
+        } finally {
+            space.close();
+        }
+    }
+
+    @Test
+    public void testMultipleDateTimeFields() {
+        try (final MongoClient client = MongoClients.create(connectionString)) {
+            final MongoDatabase db = client.getDatabase(DB_NAME);
+            final MongoCollection<Document> tasks = db.getCollection("tasks");
+            tasks.drop();
+
+            final long now = System.currentTimeMillis();
+            final long tomorrow = now + (24 * 60 * 60 * 1000);
+
+            tasks.insertOne(new Document()
+                    .append("_id", "task1")
+                    .append("title", "Important Task")
+                    .append("createdAt", new java.util.Date(now))
+                    .append("dueDate", new java.util.Date(tomorrow))
+                    .append("completedAt", null));  // null date
+        }
+
+        final docSpace space = (docSpace) this.spaceSupplier.get();
+        try {
+            final Obj task = space.read(f("mongo:tasks/task1"));
+            final Rec taskRec = task.asRec();
+
+            assertEquals(str("Important Task"), taskRec.at(uri("title")), "Title should match");
+
+            final Obj createdAt = taskRec.at(uri("createdAt"));
+            assertTrue(createdAt.isInt(), "createdAt should be an int");
+
+            final Obj dueDate = taskRec.at(uri("dueDate"));
+            assertTrue(dueDate.isInt(), "dueDate should be an int");
+
+            // Verify dueDate is after createdAt
+            assertTrue(dueDate.asInt().jvm() > createdAt.asInt().jvm(),
+                      "dueDate should be after createdAt");
+
+            LOG.info("Task with multiple DateTimes: %s", task);
+        } finally {
+            space.close();
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "dtCorner1 | 0",                          // Unix epoch (Jan 1, 1970 00:00:00 UTC)
+            "dtCorner2 | 1",                          // 1 millisecond after epoch
+            "dtCorner3 | -1",                         // 1 millisecond before epoch
+            "dtCorner4 | 9223372036854775807",        // Max long value (far future)
+            "dtCorner5 | -9223372036854775808",       // Min long value (far past)
+            "dtCorner6 | 1000000000000",              // Sep 9, 2001 01:46:40 UTC
+            "dtCorner7 | 2000000000000",              // May 18, 2033 03:33:20 UTC
+            "dtCorner8 | 253402300799999"             // Dec 31, 9999 23:59:59.999 UTC
+    }, delimiter = '|')
+    public void testDateTimeCornerCasesParameterized(final String eventId, final long milliseconds) {
+        try (final MongoClient client = MongoClients.create(connectionString)) {
+            final MongoDatabase db = client.getDatabase(DB_NAME);
+            final MongoCollection<Document> events = db.getCollection("events");
+            events.drop();
+
+            events.insertOne(new Document()
+                    .append("_id", eventId)
+                    .append("timestamp", new java.util.Date(milliseconds))
+                    .append("description", "Event at " + milliseconds + " ms"));
+        }
+
+        final docSpace space = (docSpace) this.spaceSupplier.get();
+        try {
+            final Obj event = space.read(f("mongo:events/" + eventId));
+            final Rec eventRec = event.asRec();
+
+            final Obj timestamp = eventRec.at(uri("timestamp"));
+            assertTrue(timestamp.isInt(), "timestamp should be an int");
+            assertEquals(jnt(milliseconds), timestamp, "Timestamp should match expected milliseconds");
+
+            LOG.info("DateTime corner case %s: %s ms", eventId, milliseconds);
+        } finally {
+            space.close();
+        }
+    }
+
+    @Test
+    public void testDateTimeWithNestedDocuments() {
+        try (final MongoClient client = MongoClients.create(connectionString)) {
+            final MongoDatabase db = client.getDatabase(DB_NAME);
+            final MongoCollection<Document> orders = db.getCollection("orders");
+            orders.drop();
+
+            final long orderTime = System.currentTimeMillis();
+            final long shipTime = orderTime + (2 * 24 * 60 * 60 * 1000); // 2 days later
+
+            orders.insertOne(new Document()
+                    .append("_id", "order1")
+                    .append("orderId", "ORD-12345")
+                    .append("orderDate", new java.util.Date(orderTime))
+                    .append("shipping", new Document()
+                            .append("estimatedDelivery", new java.util.Date(shipTime))
+                            .append("carrier", "FedEx")));
+        }
+
+        final docSpace space = (docSpace) this.spaceSupplier.get();
+        try {
+            final Obj order = space.read(f("mongo:orders/order1"));
+            final Rec orderRec = order.asRec();
+
+            // Check top-level datetime
+            final Obj orderDate = orderRec.at(uri("orderDate"));
+            assertTrue(orderDate.isInt(), "orderDate should be an int");
+
+            // Check nested datetime in shipping
+            final Obj shipping = orderRec.at(uri("shipping"));
+            assertTrue(shipping.isRec(), "shipping should be a record");
+            final Obj estimatedDelivery = shipping.asRec().at(uri("estimatedDelivery"));
+            assertTrue(estimatedDelivery.isInt(), "estimatedDelivery should be an int");
+
+            LOG.info("Order with nested DateTimes: %s", order);
+        } finally {
+            space.close();
+        }
+    }
+
+    @Test
+    public void testDateTimeArrays() {
+        try (final MongoClient client = MongoClients.create(connectionString)) {
+            final MongoDatabase db = client.getDatabase(DB_NAME);
+            final MongoCollection<Document> logs = db.getCollection("logs");
+            logs.drop();
+
+            final long now = System.currentTimeMillis();
+
+            logs.insertOne(new Document()
+                    .append("_id", "log1")
+                    .append("message", "System log")
+                    .append("timestamp1", new java.util.Date(now))
+                    .append("timestamp2", new java.util.Date(now + 1000))
+                    .append("timestamp3", new java.util.Date(now + 2000))
+                    .append("timestamp4", new java.util.Date(now + 3000)));
+        }
+
+        final docSpace space = (docSpace) this.spaceSupplier.get();
+        try {
+            final Obj log = space.read(f("mongo:logs/log1"));
+            final Rec logRec = log.asRec();
+
+            // Verify all timestamp fields are ints
+            final Obj ts1 = logRec.at(uri("timestamp1"));
+            final Obj ts2 = logRec.at(uri("timestamp2"));
+            final Obj ts3 = logRec.at(uri("timestamp3"));
+            final Obj ts4 = logRec.at(uri("timestamp4"));
+
+            assertTrue(ts1.isInt(), "timestamp1 should be an int");
+            assertTrue(ts2.isInt(), "timestamp2 should be an int");
+            assertTrue(ts3.isInt(), "timestamp3 should be an int");
+            assertTrue(ts4.isInt(), "timestamp4 should be an int");
+
+            // Verify they are in ascending order
+            assertTrue(ts2.asInt().jvm() > ts1.asInt().jvm(), "Timestamps should be in ascending order");
+            assertTrue(ts3.asInt().jvm() > ts2.asInt().jvm(), "Timestamps should be in ascending order");
+            assertTrue(ts4.asInt().jvm() > ts3.asInt().jvm(), "Timestamps should be in ascending order");
+
+            LOG.info("Log with multiple DateTime fields: %s", log);
+        } finally {
+            space.close();
+        }
+    }
+
+    @Test
+    public void testWriteAndReadBackDateTime() {
+        // Create the collection first
+        try (final MongoClient client = MongoClients.create(connectionString)) {
+            final MongoDatabase db = client.getDatabase(DB_NAME);
+            final MongoCollection<Document> events = db.getCollection("events");
+            events.drop();
+        }
+
+        final docSpace space = (docSpace) this.spaceSupplier.get();
+        try {
+            // Note: We write as int (milliseconds), MongoDB will store as int64
+            final long timestamp = System.currentTimeMillis();
+            final Rec eventDoc = rec(
+                    uri("name"), str("Test Event"),
+                    uri("timestamp"), jnt(timestamp)
+            );
+
+            space.write(f("mongo:events/writeTest1"), eventDoc);
+
+            // Read back
+            final Obj readBack = space.read(f("mongo:events/writeTest1"));
+            assertFalse(readBack.isNoObj(), "Document should exist after write");
+            assertTrue(readBack.isRec(), "Document should be a record");
+
+            final Rec readBackRec = readBack.asRec();
+
+            assertEquals(str("Test Event"), readBackRec.at(uri("name")), "Name should match");
+            assertEquals(jnt(timestamp), readBackRec.at(uri("timestamp")), "Timestamp should match");
+
+            LOG.info("Write and read back timestamp: %s", timestamp);
+        } finally {
+            space.close();
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "dtMixed1 | Event 1 | 1704067200000 | 1704153600000",  // Jan 1-2, 2024
+            "dtMixed2 | Event 2 | 0              | 1000000000000",  // Epoch to 2001
+            "dtMixed3 | Event 3 | -86400000      | 86400000",       // Day before/after epoch
+            "dtMixed4 | Event 4 | 1000           | 2000",           // Small values
+            "dtMixed5 | Event 5 | 253402300799999| 253402300799999" // Same start/end (far future)
+    }, delimiter = '|')
+    public void testDateTimeRangesParameterized(final String eventId, final String name,
+                                                 final long startTime, final long endTime) {
+        try (final MongoClient client = MongoClients.create(connectionString)) {
+            final MongoDatabase db = client.getDatabase(DB_NAME);
+            final MongoCollection<Document> events = db.getCollection("events");
+            events.drop();
+
+            events.insertOne(new Document()
+                    .append("_id", eventId)
+                    .append("name", name)
+                    .append("startTime", new java.util.Date(startTime))
+                    .append("endTime", new java.util.Date(endTime)));
+        }
+
+        final docSpace space = (docSpace) this.spaceSupplier.get();
+        try {
+            final Obj event = space.read(f("mongo:events/" + eventId));
+            final Rec eventRec = event.asRec();
+
+            assertEquals(str(name), eventRec.at(uri("name")), "Name should match");
+
+            final Obj start = eventRec.at(uri("startTime"));
+            final Obj end = eventRec.at(uri("endTime"));
+
+            assertTrue(start.isInt(), "startTime should be an int");
+            assertTrue(end.isInt(), "endTime should be an int");
+
+            assertEquals(jnt(startTime), start, "Start time should match");
+            assertEquals(jnt(endTime), end, "End time should match");
+
+            assertTrue(end.asInt().jvm() >= start.asInt().jvm(),
+                      "End time should be >= start time");
+
+            LOG.info("DateTime range %s: %s to %s", eventId, startTime, endTime);
+        } finally {
+            space.close();
+        }
+    }
+
+    @Test
+    public void testMixedDateTimeAndOtherTypes() {
+        try (final MongoClient client = MongoClients.create(connectionString)) {
+            final MongoDatabase db = client.getDatabase(DB_NAME);
+            final MongoCollection<Document> mixed = db.getCollection("mixed");
+            mixed.drop();
+
+            final long timestamp = System.currentTimeMillis();
+
+            mixed.insertOne(new Document()
+                    .append("_id", "mixed1")
+                    .append("stringField", "test")
+                    .append("intField", 42)
+                    .append("doubleField", 3.14)
+                    .append("boolField", true)
+                    .append("dateField", new java.util.Date(timestamp))
+                    .append("nestedDoc", new Document()
+                            .append("nestedDate", new java.util.Date(timestamp + 1000))
+                            .append("nestedString", "nested")));
+        }
+
+        final docSpace space = (docSpace) this.spaceSupplier.get();
+        try {
+            final Obj doc = space.read(f("mongo:mixed/mixed1"));
+            final Rec docRec = doc.asRec();
+
+            // Verify all types
+            assertTrue(docRec.at(uri("stringField")).isStr(), "stringField should be str");
+            assertTrue(docRec.at(uri("intField")).isInt(), "intField should be int");
+            assertTrue(docRec.at(uri("doubleField")).isReal(), "doubleField should be real");
+            assertTrue(docRec.at(uri("boolField")).isBool(), "boolField should be bool");
+            assertTrue(docRec.at(uri("dateField")).isInt(), "dateField should be int");
+
+            // Verify nested date
+            final Obj nestedDoc = docRec.at(uri("nestedDoc"));
+            assertTrue(nestedDoc.isRec(), "nestedDoc should be rec");
+            assertTrue(nestedDoc.asRec().at(uri("nestedDate")).isInt(),
+                      "nestedDate should be int");
+
+            LOG.info("Mixed types with DateTime: %s", doc);
+        } finally {
+            space.close();
+        }
+    }
+
+    @Test
+    public void testEmptyDateTimeCollection() {
+        try (final MongoClient client = MongoClients.create(connectionString)) {
+            final MongoDatabase db = client.getDatabase(DB_NAME);
+            final MongoCollection<Document> events = db.getCollection("emptyEvents");
+            events.drop();
+            // Don't insert anything
+        }
+
+        final docSpace space = (docSpace) this.spaceSupplier.get();
+        try {
+            final Obj result = space.read(f("mongo:emptyEvents/+"));
+            // Should return noobj or empty results
+            assertTrue(result.isNoObj() || (result.isObjs() && !result.asObjs().iterator().hasNext()),
+                      "Empty collection should return noobj or empty results");
+
+            LOG.info("Empty DateTime collection result: %s", result);
+        } finally {
+            space.close();
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "dtUpdate1 | 1000000000000 | 2000000000000",  // Update to later time
+            "dtUpdate2 | 2000000000000 | 1000000000000",  // Update to earlier time
+            "dtUpdate3 | 0             | 1",              // Update from epoch
+            "dtUpdate4 | 1704067200000 | 1704067200000",  // Update to same time
+            "dtUpdate5 | -1000         | 1000"            // Update from negative to positive
+    }, delimiter = '|')
+    public void testUpdateDateTimeFieldsParameterized(final String eventId,
+                                                       final long originalTime, final long updatedTime) {
+        try (final MongoClient client = MongoClients.create(connectionString)) {
+            final MongoDatabase db = client.getDatabase(DB_NAME);
+            final MongoCollection<Document> events = db.getCollection("events");
+            events.drop();
+
+            // Insert with original time
+            events.insertOne(new Document()
+                    .append("_id", eventId)
+                    .append("timestamp", new java.util.Date(originalTime)));
+        }
+
+        final docSpace space = (docSpace) this.spaceSupplier.get();
+        try {
+            // Verify original
+            Obj event = space.read(f("mongo:events/" + eventId));
+            assertEquals(jnt(originalTime), event.asRec().at(uri("timestamp")),
+                        "Original timestamp should match");
+
+            // Update via MongoDB client
+            try (final MongoClient client = MongoClients.create(connectionString)) {
+                final MongoDatabase db = client.getDatabase(DB_NAME);
+                final MongoCollection<Document> events = db.getCollection("events");
+                events.updateOne(
+                        new Document("_id", eventId),
+                        new Document("$set", new Document("timestamp", new java.util.Date(updatedTime)))
+                );
+            }
+
+            // Read back and verify update
+            event = space.read(f("mongo:events/" + eventId));
+            assertEquals(jnt(updatedTime), event.asRec().at(uri("timestamp")),
+                        "Updated timestamp should match");
+
+            LOG.info("Updated DateTime from %s to %s", originalTime, updatedTime);
+        } finally {
+            space.close();
+        }
+    }
+
+    @Test
+    public void testDateTimeWithAllDocumentsQuery() {
+        try (final MongoClient client = MongoClients.create(connectionString)) {
+            final MongoDatabase db = client.getDatabase(DB_NAME);
+            final MongoCollection<Document> events = db.getCollection("allEvents");
+            events.drop();
+
+            final long baseTime = System.currentTimeMillis();
+            for (int i = 0; i < 5; i++) {
+                events.insertOne(new Document()
+                        .append("_id", "event" + i)
+                        .append("sequence", i)
+                        .append("timestamp", new java.util.Date(baseTime + (i * 1000))));
+            }
+        }
+
+        final docSpace space = (docSpace) this.spaceSupplier.get();
+        try {
+            final Obj allEvents = space.read(f("mongo:allEvents/+"));
+            assertFalse(allEvents.isNoObj(), "Should return results");
+            assertTrue(allEvents.isObjs(), "Should return multiple objects");
+
+            int count = 0;
+            for (Obj event : allEvents.asObjs()) {
+                assertTrue(event.isRec(), "Each event should be a record");
+                final Obj timestamp = event.asRec().at(uri("timestamp"));
+                assertTrue(timestamp.isInt(), "Each timestamp should be an int");
+                count++;
+            }
+
+            assertEquals(5, count, "Should have 5 events");
+            LOG.info("Retrieved %s events with DateTimes using + query", count);
+        } finally {
+            space.close();
+        }
+    }
+
+    // ========================================
     // Reference Resolution Tests (auto_from_)
     // ========================================
 
@@ -1044,7 +1516,7 @@ public class docSpaceTest extends AbstractSpaceTest {
             final Obj authorIdField = postRec.jvm().get(uri("authorId"));
             assertTrue(authorIdField.isInst(), "authorId should be an auto_from instruction");
 
-            LOG.info("Post with reference: {}", post);
+            LOG.info("Post with reference: %s", post);
         } finally {
             space.close();
         }
@@ -1072,7 +1544,7 @@ public class docSpaceTest extends AbstractSpaceTest {
             assertEquals(str("John Doe"), authorRec.at(uri("name")), "Author name should match");
             assertEquals(str("john@example.com"), authorRec.at(uri("email")), "Author email should match");
 
-            LOG.info("Resolved author: {}", author);
+            LOG.info("Resolved author: %s", author);
         } finally {
             space.close();
         }
@@ -1095,7 +1567,7 @@ public class docSpaceTest extends AbstractSpaceTest {
             final Obj postIdField = commentRec.jvm().get(uri("postId"));
             assertTrue(postIdField.isInst(), "postId should be an auto_from instruction");
 
-            LOG.info("Comment with reference: {}", comment);
+            LOG.info("Comment with reference: %s", comment);
         } finally {
             space.close();
         }
@@ -1123,7 +1595,7 @@ public class docSpaceTest extends AbstractSpaceTest {
             assertEquals(str("First Post"), postRec.at(uri("title")), "Post title should match");
             assertEquals(str("This is the first post"), postRec.at(uri("content")), "Post content should match");
 
-            LOG.info("Resolved post from comment reference: {}", post);
+            LOG.info("Resolved post from comment reference: %s", post);
         } finally {
             space.close();
         }
@@ -1147,7 +1619,7 @@ public class docSpaceTest extends AbstractSpaceTest {
             final String postStr = post.toString();
             assertNotNull(postStr, "Should be able to stringify without infinite recursion");
 
-            LOG.info("Post without infinite recursion: {}", postStr);
+            LOG.info("Post without infinite recursion: %s", postStr);
         } finally {
             space.close();
         }

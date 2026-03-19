@@ -20,10 +20,8 @@ package studio.phaseshift.metatron.isa.doc;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
-import studio.phaseshift.metatron.isa.m.type.Inst;
-import studio.phaseshift.metatron.isa.m.type.InstSet;
-import studio.phaseshift.metatron.isa.m.type.Rel;
-import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -85,6 +83,11 @@ public class docInstSet extends AbstractInstSet {
     @Override
     public Set<Type> types() {
         return Set.of(docSpace.DOC_SPACE_TYPE, DOC_TYPE, COLLECTION_TYPE);
+    }
+    
+    @Override
+    public Set<Obj> consts() {
+        return Set.of(ObjSimpleJSONSerializer.single());
     }
 
     @Override

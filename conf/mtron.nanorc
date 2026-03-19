@@ -32,7 +32,7 @@ icolor blue "(/|([a-z]+(://))|[a-z])([0-9]|[a-z]|\.|-|_)+(:)?[0-9]*(/)?([a-z]|/|
 # rec/rel uri key
 icolor cyan "</?([a-z]|[0-9]|/|_|-|:|\s)*>\s*=>"
 icolor cyan "/?([a-z]|[0-9]|/|_|-|:)*\s*=>"
-color green "=>" "<" ">"
+color green "=>"
 ### bytes
 icolor yellow "0x([0-9]|[A-F]|[a-f])+"
 color yellow,underline "0x"
@@ -66,6 +66,9 @@ color yellow "dir"
 color yellow "[\"][^\"]*[\"]"
 color yellow "['][^']*[']"
 color yellow start="\"\"\"" end="\"\"\""
+###  uri
+color blue "[<][^=]([^>])*[>]"
+color green "<" ">"
 ### comments
-color gray start="\[--" end="--\]"
-color gray start="\[==" end="==\]"
+color gray start="\[--" end="--]"
+color gray start="\[==" end="==]"

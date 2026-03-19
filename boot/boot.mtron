@@ -23,6 +23,7 @@ import(/m/grph);
 import(/m/grph/tp3);
 import(/m/llm);
 import(/m/tble);
+import(/m/doc);
 [== global settings store in boot ==]
 print("{{y}}mqtt broker location{{X}}: ", <boot/args/mqtt>.else(boot/args/mqtt -> [broker => <mqtt://chibi.local:1883>]),"\n");
 print("{{y}}cluster peers{{X}}: ", *<boot/peers>.else(boot/peers -> [ws://localhost:6666,<ws://127.0.0.1:7777>]),"\n");
@@ -101,7 +102,10 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
         host       => <mariadb://localhost:3306/tble_space?user=mtron&password=mtron>,
         route      => [db:=><>],
         driver     => <org.mariadb.jdbc.Driver>]@/sys/space/db;
-        
+ doc::[pattern     => mongo:#,
+       host        => <mongodb://localhost:27017/mflix>,
+       serializer  => !*</m/mach/io/serializer/bson>,
+       route       => [mongo:=><>]]@/sys/space/mongo;
                        
 [== load user console ==]
 console::[        => ]@/sys/console;

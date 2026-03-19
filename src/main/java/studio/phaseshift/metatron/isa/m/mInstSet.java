@@ -321,6 +321,7 @@ public class mInstSet extends AbstractInstSet {
                 Tuple.Triplet.with(Tuple.Pair.with("-<|", null), List.of(CHOOSE_INST_TID), 1),
                 Tuple.Triplet.with(Tuple.Pair.with("-<", null), List.of(SPLIT_INST_TID), 1),
                 Tuple.Triplet.with(Tuple.Pair.with("->", null), List.of(REF_INST_TID), 1),
+                Tuple.Triplet.with(Tuple.Pair.with(">>=", null), List.of(UPDATE_INST_TID), 1),
                 Tuple.Triplet.with(Tuple.Pair.with(">>", null), List.of(RSHIFT_INST_TID), 1),
                 Tuple.Triplet.with(Tuple.Pair.with(">>", null), List.of(RSHIFT_INST_TID), 0),
                 //Tuple.Triplet.with(Tuple.Pair.with("<<", null), List.of(LSHIFT_INST_TID), 1),

@@ -33,6 +33,7 @@ import java.util.Objects;
 import java.util.function.Function;
 
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
@@ -105,6 +106,8 @@ public class ObjBSONSerializer extends AbstractObjSerializer<BsonValue> {
 
     @Override
     public Obj read(final BsonValue bson) {
+        if (bson.isNull())
+            return noobj();  // BsonNull maps to noobj
         if (bson.isBoolean())
             return this.readBool(bson);
         if (bson.isInt32())
@@ -117,6 +120,8 @@ public class ObjBSONSerializer extends AbstractObjSerializer<BsonValue> {
             return this.readStr(bson);
         if (bson.isObjectId())
             return this.readUri(bson);  // ObjectId maps to uri type
+        if (bson.isDateTime())
+            return this.readInt(bson);  // DateTime maps to int (milliseconds since epoch)
         if (bson.isBinary()) {
             final Byte magic = bson.asBinary().getData()[0];
             if (Objects.equals(magic, BYTES_MAGIC_NUMBER)) {
@@ -147,7 +152,14 @@ public class ObjBSONSerializer extends AbstractObjSerializer<BsonValue> {
 
     @Override
     public Int readInt(final BsonValue bson) {
-        return jnt(bson.isInt32() ? (long) bson.asInt32().getValue() : bson.asInt64().getValue());
+        if (bson.isInt32())
+            return jnt(bson.asInt32().getValue());
+        else if (bson.isInt64())
+            return jnt(bson.asInt64().getValue());
+        else if (bson.isDateTime())
+            return jnt(bson.asDateTime().getValue());  // milliseconds since epoch
+        else
+            throw MTronException.of("Cannot convert %s to Int", bson.getClass());
     }
 
     @Override

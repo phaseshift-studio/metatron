@@ -74,6 +74,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
 
     static {
         LOG = Graphitty.log(new BootLoader());
+        //EXECUTOR = Executors.newCachedThreadPool(new VirtualThreadFactory());
         EXECUTOR = Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("metatron-%d").setUncaughtExceptionHandler((a, b) -> LOG.error("%s %s", a, b)).build());
     }
 

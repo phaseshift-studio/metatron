@@ -470,7 +470,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         for (final Map.Entry<Obj, Obj> entry : rec.recValue().entrySet()) {
             // Skip non-Uri keys
             if (!entry.getKey().isUri()) {
-                this.space.logger().warn("skipping non-Uri key in record: %s", entry.getKey());
+                this.space.logger().warn("ignoring non-uri key in rec: %s", entry.getKey());
                 continue;
             }
 
@@ -478,7 +478,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
 
             // Skip empty field names
             if (fieldName == null || fieldName.isEmpty()) {
-                this.space.logger().warn("skipping empty field name for key: %s", entry.getKey());
+                this.space.logger().warn("ignoring empty field name for key: %s", entry.getKey());
                 continue;
             }
 
@@ -491,7 +491,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                 setClauses.add(column.name + " = ?");
                 values.add(Tuple.Pair.with(entry.getValue(), column));
             } else {
-                this.space.logger().warn("column %s not found in table %s, skipping", fieldName, metadata.tableName);
+                this.space.logger().warn("ignoring update as column %s not found in table %s", fieldName, metadata.tableName);
             }
         }
 
@@ -547,7 +547,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         for (final Map.Entry<Obj, Obj> entry : rec.recValue().entrySet()) {
             // Skip non-Uri keys
             if (!entry.getKey().isUri()) {
-                this.space.logger().warn("skipping non-Uri key in record: %s", entry.getKey());
+                this.space.logger().warn("ignoring non-uri key in rec: %s", entry.getKey());
                 continue;
             }
 
@@ -555,7 +555,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
 
             // Skip empty field names
             if (fieldName == null || fieldName.isEmpty()) {
-                this.space.logger().warn("skipping empty field name for key: %s", entry.getKey());
+                this.space.logger().warn("ignoring empty field name for key: %s", entry.getKey());
                 continue;
             }
 
@@ -573,7 +573,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                 columnNames.add(column.name);
                 values.add(Tuple.Pair.with(entry.getValue(), column));
             } else {
-                this.space.logger().warn("column %s not found in table %s, skipping", fieldName, metadata.tableName);
+                this.space.logger().warn("ignoring insert as column %s not found in table %s", fieldName, metadata.tableName);
             }
         }
 

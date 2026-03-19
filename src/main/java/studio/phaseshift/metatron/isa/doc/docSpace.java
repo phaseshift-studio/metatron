@@ -37,7 +37,6 @@ import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -189,9 +188,9 @@ public class docSpace extends AbstractSpace<MongoClient> {
         // Configure serializer with reference path builder for lazy resolution
         if (this.serializer instanceof ObjBSONSerializer) {
             ((ObjBSONSerializer) this.serializer).setReferencePathBuilder(refInfo ->
-                this.pattern.retractPattern()
-                    .extend(refInfo.collection())
-                    .extend(refInfo.id())
+                    this.pattern.retractPattern()
+                            .extend(refInfo.collection())
+                            .extend(refInfo.id())
             );
         }
 
@@ -288,14 +287,12 @@ public class docSpace extends AbstractSpace<MongoClient> {
                 if (documentID == null || documentID.equals("+") || documentID.equals("#")) {
                     // Pattern query - return all documents in collection
                     LOG.debug("reading all documents from collection %s", collectionName);
-                    final List<IdObj> results = new ArrayList<>();
-                    for (final Document doc : collection.find()) {
-                        final Object id = doc.get(ID_FIELD);
-                        final String idStr = id instanceof ObjectId ? ((ObjectId) id).toHexString() : id.toString();
-                        final fURI docUri = f(this.pattern.retractPattern().extend(collectionName).extend(idStr).toString());
-                        results.add(IdObj.of(docUri, this.serializer.read(doc.toBsonDocument())));
-                    }
-                    return results.stream();
+                    return IteratorUtil.stream(collection.find()).map(doc -> {
+                        final Object doc_id = doc.get(ID_FIELD);
+                        final String idStr = doc_id instanceof ObjectId ? ((ObjectId) doc_id).toHexString() : doc_id.toString();
+                        final fURI docVID = f(this.pattern.retractPattern().extend(collectionName).extend(idStr).toString());
+                        return IdObj.of(this.serializer.read(doc.toBsonDocument()).selfVID(docVID));
+                    });
                 } else {
                     // Specific document ID
                     LOG.debug("reading document %s from collection %s", documentID, collectionName);
@@ -305,8 +302,8 @@ public class docSpace extends AbstractSpace<MongoClient> {
                         return Stream.empty();
                     }
 
-                    final fURI docUri = f(this.pattern.retractPattern().extend(collectionName).extend(documentID).toString());
-                    return Stream.of(IdObj.of(docUri, this.serializer.readRec(doc.toBsonDocument())));
+                    final fURI docVID = f(this.pattern.retractPattern().extend(collectionName).extend(documentID).toString());
+                    return Stream.of(IdObj.of(docVID, this.serializer.readRec(doc.toBsonDocument()).selfVID(docVID)));
                 }
             }).iterator();
         };
@@ -325,6 +322,9 @@ public class docSpace extends AbstractSpace<MongoClient> {
      * Parse a string as an ObjectId, handling both hex strings and other formats
      */
     private Object parseObjectId(final String id) {
+        if (id == null) {
+            return null;
+        }
         // Try to parse as ObjectId (24-character hex string)
         if (id.matches("[0-9a-fA-F]{24}")) {
             return new ObjectId(id);

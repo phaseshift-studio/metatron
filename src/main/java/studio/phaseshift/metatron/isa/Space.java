@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa;
 
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.Space.IdObj;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.Stats;
@@ -179,13 +180,13 @@ public interface Space extends Rec, Closeable {
 
         public static List<IdObj> unrollPoly(final fURI polyvid, final Poly<?, ?> poly, final fURI pattern) {
             final List<IdObj> results = new ArrayList<>();
-            if(!pattern.hasPattern()) {
+            if (!pattern.hasPattern()) {
                 final Obj value = poly.at(pattern.removePrefix(polyvid));
                 if (!value.isNoObj()) {
                     results.add(IdObj.of(pattern, value));
                 }
             }
-            if(results.isEmpty()) {
+            if (results.isEmpty()) {
                 poly.indexedStream()
                         .filter(r -> r.jvm().get1().isPoly() || polyvid.extend(f(r.jvm().get0().jvm().toString())).test(pattern))
                         .forEach(r -> {
@@ -326,10 +327,14 @@ public interface Space extends Rec, Closeable {
     }
 
     record IdObj(fURI furi, Obj obj) implements Iterable<IdObj> {
+        public static IdObj of(final Obj obj) {
+            return new IdObj(obj.vid(), obj);
+        }
+
         public static IdObj of(final fURI furi, final Obj obj) {
             return new IdObj(furi, obj);
         }
-
+        
         public Iterator<IdObj> iterator() {
             return IteratorUtil.of(this);
         }
