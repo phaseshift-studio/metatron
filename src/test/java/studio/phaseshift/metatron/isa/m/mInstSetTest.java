@@ -922,15 +922,25 @@ public class mInstSetTest extends AbstractInstSetTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "1.map(+2)              % 1.map(+2)   % 3",
-            "1.map(map(map(+2)))    % 1.map(+2)   % 3",
-            "1._._._                % start(1)    % 1",
-            "1._._._._              % start(1)    % 1",
-            "1._._._._._            % start(1)    % 1",
-            "1._._._._._._          % start(1)    % 1",
-            "1._._._._._._._        % start(1)    % 1",
+            "1.map(+2)                              % 1.map(+2)   % 3",
+            "1.map(map(map(+2)))                    % 1.map(+2)   % 3",
+            "1.map(map(map(map(+2))))               % 1.map(+2)   % 3",
+            "1.map(map(map(map(map(+2)))))          % 1.map(+2)   % 3",
+            "1.map(map(map(map(map(map(+2))))))     % 1.map(+2)   % 3",
+            "1.map(map(+2))._                       % 1.map(+2)   % 3",
+            "1._.map(map(+2))._                     % 1.map(+2)   % 3",
+            // "1.+2.map(map(_))._                     % 1.plus(2)   % 3", // TODO: need to apply the entire rewrite list over again
+            "1._._._                    % start(1)            % 1",
+            "1._._._._                  % start(1)            % 1",
+            "1._._._._._                % start(1)            % 1",
+            "1._._._._._._              % start(1)            % 1",
+            "1._._._._._._._            % start(1)            % 1",
+            "1._._._._._._._._          % start(1)            % 1",
+            "1._._._._._._._.+2         % start(1).plus(2)    % 3",
+            "1._._._._._._._.+2._       % start(1).plus(2)    % 3",
+            "1._._._._._._._.+(_)._     % start(1).plus(_)    % 2",
     }, delimiter = '%')
     public void testRewrites(final String code, final String expected, final String expectedResult) throws Exception {
-        AbstractMetatronTest.checkCodeRewrite(LOG, code, expected, expectedResult);
+        AbstractMetatronTest.checkCodeRewrite(LOG, code, expected, expectedResult, false);
     }
 }

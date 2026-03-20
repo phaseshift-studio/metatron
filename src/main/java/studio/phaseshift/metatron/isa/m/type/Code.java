@@ -67,6 +67,7 @@ public interface Code extends Call {
                 .elements()
                 .filter(r -> r.second() instanceof InstSet)
                 .flatMap(r -> r.second().<InstSet>as().rewrites().stream())
+                //.peek(r -> System.out.println("REWRITE RULE: " + r))
                 .forEach(i -> rewrittenCode.set(i.apply(rewrittenCode.get()).asCode()));
         return rewrittenCode.get();
     }

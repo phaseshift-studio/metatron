@@ -123,7 +123,7 @@ public interface Inst extends Call {
                         resolvedArgs.add(r);
                     else return null;
                 } else if (usrArg.isObjCall()) {
-                    final Inst firstInst = usrArg.<Call>as().insts().get(0);
+                    final Inst firstInst = usrArg.<Call>as().insts().getFirst();
                     if (!firstInst.hasDomAndRng() && (firstInst.tid().basePath().equals(FROM_INST_TID))) { // from() is a side-effect and the type can't be known unless explicitly specified (need a way to denote side-effect insts).
                         resolvedArgs.add(usrArg.resolve(lhs));
                     } else {

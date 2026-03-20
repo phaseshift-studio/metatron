@@ -46,7 +46,7 @@ graph encodings (discussed later when presenting hypergraphs).
 
 
 .`/m/grph` instructions
-[cols=".^4a,.^4,.^4a",separator=🧱,options=header,role="table-bordered small center"]
+[cols=".^3a,.^4,.^4a",separator=🧱,options=header,role="table-bordered small center"]
 |===
 ^🧱 inst ^🧱 description ^🧱 diagram
 🧱 `out?vrtx{+*+}\<=vrtx(uri{+*+}::T})`   🧱 traverse to the outgoing adjacent vertices of the lhs vertex 1.8+a🧱
@@ -67,7 +67,7 @@ graph encodings (discussed later when presenting hypergraphs).
 🧱 `bothE?edge{+*+}\<=vrtx(uri{+*+}::T})` 🧱 traverse to both the incoming and outgoing incident edges of the lhs vertex     
 🧱 `inV?vrtx\<=edge()`                    🧱 traverse to the incoming incident vertex of the lhs edge                         
 🧱 `outV?vrtx\<=edge()`                   🧱 traverse to the outgoing incident vertex of the lhs edge                         
-🧱 `bothV?vrtx{2}\<=edge()`               🧱 traverse to both the incoming and outgoing incident vertex of the lhs edge       
+🧱 `bothV?vrtx{2}\<=edge()`               🧱 traverse to both the incoming and outgoing incident vertex of the lhs edge  🧱     
 |===
 
 [discrete]
@@ -164,8 +164,6 @@ to follow. Namely, tp3 modern (graph database) and the netflix movie dataset (re
 │               │            │└─────────────┘│
 └───────────────┘            └───────────────┘
 ----
-
-🧱
 
 |===
 

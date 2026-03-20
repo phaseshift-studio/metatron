@@ -11,16 +11,31 @@ mtron programs are composed using computational primitives called **instructions
 
 [source,mtron]
 ----
- tid?rng<=dom(args){ code }@vid                                                  
-  │  │ │  │ │ │  │  │    │   │                                                   
-  │  └┬┘  └┬┘ └─┬┘  └─┬──┘   │                                                   
-  │   │    │    │     │      └────⮞ location: instance location (addr)                
-  │   │    │    │     └───────────⮞ code: instruction body is a tree of instructions (impl)        
-  │   │    │    └─────────────────⮞ arguments: dynamic parameterizations (args)    
-  │   │    └──────────────────────⮞ domain: the incoming obj (lhs)                
-  │   └───────────────────────────⮞ range: the outgoing obj (rhs)              
-  └───────────────────────────────⮞ the type id of the instruction (opcode)
+ tid{c}?rng<=dom(args){ code }@vid                                                  
+  │  │   │      │ │  │  │    │   │                                                   
+  │  │   └──┬───┘ └─┬┘  └─┬──┘   │                                                   
+  │  │      │       │     │      └────⮞ location: instance location (addr)                
+  │  │      │       │     └───────────⮞ code: instruction body is a tree of instructions (impl)        
+  │  │      │       └─────────────────⮞ arguments: dynamic parameterizations (args)    
+  │  │      └─────────────────────────⮞ domain/range: the incoming (lhs) and outgoing (rhs) obj types                
+  │  └────────────────────────────────⮞ coefficient: the magnitude of the instruction upon the rhs              
+  └───────────────────────────────────⮞ the type id of the instruction (opcode)
 ----
+
+[.card]
+--
+The instruction template above represents the typical instruction with `rng\<=dom` and `{c}` sugar syntax being used. 
+However, note that the dom/rng and coefficient sugars ultimately compile to URI query parameters. 
+When fully parsed to a legal URI, the instruction signature is denoted:
+
+[source,mtron,role="center-code"]
+----
+inst?dom=a&rng=b&c=x,y
+----
+
+Instruction query parameters are similar in function to https://en.wikipedia.org/wiki/Java_annotation[method annotations]. Query parameters encode metadata which can
+aid the compiler instruction selection, enable code path compression, facilitate polymorphic dispatch, support lifted monadic processing, maintain runtime profiling statistics, and more.
+--
 
 Every instruction maps a **left hand side** `obj` (`lhs`) to a **right hand side** `obj` (rhs). Many-to-one, one to many, and many-to-many mappings are possible as an `obj` is an element in the power set of all `objs`. Thus, `{1,2,3}` is an `obj` with type `int{3}`.
 

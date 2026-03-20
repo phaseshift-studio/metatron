@@ -13,14 +13,14 @@
 <style>
 :root {
     --maincolor: #282c34;
-    --primarycolor: #c80000;
+    --primarycolor: var(--mred)
     --secondarycolor: #191C24;
     --tertiarycolor: #6565f3;
     --sidebarbackground: #191C24;
-    --linkcolor: var(--mmagenta);
+    --linkcolor: darkred;
     --linkcoloralternate: #2652e5;
     --white: #c2c2c2;
-    --primary: #c80000;
+    --primary: var(--mred);
     --secondary: #191C24;
     --light: #6C7293;
     --dark: #000000;
@@ -33,6 +33,25 @@
     --mlightgray: #797585;
     --myellow: #9ba201;
     --maqua: #008dbf;
+}
+
+.center-code {
+    justify-self: center;
+}
+
+.card {
+    padding: 1rem;
+    margin: 3rem;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    word-wrap: break-word;
+    background-color: var(--maincolor);
+    background-clip: border-box;
+    border: 2px solid;
+    border-color: var(--mred);
+    border-radius: 2px;
 }
 
 .terminal-box {
@@ -81,6 +100,15 @@
 
 .glow-text {
     text-shadow: 0 0 1px rgba(255, 255, 255, 0.7), 0 0 5px rgba(255, 255, 255, 0.5), 0 0 8px rgba(255, 255, 255, 0.3);
+}
+
+.tutorial-grid .btn {
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.5), 0 0 10px rgba(200, 0, 0, 0.4);
+    transition: box-shadow 0.3s ease-in-out;
+}
+
+.tutorial-grid .btn:hover {
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.7), 0 0 20px rgba(200, 0, 0, 0.6);
 }
 
 /*** TERMINAL LOOK-AND-FEEL ***/
@@ -202,7 +230,7 @@
 }
 
 .tabrow a {
-    color: #555;
+    color: var(--mred)  ;
     text-decoration: none;
 }
 
@@ -886,6 +914,8 @@ details {
     border-style: solid;
 }
 
+
+
 th {
     font-size: 1.2rem;
     color: var(--mred);
@@ -1032,8 +1062,6 @@ strong {
 
 .MathJax_Display {
     color: var(--mred);
-}
-
 }
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
@@ -1494,31 +1522,28 @@ bin/metatron</code></pre>
               <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-1" aria-expanded="false" aria-controls="card-1">Instructions</button>
               <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-2" aria-expanded="false" aria-controls="card-2">Control Structures</button>
              <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-3" aria-expanded="false" aria-controls="card-3">Large Language Models</button>
-              <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-4" aria-expanded="false" aria-controls="card-4">Space</button>
+              <button disabled class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-4" aria-expanded="false" aria-controls="card-4">Space</button>
         </div>
         <div class="row mt-3 gap-3 tutorial-grid">
             <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-5" aria-expanded="false" aria-controls="card-5">Fail and Catch</button>
             <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-6" aria-expanded="false" aria-controls="card-6">Types</button>
-            <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-7" aria-expanded="false" aria-controls="card-7">IoT Integration</button>
-            <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-8" aria-expanded="false" aria-controls="card-8">MQTT Space</button>
-            <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-9" aria-expanded="false" aria-controls="card-9">Relational Space</button>
+            <button disabled class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-7" aria-expanded="false" aria-controls="card-7">IoT Integration</button>
+            <button disabled class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-8" aria-expanded="false" aria-controls="card-8">MQTT Space</button>
+            <button disabled class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-9" aria-expanded="false" aria-controls="card-9">Relational Space</button>
         </div>
         <div class="row mt-3 gap-3 tutorial-grid">
-            <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-10" aria-expanded="false" aria-controls="card-10">Q Processors</button>
+            <button disabled class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-10" aria-expanded="false" aria-controls="card-10">Q Processors</button>
             <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-11" aria-expanded="false" aria-controls="card-11">Uniform Resource Identifiers</button>
-            <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-12" aria-expanded="false" aria-controls="card-12">File Space</button>
-            <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-13" aria-expanded="false" aria-controls="card-13">The Router</button>
+            <button disabled class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-12" aria-expanded="false" aria-controls="card-12">File Space</button>
+            <button disabled class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-13" aria-expanded="false" aria-controls="card-13">The Router</button>
             <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-14" aria-expanded="false" aria-controls="card-14">Graph Space</button>
         </div>
         <div class="row mt-3 gap-3 tutorial-grid">
-            <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-15" aria-expanded="false" aria-controls="card-15">Coefficients</button>
-            <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-16" aria-expanded="false" aria-controls="card-16">The Router</button>
-            <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-17" aria-expanded="false" aria-controls="card-17">Parallelization</button>
-            <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-18" aria-expanded="false" aria-controls="card-18">Serial Space</button>
-            <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-19" aria-expanded="false" aria-controls="card-19">Web Space</button>
-        </div>
-        <div class="row mt-3 gap-3 tutorial-grid">
-            <button class="col btn btn-outline-success" type="button" data-bs-toggle="collapse" data-bs-target="#card-16" aria-expanded="false" aria-controls="card-16">🤖 Sweep's Soliloquies</button>
+            <button disabled class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-15" aria-expanded="false" aria-controls="card-15">Coefficients</button>
+            <button disabled class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-16" aria-expanded="false" aria-controls="card-16">The Router</button>
+            <button disabled class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-17" aria-expanded="false" aria-controls="card-17">Parallelization</button>
+            <button disabled class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-18" aria-expanded="false" aria-controls="card-18">Serial Space</button>
+            <button disabled class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-19" aria-expanded="false" aria-controls="card-19">Web Space</button>
         </div>
     </div>
 <hr/>
@@ -1649,15 +1674,33 @@ While the reader searches for some unbeknownst depth in the previous sentence, a
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron"> tid?rng&lt;=dom(args){ code }@vid
-  │  │ │  │ │ │  │  │    │   │
-  │  └┬┘  └┬┘ └─┬┘  └─┬──┘   │
-  │   │    │    │     │      └────⮞ location: instance location (addr)
-  │   │    │    │     └───────────⮞ code: instruction body is a tree of instructions (impl)
-  │   │    │    └─────────────────⮞ arguments: dynamic parameterizations (args)
-  │   │    └──────────────────────⮞ domain: the incoming obj (lhs)
-  │   └───────────────────────────⮞ range: the outgoing obj (rhs)
-  └───────────────────────────────⮞ the type id of the instruction (opcode)</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron"> tid{c}?rng&lt;=dom(args){ code }@vid
+  │  │   │      │ │  │  │    │   │
+  │  │   └──┬───┘ └─┬┘  └─┬──┘   │
+  │  │      │       │     │      └────⮞ location: instance location (addr)
+  │  │      │       │     └───────────⮞ code: instruction body is a tree of instructions (impl)
+  │  │      │       └─────────────────⮞ arguments: dynamic parameterizations (args)
+  │  │      └─────────────────────────⮞ domain/range: the incoming (lhs) and outgoing (rhs) obj types
+  │  └────────────────────────────────⮞ coefficient: the magnitude of the instruction upon the rhs
+  └───────────────────────────────────⮞ the type id of the instruction (opcode)</code></pre>
+</div>
+</div>
+<div class="openblock card">
+<div class="content">
+<div class="paragraph">
+<p>The instruction template above represents the typical instruction with <code>rng&lt;=dom</code> and <code>{c}</code> sugar syntax being used.
+However, note that the dom/rng and coefficient sugars ultimately compile to URI query parameters.
+When fully parsed to a legal URI, the instruction signature is denoted:</p>
+</div>
+<div class="listingblock center-code">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">inst?dom=a&amp;rng=b&amp;c=x,y</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Instruction query parameters are similar in function to <a href="https://en.wikipedia.org/wiki/Java_annotation">method annotations</a>. Query parameters encode metadata which can
+aid the compiler instruction selection, enable code path compression, facilitate polymorphic dispatch, support lifted monadic processing, maintain runtime profiling statistics, and more.</p>
+</div>
 </div>
 </div>
 <div class="paragraph">
@@ -1685,7 +1728,7 @@ While the reader searches for some unbeknownst depth in the previous sentence, a
 ==&gt;m/1/3=&gt;7
 ==&gt;boot/peers/1=&gt;&lt;ws://127.0.0.1:7777&gt;
 ==&gt;band=&gt;inst?rng=int{?}&amp;dom=int(min=&gt;isa(int::T[is(gt(0))]@nat).else(-100),max=&gt;isa(int::T[is(gt(0))]@nat).else(100)){is(and(gte(*min),lte(*max)))}
-==&gt;personx=&gt;rec::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;personx{*}::T])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]
+==&gt;personx=&gt;rec::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;personx{*}::T])]@personx{*}])]
 ==&gt;triple=&gt;inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}
 ==&gt;boot/script/python=&gt;/usr/bin/python3
 ==&gt;x/a=&gt;1
@@ -1733,7 +1776,7 @@ While the reader searches for some unbeknownst depth in the previous sentence, a
  mqtt =&gt;[broker=&gt;&lt;mqtt://chibi.local:1883&gt;]]
 ==&gt;boot/args/mqtt=&gt;[broker=&gt;&lt;mqtt://chibi.local:1883&gt;]
 ==&gt;age=&gt;int::T[is(lt(120))]@nat
-==&gt;sum=&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{*}::T [reduce?rng=int&amp;dom=int{*}(noobj){fold(0,plus(id()))}]][...]@/sys/fail/3268
+==&gt;sum=&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{*}::T [reduce?rng=int&amp;dom=int{*}(noobj){fold(0,plus(id()))}]][...]@/sys/fail/366
 ==&gt;boot/script/mtron=&gt;/bin/mtron
 ==&gt;m/2/3=&gt;11
 ==&gt;m/2=&gt;[8,9,10,11]
@@ -1921,7 +1964,7 @@ mtron&gt; 15.band(10,20)              ​4​
 ==&gt;15
 mtron&gt; -15.band(-20,-10)           ​5​
 mtron&gt; band -&gt; |inst?int{?}&lt;=int(min=&gt;?nat::T.else(fail()),max=&gt;?nat::T.else(fail())){ is(and(gte(*min),lte(*max))) }
-==&gt;fail::[fail(noobj) is not a fail::T][...]@/sys/fail/3564
+==&gt;fail::[fail(noobj) is not a fail::T][...]@/sys/fail/596
 mtron&gt; 15.band(10,20)              ​6​
 ==&gt;15
 mtron&gt; -15.band(-20,-10)           ​7​
@@ -1972,15 +2015,15 @@ Finally, a degenerate anonymous <code>inst</code> with no specified variable fra
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; 10.(min=&gt;2,max=&gt;8){ is(and(gte(*min),lte(*max))) }                ​1​
 ==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/3578
+	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/610
 mtron&gt; 10.(min=&gt;minus(1),max=&gt;plus(1)){ is(and(gte(*min),lte(*max))) }   ​2​
 ==&gt;10
 mtron&gt; 10.(min=&gt;2,max=&gt;8){ is(and(gte(*bad_min),lte(*bad_max))) }        ​3​
 ==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/3580
+	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/612
 mtron&gt; 10.(){ is(and(gte(*min),lte(*max))) }                             ​4​
 ==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/3582
+	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/614
 mtron&gt; 10.is(and(gte(minus(1)),lte(plus(1))))                            ​5​
 ==&gt;10</code></pre>
 </div>
@@ -2019,11 +2062,11 @@ mtron&gt; 10.is(and(gte(minus(1)),lte(plus(1))))                            ​5
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;_)[mod(*by).eq(0)]
 ==&gt;fail::[is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;_)[mod(*by).eq(0)]
                                       ^ end of input expected
-][...]@/sys/fail/3584
+][...]@/sys/fail/616
 mtron&gt; 10.is_divisible(2)
-==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/3586
+==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/618
 mtron&gt; 10.is_divisible('abc')
-==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/3588</code></pre>
+==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/620</code></pre>
 </div>
 </div>
 </div>
@@ -2044,7 +2087,7 @@ mtron&gt; 10.is_divisible('abc')
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; band -&gt; |band?int{?}&lt;=int(min=&gt;_,max=&gt;is(gt(*min)).else(*min.plus(1)))[is(gte(*min)).is(lte(*max))]
 ==&gt;fail::[band -&gt; |band?int{?}&lt;=int(min=&gt;_,max=&gt;is(gt(*min)).else(*min.plus(1)))[is(gte(*min)).is(lte(*max))]
                                                                       ^ end of input expected
-][...]@/sys/fail/3590
+][...]@/sys/fail/622
 mtron&gt; 2.band(min=&gt;1,max=&gt;1)                 ​1​</code></pre>
 </div>
 </div>
@@ -2066,11 +2109,11 @@ mtron&gt; 2.band(min=&gt;1,max=&gt;1)                 ​1​</code></pre>
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;is(neq(0)).else(print('error').map(1)))[mod(*by).eq(0)]
 ==&gt;fail::[is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;is(neq(0)).else(print('error').map(1)))[mod(*by).eq(0)]
                                       ^ end of input expected
-][...]@/sys/fail/3592
+][...]@/sys/fail/624
 mtron&gt; 10.is_divisible(2)
-==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/3594
+==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/626
 mtron&gt; 10.is_divisible('abc')
-==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/3596</code></pre>
+==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/628</code></pre>
 </div>
 </div>
 </div>
@@ -2101,9 +2144,9 @@ This ensures the uri <code>triple</code> is not applied to the <code>inst</code>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; triple -&gt; inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}
-==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}]][...]@/sys/fail/3598
+==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}]][...]@/sys/fail/630
 mtron&gt; *triple
-==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}]][...]@/sys/fail/3598</code></pre>
+==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}]][...]@/sys/fail/630</code></pre>
 </div>
 </div>
 </td>
@@ -2142,7 +2185,7 @@ mtron&gt; {1,2,3,4,5,6}.triple()
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; sum -&gt; reduce?int&lt;=int{*}(){fold(0,plus(_))}
-==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{*}::T [reduce?rng=int&amp;dom=int{*}(noobj){fold(0,plus(id()))}]][...]@/sys/fail/3600</code></pre>
+==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{*}::T [reduce?rng=int&amp;dom=int{*}(noobj){fold(0,plus(id()))}]][...]@/sys/fail/632</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2414,89 +2457,89 @@ ultimately dependent on the incoming lhs <code>obj</code>, where</p>
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *ollama:+
 ==&gt;model::[
+ provider=&gt;!*/sys/space/ollama,
+ skill   =&gt;[completion,tools],
  size    =&gt;gB::48.19,
- skill   =&gt;[completion,tools],
- provider=&gt;!*/sys/space/ollama,
- think   =&gt;false,
+ host    =&gt;!*/sys/space/ollama/host,
  name    =&gt;qwen3-coder-next:latest,
- host    =&gt;!*/sys/space/ollama/host]@ollama:qwen3-coder-next:latest
+ think   =&gt;false]@ollama:qwen3-coder-next:latest
 ==&gt;model::[
+ provider=&gt;!*/sys/space/ollama,
+ skill   =&gt;[completion,tools,thinking],
  size    =&gt;gB::17.71,
- skill   =&gt;[completion,tools,thinking],
- provider=&gt;!*/sys/space/ollama,
- think   =&gt;true,
+ host    =&gt;!*/sys/space/ollama/host,
  name    =&gt;&lt;glm-4.7-flash:latest&gt;,
- host    =&gt;!*/sys/space/ollama/host]@ollama:glm-4.7-flash:latest
+ think   =&gt;true]@ollama:glm-4.7-flash:latest
 ==&gt;model::[
- size    =&gt;gB::0.00,
- skill   =&gt;[completion,tools,thinking],
  provider=&gt;!*/sys/space/ollama,
- think   =&gt;true,
+ skill   =&gt;[completion,tools,thinking],
+ size    =&gt;gB::0.00,
+ host    =&gt;!*/sys/space/ollama/host,
  name    =&gt;&lt;deepseek-v3.2:cloud&gt;,
- host    =&gt;!*/sys/space/ollama/host]@ollama:deepseek-v3.2:cloud
+ think   =&gt;true]@ollama:deepseek-v3.2:cloud
 ==&gt;model::[
- size    =&gt;gB::4.87,
- skill   =&gt;[completion,tools,thinking],
  provider=&gt;!*/sys/space/ollama,
- think   =&gt;true,
+ skill   =&gt;[completion,tools,thinking],
+ size    =&gt;gB::4.87,
+ host    =&gt;!*/sys/space/ollama/host,
  name    =&gt;qwen3:8b,
- host    =&gt;!*/sys/space/ollama/host]@ollama:qwen3:8b
+ think   =&gt;true]@ollama:qwen3:8b
 ==&gt;model::[
+ provider=&gt;!*/sys/space/ollama,
+ skill   =&gt;[completion],
  size    =&gt;gB::8.37,
- skill   =&gt;[completion],
- provider=&gt;!*/sys/space/ollama,
- think   =&gt;false,
+ host    =&gt;!*/sys/space/ollama/host,
  name    =&gt;deepcoder:latest,
- host    =&gt;!*/sys/space/ollama/host]@ollama:deepcoder:latest
+ think   =&gt;false]@ollama:deepcoder:latest
 ==&gt;model::[
- size    =&gt;gB::4.41,
+ provider=&gt;!*/sys/space/ollama,
  skill   =&gt;[completion,vision],
- provider=&gt;!*/sys/space/ollama,
- think   =&gt;false,
+ size    =&gt;gB::4.41,
+ host    =&gt;!*/sys/space/ollama/host,
  name    =&gt;llava:latest,
- host    =&gt;!*/sys/space/ollama/host]@ollama:llava:latest
+ think   =&gt;false]@ollama:llava:latest
 ==&gt;model::[
+ provider=&gt;!*/sys/space/ollama,
+ skill   =&gt;[completion,tools,thinking],
  size    =&gt;gB::4.87,
- skill   =&gt;[completion,tools,thinking],
- provider=&gt;!*/sys/space/ollama,
- think   =&gt;true,
+ host    =&gt;!*/sys/space/ollama/host,
  name    =&gt;qwen3:latest,
- host    =&gt;!*/sys/space/ollama/host]@ollama:qwen3:latest
+ think   =&gt;true]@ollama:qwen3:latest
 ==&gt;model::[
+ provider=&gt;!*/sys/space/ollama,
+ skill   =&gt;[completion,tools,thinking],
  size    =&gt;gB::12.85,
- skill   =&gt;[completion,tools,thinking],
- provider=&gt;!*/sys/space/ollama,
- think   =&gt;true,
+ host    =&gt;!*/sys/space/ollama/host,
  name    =&gt;gpt-oss:latest,
- host    =&gt;!*/sys/space/ollama/host]@ollama:gpt-oss:latest
+ think   =&gt;true]@ollama:gpt-oss:latest
 ==&gt;model::[
- size    =&gt;gB::0.00,
+ provider=&gt;!*/sys/space/ollama,
  skill   =&gt;[completion,tools,thinking],
- provider=&gt;!*/sys/space/ollama,
- think   =&gt;true,
+ size    =&gt;gB::0.00,
+ host    =&gt;!*/sys/space/ollama/host,
  name    =&gt;&lt;minimax-m2.5:cloud&gt;,
- host    =&gt;!*/sys/space/ollama/host]@ollama:minimax-m2.5:cloud
+ think   =&gt;true]@ollama:minimax-m2.5:cloud
 ==&gt;model::[
+ provider=&gt;!*/sys/space/ollama,
+ skill   =&gt;[completion],
  size    =&gt;gB::0.72,
- skill   =&gt;[completion],
- provider=&gt;!*/sys/space/ollama,
- think   =&gt;false,
+ host    =&gt;!*/sys/space/ollama/host,
  name    =&gt;deepseek-coder:latest,
- host    =&gt;!*/sys/space/ollama/host]@ollama:deepseek-coder:latest
+ think   =&gt;false]@ollama:deepseek-coder:latest
 ==&gt;model::[
- size    =&gt;gB::0.59,
+ provider=&gt;!*/sys/space/ollama,
  skill   =&gt;[completion],
- provider=&gt;!*/sys/space/ollama,
- think   =&gt;false,
+ size    =&gt;gB::0.59,
+ host    =&gt;!*/sys/space/ollama/host,
  name    =&gt;tinyllama:latest,
- host    =&gt;!*/sys/space/ollama/host]@ollama:tinyllama:latest
+ think   =&gt;false]@ollama:tinyllama:latest
 ==&gt;model::[
- size    =&gt;gB::4.34,
- skill   =&gt;[completion,tools],
  provider=&gt;!*/sys/space/ollama,
- think   =&gt;false,
+ skill   =&gt;[completion,tools],
+ size    =&gt;gB::4.34,
+ host    =&gt;!*/sys/space/ollama/host,
  name    =&gt;llama3-groq-tool-use:latest,
- host    =&gt;!*/sys/space/ollama/host]@ollama:llama3-groq-tool-use:latest</code></pre>
+ think   =&gt;false]@ollama:llama3-groq-tool-use:latest</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2567,7 +2610,7 @@ ai/memory -> /usr/mem
 ==&gt;fail::[unable to determine inst function:
 	1           =&gt; plus(b)      | [inst]
 	int::T      =&gt; #::T         |  \_dom
-	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/3604
+	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/636
 mtron&gt; 1.plus(b).catch(2).plus(3)        ​2​
 ==&gt;5</code></pre>
 </div>
@@ -2603,25 +2646,25 @@ mtron&gt; 1.plus(b).catch(2).plus(3)        ​2​
 ==&gt;fail::[unable to determine inst function:
 	1           =&gt; plus(b)      | [inst]
 	int::T      =&gt; #::T         |  \_dom
-	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/3612
+	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/644
 mtron&gt; */sys/fail/+               ​2​
+==&gt;fail::[unable to evaluate inst: plus(b)][...]@/sys/fail/641
+==&gt;fail::[unable to evaluate inst: plus(b)][...]@/sys/fail/642
 ==&gt;fail::[unable to determine inst function:
 	1           =&gt; plus(b)      | [inst]
 	int::T      =&gt; #::T         |  \_dom
-	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/3611
+	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/643
 ==&gt;fail::[unable to determine inst function:
 	1           =&gt; plus(b)      | [inst]
 	int::T      =&gt; #::T         |  \_dom
-	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/3612
-==&gt;fail::[unable to evaluate inst: plus(b)][...]@/sys/fail/3610
-==&gt;fail::[unable to evaluate inst: plus(b)][...]@/sys/fail/3609
+	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/644
 mtron&gt; */sys/fail/+.catch(_)      ​3​
+==&gt;fail{2}::[unable to evaluate inst: plus(b)]
 ==&gt;fail{2}::[unable to determine inst function:
 	1           =&gt; plus(b)      | [inst]
 	int::T      =&gt; #::T         |  \_dom
 	int::T     X=&gt; [b]          |  \_args]
     \_fail::[unable to evaluate inst: plus(b)]
-==&gt;fail{2}::[unable to evaluate inst: plus(b)]
 mtron&gt; */sys/fail                 ​4​</code></pre>
 </div>
 </div>
@@ -2654,7 +2697,7 @@ mtron&gt; */sys/fail                 ​4​</code></pre>
 ==&gt;cause?rng=fail{?}&amp;dom=fail(){&lt;j&gt;}
 mtron&gt; 1+b.catch(cause())     ​2​
 ==&gt;fail::[rhs does not match inst range:
-	fail::[unable to evaluate inst: plus(b)]=&gt;(X=&gt;int{*}::T)][...]@/sys/fail/3618</code></pre>
+	fail::[unable to evaluate inst: plus(b)]=&gt;(X=&gt;int{*}::T)][...]@/sys/fail/650</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -2760,10 +2803,10 @@ mtron&gt; even -&gt; int::T[is(mod(2).eq(0))]    ​4​
 mtron&gt; nat::10
 ==&gt;nat::10
 mtron&gt; nat::-10
-==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/3684
+==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/716
 mtron&gt; int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/3690</code></pre>
+  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/722</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2859,10 +2902,10 @@ mtron&gt; int::-10.as(nat::T)
 mtron&gt; nat::10
 ==&gt;nat::10
 mtron&gt; nat::-10
-==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/3704
+==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/736
 mtron&gt; int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/3710</code></pre>
+  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/742</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2885,10 +2928,10 @@ mtron&gt; age:125
 ==&gt;age:125
 mtron&gt; nat:125.as(age::T)
 ==&gt;fail::[nat:125 is not a is(lt(120))
-  nat:125=&gt;(==&gt;is(lt(120)))][...]@/sys/fail/3752
+  nat:125=&gt;(==&gt;is(lt(120)))][...]@/sys/fail/784
 mtron&gt; 125.as(nat::T).as(age::T)
 ==&gt;fail::[nat::125 is not a is(lt(120))
-  nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/3758</code></pre>
+  nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/790</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -2898,7 +2941,7 @@ mtron&gt; 125.as(nat::T).as(age::T)
 mtron&gt; personx -&gt; rec::T[?[name  =&gt; str::T,
                            age   =&gt; age::T,
                            knows =&gt; personx{*}::T]]
-==&gt;rec::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;personx{*}::T])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]
+==&gt;rec::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;personx{*}::T])]@personx{*}])]@personx{*}])]
 mtron&gt; marko -&gt; personx::[name=&gt;'marko',age=&gt;29,knows=&gt;!*grant]
 ==&gt;personx::[name=&gt;'marko',age=&gt;29,knows=&gt;!*grant]
 mtron&gt; grant -&gt; personx::[name=&gt;'grant',age=&gt;23,knows=&gt;!*marko]
@@ -3154,10 +3197,10 @@ mtron&gt; *#.as[name      =&gt; _,
 </table>
 <h3 id="_spatial_embeddings" class="discrete">spatial embeddings</h3>
 <div class="paragraph">
-<p><strong class="orange">m</strong>​<strong class="green">e</strong>​<span class="fuchsia">t</span>​<span class="yellow">A</span>​<strong class="aqua">T</strong>​<span class="blue">R</span>​<span class="lime">o</span>​<strong class="red">N</strong>​ was designed to support the creation and manipulation of <em>abstract data types</em> in a compact, fluid manner so as to allow the user to move smoothly between <em>multiple models</em> across different spaces, each espousing a different perspective on the data their maintain: e.g., key/value, document, relational, vector, graph, and the various nooks and crannies between.</p>
+<p><strong class="blue">M</strong>​<span class="red">E</span>​<span class="lime">T</span>​<span class="aqua">A</span>​<span class="yellow">t</span>​<span class="green">R</span>​<span class="orange">O</span>​<span class="fuchsia">n</span>​ was designed to support the creation and manipulation of <em>abstract data types</em> in a compact, fluid manner so as to allow the user to move smoothly between <em>multiple models</em> across different spaces, each espousing a different perspective on the data their maintain: e.g., key/value, document, relational, vector, graph, and the various nooks and crannies between.</p>
 </div>
 <div class="paragraph">
-<p><span class="green">m</span>​<strong class="aqua">e</strong>​<strong class="fuchsia">T</strong>​<span class="blue">a</span>​<span class="yellow">t</span>​<span class="red">r</span>​<strong class="orange">O</strong>​<span class="lime">N</span>​'s URI addressing scheme makes it possible to <em>embed</em> arbitrary data types into a space.
+<p><strong class="red">M</strong>​<span class="blue">E</span>​<strong class="green">T</strong>​<strong class="yellow">A</strong>​<span class="fuchsia">T</span>​<strong class="lime">R</strong>​<span class="orange">O</span>​<span class="aqua">n</span>​'s URI addressing scheme makes it possible to <em>embed</em> arbitrary data types into a space.
 This section will explore the following considerations when designing a <em>multi-model abstract data type</em>.</p>
 </div>
 <div class="olist arabic">
@@ -3487,9 +3530,9 @@ graph encodings (discussed later when presenting hypergraphs).</p>
 <table class="tableblock frame-all grid-all stretch table-bordered small center">
 <caption class="title">Table 3. <code>/m/grph</code> instructions</caption>
 <colgroup>
-<col style="width: 33.3333%;">
-<col style="width: 33.3333%;">
-<col style="width: 33.3334%;">
+<col style="width: 27.2727%;">
+<col style="width: 36.3636%;">
+<col style="width: 36.3637%;">
 </colgroup>
 <thead>
 <tr>
@@ -3557,6 +3600,13 @@ graph encodings (discussed later when presenting hypergraphs).</p>
 <p><code>outV?vrtx&lt;=edge()</code></p>
 </div></div></td>
 <td class="tableblock halign-left valign-middle"><p class="tableblock">traverse to the outgoing incident vertex of the lhs edge</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-middle"><div class="content"><div class="paragraph">
+<p><code>bothV?vrtx{2}&lt;=edge()</code></p>
+</div></div></td>
+<td class="tableblock halign-left valign-middle"><p class="tableblock">traverse to both the incoming and outgoing incident vertex of the lhs edge</p></td>
+<td class="tableblock halign-left valign-middle"><div class="content"></div></td>
 </tr>
 </tbody>
 </table>
@@ -3751,7 +3801,7 @@ mtron&gt; *netflix:movie/11488
  runtime      =&gt;138,
  title        =&gt;'Good Bad Ugly']
 mtron&gt; /g/V/1.addE(watched,*netflix:movie/11488)
-==&gt;fail::[unable to convert uri::T to vertexmap][...]@/sys/fail/3538</code></pre>
+==&gt;fail::[unable to convert uri::T to vertexmap][...]@/sys/fail/570</code></pre>
 </div>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
@@ -3923,7 +3973,7 @@ mtron&gt; *x.&gt;&gt;b&gt;&gt;d&gt;&gt;1
 ==&gt;fail::[unable to determine inst function:
 	capitalize  =&gt; merge(',')   | [inst]
 	uri::T      =&gt; #::T         |  \_dom
-	uri::T     X=&gt; [',']        |  \_args][...]@/sys/fail/3532</code></pre>
+	uri::T     X=&gt; [',']        |  \_args][...]@/sys/fail/564</code></pre>
 </div>
 </div>
 <h3 id="_pattern_matching_the_wildcards" class="discrete">Pattern Matching: The Wildcards</h3>

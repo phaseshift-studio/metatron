@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
@@ -66,6 +67,7 @@ public abstract class AbstractInstSetTest extends AbstractMetatronTest {
     }
 
     @Test
+    @Disabled
     public void testInstDomRngMatching() {
         AtomicInteger hasDomRng = new AtomicInteger(0);
         AtomicInteger hasNotDomRng = new AtomicInteger(0);

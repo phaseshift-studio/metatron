@@ -22,9 +22,9 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.impl.Rewriter;
 import studio.phaseshift.metatron.util.Tuple;
 
-import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -53,6 +53,8 @@ import static studio.phaseshift.metatron.isa.m.type.Rel.REL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 @InstSet.JREService(tid = "/m")
@@ -266,27 +268,17 @@ public class mInstSet extends AbstractInstSet {
     @Override
     public Set<Inst> rewrites() {
         return new LinkedHashSet<>(List.of(
-                InstSet.Helper.rewriter(f("id_removal_rewrite"), code -> code.selfJVM(code.insts().stream().filter(i -> !i.tid().equals(ID_INST_TID)).toList()).asCode()),
-                InstSet.Helper.rewriter(f("map_nest_rewrite"), code -> {
-                    final List<Inst> newInsts = new ArrayList<>();
-                    boolean done = false;
-                    while (!done) {
-                        done = true;
-                        for (final Inst i : code.insts()) {
-                            if (i.tid().equals(MAP_INST_TID) && i.arg(0).isObjCall() && i.arg(0).<Call>as().insts().getFirst().tid().basePath().equals(MAP_INST_TID)) {
-                                done = false;
-                                LOG.debug("nesting rewrite: %s", i);
-                                newInsts.add(i.arg(0).asInst());
-                            } else {
-                                newInsts.add(i);
-                            }
-                        }
-                        code.selfJVM(new ArrayList<>(newInsts));
-                        newInsts.clear();
-                    }
-                    return code;
-                })
-        ));
+                InstSet.Helper.rewriter(f("id_removal_rewrite"),
+                        code -> code.selfJVM(
+                                Rewriter.search(code.insts())
+                                        .match(instB(ID_INST_TID, lst()).insts())
+                                        .rewrite(_ -> List.of())).asCode()),
+                InstSet.Helper.rewriter(f("map_nest_rewrite"),
+                        code -> code.selfJVM(
+                                Rewriter.search(code.insts())
+                                        .match(instB(MAP_INST_TID, lst(instB(MAP_INST_TID, lst()))).insts())
+                                        .repeat()
+                                        .rewrite(map -> map.values().stream().map(objs -> objs.arg(0).asInst()).toList())).asCode())));
     }
 
     @Override

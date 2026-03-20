@@ -119,22 +119,32 @@ public abstract class AbstractMetatronTest {
         return Tuple.Quartet.with(parseResult.get0(), parseResult.get1(), evalResult.get0(), evalResult.get1());
     }
 
-    public static void checkCodeRewrite(final GraphittyLogger LOG, final String code, final String expected, final String expectedResult) {
+    public static void checkCodeRewrite(final GraphittyLogger LOG, final String code, final String expected, final String expectedResult, boolean checkTIDs) {
         final Code firstStage = mParser.parse(code);
-        final Obj secondStage = mParser.parse(expected);
-        final Obj compilation = firstStage.rewrite().tryToInst();
+        final Call secondStage = mParser.parse(expected);
+        final Call compilation = firstStage.rewrite().tryToInst();
         final Obj result = mParser.parse(expectedResult);
-        LOG.debug("testing compilation %s => %s [expected:%s]", firstStage, secondStage, compilation);
-        assertEquals(secondStage, compilation);
-        Obj actual = firstStage.apply(noobj());
-        LOG.debug("testing evaluation 1 %s => %s [expected:%s]", firstStage, actual, result);
-        assertEquals(result, actual);
-        actual = secondStage.apply(noobj());
-        LOG.debug("testing evaluation 2 %s => %s [expected:%s]", secondStage, actual, result);
-        assertEquals(result, actual);
-        actual = compilation.apply(noobj());
-        LOG.debug("testing evaluation 3 %s => %s [expected:%s]", compilation, actual, result);
-        assertEquals(result, actual);
+        if (checkTIDs) {
+            assertFalse(secondStage.insts().isEmpty());
+            assertEquals(secondStage.insts().size(), compilation.insts().size());
+            for (int i = 0; i < compilation.insts().size(); i++) {
+                assertEquals(compilation.insts().get(i).tid().basePath(), secondStage.insts().get(i).tid().basePath());
+            }
+            assertEquals(result, firstStage.apply(noobj()));
+        } else {
+
+            LOG.debug("testing compilation %s => %s [expected:%s]", firstStage, secondStage, compilation);
+            assertEquals(secondStage, compilation);
+            Obj actual = firstStage.apply(noobj());
+            LOG.debug("testing evaluation 1 %s => %s [expected:%s]", firstStage, actual, result);
+            assertEquals(result, actual);
+            actual = secondStage.apply(noobj());
+            LOG.debug("testing evaluation 2 %s => %s [expected:%s]", secondStage, actual, result);
+            assertEquals(result, actual);
+            actual = compilation.apply(noobj());
+            LOG.debug("testing evaluation 3 %s => %s [expected:%s]", compilation, actual, result);
+            assertEquals(result, actual);
+        }
     }
 
     public static void checkCodeParseApply(final GraphittyLogger LOG, final String lhs, final String code, final String expected) {

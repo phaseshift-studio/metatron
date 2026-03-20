@@ -18,13 +18,13 @@
 
  package studio.phaseshift.metatron.isa.tble;
 
- import org.junit.jupiter.api.AfterAll;
- import org.junit.jupiter.api.BeforeAll;
- import org.junit.jupiter.api.Test;
+ import org.junit.jupiter.api.*;
  import org.junit.jupiter.params.ParameterizedTest;
  import org.junit.jupiter.params.provider.Arguments;
  import org.junit.jupiter.params.provider.CsvSource;
  import org.junit.jupiter.params.provider.MethodSource;
+ import studio.phaseshift.metatron.AbstractMetatronTest;
+ import studio.phaseshift.metatron.BootLoader;
  import studio.phaseshift.metatron.furi.fURI;
  import studio.phaseshift.metatron.isa.AbstractSpaceTest;
  import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -50,26 +50,33 @@
  import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
  import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
  import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+ import static studio.phaseshift.metatron.isa.tble.tbleInstSet.TBLE_ISA_TID;
 
  /**
   * Test suite for tbleSpace with MQTT-indexed schema.
   *
   * @author Marko A. Rodriguez (http://markorodriguez.com)
   */
+ @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
  public class tbleSpaceTest extends AbstractSpaceTest {
 
      private static final String DB_PATH = "target/test-tble-space.db";
      private static final fURI SPACE_VID = f("/sys/space/tble/test");
 
      public tbleSpaceTest() {
-         super(() -> tbleSpace.of(
-                 rec(
-                         uri(PATTERN), uri("/tble/#"),
-                         uri(HOST), uri("sqlite:" + DB_PATH),
-                         uri(DRIVER), uri("org.sqlite.JDBC")
-                 ).jvm(),
-                 SPACE_VID
-         ));
+         super(() -> {
+             return tbleSpace.of(
+                     rec(
+                             uri(PATTERN), uri("/tble/#"),
+                             uri(HOST), uri("sqlite:" + DB_PATH),
+                             uri(DRIVER), uri("org.sqlite.JDBC"),
+                             uri(ROUTE), rec(uri("/tble/"),uri(""))
+                     ).jvm(),
+                     SPACE_VID
+             );
+         });
+         new tbleInstSet();
+         //BootLoader.importInstSet(TBLE_ISA_TID,f("tble"));
      }
 
      @BeforeAll
@@ -89,15 +96,15 @@
 
              // Create users table
              stmt.executeUpdate("""
-                     CREATE TABLE users (
-                         id INTEGER PRIMARY KEY,
-                         name TEXT,
-                         age INTEGER,
-                         salary REAL,
-                         active INTEGER,
-                         email TEXT
-                     )
-                     """);
+                                CREATE TABLE users (
+                                    id INTEGER PRIMARY KEY,
+                                    name TEXT,
+                                    age INTEGER,
+                                    salary REAL,
+                                    active INTEGER,
+                                    email TEXT
+                                )
+                                """);
 
              // Insert test data into users
              stmt.executeUpdate("INSERT INTO users VALUES (1, 'Alice', 30, 75000.0, 1, 'alice@example.com')");
@@ -106,15 +113,15 @@
 
              // Create products table
              stmt.executeUpdate("""
-                     CREATE TABLE products (
-                         id INTEGER PRIMARY KEY,
-                         product_name TEXT,
-                         price REAL,
-                         in_stock INTEGER,
-                         quantity INTEGER,
-                         category TEXT
-                     )
-                     """);
+                                CREATE TABLE products (
+                                    id INTEGER PRIMARY KEY,
+                                    product_name TEXT,
+                                    price REAL,
+                                    in_stock INTEGER,
+                                    quantity INTEGER,
+                                    category TEXT
+                                )
+                                """);
 
              // Insert test data into products
              stmt.executeUpdate("INSERT INTO products VALUES (101, 'Laptop', 1299.99, 1, 15, 'Electronics')");
@@ -136,6 +143,16 @@
          if (dbFile.exists()) {
              dbFile.delete();
          }
+     }
+     
+     @Order(1)
+     @ParameterizedTest
+     @CsvSource(value = {
+             "*/tble/users.count()                                 % sql_native_count?int<=#{0}(/tble/users)   % 3",
+             "*/tble/products.count()                              % sql_native_count?int<=#{0}(/tble/products)   % 10",
+     }, delimiter = '%')
+     public void testRewrites(final String code, final String expected, final String expectedResult) throws Exception {
+         AbstractMetatronTest.checkCodeRewrite(LOG, code, expected, expectedResult, true);
      }
 
      @Test
@@ -808,7 +825,8 @@
                  rec(
                          uri(PATTERN), uri("/tble/#"),
                          uri(HOST), uri("sqlite:target/test-typed-storage.db"),
-                         uri(DRIVER), uri("org.sqlite.JDBC")
+                         uri(DRIVER), uri("org.sqlite.JDBC"),
+                         uri(ROUTE),rec(uri("/tble/"),uri(""))
                  ).jvm(),
                  f("/sys/space/tble/typed")
          );
@@ -933,7 +951,6 @@
       */
      @Test
      public void testPolyUnrollingWithPatternExistingTable() throws Exception {
-         // Create test database with users table
          try (final Connection conn = DriverManager.getConnection("jdbc:sqlite:" + DB_PATH);
               final Statement stmt = conn.createStatement()) {
              stmt.executeUpdate("""
@@ -1149,7 +1166,7 @@
              "Underscore                | users | 1 | name  | 'user_name_123'"
      }, delimiter = '|')
      public void testDatabaseStringCornerCases(String description, String table, String rowId,
-                                       String field, String value) throws Exception {
+                                               String field, String value) throws Exception {
          setupTestDatabase();
          final tbleSpace testSpace = createTestSpace();
          try {
@@ -1188,7 +1205,7 @@
              "Million                   | users | 1 | age | 1000000"
      }, delimiter = '|')
      public void testDatabaseIntegerBoundaries(String description, String table, String rowId,
-                                       String field, int value) throws Exception {
+                                               String field, int value) throws Exception {
          setupTestDatabase();
          final tbleSpace testSpace = createTestSpace();
          try {
@@ -1227,7 +1244,7 @@
              "Large negative            | users | 1 | salary | -1000000.0"
      }, delimiter = '|')
      public void testDatabaseRealBoundaries(String description, String table, String rowId,
-                                    String field, double value) throws Exception {
+                                            String field, double value) throws Exception {
          setupTestDatabase();
          final tbleSpace testSpace = createTestSpace();
          try {
@@ -1524,23 +1541,23 @@
 
              // Create parent table (authors)
              stmt.executeUpdate("""
-                 CREATE TABLE IF NOT EXISTS authors (
-                     id INTEGER PRIMARY KEY,
-                     name TEXT NOT NULL,
-                     country TEXT
-                 )
-                 """);
+                                CREATE TABLE IF NOT EXISTS authors (
+                                    id INTEGER PRIMARY KEY,
+                                    name TEXT NOT NULL,
+                                    country TEXT
+                                )
+                                """);
 
              // Create child table (books) with foreign key to authors
              stmt.executeUpdate("""
-                 CREATE TABLE IF NOT EXISTS books (
-                     id INTEGER PRIMARY KEY,
-                     title TEXT NOT NULL,
-                     author_id INTEGER,
-                     published_year INTEGER,
-                     FOREIGN KEY (author_id) REFERENCES authors(id)
-                 )
-                 """);
+                                CREATE TABLE IF NOT EXISTS books (
+                                    id INTEGER PRIMARY KEY,
+                                    title TEXT NOT NULL,
+                                    author_id INTEGER,
+                                    published_year INTEGER,
+                                    FOREIGN KEY (author_id) REFERENCES authors(id)
+                                )
+                                """);
 
              // Insert test data
              stmt.executeUpdate("INSERT INTO authors VALUES (1, 'Jane Austen', 'England')");
@@ -1596,10 +1613,10 @@
                  assertNotNull(fkRec.at(uri("ref_column")), "FK should have ref_column field");
 
                  LOG.info("FK: %s.%s -> %s.%s",
-                     fkRec.at(uri("table")),
-                     fkRec.at(uri("column")),
-                     fkRec.at(uri("references")),
-                     fkRec.at(uri("ref_column")));
+                         fkRec.at(uri("table")),
+                         fkRec.at(uri("column")),
+                         fkRec.at(uri("references")),
+                         fkRec.at(uri("ref_column")));
              }
 
          } finally {
@@ -1629,33 +1646,33 @@
 
              // Create parent tables
              stmt.executeUpdate("""
-                 CREATE TABLE IF NOT EXISTS customers (
-                     id INTEGER PRIMARY KEY,
-                     name TEXT NOT NULL,
-                     email TEXT
-                 )
-                 """);
+                                CREATE TABLE IF NOT EXISTS customers (
+                                    id INTEGER PRIMARY KEY,
+                                    name TEXT NOT NULL,
+                                    email TEXT
+                                )
+                                """);
 
              stmt.executeUpdate("""
-                 CREATE TABLE IF NOT EXISTS products_fk (
-                     id INTEGER PRIMARY KEY,
-                     name TEXT NOT NULL,
-                     price REAL
-                 )
-                 """);
+                                CREATE TABLE IF NOT EXISTS products_fk (
+                                    id INTEGER PRIMARY KEY,
+                                    name TEXT NOT NULL,
+                                    price REAL
+                                )
+                                """);
 
              // Create child table with multiple foreign keys
              stmt.executeUpdate("""
-                 CREATE TABLE IF NOT EXISTS orders (
-                     id INTEGER PRIMARY KEY,
-                     customer_id INTEGER,
-                     product_id INTEGER,
-                     quantity INTEGER,
-                     order_date TEXT,
-                     FOREIGN KEY (customer_id) REFERENCES customers(id),
-                     FOREIGN KEY (product_id) REFERENCES products_fk(id)
-                 )
-                 """);
+                                CREATE TABLE IF NOT EXISTS orders (
+                                    id INTEGER PRIMARY KEY,
+                                    customer_id INTEGER,
+                                    product_id INTEGER,
+                                    quantity INTEGER,
+                                    order_date TEXT,
+                                    FOREIGN KEY (customer_id) REFERENCES customers(id),
+                                    FOREIGN KEY (product_id) REFERENCES products_fk(id)
+                                )
+                                """);
 
              // Insert test data
              stmt.executeUpdate("INSERT INTO customers VALUES (1, 'Alice', 'alice@example.com')");
@@ -1704,9 +1721,9 @@
                  if (table.equalsIgnoreCase("orders")) {
                      ordersFK++;
                      LOG.info("Orders FK: {} -> {}.{}",
-                         fkRec.at(uri("column")),
-                         fkRec.at(uri("references")),
-                         fkRec.at(uri("ref_column")));
+                             fkRec.at(uri("column")),
+                             fkRec.at(uri("references")),
+                             fkRec.at(uri("ref_column")));
                  }
              }
 
@@ -1740,22 +1757,22 @@
              stmt.executeUpdate("PRAGMA foreign_keys = ON");
 
              stmt.executeUpdate("""
-                 CREATE TABLE IF NOT EXISTS departments (
-                     id INTEGER PRIMARY KEY,
-                     name TEXT NOT NULL
-                 )
-                 """);
+                                CREATE TABLE IF NOT EXISTS departments (
+                                    id INTEGER PRIMARY KEY,
+                                    name TEXT NOT NULL
+                                )
+                                """);
 
              stmt.executeUpdate("""
-                 CREATE TABLE IF NOT EXISTS employees (
-                     id INTEGER PRIMARY KEY,
-                     name TEXT NOT NULL,
-                     department_id INTEGER,
-                     manager_id INTEGER,
-                     FOREIGN KEY (department_id) REFERENCES departments(id),
-                     FOREIGN KEY (manager_id) REFERENCES employees(id)
-                 )
-                 """);
+                                CREATE TABLE IF NOT EXISTS employees (
+                                    id INTEGER PRIMARY KEY,
+                                    name TEXT NOT NULL,
+                                    department_id INTEGER,
+                                    manager_id INTEGER,
+                                    FOREIGN KEY (department_id) REFERENCES departments(id),
+                                    FOREIGN KEY (manager_id) REFERENCES employees(id)
+                                )
+                                """);
 
              stmt.executeUpdate("INSERT INTO departments VALUES (1, 'Engineering')");
              stmt.executeUpdate("INSERT INTO departments VALUES (2, 'Sales')");
@@ -1829,11 +1846,11 @@
               final Statement stmt = conn.createStatement()) {
 
              stmt.executeUpdate("""
-                 CREATE TABLE IF NOT EXISTS standalone_table (
-                     id INTEGER PRIMARY KEY,
-                     data TEXT
-                 )
-                 """);
+                                CREATE TABLE IF NOT EXISTS standalone_table (
+                                    id INTEGER PRIMARY KEY,
+                                    data TEXT
+                                )
+                                """);
 
              stmt.executeUpdate("INSERT INTO standalone_table VALUES (1, 'test data')");
          }
@@ -1867,7 +1884,7 @@
              for (Obj fk : fkList) {
                  final String table = fk.asRec().at(uri("table")).toString();
                  assertNotEquals("standalone_table", table.toLowerCase(),
-                     "standalone_table should not have any foreign keys");
+                         "standalone_table should not have any foreign keys");
              }
 
          } finally {
@@ -1893,13 +1910,13 @@
               final Statement stmt = conn.createStatement()) {
 
              stmt.executeUpdate("""
-                 CREATE TABLE IF NOT EXISTS emp_hierarchy (
-                     id INTEGER PRIMARY KEY,
-                     name TEXT NOT NULL,
-                     manager_id INTEGER,
-                     FOREIGN KEY (manager_id) REFERENCES emp_hierarchy(id)
-                 )
-                 """);
+                                CREATE TABLE IF NOT EXISTS emp_hierarchy (
+                                    id INTEGER PRIMARY KEY,
+                                    name TEXT NOT NULL,
+                                    manager_id INTEGER,
+                                    FOREIGN KEY (manager_id) REFERENCES emp_hierarchy(id)
+                                )
+                                """);
 
              // Create a hierarchy: CEO -> VP -> Manager -> Employee
              stmt.executeUpdate("INSERT INTO emp_hierarchy VALUES (1, 'CEO', NULL)");
