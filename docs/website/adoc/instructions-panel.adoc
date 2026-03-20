@@ -37,20 +37,47 @@ Instruction query parameters are similar in function to https://en.wikipedia.org
 aid the compiler instruction selection, enable code path compression, facilitate polymorphic dispatch, support lifted monadic processing, maintain runtime profiling statistics, and more.
 --
 
-Every instruction maps a **left hand side** `obj` (`lhs`) to a **right hand side** `obj` (rhs). Many-to-one, one to many, and many-to-many mappings are possible as an `obj` is an element in the power set of all `objs`. Thus, `{1,2,3}` is an `obj` with type `int{3}`.
+[.discrete]
+=== obj propagation mechanics
+
+Every instruction maps a **left hand side** `obj` (`lhs`) to a **right hand side** `obj` (rhs). Many-to-one, one to many, and many-to-many mappings are possible as an `obj` is an element in the power set of all `objs`. Thus, `{1,2,3}` is an `obj` with type `int{3}`. Programmatically, what is passed between instructions is a single stream `obj` which guarantees that there is always an rhs `obj` for every lhs `obj` regardless of failure or emptiness.
 
 \begin{align*}
 \text{obj} \in \mathcal{P}(\text{obj})
 \end{align*}
 
+It is important to understand the mechanics of instruction evaluation. Every instruction follows the same pattern. When a lhs `obj` is applied to an `inst` obj, the first thing that happens is the arguments of the `inst` are resolved. This is perhaps best described with an example.
+
+++++
+<!-- 🐖 
+1.plus(2)          [-- <1>
+1.plus(_)          [-- <2>
+1.plus(plus(2))    [-- <3>
+1.map(bool::T)     [-- <4>
+1.as(bool::T)      [-- <5>
+-->
+++++
+
+<1> `1` is applied to `2` and then `1` is added to `2` to yield `3`. (expected)
+<2> `1` is applied to the identity function to yield `1` and then `1` is added to `1` to yield `2`.
+<3> `1` is applied to the instruction `plus(2)` to yield `3` and then `1` is added to `3` to yield `4`.
+<4> `1` is applied to the type `bool::T` to yield `noobj` as types serve as stream predicates.
+<5> `1` is applied to `bool::T` to yield `noobj` but then is operated within the code of `as()` to emit `bool::true`.
+
+The key point is that *call* objs (`inst`, `code`, `noobj`, and `type`) have a dynamic domain and range. Constant
+`objs` (non-call objs) also have a domain and range. For instance, the verbose representation of `int::1` is `int?int\<=#{?}::1`. 
+This states that every lhs `obj` or `noobj` (`+#+{+?+}`) that is applied to `1`, yields a single rhs `int`; namely `1`. In this way, constants are functions (calls), though not interesting because they always return the same value regardless of input.
+
+The diagram below demonstrates how a lhs `obj` percolates through an `inst` to where ultimately, at the end of the last `inst` of code the resultant rhs `obj` is emitted.
+
 [source,mtron,role="center-code"]
 ----
-      ┌────────────────┐                                       
-  ┌───┴───────┐        │       ┌──┐     ┌────────┐            
-  │           ▼ 1      ▼ 2     │  ▼ 4   │      6 ▼            
- lhs => inst(arg1,...,argN){ inst1...instN } => rhs           
-  │                          3 ▲   │  ▲ 5                       
-  └────────────────────────────┘   └──┘
+     ┌────────────────┐                                       
+ ┌───┴───────┐        │       ┌──┐     ┌────────┐            
+ │           ▼ 1      ▼ 2     │  ▼ 4   │      6 ▼            
+lhs => inst(arg1,...,argN){ inst1...instN } => rhs           
+ │                          3 ▲   │  ▲ 5                       
+ └────────────────────────────┘   └──┘
 ----
 
 
@@ -72,6 +99,19 @@ Every logical thread has a `/m/space/stack` patterned `<+/#>`. The current stack
 
 ====
 
+[source,mtron,role="center-code"]
+----
+                                                  
+ lhs    inst(arg1,...,argN){ inst1...instN }     rhs           
+  │         │            │  │             │       ▲             
+  │push     └─────┬──────┘  └─────────────┘    pop│            
+┌─┼───────────────┼──────┐     inst body          │     
+│ │           inst│frame │                       ┌─┐         
+│ ▼               │      ├──────────────────────►│X│         
+│ stack           ▼      │                       └─┘         
+└────────────────────────┘                                     
+----
+
 
 When an instruction is called, the associated https://en.wikipedia.org/wiki/Parameter_(computer_programming)[arguments] have the lhs `obj` applied and the result of the application is pushed onto the stack -- accessible through reference for entirety of the 
 `inst` code block. From this architecture, the following `inst` forms are made available for use.
@@ -81,13 +121,16 @@ When an instruction is called, the associated https://en.wikipedia.org/wiki/Para
 .positional args
 =====
 
+[.card-tight]
+--
 [stem]
 ++++
-\tt{obj}_\tt{lhs} \cdot f(\color{yellow}{\__{0}}, \color{yellow}{\__{1}},\ldots,\color{yellow}{\__{n}}) \mapsto \tt{obj}_\tt{rhs}
+\large \tt{obj}_\tt{lhs} \cdot f(\color{yellow}{\__{0}}, \color{yellow}{\__{1}},\ldots,\color{yellow}{\__{n}}) \mapsto \tt{obj}_\tt{rhs}
 ++++
+--
 
 The arguments are captured as a `lst` and are accessed via their position furi.
-For example, `+*+<0>` references the first argument, `+*+<1>` the second argument, so on and so forth. Note that for single digit numbers, the uri `< >` wrapper isn't required and the above can be written as `+*+0`, `+*+1`, etc.
+For example, `*<0>` references the first argument, `+*+<1>` the second argument, so on and so forth. Note that for single digit numbers, the uri `< >` wrapper isn't required and the above can be written as `*0`, `*1`, etc.
 
 In the example below, the user defined instruction `band` filters out lhs `objs` not within the provided range (min/max).
 Given the filtering behavior of the instruction, the signature of `band` is `int{?}\<=int`. That is, it accepts a single
@@ -109,10 +152,13 @@ band -> |inst?int{?}<=int(_,_){ is(and(gte(*0),lte(*1))) }
 .named args
 =====
 
+[.card-tight]
+--
 [stem]
 ++++
-\tt{obj}_\tt{lhs} \cdot f(\color{yellow}{a_1} \Rightarrow x, \color{yellow}{a_2} \Rightarrow y,\ldots,a_n) \mapsto \tt{obj}_\tt{rhs}
+\large \tt{obj}_\tt{lhs} \cdot f(\color{yellow}{a_1} \Rightarrow x, \color{yellow}{a_2} \Rightarrow y,\ldots,a_n) \mapsto \tt{obj}_\tt{rhs}
 ++++
+--
 
 When the arguments are provided in a `rec` form, the key of each relation of the `rec` is a https://en.wikipedia.org/wiki/Named_parameter[named argument]. Named
 arguments are resolved from the stack via their furi name.
@@ -138,10 +184,13 @@ Note where the error is thrown when `str['abc']` is provided.
 .default args
 =====
 
+[.card-tight]
+--
 [stem]
 ++++
-\tt{obj}_\text{lhs} \cdot f(a_1 \Rightarrow \color{yellow}{else(x)},a_2 \Rightarrow \color{yellow}{else(y)},\ldots,a_n) \mapsto \tt{obj}_\tt{rhs}
+\large \tt{obj}_\text{lhs} \cdot f(a_1 \Rightarrow \color{yellow}{else(x)},a_2 \Rightarrow \color{yellow}{else(y)},\ldots,a_n) \mapsto \tt{obj}_\tt{rhs}
 ++++
+--
 
 The `else` instruction has numerous uses. With respect to instruction arguments, the `else` instruction provides the user
 the ability to express
@@ -166,10 +215,13 @@ band -> |inst?int{?}<=int(min=>else(2),max=>else(8)){ is(and(gte(*min),lte(*max)
 .typed args
 =====
 
+[.card-tight]
+--
 [stem]
 ++++
-\tt{obj_{\text{lhs}} \cdot f(a_1 \Rightarrow \color{yellow}{?type_1}, a_2 \Rightarrow \color{yellow}{?type_2},\ldots,a_n \Rightarrow \color{yellow}{?type_3}) \mapsto obj_{rhs}}
+\large \tt{obj_{\text{lhs}} \cdot f(a_1 \Rightarrow \color{yellow}{?type_1}, a_2 \Rightarrow \color{yellow}{?type_2},\ldots,a_n \Rightarrow \color{yellow}{?type_3}) \mapsto obj_{rhs}}
 ++++
+--
 
 The previous examples made use of the polymorphic `id` instruction (sugar'd `_`). It's important to realize that an argument
 can be any arbitrary `obj` (thus, `code`). Type arguments are the means by which instruction arguments are typed.
@@ -201,10 +253,13 @@ band -> |inst?int{?}<=int(min=>?nat::T.else(-100),max=>?nat::T.else(100)){ is(an
 .anonymous inst
 =====
 
+[.card-tight]
+--
 [stem]
 ++++
-\tt{obj}_\tt{lhs} \cdot \color{yellow}{\lambda}(a_1 \Rightarrow x, a_2 \Rightarrow y,\ldots,a_n) \mapsto \tt{obj}_\tt{rhs}
+\large \tt{obj}_\tt{lhs} \cdot \color{yellow}{\lambda}(a_1 \Rightarrow x, a_2 \Rightarrow y,\ldots,a_n) \mapsto \tt{obj}_\tt{rhs}
 ++++
+--
 
 An untyped `inst` is an anonymous `inst` and behaves analogously to an
 https://en.wikipedia.org/wiki/Anonymous_function[anonymous function] in other programming environments.
@@ -231,6 +286,7 @@ Finally, a degenerate anonymous `inst` with no specified variable frame is simpl
 <5> When arguments are embedded in the value, then the `inst` is simply `bcode`.
 =====
 
+
 [indent=0,subs="verbatim,attributes",role="secondary"]
 .contextualargs
 =====
@@ -248,10 +304,13 @@ is_divisible -> |is_divisble?bool<=int(by?int=>_)[mod(*by).eq(0)]
 .dependent args
 =====
 
+[.card-tight]
+--
 [stem]
 ++++
-\tt{obj}_\tt{in}.f(a_1 \Rightarrow x,a_2 \Rightarrow \color{yellow}{g(*a_1)},\ldots,a_n) \mapsto \tt{obj}_\tt{out}
+\large \tt{obj}_\tt{in}.f(a_1 \Rightarrow x,a_2 \Rightarrow \color{yellow}{g(*a_1)},\ldots,a_n) \mapsto \tt{obj}_\tt{out}
 ++++
+--
 
 If an argument's type is dependent on the value of another argument, then the argument is a https://en.m.wikipedia.org/wiki/Dependent_type[dependent argument].
 

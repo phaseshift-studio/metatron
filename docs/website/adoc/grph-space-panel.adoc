@@ -1,10 +1,12 @@
 [discrete]
 == Graph Space
 
-A graph is a data structure composed of a set of vertices `V` connected by a set of edges `E`, described notationally
+A graph is a data structure composed of a set of vertices latexmath:[V] connected by a set of edges latexmath:[E], denoted
 \[
-G = (V,E).
+G = (V,E),
 \]
+where latexmath:[E] is typically a https://en.wikipedia.org/wiki/Partial_function[partial function] latexmath:[E \subseteq (V \times V)].
+
 
 ++++
 <div style="justify-self: center;">
@@ -21,14 +23,18 @@ G = (V,E).
 </div>
 ++++
 
-This generic structure has numerous variations ranging from whether or not edges are directed, or labeled, or if self-loops are allowed, or whether edges are total or partial functions, and more. Of particular interest to modern graph databases is the variation known colloquially as a *property graph*. The property graph extends `G=(V,E)` by extending each vertex and edge with a set of properties (i.e. key/value pairs). A property graph is also known, in a more formal jargon, as a directed, labeled, attributed binary graph.
+This classic structure has been modulated in various ways over the years. Examples include variants where edges are undirected, labeled, whether self-loops are allowed, or if edges represent total or partial functions, and more. Modern graph databases architects approach graphs with a focus on ease of modeling and speed of querying as the complementary technologies that shape their perspective are other database models such as relational, key/value, column, vector, document, etc. Designers have converged on a particular modulation colloquially known as a *property graph*. This graph structure is known more formally as a _directed, labeled, attributed, multi-relational binary graph_. The property graph extends latexmath:[G = (V,E)] with properties (key/value pairs) associated with vertices and edges. This extension provides users a convenient path for moving between the dynamic state of a system represented using the constructs of modern object-oriented programming and the persisted state of the system stored in a graph database. As such, property graphs are useful when modeling multi-relational environments, where a heterogeneous set of "things" (different types of vertices) relate to one another via a heterogeneous set of "connections" (different types of edges).
+
+An assortment of example property graph traversals represented in mtron are provided below.
 
 ++++
 <!-- 🐖 
-*/g/V/1                     [-- <1>
-*/g/V/1.outE()              [-- <2>
-*/g/V/1.outE().inV()        [-- <3>
-*/g/V/1.out()               [-- <4>
+*/g/V/1                                [-- <1>
+*/g/V/1.outE()                         [-- <2>
+*/g/V/1.outE().inV()                   [-- <3>
+*/g/V/1.out()                          [-- <4>
+*/g/V/1.out(knows).out(created)        [-- <5>
+*/g/V/1.out(knows).out(created)>>name  [-- <6>
 -->
 ++++
 
@@ -36,9 +42,10 @@ This generic structure has numerous variations ranging from whether or not edges
 <2> The incident outgoing edges of vertex `1`.
 <3> The incoming vertex incident to the outgoing edges of vertex `1`.
 <4> The outgoing adjacent vertices to vertex `1`.
+<5> The vertices 2 steps away from vertex `1` whose relationship is created by people vertex `1` knows.
+<6> The incident name property value of the vertices 2 steps away.
 
-A property graph is useful when modeling multi-relational environments where a heterogeneous set of "things" (different types of vertices)
-related to one another via a heterogeneous set of "connections" (different types of edges).
+
 
 The `/m/grph` instruction extends the core `/m` instruction set with the following graph-oriented instructions. These
 navigations primitives hide the graph encoding specifics, enabling the same instructions to be used across different

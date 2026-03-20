@@ -268,6 +268,7 @@ class ProcessingState:
                 result.append(
                     f"mtron> {'\n       '.join(line.split("%"))}")  # the spaces are to shift right due to mtron> 
                 result.append(f"{self.mtron.exec(line.replace("%", "").strip())}")
+                result.append("​")
             else:
                 self.mtron.exec(line.replace("%", "").replace("[HIDDEN]", "").strip())
         self.output.extend(result[1:]) # first line is always a blank (for some reason)
