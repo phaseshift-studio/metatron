@@ -284,7 +284,7 @@ public class mInstSetTest extends AbstractInstSetTest {
             "{1,2,3}-<?rec<=int{3}([=>])                                            % [=>]",
             "{1,2,3}-<?rec<=int{*}([=>])                                            % [=>]",
             "{1,2,3}.barrier([,])>-.map(noobj)                                      % noobj",
-            "{1,2,3}.barrier([noobj]).-<[./0]                                       % [noobj]",
+            "{1,2,3}.barrier([noobj]).-<[>>0]                                       % [noobj]",
             "{1,2,3}.-<[noobj=>noobj]                                               % {3}[=>]",
             "{1,2,3}.map?int<=real(1)                                               % <ERROR>",
             "{1,2,3}.inst?int<=int{3}(){1}                                          % 1",
@@ -853,9 +853,9 @@ public class mInstSetTest extends AbstractInstSetTest {
     })
     @CsvSource(value = {
             "*a                                           % [x=>!(*(b))]",
-            "*a../x                                       % [x=>!(*(c))]",
-            "*a../x../x                                   % 6",
-            "*a../x../x.plus(4)                           % 10",
+            "*a.>>x                                       % [x=>!(*(c))]",
+            "*a.>>x/x                                     % 6",
+            "*a.>>x>>x.plus(4)                            % 10",
     }, delimiter = '%')
     public void testAuto(final String code, final String expected) throws Exception {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
@@ -885,9 +885,13 @@ public class mInstSetTest extends AbstractInstSetTest {
     })
     @CsvSource(value = {
             "*a                                           % [x=>!*b]",
-            "*a../x                                       % [x=>!*c]",
-            "*a../x../x                                   % 6",
-            "*a../x../x.plus(4)                           % 10",
+            "*a.>>x                                       % [x=>!*c]",
+            "*a>>x                                        % [x=>!*c]",
+            "*a.>>x/x                                     % 6",
+            "*a>>x/x                                      % 6",
+            "*a>>x>>x                                     % 6",
+            "*a.>>x.>>x                                   % 6",
+            "*a>>x>>x.plus(4)                             % 10",
     }, delimiter = '%')
     public void testAutoFrom(final String code, final String expected) throws Exception {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);

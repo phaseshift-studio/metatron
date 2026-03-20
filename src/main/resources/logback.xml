@@ -32,4 +32,5 @@
     <logger name="cch.qos.logback" level="WARN">
         <appender-ref ref="STDOUT"/>
     </logger>
+    <logger name="org.mongodb.driver" level="WARN"/>
 </configuration>

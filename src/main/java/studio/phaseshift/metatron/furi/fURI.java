@@ -67,7 +67,7 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
         if (firstList.size() != secondList.size())
             return false;
         for (int i = 0; i < firstList.size(); i++) {
-            if (!firstList.get(i).test(secondList.get(i)))
+            if (!firstList.get(i).basePath().test(secondList.get(i).basePath()))
                 return false;
         }
         return true;

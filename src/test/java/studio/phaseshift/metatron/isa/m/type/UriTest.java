@@ -158,13 +158,13 @@ public class UriTest extends AbstractMetatronTest {
     @ParameterizedTest
     @CsvSource(value = {
             "<a://b.com:123/c/d?x=1&y=2>                                 % <a://b.com:123/c/d?x=1&y=2>",
-            "<a://b.com:123/c/d?x=1&y=2>.as(rec::T)../scheme                        % a",
+            "<a://b.com:123/c/d?x=1&y=2>.as(rec::T)>>scheme                        % a",
             "<a://b.com:123/c/d?x=1&y=2>.scheme(abc)                     % <abc://b.com:123/c/d?x=1&y=2>",
-            "<a://b.com:123/c/d?x=1&y=2>.as(rec::T)../port                          % 123",
+            "<a://b.com:123/c/d?x=1&y=2>.as(rec::T)>>port                          % 123",
             "<a://b.com:123/c/d?x=1&y=2>.port(666)                       % <a://b.com:666/c/d?x=1&y=2>",
-            "<a://b.com:123/c/d?x=1&y=2>.as(rec::T)../host                         % <b.com>",
+            "<a://b.com:123/c/d?x=1&y=2>.as(rec::T)>>host                         % <b.com>",
             "<a://b.com:123/c/d?x=1&y=2>.host(<abc.org>)                 % <a://abc.org:123/c/d?x=1&y=2>",
-            "<a://b.com:123/c/d?x=1&y=2>.as(rec::T)../q                         % [x=><1>,y=><2>]",
+            "<a://b.com:123/c/d?x=1&y=2>.as(rec::T)>>q                         % [x=><1>,y=><2>]",
             // "<a://b.com:123/c/d?x=1&y=2>.query(x=3)                 % <a://b.com:123/c/d?x=3&y=2>",
     }, delimiter = '%')
     public void testAsRec(final String code, final String expected) {

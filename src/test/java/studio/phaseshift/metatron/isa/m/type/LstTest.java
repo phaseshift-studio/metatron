@@ -132,18 +132,18 @@ public class LstTest extends AbstractAlgebraTest<Lst> {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "[a,[b,[c,d],e],f]                                                                       % [a,[b,[c,d],e],f]",
-            "[a,[b,[c,d],e],f].get(<0>)                                                              % a",
-            "[a,[b,[c,d],e],f].get(<1/0>)                                                            % b",
-            "[a,[b,[c,d],e],f].get(<1/1/0>)                                                          % c",
-            "[a,[b,[c,d],e],f].get(<1/1/1>)                                                          % d",
-            "[a,[b,[c,d],e],f].get(<1/1/+>)                                                          % {c,d}",
-            "[a,[b,[c,d],e],f].get(<1/+/+>)                                                          % {c,d}",
-            "[a,[b,[c,d],[e,f]],g].get(<1/+/+>)                                                      % {c,d,e,f}",
-            "[a,[b,[c,d],[e,[f,g]]],h].get(<1/+/+>)                                                  % {c,d,e,[f,g]}",
-            "[a,[b,[c,d],e],f].get(<1/+>)                                                            % {b,[c,d],e}",
-            "[a,[b,[c,d],e],f].get(<1/+>)                                                            % {b,[c,d],e}",
-            "[a,[b,[c,d],e],f].get(<#>)                                                              % {a,[b,[c,d],e],f}" // TODO: should this be unrolled?
+            "[a,[b,[c,d],e],f]                                                                   % [a,[b,[c,d],e],f]",
+            "[a,[b,[c,d],e],f]>>0                                                                % a",
+            "[a,[b,[c,d],e],f]>><1/0>                                                            % b",
+            "[a,[b,[c,d],e],f]>><1/1/0>                                                          % c",
+            "[a,[b,[c,d],e],f]>><1/1/1>                                                          % d",
+            "[a,[b,[c,d],e],f]>><1/1/+>                                                          % {c,d}",
+            "[a,[b,[c,d],e],f]>><1/+/+>                                                          % {c,d}",
+            "[a,[b,[c,d],[e,f]],g]>><1/+/+>                                                      % {c,d,e,f}",
+            "[a,[b,[c,d],[e,[f,g]]],h]>><1/+/+>                                                  % {c,d,e,[f,g]}",
+            "[a,[b,[c,d],e],f]>><1/+>                                                            % {b,[c,d],e}",
+            "[a,[b,[c,d],e],f]>><1/+>                                                            % {b,[c,d],e}",
+            "[a,[b,[c,d],e],f]>><#>                                                              % {a,[b,[c,d],e],f}" // TODO: should this be unrolled?
 
     }, delimiter = '%')
     public void testCode(final String code, final String expected) {

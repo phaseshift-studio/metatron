@@ -1,0 +1,128 @@
+[discrete]
+== Graph Space
+
+A graph is a data structure composed of a set of vertices `V` connected by a set of edges `E`, described notationally
+\[
+G = (V,E).
+\]
+This generic structure has numerous variations ranging from whether or not edges are directed, or labeled, or if self-loops are allowed, or whether edges are total or partial functions, and more. Of particular interest to modern graph databases is the variation known colloquially as a *property graph*. The property graph extends `G=(V,E)` by extending each vertex and edge with a set of properties (i.e. key/value pairs). A property graph is also known, in a more formal jargon, as a directed, labeled, attributed binary graph.
+
+++++
+<!-- 🐖 
+*/g/V/1                     [-- <1>
+*/g/V/1.outE()              [-- <2>
+*/g/V/1.outE().inV()        [-- <3>
+*/g/V/1.out()               [-- <4>
+-->
+++++
+
+<1> Vertex `1` with associated properties.
+<2> The incident outgoing edges of vertex `1`.
+<3> The incoming vertex incident to the outgoing edges of vertex `1`.
+<4> The outgoing adjacent vertices to vertex `1`.
+
+A property graph is useful when modeling multi-relational environments where a heterogeneous set of "things" (different types of vertices)
+related to one another via a heterogeneous set of "connections" (different types of edges).
+
+The `/m/grph` instruction extends the core `/m` instruction set with the following graph-oriented instructions. These
+navigations primitives hide the graph encoding specifics, enabling the same instructions to be used across different
+graph encodings (discussed later when presenting hypergraphs).
+
+.`/m/grph` instructions
+[cols=".^2a,.^5",separator=🧱,options=header,role="table-bordered small center"]
+|===
+^🧱 inst 🧱 description
+🧱 `out?vrtx{+*+}\<=vrtx(uri{+*+}::T})`   🧱 traverse to the outgoing adjacent vertices of the lhs vertex
+🧱 `in?vrtx{+*+}\<=vrtx(uri{+*+}::T})`    🧱 traverse to the incoming adjacent vertices of the lhs vertex
+🧱 `both?vrtx{+*+}\<=vrtx(uri{+*+}::T})`  🧱 traverse to both the incoming and outgoing adjacent vertex of the lhs vertex
+🧱 `outE?edge{+*+}\<=vrtx(uri{+*+}::T})`  🧱 traverse to the outgoing incident edges of the lhs vertex
+🧱 `inE?edge{+*+}\<=vrtx(uri{+*+}::T})`   🧱 traverse to the incoming incident edges of the lhs vertex
+🧱 `bothE?edge{+*+}\<=vrtx(uri{+*+}::T})` 🧱 traverse to both the incoming and outgoing incident edges of the lhs vertex
+🧱 `inV?vrtx\<=edge()`                    🧱 traverse to the incoming incident vertex of the lhs edge
+🧱 `outV?vrtx\<=edge()`                   🧱 traverse to the outgoing incident vertex of the lhs edge
+🧱 `bothV?vrtx{2}\<=edge()`               🧱 traverse to both the incoming and outgoing incident vertex of the lhs edge
+|===
+
+[discrete]
+=== Property Graph Extensions
+
+mtron's design makes possible a swathe of natural extensions to both the standard property graph data model and associated traversal and pattern-matching query engines.
+The following itemization summarizes some of the more consequential realizations.
+
+. *nested properties*: mtron supports `poly` values meaning element property values can be nested (via `rec`, `rel`, or `lst`).
+. *interspace traversals*: `!+*+` instructions can be encapsulated as vertices and/or property values, enabling inter- and intra-space
+traversals.
+. *process encodings*: graph databases have historically been used for structuring data, where processing exists exogenous graph and executing only at query time. mtron's `inst` objs make possible the graph encoding of processes, where, for example, vertices can become active objects within the larger application.
+. *sympathetic partitions*: an mtron `poly` is not constrained to a single space nor within a single space, does an operation on the poly imply a particular physical layout of underlying data. In this way, mtron conveniently supports language agnostic retrieval of data across different physical layouts.
+
+[indent=0,subs="verbatim,attributes",role="primary"]
+.nested properties
+=====
+
+++++
+<!-- 🐖
+*/g/V/1==[_=>_]                                                  [-- <1>
+*/g/V/1>>=[address=>[                       /
+             home => [city =>'santa fe',    /
+                      state=>NM],           /
+             work => !*<../home>]]                               [-- <2>
+*/g/V/1/address/home/city                                        [-- <3>
+*/g/V/+.?==[address=>[_ => [state=>NM]]]                         [-- <4>
+*/g/V/+.?==[address=>[_ => [state=>NM]]].>>address/+/city        [-- <5>
+-->
+++++
+
+<1> select the properties of vertex 1.
+<2> update the properties of vertex 1 with a nested address `rec`.
+<3> the new address `rec` components have a unique URI.
+<4> for all vertices, return those that have an address in New Mexico.
+<5> for the NM vertices, return the cities of their addresses.
+
+=====
+
+[indent=0,subs="verbatim,attributes",role="secondary"]
+.interspace traversals
+=====
+
+The boot loader used for this documentation connects to a number of data sources, with two being of use for the example
+to follow. Namely, tp3 modern (graph database) and the netflix movie dataset (relational database).
+
+.the netflix schema
+[%collapsible]
+====
+
+++++
+<!-- 🐖 
+*netflix:
+*netflix:schema/foreign_keys
+-->
+++++
+
+====
+
+++++
+<!-- 🐖
+*/g/V/1
+*netflix:movie/11488
+/g/V/1.addE(watched,*netflix:movie/11488)
+-->
+++++
+
+=====
+
+
+[indent=0,subs="verbatim,attributes",role="secondary"]
+.process encoding
+=====
+
+A vertex can subscribe to events, maintain a thread of execution, and pass `obj` messages to other vertices in the graph.
+
+++++
+<!-- 🐖 
+/g/V/1?sub -> |process_message?#{*}<=#(msg=>_) { print(*msg/trgt, "received message: ", *msg/msg)  }
+--> 
+++++
+
+=====
+
+

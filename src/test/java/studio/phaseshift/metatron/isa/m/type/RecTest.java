@@ -179,8 +179,6 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "[a=>[knows=>[b=>[knows=>c]]]]../<a/+/b/knows>                                           % c",
-            "(a=>(knows=>(b=>(knows=>c))))../<a/+/b/knows>                                           % c",
             "[a=>[knows=>[b=>[knows=>c]]]]>><a/+/b/knows>                                            % c",
             "(a=>(knows=>(b=>(knows=>c))))>><a/+/b/knows>                                            % c",
             "[a=>[knows=>[b=>[knows=>c]]]]>><a/+/b>                                                  % [knows=>c]",

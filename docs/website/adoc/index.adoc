@@ -69,11 +69,11 @@ include::header.html[]
             <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-14" aria-expanded="false" aria-controls="card-14">Graph Space</button>
         </div>
         <div class="row mt-3 gap-3 tutorial-grid">
-            <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-12" aria-expanded="false" aria-controls="card-12">Coefficients</button>
-            <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-13" aria-expanded="false" aria-controls="card-13">The Router</button>
-            <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-14" aria-expanded="false" aria-controls="card-14">Parallelization</button>
-            <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-9" aria-expanded="false" aria-controls="card-9">Serial Space</button>
-            <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-15" aria-expanded="false" aria-controls="card-15">Web Space</button>
+            <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-15" aria-expanded="false" aria-controls="card-15">Coefficients</button>
+            <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-16" aria-expanded="false" aria-controls="card-16">The Router</button>
+            <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-17" aria-expanded="false" aria-controls="card-17">Parallelization</button>
+            <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-18" aria-expanded="false" aria-controls="card-18">Serial Space</button>
+            <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-19" aria-expanded="false" aria-controls="card-19">Web Space</button>
         </div>
         <div class="row mt-3 gap-3 tutorial-grid">
             <button class="col btn btn-outline-success" type="button" data-bs-toggle="collapse" data-bs-target="#card-16" aria-expanded="false" aria-controls="card-16">🤖 Sweep's Soliloquies</button>
@@ -202,6 +202,14 @@ include::uniform-resource-identifiers-panel.adoc[]
 </div>
 ++++
 
+
+++++ 
+<div class="collapse" id="card-14">
+++++
+include::grph-space-panel.adoc[]
+++++
+</div>
+++++
 
 ++++ 
 <div class="collapse" id="card-12">

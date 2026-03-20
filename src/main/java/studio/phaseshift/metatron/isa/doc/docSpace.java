@@ -37,7 +37,6 @@ import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.util.IteratorUtil;
-import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Iterator;
 import java.util.List;
@@ -160,22 +159,10 @@ public class docSpace extends AbstractSpace<MongoClient> {
     protected String databaseName;
     protected String schemaPrefix;
     protected ObjSerializer<BsonValue> serializer;
-
-    /**
-     * Create a new docSpace instance
-     *
-     * @param config Configuration map with PATTERN, HOST, ROUTE, and optional COLLECTION
-     * @param vid    Virtual ID for this space
-     * @return A new docSpace instance
-     */
+    
     public static docSpace of(final Map<Obj, Obj> config, final fURI vid) {
-        try {
-            final String connectionString = config.get(uri(HOST)).uriValue().toString();
-            final MongoClient client = MongoClients.create(connectionString);
-            return new docSpace(client, config, DOC_SPACE_TID, vid);
-        } catch (final Exception ex) {
-            throw MTronException.of(ex);
-        }
+        final MongoClient client = MongoClients.create(config.get(uri(HOST)).uriValue().toString());
+        return new docSpace(client, config, DOC_SPACE_TID, vid);
     }
 
     protected docSpace(final MongoClient sjvm, final Map<Obj, Obj> config, final fURI tid, final fURI vid) {
@@ -198,14 +185,12 @@ public class docSpace extends AbstractSpace<MongoClient> {
         final Rec conn = MObjFactory.of().toObj(this.sjvm()).asRec();
         LOG.debug("{{g}}connected{{X}} %s", conn);
         this.at(uri(NATIVE_CONNACK), conn, MUTABLE);
-        LOG.info("using database {{b}}%s{{X}}", this.databaseName);
+        LOG.info("using document database {{b}}%s{{X}}", this.databaseName);
         // Initialize schema prefix for schema access
         this.schemaPrefix = this.pattern.retractPattern().extend("schema").toString();
         // Log available collections
-        final List<String> collections = StreamSupport.stream(
-                        this.database.listCollectionNames().spliterator(), false)
-                .collect(Collectors.toList());
-        LOG.info("discovered {{g}}%d collections{{X}}: %s", collections.size(), collections);
+        final List<String> collections = IteratorUtil.list(this.database.listCollectionNames().iterator());
+        LOG.info("discovered {{y}}%d {{g}}collections{{X}}: %s", collections.size(), collections);
     }
 
     @Override

@@ -101,7 +101,7 @@ public class tp3SpaceTest extends AbstractSpaceTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "*/g/V/#../name                                                                 % {\"marko\",\"josh\",\"peter\",\"lop\",\"vadas\",\"ripple\"}",
+            "*/g/V/#>>name                                                                 % {\"marko\",\"josh\",\"peter\",\"lop\",\"vadas\",\"ripple\"}",
             //   "*/g/V/+>>OUT/+/IN/name                                                         % {\"josh\",str{3}::\"lop\",\"vadas\",\"ripple\"}",
             "*/g/V/+>>OUT/+>>IN/name                                                        % {\"josh\",str{3}::\"lop\",\"vadas\",\"ripple\"}",
             //   "*/g/V/+/OUT/+/IN/name                                                          % {\"josh\",str{3}::\"lop\",\"vadas\",\"ripple\"}",

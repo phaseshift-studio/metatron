@@ -26,6 +26,8 @@ import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.tble.schema.storage.TableSchema;
 import studio.phaseshift.metatron.isa.tble.tbleSpace;
+import studio.phaseshift.metatron.util.CommonUtil;
+import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.sql.*;
@@ -143,7 +145,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                         String pkTableName = fks.getString("PKTABLE_NAME");
                         String pkColumnName = fks.getString("PKCOLUMN_NAME");
                         foreignKeys.add(new ForeignKeyMetadata(
-                            tableName, fkColumnName, pkTableName, pkColumnName, fkName
+                                tableName, fkColumnName, pkTableName, pkColumnName, fkName
                         ));
                     }
                 }
@@ -224,8 +226,8 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
 
         // Check if this is a BOOLEAN column that SQLite reports as INTEGER
         if ("BOOLEAN".equalsIgnoreCase(col.typeName) &&
-            (col.sqlType == Types.INTEGER || col.sqlType == Types.TINYINT ||
-             col.sqlType == Types.SMALLINT || col.sqlType == Types.BIT)) {
+                (col.sqlType == Types.INTEGER || col.sqlType == Types.TINYINT ||
+                        col.sqlType == Types.SMALLINT || col.sqlType == Types.BIT)) {
             final Object value = rs.getObject(col.name);
             if (value == null || rs.wasNull()) {
                 return noobj();
@@ -252,7 +254,6 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         }
         return null;
     }
-
 
 
     /**
@@ -652,6 +653,8 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                             .orElseThrow();
                     if (pkColMeta.sqlType == Types.INTEGER || pkColMeta.sqlType == Types.BIGINT ||
                             pkColMeta.sqlType == Types.SMALLINT || pkColMeta.sqlType == Types.TINYINT) {
+                        if (!CommonUtil.isInt(rowId))
+                            return IteratorUtil.of();
                         stmt.setLong(1, Long.parseLong(rowId));
                     } else {
                         stmt.setString(1, rowId);
@@ -675,6 +678,8 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                             .orElseThrow();
                     if (pkColMeta.sqlType == Types.INTEGER || pkColMeta.sqlType == Types.BIGINT ||
                             pkColMeta.sqlType == Types.SMALLINT || pkColMeta.sqlType == Types.TINYINT) {
+                        if (!CommonUtil.isInt(rowId))
+                            return IteratorUtil.of();
                         stmt.setLong(1, Long.parseLong(rowId));
                     } else {
                         stmt.setString(1, rowId);
@@ -736,9 +741,9 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
             return null;
         }
         return metadata.foreignKeys().stream()
-            .filter(fk -> fk.fromColumn().equalsIgnoreCase(columnName))
-            .findFirst()
-            .orElse(null);
+                .filter(fk -> fk.fromColumn().equalsIgnoreCase(columnName))
+                .findFirst()
+                .orElse(null);
     }
 
     /**
@@ -757,7 +762,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
      */
     public List<ForeignKeyMetadata> getAllForeignKeys() {
         return tableSchemas.values().stream()
-            .flatMap(table -> table.foreignKeys().stream())
-            .toList();
+                .flatMap(table -> table.foreignKeys().stream())
+                .toList();
     }
 }

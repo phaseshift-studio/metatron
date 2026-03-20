@@ -1,3 +1,4 @@
+[discrete]
 == Fail and Catch
 
 The exception handling architecture of metatron leverages a fail monad with some unique features novel to metatron. The fail monad as two states: propagating and caught.

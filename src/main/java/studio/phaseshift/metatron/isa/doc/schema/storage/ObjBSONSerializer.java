@@ -109,7 +109,7 @@ public class ObjBSONSerializer extends AbstractObjSerializer<BsonValue> {
     @Override
     public Obj read(final BsonValue bson) {
         if (bson.isNull())
-            return noobj();  // BsonNull maps to noobj
+            return noobj();
         if (bson.isBoolean())
             return this.readBool(bson);
         if (bson.isInt32())
@@ -121,9 +121,9 @@ public class ObjBSONSerializer extends AbstractObjSerializer<BsonValue> {
         if (bson.isString())
             return this.readStr(bson);
         if (bson.isObjectId())
-            return this.readUri(bson);  // ObjectId maps to uri type
+            return this.readUri(bson);
         if (bson.isDateTime())
-            return this.readInt(bson);  // DateTime maps to int (milliseconds since epoch)
+            return this.readInt(bson);  // datetime maps to int (milliseconds since epoch)
         if (bson.isBinary()) {
             final Byte magic = bson.asBinary().getData()[0];
             if (Objects.equals(magic, BYTES_MAGIC_NUMBER)) {
@@ -229,7 +229,7 @@ public class ObjBSONSerializer extends AbstractObjSerializer<BsonValue> {
                     !key.equals("_id") &&
                     value.isObjectId()) {
 
-                // Extract collection name from field name (e.g., "userId" -> "users")
+                // Extract the collection name from the field name (e.g., "userId" -> "users")
                 final String fieldName = key.substring(0, key.length() - 2); // Remove "Id"
                 final String collectionName = fieldName + "s"; // Simple pluralization
                 final String id = value.asObjectId().getValue().toHexString();

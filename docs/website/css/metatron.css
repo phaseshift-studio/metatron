@@ -537,11 +537,11 @@ body {
     padding: 20px !important;
 }
 
-.pdf-export-mode h1, 
-.pdf-export-mode h2, 
-.pdf-export-mode h3, 
-.pdf-export-mode h4, 
-.pdf-export-mode h5, 
+.pdf-export-mode h1,
+.pdf-export-mode h2,
+.pdf-export-mode h3,
+.pdf-export-mode h4,
+.pdf-export-mode h5,
 .pdf-export-mode h6 {
     color: #000000 !important;
     font-family: 'Times New Roman', Times, serif !important;
@@ -551,7 +551,7 @@ body {
     -webkit-text-stroke: 0 !important;
 }
 
-.pdf-export-mode p, 
+.pdf-export-mode p,
 .pdf-export-mode li,
 .pdf-export-mode div {
     color: #000000 !important;
@@ -561,7 +561,7 @@ body {
     text-shadow: none !important;
 }
 
-.pdf-export-mode pre, 
+.pdf-export-mode pre,
 .pdf-export-mode code {
     background: #f0f0f0 !important;
     color: #000000 !important;
@@ -579,46 +579,46 @@ body {
 }
 
 /* Reset syntax highlighting for B&W export */
-.pdf-export-mode .hljs-comment, 
+.pdf-export-mode .hljs-comment,
 .pdf-export-mode .hljs-quote,
-.pdf-export-mode .hljs-mtron-comment { 
-    color: #555 !important; 
-    font-style: italic !important; 
+.pdf-export-mode .hljs-mtron-comment {
+    color: #555 !important;
+    font-style: italic !important;
 }
 
-.pdf-export-mode .hljs-keyword, 
-.pdf-export-mode .hljs-selector-tag, 
+.pdf-export-mode .hljs-keyword,
+.pdf-export-mode .hljs-selector-tag,
 .pdf-export-mode .hljs-subst,
 .pdf-export-mode .hljs-mtron-keyword,
-.pdf-export-mode .hljs-mtron-inst { 
-    color: #000 !important; 
-    font-weight: bold !important; 
+.pdf-export-mode .hljs-mtron-inst {
+    color: #000 !important;
+    font-weight: bold !important;
 }
 
-.pdf-export-mode .hljs-number, 
-.pdf-export-mode .hljs-literal, 
-.pdf-export-mode .hljs-variable, 
-.pdf-export-mode .hljs-template-variable, 
+.pdf-export-mode .hljs-number,
+.pdf-export-mode .hljs-literal,
+.pdf-export-mode .hljs-variable,
+.pdf-export-mode .hljs-template-variable,
 .pdf-export-mode .hljs-tag .hljs-attr,
 .pdf-export-mode .hljs-mtron-real,
 .pdf-export-mode .hljs-mtron-int,
-.pdf-export-mode .hljs-mtron-bool { 
-    color: #000 !important; 
+.pdf-export-mode .hljs-mtron-bool {
+    color: #000 !important;
 }
 
-.pdf-export-mode .hljs-string, 
+.pdf-export-mode .hljs-string,
 .pdf-export-mode .hljs-doctag,
-.pdf-export-mode .hljs-mtron-str { 
-    color: #000 !important; 
+.pdf-export-mode .hljs-mtron-str {
+    color: #000 !important;
 }
 
-.pdf-export-mode .hljs-title, 
-.pdf-export-mode .hljs-section, 
+.pdf-export-mode .hljs-title,
+.pdf-export-mode .hljs-section,
 .pdf-export-mode .hljs-selector-id,
 .pdf-export-mode .hljs-mtron-uri,
-.pdf-export-mode .hljs-mtron-type { 
-    color: #000 !important; 
-    font-weight: bold !important; 
+.pdf-export-mode .hljs-mtron-type {
+    color: #000 !important;
+    font-weight: bold !important;
 }
 
 .pdf-export-mode .conum + b {
@@ -666,16 +666,19 @@ body {
         font-family: 'Times New Roman', Times, serif !important;
         padding: 0 !important;
     }
+
     .custom-docs h1, .custom-docs h2, .custom-docs h3, .custom-docs h4, .custom-docs h5, .custom-docs h6 {
         color: #000000 !important;
         font-family: 'Times New Roman', Times, serif !important;
         border-bottom: 1px solid #eee;
         padding-bottom: 5px;
     }
+
     .custom-docs p, .custom-docs li {
         font-size: 11pt !important;
         line-height: 1.5 !important;
     }
+
     .collapse {
         display: block !important;
         height: auto !important;
@@ -685,10 +688,12 @@ body {
         border: none !important;
         box-shadow: none !important;
     }
+
     .collapse:last-child {
         page-break-after: avoid;
         break-after: avoid;
     }
+
     pre, code {
         background: #f8f9fa !important;
         color: #000000 !important;
@@ -697,30 +702,83 @@ body {
         word-wrap: break-word !important;
         font-size: 9pt !important;
     }
+
     .hljs {
         background: #f8f9fa !important;
         color: #000000 !important;
     }
+
     /* Reset syntax highlighting for a more academic look */
-    .hljs-comment, .hljs-quote { color: #666 !important; font-style: italic !important; }
-    .hljs-keyword, .hljs-selector-tag, .hljs-subst { color: #000 !important; font-weight: bold !important; }
-    .hljs-number, .hljs-literal, .hljs-variable, .hljs-template-variable, .hljs-tag .hljs-attr { color: #000 !important; }
-    .hljs-string, .hljs-doctag { color: #000 !important; }
-    .hljs-title, .hljs-section, .hljs-selector-id { color: #000 !important; font-weight: bold !important; }
-    .hljs-subst { font-weight: normal !important; }
-    .hljs-type, .hljs-class .hljs-title { color: #000 !important; font-weight: bold !important; }
-    .hljs-tag, .hljs-name, .hljs-attribute { color: #000 !important; }
-    .hljs-regexp, .hljs-link { color: #000 !important; }
-    .hljs-symbol, .hljs-bullet { color: #000 !important; }
-    .hljs-built_in, .hljs-builtin-name { color: #000 !important; }
-    .hljs-meta { color: #666 !important; font-weight: bold !important; }
-    .hljs-deletion { background: #fdd !important; }
-    .hljs-addition { background: #dfd !important; }
-    .hljs-emphasis { font-style: italic !important; }
+    .hljs-comment, .hljs-quote {
+        color: #666 !important;
+        font-style: italic !important;
+    }
+
+    .hljs-keyword, .hljs-selector-tag, .hljs-subst {
+        color: #000 !important;
+        font-weight: bold !important;
+    }
+
+    .hljs-number, .hljs-literal, .hljs-variable, .hljs-template-variable, .hljs-tag .hljs-attr {
+        color: #000 !important;
+    }
+
+    .hljs-string, .hljs-doctag {
+        color: #000 !important;
+    }
+
+    .hljs-title, .hljs-section, .hljs-selector-id {
+        color: #000 !important;
+        font-weight: bold !important;
+    }
+
+    .hljs-subst {
+        font-weight: normal !important;
+    }
+
+    .hljs-type, .hljs-class .hljs-title {
+        color: #000 !important;
+        font-weight: bold !important;
+    }
+
+    .hljs-tag, .hljs-name, .hljs-attribute {
+        color: #000 !important;
+    }
+
+    .hljs-regexp, .hljs-link {
+        color: #000 !important;
+    }
+
+    .hljs-symbol, .hljs-bullet {
+        color: #000 !important;
+    }
+
+    .hljs-built_in, .hljs-builtin-name {
+        color: #000 !important;
+    }
+
+    .hljs-meta {
+        color: #666 !important;
+        font-weight: bold !important;
+    }
+
+    .hljs-deletion {
+        background: #fdd !important;
+    }
+
+    .hljs-addition {
+        background: #dfd !important;
+    }
+
+    .hljs-emphasis {
+        font-style: italic !important;
+    }
+
     .hljs-mtron-comment {
         color: #666 !important;
         font-style: italic !important;
     }
+
     .hljs-mtron-at-vid,
     .hljs-mtron-real,
     .hljs-mtron-bytes,
@@ -758,6 +816,7 @@ body {
         color: #000 !important;
         font-weight: bold !important;
     }
+
     .conum + b {
         background: #000 !important;
         color: #fff !important;
@@ -808,6 +867,16 @@ details {
     border-width: 1px;
     background-color: var(--secondarycolor) !important;
     border-style: solid;
+}
+
+.halign-center {
+    display: table-cell;
+    text-align: center; /* centers horizontally */
+}
+
+.valign-middle {
+    display: table-cell;
+    align-items: center; /* centers vertically */
 }
 
 .hljs {
@@ -939,4 +1008,6 @@ strong {
 
 .MathJax_Display {
     color: var(--mred);
+}
+
 }

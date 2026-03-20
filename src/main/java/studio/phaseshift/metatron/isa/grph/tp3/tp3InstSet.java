@@ -127,6 +127,11 @@ public class tp3InstSet extends AbstractInstSet {
             .doc("a vertex", "both adjacent edges", Map.of(jnt(0), "zero or more edge labels"), "returns the lhs vertex arg-adjacent incoming and outgoing edges")
             .inst(ADDE_INST_TID.dom(VRTX_TID).rng(EDGE_TID), lst(URI_TYPE, T(VRTX_TID), T(REC_TID.maybe())), (lhs, inst) -> objs(inst.arg(1).stream().map(e -> {
                 //if (e.test(T(VRTX_TID))) {
+                final VertexMap lhsMap =  lhs.jvm();
+                final fURI edgeLabel = inst.arg(0).uriValue().big();
+                //    final Object rhsObj = inst.arg(1).test(VRTX_TYPE) ? ((VertexMap)e.jvm()).getBase() ? inst.arg(1).tid().test(AUTO_FROM_INST_TID) : 
+                // TODO:support 
+                
                 final Edge edge = ((VertexMap) lhs.jvm()).getBase().addEdge(inst.arg(0).uriValue().big().toString(),
                         ((VertexMap) e.jvm()).getBase());
                 if (inst.arg(2).isRec()) {
