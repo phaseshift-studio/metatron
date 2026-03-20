@@ -43,6 +43,18 @@ Every instruction maps a **left hand side** `obj` (`lhs`) to a **right hand side
 \text{obj} \in \mathcal{P}(\text{obj})
 \end{align*}
 
+[source,mtron,role="center-code"]
+----
+      ┌────────────────┐                                       
+  ┌───┴───────┐        │       ┌──┐     ┌────────┐            
+  │           ▼ 1      ▼ 2     │  ▼ 4   │      6 ▼            
+ lhs => inst(arg1,...,argN){ inst1...instN } => rhs           
+  │                          3 ▲   │  ▲ 5                       
+  └────────────────────────────┘   └──┘
+----
+
+
+
 [discrete]
 === stacks and frames
 
