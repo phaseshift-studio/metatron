@@ -5,6 +5,22 @@ A graph is a data structure composed of a set of vertices `V` connected by a set
 \[
 G = (V,E).
 \]
+
+++++
+<div style="justify-self: center;">
+++++
+[source,mtron]
+----
+┌────────┐                     ┌────────┐       
+│        │        edge         │        │       
+│ vertex ├────────────────────►│ vertex │       
+│        │                     │        │       
+└────────┘                     └────────┘       
+----
+++++
+</div>
+++++
+
 This generic structure has numerous variations ranging from whether or not edges are directed, or labeled, or if self-loops are allowed, or whether edges are total or partial functions, and more. Of particular interest to modern graph databases is the variation known colloquially as a *property graph*. The property graph extends `G=(V,E)` by extending each vertex and edge with a set of properties (i.e. key/value pairs). A property graph is also known, in a more formal jargon, as a directed, labeled, attributed binary graph.
 
 ++++
@@ -28,19 +44,30 @@ The `/m/grph` instruction extends the core `/m` instruction set with the followi
 navigations primitives hide the graph encoding specifics, enabling the same instructions to be used across different
 graph encodings (discussed later when presenting hypergraphs).
 
+
 .`/m/grph` instructions
-[cols=".^2a,.^5",separator=🧱,options=header,role="table-bordered small center"]
+[cols=".^4a,.^4,.^4a",separator=🧱,options=header,role="table-bordered small center"]
 |===
-^🧱 inst 🧱 description
-🧱 `out?vrtx{+*+}\<=vrtx(uri{+*+}::T})`   🧱 traverse to the outgoing adjacent vertices of the lhs vertex
-🧱 `in?vrtx{+*+}\<=vrtx(uri{+*+}::T})`    🧱 traverse to the incoming adjacent vertices of the lhs vertex
-🧱 `both?vrtx{+*+}\<=vrtx(uri{+*+}::T})`  🧱 traverse to both the incoming and outgoing adjacent vertex of the lhs vertex
-🧱 `outE?edge{+*+}\<=vrtx(uri{+*+}::T})`  🧱 traverse to the outgoing incident edges of the lhs vertex
-🧱 `inE?edge{+*+}\<=vrtx(uri{+*+}::T})`   🧱 traverse to the incoming incident edges of the lhs vertex
-🧱 `bothE?edge{+*+}\<=vrtx(uri{+*+}::T})` 🧱 traverse to both the incoming and outgoing incident edges of the lhs vertex
-🧱 `inV?vrtx\<=edge()`                    🧱 traverse to the incoming incident vertex of the lhs edge
-🧱 `outV?vrtx\<=edge()`                   🧱 traverse to the outgoing incident vertex of the lhs edge
-🧱 `bothV?vrtx{2}\<=edge()`               🧱 traverse to both the incoming and outgoing incident vertex of the lhs edge
+^🧱 inst ^🧱 description ^🧱 diagram
+🧱 `out?vrtx{+*+}\<=vrtx(uri{+*+}::T})`   🧱 traverse to the outgoing adjacent vertices of the lhs vertex 1.8+a🧱
+[source,mtron]
+----
+   vertex         ┌─────────┐        vertex  
+┌─────────┐       │k1 => v1 │      ┌─────────┐ 
+│k1 => v1 │       │k2 => v2 │      │k1 => v1 │ 
+│k2 => v2 │outE   └─────────┘  inV │k2 => v2 │ 
+│  ...    ├───────────────────────►│  ...    │
+│k3 => v3 │outV      edge      inE │k3 => v3 │
+└─────────┘                        └─────────┘
+----
+🧱 `in?vrtx{+*+}\<=vrtx(uri{+*+}::T})`    🧱 traverse to the incoming adjacent vertices of the lhs vertex                   
+🧱 `both?vrtx{+*+}\<=vrtx(uri{+*+}::T})`  🧱 traverse to both the incoming and outgoing adjacent vertex of the lhs vertex   
+🧱 `outE?edge{+*+}\<=vrtx(uri{+*+}::T})`  🧱 traverse to the outgoing incident edges of the lhs vertex                      
+🧱 `inE?edge{+*+}\<=vrtx(uri{+*+}::T})`   🧱 traverse to the incoming incident edges of the lhs vertex                     
+🧱 `bothE?edge{+*+}\<=vrtx(uri{+*+}::T})` 🧱 traverse to both the incoming and outgoing incident edges of the lhs vertex     
+🧱 `inV?vrtx\<=edge()`                    🧱 traverse to the incoming incident vertex of the lhs edge                         
+🧱 `outV?vrtx\<=edge()`                   🧱 traverse to the outgoing incident vertex of the lhs edge                         
+🧱 `bothV?vrtx{2}\<=edge()`               🧱 traverse to both the incoming and outgoing incident vertex of the lhs edge       
 |===
 
 [discrete]
@@ -87,18 +114,31 @@ traversals.
 The boot loader used for this documentation connects to a number of data sources, with two being of use for the example
 to follow. Namely, tp3 modern (graph database) and the netflix movie dataset (relational database).
 
-.the netflix schema
+.the modern graph schema
 [%collapsible]
 ====
+++++
+<!-- 🐖
+*/g/schema/pattern.*(_)
+-->
+++++
+====
 
+
+.the netflix relational schema
+[%collapsible]
+====
 ++++
 <!-- 🐖 
 *netflix:
-*netflix:schema/foreign_keys
 -->
 ++++
-
 ====
+
+[cols="5a,5a",role="table-bordered small center",separator=🧱]
+|===
+
+🧱
 
 ++++
 <!-- 🐖
@@ -107,6 +147,27 @@ to follow. Namely, tp3 modern (graph database) and the netflix movie dataset (re
 /g/V/1.addE(watched,*netflix:movie/11488)
 -->
 ++++
+
+🧱        
+[source,mtron]
+----
+      grph                         tble           
+┌───────────────┐            ┌───────────────┐
+│               │            │┌─────────────┐│
+│ ┌──┐          │            │├─────────────┤│
+│ │  ├──────────┼────────────►├─────────────┤│
+│ └─┬┘          │            │├─────────────┤│
+│   │           │            │├─────────────┤│
+│   │    ┌──┐   │            │├─────────────┤│
+│   └───►│  │◄──┼────────────┤├─────────────┤│
+│        └──┘   │            │├─────────────┤│
+│               │            │└─────────────┘│
+└───────────────┘            └───────────────┘
+----
+
+🧱
+
+|===
 
 =====
 

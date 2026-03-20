@@ -70,6 +70,15 @@
     text-shadow: 0 0 1px rgba(255, 255, 255, 0.7), 0 0 5px rgba(255, 255, 255, 0.5), 0 0 8px rgba(255, 255, 255, 0.3);
 }
 
+.tutorial-grid .btn {
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.5), 0 0 10px rgba(200, 0, 0, 0.4);
+    transition: box-shadow 0.3s ease-in-out;
+}
+
+.tutorial-grid .btn:hover {
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.7), 0 0 20px rgba(200, 0, 0, 0.6);
+}
+
 /*** TERMINAL LOOK-AND-FEEL ***/
 [data-termynal] {
     width: 100%;
@@ -831,6 +840,10 @@ pre {
     border: none;
 }
 
+.content {
+    margin: 0.5rem;
+}
+
 details {
     border-style: solid;
     border-width: 1px;
@@ -869,14 +882,23 @@ details {
     border-style: solid;
 }
 
+
+
+th {
+    font-size: 1.2rem;
+    color: var(--mred);
+}
+
 .halign-center {
     display: table-cell;
     text-align: center; /* centers horizontally */
+    padding: 0.5rem;
 }
 
 .valign-middle {
     display: table-cell;
     align-items: center; /* centers vertically */
+    padding: 0.5rem;
 }
 
 .hljs {
@@ -1008,6 +1030,4 @@ strong {
 
 .MathJax_Display {
     color: var(--mred);
-}
-
 }

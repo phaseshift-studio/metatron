@@ -550,11 +550,11 @@ body {
     padding: 20px !important;
 }
 
-.pdf-export-mode h1, 
-.pdf-export-mode h2, 
-.pdf-export-mode h3, 
-.pdf-export-mode h4, 
-.pdf-export-mode h5, 
+.pdf-export-mode h1,
+.pdf-export-mode h2,
+.pdf-export-mode h3,
+.pdf-export-mode h4,
+.pdf-export-mode h5,
 .pdf-export-mode h6 {
     color: #000000 !important;
     font-family: 'Times New Roman', Times, serif !important;
@@ -564,7 +564,7 @@ body {
     -webkit-text-stroke: 0 !important;
 }
 
-.pdf-export-mode p, 
+.pdf-export-mode p,
 .pdf-export-mode li,
 .pdf-export-mode div {
     color: #000000 !important;
@@ -574,7 +574,7 @@ body {
     text-shadow: none !important;
 }
 
-.pdf-export-mode pre, 
+.pdf-export-mode pre,
 .pdf-export-mode code {
     background: #f0f0f0 !important;
     color: #000000 !important;
@@ -592,46 +592,46 @@ body {
 }
 
 /* Reset syntax highlighting for B&W export */
-.pdf-export-mode .hljs-comment, 
+.pdf-export-mode .hljs-comment,
 .pdf-export-mode .hljs-quote,
-.pdf-export-mode .hljs-mtron-comment { 
-    color: #555 !important; 
-    font-style: italic !important; 
+.pdf-export-mode .hljs-mtron-comment {
+    color: #555 !important;
+    font-style: italic !important;
 }
 
-.pdf-export-mode .hljs-keyword, 
-.pdf-export-mode .hljs-selector-tag, 
+.pdf-export-mode .hljs-keyword,
+.pdf-export-mode .hljs-selector-tag,
 .pdf-export-mode .hljs-subst,
 .pdf-export-mode .hljs-mtron-keyword,
-.pdf-export-mode .hljs-mtron-inst { 
-    color: #000 !important; 
-    font-weight: bold !important; 
+.pdf-export-mode .hljs-mtron-inst {
+    color: #000 !important;
+    font-weight: bold !important;
 }
 
-.pdf-export-mode .hljs-number, 
-.pdf-export-mode .hljs-literal, 
-.pdf-export-mode .hljs-variable, 
-.pdf-export-mode .hljs-template-variable, 
+.pdf-export-mode .hljs-number,
+.pdf-export-mode .hljs-literal,
+.pdf-export-mode .hljs-variable,
+.pdf-export-mode .hljs-template-variable,
 .pdf-export-mode .hljs-tag .hljs-attr,
 .pdf-export-mode .hljs-mtron-real,
 .pdf-export-mode .hljs-mtron-int,
-.pdf-export-mode .hljs-mtron-bool { 
-    color: #000 !important; 
+.pdf-export-mode .hljs-mtron-bool {
+    color: #000 !important;
 }
 
-.pdf-export-mode .hljs-string, 
+.pdf-export-mode .hljs-string,
 .pdf-export-mode .hljs-doctag,
-.pdf-export-mode .hljs-mtron-str { 
-    color: #000 !important; 
+.pdf-export-mode .hljs-mtron-str {
+    color: #000 !important;
 }
 
-.pdf-export-mode .hljs-title, 
-.pdf-export-mode .hljs-section, 
+.pdf-export-mode .hljs-title,
+.pdf-export-mode .hljs-section,
 .pdf-export-mode .hljs-selector-id,
 .pdf-export-mode .hljs-mtron-uri,
-.pdf-export-mode .hljs-mtron-type { 
-    color: #000 !important; 
-    font-weight: bold !important; 
+.pdf-export-mode .hljs-mtron-type {
+    color: #000 !important;
+    font-weight: bold !important;
 }
 
 .pdf-export-mode .conum + b {
@@ -679,16 +679,19 @@ body {
         font-family: 'Times New Roman', Times, serif !important;
         padding: 0 !important;
     }
+
     .custom-docs h1, .custom-docs h2, .custom-docs h3, .custom-docs h4, .custom-docs h5, .custom-docs h6 {
         color: #000000 !important;
         font-family: 'Times New Roman', Times, serif !important;
         border-bottom: 1px solid #eee;
         padding-bottom: 5px;
     }
+
     .custom-docs p, .custom-docs li {
         font-size: 11pt !important;
         line-height: 1.5 !important;
     }
+
     .collapse {
         display: block !important;
         height: auto !important;
@@ -698,10 +701,12 @@ body {
         border: none !important;
         box-shadow: none !important;
     }
+
     .collapse:last-child {
         page-break-after: avoid;
         break-after: avoid;
     }
+
     pre, code {
         background: #f8f9fa !important;
         color: #000000 !important;
@@ -710,30 +715,83 @@ body {
         word-wrap: break-word !important;
         font-size: 9pt !important;
     }
+
     .hljs {
         background: #f8f9fa !important;
         color: #000000 !important;
     }
+
     /* Reset syntax highlighting for a more academic look */
-    .hljs-comment, .hljs-quote { color: #666 !important; font-style: italic !important; }
-    .hljs-keyword, .hljs-selector-tag, .hljs-subst { color: #000 !important; font-weight: bold !important; }
-    .hljs-number, .hljs-literal, .hljs-variable, .hljs-template-variable, .hljs-tag .hljs-attr { color: #000 !important; }
-    .hljs-string, .hljs-doctag { color: #000 !important; }
-    .hljs-title, .hljs-section, .hljs-selector-id { color: #000 !important; font-weight: bold !important; }
-    .hljs-subst { font-weight: normal !important; }
-    .hljs-type, .hljs-class .hljs-title { color: #000 !important; font-weight: bold !important; }
-    .hljs-tag, .hljs-name, .hljs-attribute { color: #000 !important; }
-    .hljs-regexp, .hljs-link { color: #000 !important; }
-    .hljs-symbol, .hljs-bullet { color: #000 !important; }
-    .hljs-built_in, .hljs-builtin-name { color: #000 !important; }
-    .hljs-meta { color: #666 !important; font-weight: bold !important; }
-    .hljs-deletion { background: #fdd !important; }
-    .hljs-addition { background: #dfd !important; }
-    .hljs-emphasis { font-style: italic !important; }
+    .hljs-comment, .hljs-quote {
+        color: #666 !important;
+        font-style: italic !important;
+    }
+
+    .hljs-keyword, .hljs-selector-tag, .hljs-subst {
+        color: #000 !important;
+        font-weight: bold !important;
+    }
+
+    .hljs-number, .hljs-literal, .hljs-variable, .hljs-template-variable, .hljs-tag .hljs-attr {
+        color: #000 !important;
+    }
+
+    .hljs-string, .hljs-doctag {
+        color: #000 !important;
+    }
+
+    .hljs-title, .hljs-section, .hljs-selector-id {
+        color: #000 !important;
+        font-weight: bold !important;
+    }
+
+    .hljs-subst {
+        font-weight: normal !important;
+    }
+
+    .hljs-type, .hljs-class .hljs-title {
+        color: #000 !important;
+        font-weight: bold !important;
+    }
+
+    .hljs-tag, .hljs-name, .hljs-attribute {
+        color: #000 !important;
+    }
+
+    .hljs-regexp, .hljs-link {
+        color: #000 !important;
+    }
+
+    .hljs-symbol, .hljs-bullet {
+        color: #000 !important;
+    }
+
+    .hljs-built_in, .hljs-builtin-name {
+        color: #000 !important;
+    }
+
+    .hljs-meta {
+        color: #666 !important;
+        font-weight: bold !important;
+    }
+
+    .hljs-deletion {
+        background: #fdd !important;
+    }
+
+    .hljs-addition {
+        background: #dfd !important;
+    }
+
+    .hljs-emphasis {
+        font-style: italic !important;
+    }
+
     .hljs-mtron-comment {
         color: #666 !important;
         font-style: italic !important;
     }
+
     .hljs-mtron-at-vid,
     .hljs-mtron-real,
     .hljs-mtron-bytes,
@@ -771,6 +829,7 @@ body {
         color: #000 !important;
         font-weight: bold !important;
     }
+
     .conum + b {
         background: #000 !important;
         color: #fff !important;
@@ -783,6 +842,10 @@ pre {
 
 .switch {
     border: none;
+}
+
+.content {
+    margin: 0.5rem;
 }
 
 details {
@@ -821,6 +884,23 @@ details {
     border-width: 1px;
     background-color: var(--secondarycolor) !important;
     border-style: solid;
+}
+
+th {
+    font-size: 1.2rem;
+    color: var(--mred);
+}
+
+.halign-center {
+    display: table-cell;
+    text-align: center; /* centers horizontally */
+    padding: 0.5rem;
+}
+
+.valign-middle {
+    display: table-cell;
+    align-items: center; /* centers vertically */
+    padding: 0.5rem;
 }
 
 .hljs {
@@ -952,6 +1032,8 @@ strong {
 
 .MathJax_Display {
     color: var(--mred);
+}
+
 }
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
@@ -1603,7 +1685,7 @@ While the reader searches for some unbeknownst depth in the previous sentence, a
 ==&gt;m/1/3=&gt;7
 ==&gt;boot/peers/1=&gt;&lt;ws://127.0.0.1:7777&gt;
 ==&gt;band=&gt;inst?rng=int{?}&amp;dom=int(min=&gt;isa(int::T[is(gt(0))]@nat).else(-100),max=&gt;isa(int::T[is(gt(0))]@nat).else(100)){is(and(gte(*min),lte(*max)))}
-==&gt;personx=&gt;rec::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;personx{*}::T])]
+==&gt;personx=&gt;rec::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;personx{*}::T])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]
 ==&gt;triple=&gt;inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}
 ==&gt;boot/script/python=&gt;/usr/bin/python3
 ==&gt;x/a=&gt;1
@@ -1651,7 +1733,7 @@ While the reader searches for some unbeknownst depth in the previous sentence, a
  mqtt =&gt;[broker=&gt;&lt;mqtt://chibi.local:1883&gt;]]
 ==&gt;boot/args/mqtt=&gt;[broker=&gt;&lt;mqtt://chibi.local:1883&gt;]
 ==&gt;age=&gt;int::T[is(lt(120))]@nat
-==&gt;sum=&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{*}::T [reduce?rng=int&amp;dom=int{*}(noobj){fold(0,plus(id()))}]][...]@/sys/fail/106
+==&gt;sum=&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{*}::T [reduce?rng=int&amp;dom=int{*}(noobj){fold(0,plus(id()))}]][...]@/sys/fail/3268
 ==&gt;boot/script/mtron=&gt;/bin/mtron
 ==&gt;m/2/3=&gt;11
 ==&gt;m/2=&gt;[8,9,10,11]
@@ -1839,7 +1921,7 @@ mtron&gt; 15.band(10,20)              ​4​
 ==&gt;15
 mtron&gt; -15.band(-20,-10)           ​5​
 mtron&gt; band -&gt; |inst?int{?}&lt;=int(min=&gt;?nat::T.else(fail()),max=&gt;?nat::T.else(fail())){ is(and(gte(*min),lte(*max))) }
-==&gt;fail::[fail(noobj) is not a fail::T][...]@/sys/fail/336
+==&gt;fail::[fail(noobj) is not a fail::T][...]@/sys/fail/3564
 mtron&gt; 15.band(10,20)              ​6​
 ==&gt;15
 mtron&gt; -15.band(-20,-10)           ​7​
@@ -1890,15 +1972,15 @@ Finally, a degenerate anonymous <code>inst</code> with no specified variable fra
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; 10.(min=&gt;2,max=&gt;8){ is(and(gte(*min),lte(*max))) }                ​1​
 ==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/350
+	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/3578
 mtron&gt; 10.(min=&gt;minus(1),max=&gt;plus(1)){ is(and(gte(*min),lte(*max))) }   ​2​
 ==&gt;10
 mtron&gt; 10.(min=&gt;2,max=&gt;8){ is(and(gte(*bad_min),lte(*bad_max))) }        ​3​
 ==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/352
+	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/3580
 mtron&gt; 10.(){ is(and(gte(*min),lte(*max))) }                             ​4​
 ==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/354
+	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/3582
 mtron&gt; 10.is(and(gte(minus(1)),lte(plus(1))))                            ​5​
 ==&gt;10</code></pre>
 </div>
@@ -1937,11 +2019,11 @@ mtron&gt; 10.is(and(gte(minus(1)),lte(plus(1))))                            ​5
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;_)[mod(*by).eq(0)]
 ==&gt;fail::[is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;_)[mod(*by).eq(0)]
                                       ^ end of input expected
-][...]@/sys/fail/356
+][...]@/sys/fail/3584
 mtron&gt; 10.is_divisible(2)
-==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/358
+==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/3586
 mtron&gt; 10.is_divisible('abc')
-==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/360</code></pre>
+==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/3588</code></pre>
 </div>
 </div>
 </div>
@@ -1962,7 +2044,7 @@ mtron&gt; 10.is_divisible('abc')
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; band -&gt; |band?int{?}&lt;=int(min=&gt;_,max=&gt;is(gt(*min)).else(*min.plus(1)))[is(gte(*min)).is(lte(*max))]
 ==&gt;fail::[band -&gt; |band?int{?}&lt;=int(min=&gt;_,max=&gt;is(gt(*min)).else(*min.plus(1)))[is(gte(*min)).is(lte(*max))]
                                                                       ^ end of input expected
-][...]@/sys/fail/362
+][...]@/sys/fail/3590
 mtron&gt; 2.band(min=&gt;1,max=&gt;1)                 ​1​</code></pre>
 </div>
 </div>
@@ -1984,11 +2066,11 @@ mtron&gt; 2.band(min=&gt;1,max=&gt;1)                 ​1​</code></pre>
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;is(neq(0)).else(print('error').map(1)))[mod(*by).eq(0)]
 ==&gt;fail::[is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;is(neq(0)).else(print('error').map(1)))[mod(*by).eq(0)]
                                       ^ end of input expected
-][...]@/sys/fail/364
+][...]@/sys/fail/3592
 mtron&gt; 10.is_divisible(2)
-==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/366
+==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/3594
 mtron&gt; 10.is_divisible('abc')
-==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/368</code></pre>
+==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/3596</code></pre>
 </div>
 </div>
 </div>
@@ -2019,9 +2101,9 @@ This ensures the uri <code>triple</code> is not applied to the <code>inst</code>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; triple -&gt; inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}
-==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}]][...]@/sys/fail/370
+==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}]][...]@/sys/fail/3598
 mtron&gt; *triple
-==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}]][...]@/sys/fail/370</code></pre>
+==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}]][...]@/sys/fail/3598</code></pre>
 </div>
 </div>
 </td>
@@ -2060,7 +2142,7 @@ mtron&gt; {1,2,3,4,5,6}.triple()
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; sum -&gt; reduce?int&lt;=int{*}(){fold(0,plus(_))}
-==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{*}::T [reduce?rng=int&amp;dom=int{*}(noobj){fold(0,plus(id()))}]][...]@/sys/fail/372</code></pre>
+==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{*}::T [reduce?rng=int&amp;dom=int{*}(noobj){fold(0,plus(id()))}]][...]@/sys/fail/3600</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2152,15 +2234,17 @@ via constructs within the language itself and existing outside the referential s
 The <code>split</code> instruction is the addition operator of the mtron <code>inst</code> ring. As such, it forms an abelian group. The significance
 of its distributivity with the ring&#8217;s multiplicative operator (<code>apply</code>, sugar&#8217;d <code>.</code>) can not be overstated. However, a
 detailed discussion of this property will be discussed elsewhere. For now, when seen in isolation as a commutative group,
-the following axioms hold.
-\[
+the following axioms hold.</p>
+</div>
+<div class="paragraph">
+<p>\[
 \small
-\begin{align}
+\begin{aligned}
 &amp;\tt{split}(ca,noobj)        &amp;=&amp;\; \tt{ca} + \tt{noobj}          &amp;=&amp;\; \tt{ca}                             &amp; (\text{zero})\\
 &amp;\tt{split}(ca,cb)           &amp;=&amp;\; \tt{ca} + \tt{cb}             &amp;=&amp;\; \tt{split}(cb,ca)                   &amp; (\text{commutative})\\
 &amp;\tt{split}(ca,{\text{-}ca}) &amp;=&amp;\; \tt{ca} - \tt{ca}             &amp;=&amp;\; \tt{noobj}                   &amp; (\text{inverse})\\
 &amp;\tt{split}(ca,split(cb,cd)) &amp;=&amp;\; \tt{ca} + (\tt{cb} + \tt{cd}) &amp;=&amp;\; \tt{split(split(ca,cb),cd)}  &amp; (\text{associative}).\\
-\end{align}
+\end{aligned}
 \]</p>
 </div>
 <div class="paragraph">
@@ -2170,13 +2254,13 @@ the following axioms hold.
 <p>\[
 \small
 \tt{obj} \cdot \tt{split}(\tt{rec}) \equiv \left[
-\begin{align}
-\tt{obj} \cdot&amp; \tt{dom({rec}{0})}   &amp; \Rightarrow &amp;\; \tt{obj} \cdot \tt{rng({rec}_{0})} \\
+\begin{aligned}
+\tt{obj} \cdot&amp; \tt{dom({rec}_{0})}   &amp; \Rightarrow &amp;\; \tt{obj} \cdot \tt{rng({rec}_{0})} \\
 \tt{obj} \cdot&amp; \tt{dom({rec}_{1})}  &amp; \Rightarrow &amp;\; \tt{obj} \cdot \tt{rng({rec}_{1})} \\
 \tt{obj} \cdot&amp; \tt{dom({rec}_{2})}  &amp; \Rightarrow &amp;\; \tt{obj} \cdot \tt{rng({rec}_{2})} \\
 \vdots        &amp;                      &amp; \Rightarrow &amp;\; \vdots \\
 \tt{obj} \cdot&amp; \tt{dom({rec}_{n})}  &amp; \Rightarrow &amp;\; \tt{obj} \cdot \tt{rng({rec}_{n})}
-\end{align}
+\end{aligned}
 \right]
 \]</p>
 </div>
@@ -2184,12 +2268,12 @@ the following axioms hold.
 <p>\[
 \small
 \tt{obj} \cdot \tt{split}(\tt{lst}) \equiv \left[
-\begin{align}
+\begin{aligned}
 \tt{obj} \cdot &amp; \tt{dom({lst}_{0})} \\
 \tt{obj} \cdot &amp; \tt{rng({lst}_{1})} \\
 \vdots &amp;\\
 \tt{obj} \cdot &amp; \tt{rng({lst}_{n})} \\
-\end{align}
+\end{aligned}
 \right]
 \]</p>
 </div>
@@ -2331,88 +2415,88 @@ ultimately dependent on the incoming lhs <code>obj</code>, where</p>
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *ollama:+
 ==&gt;model::[
  size    =&gt;gB::48.19,
- host    =&gt;!*/sys/space/ollama/host,
- name    =&gt;qwen3-coder-next:latest,
- think   =&gt;false,
+ skill   =&gt;[completion,tools],
  provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion,tools]]@ollama:qwen3-coder-next:latest
+ think   =&gt;false,
+ name    =&gt;qwen3-coder-next:latest,
+ host    =&gt;!*/sys/space/ollama/host]@ollama:qwen3-coder-next:latest
 ==&gt;model::[
  size    =&gt;gB::17.71,
- host    =&gt;!*/sys/space/ollama/host,
- name    =&gt;&lt;glm-4.7-flash:latest&gt;,
- think   =&gt;true,
+ skill   =&gt;[completion,tools,thinking],
  provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion,tools,thinking]]@ollama:glm-4.7-flash:latest
+ think   =&gt;true,
+ name    =&gt;&lt;glm-4.7-flash:latest&gt;,
+ host    =&gt;!*/sys/space/ollama/host]@ollama:glm-4.7-flash:latest
 ==&gt;model::[
  size    =&gt;gB::0.00,
- host    =&gt;!*/sys/space/ollama/host,
- name    =&gt;&lt;deepseek-v3.2:cloud&gt;,
- think   =&gt;true,
+ skill   =&gt;[completion,tools,thinking],
  provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion,tools,thinking]]@ollama:deepseek-v3.2:cloud
+ think   =&gt;true,
+ name    =&gt;&lt;deepseek-v3.2:cloud&gt;,
+ host    =&gt;!*/sys/space/ollama/host]@ollama:deepseek-v3.2:cloud
 ==&gt;model::[
  size    =&gt;gB::4.87,
- host    =&gt;!*/sys/space/ollama/host,
- name    =&gt;qwen3:8b,
- think   =&gt;true,
+ skill   =&gt;[completion,tools,thinking],
  provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion,tools,thinking]]@ollama:qwen3:8b
+ think   =&gt;true,
+ name    =&gt;qwen3:8b,
+ host    =&gt;!*/sys/space/ollama/host]@ollama:qwen3:8b
 ==&gt;model::[
  size    =&gt;gB::8.37,
- host    =&gt;!*/sys/space/ollama/host,
- name    =&gt;deepcoder:latest,
- think   =&gt;false,
+ skill   =&gt;[completion],
  provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion]]@ollama:deepcoder:latest
+ think   =&gt;false,
+ name    =&gt;deepcoder:latest,
+ host    =&gt;!*/sys/space/ollama/host]@ollama:deepcoder:latest
 ==&gt;model::[
  size    =&gt;gB::4.41,
- host    =&gt;!*/sys/space/ollama/host,
- name    =&gt;llava:latest,
- think   =&gt;false,
+ skill   =&gt;[completion,vision],
  provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion,vision]]@ollama:llava:latest
+ think   =&gt;false,
+ name    =&gt;llava:latest,
+ host    =&gt;!*/sys/space/ollama/host]@ollama:llava:latest
 ==&gt;model::[
  size    =&gt;gB::4.87,
- host    =&gt;!*/sys/space/ollama/host,
- name    =&gt;qwen3:latest,
- think   =&gt;true,
+ skill   =&gt;[completion,tools,thinking],
  provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion,tools,thinking]]@ollama:qwen3:latest
+ think   =&gt;true,
+ name    =&gt;qwen3:latest,
+ host    =&gt;!*/sys/space/ollama/host]@ollama:qwen3:latest
 ==&gt;model::[
  size    =&gt;gB::12.85,
- host    =&gt;!*/sys/space/ollama/host,
- name    =&gt;gpt-oss:latest,
- think   =&gt;true,
+ skill   =&gt;[completion,tools,thinking],
  provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion,tools,thinking]]@ollama:gpt-oss:latest
+ think   =&gt;true,
+ name    =&gt;gpt-oss:latest,
+ host    =&gt;!*/sys/space/ollama/host]@ollama:gpt-oss:latest
 ==&gt;model::[
  size    =&gt;gB::0.00,
- host    =&gt;!*/sys/space/ollama/host,
- name    =&gt;&lt;minimax-m2.5:cloud&gt;,
- think   =&gt;true,
+ skill   =&gt;[completion,tools,thinking],
  provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion,tools,thinking]]@ollama:minimax-m2.5:cloud
+ think   =&gt;true,
+ name    =&gt;&lt;minimax-m2.5:cloud&gt;,
+ host    =&gt;!*/sys/space/ollama/host]@ollama:minimax-m2.5:cloud
 ==&gt;model::[
  size    =&gt;gB::0.72,
- host    =&gt;!*/sys/space/ollama/host,
- name    =&gt;deepseek-coder:latest,
- think   =&gt;false,
+ skill   =&gt;[completion],
  provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion]]@ollama:deepseek-coder:latest
+ think   =&gt;false,
+ name    =&gt;deepseek-coder:latest,
+ host    =&gt;!*/sys/space/ollama/host]@ollama:deepseek-coder:latest
 ==&gt;model::[
  size    =&gt;gB::0.59,
- host    =&gt;!*/sys/space/ollama/host,
- name    =&gt;tinyllama:latest,
- think   =&gt;false,
+ skill   =&gt;[completion],
  provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion]]@ollama:tinyllama:latest
+ think   =&gt;false,
+ name    =&gt;tinyllama:latest,
+ host    =&gt;!*/sys/space/ollama/host]@ollama:tinyllama:latest
 ==&gt;model::[
  size    =&gt;gB::4.34,
- host    =&gt;!*/sys/space/ollama/host,
- name    =&gt;llama3-groq-tool-use:latest,
- think   =&gt;false,
+ skill   =&gt;[completion,tools],
  provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion,tools]]@ollama:llama3-groq-tool-use:latest</code></pre>
+ think   =&gt;false,
+ name    =&gt;llama3-groq-tool-use:latest,
+ host    =&gt;!*/sys/space/ollama/host]@ollama:llama3-groq-tool-use:latest</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2483,7 +2567,7 @@ ai/memory -> /usr/mem
 ==&gt;fail::[unable to determine inst function:
 	1           =&gt; plus(b)      | [inst]
 	int::T      =&gt; #::T         |  \_dom
-	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/376
+	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/3604
 mtron&gt; 1.plus(b).catch(2).plus(3)        ​2​
 ==&gt;5</code></pre>
 </div>
@@ -2519,25 +2603,25 @@ mtron&gt; 1.plus(b).catch(2).plus(3)        ​2​
 ==&gt;fail::[unable to determine inst function:
 	1           =&gt; plus(b)      | [inst]
 	int::T      =&gt; #::T         |  \_dom
-	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/384
+	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/3612
 mtron&gt; */sys/fail/+               ​2​
-==&gt;fail::[unable to evaluate inst: plus(b)][...]@/sys/fail/381
-==&gt;fail::[unable to evaluate inst: plus(b)][...]@/sys/fail/382
 ==&gt;fail::[unable to determine inst function:
 	1           =&gt; plus(b)      | [inst]
 	int::T      =&gt; #::T         |  \_dom
-	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/384
+	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/3611
 ==&gt;fail::[unable to determine inst function:
 	1           =&gt; plus(b)      | [inst]
 	int::T      =&gt; #::T         |  \_dom
-	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/383
+	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/3612
+==&gt;fail::[unable to evaluate inst: plus(b)][...]@/sys/fail/3610
+==&gt;fail::[unable to evaluate inst: plus(b)][...]@/sys/fail/3609
 mtron&gt; */sys/fail/+.catch(_)      ​3​
-==&gt;fail{2}::[unable to evaluate inst: plus(b)]
 ==&gt;fail{2}::[unable to determine inst function:
 	1           =&gt; plus(b)      | [inst]
 	int::T      =&gt; #::T         |  \_dom
 	int::T     X=&gt; [b]          |  \_args]
     \_fail::[unable to evaluate inst: plus(b)]
+==&gt;fail{2}::[unable to evaluate inst: plus(b)]
 mtron&gt; */sys/fail                 ​4​</code></pre>
 </div>
 </div>
@@ -2570,7 +2654,7 @@ mtron&gt; */sys/fail                 ​4​</code></pre>
 ==&gt;cause?rng=fail{?}&amp;dom=fail(){&lt;j&gt;}
 mtron&gt; 1+b.catch(cause())     ​2​
 ==&gt;fail::[rhs does not match inst range:
-	fail::[unable to evaluate inst: plus(b)]=&gt;(X=&gt;int{*}::T)][...]@/sys/fail/390</code></pre>
+	fail::[unable to evaluate inst: plus(b)]=&gt;(X=&gt;int{*}::T)][...]@/sys/fail/3618</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -2676,10 +2760,10 @@ mtron&gt; even -&gt; int::T[is(mod(2).eq(0))]    ​4​
 mtron&gt; nat::10
 ==&gt;nat::10
 mtron&gt; nat::-10
-==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/456
+==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/3684
 mtron&gt; int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/462</code></pre>
+  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/3690</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2775,10 +2859,10 @@ mtron&gt; int::-10.as(nat::T)
 mtron&gt; nat::10
 ==&gt;nat::10
 mtron&gt; nat::-10
-==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/476
+==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/3704
 mtron&gt; int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/482</code></pre>
+  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/3710</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2801,10 +2885,10 @@ mtron&gt; age:125
 ==&gt;age:125
 mtron&gt; nat:125.as(age::T)
 ==&gt;fail::[nat:125 is not a is(lt(120))
-  nat:125=&gt;(==&gt;is(lt(120)))][...]@/sys/fail/524
+  nat:125=&gt;(==&gt;is(lt(120)))][...]@/sys/fail/3752
 mtron&gt; 125.as(nat::T).as(age::T)
 ==&gt;fail::[nat::125 is not a is(lt(120))
-  nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/530</code></pre>
+  nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/3758</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -2814,7 +2898,7 @@ mtron&gt; 125.as(nat::T).as(age::T)
 mtron&gt; personx -&gt; rec::T[?[name  =&gt; str::T,
                            age   =&gt; age::T,
                            knows =&gt; personx{*}::T]]
-==&gt;rec::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;personx{*}::T])]@personx{*}])]
+==&gt;rec::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;personx{*}::T])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]
 mtron&gt; marko -&gt; personx::[name=&gt;'marko',age=&gt;29,knows=&gt;!*grant]
 ==&gt;personx::[name=&gt;'marko',age=&gt;29,knows=&gt;!*grant]
 mtron&gt; grant -&gt; personx::[name=&gt;'grant',age=&gt;23,knows=&gt;!*marko]
@@ -3070,10 +3154,10 @@ mtron&gt; *#.as[name      =&gt; _,
 </table>
 <h3 id="_spatial_embeddings" class="discrete">spatial embeddings</h3>
 <div class="paragraph">
-<p><strong class="blue">M</strong>​<span class="green">E</span>​<strong class="fuchsia">t</strong>​<strong class="red">A</strong>​<span class="aqua">T</span>​<strong class="yellow">r</strong>​<strong class="orange">o</strong>​<span class="lime">n</span>​ was designed to support the creation and manipulation of <em>abstract data types</em> in a compact, fluid manner so as to allow the user to move smoothly between <em>multiple models</em> across different spaces, each espousing a different perspective on the data their maintain: e.g., key/value, document, relational, vector, graph, and the various nooks and crannies between.</p>
+<p><strong class="orange">m</strong>​<strong class="green">e</strong>​<span class="fuchsia">t</span>​<span class="yellow">A</span>​<strong class="aqua">T</strong>​<span class="blue">R</span>​<span class="lime">o</span>​<strong class="red">N</strong>​ was designed to support the creation and manipulation of <em>abstract data types</em> in a compact, fluid manner so as to allow the user to move smoothly between <em>multiple models</em> across different spaces, each espousing a different perspective on the data their maintain: e.g., key/value, document, relational, vector, graph, and the various nooks and crannies between.</p>
 </div>
 <div class="paragraph">
-<p><span class="green">m</span>​<span class="fuchsia">e</span>​<span class="red">t</span>​<span class="blue">A</span>​<strong class="lime">t</strong>​<span class="aqua">r</span>​<span class="yellow">O</span>​<strong class="orange">n</strong>​'s URI addressing scheme makes it possible to <em>embed</em> arbitrary data types into a space.
+<p><span class="green">m</span>​<strong class="aqua">e</strong>​<strong class="fuchsia">T</strong>​<span class="blue">a</span>​<span class="yellow">t</span>​<span class="red">r</span>​<strong class="orange">O</strong>​<span class="lime">N</span>​'s URI addressing scheme makes it possible to <em>embed</em> arbitrary data types into a space.
 This section will explore the following considerations when designing a <em>multi-model abstract data type</em>.</p>
 </div>
 <div class="olist arabic">
@@ -3333,18 +3417,30 @@ Once found, it then traverses within the match to resolve the remaining path seg
 <p>A graph is a data structure composed of a set of vertices <code>V</code> connected by a set of edges <code>E</code>, described notationally
 \[
 G = (V,E).
-\]
-This generic structure has numerous variations ranging from whether or not edges are directed, or labeled, or if self-loops are allowed, or whether edges are total or partial functions, and more. Of particular interest to modern graph databases is the variation known colloquially as a <strong>property graph</strong>. The property graph extends <code>G=(V,E)</code> by extending each vertex and edge with a set of properties (i.e. key/value pairs). A property graph is also known, in a more formal jargon, as a directed, labeled, attributed binary graph.</p>
+\]</p>
+</div>
+<div style="justify-self: center;">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">┌────────┐                     ┌────────┐
+│        │        edge         │        │
+│ vertex ├────────────────────►│ vertex │
+│        │                     │        │
+└────────┘                     └────────┘</code></pre>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>This generic structure has numerous variations ranging from whether or not edges are directed, or labeled, or if self-loops are allowed, or whether edges are total or partial functions, and more. Of particular interest to modern graph databases is the variation known colloquially as a <strong>property graph</strong>. The property graph extends <code>G=(V,E)</code> by extending each vertex and edge with a set of properties (i.e. key/value pairs). A property graph is also known, in a more formal jargon, as a directed, labeled, attributed binary graph.</p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */g/V/1                     ​1​
 ==&gt;person::[
- age    =&gt;29,
- name   =&gt;'marko',
  address=&gt;[
-   home=&gt;[city=&gt;'santa fe',state=&gt;NM],
-   work=&gt;!*&lt;../home&gt;]]@/g/V/1
+   home=&gt;[city=&gt;'santa fe',state=&gt;NM]],
+ age    =&gt;29,
+ name   =&gt;'marko']@/g/V/1
 mtron&gt; */g/V/1.outE()              ​2​
 ==&gt;created::[weight=&gt;0.40]@/g/E/9
 ==&gt;knows::[weight=&gt;0.50]@/g/E/7
@@ -3391,13 +3487,15 @@ graph encodings (discussed later when presenting hypergraphs).</p>
 <table class="tableblock frame-all grid-all stretch table-bordered small center">
 <caption class="title">Table 3. <code>/m/grph</code> instructions</caption>
 <colgroup>
-<col style="width: 28.5714%;">
-<col style="width: 71.4286%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
 </colgroup>
 <thead>
 <tr>
 <th class="tableblock halign-center valign-middle">inst</th>
-<th class="tableblock halign-left valign-middle">description</th>
+<th class="tableblock halign-center valign-middle">description</th>
+<th class="tableblock halign-center valign-middle">diagram</th>
 </tr>
 </thead>
 <tbody>
@@ -3406,6 +3504,17 @@ graph encodings (discussed later when presenting hypergraphs).</p>
 <p><code>out?vrtx{*}&lt;=vrtx(uri{*}::T})</code></p>
 </div></div></td>
 <td class="tableblock halign-left valign-middle"><p class="tableblock">traverse to the outgoing adjacent vertices of the lhs vertex</p></td>
+<td class="tableblock halign-left valign-middle" rowspan="8"><div class="content"><div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">   vertex         ┌─────────┐        vertex
+┌─────────┐       │k1 =&gt; v1 │      ┌─────────┐
+│k1 =&gt; v1 │       │k2 =&gt; v2 │      │k1 =&gt; v1 │
+│k2 =&gt; v2 │outE   └─────────┘  inV │k2 =&gt; v2 │
+│  ...    ├───────────────────────►│  ...    │
+│k3 =&gt; v3 │outV      edge      inE │k3 =&gt; v3 │
+└─────────┘                        └─────────┘</code></pre>
+</div>
+</div></div></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-middle"><div class="content"><div class="paragraph">
@@ -3449,12 +3558,6 @@ graph encodings (discussed later when presenting hypergraphs).</p>
 </div></div></td>
 <td class="tableblock halign-left valign-middle"><p class="tableblock">traverse to the outgoing incident vertex of the lhs edge</p></td>
 </tr>
-<tr>
-<td class="tableblock halign-left valign-middle"><div class="content"><div class="paragraph">
-<p><code>bothV?vrtx{2}&lt;=edge()</code></p>
-</div></div></td>
-<td class="tableblock halign-left valign-middle"><p class="tableblock">traverse to both the incoming and outgoing incident vertex of the lhs edge</p></td>
-</tr>
 </tbody>
 </table>
 <h3 id="_property_graph_extensions" class="discrete">Property Graph Extensions</h3>
@@ -3486,19 +3589,17 @@ traversals.</p>
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */g/V/1==[_=&gt;_]                                                  ​1​
 ==&gt;[
- age    =&gt;29,
- name   =&gt;'marko',
  address=&gt;[
-   home=&gt;[city=&gt;'santa fe',state=&gt;NM],
-   work=&gt;!*&lt;../home&gt;]]
+   home=&gt;[city=&gt;'santa fe',state=&gt;NM]],
+ age    =&gt;29,
+ name   =&gt;'marko']
 mtron&gt; */g/V/1&gt;&gt;=[address=&gt;[
                     home =&gt; [city =&gt;'santa fe',
                              state=&gt;NM],
                     work =&gt; !*&lt;../home&gt;]]                               ​2​
 ==&gt;person::[
  address=&gt;[
-   home=&gt;[city=&gt;'santa fe',state=&gt;NM],
-   work=&gt;noobj],
+   home=&gt;[city=&gt;'santa fe',state=&gt;NM]],
  age    =&gt;29,
  name   =&gt;'marko']@/g/V/1
 mtron&gt; */g/V/1/address/home/city                                        ​3​
@@ -3547,7 +3648,21 @@ mtron&gt; */g/V/+.?==[address=&gt;[_ =&gt; [state=&gt;NM]]].&gt;&gt;address/+/ci
 to follow. Namely, tp3 modern (graph database) and the netflix movie dataset (relational database).</p>
 </div>
 <details>
-<summary class="title">the netflix schema</summary>
+<summary class="title">the modern graph schema</summary>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */g/schema/pattern.*(_)
+==&gt;vrtx::T[isa([name=&gt;str::T,age=&gt;int::T])]@/m/grph/inst/schema/modern/person
+==&gt;vrtx::T[isa([name=&gt;str::T,lang=&gt;str::T])]@/m/grph/inst/schema/modern/software
+==&gt;edge::T[isa([weight=&gt;real::T,OUT=&gt;vrtx::T[isa([name=&gt;str::T,age=&gt;int::T])]@/m/grph/inst/schema/modern/person,IN=&gt;vrtx::T[isa([name=&gt;str::T,age=&gt;int::T])]@/m/grph/inst/schema/modern/person])]@/m/grph/inst/schema/modern/knows
+==&gt;edge::T[isa([weight=&gt;real::T,OUT=&gt;vrtx::T[isa([name=&gt;str::T,age=&gt;int::T])]@/m/grph/inst/schema/modern/person,IN=&gt;vrtx::T[isa([name=&gt;str::T,lang=&gt;str::T])]@/m/grph/inst/schema/modern/software])]@/m/grph/inst/schema/modern/created</code></pre>
+</div>
+</div>
+</div>
+</details>
+<details>
+<summary class="title">the netflix relational schema</summary>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -3608,31 +3723,19 @@ to follow. Namely, tp3 modern (graph database) and the netflix movie dataset (re
        column    =&gt;'season_id',
        references=&gt;'season',
        ref_column=&gt;'id',
-       name      =&gt;'fk_view_summary_season_id']]]]
-mtron&gt; *netflix:schema/foreign_keys
-==&gt;[[
-   table     =&gt;'season',
-   column    =&gt;'tv_show_id',
-   references=&gt;'tv_show',
-   ref_column=&gt;'id',
-   name      =&gt;'fk_season_tv_show_id'],
-  [
-   table     =&gt;'view_summary',
-   column    =&gt;'movie_id',
-   references=&gt;'movie',
-   ref_column=&gt;'id',
-   name      =&gt;'fk_view_summary_movie_id'],
-  [
-   table     =&gt;'view_summary',
-   column    =&gt;'season_id',
-   references=&gt;'season',
-   ref_column=&gt;'id',
-   name      =&gt;'fk_view_summary_season_id']]</code></pre>
+       name      =&gt;'fk_view_summary_season_id']]]]</code></pre>
 </div>
 </div>
 </div>
 </details>
-<div class="listingblock">
+<table class="tableblock frame-all grid-all stretch table-bordered small center">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */g/V/1
 ==&gt;person::[
@@ -3648,9 +3751,28 @@ mtron&gt; *netflix:movie/11488
  runtime      =&gt;138,
  title        =&gt;'Good Bad Ugly']
 mtron&gt; /g/V/1.addE(watched,*netflix:movie/11488)
-==&gt;fail::[unable to convert uri::T to vertexmap][...]@/sys/fail/310</code></pre>
+==&gt;fail::[unable to convert uri::T to vertexmap][...]@/sys/fail/3538</code></pre>
 </div>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">      grph                         tble
+┌───────────────┐            ┌───────────────┐
+│               │            │┌─────────────┐│
+│ ┌──┐          │            │├─────────────┤│
+│ │  ├──────────┼────────────►├─────────────┤│
+│ └─┬┘          │            │├─────────────┤│
+│   │           │            │├─────────────┤│
+│   │    ┌──┐   │            │├─────────────┤│
+│   └───►│  │◄──┼────────────┤├─────────────┤│
+│        └──┘   │            │├─────────────┤│
+│               │            │└─────────────┘│
+└───────────────┘            └───────────────┘</code></pre>
 </div>
+</div></div></td>
+</tr>
+</tbody>
+</table>
 </div>
 </div>
 <div class="exampleblock secondary">
@@ -3801,7 +3923,7 @@ mtron&gt; *x.&gt;&gt;b&gt;&gt;d&gt;&gt;1
 ==&gt;fail::[unable to determine inst function:
 	capitalize  =&gt; merge(',')   | [inst]
 	uri::T      =&gt; #::T         |  \_dom
-	uri::T     X=&gt; [',']        |  \_args][...]@/sys/fail/304</code></pre>
+	uri::T     X=&gt; [',']        |  \_args][...]@/sys/fail/3532</code></pre>
 </div>
 </div>
 <h3 id="_pattern_matching_the_wildcards" class="discrete">Pattern Matching: The Wildcards</h3>

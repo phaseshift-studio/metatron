@@ -3,6 +3,7 @@
 
 Every `obj` is a triple such that
 
+[stem]
 \[
 \tt{obj} \in \tt{tid} \times OBJECT \times \tt{vid},
 \]
@@ -55,6 +56,7 @@ age::T[?even::T]
 
 For instance, it is possible to define the type `nat` which represents the set of natural numbers -- integers greater than zero. In mtron, this is written:
 
+[stem]
 \[
 \tt{int::T[?>0]}
 \]

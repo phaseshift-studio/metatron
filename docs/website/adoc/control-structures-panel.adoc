@@ -18,40 +18,43 @@ The `split` instruction is the addition operator of the mtron `inst` ring. As su
 of its distributivity with the ring's multiplicative operator (`apply`, sugar'd `.`) can not be overstated. However, a 
 detailed discussion of this property will be discussed elsewhere. For now, when seen in isolation as a commutative group,
 the following axioms hold.
+[stem]
 \[
 \small
-\begin{align}
+\begin{aligned}
 &\tt{split}(ca,noobj)        &=&\; \tt{ca} + \tt{noobj}          &=&\; \tt{ca}                             & (\text{zero})\\
 &\tt{split}(ca,cb)           &=&\; \tt{ca} + \tt{cb}             &=&\; \tt{split}(cb,ca)                   & (\text{commutative})\\
 &\tt{split}(ca,{\text{-}ca}) &=&\; \tt{ca} - \tt{ca}             &=&\; \tt{noobj}                   & (\text{inverse})\\
 &\tt{split}(ca,split(cb,cd)) &=&\; \tt{ca} + (\tt{cb} + \tt{cd}) &=&\; \tt{split(split(ca,cb),cd)}  & (\text{associative}).\\
-\end{align}
+\end{aligned}
 \]
 
 When a `poly` is an argument to `split`, a new `poly` is constructed as detailed below.
 
+[stem]
 \[
 \small
 \tt{obj} \cdot \tt{split}(\tt{rec}) \equiv \left[
-\begin{align}
-\tt{obj} \cdot& \tt{dom({rec}{0})}   & \Rightarrow &\; \tt{obj} \cdot \tt{rng({rec}_{0})} \\
+\begin{aligned}
+\tt{obj} \cdot& \tt{dom({rec}_{0})}   & \Rightarrow &\; \tt{obj} \cdot \tt{rng({rec}_{0})} \\
 \tt{obj} \cdot& \tt{dom({rec}_{1})}  & \Rightarrow &\; \tt{obj} \cdot \tt{rng({rec}_{1})} \\
 \tt{obj} \cdot& \tt{dom({rec}_{2})}  & \Rightarrow &\; \tt{obj} \cdot \tt{rng({rec}_{2})} \\
 \vdots        &                      & \Rightarrow &\; \vdots \\
 \tt{obj} \cdot& \tt{dom({rec}_{n})}  & \Rightarrow &\; \tt{obj} \cdot \tt{rng({rec}_{n})}
-\end{align}
+\end{aligned}
 \right]
 \]
 
+[stem]
 \[
 \small
 \tt{obj} \cdot \tt{split}(\tt{lst}) \equiv \left[
-\begin{align}
+\begin{aligned}
 \tt{obj} \cdot & \tt{dom({lst}_{0})} \\
 \tt{obj} \cdot & \tt{rng({lst}_{1})} \\
 \vdots &\\
 \tt{obj} \cdot & \tt{rng({lst}_{n})} \\
-\end{align}
+\end{aligned}
 \right]
 \]
 
@@ -92,6 +95,7 @@ While `gte?bool\<=int(int::T)` yields a `bool`, `is?int{?}\<=int(bool::T)` yield
 is either allowed to pass or not depending on the `bool` argument. Given `inst` evaluation semantics, the value of the `bool::T` argument of `is` is
 ultimately dependent on the incoming lhs `obj`, where
 
+[stem]
 \[
 \tt{obj} \cdot \tt{gte}(\_ ) \cdot \tt{is}(\_ ) => obj\{?\} \in \{\tt{obj},\tt{noobj}\}.
 \]
