@@ -620,7 +620,7 @@ body {
     color: #000000 !important;
     background: transparent !important;
     font-size: 11pt !important;
-    line-height: 1.5 !important;
+    line-height: 1.25 !important;
     text-shadow: none !important;
 }
 
@@ -739,7 +739,7 @@ body {
 
     .custom-docs p, .custom-docs li {
         font-size: 11pt !important;
-        line-height: 1.5 !important;
+        line-height: 1.25 !important;
     }
 
     .collapse {
@@ -895,7 +895,7 @@ pre {
 }
 
 .content {
-    margin: 0.5rem;
+    margin: 0.15rem;
 }
 
 details {
@@ -1783,8 +1783,7 @@ mtron&gt; 1.as(bool::T)      ​5​
 </table>
 </div>
 <div class="paragraph">
-<p>The key point is that <strong>call</strong> objs (<code>inst</code>, <code>code</code>, <code>noobj</code>, and <code>type</code>) have a dynamic domain and range. Constant
-<code>objs</code> (non-call objs) also have a domain and range. For instance, the verbose representation of <code>int::1</code> is <code>int?int&lt;=#{?}::1</code>.
+<p>The key point is that <strong>call</strong> objs (<code>inst</code>, <code>code</code>, <code>noobj</code>, and <code>type</code>) have a domain and range that are contextual due to dynamic resolution. Said another way, <code>calls</code> are types that become instances at time of application. Constant <code>objs</code> (non-call objs) also have a domain and range. For instance, the verbose representation of <code>int::1</code> is <code>int?int&lt;=#{?}::1</code>.
 This states that every lhs <code>obj</code> or <code>noobj</code> (<code>#{?}</code>) that is applied to <code>1</code>, yields a single rhs <code>int</code>; namely <code>1</code>. In this way, constants are functions (calls), though not interesting because they always return the same value regardless of input.</p>
 </div>
 <div class="paragraph">
@@ -1818,7 +1817,7 @@ mtron&gt; *&lt;+/#/&gt;
 ==&gt;m/1/3=&gt;7
 ==&gt;boot/peers/1=&gt;&lt;ws://127.0.0.1:7777&gt;
 ==&gt;band=&gt;inst?rng=int{?}&amp;dom=int(min=&gt;isa(int::T[is(gt(0))]@nat).else(-100),max=&gt;isa(int::T[is(gt(0))]@nat).else(100)){is(and(gte(*min),lte(*max)))}
-==&gt;personx=&gt;rec::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;personx{*}::T])]@personx{*}])]
+==&gt;personx=&gt;rec::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;personx{*}::T])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]
 ==&gt;triple=&gt;inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}
 ==&gt;boot/script/python=&gt;/usr/bin/python3
 ==&gt;x/a=&gt;1
@@ -1866,7 +1865,7 @@ mtron&gt; *&lt;+/#/&gt;
  mqtt =&gt;[broker=&gt;&lt;mqtt://chibi.local:1883&gt;]]
 ==&gt;boot/args/mqtt=&gt;[broker=&gt;&lt;mqtt://chibi.local:1883&gt;]
 ==&gt;age=&gt;int::T[is(lt(120))]@nat
-==&gt;sum=&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{*}::T [reduce?rng=int&amp;dom=int{*}(noobj){fold(0,plus(id()))}]][...]@/sys/fail/342
+==&gt;sum=&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{*}::T [reduce?rng=int&amp;dom=int{*}(noobj){fold(0,plus(id()))}]][...]@/sys/fail/1406
 ==&gt;boot/script/mtron=&gt;/bin/mtron
 ==&gt;m/2/3=&gt;11
 ==&gt;m/2=&gt;[8,9,10,11]
@@ -1921,13 +1920,21 @@ mtron&gt; *&lt;+/#/&gt;
 </div>
 </div>
 <div class="paragraph">
-<p>The arguments are captured as a <code>lst</code> and are accessed via their position furi.
-For example, <code>*&lt;0&gt;</code> references the first argument, <code>*&lt;1&gt;</code> the second argument, so on and so forth. Note that for single digit numbers, the uri <code>&lt; &gt;</code> wrapper isn&#8217;t required and the above can be written as <code>*0</code>, <code>*1</code>, etc.</p>
+<p>The arguments are captured as a <code>lst</code> and are accessed via their position. Realize that <code>&lt;1&gt;</code> is <code>uri::1</code>, not <code>int::1</code>.
+<code>*&lt;0&gt;</code> references the first argument of the args <code>lst</code>, <code>*&lt;1&gt;</code> the second argument, so on and so forth. Note that for single digit numbers, the uri <code>&lt; &gt;</code> wrapper isn&#8217;t required and the position references can be written as <code>*0</code>, <code>*1</code>, etc.</p>
 </div>
 <div class="paragraph">
 <p>In the example below, the user defined instruction <code>band</code> filters out lhs <code>objs</code> not within the provided range (min/max).
 Given the filtering behavior of the instruction, the signature of <code>band</code> is <code>int{?}&lt;=int</code>. That is, it accepts a single
 <code>int</code> and return either <code>noobj</code> or the <code>int</code>.</p>
+</div>
+<div class="listingblock center-code">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">           *0                   *1
+┌───────────┬────────────────────┬────────────┐
+│XXXXXXXXXXX│                    │XXXXXXXXXXXX│
+└───────────┴────────────────────┴────────────┘</code></pre>
+</div>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1971,6 +1978,14 @@ mtron&gt; 10.band(2,8)                               ​2​
 <div class="paragraph">
 <p>When the arguments are provided in a <code>rec</code> form, the key of each relation of the <code>rec</code> is a <a href="https://en.wikipedia.org/wiki/Named_parameter">named argument</a>. Named
 arguments are resolved from the stack via their furi name.</p>
+</div>
+<div class="listingblock center-code">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">            *min                  *max
+┌────────────┬────────────────────┬────────────┐
+│XXXXXXXXXXXX│                    │XXXXXXXXXXXX│
+└────────────┴────────────────────┴────────────┘</code></pre>
+</div>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -2032,6 +2047,14 @@ the ability to express
 <a href="https://en.wikipedia.org/wiki/Default_argument">default arguments</a>.
 If the incoming <code>obj</code> to <code>else</code> is <code>noobj</code>, then <code>else</code> returns it&#8217;s argument, otherwise it returns the incoming lhs <code>obj</code>.</p>
 </div>
+<div class="listingblock center-code">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">        *min | 2             *max | 8
+┌────────────┬────────────────────┬────────────┐
+│XXXXXXXXXXXX│                    │XXXXXXXXXXXX│
+└────────────┴────────────────────┴────────────┘</code></pre>
+</div>
+</div>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">​
@@ -2083,6 +2106,15 @@ mtron&gt; {2,3,4,5}.band(min=&gt;3,max=&gt;4)         ​3​
 <p>The previous examples made use of the polymorphic <code>id</code> instruction (sugar&#8217;d <code>_</code>). It&#8217;s important to realize that an argument
 can be any arbitrary <code>obj</code> (thus, <code>code</code>). Type arguments are the means by which instruction arguments are typed.</p>
 </div>
+<div class="listingblock center-code">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">            *min                 *max
+┌────────────┬────────────────────┬────────────┐
+│XXXXXXXXXXXX│                    │XXXXXXXXXXXX│
+└────────────┴────────────────────┴────────────┘
+            ?&gt;0 ───────────────────────────────⮞</code></pre>
+</div>
+</div>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">​
@@ -2106,7 +2138,7 @@ mtron&gt; 15.band(10,20)              ​4​
 mtron&gt; -15.band(-20,-10)           ​5​
 ​
 mtron&gt; band -&gt; |inst?int{?}&lt;=int(min=&gt;?nat::T.else(fail()),max=&gt;?nat::T.else(fail())){ is(and(gte(*min),lte(*max))) }
-==&gt;fail::[fail(noobj) is not a fail::T][...]@/sys/fail/572
+==&gt;fail::[fail(noobj) is not a fail::T][...]@/sys/fail/1636
 ​
 mtron&gt; 15.band(10,20)              ​6​
 ==&gt;15
@@ -2168,18 +2200,18 @@ Finally, a degenerate anonymous <code>inst</code> with no specified variable fra
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">​
 mtron&gt; 10.(min=&gt;2,max=&gt;8){ is(and(gte(*min),lte(*max))) }                ​1​
 ==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/586
+	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/1650
 ​
 mtron&gt; 10.(min=&gt;minus(1),max=&gt;plus(1)){ is(and(gte(*min),lte(*max))) }   ​2​
 ==&gt;10
 ​
 mtron&gt; 10.(min=&gt;2,max=&gt;8){ is(and(gte(*bad_min),lte(*bad_max))) }        ​3​
 ==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/588
+	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/1652
 ​
 mtron&gt; 10.(){ is(and(gte(*min),lte(*max))) }                             ​4​
 ==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/590
+	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/1654
 ​
 mtron&gt; 10.is(and(gte(minus(1)),lte(plus(1))))                            ​5​
 ==&gt;10
@@ -2221,13 +2253,13 @@ mtron&gt; 10.is(and(gte(minus(1)),lte(plus(1))))                            ​5
 mtron&gt; is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;_)[mod(*by).eq(0)]
 ==&gt;fail::[is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;_)[mod(*by).eq(0)]
                                       ^ end of input expected
-][...]@/sys/fail/592
+][...]@/sys/fail/1656
 ​
 mtron&gt; 10.is_divisible(2)
-==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/594
+==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/1658
 ​
 mtron&gt; 10.is_divisible('abc')
-==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/596
+==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/1660
 ​</code></pre>
 </div>
 </div>
@@ -2254,7 +2286,7 @@ mtron&gt; 10.is_divisible('abc')
 mtron&gt; band -&gt; |band?int{?}&lt;=int(min=&gt;_,max=&gt;is(gt(*min)).else(*min.plus(1)))[is(gte(*min)).is(lte(*max))]
 ==&gt;fail::[band -&gt; |band?int{?}&lt;=int(min=&gt;_,max=&gt;is(gt(*min)).else(*min.plus(1)))[is(gte(*min)).is(lte(*max))]
                                                                       ^ end of input expected
-][...]@/sys/fail/598
+][...]@/sys/fail/1662
 ​
 mtron&gt; 2.band(min=&gt;1,max=&gt;1)                 ​1​
 ​</code></pre>
@@ -2279,16 +2311,34 @@ mtron&gt; 2.band(min=&gt;1,max=&gt;1)                 ​1​
 mtron&gt; is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;is(neq(0)).else(print('error').map(1)))[mod(*by).eq(0)]
 ==&gt;fail::[is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;is(neq(0)).else(print('error').map(1)))[mod(*by).eq(0)]
                                       ^ end of input expected
-][...]@/sys/fail/600
+][...]@/sys/fail/1664
 ​
 mtron&gt; 10.is_divisible(2)
-==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/602
+==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/1666
 ​
 mtron&gt; 10.is_divisible('abc')
-==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/604
+==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/1668
 ​</code></pre>
 </div>
 </div>
+</div>
+</div>
+</div>
+<div class="sect2 discrete">
+<h3 id="_domrng_coefficients">dom/rng coefficients</h3>
+<div class="paragraph">
+<p>Every <code>inst</code> has a <code>dom</code> and <code>rng</code> encoded in their key/value query parameters. The dom/rng query parameter values are
+any fURI minus query parameters. As such, it is possible to specify a type structure, a coefficient, and polymorphic
+generics.</p>
+</div>
+<div class="listingblock center-code">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">   /ex/inst/xyz?poly{c1,c2}[p1,p2,..,pn]&lt;=mono{c3}
+        ▲        ▲     ▲        ▲         ▲     ▲
+        │        │     │        │         │     │
+        │       tid  coeff    poly       tid  coeff
+        │        └─────┬────────┘         └──┬──┘
+     inst tid         rng                   dom</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2321,10 +2371,10 @@ This ensures the uri <code>triple</code> is not applied to the <code>inst</code>
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">​
 mtron&gt; triple -&gt; inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}
-==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}]][...]@/sys/fail/606
+==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}]][...]@/sys/fail/1670
 ​
 mtron&gt; *triple
-==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}]][...]@/sys/fail/606
+==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}]][...]@/sys/fail/1670
 ​</code></pre>
 </div>
 </div>
@@ -2368,7 +2418,7 @@ mtron&gt; {1,2,3,4,5,6}.triple()
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">​
 mtron&gt; sum -&gt; reduce?int&lt;=int{*}(){fold(0,plus(_))}
-==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{*}::T [reduce?rng=int&amp;dom=int{*}(noobj){fold(0,plus(id()))}]][...]@/sys/fail/608
+==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{*}::T [reduce?rng=int&amp;dom=int{*}(noobj){fold(0,plus(id()))}]][...]@/sys/fail/1672
 ​</code></pre>
 </div>
 </div>
@@ -2817,7 +2867,7 @@ mtron&gt; 1.plus(b).plus(3)                 ​1​
 ==&gt;fail::[unable to determine inst function:
 	1           =&gt; plus(b)      | [inst]
 	int::T      =&gt; #::T         |  \_dom
-	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/612
+	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/1676
 ​
 mtron&gt; 1.plus(b).catch(2).plus(3)        ​2​
 ==&gt;5
@@ -2856,19 +2906,19 @@ mtron&gt; 1.plus(b)                  ​1​
 ==&gt;fail::[unable to determine inst function:
 	1           =&gt; plus(b)      | [inst]
 	int::T      =&gt; #::T         |  \_dom
-	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/620
+	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/1684
 ​
 mtron&gt; */sys/fail/+               ​2​
 ==&gt;fail::[unable to determine inst function:
 	1           =&gt; plus(b)      | [inst]
 	int::T      =&gt; #::T         |  \_dom
-	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/619
+	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/1683
 ==&gt;fail::[unable to determine inst function:
 	1           =&gt; plus(b)      | [inst]
 	int::T      =&gt; #::T         |  \_dom
-	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/620
-==&gt;fail::[unable to evaluate inst: plus(b)][...]@/sys/fail/617
-==&gt;fail::[unable to evaluate inst: plus(b)][...]@/sys/fail/618
+	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/1684
+==&gt;fail::[unable to evaluate inst: plus(b)][...]@/sys/fail/1681
+==&gt;fail::[unable to evaluate inst: plus(b)][...]@/sys/fail/1682
 ​
 mtron&gt; */sys/fail/+.catch(_)      ​3​
 ==&gt;fail{2}::[unable to determine inst function:
@@ -2913,7 +2963,7 @@ mtron&gt; *cause                 ​1​
 ​
 mtron&gt; 1+b.catch(cause())     ​2​
 ==&gt;fail::[rhs does not match inst range:
-	fail::[unable to evaluate inst: plus(b)]=&gt;(X=&gt;int{*}::T)][...]@/sys/fail/626
+	fail::[unable to evaluate inst: plus(b)]=&gt;(X=&gt;int{*}::T)][...]@/sys/fail/1690
 ​</code></pre>
 </div>
 </div>
@@ -3030,11 +3080,11 @@ mtron&gt; nat::10
 ==&gt;nat::10
 ​
 mtron&gt; nat::-10
-==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/692
+==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/1756
 ​
 mtron&gt; int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/698
+  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/1762
 ​</code></pre>
 </div>
 </div>
@@ -3134,11 +3184,11 @@ mtron&gt; nat::10
 ==&gt;nat::10
 ​
 mtron&gt; nat::-10
-==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/712
+==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/1776
 ​
 mtron&gt; int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/718
+  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/1782
 ​</code></pre>
 </div>
 </div>
@@ -3170,11 +3220,11 @@ mtron&gt; age:125
 ​
 mtron&gt; nat:125.as(age::T)
 ==&gt;fail::[nat:125 is not a is(lt(120))
-  nat:125=&gt;(==&gt;is(lt(120)))][...]@/sys/fail/760
+  nat:125=&gt;(==&gt;is(lt(120)))][...]@/sys/fail/1824
 ​
 mtron&gt; 125.as(nat::T).as(age::T)
 ==&gt;fail::[nat::125 is not a is(lt(120))
-  nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/766
+  nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/1830
 ​</code></pre>
 </div>
 </div>
@@ -3187,7 +3237,7 @@ mtron&gt; name   -&gt; str::T[-&lt;''&gt;-count().?&lt;30]
 mtron&gt; personx -&gt; rec::T[?[name  =&gt; str::T,
                            age   =&gt; age::T,
                            knows =&gt; personx{*}::T]]
-==&gt;rec::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;personx{*}::T])]@personx{*}])]@personx{*}])]
+==&gt;rec::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;personx{*}::T])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]
 ​
 mtron&gt; marko -&gt; personx::[name=&gt;'marko',age=&gt;29,knows=&gt;!*grant]
 ==&gt;personx::[name=&gt;'marko',age=&gt;29,knows=&gt;!*grant]
@@ -3449,10 +3499,10 @@ mtron&gt; *#.as[name      =&gt; _,
 </table>
 <h3 id="_spatial_embeddings" class="discrete">spatial embeddings</h3>
 <div class="paragraph">
-<p><strong class="blue">m</strong>​<strong class="green">e</strong>​<span class="orange">T</span>​<span class="lime">a</span>​<strong class="aqua">t</strong>​<span class="yellow">R</span>​<strong class="red">O</strong>​<span class="fuchsia">N</span>​ was designed to support the creation and manipulation of <em>abstract data types</em> in a compact, fluid manner so as to allow the user to move smoothly between <em>multiple models</em> across different spaces, each espousing a different perspective on the data their maintain: e.g., key/value, document, relational, vector, graph, and the various nooks and crannies between.</p>
+<p><strong class="yellow">m</strong>​<span class="fuchsia">e</span>​<span class="lime">T</span>​<span class="aqua">A</span>​<span class="blue">T</span>​<strong class="red">r</strong>​<span class="green">o</span>​<span class="orange">N</span>​ was designed to support the creation and manipulation of <em>abstract data types</em> in a compact, fluid manner so as to allow the user to move smoothly between <em>multiple models</em> across different spaces, each espousing a different perspective on the data their maintain: e.g., key/value, document, relational, vector, graph, and the various nooks and crannies between.</p>
 </div>
 <div class="paragraph">
-<p><span class="fuchsia">m</span>​<strong class="aqua">E</strong>​<span class="red">T</span>​<strong class="yellow">A</strong>​<strong class="blue">T</strong>​<span class="green">R</span>​<span class="lime">o</span>​<span class="orange">N</span>​'s URI addressing scheme makes it possible to <em>embed</em> arbitrary data types into a space.
+<p><span class="yellow">m</span>​<span class="fuchsia">E</span>​<span class="aqua">T</span>​<span class="orange">A</span>​<strong class="lime">T</strong>​<span class="red">r</span>​<span class="blue">o</span>​<strong class="green">N</strong>​'s URI addressing scheme makes it possible to <em>embed</em> arbitrary data types into a space.
 This section will explore the following considerations when designing a <em>multi-model abstract data type</em>.</p>
 </div>
 <div class="olist arabic">
@@ -4121,7 +4171,7 @@ mtron&gt; *netflix:movie/11488
  title        =&gt;'Good Bad Ugly']
 ​
 mtron&gt; /g/V/1.addE(watched,*netflix:movie/11488)
-==&gt;fail::[unable to convert uri::T to vertexmap][...]@/sys/fail/546
+==&gt;fail::[unable to convert uri::T to vertexmap][...]@/sys/fail/1610
 ​</code></pre>
 </div>
 </div></div></td>
@@ -4316,7 +4366,7 @@ mtron&gt; "a b c".-&lt;' '.map(capitalize).&gt;-','
 ==&gt;fail::[unable to determine inst function:
 	capitalize  =&gt; merge(',')   | [inst]
 	uri::T      =&gt; #::T         |  \_dom
-	uri::T     X=&gt; [',']        |  \_args][...]@/sys/fail/540
+	uri::T     X=&gt; [',']        |  \_args][...]@/sys/fail/1604
 ​</code></pre>
 </div>
 </div>

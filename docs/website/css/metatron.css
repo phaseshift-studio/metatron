@@ -607,7 +607,7 @@ body {
     color: #000000 !important;
     background: transparent !important;
     font-size: 11pt !important;
-    line-height: 1.5 !important;
+    line-height: 1.25 !important;
     text-shadow: none !important;
 }
 
@@ -726,7 +726,7 @@ body {
 
     .custom-docs p, .custom-docs li {
         font-size: 11pt !important;
-        line-height: 1.5 !important;
+        line-height: 1.25 !important;
     }
 
     .collapse {
@@ -882,7 +882,7 @@ pre {
 }
 
 .content {
-    margin: 0.5rem;
+    margin: 0.15rem;
 }
 
 details {
@@ -946,7 +946,7 @@ th {
     background: var(--secondarycolor);
     font-size: 100%;
     display: block;
-    padding: 0.5em;
+    padding: 0;
     overflow-y: scroll;
     scrollbar-width: none;
     -ms-overflow-style: none;

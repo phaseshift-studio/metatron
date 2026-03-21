@@ -64,8 +64,7 @@ It is important to understand the mechanics of instruction evaluation. Every ins
 <4> `1` is applied to the type `bool::T` to yield `noobj` as types serve as stream predicates.
 <5> `1` is applied to `bool::T` to yield `noobj` but then is operated within the code of `as()` to emit `bool::true`.
 
-The key point is that *call* objs (`inst`, `code`, `noobj`, and `type`) have a dynamic domain and range. Constant
-`objs` (non-call objs) also have a domain and range. For instance, the verbose representation of `int::1` is `int?int\<=#{?}::1`. 
+The key point is that *call* objs (`inst`, `code`, `noobj`, and `type`) have a domain and range that are contextual due to dynamic resolution. Said another way, `calls` are types that become instances at time of application. Constant `objs` (non-call objs) also have a domain and range. For instance, the verbose representation of `int::1` is `int?int\<=#{?}::1`. 
 This states that every lhs `obj` or `noobj` (`+#+{+?+}`) that is applied to `1`, yields a single rhs `int`; namely `1`. In this way, constants are functions (calls), though not interesting because they always return the same value regardless of input.
 
 The diagram below demonstrates how a lhs `obj` percolates through an `inst` to where ultimately, at the end of the last `inst` of code the resultant rhs `obj` is emitted.
@@ -129,12 +128,21 @@ When an instruction is called, the associated https://en.wikipedia.org/wiki/Para
 ++++
 --
 
-The arguments are captured as a `lst` and are accessed via their position furi.
-For example, `*<0>` references the first argument, `+*+<1>` the second argument, so on and so forth. Note that for single digit numbers, the uri `< >` wrapper isn't required and the above can be written as `*0`, `*1`, etc.
+The arguments are captured as a `lst` and are accessed via their position. Realize that `<1>` is `uri::1`, not `int::1`.
+`*<0>` references the first argument of the args `lst`, `+*+<1>` the second argument, so on and so forth. Note that for single digit numbers, the uri `< >` wrapper isn't required and the position references can be written as `*0`, `*1`, etc.
 
 In the example below, the user defined instruction `band` filters out lhs `objs` not within the provided range (min/max).
 Given the filtering behavior of the instruction, the signature of `band` is `int{?}\<=int`. That is, it accepts a single
 `int` and return either `noobj` or the `int`.
+
+[source,mtron,role="center-code"]
+----
+           *0                   *1                              
+┌───────────┬────────────────────┬────────────┐                        
+│XXXXXXXXXXX│                    │XXXXXXXXXXXX│                         
+└───────────┴────────────────────┴────────────┘
+----
+
 
 ++++
 <!-- 🐖 
@@ -162,6 +170,14 @@ band -> |inst?int{?}<=int(_,_){ is(and(gte(*0),lte(*1))) }
 
 When the arguments are provided in a `rec` form, the key of each relation of the `rec` is a https://en.wikipedia.org/wiki/Named_parameter[named argument]. Named
 arguments are resolved from the stack via their furi name.
+
+[source,mtron,role="center-code"]
+----
+            *min                  *max                              
+┌────────────┬────────────────────┬────────────┐                        
+│XXXXXXXXXXXX│                    │XXXXXXXXXXXX│                         
+└────────────┴────────────────────┴────────────┘
+----
 
 ++++
 <!-- 🐖 
@@ -197,6 +213,14 @@ the ability to express
 https://en.wikipedia.org/wiki/Default_argument[default arguments].
 If the incoming `obj` to `else` is `noobj`, then `else` returns it's argument, otherwise it returns the incoming lhs `obj`.
 
+[source,mtron,role="center-code"]
+----
+        *min | 2             *max | 8                              
+┌────────────┬────────────────────┬────────────┐                        
+│XXXXXXXXXXXX│                    │XXXXXXXXXXXX│                         
+└────────────┴────────────────────┴────────────┘
+----
+
 ++++
 <!-- 🐖 
 band -> |inst?int{?}<=int(min=>else(2),max=>else(8)){ is(and(gte(*min),lte(*max))) }
@@ -225,6 +249,15 @@ band -> |inst?int{?}<=int(min=>else(2),max=>else(8)){ is(and(gte(*min),lte(*max)
 
 The previous examples made use of the polymorphic `id` instruction (sugar'd `_`). It's important to realize that an argument
 can be any arbitrary `obj` (thus, `code`). Type arguments are the means by which instruction arguments are typed.
+
+[source,mtron,role="center-code"]
+----
+            *min                 *max                              
+┌────────────┬────────────────────┬────────────┐                        
+│XXXXXXXXXXXX│                    │XXXXXXXXXXXX│                         
+└────────────┴────────────────────┴────────────┘
+            ?>0 ───────────────────────────────⮞                    
+----
 
 ++++
 <!-- 🐖 
@@ -337,7 +370,22 @@ is_divisible -> |is_divisble?bool<=int(by?int=>is(neq(0)).else(print('error').ma
 ++++
 =====
 
+[.discrete]
+=== dom/rng coefficients
 
+Every `inst` has a `dom` and `rng` encoded in their key/value query parameters. The dom/rng query parameter values are
+any fURI minus query parameters. As such, it is possible to specify a type structure, a coefficient, and polymorphic 
+generics.
+
+[source,mtron,role="center-code"]
+----
+   /ex/inst/xyz?poly{c1,c2}[p1,p2,..,pn]<=mono{c3}     
+        ▲        ▲     ▲        ▲         ▲     ▲
+        │        │     │        │         │     │
+        │       tid  coeff    poly       tid  coeff
+        │        └─────┬────────┘         └──┬──┘    
+     inst tid         rng                   dom
+----
 
 
 An `inst` to create `int` triples can be written:
