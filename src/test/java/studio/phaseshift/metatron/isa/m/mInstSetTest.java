@@ -922,6 +922,7 @@ public class mInstSetTest extends AbstractInstSetTest {
 
     @ParameterizedTest
     @CsvSource(value = {
+            // map_nest_rewrite tests
             "1.map(+2)                              % 1.map(+2)   % 3",
             "1.map(map(map(+2)))                    % 1.map(+2)   % 3",
             "1.map(map(map(map(+2))))               % 1.map(+2)   % 3",
@@ -930,6 +931,8 @@ public class mInstSetTest extends AbstractInstSetTest {
             "1.map(map(+2))._                       % 1.map(+2)   % 3",
             "1._.map(map(+2))._                     % 1.map(+2)   % 3",
             // "1.+2.map(map(_))._                     % 1.plus(2)   % 3", // TODO: need to apply the entire rewrite list over again
+
+            // id_removal_rewrite tests
             "1._._._                    % start(1)            % 1",
             "1._._._._                  % start(1)            % 1",
             "1._._._._._                % start(1)            % 1",
@@ -939,6 +942,54 @@ public class mInstSetTest extends AbstractInstSetTest {
             "1._._._._._._._.+2         % start(1).plus(2)    % 3",
             "1._._._._._._._.+2._       % start(1).plus(2)    % 3",
             "1._._._._._._._.+(_)._     % start(1).plus(_)    % 2",
+
+            // else_after_count_rewrite tests
+            "{1,2,3}.count().else(0)                % {1,2,3}.count()              % 3",
+            "{1,2,3}.count().else(999)              % {1,2,3}.count()              % 3",
+
+            // plus_zero_rewrite tests
+            "5.plus(0)                              % start(5)                     % 5",
+            "10.plus(0)                             % start(10)                    % 10",
+            "0.plus(0)                              % start(0)                     % 0",
+            "-5.plus(0)                             % start(-5)                    % -5",
+            "5.plus(0).plus(3)                      % start(5).plus(3)             % 8",
+
+            // mult_one_rewrite tests
+            "5.mult(1)                              % start(5)                     % 5",
+            "10.mult(1)                             % start(10)                    % 10",
+            "0.mult(1)                              % start(0)                     % 0",
+            "-5.mult(1)                             % start(-5)                    % -5",
+            "5.mult(1).mult(3)                      % start(5).mult(3)             % 15",
+
+            // Combined rewrites (plus_zero + mult_one)
+            "5.plus(0).mult(1)                      % start(5)                     % 5",
+            "{1,2,3}.count().plus(0)                % {1,2,3}.count()              % 3",
+            "{1,2,3}.count().else(0).plus(0)        % {1,2,3}.count()              % 3",
+
+            // split_collapse_rewrite tests (ring-theoretic branch collapsing)
+            "{1}-<[plus(3),plus(3)]>-               % {1}.plus{2}(3)                % int{2}::4",
+            "{1}-<[plus(2),plus(2),plus(2)]>-       % {1}.plus{3}(2)                % int{3}::3",
+            "{5}-<[mult(2),mult(2)]>-               % {5}.mult{2}(2)                % int{2}::10",
+
+            // split_merge_left_factor_rewrite tests (distributive property - left factoring)
+            // Pattern: a-<[b.c.d, b.c.e]>- → a.b.c-<[d, e]>-
+            "1-<[plus(2).mult(3), plus(2).mult(4)]>-                    % 1.plus(2).-<[mult(3),mult(4)]>-              % {9,12}",
+            "5-<[plus(1).plus(1), plus(1).plus(2)]>-                    % 5.plus(1)-<[plus(1),plus(2)]>-               % {7,8}",
+            "10-<[mult(2).plus(5), mult(2).plus(10)]>-                  % 10.mult(2).-<[plus(5),plus(10)]>-            % {25,30}",
+            "{1,2}-<[plus(10).mult(2), plus(10).mult(3)]>-              % {1,2}.plus(10)-<[mult(2),mult(3)]>-          % {22,33,24,36}",
+            "3-<[plus(1).plus(1).mult(2), plus(1).plus(1).mult(3)]>-    % 3.plus(1).plus(1)-<[mult(2),mult(3)]>-       % {10,15}",
+
+            // split_merge_right_factor_rewrite tests (distributive property - right factoring)
+            // Pattern: a-<[b.d, c.d]>- → a-<[b, c]>-.d
+            "1-<[plus(2).mult(5), plus(3).mult(5)]>-                    % 1.-<[plus(2),plus(3)]>-.mult(5)              % {15,20}",
+            "10-<[mult(2).plus(100), mult(3).plus(100)]>-               % 10.-<[mult(2),mult(3)]>-.plus(100)           % {120,130}",
+            "5-<[plus(1).mult(2), plus(2).mult(2)]>-                    % 5.-<[plus(1),plus(2)]>-.mult(2)              % {12,14}",
+            "{1,2}-<[plus(5).mult(10), plus(6).mult(10)]>-              % {1,2}-<[plus(5),plus(6)]>-.mult(10)          % {60,{2}70,80}",
+            "2-<[mult(3).mult(2).plus(1), mult(4).mult(2).plus(1)]>-    % 2.-<[mult(3),mult(4)]>-.mult(2).plus(1)      % {13,17}",
+
+            // Combined left and right factoring (both common prefix and suffix)
+            // Note: With .repeat(), both rewrites apply iteratively - left factor extracts plus(1), then right factor extracts plus(10)
+            "1-<[plus(1).mult(2).plus(10), plus(1).mult(3).plus(10)]>-  % start(1).plus(1).-<[mult(2),mult(3)]>-.plus(10)    % {14,16}",
     }, delimiter = '%')
     public void testRewrites(final String code, final String expected, final String expectedResult) throws Exception {
         AbstractMetatronTest.checkCodeRewrite(LOG, code, expected, expectedResult, false);

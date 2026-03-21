@@ -18,10 +18,12 @@
 
 package studio.phaseshift.metatron.isa.m;
 
+import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.m.type.impl.Rewriter;
 import studio.phaseshift.metatron.util.Tuple;
 
@@ -268,17 +270,250 @@ public class mInstSet extends AbstractInstSet {
     @Override
     public Set<Inst> rewrites() {
         return new LinkedHashSet<>(List.of(
+                // Remove identity instructions (no-op)
                 InstSet.Helper.rewriter(f("id_removal_rewrite"),
                         code -> code.selfJVM(
                                 Rewriter.search(code.insts())
                                         .match(instB(ID_INST_TID, lst()).insts())
                                         .rewrite(_ -> List.of())).asCode()),
+
+                // Flatten nested map instructions
                 InstSet.Helper.rewriter(f("map_nest_rewrite"),
                         code -> code.selfJVM(
                                 Rewriter.search(code.insts())
                                         .match(instB(MAP_INST_TID, lst(instB(MAP_INST_TID, lst()))).insts())
                                         .repeat()
-                                        .rewrite(map -> map.values().stream().map(objs -> objs.arg(0).asInst()).toList())).asCode())));
+                                        .rewrite(map -> map.values().stream().map(objs -> objs.arg(0).asInst()).toList())).asCode()),
+
+                // Eliminate else() after non-maybe instruction (dead code)
+                // Pattern: .count().else(x) → .count() (count always returns a value)
+                InstSet.Helper.rewriter(f("else_after_count_rewrite"),
+                        code -> code.selfJVM(
+                                Rewriter.search(code.insts())
+                                        .match(List.of(instB(COUNT_INST_TID, lst()), instB(ELSE_INST_TID, lst())))
+                                        .rewrite(map -> {
+                                            final List<Inst> matched = map.values().stream().toList();
+                                            // COUNT always returns int, so ELSE is dead code
+                                            return List.of(matched.get(0));
+                                        })).asCode()),
+
+                // Optimize plus(0) for integers (identity)
+                // Pattern: .plus(0) → identity (no-op)
+                InstSet.Helper.rewriter(f("plus_zero_rewrite"),
+                        code -> code.selfJVM(
+                                Rewriter.search(code.insts())
+                                        .match(instB(PLUS_INST_TID, lst()).insts())
+                                        .rewrite(map -> {
+                                            final Inst plusInst = map.values().iterator().next();
+                                            if (plusInst.args().count() > 0 && plusInst.arg(0).isInt() &&
+                                                    plusInst.arg(0).intValue().intValue() == 0) {
+                                                // plus(0) is identity, remove it
+                                                return List.of();
+                                            }
+                                            return List.of(plusInst);
+                                        })).asCode()),
+
+                // Optimize mult(1) for integers (identity)
+                // Pattern: .mult(1) → identity (no-op)
+                InstSet.Helper.rewriter(f("mult_one_rewrite"),
+                        code -> code.selfJVM(
+                                Rewriter.search(code.insts())
+                                        .match(instB(MULT_INST_TID, lst()).insts())
+                                        .rewrite(map -> {
+                                            final Inst multInst = map.values().iterator().next();
+                                            if (multInst.args().count() > 0 && multInst.arg(0).isInt() &&
+                                                    multInst.arg(0).intValue().intValue() == 1) {
+                                                // mult(1) is identity, remove it
+                                                return List.of();
+                                            }
+                                            return List.of(multInst);
+                                        })).asCode()),
+
+                // Collapse identical branches in split-merge by summing coefficients
+                // Pattern: -<[inst,inst,...]>- → inst{n}
+                // This leverages the ring structure where identical branches collapse on merge
+                // Note: Only applies to split-merge pairs, as split alone creates superposition
+                InstSet.Helper.rewriter(f("split_merge_collapse_rewrite"),
+                        code -> code.selfJVM(
+                                Rewriter.search(code.insts())
+                                        .match(List.of(instB(SPLIT_INST_TID, lst()), instB(MERGE_INST_TID, lst())))
+                                        .rewrite(map -> {
+                                            final List<Inst> matched = map.values().stream().toList();
+                                            final Inst splitInst = matched.get(0);
+                                            final Inst mergeInst = matched.get(1);
+
+                                            if (splitInst.args().count() > 0 && splitInst.arg(0).isLst()) {
+                                                final Lst branches = splitInst.arg(0).asLst();
+                                                // Check if all branches are identical instructions
+                                                if (branches.count() > 1) {
+                                                    final List<Obj> branchList = branches.elements().toList();
+                                                    final Obj firstBranch = branchList.get(0);
+
+                                                    // Check if all branches are the same instruction
+                                                    boolean allIdentical = branchList.stream()
+                                                            .allMatch(b -> b.isInst() &&
+                                                                    b.asInst().tid().basePath().equals(firstBranch.asInst().tid().basePath()) &&
+                                                                    b.asInst().args().count() == firstBranch.asInst().args().count() &&
+                                                                    (b.asInst().args().count() == 0 ||
+                                                                            b.asInst().arg(0).equals(firstBranch.asInst().arg(0))));
+
+                                                    if (allIdentical && firstBranch.isInst()) {
+                                                        // Sum the coefficients (using max() since coefficients are exact values)
+                                                        final long totalCoeff = branchList.stream()
+                                                                .mapToLong(b -> b.asInst().c().max())
+                                                                .sum();
+
+                                                        // Return single instruction with summed coefficient
+                                                        // The merge is implicit in the collapsed instruction
+                                                        return List.of(firstBranch.asInst().c(c -> cInt.of(totalCoeff)).asInst());
+                                                    }
+                                                }
+                                            }
+                                            return matched;
+                                        })).asCode()),
+
+                // Left factoring: pull out common prefix from split branches
+                // Pattern: a-<[b.c.d, b.c.e]>- → a.b.c-<[d, e]>-
+                // This reduces clock cycles by executing common prefix once
+                InstSet.Helper.rewriter(f("split_merge_left_factor_rewrite"),
+                        code -> code.selfJVM(
+                                Rewriter.search(code.asCode().insts())
+                                        .match(List.of(instB(SPLIT_INST_TID, lst()), instB(MERGE_INST_TID, lst())))
+                                        .repeat()
+                                        .rewrite(map -> {
+                                            final List<Inst> matched = map.values().stream().toList();
+                                            final Inst splitInst = matched.get(0);
+                                            final Inst mergeInst = matched.get(1);
+
+                                            if (splitInst.args().count() > 0 && splitInst.arg(0).isLst()) {
+                                                final Lst branches = splitInst.arg(0).asLst();
+                                                final List<Obj> branchList = branches.jvm();
+
+                                                if (branchList.size() > 1) {
+                                                    // Get instruction lists for each branch
+                                                    final List<List<Inst>> branchInsts = branchList.stream()
+                                                            .map(b -> b.<Call>as().insts())
+                                                            .toList();
+
+                                                    // Find common prefix length
+                                                    int commonPrefixLen = 0;
+                                                    final int minLen = branchInsts.stream().mapToInt(List::size).min().orElse(0);
+
+                                                    for (int i = 0; i < minLen; i++) {
+                                                        final Inst firstInst = branchInsts.get(0).get(i);
+                                                        final int idx = i;
+                                                        final boolean allMatch = branchInsts.stream()
+                                                                .allMatch(insts -> insts.get(idx).tid().equals(firstInst.tid()) &&
+                                                                        insts.get(idx).args().equals(firstInst.args()));
+                                                        if (allMatch) {
+                                                            commonPrefixLen++;
+                                                        } else {
+                                                            break;
+                                                        }
+                                                    }
+
+                                                    if (commonPrefixLen > 0 && commonPrefixLen < minLen) {
+                                                        // Only optimize if there's a common prefix AND remaining instructions
+                                                        // (don't optimize if all branches are identical - that's handled by collapse rewrite)
+
+                                                        // Extract common prefix
+                                                        final List<Inst> commonPrefix = branchInsts.get(0).subList(0, commonPrefixLen);
+
+                                                        // Create new branches without the common prefix
+                                                        final int commonPrefixLenFinal = commonPrefixLen;
+                                                        final List<Obj> newBranches = branchInsts.stream()
+                                                                .map(insts -> (Obj) MCode.of(insts.subList(commonPrefixLenFinal, insts.size())).tryToInst())
+                                                                .toList();
+
+                                                        // Return: common_prefix + split(new_branches) + merge
+                                                        return Stream.concat(
+                                                                commonPrefix.stream(),
+                                                                Stream.of(
+                                                                        instB(SPLIT_INST_TID, lst(lst(newBranches))),
+                                                                        instB(MERGE_INST_TID, lst())
+                                                                )
+                                                        ).toList();
+                                                    }
+                                                }
+                                            }
+                                            // No optimization possible, return original
+                                            return matched;
+                                        })).asCode()),
+
+                // Right factoring: pull out common suffix from split branches
+                // Pattern: a-<[b.d, c.d]>- → a-<[b, c]>-.d
+                // This reduces clock cycles by executing common suffix once
+                InstSet.Helper.rewriter(f("split_merge_right_factor_rewrite"),
+                        code -> code.selfJVM(
+                                Rewriter.search(code.asCode().insts())
+                                        .match(List.of(instB(SPLIT_INST_TID, lst()), instB(MERGE_INST_TID, lst())))
+                                        .repeat()
+                                        .rewrite(map -> {
+                                            final List<Inst> matched = map.values().stream().toList();
+                                            final Inst splitInst = matched.get(0);
+                                            final Inst mergeInst = matched.get(1);
+
+                                            if (splitInst.args().count() > 0 && splitInst.arg(0).isLst()) {
+                                                final Lst branches = splitInst.arg(0).asLst();
+                                                final List<Obj> branchList = branches.jvm();
+
+                                                if (branchList.size() > 1) {
+                                                    // Get instruction lists for each branch
+                                                    final List<List<Inst>> branchInsts = branchList.stream()
+                                                            .map(b -> b.<Call>as().insts())
+                                                            .toList();
+
+                                                    // Find common suffix length
+                                                    int commonSuffixLen = 0;
+                                                    final int minLen = branchInsts.stream().mapToInt(List::size).min().orElse(0);
+
+                                                    for (int i = 1; i <= minLen; i++) {
+                                                        final int offset = i;
+                                                        final Inst firstInst = branchInsts.getFirst().get(branchInsts.getFirst().size() - offset);
+                                                        final boolean allMatch = branchInsts.stream()
+                                                                .allMatch(insts -> {
+                                                                    final Inst inst1 = insts.get(insts.size() - offset);
+                                                                    return inst1.tid().equals(firstInst.tid()) &&
+                                                                            inst1.args().equals(firstInst.args());
+                                                                });
+                                                        if (allMatch) {
+                                                            commonSuffixLen++;
+                                                        } else {
+                                                            break;
+                                                        }
+                                                    }
+
+                                                    if (commonSuffixLen > 0 && commonSuffixLen < minLen) {
+                                                        // Only optimize if there's a common suffix AND remaining instructions
+                                                        // (don't optimize if all branches are identical - that's handled by collapse rewrite)
+
+                                                        // Extract common suffix
+                                                        final List<Inst> firstBranchInsts = branchInsts.getFirst();
+                                                        final List<Inst> commonSuffix = firstBranchInsts.subList(
+                                                                firstBranchInsts.size() - commonSuffixLen,
+                                                                firstBranchInsts.size()
+                                                        );
+
+                                                        // Create new branches without the common suffix
+                                                        final int commonSuffixLenFinal = commonSuffixLen;
+                                                        final List<Obj> newBranches = branchInsts.stream()
+                                                                .map(insts -> (Obj) MCode.of(insts.subList(0, insts.size() - commonSuffixLenFinal)).tryToInst())
+                                                                .toList();
+
+                                                        // Return: split(new_branches) + merge + common_suffix
+                                                        return Stream.concat(
+                                                                Stream.of(
+                                                                        instB(SPLIT_INST_TID, lst(lst(newBranches))),
+                                                                        instB(MERGE_INST_TID, lst())
+                                                                ),
+                                                                commonSuffix.stream()
+                                                        ).toList();
+                                                    }
+                                                }
+                                            }
+                                            // No optimization possible, return original
+                                            return matched;
+                                        })).asCode())));
     }
 
     @Override
