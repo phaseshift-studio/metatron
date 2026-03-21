@@ -37,10 +37,10 @@ Instruction query parameters are similar in function to https://en.wikipedia.org
 aid the compiler instruction selection, enable code path compression, facilitate polymorphic dispatch, support lifted monadic processing, maintain runtime profiling statistics, and more.
 --
 
-[.discrete]
+[discrete]
 === obj propagation mechanics
 
-Every instruction maps a **left hand side** `obj` (`lhs`) to a **right hand side** `obj` (rhs). Many-to-one, one to many, and many-to-many mappings are possible as an `obj` is an element in the power set of all `objs`. Thus, `{1,2,3}` is an `obj` with type `int{3}`. Programmatically, what is passed between instructions is a single stream `obj` which guarantees that there is always an rhs `obj` for every lhs `obj` regardless of failure or emptiness.
+Every instruction maps a **left hand side** `obj` (`lhs`) to a **right hand side** `obj` (rhs). Many-to-one, one to many, and many-to-many mappings are possible as an `obj` is an element in the power set of all `objs`. Thus, `{1,2,3}` is an `obj` with type `int{3}`. Programmatically, what is passed between instructions is a single stream `obj` which guarantees that there is always an rhs `obj` for every lhs `obj` regardless of failure or emptiness. As a side note, discussed at length elsewhere, the mtron ring is the set of `objs` and is closed under latexmath:[\cdot] (apply) and latexmath:[+] (split/merge), both of which are total functions.
 
 \begin{align*}
 \text{obj} \in \mathcal{P}(\text{obj})
@@ -370,7 +370,7 @@ is_divisible -> |is_divisble?bool<=int(by?int=>is(neq(0)).else(print('error').ma
 ++++
 =====
 
-[.discrete]
+[discrete]
 === dom/rng coefficients
 
 Every `inst` has a `dom` and `rng` encoded in their key/value query parameters. The dom/rng query parameter values are
@@ -398,7 +398,7 @@ triple -> |inst?lst<=int{3}(){>-[,]}
 ++++
 
 [NOTE]
-====
+--
 The `|` token is synatic sugar for the `block` inst. A blocked instruction prevents the application of the `lhs` to the `inst` args and `inst` code.
 This ensures the uri `triple` is not applied to the `inst` prior to the uri being bound as the reference (`->`). Without block, the result of applying `triple` to `inst` would be what `triple` is bound to. In this particular instance, `triple` would reference a `fail` obj.
 
@@ -408,8 +408,7 @@ triple -> inst?lst[int,int,int]<=int{3}(){>-[,]}
 *triple
 -->
 ++++
-
-====
+--
 
 A stricter representation leveraging polymorphic type constructions is expressed as follows:
 
@@ -421,68 +420,7 @@ triple -> |inst?lst[int,int,int]<=int{3}(){>-[,]}
 ++++
 
 [NOTE]
-====
-The `triple` instruction code is composed of a single instruction: `>-[,]`. This syntactic sugar resolves `merge([,])`. The instruction signature of `merge` is  `A\<=#{+*+}(A::T)`. This states that `merge` is a **barrier instruction** that maps the entire lhs stream of objs (`#{+*+}`) to a single `A`, where `A` is a generic bound to `lst` given the resolution of the argument `A::T`. Thus, this instance of `merge` yields a single `lst` whose elements are the instructions three (`int{3}`) incoming lhs objs.  
-====
+--
+The `triple` instruction code is composed of a single instruction: `>-[,]`. This syntactic sugar resolves `merge([,])`. The instruction signature of `merge` is  `A\<=\#{*}(A::T)`. This states that `merge` is a **barrier instruction** that maps the entire lhs stream of objs (`#{+*+}`) to a single `A`, where `A` is a generic bound to `lst` given the resolution of the argument `A::T`. Thus, this instance of `merge` yields a single `lst` whose elements are the instructions three (`int{3}`) incoming lhs objs.  
+--
 
-An instruction is evaluated by applying a left-hand side `obj` as follows:
-
-++++
-<!-- 🐖
-sum -> reduce?int<=int{*}(){fold(0,plus(_))}
--->
-++++
-
-
-An instruction is evaluated by applying a left-hand side `obj` as follows:
-
-[source,mtron]
-----
-lhs => ?dom        [-- verify the lhs obj in the inst domain --]
-=> arg0        [--  ┐                                    --]
-=> ...         [--  ├── resolve arguments by applying the lhs to each
-=> argN        [--  ┘                                    --]
-=> code        [-- apply the lhs the first inst of the code block with args accessible on the stack --]
-=> rhs         [-- the out of the code block is the result of the instruction --]
-rhs => ?rng [-- verify the result is in the inst range --]
-----
-
-
-\begin{align*}
-\texttt{inst} \in (\underbrace{\texttt{obj}}_{\text{the lhs object}} \times \underbrace{\texttt{inst}}_{\text{the instruction}}) \rightarrow \underbrace{\texttt{obj}}_{\text{the rhs object}}
-\end{align*}
-
-
-An instruction set is defined as a **record** (`rec`) of the form:
-
-[source,mtron]
-----
-instset -> rec::T[?[type  => T{*}::T,                        [-- type definitions                   --]
-inst  => inst{*}::T,                     [-- instruction definitions            --]
-const => #::T,                           [-- constant definitions:              --]
-sugar => rec::T[?[str::T=>uri::T]]]]     [-- syntactic sugar: token to inst tid --]
-----
-
-
-\begin{align*}
-\texttt{inst} \in (\underbrace{\texttt{obj}}_{\text{the lhs object}} \times \underbrace{\texttt{inst}}_{\text{the instruction}}) \rightarrow \underbrace{\texttt{obj}}_{\text{the rhs object}}
-\end{align*}
-
-
-that is used to write programs that form an a
-
-for composing data flow instructions.
-The language draws inspiration from the referential constructs of C, the data selection and push-down predicates of SQL, the structural typing of TypeScript, the tersenes of form and underlying navigation perspective realized in Gremlin, the self-reflective URI addressable scheme of NenoFhat and RDF/OWL, and the record-oriented foundation of JavaScript.
-
-[source,mtron]
-----
-*milky_way>>bodies.?star::T.where(>>planets.count().?>(0)).-<[
-name            => >>name,
-stats           => -<[kilos => >>mass.as(kg::T),
-area  => _(s=>?star::T){ *pi.mult(*s.>>radius.pow(2.0)).as(km::T) }],
-primary_planets => >>planets.order(>>mass).take(1).>>name]
-----
-
-Instructions, like the data it operates on, exist within the URI address space so that meta-programming concepts such as reflection, memoization, and serialization of the computational state can be naturally expressed and leveraged.
-
-An instruction set packages types, constants, instructions, and syntax sugars and can be imported and used to effect domain-specific views the underlying data.

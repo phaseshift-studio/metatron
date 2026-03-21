@@ -31,8 +31,9 @@ ai/memory -> /usr/mem
 ++++
 
 [NOTE]
-====
+--
 The `size` relation maps to a `gB::T` (gigabytes) while the `where()` clause filtered on `mB::T` (megabytes). The conversion between the various data size units is handled automatically by the type constructors of the various data type sizes distributed in the `/m/math` instruction set.
+--
 
 [source,mtron]
 ----

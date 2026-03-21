@@ -4,9 +4,9 @@
 Every `obj` is a triple such that
 
 [stem]
-\[
-\tt{obj} \in \tt{tid} \times OBJECT \times \tt{vid},
-\]
+++++
+\tt{obj} \in \tt{tid} \times \tt{OBJECT} \times \tt{vid},
+++++
 
 where `tid` is a type identifier, `OBJECT` is a data structure outside the direct referential reaches of mtron, and `vid` is a value identifier. The shape `OBJECT` can take is constrained by the structure specified by the `obj` referenced `tid`. 
 
@@ -57,9 +57,9 @@ age::T[?even::T]
 For instance, it is possible to define the type `nat` which represents the set of natural numbers -- integers greater than zero. In mtron, this is written:
 
 [stem]
-\[
+++++
 \tt{int::T[?>0]}
-\]
+++++
 
 The `int::T` (`int` type) is being constrained by the predicate `?>0` (or `is(gt(0))`). This constraint is a refinement of `int` (a well defined subset).
 

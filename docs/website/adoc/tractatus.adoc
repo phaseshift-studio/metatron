@@ -1,0 +1,228 @@
+:copyright: PhaseShift Studio
+:author: Marko A. Rodriguez
+:email: marko@markorodriguez.com
+:revnumber: 0.1-alpha
+:imagesdir: ../images
+:favicon: ./favicon.ico
+:highlightjsdir: highlight
+:source-highlighter: ./highlight.js
+:highlightjs-languages: mtron,bash,json
+:stylesheet: ./src/css/metatron.css
+:highlightjs-theme: monokai
+:icons: font
+:icon-set: fas
+:stem: latexmath
+:data-uri:
+:sectnums!:
+:toc: none
+:linkcss!:
+:license-url: https://www.gnu.org/licenses/agpl-3.0.html
+:license-title: AGPLv3
+:lang: en
+:max-width: 100%
+:app-name: metatron
+:version-label: ring-oriented computing
+:docname: metatron documentation
+:L: latexmath
+:title: metatron
+:nofooter:
+:noheader:
+:!example-caption:
+
+++++
+include::header.html[]
+++++
+
+++++
+<div class="container-xxl py-5">
+    <div class="container wow fadeIn" data-wow-delay="0.5s">
+        <h1 class="text-primary text-center p-5 glow-text">Tractatus Algebraicus Metatronicus</h1>
+        <hr/>
+        <div class="row mt-3 justify-content-center">
+            <div class="col-md-6 position-relative">
+                <input type="text" id="lecture-search" class="form-control bg-dark text-light border-primary" placeholder="search lectures...">
+                <button id="clear-search" class="btn btn-link text-primary position-absolute end-0 top-50 translate-middle-y me-2" style="display: none; text-decoration: none;">&times;</button>
+            </div>
+        </div>
+        <div class="row mt-4 gap-4 tutorial-grid">
+              <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-0" aria-expanded="false" aria-controls="card-0">Algebra</button>
+              <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-1" aria-expanded="false" aria-controls="card-1">Instructions</button>
+              <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-2" aria-expanded="false" aria-controls="card-2">Control Structures</button>
+             <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-3" aria-expanded="false" aria-controls="card-3">Large Language Models</button>
+              <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-4" aria-expanded="false" aria-controls="card-4">Instruction Sets</button>
+        </div>
+        <div class="row mt-3 gap-3 tutorial-grid">
+            <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-5" aria-expanded="false" aria-controls="card-5">Fail and Catch</button> 
+            <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-6" aria-expanded="false" aria-controls="card-6">Types</button>  
+            <button disabled class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-7" aria-expanded="false" aria-controls="card-7">IoT Integration</button>
+            <button disabled class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-8" aria-expanded="false" aria-controls="card-8">MQTT Space</button>
+            <button disabled class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-9" aria-expanded="false" aria-controls="card-9">Relational Space</button>
+        </div>
+        <div class="row mt-3 gap-3 tutorial-grid">
+            <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-10" aria-expanded="false" aria-controls="card-10">Q Processors</button>
+            <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-11" aria-expanded="false" aria-controls="card-11">Uniform Resource Identifiers</button>
+            <button disabled class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-12" aria-expanded="false" aria-controls="card-12">File Space</button>
+            <button disabled class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-13" aria-expanded="false" aria-controls="card-13">The Router</button>
+            <button class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-14" aria-expanded="false" aria-controls="card-14">Graph Space</button>
+        </div>
+        <div class="row mt-3 gap-3 tutorial-grid">
+            <button disabled class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-15" aria-expanded="false" aria-controls="card-15">Coefficients</button>
+            <button disabled class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-16" aria-expanded="false" aria-controls="card-16">The Router</button>
+            <button disabled class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-17" aria-expanded="false" aria-controls="card-17">Parallelization</button>
+            <button disabled class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-18" aria-expanded="false" aria-controls="card-18">Serial Space</button>
+            <button disabled class="col btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-19" aria-expanded="false" aria-controls="card-19">Web Space</button>
+        </div>
+    </div>
+<hr/>
+<div class="d-grid gap-2 d-md-flex justify-content-md-end">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <button class="btn btn-secondary btn-sm" id="custom-docs-button">export to pdf</button>
+    <script>
+      const opt = {
+          margin: [15, 10, 15, 10],
+          filename: 'metatron-tractatus.pdf',
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { 
+              scale: 2, 
+              useCORS: true, 
+              letterRendering: true,
+              backgroundColor: '#ffffff' 
+          },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+          pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+      };
+      document.getElementById('custom-docs-button').addEventListener('click', () => {
+        const element = document.getElementById('custom-docs');
+        
+        // Apply PDF-specific black & white styling
+        element.classList.add('pdf-export-mode');
+        
+        // Show PDF header before capture
+        const pdfHeader = document.getElementById('pdf-header');
+        pdfHeader.style.display = 'block';
+        
+        html2pdf().set(opt).from(element).toPdf().get('pdf').then(function (pdf) {
+            const totalPages = pdf.internal.getNumberOfPages();
+            for (let i = 1; i <= totalPages; i++) {
+                pdf.setPage(i);
+                pdf.setFontSize(10);
+                pdf.setTextColor(100);
+                pdf.text('Page ' + i + ' of ' + totalPages, pdf.internal.pageSize.getWidth() - 30, pdf.internal.pageSize.getHeight() - 10);
+                pdf.text('PhaseShift Studio © 2026', 15, pdf.internal.pageSize.getHeight() - 10);
+            }
+        }).save().then(() => {
+            // Restore original website styling
+            element.classList.remove('pdf-export-mode');
+            pdfHeader.style.display = 'none';
+        });
+      });
+    </script>
+</div>
+<div id="custom-docs" class="custom-docs" style="padding: 20px;">
+<div id="pdf-header" style="display: none; border-bottom: 1px solid #333; margin-bottom: 20px; padding-bottom: 10px;">
+    <div style="display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center;">
+             <i class="bi bi-soundwave me-3" style="font-size: 2rem; color: #000;"></i>
+             <div>
+                <h2 style="margin: 0; color: #000; font-family: 'Times New Roman', serif; text-transform: uppercase; letter-spacing: 1px;">PhaseShift Studio</h2>
+                <p style="margin: 0; color: #333; font-size: 1rem; font-family: 'Times New Roman', serif; font-style: italic;">Tractatus Algebraicus Metatronicus</p>
+             </div>
+        </div>
+        <div style="text-align: right; font-family: 'Times New Roman', serif;">
+            <p style="margin: 0; color: #333; font-size: 0.9rem;">metatron documentation</p>
+            <p style="margin: 0; color: #333; font-size: 0.9rem;">rev 0.1-alpha</p>
+        </div>
+    </div>
+</div>
+++++
+
+++++
+<div class="collapse" id="card-0">
+++++
+include::data-manipulation-panel.adoc[]
+++++
+</div>
+++++
+
+++++
+<div class="collapse" id="card-1">
+++++
+include::instructions-panel.adoc[]
+++++
+</div>
+++++
+
+++++ 
+<div class="collapse" id="card-2">
+++++
+include::control-structures-panel.adoc[]
+++++
+</div>
+++++
+
+++++
+<div class="collapse" id="card-3">
+++++
+include::llm-panel.adoc[]
+++++
+</div>
+++++
+
+++++
+<div class="collapse" id="card-4">
+++++
+include::instset-panel.adoc[]
+++++
+</div>
+++++
+
+++++
+<div class="collapse" id="card-5">
+++++
+include::fail-catch-panel.adoc[]
+++++
+</div>
+++++
+
+++++ 
+<div class="collapse" id="card-6">
+++++
+include::type-panel.adoc[]
+++++
+</div>
+++++
+
+
+++++ 
+<div class="collapse" id="card-11">
+++++
+include::uris-panel.adoc[]
+++++
+</div>
+++++
+
+
+++++ 
+<div class="collapse" id="card-14">
+++++
+include::grph-space-panel.adoc[]
+++++
+</div>
+++++
+
+++++ 
+<div class="collapse" id="card-12">
+++++
+include::sweep-panel.adoc[]
+++++
+</div>
+++++
+
+++++
+</div>
+</div>
+++++
+
+++++
+include::footer.html[]
+++++

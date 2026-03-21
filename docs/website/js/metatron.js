@@ -106,14 +106,39 @@
 })(jQuery);
 
 function slideShowPage(id) {
-    $('#carousel-body').carousel(id);
-    Object.keys(termynals).forEach(key => refreshTermynal(key));
+    if (id === 0) {
+        triggerSweep("index.html");
+    } else {
+        triggerSweep("tractatus.html");
+    }
+}
+
+function triggerSweep(url) {
+    const sweep = $('<div class="page-sweep"></div>').appendTo('body');
+    setTimeout(() => sweep.addClass('active'), 5);
+    setTimeout(() => window.location.href = url, 250);
 }
 
 $(document).ready(function () {
+    // Initial sweep-out on page load
+    const sweep = $('<div class="page-sweep active"></div>').appendTo('body');
+    setTimeout(() => {
+        sweep.addClass('exit');
+        setTimeout(() => sweep.remove(), 250);
+    }, 100);
+
+    $('a').on('click', function(e) {
+        const href = $(this).attr('href');
+        const currentPath = window.location.pathname.split('/').pop() || 'index.html';
+        if (href && (href === 'index.html' || href === 'tractatus.html') && href !== currentPath) {
+            e.preventDefault();
+            triggerSweep(href);
+        }
+    });
+
     const hash = window.location.hash.substring(1);
-    if (hash) {
-        $('#carousel-body').carousel(parseInt(hash));
+    if (hash === "1") {
+        window.location.href = "tractatus.html";
     }
 });
 

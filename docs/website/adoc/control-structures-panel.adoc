@@ -1,35 +1,74 @@
 [discrete]
 == Control Structures
 
-A fundamental component of general purpose computing is _branching_. This means deciding at some point in time whether
-the process should continue to execute instructions on path A or path B. Most programming language enable branching
-via constructs within the language itself and existing outside the referential scope of the data itself.
+[source,mtron,role="float-right-code"]
+----
+┌────────────────────────────────┐ 
+│data  o.   o...o  ..oo    o     │ 
+│     o . :  o ▲ o    :  ..  o   │ 
+│         o    │       o..   o   │ 
+└──────────────┼─────────────────┘  
+               @                  
+               └────┐             
+┌───────────────────┼────────────┐
+│       ▲──────┐    ▼─────►    ▲ │
+│  ─────┘      ▼────┘     │    │ │
+│instructions             └────┘ │
+└────────────────────────────────┘
+----
 
-Common branching motifs include: 
+A fundamental requirement for general-purpose computing is https://en.wikipedia.org/wiki/Branch_(computer_science)[branching]. Branching occurs when a process chooses 
+one of the myriad of paths through a body of code. This path is the process trace and in classical, non-quantum computing 
+this trace is the result of numerous choices made by the process altering its state given its current instruction and data.
+Common branching idioms include *if/else* or *while/do* or *switch/case*. These structures typically reside outside the referential
+purview of the executing process and serve as an existential scaffolding that guides the unwitting process through 
+the code and over the data -- instruction by instruction and pointer by pointer.
 
-* **if/then/else**
-* **switch/case**
-* **for**
-* **while**
+mtron has no language construct for branching. Instead, branching is realized as an epiphenomena of the evaluation of two 
+instructions: *split* and *merge* (enabled through their respective coefficients). 
+
+[stem]
+++++
+
+\begin{align*}
+\color{darkred}{\tt{split}}&\color{yellow}{?}\color{purple}{A}\color{orange}{\{*\}}\color{yellow}{\tt{<=}}\color{purple}{A} & \\
+\color{darkred}{\tt{merge}}&\color{yellow}{?}\color{purple}{A}\color{orange}{\{*\}}\color{yellow}{\tt{<=}}\color{purple}{A}\color{orange}{\{*\}} &
+\end{align*}
+++++
 
 
-mtron has no language construct for branching. Instead, branching is realized through the use of the *split* instruction.
-The `split` instruction is the addition operator of the mtron `inst` ring. As such, it forms an abelian group. The significance
-of its distributivity with the ring's multiplicative operator (`apply`, sugar'd `.`) can not be overstated. However, a 
-detailed discussion of this property will be discussed elsewhere. For now, when seen in isolation as a commutative group,
+Individually, `split` and `merge` are "proto"-instructions in that, algebraically, they are not a complete
+computational step in and of themselves, but when combined, the two yield the abelian group of the mtron `inst` ring -- 
+i.e. the addition operator. When split, but not yet merged, the process is in a state akin to a
+https://en.wikipedia.org/wiki/Quantum_superposition[quantum superposition]. In fact, when coefficients are complex numbers, 
+then constructive and destructive interference occurs, effectively rendering the mathematics of Schrödinger's
+https://en.wikipedia.org/wiki/Schr%C3%B6dinger_equation[wave function] equation, which for the computationally inclined,
+is perhaps best conceptualized by Feynman's https://en.wikipedia.org/wiki/Path_integral_formulation[path integrals].
+
+[stem]
+++++
+\begin{align*}
+\color{darkred}{\tt{apply}}&\color{yellow}{?}\color{purple}{B}\color{orange}{\{\tt{*}\}}\color{yellow}{\tt{<=}}\color{purple}{A}\color{orange}{\{\tt{*}\}}
+\end{align*}
+++++
+
+The additive component of the mtron ring, `split/merge` (sugar'd `-<`/`>-`), is distributive over the ring's
+multiplicative monoid, `apply` (sugar'd `.`). The relationship between `split/merge` and `apply` is significant, with mtron coefficients serving as the glue which renders
+this coupling algebraically sound. A complete analysis of this algebra is discussed elsewhere. For now, when seen in isolation as a commutative group,
 the following axioms hold.
+
 [stem]
 \[
 \small
 \begin{aligned}
-&\tt{split}(ca,noobj)        &=&\; \tt{ca} + \tt{noobj}          &=&\; \tt{ca}                             & (\text{zero})\\
-&\tt{split}(ca,cb)           &=&\; \tt{ca} + \tt{cb}             &=&\; \tt{split}(cb,ca)                   & (\text{commutative})\\
-&\tt{split}(ca,{\text{-}ca}) &=&\; \tt{ca} - \tt{ca}             &=&\; \tt{noobj}                   & (\text{inverse})\\
-&\tt{split}(ca,split(cb,cd)) &=&\; \tt{ca} + (\tt{cb} + \tt{cd}) &=&\; \tt{split(split(ca,cb),cd)}  & (\text{associative}).\\
+&\tt{sm}(ca,noobj)        &=&\; \tt{ca} + \tt{noobj}          &=&\; \tt{ca}                & (\text{zero identity})\\
+&\tt{sm}(ca,cb)           &=&\; \tt{ca} + \tt{cb}             &=&\; \tt{sm}(cb,ca)         & (\text{commutative})\\
+&\tt{sm}(ca,{\text{-}ca}) &=&\; \tt{ca} - \tt{ca}             &=&\; \tt{noobj}             & (\text{inverse})\\
+&\tt{sm}(ca,sm(cb,cd))   &=&\; \tt{ca} + (\tt{cb} + \tt{cd}) &=&\; \tt{sm(sm(ca,cb),cd)}  & (\text{associative}).\\
 \end{aligned}
 \]
 
-When a `poly` is an argument to `split`, a new `poly` is constructed as detailed below.
+When a `poly` is an argument to `split`, a new `poly` is constructed as detailed below for both `rec`
 
 [stem]
 \[
@@ -45,6 +84,8 @@ When a `poly` is an argument to `split`, a new `poly` is constructed as detailed
 \right]
 \]
 
+and `lst`
+
 [stem]
 \[
 \small
@@ -55,26 +96,60 @@ When a `poly` is an argument to `split`, a new `poly` is constructed as detailed
 \vdots &\\
 \tt{obj} \cdot & \tt{rng({lst}_{n})} \\
 \end{aligned}
-\right]
+\right].
 \]
 
 These constructions appear at odds with what is required for branching -- namely, discrimination. The ability to choose one branch of code over another
 is entirely absent in the semantics of `split`. Every relation in a `rec` argument and every element in `lst` argument has the lhs `obj`
 applied to it -- indiscriminately. Selective discrimination is a consequence of the properties of the abelian monoid (commutative/associative) and its zero element (`noobj`). 
-Given that a `rec` relation can not have a `noobj` domain nor range, then selective branching is achieved programmatically through _filtering_.
-For instance,
+Given that a `rec` relation can not have a `noobj` domain nor range, then selective branching is achieved programmatically through *filtering*.
+That is, given `rec` relations,
 
 ++++
 <!-- 🐖 
-[a=>1,b=>noobj,noobj=>3]      [-- <1>
-{1,2}-<[gte(2)      => +3]    [-- <2>
-{1,2}-<[?>=2        => +3]    [-- <3>
+[a=>1,b=>noobj,noobj=>3]
 -->
 ++++
 
-<1> all `rec` relations are unlabeled binary edges (half-edges are `monos`). 
-<2> `gte?bool\<=int(int::T)` is a many-to-one function that stages a binary switch.
-<3> `is?int{?}\<=int(bool::T)` is the filtering instruction as made explicit in range coefficient: `int{?} = int{0,1}`.
+then,
+
+++++
+<!-- 🐖 
+{1,2}                                          [-- <1>
+{1,2}.split([is(lt(2))  => plus(9), /        
+             is(gte(2)) => plus(3)])         
+{1,2}.split([is(lt(2))  => plus(9), /
+             is(gte(2)) => plus(3)]).rshift()  [-- <5> 
+-->
+++++
+
+<1> two `int` objs in a stream.
+<2> each `int` obj is split (copied) across the branch arguments (the `rels` of the `rec` arg).
+<3> `gte?bool\<=int(int::T)` is a one-to-one function which sets up a binary switch (the process is in "superposition").
+<4> `is?int{?}\<=int(bool::T)` is a one-to-maybe function that filters paths given a binary signal (the process has chosen its path).
+<5> `merge?int\<=int{*}` collapses the two stream pathways into a single stream (the process has "collapsed" into a single branch). 
+
+The above written once more using sugar syntax:
+
+[cols="3a,3a",separator=🧱]
+|===
+🧱
+++++
+<!-- 🐖
+{1,2}-<[?<2=>+9,?>=2=>+3]
+{1,2}-<[?<2=>+9,?>=2=>+3]>>
+-->
+++++ 
+🧱
+
+* `-<` split.
+* `?<` is less than.
+* `>?` is greater than.
+* `>-` merge.
+|===
+
+
+
 
 Unlike `rec`, `lst` can have `noobj` elements. However, when merged into a single stream, `noobj` are discarded.
 

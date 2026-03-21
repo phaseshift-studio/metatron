@@ -516,6 +516,7 @@
                                     </includes>
                                     <excludes>
                                         <exclude>index.html</exclude>
+                                        <exclude>tractatus.html</exclude>
                                     </excludes>
                                 </resource>
                             </resources>
@@ -608,6 +609,7 @@
                 <configuration>
                     <sourceDirectory>${project.build.directory}/temp</sourceDirectory>
                     <sourceDocumentName>index.adoc</sourceDocumentName>
+                    <sourceDocumentName>tractatus.adoc</sourceDocumentName> 
                     <outputDirectory>${project.basedir}/docs/website</outputDirectory>
                     <skip>${skipAdoc}</skip>
                     <resources>
