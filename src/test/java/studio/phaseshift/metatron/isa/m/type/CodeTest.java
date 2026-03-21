@@ -43,7 +43,7 @@ public class CodeTest extends AbstractMetatronTest {
                 "*?int<=(abc).plus(2)                               % true",
              //   "1.-<[_,_]                                          % true",   // TODO: this should pass . ??
              //   "{1,2,3}.-<[_,_]                                    % true",    // TODO: this should pass . ??
-                "1.-<[_,_]>-                                        % false",  // TODO: this should resolve once generics are implemented fully
+                "1.-<[_,_]>-                                        % true",  // TODO:this resolves because of ring algebra
                 "{1,2,3}.>-                                         % true",
                 "{1,2,3}.plus(34).sum()                             % true",
                 "'a'.plus('b').sum()                                % true",
