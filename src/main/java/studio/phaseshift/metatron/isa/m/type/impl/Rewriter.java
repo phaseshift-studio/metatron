@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.m.type.impl;
 
 import com.google.common.base.Objects;
 import studio.phaseshift.metatron.isa.m.type.Inst;
+import studio.phaseshift.metatron.isa.m.type.Obj;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -70,14 +71,24 @@ public class Rewriter {
             return false;
         if(!source.rng().test(match.rng()))
             return false;*/
-       /* if (!match.c().equals(source.c()))
+       /* if (!match.c().equals(source.c())) // equals or within?
             return false;*/
         if (match.args().isEmpty())
             return true;
         if (match.args().count() != source.args().count())
             return false;
         for (int i = 0; i < match.args().count(); i++) {
-            if (!source.arg(i).tid().basePath().equals(match.arg(i).tid().basePath()))
+
+            Obj matchArg = match.arg(i);
+            final Obj sourceArg = source.arg(i);
+            //if( sourceArg.isNoObj() && matchArg.isNoObj())
+            // return false;
+            if (matchArg.isObjCall()) {
+                //if (matchArg.isCall())
+                //  matchArg = matchArg.apply(sourceArg);
+                if (!sourceArg.test(matchArg))
+                    return false;
+            } else if (!source.arg(i).tid().basePath().equals(match.arg(i).tid().basePath()))
                 return false;
             //if (!source.arg(i).test(match.arg(i))) // TODO: why is this matching on map
             //    return false;

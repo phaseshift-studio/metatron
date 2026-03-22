@@ -24,11 +24,13 @@ import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.machine.SwarmMachine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.NOOBJ;
 import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
@@ -63,12 +65,21 @@ public interface Code extends Call {
 
     default Code rewrite() {
         final AtomicReference<Code> rewrittenCode = new AtomicReference<>(this);
-        Router.global().spaces()
-                .elements()
-                .filter(r -> r.second() instanceof InstSet)
-                .flatMap(r -> r.second().<InstSet>as().rewrites().stream())
-                //.peek(r -> System.out.println("REWRITE RULE: " + r))
-                .forEach(i -> rewrittenCode.set(i.apply(rewrittenCode.get()).asCode()));
+        int hash = this.hashCode();
+        int done = 2;
+        while (done != 0) {
+            Router.global().spaces()
+                    .elements()
+                    .filter(r -> r.second() instanceof InstSet)
+                    .flatMap(r -> r.second().<InstSet>as().rewrites().stream())
+                    //.peek(r -> this.logger().warn("REWRITE RULE: %s => %s [hash:%d][stage:%d]", rewrittenCode.get(), r, rewrittenCode.get().hashCode(), stage))
+                    .forEach(r -> {
+                        // rewrittenCode.get().insts().forEach(i -> i.args(Code.Helper.tryRewrite(i.args()).as()));
+                        rewrittenCode.set(r.apply(rewrittenCode.get()).asCode());
+                    });
+            if (hash == (hash = rewrittenCode.get().hashCode()))
+                done--;
+        }
         return rewrittenCode.get();
     }
 
@@ -162,12 +173,29 @@ public interface Code extends Call {
     @Override
     default Obj apply(final Obj lhs) {
         final Call resolve = this.tryToInst().resolve(lhs);
+        // TODO: add this as a TypeCheker check point?
         //if (!lhs.matches(resolve.dom()))
         //    throw MTronException.of("%s ({{m}}lhs{{/m}}) (%s) does not match {{m}}code domain{{/m}} (%s): %s", lhs, lhs.rng(), resolve.dom(), resolve);
         final Obj rhs = objs(resolve.isCode() ? SwarmMachine.of(lhs, resolve.as()).apply(noobj()) : resolve.apply(lhs));
         //if (!rhs.matches(call.rng()))
         //    throw MTronException.of("%s ({{m}}rhs{{/m}}) (%s) does not match {{m}}code range{{/m}} (%s): %s", rhs, rhs.rng(), call.rng(), this);
         return rhs;
+    }
+
+    public static class Helper {
+
+        public static Obj tryRewrite(final Obj obj) {
+            if (obj.isCode())
+                return obj.asCode().rewrite();
+            if (obj.isInst())
+                return obj.asInst().args(tryRewrite(obj.asInst().args()).as());
+            if (obj.isLst())
+                return obj.selfJVM(obj.asLst().elements().map(Code.Helper::tryRewrite).toList());
+            if (obj.isRec())
+                return obj.selfJVM(obj.asRec().elements().map(r -> Tuple.Pair.with(r.first(), tryRewrite(r.second()))).collect(Collectors.toMap(Tuple.Pair::get0, Tuple.Pair::get1, (a, b) -> a)));
+            return obj;
+        }
+
     }
 
     // Code resolve(final Obj start);

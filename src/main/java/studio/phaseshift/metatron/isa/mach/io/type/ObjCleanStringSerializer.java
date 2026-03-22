@@ -181,7 +181,7 @@ public class ObjCleanStringSerializer extends AbstractObjSerializer<String> {
                 .map(this::write)
                 .reduce(",", (a, b) -> a + b + ",");
         return handleIds(inst, "(" +
-                (inst.args().isEmpty() || inst.args().isNoObj() ? "" : internal.substring(1, internal.length() - 1)) + ")" + (inst.f() == null ? "" : "{" + inst.f() + "}"));
+                (inst.args().isEmpty() ? "" : internal.substring(1, internal.length() - 1)) + ")" + (inst.f() == null ? "" : "{" + inst.f() + "}"));
     }
 
     @Override

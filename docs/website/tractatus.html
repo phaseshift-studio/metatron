@@ -63,13 +63,12 @@
     flex-direction: column;
     min-width: 0;
     word-wrap: break-word;
-    background-color: var(--maincolor);
+    background-color: var(--secondarycolor);
     background-clip: border-box;
     border: 2px solid;
     border-color: var(--mred);
     border-radius: 2px;
 }
-
 
 .card-tight {
     padding: 0;
@@ -79,9 +78,9 @@
     flex-direction: column;
     min-width: 0;
     word-wrap: break-word;
-    background-color: var(--maincolor);
+    background-color: var(--secondarycolor);
     background-clip: border-box;
-    border: 1px solid;
+    border: 2px solid;
     border-color: var(--mred);
     border-radius: 1px;
 }
@@ -318,6 +317,9 @@
 code.hljs {
     font-size: 0.9rem;
     display: inline;
+    width: 90%;
+    overflow: hidden;
+    text-overflow: clip;
 }
 
 .code {
@@ -1274,6 +1276,9 @@ $(addBlockSwitches);
     </a>
     <div class="collapse navbar-collapse" id="navbarCollapse">
         <div class="navbar-nav ms-auto p-4 p-lg-0">
+            <!----------------------------------------------------------------------------------------------------------
+            ------------------------------------------ DOWNLOAD DROPDOWN -----------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
             <li class="nav-item dropdown">
                 <a id="download_dropdown" class="nav-link dropdown-toggle" href="#" role="button"
                    data-bs-toggle="dropdown" aria-expanded="false">
@@ -1299,28 +1304,72 @@ bin/metatron</code></pre>
                     </li>
                 </ul>
             </li>
+            <!----------------------------------------------------------------------------------------------------------
+            -------------------------------- INSTRUCTION SET ARCHITECTURES DROPDOWN ------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
             <li class="nav-item dropdown">
                 <a id="isa_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
                    aria-expanded="false">
                     instruction sets
                 </a>
                 <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="isa_dropdown">
-                    <li><a class="code dropdown-item d-flex align-items-center" href="index.html"><img src="./images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2" alt="mtron"/>/m</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="index.html"><img src="./images/icons/space/oltp-icon.svg" class="isa-row icon-color me-2" alt="mach"/>/m/mach</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="index.html"><img src="./images/icons/space/tblespace-icon.svg" class="isa-row icon-color me-2" alt="tble"/>/m/tble</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="index.html"><img src="./images/icons/space/docspace-icon.svg" class="isa-row icon-color me-2" alt="doc"/>/m/doc</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="index.html"><img src="./images/icons/space/grphspace-icon.svg" class="isa-row icon-color me-2" alt="grph"/>/m/grph</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="index.html"><img src="./images/icons/space/gremlin-icon.svg" class="isa-row icon-color me-2" alt="tp3"/>/m/grph/tp3</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="index.html"><img src="./images/icons/space/olap-icon.svg" class="isa-row icon-color me-2" alt="vec"/>/m/vec</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="index.html"><img src="./images/icons/space/web-icon.svg" class="isa-row icon-color me-2" alt="web"/>/m/web</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="index.html"><img src="./images/icons/space/llm-icon.svg" class="isa-row icon-color me-2" alt="llm"/>/m/llm</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="index.html"><img src="./images/icons/space/graphql-icon.svg" class="isa-row icon-color me-2" alt="iot"/>/m/iot</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="index.html"><img src="./images/icons/space/olrp-icon.svg" class="isa-row icon-color me-2" alt="sys"/>/m/sys</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="index.html"><img
+                            src="./images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
+                            alt="mtron"/>/m</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="index.html"><img
+                            src="./images/icons/space/oltp-icon.svg" class="isa-row icon-color me-2" alt="mach"/>/m/mach</a>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="index.html"><img
+                            src="./images/icons/space/tblespace-icon.svg" class="isa-row icon-color me-2" alt="tble"/>/m/tble</a>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="index.html"><img
+                            src="./images/icons/space/docspace-icon.svg" class="isa-row icon-color me-2" alt="doc"/>/m/doc</a>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="index.html"><img
+                            src="./images/icons/space/grphspace-icon.svg" class="isa-row icon-color me-2" alt="grph"/>/m/grph</a>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="index.html"><img
+                            src="./images/icons/space/gremlin-icon.svg" class="isa-row icon-color me-2" alt="tp3"/>/m/grph/tp3</a>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="index.html"><img
+                            src="./images/icons/space/olap-icon.svg" class="isa-row icon-color me-2"
+                            alt="vec"/>/m/vec</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="index.html"><img
+                            src="./images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
+                            alt="web"/>/m/web</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="index.html"><img
+                            src="./images/icons/space/llm-icon.svg" class="isa-row icon-color me-2"
+                            alt="llm"/>/m/llm</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="index.html"><img
+                            src="./images/icons/space/graphql-icon.svg" class="isa-row icon-color me-2" alt="iot"/>/m/iot</a>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="index.html"><img
+                            src="./images/icons/space/olrp-icon.svg" class="isa-row icon-color me-2"
+                            alt="sys"/>/m/sys</a></li>
                 </ul>
             </li>
+            <!----------------------------------------------------------------------------------------------------------
+             ----------------------------------- TRACTATUS LINK --------------------------------------------------------
+             ---------------------------------------------------------------------------------------------------------->
             <li class="nav-item">
                 <a class="nav-link" href="tractatus.html">the tractatus</a>
             </li>
+            <!----------------------------------------------------------------------------------------------------------
+            ----------------------------------- ARTICLES DROPDOWN ------------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="articles-dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">articles</a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="articles-dropdown">
+                    <li><a class="dropdown-item" href="#"
+                           onclick="location.href='./articles/computational-ring-theory.html';">computational ring
+                        theory</a></li>
+                    <li>
+                </ul>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            ----------------------------------- GUILD DROPDOWN ---------------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
             <li class="nav-item dropdown">
                 <a id="guild_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
                    aria-expanded="false">
@@ -1332,7 +1381,7 @@ bin/metatron</code></pre>
                     <li><a class="dropdown-item" href="#"
                            onclick="location.href='https://github.com/phaseshift-studio/metatron';">github</a></li>
                     <li><a class="dropdown-item" href="#" onclick="location.href='index.html';">mailing list</a></li>
-                    <li><a class="dropdown-item" href="#" onclick="location.href='index.html';">live coding</a></li>
+                    <!--<li><a class="dropdown-item" href="#" onclick="location.href='index.html';">live coding</a></li>-->
                     <li><a class="dropdown-item" href="#" onclick="location.href='index.html';">artifacts</a></li>
                 </ul>
             </li>
@@ -1576,7 +1625,7 @@ mtron&gt; 1.plus(plus(2))    ​3​
 ==&gt;4
 ​
 mtron&gt; 1.map(bool::T)     ​4​
-==&gt;bool::T
+==&gt;fail::[unable to convert mfail to code][...]@/sys/fail/22
 ​
 mtron&gt; 1.as(bool::T)      ​5​
 ==&gt;true
@@ -1635,52 +1684,27 @@ lhs =&gt; inst(arg1,...,argN){ inst1...instN } =&gt; rhs
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">​
 mtron&gt; *&lt;+/#/&gt;
+==&gt;split_merge_right_factor_rewrite=&gt;split_merge_right_factor_rewrite?rng=code{?}&amp;dom=#{?}(code::T){&lt;j&gt;}
 ==&gt;id_removal_rewrite=&gt;id_removal_rewrite?rng=code{?}&amp;dom=#{?}(code::T){&lt;j&gt;}
+==&gt;m/1/2=&gt;6
 ==&gt;boot/script/perl=&gt;/usr/bin/perl
 ==&gt;m/1/1=&gt;5
-==&gt;boot/args/local=&gt;booger
-==&gt;m/1/3=&gt;7
-==&gt;boot/peers/1=&gt;&lt;ws://127.0.0.1:7777&gt;
-==&gt;band=&gt;inst?rng=int{?}&amp;dom=int(min=&gt;isa(int::T[is(gt(0))]@nat).else(-100),max=&gt;isa(int::T[is(gt(0))]@nat).else(100)){is(and(gte(*min),lte(*max)))}
-==&gt;personx=&gt;rec::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;personx{*}::T])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]
-==&gt;triple=&gt;inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}
-==&gt;boot/script/python=&gt;/usr/bin/python3
-==&gt;x/a=&gt;1
-==&gt;marko/age=&gt;29
-==&gt;m/1=&gt;[4,5,6,7]
-==&gt;grant=&gt;personx::[name=&gt;'grant',age=&gt;23,knows=&gt;!*marko]
-==&gt;m/2/0=&gt;8
-==&gt;odd=&gt;int::T[is(mod(2).eq(1))]
-==&gt;boot/args/host=&gt;&lt;ws://0.0.0.0:8999&gt;
-==&gt;m/0/3=&gt;3
-==&gt;m/2/2=&gt;10
-==&gt;m=&gt;[[0,1,2,3],
-  [4,5,6,7],
-  [8,9,10,11]]
-==&gt;fs_prefix=&gt;booger
-==&gt;map_nest_rewrite=&gt;map_nest_rewrite?rng=code{?}&amp;dom=#{?}(code::T){&lt;j&gt;}
-==&gt;nat=&gt;int::T[is(gt(0))]
-==&gt;m/0/1=&gt;1
-==&gt;even=&gt;int::T[is(mod(2).eq(0))]
-==&gt;marko/knows=&gt;!*grant
-==&gt;boot/script/sh=&gt;/bin/sh
-==&gt;grant/name=&gt;'grant'
-==&gt;m/1/2=&gt;6
 ==&gt;x=&gt;[
  a=&gt;1,
  b=&gt;[
    c=&gt;2,
    d=&gt;[3,4,5]]]
+==&gt;boot/args/local=&gt;booger
 ==&gt;boot/args/boot=&gt;&lt;/home/killswitch/software/metatron/boot/boot.mtron&gt;
-==&gt;marko=&gt;personx::[name=&gt;'marko',age=&gt;29,knows=&gt;!*grant]
+==&gt;m/1/3=&gt;7
+==&gt;boot/peers/1=&gt;&lt;ws://127.0.0.1:7777&gt;
 ==&gt;x/b=&gt;[
  c=&gt;2,
  d=&gt;[3,4,5]]
-==&gt;grant/knows=&gt;!*marko
+==&gt;mult_one_rewrite=&gt;mult_one_rewrite?rng=code{?}&amp;dom=#{?}(code::T){&lt;j&gt;}
 ==&gt;m/1/0=&gt;4
 ==&gt;boot/peers/0=&gt;ws://localhost:6666
 ==&gt;boot/args/log=&gt;info
-==&gt;grant/age=&gt;23
 ==&gt;boot/peers=&gt;[ws://localhost:6666,&lt;ws://127.0.0.1:7777&gt;]
 ==&gt;boot/args=&gt;[
  host =&gt;&lt;ws://0.0.0.0:8999&gt;,
@@ -1688,21 +1712,36 @@ mtron&gt; *&lt;+/#/&gt;
  log  =&gt;info,
  local=&gt;booger,
  mqtt =&gt;[broker=&gt;&lt;mqtt://chibi.local:1883&gt;]]
+==&gt;boot/script/python=&gt;/usr/bin/python3
 ==&gt;boot/args/mqtt=&gt;[broker=&gt;&lt;mqtt://chibi.local:1883&gt;]
-==&gt;age=&gt;int::T[is(lt(120))]@nat
+==&gt;x/a=&gt;1
 ==&gt;boot/script/mtron=&gt;/bin/mtron
 ==&gt;m/2/3=&gt;11
+==&gt;m/1=&gt;[4,5,6,7]
 ==&gt;m/2=&gt;[8,9,10,11]
 ==&gt;boot/script/zsh=&gt;/bin/zsh
-==&gt;marko/name=&gt;'marko'
+==&gt;m/2/0=&gt;8
 ==&gt;m/0/2=&gt;2
 ==&gt;sql_native_count_rewrite=&gt;sql_native_count_rewrite?rng=code{?}&amp;dom=#{?}(code::T){&lt;j&gt;}
+==&gt;boot/args/host=&gt;&lt;ws://0.0.0.0:8999&gt;
+==&gt;m/0/3=&gt;3
 ==&gt;boot/file=&gt;file::&lt;/home/killswitch/software/metatron/boot/boot.mtron?p=rw-rw-r--&gt;@boot/file
+==&gt;m/2/2=&gt;10
 ==&gt;m/0=&gt;[0,1,2,3]
 ==&gt;m/2/1=&gt;9
+==&gt;m=&gt;[[0,1,2,3],
+  [4,5,6,7],
+  [8,9,10,11]]
+==&gt;split_merge_left_factor_rewrite=&gt;split_merge_left_factor_rewrite?rng=code{?}&amp;dom=#{?}(code::T){&lt;j&gt;}
+==&gt;fs_prefix=&gt;booger
+==&gt;else_after_count_rewrite=&gt;else_after_count_rewrite?rng=code{?}&amp;dom=#{?}(code::T){&lt;j&gt;}
+==&gt;map_nest_rewrite=&gt;map_nest_rewrite?rng=code{?}&amp;dom=#{?}(code::T){&lt;j&gt;}
 ==&gt;boot/script/bash=&gt;/bin/bash
+==&gt;plus_zero_rewrite=&gt;plus_zero_rewrite?rng=code{?}&amp;dom=#{?}(code::T){&lt;j&gt;}
 ==&gt;m/0/0=&gt;0
-==&gt;name=&gt;str::T[split('').merge(count(noobj)).is(lt(30))]
+==&gt;split_merge_collapse_rewrite=&gt;split_merge_collapse_rewrite?rng=code{?}&amp;dom=#{?}(code::T){&lt;j&gt;}
+==&gt;m/0/1=&gt;1
+==&gt;boot/script/sh=&gt;/bin/sh
 ==&gt;boot/script=&gt;[
  sh    =&gt;/bin/sh,
  bash  =&gt;/bin/bash,
@@ -1962,7 +2001,7 @@ mtron&gt; 15.band(10,20)              ​4​
 mtron&gt; -15.band(-20,-10)           ​5​
 ​
 mtron&gt; band -&gt; |inst?int{?}&lt;=int(min=&gt;?nat::T.else(fail()),max=&gt;?nat::T.else(fail())){ is(and(gte(*min),lte(*max))) }
-==&gt;fail::[fail(noobj) is not a fail::T][...]@/sys/fail/4824
+==&gt;fail::[fail(noobj) is not a fail::T][...]@/sys/fail/48
 ​
 mtron&gt; 15.band(10,20)              ​6​
 ==&gt;15
@@ -2024,18 +2063,18 @@ Finally, a degenerate anonymous <code>inst</code> with no specified variable fra
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">​
 mtron&gt; 10.(min=&gt;2,max=&gt;8){ is(and(gte(*min),lte(*max))) }                ​1​
 ==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/4838
+	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/62
 ​
 mtron&gt; 10.(min=&gt;minus(1),max=&gt;plus(1)){ is(and(gte(*min),lte(*max))) }   ​2​
 ==&gt;10
 ​
 mtron&gt; 10.(min=&gt;2,max=&gt;8){ is(and(gte(*bad_min),lte(*bad_max))) }        ​3​
 ==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/4840
+	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/64
 ​
 mtron&gt; 10.(){ is(and(gte(*min),lte(*max))) }                             ​4​
 ==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/4842
+	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/66
 ​
 mtron&gt; 10.is(and(gte(minus(1)),lte(plus(1))))                            ​5​
 ==&gt;10
@@ -2077,13 +2116,13 @@ mtron&gt; 10.is(and(gte(minus(1)),lte(plus(1))))                            ​5
 mtron&gt; is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;_)[mod(*by).eq(0)]
 ==&gt;fail::[is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;_)[mod(*by).eq(0)]
                                       ^ end of input expected
-][...]@/sys/fail/4844
+][...]@/sys/fail/68
 ​
 mtron&gt; 10.is_divisible(2)
-==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/4846
+==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/70
 ​
 mtron&gt; 10.is_divisible('abc')
-==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/4848
+==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/72
 ​</code></pre>
 </div>
 </div>
@@ -2110,7 +2149,7 @@ mtron&gt; 10.is_divisible('abc')
 mtron&gt; band -&gt; |band?int{?}&lt;=int(min=&gt;_,max=&gt;is(gt(*min)).else(*min.plus(1)))[is(gte(*min)).is(lte(*max))]
 ==&gt;fail::[band -&gt; |band?int{?}&lt;=int(min=&gt;_,max=&gt;is(gt(*min)).else(*min.plus(1)))[is(gte(*min)).is(lte(*max))]
                                                                       ^ end of input expected
-][...]@/sys/fail/4850
+][...]@/sys/fail/74
 ​
 mtron&gt; 2.band(min=&gt;1,max=&gt;1)                 ​1​
 ​</code></pre>
@@ -2135,13 +2174,13 @@ mtron&gt; 2.band(min=&gt;1,max=&gt;1)                 ​1​
 mtron&gt; is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;is(neq(0)).else(print('error').map(1)))[mod(*by).eq(0)]
 ==&gt;fail::[is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;is(neq(0)).else(print('error').map(1)))[mod(*by).eq(0)]
                                       ^ end of input expected
-][...]@/sys/fail/4852
+][...]@/sys/fail/76
 ​
 mtron&gt; 10.is_divisible(2)
-==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/4854
+==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/78
 ​
 mtron&gt; 10.is_divisible('abc')
-==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/4856
+==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/80
 ​</code></pre>
 </div>
 </div>
@@ -2193,10 +2232,10 @@ This ensures the uri <code>triple</code> is not applied to the <code>inst</code>
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">​
 mtron&gt; triple -&gt; inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}
-==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}]][...]@/sys/fail/4858
+==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}]][...]@/sys/fail/82
 ​
 mtron&gt; *triple
-==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}]][...]@/sys/fail/4858
+==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(noobj){merge([,])}]][...]@/sys/fail/82
 ​</code></pre>
 </div>
 </div>
@@ -2273,14 +2312,12 @@ instructions: <strong>split</strong> and <strong>merge</strong> (enabled through
 </div>
 </div>
 <div class="paragraph">
-<p>Individually, <code>split</code> and <code>merge</code> are "proto"-instructions in that they are not a complete
-computational step in and of themselves, but when combined, the two yield the abelian group of the mtron <code>inst</code> ring&#8201;&#8212;&#8201;i.e. the addition operator. When split, but not yet merged, the process is in a state akin to
+<p>Individually, <code>split</code> and <code>merge</code> are "proto"-instructions in that, algebraically, they are not a complete
+computational step in and of themselves, but when combined, the two yield the abelian group of the mtron <code>inst</code> ring&#8201;&#8212;&#8201;i.e. the addition operator. When split, but not yet merged, the process is in a state akin to a
 <a href="https://en.wikipedia.org/wiki/Quantum_superposition">quantum superposition</a>. In fact, when coefficients are complex numbers,
 then constructive and destructive interference occurs, effectively rendering the mathematics of Schrödinger&#8217;s
-<a href="https://en.wikipedia.org/wiki/Schr%C3%B6dinger_equation">wave function</a> equation, which is perhaps best represented, for the
-computationally inclined, by Feynman&#8217;s <a href="https://en.wikipedia.org/wiki/Path_integral_formulation">path integrals</a>. In classical
-computing, the additive component of the mtron ring, <code>split/merge</code> (sugar&#8217;d <code>-&lt;</code>/<code>&gt;-</code>), is distributive over the ring&#8217;s
-multiplicative monoid, <code>apply</code> (sugar&#8217;d <code>.</code>).</p>
+<a href="https://en.wikipedia.org/wiki/Schr%C3%B6dinger_equation">wave function</a> equation, which for the computationally inclined,
+is perhaps best conceptualized by Feynman&#8217;s <a href="https://en.wikipedia.org/wiki/Path_integral_formulation">path integrals</a>.</p>
 </div>
 <div class="stemblock">
 <div class="content">
@@ -2290,8 +2327,9 @@ multiplicative monoid, <code>apply</code> (sugar&#8217;d <code>.</code>).</p>
 </div>
 </div>
 <div class="paragraph">
-<p>The relationship between <code>split/merge</code> and <code>apply</code> is significant, with mtron coefficients serving as the glue which renders
-this coupling algebraically sound. A complete analysis of this algebra will be discussed elsewhere. For now, when seen in isolation as a commutative group,
+<p>The additive component of the mtron ring, <code>split/merge</code> (sugar&#8217;d <code>-&lt;</code>/<code>&gt;-</code>), is distributive over the ring&#8217;s
+multiplicative monoid, <code>apply</code> (sugar&#8217;d <code>.</code>). The relationship between <code>split/merge</code> and <code>apply</code> is significant, with mtron coefficients serving as the glue which renders
+this coupling algebraically sound. A complete analysis of this algebra is discussed elsewhere. For now, when seen in isolation as a commutative group,
 the following axioms hold.</p>
 </div>
 <div class="paragraph">
@@ -2306,7 +2344,7 @@ the following axioms hold.</p>
 \]</p>
 </div>
 <div class="paragraph">
-<p>When a <code>poly</code> is an argument to <code>split</code>, a new <code>poly</code> is constructed as detailed below.</p>
+<p>When a <code>poly</code> is an argument to <code>split</code>, a new <code>poly</code> is constructed as detailed below for both <code>rec</code></p>
 </div>
 <div class="paragraph">
 <p>\[
@@ -2323,6 +2361,9 @@ the following axioms hold.</p>
 \]</p>
 </div>
 <div class="paragraph">
+<p>and <code>lst</code></p>
+</div>
+<div class="paragraph">
 <p>\[
 \small
 \tt{obj} \cdot \tt{split}(\tt{lst}) \equiv \left[
@@ -2332,20 +2373,20 @@ the following axioms hold.</p>
 \vdots &amp;\\
 \tt{obj} \cdot &amp; \tt{rng({lst}_{n})} \\
 \end{aligned}
-\right]
+\right].
 \]</p>
 </div>
 <div class="paragraph">
 <p>These constructions appear at odds with what is required for branching&#8201;&#8212;&#8201;namely, discrimination. The ability to choose one branch of code over another
 is entirely absent in the semantics of <code>split</code>. Every relation in a <code>rec</code> argument and every element in <code>lst</code> argument has the lhs <code>obj</code>
 applied to it&#8201;&#8212;&#8201;indiscriminately. Selective discrimination is a consequence of the properties of the abelian monoid (commutative/associative) and its zero element (<code>noobj</code>).
-Given that a <code>rec</code> relation can not have a <code>noobj</code> domain nor range, then selective branching is achieved programmatically through <em>filtering</em>.
+Given that a <code>rec</code> relation can not have a <code>noobj</code> domain nor range, then selective branching is achieved programmatically through <strong>filtering</strong>.
 That is, given <code>rec</code> relations,</p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">​
-mtron&gt; [a=&gt;1,b=&gt;noobj,noobj=&gt;3]      ​1​
+mtron&gt; [a=&gt;1,b=&gt;noobj,noobj=&gt;3]
 ==&gt;[a=&gt;1]
 ​</code></pre>
 </div>
@@ -2478,15 +2519,17 @@ mtron&gt; {1,2}-&lt;[?&gt;=2,?&gt;3]&gt;-              ​3​
 is either allowed to pass or not depending on the <code>bool</code> argument. Given <code>inst</code> evaluation semantics, the value of the <code>bool::T</code> argument of <code>is</code> is
 ultimately dependent on the incoming lhs <code>obj</code>, where</p>
 </div>
-<div class="paragraph">
-<p>\[
-\tt{obj} \cdot \tt{gte}(\_ ) \cdot \tt{is}(\_ ) &#8658; obj\{?\} \in \{\tt{obj},\tt{noobj}\}.
-\]</p>
+<div class="stemblock">
+<div class="content">
+\[\tt{obj} \cdot \tt{gte}(\_ ) \cdot \tt{is}(\_ ) =&gt; obj\{?\} \in \{\tt{obj},\tt{noobj}\}.\]
 </div>
-<div class="listingblock primary">
+</div>
+<div class="exampleblock primary">
 <div class="title">if/else</div>
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">​
+<div class="listingblock">
+<div class="content">
+<pre>​
 mtron&gt; {1,2,3,4,5}-&lt;[?&gt;2 =&gt; as(str::T) + ' greater than 2',
                      ?&gt;5 =&gt; as(str::T) + ' greater than 5',
                      _   =&gt; as(str::T) + ' is something.']
@@ -2495,16 +2538,22 @@ mtron&gt; {1,2,3,4,5}-&lt;[?&gt;2 =&gt; as(str::T) + ' greater than 2',
 ==&gt;[3=&gt;{'3 greater than 2','3 is something.'}]
 ==&gt;[4=&gt;{'4 greater than 2','4 is something.'}]
 ==&gt;[5=&gt;{'5 greater than 2','5 is something.'}]
-​</code></pre>
+​</pre>
 </div>
 </div>
-<div class="listingblock secondary">
+</div>
+</div>
+<div class="exampleblock secondary">
 <div class="title">switch</div>
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">​
+<div class="listingblock">
+<div class="content">
+<pre>​
 mtron&gt; 1.plus(10)
 ==&gt;11
-​</code></pre>
+​</pre>
+</div>
+</div>
 </div>
 </div>
 <h3 id="_switch_behavior" class="discrete">switch behavior</h3>
@@ -2553,89 +2602,89 @@ mtron&gt; */m/llm/model
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">​
 mtron&gt; *ollama:+
 ==&gt;model::[
- think   =&gt;false,
- provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion,tools],
  size    =&gt;gB::48.19,
- host    =&gt;!*/sys/space/ollama/host,
- name    =&gt;qwen3-coder-next:latest]@ollama:qwen3-coder-next:latest
-==&gt;model::[
- think   =&gt;true,
- provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion,tools,thinking],
- size    =&gt;gB::17.71,
- host    =&gt;!*/sys/space/ollama/host,
- name    =&gt;&lt;glm-4.7-flash:latest&gt;]@ollama:glm-4.7-flash:latest
-==&gt;model::[
- think   =&gt;true,
- provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion,tools,thinking],
- size    =&gt;gB::0.00,
- host    =&gt;!*/sys/space/ollama/host,
- name    =&gt;&lt;deepseek-v3.2:cloud&gt;]@ollama:deepseek-v3.2:cloud
-==&gt;model::[
- think   =&gt;true,
- provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion,tools,thinking],
- size    =&gt;gB::4.87,
- host    =&gt;!*/sys/space/ollama/host,
- name    =&gt;qwen3:8b]@ollama:qwen3:8b
-==&gt;model::[
- think   =&gt;false,
- provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion],
- size    =&gt;gB::8.37,
- host    =&gt;!*/sys/space/ollama/host,
- name    =&gt;deepcoder:latest]@ollama:deepcoder:latest
-==&gt;model::[
- think   =&gt;false,
- provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion,vision],
- size    =&gt;gB::4.41,
- host    =&gt;!*/sys/space/ollama/host,
- name    =&gt;llava:latest]@ollama:llava:latest
-==&gt;model::[
- think   =&gt;true,
- provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion,tools,thinking],
- size    =&gt;gB::4.87,
- host    =&gt;!*/sys/space/ollama/host,
- name    =&gt;qwen3:latest]@ollama:qwen3:latest
-==&gt;model::[
- think   =&gt;true,
- provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion,tools,thinking],
- size    =&gt;gB::12.85,
- host    =&gt;!*/sys/space/ollama/host,
- name    =&gt;gpt-oss:latest]@ollama:gpt-oss:latest
-==&gt;model::[
- think   =&gt;true,
- provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion,tools,thinking],
- size    =&gt;gB::0.00,
- host    =&gt;!*/sys/space/ollama/host,
- name    =&gt;&lt;minimax-m2.5:cloud&gt;]@ollama:minimax-m2.5:cloud
-==&gt;model::[
- think   =&gt;false,
- provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion],
- size    =&gt;gB::0.72,
- host    =&gt;!*/sys/space/ollama/host,
- name    =&gt;deepseek-coder:latest]@ollama:deepseek-coder:latest
-==&gt;model::[
- think   =&gt;false,
- provider=&gt;!*/sys/space/ollama,
- skill   =&gt;[completion],
- size    =&gt;gB::0.59,
- host    =&gt;!*/sys/space/ollama/host,
- name    =&gt;tinyllama:latest]@ollama:tinyllama:latest
-==&gt;model::[
- think   =&gt;false,
- provider=&gt;!*/sys/space/ollama,
  skill   =&gt;[completion,tools],
+ provider=&gt;!*/sys/space/ollama,
+ think   =&gt;false,
+ name    =&gt;qwen3-coder-next:latest,
+ host    =&gt;!*/sys/space/ollama/host]@ollama:qwen3-coder-next:latest
+==&gt;model::[
+ size    =&gt;gB::17.71,
+ skill   =&gt;[completion,tools,thinking],
+ provider=&gt;!*/sys/space/ollama,
+ think   =&gt;true,
+ name    =&gt;&lt;glm-4.7-flash:latest&gt;,
+ host    =&gt;!*/sys/space/ollama/host]@ollama:glm-4.7-flash:latest
+==&gt;model::[
+ size    =&gt;gB::0.00,
+ skill   =&gt;[completion,tools,thinking],
+ provider=&gt;!*/sys/space/ollama,
+ think   =&gt;true,
+ name    =&gt;&lt;deepseek-v3.2:cloud&gt;,
+ host    =&gt;!*/sys/space/ollama/host]@ollama:deepseek-v3.2:cloud
+==&gt;model::[
+ size    =&gt;gB::4.87,
+ skill   =&gt;[completion,tools,thinking],
+ provider=&gt;!*/sys/space/ollama,
+ think   =&gt;true,
+ name    =&gt;qwen3:8b,
+ host    =&gt;!*/sys/space/ollama/host]@ollama:qwen3:8b
+==&gt;model::[
+ size    =&gt;gB::8.37,
+ skill   =&gt;[completion],
+ provider=&gt;!*/sys/space/ollama,
+ think   =&gt;false,
+ name    =&gt;deepcoder:latest,
+ host    =&gt;!*/sys/space/ollama/host]@ollama:deepcoder:latest
+==&gt;model::[
+ size    =&gt;gB::4.41,
+ skill   =&gt;[completion,vision],
+ provider=&gt;!*/sys/space/ollama,
+ think   =&gt;false,
+ name    =&gt;llava:latest,
+ host    =&gt;!*/sys/space/ollama/host]@ollama:llava:latest
+==&gt;model::[
+ size    =&gt;gB::4.87,
+ skill   =&gt;[completion,tools,thinking],
+ provider=&gt;!*/sys/space/ollama,
+ think   =&gt;true,
+ name    =&gt;qwen3:latest,
+ host    =&gt;!*/sys/space/ollama/host]@ollama:qwen3:latest
+==&gt;model::[
+ size    =&gt;gB::12.85,
+ skill   =&gt;[completion,tools,thinking],
+ provider=&gt;!*/sys/space/ollama,
+ think   =&gt;true,
+ name    =&gt;gpt-oss:latest,
+ host    =&gt;!*/sys/space/ollama/host]@ollama:gpt-oss:latest
+==&gt;model::[
+ size    =&gt;gB::0.00,
+ skill   =&gt;[completion,tools,thinking],
+ provider=&gt;!*/sys/space/ollama,
+ think   =&gt;true,
+ name    =&gt;&lt;minimax-m2.5:cloud&gt;,
+ host    =&gt;!*/sys/space/ollama/host]@ollama:minimax-m2.5:cloud
+==&gt;model::[
+ size    =&gt;gB::0.72,
+ skill   =&gt;[completion],
+ provider=&gt;!*/sys/space/ollama,
+ think   =&gt;false,
+ name    =&gt;deepseek-coder:latest,
+ host    =&gt;!*/sys/space/ollama/host]@ollama:deepseek-coder:latest
+==&gt;model::[
+ size    =&gt;gB::0.59,
+ skill   =&gt;[completion],
+ provider=&gt;!*/sys/space/ollama,
+ think   =&gt;false,
+ name    =&gt;tinyllama:latest,
+ host    =&gt;!*/sys/space/ollama/host]@ollama:tinyllama:latest
+==&gt;model::[
  size    =&gt;gB::4.34,
- host    =&gt;!*/sys/space/ollama/host,
- name    =&gt;llama3-groq-tool-use:latest]@ollama:llama3-groq-tool-use:latest
+ skill   =&gt;[completion,tools],
+ provider=&gt;!*/sys/space/ollama,
+ think   =&gt;false,
+ name    =&gt;llama3-groq-tool-use:latest,
+ host    =&gt;!*/sys/space/ollama/host]@ollama:llama3-groq-tool-use:latest
 ​</code></pre>
 </div>
 </div>
@@ -2762,7 +2811,7 @@ mtron&gt; 1.plus(b).plus(3)                 ​1​
 ==&gt;fail::[unable to determine inst function:
 	1           =&gt; plus(b)      | [inst]
 	int::T      =&gt; #::T         |  \_dom
-	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/4862
+	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/110
 ​
 mtron&gt; 1.plus(b).catch(2).plus(3)        ​2​
 ==&gt;5
@@ -2801,27 +2850,117 @@ mtron&gt; 1.plus(b)                  ​1​
 ==&gt;fail::[unable to determine inst function:
 	1           =&gt; plus(b)      | [inst]
 	int::T      =&gt; #::T         |  \_dom
-	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/4870
+	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/166
 ​
 mtron&gt; */sys/fail/+               ​2​
+==&gt;fail::[unable to evaluate inst: plus(b)][...]@/sys/fail/163
+==&gt;fail::[unable to evaluate inst: plus(b)][...]@/sys/fail/164
+==&gt;fail::[apply failure:
+	[lhs]    | b
+	 \_type  | /m/uri
+	  \_pred | []
+	[inst]   | zero?rng=bytes&amp;dom=uri(noobj){&lt;j&gt;}
+	 \_dom   | uri::T
+	 \_args  | [noobj]][...]@/sys/fail/142
+==&gt;fail::[apply failure:
+	[lhs]    | b
+	 \_type  | /m/uri
+	  \_pred | []
+	[inst]   | zero?rng=bytes&amp;dom=uri(noobj){&lt;j&gt;}
+	 \_dom   | uri::T
+	 \_args  | [noobj]][...]@/sys/fail/141
+==&gt;fail::[apply failure:
+	[lhs]    | b
+	 \_type  | /m/uri
+	  \_pred | []
+	[inst]   | zero?rng=bytes&amp;dom=uri(noobj){&lt;j&gt;}
+	 \_dom   | uri::T
+	 \_args  | [noobj]][...]@/sys/fail/160
 ==&gt;fail::[unable to determine inst function:
 	1           =&gt; plus(b)      | [inst]
 	int::T      =&gt; #::T         |  \_dom
-	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/4869
-==&gt;fail::[unable to evaluate inst: plus(b)][...]@/sys/fail/4868
+	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/166
 ==&gt;fail::[unable to determine inst function:
 	1           =&gt; plus(b)      | [inst]
 	int::T      =&gt; #::T         |  \_dom
-	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/4870
-==&gt;fail::[unable to evaluate inst: plus(b)][...]@/sys/fail/4867
+	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/165
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/149
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(noobj){&lt;j&gt;}][...]@/sys/fail/140
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(noobj){&lt;j&gt;}][...]@/sys/fail/146
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(noobj){&lt;j&gt;}][...]@/sys/fail/145
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/144
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/143
+==&gt;fail::[apply failure:
+	[lhs]    | b
+	 \_type  | /m/uri
+	  \_pred | []
+	[inst]   | zero?rng=bytes&amp;dom=uri(noobj){&lt;j&gt;}
+	 \_dom   | uri::T
+	 \_args  | [noobj]][...]@/sys/fail/159
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/162
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/161
+==&gt;fail::[apply failure:
+	[lhs]    | b
+	 \_type  | /m/uri
+	  \_pred | []
+	[inst]   | zero?rng=bytes&amp;dom=uri(noobj){&lt;j&gt;}
+	 \_dom   | uri::T
+	 \_args  | [noobj]][...]@/sys/fail/154
+==&gt;fail::[apply failure:
+	[lhs]    | b
+	 \_type  | /m/uri
+	  \_pred | []
+	[inst]   | zero?rng=bytes&amp;dom=uri(noobj){&lt;j&gt;}
+	 \_dom   | uri::T
+	 \_args  | [noobj]][...]@/sys/fail/153
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(noobj){&lt;j&gt;}][...]@/sys/fail/139
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(noobj){&lt;j&gt;}][...]@/sys/fail/158
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(noobj){&lt;j&gt;}][...]@/sys/fail/152
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(noobj){&lt;j&gt;}][...]@/sys/fail/151
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(noobj){&lt;j&gt;}][...]@/sys/fail/157
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/156
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/155
+==&gt;fail::[apply failure:
+	[lhs]    | b
+	 \_type  | /m/uri
+	  \_pred | []
+	[inst]   | zero?rng=bytes&amp;dom=uri(noobj){&lt;j&gt;}
+	 \_dom   | uri::T
+	 \_args  | [noobj]][...]@/sys/fail/147
+==&gt;fail::[apply failure:
+	[lhs]    | b
+	 \_type  | /m/uri
+	  \_pred | []
+	[inst]   | zero?rng=bytes&amp;dom=uri(noobj){&lt;j&gt;}
+	 \_dom   | uri::T
+	 \_args  | [noobj]][...]@/sys/fail/148
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/150
 ​
 mtron&gt; */sys/fail/+.catch(_)      ​3​
+==&gt;fail{2}::[unable to evaluate inst: plus(b)]
+==&gt;fail{8}::[apply failure:
+	[lhs]    | b
+	 \_type  | /m/uri
+	  \_pred | []
+	[inst]   | zero?rng=bytes&amp;dom=uri(noobj){&lt;j&gt;}
+	 \_dom   | uri::T
+	 \_args  | [noobj]]
+    \_fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(noobj){&lt;j&gt;}]
 ==&gt;fail{2}::[unable to determine inst function:
 	1           =&gt; plus(b)      | [inst]
 	int::T      =&gt; #::T         |  \_dom
 	int::T     X=&gt; [b]          |  \_args]
     \_fail::[unable to evaluate inst: plus(b)]
-==&gt;fail{2}::[unable to evaluate inst: plus(b)]
+==&gt;fail{8}::[unable to convert uri::T to bytes]
+    \_fail::[apply failure:
+	[lhs]    | b
+	 \_type  | /m/uri
+	  \_pred | []
+	[inst]   | zero?rng=bytes&amp;dom=uri(noobj){&lt;j&gt;}
+	 \_dom   | uri::T
+	 \_args  | [noobj]]
+    \_fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(noobj){&lt;j&gt;}]
+==&gt;fail{8}::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(noobj){&lt;j&gt;}]
 ​
 mtron&gt; */sys/fail                 ​4​
 ​</code></pre>
@@ -2858,7 +2997,7 @@ mtron&gt; *cause                 ​1​
 ​
 mtron&gt; 1+b.catch(cause())     ​2​
 ==&gt;fail::[rhs does not match inst range:
-	fail::[unable to evaluate inst: plus(b)]=&gt;(X=&gt;int{*}::T)][...]@/sys/fail/4876
+	fail::[unable to evaluate inst: plus(b)]=&gt;(X=&gt;int{*}::T)][...]@/sys/fail/196
 ​</code></pre>
 </div>
 </div>
@@ -2975,11 +3114,11 @@ mtron&gt; nat::10
 ==&gt;nat::10
 ​
 mtron&gt; nat::-10
-==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/4942
+==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/262
 ​
 mtron&gt; int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/4948
+  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/268
 ​</code></pre>
 </div>
 </div>
@@ -3079,11 +3218,11 @@ mtron&gt; nat::10
 ==&gt;nat::10
 ​
 mtron&gt; nat::-10
-==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/4962
+==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/282
 ​
 mtron&gt; int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/4968
+  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/288
 ​</code></pre>
 </div>
 </div>
@@ -3115,11 +3254,11 @@ mtron&gt; age:125
 ​
 mtron&gt; nat:125.as(age::T)
 ==&gt;fail::[nat:125 is not a is(lt(120))
-  nat:125=&gt;(==&gt;is(lt(120)))][...]@/sys/fail/5010
+  nat:125=&gt;(==&gt;is(lt(120)))][...]@/sys/fail/330
 ​
 mtron&gt; 125.as(nat::T).as(age::T)
 ==&gt;fail::[nat::125 is not a is(lt(120))
-  nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/5016
+  nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/336
 ​</code></pre>
 </div>
 </div>
@@ -3132,7 +3271,7 @@ mtron&gt; name   -&gt; str::T[-&lt;''&gt;-count().?&lt;30]
 mtron&gt; personx -&gt; rec::T[?[name  =&gt; str::T,
                            age   =&gt; age::T,
                            knows =&gt; personx{*}::T]]
-==&gt;rec::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;personx{*}::T])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]
+==&gt;rec::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;personx{*}::T])]
 ​
 mtron&gt; marko -&gt; personx::[name=&gt;'marko',age=&gt;29,knows=&gt;!*grant]
 ==&gt;personx::[name=&gt;'marko',age=&gt;29,knows=&gt;!*grant]
@@ -3394,10 +3533,10 @@ mtron&gt; *#.as[name      =&gt; _,
 </table>
 <h3 id="_spatial_embeddings" class="discrete">spatial embeddings</h3>
 <div class="paragraph">
-<p><span class="green">m</span>​<strong class="lime">E</strong>​<span class="red">t</span>​<span class="yellow">a</span>​<strong class="blue">T</strong>​<strong class="aqua">R</strong>​<strong class="orange">O</strong>​<span class="fuchsia">n</span>​ was designed to support the creation and manipulation of <em>abstract data types</em> in a compact, fluid manner so as to allow the user to move smoothly between <em>multiple models</em> across different spaces, each espousing a different perspective on the data their maintain: e.g., key/value, document, relational, vector, graph, and the various nooks and crannies between.</p>
+<p><strong class="lime">M</strong>​<strong class="yellow">E</strong>​<span class="green">T</span>​<strong class="fuchsia">A</strong>​<span class="orange">t</span>​<strong class="red">r</strong>​<span class="aqua">o</span>​<span class="blue">N</span>​ was designed to support the creation and manipulation of <em>abstract data types</em> in a compact, fluid manner so as to allow the user to move smoothly between <em>multiple models</em> across different spaces, each espousing a different perspective on the data their maintain: e.g., key/value, document, relational, vector, graph, and the various nooks and crannies between.</p>
 </div>
 <div class="paragraph">
-<p><span class="lime">M</span>​<span class="yellow">E</span>​<span class="red">t</span>​<strong class="fuchsia">A</strong>​<strong class="blue">T</strong>​<span class="orange">R</span>​<span class="aqua">o</span>​<span class="green">n</span>​'s URI addressing scheme makes it possible to <em>embed</em> arbitrary data types into a space.
+<p><strong class="lime">M</strong>​<span class="red">e</span>​<span class="blue">t</span>​<span class="green">A</span>​<span class="aqua">T</span>​<span class="fuchsia">r</span>​<strong class="yellow">o</strong>​<span class="orange">n</span>​'s URI addressing scheme makes it possible to <em>embed</em> arbitrary data types into a space.
 This section will explore the following considerations when designing a <em>multi-model abstract data type</em>.</p>
 </div>
 <div class="olist arabic">
@@ -3715,11 +3854,7 @@ where \(E\) is typically a <a href="https://en.wikipedia.org/wiki/Partial_functi
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">​
 mtron&gt; */g/V/1                                ​1​
-==&gt;person::[
- address=&gt;[
-   home=&gt;[city=&gt;'santa fe',state=&gt;NM]],
- age    =&gt;29,
- name   =&gt;'marko']@/g/V/1
+==&gt;person::[age=&gt;29,name=&gt;'marko']@/g/V/1
 ​
 mtron&gt; */g/V/1.outE()                         ​2​
 ==&gt;created::[weight=&gt;0.40]@/g/E/9
@@ -3891,11 +4026,7 @@ traversals.</p>
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">​
 mtron&gt; */g/V/1==[_=&gt;_]                                                  ​1​
-==&gt;[
- address=&gt;[
-   home=&gt;[city=&gt;'santa fe',state=&gt;NM]],
- age    =&gt;29,
- name   =&gt;'marko']
+==&gt;[age=&gt;29,name=&gt;'marko']
 ​
 mtron&gt; */g/V/1&gt;&gt;=[address=&gt;[
                     home =&gt; [city =&gt;'santa fe',
@@ -3903,7 +4034,8 @@ mtron&gt; */g/V/1&gt;&gt;=[address=&gt;[
                     work =&gt; !*&lt;../home&gt;]]                               ​2​
 ==&gt;person::[
  address=&gt;[
-   home=&gt;[city=&gt;'santa fe',state=&gt;NM]],
+   home=&gt;[city=&gt;'santa fe',state=&gt;NM],
+   work=&gt;!*&lt;../home&gt;],
  age    =&gt;29,
  name   =&gt;'marko']@/g/V/1
 ​
@@ -3912,10 +4044,11 @@ mtron&gt; */g/V/1/address/home/city                                        ​3�
 ​
 mtron&gt; */g/V/+.?==[address=&gt;[_ =&gt; [state=&gt;NM]]]                         ​4​
 ==&gt;person::[
- address=&gt;[
-   home=&gt;[city=&gt;'santa fe',state=&gt;NM]],
  age    =&gt;29,
- name   =&gt;'marko']@/g/V/1
+ name   =&gt;'marko',
+ address=&gt;[
+   home=&gt;[city=&gt;'santa fe',state=&gt;NM],
+   work=&gt;!*&lt;../home&gt;]]@/g/V/1
 ​
 mtron&gt; */g/V/+.?==[address=&gt;[_ =&gt; [state=&gt;NM]]].&gt;&gt;address/+/city        ​5​
 ==&gt;santa fe
@@ -4053,10 +4186,11 @@ mtron&gt; *netflix:
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">​
 mtron&gt; */g/V/1
 ==&gt;person::[
- address=&gt;[
-   home=&gt;[city=&gt;'santa fe',state=&gt;NM]],
  age    =&gt;29,
- name   =&gt;'marko']@/g/V/1
+ name   =&gt;'marko',
+ address=&gt;[
+   home=&gt;[city=&gt;'santa fe',state=&gt;NM],
+   work=&gt;!*&lt;../home&gt;]]@/g/V/1
 ​
 mtron&gt; *netflix:movie/11488
 ==&gt;[
@@ -4067,7 +4201,7 @@ mtron&gt; *netflix:movie/11488
  title        =&gt;'Good Bad Ugly']
 ​
 mtron&gt; /g/V/1.addE(watched,*netflix:movie/11488)
-==&gt;fail::[unable to convert uri::T to vertexmap][...]@/sys/fail/4798
+==&gt;fail::[unable to convert uri::T to vertexmap][...]@/sys/fail/14
 ​</code></pre>
 </div>
 </div></div></td>
@@ -4262,7 +4396,7 @@ mtron&gt; "a b c".-&lt;' '.map(capitalize).&gt;-','
 ==&gt;fail::[unable to determine inst function:
 	capitalize  =&gt; merge(',')   | [inst]
 	uri::T      =&gt; #::T         |  \_dom
-	uri::T     X=&gt; [',']        |  \_args][...]@/sys/fail/4792
+	uri::T     X=&gt; [',']        |  \_args][...]@/sys/fail/8
 ​</code></pre>
 </div>
 </div>

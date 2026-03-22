@@ -18,6 +18,8 @@
 
 package studio.phaseshift.metatron.isa.m;
 
+import studio.phaseshift.metatron.algebra.MultMonoid;
+import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
@@ -38,6 +40,7 @@ import static studio.phaseshift.metatron.furi.Q.Q_TYPE;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.CONSTQ_TYPE;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.space.memSpace.MEM_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.space.metaSpace.META_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.space.stackSpace.STACK_SPACE_TYPE;
@@ -55,6 +58,7 @@ import static studio.phaseshift.metatron.isa.m.type.Rel.REL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instA;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -274,14 +278,14 @@ public class mInstSet extends AbstractInstSet {
                 InstSet.Helper.rewriter(f("id_removal_rewrite"),
                         code -> code.selfJVM(
                                 Rewriter.search(code.insts())
-                                        .match(instB(ID_INST_TID, lst()).insts())
+                                        .match(instA(ID_INST_TID).insts())
                                         .rewrite(_ -> List.of())).asCode()),
 
                 // Flatten nested map instructions
                 InstSet.Helper.rewriter(f("map_nest_rewrite"),
                         code -> code.selfJVM(
                                 Rewriter.search(code.insts())
-                                        .match(instB(MAP_INST_TID, lst(instB(MAP_INST_TID, lst()))).insts())
+                                        .match(instB(MAP_INST_TID, lst(instA(MAP_INST_TID))).insts())
                                         .repeat()
                                         .rewrite(map -> map.values().stream().map(objs -> objs.arg(0).asInst()).toList())).asCode()),
 
@@ -290,44 +294,53 @@ public class mInstSet extends AbstractInstSet {
                 InstSet.Helper.rewriter(f("else_after_count_rewrite"),
                         code -> code.selfJVM(
                                 Rewriter.search(code.insts())
-                                        .match(List.of(instB(COUNT_INST_TID, lst()), instB(ELSE_INST_TID, lst())))
+                                        .match(List.of(instA(COUNT_INST_TID), instA(ELSE_INST_TID)))
                                         .rewrite(map -> {
                                             final List<Inst> matched = map.values().stream().toList();
                                             // COUNT always returns int, so ELSE is dead code
-                                            return List.of(matched.get(0));
+                                            return List.of(matched.getFirst());
                                         })).asCode()),
 
-                // Optimize plus(0) for integers (identity)
+                // Optimize plus(0) for any PlusMonoid (identity)
                 // Pattern: .plus(0) → identity (no-op)
+                // DISABLED: This rewrite is interfering with Rec operations (RecTest.testAt() failures)
+                // The rewrite removes .plus(0) operations that are needed for record access patterns
+
                 InstSet.Helper.rewriter(f("plus_zero_rewrite"),
                         code -> code.selfJVM(
                                 Rewriter.search(code.insts())
-                                        .match(instB(PLUS_INST_TID, lst()).insts())
+                                        .match(List.of(instB(PLUS_INST_TID, lst(is_(eq_(zero_())).tryToInst()))))
                                         .rewrite(map -> {
                                             final Inst plusInst = map.values().iterator().next();
-                                            if (plusInst.args().count() > 0 && plusInst.arg(0).isInt() &&
-                                                    plusInst.arg(0).intValue().intValue() == 0) {
-                                                // plus(0) is identity, remove it
-                                                return List.of();
+                                            if (plusInst.args().count() > 0) {
+                                                if (plusInst.arg(0) instanceof PlusMonoid<?> && ((PlusMonoid<?>) plusInst.arg(0)).isZero()) {
+                                                    // plus(0) is identity, remove it
+                                                    return List.of();
+                                                }
                                             }
                                             return List.of(plusInst);
                                         })).asCode()),
 
+
                 // Optimize mult(1) for integers (identity)
                 // Pattern: .mult(1) → identity (no-op)
+                // DISABLED: This rewrite is interfering with list operations
+
                 InstSet.Helper.rewriter(f("mult_one_rewrite"),
                         code -> code.selfJVM(
                                 Rewriter.search(code.insts())
-                                        .match(instB(MULT_INST_TID, lst()).insts())
+                                        .match(List.of(mult_(is_(eq_(one_()))).tryToInst().as()))
                                         .rewrite(map -> {
                                             final Inst multInst = map.values().iterator().next();
-                                            if (multInst.args().count() > 0 && multInst.arg(0).isInt() &&
-                                                    multInst.arg(0).intValue().intValue() == 1) {
-                                                // mult(1) is identity, remove it
-                                                return List.of();
+                                            if (multInst.args().count() > 0) {
+                                                if (multInst.arg(0) instanceof MultMonoid<?> && ((MultMonoid<?>) multInst.arg(0)).isOne()) {
+                                                    // mult(1) is identity, remove it
+                                                    return List.of();
+                                                }
                                             }
                                             return List.of(multInst);
                                         })).asCode()),
+
 
                 // Collapse identical branches in split-merge by summing coefficients
                 // Pattern: -<[inst,inst,...]>- → inst{n}
@@ -336,7 +349,7 @@ public class mInstSet extends AbstractInstSet {
                 InstSet.Helper.rewriter(f("split_merge_collapse_rewrite"),
                         code -> code.selfJVM(
                                 Rewriter.search(code.insts())
-                                        .match(List.of(instB(SPLIT_INST_TID, lst()), instB(MERGE_INST_TID, lst())))
+                                        .match(List.of(instA(SPLIT_INST_TID), instA(MERGE_INST_TID)))
                                         .rewrite(map -> {
                                             final List<Inst> matched = map.values().stream().toList();
                                             final Inst splitInst = matched.get(0);
@@ -349,6 +362,11 @@ public class mInstSet extends AbstractInstSet {
                                                     final List<Obj> branchList = branches.elements().toList();
                                                     final Obj firstBranch = branchList.get(0);
 
+                                                    // First check if firstBranch is an instruction
+                                                    if (!firstBranch.isInst()) {
+                                                        return matched;
+                                                    }
+
                                                     // Check if all branches are the same instruction
                                                     boolean allIdentical = branchList.stream()
                                                             .allMatch(b -> b.isInst() &&
@@ -357,7 +375,7 @@ public class mInstSet extends AbstractInstSet {
                                                                     (b.asInst().args().count() == 0 ||
                                                                             b.asInst().arg(0).equals(firstBranch.asInst().arg(0))));
 
-                                                    if (allIdentical && firstBranch.isInst()) {
+                                                    if (allIdentical) {
                                                         // Sum the coefficients (using max() since coefficients are exact values)
                                                         final long totalCoeff = branchList.stream()
                                                                 .mapToLong(b -> b.asInst().c().max())
@@ -378,7 +396,7 @@ public class mInstSet extends AbstractInstSet {
                 InstSet.Helper.rewriter(f("split_merge_left_factor_rewrite"),
                         code -> code.selfJVM(
                                 Rewriter.search(code.asCode().insts())
-                                        .match(List.of(instB(SPLIT_INST_TID, lst()), instB(MERGE_INST_TID, lst())))
+                                        .match(List.of(instA(SPLIT_INST_TID), instA(MERGE_INST_TID)))
                                         .repeat()
                                         .rewrite(map -> {
                                             final List<Inst> matched = map.values().stream().toList();
@@ -446,7 +464,7 @@ public class mInstSet extends AbstractInstSet {
                 InstSet.Helper.rewriter(f("split_merge_right_factor_rewrite"),
                         code -> code.selfJVM(
                                 Rewriter.search(code.asCode().insts())
-                                        .match(List.of(instB(SPLIT_INST_TID, lst()), instB(MERGE_INST_TID, lst())))
+                                        .match(List.of(instA(SPLIT_INST_TID), instA(MERGE_INST_TID)))
                                         .repeat()
                                         .rewrite(map -> {
                                             final List<Inst> matched = map.values().stream().toList();

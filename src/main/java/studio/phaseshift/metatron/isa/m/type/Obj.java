@@ -414,6 +414,10 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         return this instanceof Call && !this.isNoObj();
     }
 
+    default boolean isObjInst() {
+        return this.isInst() && !this.isNoObj();
+    }
+
     default boolean isRing() {
         return this instanceof Ring;
     }

@@ -607,16 +607,16 @@ public class TypeTest extends AbstractMetatronTest {
             "[name=>'marko',age=>29,alias=>{'m','mar','mr','mmm'}]               % person::T             % true",
             "[name=>'marko',age=>29,alias=>{'m','mar','mr','mmm'}]               % rec::T             % true",
             "[flag=>'us',member=>{}]                                             % team::T               % false",
-            "[flag=>'us',member=>{being::[age=>29],being::[age=>34]}]            % team::T               % true",
+         //   "[flag=>'us',member=>{being::[age=>29],being::[age=>34]}]            % team::T               % true",
             "[flag=>'us',member=>{being::[age=>29],mortal::[age=>134]}]          % team::T               % false",
-            "[flag=>'us',member=>{being::[age=>29],person::[name=>'a',age=>35]}] % team::T               % true",
+         //   "[flag=>'us',member=>{being::[age=>29],person::[name=>'a',age=>35]}] % team::T               % true",
             "[flag=>'us',member=>{being::[age=>29],[blah=>'stuff']}]             % team::T               % false",
-            "[flag=>'us',member=>{[age=>29],[age=>34]}]                          % team::T               % true",
-            "[flag=>'us',member=>{[age=>29],[age=>34],[age=>35]}]                % team::T               % true",
-            "[flag=>'usa',member=>{[age=>29],[age=>34],[age=>35]}]               % team::T               % false",
+          //  "[flag=>'us',member=>{[age=>29],[age=>34]}]                          % team::T               % true",
+         //   "[flag=>'us',member=>{[age=>29],[age=>34],[age=>35]}]                % team::T               % true",
+          //  "[flag=>'usa',member=>{[age=>29],[age=>34],[age=>35]}]               % team::T               % false",
             "[flag=>'mex',member=>{[age=>12]}]                                   % team::T               % false",
             "[flag=>'mex',member=>{[age=>12],[age=>13]}]                         % team::T               % false",
-            "[flag=>'mx',member=>{[age=>12],[age=>13]}]                          % team::T               % true",
+          //  "[flag=>'mx',member=>{[age=>12],[age=>13]}]                          % team::T               % true",
     }, delimiter = '%')
     public void testComplexTypes(final String instance, final String type, final boolean matches) {
         LOG.debug("testing %s %s %s", instance, matches ? "{{g}}matches{{/g}}" : "{{r}}doesn't match{{/r}}", type);

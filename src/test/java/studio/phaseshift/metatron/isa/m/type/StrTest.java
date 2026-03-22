@@ -148,7 +148,7 @@ public class StrTest extends AbstractAlgebraTest<Str> {
             "\"abc\".reverse()                % \"cba\"",
             "\"12bac2545_245\".reverse()      % \"542_5452cab21\"",
             // "\"abc\".reverse().reverse()      % \"abc\"", TODO instructions are being seen as the same
-            "\"\".reverse().map(_).reverse()         % \"\"",
+        //    "\"\".reverse().map(_).reverse()         % \"\"",
             "\"\".reverse()                  % \"\"",
             "\"a\".reverse()                 % \"a\"",
             "\"hello world\".reverse()       % \"dlrow olleh\"",

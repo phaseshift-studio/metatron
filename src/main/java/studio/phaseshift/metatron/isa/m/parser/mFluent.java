@@ -29,7 +29,6 @@ import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static studio.phaseshift.metatron.isa.m.mInstSet.ID_INST_TID;
@@ -102,7 +101,14 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
         return this.addInst(instB(mInstSet.BARRIER_INST_TID, lst(obj)));
     }
 
+    public F zero_() {
+        return this.addInst(instB(mInstSet.ZERO_INST_TID, lst()));
+    }
 
+    public F one_() {
+        return this.addInst(instB(mInstSet.ONE_INST_TID, lst()));
+    }
+    
     public F thread_(final Obj obj) {
         return this.addInst(instB(mInstSet.THREAD_INST_TID, lst(obj)));
     }
@@ -479,6 +485,14 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
             return new mFluent<F>().thread_(obj);
         }
 
+        public static <F extends mFluent<F>> F zero_() {
+            return new mFluent<F>().zero_();
+        }
+
+        public static <F extends mFluent<F>> F one_() {
+            return new mFluent<F>().one_();
+        }
+        
         // ========================================
         // Logical Operators
         // ========================================

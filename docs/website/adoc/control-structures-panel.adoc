@@ -133,13 +133,16 @@ The above written once more using sugar syntax:
 
 [cols="3a,3a",separator=🧱]
 |===
+
 🧱
+
 ++++
 <!-- 🐖
 {1,2}-<[?<2=>+9,?>=2=>+3]
 {1,2}-<[?<2=>+9,?>=2=>+3]>>
 -->
 ++++ 
+
 🧱
 
 * `-<` split.
@@ -147,8 +150,6 @@ The above written once more using sugar syntax:
 * `>?` is greater than.
 * `>-` merge.
 |===
-
-
 
 
 Unlike `rec`, `lst` can have `noobj` elements. However, when merged into a single stream, `noobj` are discarded.
@@ -171,12 +172,14 @@ is either allowed to pass or not depending on the `bool` argument. Given `inst` 
 ultimately dependent on the incoming lhs `obj`, where
 
 [stem]
-\[
+++++
 \tt{obj} \cdot \tt{gte}(\_ ) \cdot \tt{is}(\_ ) => obj\{?\} \in \{\tt{obj},\tt{noobj}\}.
-\]
+++++
 
-[source,mtron,indent=0,subs="verbatim,attributes",role="primary"]
+[indent=0,subs="verbatim,attributes",role="primary"]
 .if/else
+=====
+
 ++++
 <!-- 🐖 [NO_HEADER]
 {1,2,3,4,5}-<[?>2 => as(str::T) + ' greater than 2', /
@@ -185,13 +188,20 @@ ultimately dependent on the incoming lhs `obj`, where
 -->
 ++++
 
-[source,mtron,indent=0,subs="verbatim,attributes",role="secondary"]
+=====
+
+[indent=0,subs="verbatim,attributes",role="secondary"]
 .switch
+=====
+
 ++++
 <!-- 🐖 [NO_HEADER]
 1.plus(10)
 -->
 ++++
+
+=====
+
 
 [discrete]
 === switch behavior 
