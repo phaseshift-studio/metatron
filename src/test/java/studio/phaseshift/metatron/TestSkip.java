@@ -40,6 +40,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  *     // Skips specified methods from BaseTestClass
  * }
  * }</pre>
+ *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 @Target({ElementType.ANNOTATION_TYPE, ElementType.TYPE})
@@ -65,7 +66,7 @@ public @interface TestSkip {
      * Register with {@code @ExtendWith(TestSkip.TestSkipExtension.class)}.
      */
     class TestSkipExtension implements BeforeTestExecutionCallback {
-        
+
         /**
          * Callback invoked before each test execution. Traverses the class hierarchy
          * to determine if the current test method should be skipped.

@@ -25,12 +25,7 @@ import com.mongodb.client.MongoDatabase;
 import de.bwaldvogel.mongo.MongoServer;
 import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
 import org.bson.Document;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
@@ -50,7 +45,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.doc.docInstSet.DOC_ISA_TID;
-import static studio.phaseshift.metatron.isa.iot.iotInstSet.IOT_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -91,18 +85,65 @@ public class docSpaceTest extends AbstractSpaceTest {
     }
 
     // Disable all abstract tests - docSpace has its own comprehensive MongoDB-specific tests
-    @Override @Disabled public void testStringCornerCases(String description, String value) {}
-    @Override @Disabled public void testIntegerBoundaries(String description, long value) {}
-    @Override @Disabled public void testRealBoundaries(String description, double value) {}
-    @Override @Disabled public void testBooleanValues(String description, boolean value) {}
-    @Override @Disabled public void testSequentialUpdates(int iterations) {}
-    @Override @Disabled public void testBasicCRUD(String description, String key, String valueStr) {}
-    @Override @Disabled public void testTypePreservation(String description, Obj value) {}
-    @Override @Disabled public void testNestedRecords(int depth) {}
-    @Override @Disabled public void testListHandling(String description, studio.phaseshift.metatron.isa.m.type.Lst listValue, int expectedCount) {}
-    @Override @Disabled public void testTypeChanges(String description, Obj initialValue, Obj updatedValue) {}
-    @Override @Disabled public void testMultiFieldUpdates(int fieldCount) {}
-    @Override @Disabled public void testSpecialStringValues(String description, String value) {}
+    @Override
+    @Disabled
+    public void testStringCornerCases(String description, String value) {
+    }
+
+    @Override
+    @Disabled
+    public void testIntegerBoundaries(String description, long value) {
+    }
+
+    @Override
+    @Disabled
+    public void testRealBoundaries(String description, double value) {
+    }
+
+    @Override
+    @Disabled
+    public void testBooleanValues(String description, boolean value) {
+    }
+
+    @Override
+    @Disabled
+    public void testSequentialUpdates(int iterations) {
+    }
+
+    @Override
+    @Disabled
+    public void testBasicCRUD(String description, String key, String valueStr) {
+    }
+
+    @Override
+    @Disabled
+    public void testTypePreservation(String description, Obj value) {
+    }
+
+    @Override
+    @Disabled
+    public void testNestedRecords(int depth) {
+    }
+
+    @Override
+    @Disabled
+    public void testListHandling(String description, studio.phaseshift.metatron.isa.m.type.Lst listValue, int expectedCount) {
+    }
+
+    @Override
+    @Disabled
+    public void testTypeChanges(String description, Obj initialValue, Obj updatedValue) {
+    }
+
+    @Override
+    @Disabled
+    public void testMultiFieldUpdates(int fieldCount) {
+    }
+
+    @Override
+    @Disabled
+    public void testSpecialStringValues(String description, String value) {
+    }
 
     @BeforeAll
     public static void setupAll() {
@@ -525,7 +566,7 @@ public class docSpaceTest extends AbstractSpaceTest {
             "prod2     | Mouse     | 29.99     | 50"
     }, delimiter = '|')
     public void testReadProductByIdParameterized(final String productId, final String expectedName,
-                                                  final double expectedPrice, final int expectedQuantity) {
+                                                 final double expectedPrice, final int expectedQuantity) {
         final docSpace space = (docSpace) this.spaceSupplier.get();
         try {
             final Obj product = space.read(f("mongo:products/" + productId));
@@ -555,7 +596,7 @@ public class docSpaceTest extends AbstractSpaceTest {
             "testUser10| Zero Age      | 0   | zero@test.com"          // zero age
     }, delimiter = '|')
     public void testWriteAndReadParameterized(final String userId, final String name,
-                                               final int age, final String email) {
+                                              final int age, final String email) {
         final docSpace space = (docSpace) this.spaceSupplier.get();
         try {
             // Write user
@@ -630,14 +671,14 @@ public class docSpaceTest extends AbstractSpaceTest {
 
             // Verify exists
             assertFalse(space.read(f("mongo:users/" + userId)).isNoObj(),
-                       "User should exist before deletion");
+                    "User should exist before deletion");
 
             // Delete
             space.write(f("mongo:users/" + userId), noobj());
 
             // Verify deleted
             assertTrue(space.read(f("mongo:users/" + userId)).isNoObj(),
-                      "User should not exist after deletion");
+                    "User should not exist after deletion");
         } finally {
             space.close();
         }
@@ -653,7 +694,7 @@ public class docSpaceTest extends AbstractSpaceTest {
             "nestedUser6 | Eve     | Street Only   | none        | 00000"   // different partial
     }, delimiter = '|')
     public void testNestedDocumentsParameterized(final String userId, final String name,
-                                                  final String street, final String city, final String zip) {
+                                                 final String street, final String city, final String zip) {
         final docSpace space = (docSpace) this.spaceSupplier.get();
         try {
             final Rec nestedDoc = rec(
@@ -724,7 +765,7 @@ public class docSpaceTest extends AbstractSpaceTest {
             "typeTest7 | negative      | -1         | -0.0      | true"    // negative values
     }, delimiter = '|')
     public void testMultipleDataTypesParameterized(final String docId, final String strVal,
-                                                    final int intVal, final double realVal, final boolean boolVal) {
+                                                   final int intVal, final double realVal, final boolean boolVal) {
         final docSpace space = (docSpace) this.spaceSupplier.get();
         try {
             final Rec multiTypeDoc = rec(
@@ -790,7 +831,7 @@ public class docSpaceTest extends AbstractSpaceTest {
             }
 
             assertTrue(count >= expectedMinCount,
-                      "Should have at least " + expectedMinCount + " documents in " + collectionName);
+                    "Should have at least " + expectedMinCount + " documents in " + collectionName);
         } finally {
             space.close();
         }
@@ -920,7 +961,7 @@ public class docSpaceTest extends AbstractSpaceTest {
             "mixedList5 | -999  | neg   | -1.0  | false"
     }, delimiter = '|')
     public void testMixedTypeListsParameterized(final String docId, final int intVal,
-                                                 final String strVal, final double realVal, final boolean boolVal) {
+                                                final String strVal, final double realVal, final boolean boolVal) {
         final docSpace space = (docSpace) this.spaceSupplier.get();
         try {
             final Rec doc = rec(
@@ -955,14 +996,14 @@ public class docSpaceTest extends AbstractSpaceTest {
         try {
             // Verify doesn't exist
             assertTrue(space.read(f("mongo:users/" + docId)).isNoObj(),
-                      "Document should not exist initially");
+                    "Document should not exist initially");
 
             // Delete non-existent document (should not throw error, just no-op)
             space.write(f("mongo:users/" + docId), noobj());
 
             // Verify still doesn't exist
             assertTrue(space.read(f("mongo:users/" + docId)).isNoObj(),
-                      "Document should still not exist after delete");
+                    "Document should still not exist after delete");
         } finally {
             space.close();
         }
@@ -991,9 +1032,9 @@ public class docSpaceTest extends AbstractSpaceTest {
             final Rec readBackRec = readBack.asRec();
 
             assertEquals(jnt(iterations - 1), readBackRec.at(uri("iteration")),
-                        "Should have last iteration value");
+                    "Should have last iteration value");
             assertEquals(str("value" + (iterations - 1)), readBackRec.at(uri("value")),
-                        "Should have last value");
+                    "Should have last value");
         } finally {
             space.close();
         }
@@ -1104,7 +1145,7 @@ public class docSpaceTest extends AbstractSpaceTest {
 
             // Verify dueDate is after createdAt
             assertTrue(dueDate.asInt().jvm() > createdAt.asInt().jvm(),
-                      "dueDate should be after createdAt");
+                    "dueDate should be after createdAt");
 
             LOG.info("Task with multiple DateTimes: %s", task);
         } finally {
@@ -1280,7 +1321,7 @@ public class docSpaceTest extends AbstractSpaceTest {
             "dtMixed5 | Event 5 | 253402300799999| 253402300799999" // Same start/end (far future)
     }, delimiter = '|')
     public void testDateTimeRangesParameterized(final String eventId, final String name,
-                                                 final long startTime, final long endTime) {
+                                                final long startTime, final long endTime) {
         try (final MongoClient client = MongoClients.create(connectionString)) {
             final MongoDatabase db = client.getDatabase(DB_NAME);
             final MongoCollection<Document> events = db.getCollection("events");
@@ -1310,7 +1351,7 @@ public class docSpaceTest extends AbstractSpaceTest {
             assertEquals(jnt(endTime), end, "End time should match");
 
             assertTrue(end.asInt().jvm() >= start.asInt().jvm(),
-                      "End time should be >= start time");
+                    "End time should be >= start time");
 
             LOG.info("DateTime range %s: %s to %s", eventId, startTime, endTime);
         } finally {
@@ -1355,7 +1396,7 @@ public class docSpaceTest extends AbstractSpaceTest {
             final Obj nestedDoc = docRec.at(uri("nestedDoc"));
             assertTrue(nestedDoc.isRec(), "nestedDoc should be rec");
             assertTrue(nestedDoc.asRec().at(uri("nestedDate")).isInt(),
-                      "nestedDate should be int");
+                    "nestedDate should be int");
 
             LOG.info("Mixed types with DateTime: %s", doc);
         } finally {
@@ -1377,7 +1418,7 @@ public class docSpaceTest extends AbstractSpaceTest {
             final Obj result = space.read(f("mongo:emptyEvents/+"));
             // Should return noobj or empty results
             assertTrue(result.isNoObj() || (result.isObjs() && !result.asObjs().iterator().hasNext()),
-                      "Empty collection should return noobj or empty results");
+                    "Empty collection should return noobj or empty results");
 
             LOG.info("Empty DateTime collection result: %s", result);
         } finally {
@@ -1394,7 +1435,7 @@ public class docSpaceTest extends AbstractSpaceTest {
             "dtUpdate5 | -1000         | 1000"            // Update from negative to positive
     }, delimiter = '|')
     public void testUpdateDateTimeFieldsParameterized(final String eventId,
-                                                       final long originalTime, final long updatedTime) {
+                                                      final long originalTime, final long updatedTime) {
         try (final MongoClient client = MongoClients.create(connectionString)) {
             final MongoDatabase db = client.getDatabase(DB_NAME);
             final MongoCollection<Document> events = db.getCollection("events");
@@ -1411,7 +1452,7 @@ public class docSpaceTest extends AbstractSpaceTest {
             // Verify original
             Obj event = space.read(f("mongo:events/" + eventId));
             assertEquals(jnt(originalTime), event.asRec().at(uri("timestamp")),
-                        "Original timestamp should match");
+                    "Original timestamp should match");
 
             // Update via MongoDB client
             try (final MongoClient client = MongoClients.create(connectionString)) {
@@ -1426,7 +1467,7 @@ public class docSpaceTest extends AbstractSpaceTest {
             // Read back and verify update
             event = space.read(f("mongo:events/" + eventId));
             assertEquals(jnt(updatedTime), event.asRec().at(uri("timestamp")),
-                        "Updated timestamp should match");
+                    "Updated timestamp should match");
 
             LOG.info("Updated DateTime from %s to %s", originalTime, updatedTime);
         } finally {
@@ -1653,7 +1694,7 @@ public class docSpaceTest extends AbstractSpaceTest {
             "507f1f77bcf86cd799439022 | Second Post | Jane Smith"
     }, delimiter = '|')
     public void testMultipleReferencesParameterized(final String postId, final String expectedTitle,
-                                                     final String expectedAuthorName) {
+                                                    final String expectedAuthorName) {
         setupTestDataWithReferences();
         final docSpace space = (docSpace) this.spaceSupplier.get();
         try {

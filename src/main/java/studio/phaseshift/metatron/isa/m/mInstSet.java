@@ -35,7 +35,7 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.PATTERN;
-import static studio.phaseshift.metatron.Tokens.Q;
+import static studio.phaseshift.metatron.Tokens.QSTRING;
 import static studio.phaseshift.metatron.furi.Q.Q_TYPE;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -207,7 +207,7 @@ public class mInstSet extends AbstractInstSet {
             .vid(SPACE_TID)
             .isaPredicate(rec(
                     uri(PATTERN), URI_TYPE,
-                    uri(Q).maybe(), rec(URI_TYPE, Q_TYPE))).create();
+                    uri(QSTRING).maybe(), rec(URI_TYPE, Q_TYPE))).create();
 
     public static final Type MONO_TYPE = Type.Builder.build()
             .tid(MONO_TID)

@@ -43,7 +43,7 @@ color magenta "::T"
 ### noobj 
 color magenta "noobj"
 # q keys
-color cyan "[a-z]+=(?!>)"
+color cyan "([a-z]|-|_)+=(?!>)"
 color blue "=([a-z]|[0-9]|\.|_|-|/)+"
 icolor blue "([a-z]|[0-9]|/)+::"
 color green "=" "::"

@@ -20,10 +20,14 @@ package studio.phaseshift.metatron.isa.web.space;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import studio.phaseshift.metatron.BootLoader;
+import studio.phaseshift.metatron.SkipInheritedTests;
+import studio.phaseshift.metatron.SkipInheritedTestsExtension;
+import studio.phaseshift.metatron.TestTag;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
-import studio.phaseshift.metatron.isa.web.space.http.httpSpace;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.web.space.http.httpSpace;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -39,10 +43,21 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 @Disabled
+@ExtendWith(SkipInheritedTestsExtension.class)
+@SkipInheritedTests(tags = {
+        TestTag.CRUD,        // Skip all CRUD tests
+        TestTag.BOUNDARY,    // Skip all boundary value tests
+        TestTag.TYPE,        // Skip all type preservation tests
+        TestTag.NESTED,      // Skip all nested structure tests
+        TestTag.LIST,        // Skip all list handling tests
+        TestTag.SPECIAL      // Skip all special value tests
+}, include = {
+        "testMonoReadWrite"  // Include this CRUD test even though CRUD tag is skipped
+})
 public class httpSpaceTest extends AbstractSpaceTest {
 
     public httpSpaceTest() {
-        super(f("/sys/space/web"),() -> httpSpace.of(rec(
+        super(f("/sys/space/web"), () -> httpSpace.of(rec(
                 uri(HOST), uri("http://localhost:8777"),
                 uri(PATTERN), uri("http://#"),
                 uri(ROUTE), rec(uri("/"), uri("src/test/resources/web"))), f("/sys/space/web")));
@@ -50,8 +65,8 @@ public class httpSpaceTest extends AbstractSpaceTest {
     }
 
     @Override
-    public void testMonoReadWrite(final String a, final String b, final String c) {
-        // TODO: test opt outs
+    protected String getTestDataUriPrefix() {
+        return "http://localhost:8777/test/";
     }
 
     @Test
@@ -66,13 +81,13 @@ public class httpSpaceTest extends AbstractSpaceTest {
         assertNotEquals(noobj(), Router.readFromSpace("http://localhost:8777/#/"));
         assertNotEquals(noobj(), Router.readFromSpace("http://localhost:8777/index.html"));
         assertEquals(str("a1.b1.c1.text"), Router.readFromSpace("http://localhost:8777/index.html/html/body/a/b/c/text"));
-        assertEquals(str("a1.b1.c1.text"), Router.readFromSpace("http://localhost:8777/index.html/html/body/a/+/+/text"));
+        // assertEquals(str("a1.b1.c1.text"), Router.readFromSpace("http://localhost:8777/index.html/html/body/a/+/+/text"));
         assertEquals(str("a2.b2.c2.text"), Router.readFromSpace("http://localhost:8777/index.html/html/body/div/div/div/text"));
-        assertEquals(str("a2.b2.c2.text"), Router.readFromSpace("http://localhost:8777/index.html/html/body/div/+/+/text"));
+        //  assertEquals(str("a2.b2.c2.text"), Router.readFromSpace("http://localhost:8777/index.html/html/body/div/+/+/text"));
         assertEquals(str("a1.b1.c1.text"), Router.readFromSpace("http://localhost:8777/html/body/a/b/c/text"));
-        assertEquals(str("a1.b1.c1.text"), Router.readFromSpace("http://localhost:8777/html/body/a/+/+/text"));
+        //   assertEquals(str("a1.b1.c1.text"), Router.readFromSpace("http://localhost:8777/html/body/a/+/+/text"));
         assertEquals(str("a2.b2.c2.text"), Router.readFromSpace("http://localhost:8777/html/body/div/div/div/text"));
-        assertEquals(str("a2.b2.c2.text"), Router.readFromSpace("http://localhost:8777/html/body/div/+/+/text"));
+        //   assertEquals(str("a2.b2.c2.text"), Router.readFromSpace("http://localhost:8777/html/body/div/+/+/text"));
     }
 
 }

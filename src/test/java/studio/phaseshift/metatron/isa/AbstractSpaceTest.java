@@ -21,11 +21,13 @@ package studio.phaseshift.metatron.isa;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.TestCategory;
 import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
@@ -112,6 +114,8 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
         return data;
     }
 
+    @TestCategory.Crud
+    @TestCategory.ReadWrite
     @ParameterizedTest
     @TestData(oneTime = false, value = {""})
     @CsvSource(value = {
@@ -265,7 +269,7 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
      * Test string corner cases: empty, special chars, unicode, SQL injection attempts, etc.
      * Subclasses can add more test cases by providing additional data via @MethodSource.
      */
-    @SpaceTestCategory.Boundary
+    @TestCategory.Boundary
     @ParameterizedTest(name = "[{index}] String: {0}")
     @CsvSource(value = {
             "empty string              | ''",
@@ -302,7 +306,7 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
     /**
      * Test integer boundary values: zero, min/max, negative, various magnitudes.
      */
-    @SpaceTestCategory.Boundary
+    @TestCategory.Boundary
     @ParameterizedTest(name = "[{index}] Integer: {0} = {1}")
     @CsvSource(value = {
             "zero                      | 0",
@@ -336,7 +340,7 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
     /**
      * Test real/double boundary values with tolerance for floating point precision.
      */
-    @SpaceTestCategory.Boundary
+    @TestCategory.Boundary
     @ParameterizedTest(name = "[{index}] Real: {0} = {1}")
     @CsvSource(value = {
             "zero                      | 0.0",
@@ -371,7 +375,7 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
     /**
      * Test boolean values.
      */
-    @SpaceTestCategory.Boundary
+    @TestCategory.Boundary
     @ParameterizedTest(name = "[{index}] Boolean: {0} = {1}")
     @CsvSource(value = {
             "true value                | true",
@@ -397,7 +401,7 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
     /**
      * Test reading non-existent keys returns noobj.
      */
-    @SpaceTestCategory.Crud
+    @TestCategory.Crud
     @ParameterizedTest(name = "[{index}] Non-existent: {0}")
     @CsvSource(value = {
             "simple missing key",
@@ -421,7 +425,7 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
     /**
      * Test sequential updates to the same key.
      */
-    @SpaceTestCategory.Crud
+    @TestCategory.Crud
     @ParameterizedTest(name = "[{index}] Sequential updates: {0} iterations")
     @CsvSource(value = {
             "3",
@@ -452,7 +456,7 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
     /**
      * Test basic CRUD operations: Create, Read, Update, Delete.
      */
-    @SpaceTestCategory.Crud
+    @TestCategory.Crud
     @ParameterizedTest(name = "[{index}] CRUD: {0}")
     @CsvSource(value = {
             "string value  | test_string  | 'Hello World'",
@@ -513,7 +517,7 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
     /**
      * Test that types are preserved through write/read cycles.
      */
-    @SpaceTestCategory.Type
+    @TestCategory.Type
     @ParameterizedTest(name = "[{index}] Type preservation: {0}")
     @MethodSource("provideTypePreservationTestCases")
     public void testTypePreservation(String description, Obj value) {
@@ -559,7 +563,7 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
     /**
      * Test nested records (documents).
      */
-    @SpaceTestCategory.Nested
+    @TestCategory.Nested
     @ParameterizedTest(name = "[{index}] Nested record: depth {0}")
     @CsvSource(value = {
             "1",
@@ -600,7 +604,7 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
     /**
      * Test list handling: empty lists, single element, multiple elements.
      */
-    @SpaceTestCategory.List
+    @TestCategory.List
     @ParameterizedTest(name = "[{index}] List: {0}")
     @MethodSource("provideListTestCases")
     public void testListHandling(String description, studio.phaseshift.metatron.isa.m.type.Lst listValue, int expectedCount) {
@@ -634,7 +638,7 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
     /**
      * Test updating from one type to another.
      */
-    @SpaceTestCategory.Type
+    @TestCategory.Type
     @ParameterizedTest(name = "[{index}] Type change: {0} -> {1}")
     @MethodSource("provideTypeChangeTestCases")
     public void testTypeChanges(String description, Obj initialValue, Obj updatedValue) {
@@ -669,7 +673,7 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
     /**
      * Test updating multiple fields in a record independently.
      */
-    @SpaceTestCategory.Crud
+    @TestCategory.Crud
     @ParameterizedTest(name = "[{index}] Multi-field update: {0} fields")
     @CsvSource(value = {
             "2",
@@ -711,7 +715,7 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
     /**
      * Test special string values that might cause issues.
      */
-    @SpaceTestCategory.Special
+    @TestCategory.Special
     @ParameterizedTest(name = "[{index}] Special string: {0}")
     @CsvSource(value = {
             "newline              | 'line1\\nline2'",
@@ -750,7 +754,7 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
     /**
      * Test empty record handling.
      */
-    @SpaceTestCategory.Type
+    @TestCategory.Type
     @ParameterizedTest(name = "[{index}] Empty record test {0}")
     @CsvSource(value = {
             "1",

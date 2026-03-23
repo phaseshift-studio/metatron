@@ -115,18 +115,17 @@ public class BaseQ extends MRec implements Q {
             super(mutableMap(uri(PRE_READ), preRead, uri(POST_READ), postRead), REC_TID, null);
         }
 
-        public Optional<Obj> preRead(final fURI source, final fURI vid) {
+        public Optional<Obj> preRead(final fURI vid) {
             final Inst i = this.at(PRE_READ).as();
             if (i.isNoObj()) return Optional.empty();
-            final Obj result = i.args(lst(uri(vid))).apply(vid.toUri());
-            return Optional.of(result);
-
+            final Obj result = i.args(lst(uri(vid))).apply();
+            return result.isNoObj() ? Optional.empty() : Optional.of(result);
         }
 
-        public Optional<Obj> postRead(final fURI source, final fURI vid, final Obj obj) {
+        public Optional<Obj> postRead(final fURI vid, final Obj obj) {
             final Inst i = this.at(POST_READ).as();
             if (i.isNoObj()) return Optional.empty();
-            final Obj result = i.args(lst(uri(vid), obj)).apply(vid.toUri());
+            final Obj result = i.args(lst(uri(vid), obj)).apply();
             return result.isNoObj() ? Optional.empty() : Optional.of(result);
         }
     }
@@ -136,25 +135,25 @@ public class BaseQ extends MRec implements Q {
             super(mutableMap(uri(PRE_WRITE), preWrite, uri(POST_WRITE), postWrite, uri(QLESS_WRITE), qlessWrite), REC_TID, null);
         }
 
-        public Optional<Obj> preWrite(final fURI source, final fURI vid, final Obj obj) {
+        public Optional<Obj> preWrite(final fURI vid, final Obj obj) {
             final Inst i = this.at(PRE_WRITE).as();
             if (i.isNoObj()) return Optional.empty();
-            final Obj result = i.args(lst(uri(vid), obj)).apply(vid.toUri());
+            final Obj result = i.args(lst(uri(vid), obj)).apply();
             return result.isNoObj() ? Optional.empty() : Optional.of(result);
 
         }
 
-        public Optional<Obj> postWrite(final fURI source, final fURI vid, final Obj oldObj, final Obj newObj) {
+        public Optional<Obj> postWrite(final fURI vid, final Obj oldObj, final Obj newObj) {
             final Inst i = this.at(POST_WRITE).as();
             if (i.isNoObj()) return Optional.empty();
-            final Obj result = i.args(lst(uri(vid), oldObj, newObj)).apply(vid.toUri());
+            final Obj result = i.args(lst(uri(vid), oldObj, newObj)).apply();
             return result.isNoObj() ? Optional.empty() : Optional.of(result);
         }
 
-        public Optional<Obj> qlessWrite(final fURI source, final fURI vid, final Obj obj) {
+        public Optional<Obj> qlessWrite(final fURI vid, final Obj obj) {
             final Inst i = this.at(QLESS_WRITE).as();
             if (i.isNoObj()) return Optional.empty();
-            final Obj result = i.args(lst(uri(vid), obj)).apply(vid.toUri());
+            final Obj result = i.args(lst(uri(vid), obj)).apply();
             return result.isNoObj() ? Optional.empty() : Optional.of(result);
         }
     }
@@ -166,8 +165,8 @@ public class BaseQ extends MRec implements Q {
                            final TriFunction<fURI, Obj, Obj, Obj> postWrite,
                            final BiFunction<fURI, Obj, Obj> qlessWrite) {
         return new BaseQ(mutableMap(
-                uri(PRE_READ), null == preRead ? noobj() : instC(INST_TID, lst(), (_, inst) -> preRead.apply(inst.arg(0).uriValue())),
-                uri(POST_READ), null == postRead ? noobj() : instC(INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(URI_TYPE), (_, inst) -> postRead.apply(inst.arg(0).uriValue(), inst.arg(1))),
+                uri(PRE_READ), null == preRead ? noobj() : instC(INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(URI_TYPE), (_, inst) -> preRead.apply(inst.arg(0).uriValue())),
+                uri(POST_READ), null == postRead ? noobj() : instC(INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(URI_TYPE,T(ALL)), (_, inst) -> postRead.apply(inst.arg(0).uriValue(), inst.arg(1))),
                 uri(PRE_WRITE), null == preWrite ? noobj() : instC(INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(URI_TYPE, T(ALL)), (_, inst) -> preWrite.apply(inst.arg(0).uriValue(), inst.arg(1))),
                 uri(POST_WRITE), null == postWrite ? noobj() : instC(INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(URI_TYPE, T(ALL), T(ALL)), (_, inst) -> postWrite.apply(inst.arg(0).uriValue(), inst.arg(1), inst.arg(2))),
                 uri(QLESS_WRITE), null == qlessWrite ? noobj() : instC(INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(URI_TYPE, T(ALL)), (_, inst) -> qlessWrite.apply(inst.arg(0).uriValue(), inst.arg(1)))), pattern, tid);

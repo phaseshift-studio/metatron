@@ -62,12 +62,12 @@ public class MqttPubSubQ extends BaseQ {
         }
         
         @Override
-        public Optional<Obj> qlessWrite(final fURI source, final fURI vid, final Obj obj) {
+        public Optional<Obj> qlessWrite(final fURI vid, final Obj obj) {
             return Optional.empty();
         }
 
         @Override
-        public Optional<Obj> preWrite(final fURI source, final fURI vid, final Obj obj) {
+        public Optional<Obj> preWrite(final fURI vid, final Obj obj) {
             LOG.trace("evaluating {{y}}prewrite{{/y}}: %s => %s", obj, vid);
             if (vid.hasQ(SUB)) {
                 if (obj.isNoObj()) {
@@ -100,7 +100,7 @@ public class MqttPubSubQ extends BaseQ {
                                     o = space.serializer.inputBytes(ByteBuffer.wrap(p.getPayloadAsBytes()));
                                 } else
                                     o = noobj();
-                                super.qlessWrite(source, topic, o);
+                                super.qlessWrite(topic, o);
                                 space.cache.write(topic, o);
 
                             })

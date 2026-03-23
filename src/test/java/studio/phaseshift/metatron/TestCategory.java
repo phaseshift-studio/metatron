@@ -2,7 +2,7 @@
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 
-package studio.phaseshift.metatron.isa;
+package studio.phaseshift.metatron;
 
 import org.junit.jupiter.api.Tag;
 
@@ -12,13 +12,14 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotations to categorize Space tests for selective execution.
- * Subclasses can use @Tag to include/exclude specific test categories.
+ * Annotations to categorize tests for selective execution.
+ * Test classes can use @SkipInheritedTests with these tags to include/exclude specific test categories.
  */
-public class SpaceTestCategory {
+public class TestCategory {
 
     /**
      * Tests for basic CRUD operations (Create, Read, Update, Delete).
+     * Corresponds to {@link TestTag#CRUD}.
      */
     @Target({ElementType.METHOD, ElementType.TYPE})
     @Retention(RetentionPolicy.RUNTIME)
@@ -27,7 +28,18 @@ public class SpaceTestCategory {
     }
 
     /**
+     * Tests for read and write operations.
+     * Corresponds to {@link TestTag#READ_WRITE}.
+     */
+    @Target({ElementType.METHOD, ElementType.TYPE})
+    @Retention(RetentionPolicy.RUNTIME)
+    @Tag("read_write")
+    public @interface ReadWrite {
+    }
+
+    /**
      * Tests for type preservation and conversion.
+     * Corresponds to {@link TestTag#TYPE}.
      */
     @Target({ElementType.METHOD, ElementType.TYPE})
     @Retention(RetentionPolicy.RUNTIME)
@@ -37,6 +49,7 @@ public class SpaceTestCategory {
 
     /**
      * Tests for boundary values and edge cases.
+     * Corresponds to {@link TestTag#BOUNDARY}.
      */
     @Target({ElementType.METHOD, ElementType.TYPE})
     @Retention(RetentionPolicy.RUNTIME)
@@ -46,6 +59,7 @@ public class SpaceTestCategory {
 
     /**
      * Tests for pattern matching functionality.
+     * Corresponds to {@link TestTag#PATTERN}.
      */
     @Target({ElementType.METHOD, ElementType.TYPE})
     @Retention(RetentionPolicy.RUNTIME)
@@ -55,6 +69,7 @@ public class SpaceTestCategory {
 
     /**
      * Tests for nested structures (records, documents).
+     * Corresponds to {@link TestTag#NESTED}.
      */
     @Target({ElementType.METHOD, ElementType.TYPE})
     @Retention(RetentionPolicy.RUNTIME)
@@ -64,6 +79,7 @@ public class SpaceTestCategory {
 
     /**
      * Tests for list/array handling.
+     * Corresponds to {@link TestTag#LIST}.
      */
     @Target({ElementType.METHOD, ElementType.TYPE})
     @Retention(RetentionPolicy.RUNTIME)
@@ -73,6 +89,7 @@ public class SpaceTestCategory {
 
     /**
      * Tests for concurrent operations.
+     * Corresponds to {@link TestTag#CONCURRENT}.
      */
     @Target({ElementType.METHOD, ElementType.TYPE})
     @Retention(RetentionPolicy.RUNTIME)
@@ -82,6 +99,7 @@ public class SpaceTestCategory {
 
     /**
      * Tests for special values (unicode, special chars, etc).
+     * Corresponds to {@link TestTag#SPECIAL}.
      */
     @Target({ElementType.METHOD, ElementType.TYPE})
     @Retention(RetentionPolicy.RUNTIME)

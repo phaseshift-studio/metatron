@@ -37,8 +37,9 @@ public final class Tokens {
     public static final fURI STACK_PATTERN = f("+/#");
 
     public static final String SRC = "src";
-    public static final String TGT = "tgt";
+    public static final String TARGET = "target";
     public static final String INCR = "incr";
+    public static final String FORMAT = "format";
     public static final String PROVIDER = "provider";
     public static final String API_KEY = "api_key";
     public static final String BLOCK = "block";
@@ -75,7 +76,7 @@ public final class Tokens {
     public static final String CLIENT = "client";
     public static final String SCRIPT = "script";
     public static final String REWRITE = "rewrite";
-    public static final String Q = "q";
+    public static final String QSTRING = "q";
     public static final String T = "T";
     public static final String C = "c";
     public static final String MIN = "min";

@@ -388,8 +388,8 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
     @ParameterizedTest
     @CsvSource(value = {
             "[a=>1,b=>2].plus([c=>3])                                                    % [a=>1,b=>2,c=>3]",
-            "[a=>1,b=>2].plus([b=>3,c=>4])                                               % [a=>1,b=>{2,3},c=>4]",
-            "[a=>1].plus([a=>2])                                                         % [a=>{1,2}]",
+            "[a=>1,b=>2].plus([b=>3,c=>4])                                               % [a=>1,b=>5,c=>4]",
+            "[a=>1].plus([a=>2])                                                         % [a=>3]", // [a=>{1,2}]",
             "[=>].plus([a=>1])                                                           % [a=>1]",
             "[a=>1].plus([=>])                                                           % [a=>1]",
             "[=>].plus([=>])                                                             % [=>]",
@@ -425,7 +425,7 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
     @CsvSource(value = {
             "[a=>1,b=>2,c=>3].sum()                                                      % [a=>1,b=>2,c=>3]",
             "{[a=>1],[b=>2]}.sum()                                                       % [a=>1,b=>2]",
-            "{[a=>1],[a=>2]}.sum()                                                       % [a=>{1,2}]",
+            "{[a=>1],[a=>2]}.sum()                                                       % [a=>3]",//[a=>{1,2}]",
             "{[a=>1,b=>2],[c=>3,d=>4]}.sum()                                             % [a=>1,b=>2,c=>3,d=>4]",
     }, delimiter = '%')
     public void testSum(final String code, final String expected) {

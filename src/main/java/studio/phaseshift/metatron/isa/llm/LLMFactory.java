@@ -24,6 +24,7 @@ import dev.langchain4j.model.ollama.OllamaStreamingChatModel;
 import dev.langchain4j.model.openai.OpenAiModelCatalog;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.llm.space.modelCatalogSpace;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -40,7 +41,8 @@ import static studio.phaseshift.metatron.isa.llm.llmInstSet.MODEL_TID;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.GBYTE_TYPE;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_BYTE_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
-import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -58,20 +60,22 @@ public final class LLMFactory {
     }
 
     public static Space createModelCatalog(final Rec spaceRec) {
-        return switch (spaceRec.at(PROVIDER).uriValue().toString()) {
+        return switch (spaceRec.at(NAME).uriValue().toString()) {
             case "ollama" -> {
                 final OllamaModels models = OllamaModels.builder().baseUrl(spaceRec.at(HOST).uriValue().toString()).build();
                 final modelCatalogSpace<?> catalogSpace = modelCatalogSpace.of(models, spaceRec.jvm(), spaceRec.vid());
+                catalogSpace.at(QSTRING, catalogSpace.at(QSTRING).orElse(lst()).add(QCollection.subq(), MUTABLE), MUTABLE);
                 models.availableModels().content().stream()
                         .map(m -> Tuple.Pair.with(m, models.modelCard(m.getName()).content()))
-                        .forEach(m -> rec(
-                                Map.of(uri(PROVIDER), auto_from_(spaceRec.vid()).tryToInst(),
-                                        uri(HOST), auto_from_(spaceRec.vid().extend(HOST)).tryToInst(),
-                                        uri(NAME), uri(m.get0().getName()),
-                                        uri(THINK), bool(m.get1().getCapabilities().contains(THINKING)),
-                                        uri(SKILL), lst(m.get1().getCapabilities().stream().map(MUri::uri)),
-                                        uri(SIZE), real(Long.valueOf(m.get0().getSize()).doubleValue(), MATH_BYTE_TID, null).as(GBYTE_TYPE)),
-                                MODEL_TID, catalogSpace.pattern().retractPattern().extend(m.get0().getName())));
+                        .forEach(m -> {
+                            final fURI vid = catalogSpace.pattern().retractPattern().extend(m.get0().getName());
+                            rec(Map.of(uri(PROVIDER), auto_from_(spaceRec.vid()).tryToInst(),
+                                            uri(NAME), uri(m.get0().getName()),
+                                            uri(THINK), m.get1().getCapabilities().contains(THINKING) ? uri(vid.extend("thought")) : noobj(),
+                                            uri(SKILL), lst(m.get1().getCapabilities().stream().map(MUri::uri)),
+                                            uri(SIZE), real(Long.valueOf(m.get0().getSize()).doubleValue(), MATH_BYTE_TID, null).as(GBYTE_TYPE)),
+                                    MODEL_TID, vid);
+                        });
                 yield catalogSpace;
             }
             case "openai" -> {
@@ -90,13 +94,13 @@ public final class LLMFactory {
     }
 
     public static StreamingChatModel createModel(final Rec llm, String modelName) {
-        final fURI provider = llm.at(f(PROVIDER)).asRec().at(PROVIDER).uriValue();
+        final fURI provider = llm.at(f(PROVIDER)).asRec().at(NAME).uriValue();
         final String host = llm.at(f(PROVIDER)).asRec().at(HOST).uriValue().toString();
-        //   final boolean toolUse = !llm.at(TOOL).isNoObj();
-        final boolean thinking = llm.at(THINK).orElse(bool(false)).boolValue();
-        // final Uri memory = llm.at(MEMORY).orElse(null);
+        final boolean thinking = llm.has(THINK);
         final Str api_key = llm.at(API_KEY).orElse(null);
         final String model = llm.at(NAME).uriValue().toString();
+        //  new JsonSchema.Builder().
+        //  final ResponseFormat responseFormat = ResponseFormat.builder().jsonSchema()
         return switch (provider.toString().toLowerCase()) {
             case "ollama" -> OllamaStreamingChatModel.builder()
                     .baseUrl(host)

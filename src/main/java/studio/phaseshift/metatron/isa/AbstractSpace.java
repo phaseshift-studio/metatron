@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa;
 
+import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -62,19 +63,20 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
     @Override
     public Obj read(final fURI vid) {
         // LOG.warn("reading %s => %s", vid, Space.Helper.routeFromSpace(vid, this.routes()));
-        return studio.phaseshift.metatron.furi.Q.Helper.processPreRead(this.qs(), vid, vid).orElseGet(() -> {
+        return Q.Helper.processPreRead(this.qs(), vid).orElseGet(() -> {
             Obj result = Space.Helper.resolveRead(this, vid.basePath(), directReader());
-            return studio.phaseshift.metatron.furi.Q.Helper.processPostRead(this.qs(), vid, vid, result).orElse(result);
+            return Q.Helper.processPostRead(this.qs(), vid, result).orElse(result);
         });
     }
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
         // LOG.warn("writing %s => %s", vid, Space.Helper.routeFromSpace(vid, this.routes()));
-        return studio.phaseshift.metatron.furi.Q.Helper.processPreWrite(this.qs(), vid, vid, obj).orElseGet(() -> {
-            Space.Helper.resolveWrite(LOG, this, vid.basePath(), obj, this.directWriter(), this.directReader());
-            return studio.phaseshift.metatron.furi.Q.Helper.processPostWrite(this.qs(), vid, vid, obj).orElse(obj);
-        });
+        return Q.Helper.processPreWrite(this.qs(), vid, obj)
+                .orElseGet(() -> Q.Helper.processQlessWrite(this.qs(), vid, obj).orElseGet(() -> {
+                    Space.Helper.resolveWrite(LOG, this, vid.basePath(), obj, this.directWriter(), this.directReader());
+                    return Q.Helper.processPostWrite(this.qs(), vid, obj).orElse(obj);
+                }));
     }
 
     @Override

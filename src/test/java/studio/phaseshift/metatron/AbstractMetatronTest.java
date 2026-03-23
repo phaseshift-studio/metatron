@@ -86,8 +86,15 @@ public abstract class AbstractMetatronTest {
         final Obj a = mParser.eval(lhs);
         final Obj b = mParser.eval(expected);
         final Obj actual = b.apply(a);
-        LOG.debug("testing %s => %s [expected:%s]", a, b, actual);
-        assertEquals(b, actual);
+        LOG.warn("testing %s => %s [expected:%s]", a, b, actual);
+        if(!expected.trim().equals("<ERROR>")) {
+            assertTrue(a.stream().noneMatch(Obj::isFail));
+            assertTrue(actual.stream().noneMatch(Obj::isFail));
+            assertEquals(b, actual);
+        }  else {
+            assertTrue(actual.stream().allMatch(Obj::isFail));
+        }
+     
     }
 
 

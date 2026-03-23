@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.isa.llm.space;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.llm.LLMFactory;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -42,28 +41,28 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 
-public class modelCatalogSpace<CATALOG> extends AbstractSpace<CATALOG> {
+public class modelCatalogSpace<CATALOG> extends memSpace {
 
     public static final fURI LLM_CATALOG_SPACE_TID = LLM_SPACE_TID.extend("catalog");
     public static final Type LLM_CATALOG_SPACE_TYPE = Type.Builder.build()
             .tid(SPACE_TID)
             .vid(LLM_CATALOG_SPACE_TID)
             .isaPredicate(rec(
-                    uri(PROVIDER), is_(or_(eq_(uri("openai")), eq_(uri("ollama")))),
+                    uri(NAME), is_(or_(eq_(uri("openai")), eq_(uri("ollama")))),
                     uri(PATTERN), URI_TYPE,
                     uri(HOST), URI_TYPE,
                     uri(ROUTE), rec(URI_TYPE, URI_TYPE)))
             .constructor(instC(INST_TID.dom(ALL.maybe()).rng(LLM_CATALOG_SPACE_TID), lst(T(REC_TID)), (_, inst) -> LLMFactory.createModelCatalog(inst.arg(0).asRec()))).create();
 
-    private final memSpace cache;
+    private final CATALOG models;
 
     public static <CATALOG> modelCatalogSpace<CATALOG> of(final CATALOG models, final Map<Obj, Obj> config, final fURI vid) {
         return new modelCatalogSpace<>(models, config, vid);
     }
 
     public modelCatalogSpace(final CATALOG models, final Map<Obj, Obj> config, final fURI vid) {
-        super(models, config, LLM_SPACE_TID, vid);
-        this.cache = memSpace.of(this.pattern(), null);
+        super(config, LLM_SPACE_TID, vid);
+        this.models = models;
         this.refreshModels();
     }
 
@@ -83,15 +82,5 @@ public class modelCatalogSpace<CATALOG> extends AbstractSpace<CATALOG> {
                 });
               
          */
-    }
-
-    @Override
-    public Obj read(final fURI vid) {
-        return this.cache.read(vid);
-    }
-
-    @Override
-    public Obj write(final fURI vid, final Obj obj) {
-        return this.cache.write(vid, obj);
     }
 }

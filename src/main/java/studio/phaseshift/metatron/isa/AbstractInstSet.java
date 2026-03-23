@@ -63,7 +63,7 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
     public AbstractInstSet(final fURI tid, final fURI vid) {
         super(new LinkedHashMap<>(), mutableMap(
                 uri(Tokens.PATTERN), uri(tid.extend(ALL))), tid, vid);
-        this.at(uri(Tokens.Q), lst(new DocQ()), MUTABLE);
+        this.at(uri(Tokens.QSTRING), lst(new DocQ()), MUTABLE);
         if (Router.loaded()) {
             this.sugars().forEach(mParser::addSugar);
             this.consts().forEach(c -> Router.global().registerRewrite(f(c.vid().name()), c.vid()));
@@ -131,7 +131,7 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
     public Obj read(final fURI pattern) {
         if (Objects.equals(this.tid, pattern))
             return this;
-        return Q.Helper.processPreRead(this.qs(), this.vid, pattern).orElseGet(() -> {
+        return Q.Helper.processPreRead(this.qs(), pattern).orElseGet(() -> {
             final Obj result = objs(INST_TABLE.entrySet()
                     .stream()
                     .filter(kv -> kv.getKey().bimatches(pattern.basePath().asNode()))
@@ -151,14 +151,14 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
                             .map(kv -> pattern.isNode() ?
                                     kv.getValue() :
                                     rel(kv.getKey().toUri(), kv.getValue()))));
-            return Q.Helper.processPostRead(this.qs(), vid, vid, result).orElse(result);
+            return Q.Helper.processPostRead(this.qs(), vid, result).orElse(result);
         });
     }
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
-        return Q.Helper.processQlessWrite(this.qs(), this.vid, vid, obj).orElse(
-                Q.Helper.processPreWrite(this.qs(), this.vid, vid, obj).orElseGet(
+        return Q.Helper.processPreWrite(this.qs(), vid, obj).orElse(
+                Q.Helper.processQlessWrite(this.qs(), vid, obj).orElseGet(
                         () -> {
                             if (obj.isInst()) {
                                 final Inst inst = obj.as();
@@ -177,7 +177,7 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
                                 CONST_TABLE.put(vid, obj);
                                 // throw MTronException.of("inst set %s can only store insts, types, and rewrites: {{r}}!{{/r}} %s", this.simpeToString(), obj);
                             }
-                            return Q.Helper.processPostWrite(this.qs(), vid, vid, obj).orElse(obj);
+                            return Q.Helper.processPostWrite(this.qs(), vid, obj).orElse(obj);
                         }));
     }
 

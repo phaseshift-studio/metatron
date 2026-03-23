@@ -70,16 +70,7 @@ public final class QCollection {
             Type.Builder.build()
                     .vid(SUBSCRIPTION_TID)
                     .tid(REC_TID)
-                    .isaPredicate(rec(SRC, T(URI_TID), TGT, T(URI_TID), ON_RECV, T(ALL)))
-                    .constructor(instC(INST_TID.dom(ALL_STAR).rng(SUBSCRIPTION_TID), lst(), (lhs, inst) -> {
-                        if (lhs instanceof Rec && lhs.tid().equals(SUBSCRIPTION_TID)) {
-                            return lhs;
-                        } else if (lhs.isRec()) {
-                            return lhs.asRec();
-                        } else {
-                            return rec(Map.of(uri(SRC), uri("/mqtt/test/#"), uri(TGT), uri("/mqtt/test/#"), uri(ON_RECV), lhs.<Call>as()));
-                        }
-                    }))
+                    .isaPredicate(rec(TARGET, T(URI_TID), ON_RECV, T(ALL)))
                     .create();
 
     private QCollection() {
@@ -124,7 +115,7 @@ public final class QCollection {
                     return obj.vid(vid.removeQ(INCR).path(newPath));
                 }).create();
     }
-    
+
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -133,24 +124,31 @@ public final class QCollection {
         final Rec subscriptions = rec();
         final Queue<Machine> mail = new LinkedList<>();
         return studio.phaseshift.metatron.furi.Q.Helper.build(Q_TID.extend("subq"), f("subq"))
-                .preRead((vid) -> subscriptions.elements().map(Rel::second).map(Obj::asRec).filter(s -> vid.basePath().bimatches(s.at(TGT).uriValue())).map(Obj::<Obj>as).reduce(Obj::append).orElse(noobj()))
+                .preRead(vid -> subscriptions
+                        .elements()
+                        .map(Rel::second).map(Obj::asRec)
+                        .filter(s -> vid.basePath().bimatches(s.at(TARGET).uriValue())).map(Obj::<Obj>as)
+                        .reduce(Obj::append)
+                        .orElse(noobj()))
                 .postWrite((vid, obj, obj2) -> {
-                    //LOG.debug("evaluating {{y}}postwrite{{/y}}: %s => %s", obj, vid);
-                    if (vid.hasQ(SUB)) {
-                        if (obj.isNoObj()) {
-                            subscriptions.jvm().remove(vid.basePath().toUri());
-                        } else if (obj.tid().basePath().equals(SUBSCRIPTION_TID)) {
-                            subscriptions.jvm().put(vid.basePath().toUri(), obj.as());
-                        } else
-                            subscriptions.jvm().put(vid.basePath().toUri(), rec(Map.of(uri(SRC), uri(vid), uri(TGT), uri(vid.basePath()), uri(ON_RECV), obj.as()), SUBSCRIPTION_TID, null));
-                        //LOG.debug("current subscriptions: %s", subscriptions);
-                        return obj;
+                    final Obj subscription;
+                    if (obj.isNoObj()) {
+                        subscription = noobj();
+                        subscriptions.jvm().remove(vid.basePath().toUri());
+                        subscription.logger().info("unsubscribing from %s");
+                    } else if (obj.tid().basePath().equals(SUBSCRIPTION_TID)) {
+                        subscription = obj;
+                        subscriptions.jvm().put(vid.basePath().toUri(), obj);
+                    } else {
+                        subscription = rec(Map.of(uri(TARGET), uri(vid.basePath()), uri(ON_RECV), obj), SUBSCRIPTION_TID, null);
+                        subscriptions.jvm().put(vid.basePath().toUri(), subscription);
                     }
-                    return noobj();
+                    //LOG.debug("current subscriptions: %s", subscriptions);
+                    return subscription;
                 })
                 .qlessWrite((vid, obj) -> {
                     //   LOG.debug("evaluating {{y}}qless write{{/y}}: %s => %s", obj, vid);
-                    subscriptions.elements().map(Rel::second).map(Obj::asRec).filter(s -> vid.test(s.at(TGT).uriValue())).forEach(s -> {
+                    subscriptions.elements().map(Rel::second).map(Obj::asRec).filter(s -> vid.test(s.at(TARGET).uriValue())).forEach(s -> {
                         //  LOG.debug("sending mail: (%s, %s)", obj, s);
                         mail.add(SwarmMachine.of(lst(List.of(vid.toUri(), obj)), s.at(ON_RECV).as()));
                     });
@@ -163,7 +161,7 @@ public final class QCollection {
                             machine.apply();
                         }
                     }));
-                    return obj;
+                    return noobj();
                 }).create();
     }
 }

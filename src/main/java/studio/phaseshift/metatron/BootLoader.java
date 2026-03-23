@@ -157,7 +157,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
             ROUTER = new BasicRouter(localAuthority, SYS_TID.extend("router"));
             sysSpace.write(ROUTER.vid(), ROUTER);
             Router.global().addSpace(sysSpace.self(sysSpace.jvm(), sysSpace.tid(), f("/sys")).as());
-            sysSpace.jvm().put(uri(Q), lst(QCollection.incrQ()));
+            sysSpace.jvm().put(uri(QSTRING), lst(QCollection.incrQ()));
             Router.writeToSpace(new mInstSet());
             Router.writeToSpace(new machInstSet());
             Router.writeToSpace(f("boot/args"), args);

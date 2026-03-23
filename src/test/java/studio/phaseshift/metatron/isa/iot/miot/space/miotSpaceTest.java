@@ -21,14 +21,14 @@ package studio.phaseshift.metatron.isa.iot.miot.space;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.BootLoader;
+import studio.phaseshift.metatron.*;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
 import studio.phaseshift.metatron.isa.iot.MoquetteServer;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -47,6 +47,17 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
+@ExtendWith(SkipInheritedTestsExtension.class)
+@SkipInheritedTests(tags = {
+        TestTag.CRUD,        // Skip all CRUD tests
+        TestTag.BOUNDARY,    // Skip all boundary value tests
+        TestTag.TYPE,        // Skip all type preservation tests
+        TestTag.NESTED,      // Skip all nested structure tests
+        TestTag.LIST,        // Skip all list handling tests
+        TestTag.SPECIAL      // Skip all special value tests
+}, include = {
+       // "testMonoReadWrite"  // Include this CRUD test even though CRUD tag is skipped
+})
 public class miotSpaceTest extends AbstractSpaceTest {
 
     private static final int PORT = generatePort();
@@ -82,8 +93,8 @@ public class miotSpaceTest extends AbstractSpaceTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "/t/a?sub -> sub::[src=>a,tgt=>/t/a,on_recv=><abc>->3]                            % /t/a -> 4                       % *abc.?=3",
-            "/t/b?sub -> sub::[src=>a,tgt=>/t/b,on_recv=><abc>->4]                            % /t/b -> 3                       % *abc.?=4",
+            "/t/a?sub -> sub::[target=>/t/a,on_recv=><abc>->3]                            % /t/a -> 4                       % *abc.?=3",
+            "/t/b?sub -> sub::[target=>/t/b,on_recv=><abc>->4]                            % /t/b -> 3                       % *abc.?=4",
     }, delimiter = '%')
     public void testSubscriptions(final String subscription, final String write, final String check) {
         final Rec sub = mParser.eval(subscription);
@@ -92,21 +103,4 @@ public class miotSpaceTest extends AbstractSpaceTest {
         final Obj checkObj = mParser.eval(check);
         assertNotEquals(noobj(), checkObj);
     }
-
-    // Disable all abstract tests - miotSpace uses MQTT pub/sub model, not traditional CRUD
-    @Override @Disabled public void testMonoReadWrite(String writeExpression, String readExpression, String expectedExpression) {}
-    @Override @Disabled public void testStringCornerCases(String description, String value) {}
-    @Override @Disabled public void testIntegerBoundaries(String description, long value) {}
-    @Override @Disabled public void testRealBoundaries(String description, double value) {}
-    @Override @Disabled public void testBooleanValues(String description, boolean value) {}
-    @Override @Disabled public void testNonExistentAccess(String key) {}
-    @Override @Disabled public void testSequentialUpdates(int iterations) {}
-    @Override @Disabled public void testBasicCRUD(String description, String key, String valueStr) {}
-    @Override @Disabled public void testTypePreservation(String description, Obj value) {}
-    @Override @Disabled public void testNestedRecords(int depth) {}
-    @Override @Disabled public void testListHandling(String description, studio.phaseshift.metatron.isa.m.type.Lst listValue, int expectedCount) {}
-    @Override @Disabled public void testTypeChanges(String description, Obj initialValue, Obj updatedValue) {}
-    @Override @Disabled public void testMultiFieldUpdates(int fieldCount) {}
-    @Override @Disabled public void testSpecialStringValues(String description, String value) {}
-    @Override @Disabled public void testEmptyRecords(int testNumber) {}
 }

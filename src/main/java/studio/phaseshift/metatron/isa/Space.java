@@ -20,7 +20,6 @@ package studio.phaseshift.metatron.isa;
 
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.Space.IdObj;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.Stats;
@@ -33,6 +32,8 @@ import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.io.Closeable;
+import java.io.File;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -55,7 +56,7 @@ public interface Space extends Rec, Closeable {
     }
 
     default Lst qs() {
-        return this.at(uri(Tokens.Q)).orElse(lst());
+        return this.at(uri(Tokens.QSTRING)).orElse(lst());
     }
 
     fURI pattern();
@@ -314,6 +315,33 @@ public interface Space extends Rec, Closeable {
             }
             return null;
         }
+
+        public static File locateBaseFile(final fURI vid, final String dirRootFile) {
+            // if dir, check if the root file is in dir
+            if (vid.isBranch() && null != dirRootFile) {
+                final Path path = Path.of(vid.extend(dirRootFile).toString());
+                if (path.toFile().exists() && path.toFile().isFile())
+                    return path.toFile();
+            }
+            if(vid.isNode()) {
+                final Path path = Path.of(vid.toString());
+                if (path.toFile().exists() && path.toFile().isFile())
+                    return path.toFile();
+            }
+            fURI temp = vid.asNode();
+            while (temp.segmentLength() != 0) {
+                Path path = Path.of(temp.toString());
+                if (path.toFile().exists() && path.toFile().isFile())
+                    return path.toFile();
+                if (null != dirRootFile) {
+                    path = Path.of(temp.extend(dirRootFile).toString());
+                    if (path.toFile().exists() && path.toFile().isFile())
+                        return path.toFile();
+                }
+                temp = temp.retract(1);
+            }
+            return null;
+        }
     }
 
     final class SpaceType {
@@ -334,7 +362,7 @@ public interface Space extends Rec, Closeable {
         public static IdObj of(final fURI furi, final Obj obj) {
             return new IdObj(furi, obj);
         }
-        
+
         public Iterator<IdObj> iterator() {
             return IteratorUtil.of(this);
         }

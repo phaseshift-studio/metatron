@@ -83,9 +83,9 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
  serial::[pattern => <serial:#>,
           route   => [serial:=><>]]@/sys/space/serial;
  catalog::[host    => <http://localhost:11434>,
-       pattern => <ollama:#>,
-       provider => <ollama>,
-       route   => [ollama:=><>]]@/sys/space/ollama;
+           pattern => <ollama:#>,
+           name => <ollama>,
+           route   => [ollama:=><>]]@/sys/space/ollama;
  tble::[pattern    => netflix:#,
         host       => <mariadb://localhost:3306/netflix?user=mtron&password=mtron>,
         route      => [<netflix:>=><>],

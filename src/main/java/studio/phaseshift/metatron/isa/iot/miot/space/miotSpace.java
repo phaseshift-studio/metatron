@@ -26,9 +26,12 @@ import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.util.IteratorUtil;
 
+import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
@@ -65,27 +68,29 @@ public class miotSpace extends mqttSpace {
         super(client, config, MIOT_SPACE_TID, vid);
     }
 
-    public Obj read(final fURI vid) {
-        final Obj result = super.read(vid);
-        if (result.isNoObj())
-            return result;
-        // final fURI toVID = Space.Helper.toNativeSpace(vid,this.routes());
-        // TODO: branch uri/pattern and device construction
-        if (!vid.hasPattern() && vid.test(this.pattern().retractPattern().extend("+"))) {
-            Rec soc = result.asRec().tid(MIOT_DEVICE_TID).selfVID(vid).asRec();
-            if (soc.has("gpio"))
-                soc.at("gpio", soc.at("gpio").asRec().tid(MIOT_GPIO_TID), MUTABLE);
-            if (soc.has("pwm"))
-                soc.at("pwm", soc.at("pwm").asRec().tid(MIOT_PWM_TID), MUTABLE);
-            return soc;
-        } else if (vid.test(this.pattern().retractPattern().extend("+/gpio"))) {
-            return result.asRec().tid(MIOT_GPIO_TID).selfVID(vid);
-        } else if (vid.test(this.pattern().retractPattern().extend("+/pwm"))) {
-            return result.asRec().tid(MIOT_PWM_TID).selfVID(vid);
-        }
-        return result;
+    @Override
+    public Function<fURI, Iterator<IdObj>> directReader() {
+        return (pattern) -> {
+            LOG.debug("reading %s", pattern);
+            return IteratorUtil.stream(super.directReader().apply(pattern)).map(idobj -> {
+                final Obj result = idobj.obj();
+                if (result.isPoly()) {
+                    if (!vid.hasPattern() && vid.test(this.pattern().retractPattern().extend("+"))) {
+                        Rec soc = result.asRec().tid(MIOT_DEVICE_TID).selfVID(vid).asRec();
+                        if (soc.has("gpio"))
+                            soc.at("gpio", soc.at("gpio").asRec().tid(MIOT_GPIO_TID), MUTABLE);
+                        if (soc.has("pwm"))
+                            soc.at("pwm", soc.at("pwm").asRec().tid(MIOT_PWM_TID), MUTABLE);
+                        return new IdObj(idobj.furi(), soc);
+                    } else if (vid.test(this.pattern().retractPattern().extend("+/gpio"))) {
+                        return new IdObj(idobj.furi(), result.asRec().tid(MIOT_GPIO_TID).selfVID(vid));
+                    } else if (vid.test(this.pattern().retractPattern().extend("+/pwm"))) {
+                        return new IdObj(idobj.furi(), result.asRec().tid(MIOT_PWM_TID).selfVID(vid));
+                    }
+                }
+                return idobj;
+            }).iterator();
+        };
     }
-
-    /// /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 }

@@ -85,11 +85,11 @@ public class mqttSpaceTest extends AbstractSpaceTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "/t/a?sub -> sub::[src=>a,tgt=>/t/a,on_recv=><abc>->3]                                        % /t/a -> 4                           % *abc.?=3",
-            "/t/b?sub -> sub::[src=>a,tgt=>/t/b,on_recv=><abc>->4]                                        % /t/b -> 3                           % *abc.?=4",
+            "/t/a?sub -> sub::[target=>/t/a,on_recv=><abc>->3]                                        % /t/a -> 4                           % *abc.?=3",
+            "/t/b?sub -> sub::[target=>/t/b,on_recv=><abc>->4]                                        % /t/b -> 3                           % *abc.?=4",
          //   "/t/c/+?sub -> sub::[src=>a,tgt=>/t/+,on_recv=>(){*<zzz>.else(0).plus(4).to(zzz).print(_)}]   % 3.to(/t/c/b).map(7).to(/t/c/a)      % *zzz.?=8",
            // "/t/c?sub -> sub::[src=>a,tgt=>/t/c,on_recv=>(){*</t/c>.plus(4).to(yyy).print(_)}]            % 3.to(/t/c)                          % *yyy.?=7",
-            "/t/d?sub -> sub::[src=>a,tgt=>/t/d,on_recv=>(){*</t/d>.plus(4).to(ggg).print(_)}]            % 1.to(ggg).map(3).to(/t/c)           % *ggg.?=1",
+            "/t/d?sub -> sub::[target=>/t/d,on_recv=><ggg>->1]                                        % /t/d -> 3                           % *ggg.?=1",
     }, delimiter = '%')
     public void testSubscriptions(final String subscription, final String write, final String check) {
         final Rec sub = mParser.eval(subscription);

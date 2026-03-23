@@ -344,7 +344,7 @@ public class mParser {
         return seq(of("?"), seq(
                 opt(m_furi_inst_dom_rng(), ""),
                 opt(of("&"), ""),
-                opt(seq((word().or(of("+")).or(of("#"))).plus(), opt(seq(of("="), choice(m_furi_no_query(), word().or(anyOf(FULL_FURI_CHARS)).star())), "")).separatedBy(of("&")), "").flatten())
+                opt(seq((word().or(anyOf("+#_-"))).plus(), opt(seq(of("="), choice(m_furi_no_query(), word().or(anyOf(FULL_FURI_CHARS)).star())), "")).separatedBy(of("&")), "").flatten())
         ).map(t -> mParser.<List<String>>pick(t, 1).stream().reduce((a, b) -> a + b).orElse(""));
     }
 

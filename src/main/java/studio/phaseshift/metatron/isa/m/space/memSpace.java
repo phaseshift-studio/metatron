@@ -79,6 +79,11 @@ public class memSpace extends AbstractSpace<Map<fURI, Obj>> {
         load();
     }
 
+    protected memSpace(final Map<Obj, Obj> config, final fURI tid, final fURI vid) {
+        super(new ConcurrentHashMap<>(), config, tid, vid);
+        load();
+    }
+
 
     public static memSpace of(final fURI pattern, final fURI vid) {
         return new memSpace(mutableMap(uri(Tokens.PATTERN), uri(pattern)), vid);

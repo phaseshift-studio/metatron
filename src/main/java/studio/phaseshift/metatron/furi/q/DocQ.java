@@ -334,7 +334,7 @@ public class DocQ extends BaseQ {
         }
 
         @Override
-        public Optional<Obj> preRead(final fURI source, final fURI vid) {
+        public Optional<Obj> preRead(final fURI vid) {
             LOG.trace("evaluating {{y}}preread{{/y}}: %s", vid);
             return Optional.of(objs(docSpace.entrySet().stream()
                     .filter(kv -> kv.getKey().test(vid))
@@ -350,7 +350,7 @@ public class DocQ extends BaseQ {
         }
 
         @Override
-        public Optional<Obj> preWrite(final fURI source, final fURI vid, final Obj obj) {
+        public Optional<Obj> preWrite(final fURI vid, final Obj obj) {
             LOG.trace("evaluating {{y}}pre write{{/y}}: %s => %s", obj, vid);
             docSpace.put(vid, obj);
             return Optional.of(obj);
