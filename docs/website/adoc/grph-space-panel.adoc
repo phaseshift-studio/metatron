@@ -9,7 +9,7 @@ where latexmath:[E] is typically a https://en.wikipedia.org/wiki/Partial_functio
 
 
 ++++
-<div style="justify-self: center;">
+<div style="justify-self:center; width:80%;">
 ++++
 [source,mtron]
 ----

@@ -104,6 +104,7 @@
 
 .table {
     vertical-align: middle;
+    caption-side: top;
     padding: 0 !important;
     margin: 0 !important;
 }
@@ -949,13 +950,13 @@ th {
 .halign-center {
     display: table-cell;
     text-align: center; /* centers horizontally */
-    padding: 0.5rem;
+    padding: 0.25rem;
 }
 
 .valign-middle {
     display: table-cell;
     align-items: center; /* centers vertically */
-    padding: 0.5rem;
+    padding: 0.25rem;
 }
 
 .hljs {
