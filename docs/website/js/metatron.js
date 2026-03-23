@@ -18,6 +18,15 @@
         } else {
             $('.sticky-top').removeClass('shadow-sm').css('top', '-100px');
         }
+        if ($(this).scrollTop() > 300) {
+            $('.back-to-top').addClass('show');
+        } else {
+            $('.back-to-top').removeClass('show');
+        }
+    });
+    $('.back-to-top').click(function () {
+        $('html, body').animate({scrollTop: 0}, 1500, 'easeInOutExpo');
+        return false;
     });
     // SYNTAX HIGHLIGHTING IN <code> SNIPPETS
     hljs.highlightAll();

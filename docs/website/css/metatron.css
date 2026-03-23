@@ -7,7 +7,7 @@
     --linkcolor: var(--mmagenta);
     --linkcoloralternate: #2652e5;
     --white: #c2c2c2;
-    --primary: #c80000;
+    --primary: #a30000;
     --secondary: #191C24;
     --light: #6C7293;
     --dark: #000000;
@@ -385,16 +385,19 @@ h1 {
 }
 
 .btn-square {
+    padding: 5px;
     width: 38px;
     height: 38px;
 }
 
 .btn-sm-square {
+    padding: 5px;
     width: 32px;
     height: 32px;
 }
 
 .btn-lg-square {
+    padding-top: 10px;
     width: 48px;
     height: 48px;
 }
@@ -402,7 +405,6 @@ h1 {
 .btn-square,
 .btn-sm-square,
 .btn-lg-square {
-    padding: 0;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1105,4 +1107,28 @@ strong {
 
 .page-sweep.exit {
     left: 100%;
+}
+
+/*** Back to Top ***/
+.back-to-top {
+    position: fixed;
+    display: block;
+    left: 0;
+    bottom: 55px;
+    z-index: 99;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.5s ease-in-out, visibility 0.5s;
+}
+
+.back-to-top.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+@media (max-width: 991.98px) {
+    .back-to-top {
+        left: 0;
+        bottom: 20px;
+    }
 }
