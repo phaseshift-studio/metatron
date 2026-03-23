@@ -264,13 +264,13 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
     List<String> segments();
 
     default String segments(final int index, final String defaultSegment) {
-        return this.segmentLength() > index ? this.segments().get(index) : null;
+        return this.segmentLength() > index ? this.segments().get(index) : defaultSegment;
     }
 
     int segmentLength();
 
     default fURI asRelativeNode() {
-        return this.asNode().asRelative();
+        return this.asRelative().asNode();
     }
 
     fURI poly(final List<String> poly);

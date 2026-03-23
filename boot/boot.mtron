@@ -55,8 +55,10 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
         route    => [</h/+/>=><>],
         native   => [factory  => mfactory::[=>],
                      load     => grateful]]@/sys/space/grateful;                    
-  tp3::[pattern  => /g/#,
-        route    => [</g/+/>=><>],
+  tp3::[pattern  => g:#,
+        route    => [<g:V>=><V>,
+                     <g:E>=><E>,
+                     <g:S>=>/m/grph/inst/schema/modern],
         native   => [factory  => mfactory::[=>],
                      load     => modern]]@/sys/space/modern;
   mqtt::[pattern => <mqtt:#>,

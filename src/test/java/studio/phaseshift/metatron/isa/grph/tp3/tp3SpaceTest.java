@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -38,6 +38,7 @@ import static org.apache.tinkerpop.gremlin.LoadGraphWith.GraphData.MODERN;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.GRPH_ISA_TID;
+import static studio.phaseshift.metatron.isa.grph.tp3.space.schema.modernSchema.MODERN_SCHEMA_TID;
 import static studio.phaseshift.metatron.isa.grph.tp3.tp3InstSet.TP3_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -54,16 +55,17 @@ public class tp3SpaceTest extends AbstractSpaceTest {
      * load     => modern]]@/sys/space/modern;
      */
     public tp3SpaceTest() {
-        super(f("/g/"), () -> {
+        super(() -> {
             BootLoader.loadInstSetProvider(GRPH_ISA_TID);
             BootLoader.loadInstSetProvider(TP3_ISA_TID);
             return tp3Space.of(rec(
                     PATTERN, uri("/g/#"),
-                    ROUTE, rec(uri("/g/+/"), uri("")),
+                    ROUTE, rec(uri("/g/V"), uri("V"),
+                            uri("/g/E"), uri("E"),
+                            uri("/g/S"), uri(MODERN_SCHEMA_TID)),
                     NATIVE, rec(uri("factory"), MObjFactory.single(),
                             uri(LOAD), uri(MODERN.name().toLowerCase()))), f("/sys/space/test")); // GRATEFUL.name().toLowerCase()
         });
-        tp3Space.TP3SpaceType.insts().forEach(i -> Router.writeToSpace(i.tid(), (Inst) i));
     }
 
     @Test
@@ -88,12 +90,12 @@ public class tp3SpaceTest extends AbstractSpaceTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "*/g/schema.count()                                                                  % 1",
-            "*/g/schema/pattern                                                                  % /m/grph/inst/schema/modern/#",
-            "*/g/schema/pattern.*(_).count()                                                       % 4",
-            "*/g/schema/pattern.*_.count()                                                       % 4",
+            "*/g/S.count()                                                                  % 1",
+            "*/g/S>>pattern                                                                  % /m/grph/inst/schema/modern/#",
+            "*/g/S>>pattern.*(_).count()                                                       % 4",
+            "*/g/S>>pattern.*_.count()                                                       % 4",
             //  "**/g/S/pattern.count()                                                       % 4",
-            "*/g/schema/pattern.*(_).vid()                                                         % {/m/grph/inst/schema/modern/person,/m/grph/inst/schema/modern/software,/m/grph/inst/schema/modern/created,/m/grph/inst/schema/modern/knows}",
+            "*/g/S>>pattern.*(_).vid()                                                         % {/m/grph/inst/schema/modern/person,/m/grph/inst/schema/modern/software,/m/grph/inst/schema/modern/created,/m/grph/inst/schema/modern/knows}",
     }, delimiter = '%')
     public void testSchemaTraversal(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
@@ -109,7 +111,7 @@ public class tp3SpaceTest extends AbstractSpaceTest {
             "*/g/V/1/OUT.dom()                                                              % {created,{2}knows}",
             "*/g/V/1/OUT/created.count()                                                    % 1",
             "*/g/V/1/OUT/knows.count()                                                      % 2",
-           // "*/g/V/1/OUT/+.count()                                                          % 3",
+            // "*/g/V/1/OUT/+.count()                                                          % 3",
             "*/g/V/1/OUT/knows.>>IN.count()                                                 % 2",
             "*/g/V/1/OUT/knows.>>IN>>name                                                   % {\"vadas\",\"josh\"}",
             "*/g/V/1/OUT/knows.>>IN/name                                                    % {\"vadas\",\"josh\"}",
@@ -130,7 +132,6 @@ public class tp3SpaceTest extends AbstractSpaceTest {
             "*/g/V/1/OUT/+/IN/OUT/+/IN/OUT/+/IN.count()                                     % 0",
             "*/g/V/#.count()                                                                % 6",
             "*/g/E/+.count()                                                                % 6",
-            "*/g/schema/+.count()                                                            % 2",
             "*/g/V/1.count()                                                                % 1",
             "*/g/E/#.count()                                                                % 6",
             "*/g/E/1.count()                                                                % 0",

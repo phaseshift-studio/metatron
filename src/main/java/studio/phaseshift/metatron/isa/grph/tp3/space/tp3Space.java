@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -37,6 +37,7 @@ import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -48,13 +49,13 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.*;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.failure_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -67,7 +68,7 @@ public class tp3Space extends grphSpace<Graph> {
     public static final String TP3_GRAPH_CONFIGURATION_KEY = "mtron.grph.vid";
 
     protected static ObjFactory FACTORY = null;
-
+    private static final fURI V_SOME = f("V/+");
     public static final fURI TP3_SPACE_TID = GRPH_ISA_TID.extend(SPACE).extend("tp3");
     public static final Type TP3_SPACE_TYPE = Type.Builder.build()
             .tid(GRPH_SPACE_TID)
@@ -80,11 +81,6 @@ public class tp3Space extends grphSpace<Graph> {
                                     throw inst.arg(0).asFail().asException();
                                 return tp3Space.of(inst.arg(0).asRec(), inst.arg(0).vid());
                             })).create();
-
-    protected final String vertexPrefix;
-    protected final String edgePrefix;
-    protected final String schemaPrefix;
-    protected final Obj schema;
 
     public static tp3Space of(final Rec config, final fURI vid) {
         Router.global().logger().debug("tp3 space config: %s", config);
@@ -109,10 +105,10 @@ public class tp3Space extends grphSpace<Graph> {
         return (tp3Space) Router.readFromSpace(f(element.graph().configuration().get(String.class, tp3Space.TP3_GRAPH_CONFIGURATION_KEY)));
     }
 
-    public fURI elementVID(final Element element) {
+    protected fURI elementVID(final Element element) {
         return element instanceof Vertex ?
-                f(this.vertexPrefix + "/" + element.id().toString()) :
-                f(this.edgePrefix + "/" + element.id().toString());
+                Space.Helper.routeToSpace(f("V/" + element.id().toString()), this.routes()) :
+                Space.Helper.routeToSpace(f("E/" + element.id().toString()), this.routes());
     }
 
     protected tp3Space(final Graph graph, final Map<Obj, Obj> config, final fURI vid) {
@@ -131,35 +127,13 @@ public class tp3Space extends grphSpace<Graph> {
                 LOG.warn("unable to encode %s:%s: %s", key, value, e);
             }
         });
-        // this.put(uri("native/factory"), FACTORY, MUTABLE);
         this.at(uri(NATIVE), rec(
                 uri("factory"), FACTORY,
                 uri(CONFIG), tp3Config,
                 uri("id"), rec(
                         uri(VERTEX), uri(IteratorUtil.findFirst(this.sjvm.vertices()).map(i -> i.id().getClass().getSimpleName()).orElse("unknown")),
                         uri(EDGE), uri(IteratorUtil.findFirst(this.sjvm.edges()).map(i -> i.id().getClass().getSimpleName()).orElse("unknown")))), MUTABLE);
-        this.vertexPrefix = this.pattern.retractPattern().extend("V").toString();
-        this.edgePrefix = this.pattern.retractPattern().extend("E").toString();
-        this.schemaPrefix = this.pattern.retractPattern().extend("schema").toString();
-        this.at(uri(ROUTE), rec(
-                uri(VERTEX), uri(this.vertexPrefix),
-                uri(EDGE), uri(this.edgePrefix),
-                uri(SCHEMA), uri(this.schemaPrefix)), MUTABLE);
-        LOG.debug("tp3 prefixes: %s %s %s", this.vertexPrefix, this.edgePrefix, this.schemaPrefix);
-        this.schema = this.at(uri(SCHEMA));
     }
-    
-   /* @Override
-    public Obj write(final fURI vid, final Obj obj) {
-        return studio.phaseshift.metatron.furi.Q.Helper.processPreWrite(this.qs(), vid, vid, obj).orElseGet(() -> {
-            if (obj.jvm() instanceof ElementMap) // underlying store has already updated the element accordingly
-                return obj;
-            Space.Helper.resolveWrite(LOG, this, vid.basePath(), obj, this.directWriter(), this.directReader());
-            //return obj;
-            return studio.phaseshift.metatron.furi.Q.Helper.processPostWrite(this.qs(), vid, vid, obj)
-                    .orElse(studio.phaseshift.metatron.furi.Q.Helper.processQlessWrite(this.qs(), vid, vid, obj).orElse(obj));
-        });
-    }*/
 
     @Override
     public Function<fURI, Iterator<IdObj>> directReader() {
@@ -168,27 +142,35 @@ public class tp3Space extends grphSpace<Graph> {
             if (pattern.equals(ALL)) {
                 throw MTronException.of("cannot read all tp3 space");
             } else {
-                if (f(this.schemaPrefix).test(pattern)) {
-                    return IdObj.of(f(this.schemaPrefix), this.at(SCHEMA)).iterator();
-                } else if (pattern.hasPrefix(this.schemaPrefix)) {
-                    return IteratorUtil.of();
-                } else if (pattern.segmentLength() < 3) {
-                    return IteratorUtil.of();
-                } else if (pattern.equals(f(this.vertexPrefix).extend("#"))) {
-                    return (Iterator) IteratorUtil.stream(this.sjvm.vertices()).map(v -> IdObj.of(f(this.vertexPrefix).extend(v.id().toString()), VertexMap.vertexToRec(v, this))).iterator();
-                } else if (pattern.test(f(this.vertexPrefix).extend("+"))) {
-                    final String suffix = pattern.name();
-                    LOG.info("reading vertices %s => %s", vid, suffix);
-                    Iterator<Vertex> vertices = (suffix.equals("+") || suffix.equals("#")) ? this.sjvm.vertices() : this.sjvm.vertices(Integer.parseInt(suffix));
-                    return IteratorUtil.map(vertices, v -> IdObj.of(f(this.vertexPrefix).extend(v.id().toString()), VertexMap.vertexToRec(v, this)));
-                } else if (pattern.test(f(this.edgePrefix).extend("+"))) {
-                    final String suffix = pattern.name();
-                    LOG.info("reading edges %s => %s", vid, suffix);
-                    Iterator<Edge> edges = (suffix.equals("+") || suffix.equals("#")) ? this.sjvm.edges() : this.sjvm.edges(Integer.parseInt(suffix));
-                    return IteratorUtil.map(edges, e -> IdObj.of(f(this.edgePrefix).extend(e.id().toString()), EdgeMap.edgeToRec(e, this)));
+                final fURI routed = Space.Helper.routeFromSpace(pattern, this.routes()).asRelative();
+                LOG.info("tp3 vid: %s => %s", pattern, routed);
+                final String first = routed.segments(0, null);
+                if (null == first) return IteratorUtil.of();
+                final String second = routed.segments(1, null);
+                // LOG.info("parts: %s / %s",first,second);
+                final boolean all = "#".equals(second) || "+".equals(second);
+                ////////////////////////////////////////////////////////////////////
+                if (first.equals("V")) {
+                    if (routed.segmentLength() > 2)
+                        return IteratorUtil.of();
+                    Iterator<Vertex> iterator;
+                    if (CommonUtil.isInt(second)) iterator = this.sjvm.vertices(Integer.parseInt(second));
+                    else if (all) iterator = this.sjvm.vertices();
+                    else iterator = IteratorUtil.of();
+                    return (Iterator) IteratorUtil.stream(iterator).map(v -> IdObj.of(this.elementVID(v), VertexMap.vertexToRec(v, this))).iterator();
+                } else if (first.equals("E")) {
+                    if (routed.segmentLength() > 2)
+                        return IteratorUtil.of();
+                    Iterator<Edge> iterator;
+                    if (CommonUtil.isInt(second)) iterator = this.sjvm.edges(Integer.parseInt(second));
+                    else if (all) iterator = this.sjvm.edges();
+                    else iterator = IteratorUtil.of();
+                    return (Iterator) IteratorUtil.stream(iterator).map(e -> IdObj.of(this.elementVID(e), EdgeMap.edgeToRec(e, this))).iterator();
                 } else {
-                    LOG.warn("unknown tp3 vid: %s", pattern);
-                    return IteratorUtil.of();
+                    LOG.debug("unknown tp3 vid: %s", pattern);
+                    final fURI full = Space.Helper.routeFromSpace(pattern, this.routes());
+                    if (full.equals(pattern)) return IteratorUtil.of();
+                    return IdObj.of(full, Router.global().read(full)).iterator();
                 }
             }
         };
@@ -206,10 +188,9 @@ public class tp3Space extends grphSpace<Graph> {
             } else {
                 if (obj.jvm() instanceof ElementMap) // vertex already exists, all updates already occurred, no need to write it again
                     return obj;
-                final String vidString = pattern.toString();
-                if (vidString.startsWith(this.vertexPrefix)) {
-                    final String suffix = vidString.replaceFirst(this.vertexPrefix + "/", "");
-                    final Integer id = Integer.parseInt(suffix);
+                final fURI strip = Space.Helper.routeToSpace(pattern, this.routes());
+                if (strip.test(V_SOME)) {
+                    final Integer id = Integer.parseInt(strip.name());
                     try { //  a newly created vertex from a rec
                         final Vertex vertex = IteratorUtil.stream(this.sjvm.vertices(id)).findFirst().orElseGet(() -> this.sjvm.addVertex(org.apache.tinkerpop.gremlin.structure.T.label, obj.tid().basePath().toString(), org.apache.tinkerpop.gremlin.structure.T.id, id));
                         LOG.info("writing vertex %s => %s", vid, vertex);

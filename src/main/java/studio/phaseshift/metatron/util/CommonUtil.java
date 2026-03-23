@@ -148,11 +148,11 @@ public final class CommonUtil {
     }
 
     public static boolean isInt(final String s) {
-        return INT_PATTERN.matcher(s).matches();
+        return null != s  && INT_PATTERN.matcher(s).matches();
     }
 
     public static boolean isReal(final String s) {
-        return REAL_PATTERN.matcher(s).matches();
+        return null != s && REAL_PATTERN.matcher(s).matches();
     }
 
     public static <T> Supplier<T> lambda(final Supplier<T> object) {

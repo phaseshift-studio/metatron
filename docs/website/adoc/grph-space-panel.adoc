@@ -23,18 +23,18 @@ where latexmath:[E] is typically a https://en.wikipedia.org/wiki/Partial_functio
 </div>
 ++++
 
-This classic structure has been modulated in various ways over the years. Examples include variants where edges are undirected, labeled, whether self-loops are allowed, or if edges represent total or partial functions, and more. Modern graph databases architects approach graphs with a focus on ease of modeling and speed of querying as the complementary technologies that shape their perspective are other database models such as relational, key/value, column, vector, document, etc. Designers have converged on a particular modulation colloquially known as a *property graph*. This graph structure is known more formally as a _directed, labeled, attributed, multi-relational binary graph_. The property graph extends latexmath:[G = (V,E)] with properties (key/value pairs) associated with vertices and edges. This extension provides users a convenient path for moving between the dynamic state of a system represented using the constructs of modern object-oriented programming and the persisted state of the system stored in a graph database. As such, property graphs are useful when modeling multi-relational environments, where a heterogeneous set of "things" (different types of vertices) relate to one another via a heterogeneous set of "connections" (different types of edges).
+This classic structure has been extended in various ways since its inception in 1736 (by https://en.wikipedia.org/wiki/Leonhard_Euler[Leonard Euler]). Examples include variants where edges are undirected, labeled, can self-loop, can connect more than two vertices and more. Modern graph database designers approach graphs with a focus on ease of modeling and speed of querying so to compete with contemporary, complementary technologies such as relational, key/value, column, vector, document, etc. They quickly converged on a particular graph data model colloquially known as a *property graph*. This structure is known more formally as a _directed, labeled, attributed, multi-relational binary graph_. The property graph extends latexmath:[G = (V,E)] with properties (key/value pairs) associated with vertices and edges. This extension provides users a convenient path for moving between the dynamic state of a system represented using the constructs of modern object-oriented programming and the persisted state of the system stored in a graph database. As such, property graphs are useful when modeling multi-relational environments, where a heterogeneous set of "things" (different types of vertices) relate to one another via a heterogeneous set of "connections" (different types of edges).
 
-An assortment of example property graph traversals represented in mtron are provided below.
+An assortment of example property graph traversals written in mtron is provided below.
 
 ++++
 <!-- 🐖 
-*/g/V/1                                [-- <1>
-*/g/V/1.outE()                         [-- <2>
-*/g/V/1.outE().inV()                   [-- <3>
-*/g/V/1.out()                          [-- <4>
-*/g/V/1.out(knows).out(created)        [-- <5>
-*/g/V/1.out(knows).out(created)>>name  [-- <6>
+*g:V/1                                [-- <1>
+*g:V/1.outE()                         [-- <2>
+*g:V/1.outE().inV()                   [-- <3>
+*g:V/1.out()                          [-- <4>
+*g:V/1.out(knows).out(created)        [-- <5>
+*g:V/1.out(knows).out(created)>>name  [-- <6>
 -->
 ++++
 
@@ -59,22 +59,22 @@ graph encodings (discussed later when presenting hypergraphs).
 🧱 `out?vrtx{+*+}\<=vrtx(uri{+*+}::T})`   🧱 traverse to the outgoing adjacent vertices of the lhs vertex 1.8+a🧱
 [source,mtron]
 ----
-   vertex         ┌─────────┐        vertex  
-┌─────────┐       │k1 => v1 │      ┌─────────┐ 
-│k1 => v1 │       │k2 => v2 │      │k1 => v1 │ 
-│k2 => v2 │outE   └─────────┘  inV │k2 => v2 │ 
-│  ...    ├───────────────────────►│  ...    │
-│k3 => v3 │outV      edge      inE │k3 => v3 │
-└─────────┘                        └─────────┘
+   vertex       ┌─────────┐       vertex  
+┌─────────┐     │k1 => v1 │     ┌─────────┐ 
+│k1 => v1 │     │k2 => v2 │     │k1 => v1 │ 
+│k2 => v2 │outE └─────────┘ inV │k2 => v2 │ 
+│  ...    ├────────────────────►│  ...    │
+│k3 => v3 │outV     edge    inE │k3 => v3 │
+└─────────┘                     └─────────┘
 ----
-🧱 `in?vrtx{+*+}\<=vrtx(uri{+*+}::T})`    🧱 traverse to the incoming adjacent vertices of the lhs vertex                   
+🧱 `in?vrtx{+*+}\<=vrtx(uri{+*+}::T})`    🧱 traverse to the incoming adjacent vertices of the lhs vertex         
 🧱 `both?vrtx{+*+}\<=vrtx(uri{+*+}::T})`  🧱 traverse to both the incoming and outgoing adjacent vertex of the lhs vertex   
 🧱 `outE?edge{+*+}\<=vrtx(uri{+*+}::T})`  🧱 traverse to the outgoing incident edges of the lhs vertex                      
 🧱 `inE?edge{+*+}\<=vrtx(uri{+*+}::T})`   🧱 traverse to the incoming incident edges of the lhs vertex                     
 🧱 `bothE?edge{+*+}\<=vrtx(uri{+*+}::T})` 🧱 traverse to both the incoming and outgoing incident edges of the lhs vertex     
 🧱 `inV?vrtx\<=edge()`                    🧱 traverse to the incoming incident vertex of the lhs edge                         
 🧱 `outV?vrtx\<=edge()`                   🧱 traverse to the outgoing incident vertex of the lhs edge                         
-🧱 `bothV?vrtx{2}\<=edge()`               🧱 traverse to both the incoming and outgoing incident vertex of the lhs edge  🧱     
+🧱 `bothV?vrtx{2}\<=edge()`               🧱 traverse to both the incoming and outgoing incident vertex of the lhs edge
 |===
 
 [discrete]
@@ -95,14 +95,14 @@ traversals.
 
 ++++
 <!-- 🐖
-*/g/V/1==[_=>_]                                                  [-- <1>
-*/g/V/1>>=[address=>[                       /
+*g:V/1==[_=>_]                                                  [-- <1>
+*g:V/1>>=[address=>[                       /
              home => [city =>'santa fe',    /
                       state=>NM],           /
              work => !*<../home>]]                               [-- <2>
-*/g/V/1/address/home/city                                        [-- <3>
-*/g/V/+.?==[address=>[_ => [state=>NM]]]                         [-- <4>
-*/g/V/+.?==[address=>[_ => [state=>NM]]].>>address/+/city        [-- <5>
+*g:V/1/address/home/city                                        [-- <3>
+*g:V/+.?==[address=>[_ => [state=>NM]]]                         [-- <4>
+*g:V/+.?==[address=>[_ => [state=>NM]]].>>address/+/city        [-- <5>
 -->
 ++++
 
@@ -126,7 +126,7 @@ to follow. Namely, tp3 modern (graph database) and the netflix movie dataset (re
 ====
 ++++
 <!-- 🐖
-*/g/schema/pattern.*(_)
+*g:S/pattern.*(_)
 -->
 ++++
 ====
@@ -149,9 +149,9 @@ to follow. Namely, tp3 modern (graph database) and the netflix movie dataset (re
 
 ++++
 <!-- 🐖
-*/g/V/1
+*g:V/1
 *netflix:movie/11488
-/g/V/1.addE(watched,*netflix:movie/11488)
+g:V/1.addE(watched,*netflix:movie/11488)
 -->
 ++++
 
@@ -185,7 +185,7 @@ A vertex can subscribe to events, maintain a thread of execution, and pass `obj`
 
 ++++
 <!-- 🐖 
-/g/V/1?sub -> |process_message?#{*}<=#(msg=>_) { print(*msg/trgt, "received message: ", *msg/msg)  }
+g:V/1?sub -> |process_message?#{*}<=#(msg=>_) { print(*msg/trgt, "received message: ", *msg/msg)  }
 --> 
 ++++
 
