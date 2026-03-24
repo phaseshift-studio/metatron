@@ -93,7 +93,7 @@ public class MFail extends MObj implements Fail {
 
     public static class MCaughtFail extends MFail implements CaughtFail {
 
-        protected MCaughtFail(Fail jvm) {
+        protected MCaughtFail(final Fail jvm) {
             super(Tuple.Pair.with(jvm.message(), jvm.cause().map(MCaughtFail::new).orElse(null)), jvm.tid(), null);
         }
 

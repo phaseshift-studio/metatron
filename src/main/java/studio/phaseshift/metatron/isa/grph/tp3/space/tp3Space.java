@@ -86,17 +86,19 @@ public class tp3Space extends grphSpace<Graph> {
         Router.global().logger().debug("tp3 space config: %s", config);
         final TinkerGraph graph = TinkerGraph.open();
         if (config.has(NATIVE)) {
-            final fURI dataset = config.at(NATIVE).asRec().at(LOAD).uriValue();
-            Graphitty.log(tp3Space.class).info("translating %s into grph space", config.at(NATIVE_LOAD));
-            if (dataset.equals(f("modern"))) {
-                config.at(uri(SCHEMA), new modernSchema(config.at(PATTERN).uriValue().head(1).extend("S").extend("modern")), MUTABLE);
-                TinkerFactory.generateModern(graph);
-            } else if (dataset.equals(f("grateful")))
-                TinkerFactory.generateGratefulDead(graph);
-            else if (dataset.equals(f("air_routes")))
-                TinkerFactory.generateAirRoutes(graph);
-            else
-                throw MTronException.of("unknown dataset: %s", config.at(NATIVE_LOAD));
+            final Obj dataset = config.at(NATIVE).asRec().at(LOAD);
+            if (!dataset.isNoObj()) {
+                Graphitty.log(tp3Space.class).info("translating %s into grph space", config.at(NATIVE_LOAD));
+                if (dataset.uriValue().equals(f("modern"))) {
+                    config.at(uri(SCHEMA), new modernSchema(config.at(PATTERN).uriValue().head(1).extend("S").extend("modern")), MUTABLE);
+                    TinkerFactory.generateModern(graph);
+                } else if (dataset.uriValue().equals(f("grateful")))
+                    TinkerFactory.generateGratefulDead(graph);
+                else if (dataset.uriValue().equals(f("air_routes")))
+                    TinkerFactory.generateAirRoutes(graph);
+                else
+                    throw MTronException.of("unknown dataset: %s", config.at(NATIVE_LOAD));
+            }
         }
         return new tp3Space(graph, config.jvm(), vid);
     }
@@ -109,6 +111,10 @@ public class tp3Space extends grphSpace<Graph> {
         return element instanceof Vertex ?
                 Space.Helper.routeToSpace(f("V/" + element.id().toString()), this.routes()) :
                 Space.Helper.routeToSpace(f("E/" + element.id().toString()), this.routes());
+    }
+
+    protected fURI schemaVID(final String label) {
+        return this.at(ROUTE).asRec().elements().filter(e -> e.first().uriValue().toString().endsWith("S")).findFirst().get().first().uriValue().extend(label);
     }
 
     protected tp3Space(final Graph graph, final Map<Obj, Obj> config, final fURI vid) {
@@ -143,7 +149,10 @@ public class tp3Space extends grphSpace<Graph> {
                 throw MTronException.of("cannot read all tp3 space");
             } else {
                 final fURI routed = Space.Helper.routeFromSpace(pattern, this.routes()).asRelative();
-                LOG.info("tp3 vid: %s => %s", pattern, routed);
+                LOG.info("reading tp3 vid: %s => %s", pattern, routed);
+                if (routed.hasScheme()) {
+                    return new IdObj(routed, Router.global().read(routed)).iterator();
+                }
                 final String first = routed.segments(0, null);
                 if (null == first) return IteratorUtil.of();
                 final String second = routed.segments(1, null);
@@ -188,17 +197,21 @@ public class tp3Space extends grphSpace<Graph> {
             } else {
                 if (obj.jvm() instanceof ElementMap) // vertex already exists, all updates already occurred, no need to write it again
                     return obj;
-                final fURI strip = Space.Helper.routeToSpace(pattern, this.routes());
-                if (strip.test(V_SOME)) {
-                    final Integer id = Integer.parseInt(strip.name());
+                final fURI routed = Space.Helper.routeFromSpace(pattern, this.routes());
+                LOG.info("writing tp3 vid: %s => %s", pattern, routed);
+                if (routed.test(V_SOME)) {
+                    final Integer id = Integer.parseInt(routed.name());
                     try { //  a newly created vertex from a rec
-                        final Vertex vertex = IteratorUtil.stream(this.sjvm.vertices(id)).findFirst().orElseGet(() -> this.sjvm.addVertex(org.apache.tinkerpop.gremlin.structure.T.label, obj.tid().basePath().toString(), org.apache.tinkerpop.gremlin.structure.T.id, id));
+                        final Vertex vertex = IteratorUtil.stream(this.sjvm.vertices(id)).findFirst().orElseGet(() ->
+                                this.sjvm.addVertex(
+                                        org.apache.tinkerpop.gremlin.structure.T.label, obj.tid().basePath().toString(),
+                                        org.apache.tinkerpop.gremlin.structure.T.id, id));
                         LOG.info("writing vertex %s => %s", vid, vertex);
-                        obj.asRec().elements()
-                                .filter(e -> !e.first().equals(IN) && !e.first().equals(OUT))
+                        obj.asRec().jvm().entrySet().stream()
+                                .filter(e -> !e.getKey().equals(IN) && !e.getValue().equals(OUT))
                                 .forEach(e -> {
-                                    LOG.info("writing vertex property %s =%s=> %s", vertex, e.first(), e.second());
-                                    vertex.property(e.jvm().get0().uriValue().toString(), FACTORY.toObj(e.jvm().get1()).jvm());
+                                    LOG.info("writing vertex property %s =%s=> %s", vertex, e.getKey(), e.getValue());
+                                    vertex.property(e.getKey().uriValue().toString(), FACTORY.toObj(e.getValue()).jvm());
                                 });
                         obj.asRec().elements().filter(e -> e.first().equals(OUT))
                                 .forEach(label -> label.jvm().get1().asRec()

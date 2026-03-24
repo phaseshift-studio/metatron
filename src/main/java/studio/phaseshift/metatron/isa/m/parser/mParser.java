@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -226,7 +226,7 @@ public class mParser {
     }
 
     public static Parser m_call_prefix(final Parser objParser, final fURI headTID) {
-        return seq(opt(objParser, noobj()), opt(of(".").trim(), '.'), opt(m_code(), null), m_vid_postfix()).map(t -> {
+        return seq(opt(objParser, null), opt(of(".").trim(), '.'), opt(m_code(), null), m_vid_postfix()).map(t -> {
             final Obj first = mParser.pick(t, 0);
             final Obj second = mParser.pick(t, 2);
             if (null == second)
@@ -506,7 +506,7 @@ public class mParser {
     /// //////////////////////////////////////////////////////////////////////////////////////////
 
     private static Parser sugar_args(boolean endToken) {
-        if(endToken)
+        if (endToken)
             return m_paren_wrap(obj_rel_back_parser);
         return choice(seq(of("(").trim(), obj_rel_back_parser, of(")").trim()).map(t -> pick(t, 1)), obj_rel_back_parser2);
     }

@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -34,12 +34,13 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.BOOL_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.BYTES_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mParser.m_bool;
 import static studio.phaseshift.metatron.isa.m.parser.mParser.m_bytes;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
@@ -102,7 +103,7 @@ public class mParserTest extends AbstractMetatronTest {
     @Test
     public void testUriParse() {
         assertEquals(
-                f("http://metatron.com?a=2&b=3"), 
+                f("http://metatron.com?a=2&b=3"),
                 uri("http://metatron.com?a=2&b=3").uriValue());
         assertEquals(
                 uri("http://metatron.com?a=2&b=3").uriValue(),
@@ -135,5 +136,13 @@ public class mParserTest extends AbstractMetatronTest {
         assertEquals(rel(uri("a"), uri("b")).jvm(), mParser.parse("a => b").jvm());
         assertEquals(rel(jnt(1), uri("b")).jvm(), mParser.parse("1 => b").jvm());
         assertEquals(rel(jnt(1), real(4.3)).jvm(), mParser.parse("1 => 4.3").jvm());
+    }
+
+    @Test
+    public void testInstParse() {
+        assertEquals(instB(PLUS_INST_TID, lst(jnt(1), jnt(2))), mParser.parse("plus(1,2)"));
+        assertEquals(instB(PLUS_INST_TID, lst()), mParser.parse("plus()"));
+        assertTrue(mParser.parse("plus()").asInst().jvm().get0().isEmpty());
+        assertEquals(0, mParser.parse("plus()").asInst().jvm().get0().count());
     }
 }

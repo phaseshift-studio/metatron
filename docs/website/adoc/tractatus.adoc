@@ -40,7 +40,7 @@ include::header.html[]
         <hr/>
         <div class="row mt-3 justify-content-center">
             <div class="col-md-6 position-relative">
-                <input type="text" id="lecture-search" class="form-control bg-dark text-light border-primary" placeholder="search lectures...">
+                <input type="text" id="lecture-search" class="form-control bg-dark text-light border-primary" placeholder="keyword search">
                 <button id="clear-search" class="btn btn-link text-primary position-absolute end-0 top-50 translate-middle-y me-2" style="display: none; text-decoration: none;">&times;</button>
             </div>
         </div>
@@ -74,7 +74,7 @@ include::header.html[]
         </div>
     </div>
 <hr/>
-<div class="d-grid gap-2 d-md-flex justify-content-md-end">
+<div class="d-grid gap-2 d-md-flex justify-content-md-end" id="pdf-export-container" style="display: none;">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <button class="btn btn-secondary btn-sm" id="custom-docs-button">export to pdf</button>
     <script>
@@ -118,7 +118,7 @@ include::header.html[]
       });
     </script>
 </div>
-<div id="custom-docs" class="custom-docs" style="padding: 20px;">
+<div id="custom-docs" class="custom-docs" style="padding: 20px; display: none;">
 <div id="pdf-header" style="display: none; border-bottom: 1px solid #333; margin-bottom: 20px; padding-bottom: 10px;">
     <div style="display: flex; align-items: center; justify-content: space-between;">
         <div style="display: flex; align-items: center;">

@@ -105,11 +105,28 @@
         // REORDER PANELS BY CLICK ORDER
         $('.tutorial-grid button').on('click', function () {
             var targetId = $(this).attr('data-bs-target');
-            // If it's about to be shown (currently not shown or being toggled)
-            // Bootstrap's collapse plugin will handle the visibility, 
-            // but we want to move the element to the end of the container
+            
+            // Move the element to the end of the container
             // to ensure it appears in the order it was clicked.
             $(targetId).appendTo('#custom-docs');
+
+            // Show PDF export button and the custom-docs panel when a tutorial is active
+            // We use setTimeout to allow Bootstrap to start the collapse animation/state change
+            var checkVisibility = function() {
+                var anyVisible = $('#custom-docs .collapse.show, #custom-docs .collapse.collapsing').length > 0;
+                if (anyVisible) {
+                    $('#pdf-export-container').show();
+                    $('#custom-docs').show();
+                } else {
+                    $('#pdf-export-container').hide();
+                    $('#custom-docs').hide();
+                }
+            };
+            
+            // Check multiple times to catch state transitions
+            setTimeout(checkVisibility, 50);
+            setTimeout(checkVisibility, 250);
+            setTimeout(checkVisibility, 500);
         });
     });
 })(jQuery);
