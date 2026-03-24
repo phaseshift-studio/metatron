@@ -790,12 +790,12 @@ public class MServerTest extends AbstractMetatronTest {
         final List<Map<String, Object>> content = (List<Map<String, Object>>) result.get("content");
         final String instructionsText = (String) content.get(0).get("text");
 
-        assertTrue(instructionsText.contains("Instructions"),
+        assertTrue(instructionsText.contains("mtron>"),
                 "Instructions list should contain header");
         assertTrue(instructionsText.contains("plus") || instructionsText.contains("Arithmetic"),
                 "Instructions should mention arithmetic operations");
 
-        LOG.info("Instructions: %s", instructionsText);
+        LOG.warn("Instructions: %s", instructionsText);
 
         client.closeBlocking();
     }

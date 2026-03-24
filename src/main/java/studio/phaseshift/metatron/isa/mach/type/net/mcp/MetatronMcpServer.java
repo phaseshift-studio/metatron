@@ -25,11 +25,13 @@ import io.modelcontextprotocol.server.McpServer;
 import io.modelcontextprotocol.server.McpServerFeatures;
 import io.modelcontextprotocol.spec.McpSchema;
 import reactor.core.publisher.Mono;
-import studio.phaseshift.metatron.isa.m.parser.mParser;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.net.mcp.tool.EvaluateCodeTool;
+import studio.phaseshift.metatron.isa.mach.type.net.mcp.tool.GetSystemInfoTool;
+import studio.phaseshift.metatron.isa.mach.type.net.mcp.tool.ListInstTool;
+import studio.phaseshift.metatron.isa.mach.type.net.mcp.tool.ListSpaceTool;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.HashMap;
 import java.util.List;
@@ -64,7 +66,7 @@ public class MetatronMcpServer {
         this.toolDispatcher = new JsonRpcToolDispatcher();
         this.transportProvider = new McpWebSocketTransportProvider(createObjectMapper());
         // Set the tool dispatcher in the transport provider so it can intercept tools/call requests
-        this.transportProvider.setToolDispatcher(toolDispatcher);
+        this.transportProvider.setToolDispatcher(this.toolDispatcher);
         this.mcpServer = buildMcpServer();
         LOG.info("metatron mcp server initialized");
     }
@@ -87,63 +89,71 @@ public class MetatronMcpServer {
         // will be handled by our custom dispatcher
         final McpAsyncServer server = McpServer.async(transportProvider)
                 .serverInfo(SERVER_NAME, SERVER_VERSION)
-                .instructions("metatron mcp server - Execute metatron code and query system state. " +
-                        "Use 'evaluate_code' to run metatron expressions, 'get_system_info' for router details, " +
-                        "and 'list_instructions' to discover available instruction types.")
+                .instructions("metatron mcp server")
                 .capabilities(McpSchema.ServerCapabilities.builder()
                         .tools(true)
                         .resources(false, false)
                         .prompts(false)
                         .build())
-                // Tool: evaluate_code
                 .tools(McpServerFeatures.AsyncToolSpecification.builder()
                         .tool(McpSchema.Tool.builder()
-                                .name("evaluate_code")
-                                .description("Evaluate metatron code and return the result. " +
-                                        "The code is executed in the context of the global router.")
-                                .inputSchema(McpJsonDefaults.getMapper(), createEvaluateCodeSchemaJson())
+                                .name(EvaluateCodeTool.getName())
+                                .description(EvaluateCodeTool.getDescription())
+                                .inputSchema(McpJsonDefaults.getMapper(), EvaluateCodeTool.getJsonSchema())
                                 .build())
                         .callHandler((exchange, request) -> Mono.fromCallable(() -> {
                             // This handler won't be called due to SDK bug, but we keep it for completeness
-                            LOG.warn("SDK tool handler called (unexpected - should use dispatcher)");
+                            LOG.warn("sdk tool handler called (unexpected - should use dispatcher)");
                             return McpSchema.CallToolResult.builder()
-                                    .content(List.of(new McpSchema.TextContent("SDK handler called")))
+                                    .content(List.of(new McpSchema.TextContent("sdk handler called")))
+                                    .build();
+                        }))
+                        .build())
+                .tools(McpServerFeatures.AsyncToolSpecification.builder()
+                        .tool(McpSchema.Tool.builder()
+                                .name(ListSpaceTool.getName())
+                                .description(ListSpaceTool.getDescription())
+                                .inputSchema(McpJsonDefaults.getMapper(), ListSpaceTool.getJsonSchema())
+                                .build())
+                        .callHandler((exchange, request) -> Mono.fromCallable(() -> {
+                            // This handler won't be called due to SDK bug, but we keep it for completeness
+                            LOG.warn("sdk tool handler called (unexpected - should use dispatcher)");
+                            return McpSchema.CallToolResult.builder()
+                                    .content(List.of(new McpSchema.TextContent("sdk handler called")))
+                                    .build();
+                        }))
+                        .build())
+                .tools(McpServerFeatures.AsyncToolSpecification.builder()
+                        .tool(McpSchema.Tool.builder()
+                                .name(ListInstTool.getName())
+                                .description(ListInstTool.getDescription())
+                                .inputSchema(McpJsonDefaults.getMapper(), ListInstTool.getJsonSchema())
+                                .build())
+                        .callHandler((exchange, request) -> Mono.fromCallable(() -> {
+                            // This handler won't be called due to SDK bug, but we keep it for completeness
+                            LOG.warn("sdk tool handler called (unexpected - should use dispatcher)");
+                            return McpSchema.CallToolResult.builder()
+                                    .content(List.of(new McpSchema.TextContent("sdk handler called")))
                                     .build();
                         }))
                         .build())
                 // Tool: get_system_info
                 .tools(McpServerFeatures.AsyncToolSpecification.builder()
                         .tool(McpSchema.Tool.builder()
-                                .name("get_system_info")
-                                .description("Get information about the metatron system including router state, " +
-                                        "server information, and system statistics.")
-                                .inputSchema(McpJsonDefaults.getMapper(), createSystemInfoSchemaJson())
+                                .name(GetSystemInfoTool.getName())
+                                .description(GetSystemInfoTool.getDescription())
+                                .inputSchema(McpJsonDefaults.getMapper(), GetSystemInfoTool.getJsonSchema())
                                 .build())
                         .callHandler((exchange, request) -> Mono.fromCallable(() -> {
-                            LOG.warn("SDK tool handler called (unexpected - should use dispatcher)");
+                            LOG.warn("sdk tool handler called (unexpected - should use dispatcher)");
                             return McpSchema.CallToolResult.builder()
-                                    .content(List.of(new McpSchema.TextContent("SDK handler called")))
-                                    .build();
-                        }))
-                        .build())
-                // Tool: list_instructions
-                .tools(McpServerFeatures.AsyncToolSpecification.builder()
-                        .tool(McpSchema.Tool.builder()
-                                .name("list_instructions")
-                                .description("List available metatron instruction types and their descriptions. " +
-                                        "Optionally filter by category or search term.")
-                                .inputSchema(McpJsonDefaults.getMapper(), createListInstructionsSchemaJson())
-                                .build())
-                        .callHandler((exchange, request) -> Mono.fromCallable(() -> {
-                            LOG.warn("SDK tool handler called (unexpected - should use dispatcher)");
-                            return McpSchema.CallToolResult.builder()
-                                    .content(List.of(new McpSchema.TextContent("SDK handler called")))
+                                    .content(List.of(new McpSchema.TextContent("sdk handler called")))
                                     .build();
                         }))
                         .build())
                 .build();
 
-        LOG.info("MCP server built successfully, session factory should be set");
+        LOG.info("mcp server built successfully, session factory should be set");
         return server;
     }
 
@@ -152,170 +162,23 @@ public class MetatronMcpServer {
      * These handlers will actually be invoked when tools/call requests arrive.
      */
     private void registerToolsWithDispatcher() {
-        LOG.info("Registering tools with custom dispatcher");
-
-        // Tool: evaluate_code
-        toolDispatcher.registerTool(
-                McpSchema.Tool.builder()
-                        .name("evaluate_code")
-                        .description("Evaluate metatron code and return the result. " +
-                                "The code is executed in the context of the global router.")
-                        .inputSchema(McpJsonDefaults.getMapper(), createEvaluateCodeSchemaJson())
-                        .build(),
-                args -> {
-                    try {
-                        LOG.info("evaluate_code tool handler invoked via dispatcher");
-                        String code = args.get("code").toString();
-                        LOG.debug("Evaluating code: %s", code);
-
-                        // Execute code through Router - read and apply
-                        Obj codeObj = mParser.parse(code);
-                        Obj result = codeObj.apply();
-
-                        String resultStr = result.toString();
-                        LOG.debug("Evaluation result: %s", resultStr);
-
-                        return McpSchema.CallToolResult.builder()
-                                .content(List.of(new McpSchema.TextContent(resultStr)))
-                                .isError(false)
-                                .build();
-                    } catch (Exception e) {
-                        LOG.error("Error evaluating code: %s", e.getMessage());
-                        return McpSchema.CallToolResult.builder()
-                                .content(List.of(new McpSchema.TextContent("Error: " + e.getMessage())))
-                                .isError(true)
-                                .build();
-                    }
-                }
-        );
-
-        // Tool: get_system_info
-        toolDispatcher.registerTool(
-                McpSchema.Tool.builder()
-                        .name("get_system_info")
-                        .description("Get information about the metatron system including router state, " +
-                                "server information, and system statistics.")
-                        .inputSchema(McpJsonDefaults.getMapper(), createSystemInfoSchemaJson())
-                        .build(),
-                args -> {
-                    try {
-                        LOG.info("get_system_info tool handler invoked via dispatcher");
-                        StringBuilder info = new StringBuilder();
-                        info.append("=== Metatron System Information ===\n\n");
-
-                        if (Router.loaded()) {
-                            Router router = Router.global();
-                            info.append("Router VID: ").append(router.vid()).append("\n");
-                            info.append("Router TID: ").append(router.tid()).append("\n");
-
-                            if (router.server() != null) {
-                                info.append("Server Host: ").append(router.server().host()).append("\n");
-                                info.append("Server Running: ").append(router.server().isRunning()).append("\n");
-                            }
-
-                            if (router.stats() != null) {
-                                info.append("\nStatistics:\n");
-                                info.append("  I/O Stats: ").append(router.stats().ioStats()).append("\n");
-                            }
-                        } else {
-                            info.append("Router not loaded\n");
-                        }
-
-                        return McpSchema.CallToolResult.builder()
-                                .content(List.of(new McpSchema.TextContent(info.toString())))
-                                .isError(false)
-                                .build();
-                    } catch (Exception e) {
-                        LOG.error("Error getting system info: %s", e.getMessage());
-                        return McpSchema.CallToolResult.builder()
-                                .content(List.of(new McpSchema.TextContent("Error: " + e.getMessage())))
-                                .isError(true)
-                                .build();
-                    }
-                }
-        );
-
-        // Tool: list_instructions
-        toolDispatcher.registerTool(
-                McpSchema.Tool.builder()
-                        .name("list_instructions")
-                        .description("List available metatron instruction types and their descriptions. " +
-                                "Optionally filter by category or search term.")
-                        .inputSchema(McpJsonDefaults.getMapper(), createListInstructionsSchemaJson())
-                        .build(),
-                args -> {
-                    try {
-                        LOG.info("list_instructions tool handler invoked via dispatcher");
-                        String filter = args.containsKey("filter") ? args.get("filter").toString() : null;
-
-                        StringBuilder result = new StringBuilder();
-                        result.append("=== Metatron Instructions ===\n\n");
-
-                        // TODO: Implement instruction listing from mInstSet
-                        // For now, provide basic instruction categories
-                        result.append("Core Instructions:\n");
-                        result.append("  - Arithmetic: plus, mult, neg, minus\n");
-                        result.append("  - Logic: and, or, not\n");
-                        result.append("  - Relations: id, compose, domain, range\n");
-                        result.append("  - Collections: lst, objs, map\n");
-                        result.append("  - Control: if, loop, apply\n");
-                        result.append("\nUse evaluate_code to execute instructions.\n");
-
-                        return McpSchema.CallToolResult.builder()
-                                .content(List.of(new McpSchema.TextContent(result.toString())))
-                                .isError(false)
-                                .build();
-                    } catch (Exception e) {
-                        LOG.error("Error listing instructions: %s", e.getMessage());
-                        return McpSchema.CallToolResult.builder()
-                                .content(List.of(new McpSchema.TextContent("Error: " + e.getMessage())))
-                                .isError(true)
-                                .build();
-                    }
-                }
-        );
-
-        LOG.info("Registered %d tools with custom dispatcher", toolDispatcher.getTools().size());
+        LOG.info("registering tools with custom dispatcher");
+        /// ////////////////////////////////////////////////////////////////////////////////////////////////////////
+        final Tuple.Pair<McpSchema.Tool, JsonRpcToolDispatcher.ToolHandler> evaluateCodeTool = EvaluateCodeTool.create();
+        toolDispatcher.registerTool(evaluateCodeTool.get0(), evaluateCodeTool.get1());
+        /// ////////////////////////////////////////////////////////////////////////////////////////////////////////
+        final Tuple.Pair<McpSchema.Tool, JsonRpcToolDispatcher.ToolHandler> listSpaceTool = ListSpaceTool.create();
+        toolDispatcher.registerTool(listSpaceTool.get0(), listSpaceTool.get1());
+        /// ////////////////////////////////////////////////////////////////////////////////////////////////////////
+        final Tuple.Pair<McpSchema.Tool, JsonRpcToolDispatcher.ToolHandler> listInstTool = ListInstTool.create();
+        toolDispatcher.registerTool(listInstTool.get0(), listInstTool.get1());
+        /// ////////////////////////////////////////////////////////////////////////////////////////////////////////
+        final Tuple.Pair<McpSchema.Tool, JsonRpcToolDispatcher.ToolHandler> getSytemInfoTool = GetSystemInfoTool.create();
+        toolDispatcher.registerTool(getSytemInfoTool.get0(), getSytemInfoTool.get1());
+        /// ////////////////////////////////////////////////////////////////////////////////////////////////////////
+        LOG.info("registered %d tools with custom dispatcher", this.toolDispatcher.getTools().size());
     }
-
-    private String createEvaluateCodeSchemaJson() {
-        return """
-               {
-                 "type": "object",
-                 "properties": {
-                   "code": {
-                     "type": "string",
-                     "description": "metatron code to evaluate"
-                   }
-                 },
-                 "required": ["code"]
-               }
-               """;
-    }
-
-    private String createSystemInfoSchemaJson() {
-        return """
-               {
-                 "type": "object",
-                 "properties": {}
-               }
-               """;
-    }
-
-    private String createListInstructionsSchemaJson() {
-        return """
-               {
-                 "type": "object",
-                 "properties": {
-                   "filter": {
-                     "type": "string",
-                     "description": "Optional filter to search for specific instructions"
-                   }
-                 }
-               }
-               """;
-    }
-
+    
     @SuppressWarnings("unchecked")
     protected Map<String, Object> extractArguments(final McpSchema.CallToolRequest request) {
         final Object args = request.arguments();
