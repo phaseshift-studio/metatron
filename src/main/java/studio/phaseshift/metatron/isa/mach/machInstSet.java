@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -51,6 +51,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.MONAD;
+import static studio.phaseshift.metatron.Tokens.TOOL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.DocQ.DOCQ_TYPE;
@@ -78,6 +79,11 @@ import static studio.phaseshift.metatron.isa.mach.io.space.file.fsSpace.makeFile
 import static studio.phaseshift.metatron.isa.mach.io.space.serial.serialSpace.SERIAL_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.mach.type.Machine.MACH_MACHINE_TYPE;
 import static studio.phaseshift.metatron.isa.mach.type.machine.SwarmMachine.MACH_SWARM_MACHINE_TYPE;
+import static studio.phaseshift.metatron.isa.mach.type.net.MServer.MSERVER_TID;
+import static studio.phaseshift.metatron.isa.mach.type.net.mcp.MetatronMcpServer.MACH_SERVER_MCP_SERVER_TID;
+import static studio.phaseshift.metatron.isa.mach.type.net.protocol.MServerProtocolHandler.MACH_SERVER_PROTOCOL_TID;
+import static studio.phaseshift.metatron.isa.mach.type.net.protocol.McpProtocolHandler.MACH_SERVER_MCP_PROTOCOL_TID;
+import static studio.phaseshift.metatron.isa.mach.type.net.protocol.NativeMetatronProtocolHandler.MACH_SERVER_NATIVE_PROTOCOL_TID;
 import static studio.phaseshift.metatron.isa.mach.type.ui.console.Console.CONSOLE_TYPE;
 
 /*
@@ -136,10 +142,33 @@ public class machInstSet extends AbstractInstSet {
             .tid(FILE_TID)
             .vid(IMAGE_TID).create();
 
+    /// //////////////////////////////////////////////////////////////////////
+    public static final Type SERVER_TYPE = Type.Builder.build()
+            .tid(REC_TID)
+            .vid(MSERVER_TID)
+            .create();
+    public static final Type SERVER_PROTOCOL_TYPE = Type.Builder.build()
+            .tid(REC_TID)
+            .vid(f(MACH_SERVER_PROTOCOL_TID))
+            .create();
+    public static final Type NATIVE_SERVER_PROTOCOL_TYPE = Type.Builder.build()
+            .tid(f(MACH_SERVER_PROTOCOL_TID))
+            .vid(f(MACH_SERVER_NATIVE_PROTOCOL_TID))
+            .create();
+    public static final Type MCP_SERVER_PROTOCOL_TYPE = Type.Builder.build()
+            .tid(f(MACH_SERVER_PROTOCOL_TID))
+            .vid(f(MACH_SERVER_MCP_PROTOCOL_TID))
+            .create();
+    public static final Type MCP_SERVER_TYPE = Type.Builder.build()
+            .tid(REC_TID)
+            .vid(f(MACH_SERVER_MCP_SERVER_TID))
+            .isaPredicate(rec(uri(f(TOOL).maybe()), T(INST_TID.maybeSome())))
+            .create();
     public static final Type MACH_MONAD_TYPE = Type.Builder.build().tid(LST_TID).vid(MACH_MONAD_TID).create();
 
     public machInstSet() {
         super(MACH_ISA_TID, MACH_ISA_TID);
+        // Router.global().registerPrefix(f("mach"), MACH_ISA_TID);
     }
 
     @Override
@@ -160,6 +189,12 @@ public class machInstSet extends AbstractInstSet {
                 IMAGE_FILE_TYPE,
                 FACTORY_TYPE,
                 M_FACTORY_TYPE,
+                /// /////////////////////
+                SERVER_TYPE,
+                SERVER_PROTOCOL_TYPE,
+                NATIVE_SERVER_PROTOCOL_TYPE,
+                MCP_SERVER_PROTOCOL_TYPE,
+                MCP_SERVER_TYPE,
                 /// /////////////////////
                 MACH_MONAD_TYPE,
                 MACH_MACHINE_TYPE,

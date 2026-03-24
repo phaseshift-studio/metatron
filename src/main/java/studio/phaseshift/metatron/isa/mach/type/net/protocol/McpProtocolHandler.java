@@ -21,6 +21,8 @@ package studio.phaseshift.metatron.isa.mach.type.net.protocol;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.modelcontextprotocol.spec.McpServerSession;
 import org.java_websocket.WebSocket;
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.type.net.mcp.MetatronMcpServer;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 
@@ -28,6 +30,9 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.mach.type.net.MServer.MSERVER_TID;
 
 /**
  * MCP (Model Context Protocol) protocol handler.
@@ -39,24 +44,22 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class McpProtocolHandler implements MServerProtocolHandler {
+public class McpProtocolHandler extends MRec implements MServerProtocolHandler {
+
+    public static final String MACH_SERVER_MCP_PROTOCOL_TID = MSERVER_TID.extend("protocol").extend("mcp").toString();
 
     private final MetatronMcpServer mcpServer;
     private final Map<WebSocket, McpServerSession> mcpSessions = new ConcurrentHashMap<>();
     private final ObjectMapper jsonMapper;
     private final GraphittyLogger LOG;
 
-    public McpProtocolHandler(final GraphittyLogger LOG) {
-        this.LOG = LOG;
+    public McpProtocolHandler(final fURI vid) {
+        super(Map.of(), f(MACH_SERVER_MCP_PROTOCOL_TID), vid);
+        this.LOG = this.logger();
         this.jsonMapper = new ObjectMapper();
         this.jsonMapper.findAndRegisterModules();
-        this.mcpServer = new MetatronMcpServer();
+        this.mcpServer = new MetatronMcpServer(this.vid().extend("server"));
         LOG.info("MCP protocol handler initialized");
-    }
-
-    @Override
-    public String protocolName() {
-        return "mcp";
     }
 
     @Override

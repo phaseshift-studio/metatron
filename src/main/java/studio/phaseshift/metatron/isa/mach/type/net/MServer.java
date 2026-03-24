@@ -24,6 +24,7 @@ import org.java_websocket.server.WebSocketServer;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.reflect.ObjFieldReflection;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjByteBufferSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
@@ -46,11 +47,11 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.mach.type.router.BasicRouter.ROUTER_TID;
+import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_ISA_TID;
 
-public class MServer extends WebSocketServer implements Cluster, Closeable, Obj {
+public class MServer extends WebSocketServer implements Cluster, Closeable, Rec {
 
-    public static final fURI MSERVER_TID = ROUTER_TID.extend("server");
+    public static final fURI MSERVER_TID = MACH_ISA_TID.extend("server");
 
     protected final fURI host;
     protected final ObjSerializer<?> serializer;
@@ -72,27 +73,7 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
         this.peers = peers;
         LOG = Graphitty.log(this);
         this.serializer = new ObjByteBufferSerializer();
-
-        // Initialize protocol handlers
-        initializeProtocolHandlers();
-    }
-
-    /**
-     * Initializes all protocol handlers.
-     * This is where new protocols can be registered.
-     */
-    private void initializeProtocolHandlers() {
-        // Native Metatron protocol (binary Obj serialization)
-        nativeProtocolHandler = new NativeMetatronProtocolHandler(serializer, new HashMap<>(), LOG);
-        protocolHandlers.add(nativeProtocolHandler);
-
-        // MCP protocol (JSON-RPC 2.0)
-        mcpProtocolHandler = new McpProtocolHandler(LOG);
-        protocolHandlers.add(mcpProtocolHandler);
-
-        LOG.info("Initialized %d protocol handlers: %s",
-                protocolHandlers.size(),
-                protocolHandlers.stream().map(MServerProtocolHandler::protocolName).toList());
+        Obj.Helper.objCheckAndSave(this);
     }
 
     public boolean isRunning() {
@@ -130,6 +111,17 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
             } catch (final Exception e) {
                 // do nothing
             }
+            // Native Metatron protocol (binary Obj serialization)
+            nativeProtocolHandler = new NativeMetatronProtocolHandler(serializer, Map.of(), this.vid().extend("protocol/native"));
+            protocolHandlers.add(nativeProtocolHandler);
+
+            // MCP protocol (JSON-RPC 2.0)
+            mcpProtocolHandler = new McpProtocolHandler(this.vid().extend("protocol/mcp"));
+            protocolHandlers.add(mcpProtocolHandler);
+
+            LOG.info("Initialized %d protocol handlers: %s",
+                    protocolHandlers.size(),
+                    protocolHandlers.stream().map(h -> h.tid().name()).toList());
         } else {
             throw MTronException.of("unable to start server as router not loaded");
         }
@@ -180,7 +172,7 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
         for (final MServerProtocolHandler handler : protocolHandlers) {
             if (handler.canHandle(message)) {
                 Router.global().stats().ioStats().setLastMessage(message);
-                LOG.debug("Routing message to %s protocol handler", handler.protocolName());
+                LOG.debug("Routing message to %s protocol handler", handler.tid().name());
                 handler.handleMessage(conn, message);
                 return;
             }
@@ -198,7 +190,7 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
         for (final MServerProtocolHandler handler : protocolHandlers) {
             if (handler.canHandle(message)) {
                 Router.global().stats().ioStats().setLastMessage(new String(message.array()));
-                LOG.debug("Routing message to %s protocol handler", handler.protocolName());
+                LOG.debug("Routing message to %s protocol handler", handler.tid().name());
                 handler.handleMessage(conn, message);
                 return;
             }
@@ -222,8 +214,8 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
     }
 
     @Override
-    public WebSocketServer jvm() {
-        return this;
+    public Map<Obj,Obj> jvm() {
+        return Map.of();
     }
 
     @Override
@@ -269,7 +261,7 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
      */
     public MServerProtocolHandler getProtocolHandler(final String protocolName) {
         return protocolHandlers.stream()
-                .filter(h -> h.protocolName().equals(protocolName))
+                .filter(h -> h.tid().name().equals(protocolName))
                 .findFirst()
                 .orElse(null);
     }

@@ -19,14 +19,17 @@
 package studio.phaseshift.metatron.isa.mach.type.net.protocol;
 
 import org.java_websocket.WebSocket;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 
 import java.nio.ByteBuffer;
+
+import static studio.phaseshift.metatron.isa.mach.type.net.MServer.MSERVER_TID;
 
 /**
  * Protocol handler interface for MServer.
  * Allows MServer to support multiple communication protocols (native Metatron, MCP, etc.)
  * by delegating message handling to protocol-specific implementations.
- *
+ * <p>
  * Each protocol handler is responsible for:
  * - Detecting if a message belongs to its protocol
  * - Processing messages in its protocol format
@@ -35,16 +38,13 @@ import java.nio.ByteBuffer;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public interface MServerProtocolHandler {
+public interface MServerProtocolHandler extends Rec {
 
-    /**
-     * Returns the name of this protocol (e.g., "native", "mcp", "agent").
-     */
-    String protocolName();
+    public static final String MACH_SERVER_PROTOCOL_TID = MSERVER_TID.extend("protocol").toString();
 
-    
+
     int connections();
-    
+
     /**
      * Checks if a string message belongs to this protocol.
      * This is used for protocol detection when a text message arrives.
@@ -66,7 +66,7 @@ public interface MServerProtocolHandler {
     /**
      * Handles an incoming text message.
      *
-     * @param conn The WebSocket connection
+     * @param conn    The WebSocket connection
      * @param message The text message
      */
     void handleMessage(final WebSocket conn, final String message);
@@ -74,7 +74,7 @@ public interface MServerProtocolHandler {
     /**
      * Handles an incoming binary message.
      *
-     * @param conn The WebSocket connection
+     * @param conn    The WebSocket connection
      * @param message The binary message
      */
     void handleMessage(final WebSocket conn, final ByteBuffer message);
@@ -91,8 +91,8 @@ public interface MServerProtocolHandler {
      * Called when a WebSocket connection is closed.
      * Allows the protocol handler to clean up connection-specific state.
      *
-     * @param conn The WebSocket connection
-     * @param code The close code
+     * @param conn   The WebSocket connection
+     * @param code   The close code
      * @param reason The close reason
      */
     void onConnectionClose(final WebSocket conn, final int code, final String reason);

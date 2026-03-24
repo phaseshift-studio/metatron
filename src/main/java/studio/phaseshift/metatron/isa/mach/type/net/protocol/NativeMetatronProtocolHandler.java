@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.mach.type.net.protocol;
 import org.java_websocket.WebSocket;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
@@ -28,9 +29,12 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import java.nio.ByteBuffer;
 import java.util.Map;
 
+import static studio.phaseshift.metatron.Tokens.NAME;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.mach.type.net.MServer.MSERVER_TID;
 
 /**
  * Native Metatron protocol handler.
@@ -41,8 +45,10 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class NativeMetatronProtocolHandler implements MServerProtocolHandler {
+public class NativeMetatronProtocolHandler extends MRec implements MServerProtocolHandler {
 
+    public static final String MACH_SERVER_NATIVE_PROTOCOL_TID = MSERVER_TID.extend("protocol").extend("native").toString();
+    
     private final ObjSerializer<?> serializer;
     private final Map<fURI, WebSocket> cluster;
     private final GraphittyLogger LOG;
@@ -50,15 +56,11 @@ public class NativeMetatronProtocolHandler implements MServerProtocolHandler {
     public NativeMetatronProtocolHandler(
             final ObjSerializer<?> serializer,
             final Map<fURI, WebSocket> cluster,
-            final GraphittyLogger LOG) {
+            final fURI vid) {
+        super(Map.of(), f(MACH_SERVER_NATIVE_PROTOCOL_TID), vid);
         this.serializer = serializer;
         this.cluster = cluster;
-        this.LOG = LOG;
-    }
-
-    @Override
-    public String protocolName() {
-        return "native";
+        this.LOG = this.logger();
     }
 
     @Override

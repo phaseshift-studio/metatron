@@ -99,7 +99,26 @@ public class JsonRpcToolDispatcher {
                 return method != null && "tools/call".equals(method.toString());
             }
         } catch (final Exception e) {
-            LOG.debug("Failed to check if message is tool call: %s", e.getMessage());
+            LOG.debug("failed to check if message is tool call: %s", e.getMessage());
+        }
+        return false;
+    }
+
+    /**
+     * Check if a JSON-RPC message is a tools/list request.
+     *
+     * @param message The raw JSON message string
+     * @return true if this is a tools/list request
+     */
+    public boolean isToolListRequest(final String message) {
+        try {
+            final Obj parsed = JSON_SERIALIZER.parse(message);
+            if (parsed.isRec()) {
+                final Obj method = parsed.recValue().get(uri("method"));
+                return method != null && "tools/list".equals(method.toString());
+            }
+        } catch (final Exception e) {
+            LOG.debug("failed to check if message is tool list: %s", e.getMessage());
         }
         return false;
     }

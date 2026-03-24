@@ -40,9 +40,15 @@ This directory contains AI-generated documentation that serves as memory for wor
   - **Status**: 📋 Exploration phase
 
 ### MCP Server Implementation
+- **`mcp-annotation-system.md`** - ✅ **NEW** - Annotation-based tool creation framework
+  - Declarative `@McpTool`, `@McpParameter`, `@McpHandler` annotations
+  - Auto-generates JSON schemas from annotations
+  - Reduces boilerplate, improves type safety
+  - **Status**: ✅ Implemented and ready to use
+
 - **`mcp-custom-dispatcher-solution.md`** - ✅ **WORKING SOLUTION** - Custom JSON-RPC tool dispatcher
   - Bypasses MCP SDK bug using ObjSimpleJSONSerializer
-  - All 3 tools working: evaluate_code, get_system_info, list_instructions
+  - All 4 tools working: evaluate_code, get_system_info, list_instructions, list_space
   - Complete implementation guide and connection info
   - **Status**: ✅ Fully functional MCP server
 
