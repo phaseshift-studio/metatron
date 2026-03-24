@@ -145,4 +145,9 @@ public class mParserTest extends AbstractMetatronTest {
         assertTrue(mParser.parse("plus()").asInst().jvm().get0().isEmpty());
         assertEquals(0, mParser.parse("plus()").asInst().jvm().get0().count());
     }
+
+    @Test
+    public void testSugar() {
+        assertEquals(lst(jnt(1), lst(jnt(1), lst(jnt(1)))), mParser.parse("1-<[_,-<[_,-<[_]]]").apply());
+    }
 }

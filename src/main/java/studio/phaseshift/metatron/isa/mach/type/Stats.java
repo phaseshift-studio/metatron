@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_ISA_TID;
 
@@ -53,12 +54,28 @@ public interface Stats {
             return this.at(uri("bytes_sent"), jnt(this.at(uri("bytes_sent")).intValue() + (int) bytes), MUTABLE).as();
         }
 
+        default IOStats setLastMessage(final String message) {
+            return this.at(uri("last_message"), str(message), MUTABLE).as();
+        }
+
+        default IOStats setConnections(final int connections) {
+            return this.at(uri("connections"), jnt(connections), MUTABLE).as();
+        }
+
         default long bytesSent() {
-            return this.at(uri("bytes_sent")).intValue();
+            return this.at(uri("bytes_sent")).orElse(jnt(0)).intValue().intValue();
         }
 
         default long bytesRecv() {
-            return this.at(uri("bytes_recv")).intValue();
+            return this.at(uri("bytes_recv")).orElse(jnt(0)).intValue().intValue();
+        }
+
+        default String lastMessage() {
+            return this.at(uri("last_message")).orElse(str("")).strValue();
+        }
+
+        default int connections() {
+            return this.at(uri("connections")).orElse(jnt(0)).intValue().intValue();
         }
 
     }

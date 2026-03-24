@@ -39,14 +39,14 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
        q         => [subq::[=>]]]@/sys/space/usr;
  mem::[pattern   => /shared/#,
        persist   => </tmp/shared.mtron>]@/sys/space/shared;
- meta::[pattern  => </a/cluster/#>,
+ [==meta::[pattern  => </a/cluster/#>,
         host     => <ws://localhost:6666>,
         route    => [</a/cluster>=></shared>],
         peers    => !*boot/peers]@/sys/space/meta1;
  meta::[pattern  => </b/cluster/#>,
         host     => <ws://127.0.0.1:7777>,
         route    => [</b/cluster>=></shared>],
-        peers    => !*boot/peers]@/sys/space/meta2;
+        peers    => !*boot/peers]@/sys/space/meta2;==]
  http::[host     => <http://localhost:8777>,
         pattern  => http://#,
         route    => [/     => examples/www,

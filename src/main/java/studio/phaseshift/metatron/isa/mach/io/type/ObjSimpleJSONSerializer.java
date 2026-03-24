@@ -173,8 +173,12 @@ public class ObjSimpleJSONSerializer extends AbstractObjSerializer<JsonElement> 
             }
             throw new IllegalStateException("unknown type: " + json + "::" + json.getAsInt());
         } catch (final Exception e) {
-            LOG.warn("ignoring json parse problem with %s: %s", json, e);
-            return NoObj.noobj();
+            try {
+                return mParser.parse(json.getAsString()).apply();
+            } catch (final Exception e2) {
+                LOG.warn("ignoring json parse problem with %s: %s", json, e);
+                return NoObj.noobj();
+            }
         }
     }
 

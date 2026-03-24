@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -28,6 +28,9 @@ import studio.phaseshift.metatron.isa.m.type.reflect.ObjFieldReflection;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjByteBufferSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.net.protocol.MServerProtocolHandler;
+import studio.phaseshift.metatron.isa.mach.type.net.protocol.McpProtocolHandler;
+import studio.phaseshift.metatron.isa.mach.type.net.protocol.NativeMetatronProtocolHandler;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
@@ -42,10 +45,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.mach.type.router.BasicRouter.ROUTER_TID;
 
 public class MServer extends WebSocketServer implements Cluster, Closeable, Obj {
@@ -61,12 +61,38 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
     final AtomicBoolean running = new AtomicBoolean(false);
     protected final List<fURI> peers;
 
+    // Protocol handlers for multi-protocol support
+    protected final List<MServerProtocolHandler> protocolHandlers = new ArrayList<>();
+    protected MServerProtocolHandler nativeProtocolHandler;
+    protected MServerProtocolHandler mcpProtocolHandler;
+
     public MServer(final fURI host, final List<fURI> peers) {
         super(new InetSocketAddress(host.host(), host.port()));
         this.host = host;
         this.peers = peers;
         LOG = Graphitty.log(this);
         this.serializer = new ObjByteBufferSerializer();
+
+        // Initialize protocol handlers
+        initializeProtocolHandlers();
+    }
+
+    /**
+     * Initializes all protocol handlers.
+     * This is where new protocols can be registered.
+     */
+    private void initializeProtocolHandlers() {
+        // Native Metatron protocol (binary Obj serialization)
+        nativeProtocolHandler = new NativeMetatronProtocolHandler(serializer, new HashMap<>(), LOG);
+        protocolHandlers.add(nativeProtocolHandler);
+
+        // MCP protocol (JSON-RPC 2.0)
+        mcpProtocolHandler = new McpProtocolHandler(LOG);
+        protocolHandlers.add(mcpProtocolHandler);
+
+        LOG.info("Initialized %d protocol handlers: %s",
+                protocolHandlers.size(),
+                protocolHandlers.stream().map(MServerProtocolHandler::protocolName).toList());
     }
 
     public boolean isRunning() {
@@ -86,6 +112,7 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
                 super.setDaemon(true);
                 Runtime.getRuntime().addShutdownHook(new Thread(this::close));
                 this.running.set(true);
+
                 super.start();
                 LOG.trace("server started: %s", this.getAddress());
                 this.peers.forEach(
@@ -114,8 +141,11 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
 
     @Override
     public void close() {
-        LOG.info("closing %s node {{b}}%s{{/b}}", Graphitty.sillyPrint("mtron", true, true), this.host);
+        LOG.debug("closing %s node {{b}}%s{{/b}}", Graphitty.sillyPrint("mtron", true, true), this.host);
         try {
+            // Shutdown all protocol handlers
+            protocolHandlers.forEach(MServerProtocolHandler::shutdown);
+
             this.cluster.values().stream().toList().forEach(MConnection::close);
             super.stop(1000, "server shutdown");
         } catch (final InterruptedException e) {
@@ -127,51 +157,55 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
 
     @Override
     public void onOpen(final WebSocket ws, final ClientHandshake handshake) {
-        ws.setAttachment(f("ws://" + ws.getRemoteSocketAddress()));
-        LOG.info("new connection from %s", ws.getRemoteSocketAddress());
+        // ws.setAttachment("ws://" + ws.getRemoteSocketAddress());
+        LOG.debug("new connection from %s", ws.getRemoteSocketAddress());
         this.running.set(true);
-        // broadcast("new connection: " + handshake.getResourceDescriptor()); //This method sends a message to all clients connected
+        // Notify all protocol handlers of new connection
+        protocolHandlers.forEach(handler -> handler.onConnectionOpen(ws));
+        Router.global().stats().ioStats().setConnections(protocolHandlers.stream().mapToInt(MServerProtocolHandler::connections).sum());
     }
 
     @Override
     public void onClose(final WebSocket conn, final int code, final String reason, final boolean remote) {
-        LOG.info("closed %s with exit code %s [reason: %s]", this.cluster.remove(conn.<fURI>getAttachment()), code, reason);
+        // Notify all protocol handlers of connection close
+        protocolHandlers.forEach(handler -> handler.onConnectionClose(conn, code, reason));
+        Router.global().stats().ioStats().setConnections(protocolHandlers.stream().mapToInt(MServerProtocolHandler::connections).sum());
     }
 
     @Override
     public void onMessage(final WebSocket conn, final String message) {
-        LOG.debug("received from %s string [length:%d]", conn.getAttachment(), message.length());
-        this.onMessage(conn, ByteBuffer.wrap(message.getBytes()));
+        //LOG.debug("received from %s string [length:%d]", conn.getAttachment(), message.length());
+
+        // Try each protocol handler until one accepts the message
+        for (final MServerProtocolHandler handler : protocolHandlers) {
+            if (handler.canHandle(message)) {
+                Router.global().stats().ioStats().setLastMessage(message);
+                LOG.debug("Routing message to %s protocol handler", handler.protocolName());
+                handler.handleMessage(conn, message);
+                return;
+            }
+        }
+
+        // No handler found - log warning
+        LOG.warn("No protocol handler found for message from %s", conn.getAttachment());
     }
 
     @Override
     public void onMessage(final WebSocket conn, final ByteBuffer message) {
-        LOG.debug("received from %s byte buffer [length:%d]", conn.getAttachment(), message.array().length);
-        Router.global().stats().ioStats().incrBytesRecv(message.array().length);
-        try {
-            final Obj obj = this.serializer.inputBytes(message);// this.serializer.read(message);
-            this.onObj(conn, obj);
-        } catch (final Exception e) {
-            this.onObj(conn, fail(e));
-        }
-    }
+        //  LOG.debug("received from %s byte buffer [length:%d]", conn.getAttachment(), message.array().length);
 
-
-    public void onObj(final WebSocket conn, final Obj obj) {
-        Obj result;
-        try {
-            LOG.trace("processing %s for {{b}}%s{{/b}}", obj, conn.getAttachment());
-            result = obj.apply();
-            result = objs(result.stream().map(x -> x.vid(null))); // x.vid(this.host().extend(x.vid()))));
-            final ByteBuffer bytes = this.serializer.outputBytes(result);
-            conn.send(bytes);
-            Router.global().stats().ioStats().incrBytesSent(bytes.array().length);
-            LOG.trace("sent %s for {{b}}%s{{/b}}", result, conn.getAttachment());
-        } catch (final Exception e) {
-            final ByteBuffer bytes = this.serializer.outputBytes(fail(e));
-            conn.send(bytes);
-            Router.global().stats().ioStats().incrBytesRecv(bytes.array().length);
+        // Try each protocol handler until one accepts the message
+        for (final MServerProtocolHandler handler : protocolHandlers) {
+            if (handler.canHandle(message)) {
+                Router.global().stats().ioStats().setLastMessage(new String(message.array()));
+                LOG.debug("Routing message to %s protocol handler", handler.protocolName());
+                handler.handleMessage(conn, message);
+                return;
+            }
         }
+
+        // No handler found - log warning
+        LOG.warn("No protocol handler found for binary message from %s", conn.getAttachment());
     }
 
     @Override
@@ -222,34 +256,21 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
         return this.cluster;
     }
 
-   /* public class MServerClient implements MConnection {
-        private final WebSocket ws;
+    /**
+     * Gets the list of registered protocol handlers.
+     * Useful for introspection and debugging.
+     */
+    public List<MServerProtocolHandler> getProtocolHandlers() {
+        return new ArrayList<>(protocolHandlers);
+    }
 
-        public MServerClient(final WebSocket ws) {
-            this.ws = ws;
-        }
-
-        @Override
-        public void sendObj(final Obj obj) {
-            this.ws.send(serializer.write(obj));
-        }
-
-        @Override
-        public <O extends Obj> FutureObj<O> sendRecvObj(final Obj obj) {
-            final FutureObj<O> future = new FutureObj<>("abc");
-            futures.add(future);
-            this.ws.send(serializer.write(obj));
-            return future;
-        }
-
-        @Override
-        public void close() {
-            this.ws.close();
-        }
-
-        @Override
-        public fURI remoteHost() {
-            return this.ws.getAttachment();
-        }
-    }*/
+    /**
+     * Gets a specific protocol handler by name.
+     */
+    public MServerProtocolHandler getProtocolHandler(final String protocolName) {
+        return protocolHandlers.stream()
+                .filter(h -> h.protocolName().equals(protocolName))
+                .findFirst()
+                .orElse(null);
+    }
 }

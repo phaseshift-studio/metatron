@@ -104,6 +104,7 @@ public class Model extends MRec {
                     .id(this.memory().get())
                     .chatMemoryStore(SpaceChatMemoryStore.single())
                     .build());
+        //service.tools()
         tools().ifPresent(t -> service.tools(t).executeToolsConcurrently(BootLoader.getExecutor()));
 
         /// ////////////////////////////////////////////////////////////////////////////////////////

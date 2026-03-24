@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -75,6 +75,19 @@ public class StatusLine implements Runnable {
         this.addWidget(f("halt"), () -> "{{w}}halt:{{y}}%d".formatted(Router.global().stats().monadicStats().haltedMonads()));
         this.addWidget(f("kill"), () -> "{{w}}kill:{{y}}%d".formatted(Router.global().stats().monadicStats().killedMonads()));
         this.addWidget(f("barrier"), () -> "{{w}}barrier:{{y}}%d".formatted(Router.global().stats().monadicStats().barrierMonads()));
+        this.addWidget(f("ws"), () -> "{{w}}ws:{{y&[g]}}[%d]{{[%s]}} %s".formatted(Router.global().stats().ioStats().connections(), this.getColor(), formatMessage(Router.global().stats().ioStats().lastMessage())));
+    }
+
+    private String formatMessage(final String message) {
+        String newMessage = Graphitty.strip(message.trim());
+        while (newMessage.startsWith("\""))
+            newMessage = newMessage.substring(1);
+        while (newMessage.endsWith("\""))
+            newMessage = newMessage.substring(0, newMessage.length() - 1);
+        newMessage = newMessage.replace("\\n", "\\").trim();
+        while (newMessage.endsWith("\\"))
+            newMessage = newMessage.substring(0, newMessage.length() - 1);
+        return newMessage;
     }
 
 

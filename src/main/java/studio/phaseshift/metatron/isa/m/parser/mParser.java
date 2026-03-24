@@ -229,6 +229,8 @@ public class mParser {
         return seq(opt(objParser, null), opt(of(".").trim(), '.'), opt(m_code(), null), m_vid_postfix()).map(t -> {
             final Obj first = mParser.pick(t, 0);
             final Obj second = mParser.pick(t, 2);
+            if(null == first)
+                return second;
             if (null == second)
                 return first;
             final List<Inst> newCode = new ArrayList<>();
