@@ -3,13 +3,30 @@
 
 The exception handling architecture of metatron leverages a fail monad with some unique features novel to metatron. The fail monad as two states: propagating and caught.
 
+[cols="6a,4a",separator=🧱,role="table-bordered small center"]
+|===
+🧱
 ++++
 <!-- 🐖 
 [HIDDEN] /sys/fail/+ -> noobj
-1.plus(b).plus(3)                 [-- <1>
-1.plus(b).catch(2).plus(3)        [-- <2>
+1.plus(b).plus(3).mult(5)                 [-- <1>
+1.plus(b).plus(3).catch(2).mult(5)        [-- <2>
 -->
 ++++
+🧱
+[source,mtron]
+----
+      ┌─────────────────►          
+      │ 
+──────►
+1.plus(b).plus(3).mult(5)
+
+      ┌───────────┐          
+      │           │          
+──────►           ▼──────────────►
+1.plus(b).plus(3).catch(2).mult(5)
+----
+|===
 
 <1> (*propagating*) `plus?\<=int(b)(int::T)` is not a valid instruction and a `fail::T` monad is generated.
 <2> (*caught*) `catch?A{+*+}\<=A(A{+*+}::T)` will apply a lhs `fail::T` to its argument, else it will allow the lhs `obj` to pass through unmanipulated.
