@@ -43,6 +43,12 @@
     $(document).ready(function () {
         // Toggle dark theme for the tutorial section based on system/user preference if needed
         // but for now, we just ensure it's readable.
+
+        // Initialize tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        })
     });
 
     // LECTURE SEARCH FILTERING
@@ -66,40 +72,82 @@
                 tokens.push(match[1] || match[2] || match[0]);
             }
 
-            $('.tutorial-grid button').each(function () {
-                var btnText = $(this).text().toLowerCase();
-                var targetId = $(this).attr('data-bs-target');
-                var contentText = $(targetId).text().toLowerCase();
-                var fullSearchableText = btnText + " " + contentText;
-                
-                var toggle = true;
-                if (tokens.length > 0) {
-                    // All tokens must be present (AND logic)
-                    for (var i = 0; i < tokens.length; i++) {
-                        if (fullSearchableText.indexOf(tokens[i]) === -1) {
-                            toggle = false;
-                            break;
+            var firstMatchingSlide = -1;
+            $('.carousel-item').each(function (slideIndex) {
+                var slideHasVisible = false;
+                $(this).find('.tutorial-grid button').each(function () {
+                    var btnText = $(this).text().toLowerCase();
+                    var targetId = $(this).attr('data-bs-target');
+                    var contentText = $(targetId).text().toLowerCase();
+                    var fullSearchableText = btnText + " " + contentText;
+                    
+                    var toggle = true;
+                    if (tokens.length > 0) {
+                        // All tokens must be present (AND logic)
+                        for (var i = 0; i < tokens.length; i++) {
+                            if (fullSearchableText.indexOf(tokens[i]) === -1) {
+                                toggle = false;
+                                break;
+                            }
                         }
                     }
-                }
 
-                $(this).toggle(toggle);
+                    $(this).toggle(toggle);
+                    if (toggle) slideHasVisible = true;
+                });
+
+                if (slideHasVisible && firstMatchingSlide === -1) {
+                    firstMatchingSlide = slideIndex;
+                }
             });
-            
-            // Hide parent rows if all buttons inside are hidden
-            $('.tutorial-grid').each(function() {
-                var buttons = $(this).find('button');
-                var hasVisible = buttons.filter(function() {
-                    return $(this).css('display') !== 'none';
-                }).length > 0;
-                $(this).toggle(hasVisible);
-            });
+
+            if (tokens.length > 0 && firstMatchingSlide !== -1) {
+                // If there's a match, prefer jumping to a topic slide (index > 0)
+                // if it's the first match, but if we only match in 'All', that's fine too.
+                // Actually, the current logic finds the FIRST matching slide.
+                // Since 'All' is index 0, it will always match 'All' first if it matches anything.
+                // We might want to jump to the specific topic instead if it's not 'All'.
+                
+                var bestMatch = firstMatchingSlide;
+                if (bestMatch === 0) {
+                    // Look if there's a match in subsequent slides (the specific topics)
+                    $('.carousel-item').each(function(idx) {
+                        if (idx > 0) {
+                            var matchInTopic = false;
+                            $(this).find('.tutorial-grid button').each(function() {
+                                if ($(this).css('display') !== 'none') {
+                                    matchInTopic = true;
+                                    return false;
+                                }
+                            });
+                            if (matchInTopic) {
+                                bestMatch = idx;
+                                return false;
+                            }
+                        }
+                    });
+                }
+                $('#tutorial-carousel').carousel(bestMatch);
+            }
         });
 
         // Clear search button functionality
         $('#clear-search').on('click', function() {
             $(this).hide();
             $('#lecture-search').val('').keyup().focus();
+        });
+
+        // CAROUSEL JUMP BUTTONS
+        $('.carousel-jump').on('click', function() {
+            var slideTo = $(this).attr('data-bs-slide-to');
+            $('#tutorial-carousel').carousel(parseInt(slideTo));
+        });
+
+        // UPDATE ACTIVE BUTTON ON CAROUSEL SLIDE
+        $('#tutorial-carousel').on('slid.bs.carousel', function (e) {
+            var index = e.to;
+            $('.carousel-jump').removeClass('active');
+            $('.carousel-jump[data-bs-slide-to="' + index + '"]').addClass('active');
         });
 
         // REORDER PANELS BY CLICK ORDER
@@ -109,6 +157,10 @@
             // Move the element to the end of the container
             // to ensure it appears in the order it was clicked.
             $(targetId).appendTo('#custom-docs');
+
+            // Hide tooltip when button is clicked (to avoid it staying on screen)
+            var tooltip = bootstrap.Tooltip.getInstance(this);
+            if (tooltip) tooltip.hide();
 
             // Show PDF export button and the custom-docs panel when a tutorial is active
             // We use setTimeout to allow Bootstrap to start the collapse animation/state change
@@ -127,6 +179,25 @@
             setTimeout(checkVisibility, 50);
             setTimeout(checkVisibility, 250);
             setTimeout(checkVisibility, 500);
+        });
+
+        // Handle close button click to update container visibility
+        $('#custom-docs').on('click', '.btn-close', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            // Find the ID of the collapse panel this close button belongs to
+            var targetId = $(this).attr('data-bs-target');
+            
+            // Find the corresponding grid button that toggles this panel
+            // and trigger a click on it to ensure both the panel closes 
+            // and the button's 'active' state (if any) is updated.
+            // We search in .tutorial-grid to find the button with the same data-bs-target
+            $('.tutorial-grid button[data-bs-target="' + targetId + '"]').first().click();
+
+            // Hide tooltip when close button is clicked
+            var tooltip = bootstrap.Tooltip.getInstance(this);
+            if (tooltip) tooltip.hide();
         });
     });
 })(jQuery);

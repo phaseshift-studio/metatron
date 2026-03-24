@@ -512,19 +512,23 @@ h1 {
 }
 
 .page-header {
-    background: linear-gradient(rgba(0, 0, 0, .875), rgba(0, 0, 0, .875)), url(../images/angel-wings.png) center center no-repeat;
-    background-size: cover;
+    /*background: linear-gradient(rgba(0, 0, 0, .775), rgba(0, 0, 0, .775)), url(../images/angel-wings.png) center center no-repeat;
+    background-size: cover;*/
 }
 
 .breadcrumb-item + .breadcrumb-item::before {
     color: var(--light);
 }
 
+html {
+    overflow-y: scroll;
+}
+
 body {
     margin: 0;
     padding: 0;
-    height: 100vh;
-    background-image: linear-gradient(rgba(0, 0, 0, .875), rgba(0, 0, 0, .875)), url(../images/angel-wings.png);
+    min-height: 100vh;
+    background-image: linear-gradient(rgba(0, 0, 0, .925), rgba(0, 0, 0, .925)), url(../images/angel-wings.png);
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
@@ -600,12 +604,44 @@ body {
     background: var(--secondarycolor);
 }
 
+.custom-docs .collapse {
+    border-bottom: 1px solid var(--mred);
+    padding-bottom: 2rem;
+    margin-bottom: 2rem;
+}
+
+.custom-docs .collapse:last-child {
+    border-bottom: none;
+}
+
+.btn-close:focus {
+    box-shadow: none;
+}
+
+.btn-close-white {
+    filter: invert(1) grayscale(100%) brightness(35%);
+    opacity: 0.8;
+    width: 0.15em;
+    height: 0.15em;
+    position: relative !important;
+    top: -20px !important;
+    left: -20px !important;
+}
+
+.btn-close-white:hover {
+    opacity: 1;
+}
+
 /* ACADEMIC PDF EXPORT MODE (B&W) */
 .pdf-export-mode {
     background: #ffffff !important;
     color: #000000 !important;
     font-family: 'Times New Roman', Times, serif !important;
     padding: 20px !important;
+}
+
+.pdf-export-mode .btn-close {
+    display: none !important;
 }
 
 .pdf-export-mode h1,
