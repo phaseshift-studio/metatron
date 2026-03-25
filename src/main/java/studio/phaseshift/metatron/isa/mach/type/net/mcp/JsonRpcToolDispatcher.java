@@ -18,29 +18,25 @@
 
 package studio.phaseshift.metatron.isa.mach.type.net.mcp;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import io.modelcontextprotocol.spec.McpSchema;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
-
-import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
  * Custom JSON-RPC 2.0 tool dispatcher for MCP.
- *
+ * <p>
  * This dispatcher works around a known bug in MCP Java SDK 1.1.0 where tool handlers
  * are not invoked. It intercepts "tools/call" requests, manually invokes the registered
  * handlers, and constructs proper JSON-RPC responses.
- *
+ * <p>
  * Uses metatron's ObjSimpleJSONSerializer for JSON parsing, providing a lightweight
  * alternative to the SDK's internal routing mechanism.
  *
@@ -49,7 +45,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 public class JsonRpcToolDispatcher {
 
     private static final GraphittyLogger LOG = Graphitty.log(JsonRpcToolDispatcher.class);
-    private static final ObjSimpleJSONSerializer JSON_SERIALIZER = ObjSimpleJSONSerializer.single();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper().configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
 
     /**
      * Tool handler function that takes arguments and returns a CallToolResult.
@@ -69,13 +65,13 @@ public class JsonRpcToolDispatcher {
     /**
      * Register a tool with its handler.
      *
-     * @param tool The tool definition (name, description, schema)
+     * @param tool    The tool definition (name, description, schema)
      * @param handler The handler function to invoke when the tool is called
      */
     public void registerTool(final McpSchema.Tool tool, final ToolHandler handler) {
         toolHandlers.put(tool.name(), handler);
         toolDefinitions.put(tool.name(), tool);
-        LOG.info("Registered tool: %s", tool.name());
+        LOG.info("registered tool: %s", tool.name());
     }
 
     /**
@@ -93,11 +89,10 @@ public class JsonRpcToolDispatcher {
      */
     public boolean isToolCallRequest(final String message) {
         try {
-            final Obj parsed = JSON_SERIALIZER.parse(message);
-            if (parsed.isRec()) {
-                final Obj method = parsed.recValue().get(uri("method"));
-                return method != null && "tools/call".equals(method.toString());
-            }
+            final Map<String, Object> parsed = OBJECT_MAPPER.readValue(message, new com.fasterxml.jackson.core.type.TypeReference<>() {
+            });
+            final Object method = parsed.get("method");
+            return method != null && "tools/call".equals(method.toString());
         } catch (final Exception e) {
             LOG.debug("failed to check if message is tool call: %s", e.getMessage());
         }
@@ -112,15 +107,78 @@ public class JsonRpcToolDispatcher {
      */
     public boolean isToolListRequest(final String message) {
         try {
-            final Obj parsed = JSON_SERIALIZER.parse(message);
-            if (parsed.isRec()) {
-                final Obj method = parsed.recValue().get(uri("method"));
-                return method != null && "tools/list".equals(method.toString());
-            }
+            final Map<String, Object> parsed = OBJECT_MAPPER.readValue(message, new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {
+            });
+            final Object method = parsed.get("method");
+            return method != null && "tools/list".equals(method.toString());
         } catch (final Exception e) {
             LOG.debug("failed to check if message is tool list: %s", e.getMessage());
         }
         return false;
+    }
+
+    /**
+     * Handle a tools/list request and return a JSON-RPC response.
+     *
+     * @param message The raw JSON-RPC request message
+     * @return The JSON-RPC response as a JSON string
+     */
+    public String handleToolList(final String message) {
+        try {
+            LOG.debug("Handling tools/list request");
+
+            // Parse the JSON-RPC request using Jackson
+            final Map<String, Object> requestMap = OBJECT_MAPPER.readValue(message, new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {
+            });
+
+            // Extract request ID
+            final Object requestId = requestMap.get("id");
+
+            // Build tools list from registered tools
+            final List<Map<String, Object>> toolsList = new ArrayList<>();
+            final ObjectMapper mapper = new ObjectMapper();
+
+            for (final McpSchema.Tool tool : toolDefinitions.values()) {
+                final Map<String, Object> toolMap = new HashMap<>();
+                toolMap.put("name", tool.name());
+                toolMap.put("description", tool.description());
+
+                // Convert JsonSchema to a proper object
+                // The JsonSchema is likely a wrapper around JsonNode or similar
+                final McpSchema.JsonSchema schema = tool.inputSchema();
+                try {
+                    // Try to serialize and deserialize to get a proper Map/Object
+                    final String schemaJson = mapper.writeValueAsString(schema);
+                    final Object schemaObj = mapper.readValue(schemaJson, Object.class);
+                    toolMap.put("inputSchema", schemaObj);
+                } catch (final Exception e) {
+                    LOG.warn("failed to convert inputSchema for tool %s: %s", tool.name(), e.getMessage());
+                    // Fallback to empty schema
+                    toolMap.put("inputSchema", Map.of("type", "object", "properties", Map.of()));
+                }
+
+                toolsList.add(toolMap);
+            }
+
+            LOG.debug("returning %d tools", toolsList.size());
+
+            // Create success response
+            final Map<String, Object> result = new HashMap<>();
+            result.put("tools", toolsList);
+
+            final Map<String, Object> response = new HashMap<>();
+            response.put("jsonrpc", "2.0");
+            if (null != requestId)
+                response.put("id", requestId);
+            response.put("result", result);
+
+            // Convert to JSON directly using Jackson (skip ObjSimpleJSONSerializer to avoid conversion errors)
+            return OBJECT_MAPPER.writeValueAsString(response);
+
+        } catch (final Exception e) {
+            LOG.error("Error handling tools/list: %s", e.getMessage());
+            return createErrorResponse(null, -32603, "Internal error", e.getMessage());
+        }
     }
 
     /**
@@ -133,50 +191,43 @@ public class JsonRpcToolDispatcher {
         try {
             LOG.debug("Handling tool call request: %s", message);
 
-            // Parse the JSON-RPC request using ObjSimpleJSONSerializer
-            final Obj requestObj = JSON_SERIALIZER.parse(message);
-
-            if (!requestObj.isRec()) {
-                return createErrorResponse(null, -32600, "Invalid Request", "Request must be a JSON object");
-            }
-
-            // Extract request fields
-            final Map<Obj, Obj> requestMap = requestObj.recValue();
-            final Obj idObj = requestMap.get(uri("id"));
-            final Obj paramsObj = requestMap.get(uri("params"));
+            // Parse the JSON-RPC request using Jackson (NOT ObjSimpleJSONSerializer which evaluates code)
+            final Map<String, Object> requestMap = OBJECT_MAPPER.readValue(message, new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {
+            });
 
             // Extract request ID (required for response)
-            final Object requestId = idObj != null ? extractJsonValue(idObj) : null;
+            final Object requestId = requestMap.get("id");
 
-            if (paramsObj == null || !paramsObj.isRec()) {
+            // Extract params
+            final Object paramsObj = requestMap.get("params");
+            if (!(paramsObj instanceof Map)) {
                 return createErrorResponse(requestId, -32602, "Invalid params", "params must be an object");
             }
 
-            // Extract tool name and arguments from params
-            final Map<Obj, Obj> paramsMap = paramsObj.recValue();
-            final Obj nameObj = paramsMap.get(uri("name"));
-            final Obj argumentsObj = paramsMap.get(uri("arguments"));
+            @SuppressWarnings("unchecked") final Map<String, Object> paramsMap = (Map<String, Object>) paramsObj;
 
+            // Extract tool name
+            final Object nameObj = paramsMap.get("name");
             if (nameObj == null) {
                 return createErrorResponse(requestId, -32602, "Invalid params", "Missing 'name' field");
             }
 
             final String toolName = nameObj.toString();
-            LOG.info("Dispatching tool call: %s", toolName);
+            LOG.debug("dispatching tool call: %s", toolName);
 
             // Get the tool handler
             final ToolHandler handler = toolHandlers.get(toolName);
             if (handler == null) {
                 return createErrorResponse(requestId, -32601, "Method not found",
-                    "Tool '" + toolName + "' not found");
+                        "Tool '" + toolName + "' not found");
             }
 
-            // Extract arguments as a Map
+            // Extract arguments as a Map (keep as raw Java objects, don't convert through Metatron)
             final Map<String, Object> arguments = new HashMap<>();
-            if (argumentsObj != null && argumentsObj.isRec()) {
-                for (final Map.Entry<Obj, Obj> entry : argumentsObj.recValue().entrySet()) {
-                    arguments.put(entry.getKey().toString(), extractJsonValue(entry.getValue()));
-                }
+            final Object argumentsObj = paramsMap.get("arguments");
+            if (argumentsObj instanceof Map) {
+                @SuppressWarnings("unchecked") final Map<String, Object> argsMap = (Map<String, Object>) argumentsObj;
+                arguments.putAll(argsMap);
             }
 
             LOG.debug("Invoking tool handler for: %s with arguments: %s", toolName, arguments);
@@ -194,39 +245,6 @@ public class JsonRpcToolDispatcher {
     }
 
     /**
-     * Extract a Java value from a metatron Obj for JSON serialization.
-     */
-    private Object extractJsonValue(final Obj obj) {
-        if (obj.isNoObj()) {
-            return null;
-        } else if (obj.isBool()) {
-            return obj.boolValue();
-        } else if (obj.isInt()) {
-            return obj.intValue();
-        } else if (obj.isReal()) {
-            return obj.realValue();
-        } else if (obj.isStr()) {
-            return obj.strValue();
-        } else if (obj.isUri()) {
-            return obj.uriValue().toString();
-        } else if (obj.isLst()) {
-            final java.util.List<Object> list = new java.util.ArrayList<>();
-            for (final Obj item : obj.<Iterable<Obj>>jvm()) {
-                list.add(extractJsonValue(item));
-            }
-            return list;
-        } else if (obj.isRec()) {
-            final Map<String, Object> map = new HashMap<>();
-            for (final Map.Entry<Obj, Obj> entry : obj.recValue().entrySet()) {
-                map.put(entry.getKey().toString(), extractJsonValue(entry.getValue()));
-            }
-            return map;
-        } else {
-            return obj.toString();
-        }
-    }
-
-    /**
      * Create a JSON-RPC success response.
      */
     private String createSuccessResponse(final Object id, final McpSchema.CallToolResult result) {
@@ -238,8 +256,8 @@ public class JsonRpcToolDispatcher {
             // Convert CallToolResult to a map
             final Map<String, Object> resultMap = new HashMap<>();
 
-            // Add content array
-            final java.util.List<Map<String, Object>> contentList = new java.util.ArrayList<>();
+            // Convert content array
+            final List<Map<String, Object>> contentList = new ArrayList<>();
             for (final McpSchema.Content content : result.content()) {
                 final Map<String, Object> contentItem = new HashMap<>();
                 if (content instanceof McpSchema.TextContent) {
@@ -265,18 +283,16 @@ public class JsonRpcToolDispatcher {
 
             response.put("result", resultMap);
 
-            // Convert to JSON using ObjSimpleJSONSerializer
-            final Obj responseObj = convertToObj(response);
-            final JsonElement jsonElement = JSON_SERIALIZER.write(responseObj);
-            final String jsonResponse = jsonElement.toString();
+            // Convert to JSON directly using Jackson (skip ObjSimpleJSONSerializer to avoid conversion errors)
+            final String jsonResponse = OBJECT_MAPPER.writeValueAsString(response);
 
-            LOG.debug("Created success response: %s", jsonResponse);
+            LOG.debug("created success response: %s", jsonResponse);
             return jsonResponse;
 
         } catch (final Exception e) {
-            LOG.error("Failed to create success response: %s", e.getMessage());
-            return createErrorResponse(id, -32603, "Internal error",
-                "Failed to serialize response: " + e.getMessage());
+            LOG.error("failed to create success response: %s", e.getMessage());
+            return createErrorResponse(id, -32603, "internal error",
+                    "failed to serialize response: " + e.getMessage());
         }
     }
 
@@ -297,56 +313,19 @@ public class JsonRpcToolDispatcher {
             }
             response.put("error", error);
 
-            // Convert to JSON using ObjSimpleJSONSerializer
-            final Obj responseObj = convertToObj(response);
-            final JsonElement jsonElement = JSON_SERIALIZER.write(responseObj);
-            return jsonElement.toString();
+            // Convert to JSON directly using Jackson (skip ObjSimpleJSONSerializer to avoid conversion errors)
+            return OBJECT_MAPPER.writeValueAsString(response);
 
         } catch (final Exception e) {
             // Fallback to manual JSON construction if serialization fails
             LOG.error("Failed to create error response: %s", e.getMessage());
             return String.format(
-                "{\"jsonrpc\":\"2.0\",\"id\":%s,\"error\":{\"code\":%d,\"message\":\"%s\"}}",
-                id != null ? "\"" + id + "\"" : "null",
-                code,
-                message.replace("\"", "\\\"")
+                    "{\"jsonrpc\":\"2.0\",\"id\":%s,\"error\":{\"code\":%d,\"message\":\"%s\"}}",
+                    id != null ? "\"" + id + "\"" : "null",
+                    code,
+                    message.replace("\"", "\\\"")
             );
         }
     }
 
-    /**
-     * Convert a Java Map/List structure to a metatron Obj for serialization.
-     */
-    private Obj convertToObj(final Object value) {
-        if (value == null) {
-            return studio.phaseshift.metatron.isa.m.type.NoObj.noobj();
-        } else if (value instanceof Boolean) {
-            return studio.phaseshift.metatron.isa.m.type.impl.MBool.bool((Boolean) value);
-        } else if (value instanceof Integer) {
-            return studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt((Integer) value);
-        } else if (value instanceof Long) {
-            return studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt((Long) value);
-        } else if (value instanceof Double) {
-            return studio.phaseshift.metatron.isa.m.type.impl.MReal.real((Double) value);
-        } else if (value instanceof String) {
-            return studio.phaseshift.metatron.isa.m.type.impl.MStr.str((String) value);
-        } else if (value instanceof java.util.List) {
-            final java.util.List<Obj> list = new java.util.ArrayList<>();
-            for (final Object item : (java.util.List<?>) value) {
-                list.add(convertToObj(item));
-            }
-            return studio.phaseshift.metatron.isa.m.type.impl.MLst.lst(list);
-        } else if (value instanceof Map) {
-            final Map<Obj, Obj> map = new java.util.LinkedHashMap<>();
-            for (final Map.Entry<?, ?> entry : ((Map<?, ?>) value).entrySet()) {
-                map.put(
-                    uri(entry.getKey().toString()),
-                    convertToObj(entry.getValue())
-                );
-            }
-            return studio.phaseshift.metatron.isa.m.type.impl.MRec.rec(map);
-        } else {
-            return studio.phaseshift.metatron.isa.m.type.impl.MStr.str(value.toString());
-        }
-    }
 }

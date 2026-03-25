@@ -85,10 +85,7 @@ public class McpWebSocketTransportProvider implements McpServerTransportProvider
         final McpWebSocketTransport transport = new McpWebSocketTransport(webSocket, objectMapper, toolDispatcher);
 
         // Create session using the factory provided by McpServer
-        System.out.println("DEBUG: Creating session with factory");
         final McpServerSession session = sessionFactory.create(transport);
-        System.out.println("DEBUG: Session created: " + session);
-
         // Link the session back to the transport so it can handle incoming messages
         transport.setSession(session);
 

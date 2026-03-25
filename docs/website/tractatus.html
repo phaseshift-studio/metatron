@@ -2744,77 +2744,77 @@ mtron&gt; */m/llm/model
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">​
 mtron&gt; *ollama:+
 ==&gt;model::[
- size    =&gt;gB::4.87,
  provider=&gt;!*/sys/space/ollama,
- think   =&gt;ollama:qwen3:8b/thought,
+ size    =&gt;gB::4.87,
+ skill   =&gt;[completion,tools,thinking],
  name    =&gt;qwen3:8b,
- skill   =&gt;[completion,tools,thinking]]@ollama:qwen3:8b
+ think   =&gt;ollama:qwen3:8b/thought]@ollama:qwen3:8b
 ==&gt;model::[
- size    =&gt;gB::0.00,
  provider=&gt;!*/sys/space/ollama,
- think   =&gt;&lt;ollama:minimax-m2.5:cloud/thought&gt;,
+ size    =&gt;gB::0.00,
+ skill   =&gt;[completion,tools,thinking],
  name    =&gt;&lt;minimax-m2.5:cloud&gt;,
- skill   =&gt;[completion,tools,thinking]]@ollama:minimax-m2.5:cloud
+ think   =&gt;&lt;ollama:minimax-m2.5:cloud/thought&gt;]@ollama:minimax-m2.5:cloud
 ==&gt;model::[
+ provider=&gt;!*/sys/space/ollama,
  size    =&gt;gB::4.87,
- provider=&gt;!*/sys/space/ollama,
- think   =&gt;ollama:qwen3:latest/thought,
+ skill   =&gt;[completion,tools,thinking],
  name    =&gt;qwen3:latest,
- skill   =&gt;[completion,tools,thinking]]@ollama:qwen3:latest
+ think   =&gt;ollama:qwen3:latest/thought]@ollama:qwen3:latest
 ==&gt;model::[
+ provider=&gt;!*/sys/space/ollama,
  size    =&gt;gB::0.59,
- provider=&gt;!*/sys/space/ollama,
- think   =&gt;noobj,
+ skill   =&gt;[completion],
  name    =&gt;tinyllama:latest,
- skill   =&gt;[completion]]@ollama:tinyllama:latest
+ think   =&gt;noobj]@ollama:tinyllama:latest
 ==&gt;model::[
+ provider=&gt;!*/sys/space/ollama,
  size    =&gt;gB::12.85,
- provider=&gt;!*/sys/space/ollama,
- think   =&gt;ollama:gpt-oss:latest/thought,
+ skill   =&gt;[completion,tools,thinking],
  name    =&gt;gpt-oss:latest,
- skill   =&gt;[completion,tools,thinking]]@ollama:gpt-oss:latest
+ think   =&gt;ollama:gpt-oss:latest/thought]@ollama:gpt-oss:latest
 ==&gt;model::[
+ provider=&gt;!*/sys/space/ollama,
  size    =&gt;gB::0.00,
- provider=&gt;!*/sys/space/ollama,
- think   =&gt;&lt;ollama:deepseek-v3.2:cloud/thought&gt;,
+ skill   =&gt;[completion,tools,thinking],
  name    =&gt;&lt;deepseek-v3.2:cloud&gt;,
- skill   =&gt;[completion,tools,thinking]]@ollama:deepseek-v3.2:cloud
+ think   =&gt;&lt;ollama:deepseek-v3.2:cloud/thought&gt;]@ollama:deepseek-v3.2:cloud
 ==&gt;model::[
+ provider=&gt;!*/sys/space/ollama,
  size    =&gt;gB::8.37,
- provider=&gt;!*/sys/space/ollama,
- think   =&gt;noobj,
+ skill   =&gt;[completion],
  name    =&gt;deepcoder:latest,
- skill   =&gt;[completion]]@ollama:deepcoder:latest
+ think   =&gt;noobj]@ollama:deepcoder:latest
 ==&gt;model::[
+ provider=&gt;!*/sys/space/ollama,
  size    =&gt;gB::0.72,
- provider=&gt;!*/sys/space/ollama,
- think   =&gt;noobj,
+ skill   =&gt;[completion],
  name    =&gt;deepseek-coder:latest,
- skill   =&gt;[completion]]@ollama:deepseek-coder:latest
+ think   =&gt;noobj]@ollama:deepseek-coder:latest
 ==&gt;model::[
+ provider=&gt;!*/sys/space/ollama,
  size    =&gt;gB::17.71,
- provider=&gt;!*/sys/space/ollama,
- think   =&gt;&lt;ollama:glm-4.7-flash:latest/thought&gt;,
+ skill   =&gt;[completion,tools,thinking],
  name    =&gt;&lt;glm-4.7-flash:latest&gt;,
- skill   =&gt;[completion,tools,thinking]]@ollama:glm-4.7-flash:latest
+ think   =&gt;&lt;ollama:glm-4.7-flash:latest/thought&gt;]@ollama:glm-4.7-flash:latest
 ==&gt;model::[
+ provider=&gt;!*/sys/space/ollama,
  size    =&gt;gB::4.34,
- provider=&gt;!*/sys/space/ollama,
- think   =&gt;noobj,
+ skill   =&gt;[completion,tools],
  name    =&gt;llama3-groq-tool-use:latest,
- skill   =&gt;[completion,tools]]@ollama:llama3-groq-tool-use:latest
+ think   =&gt;noobj]@ollama:llama3-groq-tool-use:latest
 ==&gt;model::[
+ provider=&gt;!*/sys/space/ollama,
  size    =&gt;gB::4.41,
- provider=&gt;!*/sys/space/ollama,
- think   =&gt;noobj,
+ skill   =&gt;[completion,vision],
  name    =&gt;llava:latest,
- skill   =&gt;[completion,vision]]@ollama:llava:latest
+ think   =&gt;noobj]@ollama:llava:latest
 ==&gt;model::[
- size    =&gt;gB::48.19,
  provider=&gt;!*/sys/space/ollama,
- think   =&gt;noobj,
+ size    =&gt;gB::48.19,
+ skill   =&gt;[completion,tools],
  name    =&gt;qwen3-coder-next:latest,
- skill   =&gt;[completion,tools]]@ollama:qwen3-coder-next:latest
+ think   =&gt;noobj]@ollama:qwen3-coder-next:latest
 ​</code></pre>
 </div>
 </div>
@@ -3697,10 +3697,10 @@ mtron&gt; *#.as[name      =&gt; _,
 </table>
 <h3 id="_spatial_embeddings" class="discrete">spatial embeddings</h3>
 <div class="paragraph">
-<p><span class="green">m</span>​<span class="orange">e</span>​<span class="aqua">T</span>​<strong class="blue">A</strong>​<span class="fuchsia">t</span>​<span class="red">r</span>​<span class="lime">O</span>​<strong class="yellow">N</strong>​ was designed to support the creation and manipulation of <em>abstract data types</em> in a compact, fluid manner so as to allow the user to move smoothly between <em>multiple models</em> across different spaces, each espousing a different perspective on the data their maintain: e.g., key/value, document, relational, vector, graph, and the various nooks and crannies between.</p>
+<p><span class="orange">M</span>​<span class="green">E</span>​<strong class="fuchsia">t</strong>​<span class="blue">a</span>​<strong class="lime">t</strong>​<strong class="yellow">R</strong>​<span class="red">o</span>​<span class="aqua">n</span>​ was designed to support the creation and manipulation of <em>abstract data types</em> in a compact, fluid manner so as to allow the user to move smoothly between <em>multiple models</em> across different spaces, each espousing a different perspective on the data their maintain: e.g., key/value, document, relational, vector, graph, and the various nooks and crannies between.</p>
 </div>
 <div class="paragraph">
-<p><strong class="orange">M</strong>​<strong class="green">e</strong>​<strong class="blue">T</strong>​<span class="red">a</span>​<span class="aqua">t</span>​<strong class="fuchsia">r</strong>​<span class="lime">O</span>​<strong class="yellow">n</strong>​'s URI addressing scheme makes it possible to <em>embed</em> arbitrary data types into a space.
+<p><span class="fuchsia">m</span>​<span class="yellow">E</span>​<strong class="green">T</strong>​<span class="aqua">a</span>​<strong class="blue">T</strong>​<span class="lime">r</span>​<strong class="orange">O</strong>​<strong class="red">n</strong>​'s URI addressing scheme makes it possible to <em>embed</em> arbitrary data types into a space.
 This section will explore the following considerations when designing a <em>multi-model abstract data type</em>.</p>
 </div>
 <div class="olist arabic">

@@ -973,7 +973,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                                         kv.getValue().asLst().at(0).apply(kv.getValue().asLst().at(jnt(1)))))  // compute barriered value
                                 .collect(new CommonUtil.RecCollector());
                     }),
-                    docWrap(instC(EVAL_INST_TID.dom(ALL.maybe()).rng(ALL_STAR), rec(uri(Tokens.CODE), STR_TYPE), (lhs, inst) -> mParser.eval(inst.arg(0).strValue())),
+                    docWrap(instC(EVAL_INST_TID.dom(ALL.maybe()).rng(ALL_STAR), rec(uri(Tokens.CODE), STR_TYPE), (lhs, inst) -> mParser.eval(inst.arg("code").strValue())),
                             "can be any obj as long as the arg generated is a str", "the result of evaluating the source str arg", Map.of(uri(Tokens.CODE), "the mtron source code to evaluate"), "evaluates mtron source code"),
                     instC(SWAP_TID.dom(A).rng(A), lst(T(B)), (lhs, inst) -> lhs.apply(inst.arg(0))),
                     instC(RSHIFT_INST_TID.dom(A).rng(B.maybe()), lst(), (lhs, _) -> lhs.isPoly() ? lhs.<Poly<?, ?>>as().at(uri("+")) : noobj()),

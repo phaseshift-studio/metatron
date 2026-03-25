@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.mach.type.net.protocol;
 
 import org.java_websocket.WebSocket;
+import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
@@ -35,6 +36,8 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.type.net.MServer.MSERVER_TID;
+import static studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty.sillyPrint;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
  * Native Metatron protocol handler.
@@ -57,7 +60,7 @@ public class NativeMetatronProtocolHandler extends MRec implements MServerProtoc
             final ObjSerializer<?> serializer,
             final Map<fURI, WebSocket> cluster,
             final fURI vid) {
-        super(Map.of(), f(MACH_SERVER_NATIVE_PROTOCOL_TID), vid);
+        super(mutableMap(cluster), f(MACH_SERVER_NATIVE_PROTOCOL_TID), vid);
         this.serializer = serializer;
         this.cluster = cluster;
         this.LOG = this.logger();
@@ -72,7 +75,7 @@ public class NativeMetatronProtocolHandler extends MRec implements MServerProtoc
     public boolean canHandle(final String message) {
         // Native protocol doesn't use text messages (only binary)
         // If we receive text that's not JSON-RPC, convert it to binary
-        return message != null && !message.trim().isEmpty() && !message.trim().contains("jsonrpc");
+        return message != null && !message.trim().isEmpty() && !message.trim().contains(Tokens.JSONRPC);
     }
 
     @Override
@@ -84,16 +87,15 @@ public class NativeMetatronProtocolHandler extends MRec implements MServerProtoc
 
     @Override
     public void handleMessage(final WebSocket conn, final String message) {
-        LOG.debug("received from %s string [length:%d] - converting to binary", conn.getAttachment(), message.length());
+        LOG.debug("received from %s string [length:%d] - converting to binary", conn, message.length());
         // Convert string to binary and handle as ByteBuffer
         handleMessage(conn, ByteBuffer.wrap(message.getBytes()));
     }
 
     @Override
     public void handleMessage(final WebSocket conn, final ByteBuffer message) {
-        LOG.debug("received from %s byte buffer [length:%d]", conn.getAttachment(), message.array().length);
+        LOG.debug("received from %s byte buffer [length:%d]", conn, message.array().length);
         Router.global().stats().ioStats().incrBytesRecv(message.array().length);
-
         try {
             final Obj obj = this.serializer.inputBytes(message);
             processObj(conn, obj);
@@ -108,7 +110,7 @@ public class NativeMetatronProtocolHandler extends MRec implements MServerProtoc
     private void processObj(final WebSocket conn, final Obj obj) {
         Obj result;
         try {
-            LOG.debug("processing %s for {{b}}%s{{/b}}", obj, conn.getAttachment());
+            LOG.debug("processing %s for {{b}}%s{{/b}}", obj, conn);
             result = obj.apply();
 
             final ByteBuffer bytes = result.isNoObj() ?
@@ -116,7 +118,7 @@ public class NativeMetatronProtocolHandler extends MRec implements MServerProtoc
                     this.serializer.outputBytes(result);
             conn.send(bytes);
             Router.global().stats().ioStats().incrBytesSent(bytes.array().length);
-            LOG.debug("sent %s for {{b}}%s{{/b}}", result, conn.getAttachment());
+            LOG.debug("sent %s for {{b}}%s{{/b}}", result, conn);
         } catch (final Exception e) {
             final ByteBuffer bytes = this.serializer.outputBytes(fail(e));
             conn.send(bytes);
@@ -141,7 +143,7 @@ public class NativeMetatronProtocolHandler extends MRec implements MServerProtoc
 
     @Override
     public void shutdown() {
-        LOG.info("native protocol handler shutting down");
+        LOG.info("%s protocol handler shutting down", sillyPrint("native", true, true));
         // No special cleanup needed
     }
 }

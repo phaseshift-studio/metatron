@@ -34,13 +34,11 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Registry for MCP tools using annotation-based discovery.
- *
+ * <p>
  * Scans for classes annotated with @McpTool and automatically:
  * - Generates JSON schemas from @McpParameter annotations
  * - Creates tool definitions
@@ -68,13 +66,13 @@ public class McpToolRegistry {
             final URL resource = classLoader.getResource(path);
 
             if (resource == null) {
-                LOG.warn("Package not found: %s", packageName);
+                LOG.warn("package not found: %s", packageName);
                 return tools;
             }
 
             final File directory = new File(resource.getFile());
             if (!directory.exists()) {
-                LOG.warn("Package directory does not exist: %s", packageName);
+                LOG.warn("package directory does not exist: %s", packageName);
                 return tools;
             }
 
@@ -89,19 +87,19 @@ public class McpToolRegistry {
                 try {
                     final Class<?> clazz = Class.forName(className);
                     if (clazz.isAnnotationPresent(McpTool.class)) {
-                        LOG.info("Found @McpTool annotated class: %s", className);
+                        LOG.info("found @McpTool annotated class: %s", className);
                         final Tuple.Pair<McpSchema.Tool, JsonRpcToolDispatcher.ToolHandler> tool = register(clazz);
                         tools.add(tool);
                     }
                 } catch (final ClassNotFoundException e) {
-                    LOG.warn("Could not load class: %s", className);
+                    LOG.warn("could not load class: %s", className);
                 }
             }
 
-            LOG.info("Scanned package %s and found %d tools", packageName, tools.size());
+            LOG.info("scanned package %s and found %d tools", packageName, tools.size());
 
         } catch (final Exception e) {
-            LOG.error("Error scanning package %s: %s", packageName, e.getMessage());
+            LOG.error("error scanning package %s: %s", packageName, e.getMessage());
         }
 
         return tools;

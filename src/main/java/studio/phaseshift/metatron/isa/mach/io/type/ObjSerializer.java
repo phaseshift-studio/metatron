@@ -42,23 +42,23 @@ public interface ObjSerializer<T> extends Uri {
         try {
             return switch (obj) {
                 case null -> this.writeNoObj(noobj());
-                case NoObj objs -> this.writeNoObj(obj.as());
-                case Bytes objs -> this.writeBytes(obj.as());
-                case Fail objs -> this.writeFail(obj.as());
-                case Bool objs -> this.writeBool(obj.as());
-                case Int objs -> this.writeInt(obj.as());
-                case Real objs -> this.writeReal(obj.as());
-                case Str objs -> this.writeStr(obj.as());
-                case Uri objs -> this.writeUri(obj.as());
-                case Rel objs -> this.writeRel(obj.as());
-                case Monad objs -> this.writeMonad(obj.as());
-                case Lst objs -> this.writeLst(obj.as());
-                case Machine objs -> this.writeMachine(obj.as());
-                case Rec objs -> this.writeRec(obj.as());
-                case Inst objs -> this.writeInst(obj.as());
-                case Code objs -> this.writeCode(obj.as());
-                case Objs objs -> this.writeObjs(obj.as());
-                case Type objs -> this.writeType(obj.as());
+                case NoObj objs -> this.writeNoObj(objs);
+                case Bytes objs -> this.writeBytes(objs);
+                case Fail objs -> this.writeFail(objs);
+                case Bool objs -> this.writeBool(objs);
+                case Int objs -> this.writeInt(objs);
+                case Real objs -> this.writeReal(objs);
+                case Str objs -> this.writeStr(objs);
+                case Uri objs -> this.writeUri(objs);
+                case Rel objs -> this.writeRel(objs);
+                case Monad objs -> this.writeMonad(objs);
+                case Lst objs -> this.writeLst(objs);
+                case Machine objs -> this.writeMachine(objs);
+                case Rec objs -> this.writeRec(objs);
+                case Inst objs -> this.writeInst(objs);
+                case Code objs -> this.writeCode(objs);
+                case Objs objs -> this.writeObjs(objs);
+                case Type objs -> this.writeType(objs);
 
                 case FutureObj<?> objs -> this.write(objs.get(5000));
                 default -> throw MTronException.of("unknown obj class: %s", obj.getClass());

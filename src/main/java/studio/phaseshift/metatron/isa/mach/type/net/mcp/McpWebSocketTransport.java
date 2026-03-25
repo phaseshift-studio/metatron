@@ -78,14 +78,23 @@ public class McpWebSocketTransport implements McpServerTransport {
 
                 // WORKAROUND: Check if this is a tools/call request and handle it directly
                 if (toolDispatcher != null && toolDispatcher.isToolCallRequest(message)) {
-                    LOG.info("Intercepting tools/call request for custom dispatcher");
+                    LOG.debug("intercepting tools/call request for custom dispatcher");
                     final String response = toolDispatcher.handleToolCall(message);
-                    LOG.debug("Sending dispatcher response: %s", response);
+                    LOG.debug("sending dispatcher response: %s", response);
                     webSocket.send(response);
                     return;
                 }
 
-                // For all other messages (initialize, tools/list, etc.), use the SDK
+                // WORKAROUND: Check if this is a tools/list request and handle it directly
+                if (toolDispatcher != null && toolDispatcher.isToolListRequest(message)) {
+                    LOG.debug("intercepting tools/list request for custom dispatcher");
+                    final String response = toolDispatcher.handleToolList(message);
+                    LOG.debug("sending dispatcher response: %s", response);
+                    webSocket.send(response);
+                    return;
+                }
+
+                // For all other messages (initialize, etc.), use the SDK
                 // First parse as a generic map to inspect the message
                 @SuppressWarnings("unchecked")
                 final java.util.Map<String, Object> jsonMap = objectMapper.readValue(message, java.util.Map.class);
@@ -97,16 +106,16 @@ public class McpWebSocketTransport implements McpServerTransport {
                     // This is either a request or notification
                     if (jsonMap.containsKey("id")) {
                         // Request
-                        LOG.debug("Parsed as JSONRPCRequest: method=%s, id=%s", jsonMap.get("method"), jsonMap.get("id"));
+                        LOG.debug("parsed as JSONRPCRequest: method=%s, id=%s", jsonMap.get("method"), jsonMap.get("id"));
                         jsonRpcMessage = objectMapper.convertValue(jsonMap, McpSchema.JSONRPCRequest.class);
                     } else {
                         // Notification
-                        LOG.debug("Parsed as JSONRPCNotification: method=%s", jsonMap.get("method"));
+                        LOG.debug("parsed as JSONRPCNotification: method=%s", jsonMap.get("method"));
                         jsonRpcMessage = objectMapper.convertValue(jsonMap, McpSchema.JSONRPCNotification.class);
                     }
                 } else if (jsonMap.containsKey("result") || jsonMap.containsKey("error")) {
                     // Response
-                    LOG.debug("Parsed as JSONRPCResponse: id=%s", jsonMap.get("id"));
+                    LOG.debug("parsed as JSONRPCResponse: id=%s", jsonMap.get("id"));
                     jsonRpcMessage = objectMapper.convertValue(jsonMap, McpSchema.JSONRPCResponse.class);
                 } else {
                     throw new IllegalArgumentException("Invalid JSON-RPC message format");

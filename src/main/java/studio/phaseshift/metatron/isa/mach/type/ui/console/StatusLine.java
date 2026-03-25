@@ -75,7 +75,7 @@ public class StatusLine implements Runnable {
         this.addWidget(f("halt"), () -> "{{w}}halt:{{y}}%d".formatted(Router.global().stats().monadicStats().haltedMonads()));
         this.addWidget(f("kill"), () -> "{{w}}kill:{{y}}%d".formatted(Router.global().stats().monadicStats().killedMonads()));
         this.addWidget(f("barrier"), () -> "{{w}}barrier:{{y}}%d".formatted(Router.global().stats().monadicStats().barrierMonads()));
-        this.addWidget(f("ws"), () -> "{{w}}ws:{{y&[g]}}[%d]{{[%s]}} %s".formatted(Router.global().stats().ioStats().connections(), this.getColor(), formatMessage(Router.global().stats().ioStats().lastMessage())));
+        this.addWidget(f("ws"), () -> "{{w}}ws:{{w&[g]}}[%d]{{[%s]}} %s".formatted(Router.global().stats().ioStats().connections(), this.getColor(), formatMessage(Router.global().stats().ioStats().lastMessage())));
     }
 
     private String formatMessage(final String message) {

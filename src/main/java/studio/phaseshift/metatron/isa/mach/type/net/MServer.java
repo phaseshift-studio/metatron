@@ -48,6 +48,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_ISA_TID;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 public class MServer extends WebSocketServer implements Cluster, Closeable, Rec {
 
@@ -112,7 +113,7 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Rec 
                 // do nothing
             }
             // Native Metatron protocol (binary Obj serialization)
-            nativeProtocolHandler = new NativeMetatronProtocolHandler(serializer, Map.of(), this.vid().extend("protocol/native"));
+            nativeProtocolHandler = new NativeMetatronProtocolHandler(serializer, mutableMap(this.cluster), this.vid().extend("protocol/native"));
             protocolHandlers.add(nativeProtocolHandler);
 
             // MCP protocol (JSON-RPC 2.0)

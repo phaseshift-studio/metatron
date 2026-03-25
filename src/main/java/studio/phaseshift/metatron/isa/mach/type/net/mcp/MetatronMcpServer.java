@@ -19,6 +19,8 @@
 package studio.phaseshift.metatron.isa.mach.type.net.mcp;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import io.modelcontextprotocol.json.McpJsonDefaults;
 import io.modelcontextprotocol.server.McpAsyncServer;
 import io.modelcontextprotocol.server.McpServer;
@@ -29,23 +31,26 @@ import studio.phaseshift.metatron.furi.q.DocQ;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
+import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjCleanStringSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.net.mcp.annotation.McpToolRegistry;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.Tuple;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.mInstSet.EVAL_INST_TID;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.type.net.MServer.MSERVER_TID;
+import static studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty.sillyPrint;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
@@ -73,12 +78,12 @@ public class MetatronMcpServer extends MRec {
     private final McpWebSocketTransportProvider transportProvider;
     private final JsonRpcToolDispatcher toolDispatcher;
     private final GraphittyLogger LOG;
-    private final ObjSimpleJSONSerializer jsonSerializer;
+    private final ObjCleanStringSerializer stringSerializer;
 
     public MetatronMcpServer(final fURI vid) {
         super(mutableMap(), f(MACH_SERVER_MCP_SERVER_TID), vid);
         this.LOG = Graphitty.log(this);
-        this.jsonSerializer = ObjSimpleJSONSerializer.single();
+        this.stringSerializer = new ObjCleanStringSerializer();
         // Set the tool dispatcher in the transport provider so it can intercept tools/call requests
         this.transportProvider = new McpWebSocketTransportProvider(createObjectMapper());
         this.toolDispatcher = new JsonRpcToolDispatcher();
@@ -87,9 +92,9 @@ public class MetatronMcpServer extends MRec {
         // register the eval inst as tool (the foundational tool by which all other tools can be created)
         // this is the barebones necessity for an agent to then have full control of the metatron environment
         // with eval, they can then create spaces, register new instructions, create instructions, etc.
-        final Obj evalInst = Router.global().read(studio.phaseshift.metatron.isa.m.mInstSet.EVAL_INST_TID);
+        final Obj evalInst = Router.global().read(EVAL_INST_TID);
         if (evalInst.isNoObj() || !evalInst.isObjInst())
-            LOG.error("could not find eval inst at %s", studio.phaseshift.metatron.isa.m.mInstSet.EVAL_INST_TID);
+            LOG.error("could not find eval inst at %s", EVAL_INST_TID);
         else register(evalInst);
         LOG.info("metatron mcp server initialized");
     }
@@ -148,25 +153,8 @@ public class MetatronMcpServer extends MRec {
         LOG.info("registered %d tools with custom dispatcher", this.toolDispatcher.getTools().size());
     }
 
-    @SuppressWarnings("unchecked")
-    protected Map<String, Object> extractArguments(final McpSchema.CallToolRequest request) {
-        final Object args = request.arguments();
-        if (args instanceof Map) {
-            return (Map<String, Object>) args;
-        }
-        return new HashMap<>();
-    }
-
     public McpWebSocketTransportProvider getTransportProvider() {
         return transportProvider;
-    }
-
-    public McpAsyncServer getMcpServer() {
-        return mcpServer;
-    }
-
-    public JsonRpcToolDispatcher getToolDispatcher() {
-        return toolDispatcher;
     }
 
     /**
@@ -207,7 +195,7 @@ public class MetatronMcpServer extends MRec {
     private void registerInst(final Inst inst) {
         // Get tool name from tid
         final String toolName = inst.tid().name();
-        LOG.info("registering inst as an mcp tool: %s", toolName);
+        LOG.debug("registering inst as an mcp tool: %s", toolName);
         // Query for documentation metadata
         final Obj docObj = Router.global().read(inst.tid().q("doc", null));
         // rebuild the doc object just in case the rec is not a true Doc Java class doc (e.g. rec stored in a database)
@@ -230,13 +218,14 @@ public class MetatronMcpServer extends MRec {
         // Create handler that executes the inst
         final JsonRpcToolDispatcher.ToolHandler handler = args -> {
             try {
-                LOG.debug("executing Inst tool '%s' with args: %s", toolName, args);
-
-                // Convert args Map to Obj matching inst's expected args structure
-                final Obj argsObj = convertArgsForInst(inst, args);
-
+                LOG.debug("executing inst tool '%s' with args: %s", toolName, args);
                 // Execute the inst
-                final Obj result = inst.apply(argsObj);
+                final Obj result = inst.args(args
+                                .entrySet()
+                                .stream()
+                                .map(kv -> rel(uri(kv.getKey()), MObjFactory.of().toObj(kv.getValue())))
+                                .collect(new CommonUtil.RecCollector()))
+                        .apply();
                 if (result.isFail())
                     throw result.asFail().asException();
 
@@ -244,8 +233,9 @@ public class MetatronMcpServer extends MRec {
                 return convertObjToResult(result);
 
             } catch (final Exception e) {
-                LOG.error("error executing Inst tool '%s': %s", toolName, e.getMessage());
-                return McpSchema.CallToolResult.builder()
+                LOG.error("error executing inst tool '%s': %s", toolName, e.getMessage());
+                return McpSchema.CallToolResult
+                        .builder()
                         .content(List.of(new McpSchema.TextContent(e.getMessage())))
                         .isError(true)
                         .build();
@@ -254,7 +244,7 @@ public class MetatronMcpServer extends MRec {
 
         // Register with dispatcher
         toolDispatcher.registerTool(tool, handler);
-        LOG.info("successfully registered Inst tool: %s", toolName);
+        LOG.info("successfully registered inst tool: %s", toolName);
     }
 
     /**
@@ -262,52 +252,50 @@ public class MetatronMcpServer extends MRec {
      * Follows the OLLM pattern for handling both Lst (positional) and Rec (named) args.
      */
     private String buildSchemaFromInst(final Inst inst, final DocQ.Doc doc) {
-        final Poly<?, ?> args = inst.args().orElse(studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0());
+        final Poly<?, ?> args = inst.args().orElse(rec0());
 
         if (args.isNoObj() || args.isEmpty()) {
             return createDefaultArgsSchema();
         }
 
         final Poly<?, ?> docArgs = doc.args();
-        final com.google.gson.JsonObject schema = new com.google.gson.JsonObject();
-        schema.addProperty("type", "object");
+        final JsonObject schema = new JsonObject();
+        schema.addProperty(Tokens.TYPE, Tokens.OBJECT);
 
-        final com.google.gson.JsonObject properties = new com.google.gson.JsonObject();
-        final com.google.gson.JsonArray required = new com.google.gson.JsonArray();
+        final JsonObject properties = new JsonObject();
+        final JsonArray required = new JsonArray();
 
         // Handle Lst args (positional) - use index as property name
         if (args.isLst()) {
             args.asLst().indexedStream().forEach(indexedArg -> {
-                final long indexLong = indexedArg.first().intValue();
-                final int index = (int) indexLong;
+                final int index = indexedArg.first().intValue().intValue();
                 final Obj argType = indexedArg.second();
                 final String argName = String.valueOf(index);
 
-                final com.google.gson.JsonObject propSchema = new com.google.gson.JsonObject();
-                propSchema.addProperty("type", mapTypeToJsonSchemaType(argType.tid().toString()));
+                final JsonObject propSchema = new JsonObject();
+                propSchema.addProperty(Tokens.TYPE, mapTypeToJsonSchemaType(argType));
 
                 // Get description from doc
                 final String argDesc = docArgs.isRec()
-                        ? docArgs.asRec().at(studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt(index)).orElse(str("")).toString()
+                        ? docArgs.asRec().at(jnt(index)).orElse(str("")).toString()
                         : "";
                 propSchema.addProperty("description", argDesc);
 
                 properties.add(argName, propSchema);
 
                 // Add to required if not zeroable
-                if (!argType.c().isZeroable()) {
+                if (!argType.c().isZeroable())
                     required.add(argName);
-                }
             });
         }
         // Handle Rec args (named) - use uri as property name
         else if (args.isRec()) {
             args.asRec().elements().forEach(rel -> {
-                final String argName = rel.first().toString();
+                final String argName = rel.first().uriValue().toString();
                 final Obj argType = rel.second();
 
-                final com.google.gson.JsonObject propSchema = new com.google.gson.JsonObject();
-                propSchema.addProperty("type", mapTypeToJsonSchemaType(argType.tid().toString()));
+                final JsonObject propSchema = new JsonObject();
+                propSchema.addProperty(Tokens.TYPE, mapTypeToJsonSchemaType(argType));
 
                 // Get description from doc
                 final String argDesc = docArgs.isRec()
@@ -324,150 +312,30 @@ public class MetatronMcpServer extends MRec {
             });
         }
         schema.add("properties", properties);
-        schema.add("required", required);
+        schema.add(Tokens.REQUIRED, required);
         return schema.toString();
     }
 
     /**
      * Map Metatron type names to JSON Schema types.
      */
-    private String mapTypeToJsonSchemaType(final String metatronType) {
-        // Simple mapping - can be enhanced
-        if (metatronType.contains("str") || metatronType.contains("uri")) {
+    private String mapTypeToJsonSchemaType(final Obj obj) {
+        if (obj.isStr() || obj.isUri()) {
             return "string";
-        } else if (metatronType.contains("int") || metatronType.contains("jnt")) {
+        } else if (obj.isInt()) {
             return "integer";
-        } else if (metatronType.contains("real")) {
+        } else if (obj.isReal()) {
             return "number";
-        } else if (metatronType.contains("bool")) {
+        } else if (obj.isBool()) {
             return "boolean";
-        } else if (metatronType.contains("lst")) {
+        } else if (obj.isLst()) {
             return "array";
-        } else if (metatronType.contains("rec")) {
+        } else if (obj.isRec()) {
             return "object";
         }
         return "string"; // default fallback
     }
 
-    /**
-     * Convert JSON args to the format expected by an Inst.
-     * Follows the OLLM pattern for handling both Lst (positional) and Rec (named) args.
-     */
-    private Obj convertArgsForInst(final Inst inst, final Map<String, Object> args) {
-        final Poly<?, ?> instArgs = inst.args().orElse(studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0());
-
-        if (instArgs.isNoObj() || instArgs.isEmpty()) {
-            return lst();
-        }
-
-        // Handle Lst args (positional) - convert from {"0": val, "1": val} to lst(val, val)
-        if (instArgs.isLst()) {
-            final java.util.List<Obj> argsList = new java.util.ArrayList<>();
-            // Sort by index to maintain order
-            args.entrySet().stream()
-                    .sorted(java.util.Map.Entry.comparingByKey())
-                    .forEach(entry -> {
-                        argsList.add(convertJavaToObj(entry.getValue()));
-                    });
-            return lst(argsList);
-        }
-
-        // Handle Rec args (named) - convert from {"key": val} to rec(uri(key), val)
-        if (instArgs.isRec()) {
-            return convertMapToRec(args);
-        }
-
-        // Fallback
-        return convertMapToRec(args);
-    }
-
-    /**
-     * Register a tool from a Rec wrapper (legacy approach).
-     */
-   /* private void registerFromRec(final Obj toolRec) {
-        final Map<Obj, Obj> toolMap = toolRec.recValue();
-
-        // Extract tool name (required)
-        final Obj nameObj = toolMap.get(uri(Tokens.NAME));
-        if (nameObj == null || !nameObj.isStr()) {
-            LOG.error("Cannot register tool from Rec: missing or invalid 'name' field");
-            return;
-        }
-        final String toolName = nameObj.strValue();
-
-        // Extract description (required)
-        final Obj descObj = toolMap.get(uri(Tokens.DESC));
-        final String description = (descObj != null && descObj.isStr())
-                ? descObj.strValue()
-                : "No description provided";
-
-        // Extract the eval inst (required)
-        final Obj evalObj = toolMap.get(uri("eval"));
-        if (evalObj == null || !evalObj.isInst()) {
-            LOG.error("Cannot register tool '%s': missing or invalid 'eval' field", toolName);
-            return;
-        }
-        final Inst evalInst = (Inst) evalObj;
-
-        // Extract args schema (optional)
-        final Obj argsObj = toolMap.get(uri("args"));
-        final String argsSchema = (argsObj != null && argsObj.isRec())
-                ? jsonSerializer.write(argsObj).toString()
-                : createDefaultArgsSchema();
-
-        LOG.info("Registering tool from Rec: %s", toolName);
-
-        // Create MCP tool definition
-        final McpSchema.Tool tool = McpSchema.Tool.builder()
-                .name(toolName)
-                .description(description)
-                .inputSchema(McpJsonDefaults.getMapper(), argsSchema)
-                .build();
-
-        // Create handler that executes the inst
-        final JsonRpcToolDispatcher.ToolHandler handler = args -> {
-            try {
-                LOG.debug("Executing tool '%s' with args: %s", toolName, args);
-
-                // Convert args Map to Obj
-                final Obj argsRec = convertMapToRec(args);
-
-                // Execute the inst
-                final Obj result = evalInst.apply(argsRec);
-
-                // Convert result to CallToolResult
-                return convertObjToResult(result);
-
-            } catch (final Exception e) {
-                LOG.error("Error executing tool '%s': %s", toolName, e.getMessage());
-                return McpSchema.CallToolResult.builder()
-                        .content(List.of(new McpSchema.TextContent("Error: " + e.getMessage())))
-                        .isError(true)
-                        .build();
-            }
-        };
-
-        // Register with dispatcher
-        toolDispatcher.registerTool(tool, handler);
-        LOG.info("Successfully registered tool: %s", toolName);
-    }*/
-
-    /**
-     * Register the existing eval instruction as an MCP tool.
-     * The eval instruction is already defined in Obj with documentation.
-     */
-    private void registerEvaluateCodeTool() {
-        LOG.info("Registering existing eval instruction as mcp tool");
-
-        // Get the eval instruction from the global router
-        final Obj evalInst = Router.global().read(studio.phaseshift.metatron.isa.m.mInstSet.EVAL_INST_TID).orElse(null);
-        if (evalInst == null || !evalInst.isInst()) {
-            LOG.error("could not find eval instruction at %s", studio.phaseshift.metatron.isa.m.mInstSet.EVAL_INST_TID);
-            return;
-        }
-        // Register the existing Inst directly - it already has docWrap metadata!
-        register(evalInst);
-    }
 
     /**
      * Create a default args schema for tools without explicit schema.
@@ -483,83 +351,33 @@ public class MetatronMcpServer extends MRec {
     }
 
     /**
-     * Convert a Map<String, Object> to a metatron Rec.
-     */
-    private Obj convertMapToRec(final Map<String, Object> map) {
-        final Map<Obj, Obj> recMap = new HashMap<>();
-        for (final Map.Entry<String, Object> entry : map.entrySet()) {
-            recMap.put(uri(entry.getKey()), convertJavaToObj(entry.getValue()));
-        }
-        return rec(recMap);
-    }
-
-    /**
-     * Convert a Java value to a metatron Obj.
-     */
-    private Obj convertJavaToObj(final Object value) {
-        if (value == null) {
-            return studio.phaseshift.metatron.isa.m.type.NoObj.noobj();
-        } else if (value instanceof Boolean) {
-            return studio.phaseshift.metatron.isa.m.type.impl.MBool.bool((Boolean) value);
-        } else if (value instanceof Integer) {
-            return studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt((Integer) value);
-        } else if (value instanceof Long) {
-            return studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt((Long) value);
-        } else if (value instanceof Double) {
-            return studio.phaseshift.metatron.isa.m.type.impl.MReal.real((Double) value);
-        } else if (value instanceof String) {
-            return str((String) value);
-        } else if (value instanceof List) {
-            final List<Obj> list = new java.util.ArrayList<>();
-            for (final Object item : (List<?>) value) {
-                list.add(convertJavaToObj(item));
-            }
-            return lst(list);
-        } else if (value instanceof Map) {
-            return convertMapToRec((Map<String, Object>) value);
-        } else {
-            return str(value.toString());
-        }
-    }
-
-    /**
      * Convert an Obj to a CallToolResult.
      * - If Obj is a Fail, sets isError(true)
-     * - Otherwise, converts to JSON using ObjSimpleJSONSerializer
+     * - Otherwise, converts to string using toString()
      */
     private McpSchema.CallToolResult convertObjToResult(final Obj obj) {
         try {
-            // Check if it's a Fail (error)
-            final boolean isError = obj.getClass().getSimpleName().contains("Fail");
-
-            if (isError) {
-                // Extract error message from Fail
-                final String errorMsg = obj.toString();
-                return McpSchema.CallToolResult.builder()
-                        .content(List.of(new McpSchema.TextContent(errorMsg)))
-                        .isError(true)
-                        .build();
+            if (obj.isFail()) {
+                throw obj.asFail().asException();
             } else {
-                // Convert Obj to JSON
-                final com.google.gson.JsonElement jsonElement = jsonSerializer.write(obj);
-                final String jsonString = jsonElement.toString();
-
+                // Convert Obj to string using its toString() method
+                final String resultString = obj.toString();
                 return McpSchema.CallToolResult.builder()
-                        .content(List.of(new McpSchema.TextContent(jsonString)))
+                        .content(List.of(new McpSchema.TextContent(resultString)))
                         .isError(false)
                         .build();
             }
         } catch (final Exception e) {
             LOG.error("Error converting Obj to result: %s", e.getMessage());
             return McpSchema.CallToolResult.builder()
-                    .content(List.of(new McpSchema.TextContent("Error: " + e.getMessage())))
+                    .content(List.of(new McpSchema.TextContent(e.getMessage())))
                     .isError(true)
                     .build();
         }
     }
 
     public void close() {
-        LOG.info("Closing metatron MCP Server");
+        LOG.info("closing metatron %s server", sillyPrint("mcp", true, true));
         transportProvider.closeGracefully().subscribe();
     }
 }

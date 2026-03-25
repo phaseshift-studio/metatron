@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -36,6 +36,9 @@ public final class Tokens {
     public static final fURI PLUS = f("+");
     public static final fURI STACK_PATTERN = f("+/#");
 
+    
+    public static final String JSONRPC = "jsonrpc";
+    public static final String REQUIRED = "required";
     public static final String SRC = "src";
     public static final String TARGET = "target";
     public static final String INCR = "incr";
@@ -55,6 +58,7 @@ public final class Tokens {
     public static final String MEMORY = "memory";
     public static final String HISTORY = "history";
     public static final String TOOL = "tool";
+    public static final String OBJECT = "object";
     public static final String TYPE = "type";
     public static final String THINKING = "thinking";
     public static final String TEXT = "text";

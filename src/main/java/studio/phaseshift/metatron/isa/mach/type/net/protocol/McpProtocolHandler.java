@@ -33,6 +33,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.mach.type.net.MServer.MSERVER_TID;
+import static studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty.sillyPrint;
 
 /**
  * MCP (Model Context Protocol) protocol handler.
@@ -136,7 +137,7 @@ public class McpProtocolHandler extends MRec implements MServerProtocolHandler {
 
     @Override
     public void shutdown() {
-        LOG.info("MCP protocol handler shutting down");
+        LOG.info("%s protocol handler shutting down", sillyPrint("mcp", true, true));
         if (mcpServer != null) {
             mcpServer.close();
         }
@@ -158,9 +159,5 @@ public class McpProtocolHandler extends MRec implements MServerProtocolHandler {
         } catch (final Exception ex) {
             LOG.error("Failed to send error response: %s", ex.getMessage());
         }
-    }
-
-    public MetatronMcpServer getMcpServer() {
-        return mcpServer;
     }
 }
