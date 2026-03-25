@@ -83,22 +83,54 @@ graph encodings (discussed later when presenting hypergraphs).
 mtron's design makes possible a swathe of natural extensions to both the standard property graph data model and associated traversal and pattern-matching query engines.
 The following itemization summarizes some of the more consequential realizations.
 
+. *heirarchial properties*: the folder-like structure of uris combined with mtron pattern matching enables hierarchical organization within the property graph model's flat namespace.
 . *nested properties*: mtron supports `poly` values meaning element property values can be nested (via `rec`, `rel`, or `lst`).
 . *interspace traversals*: `!+*+` instructions can be encapsulated as vertices and/or property values, enabling inter- and intra-space
 traversals.
 . *process encodings*: graph databases have historically been used for structuring data, where processing exists exogenous graph and executing only at query time. mtron's `inst` objs make possible the graph encoding of processes, where, for example, vertices can become active objects within the larger application.
 . *sympathetic partitions*: an mtron `poly` is not constrained to a single space nor within a single space, does an operation on the poly imply a particular physical layout of underlying data. In this way, mtron conveniently supports language agnostic retrieval of data across different physical layouts.
 
+
 [indent=0,subs="verbatim,attributes",role="primary"]
+.hierarchical properties
+=====
+
+A consequence of mtron's uri-oriented id scheme is property keys no longer sit in a flat address space. 
+The following examples demonstrate selection and filtering using multi-segment uri pattern matching with wildcards.
+
+++++
+<!-- 🐖
+*g:V/1>>=[address/home/city => 'santa fe',        /
+          address/work/city => 'nomansland']                    [-- <1>
+*g:V/1/address/home/city                                        [-- <2>
+*g:V/+.?==[address/+/city => 'santa fe']                        [-- <3>
+*g:V/+.==[address/+/city/ => _]                                 [-- <4>
+*g:V/+.>>address/+/city/                                        [-- <5>
+*g:V/+.>>address/+/city                                         [-- <6>
+*g:V/+.>>address/#                                              [-- <7>
+-->
+++++
+<1> add two properties keyed with 3 segment uris to vertex `1` .
+<2> uri properties uniquely identify values in the vertex.
+<3> for all vertices, return those that have an address in Santa Fe.
+<4> for all vertices, select the cities of any of their addresses.
+<5> for all vertices, traverse to their city address properties.
+<5> for all vertices, traverse to their city address values.
+<5> for all vertices, traverse to the values of any addresses.
+=====
+
+[indent=0,subs="verbatim,attributes",role="secondary"]
 .nested properties
 =====
 ++++
 <!-- 🐖
+[HIDDEN] *g:V/1>>=[address/home/city => noobj]
+[HIDDEN] *g:V/1>>=[address/work/city => noobj]
 *g:V/1==[_=>_]                                                  [-- <1>
-*g:V/1>>=[address=>[                       /
+*g:V/1>>=[address=>[                        /
              home => [city =>'santa fe',    /
                       state=>NM],           /
-             work => !*<../home>]]                               [-- <2>
+             work => !*<../home>]]                              [-- <2>
 *g:V/1/address/home/city                                        [-- <3>
 *g:V/+.?==[address=>[_ => [state=>NM]]]                         [-- <4>
 *g:V/+.?==[address=>[_ => [state=>NM]]].>>address/+/city        [-- <5>

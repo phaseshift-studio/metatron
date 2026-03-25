@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -140,6 +140,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
             //if (key.uriValue().isEmpty())
             //   return this.c(c -> c.mult(key.c())).as();
             final boolean singleSegment = key.uriValue().segmentLength() == 1;
+            //   System.out.println("%s %b".formatted(key,singleSegment));
             final String step = singleSegment ? key.uriValue().asNode().toString() : key.uriValue().path().getFirst();
             Obj result;
             final Uri asNode = uri(key.uriValue().asNode());
@@ -157,7 +158,15 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
                         this.jvm().get(asNode).autoResolve(this)).c(c -> c.mult(cKey)).parent(this);
             } else { // this.recValue().containsKey(uri(step))
                 final Obj temp = this.jvm().getOrDefault(uri(step), NoObj.noobj()).autoResolve(this).parent(this);
-                result = (isBranch ? rel(asNode, temp) : temp).c(c -> c.mult(cKey)).parent(this);
+                if (temp.isNoObj()) {
+                    return (OBJ) objs(this.jvm().entrySet()
+                            .stream()
+                            .filter(kv -> kv.getKey().isUri())
+                            .filter(kv -> kv.getKey().uriValue().test(asNode.uriValue()))
+                            .map(kv -> isBranch ? rel(kv.getKey(), kv.getValue().autoResolve(this)) : kv.getValue().autoResolve(this)));
+                } else {
+                    result = (isBranch ? rel(asNode, temp) : temp).c(c -> c.mult(cKey)).parent(this);
+                }
             }
             /// ///////////////////////////////////////////////////////////////////////////////////////////////////////
             if (singleSegment) {
@@ -241,7 +250,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
                     instC(HAS_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(ALL)), (lhs, inst) -> inst.arg(0).isRel() ?
                             (lhs.<Rec>as().elements().anyMatch(r -> r.test(inst.arg(0))) ? lhs : noobj()) :
                             (lhs.<Rec>as().elements().map(Rel::first).anyMatch(r -> r.test(inst.arg(0))) ? lhs : noobj())),
-                   // instC(GET_INST_TID.dom(REC_TID).rng(ALL_STAR), lst(T(URI_TID)), (lhs, inst) -> objs(lhs.stream().map(r -> r.<Rec>as().at(inst.arg(0))))),
+                    // instC(GET_INST_TID.dom(REC_TID).rng(ALL_STAR), lst(T(URI_TID)), (lhs, inst) -> objs(lhs.stream().map(r -> r.<Rec>as().at(inst.arg(0))))),
                     instC(SPLIT_INST_TID.dom(ALL).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> inst.arg(0).asRec().elements().map(e -> rel(e.first().apply(lhs), e.second().apply(lhs))).collect(new CommonUtil.RecCollector())),
                     instC(MERGE_INST_TID.dom(REC_TID).rng(REL_TID.maybeSome()), lst(), (lhs, inst) -> objs(lhs.elements())),
                     //instC(MERGE_INST_TID.dom(REC_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> inst.arg(0).<Rec>as().plus(lhs.as())),//objs(lhs.elementStream())),

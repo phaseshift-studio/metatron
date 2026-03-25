@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.algebra.AbstractAlgebraTest;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -411,11 +412,30 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
     }
 
     @ParameterizedTest
+    @TestData(value = {
+            "x -> [address/home/city=>\"santa fe\",address/work/city=>\"nomansland\"]",
+            "y -> [address/home/city=>\"santa fe\",address/work/city=>!>>(address/home/city)]"})
     @CsvSource(value = {
-            "[a=>1,b=>2,c=>3].select([a=>_,b=>_])                                              % [a=>1,b=>2]",
-            "[a=>1,b=>2,c=>3].select([a=>_])                                                % [a=>1]",
-            "[a=>1,b=>2,c=>3].select([d=>_])                                                % noobj",
-            "[a=>1,b=>2,c=>3].select([a=>_,d=>_])                                              % [a=>1]",
+            "[a=>1,b=>2,c=>3].select([a=>_,b=>_])                                          % [a=>1,b=>2]",
+            "[a=>1,b=>2,c=>3].select([a=>_])                                               % [a=>1]",
+            "[a=>1,b=>2,c=>3].select([d=>_])                                               % noobj",
+            "[a=>1,b=>2,c=>3].select([a=>_,d=>_])                                          % [a=>1]",
+            "*x>>address/home/city                                                         % \"santa fe\"",
+            "*x>>address/work/city                                                         % \"nomansland\"",
+            "*x>><address/+/city>                                                          % {\"nomansland\",\"santa fe\"}",
+            "*x>><address/+/city/>                                                         % {address/home/city=>\"santa fe\",address/work/city=>\"nomansland\"}",
+            "*x>><address/+/#/>                                                            % {address/home/city=>\"santa fe\",address/work/city=>\"nomansland\"}",
+            "*x>>#/                                                                        % {address/home/city=>\"santa fe\",address/work/city=>\"nomansland\"}",
+            "*x.select[address/+/city=>_]                                                  % [address/+/city=>{\"nomansland\",\"santa fe\"}]",
+            "*x.select[address/+/+=>_]                                                     % [address/+/+=>{\"nomansland\",\"santa fe\"}]",
+            "*x.select[address/#=>_]                                                       % [address/#=>{\"nomansland\",\"santa fe\"}]",
+            "*x.select[#=>_]                                                               % [#=>{\"nomansland\",\"santa fe\"}]",
+            "*x.select[address/+/city/=>_]                                                 % [address/+/city/=>{address/work/city=>\"nomansland\",address/home/city=>\"santa fe\"}]",
+            "*x.select[<address/work/city/../../home/city>=>_].rng()                       % \"santa fe\"",
+            "*x.select[<address/work/home/../../work/city>=>_]>>                           % \"nomansland\"",
+            "*x.select[<address/work/city/../../+/city>=>_]>>                              % {\"nomansland\",\"santa fe\"}",
+            "*x.select[<address/work/city/../../+/city/../../../#>=>_]>>                   % {\"nomansland\",\"santa fe\"}",
+            "*y>>address/work/city                                                         % \"santa fe\""
     }, delimiter = '%')
     public void testSelect(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
@@ -446,7 +466,7 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
     }, delimiter = '%')
     public void testPoly(final String record, final String type, final boolean matches) {
         final Type t = mParser.parse(type);
-        LOG.error("%s",t);
-        AbstractMetatronTest.checkMatches(LOG, record, type,matches);
+        LOG.error("%s", t);
+        AbstractMetatronTest.checkMatches(LOG, record, type, matches);
     }
 }
