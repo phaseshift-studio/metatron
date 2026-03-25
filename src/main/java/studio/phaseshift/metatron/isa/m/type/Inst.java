@@ -334,7 +334,7 @@ public interface Inst extends Call {
         //final String monadUpDown = this.tid().queryValue(fURI.of(MONAD), String.class);
         Obj clhs = FutureObj.resolveFuture(isMonadicInst ? lhs.asMonad() : lhs);
         //boolean reself = !this.args().isEmpty() && this.args().argElements().noneMatch(e -> e.vid() != null || e.isObjCall());
-        Inst cinst = this.args().isEmpty() ? this.args(lst(noobj())).resolve(clhs) : this.resolve(clhs); // TODO: this isn't a general solution (multi slotted args won't work).
+        Inst cinst = this.resolve(clhs); // TODO: this isn't a general solution (multi slotted args won't work).
         //if (false && reself) // TODO: why do type predicates get rewritten?
         //    this.self(Triplet.with(cinst.args(), cinst.f(), cinst.seed()), cinst.tid(), cinst.vid());
         if (cinst.isNoObj())

@@ -47,8 +47,8 @@ main {
 }
 
 .card {
-    padding: 1rem;
-    margin: 3rem;
+    padding: 0.5rem;
+    margin: 2rem;
     position: relative;
     display: flex;
     flex-direction: column;
@@ -106,11 +106,20 @@ main {
     font-size: 1.35rem;
 }
 
+table {
+    vertical-align: middle;
+    caption-side: top;
+    padding: 0 !important;
+    margin-top: 2rem !important;
+    margin-bottom: 2rem !important;
+}
+
 .table {
     vertical-align: middle;
     caption-side: top;
     padding: 0 !important;
-    margin: 0 !important;
+    margin-top: 2rem !important;
+    margin-bottom: 2rem !important;
 }
 
 .table-borderless {
@@ -309,7 +318,7 @@ main {
 code.hljs {
     font-size: 0.9rem;
     display: inline;
-    width: 90%;
+    /*width: 90%;*/
     overflow: hidden;
     text-overflow: clip;
 }
@@ -511,11 +520,6 @@ h1 {
     }
 }
 
-.page-header {
-    /*background: linear-gradient(rgba(0, 0, 0, .775), rgba(0, 0, 0, .775)), url(../images/angel-wings.png) center center no-repeat;
-    background-size: cover;*/
-}
-
 .breadcrumb-item + .breadcrumb-item::before {
     color: var(--light);
 }
@@ -616,6 +620,16 @@ body {
 
 .btn-close:focus {
     box-shadow: none;
+}
+
+.btn-copy-url {
+    filter: invert(0) grayscale(100%) brightness(35%);
+    opacity: 0.8;
+  /*  width: 0.15em;
+    height: 0.15em; */
+    position: relative !important;
+    top: -16px !important;
+    left: -35px !important;
 }
 
 .btn-close-white {

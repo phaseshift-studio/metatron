@@ -24,6 +24,8 @@ mtron programs are composed using computational primitives called **instructions
 
 [.card]
 --
+[discrete,.center]
+==== uri syntax sugar
 The instruction template above represents the typical instruction with `rng\<=dom` and `{c}` sugar syntax being used. 
 However, note that the dom/rng and coefficient sugars ultimately compile to URI query parameters. 
 When fully parsed to a legal URI, the instruction signature is denoted:

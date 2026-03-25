@@ -130,12 +130,12 @@ public class NativeMetatronProtocolHandler extends MRec implements MServerProtoc
     public void onConnectionOpen(final WebSocket conn) {
         // Native protocol doesn't need special initialization
         LOG.debug("native protocol connection opened: %s", conn);
-        this.cluster.put(f(conn.getRemoteSocketAddress().toString()), conn);
+        this.cluster.put(f(conn.getRemoteSocketAddress().getHostString()), conn);
     }
 
     @Override
     public void onConnectionClose(final WebSocket conn, final int code, final String reason) {
-        final WebSocket removed = cluster.remove(f(conn.getRemoteSocketAddress().toString()));
+        final WebSocket removed = cluster.remove(f(conn.getRemoteSocketAddress().getHostString()));
         if (removed != null) {
             LOG.debug("closed native connection %s with exit code %s [reason: %s]", removed, code, reason);
         }

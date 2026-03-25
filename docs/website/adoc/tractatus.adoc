@@ -211,6 +211,7 @@ include::header.html[]
 ++++
 <div class="collapse position-relative" id="card-0">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-0" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
+<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
 ++++
 include::data-manipulation-panel.adoc[]
 ++++
@@ -220,6 +221,7 @@ include::data-manipulation-panel.adoc[]
 ++++
 <div class="collapse position-relative" id="card-1">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-1" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
+<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
 ++++
 include::instructions-panel.adoc[]
 ++++
@@ -229,6 +231,7 @@ include::instructions-panel.adoc[]
 ++++ 
 <div class="collapse position-relative" id="card-2">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-2" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
+<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
 ++++
 include::control-structures-panel.adoc[]
 ++++
@@ -238,6 +241,7 @@ include::control-structures-panel.adoc[]
 ++++
 <div class="collapse position-relative" id="card-3">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-3" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
+<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
 ++++
 include::llm-panel.adoc[]
 ++++
@@ -247,6 +251,7 @@ include::llm-panel.adoc[]
 ++++
 <div class="collapse position-relative" id="card-4">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-4" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
+<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
 ++++
 include::instset-panel.adoc[]
 ++++
@@ -256,6 +261,7 @@ include::instset-panel.adoc[]
 ++++
 <div class="collapse position-relative" id="card-5">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-5" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
+<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
 ++++
 include::fail-catch-panel.adoc[]
 ++++
@@ -265,6 +271,7 @@ include::fail-catch-panel.adoc[]
 ++++ 
 <div class="collapse position-relative" id="card-6">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-6" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
+<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
 ++++
 include::type-panel.adoc[]
 ++++
@@ -275,6 +282,7 @@ include::type-panel.adoc[]
 ++++ 
 <div class="collapse position-relative" id="card-11">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-11" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
+<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
 ++++
 include::uris-panel.adoc[]
 ++++
@@ -285,6 +293,7 @@ include::uris-panel.adoc[]
 ++++ 
 <div class="collapse position-relative" id="card-14">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-14" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
+<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
 ++++
 include::grph-space-panel.adoc[]
 ++++
@@ -294,6 +303,7 @@ include::grph-space-panel.adoc[]
 ++++ 
 <div class="collapse position-relative" id="card-12">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-12" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
+<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
 ++++
 include::sweep-panel.adoc[]
 ++++

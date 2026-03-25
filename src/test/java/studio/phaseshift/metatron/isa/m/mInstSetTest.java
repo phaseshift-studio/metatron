@@ -512,8 +512,7 @@ public class mInstSetTest extends AbstractInstSetTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
-
-    @Disabled
+    
     @ParameterizedTest
     @TestData(value = {"nat -> int::T[is(gt(0))]"})
     @CsvSource(value = {

@@ -181,6 +181,54 @@
             setTimeout(checkVisibility, 500);
         });
 
+        // HANDLE URL FRAGMENTS (HASH) FOR DIRECT TUTORIAL ACCESS
+        function handleHash() {
+            var hash = window.location.hash;
+            if (hash && hash.length > 1) {
+                var tutorialName = decodeURIComponent(hash.substring(1)).toLowerCase();
+                var found = false;
+                
+                $('.tutorial-grid button').each(function() {
+                    var btnText = $(this).text().trim().toLowerCase();
+                    // Match by exact name or slugified name (replace spaces with dashes)
+                    if (btnText === tutorialName || btnText.replace(/\s+/g, '-') === tutorialName || btnText.replace(/\s+/g, '') === tutorialName) {
+                        // Only click if it's not already open (aria-expanded="false")
+                        if ($(this).attr('aria-expanded') === 'false') {
+                            $(this).click();
+                        }
+                        
+                        // Also jump to the slide containing this button if it's not the active slide
+                        var $carouselItem = $(this).closest('.carousel-item');
+                        if ($carouselItem.length > 0 && !$carouselItem.hasClass('active')) {
+                            var slideIndex = $carouselItem.index();
+                            $('#tutorial-carousel').carousel(slideIndex);
+                        }
+                        
+                        found = true;
+                        return false; // Break loop
+                    }
+                });
+                
+                if (found) {
+                    // Smooth scroll to the custom-docs area after a short delay
+                    setTimeout(function() {
+                        var $docs = $('#custom-docs');
+                        if ($docs.length > 0 && $docs.is(':visible')) {
+                            $('html, body').animate({
+                                scrollTop: $docs.offset().top - 100
+                            }, 500);
+                        }
+                    }, 600);
+                }
+            }
+        }
+
+        // Run on load
+        handleHash();
+        
+        // Also run when hash changes without page reload
+        $(window).on('hashchange', handleHash);
+
         // Handle close button click to update container visibility
         $('#custom-docs').on('click', '.btn-close', function(e) {
             e.preventDefault();
@@ -198,6 +246,43 @@
             // Hide tooltip when close button is clicked
             var tooltip = bootstrap.Tooltip.getInstance(this);
             if (tooltip) tooltip.hide();
+        });
+
+        // Handle copy URL button click
+        $('#custom-docs').on('click', '.btn-copy-url', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            var $panel = $(this).closest('.collapse');
+            var panelId = $panel.attr('id');
+            var $gridBtn = $('.tutorial-grid button[data-bs-target="#' + panelId + '"]').first();
+            var tutorialName = $gridBtn.text().trim();
+            
+            // Construct the full URL with the fragment
+            var hash = tutorialName.replace(/\s+/g, '-').toLowerCase();
+            var url = window.location.origin + window.location.pathname + window.location.search + '#' + hash;
+
+            // Copy to clipboard
+            var $temp = $("<input>");
+            $("body").append($temp);
+            $temp.val(url).select();
+            document.execCommand("copy");
+            $temp.remove();
+
+            // Show feedback via tooltip
+            var tooltip = bootstrap.Tooltip.getInstance(this);
+            if (tooltip) {
+                // In Bootstrap 5, we can use setContent to update title or manually trigger
+                // but simpler to hide, update attribute, show, then revert.
+                var originalTitle = $(this).attr('data-bs-original-title') || $(this).attr('title');
+                
+                $(this).attr('data-bs-original-title', 'Copied!').tooltip('show');
+                
+                var btn = this;
+                setTimeout(function() {
+                    $(btn).attr('data-bs-original-title', originalTitle).tooltip('hide');
+                }, 2000);
+            }
         });
     });
 })(jQuery);
