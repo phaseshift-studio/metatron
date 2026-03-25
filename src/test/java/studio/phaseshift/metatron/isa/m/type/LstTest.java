@@ -246,4 +246,33 @@ public class LstTest extends AbstractAlgebraTest<Lst> {
     public void testPlus(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "[1,2,3]                                     % lst::T                       % true",
+            "[1,2,3]                                     % lst[int,int,int]::T          % true",
+            "[1]                                         % lst[int,int]::T              % false",
+            "[1]                                         % lst[int,int{0}]::T           % true",
+            "[1]                                         % lst[int,int{?}]::T           % true",
+            "[,]                                         % lst[int{?},int{?}]::T        % true",
+            "[,]                                         % lst[int{0},int{0}]::T        % true",
+            "[,]                                         % lst[int{0},int]::T           % false",
+            "[a=>1,b=>2]                                 % lst[str,str]::T              % false",
+            "{1,2,3}                                     % lst[int,int,int]::T          % false",
+            "['a',1,['b',2]]                             % lst[str,int,lst]::T          % true",
+            "['a',{2}1]                                  % lst[str{?},int{2,3}]::T      % true",
+            "['a',{4}1]                                  % lst[str{?},int{2,3}]::T      % false",
+            "[{0}1,1,['b',2]]                            % lst[int{?},int,lst]::T       % true",
+            "[{0}1,1,['b',2]]                            % lst[int,int,lst]::T          % false",
+            "[{1}1,{5}'a',2.01234]                       % lst[int,str{+},real]::T      % true",
+            "[{1}1,{5}'a',real::T]                       % lst[int,str{+},real]::T      % true",
+            "lst[int,str{+},real]::T                     % lst[int,str{+},real]::T      % true",
+            "lst[int,str,real]::T                        % lst[int,str{+},real]::T      % true",
+            "lst[int,str{0},real]::T                     % lst[int,str{+},real]::T      % false",
+            "[{1,2,3},{'a','b'}]::T                      % lst[int{3},str{+}]::T        % true",
+            "[{1,2,3},{'a','b'}]::T                      % lst[int{*}]::T               % true",
+    }, delimiter = '%')
+    public void testPoly(final String list, final String type, final boolean matches) {
+        AbstractMetatronTest.checkMatches(LOG, list, type,matches);
+    }
 }

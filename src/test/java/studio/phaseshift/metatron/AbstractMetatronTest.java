@@ -78,7 +78,7 @@ public abstract class AbstractMetatronTest {
         final Obj a = mParser.m_obj().parse(lhs).get();
         final Obj b = mParser.m_obj().parse(rhs).get();
         final boolean m = a.test(b);
-        LOG.debug("testing %s matches %s: %s [expected:%s]", a, b, m, matches);
+        LOG.warn("testing %s matches %s: %s [expected:%s]", a, b, m, matches);
         assertEquals(matches, m);
     }
 

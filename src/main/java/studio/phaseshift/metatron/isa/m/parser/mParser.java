@@ -260,7 +260,7 @@ public class mParser {
     }
 
     public static <O extends Obj> O eval(final String code) {
-        return (O) objs(splitOnNonQuotedSequence(code, ';',false).stream()
+        return (O) objs(splitOnNonQuotedSequence(code, ';', false).stream()
                 .filter(s -> !s.trim().isEmpty())
                 .map(s -> Arrays.stream(s.split("\n"))
                         .map(String::trim)
@@ -272,7 +272,7 @@ public class mParser {
     }
 
     public static <O extends Obj> O parseByLine(final String code) {
-        return (O) objs(splitOnNonQuotedSequence(code, ';',false).stream()
+        return (O) objs(splitOnNonQuotedSequence(code, ';', false).stream()
                 .filter(s -> !s.trim().isEmpty())
                 .map(s -> Arrays.stream(s.split("\n"))
                         .map(String::trim)
@@ -323,7 +323,10 @@ public class mParser {
     }
 
     public static Parser m_furi_poly_type() {
-        return seq(of('[').trim(), m_furi(REDUCED_FURI_CHARS, false, true, false).separatedBy(of(',').trim()), of(']').trim())
+        return seq(of('[').trim(),
+                seq(m_furi(REDUCED_FURI_CHARS, false, true, false), opt(seq(of("=>").trim(), m_furi(REDUCED_FURI_CHARS, false, true, false)), "")).flatten()
+                        .separatedBy(of(',').trim()),
+                of(']').trim())
                 .map(t -> ((List) (pick(t, 1))).stream().filter(c -> !c.equals(',')).map(Object::toString).toList());
     }
 
@@ -554,7 +557,7 @@ public class mParser {
             try (final BufferedReader reader = new BufferedReader(read)) {
                 final List<String> lines = reader.lines().toList();
                 final String source = removeBlockComments(lines.stream().reduce("", (a, b) -> a + b + "\n"));
-                return splitOnNonQuotedSequence(source, ';',false).stream()
+                return splitOnNonQuotedSequence(source, ';', false).stream()
                         .map(mParser::removeLineComments)
                         .filter(s -> !s.trim().isEmpty())
                         .map(s -> Arrays.stream(s.split("\n"))

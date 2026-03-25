@@ -376,8 +376,8 @@ is_divisible -> |is_divisble?bool<=int(by?int=>is(neq(0)).else(print('error').ma
 === dom/rng coefficients
 
 Every `inst` has a `dom` and `rng` encoded in their key/value query parameters. The dom/rng query parameter values are
-any fURI minus query parameters. As such, it is possible to specify a type structure, a coefficient, and polymorphic 
-generics.
+any fURI minus query parameters (ie. recursive `?`s are not allowed). What is possible, is the specification of 
+a type structure, a coefficient, and polymorphic generics.
 
 [source,mtron,role="center-code"]
 ----

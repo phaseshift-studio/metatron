@@ -431,4 +431,22 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
     public void testSum(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "[a=>1,b=>2,c=>3]                            % rec::T                       % true",
+            //"[a=>1]                                      % rec[uri=>int]::T             % true",
+            //"[a=>1,b=>2,c=>3]                            % rec[uri=>int]::T             % true",
+            //"[=>]                                        % rec[#{?}=>#{?}]::T           % true",
+            //"[a=>1]                                      % rec[#{?}=>#{?}]::T           % true",
+            "[a=>1]                                      % rec[#=>#]::T                 % true",
+            "[a=>1]                                      % rec[int=>int]::T             % false",
+            "[a=>1]                                      % rec[#=>int]::T               % true",
+            //"[a=>1]                                      % rec[uri=>#]::T               % true"
+    }, delimiter = '%')
+    public void testPoly(final String record, final String type, final boolean matches) {
+        final Type t = mParser.parse(type);
+        LOG.error("%s",t);
+        AbstractMetatronTest.checkMatches(LOG, record, type,matches);
+    }
 }

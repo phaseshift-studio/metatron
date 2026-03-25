@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -34,13 +34,12 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import static studio.phaseshift.metatron.furi.fURI.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Type.LOG;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -142,7 +141,7 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
         if (key.isInt())
             return (OBJ) ((this.jvm().size() > key.intValue()) ? this.jvm().get(key.<Int>as().intValue().intValue()).autoResolve(this) : noobj()).parent(this).c(c -> c.mult(cKey));
         else if (key.isUri()) {
-           // LOG.info("key: %s", key);
+            // LOG.info("key: %s", key);
             // if (key.uriValue().isEmpty())
             //            return this.c(c -> c.mult(cKey)).as();
 
@@ -151,7 +150,7 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
             final String step = key.uriValue().segments().getFirst();
             final boolean isBranch = key.uriValue().isBranch();
             Stream<Obj> result;
-           // LOG.info("step: %s", step);
+            // LOG.info("step: %s", step);
             if (step.equals(Singleton.WILD_ONE.toString()) || step.equals(ALL.toString())) {
                 result = isBranch ? (Stream) this.indexedStream() : this.elements();
             } else {
@@ -197,11 +196,16 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
     @Override
     default boolean test(final Obj rhs) {
         if (rhs.isLst()) {
-            if (rhs.lstValue().size() > this.lstValue().size())
-                return false;
+            //if (rhs.lstValue().size() > this.lstValue().size())
+            //    return false;
             for (int i = 0; i < rhs.lstValue().size(); i++) {
-                final Obj l = this.lstValue().get(i).autoResolve(this);
                 final Obj r = rhs.lstValue().get(i).autoResolve(this);
+                if (this.lstValue().size() <= i) {
+                    if (!r.c().isZeroable())
+                        return false;
+                    else continue;
+                }
+                final Obj l = this.lstValue().get(i).autoResolve(this);
                 if (!l.test(r))
                     return false;
             }

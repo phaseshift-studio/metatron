@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -19,10 +19,12 @@
 package studio.phaseshift.metatron.isa.m.type;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.furi.form.SAPPCQfURI;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.*;
@@ -169,6 +171,12 @@ public interface Type extends Obj {
             return null;
         }
 
+        public static Poly<?, ?> parsePoly(final fURI furi) {
+            if (furi.hasPoly())
+                return ((SAPPCQfURI) furi).polyParsed();
+            throw MTronException.of("furi does not have poly: %s", furi);
+        }
+
         public static boolean typeCheck(final Obj lhs, final Obj rhs) {
             if (lhs.isType()) {
                 /// /////////////////////////
@@ -187,10 +195,13 @@ public interface Type extends Obj {
                 // if(rhs.asType().parentType()!= null && !this.test(rhs.asType().parentType()))
                 //     return false;
                 if (lhs.asType().isBaseType())
-                    return lhs.baseType().test(rhs.tid()) && (!rhs.asType().hasPredicate() || Objects.equals(lhs.asType().predicate(), rhs.asType().predicate())); // matches any abstract type to it's base type as long as within the coefficient boundaries
+                    return lhs.baseType().test(rhs.tid()) &&
+                            (!rhs.asType().hasPredicate() || Objects.equals(lhs.asType().predicate(), rhs.asType().predicate())); // matches any abstract type to it's base type as long as within the coefficient boundaries
                 if (rhs.tid().isGeneric())
-                    return !lhs.tid().isGeneric() || (lhs.c().within(rhs.c()) && lhs.tid().basePath().equals(rhs.tid().basePath()));
-                return !rhs.asType().hasPredicate() || Objects.equals(lhs.asType().predicate(), rhs.asType().predicate());// || !rhs.asType().predicate().apply(this).isNoObj();
+                    return !lhs.tid().isGeneric() ||
+                            (lhs.c().within(rhs.c()) && lhs.tid().basePath().equals(rhs.tid().basePath()));
+                return !rhs.asType().hasPredicate() ||
+                        Objects.equals(lhs.asType().predicate(), rhs.asType().predicate());// || !rhs.asType().predicate().apply(this).isNoObj();
             } else if (rhs.isType()) {
                 /// //////////////////
                 /// OBJ <=> TYPE ///
@@ -198,13 +209,8 @@ public interface Type extends Obj {
                 if (rhs.tid().isGeneric() || rhs.test(T(CODE_TID)) || rhs.test(T(INST_TID)))
                     return true;
                 if (rhs.tid().hasPoly()) {
-                    if (!lhs.isPoly())
-                        return false;
-                    // System.out.println(this + "---" + rhs.tid().poly());
-                    if (rhs.tid().poly().size() != lhs.asLst().count())
-                        return false;
-                    for (int i = 0; i < rhs.tid().poly().size(); i++) {
-                        if (!lhs.asLst().at(i).test(T(f(rhs.tid().poly().get(i)))))
+                    if (rhs.tid().hasPoly()) {
+                        if (!lhs.test(parsePoly(rhs.tid())))
                             return false;
                     }
                 }
@@ -222,7 +228,6 @@ public interface Type extends Obj {
     }
 
     final class TypeType {
-
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
                     instC(RSHIFT_INST_TID.dom(TYPE_TID).rng(ALL_STAR), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(inst.arg(0).orElse((Obj) uri(ALL)).stream().flatMap(u -> rec(

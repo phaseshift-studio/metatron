@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -20,7 +20,6 @@ package studio.phaseshift.metatron.isa.m.type;
 
 import studio.phaseshift.metatron.algebra.MultMonoid;
 import studio.phaseshift.metatron.algebra.PlusMonoid;
-import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.util.Tuple;
@@ -178,9 +177,9 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>>, MultMonoid.O<Rel>,
         // Check if both domain and range are id() instructions
         // Use path() to get base TID without query parameters (dom/rng qualifiers)
         return this.jvm().get0().isObjInst() &&
-               this.jvm().get1().isObjInst() &&
-               this.jvm().get0().asInst().tid().path().equals(ID_INST_TID.path()) &&
-               this.jvm().get1().asInst().tid().path().equals(ID_INST_TID.path());
+                this.jvm().get1().isObjInst() &&
+                this.jvm().get0().asInst().tid().path().equals(ID_INST_TID.path()) &&
+                this.jvm().get1().asInst().tid().path().equals(ID_INST_TID.path());
     }
 
     /**
@@ -230,7 +229,7 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>>, MultMonoid.O<Rel>,
      * -(a=>b) = (b=>a)
      * This makes relations form an additive group where negation is relation reversal.
      */
-   // @Override
+    // @Override
     default Rel neg() {
         return rel(this.second(), this.first());
     }
@@ -244,9 +243,8 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>>, MultMonoid.O<Rel>,
     default Rel plus(final Rel rhs) {
         // Handle additive identity: 0 + a = a and a + 0 = a
         if (this.isZero()) return rhs;
-        if (rhs.isZero()) return (Rel) this;
-
-        // Create Objs collection from both relations
+        if (rhs.isZero()) return this;
+        // create objs collection from both relations
         return this;// objs(this, rhs);
     }
 
@@ -288,21 +286,21 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>>, MultMonoid.O<Rel>,
                             // Direct addition of two relations
                             if (lhs.asRel().isZero()) return inst.arg(0);
                             if (inst.arg(0).asRel().isZero()) return lhs.asRel();
-                            return objs(lhs.asRel(),inst.arg(0).asRel());
+                            return objs(lhs.asRel(), inst.arg(0).asRel());
                         }
                     }),
                     instC(MULT_INST_TID.dom(REL_TID).rng(REL_TID.maybeSome()), lst(T(REL_TID.maybeSome())), (lhs, inst) -> {
-                        if(lhs.asRel().isZero())
+                        if (lhs.asRel().isZero())
                             return lhs.asRel().c(cInt.ZERO());
                         if (inst.arg(0).isObjs()) {
                             return objs(inst.arg(0).stream().map(Obj::<Rel>as).map(rhs -> {
-                                if(rhs.isZero())
+                                if (rhs.isZero())
                                     return rhs.c(cInt.ZERO());
-                                if(lhs.asRel().isOne())
+                                if (lhs.asRel().isOne())
                                     return rhs;
-                                else if(rhs.isOne())
+                                else if (rhs.isOne())
                                     return lhs;
-                              return  lhs.asRel().mult(rhs);
+                                return lhs.asRel().mult(rhs);
                             }));
                         } else {
                             if (lhs.asRel().isOne())
