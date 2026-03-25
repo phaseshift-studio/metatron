@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -20,9 +20,10 @@ package studio.phaseshift.metatron.isa.tble;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractSpace;
-import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mInstSet;
+import studio.phaseshift.metatron.isa.m.type.NoObj;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
@@ -33,9 +34,7 @@ import studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema;
 import studio.phaseshift.metatron.isa.tble.schema.storage.fURIAwareIndexedSchema;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
@@ -47,13 +46,17 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TID;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs0;
+import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-
-import java.util.LinkedHashMap;
+import static studio.phaseshift.metatron.isa.tble.tbleInstSet.*;
 
 /**
  * tbleSpace - A dual-mode SQL database connector for Metatron with pluggable schema support
@@ -130,20 +133,63 @@ import java.util.LinkedHashMap;
  */
 public class tbleSpace extends AbstractSpace<Connection> {
 
-    public static fURI TABL_SPACE_TID = tbleInstSet.TBLE_ISA_TID.extend(SPACE).extend("tble");
+    public static fURI SQL_INST_TID = TBLE_ISA_TID.extend(INST).extend(SQL);
+    public static fURI TBLE_SPACE_TID = TBLE_ISA_TID.extend(SPACE).extend("tble");
     public static final Type TABL_SPACE_TYPE =
             Type.Builder.build()
                     .tid(SPACE_TID)
-                    .vid(TABL_SPACE_TID)
+                    .vid(TBLE_SPACE_TID)
                     .isaPredicate(rec(
                             uri(PATTERN), URI_TYPE,
                             uri(HOST), URI_TYPE,
                             uri(DRIVER), URI_TYPE,
                             uri(ROUTE), rec(URI_TYPE, URI_TYPE),
                             uri(TABLE).maybe(), LST_TYPE))
-                    .constructor(instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(TABL_SPACE_TID),
+                    .constructor(instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(TBLE_SPACE_TID),
                             lst(REC_TYPE),
-                            (_, inst) -> tbleSpace.of(inst.arg(0).asRec().jvm(), inst.arg(0).vid()))).create();
+                            (_, inst) -> tbleSpace.of(inst.arg(0).asRec().jvm(), inst.arg(0).vid())))
+                    .inst(instC(SQL_INST_TID.dom(TBLE_SPACE_TID).rng(REC_ROW_TID.maybeSome()), lst(STR_TYPE), (lhs, inst) -> {
+                        try {
+                            final Statement statement = lhs.<tbleSpace>as().sjvm().createStatement();
+                            final ResultSet result = statement.executeQuery(inst.arg(0).strValue());
+                            final ResultSetMetaData metadata = result.getMetaData();
+                            Obj objs = objs0();
+                            while (result.next()) {
+                                final Rec row = rec();
+                                for (int i = 1; i <= metadata.getColumnCount(); i++) {
+                                    final int sqlType = metadata.getColumnType(i);
+                                    final String columnName = metadata.getColumnName(i);
+                                    // Use typed getters based on SQL type to avoid database-specific objects
+                                    final Obj value = switch (sqlType) {
+                                        case Types.TINYINT, Types.SMALLINT, Types.INTEGER, Types.BIGINT -> {
+                                            final long val = result.getLong(i);
+                                            yield result.wasNull() ? NoObj.noobj() : jnt(val);
+                                        }
+                                        case Types.FLOAT, Types.REAL, Types.DOUBLE, Types.DECIMAL, Types.NUMERIC -> {
+                                            final double val = result.getDouble(i);
+                                            yield result.wasNull() ? NoObj.noobj() : real(val);
+                                        }
+                                        case Types.BOOLEAN, Types.BIT -> {
+                                            final boolean val = result.getBoolean(i);
+                                            yield result.wasNull() ? NoObj.noobj() : bool(val);
+                                        }
+                                        default -> {
+                                            // String types, dates, binary, etc.
+                                            final String val = result.getString(i);
+                                            yield val == null ? NoObj.noobj() : str(val);
+                                        }
+                                    };
+                                    row.at(uri(columnName), value, MUTABLE);
+                                }
+                                objs = objs.append(row);
+                            }
+                            return objs;
+
+                        } catch (final Exception e) {
+                            throw MTronException.of(e);
+                        }
+                    }))
+                    .create(TBLE_ISA_TYPES, TBLE_ISA_INSTS);
 
     protected ObjSerializer<?> serializer;
     protected TableSchema schema;
@@ -155,7 +201,7 @@ public class tbleSpace extends AbstractSpace<Connection> {
         MTronException.wrap(() -> Class.forName(config.get(uri(DRIVER)).uriValue().toString()));
         try {
             final Connection conn = DriverManager.getConnection(JDBC + config.get(uri(HOST)).uriValue().toString());
-            return new tbleSpace(conn, config, TABL_SPACE_TID, vid);
+            return new tbleSpace(conn, config, TBLE_SPACE_TID, vid);
         } catch (final SQLException ex) {
             throw MTronException.of(ex);
         }
@@ -197,12 +243,12 @@ public class tbleSpace extends AbstractSpace<Connection> {
                 final fURI schemaPath = f(this.schemaPrefix).extend(dbName);
 
                 this.schemaGenerator = new SQLSchemaGenerator(
-                    this.existingTableSchema.getTableMetadata(),
-                    schemaPath
+                        this.existingTableSchema.getTableMetadata(),
+                        schemaPath
                 );
 
                 LOG.info("initialized {{g}}SQL schema{{X}} at %s (lazy) with %s table types",
-                    schemaPath, this.existingTableSchema.getTableNames().size());
+                        schemaPath, this.existingTableSchema.getTableNames().size());
 
             } else {
                 this.existingTableSchema = null;

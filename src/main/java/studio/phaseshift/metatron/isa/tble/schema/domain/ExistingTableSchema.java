@@ -288,7 +288,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
     public int write(final Connection conn, final fURI furi, final Obj obj) throws SQLException {
         final List<String> tablePath = parseTablePath(furi.asNode());
         if (tablePath == null) {
-            throw new SQLException("Invalid table path: " + furi);
+            throw new SQLException("invalid table path: " + furi);
         }
 
         final String tableName = tablePath.getFirst();
@@ -296,15 +296,15 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         final TableMetadata metadata = tableSchemas.get(tableName.toLowerCase());
 
         if (metadata == null) {
-            throw new SQLException("Table not found: " + tableName);
+            throw new SQLException("table not found: " + tableName);
         }
 
         if (rowId == null || rowId.equals("+")) {
-            throw new SQLException("Cannot write without specific row ID: " + furi);
+            throw new SQLException("cannot write without specific row ID: " + furi);
         }
 
         if (metadata.primaryKeys.isEmpty()) {
-            throw new SQLException("Table " + tableName + " has no primary key, cannot write");
+            throw new SQLException("table " + tableName + " has no primary key, cannot write");
         }
 
         // Check if this is a field-level write (e.g., /table/123/name)
@@ -322,7 +322,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                 // List with positional values (indices correspond to column order)
                 return writeRowFromList(conn, metadata, rowId, obj.asLst());
             } else {
-                throw new SQLException("Expected record or list for row write, got: " + obj.tid());
+                throw new SQLException("expected record or list for row write, got: " + obj.tid());
             }
         }
     }

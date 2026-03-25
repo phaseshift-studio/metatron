@@ -30,6 +30,7 @@ import java.util.*;
 
 import static studio.phaseshift.metatron.isa.grph.space.grphSpace.GRPH_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.MTRON_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /*
@@ -38,14 +39,13 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 @InstSet.JREService(tid = "/m/grph")
 public class grphInstSet extends AbstractInstSet {
 
-    public static final fURI GRPH_ISA_TID = MTRON_TID.extend("grph");
+    public static final fURI GRPH_ISA_TID = M_ISA_TID.extend("grph");
     public static final fURI GRPH_INST_TID = GRPH_ISA_TID.extend("inst");
     public static final fURI ELMT_TID = GRPH_ISA_TID.extend("elmt");
     public static final fURI VRTX_TID = GRPH_ISA_TID.extend("vrtx");
     public static final fURI EDGE_TID = GRPH_ISA_TID.extend("edge");
 
     public static final fURI V_INST_TID = GRPH_INST_TID.extend("Vx");
-    public static final fURI E_INST_TID = GRPH_INST_TID.extend("Ex");
     public static final fURI OUT_INST_TID = GRPH_INST_TID.extend("out");
     public static final fURI IN_INST_TID = GRPH_INST_TID.extend("in");
     public static final fURI OUTE_INST_TID = GRPH_INST_TID.extend("outE");

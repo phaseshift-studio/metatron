@@ -96,7 +96,7 @@ public class McpProtocolHandler extends MRec implements MServerProtocolHandler {
                         "mcp-" + System.currentTimeMillis();
                 session = mcpServer.getTransportProvider().createSession(conn, sessionId);
                 mcpSessions.put(conn, session);
-                LOG.info("Created new MCP session: %s", sessionId);
+                LOG.info("created new %s session: %s", sillyPrint("mcp", true, false), sessionId);
             }
 
             // Send the raw JSON string to the transport which will handle parsing

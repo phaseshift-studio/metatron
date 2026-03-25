@@ -29,13 +29,14 @@ import java.util.function.Function;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.CODE_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.Code.CODE_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 
 public interface InstSet extends Space {
-
+    
+    Type INSTSET_TYPE = Type.Builder.build().tid(INSTSET_TID).vid(INSTSET_TID).create();
 
     fURI A = f("A");
     fURI B = f("B");

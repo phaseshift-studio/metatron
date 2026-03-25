@@ -67,6 +67,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.CommonUtil.splitOnNonQuotedSequence;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
 public class mParser {
@@ -229,7 +230,7 @@ public class mParser {
         return seq(opt(objParser, null), opt(of(".").trim(), '.'), opt(m_code(), null), m_vid_postfix()).map(t -> {
             final Obj first = mParser.pick(t, 0);
             final Obj second = mParser.pick(t, 2);
-            if(null == first)
+            if (null == first)
                 return second;
             if (null == second)
                 return first;
@@ -259,7 +260,7 @@ public class mParser {
     }
 
     public static <O extends Obj> O eval(final String code) {
-        return (O) objs(Arrays.stream(code.split(";"))
+        return (O) objs(splitOnNonQuotedSequence(code, ';',false).stream()
                 .filter(s -> !s.trim().isEmpty())
                 .map(s -> Arrays.stream(s.split("\n"))
                         .map(String::trim)
@@ -271,7 +272,7 @@ public class mParser {
     }
 
     public static <O extends Obj> O parseByLine(final String code) {
-        return (O) objs(Arrays.stream(code.split(";"))
+        return (O) objs(splitOnNonQuotedSequence(code, ';',false).stream()
                 .filter(s -> !s.trim().isEmpty())
                 .map(s -> Arrays.stream(s.split("\n"))
                         .map(String::trim)
@@ -553,7 +554,7 @@ public class mParser {
             try (final BufferedReader reader = new BufferedReader(read)) {
                 final List<String> lines = reader.lines().toList();
                 final String source = removeBlockComments(lines.stream().reduce("", (a, b) -> a + b + "\n"));
-                return Arrays.stream(source.split(";"))
+                return splitOnNonQuotedSequence(source, ';',false).stream()
                         .map(mParser::removeLineComments)
                         .filter(s -> !s.trim().isEmpty())
                         .map(s -> Arrays.stream(s.split("\n"))

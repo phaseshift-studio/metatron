@@ -20,10 +20,10 @@ package studio.phaseshift.metatron.isa.mach.type.net.mcp;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.modelcontextprotocol.spec.McpServerSession;
-import io.modelcontextprotocol.spec.McpServerTransport;
 import io.modelcontextprotocol.spec.McpServerTransportProvider;
 import org.java_websocket.WebSocket;
 import reactor.core.publisher.Mono;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -31,7 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Transport provider that creates MCP transports for WebSocket connections.
  * Manages the lifecycle of MCP sessions over WebSocket connections.
- *
+ * <p>
  * This provider acts as a factory, creating a new transport and session for each
  * WebSocket client connection. It maintains a registry of active sessions and
  * handles broadcasting notifications to all connected clients.
@@ -63,7 +63,6 @@ public class McpWebSocketTransportProvider implements McpServerTransportProvider
     @Override
     public void setSessionFactory(final McpServerSession.Factory sessionFactory) {
         this.sessionFactory = sessionFactory;
-        System.out.println("DEBUG: Session factory set in transport provider");
     }
 
     /**
@@ -75,10 +74,8 @@ public class McpWebSocketTransportProvider implements McpServerTransportProvider
      * @return The created MCP session
      */
     public McpServerSession createSession(final WebSocket webSocket, final String sessionId) {
-        System.out.println("DEBUG: createSession called, sessionFactory = " + sessionFactory);
-        if (sessionFactory == null) {
-            throw new IllegalStateException("Session factory not set. MCP server must be initialized first.");
-        }
+        if (sessionFactory == null)
+            throw MTronException.of("session factory not set. mcp server must be initialized first.");
 
         // Create transport for this specific WebSocket connection
         // Pass the tool dispatcher to enable custom tool handling
@@ -117,9 +114,9 @@ public class McpWebSocketTransportProvider implements McpServerTransportProvider
     @Override
     public Mono<Void> notifyClients(final String method, final Object params) {
         return Mono.when(
-            sessions.values().stream()
-                .map(session -> session.sendNotification(method, params))
-                .toList()
+                sessions.values().stream()
+                        .map(session -> session.sendNotification(method, params))
+                        .toList()
         );
     }
 
@@ -135,9 +132,9 @@ public class McpWebSocketTransportProvider implements McpServerTransportProvider
     @Override
     public Mono<Void> closeGracefully() {
         return Mono.when(
-            sessions.values().stream()
-                .map(McpServerSession::closeGracefully)
-                .toList()
+                sessions.values().stream()
+                        .map(McpServerSession::closeGracefully)
+                        .toList()
         ).then(Mono.fromRunnable(sessions::clear));
     }
 
@@ -150,7 +147,7 @@ public class McpWebSocketTransportProvider implements McpServerTransportProvider
      * The message will be parsed and handled by the MCP session.
      *
      * @param webSocket The WebSocket connection
-     * @param message The raw JSON-RPC message string
+     * @param message   The raw JSON-RPC message string
      */
     public void sendMessageToSession(final WebSocket webSocket, final String message) {
         // The MCP SDK doesn't provide a direct way to push messages into a session

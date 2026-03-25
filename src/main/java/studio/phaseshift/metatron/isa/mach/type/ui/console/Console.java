@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -100,6 +100,23 @@ public class Console extends JRec implements Closeable, Runnable {
     public static Console LOCAL_INSTANCE = null;
     public Machine machine = null;
 
+    // Language mode for multi-language support
+    public enum Language {
+        MTRON("mtron", "{{m}}mtron{{g}}> "),
+        GREMLIN("gremlin", "{{y}}gremlin{{g}}> "),
+        SQL("sql", "{{c}}sql{{g}}> ");
+
+        public final String name;
+        public final String prompt;
+
+        Language(String name, String prompt) {
+            this.name = name;
+            this.prompt = prompt;
+        }
+    }
+
+    private Language currentLanguage = Language.MTRON;
+
     public static final Type CONSOLE_TYPE = Type.Builder.build()
             .tid(REC_TID)
             .vid(CONSOLE_TID)
@@ -181,7 +198,16 @@ public class Console extends JRec implements Closeable, Runnable {
     }
 
     public String prompt() {
-        return Graphitty.string("{{m}}mtron{{g}}> ");
+        return Graphitty.string(this.currentLanguage.prompt);
+    }
+
+    public Language getCurrentLanguage() {
+        return this.currentLanguage;
+    }
+
+    public void setLanguage(Language language) {
+        this.currentLanguage = language;
+        LOG.info("switched to {{y}}%s{{X}} mode", language.name);
     }
 
     public StatusLine getStatus() {
@@ -200,10 +226,55 @@ public class Console extends JRec implements Closeable, Runnable {
         });
     }
 
+    protected void executeInCurrentLanguage(final String line) {
+        switch (this.currentLanguage) {
+            case MTRON -> this.executeMtron(line);
+            case GREMLIN -> this.executeGremlin(line);
+            case SQL -> this.executeSql(line);
+        }
+    }
+
+    protected void executeMtron(final String line) {
+        CommonUtil.splitOnNonQuotedSequence(line, ';', false).forEach(l -> {
+            try {
+                final Obj parseResult = mParser.parse(l);
+                if (null != parseResult && !parseResult.isNoObj()) {
+                    this.machine = SwarmMachine.of(parseResult.isCall() ? parseResult.as() : start_(parseResult)).onHalt(this::printResult);
+                    final Obj computeResult = this.machine.apply();
+                    computeResult.stream().forEach(this::printResult);
+                }
+            } catch (final Exception e) {
+                this.printResult(fail(e));
+            }
+        });
+    }
+
+    protected void executeGremlin(final String line) {
+        try {
+            // TODO: Implement Gremlin execution using GremlinScriptEngine
+            // The result should be converted to Metatron objects
+            LOG.warn("Gremlin execution not yet implemented");
+            this.printResult(fail(new UnsupportedOperationException("Gremlin mode not yet implemented")));
+        } catch (final Exception e) {
+            this.printResult(fail(e));
+        }
+    }
+
+    protected void executeSql(final String line) {
+        try {
+            // TODO: Implement SQL execution
+            // The result should be converted to Metatron objects (similar to tbleSpace.sql())
+            LOG.warn("SQL execution not yet implemented");
+            this.printResult(fail(new UnsupportedOperationException("SQL mode not yet implemented")));
+        } catch (final Exception e) {
+            this.printResult(fail(e));
+        }
+    }
+
     public void redrawBuffer() {
-        Graphitty.out(this.terminal.output(), "\n");
-        Graphitty.out(this.terminal.output(), this.prompt());
-        Graphitty.out(this.terminal.output(), Highlighter.format(this.reader.getBuffer().toString()));
+        Graphitty.out(terminal.output(), "\n");
+        Graphitty.out(terminal.output(), this.prompt());
+        Graphitty.out(terminal.output(), Highlighter.format(this.reader.getBuffer().toString()));
     }
 
     public void run() {
@@ -231,12 +302,12 @@ public class Console extends JRec implements Closeable, Runnable {
                     LogObj.setSLF4J(line.substring(4));
                 } else if (line.startsWith(":check")) {
                     Arrays.stream(line.substring(6).trim().split(" ")).forEach(s -> {
-                        if(!s.trim().isEmpty()) {
+                        if (!s.trim().isEmpty()) {
                             if (s.startsWith("-"))
                                 TypeCheck.disable(TypeCheck.valueOf(s.substring(1).toUpperCase()));
                             else
                                 TypeCheck.enable(TypeCheck.valueOf(s.toUpperCase()));
-                        }   
+                        }
                     });
                     LOG.info("type checking %s", TypeCheck.getEnabled());
                 } else if (line.startsWith(":card")) {
@@ -264,20 +335,17 @@ public class Console extends JRec implements Closeable, Runnable {
                     LOG.info("%s justifying nested polys", leftJustify ? "{{y}}left{{X}}" : "{{y}}right{{X}}");
                 } else if (line.startsWith(":state")) {
                     this.status.setState(Level.valueOf(line.substring(6).trim().toUpperCase()));
+                } else if (line.startsWith(":lang")) {
+                    final String langName = line.substring(5).trim().toLowerCase();
+                    try {
+                        final Language newLang = Language.valueOf(langName.toUpperCase());
+                        this.setLanguage(newLang);
+                    } catch (IllegalArgumentException e) {
+                        LOG.error("unknown language: {{r}}%s{{X}}. Available: mtron, gremlin, sql", langName);
+                    }
                 } else {
                     this.status.startTimer();
-                    Arrays.stream(line.split(";")).forEach(l -> {
-                        try {
-                            final Obj parseResult = mParser.parse(l);
-                            if (null != parseResult && !parseResult.isNoObj()) {
-                                this.machine = SwarmMachine.of(parseResult.isCall() ? parseResult.as() : start_(parseResult)).onHalt(this::printResult);
-                                final Obj computeResult = this.machine.apply();
-                                computeResult.stream().forEach(this::printResult);
-                            }
-                        } catch (final Exception e) {
-                            this.printResult(fail(e));
-                        }
-                    });
+                    this.executeInCurrentLanguage(line);
                     this.machine = null;
                 }
             } catch (final UserInterruptException e) {

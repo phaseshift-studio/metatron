@@ -30,6 +30,7 @@ import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.Tokens.ROUTE;
+import static studio.phaseshift.metatron.isa.grph.grphInstSet.GRPH_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.MTRON_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TID;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
@@ -40,7 +41,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  */
 public abstract class grphSpace<S> extends AbstractSpace<S> {
 
-    public static final fURI GRPH_SPACE_TID = MTRON_TID.extend("grph").extend("space/grph");
+    public static final fURI GRPH_SPACE_TID = GRPH_ISA_TID.extend("space/grph");
 
     public static final Rec GRPH_CONFIG = rec(
             uri(PATTERN), URI_TYPE,

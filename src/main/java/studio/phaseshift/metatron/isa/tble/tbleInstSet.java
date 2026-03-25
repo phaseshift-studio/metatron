@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -44,6 +44,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.tble.tbleSpace.TABL_SPACE_TYPE;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -56,24 +57,26 @@ public class tbleInstSet extends AbstractInstSet {
     public static final fURI LST_ROW_TID = TBLE_ISA_TID.extend("lrow");
     public static final fURI REC_ROW_TID = TBLE_ISA_TID.extend("rrow");
     public static final fURI TABLE_TID = TBLE_ISA_TID.extend("table");
-
+    
+    static final Set<Inst> TBLE_ISA_INSTS = new LinkedHashSet<>();
+    static final Set<Type> TBLE_ISA_TYPES = new LinkedHashSet<>();
 
     public static final Type LST_ROW_TYPE = Type.Builder.build()
             .tid(LST_TID)
             .vid(LST_ROW_TID)
-            .create();
+            .create(TBLE_ISA_TYPES, TBLE_ISA_INSTS);
 
     public static final Type REC_ROW_TYPE = Type.Builder.build()
             .tid(REC_TID)
             .vid(REC_ROW_TID)
             .isaPredicate(rec(URI_TYPE, T(ALL)))
-            .create();
+            .create(TBLE_ISA_TYPES, TBLE_ISA_INSTS);
 
     public static final Type TABLE_TYPE = Type.Builder.build()
             .tid(LST_TID.maybeSome())
             .vid(TABLE_TID)
             .predicate(isa_(T(LST_ROW_TID.maybeSome())).tryToInst())
-            .create();
+            .create(TBLE_ISA_TYPES, TBLE_ISA_INSTS);
 
 
     public tbleInstSet() {
@@ -82,15 +85,15 @@ public class tbleInstSet extends AbstractInstSet {
 
     @Override
     public Set<Type> types() {
-        return Set.of(tbleSpace.TABL_SPACE_TYPE, REC_ROW_TYPE, LST_ROW_TYPE, TABLE_TYPE);
+        TBLE_ISA_TYPES.add(TABL_SPACE_TYPE);
+        return TBLE_ISA_TYPES;
     }
 
     @Override
     public Set<Inst> insts() {
-        return new LinkedHashSet<>(List.of(
-                instC(AS_INST_TID.dom(LST_ROW_TID).rng(REC_ROW_TID), lst(REC_ROW_TYPE), (lhs, inst) -> lhs.asRec().at(uri(TABLE))),
-                instC(AS_INST_TID.dom(REC_ROW_TID).rng(LST_ROW_TID), lst(LST_ROW_TYPE), (lhs, inst) -> lst(lhs.asRec().elements().map(Rel::second).toList(), LST_ROW_TID, null)
-                )));
+        TBLE_ISA_INSTS.add(instC(AS_INST_TID.dom(LST_ROW_TID).rng(REC_ROW_TID), lst(REC_ROW_TYPE), (lhs, inst) -> lhs.asRec().at(uri(TABLE))));
+        TBLE_ISA_INSTS.add(instC(AS_INST_TID.dom(REC_ROW_TID).rng(LST_ROW_TID), lst(LST_ROW_TYPE), (lhs, inst) -> lst(lhs.asRec().elements().map(Rel::second).toList(), LST_ROW_TID, null)));
+        return TBLE_ISA_INSTS;
     }
 
     @Override

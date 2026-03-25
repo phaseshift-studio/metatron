@@ -36,7 +36,7 @@ public final class Tokens {
     public static final fURI PLUS = f("+");
     public static final fURI STACK_PATTERN = f("+/#");
 
-    
+
     public static final String JSONRPC = "jsonrpc";
     public static final String REQUIRED = "required";
     public static final String SRC = "src";
@@ -110,6 +110,8 @@ public final class Tokens {
     public static final String CREATOR = "creator";
     public static final String LEVEL = "level";
     public static final String SPACE = "space";
+    public static final String INST = "inst";
+    public static final String SQL = "sql";
     public static final String STORE = "store";
     public static final String PREFIX = "prefix";
     public static final String USER_HOME = "user.home";

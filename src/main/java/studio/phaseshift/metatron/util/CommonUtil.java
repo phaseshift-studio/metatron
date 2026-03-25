@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -148,7 +148,7 @@ public final class CommonUtil {
     }
 
     public static boolean isInt(final String s) {
-        return null != s  && INT_PATTERN.matcher(s).matches();
+        return null != s && INT_PATTERN.matcher(s).matches();
     }
 
     public static boolean isReal(final String s) {
@@ -162,6 +162,35 @@ public final class CommonUtil {
     public static int countLines(final String str) {
         final String[] lines = str.split("\r\n|\r|\n");
         return lines.length;
+    }
+
+    public static List<String> splitOnNonQuotedSequence(final String sequence, final char split, boolean includeSplitCharacter) {
+        List<String> result = new ArrayList<>();
+        StringBuilder current = new StringBuilder();
+        boolean inSingleQuote = false;
+        boolean inDoubleQuote = false;
+        boolean escaped = false;
+
+        for (char c : sequence.toCharArray()) {
+            if (escaped) {
+                current.append(c);
+                escaped = false;
+            } else if (c == '\\') {
+                escaped = true;
+            } else if (c == '\'' && !inDoubleQuote) {
+                inSingleQuote = !inSingleQuote;
+            } else if (c == '"' && !inSingleQuote) {
+                inDoubleQuote = !inDoubleQuote;
+            } else if (c == split && !inSingleQuote && !inDoubleQuote) {
+                result.add(current.toString().trim());
+                current = new StringBuilder();
+            }
+            if (includeSplitCharacter || c != split)
+                current.append(c);
+
+        }
+        result.add(current.toString().trim());
+        return result;
     }
 
     public static String replaceGroups(String s, final String leftDelim, final String rightDelim,

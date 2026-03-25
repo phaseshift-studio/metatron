@@ -80,6 +80,7 @@ public class mInstSet extends AbstractInstSet {
     public static final fURI LST_TID = M_ISA_TID.extend("lst");
     public static final fURI REC_TID = M_ISA_TID.extend("rec");
     public static final fURI INST_TID = M_ISA_TID.extend("inst");
+    public static final fURI INSTSET_TID = M_ISA_TID.extend("instset");
     public static final fURI OBJS_TID = M_ISA_TID.extend("objs");
     public static final fURI TYPE_TID = M_ISA_TID.extend("type");
     public static final fURI CODE_TID = M_ISA_TID.extend("code");
@@ -255,6 +256,7 @@ public class mInstSet extends AbstractInstSet {
                 LST_TYPE,
                 REC_TYPE,
                 INST_TYPE,
+                INSTSET_TYPE,
                 CODE_TYPE,
                 Type.Builder.build().tid(OBJS_TID).vid(OBJS_TID).create(),
                 /// ///////////////////////////////////

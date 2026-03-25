@@ -73,21 +73,18 @@ public class MetatronMcpServer extends MRec {
 
     private static final String SERVER_NAME = "metatron-mcp";
     private static final String SERVER_VERSION = "1.0.0";
-
-    private final McpAsyncServer mcpServer;
+    
     private final McpWebSocketTransportProvider transportProvider;
     private final JsonRpcToolDispatcher toolDispatcher;
     private final GraphittyLogger LOG;
-    private final ObjCleanStringSerializer stringSerializer;
 
     public MetatronMcpServer(final fURI vid) {
         super(mutableMap(), f(MACH_SERVER_MCP_SERVER_TID), vid);
         this.LOG = Graphitty.log(this);
-        this.stringSerializer = new ObjCleanStringSerializer();
         // Set the tool dispatcher in the transport provider so it can intercept tools/call requests
         this.transportProvider = new McpWebSocketTransportProvider(createObjectMapper());
         this.toolDispatcher = new JsonRpcToolDispatcher();
-        this.mcpServer = buildMcpServer();
+        buildMcpServer();
         this.transportProvider.setToolDispatcher(this.toolDispatcher);
         // register the eval inst as tool (the foundational tool by which all other tools can be created)
         // this is the barebones necessity for an agent to then have full control of the metatron environment
@@ -107,7 +104,7 @@ public class MetatronMcpServer extends MRec {
     }
 
     private McpAsyncServer buildMcpServer() {
-        LOG.info("Building MCP server with tool handlers");
+        LOG.info("building mcp server with tool handlers");
 
         // Register tools with our custom dispatcher (workaround for SDK bug)
         registerToolsWithDispatcher();
@@ -226,10 +223,11 @@ public class MetatronMcpServer extends MRec {
                                 .map(kv -> rel(uri(kv.getKey()), MObjFactory.of().toObj(kv.getValue())))
                                 .collect(new CommonUtil.RecCollector()))
                         .apply();
-                if (result.isFail())
-                    throw result.asFail().asException();
 
-                // Convert result to CallToolResult
+                // fail::T is a valid Metatron object type and should be returned as a successful result
+                // Do NOT throw exceptions for fail objects - they are part of the language semantics
+
+                // Convert result to CallToolResult (handles all Obj types including fail::T)
                 return convertObjToResult(result);
 
             } catch (final Exception e) {
@@ -352,21 +350,17 @@ public class MetatronMcpServer extends MRec {
 
     /**
      * Convert an Obj to a CallToolResult.
-     * - If Obj is a Fail, sets isError(true)
-     * - Otherwise, converts to string using toString()
+     * Fail objects are valid Metatron objects and should be returned as successful results.
      */
     private McpSchema.CallToolResult convertObjToResult(final Obj obj) {
         try {
-            if (obj.isFail()) {
-                throw obj.asFail().asException();
-            } else {
-                // Convert Obj to string using its toString() method
-                final String resultString = obj.toString();
-                return McpSchema.CallToolResult.builder()
-                        .content(List.of(new McpSchema.TextContent(resultString)))
-                        .isError(false)
-                        .build();
-            }
+            // Convert Obj to string using its toString() method
+            // This works for all Obj types including fail::T
+            final String resultString = obj.toString();
+            return McpSchema.CallToolResult.builder()
+                    .content(List.of(new McpSchema.TextContent(resultString)))
+                    .isError(false)
+                    .build();
         } catch (final Exception e) {
             LOG.error("Error converting Obj to result: %s", e.getMessage());
             return McpSchema.CallToolResult.builder()
