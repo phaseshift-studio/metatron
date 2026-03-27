@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -21,9 +21,9 @@ package studio.phaseshift.metatron.isa.grph.tp3.space;
 import org.apache.tinkerpop.gremlin.structure.Element;
 import org.apache.tinkerpop.gremlin.structure.Property;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.m.type.impl.MInst;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
@@ -40,6 +40,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.LABEL;
 import static studio.phaseshift.metatron.isa.grph.tp3.space.tp3Space.FACTORY;
 import static studio.phaseshift.metatron.isa.m.mInstSet.AUTO_INST_TID;
@@ -73,13 +74,11 @@ public abstract class ElementMap extends AbstractMap<Uri, Obj> {
     public Obj get(final Object key) {
         if (key.equals(LABEL))
             return uri(this.getBase().label());
-        Property<?> property = this.base.property(((Uri) key).uriValue().toString());
-        if (property.isPresent()) {
-            return MObjFactory.of().toObj(property.value());
-        } else {
-            property = this.base.property(":" + ((Uri) key).uriValue().toString());
-            return property.isPresent() ? mParser.m_obj().parse(property.value().toString()).get() : noobj();
-        }
+        return objs(IteratorUtil.stream(this.base.<Object>properties())
+                .filter(prop -> f(Helper.noMeta(prop.key())).test(((Uri) key).uriValue()))
+                .map(Helper::mtronKV)
+                .map(Helper.mtronKeyValue::value)
+                .map(o -> (Obj) o));
     }
 
     @Override
@@ -113,18 +112,11 @@ public abstract class ElementMap extends AbstractMap<Uri, Obj> {
 
     @Override
     public Obj put(final Uri key, final Obj value) {
-        final Property<?> property = this.base.property(key.uriValue().toString());
-        if (value.isMono()) {
-            LOG.info("adding mono property %s to element %s", key, value);
-            this.base.property(key.uriValue().toString(), value.jvm());
-        } else {
-            LOG.info("adding mtron-native property %s to element %s", key, value);
-            String keyString = key.uriValue().toString();
-            while (keyString.startsWith(":"))
-                keyString = keyString.substring(1);
-            this.base.property(":" + keyString, SERIALIZER.write(value));
-        }
-        return property.isPresent() ? FACTORY.toObj(property.value()) : null;
+        //final Property<?> property = this.base.property(key.uriValue().toString());
+        Helper.tp3KeyValue kv = new Helper.tp3KeyValue(key, value);
+        LOG.info("adding mono property %s to element %s", key, value);
+        this.base.property((String) kv.key(), kv.value());
+        return value;
     }
 
     @Override
@@ -188,5 +180,68 @@ public abstract class ElementMap extends AbstractMap<Uri, Obj> {
             return this.getBase().hashCode();
         }
 
+    }
+
+    public static class Helper {
+        private Helper() {
+            // do nothing
+        }
+
+        protected static String makeMeta(String key) {
+            while (key.startsWith(":"))
+                key = key.substring(1);
+            return ":" + key;
+        }
+
+        protected static String noMeta(final String key) {
+            return key.startsWith(":") ? key.substring(1) : key;
+        }
+
+        protected static boolean isMeta(final String key) {
+            return key.startsWith(":");
+        }
+
+        protected static boolean isMeta(final Obj value) {
+            return !value.isMono() || value.isObjCall();
+        }
+
+        protected static boolean isVertex(final Obj obj) {
+            return obj instanceof VertexMap || obj.vid() != null;
+        }
+
+        public static mtronKeyValue mtronKV(Property<?> property) {
+            return new mtronKeyValue(property.key(), property.value());
+        }
+
+        public static tp3KeyValue tp3KV(Rel relation) {
+            return new tp3KeyValue(relation.jvm().get0(), relation.jvm().get1());
+        }
+
+
+        public record mtronKeyValue(Object key, Object value) {
+            public Object key() {
+                return uri(Helper.noMeta(key.toString()));
+            }
+
+            public Object value() {
+                return Helper.isMeta(key.toString()) ? SERIALIZER.read((String) value) : FACTORY.toObj(value);
+            }
+        }
+
+        public record tp3KeyValue(Object key, Object value) {
+            public Object key() {
+                final Obj obj = (Obj) value;
+                if (obj.isMono() && !obj.isCall())
+                    return ((Uri) key).uriValue().toString();
+                return makeMeta(((Uri) key).uriValue().toString());
+            }
+
+            public Object value() {
+                final Obj obj = (Obj) value;
+                if (obj.equals(uri("/noobj")))
+                    return null;
+                return obj.isMono() && !obj.isCall() ? obj.jvm() : SERIALIZER.write(obj);
+            }
+        }
     }
 }

@@ -29,6 +29,7 @@ import java.util.*;
 import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -36,6 +37,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 public interface Poly<P extends Poly<P, J>, J> extends Obj {
@@ -261,6 +263,11 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
                         return kv.second().apply(lhs);
                     }
                 } else {
+                    if(b.isNoObj() || (b.isUri() && b.uriValue().equals(uri("/noobj")))) {
+                      //  lhs.logger().warn("FOUND");
+                        return null;
+                     
+                    }
                     return b;
                 }
             }));

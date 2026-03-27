@@ -502,7 +502,6 @@ public class mInstSet extends AbstractInstSet {
                                                             break;
                                                         }
                                                     }
-
                                                     if (commonSuffixLen > 0 && commonSuffixLen < minLen) {
                                                         // Only optimize if there's a common suffix AND remaining instructions
                                                         // (don't optimize if all branches are identical - that's handled by collapse rewrite)
@@ -545,6 +544,7 @@ public class mInstSet extends AbstractInstSet {
                 Tuple.Triplet.with(Tuple.Pair.with("?==", null), List.of(WHERE_INST_TID), 1),
                 Tuple.Triplet.with(Tuple.Pair.with("%==", null), List.of(GROUP_INST_TID), 1),
                 Tuple.Triplet.with(Tuple.Pair.with("==", null), List.of(SELECT_INST_TID), 1),
+                Tuple.Triplet.with(Tuple.Pair.with("=","=>"), List.of(UPDATE_INST_TID),2),
                 Tuple.Triplet.with(Tuple.Pair.with("=~", null), List.of(MATCHES_INST_TID), 1),
                 Tuple.Triplet.with(Tuple.Pair.with("?=~", null), List.of(IS_INST_TID, MATCHES_INST_TID), 1),
                 Tuple.Triplet.with(Tuple.Pair.with("?=", null), List.of(IS_INST_TID, EQ_INST_TID), 1),

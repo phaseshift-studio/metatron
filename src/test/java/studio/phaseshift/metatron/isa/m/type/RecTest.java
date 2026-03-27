@@ -25,12 +25,15 @@ import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.algebra.AbstractAlgebraTest;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.mach.type.monad.AbstractMonad;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.algebra.Form.PLUS_MONOID;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.start_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.update_;
 import static studio.phaseshift.metatron.isa.m.type.Poly.IMMUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -162,7 +165,7 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
             "[a=>1,b=>2,c=>3]>>b/                                                       % b=>2",
             "[a=>1,b=>2,c=>3]>>{a/,b/}                                                  % {a=>1,b=>2}",
             "[a=>1,b=>2,c=>3]>>{a/,b/,c/}                                               % {a=>1,b=>2,c=>3}",
-            "[a=>1,b=>2,c=>3]>>{a/,b/,c/,d/}                                            % {a=>1,b=>2,c=>3,d=>noobj}", // <== BAD: rel noobj lives
+            "[a=>1,b=>2,c=>3]>>{a/,b/,c/,d/}                                            % {a=>1,b=>2,c=>3}",
             "[a=>1,b=>2,c=>3]>>{a/,b/,c,d}                                              % {a=>1,b=>2,3}",
             "[a=>1,b=>2,c=>3]>>{a,b/,c}                                                 % {1,b=>2,3}",
             "[a=>1,b=>2,c=>3]>>{a,{23}b/,c}                                             % {1,{23}b=>2,3}",
@@ -468,5 +471,22 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
         final Type t = mParser.parse(type);
         LOG.error("%s", t);
         AbstractMetatronTest.checkMatches(LOG, record, type, matches);
+    }
+    
+    @ParameterizedTest
+    @CsvSource(value = {
+            "[a=>1,b=>2]                            % [a=>3]                %  [a=>3,b=>2]",
+            "[a=>1,b=>2]                            % [a=>+3]               %  [a=>4,b=>2]",
+            "[a=>1,b=>2]                            % [a=>+7,b=>+1]         %  [a=>8,b=>3]",
+            "[a=>1,b=>[c=>3]]                       % [a=>+2,b=>[c=>+10]]   %  [a=>3,b=>[c=>13]]",
+            "[a=>1,b=>[c=>3]]                       % [b=>_]                %  [a=>1,b=>[c=>3]]",
+            //"[a=>1,b=>[c=>3]]                       % [b=>/noobj]         %  [a=>1]"
+    }, delimiter = '%')
+    public void testUpdate(final String original, final String update, final String expected) {
+        final Rec originalRec = mParser.parse(original);
+        final Rec updateRec = mParser.parse(update);
+        final Rec expectedRec = mParser.parse(expected);
+        final Rec actualRec = update_(updateRec).apply(originalRec).as();
+        AbstractMetatronTest.checkEquality(LOG, expectedRec, actualRec, true);
     }
 }

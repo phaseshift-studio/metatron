@@ -1783,7 +1783,7 @@ mtron&gt; 1.plus(plus(2))    ​3​
 ==&gt;4
 ​
 mtron&gt; 1.map(bool::T)     ​4​
-==&gt;fail::[unable to convert mfail to code][...]@/sys/fail/16
+==&gt;fail::[unable to convert mfail to code][...]@/sys/fail/92
 ​
 mtron&gt; 1.as(bool::T)      ​5​
 ==&gt;true
@@ -2159,7 +2159,7 @@ mtron&gt; 15.band(10,20)              ​4​
 mtron&gt; -15.band(-20,-10)           ​5​
 ​
 mtron&gt; band -&gt; |inst?int{?}&lt;=int(min=&gt;?nat::T.else(fail()),max=&gt;?nat::T.else(fail())){ is(and(gte(*min),lte(*max))) }
-==&gt;fail::[fail() is not a fail::T][...]@/sys/fail/42
+==&gt;fail::[fail() is not a fail::T][...]@/sys/fail/118
 ​
 mtron&gt; 15.band(10,20)              ​6​
 ==&gt;15
@@ -2221,18 +2221,18 @@ Finally, a degenerate anonymous <code>inst</code> with no specified variable fra
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">​
 mtron&gt; 10.(min=&gt;2,max=&gt;8){ is(and(gte(*min),lte(*max))) }                ​1​
 ==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/56
+	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/132
 ​
 mtron&gt; 10.(min=&gt;minus(1),max=&gt;plus(1)){ is(and(gte(*min),lte(*max))) }   ​2​
 ==&gt;10
 ​
 mtron&gt; 10.(min=&gt;2,max=&gt;8){ is(and(gte(*bad_min),lte(*bad_max))) }        ​3​
 ==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/58
+	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/134
 ​
 mtron&gt; 10.(){ is(and(gte(*min),lte(*max))) }                             ​4​
 ==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/60
+	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/136
 ​
 mtron&gt; 10.is(and(gte(minus(1)),lte(plus(1))))                            ​5​
 ==&gt;10
@@ -2274,13 +2274,13 @@ mtron&gt; 10.is(and(gte(minus(1)),lte(plus(1))))                            ​5
 mtron&gt; is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;_)[mod(*by).eq(0)]
 ==&gt;fail::[is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;_)[mod(*by).eq(0)]
                                       ^ end of input expected
-][...]@/sys/fail/62
+][...]@/sys/fail/138
 ​
 mtron&gt; 10.is_divisible(2)
-==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/64
+==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/140
 ​
 mtron&gt; 10.is_divisible('abc')
-==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/66
+==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/142
 ​</code></pre>
 </div>
 </div>
@@ -2307,7 +2307,7 @@ mtron&gt; 10.is_divisible('abc')
 mtron&gt; band -&gt; |band?int{?}&lt;=int(min=&gt;_,max=&gt;is(gt(*min)).else(*min.plus(1)))[is(gte(*min)).is(lte(*max))]
 ==&gt;fail::[band -&gt; |band?int{?}&lt;=int(min=&gt;_,max=&gt;is(gt(*min)).else(*min.plus(1)))[is(gte(*min)).is(lte(*max))]
                                                                       ^ end of input expected
-][...]@/sys/fail/68
+][...]@/sys/fail/144
 ​
 mtron&gt; 2.band(min=&gt;1,max=&gt;1)                 ​1​
 ​</code></pre>
@@ -2332,13 +2332,13 @@ mtron&gt; 2.band(min=&gt;1,max=&gt;1)                 ​1​
 mtron&gt; is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;is(neq(0)).else(print('error').map(1)))[mod(*by).eq(0)]
 ==&gt;fail::[is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;is(neq(0)).else(print('error').map(1)))[mod(*by).eq(0)]
                                       ^ end of input expected
-][...]@/sys/fail/70
+][...]@/sys/fail/146
 ​
 mtron&gt; 10.is_divisible(2)
-==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/72
+==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/148
 ​
 mtron&gt; 10.is_divisible('abc')
-==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/74
+==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/150
 ​</code></pre>
 </div>
 </div>
@@ -2390,10 +2390,10 @@ This ensures the uri <code>triple</code> is not applied to the <code>inst</code>
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">​
 mtron&gt; triple -&gt; inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}
-==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}]][...]@/sys/fail/76
+==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}]][...]@/sys/fail/152
 ​
 mtron&gt; *triple
-==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}]][...]@/sys/fail/76
+==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}]][...]@/sys/fail/152
 ​</code></pre>
 </div>
 </div>
@@ -2611,12 +2611,15 @@ mtron&gt; {1,2}.split([is(lt(2))  =&gt; plus(9),
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">​
 mtron&gt; {1,2}-&lt;[?&lt;2=&gt;+9,?&gt;=2=&gt;+3]
-==&gt;[1=&gt;10]
-==&gt;[2=&gt;5]
+==&gt;[is(lt(2))=&gt;plus(9),
+  fail::[unable to evaluate inst: is?rng=A{?}&amp;dom=A{?}(fail::[unable to determine inst function:][...]@/sys/fail/46]
+==&gt;[is(lt(2))=&gt;plus(9),
+  fail::[unable to evaluate inst: is?rng=A{?}&amp;dom=A{?}(fail::[unable to determine inst function:][...]@/sys/fail/48]
 ​
 mtron&gt; {1,2}-&lt;[?&lt;2=&gt;+9,?&gt;=2=&gt;+3]&gt;&gt;
-==&gt;10
-==&gt;5
+==&gt;{2}is(lt(2))=&gt;plus(9)
+==&gt;fail::[unable to convert mfail to bool][...]@/sys/fail/66
+==&gt;fail::[unable to convert mfail to bool][...]@/sys/fail/84
 ​</code></pre>
 </div>
 </div></div></td>
@@ -2763,77 +2766,77 @@ mtron&gt; */m/llm/model
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">​
 mtron&gt; *ollama:+
 ==&gt;model::[
- think   =&gt;ollama:qwen3:8b/thought,
+ skill   =&gt;[completion,tools,thinking],
  name    =&gt;qwen3:8b,
- skill   =&gt;[completion,tools,thinking],
- size    =&gt;gB::4.87,
- provider=&gt;!*/sys/space/ollama]@ollama:qwen3:8b
+ think   =&gt;ollama:qwen3:8b/thought,
+ provider=&gt;!*/sys/space/ollama,
+ size    =&gt;gB::4.87]@ollama:qwen3:8b
 ==&gt;model::[
- think   =&gt;&lt;ollama:minimax-m2.5:cloud/thought&gt;,
+ skill   =&gt;[completion,tools,thinking],
  name    =&gt;&lt;minimax-m2.5:cloud&gt;,
- skill   =&gt;[completion,tools,thinking],
- size    =&gt;gB::0.00,
- provider=&gt;!*/sys/space/ollama]@ollama:minimax-m2.5:cloud
+ think   =&gt;&lt;ollama:minimax-m2.5:cloud/thought&gt;,
+ provider=&gt;!*/sys/space/ollama,
+ size    =&gt;gB::0.00]@ollama:minimax-m2.5:cloud
 ==&gt;model::[
- think   =&gt;ollama:qwen3:latest/thought,
+ skill   =&gt;[completion,tools,thinking],
  name    =&gt;qwen3:latest,
- skill   =&gt;[completion,tools,thinking],
- size    =&gt;gB::4.87,
- provider=&gt;!*/sys/space/ollama]@ollama:qwen3:latest
+ think   =&gt;ollama:qwen3:latest/thought,
+ provider=&gt;!*/sys/space/ollama,
+ size    =&gt;gB::4.87]@ollama:qwen3:latest
 ==&gt;model::[
- think   =&gt;noobj,
+ skill   =&gt;[completion],
  name    =&gt;tinyllama:latest,
- skill   =&gt;[completion],
- size    =&gt;gB::0.59,
- provider=&gt;!*/sys/space/ollama]@ollama:tinyllama:latest
+ think   =&gt;noobj,
+ provider=&gt;!*/sys/space/ollama,
+ size    =&gt;gB::0.59]@ollama:tinyllama:latest
 ==&gt;model::[
- think   =&gt;ollama:gpt-oss:latest/thought,
+ skill   =&gt;[completion,tools,thinking],
  name    =&gt;gpt-oss:latest,
- skill   =&gt;[completion,tools,thinking],
- size    =&gt;gB::12.85,
- provider=&gt;!*/sys/space/ollama]@ollama:gpt-oss:latest
+ think   =&gt;ollama:gpt-oss:latest/thought,
+ provider=&gt;!*/sys/space/ollama,
+ size    =&gt;gB::12.85]@ollama:gpt-oss:latest
 ==&gt;model::[
- think   =&gt;&lt;ollama:deepseek-v3.2:cloud/thought&gt;,
+ skill   =&gt;[completion,tools,thinking],
  name    =&gt;&lt;deepseek-v3.2:cloud&gt;,
- skill   =&gt;[completion,tools,thinking],
- size    =&gt;gB::0.00,
- provider=&gt;!*/sys/space/ollama]@ollama:deepseek-v3.2:cloud
+ think   =&gt;&lt;ollama:deepseek-v3.2:cloud/thought&gt;,
+ provider=&gt;!*/sys/space/ollama,
+ size    =&gt;gB::0.00]@ollama:deepseek-v3.2:cloud
 ==&gt;model::[
- think   =&gt;noobj,
+ skill   =&gt;[completion],
  name    =&gt;deepcoder:latest,
- skill   =&gt;[completion],
- size    =&gt;gB::8.37,
- provider=&gt;!*/sys/space/ollama]@ollama:deepcoder:latest
-==&gt;model::[
  think   =&gt;noobj,
+ provider=&gt;!*/sys/space/ollama,
+ size    =&gt;gB::8.37]@ollama:deepcoder:latest
+==&gt;model::[
+ skill   =&gt;[completion],
  name    =&gt;deepseek-coder:latest,
- skill   =&gt;[completion],
- size    =&gt;gB::0.72,
- provider=&gt;!*/sys/space/ollama]@ollama:deepseek-coder:latest
+ think   =&gt;noobj,
+ provider=&gt;!*/sys/space/ollama,
+ size    =&gt;gB::0.72]@ollama:deepseek-coder:latest
 ==&gt;model::[
- think   =&gt;&lt;ollama:glm-4.7-flash:latest/thought&gt;,
- name    =&gt;&lt;glm-4.7-flash:latest&gt;,
  skill   =&gt;[completion,tools,thinking],
- size    =&gt;gB::17.71,
- provider=&gt;!*/sys/space/ollama]@ollama:glm-4.7-flash:latest
+ name    =&gt;&lt;glm-4.7-flash:latest&gt;,
+ think   =&gt;&lt;ollama:glm-4.7-flash:latest/thought&gt;,
+ provider=&gt;!*/sys/space/ollama,
+ size    =&gt;gB::17.71]@ollama:glm-4.7-flash:latest
 ==&gt;model::[
- think   =&gt;noobj,
+ skill   =&gt;[completion,tools],
  name    =&gt;llama3-groq-tool-use:latest,
- skill   =&gt;[completion,tools],
- size    =&gt;gB::4.34,
- provider=&gt;!*/sys/space/ollama]@ollama:llama3-groq-tool-use:latest
-==&gt;model::[
  think   =&gt;noobj,
- name    =&gt;llava:latest,
+ provider=&gt;!*/sys/space/ollama,
+ size    =&gt;gB::4.34]@ollama:llama3-groq-tool-use:latest
+==&gt;model::[
  skill   =&gt;[completion,vision],
- size    =&gt;gB::4.41,
- provider=&gt;!*/sys/space/ollama]@ollama:llava:latest
-==&gt;model::[
+ name    =&gt;llava:latest,
  think   =&gt;noobj,
- name    =&gt;qwen3-coder-next:latest,
+ provider=&gt;!*/sys/space/ollama,
+ size    =&gt;gB::4.41]@ollama:llava:latest
+==&gt;model::[
  skill   =&gt;[completion,tools],
- size    =&gt;gB::48.19,
- provider=&gt;!*/sys/space/ollama]@ollama:qwen3-coder-next:latest
+ name    =&gt;qwen3-coder-next:latest,
+ think   =&gt;noobj,
+ provider=&gt;!*/sys/space/ollama,
+ size    =&gt;gB::48.19]@ollama:qwen3-coder-next:latest
 ​</code></pre>
 </div>
 </div>
@@ -2971,7 +2974,7 @@ mtron&gt; 1.plus(b).plus(3).mult(5)                 ​1​
 ==&gt;fail::[unable to determine inst function:
 	1           =&gt; plus(b)      | [inst]
 	int::T      =&gt; #::T         |  \_dom
-	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/104
+	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/180
 ​
 mtron&gt; 1.plus(b).plus(3).catch(2).mult(5)        ​2​
 ==&gt;10
@@ -3033,99 +3036,93 @@ mtron&gt; 1.plus(b)                  ​1​
 ==&gt;fail::[unable to determine inst function:
 	1           =&gt; plus(b)      | [inst]
 	int::T      =&gt; #::T         |  \_dom
-	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/160
+	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/236
 ​
 mtron&gt; */sys/fail/+               ​2​
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/140
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/232
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/222
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/231
+==&gt;fail::[apply failure:
+	[lhs]    | b
+	 \_type  | /m/uri
+	  \_pred | []
+	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
+	 \_dom   | uri::T
+	 \_args  | [,]][...]@/sys/fail/229
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/214
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/221
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/213
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/209
+==&gt;fail::[apply failure:
+	[lhs]    | b
+	 \_type  | /m/uri
+	  \_pred | []
+	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
+	 \_dom   | uri::T
+	 \_args  | [,]][...]@/sys/fail/223
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/228
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/227
+==&gt;fail::[apply failure:
+	[lhs]    | b
+	 \_type  | /m/uri
+	  \_pred | []
+	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
+	 \_dom   | uri::T
+	 \_args  | [,]][...]@/sys/fail/224
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/219
+==&gt;fail::[apply failure:
+	[lhs]    | b
+	 \_type  | /m/uri
+	  \_pred | []
+	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
+	 \_dom   | uri::T
+	 \_args  | [,]][...]@/sys/fail/212
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/220
+==&gt;fail::[apply failure:
+	[lhs]    | b
+	 \_type  | /m/uri
+	  \_pred | []
+	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
+	 \_dom   | uri::T
+	 \_args  | [,]][...]@/sys/fail/211
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/226
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/225
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/210
+==&gt;fail::[apply failure:
+	[lhs]    | b
+	 \_type  | /m/uri
+	  \_pred | []
+	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
+	 \_dom   | uri::T
+	 \_args  | [,]][...]@/sys/fail/230
+==&gt;fail::[apply failure:
+	[lhs]    | b
+	 \_type  | /m/uri
+	  \_pred | []
+	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
+	 \_dom   | uri::T
+	 \_args  | [,]][...]@/sys/fail/218
+==&gt;fail::[apply failure:
+	[lhs]    | b
+	 \_type  | /m/uri
+	  \_pred | []
+	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
+	 \_dom   | uri::T
+	 \_args  | [,]][...]@/sys/fail/217
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/215
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/216
 ==&gt;fail::[unable to determine inst function:
 	1           =&gt; plus(b)      | [inst]
 	int::T      =&gt; #::T         |  \_dom
-	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/160
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/139
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/149
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/143
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/144
-==&gt;fail::[apply failure:
-	[lhs]    | b
-	 \_type  | /m/uri
-	  \_pred | []
-	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
-	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/154
-==&gt;fail::[apply failure:
-	[lhs]    | b
-	 \_type  | /m/uri
-	  \_pred | []
-	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
-	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/153
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/133
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/152
-==&gt;fail::[apply failure:
-	[lhs]    | b
-	 \_type  | /m/uri
-	  \_pred | []
-	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
-	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/136
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/134
-==&gt;fail::[apply failure:
-	[lhs]    | b
-	 \_type  | /m/uri
-	  \_pred | []
-	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
-	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/135
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/151
+	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/235
 ==&gt;fail::[unable to determine inst function:
 	1           =&gt; plus(b)      | [inst]
 	int::T      =&gt; #::T         |  \_dom
-	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/159
-==&gt;fail::[unable to evaluate inst: plus(b)][...]@/sys/fail/157
-==&gt;fail::[unable to evaluate inst: plus(b)][...]@/sys/fail/158
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/138
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/137
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/155
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/156
-==&gt;fail::[apply failure:
-	[lhs]    | b
-	 \_type  | /m/uri
-	  \_pred | []
-	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
-	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/141
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/150
-==&gt;fail::[apply failure:
-	[lhs]    | b
-	 \_type  | /m/uri
-	  \_pred | []
-	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
-	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/142
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/146
-==&gt;fail::[apply failure:
-	[lhs]    | b
-	 \_type  | /m/uri
-	  \_pred | []
-	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
-	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/147
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/145
-==&gt;fail::[apply failure:
-	[lhs]    | b
-	 \_type  | /m/uri
-	  \_pred | []
-	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
-	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/148
+	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/236
+==&gt;fail::[unable to evaluate inst: plus(b)][...]@/sys/fail/233
+==&gt;fail::[unable to evaluate inst: plus(b)][...]@/sys/fail/234
 ​
 mtron&gt; */sys/fail/+.catch(_)      ​3​
-==&gt;fail{8}::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}]
-==&gt;fail{2}::[unable to determine inst function:
-	1           =&gt; plus(b)      | [inst]
-	int::T      =&gt; #::T         |  \_dom
-	int::T     X=&gt; [b]          |  \_args]
-    \_fail::[unable to evaluate inst: plus(b)]
 ==&gt;fail{8}::[unable to convert uri::T to bytes]
     \_fail::[apply failure:
 	[lhs]    | b
@@ -3135,6 +3132,7 @@ mtron&gt; */sys/fail/+.catch(_)      ​3​
 	 \_dom   | uri::T
 	 \_args  | [,]]
     \_fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}]
+==&gt;fail{8}::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}]
 ==&gt;fail{8}::[apply failure:
 	[lhs]    | b
 	 \_type  | /m/uri
@@ -3143,6 +3141,11 @@ mtron&gt; */sys/fail/+.catch(_)      ​3​
 	 \_dom   | uri::T
 	 \_args  | [,]]
     \_fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}]
+==&gt;fail{2}::[unable to determine inst function:
+	1           =&gt; plus(b)      | [inst]
+	int::T      =&gt; #::T         |  \_dom
+	int::T     X=&gt; [b]          |  \_args]
+    \_fail::[unable to evaluate inst: plus(b)]
 ==&gt;fail{2}::[unable to evaluate inst: plus(b)]
 ​
 mtron&gt; */sys/fail                 ​4​
@@ -3180,7 +3183,7 @@ mtron&gt; *cause                 ​1​
 ​
 mtron&gt; 1+b.catch(cause())     ​2​
 ==&gt;fail::[rhs does not match inst range:
-	fail::[unable to evaluate inst: plus(b)]=&gt;(X=&gt;int{*}::T)][...]@/sys/fail/190
+	fail::[unable to evaluate inst: plus(b)]=&gt;(X=&gt;int{*}::T)][...]@/sys/fail/266
 ​</code></pre>
 </div>
 </div>
@@ -3299,11 +3302,11 @@ mtron&gt; nat::10
 ==&gt;nat::10
 ​
 mtron&gt; nat::-10
-==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/256
+==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/332
 ​
 mtron&gt; int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/262
+  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/338
 ​</code></pre>
 </div>
 </div>
@@ -3403,11 +3406,11 @@ mtron&gt; nat::10
 ==&gt;nat::10
 ​
 mtron&gt; nat::-10
-==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/276
+==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/352
 ​
 mtron&gt; int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/282
+  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/358
 ​</code></pre>
 </div>
 </div>
@@ -3439,11 +3442,11 @@ mtron&gt; age:125
 ​
 mtron&gt; nat:125.as(age::T)
 ==&gt;fail::[nat:125 is not a is(lt(120))
-  nat:125=&gt;(==&gt;is(lt(120)))][...]@/sys/fail/324
+  nat:125=&gt;(==&gt;is(lt(120)))][...]@/sys/fail/400
 ​
 mtron&gt; 125.as(nat::T).as(age::T)
 ==&gt;fail::[nat::125 is not a is(lt(120))
-  nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/330
+  nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/406
 ​</code></pre>
 </div>
 </div>
@@ -3720,10 +3723,10 @@ mtron&gt; *#.as[name      =&gt; _,
 </table>
 <h3 id="_spatial_embeddings" class="discrete">spatial embeddings</h3>
 <div class="paragraph">
-<p><span class="fuchsia">M</span>​<span class="green">e</span>​<strong class="yellow">T</strong>​<span class="blue">A</span>​<strong class="orange">T</strong>​<strong class="aqua">R</strong>​<span class="lime">o</span>​<strong class="red">n</strong>​ was designed to support the creation and manipulation of <em>abstract data types</em> in a compact, fluid manner so as to allow the user to move smoothly between <em>multiple models</em> across different spaces, each espousing a different perspective on the data their maintain: e.g., key/value, document, relational, vector, graph, and the various nooks and crannies between.</p>
+<p><span class="lime">m</span>​<strong class="fuchsia">e</strong>​<span class="blue">T</span>​<span class="yellow">A</span>​<strong class="green">t</strong>​<span class="orange">r</span>​<strong class="aqua">o</strong>​<span class="red">N</span>​ was designed to support the creation and manipulation of <em>abstract data types</em> in a compact, fluid manner so as to allow the user to move smoothly between <em>multiple models</em> across different spaces, each espousing a different perspective on the data their maintain: e.g., key/value, document, relational, vector, graph, and the various nooks and crannies between.</p>
 </div>
 <div class="paragraph">
-<p><span class="yellow">M</span>​<span class="fuchsia">E</span>​<strong class="blue">t</strong>​<strong class="lime">a</strong>​<span class="red">t</span>​<strong class="aqua">R</strong>​<strong class="orange">o</strong>​<strong class="green">N</strong>​'s URI addressing scheme makes it possible to <em>embed</em> arbitrary data types into a space.
+<p><strong class="red">M</strong>​<strong class="orange">E</strong>​<span class="fuchsia">T</span>​<span class="green">a</span>​<span class="lime">T</span>​<span class="yellow">R</span>​<strong class="aqua">o</strong>​<strong class="blue">n</strong>​'s URI addressing scheme makes it possible to <em>embed</em> arbitrary data types into a space.
 This section will explore the following considerations when designing a <em>multi-model abstract data type</em>.</p>
 </div>
 <div class="olist arabic">
@@ -4303,12 +4306,12 @@ mtron&gt; *g:V/1/address/home/city                                        ​3�
 mtron&gt; *g:V/+.?==[address=&gt;[_ =&gt; [state=&gt;NM]]]                         ​4​
 ==&gt;person::[
  address/home/city=&gt;'santa fe',
+ :address         =&gt;[
+   home=&gt;[city=&gt;'santa fe',state=&gt;NM],
+   work=&gt;!*&lt;../home&gt;],
  age              =&gt;29,
  name             =&gt;'marko',
- address/work/city=&gt;'nomansland',
- address          =&gt;[
-   home=&gt;[city=&gt;'santa fe',state=&gt;NM],
-   work=&gt;!*&lt;../home&gt;]]@g:V/1
+ address/work/city=&gt;'nomansland']@g:V/1
 ​
 mtron&gt; *g:V/+.?==[address=&gt;[_ =&gt; [state=&gt;NM]]].&gt;&gt;address/+/city        ​5​
 ==&gt;santa fe
@@ -4375,9 +4378,9 @@ mtron&gt; *g:V/+.?==[address=&gt;[_ =&gt; [state=&gt;NM]]].&gt;&gt;address/+/cit
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">tble::[pattern =&gt; netflix:#,
-       host    =&gt; &lt;mariadb://localhost:3306/netflix&gt;,
-       route   =&gt; [netflix: =&gt; &lt;&gt;],
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">tble::[pattern =&gt; acme:#,
+       host    =&gt; &lt;mariadb://localhost:3306/classicmodels&gt;,
+       route   =&gt; [acme: =&gt; &lt;&gt;],
        table   =&gt; [,],
        driver  =&gt; &lt;org.mariadb.jdbc.Driver&gt;]@/sys/space/netflix</code></pre>
 </div>
@@ -4411,22 +4414,63 @@ mtron&gt; *g:V/+.?==[address=&gt;[_ =&gt; [state=&gt;NM]]].&gt;&gt;address/+/cit
 mtron&gt; *g:V/1
 ==&gt;person::[
  address/home/city=&gt;'santa fe',
+ :address         =&gt;[
+   home=&gt;[city=&gt;'santa fe',state=&gt;NM],
+   work=&gt;!*&lt;../home&gt;],
  age              =&gt;29,
  name             =&gt;'marko',
- address/work/city=&gt;'nomansland',
- address          =&gt;[
-   home=&gt;[city=&gt;'santa fe',state=&gt;NM],
-   work=&gt;!*&lt;../home&gt;]]@g:V/1
+ address/work/city=&gt;'nomansland']@g:V/1
 ​
-mtron&gt; *netflix:movie/11488
+mtron&gt; *acme:customers/357
 ==&gt;[
- id           =&gt;11488,
- created_date =&gt;'2024-01-01 00:00:00.000000',
- modified_date=&gt;'2024-01-01 00:00:00.000000',
- runtime      =&gt;138,
- title        =&gt;'Good Bad Ugly']
+ customerNumber        =&gt;357,
+ customerName          =&gt;'GiftsForHim.com',
+ contactLastName       =&gt;'MacKinlay',
+ contactFirstName      =&gt;'Wales',
+ phone                 =&gt;'64-9-3763555',
+ addressLine1          =&gt;'199 Great North Road',
+ city                  =&gt;'Auckland',
+ country               =&gt;'New Zealand',
+ salesRepEmployeeNumber=&gt;!*acme:employees/1612,
+ creditLimit           =&gt;77700.00]
 ​
-mtron&gt; [-- *g:V/1.addE(watched,*netflix:movie/11488)
+mtron&gt; *g:V/1.addE(consulted,acme:customers/357)
+==&gt;consulted::[=&gt;]@g:E/19
+​
+mtron&gt; *g:V/1&gt;&gt;consulted
+==&gt;[
+ customerNumber        =&gt;357,
+ customerName          =&gt;'GiftsForHim.com',
+ contactLastName       =&gt;'MacKinlay',
+ contactFirstName      =&gt;'Wales',
+ phone                 =&gt;'64-9-3763555',
+ addressLine1          =&gt;'199 Great North Road',
+ city                  =&gt;'Auckland',
+ country               =&gt;'New Zealand',
+ salesRepEmployeeNumber=&gt;!*acme:employees/1612,
+ creditLimit           =&gt;77700.00]
+​
+mtron&gt; *g:V/1&gt;&gt;consulted&gt;&gt;salesRepEmployeeNumber
+==&gt;[
+ employeeNumber=&gt;1612,
+ lastName      =&gt;'Marsh',
+ firstName     =&gt;'Peter',
+ extension     =&gt;'x102',
+ email         =&gt;'pmarsh@classicmodelcars.com',
+ officeCode    =&gt;!*acme:offices/6,
+ reportsTo     =&gt;!*acme:employees/1088,
+ jobTitle      =&gt;'Sales Rep']
+​
+mtron&gt; *g:V/1&gt;&gt;consulted&gt;&gt;salesRepEmployeeNumber&gt;&gt;reportsTo
+==&gt;[
+ employeeNumber=&gt;1088,
+ lastName      =&gt;'Patterson',
+ firstName     =&gt;'William',
+ extension     =&gt;'x4871',
+ email         =&gt;'wpatterson@classicmodelcars.com',
+ officeCode    =&gt;!*acme:offices/6,
+ reportsTo     =&gt;!*acme:employees/1056,
+ jobTitle      =&gt;'Sales Manager (APAC)']
 ​</code></pre>
 </div>
 </div></div></td>

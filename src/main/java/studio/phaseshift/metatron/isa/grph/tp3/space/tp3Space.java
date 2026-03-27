@@ -35,6 +35,8 @@ import studio.phaseshift.metatron.isa.grph.tp3.space.schema.modernSchema;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjCleanStringSerializer;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.CommonUtil;
@@ -64,8 +66,11 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  */
 public class tp3Space extends grphSpace<Graph> {
 
+    public static final fURI MTRON_PREFIX = f("mtron:");
+
     public static final Uri NATIVE_LOAD = uri(f(NATIVE).extend(LOAD));
     public static final String TP3_GRAPH_CONFIGURATION_KEY = "mtron.grph.vid";
+    public static final ObjSerializer<String> SERIALIZER = new ObjCleanStringSerializer();
 
     protected static ObjFactory FACTORY = null;
     private static final fURI V_SOME = f("V/+");
@@ -207,12 +212,17 @@ public class tp3Space extends grphSpace<Graph> {
                                         org.apache.tinkerpop.gremlin.structure.T.label, obj.tid().basePath().toString(),
                                         org.apache.tinkerpop.gremlin.structure.T.id, id));
                         LOG.info("writing vertex %s => %s", vid, vertex);
+                        /// SET VERTEX PROPERTIES
                         obj.asRec().jvm().entrySet().stream()
                                 .filter(e -> !e.getKey().equals(IN) && !e.getValue().equals(OUT))
                                 .forEach(e -> {
                                     LOG.info("writing vertex property %s =%s=> %s", vertex, e.getKey(), e.getValue());
-                                    vertex.property(e.getKey().uriValue().toString(), FACTORY.toObj(e.getValue()).jvm());
+                                    ElementMap.Helper.tp3KeyValue kv = new ElementMap.Helper.tp3KeyValue(e.getKey(), e.getValue());
+                                    vertex.property((String) kv.key()).remove();
+                                    if (!e.getValue().equals(uri("/noobj")) && !e.getValue().isNoObj())
+                                        vertex.property((String) kv.key(), kv.value());
                                 });
+                        /// SET VERTEX OUT EDGES
                         obj.asRec().elements().filter(e -> e.first().equals(OUT))
                                 .forEach(label -> label.jvm().get1().asRec()
                                         .elements()

@@ -524,7 +524,13 @@ public class mParser {
     private static Parser generate_sugar_parser(final List<fURI> instChain, final Parser startToken, final int argCount, final Parser endToken) {
         // TODO: look into ExpressionBuilder for handling paren wrapping properly.
         if (instChain.size() == 1) {
-            return null == endToken ? generate_sugar_parser(instChain.getFirst(), startToken, argCount) : generate_sugar_parser(instChain.getFirst(), startToken, argCount, endToken);
+            if (null != endToken && argCount > 1) {
+                return seq(startToken.trim(), opt(seq(of('?'), m_furi_inst_dom_rng()).map(t -> pick(t, 1)), null), m_paren_wrap(obj_rel_back_parser), endToken.trim(), m_paren_wrap(obj_rel_back_parser))
+                        .map(t -> instB(instChain.getFirst().qString(pick(t, 1)), lst(rec(mParser.<Obj>pick(t, 2), mParser.<Obj>pick(t, 4)))));
+            } else
+                return null == endToken ?
+                        generate_sugar_parser(instChain.getFirst(), startToken, argCount) :
+                        generate_sugar_parser(instChain.getFirst(), startToken, argCount, endToken);
         }
         return (argCount == 0 ?
                 seq(startToken.trim(), opt(seq(of('?'), m_furi_inst_dom_rng()).map(t -> pick(t, 1)), null)).map(t -> instB(instChain.getFirst(), lst(MInst.instA(instChain.get(1).qString(pick(t, 1)))))) :

@@ -27,10 +27,8 @@ import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
 import studio.phaseshift.metatron.isa.grph.tp3.space.tp3Space;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
-import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
-import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.Tuple;
 
@@ -40,6 +38,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.GRPH_ISA_TID;
 import static studio.phaseshift.metatron.isa.grph.tp3.space.schema.modernSchema.MODERN_SCHEMA_TID;
 import static studio.phaseshift.metatron.isa.grph.tp3.tp3InstSet.TP3_ISA_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -56,16 +55,20 @@ public class tp3SpaceTest extends AbstractSpaceTest {
      */
     public tp3SpaceTest() {
         super(() -> {
+            BootLoader.loadInstSetProvider(M_ISA_TID);
             BootLoader.loadInstSetProvider(GRPH_ISA_TID);
             BootLoader.loadInstSetProvider(TP3_ISA_TID);
             return tp3Space.of(rec(
                     PATTERN, uri("/g/#"),
-                    ROUTE, rec(uri("/g/V"), uri("V"),
+                    ROUTE, rec(
+                            uri("/g/V"), uri("V"),
                             uri("/g/E"), uri("E"),
                             uri("/g/S"), uri(MODERN_SCHEMA_TID)),
                     NATIVE, rec(uri("factory"), MObjFactory.single(),
                             uri(LOAD), uri(MODERN.name().toLowerCase()))), f("/sys/space/test")); // GRATEFUL.name().toLowerCase()
         });
+        BootLoader.loadInstSetProvider(GRPH_ISA_TID);
+        BootLoader.loadInstSetProvider(TP3_ISA_TID);
     }
 
     @Test
@@ -144,6 +147,37 @@ public class tp3SpaceTest extends AbstractSpaceTest {
     }, delimiter = '%')
     public void testIdTraversals(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "*/g/V/1>>=[age=>23]                                               % */g/V/1>>age                     % 23",
+            "*/g/V/1>>=[age=>+10]                                              % */g/V/1>>age                     % 39",
+            "*/g/V/1                                                           % */g/V/1>>age                     % 29",
+            "*/g/V/1>>=[age=>/noobj]                                           % */g/V/1>>age                     % noobj",
+            "*/g/V/1>>=[age=>-<[_]>-]                                          % */g/V/1>>age                     % 29",
+            "*/g/V/1>>=[age=>_]                                                % */g/V/1>>age                     % 29",
+            "*/g/V/1>>=[name=>-<[_,<<.>>age.as(str::T)]>-.sum?str<=str{*}()]   % */g/V/1>>name                    % \"marko29\"",
+            "*/g/V/1>>=[age=><<>>name]                                         % */g/V/1>>age                     % \"marko\"",
+            "*/g/V/1>>=[age=>'hello']                                          % */g/V/1>>age                     % \"hello\"",
+            "*/g/V/1>>=[likes=>food]                                           % */g/V/1>>likes                   % food",
+            "*/g/V/1>>=[likes=>|!*/g/V/2]                                      % */g/V/1>>likes                   % */g/V/2",
+            "*/g/V/1>>=[likes=>[!*/g/V/2,!*/g/V/3]]                            % */g/V/1>>likes>-                 % 1-<{*/g/V/2,*/g/V/3}",
+           // "*/g/V/1>>=[worksWith=>|!*/g/V/3]                                  % */g/V/1                          % */g/V/3"
+            
+    }, delimiter = '%')
+    public void testVertexUpdate(final String update, final String select, final String expected) {
+        mParser.eval(update);
+        AbstractMetatronTest.checkCodeParseApply(LOG, select, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "*/g/V/1.addE(likes,*/g/V/2)                                       % */g/V/1.out(likes)                     % */g/V/2",
+    }, delimiter = '%')
+    public void testAddVertex(final String update, final String select, final String expected) {
+        mParser.eval(update);
+        AbstractMetatronTest.checkCodeParseApply(LOG, select, expected);
     }
 
     // Disable all abstract tests - tp3Space is for graph traversals, not general CRUD

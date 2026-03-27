@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -28,8 +28,8 @@ import studio.phaseshift.metatron.isa.m.type.Uri;
 
 import java.util.*;
 
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.grph.space.grphSpace.GRPH_SPACE_TYPE;
-import static studio.phaseshift.metatron.isa.m.mInstSet.MTRON_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -59,7 +59,7 @@ public class grphInstSet extends AbstractInstSet {
     public static final fURI LABEL_INST_TID = GRPH_INST_TID.extend("label");
     public static final fURI PROPERTIES_INST_TID = GRPH_INST_TID.extend("properties");
     public static final fURI ADDE_INST_TID = GRPH_INST_TID.extend("addE");
-    
+
     //
     public static final fURI GREMLIN_INST_TID = GRPH_INST_TID.extend("gremlin");
 
@@ -68,6 +68,11 @@ public class grphInstSet extends AbstractInstSet {
     public static final Uri BOTH = uri(Direction.BOTH.name());
     public static final Uri LABEL = uri("LABEL");
     public static final Uri ID = uri("ID");
+    public static final fURI IN_FURI = f(Direction.IN.name());
+    public static final fURI OUT_FURI = f(Direction.OUT.name());
+    public static final fURI BOTH_FURI = f(Direction.BOTH.name());
+    public static final fURI LABEL_FURI = f("LABEL");
+    public static final fURI ID_FURI = f("ID");
 
     public grphInstSet() {
         super(GRPH_ISA_TID, GRPH_ISA_TID);

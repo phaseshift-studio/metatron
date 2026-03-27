@@ -177,9 +177,9 @@ tp3::[pattern => g:#,
 🧱
 [source,mtron]
 ----
-tble::[pattern => netflix:#,
-       host    => <mariadb://localhost:3306/netflix>,
-       route   => [netflix: => <>],
+tble::[pattern => acme:#,
+       host    => <mariadb://localhost:3306/classicmodels>,
+       route   => [acme: => <>],
        table   => [,],
        driver  => <org.mariadb.jdbc.Driver>]@/sys/space/netflix
 ----
@@ -197,8 +197,11 @@ The two data sources have a very particular understanding of how data should be 
 ++++
 <!-- 🐖
 *g:V/1
-*netflix:movie/11488
-[-- *g:V/1.addE(watched,*netflix:movie/11488)
+*acme:customers/357
+*g:V/1.addE(consulted,acme:customers/357)
+*g:V/1>>consulted
+*g:V/1>>consulted>>salesRepEmployeeNumber
+*g:V/1>>consulted>>salesRepEmployeeNumber>>reportsTo
 -->
 ++++
 🧱        

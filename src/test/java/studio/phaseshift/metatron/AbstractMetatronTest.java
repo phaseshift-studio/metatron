@@ -96,10 +96,9 @@ public abstract class AbstractMetatronTest {
         }
      
     }
-
-
+    
     public static void checkEquality(final GraphittyLogger LOG, final Obj a, final Obj b, final boolean equals) {
-        LOG.debug("testing %s == %s [expected:%s]", a, b, equals);
+        LOG.warn("testing %s == %s [expected:%s]", a, b, equals);
         if (equals)
             assertEquals(a, b, Graphitty.string("failed %s != %s", a, b));
         else

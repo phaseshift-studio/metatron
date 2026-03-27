@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -18,8 +18,7 @@
 
 package studio.phaseshift.metatron.isa.grph.tp3;
 
-import org.apache.tinkerpop.gremlin.structure.Direction;
-import org.apache.tinkerpop.gremlin.structure.Edge;
+import org.apache.tinkerpop.gremlin.structure.*;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.grph.tp3.parser.ObjTP3Serializer;
@@ -38,12 +37,16 @@ import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.*;
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.INV_INST_TID;
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.JREService;
+import static studio.phaseshift.metatron.isa.grph.tp3.space.ElementMap.Helper.mtronKV;
 import static studio.phaseshift.metatron.isa.grph.tp3.space.schema.modernSchema.MODERN_SCHEMA_TYPE;
+import static studio.phaseshift.metatron.isa.grph.tp3.space.tp3Space.SERIALIZER;
 import static studio.phaseshift.metatron.isa.grph.tp3.space.tp3Space.TP3_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -60,6 +63,8 @@ public class tp3InstSet extends AbstractInstSet {
 
     public static final fURI TP3_ISA_TID = GRPH_ISA_TID.extend("tp3");
     public static final fURI GRPH_TID = TP3_ISA_TID.extend("grph");
+    public static final String REDIRECT_STRING = ":redirect";
+    public static final fURI REDIRECT_FURI = f(REDIRECT_STRING);
 
     protected static final Set<Type> TYPES = new LinkedHashSet<>();
     protected static final Set<Inst> INSTS = new LinkedHashSet<>();
@@ -71,7 +76,7 @@ public class tp3InstSet extends AbstractInstSet {
     /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    private static BiFunction<Obj, Inst, Obj> V_E_FUNCTION(final Direction direction) {
+    protected static BiFunction<Obj, Inst, Obj> V_E_FUNCTION(final Direction direction) {
         return (lhs, inst) -> {
             final Rec lhsRec = lhs.asRec();
             final String[] labels = inst.arg(0).isNoObj() ? EMPTY_STRING_ARRAY : inst.arg(0).stream().map(Obj::uriValue).map(fURI::toString).toArray(String[]::new);
@@ -79,11 +84,14 @@ public class tp3InstSet extends AbstractInstSet {
         };
     }
 
-    private static BiFunction<Obj, Inst, Obj> V_V_FUNCTION(final Direction direction) {
+    public static BiFunction<Obj, Inst, Obj> V_V_FUNCTION(final Direction direction) {
         return (lhs, inst) -> {
             final Rec lhsRec = lhs.asRec();
             final String[] labels = inst.arg(0).isNoObj() ? EMPTY_STRING_ARRAY : inst.arg(0).stream().map(Obj::uriValue).map(fURI::toString).toArray(String[]::new);
-            return objs(IteratorUtil.map(VertexMap.recToVertex(lhs.asRec()).vertices(direction, labels), v -> VertexMap.vertexToRec(v, lhsRec)));
+            return objs(IteratorUtil.map(VertexMap.recToVertex(lhs.asRec()).vertices(direction, labels), v -> {
+                final Property<?> redirect = v.property(REDIRECT_STRING);
+                return redirect.isPresent() ? (Obj) mtronKV(redirect).value() : VertexMap.vertexToRec(v, lhsRec);
+            }));
         };
     }
 
@@ -125,26 +133,48 @@ public class tp3InstSet extends AbstractInstSet {
             .doc("a vertex", "in adjacent edges", Map.of(jnt(0), "zero or more edge labels"), "returns the lhs vertex arg-adjacent incoming edges")
             .inst(BOTHE_INST_TID.dom(VRTX_TID).rng(EDGE_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_E_FUNCTION(Direction.BOTH))
             .doc("a vertex", "both adjacent edges", Map.of(jnt(0), "zero or more edge labels"), "returns the lhs vertex arg-adjacent incoming and outgoing edges")
-            .inst(ADDE_INST_TID.dom(VRTX_TID).rng(EDGE_TID), lst(URI_TYPE, T(VRTX_TID), T(REC_TID.maybe())), (lhs, inst) -> objs(inst.arg(1).stream().map(e -> {
-                //if (e.test(T(VRTX_TID))) {
-                final VertexMap lhsMap =  lhs.jvm();
+            /*  .inst(ADDE_INST_TID.dom(VRTX_TID).rng(EDGE_TID), lst(URI_TYPE, T(VRTX_TID), T(REC_TID.maybe())), (lhs, inst) -> objs(inst.arg(1).stream().map(e -> {
+                  //if (e.test(T(VRTX_TID))) {
+                  final VertexMap lhsMap = lhs.jvm();
+                  final fURI edgeLabel = inst.arg(0).uriValue().big();
+                  //    final Object rhsObj = inst.arg(1).test(VRTX_TYPE) ? ((VertexMap)e.jvm()).getBase() ? inst.arg(1).tid().test(AUTO_FROM_INST_TID) : 
+                  // TODO:support 
+  
+                  final Edge edge = ((VertexMap) lhs.jvm()).getBase().addEdge(inst.arg(0).uriValue().big().toString(),
+                          ((VertexMap) e.jvm()).getBase());
+                  if (inst.arg(2).isRec()) {
+                      inst.arg(2).asRec().elements().forEach(kv -> {
+                          edge.property(kv.first().uriValue().toString(), kv.second().jvm());
+                      });
+                  }
+                  return EdgeMap.edgeToRec(edge, lhs.asRec()).tid(inst.arg(0).uriValue().big());
+                  //} else {
+                  //    throw MTronException.of("invalid edge vertex: %s", e);
+                  //}
+              })))*/
+            .inst(ADDE_INST_TID.dom(VRTX_TID).rng(EDGE_TID), lst(T(ALL), URI_TYPE, T(REC_TID.maybe())), (lhs, inst) -> {
+                final Vertex outVertex = ((VertexMap) lhs.jvm()).getBase();
                 final fURI edgeLabel = inst.arg(0).uriValue().big();
-                //    final Object rhsObj = inst.arg(1).test(VRTX_TYPE) ? ((VertexMap)e.jvm()).getBase() ? inst.arg(1).tid().test(AUTO_FROM_INST_TID) : 
-                // TODO:support 
-                
-                final Edge edge = ((VertexMap) lhs.jvm()).getBase().addEdge(inst.arg(0).uriValue().big().toString(),
-                        ((VertexMap) e.jvm()).getBase());
-                if (inst.arg(2).isRec()) {
-                    inst.arg(2).asRec().elements().forEach(kv -> {
-                        edge.property(kv.first().uriValue().toString(), kv.second().jvm());
-                    });
-                }
-                return EdgeMap.edgeToRec(edge, lhs.asRec()).tid(inst.arg(0).uriValue().big());
-                //} else {
-                //    throw MTronException.of("invalid edge vertex: %s", e);
-                //}
-            })))
+                final Graph graph = outVertex.graph();
+                return objs(inst.arg(1).stream().map(e -> {
+                    final Vertex inVertex;
+                    final Edge edge;
+                    if (e.isUri()) {
+                        inVertex = graph.addVertex(
+                                org.apache.tinkerpop.gremlin.structure.T.label, e.tid().equals(URI_TID) ? VRTX_TID.toString() : e.tid().toString(), 
+                                REDIRECT_STRING, SERIALIZER.write(auto_from_(e.asUri()).tryToInst()));
+                    } else {
+                        inVertex = e.asRec().<VertexMap>jvmAs().getBase();
+                    }
+                    edge = outVertex.addEdge(edgeLabel.toString(), inVertex);
+                    if (inst.arg(2).isRec()) {
+                        inst.arg(2).asRec().jvm().forEach((key, value) -> edge.property(key.uriValue().toString(), value.jvm()));
+                    }
+                    return EdgeMap.edgeToRec(edge, lhs.<VertexMap>jvmAs().space).tid(edgeLabel);
+                }));
+            })
             .create(TYPES, INSTS);
+
     public static final Type EDGE_TYPE = Type.Builder.build()
             .tid(ELMT_TID)
             .vid(EDGE_TID)
