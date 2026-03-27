@@ -64,7 +64,7 @@
         <jline.version>3.30.9</jline.version>
         <logback.version>1.5.32</logback.version>
         <slf4j.version>2.0.17</slf4j.version>
-        <hive.version>1.3.12</hive.version>
+        <hive.version>1.3.13</hive.version>
         <jakarta.version>2.2.0</jakarta.version>
         <jsoup.version>1.22.1</jsoup.version>
         <asciidoctor.version>3.2.0</asciidoctor.version>
