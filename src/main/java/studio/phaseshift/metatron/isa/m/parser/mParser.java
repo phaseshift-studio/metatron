@@ -318,7 +318,7 @@ public class mParser {
         return choice(
                 of("{0}").trim().map(t -> NOOBJ),
                 seq(of('<'), m_furi_internal(FULL_FURI_CHARS, polynomial, coefficient, query), of('>')).pick(1),
-                seq(of("<>").trim()).map(_ -> empty()),
+                seq(of("<>").trim()).map(x -> empty()),
                 m_furi_internal(furiCharacterSet, polynomial, coefficient, query));
     }
 

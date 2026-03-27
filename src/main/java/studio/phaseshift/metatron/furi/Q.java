@@ -66,7 +66,7 @@ public interface Q extends Rec {
                             uri(QLESS_WRITE.maybe()), T(INST_TID),
                             uri(PRE_READ.maybe()), T(INST_TID),
                             uri(POST_READ.maybe()), T(INST_TID))),
-                    (_, inst) -> new BaseQ(inst.arg(0).asRec().jvm(), inst.arg(0).asRec().at(PATTERN).uriValue(), inst.arg(0).tid()))).create();
+                    (lhs, inst) -> new BaseQ(inst.arg(0).asRec().jvm(), inst.arg(0).asRec().at(PATTERN).uriValue(), inst.arg(0).tid()))).create();
 
 
     fURI pattern();

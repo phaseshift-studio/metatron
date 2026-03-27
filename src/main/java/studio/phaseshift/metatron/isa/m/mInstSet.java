@@ -281,7 +281,7 @@ public class mInstSet extends AbstractInstSet {
                         code -> code.selfJVM(
                                 Rewriter.search(code.insts())
                                         .match(instA(ID_INST_TID).insts())
-                                        .rewrite(_ -> List.of())).asCode()),
+                                        .rewrite(x -> List.of())).asCode()),
 
                 // Flatten nested map instructions
                 InstSet.Helper.rewriter(f("map_nest_rewrite"),

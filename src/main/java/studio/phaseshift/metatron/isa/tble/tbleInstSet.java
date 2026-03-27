@@ -106,7 +106,7 @@ public class tbleInstSet extends AbstractInstSet {
                                     final fURI oldfURI = code.codeValue().getFirst().arg(0).asUri().uriValue();
                                     final Space sqlSpace = Router.global().getSpace(oldfURI);
                                     if (sqlSpace instanceof tbleSpace) {
-                                        return List.of(instC(f("sql_native_count").dom(ALL.zero()).rng(INT_TID), lst(uri(sqlSpace.rewrite(oldfURI, true))), (_, inst) -> {
+                                        return List.of(instC(f("sql_native_count").dom(ALL.zero()).rng(INT_TID), lst(uri(sqlSpace.rewrite(oldfURI, true))), (lhs, inst) -> {
                                             final fURI expandedfURI = inst.arg(0).asUri().uriValue();
                                             LOG.debug("evaluating native sql query on table %s in space %s", expandedfURI, sqlSpace);
                                             try (final Statement stmt = ((tbleSpace) sqlSpace).sjvm().createStatement()) {

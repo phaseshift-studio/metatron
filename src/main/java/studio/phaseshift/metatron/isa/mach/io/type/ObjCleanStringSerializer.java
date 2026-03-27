@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.isa.mach.io.type;
 
 
-import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.*;
@@ -36,17 +35,26 @@ import java.util.Arrays;
 import java.util.HexFormat;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
-import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.OBJ_SERIALIZER_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class ObjCleanStringSerializer extends AbstractObjSerializer<String> {
-    public static final fURI OBJ_CLEAN_STRING_SERIALIZER_VID = OBJ_SERIALIZER_TID.extend("string").extend("clean");
+    // Construct constants directly to avoid circular dependency with mInstSet
+    private static final fURI OBJ_CLEAN_STRING_SERIALIZER_VID = f("/m/mach/io/serializer/string/clean");
+    private static final fURI AUTO_FROM_INST_TID = f("/m/inst/auto_from");
+    private static final fURI AUTO_INST_TID = f("/m/inst/auto");
+    private static final fURI FROM_INST_TID = f("/m/inst/from");
+    private static final java.util.Set<fURI> BASE_TYPES = java.util.Set.of(
+            f("/m/fail"), f("/m/bool"), f("/m/bytes"), f("/m/int"), f("/m/real"),
+            f("/m/str"), f("/m/uri"), f("/m/rel"),
+            f("/m/lst"), f("/m/rec"), f("/m/inst"),
+            f("/m/code"), f("/m/objs"), f("/m/noobj"));
+
     private static final String NOOBJ_STRING = "noobj";
     protected boolean leftJustify;
 
@@ -323,7 +331,7 @@ public class ObjCleanStringSerializer extends AbstractObjSerializer<String> {
         return handleVID(sb, rec);
     }
 
-    public static final int CLIP_LENGTH = BootLoader.TESTING ? Integer.MAX_VALUE : 40;
+    public static final int CLIP_LENGTH = 40;
 
     private StringBuilder writeClip(final StringBuilder sb, final Obj obj) {
         if (obj.isStr() && obj.strValue().length() > CLIP_LENGTH) {

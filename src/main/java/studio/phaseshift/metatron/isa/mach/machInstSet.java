@@ -134,7 +134,7 @@ public class machInstSet extends AbstractInstSet {
     public static final Type DIR_TYPE = Type.Builder.build()
             .tid(FILE_TID)
             .vid(DIR_TID)
-            .predicate((uri, _) -> uri.uriValue().isBranch() ? uri : noobj())
+            .predicate((uri, x) -> uri.uriValue().isBranch() ? uri : noobj())
             .constructor(instC(INST_TID.dom(ALL.maybe()).rng(DIR_TID.maybe()),
                     lst(T(URI_TID)),
                     (lhs, inst) -> inst.arg(0).uriValue().isBranch() ? makeFile(Path.of(inst.arg(0).uriValue().basePath().toString())) : noobj())).create();

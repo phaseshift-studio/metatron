@@ -219,6 +219,24 @@ The two data sources have a very particular understanding of how data should be 
 │        └──┘   │            │├─────────────┤│
 │               │            │└─────────────┘│
 └───────────────┘            └───────────────┘
+
+
+
+
+
+
+
+                                   foreign key
+                            tableA ┌───────┐ tableB
+vertexA vertexB   redirect  ┌─┬─┬─┬┼┬─┐   ┌┼┬─┬─┬─┐
+  ┌───┐    ┌───┐┌──────────►├─┼─├─┼┼┼─┤   ├▼┼─┼─┼─┤
+  │   │───►│   ├┘           ├─┼─┼─┼─┼─┤   ├─┼─┼─┼─┤
+  └───┘    └───┘            └─┴─┴─┴─┴─┘   └─┴─┴─┴─┘    
+                                                             
+                                                         
+
+
+
 ----
 |===
 =====

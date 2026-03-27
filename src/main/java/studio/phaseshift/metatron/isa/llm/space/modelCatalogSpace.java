@@ -52,7 +52,7 @@ public class modelCatalogSpace<CATALOG> extends memSpace {
                     uri(PATTERN), URI_TYPE,
                     uri(HOST), URI_TYPE,
                     uri(ROUTE), rec(URI_TYPE, URI_TYPE)))
-            .constructor(instC(INST_TID.dom(ALL.maybe()).rng(LLM_CATALOG_SPACE_TID), lst(T(REC_TID)), (_, inst) -> LLMFactory.createModelCatalog(inst.arg(0).asRec()))).create();
+            .constructor(instC(INST_TID.dom(ALL.maybe()).rng(LLM_CATALOG_SPACE_TID), lst(T(REC_TID)), (x, inst) -> LLMFactory.createModelCatalog(inst.arg(0).asRec()))).create();
 
     private final CATALOG models;
 

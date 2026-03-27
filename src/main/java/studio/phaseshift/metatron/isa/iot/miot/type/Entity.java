@@ -99,20 +99,20 @@ public final class Entity {
                 .inst(miotInstSet.MIOT_INST_TID.extend("toggle").dom(miotInstSet.MIOT_GPIO_TID).rng(miotInstSet.MIOT_GPIO_TID), lst(INT_TYPE),
                         (lhs, inst) -> writePin(lhs.asRec(), f("gpio"), inst.arg(0), currentValue -> 0 == currentValue.intValue() ? jnt(1) : jnt(0)))
                 .inst(miotInstSet.MIOT_INST_TID.extend("on").dom(miotInstSet.MIOT_GPIO_TID).rng(miotInstSet.MIOT_GPIO_TID), lst(INT_TYPE),
-                        (lhs, inst) -> writePin(lhs.asRec(), f("gpio"), inst.arg(0), _ -> jnt(1)))
+                        (lhs, inst) -> writePin(lhs.asRec(), f("gpio"), inst.arg(0), x -> jnt(1)))
                 .inst(miotInstSet.MIOT_INST_TID.extend("off").dom(miotInstSet.MIOT_GPIO_TID).rng(miotInstSet.MIOT_GPIO_TID), lst(INT_TYPE),
-                        (lhs, inst) -> writePin(lhs.asRec(), f("gpio"), inst.arg(0), _ -> jnt(0)))
+                        (lhs, inst) -> writePin(lhs.asRec(), f("gpio"), inst.arg(0), x -> jnt(0)))
                 .create(types, insts);
         Type.Builder.build()
                 .tid(MIOT_ENTITY_TID)
                 .vid(miotInstSet.MIOT_PWM_TID)
                 .isaPredicate(rec(URI_TYPE, INT_TYPE))
                 .inst(miotInstSet.MIOT_INST_TID.extend("freq").dom(miotInstSet.MIOT_PWM_TID).rng(miotInstSet.MIOT_PWM_TID), lst(INT_TYPE, INT_TYPE),
-                        (lhs, inst) -> writePin(lhs.asRec(), f("pwm"), inst.arg(0), _ -> jnt(inst.arg(1).asInt().intValue())))
+                        (lhs, inst) -> writePin(lhs.asRec(), f("pwm"), inst.arg(0), x -> jnt(inst.arg(1).asInt().intValue())))
                 .inst(miotInstSet.MIOT_INST_TID.extend("on").dom(miotInstSet.MIOT_PWM_TID).rng(miotInstSet.MIOT_PWM_TID), lst(INT_TYPE),
-                        (lhs, inst) -> writePin(lhs.asRec(), f("pwm"), inst.arg(0), _ -> jnt(255)))
+                        (lhs, inst) -> writePin(lhs.asRec(), f("pwm"), inst.arg(0), x -> jnt(255)))
                 .inst(miotInstSet.MIOT_INST_TID.extend("off").dom(miotInstSet.MIOT_PWM_TID).rng(miotInstSet.MIOT_PWM_TID), lst(INT_TYPE),
-                        (lhs, inst) -> writePin(lhs.asRec(), f("pwm"), inst.arg(0), _ -> jnt(0)))
+                        (lhs, inst) -> writePin(lhs.asRec(), f("pwm"), inst.arg(0), x -> jnt(0)))
                 .create(types, insts);
     }
 }

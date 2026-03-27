@@ -1315,6 +1315,7 @@ $(addBlockSwitches);
     <link rel="icon" type="image/png" sizes="16x16" href="images/favicon-16x16.png">
     <link rel="mask-icon" href="images/safari-pinned-tab.svg" color="#5bbad5">
     <!-- CSS PACKAGES -->
+    <link href="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.css" rel="stylesheet"/>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
     <link href="lib/animate/animate.min.css" rel="stylesheet">
@@ -1324,6 +1325,7 @@ $(addBlockSwitches);
     <!-- JAVASCRIPT PACKAGES -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
     <script src="./highlight/highlight.min.js"></script>
+    <script src="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js"></script>
     <script src="./highlight/languages/mtron.min.js"></script>
     <script src="./highlight/languages/json.min.js"></script>
     <script src="./highlight/languages/bash.min.js"></script>
@@ -2766,77 +2768,77 @@ mtron&gt; */m/llm/model
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">​
 mtron&gt; *ollama:+
 ==&gt;model::[
- skill   =&gt;[completion,tools,thinking],
  name    =&gt;qwen3:8b,
  think   =&gt;ollama:qwen3:8b/thought,
  provider=&gt;!*/sys/space/ollama,
- size    =&gt;gB::4.87]@ollama:qwen3:8b
+ size    =&gt;gB::4.87,
+ skill   =&gt;[completion,tools,thinking]]@ollama:qwen3:8b
 ==&gt;model::[
- skill   =&gt;[completion,tools,thinking],
  name    =&gt;&lt;minimax-m2.5:cloud&gt;,
  think   =&gt;&lt;ollama:minimax-m2.5:cloud/thought&gt;,
  provider=&gt;!*/sys/space/ollama,
- size    =&gt;gB::0.00]@ollama:minimax-m2.5:cloud
+ size    =&gt;gB::0.00,
+ skill   =&gt;[completion,tools,thinking]]@ollama:minimax-m2.5:cloud
 ==&gt;model::[
- skill   =&gt;[completion,tools,thinking],
  name    =&gt;qwen3:latest,
  think   =&gt;ollama:qwen3:latest/thought,
  provider=&gt;!*/sys/space/ollama,
- size    =&gt;gB::4.87]@ollama:qwen3:latest
+ size    =&gt;gB::4.87,
+ skill   =&gt;[completion,tools,thinking]]@ollama:qwen3:latest
 ==&gt;model::[
- skill   =&gt;[completion],
  name    =&gt;tinyllama:latest,
  think   =&gt;noobj,
  provider=&gt;!*/sys/space/ollama,
- size    =&gt;gB::0.59]@ollama:tinyllama:latest
+ size    =&gt;gB::0.59,
+ skill   =&gt;[completion]]@ollama:tinyllama:latest
 ==&gt;model::[
- skill   =&gt;[completion,tools,thinking],
  name    =&gt;gpt-oss:latest,
  think   =&gt;ollama:gpt-oss:latest/thought,
  provider=&gt;!*/sys/space/ollama,
- size    =&gt;gB::12.85]@ollama:gpt-oss:latest
+ size    =&gt;gB::12.85,
+ skill   =&gt;[completion,tools,thinking]]@ollama:gpt-oss:latest
 ==&gt;model::[
- skill   =&gt;[completion,tools,thinking],
  name    =&gt;&lt;deepseek-v3.2:cloud&gt;,
  think   =&gt;&lt;ollama:deepseek-v3.2:cloud/thought&gt;,
  provider=&gt;!*/sys/space/ollama,
- size    =&gt;gB::0.00]@ollama:deepseek-v3.2:cloud
+ size    =&gt;gB::0.00,
+ skill   =&gt;[completion,tools,thinking]]@ollama:deepseek-v3.2:cloud
 ==&gt;model::[
- skill   =&gt;[completion],
  name    =&gt;deepcoder:latest,
  think   =&gt;noobj,
  provider=&gt;!*/sys/space/ollama,
- size    =&gt;gB::8.37]@ollama:deepcoder:latest
+ size    =&gt;gB::8.37,
+ skill   =&gt;[completion]]@ollama:deepcoder:latest
 ==&gt;model::[
- skill   =&gt;[completion],
  name    =&gt;deepseek-coder:latest,
  think   =&gt;noobj,
  provider=&gt;!*/sys/space/ollama,
- size    =&gt;gB::0.72]@ollama:deepseek-coder:latest
+ size    =&gt;gB::0.72,
+ skill   =&gt;[completion]]@ollama:deepseek-coder:latest
 ==&gt;model::[
- skill   =&gt;[completion,tools,thinking],
  name    =&gt;&lt;glm-4.7-flash:latest&gt;,
  think   =&gt;&lt;ollama:glm-4.7-flash:latest/thought&gt;,
  provider=&gt;!*/sys/space/ollama,
- size    =&gt;gB::17.71]@ollama:glm-4.7-flash:latest
+ size    =&gt;gB::17.71,
+ skill   =&gt;[completion,tools,thinking]]@ollama:glm-4.7-flash:latest
 ==&gt;model::[
- skill   =&gt;[completion,tools],
  name    =&gt;llama3-groq-tool-use:latest,
  think   =&gt;noobj,
  provider=&gt;!*/sys/space/ollama,
- size    =&gt;gB::4.34]@ollama:llama3-groq-tool-use:latest
+ size    =&gt;gB::4.34,
+ skill   =&gt;[completion,tools]]@ollama:llama3-groq-tool-use:latest
 ==&gt;model::[
- skill   =&gt;[completion,vision],
  name    =&gt;llava:latest,
  think   =&gt;noobj,
  provider=&gt;!*/sys/space/ollama,
- size    =&gt;gB::4.41]@ollama:llava:latest
+ size    =&gt;gB::4.41,
+ skill   =&gt;[completion,vision]]@ollama:llava:latest
 ==&gt;model::[
- skill   =&gt;[completion,tools],
  name    =&gt;qwen3-coder-next:latest,
  think   =&gt;noobj,
  provider=&gt;!*/sys/space/ollama,
- size    =&gt;gB::48.19]@ollama:qwen3-coder-next:latest
+ size    =&gt;gB::48.19,
+ skill   =&gt;[completion,tools]]@ollama:qwen3-coder-next:latest
 ​</code></pre>
 </div>
 </div>
@@ -3723,10 +3725,10 @@ mtron&gt; *#.as[name      =&gt; _,
 </table>
 <h3 id="_spatial_embeddings" class="discrete">spatial embeddings</h3>
 <div class="paragraph">
-<p><span class="lime">m</span>​<strong class="fuchsia">e</strong>​<span class="blue">T</span>​<span class="yellow">A</span>​<strong class="green">t</strong>​<span class="orange">r</span>​<strong class="aqua">o</strong>​<span class="red">N</span>​ was designed to support the creation and manipulation of <em>abstract data types</em> in a compact, fluid manner so as to allow the user to move smoothly between <em>multiple models</em> across different spaces, each espousing a different perspective on the data their maintain: e.g., key/value, document, relational, vector, graph, and the various nooks and crannies between.</p>
+<p><span class="aqua">m</span>​<strong class="green">e</strong>​<strong class="orange">T</strong>​<span class="lime">A</span>​<strong class="red">t</strong>​<span class="yellow">r</span>​<span class="fuchsia">o</span>​<span class="blue">n</span>​ was designed to support the creation and manipulation of <em>abstract data types</em> in a compact, fluid manner so as to allow the user to move smoothly between <em>multiple models</em> across different spaces, each espousing a different perspective on the data their maintain: e.g., key/value, document, relational, vector, graph, and the various nooks and crannies between.</p>
 </div>
 <div class="paragraph">
-<p><strong class="red">M</strong>​<strong class="orange">E</strong>​<span class="fuchsia">T</span>​<span class="green">a</span>​<span class="lime">T</span>​<span class="yellow">R</span>​<strong class="aqua">o</strong>​<strong class="blue">n</strong>​'s URI addressing scheme makes it possible to <em>embed</em> arbitrary data types into a space.
+<p><span class="yellow">m</span>​<strong class="red">e</strong>​<span class="fuchsia">T</span>​<strong class="blue">a</strong>​<strong class="orange">T</strong>​<strong class="aqua">r</strong>​<span class="lime">O</span>​<strong class="green">n</strong>​'s URI addressing scheme makes it possible to <em>embed</em> arbitrary data types into a space.
 This section will explore the following considerations when designing a <em>multi-model abstract data type</em>.</p>
 </div>
 <div class="olist arabic">
@@ -4487,7 +4489,20 @@ mtron&gt; *g:V/1&gt;&gt;consulted&gt;&gt;salesRepEmployeeNumber&gt;&gt;reportsTo
 │   └───►│  │◄──┼────────────┤├─────────────┤│
 │        └──┘   │            │├─────────────┤│
 │               │            │└─────────────┘│
-└───────────────┘            └───────────────┘</code></pre>
+└───────────────┘            └───────────────┘
+
+
+
+
+
+
+
+                                   foreign key
+                            tableA ┌───────┐ tableB
+vertexA vertexB   redirect  ┌─┬─┬─┬┼┬─┐   ┌┼┬─┬─┬─┐
+  ┌───┐    ┌───┐┌──────────►├─┼─├─┼┼┼─┤   ├▼┼─┼─┼─┤
+  │   │───►│   ├┘           ├─┼─┼─┼─┼─┤   ├─┼─┼─┼─┤
+  └───┘    └───┘            └─┴─┴─┴─┴─┘   └─┴─┴─┴─┘</code></pre>
 </div>
 </div></div></td>
 </tr>

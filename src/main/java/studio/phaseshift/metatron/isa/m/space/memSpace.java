@@ -155,7 +155,7 @@ public class memSpace extends AbstractSpace<Map<fURI, Obj>> {
                 LOG.info("loading persisted data at {{y}}%s", file.getAbsolutePath());
                 mParser.eval(file, ex -> {
                     throw MTronException.of(ex);
-                }).reduce(noobj(), (_, _) -> noobj());
+                }).reduce(noobj(), (x, y) -> noobj());
                 LOG.info("total data loaded from {{y}}%s{{X}}: {{y}}%d{{/y}} bytes", file.getAbsolutePath(), Files.size(file.toPath()));
             } catch (final Exception e) {
                 throw MTronException.of(e);

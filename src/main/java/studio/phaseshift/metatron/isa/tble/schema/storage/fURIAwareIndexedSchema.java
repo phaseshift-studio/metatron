@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.tble.schema.storage;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjCleanStringSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 
 import java.sql.*;
@@ -44,6 +45,7 @@ public class fURIAwareIndexedSchema implements TableSchema {
 
     private static final int MAX_SEGMENTS = 5;
     private static final String TABLE_NAME = "objs";
+    private static final ObjCleanStringSerializer SERIALIZER = new ObjCleanStringSerializer();
 
     @Override
     public void initialize(final Connection conn) throws SQLException {
@@ -136,7 +138,7 @@ public class fURIAwareIndexedSchema implements TableSchema {
 
         final List<Space.IdObj> results = new ArrayList<>();
         while (rs.next()) {
-            results.add(new Space.IdObj(f(rs.getString("furi")), ObjSimpleJSONSerializer.parse(rs.getString("obj"))));
+            results.add(new Space.IdObj(f(rs.getString("furi")), SERIALIZER.read(rs.getString("obj"))));
         }
         rs.close();
         stmt.close();
@@ -212,7 +214,7 @@ public class fURIAwareIndexedSchema implements TableSchema {
             final String furiStr = rs.getString("furi");
             // Double-check pattern match (for patterns beyond MAX_SEGMENTS)
             if (matchesMqttPattern(furiStr, patternStr)) {
-                results.add(Space.IdObj.of(f(furiStr), ObjSimpleJSONSerializer.parse(rs.getString("obj"))));
+                results.add(Space.IdObj.of(f(furiStr), SERIALIZER.read(rs.getString("obj"))));
             }
         }
 

@@ -88,8 +88,8 @@ public interface Fail extends Obj, PlusMonoid<Fail> {
 
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
-                    instC(CAUSE_INST_TID.dom(FAIL_TID).rng(FAIL_TID.maybe()), lst(), (lhs, _) -> lhs.<Fail>as().cause().map(x -> (Obj) x).orElse(noobj())), // necessary cause of type casting
-                    instC(REIFY_INST_TID.dom(FAIL_TID).rng(REC_TID), lst(), (lhs, _) -> {
+                    instC(CAUSE_INST_TID.dom(FAIL_TID).rng(FAIL_TID.maybe()), lst(), (lhs, x) -> lhs.<Fail>as().cause().map(z -> (Obj) z).orElse(noobj())), // necessary cause of type casting
+                    instC(REIFY_INST_TID.dom(FAIL_TID).rng(REC_TID), lst(), (lhs, x) -> {
                         final StackTraceElement[] element = lhs.<Fail>as().message().getStackTrace();
                         final Map<Obj, Obj> throwable = new LinkedHashMap<>();
                         throwable.put(uri("message"), str(lhs.<Fail>as().message().getMessage()));

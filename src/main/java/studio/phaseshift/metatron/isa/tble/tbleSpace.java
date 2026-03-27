@@ -20,11 +20,13 @@ package studio.phaseshift.metatron.isa.tble;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractSpace;
+import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.NoObj;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjCleanStringSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 import studio.phaseshift.metatron.isa.tble.schema.domain.ExistingTableSchema;
@@ -35,8 +37,10 @@ import studio.phaseshift.metatron.isa.tble.schema.storage.fURIAwareIndexedSchema
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -147,7 +151,7 @@ public class tbleSpace extends AbstractSpace<Connection> {
                             uri(TABLE).maybe(), LST_TYPE))
                     .constructor(instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(TBLE_SPACE_TID),
                             lst(REC_TYPE),
-                            (_, inst) -> tbleSpace.of(inst.arg(0).asRec().jvm(), inst.arg(0).vid())))
+                            (lhs, inst) -> tbleSpace.of(inst.arg(0).asRec().jvm(), inst.arg(0).vid())))
                     .inst(instC(SQL_INST_TID.dom(TBLE_SPACE_TID).rng(REC_ROW_TID.maybeSome()), lst(STR_TYPE), (lhs, inst) -> {
                         try {
                             final Statement statement = lhs.<tbleSpace>as().sjvm().createStatement();
@@ -210,16 +214,19 @@ public class tbleSpace extends AbstractSpace<Connection> {
     protected tbleSpace(final Connection sjvm, final Map<Obj, Obj> config, final fURI tid, final fURI vid) {
         super(sjvm, config, tid, vid);
         LOG.info("connected {{b}}%s{{X}}", config.get(uri(HOST)));
-        this.serializer = this.at(uri(SERIALIZER)).orElse(new ObjSimpleJSONSerializer());
         // Initialize schema - auto-detect based on database type
         try {
             final String dbProductName = sjvm.getMetaData().getDatabaseProductName().toLowerCase();
             if (dbProductName.contains("mariadb") || dbProductName.contains("mysql")) {
                 this.schema = new fURIAwareIndexedSchema();
-                LOG.info("detected {{b}}mariadb/mysql{{X}} - using {{g}}mqtt schema");
+                // Use ObjCleanStringSerializer for fURIAwareIndexedSchema to avoid JSON parsing issues
+                this.serializer = this.at(uri(SERIALIZER)).orElse(new ObjCleanStringSerializer());
+                LOG.info("detected {{b}}mariadb/mysql{{X}} - using {{g}}mqtt schema with clean string serializer");
             } else {
                 // Use TypedKeyValueSchema for isomorphic type-preserving storage
                 this.schema = new TypedKeyValueSchema();
+                // TypedKeyValueSchema handles serialization internally, but set a default anyway
+                this.serializer = this.at(uri(SERIALIZER)).orElse(new ObjCleanStringSerializer());
                 LOG.info("detected {{b}}%s{{X}} - using {{g}}typed schema", dbProductName);
             }
             this.schema.initialize(sjvm);
@@ -314,13 +321,31 @@ public class tbleSpace extends AbstractSpace<Connection> {
 
                 // Check if this is a table mapping path (existing table)
                 if (this.existingTableSchema != null && this.existingTableSchema.isTablePath(pattern)) {
-                    // Use existing table schema - just return raw results
-                    return this.existingTableSchema.read(this.sjvm(), pattern);
+                    // Use existing table schema - get raw results and add poly unrolling
+                    final Iterator<IdObj> rawResults = this.existingTableSchema.read(this.sjvm(), pattern);
+                    final List<IdObj> allResults = new ArrayList<>();
+                    rawResults.forEachRemaining(kv -> {
+                        allResults.add(kv);  // Add the base object
+                        if (pattern.hasPattern() && kv.obj().isPoly()) {
+                            // Add unrolled nested paths (like memSpace does) - only when pattern has wildcards
+                            allResults.addAll(Space.Helper.unrollPoly(kv.furi(), kv.obj().as(), pattern.asNode()));
+                        }
+                    });
+                    return allResults.iterator();
                 }
 
                 // Use key-value schema (TypedKeyValueSchema or SimpleKeyValueSchema)
-                // Just return raw results - resolveRead() will handle poly unrolling
-                return this.schema.read(this.sjvm(), pattern);
+                // Get raw results and add poly unrolling
+                final Iterator<IdObj> rawResults = this.schema.read(this.sjvm(), pattern);
+                final List<IdObj> allResults = new ArrayList<>();
+                rawResults.forEachRemaining(kv -> {
+                    allResults.add(kv);  // Add the base object
+                    if (pattern.hasPattern() && kv.obj().isPoly()) {
+                        // Add unrolled nested paths (like memSpace does) - only when pattern has wildcards
+                        allResults.addAll(Space.Helper.unrollPoly(kv.furi(), kv.obj().as(), pattern.asNode()));
+                    }
+                });
+                return allResults.iterator();
             } catch (final Exception e) {
                 throw MTronException.of(e);
             }

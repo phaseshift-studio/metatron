@@ -714,7 +714,7 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
         }
 
         public static <F extends mFluent<F>> F auto_(final Supplier<Obj> function) {
-            return new mFluent<F>().auto_(instC(INST_TID, lst(), (_, _) -> function.get()));
+            return new mFluent<F>().auto_(instC(INST_TID, lst(), (x, y) -> function.get()));
         }
 
         public static <F extends mFluent<F>> F auto_from_(final Uri uri, final Obj defaultObj) {

@@ -153,7 +153,7 @@ public class docSpace extends AbstractSpace<MongoClient> {
                             uri(COLLECTION).maybe(), LST_TYPE))
                     .constructor(instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(DOC_SPACE_TID),
                             lst(REC_TYPE),
-                            (_, inst) -> docSpace.of(inst.arg(0).asRec().jvm(), inst.arg(0).vid()))).create();
+                            (lhs, inst) -> docSpace.of(inst.arg(0).asRec().jvm(), inst.arg(0).vid()))).create();
 
     protected MongoDatabase database;
     protected String databaseName;
