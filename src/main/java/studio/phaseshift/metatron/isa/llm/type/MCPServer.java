@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -33,14 +33,17 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.MCP_SERVER_TID;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.MCP_TOOL_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.isa.m.type.Bool.*;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -54,12 +57,15 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class MCPServer extends MRec {
+
     public static final Type MCP_SERVER_TYPE = Type.Builder.build().tid(REC_TID).vid(MCP_SERVER_TID)
             .isaPredicate(rec(
                     uri(HOST), URI_TYPE,
-                    uri(TOOL).maybe(), rec(URI_TYPE, T(MCP_TOOL_TID)).maybe()))
+                    uri(TOOL).maybe(), rec(URI_TYPE, T(MCP_TOOL_TID)).maybe(),
+                    uri(STATUS).maybe(), isa_(BOOL_TYPE).else_(BOOL_FALSE)))
             .constructor(instC(INST_TID.dom(ALL.maybe()).rng(MCP_SERVER_TID), lst(T(REC_TID)),
-                    (x, inst) -> new MCPServer(inst.arg(0).asRec().jvm(), MCP_SERVER_TID, inst.arg(0).vid()))).create();
+                    (x, inst) -> new MCPServer(inst.arg(0).asRec().jvm(), MCP_SERVER_TID, inst.arg(0).vid())))
+            .create();
 
     public static final Type MCP_TOOL_TYPE = Type.Builder.build().tid(REC_TID).vid(MCP_TOOL_TID)
             .isaPredicate(rec(
@@ -75,13 +81,24 @@ public class MCPServer extends MRec {
         this.client = DefaultMcpClient.builder()
                 .clientName(METATRON)
                 .clientVersion(METATRON_VERSION)
-                .transport(createTransport(jvm.get(uri(HOST)).uriValue()))
-                .autoHealthCheck(true)
+                .transport(createTransport(
+                        jvm.get(uri(TRANSPORT)),
+                        jvm.getOrDefault(uri(HEADERS), rec0()).jvm(),
+                        jvm.get(uri(HOST))))
+                //.autoHealthCheck(true)
                 .cacheToolList(true)
                 .build();
+        this.jvm().put(uri(STATUS), auto_(instC(INST_TID.dom(ALL.maybe()).rng(BOOL_TID), lst(), (lhs, inst) -> {
+            try {
+                this.client.checkHealth();
+                return BOOL_TRUE;
+            } catch (final Exception e) {
+                return BOOL_FALSE;
+            }
+        })));
+
         this.jvm().put(uri(TOOL), auto_(instC(
-                INST_TID.dom(ALL.maybe())
-                        .rng(REC_TID), lst(),
+                INST_TID.dom(ALL.maybe()).rng(REC_TID), lst(),
                 (lhs, inst) -> this.client.listTools().stream()
                         .map(t -> {
                             try {
@@ -109,20 +126,33 @@ public class MCPServer extends MRec {
         return this.client;
     }
 
-    protected static McpTransport createTransport(final fURI host) {
-        if (host.scheme().equals(WS) || host.scheme().equals(WSS))
-            return WebSocketMcpTransport.builder()
-                    //  .logRequests(true)
-                    //  .logResponses(true)
-                    .url(host.toString())
-                    .build();
-        if (host.scheme().equals(HTTP) || host.scheme().equals(HTTPS)) {
-            return StreamableHttpMcpTransport.builder()
-                    //  .logRequests(true)
-                    //  .logResponses(true)
-                    .url(host.toString())
-                    .build();
-        } else
-            throw MTronException.of("unsupported scheme: " + host.scheme());
+    protected static McpTransport createTransport(final Obj transport, final Map<Obj, Obj> headers, final Obj host) {
+        if (null != transport) {
+            if (f("streamable-http").equals(transport.uriValue())) {
+                return StreamableHttpMcpTransport.builder()
+                        //  .logRequests(true)
+                        //  .logResponses(true)
+                        .customHeaders(headers.keySet().stream().collect(Collectors.toMap(k -> k.uriValue().toString(), v -> v.uriValue().toString())))
+                        .url(host.uriValue().toString())
+                        .build();
+            }
+        } else {
+            if (host.uriValue().scheme().equals(WS) || host.uriValue().scheme().equals(WSS))
+                return WebSocketMcpTransport.builder()
+                        //  .logRequests(true)
+                        //  .logResponses(true)
+                        .url(host.uriValue().toString())
+                        .build();
+            if (host.uriValue().scheme().equals(HTTP) || host.uriValue().scheme().equals(HTTPS)) {
+                return StreamableHttpMcpTransport.builder()
+                        //  .logRequests(true)
+                        //  .logResponses(true)
+                        .url(host.uriValue().toString())
+                        .build();
+            } else
+                throw MTronException.of("unsupported scheme: " + host.uriValue().scheme());
+        }
+        throw MTronException.of("unsupported transport for %s: %s %s", host, transport, headers);
     }
+
 }

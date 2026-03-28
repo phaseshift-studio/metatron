@@ -109,7 +109,10 @@ public final class Tokens {
     public static final String FURI = "furi";
     public static final String OBJ = "obj";
     public static final String JDBC = "jdbc:";
+    public static final String STATUS = "status";
     public static final String HOST = "host";
+    public static final String HEADERS = "headers";
+    public static final String TRANSPORT = "transport";
     public static final String SERVER = "server";
     public static final String LOCAL = "local";
     public static final String PORT = "port";
