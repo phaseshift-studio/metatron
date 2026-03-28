@@ -69,7 +69,6 @@ public class AnnotatedListInstTool {
     @McpHandler
     public Obj execute() {
         LOG.debug("curating inst list (doc=%b)", doc);
-
         // Return the list of instructions as an Obj
         // Framework will convert to structured JSON
         return lst(Router.global().read(doc ? "/m/inst/#?doc" : "/m/inst/+"));

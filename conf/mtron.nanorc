@@ -30,8 +30,8 @@ icolor yellow "\.[0-9]+E[-+]?[0-9]+"
 # uri slash or schema
 icolor blue "(/|([a-z]+(://))|[a-z])([0-9]|[a-z]|\.|-|_)+(:)?[0-9]*(/)?([a-z]|/|\_|[0-9])*"
 # rec/rel uri key
-icolor cyan "</?([a-z]|[0-9]|/|_|-|:|\s)*>\s*=>"
-icolor cyan "/?([a-z]|[0-9]|/|_|-|:)*\s*=>"
+icolor cyan "</?(<|>|[a-z]|[0-9]|/|_|-|:|\+|#|\s)*>\s*=>"
+icolor cyan "/?(<|>|\+|#|[a-z]|[0-9]|/|_|-|:)*\s*=>"
 color green "=>"
 ### bytes
 icolor yellow "0x([0-9]|[A-F]|[a-f])+"
@@ -65,8 +65,11 @@ color yellow "[\"][^\"]*[\"]"
 color yellow "['][^']*[']"
 color yellow start="\"\"\"" end="\"\"\""
 ###  uri
-color blue "[^-][<][^=]([^>])*[>][^-]"
+color blue "[^-][<][^=]([^>])*[>][^-]^(=>)]"
 color green "<" ">"
+icolor magenta "[a-z0-9_]+::"
+color green "::" 
+color yellow "<="
 ### comments
 color gray start="\[--" end="--]"
 color gray start="\[==" end="==]"

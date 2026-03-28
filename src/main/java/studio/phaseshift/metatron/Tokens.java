@@ -32,11 +32,18 @@ public final class Tokens {
         // do nothing
     }
 
+    public static final String MTRON = "mtron";
+    public static final String METATRON = "metatron";
+    public static final String METATRON_VERSION = "0.1-SNAPSHOT";
+
     public static final fURI HASH = f("#");
     public static final fURI PLUS = f("+");
     public static final fURI STACK_PATTERN = f("+/#");
 
 
+    public static final String OPENAI = "openai";
+    public static final String ANTHROPIC = "anthropic";
+    public static final String OLLAMA = "ollama";
     public static final String JSONRPC = "jsonrpc";
     public static final String REQUIRED = "required";
     public static final String SRC = "src";
@@ -58,6 +65,7 @@ public final class Tokens {
     public static final String MEMORY = "memory";
     public static final String HISTORY = "history";
     public static final String TOOL = "tool";
+    public static final String RESPONSE = "response";
     public static final String OBJECT = "object";
     public static final String TYPE = "type";
     public static final String THINKING = "thinking";
@@ -102,6 +110,7 @@ public final class Tokens {
     public static final String OBJ = "obj";
     public static final String JDBC = "jdbc:";
     public static final String HOST = "host";
+    public static final String SERVER = "server";
     public static final String LOCAL = "local";
     public static final String PORT = "port";
     public static final String USER = "user";
@@ -119,12 +128,16 @@ public final class Tokens {
     public static final String LOAD = "load";
     public static final String NATIVE = "native";
     public static final String HTTP = "http";
+    public static final String HTTPS = "https";
     public static final String WS = "ws";
+    public static final String WSS = "wss";
     public static final String MQTT = "mqtt";
     public static final String EMPTY = "";
+    public static final String ARG = "arg";
     public static final String DESC = "desc";
     public static final String MODEL = "model";
     public static final String DOC = "doc";
+    public static final String LHS = "lhs";
     public static final String GGUF_KEY = "gguf";
     public static final String QUANT = "quant";
     public static final String FAMILY = "family";

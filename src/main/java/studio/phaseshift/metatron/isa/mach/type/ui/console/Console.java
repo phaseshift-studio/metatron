@@ -455,7 +455,7 @@ public class Console extends JRec implements Closeable, Runnable {
                     final Obj code = mParser.parse(this.reader.getBuffer().toString());
                     if (code.isCode()) {
                         terminal.writer().write("\n");
-                        final Explain explain = new Explain(code.as());
+                        final ExplainV2 explain = new ExplainV2(code.as());
                         Utilities.runCursorLessWidget(explain, true);
                         redrawBuffer();
                     }

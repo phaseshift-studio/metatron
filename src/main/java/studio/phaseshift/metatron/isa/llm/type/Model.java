@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -19,18 +19,18 @@
 package studio.phaseshift.metatron.isa.llm.type;
 
 import dev.langchain4j.agent.tool.ToolSpecification;
+import dev.langchain4j.mcp.McpToolProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
-import dev.langchain4j.model.chat.StreamingChatModel;
+import dev.langchain4j.model.chat.request.json.*;
 import dev.langchain4j.service.AiServices;
 import dev.langchain4j.service.tool.ToolExecutor;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.furi.q.DocQ;
 import studio.phaseshift.metatron.isa.llm.LLMFactory;
 import studio.phaseshift.metatron.isa.llm.space.SpaceChatMemoryStore;
-import studio.phaseshift.metatron.isa.m.type.Lst;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.m.type.Str;
+import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -38,16 +38,32 @@ import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import static dev.langchain4j.internal.Json.fromJson;
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.MCP_SERVER_TID;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.MODEL_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
+import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.Real.REAL_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Rel.REL_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -79,39 +95,67 @@ public class Model extends MRec {
                 this.at(API_KEY).orElse(str("")).strValue());
     }
 
-    public Optional<Map<ToolSpecification, ToolExecutor>> tools() {
-        return Optional.<Lst>ofNullable(this.at(TOOL).orElse(null)).map(t -> t.elements()
-                .filter(Obj::isInst)
-                .map(i -> OLLM.mtronInstToolSpecification(i.asInst()))
-                .collect(Collectors.toMap(Tuple.Pair::get0, Tuple.Pair::get1)));
-    }
-
     public Optional<fURI> thinking() {
-        return Optional.<Obj>ofNullable(this.at(THINK).orElse(null)).map(Obj::uriValue);
+        return Optional.<Obj>ofNullable(this.at(THINK).orElse(null)).map(o -> o.autoResolve(this)).map(Obj::uriValue);
     }
 
     public Optional<fURI> memory() {
-        return Optional.<Obj>ofNullable(this.at(MEMORY).orElse(null)).map(Obj::uriValue);
+        return Optional.<Obj>ofNullable(this.at(MEMORY).orElse(null)).map(o -> o.autoResolve(this)).map(Obj::uriValue);
     }
 
-    public Agent agent() {
-        final StreamingChatModel streamingChatModel = LLMFactory.createModel(this, this.model());
-        final AiServices<Agent> service = AiServices.builder(Agent.class)
-                .streamingChatModel(streamingChatModel);
+    public Optional<Lst> tools() {
+        return Optional.<Obj>ofNullable(this.at(TOOL).orElse(null)).map(o -> o.autoResolve(this)).map(Obj::asLst);
+    }
+
+    public Optional<Rec> response() {
+        return Optional.<Obj>ofNullable(this.at(RESPONSE).orElse(null)).map(o -> o.autoResolve(this)).map(Obj::asRec);
+    }
+
+    public AiServices<Agent> agent() {
+        final AiServices<Agent> service = AiServices.builder(Agent.class);
+        //////////////////////////////////////////
+        /////////////// MEMORY ///////////////////
+        //////////////////////////////////////////
         if (this.memory().isPresent())
             service.chatMemory(MessageWindowChatMemory.builder()
-                    .maxMessages(Router.readFromSpace(this.memory().get().extend("max")).orElse(jnt(15)).intValue().intValue())
+                    .maxMessages(Router.readFromSpace(this.memory().get().extend(MAX)).orElse(jnt(15)).intValue().intValue())
                     .id(this.memory().get())
                     .chatMemoryStore(SpaceChatMemoryStore.single())
                     .build());
-        //service.tools()
-        tools().ifPresent(t -> service.tools(t).executeToolsConcurrently(BootLoader.getExecutor()));
 
+        //////////////////////////////////////////
+        ///////////////  RESPONSE  ///////////////
+        //////////////////////////////////////////
+        // HANDLED IN LLMFACTORY
+
+        //////////////////////////////////////////
+        ///////////////  TOOLS  //////////////////
+        //////////////////////////////////////////
+        if (this.tools().isPresent()) {
+            final Map<ToolSpecification, ToolExecutor> tools = new HashMap<>();
+            this.tools().get()
+                    .elements()
+                    .flatMap(e -> e.isObjs() ? e.elements() : Stream.of(e))
+                    .forEach(t -> {
+                        if (t.tid().equals(MCP_SERVER_TID)) {
+                            service.toolProvider(McpToolProvider.builder().mcpClients(((MCPServer) t).client()).build()).executeToolsConcurrently(BootLoader.getExecutor());
+                        } else if (t.isInst()) {
+                            if (!Router.global().read(t.tid().q(DOC, null)).isNoObj()) {
+                                final Tuple.Pair<ToolSpecification, ToolExecutor> pair = Model.Helper.mtronInstToolSpecification(t.asInst());
+                                tools.put(pair.get0(), pair.get1());
+                            } else {
+                                t.logger().warn("ignoring inst as it has no associated ?doc: %s", t);
+                            }
+                        }
+                    });
+            if (!tools.isEmpty())
+                service.tools(tools).executeToolsConcurrently(BootLoader.getExecutor());
+        }
         /// ////////////////////////////////////////////////////////////////////////////////////////
-        return service
-                //.retrievalAugmentor(new SpaceRetrievalAugmentor(null, null, null))
-                //.contentRetriever(new SpaceContentRetriever())
-                .build();
+        return service;
+        //.retrievalAugmentor(new SpaceRetrievalAugmentor(null, null, null))
+        //.contentRetriever(new SpaceContentRetriever())
+
     }
     
   /*  public Rec query(final Rec query) {
@@ -127,7 +171,7 @@ public class Model extends MRec {
         final AtomicBoolean isTooling = new AtomicBoolean(false);
         final AtomicReference<MTronException> isError = new AtomicReference<>();
         try {
-            final Agent agent = this.agent();
+            final Agent agent = this.agent().streamingChatModel(LLMFactory.createModel(this, this.model())).build();
             agent.chat(message)
                     .onToolExecuted(tool -> {
                         this.logger().info("tool executed: %s(%s) => %s", tool.request().name(), tool.request().arguments(), tool.result());
@@ -172,7 +216,166 @@ public class Model extends MRec {
         }
         return str(response.toString());
     }
+
+    public static class Helper {
+        public static JsonSchemaElement objToSchema(final Type type, final Poly<?, ?> depth, final String description) {
+            if (type.test(BOOL_TYPE))
+                return new JsonBooleanSchema.Builder().description(description).build();
+            else if (type.test(INT_TYPE))
+                return new JsonIntegerSchema.Builder().description(description).build();
+            else if (type.test(REAL_TYPE))
+                return new JsonNumberSchema.Builder().description(description).build();
+            else if (type.test(URI_TYPE))
+                return new JsonStringSchema.Builder().description(description).build();
+            else if (type.test(STR_TYPE))
+                return new JsonStringSchema.Builder().description(description).build();
+            else if (type.test(LST_TYPE))
+                return lstToSchema(depth.asLst(), description);
+            else if (type.test(REC_TYPE))
+                return recToSchema(depth.asRec(), description);
+            else if (type.test(REL_TYPE))
+                return recToSchema(rec(depth.asRel().first().type(), depth.asRel().second()), description);
+            else
+                return new JsonStringSchema.Builder().description(description).build();
+            //throw MTronException.of("unsupported obj type for schema: %s", type);
+        }
+
+        public static JsonArraySchema lstToSchema(final Lst l, final String description) {
+            final JsonArraySchema.Builder schema = JsonArraySchema.builder();
+            l.elements().forEach(e -> schema.items(objToSchema(e.type(), null, description)));
+            return schema.description(description).build();
+        }
+
+        public static JsonObjectSchema recToSchema(final Rec r, final String description) {
+            final JsonObjectSchema.Builder schema = JsonObjectSchema.builder();
+            final List<String> required = new ArrayList<>();
+            r.elements().forEach(e -> {
+                schema.addProperty(e.first().uriValue().toString(), objToSchema(e.second().type(), null, description));
+                if (!e.first().c().isZeroable())
+                    required.add(e.first().uriValue().toString());
+            });
+
+            schema.required(required);
+            return schema.build();
+        }
+
+        public static Tuple.Pair<ToolSpecification, ToolExecutor> mtronInstToolSpecification(final Inst inst) {
+            final DocQ.Doc doc = Router.readFromSpace(inst.tid().q(DOC, null))
+                    .orSupply(() -> DocQ.Doc.doc(inst,
+                            inst.dom().tid().toString(),
+                            inst.rng().tid().toString(),
+                            instB(AS_INST_TID, lst(REC_TYPE)).apply(inst.args().orElse(rec0())).asRec().elements().collect(Collectors.toMap(
+                                    Rel::first,
+                                    e -> e.second().tid().toString()
+                            )),
+                            "<no description>"));
+            inst.logger().info("building ai compliant tool from mtron inst: %s => %s", inst.tid(), doc);
+            JsonObjectSchema.Builder parameters = new JsonObjectSchema.Builder();
+            List<String> required = new ArrayList<>();
+            parameters.addProperty(LHS, objToSchema(inst.dom(), Type.Helper.polyTypePredicateObj(inst.dom()), doc.at(DOM).orElse(str("<no description>")).strValue()));
+            if (!inst.tid().dom().c().isZeroable())
+                required.add(LHS);
+            final boolean recArgs = doc.args().isRec();
+            final AtomicInteger counter = new AtomicInteger(0);
+            doc.args().elements().forEach(e -> {
+                final Rel kv = recArgs ? e.asRel() : rel(uri(ARG + counter.getAndIncrement()), e);
+                parameters.addProperty(
+                        kv.first().toString(),
+                        objToSchema(kv.second().type(), Type.Helper.polyTypePredicateObj(kv.second().type()), kv.second().orElse(str("<no description>")).strValue()));
+                if (!kv.second().c().isZeroable())
+                    required.add(kv.first().toString());
+            });
+            parameters.required(required);
+            ToolSpecification.Builder toolSpecBuilder = ToolSpecification.builder()
+                    .name(inst.tid().basePath().toString())
+                    .description(doc.description())
+                    .parameters(parameters.build());
+
+            ToolExecutor toolExecutor = (toolExecutionRequest, memoryId) -> {
+                Map<String, Object> arguments = fromJson(toolExecutionRequest.arguments(), Map.class);
+                final Poly<?, ?> args = inst.args().isNoObj() ? lst() : (inst.args().isLst() ?
+                        lst(arguments.entrySet().stream().filter(e -> !e.getKey().equals(LHS)).map(e -> MObjFactory.single().toObjFromString(e.getValue().toString())).collect(Collectors.toList())) :
+                        rec(arguments.entrySet().stream().filter(e -> !e.getKey().equals(LHS)).collect(Collectors.toMap(e -> uri(e.getKey()), e -> MObjFactory.single().toObjFromString(e.getValue().toString())))));
+                final Object result = inst
+                        .args(args)
+                        .apply(arguments.containsKey(LHS) ? MObjFactory.single().toObjFromString(arguments.get(LHS).toString()) : noobj());
+                inst.logger().info("evaluating mtron_inst tool: %s => %s => %s", arguments.get(LHS), inst, result);
+                return result.toString();
+            };
+            return Tuple.Pair.with(toolSpecBuilder.build(), toolExecutor);
+        }
+
+    }
 }
+    
 
+/*
+  public static Tools.Tool mtronInstTool(final Inst inst) {
+        final DocQ.Doc doc = Router.readFromSpace(inst.tid().q("doc", null))
+                .orSupply(() -> DocQ.Doc.doc(inst,
+                        inst.dom().tid().toString(),
+                        inst.rng().tid().toString(),
+                        instB(AS_INST_TID, lst(REC_TYPE)).apply(inst.args().orElse(rec0())).asRec().elements().collect(Collectors.toMap(
+                                Rel::first,
+                                e -> e.second().tid().toString()
+                        )),
+                        "<no description>"));
+        LOG.info("building ollama compliant tool from mtron inst: %s => %s", inst.tid(), doc);
+        Map<String, Tools.Property> instProperties = new LinkedHashMap<>();
+        List<String> required = new ArrayList<>();
+        instProperties.put("lhs", Tools.Property.builder().description(doc.at(DOM).toString()).required(!inst.dom().c().isZeroable()).type(inst.tid().dom().toString()).build());
+        instProperties.putAll(inst.args().isLst() ?
+                inst.args().asLst().indexedStream().collect(Collectors.toMap(
+                        e -> e.first().intValue().toString(),
+                        e -> Tools.Property.builder()
+                                .required(!e.second().c().isZeroable())
+                                .type(e.second().tid().toString())
+                                .description(doc.args().at(e.first()).toString()).build())) :
+                inst.args().asRec().elements().collect(Collectors.toMap(
+                        e -> e.first().uriValue().toString(),
+                        e -> Tools.Property.builder()
+                                .required(!e.second().c().isZeroable())
+                                .type(e.second().tid().toString())
+                                .description(doc.args().at(e.first()).toString()).build()
+                )));
+        instProperties.values().forEach(p -> required.add(p.isRequired() ? "true" : "false"));
 
+        return Tools.Tool.builder()
+                .toolSpec(Tools.ToolSpec.builder()
+                        .name(inst.tid().name())
+                        .description(doc.description())
+                        .parameters(new Tools.Parameters(instProperties, required)).build())
+                .toolFunction(arguments -> {
+                    final Poly<?, ?> args = inst.args().isNoObj() ? lst() : (inst.args().isLst() ?
+                            lst(arguments.entrySet().stream().filter(e -> !e.getKey().equals("lhs")).map(e -> MObjFactory.single().toObjFromString(e.getValue().toString())).collect(Collectors.toList())) :
+                            rec(arguments.entrySet().stream().filter(e -> !e.getKey().equals("lhs")).collect(Collectors.toMap(e -> uri(e.getKey()), e -> MObjFactory.single().toObjFromString(e.getValue().toString())))));
+                    final Object result = inst
+                            .args(args)
+                            .apply(MObjFactory.single().toObjFromString(arguments.get("lhs").toString()));
+                    LOG.info("evaluating mtron_inst tool: %s => %s => %s", arguments.get("lhs"), inst, result);
+                    return result;
+                })
+                .isMCPTool(false)
+                .type(inst.rng().tid().toString())
+                .build();
+    }
+
+    public static Tools.Tool mtronEvalToolSpecification() {
+        return Tools.Tool.builder()
+                .toolSpec(Tools.ToolSpec.builder()
+                        .name("mtron_eval")
+                        .description("evaluate mtron source code and get back an obj result")
+                        .parameters(new Tools.Parameters(Map.of(
+                                "code", Tools.Property.builder().required(true).type("string").description("mtron sourcecode to evaluate").build()),
+                                List.of("true")))
+                        .build())
+                .toolFunction(new ToolFunction() {
+                    @Override
+                    public Object apply(final Map<String, Object> arguments) {
+                        LOG.info("evaluating mtron_eval tool: %s", arguments.get("code"));
+                        return mParser.eval((String) arguments.get("code"));
+                    }
+                }).isMCPTool(false).type("obj").build();
+    }
+ */
 

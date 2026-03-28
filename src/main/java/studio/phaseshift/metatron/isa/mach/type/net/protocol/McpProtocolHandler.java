@@ -60,7 +60,7 @@ public class McpProtocolHandler extends MRec implements MServerProtocolHandler {
         this.jsonMapper = new ObjectMapper();
         this.jsonMapper.findAndRegisterModules();
         this.mcpServer = new MetatronMcpServer(this.vid().extend("server"));
-        LOG.info("MCP protocol handler initialized");
+        LOG.info("mcp protocol handler initialized");
     }
 
     @Override
@@ -103,7 +103,7 @@ public class McpProtocolHandler extends MRec implements MServerProtocolHandler {
             mcpServer.getTransportProvider().sendMessageToSession(conn, message);
 
         } catch (final Exception e) {
-            LOG.error("Failed to process MCP message: %s", e.getMessage());
+            LOG.error("failed to process mcp message: %s", e.getMessage());
             // Send error response back to client
             sendErrorResponse(conn, -32700, "Parse error", e.getMessage());
         }
@@ -112,12 +112,12 @@ public class McpProtocolHandler extends MRec implements MServerProtocolHandler {
     @Override
     public void handleMessage(final WebSocket conn, final ByteBuffer message) {
         // MCP doesn't use binary messages - this shouldn't be called
-        LOG.warn("MCP protocol received unexpected binary message from %s", conn.getAttachment());
+        LOG.warn("mcp protocol received unexpected binary message from %s", conn.getAttachment());
     }
 
     @Override
     public void onConnectionOpen(final WebSocket conn) {
-        LOG.debug("MCP protocol connection opened: %s", conn.getAttachment());
+        LOG.debug("mcp protocol connection opened: %s", conn.getAttachment());
         // Session will be created on first message
     }
 
@@ -131,7 +131,7 @@ public class McpProtocolHandler extends MRec implements MServerProtocolHandler {
                     "unknown";
             mcpServer.getTransportProvider().removeSession(sessionId);
             mcpServer.getTransportProvider().removeTransport(conn);
-            LOG.info("closed MCP session %s with exit code %s [reason: %s]", sessionId, code, reason);
+            LOG.info("closed mcp session %s with exit code %s [reason: %s]", sessionId, code, reason);
         }
     }
 
@@ -157,7 +157,7 @@ public class McpProtocolHandler extends MRec implements MServerProtocolHandler {
             ));
             conn.send(jsonMapper.writeValueAsString(errorResponse));
         } catch (final Exception ex) {
-            LOG.error("Failed to send error response: %s", ex.getMessage());
+            LOG.error("failed to send error response: %s", ex.getMessage());
         }
     }
 }

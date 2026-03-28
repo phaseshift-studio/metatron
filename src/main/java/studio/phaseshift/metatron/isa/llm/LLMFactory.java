@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -18,7 +18,12 @@
 
 package studio.phaseshift.metatron.isa.llm;
 
+import dev.langchain4j.model.anthropic.AnthropicModelCatalog;
+import dev.langchain4j.model.anthropic.AnthropicStreamingChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
+import dev.langchain4j.model.chat.request.ResponseFormat;
+import dev.langchain4j.model.chat.request.ResponseFormatType;
+import dev.langchain4j.model.chat.request.json.JsonSchema;
 import dev.langchain4j.model.ollama.OllamaModels;
 import dev.langchain4j.model.ollama.OllamaStreamingChatModel;
 import dev.langchain4j.model.openai.OpenAiModelCatalog;
@@ -27,12 +32,14 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.llm.space.modelCatalogSpace;
+import studio.phaseshift.metatron.isa.llm.type.Model;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Str;
 import studio.phaseshift.metatron.isa.m.type.impl.MUri;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
+import java.util.Locale;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
@@ -43,6 +50,7 @@ import static studio.phaseshift.metatron.isa.m.math.mathInstSet.MATH_BYTE_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
+import static studio.phaseshift.metatron.isa.m.type.Rec.REC_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -61,7 +69,20 @@ public final class LLMFactory {
 
     public static Space createModelCatalog(final Rec spaceRec) {
         return switch (spaceRec.at(NAME).uriValue().toString()) {
-            case "ollama" -> {
+            case ANTHROPIC -> {
+                final AnthropicModelCatalog models = AnthropicModelCatalog.builder().baseUrl(spaceRec.at(HOST).uriValue().toString()).build();
+                final modelCatalogSpace<?> catalogSpace = modelCatalogSpace.of(models, spaceRec.jvm(), spaceRec.vid());
+                catalogSpace.at(QSTRING, catalogSpace.at(QSTRING).orElse(lst()).add(QCollection.subq(), MUTABLE), MUTABLE);
+                models.listModels().forEach(m -> rec(Map.of(
+                                uri(NAME), uri(m.name()),
+                                uri(TYPE), uri(m.type().name().toLowerCase(Locale.ROOT)),
+                                uri(CREATOR), str(m.provider().name()),
+                                uri(DESC), str(m.description()),
+                                uri(PROVIDER), auto_from_(spaceRec.vid()).tryToInst()),
+                        MODEL_TID, catalogSpace.pattern().retractPattern().extend(m.name())));
+                yield catalogSpace;
+            }
+            case OLLAMA -> {
                 final OllamaModels models = OllamaModels.builder().baseUrl(spaceRec.at(HOST).uriValue().toString()).build();
                 final modelCatalogSpace<?> catalogSpace = modelCatalogSpace.of(models, spaceRec.jvm(), spaceRec.vid());
                 catalogSpace.at(QSTRING, catalogSpace.at(QSTRING).orElse(lst()).add(QCollection.subq(), MUTABLE), MUTABLE);
@@ -78,41 +99,58 @@ public final class LLMFactory {
                         });
                 yield catalogSpace;
             }
-            case "openai" -> {
+            case OPENAI -> {
                 final OpenAiModelCatalog models = OpenAiModelCatalog.builder().apiKey(spaceRec.at(API_KEY).strValue()).build();
                 final modelCatalogSpace<?> catalogSpace = modelCatalogSpace.of(models, spaceRec.jvm(), spaceRec.vid());
                 models.listModels().forEach(m -> rec(Map.of(
                                 uri(NAME), uri(m.name()),
+                                uri(TYPE), uri(m.type().name().toLowerCase(Locale.ROOT)),
                                 uri(CREATOR), str(m.provider().name()),
                                 uri(DESC), str(m.description()),
                                 uri(PROVIDER), auto_from_(spaceRec.vid()).tryToInst()),
                         MODEL_TID, catalogSpace.pattern().retractPattern().extend(m.name())));
                 yield catalogSpace;
             }
-            default -> throw new IllegalArgumentException("unsupported LLM provider: " + spaceRec.at(PROVIDER));
+            default -> throw new IllegalArgumentException("unsupported llm provider: " + spaceRec.at(PROVIDER));
         };
     }
 
-    public static StreamingChatModel createModel(final Rec llm, String modelName) {
-        final fURI provider = llm.at(f(PROVIDER)).asRec().at(NAME).uriValue();
-        final String host = llm.at(f(PROVIDER)).asRec().at(HOST).uriValue().toString();
-        final boolean thinking = llm.has(THINK);
-        final Str api_key = llm.at(API_KEY).orElse(null);
-        final String model = llm.at(NAME).uriValue().toString();
+    public static StreamingChatModel createModel(final Rec model, String modelName) {
+        final fURI provider = model.at(f(PROVIDER)).asRec().at(NAME).uriValue();
+        final String host = model.at(f(PROVIDER)).asRec().at(HOST).uriValue().toString();
+        final boolean thinking = model.has(THINK);
+        final Str api_key = model.at(API_KEY).orElse(null);
+        final String name = model.at(NAME).uriValue().toString();
+        final Rec response = model.at(RESPONSE).orElse(null);
         //  new JsonSchema.Builder().
         //  final ResponseFormat responseFormat = ResponseFormat.builder().jsonSchema()
         return switch (provider.toString().toLowerCase()) {
-            case "ollama" -> OllamaStreamingChatModel.builder()
+            case OLLAMA -> OllamaStreamingChatModel.builder()
                     .baseUrl(host)
-                    .modelName(model)
+                    .modelName(name)
                     .think(thinking)
                     .returnThinking(thinking)
+                    .responseFormat(response != null ? new ResponseFormat.Builder()
+                            .jsonSchema(new JsonSchema.Builder().rootElement(Model.Helper.objToSchema(REC_TYPE, response.asRec().at(FORMAT), RESPONSE)).build())
+                            .type(ResponseFormatType.JSON).build() : null)
                     .build();
 
-            case "openai" -> OpenAiStreamingChatModel.builder()
+            case OPENAI -> OpenAiStreamingChatModel.builder()
                     .apiKey(api_key.strValue())
                     .modelName(modelName)
                     .returnThinking(thinking)
+                    .responseFormat(response != null ? new ResponseFormat.Builder()
+                            .jsonSchema(new JsonSchema.Builder().rootElement(Model.Helper.objToSchema(REC_TYPE, response.asRec().at(FORMAT), RESPONSE)).build())
+                            .type(ResponseFormatType.JSON).build() : null)
+                    .build();
+
+            case ANTHROPIC -> AnthropicStreamingChatModel.builder()
+                    .apiKey(api_key.strValue())
+                    .modelName(modelName)
+                    .returnThinking(thinking)
+                    .responseFormat(response != null ? new ResponseFormat.Builder()
+                            .jsonSchema(new JsonSchema.Builder().rootElement(Model.Helper.objToSchema(REC_TYPE, response.asRec().at(FORMAT), RESPONSE)).build())
+                            .type(ResponseFormatType.JSON).build() : null)
                     .build();
 
             default -> throw MTronException.of("unsupported LLM provider: %s", provider);
