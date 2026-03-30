@@ -133,31 +133,37 @@ public final class LLMFactory {
                     .modelName(name)
                     .think(thinking)
                     .returnThinking(thinking)
-                    .responseFormat(!responseFormat.isNoObj()? new ResponseFormat.Builder()
+                    .responseFormat(!responseFormat.isNoObj() && !responseFormat.isEmpty() ? new ResponseFormat.Builder()
                             .jsonSchema(new JsonSchema.Builder().rootElement(Model.Helper.objToSchema(REC_TYPE, responseFormat, RESPONSE)).build())
                             .type(ResponseFormatType.JSON).build() : null)
                     .build();
             
-            case OPENAI -> OpenAiStreamingChatModel.builder()
-                    .apiKey(api_key.strValue())
-                    .baseUrl(host)
-                    .modelName(modelName)
-                    .returnThinking(thinking)
-                    .organizationId(organization.strValue())
-                    .logRequests(true)
-                    .logResponses(true)
-                    .timeout(Duration.ofSeconds(30))
-                    .logger(LoggerFactory.getLogger("openai"))
-                    .responseFormat(!responseFormat.isNoObj()? new ResponseFormat.Builder()
-                            .jsonSchema(new JsonSchema.Builder().rootElement(Model.Helper.objToSchema(REC_TYPE, responseFormat, RESPONSE)).build())
-                            .type(ResponseFormatType.JSON).build() : null)
-                    .build();
+            case OPENAI -> {
+                // Don't pass empty organizationId - it causes hangs in some LangChain4j versions
+                final String orgId = organization.strValue().isBlank() ? null : organization.strValue();
+                // Only use custom baseUrl if different from default
+                final String baseUrl = (host != null && !host.isBlank() && !host.equals("https://api.openai.com/v1")) ? host : null;
+                yield OpenAiStreamingChatModel.builder()
+                        .apiKey(api_key.strValue())
+                        .baseUrl(baseUrl)
+                        .modelName(modelName)
+                        .returnThinking(thinking)
+                        .organizationId(orgId)
+                        .logRequests(true)
+                        .logResponses(true)
+                        .timeout(Duration.ofSeconds(60))
+                        .logger(LoggerFactory.getLogger("openai"))
+                        .responseFormat(!responseFormat.isNoObj() && !responseFormat.isEmpty() ? new ResponseFormat.Builder()
+                                .jsonSchema(new JsonSchema.Builder().rootElement(Model.Helper.objToSchema(REC_TYPE, responseFormat, RESPONSE)).build())
+                                .type(ResponseFormatType.JSON).build() : null)
+                        .build();
+            }
 
             case ANTHROPIC -> AnthropicStreamingChatModel.builder()
                     .apiKey(api_key.strValue())
                     .modelName(modelName)
                     .returnThinking(thinking)
-                    .responseFormat(!responseFormat.isNoObj()? new ResponseFormat.Builder()
+                    .responseFormat(!responseFormat.isNoObj() && !responseFormat.isEmpty() ? new ResponseFormat.Builder()
                             .jsonSchema(new JsonSchema.Builder().rootElement(Model.Helper.objToSchema(REC_TYPE, responseFormat, RESPONSE)).build())
                             .type(ResponseFormatType.JSON).build() : null)
                     .build();

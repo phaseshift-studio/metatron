@@ -198,7 +198,7 @@ public class MetatronMcpServer extends MRec {
         // rebuild the doc object just in case the rec is not a true Java class doc (e.g. rec stored in a database)
         final DocQ.Doc doc = docObj.isNoObj() ? DocQ.Doc.empty(inst) : new DocQ.Doc(docObj.asRec());
         // Extract description
-        final String description = doc.description() != null
+        final String description = doc.description()!= null || doc.description().isEmpty()
                 ? doc.description()
                 : "no description provided";
         // Build JSON schema from Inst signature

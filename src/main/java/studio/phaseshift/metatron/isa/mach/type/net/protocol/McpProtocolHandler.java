@@ -91,10 +91,8 @@ public class McpProtocolHandler extends MRec implements MServerProtocolHandler {
             McpServerSession session = mcpSessions.get(conn);
             if (session == null) {
                 // Create new session
-                final String sessionId = conn.getAttachment() != null ?
-                        conn.getAttachment().toString() :
-                        "mcp-" + System.currentTimeMillis();
-                session = mcpServer.getTransportProvider().createSession(conn, sessionId);
+                final fURI sessionId = conn.getAttachment();
+                session = mcpServer.getTransportProvider().createSession(conn, sessionId.toString());
                 mcpSessions.put(conn, session);
                 LOG.info("created new %s session: %s", sillyPrint("mcp", true, false), sessionId);
             }
@@ -112,12 +110,12 @@ public class McpProtocolHandler extends MRec implements MServerProtocolHandler {
     @Override
     public void handleMessage(final WebSocket conn, final ByteBuffer message) {
         // MCP doesn't use binary messages - this shouldn't be called
-        LOG.warn("mcp protocol received unexpected binary message from %s", conn.getAttachment());
+        LOG.warn("mcp protocol received unexpected binary message from %s", conn.<fURI>getAttachment());
     }
 
     @Override
     public void onConnectionOpen(final WebSocket conn) {
-        LOG.debug("mcp protocol connection opened: %s", conn.getAttachment());
+        LOG.debug("mcp protocol connection opened: %s", conn.<fURI>getAttachment());
         // Session will be created on first message
     }
 
@@ -126,10 +124,8 @@ public class McpProtocolHandler extends MRec implements MServerProtocolHandler {
         // Clean up MCP session if exists
         final McpServerSession mcpSession = mcpSessions.remove(conn);
         if (mcpSession != null) {
-            final String sessionId = conn.getAttachment() != null ?
-                    conn.getAttachment().toString() :
-                    "unknown";
-            mcpServer.getTransportProvider().removeSession(sessionId);
+            final fURI sessionId = conn.<fURI>getAttachment();
+            mcpServer.getTransportProvider().removeSession(sessionId.toString());
             mcpServer.getTransportProvider().removeTransport(conn);
             LOG.info("closed mcp session %s with exit code %s [reason: %s]", sessionId, code, reason);
         }

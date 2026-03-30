@@ -42,6 +42,8 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.AbstractMap;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.concurrent.ExecutorService;
@@ -56,6 +58,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -152,15 +155,24 @@ public class BootLoader implements Rec, Feature.SelfClone {
                 localAuthority = args.at(HOST).orElse(uri(WS + "://" + hostname + ".local" + ":" + 8999)).uriValue();
                 args.at(LOCAL, uri(hostname), MUTABLE);
             }
-            final fURI SYS_TID = f("/sys");
-            final Space sysSpace = memSpace.of(f("/sys/#"), null);
-            ROUTER = new BasicRouter(localAuthority, SYS_TID.extend("router"));
+            final fURI SYS_VID = f("/sys");
+            final Space sysSpace = memSpace.of(SYS_VID.extend("#"), null);
+            sysSpace.jvm().put(uri(QSTRING), lst(QCollection.subq(),QCollection.incrQ()));
+            ///  LOAD SYSTEM ENVIRONMENTAL VARIABLES
+            System.getenv().entrySet().stream()
+                    .map(kv -> new AbstractMap.SimpleEntry<>(SYS_VID.extend("env").extend(kv.getKey()), str(kv.getValue())))
+                    .sorted(Map.Entry.comparingByKey(Comparator.comparing(fURI::name)))
+                    .forEach(kv -> sysSpace.write(kv.getKey(), kv.getValue()));
+            /// CREATE A ROUTER AND ATTACH IT TO SYS
+            ROUTER = new BasicRouter(localAuthority, SYS_VID.extend("router"));
             sysSpace.write(ROUTER.vid(), ROUTER);
-            Router.global().addSpace(sysSpace.self(sysSpace.jvm(), sysSpace.tid(), f("/sys")).as());
-            sysSpace.jvm().put(uri(QSTRING), lst(QCollection.incrQ()));
+            Router.global().addSpace(sysSpace.self(sysSpace.jvm(), sysSpace.tid(), SYS_VID).as());
+            /// LOAD DEFAULT INSTRUCTION SET (/m and /m/mach)
             Router.writeToSpace(new mInstSet());
             Router.writeToSpace(new machInstSet());
+            /// WRITE THE BOOT ARGS TO THE ROUTER STACK
             Router.writeToSpace(f("boot/args"), args);
+            ///  ADD INCRQ PROCESSOR TO SYS FOR AUTO INCREMENTING FAIL STACK
             MFail.FAIL_STACK_PATTERN = args.at("fail_stack_pattern").orElse(uri("/sys/fail?incr=./+")).uriValue();
             ROUTER.start();
             ///////////////////////////////////////////////////////////////
@@ -178,7 +190,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
                 LOG.info("\t {{m}}END:{{g}} evaluating provided boot loader: {{b}}%s{{X}}\n", args.at(uri(Tokens.BOOT)).uriValue());
             }
             ///////////////////////////////////////////////////////////////
-            final Obj log = Router.writeToSpace(LogObj.of(rec(args.at("log").orElse(uri("trace")), lst(uri(ALL))), SYS_TID.extend("log")));
+            final Obj log = Router.writeToSpace(LogObj.of(rec(args.at("log").orElse(uri("trace")), lst(uri(ALL))), SYS_VID.extend("log")));
             LOG.info("logging now handled by %s", log);
             /// ///////////////////////////////////
             LOG.info("%s {{g}}successfully{{/g}} booted", Graphitty.sillyPrint("metatron", true, true));

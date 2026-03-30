@@ -1,12 +1,12 @@
 /*
- * Metatron: A Distributed Computing Language and Virtual Machine
+ * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *
+ *  
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ *  
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -16,13 +16,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.mach.type.ui.console;
+package studio.phaseshift.metatron.isa.mach.type.ui.widget;
 
 import org.jline.terminal.Terminal;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.ui.Border;
 import studio.phaseshift.metatron.isa.mach.type.ui.Stylable;
+import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
+import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 
 import java.util.ArrayList;
@@ -66,13 +68,7 @@ public class Pane implements PaneNode, Stylable<Pane> {
 
     // Reference to console for redraw requests
     private Console console;
-
-    // Render region tracking (updated each render)
-    private int lastStartRow = 1;
-    private int lastStartCol = 1;
-    private int lastHeight = 24;
-    private int lastWidth = 80;
-
+    
     public Pane() {
         this(Console.Language.MTRON, DEFAULT_MAX_OUTPUT_LINES);
     }
@@ -166,21 +162,8 @@ public class Pane implements PaneNode, Stylable<Pane> {
         this.appendOutput(text);
     }
 
-    public void clearOutput() {
-        this.outputBuffer.clear();
-        this.needsRedraw = true;
-    }
-
     public List<String> outputBuffer() {
         return new ArrayList<>(this.outputBuffer); // Return copy for thread safety
-    }
-
-    public boolean needsRedraw() {
-        return this.needsRedraw;
-    }
-
-    public void clearRedrawFlag() {
-        this.needsRedraw = false;
     }
 
     /**
@@ -200,40 +183,11 @@ public class Pane implements PaneNode, Stylable<Pane> {
         return Graphitty.string(this.language.prompt);
     }
 
-    // ========== Region Tracking ==========
-
-    /**
-     * Get the row where the prompt should appear (last content row, above bottom border).
-     */
-    public int getPromptRow() {
-        return this.lastStartRow + this.lastHeight - 2; // -2 = just above bottom border
-    }
-
-    /**
-     * Get the column where the prompt should start (after left border).
-     */
-    public int getPromptCol() {
-        return this.lastStartCol + 1; // +1 to skip left border character
-    }
-
-    /**
-     * Get the width available for the prompt line.
-     */
-    public int getPromptWidth() {
-        return this.lastWidth - 2; // -2 for left border + right border
-    }
-
     // ========== PaneNode interface ==========
 
     @Override
     public void render(final Terminal terminal, final int startRow, final int startCol,
                        final int height, final int width, final Pane activePane) {
-        // Store render region for cursor positioning
-        this.lastStartRow = startRow;
-        this.lastStartCol = startCol;
-        this.lastHeight = height;
-        this.lastWidth = width;
-
         final boolean isActive = this == activePane;
         final List<String> visible = this.visibleOutput(height);
 

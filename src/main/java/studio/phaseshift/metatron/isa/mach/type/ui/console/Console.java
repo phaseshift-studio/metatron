@@ -388,6 +388,7 @@ public class Console extends JRec implements Closeable, Runnable {
 
     /**
      * Resize the active pane by adjusting its parent container's split ratio.
+     *
      * @param delta positive = more space for active pane, negative = less space
      */
     public void resizeActivePane(final float delta) {
@@ -439,6 +440,7 @@ public class Console extends JRec implements Closeable, Runnable {
     /**
      * Calculate a pane's position (startRow, startCol, height, width) by traversing the tree.
      * This ensures we always have the correct position regardless of render state.
+     *
      * @return int[] {startRow, startCol, height, width}
      */
     public int[] calculatePanePosition(final Pane pane) {
@@ -448,8 +450,8 @@ public class Console extends JRec implements Closeable, Runnable {
     }
 
     private int[] calculatePanePositionInNode(final Pane target, final PaneNode node,
-                                               final int startRow, final int startCol,
-                                               final int height, final int width) {
+                                              final int startRow, final int startCol,
+                                              final int height, final int width) {
         if (node == target) {
             return new int[]{startRow, startCol, height, width};
         }
@@ -911,7 +913,7 @@ public class Console extends JRec implements Closeable, Runnable {
                     final Obj code = mParser.parse(this.reader.getBuffer().toString());
                     if (code.isCode()) {
                         terminal.writer().write("\n");
-                        final ExplainV2 explain = new ExplainV2(code.as());
+                        final Explain explain = new Explain(code.as());
                         Utilities.runCursorLessWidget(explain, true);
                         redrawBuffer();
                     }

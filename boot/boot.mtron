@@ -89,8 +89,8 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
            name    => <ollama>,
            route   => [ollama:=><>]]@/sys/space/ollama;
  catalog::[host    => <https://api.openai.com/v1>,
-           organization => "org-qdkgVpzL5gsoXDkWjxLGzkwV",
-           api_key => "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",
+           organization => !*</sys/env/OPENAI_ORG_ID>,
+           api_key => !*</sys/env/OPENAI_API_KEY>,
            pattern => <openai:#>,
            name    => <openai>,
            route   => [<openai:>=><>]]@/sys/space/openai;

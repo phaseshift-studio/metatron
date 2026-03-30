@@ -42,6 +42,7 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -96,7 +97,7 @@ public final class QCollection {
             Type.Builder.build()
                     .vid(SUBSCRIPTION_TID)
                     .tid(REC_TID)
-                    .isaPredicate(rec(TARGET, T(URI_TID), ON_RECV, T(ALL)))
+                    .isaPredicate(rec(TARGET, URI_TYPE, ON_RECV, T(ALL)))
                     .create();
 
     private QCollection() {
@@ -135,7 +136,7 @@ public final class QCollection {
                 })
                 .preRead(vid -> {
                     final Obj type = TYPE_SPACE.read(vid.qLess());
-                    if(type.isNoObj())
+                    if (type.isNoObj())
                         return T(ALL.maybeSome());
                     return type;
                 })
@@ -196,45 +197,43 @@ public final class QCollection {
 
     public static Q subq() {
         final Rec subscriptions = rec();
-        final Queue<Machine> mail = new LinkedList<>();
         return studio.phaseshift.metatron.furi.Q.Helper.build(SUBQ_TID, SUBQ_PATTERN)
-                .preRead(vid -> subscriptions
-                        .elements()
-                        .map(Rel::second).map(Obj::asRec)
-                        .filter(s -> vid.basePath().bimatches(s.at(TARGET).uriValue())).map(Obj::<Obj>as)
-                        .reduce(Obj::append)
-                        .orElse(noobj()))
-                .postWrite((vid, obj, obj2) -> {
+                .preRead(vid -> {
+                    subscriptions.logger().info("reading: %s", vid.basePath());
+                    return subscriptions
+                            .elements()
+                            .map(Rel::second).map(Obj::asRec)
+                            .filter(s -> vid.basePath().bimatches(s.at(TARGET).uriValue()))
+                            .map(Obj::<Obj>as)
+                            .reduce(Obj::append)
+                            .orElse(noobj());
+                })
+                .preWrite((vid, obj) -> {
+                    subscriptions.logger().info("subscribing: %s", vid.basePath());
                     final Obj subscription;
                     if (obj.isNoObj()) {
                         subscription = noobj();
                         subscriptions.jvm().remove(vid.basePath().toUri());
-                        subscription.logger().info("unsubscribing from %s");
+                        subscription.logger().info("unsubscribing from %s", vid.basePath().toUri());
                     } else if (obj.tid().basePath().equals(SUBSCRIPTION_TID)) {
                         subscription = obj;
                         subscriptions.jvm().put(vid.basePath().toUri(), obj);
+                        subscription.logger().info("subscribing to %s", vid.basePath().toUri());
                     } else {
                         subscription = rec(Map.of(uri(TARGET), uri(vid.basePath()), uri(ON_RECV), obj), SUBSCRIPTION_TID, null);
                         subscriptions.jvm().put(vid.basePath().toUri(), subscription);
+                        subscription.logger().info("subscribing to %s", vid.basePath().toUri());
                     }
                     //LOG.debug("current subscriptions: %s", subscriptions);
                     return subscription;
                 })
                 .qlessWrite((vid, obj) -> {
                     //   LOG.debug("evaluating {{y}}qless write{{/y}}: %s => %s", obj, vid);
-                    subscriptions.elements().map(Rel::second).map(Obj::asRec).filter(s -> vid.test(s.at(TARGET).uriValue())).forEach(s -> {
-                        //  LOG.debug("sending mail: (%s, %s)", obj, s);
-                        mail.add(SwarmMachine.of(lst(List.of(vid.toUri(), obj)), s.at(ON_RECV).as()));
+                   // subscriptions.logger().info("qless write to %s", vid.basePath());
+                    subscriptions.elements().peek(s -> subscriptions.logger().info("testing subscription: %s", s)).map(Rel::second).map(Obj::asRec).filter(s -> vid.basePath().bimatches(s.at(TARGET).uriValue())).forEach(s -> {
+                        subscriptions.logger().info("sending mail: (%s, %s)", obj, s);
+                        BootLoader.getExecutor().submit(() -> SwarmMachine.of(lst(List.of(vid.toUri(), obj)), s.at(ON_RECV).as()).apply());
                     });
-                    BootLoader.getExecutor().submit(new Thread(() -> {
-                        while (!mail.isEmpty()) {
-                            final Machine machine = mail.poll();
-                            if (null == machine)
-                                break;
-                            //   LOG.trace("processing mail: %s", machine);
-                            machine.apply();
-                        }
-                    }));
                     return noobj();
                 }).create();
     }
