@@ -58,6 +58,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
 import static org.jline.keymap.KeyMap.*;
@@ -100,6 +101,13 @@ public class Console extends JRec implements Closeable, Runnable {
     public static Console LOCAL_INSTANCE = null;
     public Machine machine = null;
 
+    // ========== Split Pane Support ==========
+    // Pane tree: root can be a single Pane or a SplitContainer with nested panes
+    private PaneNode paneRoot;
+    private Pane activePane;
+    private final AtomicBoolean needsRedraw = new AtomicBoolean(false);
+    private boolean splitMode = false;  // True when we have more than one pane
+
     // Language mode for multi-language support
     public enum Language {
         MTRON("mtron", "{{m}}mtron{{g}}> "),
@@ -132,6 +140,11 @@ public class Console extends JRec implements Closeable, Runnable {
         super(null, options.jvm(), CONSOLE_TID, vid);
         this.jvm = this;
         try {
+            // Initialize pane system with a single pane
+            this.activePane = new Pane();
+            this.activePane.setConsole(this);
+            this.paneRoot = this.activePane;
+
             final DefaultParser parser = new DefaultParser()
                     .quoteChars(new char[]{'\'', '"'})
                     .lineCommentDelims(new String[]{"[--", "--]"})
@@ -140,8 +153,12 @@ public class Console extends JRec implements Closeable, Runnable {
                     .eofOnUnclosedBracket(DefaultParser.Bracket.CURLY, DefaultParser.Bracket.ROUND, DefaultParser.Bracket.SQUARE);
             Console.terminal = TerminalBuilder.builder().signalHandler(signal -> {
                 if (signal == Terminal.Signal.INT) {
-                    if (null != this.machine)
+                    // Interrupt active pane's machine
+                    if (this.activePane != null && this.activePane.machine() != null) {
+                        this.activePane.machine().interrupt();
+                    } else if (null != this.machine) {
                         this.machine.interrupt();
+                    }
                 }
             }).encoding(StandardCharsets.UTF_8).system(true).build();
             this.outputHeader();
@@ -198,16 +215,299 @@ public class Console extends JRec implements Closeable, Runnable {
     }
 
     public String prompt() {
+        if (this.splitMode && this.activePane != null) {
+            return this.activePane.prompt();
+        }
         return Graphitty.string(this.currentLanguage.prompt);
     }
 
+    /**
+     * Prepare for readLine() - position cursor and clear prompt area in split mode.
+     * Also clears the line above the prompt to remove any stale characters (like JLine's ~ marker).
+     */
+    private void prepareForInput() {
+        if (this.splitMode && this.activePane != null) {
+            // Disable AUTO_FRESH_LINE in split mode - it interferes with cursor positioning
+            // by outputting a ~ marker when cursor isn't at column 1
+            this.reader.unsetOpt(LineReader.Option.AUTO_FRESH_LINE);
+
+            // Calculate position dynamically from tree structure
+            final int[] pos = calculatePanePosition(this.activePane);
+            final int promptRow = pos[0] + pos[2] - 2; // startRow + height - 2
+            final int col = pos[1]; // startCol
+            final int paneWidth = pos[3]; // width
+
+            // Clear the line ABOVE the prompt (where JLine's ~ marker might appear)
+            final int lineAbove = promptRow - 1;
+            if (lineAbove >= pos[0]) { // Only if within pane bounds
+                terminal.writer().print("\u001b[" + lineAbove + ";" + col + "H");
+                terminal.writer().print(" ".repeat(Math.max(0, paneWidth - 1)));
+            }
+
+            // Position cursor at prompt location
+            terminal.writer().print("\u001b[" + promptRow + ";" + col + "H");
+            // Clear the prompt line
+            terminal.writer().print(" ".repeat(Math.max(0, paneWidth - 1)));
+            // Return to start of prompt line
+            terminal.writer().print("\u001b[" + promptRow + ";" + col + "H");
+            terminal.writer().flush();
+        } else {
+            // Re-enable AUTO_FRESH_LINE in normal mode
+            this.reader.setOpt(LineReader.Option.AUTO_FRESH_LINE);
+        }
+    }
+
     public Language getCurrentLanguage() {
+        if (this.activePane != null) {
+            return this.activePane.language();
+        }
         return this.currentLanguage;
     }
 
     public void setLanguage(Language language) {
+        if (this.activePane != null) {
+            this.activePane.language(language);
+        }
         this.currentLanguage = language;
         LOG.info("switched to {{y}}%s{{X}} mode", language.name);
+    }
+
+    // ========== Pane Management ==========
+
+    public Pane getActivePane() {
+        return this.activePane;
+    }
+
+    public List<Pane> getAllPanes() {
+        return this.paneRoot.getAllPanes();
+    }
+
+    public boolean isSplitMode() {
+        return this.splitMode;
+    }
+
+    /**
+     * Request a redraw of the pane layout. Thread-safe.
+     * Called by panes when their output buffer changes.
+     */
+    public void requestRedraw() {
+        this.needsRedraw.set(true);
+    }
+
+    /**
+     * Split the active pane in the given direction.
+     * Creates a new pane and makes it the sibling of the current active pane.
+     *
+     * @param direction VERTICAL (left|right) or HORIZONTAL (top|bottom)
+     * @return the newly created pane
+     */
+    public Pane split(final SplitLayout direction) {
+        if (direction == SplitLayout.NONE) {
+            LOG.warn("cannot split with direction NONE");
+            return this.activePane;
+        }
+
+        // Create new pane
+        final Pane newPane = new Pane(this.activePane.language(), 1000);
+        newPane.setConsole(this);
+
+        // Create split container with active pane and new pane
+        final SplitContainer container = new SplitContainer(direction, this.activePane, newPane);
+
+        // Replace active pane in tree with the container
+        if (this.paneRoot == this.activePane) {
+            // Active pane is root - just replace root
+            this.paneRoot = container;
+        } else {
+            // Find and replace in tree
+            this.paneRoot.replaceChild(this.activePane, container);
+        }
+
+        this.splitMode = true;
+        LOG.info("split pane {{y}}%d{{X}} %s, created pane {{y}}%d{{X}}",
+                this.activePane.id(), direction.name().toLowerCase(), newPane.id());
+
+        // Switch focus to new pane
+        this.activePane = newPane;
+        this.requestRedraw();
+        return newPane;
+    }
+
+    /**
+     * Close the active pane. If it's the last pane, do nothing.
+     */
+    public void closeActivePane() {
+        final List<Pane> allPanes = getAllPanes();
+        if (allPanes.size() <= 1) {
+            LOG.warn("cannot close the last pane");
+            return;
+        }
+
+        final Pane toClose = this.activePane;
+
+        // Find next pane to focus
+        final int currentIndex = allPanes.indexOf(toClose);
+        final Pane nextPane = allPanes.get((currentIndex + 1) % allPanes.size());
+
+        // Remove from tree
+        this.paneRoot = this.paneRoot.removePane(toClose);
+        if (this.paneRoot == null) {
+            // Shouldn't happen, but safety
+            this.paneRoot = nextPane;
+        }
+
+        this.activePane = nextPane;
+        this.splitMode = getAllPanes().size() > 1;
+
+        LOG.info("closed pane {{y}}%d{{X}}, focused pane {{y}}%d{{X}}", toClose.id(), this.activePane.id());
+        this.requestRedraw();
+    }
+
+    /**
+     * Focus a specific pane by ID.
+     */
+    public void focusPane(final int paneId) {
+        final Pane pane = this.paneRoot.findPane(paneId);
+        if (pane == null) {
+            LOG.error("pane {{r}}%d{{X}} not found", paneId);
+            return;
+        }
+        this.activePane = pane;
+        LOG.info("focused pane {{y}}%d{{X}}", paneId);
+        this.requestRedraw();
+    }
+
+    /**
+     * Cycle to the next pane.
+     */
+    public void nextPane() {
+        final List<Pane> allPanes = getAllPanes();
+        if (allPanes.size() <= 1) return;
+
+        final int currentIndex = allPanes.indexOf(this.activePane);
+        this.activePane = allPanes.get((currentIndex + 1) % allPanes.size());
+        LOG.info("focused pane {{y}}%d{{X}}", this.activePane.id());
+        this.requestRedraw();
+    }
+
+    /**
+     * Cycle to the previous pane.
+     */
+    public void prevPane() {
+        final List<Pane> allPanes = getAllPanes();
+        if (allPanes.size() <= 1) return;
+
+        final int currentIndex = allPanes.indexOf(this.activePane);
+        this.activePane = allPanes.get((currentIndex - 1 + allPanes.size()) % allPanes.size());
+        LOG.info("focused pane {{y}}%d{{X}}", this.activePane.id());
+        this.requestRedraw();
+    }
+
+    /**
+     * Position the cursor at the active pane's prompt location.
+     * Called after operations that move the cursor (like status refresh).
+     */
+    public void positionCursorInActivePane() {
+        if (this.activePane == null) return;
+        final int[] pos = calculatePanePosition(this.activePane);
+        final int promptRow = pos[0] + pos[2] - 2; // startRow + height - 2
+        final int promptCol = pos[1]; // startCol
+        terminal.writer().print("\u001b[" + promptRow + ";" + promptCol + "H");
+        terminal.writer().flush();
+    }
+
+    /**
+     * Calculate a pane's position (startRow, startCol, height, width) by traversing the tree.
+     * This ensures we always have the correct position regardless of render state.
+     * @return int[] {startRow, startCol, height, width}
+     */
+    public int[] calculatePanePosition(final Pane pane) {
+        final int height = terminal.getHeight() - 2;  // -2 for status + input
+        final int width = terminal.getWidth();
+        return calculatePanePositionInNode(pane, this.paneRoot, 1, 1, height, width);
+    }
+
+    private int[] calculatePanePositionInNode(final Pane target, final PaneNode node,
+                                               final int startRow, final int startCol,
+                                               final int height, final int width) {
+        if (node == target) {
+            return new int[]{startRow, startCol, height, width};
+        }
+        if (node.isLeaf()) {
+            return null; // Not found in this branch
+        }
+        // It's a SplitContainer
+        final SplitContainer container = (SplitContainer) node;
+        if (container.direction() == SplitLayout.VERTICAL) {
+            final int firstWidth = (int) (width * container.ratio()) - 1;
+            final int secondWidth = width - firstWidth - 1;
+            final int dividerCol = startCol + firstWidth;
+
+            // Check first (left)
+            int[] result = calculatePanePositionInNode(target, container.first(),
+                    startRow, startCol, height, firstWidth);
+            if (result != null) return result;
+
+            // Check second (right)
+            return calculatePanePositionInNode(target, container.second(),
+                    startRow, dividerCol + 1, height, secondWidth);
+        } else { // HORIZONTAL
+            final int firstHeight = (int) (height * container.ratio()) - 1;
+            final int secondHeight = height - firstHeight - 1;
+            final int dividerRow = startRow + firstHeight;
+
+            // Check first (top)
+            int[] result = calculatePanePositionInNode(target, container.first(),
+                    startRow, startCol, firstHeight, width);
+            if (result != null) return result;
+
+            // Check second (bottom)
+            return calculatePanePositionInNode(target, container.second(),
+                    dividerRow + 1, startCol, secondHeight, width);
+        }
+    }
+
+    /**
+     * Render all panes to the terminal. Called when in split mode.
+     */
+    public void renderPanes() {
+        if (!this.splitMode) return;
+
+        // Get terminal dimensions (leave room for status line)
+        final int height = terminal.getHeight() - 2;  // -2 for status + input
+        final int width = terminal.getWidth();
+
+        // Clear screen area for panes (not status line)
+        terminal.writer().print("\u001b[1;1H"); // Move to top-left
+        for (int row = 1; row <= height; row++) {
+            terminal.writer().print("\u001b[" + row + ";1H");
+            terminal.writer().print(" ".repeat(width));
+        }
+
+        // Render pane tree (this updates each pane's region tracking)
+        this.paneRoot.render(terminal, 1, 1, height, width, this.activePane);
+
+        // Position cursor at active pane's prompt location (use dynamic calculation)
+        final int[] pos = calculatePanePosition(this.activePane);
+        final int promptRow = pos[0] + pos[2] - 2; // startRow + height - 2
+        final int promptCol = pos[1]; // startCol
+        final int paneWidth = pos[3];
+
+        // Clear the line ABOVE the prompt (where JLine's ~ marker might appear)
+        final int lineAbove = promptRow - 1;
+        if (lineAbove >= pos[0]) { // Only if within pane bounds
+            terminal.writer().print("\u001b[" + lineAbove + ";" + promptCol + "H");
+            terminal.writer().print(" ".repeat(Math.max(0, paneWidth - 1)));
+        }
+
+        // Clear the prompt line within the pane
+        terminal.writer().print("\u001b[" + promptRow + ";" + promptCol + "H");
+        terminal.writer().print(" ".repeat(Math.max(0, paneWidth - 1)));
+        terminal.writer().print("\u001b[" + promptRow + ";" + promptCol + "H");
+
+        terminal.writer().flush();
+
+        this.needsRedraw.set(false);
     }
 
     public StatusLine getStatus() {
@@ -219,15 +519,29 @@ public class Console extends JRec implements Closeable, Runnable {
     }
 
     protected void printResult(final Obj result) {
-        result.stream().forEach(o -> {
-            this.write("{{-X-}}{{m}}=={{g}}>{{X}}");
-            this.write(o);
-            this.write("\n");
-        });
+        if (this.splitMode && this.activePane != null) {
+            // In split mode, output to active pane's buffer
+            this.activePane.appendResult(result);
+        } else {
+            // Normal mode - direct output
+            result.stream().forEach(o -> {
+                this.write("{{-X-}}{{m}}=={{g}}>{{X}}");
+                this.write(o);
+                this.write("\n");
+            });
+        }
+    }
+
+    /**
+     * Print to a specific pane (for background threads).
+     */
+    public void printResultToPane(final Pane pane, final Obj result) {
+        pane.appendResult(result);
     }
 
     protected void executeInCurrentLanguage(final String line) {
-        switch (this.currentLanguage) {
+        final Language lang = this.getCurrentLanguage();
+        switch (lang) {
             case MTRON -> this.executeMtron(line);
             case GREMLIN -> this.executeGremlin(line);
             case SQL -> this.executeSql(line);
@@ -239,12 +553,23 @@ public class Console extends JRec implements Closeable, Runnable {
             try {
                 final Obj parseResult = mParser.parse(l);
                 if (null != parseResult && !parseResult.isNoObj()) {
-                    this.machine = SwarmMachine.of(parseResult.isCall() ? parseResult.as() : start_(parseResult)).onHalt(this::printResult);
-                    final Obj computeResult = this.machine.apply();
+                    final Machine mach = SwarmMachine.of(parseResult.isCall() ? parseResult.as() : start_(parseResult)).onHalt(this::printResult);
+
+                    // Track machine in both places for interruption
+                    this.machine = mach;
+                    if (this.activePane != null) {
+                        this.activePane.machine(mach);
+                    }
+
+                    final Obj computeResult = mach.apply();
                     computeResult.stream().forEach(this::printResult);
                 }
             } catch (final Exception e) {
                 this.printResult(fail(e));
+            } finally {
+                if (this.activePane != null) {
+                    this.activePane.clearMachine();
+                }
             }
         });
     }
@@ -272,9 +597,13 @@ public class Console extends JRec implements Closeable, Runnable {
     }
 
     public void redrawBuffer() {
-        Graphitty.out(terminal.output(), "\n");
+        // In split mode, skip the newline - prompt() includes cursor positioning
+        if (!this.splitMode) {
+            Graphitty.out(terminal.output(), "\n");
+        }
         Graphitty.out(terminal.output(), this.prompt());
         Graphitty.out(terminal.output(), Highlighter.format(this.reader.getBuffer().toString()));
+        terminal.flush();
     }
 
     public void run() {
@@ -284,6 +613,8 @@ public class Console extends JRec implements Closeable, Runnable {
         CommonUtil.sleepThread(50);
         while (!Thread.currentThread().isInterrupted()) {
             try {
+                // Position cursor at active pane before reading input
+                this.prepareForInput();
                 final String line = this.reader.readLine(this.prompt()).trim();
                 if (line.equals(":header"))
                     this.outputHeader();
@@ -297,7 +628,14 @@ public class Console extends JRec implements Closeable, Runnable {
                             List.of("name", "short", "description"))
                             .addRow(List.of("space walk", "<tab>", "explore spaces"))
                             .addRow(List.of("introspect", "<space><tab>", "analyze machine"))
-                            .addRow(List.of("header", "random header", "random header")).style().headerDivider("{{[b]}} ").apply().format()).style().border(Border.simple.foreground("{{b}}")).apply().run();
+                            .addRow(List.of("header", ":header", "random header"))
+                            .addRow(List.of("split", ":split [v|h]", "split pane vertical/horizontal"))
+                            .addRow(List.of("focus", ":focus [id]", "focus pane by id"))
+                            .addRow(List.of("panes", ":panes", "list all panes"))
+                            .addRow(List.of("close", ":close", "close active pane"))
+                            .addRow(List.of("next pane", "Ctrl+W", "cycle to next pane"))
+                            .addRow(List.of("prev pane", "Alt+W", "cycle to previous pane"))
+                            .style().headerDivider("{{[b]}} ").apply().format()).style().border(Border.simple.foreground("{{b}}")).apply().run();
                 } else if (line.startsWith(":log")) {
                     LogObj.setSLF4J(line.substring(4));
                 } else if (line.startsWith(":check")) {
@@ -343,10 +681,63 @@ public class Console extends JRec implements Closeable, Runnable {
                     } catch (IllegalArgumentException e) {
                         LOG.error("unknown language: {{r}}%s{{X}}. Available: mtron, gremlin, sql", langName);
                     }
+                }
+                // ========== Split Pane Commands ==========
+                else if (line.startsWith(":split")) {
+                    final String arg = line.substring(6).trim();
+                    try {
+                        final SplitLayout direction = arg.isEmpty()
+                                ? SplitLayout.VERTICAL  // Default to vertical
+                                : SplitLayout.parse(arg);
+                        this.split(direction);
+                        this.renderPanes();
+                    } catch (IllegalArgumentException e) {
+                        LOG.error(e.getMessage());
+                    }
+                } else if (line.equals(":unsplit") || line.equals(":close")) {
+                    this.closeActivePane();
+                    if (this.splitMode) {
+                        this.renderPanes();
+                    } else {
+                        Graphitty.out(terminal.output(), "{{XX}}"); // Clear screen
+                    }
+                } else if (line.startsWith(":focus")) {
+                    final String arg = line.substring(6).trim();
+                    if (arg.isEmpty()) {
+                        // List all panes
+                        LOG.info("panes: %s, active: {{y}}%d{{X}}",
+                                getAllPanes().stream().map(p -> String.valueOf(p.id())).toList(),
+                                this.activePane.id());
+                    } else {
+                        try {
+                            final int paneId = Integer.parseInt(arg);
+                            this.focusPane(paneId);
+                            if (this.splitMode) this.renderPanes();
+                        } catch (NumberFormatException e) {
+                            LOG.error("invalid pane id: {{r}}%s{{X}}", arg);
+                        }
+                    }
+                } else if (line.equals(":panes")) {
+                    // Show all panes
+                    final List<Pane> panes = getAllPanes();
+                    LOG.info("{{y}}%d{{X}} pane(s):", panes.size());
+                    for (final Pane p : panes) {
+                        final String active = (p == this.activePane) ? " {{g}}[active]{{X}}" : "";
+                        LOG.info("  [{{y}}%d{{X}}] %s, %d lines%s",
+                                p.id(), p.language().name, p.outputBuffer().size(), active);
+                    }
                 } else {
                     this.status.startTimer();
+                    // Echo the input line to the pane's output (with prompt, syntax highlighted)
+                    if (this.splitMode && this.activePane != null) {
+                        this.activePane.appendOutput(Graphitty.string(this.currentLanguage.prompt) + Highlighter.format(line));
+                    }
                     this.executeInCurrentLanguage(line);
                     this.machine = null;
+                    // Redraw panes after command execution to show output
+                    if (this.splitMode) {
+                        this.renderPanes();
+                    }
                 }
             } catch (final UserInterruptException e) {
                 if (null != this.machine)
@@ -368,6 +759,10 @@ public class Console extends JRec implements Closeable, Runnable {
             } finally {
                 this.status.stopTimer();
                 this.status.refresh();
+                // Reposition cursor to active pane after status refresh (which moves cursor to bottom)
+                if (this.splitMode && this.activePane != null) {
+                    this.positionCursorInActivePane();
+                }
             }
         }
         this.close();
@@ -417,11 +812,30 @@ public class Console extends JRec implements Closeable, Runnable {
     class CustomWidgets extends Widgets {
         private CustomWidgets(final LineReader reader) {
             super(reader);
-            /// CREATE NEW LINE ABOVE CURRENT LOCATION
+            /// CYCLE TO NEXT PANE (Ctrl+W)
             getKeyMap().bind((Widget)
                     () -> {
-                        reader.getBuffer().up();
-                        reader.getBuffer().write("\n");
+                        if (Console.this.splitMode) {
+                            Console.this.nextPane();
+                            Console.this.renderPanes();
+                            // Force JLine to redraw prompt and buffer at new cursor position
+                            Console.this.redrawBuffer();
+                        }
+                        return true;
+                    }, ctrl('w'));
+            /// CYCLE TO PREVIOUS PANE (Ctrl+Shift+W = Alt+W in some terminals)
+            getKeyMap().bind((Widget)
+                    () -> {
+                        if (Console.this.splitMode) {
+                            Console.this.prevPane();
+                            Console.this.renderPanes();
+                            // Force JLine to redraw prompt and buffer at new cursor position
+                            Console.this.redrawBuffer();
+                        } else {
+                            // Original behavior when not in split mode
+                            reader.getBuffer().up();
+                            reader.getBuffer().write("\n");
+                        }
                         return true;
                     }, alt('w'));
             /// TURN ON/OFF TYPE CHECKING
