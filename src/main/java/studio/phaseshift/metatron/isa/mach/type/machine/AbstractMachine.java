@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -19,9 +19,7 @@
 package studio.phaseshift.metatron.isa.mach.type.machine;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.Code;
-import studio.phaseshift.metatron.isa.m.type.Lst;
-import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjs;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Monad;
@@ -31,12 +29,15 @@ import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -57,7 +58,8 @@ public abstract class AbstractMachine implements Machine {
     fURI vid;
     Consumer<Obj> onHalt;
     final AtomicBoolean interrupted = new AtomicBoolean(false);
-
+    final AtomicBoolean paused = new AtomicBoolean(false);
+    final AtomicInteger infiniteFailCounter = new AtomicInteger(0);
 
     @Override
     public Map<Obj, Obj> jvm() {
@@ -81,16 +83,44 @@ public abstract class AbstractMachine implements Machine {
         return (OBJ) this;
     }
 
+
+    protected boolean doProcessing() {
+        return !this.interrupted.get() && !this.paused.get();
+    }
+
     @Override
-    public void interrupt() {
+    public Fail interrupt() {
         this.interrupted.set(true);
+        this.paused.set(false);
+        return fail(MTronException.of("machine interrupted"));
+    }
+
+    @Override
+    public NoObj pause() {
+        if (this.interrupted.get())
+            throw MTronException.of("cannot pause interrupted machine");
+        this.paused.set(true);
+        return noobj();
+    }
+
+    @Override
+    public Obj run() {
+        if (this.interrupted.get())
+            throw MTronException.of("cannot resume interrupted machine");
+        this.paused.set(false);
+        return this.apply();
     }
 
     protected AbstractMachine(final Map<Obj, Obj> map, final fURI tid, final fURI vid) {
         this.code = map.get(uri(CODE)).as();
         this.tid = tid;
         this.vid = vid;
-        this.onHalt = o -> this.halted().append(o);
+        this.onHalt = o -> {
+            if(this.halted.isObjs())
+                ((List<Obj>)this.halted.asObjs().jvm()).add(o);
+            else
+                this.halted.append(o);
+        };
         this.running = map.getOrDefault(uri(RUNNING), RUNNING_SUPPLIER.get());
         this.barriers = map.getOrDefault(uri(BARRIER), lst(new LinkedList<>())).as();
         this.halted = map.getOrDefault(uri(HALTED), MObjs.objs0());
@@ -136,7 +166,7 @@ public abstract class AbstractMachine implements Machine {
     }
 
     @Override
-    public Machine clone(Object jvm, fURI tid, fURI vid) {
+    public Machine clone(final Object jvm, final fURI tid, final fURI vid) {
         try {
             final AbstractMachine clone = (AbstractMachine) super.clone();
             clone.tid = tid;
@@ -154,7 +184,7 @@ public abstract class AbstractMachine implements Machine {
     protected Monad split(final Monad monad) {
         if (monad.obj().unique() && (monad.inst().dom().c().isOne() || monad.inst().dom().c().isAny()))
             return monad;
-        if(monad.inst().dom().c().isZero() && !monad.obj().c().isZeroable()) // TODO: create a less than window c.ltFull()
+        if (monad.inst().dom().c().isZero() && !monad.obj().c().isZeroable()) // TODO: create a less than window c.ltFull()
             throw MTronException.of("monad obj coefficient is greater than inst domain coefficient: " +
                     "\n\tobj       => %s" +
                     "\n\t\\_c       => %s" +
@@ -171,14 +201,14 @@ public abstract class AbstractMachine implements Machine {
     }
 
     public String toString() {
-        return Machine.Helper.machToString(this);
+        return Obj.Helper.objToString(this);
     }
 
     public int hashCode() {
-        return Machine.Helper.machHashCode(this);
+        return Obj.Helper.objHashCode(this);
     }
 
     public boolean equals(Object other) {
-        return Machine.Helper.machEquals(this, other);
+        return Obj.Helper.objEquals(this, other);
     }
 }

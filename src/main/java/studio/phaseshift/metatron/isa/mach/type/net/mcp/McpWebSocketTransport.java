@@ -28,6 +28,8 @@ import reactor.core.publisher.Mono;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 
+import static studio.phaseshift.metatron.Tokens.JSONRPC;
+
 /**
  * WebSocket-based transport implementation for MCP server.
  * Handles JSON-RPC message exchange over a WebSocket connection.
@@ -122,7 +124,7 @@ public class McpWebSocketTransport implements McpServerTransport {
                 }
 
                 // Now handle the properly typed message
-                LOG.debug("Passing message to session.handle()");
+                LOG.debug("passing message to session.handle()");
                 session.handle(jsonRpcMessage)
                     .doOnSuccess(v -> LOG.debug("Session handled message successfully"))
                     .doOnError(error -> {
@@ -146,7 +148,7 @@ public class McpWebSocketTransport implements McpServerTransport {
     private void sendErrorResponse(final int code, final String message, final String data) {
         try {
             final java.util.Map<String, Object> errorResponse = new java.util.HashMap<>();
-            errorResponse.put("jsonrpc", "2.0");
+            errorResponse.put(JSONRPC, "2.0");
             errorResponse.put("error", java.util.Map.of(
                 "code", code,
                 "message", message,

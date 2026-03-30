@@ -33,7 +33,6 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjCleanStringSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.net.mcp.annotation.McpToolRegistry;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -43,8 +42,10 @@ import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.List;
 
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.EVAL_INST_TID;
+import static studio.phaseshift.metatron.isa.m.type.Str.str0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -69,11 +70,10 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  */
 public class MetatronMcpServer extends MRec {
 
-    public static final String MACH_SERVER_MCP_SERVER_TID = MSERVER_TID.extend("mcp/server").toString();
-
+    public static final String MACH_SERVER_MCP_SERVER_TID = MSERVER_TID.extend("mcp").extend("server").toString();
     private static final String SERVER_NAME = "metatron-mcp";
     private static final String SERVER_VERSION = "1.0.0";
-    
+
     private final McpWebSocketTransportProvider transportProvider;
     private final JsonRpcToolDispatcher toolDispatcher;
     private final GraphittyLogger LOG;
@@ -140,7 +140,7 @@ public class MetatronMcpServer extends MRec {
 
         // Scan for all @McpTool annotated classes in the tool package
         final List<Tuple.Pair<McpSchema.Tool, JsonRpcToolDispatcher.ToolHandler>> tools =
-                McpToolRegistry.scanPackage("studio.phaseshift.metatron.isa.mach.type.net.mcp.tool.annotated");
+                McpToolRegistry.scanPackage("studio.phaseshift.metatron.isa.mach.type.net.mcp.tool");
 
         // Register all discovered tools
         for (final Tuple.Pair<McpSchema.Tool, JsonRpcToolDispatcher.ToolHandler> tool : tools) {
@@ -161,7 +161,7 @@ public class MetatronMcpServer extends MRec {
      * - Uses inst.tid() for the tool name
      * - Queries inst.tid().q("doc") for metadata (description, arg descriptions)
      * - Derives JSON schema from inst.dom(), inst.rng(), inst.args()
-     * - Executes via inst.apply(args)
+     * - Executes via inst.args(args).apply(lhs)
      * <p>
      * For Recs (legacy/fallback):
      * - Expects rec(name, desc, args, eval) structure
@@ -195,7 +195,7 @@ public class MetatronMcpServer extends MRec {
         LOG.debug("registering inst as an mcp tool: %s", toolName);
         // Query for documentation metadata
         final Obj docObj = Router.global().read(inst.tid().q("doc", null));
-        // rebuild the doc object just in case the rec is not a true Doc Java class doc (e.g. rec stored in a database)
+        // rebuild the doc object just in case the rec is not a true Java class doc (e.g. rec stored in a database)
         final DocQ.Doc doc = docObj.isNoObj() ? DocQ.Doc.empty(inst) : new DocQ.Doc(docObj.asRec());
         // Extract description
         final String description = doc.description() != null
@@ -215,23 +215,17 @@ public class MetatronMcpServer extends MRec {
         // Create handler that executes the inst
         final JsonRpcToolDispatcher.ToolHandler handler = args -> {
             try {
-                LOG.debug("executing inst tool '%s' with args: %s", toolName, args);
-                // Execute the inst
-                final Obj result = inst.args(args
+                LOG.debug("executing inst tool %s with args: %s", toolName, args);
+                final Obj lhs = MObjFactory.single().toObj(args.remove("lhs"));
+                // execute the inst as lhs => inst(args) => rhs
+                final Obj rhs = inst.args(args
                                 .entrySet()
                                 .stream()
-                                .map(kv -> rel(uri(kv.getKey()), MObjFactory.of().toObj(kv.getValue())))
-                                .collect(new CommonUtil.RecCollector()))
-                        .apply();
-
-                // fail::T is a valid Metatron object type and should be returned as a successful result
-                // Do NOT throw exceptions for fail objects - they are part of the language semantics
-
-                // Convert result to CallToolResult (handles all Obj types including fail::T)
-                return convertObjToResult(result);
-
+                                .map(kv -> rel(uri(kv.getKey()), MObjFactory.single().toObj(kv.getValue())))
+                                .collect(new CommonUtil.RecCollector())).apply(lhs);
+                return convertObjToResult(rhs);
             } catch (final Exception e) {
-                LOG.error("error executing inst tool '%s': %s", toolName, e.getMessage());
+                LOG.error("error executing inst tool %s: %s", toolName, e.getMessage());
                 return McpSchema.CallToolResult
                         .builder()
                         .content(List.of(new McpSchema.TextContent(e.getMessage())))
@@ -239,9 +233,8 @@ public class MetatronMcpServer extends MRec {
                         .build();
             }
         };
-
-        // Register with dispatcher
-        toolDispatcher.registerTool(tool, handler);
+        // register with dispatcher
+        this.toolDispatcher.registerTool(tool, handler);
         LOG.info("successfully registered inst tool: %s", toolName);
     }
 
@@ -251,39 +244,40 @@ public class MetatronMcpServer extends MRec {
      */
     private String buildSchemaFromInst(final Inst inst, final DocQ.Doc doc) {
         final Poly<?, ?> args = inst.args().orElse(rec0());
-
-        if (args.isNoObj() || args.isEmpty()) {
+        if (args.isNoObj() || args.isEmpty()) 
             return createDefaultArgsSchema();
-        }
 
         final Poly<?, ?> docArgs = doc.args();
-        final JsonObject schema = new JsonObject();
-        schema.addProperty(Tokens.TYPE, Tokens.OBJECT);
+        final JsonObject jsonSchema = new JsonObject();
+        jsonSchema.addProperty(TYPE, Tokens.OBJECT);
 
-        final JsonObject properties = new JsonObject();
-        final JsonArray required = new JsonArray();
-
-        // Handle Lst args (positional) - use index as property name
+        final JsonObject jsonArgs = new JsonObject();
+        final JsonArray jsonRequired = new JsonArray();
+        if (!inst.dom().isNoObj()) {
+            final JsonObject propSchema = new JsonObject();
+            propSchema.addProperty(TYPE, mapTypeToJsonSchemaType(inst.dom()));
+            if (!inst.dom().c().isZeroable())
+                jsonRequired.add(LHS);
+            docArgs.at(DOM).ifPresent(domDoc -> propSchema.addProperty("description", domDoc.strValue()));
+            jsonArgs.add(LHS, propSchema);
+        }
+        // handle lst args (positional) - use index as property name
         if (args.isLst()) {
             args.asLst().indexedStream().forEach(indexedArg -> {
                 final int index = indexedArg.first().intValue().intValue();
                 final Obj argType = indexedArg.second();
                 final String argName = String.valueOf(index);
-
                 final JsonObject propSchema = new JsonObject();
-                propSchema.addProperty(Tokens.TYPE, mapTypeToJsonSchemaType(argType));
-
+                propSchema.addProperty(TYPE, mapTypeToJsonSchemaType(argType));
                 // Get description from doc
                 final String argDesc = docArgs.isRec()
-                        ? docArgs.asRec().at(jnt(index)).orElse(str("")).toString()
+                        ? docArgs.asRec().at(jnt(index)).orElse(str0()).strValue()
                         : "";
                 propSchema.addProperty("description", argDesc);
-
-                properties.add(argName, propSchema);
-
+                jsonArgs.add(argName, propSchema);
                 // Add to required if not zeroable
                 if (!argType.c().isZeroable())
-                    required.add(argName);
+                    jsonRequired.add(argName);
             });
         }
         // Handle Rec args (named) - use uri as property name
@@ -293,25 +287,25 @@ public class MetatronMcpServer extends MRec {
                 final Obj argType = rel.second();
 
                 final JsonObject propSchema = new JsonObject();
-                propSchema.addProperty(Tokens.TYPE, mapTypeToJsonSchemaType(argType));
+                propSchema.addProperty(TYPE, mapTypeToJsonSchemaType(argType));
 
                 // Get description from doc
                 final String argDesc = docArgs.isRec()
-                        ? docArgs.asRec().at(rel.first()).orElse(str("")).toString()
+                        ? docArgs.asRec().at(rel.first()).orElse(str0()).strValue()
                         : "";
                 propSchema.addProperty("description", argDesc);
 
-                properties.add(argName, propSchema);
+                jsonArgs.add(argName, propSchema);
 
                 // Add to required if not zeroable
                 if (!argType.c().isZeroable()) {
-                    required.add(argName);
+                    jsonRequired.add(argName);
                 }
             });
         }
-        schema.add("properties", properties);
-        schema.add(Tokens.REQUIRED, required);
-        return schema.toString();
+        jsonSchema.add("properties", jsonArgs);
+        jsonSchema.add(Tokens.REQUIRED, jsonRequired);
+        return jsonSchema.toString();
     }
 
     /**

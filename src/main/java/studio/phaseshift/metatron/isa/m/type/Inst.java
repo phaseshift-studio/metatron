@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -36,6 +36,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+import static studio.phaseshift.metatron.Tokens.LHS;
 import static studio.phaseshift.metatron.Tokens.MONAD;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
@@ -510,7 +511,8 @@ public interface Inst extends Call {
                             .stream()
                             .map(kv -> rel(kv.getKey().apply(lhs), blocking ?
                                     kv.getValue() :
-                                    kv.getValue().apply(lhs))));
+                                    kv.getValue().apply(lhs))))
+                            .plus(rec(LHS, lhs));
             final Inst resolved = inst.args(cargs);
             //  LOG.trace("resolution ({{m}}%s {{g}}=>{{/g}} %s{{/m}}): %s => %s", currentResolution, resolved.resolution(), lhs, resolved);
             return resolved;

@@ -108,19 +108,16 @@ public class llmInstSet extends AbstractInstSet {
                     isaPredicate(rec(
                             uri(PROVIDER), URI_TYPE,
                             uri(NAME), URI_TYPE,
-                            uri(THINK).maybe(), URI_TYPE,
+                            uri(THINK).maybe(), rec(uri(TO).maybe().asUri(), URI_TYPE),
+                            uri(RESPONSE).maybe(), rec(uri(TO).maybe().asUri(), URI_TYPE),
                             uri(SIZE), BYTE_TYPE,
-                            uri(MEMORY).maybe(), URI_TYPE,
+                            uri(MEMORY).maybe(), rec(uri(FROM).maybe().asUri(),URI_TYPE),
                             uri(SKILL).maybe(), LST_TYPE,
                             uri(TOOL).maybe(), LST_TYPE))
-                    .inst(instC(LLM_INST_TID.extend("query").dom(MODEL_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> {
-                        final ResponseFormat responseFormat = new ResponseFormat.Builder()
-                                .jsonSchema(new JsonSchema.Builder().rootElement(Model.Helper.objToSchema(REC_TYPE, inst.arg(0).asRec().at(FORMAT), "response")).build())
-                                .type(ResponseFormatType.JSON).build();
-                        return lhs;
-                    }))
-                    .inst(instC(LLM_INST_TID.extend("chat").dom(MODEL_TID).rng(STR_TID), lst(STR_TYPE, T(ALL.maybe())),
+                    .inst(instC(LLM_INST_TID.extend("chat").dom(MODEL_TID).rng(ALL.maybe()), lst(STR_TYPE),
                             (lhs, inst) -> model(lhs.asRec()).chat(inst.arg(0).strValue())))
+                  //  .inst(instC(LLM_INST_TID.extend("chat").dom(MODEL_TID).rng(MODEL_TID), lst(STR_TYPE, T(ALL.maybe())),
+                  //          (lhs, inst) -> model(lhs.asRec()).chat(inst.arg(0).strValue(), inst.arg(1).asInst())))
                     .create(TYPES, INSTS),
             "a large language model", "the model construction", Map.of(
                     uri(NAME), "the name of the model",

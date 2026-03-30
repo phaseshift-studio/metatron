@@ -16,9 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.mach.type.net.mcp.tool.annotated;
+package studio.phaseshift.metatron.isa.mach.type.net.mcp.tool;
 
-import io.modelcontextprotocol.spec.McpSchema;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.net.mcp.annotation.McpHandler;
@@ -27,24 +26,20 @@ import studio.phaseshift.metatron.isa.mach.type.net.mcp.annotation.McpTool;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 
-import java.util.List;
-
 /**
  * Example of annotation-based MCP tool definition.
- *
+ * <p>
  * This is equivalent to EvaluateCodeTool but uses annotations instead of
  * static methods for registration.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@McpTool(
-        name = "evaluate_code_annotated",
-        description = "Evaluate metatron code and return the result (annotation-based example).",
-        category = "execution"
-)
-public class AnnotatedEvaluateCodeTool {
+@McpTool(name = "mtron_eval",
+        description = "evaluate mtron code and return the result",
+        category = "execution")
+public class EvalTool {
 
-    private static final GraphittyLogger LOG = Graphitty.log(AnnotatedEvaluateCodeTool.class);
+    private static final GraphittyLogger LOG = Graphitty.log(EvalTool.class);
 
     @McpParameter(
             name = "code",
@@ -55,11 +50,7 @@ public class AnnotatedEvaluateCodeTool {
 
     @McpHandler
     public Obj execute() {
-        LOG.debug("evaluating code (annotated): %s", code);
-
-        // Execute code through mParser - just return the Obj!
-        // Framework will handle conversion to JSON and error detection
-        final Obj codeObj = mParser.parse(code);
-        return codeObj.apply();
+        LOG.info("evaluating code: %s", this.code);
+        return mParser.eval(this.code);
     }
 }

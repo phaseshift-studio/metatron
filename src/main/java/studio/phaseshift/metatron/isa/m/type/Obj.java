@@ -541,6 +541,10 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         return (Code) this;
     }
 
+    default Call asCall() {
+        return (Call) this;
+    }
+
     default Monad asMonad() {
         return (Monad) this;
     }

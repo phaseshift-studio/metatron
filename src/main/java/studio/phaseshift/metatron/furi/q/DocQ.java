@@ -189,7 +189,7 @@ public class DocQ extends BaseQ {
         }
 
         public String description() {
-            return this.at(Tokens.DESC).isNoObj() ? null : this.at(Tokens.DESC).toString();
+            return this.at(Tokens.DESC).isNoObj() ? null : this.at(Tokens.DESC).strValue();
         }
 
         public String toCleanString() {

@@ -264,6 +264,7 @@ public class mInstSet extends AbstractInstSet {
                 MEM_SPACE_TYPE,
                 STACK_SPACE_TYPE,
                 META_SPACE_TYPE,
+                Q_TYPE,
                 /// ///////////////////////////////////
                 CONSTQ_TYPE));
     }

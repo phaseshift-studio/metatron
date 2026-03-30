@@ -298,7 +298,7 @@ public interface Type extends Obj {
             return this.predicate(instC(INST_TID.dom(ALL.maybe()).rng(this.vid), lst(), predicate));
         }
 
-        public Builder isaPredicate(final Poly<?, ?> predicate) {
+        public Builder isaPredicate(final Obj predicate) {
             return this.predicate(isa_(predicate).tryToInst());
         }
 
@@ -331,7 +331,7 @@ public interface Type extends Obj {
         }
 
         public Type create(final Set<Type> typeSet, final Set<Inst> instSet) {
-            LOG.info("installing %s type", this.vid);
+          //  LOG.info("installing %s type", this.vid);
             final Type type = this.create();
             typeSet.add(type);
             instSet.addAll(this.insts);

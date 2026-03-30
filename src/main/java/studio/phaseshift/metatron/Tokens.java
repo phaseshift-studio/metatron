@@ -35,15 +35,14 @@ public final class Tokens {
     public static final String MTRON = "mtron";
     public static final String METATRON = "metatron";
     public static final String METATRON_VERSION = "0.1-SNAPSHOT";
-
-    public static final fURI HASH = f("#");
-    public static final fURI PLUS = f("+");
+    public static final fURI HASH_FURI = f("#");
+    public static final fURI PLUS_FURI = f("+");
     public static final fURI STACK_PATTERN = f("+/#");
-
-
     public static final String OPENAI = "openai";
     public static final String ANTHROPIC = "anthropic";
     public static final String OLLAMA = "ollama";
+    public static final String RESULT = "result";
+    public static final String TO = "to";
     public static final String JSONRPC = "jsonrpc";
     public static final String REQUIRED = "required";
     public static final String SRC = "src";
@@ -54,6 +53,7 @@ public final class Tokens {
     public static final String API_KEY = "api_key";
     public static final String BLOCK = "block";
     public static final String AI = "AI";
+    public static final String ID = "id";
     public static final String COEFFICIENT = "coefficient";
     public static final String QUERY = "query";
     public static final String DOM = "dom";
@@ -62,6 +62,7 @@ public final class Tokens {
     public static final String SIZE = "size";
     public static final String SKILL = "skill";
     public static final String THINK = "think";
+    public static final String THOUGHT = "thought";
     public static final String MEMORY = "memory";
     public static final String HISTORY = "history";
     public static final String TOOL = "tool";
@@ -77,8 +78,12 @@ public final class Tokens {
     public static final String HEAD = "head";
     public static final String BODY = "body";
     public static final String CODE = "code";
+    public static final String START = "start";
+    public static final String MESSAGE = "message";
     public static final String RUNNING = "running";
     public static final String HALTED = "halted";
+    public static final String STOPPED = "stopped";
+    public static final String PAUSED = "paused";
     public static final String BARRIER = "barrier";
     public static final String SUPER = "super";
     public static final String ROUTE = "route";
@@ -132,6 +137,7 @@ public final class Tokens {
     public static final String NATIVE = "native";
     public static final String HTTP = "http";
     public static final String HTTPS = "https";
+    public static final String STREAMABLE_HTTP = "streamable-http";
     public static final String WS = "ws";
     public static final String WSS = "wss";
     public static final String MQTT = "mqtt";
@@ -144,7 +150,7 @@ public final class Tokens {
     public static final String GGUF_KEY = "gguf";
     public static final String QUANT = "quant";
     public static final String FAMILY = "family";
-    public static final String FROM = "FROM";
+    public static final String FROM = "from";
     public static final String CLUSTER = "cluster";
     public static final String BOOT = "boot";
     public static final String ON_RECV = "on_recv";
@@ -153,6 +159,7 @@ public final class Tokens {
     public static final String VERTEX = "vertex";
     public static final String EDGE = "edge";
     public static final String CONFIG = "config";
+    public static final String STATE = "state";
 
 
 }

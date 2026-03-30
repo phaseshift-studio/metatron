@@ -35,26 +35,16 @@ import java.util.Arrays;
 import java.util.HexFormat;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.OBJ_CLEAN_STRING_SERIALIZER_VID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class ObjCleanStringSerializer extends AbstractObjSerializer<String> {
-    // Construct constants directly to avoid circular dependency with mInstSet
-    private static final fURI OBJ_CLEAN_STRING_SERIALIZER_VID = f("/m/mach/io/serializer/string/clean");
-    private static final fURI AUTO_FROM_INST_TID = f("/m/inst/auto_from");
-    private static final fURI AUTO_INST_TID = f("/m/inst/auto");
-    private static final fURI FROM_INST_TID = f("/m/inst/from");
-    private static final java.util.Set<fURI> BASE_TYPES = java.util.Set.of(
-            f("/m/fail"), f("/m/bool"), f("/m/bytes"), f("/m/int"), f("/m/real"),
-            f("/m/str"), f("/m/uri"), f("/m/rel"),
-            f("/m/lst"), f("/m/rec"), f("/m/inst"),
-            f("/m/code"), f("/m/objs"), f("/m/noobj"));
-
     private static final String NOOBJ_STRING = "noobj";
     protected boolean leftJustify;
 
@@ -301,9 +291,7 @@ public class ObjCleanStringSerializer extends AbstractObjSerializer<String> {
         if (rec.isEmpty()) {
             sb.append("[=>]");
         } else {
-            boolean nested =
-                    rec.jvm().values().stream().anyMatch(Obj::isPoly) ||
-                            rec.jvm().size() > 4;
+            boolean nested =  rec.jvm().size() > 4 || rec.jvm().values().stream().anyMatch(o -> o.isPoly() || o.isObjCall());
             /*rec.jvm().values().stream().filter(o -> !o.isPoly()).map(this::write).map(String::length).reduce(0, Integer::sum) > (75 - depth);*/
             final int maxKeyLength = nested ? rec.jvm().keySet().stream().map(this::write).map(String::length).reduce(0, Integer::max) : 0;
             final boolean isBaseType = rec.type().isBaseType();

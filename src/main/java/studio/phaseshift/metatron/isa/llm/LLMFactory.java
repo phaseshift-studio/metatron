@@ -54,6 +54,7 @@ import static studio.phaseshift.metatron.isa.m.type.Rec.REC_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -92,7 +93,7 @@ public final class LLMFactory {
                             final fURI vid = catalogSpace.pattern().retractPattern().extend(m.get0().getName());
                             rec(Map.of(uri(PROVIDER), auto_from_(spaceRec.vid()).tryToInst(),
                                             uri(NAME), uri(m.get0().getName()),
-                                            uri(THINK), m.get1().getCapabilities().contains(THINKING) ? uri(vid.extend("thought")) : noobj(),
+                                            uri(THINK), m.get1().getCapabilities().contains(THINKING) ? rec0() : noobj(),
                                             uri(SKILL), lst(m.get1().getCapabilities().stream().map(MUri::uri)),
                                             uri(SIZE), real(Long.valueOf(m.get0().getSize()).doubleValue(), MATH_BYTE_TID, null).as(GBYTE_TYPE)),
                                     MODEL_TID, vid);
@@ -115,32 +116,30 @@ public final class LLMFactory {
         };
     }
 
-    public static StreamingChatModel createModel(final Rec model, String modelName) {
+    public static StreamingChatModel createChatInteraction(final Rec model, String modelName) {
         final fURI provider = model.at(f(PROVIDER)).asRec().at(NAME).uriValue();
         final String host = model.at(f(PROVIDER)).asRec().at(HOST).uriValue().toString();
         final boolean thinking = model.has(THINK);
         final Str api_key = model.at(API_KEY).orElse(null);
         final String name = model.at(NAME).uriValue().toString();
-        final Rec response = model.at(RESPONSE).orElse(null);
-        //  new JsonSchema.Builder().
-        //  final ResponseFormat responseFormat = ResponseFormat.builder().jsonSchema()
+        final Rec responseFormat = model.at(RESPONSE).orElse(rec0()).at(FORMAT).orElse(rec0().zero());
         return switch (provider.toString().toLowerCase()) {
             case OLLAMA -> OllamaStreamingChatModel.builder()
                     .baseUrl(host)
                     .modelName(name)
                     .think(thinking)
                     .returnThinking(thinking)
-                    .responseFormat(response != null ? new ResponseFormat.Builder()
-                            .jsonSchema(new JsonSchema.Builder().rootElement(Model.Helper.objToSchema(REC_TYPE, response.asRec().at(FORMAT), RESPONSE)).build())
+                    .responseFormat(!responseFormat.isNoObj()? new ResponseFormat.Builder()
+                            .jsonSchema(new JsonSchema.Builder().rootElement(Model.Helper.objToSchema(REC_TYPE, responseFormat, RESPONSE)).build())
                             .type(ResponseFormatType.JSON).build() : null)
                     .build();
-
+            
             case OPENAI -> OpenAiStreamingChatModel.builder()
                     .apiKey(api_key.strValue())
                     .modelName(modelName)
                     .returnThinking(thinking)
-                    .responseFormat(response != null ? new ResponseFormat.Builder()
-                            .jsonSchema(new JsonSchema.Builder().rootElement(Model.Helper.objToSchema(REC_TYPE, response.asRec().at(FORMAT), RESPONSE)).build())
+                    .responseFormat(!responseFormat.isNoObj()? new ResponseFormat.Builder()
+                            .jsonSchema(new JsonSchema.Builder().rootElement(Model.Helper.objToSchema(REC_TYPE, responseFormat, RESPONSE)).build())
                             .type(ResponseFormatType.JSON).build() : null)
                     .build();
 
@@ -148,8 +147,8 @@ public final class LLMFactory {
                     .apiKey(api_key.strValue())
                     .modelName(modelName)
                     .returnThinking(thinking)
-                    .responseFormat(response != null ? new ResponseFormat.Builder()
-                            .jsonSchema(new JsonSchema.Builder().rootElement(Model.Helper.objToSchema(REC_TYPE, response.asRec().at(FORMAT), RESPONSE)).build())
+                    .responseFormat(!responseFormat.isNoObj()? new ResponseFormat.Builder()
+                            .jsonSchema(new JsonSchema.Builder().rootElement(Model.Helper.objToSchema(REC_TYPE, responseFormat, RESPONSE)).build())
                             .type(ResponseFormatType.JSON).build() : null)
                     .build();
 

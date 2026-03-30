@@ -18,7 +18,9 @@
 
 package studio.phaseshift.metatron.util;
 
+import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Fail;
+import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 
@@ -51,6 +53,10 @@ public class MTronException extends RuntimeException {
 
     public static MTronException of(final String format, final Object... args) {
         return new MTronException(Graphitty.string(format.formatted(args)));
+    }
+    
+    public static MTronException of(final fURI source, final String format, final Object... args) {
+        return new MTronException("[%s] %s".formatted(source, Graphitty.string(format.formatted(args))));
     }
 
     public static MTronException of(final Object throwableOrformat, final Object... args) {

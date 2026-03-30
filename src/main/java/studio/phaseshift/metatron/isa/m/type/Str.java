@@ -73,6 +73,10 @@ public interface Str extends Mono, PlusMonoid.O<Str> {
     default Str zero() {
         return ZERO;
     }
+    
+    static Str str0() {
+        return ZERO;
+    }
 
     class StrType {
         private final static Map<String, Pattern> REGEX_CACHE = new HashMap<>();

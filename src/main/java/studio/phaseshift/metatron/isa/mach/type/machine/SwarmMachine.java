@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -40,6 +40,7 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.CODE_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_ISA_TID;
@@ -64,7 +65,7 @@ public class SwarmMachine extends AbstractMachine implements Machine {
     }
 
     public static SwarmMachine of(final Call code) {
-        return new SwarmMachine(Map.of(uri(CODE), code.isCode() ? code.as() : new MCode(code.insts(), CODE_TID,null)), MACH_ISA_TID,null);
+        return new SwarmMachine(Map.of(uri(CODE), code.isCode() ? code.as() : new MCode(code.insts(), CODE_TID, null)), MACH_ISA_TID, null);
     }
 
     public static SwarmMachine machine(final Map<Obj, Obj> machineState, final fURI tid, final fURI vid) {
@@ -86,7 +87,7 @@ public class SwarmMachine extends AbstractMachine implements Machine {
             final List<Inst> prepended = new ArrayList<>();
             prepended.add(MInst.instB(mInstSet.START_INST_TID, lst(start)));
             prepended.addAll(code.codeValue());
-            return new SwarmMachine(Map.of(uri(CODE), MCode.of(prepended)), MACH_ISA_TID,null);
+            return new SwarmMachine(Map.of(uri(CODE), MCode.of(prepended)), MACH_ISA_TID, null);
         } else {
             return SwarmMachine.of(code);
         }
@@ -113,26 +114,22 @@ public class SwarmMachine extends AbstractMachine implements Machine {
 
     @Override
     public Obj apply(final Obj lhs) {
-        int infiniteFailCounter = 0;
-        Router.global().stats().monadicStats().resetMonads();
-        /*BootLoader.getExecutor().execute(() -> {
-           while(!this.future.isDone()) {
-             this.halted().stream().forEach(onHalt());  
-           }
-        });*/
-        /*this.future = BootLoader.getExecutor().submit(() -> {*/
-        final Code code = this.resolve(lhs).code();
-        if (this.running().c().isZero()) {
-            this.running().append(monad(noobj(), code.insts().getFirst(), code));
-        }
-        while (!this.interrupted.get() && infiniteFailCounter < MAX_FAILS) {
+       // if (!this.paused.get()) {
+            Router.global().stats().monadicStats().resetMonads();
+            final Code code = this.resolve(lhs).code();
+            if (this.running().c().isZero()) {
+                this.running().append(monad(noobj(), code.insts().getFirst(), code));
+            }
+      //  }
+        while (this.doProcessing() && this.infiniteFailCounter.get() < MAX_FAILS) {
             final Monad m = (Monad) this.running().take();
             if (null != m) {
                 LOG.trace("   {{g}}=>{{/g}} processing monad %s [%s]", m, m.inst().isInitial() ? "initial" : "midway");
                 final Monad x = this.split(m);
                 final Monad n = x.apply();
                 LOG.trace(" {{g}}===>{{/g}} post-processing monad %s", n);
-                infiniteFailCounter = n.obj().isFail() ? infiniteFailCounter + 1 : infiniteFailCounter;
+                if (n.obj().isFail())
+                    this.infiniteFailCounter.incrementAndGet();
                 if (n.inst().isBatching() && (!n.dead() || n.inst().dom().c().isZeroable())) {
                     if (n.inst().isGather()) {
                         final Monad barrier = this.barriers().<LinkedList<Monad>>jvmAs().peek();
@@ -200,9 +197,12 @@ public class SwarmMachine extends AbstractMachine implements Machine {
         }
         if (this.interrupted.get()) {
             return fail(MTronException.of(Graphitty.sillyPrint("machine interrupted", false, true)));
-        } else if (infiniteFailCounter >= MAX_FAILS) {
+        } else if (this.infiniteFailCounter.get() >= MAX_FAILS) {
             return fail(MTronException.of(Graphitty.sillyPrint("machine failed", false, true)), fail(MTronException.of("infinite fail-loop detected"), fail("obj/inst coefficients yielding unsolvable monad")));
+        } else if (this.paused.get()) {
+            LOG.info(Graphitty.sillyPrint("machine paused", false, true));
+            return noobj();
         } else
-            return this.halted();
+            return objs(this.halted());
     }
 }

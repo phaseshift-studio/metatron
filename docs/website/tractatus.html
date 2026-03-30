@@ -2753,13 +2753,14 @@ mtron&gt; {1,2,3,4,5}-&lt;[?&gt;2 =&gt; as(str::T) + ' greater than 2',
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">​
 mtron&gt; */m/llm/model
 ==&gt;rec::T[isa([
- provider =&gt;uri::T,
- name     =&gt;uri::T,
- {?}think =&gt;uri::T,
- size     =&gt;data_size::T[][inst?rng=bB&amp;dom=#{?}(#::T){&lt;j&gt;}]@/m/math/bB,
- {?}memory=&gt;uri::T,
- {?}skill =&gt;lst::T,
- {?}tool  =&gt;lst::T])]@/m/llm/model
+ provider   =&gt;uri::T,
+ name       =&gt;uri::T,
+ {?}think   =&gt;[{?}to=&gt;uri::T],
+ {?}response=&gt;[{?}to=&gt;uri::T],
+ size       =&gt;data_size::T[][inst?rng=bB&amp;dom=#{?}(#::T){&lt;j&gt;}]@/m/math/bB,
+ {?}memory  =&gt;[{?}from=&gt;uri::T],
+ {?}skill   =&gt;lst::T,
+ {?}tool    =&gt;lst::T])]@/m/llm/model
 ​</code></pre>
 </div>
 </div>
@@ -2768,77 +2769,77 @@ mtron&gt; */m/llm/model
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">​
 mtron&gt; *ollama:+
 ==&gt;model::[
- name    =&gt;qwen3:8b,
- think   =&gt;ollama:qwen3:8b/thought,
+ skill   =&gt;[completion,tools,thinking],
+ name    =&gt;&lt;deepseek-v3.2:cloud&gt;,
+ think   =&gt;[=&gt;],
  provider=&gt;!*/sys/space/ollama,
- size    =&gt;gB::4.87,
- skill   =&gt;[completion,tools,thinking]]@ollama:qwen3:8b
+ size    =&gt;gB::0.00]@ollama:deepseek-v3.2:cloud
 ==&gt;model::[
+ skill   =&gt;[completion,tools,thinking],
  name    =&gt;&lt;minimax-m2.5:cloud&gt;,
- think   =&gt;&lt;ollama:minimax-m2.5:cloud/thought&gt;,
+ think   =&gt;[=&gt;],
  provider=&gt;!*/sys/space/ollama,
- size    =&gt;gB::0.00,
- skill   =&gt;[completion,tools,thinking]]@ollama:minimax-m2.5:cloud
+ size    =&gt;gB::0.00]@ollama:minimax-m2.5:cloud
 ==&gt;model::[
- name    =&gt;qwen3:latest,
- think   =&gt;ollama:qwen3:latest/thought,
+ skill   =&gt;[completion,tools,thinking],
+ name    =&gt;&lt;glm-4.7-flash:latest&gt;,
+ think   =&gt;[=&gt;],
  provider=&gt;!*/sys/space/ollama,
- size    =&gt;gB::4.87,
- skill   =&gt;[completion,tools,thinking]]@ollama:qwen3:latest
+ size    =&gt;gB::17.71]@ollama:glm-4.7-flash:latest
 ==&gt;model::[
+ skill   =&gt;[completion],
  name    =&gt;tinyllama:latest,
  think   =&gt;noobj,
  provider=&gt;!*/sys/space/ollama,
- size    =&gt;gB::0.59,
- skill   =&gt;[completion]]@ollama:tinyllama:latest
+ size    =&gt;gB::0.59]@ollama:tinyllama:latest
 ==&gt;model::[
+ skill   =&gt;[completion,tools,thinking],
  name    =&gt;gpt-oss:latest,
- think   =&gt;ollama:gpt-oss:latest/thought,
+ think   =&gt;[=&gt;],
  provider=&gt;!*/sys/space/ollama,
- size    =&gt;gB::12.85,
- skill   =&gt;[completion,tools,thinking]]@ollama:gpt-oss:latest
+ size    =&gt;gB::12.85]@ollama:gpt-oss:latest
 ==&gt;model::[
- name    =&gt;&lt;deepseek-v3.2:cloud&gt;,
- think   =&gt;&lt;ollama:deepseek-v3.2:cloud/thought&gt;,
+ skill   =&gt;[completion,tools,thinking],
+ name    =&gt;qwen3:8b,
+ think   =&gt;[=&gt;],
  provider=&gt;!*/sys/space/ollama,
- size    =&gt;gB::0.00,
- skill   =&gt;[completion,tools,thinking]]@ollama:deepseek-v3.2:cloud
+ size    =&gt;gB::4.87]@ollama:qwen3:8b
 ==&gt;model::[
+ skill   =&gt;[completion],
  name    =&gt;deepcoder:latest,
  think   =&gt;noobj,
  provider=&gt;!*/sys/space/ollama,
- size    =&gt;gB::8.37,
- skill   =&gt;[completion]]@ollama:deepcoder:latest
+ size    =&gt;gB::8.37]@ollama:deepcoder:latest
 ==&gt;model::[
+ skill   =&gt;[completion],
  name    =&gt;deepseek-coder:latest,
  think   =&gt;noobj,
  provider=&gt;!*/sys/space/ollama,
- size    =&gt;gB::0.72,
- skill   =&gt;[completion]]@ollama:deepseek-coder:latest
+ size    =&gt;gB::0.72]@ollama:deepseek-coder:latest
 ==&gt;model::[
- name    =&gt;&lt;glm-4.7-flash:latest&gt;,
- think   =&gt;&lt;ollama:glm-4.7-flash:latest/thought&gt;,
- provider=&gt;!*/sys/space/ollama,
- size    =&gt;gB::17.71,
- skill   =&gt;[completion,tools,thinking]]@ollama:glm-4.7-flash:latest
-==&gt;model::[
+ skill   =&gt;[completion,tools],
  name    =&gt;llama3-groq-tool-use:latest,
  think   =&gt;noobj,
  provider=&gt;!*/sys/space/ollama,
- size    =&gt;gB::4.34,
- skill   =&gt;[completion,tools]]@ollama:llama3-groq-tool-use:latest
+ size    =&gt;gB::4.34]@ollama:llama3-groq-tool-use:latest
 ==&gt;model::[
+ skill   =&gt;[completion,vision],
  name    =&gt;llava:latest,
  think   =&gt;noobj,
  provider=&gt;!*/sys/space/ollama,
- size    =&gt;gB::4.41,
- skill   =&gt;[completion,vision]]@ollama:llava:latest
+ size    =&gt;gB::4.41]@ollama:llava:latest
 ==&gt;model::[
+ skill   =&gt;[completion,tools],
  name    =&gt;qwen3-coder-next:latest,
  think   =&gt;noobj,
  provider=&gt;!*/sys/space/ollama,
- size    =&gt;gB::48.19,
- skill   =&gt;[completion,tools]]@ollama:qwen3-coder-next:latest
+ size    =&gt;gB::48.19]@ollama:qwen3-coder-next:latest
+==&gt;model::[
+ skill   =&gt;[completion,tools,thinking],
+ name    =&gt;qwen3:latest,
+ think   =&gt;[=&gt;],
+ provider=&gt;!*/sys/space/ollama,
+ size    =&gt;gB::4.87]@ollama:qwen3:latest
 ​</code></pre>
 </div>
 </div>
@@ -3464,10 +3465,16 @@ mtron&gt; personx -&gt; rec::T[?[name  =&gt; str::T,
 ==&gt;rec::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;personx{*}::T])]
 ​
 mtron&gt; marko -&gt; personx::[name=&gt;'marko',age=&gt;29,knows=&gt;!*grant]
-==&gt;personx::[name=&gt;'marko',age=&gt;29,knows=&gt;!*grant]
+==&gt;personx::[
+ name =&gt;'marko',
+ age  =&gt;29,
+ knows=&gt;!*grant]
 ​
 mtron&gt; grant -&gt; personx::[name=&gt;'grant',age=&gt;23,knows=&gt;!*marko]
-==&gt;personx::[name=&gt;'grant',age=&gt;23,knows=&gt;!*marko]
+==&gt;personx::[
+ name =&gt;'grant',
+ age  =&gt;23,
+ knows=&gt;!*marko]
 ​
 mtron&gt; *marko&gt;&gt;knows&gt;&gt;name
 ==&gt;grant
@@ -3476,7 +3483,10 @@ mtron&gt; *marko&gt;&gt;knows&gt;&gt;knows&gt;&gt;name
 ==&gt;marko
 ​
 mtron&gt; *marko&gt;&gt;knows&gt;&gt;knows
-==&gt;personx::[name=&gt;'marko',age=&gt;29,knows=&gt;!*grant]
+==&gt;personx::[
+ name =&gt;'marko',
+ age  =&gt;29,
+ knows=&gt;!*grant]
 ​</code></pre>
 </div>
 </div>
@@ -3576,6 +3586,148 @@ mtron&gt; *#.as[name      =&gt; _,
 ==&gt;[name=&gt;'enki', coauthor=&gt;'enoch']</code></pre>
 </div>
 </div>
+</div>
+<div class="collapse position-relative" id="card-10">
+<button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-10" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
+<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
+<h2 id="_q_processors" class="discrete">Q Processors</h2>
+<div class="paragraph">
+<p>A q-processor is a space attachment that intercepts reads and writes to the space according to the query component of the read from or written to fURI.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch table-bordered small center">
+<colgroup>
+<col style="width: 12.5%;">
+<col style="width: 25%;">
+<col style="width: 62.5%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-center valign-top">q</th>
+<th class="tableblock halign-center valign-top">key=value</th>
+<th class="tableblock halign-left valign-top">description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>subq</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>subq</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>subscribe to any mutations at the specific space uri</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>docq</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>docq</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>associate documentation with a space furi</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>incrQ</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>incrQ</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>increment a space global counter</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>typeQ</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>T</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>constrain objs at a space furi to be a specific type</p>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>The q-processor type is defined as</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">​
+mtron&gt; *q
+==&gt;rec::T[][inst?rng=q&amp;dom=#{?}([
+ pattern       =&gt;uri::T,
+ pre_write{?}  =&gt;inst::T,
+ post_write{?} =&gt;inst::T,
+ qless_write{?}=&gt;inst::T,
+ pre_read{?}   =&gt;inst::T,
+ post_read{?}  =&gt;inst::T]){&lt;j&gt;}]@/m/space/q
+​</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>where a q-processor may implement any of the associated read/write stages.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch table-bordered small center">
+<colgroup>
+<col style="width: 63.6363%;">
+<col style="width: 36.3637%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="olist arabic">
+<div class="title">read processors</div>
+<ol class="arabic">
+<li>
+<p><strong>pre-read</strong>: prior to reading the space, any <code>?pattern</code> furi will be first processed by pre-read.</p>
+</li>
+<li>
+<p><strong>post-read</strong>: prior to returning an <code>obj</code> from the space, any <code>?pattern</code> furi will be first processed by post-read.</p>
+</li>
+</ol>
+</div>
+<div class="olist arabic">
+<div class="title">write processors</div>
+<ol class="arabic">
+<li>
+<p><strong>pre-write</strong>: prior to writing to the space, any <code>?pattern</code> furi will be first processed by pre-write.</p>
+</li>
+<li>
+<p><strong>post-write</strong>: prior to returning an <code>obj</code> written to the space, any <code>?pattern</code> furi will be first processed by post-write.</p>
+</li>
+<li>
+<p><strong>qless-write</strong>: regardless of a <code>?pattern</code> furi, all writes to the space will be processed by qless-write.</p>
+</li>
+</ol>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">       ┌──────────┐        ┌─────────────┐
+───────► pre-read ┼────────┼──┐          │
+       └──────────┘        │  │          │
+       ┌───────────┐       │  │          │
+◄──────┼ post-read │◄──────┼──┘          │
+       └───────────┘       │             │
+       ┌───────────┐       │             │
+────┬──► pre-write ┼───────┼──┐          │
+    │  └───────────┘       │  │          │
+    │  ┌────────────┐      │  │          │
+◄───┼──┼ post-write ◄──────┼──▲          │
+    │  └────────────┘      │  │          │
+    │  ┌─────────────┐     │  │          │
+    └──► qless-write ┼─────┼──┘   space  │
+       └─────────────┘     └─────────────┘</code></pre>
+</div>
+</div></div></td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="collapse position-relative" id="card-11">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-11" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
@@ -3725,10 +3877,10 @@ mtron&gt; *#.as[name      =&gt; _,
 </table>
 <h3 id="_spatial_embeddings" class="discrete">spatial embeddings</h3>
 <div class="paragraph">
-<p><span class="aqua">m</span>​<strong class="green">e</strong>​<strong class="orange">T</strong>​<span class="lime">A</span>​<strong class="red">t</strong>​<span class="yellow">r</span>​<span class="fuchsia">o</span>​<span class="blue">n</span>​ was designed to support the creation and manipulation of <em>abstract data types</em> in a compact, fluid manner so as to allow the user to move smoothly between <em>multiple models</em> across different spaces, each espousing a different perspective on the data their maintain: e.g., key/value, document, relational, vector, graph, and the various nooks and crannies between.</p>
+<p><span class="green">M</span>​<span class="yellow">e</span>​<strong class="red">t</strong>​<strong class="blue">A</strong>​<strong class="aqua">T</strong>​<span class="orange">R</span>​<strong class="fuchsia">O</strong>​<span class="lime">n</span>​ was designed to support the creation and manipulation of <em>abstract data types</em> in a compact, fluid manner so as to allow the user to move smoothly between <em>multiple models</em> across different spaces, each espousing a different perspective on the data their maintain: e.g., key/value, document, relational, vector, graph, and the various nooks and crannies between.</p>
 </div>
 <div class="paragraph">
-<p><span class="yellow">m</span>​<strong class="red">e</strong>​<span class="fuchsia">T</span>​<strong class="blue">a</strong>​<strong class="orange">T</strong>​<strong class="aqua">r</strong>​<span class="lime">O</span>​<strong class="green">n</strong>​'s URI addressing scheme makes it possible to <em>embed</em> arbitrary data types into a space.
+<p><span class="aqua">M</span>​<strong class="yellow">E</strong>​<span class="green">t</span>​<strong class="blue">A</strong>​<span class="lime">T</span>​<span class="fuchsia">r</span>​<strong class="red">o</strong>​<strong class="orange">n</strong>​'s URI addressing scheme makes it possible to <em>embed</em> arbitrary data types into a space.
 This section will explore the following considerations when designing a <em>multi-model abstract data type</em>.</p>
 </div>
 <div class="olist arabic">
@@ -5525,7 +5677,6 @@ Obj image = product &gt;&gt; uri("image");</code></pre>
         })
     }
     document.querySelectorAll('.btn[data-bs-toggle="collapse"]').forEach(button => {
-        console.log(button,"hello")
         button.addEventListener('click', () => {
             button.classList.toggle("active")
         });

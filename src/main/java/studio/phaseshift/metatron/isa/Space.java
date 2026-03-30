@@ -47,9 +47,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 public interface Space extends Rec, Closeable {
-
-    public static enum METHOD {FROM_SPACE, TO_SPACE}
-
+    
     @Override
     default boolean isResolved(final boolean nested) {
         return true;

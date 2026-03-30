@@ -30,6 +30,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static studio.phaseshift.metatron.Tokens.*;
+
 /**
  * Custom JSON-RPC 2.0 tool dispatcher for MCP.
  * <p>
@@ -125,22 +127,22 @@ public class JsonRpcToolDispatcher {
      */
     public String handleToolList(final String message) {
         try {
-            LOG.debug("Handling tools/list request");
+            LOG.debug("handling tools/list request");
 
             // Parse the JSON-RPC request using Jackson
             final Map<String, Object> requestMap = OBJECT_MAPPER.readValue(message, new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {
             });
 
             // Extract request ID
-            final Object requestId = requestMap.get("id");
+            final Object requestId = requestMap.get(ID);
 
             // Build tools list from registered tools
             final List<Map<String, Object>> toolsList = new ArrayList<>();
             final ObjectMapper mapper = new ObjectMapper();
 
-            for (final McpSchema.Tool tool : toolDefinitions.values()) {
+            for (final McpSchema.Tool tool : this.toolDefinitions.values()) {
                 final Map<String, Object> toolMap = new HashMap<>();
-                toolMap.put("name", tool.name());
+                toolMap.put(NAME, tool.name());
                 toolMap.put("description", tool.description());
 
                 // Convert JsonSchema to a proper object
@@ -162,21 +164,21 @@ public class JsonRpcToolDispatcher {
 
             LOG.debug("returning %d tools", toolsList.size());
 
-            // Create success response
+            // create success response
             final Map<String, Object> result = new HashMap<>();
             result.put("tools", toolsList);
 
             final Map<String, Object> response = new HashMap<>();
-            response.put("jsonrpc", "2.0");
+            response.put(JSONRPC, "2.0");
             if (null != requestId)
-                response.put("id", requestId);
-            response.put("result", result);
+                response.put(ID, requestId);
+            response.put(RESULT, result);
 
-            // Convert to JSON directly using Jackson (skip ObjSimpleJSONSerializer to avoid conversion errors)
+            // convert to JSON directly using Jackson (skip ObjSimpleJSONSerializer to avoid conversion errors)
             return OBJECT_MAPPER.writeValueAsString(response);
 
         } catch (final Exception e) {
-            LOG.error("Error handling tools/list: %s", e.getMessage());
+            LOG.error("error handling tools/list: %s", e.getMessage());
             return createErrorResponse(null, -32603, "Internal error", e.getMessage());
         }
     }
@@ -189,27 +191,27 @@ public class JsonRpcToolDispatcher {
      */
     public String handleToolCall(final String message) {
         try {
-            LOG.debug("Handling tool call request: %s", message);
+            LOG.debug("handling tool call request: %s", message);
 
             // Parse the JSON-RPC request using Jackson (NOT ObjSimpleJSONSerializer which evaluates code)
             final Map<String, Object> requestMap = OBJECT_MAPPER.readValue(message, new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {
             });
 
             // Extract request ID (required for response)
-            final Object requestId = requestMap.get("id");
+            final Object requestId = requestMap.get(ID);
 
             // Extract params
             final Object paramsObj = requestMap.get("params");
             if (!(paramsObj instanceof Map)) {
-                return createErrorResponse(requestId, -32602, "Invalid params", "params must be an object");
+                return createErrorResponse(requestId, -32602, "invalid params", "params must be an object");
             }
 
             @SuppressWarnings("unchecked") final Map<String, Object> paramsMap = (Map<String, Object>) paramsObj;
 
             // Extract tool name
-            final Object nameObj = paramsMap.get("name");
+            final Object nameObj = paramsMap.get(NAME);
             if (nameObj == null) {
-                return createErrorResponse(requestId, -32602, "Invalid params", "Missing 'name' field");
+                return createErrorResponse(requestId, -32602, "invalid params", "missing 'name' field");
             }
 
             final String toolName = nameObj.toString();
@@ -218,11 +220,10 @@ public class JsonRpcToolDispatcher {
             // Get the tool handler
             final ToolHandler handler = toolHandlers.get(toolName);
             if (handler == null) {
-                return createErrorResponse(requestId, -32601, "Method not found",
-                        "Tool '" + toolName + "' not found");
+                return createErrorResponse(requestId, -32601, "method not found", "tool '" + toolName + "' not found");
             }
 
-            // Extract arguments as a Map (keep as raw Java objects, don't convert through Metatron)
+            // extract arguments as a map (keep as raw java objects, don't convert through Metatron)
             final Map<String, Object> arguments = new HashMap<>();
             final Object argumentsObj = paramsMap.get("arguments");
             if (argumentsObj instanceof Map) {
@@ -230,17 +231,17 @@ public class JsonRpcToolDispatcher {
                 arguments.putAll(argsMap);
             }
 
-            LOG.debug("Invoking tool handler for: %s with arguments: %s", toolName, arguments);
+            LOG.debug("invoking tool handler for %s with arguments %s", toolName, arguments);
 
-            // Invoke the handler
+            // invoke the handler
             final McpSchema.CallToolResult result = handler.handle(arguments);
 
-            // Create success response
+            // create a success response
             return createSuccessResponse(requestId, result);
 
         } catch (final Exception e) {
-            LOG.error("Error handling tool call: %s", e.getMessage());
-            return createErrorResponse(null, -32603, "Internal error", e.getMessage());
+            LOG.error("error handling tool call: %s", e.getMessage());
+            return createErrorResponse(null, -32603, "internal error", e.getMessage());
         }
     }
 
@@ -250,8 +251,8 @@ public class JsonRpcToolDispatcher {
     private String createSuccessResponse(final Object id, final McpSchema.CallToolResult result) {
         try {
             final Map<String, Object> response = new HashMap<>();
-            response.put("jsonrpc", "2.0");
-            response.put("id", id);
+            response.put(JSONRPC, "2.0");
+            response.put(ID, id);
 
             // Convert CallToolResult to a map
             final Map<String, Object> resultMap = new HashMap<>();
@@ -267,9 +268,8 @@ public class JsonRpcToolDispatcher {
                     contentItem.put("type", "image");
                     contentItem.put("data", ((McpSchema.ImageContent) content).data());
                     contentItem.put("mimeType", ((McpSchema.ImageContent) content).mimeType());
-                } else if (content instanceof McpSchema.EmbeddedResource) {
+                } else if (content instanceof McpSchema.EmbeddedResource resource) {
                     contentItem.put("type", "resource");
-                    final McpSchema.EmbeddedResource resource = (McpSchema.EmbeddedResource) content;
                     // Add resource fields as needed
                 }
                 contentList.add(contentItem);
@@ -291,8 +291,7 @@ public class JsonRpcToolDispatcher {
 
         } catch (final Exception e) {
             LOG.error("failed to create success response: %s", e.getMessage());
-            return createErrorResponse(id, -32603, "internal error",
-                    "failed to serialize response: " + e.getMessage());
+            return createErrorResponse(id, -32603, "internal error", "failed to serialize response: " + e.getMessage());
         }
     }
 
@@ -302,12 +301,12 @@ public class JsonRpcToolDispatcher {
     private String createErrorResponse(final Object id, final int code, final String message, final String data) {
         try {
             final Map<String, Object> response = new HashMap<>();
-            response.put("jsonrpc", "2.0");
-            response.put("id", id);
+            response.put(JSONRPC, "2.0");
+            response.put(ID, id);
 
             final Map<String, Object> error = new HashMap<>();
-            error.put("code", code);
-            error.put("message", message);
+            error.put(CODE, code);
+            error.put(MESSAGE, message);
             if (data != null) {
                 error.put("data", data);
             }

@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -307,6 +307,10 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
 
     fURI q(final Map<String, String> query);
 
+    default fURI qLess() {
+        return this.q(Map.of());
+    }
+
     fURI removeQ(final String key);
 
     default fURI qString(final String query) {
@@ -415,14 +419,14 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
     /// ///////////////////////////////////////////////////
 
     default fURI constant() {
-        return this.q(CONST,null);
+        return this.q(CONST, null);
     }
-    
+
     default fURI type(final fURI type) {
         return this.q(T, type);
     }
-    
-    
+
+
     /// ////////////////////////////////////////////////
 
     class Singleton {

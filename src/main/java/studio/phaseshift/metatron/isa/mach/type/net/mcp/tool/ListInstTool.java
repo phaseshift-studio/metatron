@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *
+ *  
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ *  
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.mach.type.net.mcp.tool.annotated;
+package studio.phaseshift.metatron.isa.mach.type.net.mcp.tool;
 
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Router;
@@ -35,7 +35,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 @McpTool(
-        name = "list_inst",
+        name = "mtron_list_inst",
         description = """
                 Get a list of the currently accessible /m-developed instructions.
 
@@ -54,9 +54,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
                 """,
         category = "introspection"
 )
-public class AnnotatedListInstTool {
+public class ListInstTool {
 
-    private static final GraphittyLogger LOG = Graphitty.log(AnnotatedListInstTool.class);
+    private static final GraphittyLogger LOG = Graphitty.log(ListInstTool.class);
 
     @McpParameter(
             name = "doc",

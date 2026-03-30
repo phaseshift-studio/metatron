@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.llm.type;
 
 import dev.langchain4j.agent.tool.ToolSpecification;
+import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.mcp.McpToolProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.request.json.*;
@@ -29,15 +30,19 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.DocQ;
 import studio.phaseshift.metatron.isa.llm.LLMFactory;
 import studio.phaseshift.metatron.isa.llm.space.SpaceChatMemoryStore;
+import studio.phaseshift.metatron.isa.llm.space.SpaceContentRetriever;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -75,9 +80,6 @@ public class Model extends MRec {
 
     public Model(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
-        //  new JsonSchema.Builder().
-        //  final ResponseFormat responseFormat = ResponseFormat.builder().jsonSchema()
-
     }
 
     public static Model model(final Rec model) {
@@ -95,20 +97,44 @@ public class Model extends MRec {
                 this.at(API_KEY).orElse(str("")).strValue());
     }
 
-    public Optional<fURI> thinking() {
-        return Optional.<Obj>ofNullable(this.at(THINK).orElse(null)).map(o -> o.autoResolve(this)).map(Obj::uriValue);
+    public Obj processThought(final Str thought) {
+        return this.at(THINK).orElse(rec0()).at(TO).apply(thought);
     }
 
-    public Optional<fURI> memory() {
-        return Optional.<Obj>ofNullable(this.at(MEMORY).orElse(null)).map(o -> o.autoResolve(this)).map(Obj::uriValue);
+    public Obj processResponse(final Str response) {
+        final Obj result = this.at(RESPONSE).orElse(rec0()).has(FORMAT) ?
+                ObjSimpleJSONSerializer.single().inputBytes(ByteBuffer.wrap(response.strValue().getBytes(StandardCharsets.UTF_8))) :
+                response;
+        return this.at(RESPONSE).orElse(rec0()).at(TO).apply(result);
+    }
+
+    public Obj fetchMemory() {
+        return this.at(MEMORY).orElse(rec0()).at(FROM);
+    }
+
+    public Obj processMemory(final ChatMessage message) {
+        return noobj();
+        // return this.at(MEMORY).orElse(rec0()).at(TO).apply(message);
     }
 
     public Optional<Lst> tools() {
         return Optional.<Obj>ofNullable(this.at(TOOL).orElse(null)).map(o -> o.autoResolve(this)).map(Obj::asLst);
     }
 
-    public Optional<Rec> response() {
-        return Optional.<Obj>ofNullable(this.at(RESPONSE).orElse(null)).map(o -> o.autoResolve(this)).map(Obj::asRec);
+    /**
+     * RAG (Retrieval Augmented Generation) configuration.
+     *
+     * <p>Example mtron config:
+     * <pre>
+     * ollama:qwen3:32b[
+     *   rag => [pattern => &lt;/sys/docs/#&gt;, max => 5]
+     * ].chat("How do I use map?")
+     * </pre>
+     *
+     * @return Optional rec with 'pattern' (fURI) and optional 'max' (int, default 10)
+     */
+    public Optional<Rec> rag() {
+        return Optional.<Obj>ofNullable(this.at("rag").orElse(null)).map(o -> o.autoResolve(this)).map(Obj::asRec);
     }
 
     public AiServices<Agent> agent() {
@@ -116,10 +142,10 @@ public class Model extends MRec {
         //////////////////////////////////////////
         /////////////// MEMORY ///////////////////
         //////////////////////////////////////////
-        if (this.memory().isPresent())
+        if (!this.fetchMemory().isNoObj())
             service.chatMemory(MessageWindowChatMemory.builder()
-                    .maxMessages(Router.readFromSpace(this.memory().get().extend(MAX)).orElse(jnt(15)).intValue().intValue())
-                    .id(this.memory().get())
+                    .maxMessages(Router.readFromSpace(this.fetchMemory().uriValue().extend(MAX)).orElse(jnt(15)).intValue().intValue())
+                    .id(this.fetchMemory().uriValue())
                     .chatMemoryStore(SpaceChatMemoryStore.single())
                     .build());
 
@@ -151,10 +177,22 @@ public class Model extends MRec {
             if (!tools.isEmpty())
                 service.tools(tools).executeToolsConcurrently(BootLoader.getExecutor());
         }
+
+        //////////////////////////////////////////
+        ///////////////   RAG   //////////////////
+        //////////////////////////////////////////
+        // RAG = Retrieval Augmented Generation
+        // Before sending to LLM, search Space for relevant context and inject it into the prompt
+        if (this.rag().isPresent()) {
+            final Rec ragConfig = this.rag().get();
+            final fURI pattern = ragConfig.at(PATTERN).uriValue();
+            final int maxResults = ragConfig.at(MAX).orElse(jnt(10)).intValue().intValue();
+            this.logger().info("RAG enabled: pattern=%s, max=%d", pattern, maxResults);
+            service.contentRetriever(new SpaceContentRetriever(pattern, maxResults));
+        }
+
         /// ////////////////////////////////////////////////////////////////////////////////////////
         return service;
-        //.retrievalAugmentor(new SpaceRetrievalAugmentor(null, null, null))
-        //.contentRetriever(new SpaceContentRetriever())
 
     }
     
@@ -162,7 +200,14 @@ public class Model extends MRec {
         this.agent()
     }*/
 
-    public Str chat(final String message) {
+    public Model chat(final String message, final Inst onResponse) {
+        BootLoader.getExecutor().submit(() -> {
+            onResponse.apply(this.chat(message));
+        });
+        return this;
+    }
+
+    public Obj chat(final String message) {
         final StringBuilder response = new StringBuilder();
         Router.global().stats().ioStats().incrBytesSent(message.getBytes().length);
         final AtomicBoolean isThinking = new AtomicBoolean(false);
@@ -171,7 +216,7 @@ public class Model extends MRec {
         final AtomicBoolean isTooling = new AtomicBoolean(false);
         final AtomicReference<MTronException> isError = new AtomicReference<>();
         try {
-            final Agent agent = this.agent().streamingChatModel(LLMFactory.createModel(this, this.model())).build();
+            final Agent agent = this.agent().streamingChatModel(LLMFactory.createChatInteraction(this, this.model())).build();
             agent.chat(message)
                     .onToolExecuted(tool -> {
                         this.logger().info("tool executed: %s(%s) => %s", tool.request().name(), tool.request().arguments(), tool.result());
@@ -180,6 +225,7 @@ public class Model extends MRec {
                     .onCompleteResponse(c -> {
                         isComplete.set(true);
                         isResponding.set(false);
+                        Router.global().stats().ioStats().incrBytesRecv(c.aiMessage().text().getBytes().length);
                         this.logger().none("\n");
                     })
                     .onPartialToolCall(partialToolCall -> {
@@ -195,13 +241,10 @@ public class Model extends MRec {
                         response.append(s);
                     })
                     .onPartialThinking(t -> {
-                        if (!isThinking.getAndSet(true))
+                        if (this.has(THINK) && !isThinking.getAndSet(true))
                             this.logger().none(Graphitty.sillyPrint("thinking...\n", true, true));
-                        this.thinking().ifPresent(post -> {
-                            Router.global().write(post, str(t.text()));
-                        });
+                        this.processThought(str(t.text()));
                         Router.global().stats().ioStats().incrBytesRecv(t.text().getBytes().length);
-                        this.logger().none("{{b}}%s{{X}}", t.text());
                     })
                     .onError(e -> isError.set(MTronException.of(e))).start();
             while (!isComplete.get()) {
@@ -212,9 +255,10 @@ public class Model extends MRec {
             if (null != isError.get())
                 throw isError.get();
         } catch (final Exception e) {
+            e.printStackTrace();
             throw MTronException.of(e);
         }
-        return str(response.toString());
+        return this.processResponse(str(response.toString()));
     }
 
     public static class Helper {

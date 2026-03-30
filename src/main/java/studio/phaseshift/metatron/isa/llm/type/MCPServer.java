@@ -128,7 +128,7 @@ public class MCPServer extends MRec {
 
     protected static McpTransport createTransport(final Obj transport, final Map<Obj, Obj> headers, final Obj host) {
         if (null != transport) {
-            if (f("streamable-http").equals(transport.uriValue())) {
+            if (f(STREAMABLE_HTTP).equals(transport.uriValue())) {
                 return StreamableHttpMcpTransport.builder()
                         //  .logRequests(true)
                         //  .logResponses(true)

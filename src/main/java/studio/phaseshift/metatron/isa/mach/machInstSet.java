@@ -31,6 +31,7 @@ import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.io.space.file.fsSpace;
 import studio.phaseshift.metatron.isa.mach.type.Monad;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Editor;
 import studio.phaseshift.metatron.util.CommonUtil;
@@ -38,7 +39,6 @@ import studio.phaseshift.metatron.util.ImageUtil;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
-import java.awt.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -46,22 +46,18 @@ import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
-import static studio.phaseshift.metatron.Tokens.MONAD;
-import static studio.phaseshift.metatron.Tokens.TOOL;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.DocQ.DOCQ_TYPE;
 import static studio.phaseshift.metatron.furi.q.DocQ.DOC_TYPE;
 import static studio.phaseshift.metatron.furi.q.DocQ.Doc.docWrap;
-import static studio.phaseshift.metatron.furi.q.QCollection.SUBQ_TYPE;
-import static studio.phaseshift.metatron.furi.q.QCollection.SUB_TYPE;
+import static studio.phaseshift.metatron.furi.q.QCollection.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.else_;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
@@ -91,6 +87,8 @@ import static studio.phaseshift.metatron.isa.mach.type.ui.console.Console.CONSOL
  */
 @JREService(tid = "/m/mach")
 public class machInstSet extends AbstractInstSet {
+    private static final Set<Type> TYPES = new LinkedHashSet<>();
+    private static final Set<Inst> INSTS = new LinkedHashSet<>();
 
     public static final fURI MACH_ISA_TID = M_ISA_TID.extend("mach");
     public static final fURI MACH_MACHINE_TID = MACH_ISA_TID.extend("machine");
@@ -112,6 +110,7 @@ public class machInstSet extends AbstractInstSet {
     public static final fURI FACTORY_TID = MACH_ISA_TID.extend("factory");
     public static final fURI REWRITE_INST_TID = MACH_INST_TID.extend("rewrite");
     public static final Rec SPACE_CONFIG = rec(uri(Tokens.PATTERN), T(URI_TID));
+
 
     public static final Type SPACE_TYPE = Type.Builder.build()
             .tid(REC_TID)
@@ -166,6 +165,32 @@ public class machInstSet extends AbstractInstSet {
             .create();
     public static final Type MACH_MONAD_TYPE = Type.Builder.build().tid(LST_TID).vid(MACH_MONAD_TID).create();
 
+    public static final fURI MACH_THREAD_TID = MACH_ISA_TID.extend("thread").extend("core");
+    public static final fURI MACH_CORE_THREAD_TID = MACH_ISA_TID.extend("thread").extend("core");
+    public static final fURI MACH_VIRTUAL_THREAD_TID = MACH_ISA_TID.extend("thread").extend("virtual");
+    public static final Type MACH_CORE_THREAD_TYPE = Type.Builder.build()
+            .tid(MACH_THREAD_TID)
+            .vid(MACH_CORE_THREAD_TID)
+            .isaPredicate(
+                    rec(uri(CODE), T(ALL),
+                            uri(STATE).maybe().asUri(), is_(or_(eq_(uri(STOPPED)), eq_(uri(RUNNING)), eq_(uri(PAUSED)))),
+                            uri(RESULT).maybe(), T(ALL).maybeSome()))
+            .constructor(instC(INST_TID.dom(ALL.maybe()).rng(MACH_CORE_THREAD_TID), lst(T(REC_TID)), (lhs, inst) -> new CoreThread(lhs.asRec().jvm(), MACH_THREAD_TID, inst.arg(0).vid()))) // TODO: need to handle vid
+            .inst(MACH_INST_TID.extend("run").dom(MACH_CORE_THREAD_TID).rng(MACH_CORE_THREAD_TID), lst(), (lhs, inst) -> {
+                ((CoreThread) lhs).run();
+                return lhs;
+            })
+            .inst(MACH_INST_TID.extend("stop").dom(MACH_CORE_THREAD_TID).rng(MACH_CORE_THREAD_TID), lst(), (lhs, inst) -> {
+                ((CoreThread) lhs).stop();
+                return lhs;
+            })
+            .inst(MACH_INST_TID.extend("pause").dom(MACH_CORE_THREAD_TID).rng(MACH_CORE_THREAD_TID), lst(), (lhs, inst) -> {
+                ((CoreThread) lhs).pause();
+                return lhs;
+            })
+            .create(TYPES, INSTS);
+
+
     public machInstSet() {
         super(MACH_ISA_TID, MACH_ISA_TID);
         // Router.global().registerPrefix(f("mach"), MACH_ISA_TID);
@@ -173,15 +198,10 @@ public class machInstSet extends AbstractInstSet {
 
     @Override
     public Set<Type> types() {
-        return new LinkedHashSet<>(List.of(
+        TYPES.addAll(new LinkedHashSet<>(List.of(
                 ROUTER_TYPE,
                 SPACE_TYPE,
                 CONSOLE_TYPE,
-                SUB_TYPE,
-                DOCQ_TYPE,
-                DOC_TYPE,
-                SUBQ_TYPE,
-                SUB_TYPE,
                 FS_SPACE_TYPE,
                 SERIAL_SPACE_TYPE,
                 FILE_TYPE,
@@ -189,6 +209,16 @@ public class machInstSet extends AbstractInstSet {
                 IMAGE_FILE_TYPE,
                 FACTORY_TYPE,
                 M_FACTORY_TYPE,
+                /// ////////////////////////////
+                /// Q PROCESSORS ///////////////
+                /// ////////////////////////////
+                INCRQ_TYPE,
+                CONSTQ_TYPE,
+                DOCQ_TYPE,
+                DOC_TYPE,
+                SUB_TYPE,
+                SUBQ_TYPE,
+                TYPEQ_TYPE,
                 /// /////////////////////
                 SERVER_TYPE,
                 SERVER_PROTOCOL_TYPE,
@@ -196,9 +226,12 @@ public class machInstSet extends AbstractInstSet {
                 MCP_SERVER_PROTOCOL_TYPE,
                 MCP_SERVER_TYPE,
                 /// /////////////////////
+                MACH_CORE_THREAD_TYPE,
+                /////////////////////
                 MACH_MONAD_TYPE,
                 MACH_MACHINE_TYPE,
-                MACH_SWARM_MACHINE_TYPE));
+                MACH_SWARM_MACHINE_TYPE)));
+        return TYPES;
     }
 
     @Override
@@ -210,9 +243,8 @@ public class machInstSet extends AbstractInstSet {
 
     @Override
     public Set<Inst> insts() {
-        final Set<Inst> insts = new LinkedHashSet<>();
-        insts.addAll(Router.RouterType.insts());
-        insts.addAll(List.of(
+        INSTS.addAll(Router.RouterType.insts());
+        INSTS.addAll(List.of(
                 instC(LIFT_INST_TID.dom(ALL).rng(MACH_MONAD_TID).q(MONAD, "^"), lst(T(ALL.maybe())), (lhs, inst) -> {
                     final Monad monad = lhs.asMonad();
                     if (!inst.arg(0).isNoObj())
@@ -221,13 +253,11 @@ public class machInstSet extends AbstractInstSet {
                         return monad;
                 }),
                 instC(REWRITE_INST_TID.dom(ALL.maybe()).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(Router.global().rewrite(inst.arg(0).uriValue(), true))),
-                instC(MACH_INST_TID.extend("close").dom(ROUTER_TID).rng(NOOBJ_TID), lst(), (lhs, inst) -> Stream.of(noobj()).peek(o -> System.exit(0)).iterator().next()),
-                instC(MACH_INST_TID.extend("beep").dom(A.maybe()).rng(A.maybe()), lst(isa_(T(INT_TID)).else_(jnt(10))), (lhs, inst) -> {
-                    for (int i = 0; i < inst.arg(0).intValue().intValue(); i++) {
-                        Toolkit.getDefaultToolkit().beep();
-                        CommonUtil.sleepThread(15);
-                    }
-                    return lhs;
+                instC(MACH_INST_TID.extend("close").dom(ROUTER_TID).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
+                    if (lhs instanceof Router)
+                        return Stream.of(noobj()).peek(o -> System.exit(0)).iterator().next();
+                    CommonUtil.close(lhs);
+                    return noobj();
                 }),
                 instC(MACH_INST_TID.extend("nano").dom(ALL.maybe()).rng(ALL.maybe()), lst(), (lhs, inst) -> {
                     try {
@@ -308,6 +338,6 @@ public class machInstSet extends AbstractInstSet {
                         throw MTronException.of("injection larger than tuple: 1 < %d", inst.arg(0).intValue().intValue());
                 })
         ));
-        return insts;
+        return INSTS;
     }
 }

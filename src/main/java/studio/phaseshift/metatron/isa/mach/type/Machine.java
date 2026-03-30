@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -57,7 +57,11 @@ public interface Machine extends Call, Ring<Call> {
     @Override
     Map<Obj, Obj> jvm();
 
-    void interrupt();
+    Fail interrupt();
+
+    NoObj pause();
+
+    Obj run();
 
     @Override
     default boolean isResolved(final boolean nested) {
@@ -122,26 +126,6 @@ public interface Machine extends Call, Ring<Call> {
     @Override
     default Type rng() {
         return this.code().rng();
-    }
-
-    public static class Helper {
-        private Helper() {
-            // do nothing
-        }
-
-        public static String machToString(final Machine mach) {
-            return Obj.Helper.objToString(mach);
-        }
-
-        public static int machHashCode(final Machine mach) {
-            return Obj.Helper.objHashCode(mach);
-        }
-
-        public static boolean machEquals(final Machine mach, final Object other) {
-            return Obj.Helper.objEquals(mach, other);
-        }
-
-
     }
 
 }

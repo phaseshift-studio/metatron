@@ -1,0 +1,56 @@
+[discrete]
+== Q Processors
+
+A q-processor is a space attachment that intercepts reads and writes to the space according to the query component of the read from or written to fURI.
+
+[cols="1a,2a,5a",options=header,role="table-bordered small center",header]
+|===
+^| q     ^| key=value | description
+| subq  | subq      | subscribe to any mutations at the specific space uri
+| docq  | docq      | associate documentation with a space furi
+| incrQ | incrQ     | increment a space global counter
+| typeQ | T         | constrain objs at a space furi to be a specific type
+|===
+
+The q-processor type is defined as
+
+++++
+<!-- 🐖
+*q
+-->
+++++
+
+where a q-processor may implement any of the associated read/write stages.
+
+[cols="7a,4a",separator=🧱,role="table-bordered small center"]
+|===
+🧱
+.read processors
+. *pre-read*: prior to reading the space, any `?pattern` furi will be first processed by pre-read.
+. *post-read*: prior to returning an `obj` from the space, any `?pattern` furi will be first processed by post-read.
+
+.write processors
+. *pre-write*: prior to writing to the space, any `?pattern` furi will be first processed by pre-write.
+. *post-write*: prior to returning an `obj` written to the space, any `?pattern` furi will be first processed by post-write.
+. *qless-write*: regardless of a `?pattern` furi, all writes to the space will be processed by qless-write.
+
+🧱
+[source,mtron]
+----
+       ┌──────────┐        ┌─────────────┐           
+───────► pre-read ┼────────┼──┐          │           
+       └──────────┘        │  │          │           
+       ┌───────────┐       │  │          │           
+◄──────┼ post-read │◄──────┼──┘          │           
+       └───────────┘       │             │           
+       ┌───────────┐       │             │           
+────┬──► pre-write ┼───────┼──┐          │           
+    │  └───────────┘       │  │          │           
+    │  ┌────────────┐      │  │          │           
+◄───┼──┼ post-write ◄──────┼──▲          │           
+    │  └────────────┘      │  │          │           
+    │  ┌─────────────┐     │  │          │           
+    └──► qless-write ┼─────┼──┘   space  │           
+       └─────────────┘     └─────────────┘                                         
+----
+|===
