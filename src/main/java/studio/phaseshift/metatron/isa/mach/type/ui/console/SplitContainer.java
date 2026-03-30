@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.isa.mach.type.ui.console;
 
 import org.jline.terminal.Terminal;
-import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -104,38 +103,26 @@ public class SplitContainer implements PaneNode {
     public void render(final Terminal terminal, final int startRow, final int startCol,
                        final int height, final int width, final Pane activePane) {
         if (this.direction == SplitLayout.VERTICAL) {
-            // Split left | right
-            final int firstWidth = (int) (width * this.ratio) - 1; // -1 for divider
-            final int secondWidth = width - firstWidth - 1;
-            final int dividerCol = startCol + firstWidth;
+            // Split left | right - no separate divider, panes' borders are adjacent
+            final int firstWidth = (int) (width * this.ratio);
+            final int secondWidth = width - firstWidth;
 
             // Render first (left)
             this.first.render(terminal, startRow, startCol, height, firstWidth, activePane);
 
-            // Draw vertical divider
-            for (int row = startRow; row < startRow + height; row++) {
-                terminal.writer().print("\u001b[" + row + ";" + dividerCol + "H");
-                terminal.writer().print(Graphitty.string("{{b}}│{{X}}"));
-            }
-
-            // Render second (right)
-            this.second.render(terminal, startRow, dividerCol + 1, height, secondWidth, activePane);
+            // Render second (right) - starts immediately after first
+            this.second.render(terminal, startRow, startCol + firstWidth, height, secondWidth, activePane);
 
         } else { // HORIZONTAL
-            // Split top / bottom
-            final int firstHeight = (int) (height * this.ratio) - 1; // -1 for divider
-            final int secondHeight = height - firstHeight - 1;
-            final int dividerRow = startRow + firstHeight;
+            // Split top / bottom - no separate divider, panes' borders are adjacent
+            final int firstHeight = (int) (height * this.ratio);
+            final int secondHeight = height - firstHeight;
 
             // Render first (top)
             this.first.render(terminal, startRow, startCol, firstHeight, width, activePane);
 
-            // Draw horizontal divider
-            terminal.writer().print("\u001b[" + dividerRow + ";" + startCol + "H");
-            terminal.writer().print(Graphitty.string("{{b}}" + "─".repeat(width - 1) + "{{X}}"));
-
-            // Render second (bottom)
-            this.second.render(terminal, dividerRow + 1, startCol, secondHeight, width, activePane);
+            // Render second (bottom) - starts immediately after first
+            this.second.render(terminal, startRow + firstHeight, startCol, secondHeight, width, activePane);
         }
     }
 

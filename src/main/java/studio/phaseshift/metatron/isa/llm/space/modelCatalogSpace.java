@@ -50,7 +50,7 @@ public class modelCatalogSpace<CATALOG> extends memSpace {
             .isaPredicate(rec(
                     uri(NAME), is_(or_(eq_(uri(ANTHROPIC)), eq_(uri(OPENAI)), eq_(uri(OLLAMA)))),
                     uri(PATTERN), URI_TYPE,
-                    uri(HOST), URI_TYPE,
+                    uri(HOST).maybe(), URI_TYPE,
                     uri(ROUTE), rec(URI_TYPE, URI_TYPE)))
             .constructor(instC(INST_TID.dom(ALL.maybe()).rng(LLM_CATALOG_SPACE_TID), lst(T(REC_TID)), (x, inst) -> LLMFactory.createModelCatalog(inst.arg(0).asRec()))).create();
 

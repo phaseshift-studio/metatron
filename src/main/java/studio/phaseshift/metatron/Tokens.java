@@ -51,6 +51,7 @@ public final class Tokens {
     public static final String FORMAT = "format";
     public static final String PROVIDER = "provider";
     public static final String API_KEY = "api_key";
+    public static final String ORG = "org";
     public static final String BLOCK = "block";
     public static final String AI = "AI";
     public static final String ID = "id";

@@ -223,7 +223,7 @@ public class Console extends JRec implements Closeable, Runnable {
 
     /**
      * Prepare for readLine() - position cursor and clear prompt area in split mode.
-     * Also clears the line above the prompt to remove any stale characters (like JLine's ~ marker).
+     * Always re-renders panes to ensure correct layout before input.
      */
     private void prepareForInput() {
         if (this.splitMode && this.activePane != null) {
@@ -231,26 +231,9 @@ public class Console extends JRec implements Closeable, Runnable {
             // by outputting a ~ marker when cursor isn't at column 1
             this.reader.unsetOpt(LineReader.Option.AUTO_FRESH_LINE);
 
-            // Calculate position dynamically from tree structure
-            final int[] pos = calculatePanePosition(this.activePane);
-            final int promptRow = pos[0] + pos[2] - 2; // startRow + height - 2
-            final int col = pos[1]; // startCol
-            final int paneWidth = pos[3]; // width
-
-            // Clear the line ABOVE the prompt (where JLine's ~ marker might appear)
-            final int lineAbove = promptRow - 1;
-            if (lineAbove >= pos[0]) { // Only if within pane bounds
-                terminal.writer().print("\u001b[" + lineAbove + ";" + col + "H");
-                terminal.writer().print(" ".repeat(Math.max(0, paneWidth - 1)));
-            }
-
-            // Position cursor at prompt location
-            terminal.writer().print("\u001b[" + promptRow + ";" + col + "H");
-            // Clear the prompt line
-            terminal.writer().print(" ".repeat(Math.max(0, paneWidth - 1)));
-            // Return to start of prompt line
-            terminal.writer().print("\u001b[" + promptRow + ";" + col + "H");
-            terminal.writer().flush();
+            // Always render panes fresh to ensure correct layout (handles terminal resize, etc.)
+            // renderPanes() also positions cursor at the prompt location
+            this.renderPanes();
         } else {
             // Re-enable AUTO_FRESH_LINE in normal mode
             this.reader.setOpt(LineReader.Option.AUTO_FRESH_LINE);
@@ -404,6 +387,43 @@ public class Console extends JRec implements Closeable, Runnable {
     }
 
     /**
+     * Resize the active pane by adjusting its parent container's split ratio.
+     * @param delta positive = more space for active pane, negative = less space
+     */
+    public void resizeActivePane(final float delta) {
+        if (!this.splitMode || this.activePane == null) return;
+        if (this.paneRoot.isLeaf()) return; // Single pane, nothing to resize
+
+        // Find the parent container of the active pane
+        final SplitContainer parent = ((SplitContainer) this.paneRoot).findParentOf(this.activePane);
+        if (parent == null) {
+            // Active pane might be direct child of root
+            if (this.paneRoot instanceof SplitContainer root) {
+                // Check if active pane is in first or second subtree
+                if (root.first() == this.activePane ||
+                        (!root.first().isLeaf() && root.first().findPane(this.activePane.id()) != null)) {
+                    // Active pane is in first subtree - increase ratio for more space
+                    root.adjustRatio(delta);
+                } else {
+                    // Active pane is in second subtree - decrease ratio for more space
+                    root.adjustRatio(-delta);
+                }
+            }
+        } else {
+            // Determine if active pane is first or second child
+            if (parent.first() == this.activePane) {
+                // Active pane is first child - increase ratio for more space
+                parent.adjustRatio(delta);
+            } else {
+                // Active pane is second child - decrease ratio for more space
+                parent.adjustRatio(-delta);
+            }
+        }
+
+        this.requestRedraw();
+    }
+
+    /**
      * Position the cursor at the active pane's prompt location.
      * Called after operations that move the cursor (like status refresh).
      */
@@ -411,7 +431,7 @@ public class Console extends JRec implements Closeable, Runnable {
         if (this.activePane == null) return;
         final int[] pos = calculatePanePosition(this.activePane);
         final int promptRow = pos[0] + pos[2] - 2; // startRow + height - 2
-        final int promptCol = pos[1]; // startCol
+        final int promptCol = pos[1] + 1; // startCol + 1 to skip left border
         terminal.writer().print("\u001b[" + promptRow + ";" + promptCol + "H");
         terminal.writer().flush();
     }
@@ -422,7 +442,7 @@ public class Console extends JRec implements Closeable, Runnable {
      * @return int[] {startRow, startCol, height, width}
      */
     public int[] calculatePanePosition(final Pane pane) {
-        final int height = terminal.getHeight() - 2;  // -2 for status + input
+        final int height = terminal.getHeight() - 1;  // -1 for status line only
         final int width = terminal.getWidth();
         return calculatePanePositionInNode(pane, this.paneRoot, 1, 1, height, width);
     }
@@ -439,9 +459,9 @@ public class Console extends JRec implements Closeable, Runnable {
         // It's a SplitContainer
         final SplitContainer container = (SplitContainer) node;
         if (container.direction() == SplitLayout.VERTICAL) {
-            final int firstWidth = (int) (width * container.ratio()) - 1;
-            final int secondWidth = width - firstWidth - 1;
-            final int dividerCol = startCol + firstWidth;
+            // No divider - panes are directly adjacent
+            final int firstWidth = (int) (width * container.ratio());
+            final int secondWidth = width - firstWidth;
 
             // Check first (left)
             int[] result = calculatePanePositionInNode(target, container.first(),
@@ -450,11 +470,11 @@ public class Console extends JRec implements Closeable, Runnable {
 
             // Check second (right)
             return calculatePanePositionInNode(target, container.second(),
-                    startRow, dividerCol + 1, height, secondWidth);
+                    startRow, startCol + firstWidth, height, secondWidth);
         } else { // HORIZONTAL
-            final int firstHeight = (int) (height * container.ratio()) - 1;
-            final int secondHeight = height - firstHeight - 1;
-            final int dividerRow = startRow + firstHeight;
+            // No divider - panes are directly adjacent
+            final int firstHeight = (int) (height * container.ratio());
+            final int secondHeight = height - firstHeight;
 
             // Check first (top)
             int[] result = calculatePanePositionInNode(target, container.first(),
@@ -463,7 +483,7 @@ public class Console extends JRec implements Closeable, Runnable {
 
             // Check second (bottom)
             return calculatePanePositionInNode(target, container.second(),
-                    dividerRow + 1, startCol, secondHeight, width);
+                    startRow + firstHeight, startCol, secondHeight, width);
         }
     }
 
@@ -474,7 +494,7 @@ public class Console extends JRec implements Closeable, Runnable {
         if (!this.splitMode) return;
 
         // Get terminal dimensions (leave room for status line)
-        final int height = terminal.getHeight() - 2;  // -2 for status + input
+        final int height = terminal.getHeight() - 1;  // -1 for status line only
         final int width = terminal.getWidth();
 
         // Clear screen area for panes (not status line)
@@ -490,19 +510,19 @@ public class Console extends JRec implements Closeable, Runnable {
         // Position cursor at active pane's prompt location (use dynamic calculation)
         final int[] pos = calculatePanePosition(this.activePane);
         final int promptRow = pos[0] + pos[2] - 2; // startRow + height - 2
-        final int promptCol = pos[1]; // startCol
-        final int paneWidth = pos[3];
+        final int promptCol = pos[1] + 1; // startCol + 1 to skip left border
+        final int paneWidth = pos[3] - 2; // width - 2 for left and right borders
 
         // Clear the line ABOVE the prompt (where JLine's ~ marker might appear)
         final int lineAbove = promptRow - 1;
         if (lineAbove >= pos[0]) { // Only if within pane bounds
             terminal.writer().print("\u001b[" + lineAbove + ";" + promptCol + "H");
-            terminal.writer().print(" ".repeat(Math.max(0, paneWidth - 1)));
+            terminal.writer().print(" ".repeat(Math.max(0, paneWidth)));
         }
 
         // Clear the prompt line within the pane
         terminal.writer().print("\u001b[" + promptRow + ";" + promptCol + "H");
-        terminal.writer().print(" ".repeat(Math.max(0, paneWidth - 1)));
+        terminal.writer().print(" ".repeat(Math.max(0, paneWidth)));
         terminal.writer().print("\u001b[" + promptRow + ";" + promptCol + "H");
 
         terminal.writer().flush();
@@ -635,6 +655,8 @@ public class Console extends JRec implements Closeable, Runnable {
                             .addRow(List.of("close", ":close", "close active pane"))
                             .addRow(List.of("next pane", "Ctrl+W", "cycle to next pane"))
                             .addRow(List.of("prev pane", "Alt+W", "cycle to previous pane"))
+                            .addRow(List.of("shrink pane", "Alt+<", "make active pane smaller"))
+                            .addRow(List.of("grow pane", "Alt+>", "make active pane larger"))
                             .style().headerDivider("{{[b]}} ").apply().format()).style().border(Border.simple.foreground("{{b}}")).apply().run();
                 } else if (line.startsWith(":log")) {
                     LogObj.setSLF4J(line.substring(4));
@@ -838,6 +860,26 @@ public class Console extends JRec implements Closeable, Runnable {
                         }
                         return true;
                     }, alt('w'));
+            /// RESIZE PANE SMALLER (Ctrl+Shift+< = Alt+< in most terminals)
+            getKeyMap().bind((Widget)
+                    () -> {
+                        if (Console.this.splitMode) {
+                            Console.this.resizeActivePane(-0.05f);
+                            Console.this.renderPanes();
+                            Console.this.redrawBuffer();
+                        }
+                        return true;
+                    }, "\033<");  // Alt+<
+            /// RESIZE PANE LARGER (Ctrl+Shift+> = Alt+> in most terminals)
+            getKeyMap().bind((Widget)
+                    () -> {
+                        if (Console.this.splitMode) {
+                            Console.this.resizeActivePane(0.05f);
+                            Console.this.renderPanes();
+                            Console.this.redrawBuffer();
+                        }
+                        return true;
+                    }, "\033>");  // Alt+>
             /// TURN ON/OFF TYPE CHECKING
             getKeyMap().bind((Widget)
                     () -> {

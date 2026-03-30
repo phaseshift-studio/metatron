@@ -28,6 +28,7 @@ import dev.langchain4j.model.ollama.OllamaModels;
 import dev.langchain4j.model.ollama.OllamaStreamingChatModel;
 import dev.langchain4j.model.openai.OpenAiModelCatalog;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
+import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.Space;
@@ -39,6 +40,7 @@ import studio.phaseshift.metatron.isa.m.type.impl.MUri;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
+import java.time.Duration;
 import java.util.Locale;
 import java.util.Map;
 
@@ -51,6 +53,8 @@ import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_fro
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.Rec.REC_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Str.str0;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -76,9 +80,9 @@ public final class LLMFactory {
                 catalogSpace.at(QSTRING, catalogSpace.at(QSTRING).orElse(lst()).add(QCollection.subq(), MUTABLE), MUTABLE);
                 models.listModels().forEach(m -> rec(Map.of(
                                 uri(NAME), uri(m.name()),
-                                uri(TYPE), uri(m.type().name().toLowerCase(Locale.ROOT)),
+                                uri(TYPE), m.type() == null ? noobj() : uri(m.type().name().toLowerCase(Locale.ROOT)),
                                 uri(CREATOR), str(m.provider().name()),
-                                uri(DESC), str(m.description()),
+                                uri(DESC), m.description() == null || m.description().isBlank() ? noobj() :str(m.description()),
                                 uri(PROVIDER), auto_from_(spaceRec.vid()).tryToInst()),
                         MODEL_TID, catalogSpace.pattern().retractPattern().extend(m.name())));
                 yield catalogSpace;
@@ -105,9 +109,8 @@ public final class LLMFactory {
                 final modelCatalogSpace<?> catalogSpace = modelCatalogSpace.of(models, spaceRec.jvm(), spaceRec.vid());
                 models.listModels().forEach(m -> rec(Map.of(
                                 uri(NAME), uri(m.name()),
-                                uri(TYPE), uri(m.type().name().toLowerCase(Locale.ROOT)),
-                                uri(CREATOR), str(m.provider().name()),
-                                uri(DESC), str(m.description()),
+                                //uri(TYPE), m.type() == null ? noobj() : uri(m.type().name().toLowerCase(Locale.ROOT)),
+                                //uri(DESC), m.description() == null || m.description().isBlank() ? noobj() : str(m.description()),
                                 uri(PROVIDER), auto_from_(spaceRec.vid()).tryToInst()),
                         MODEL_TID, catalogSpace.pattern().retractPattern().extend(m.name())));
                 yield catalogSpace;
@@ -120,7 +123,8 @@ public final class LLMFactory {
         final fURI provider = model.at(f(PROVIDER)).asRec().at(NAME).uriValue();
         final String host = model.at(f(PROVIDER)).asRec().at(HOST).uriValue().toString();
         final boolean thinking = model.has(THINK);
-        final Str api_key = model.at(API_KEY).orElse(null);
+        final Str api_key = model.at(f(PROVIDER)).asRec().at(API_KEY).orElse(str0());
+        final Str organization = model.at(f(PROVIDER)).asRec().at(ORG).orElse(str0());
         final String name = model.at(NAME).uriValue().toString();
         final Rec responseFormat = model.at(RESPONSE).orElse(rec0()).at(FORMAT).orElse(rec0().zero());
         return switch (provider.toString().toLowerCase()) {
@@ -136,8 +140,14 @@ public final class LLMFactory {
             
             case OPENAI -> OpenAiStreamingChatModel.builder()
                     .apiKey(api_key.strValue())
+                    .baseUrl(host)
                     .modelName(modelName)
                     .returnThinking(thinking)
+                    .organizationId(organization.strValue())
+                    .logRequests(true)
+                    .logResponses(true)
+                    .timeout(Duration.ofSeconds(30))
+                    .logger(LoggerFactory.getLogger("openai"))
                     .responseFormat(!responseFormat.isNoObj()? new ResponseFormat.Builder()
                             .jsonSchema(new JsonSchema.Builder().rootElement(Model.Helper.objToSchema(REC_TYPE, responseFormat, RESPONSE)).build())
                             .type(ResponseFormatType.JSON).build() : null)

@@ -106,12 +106,13 @@ public class llmInstSet extends AbstractInstSet {
                     .tid(REC_TID)
                     .vid(MODEL_TID).
                     isaPredicate(rec(
-                            uri(PROVIDER), URI_TYPE,
+                            uri(PROVIDER), LLM_CATALOG_SPACE_TYPE,
                             uri(NAME), URI_TYPE,
                             uri(THINK).maybe(), rec(uri(TO).maybe().asUri(), URI_TYPE),
                             uri(RESPONSE).maybe(), rec(uri(TO).maybe().asUri(), URI_TYPE),
-                            uri(SIZE), BYTE_TYPE,
+                            uri(SIZE).maybe().asUri(), BYTE_TYPE,
                             uri(MEMORY).maybe(), rec(uri(FROM).maybe().asUri(),URI_TYPE),
+                            uri(DESC).maybe(), STR_TYPE,
                             uri(SKILL).maybe(), LST_TYPE,
                             uri(TOOL).maybe(), LST_TYPE))
                     .inst(instC(LLM_INST_TID.extend("chat").dom(MODEL_TID).rng(ALL.maybe()), lst(STR_TYPE),
@@ -121,7 +122,7 @@ public class llmInstSet extends AbstractInstSet {
                     .create(TYPES, INSTS),
             "a large language model", "the model construction", Map.of(
                     uri(NAME), "the name of the model",
-                    uri(HOST), "the provider endpoint",
+                    uri(HOST).maybe(), "the provider endpoint",
                     uri(THINK).maybe(), "whether to think before responding",
                     uri(SIZE).maybe(), "the size of the model in bytes",
                     uri(MEMORY).maybe(), "a pointer to the llm's memory",

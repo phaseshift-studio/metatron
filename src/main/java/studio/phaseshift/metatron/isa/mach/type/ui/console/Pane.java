@@ -21,6 +21,8 @@ package studio.phaseshift.metatron.isa.mach.type.ui.console;
 import org.jline.terminal.Terminal;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.ui.Border;
+import studio.phaseshift.metatron.isa.mach.type.ui.Stylable;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 
 import java.util.ArrayList;
@@ -33,6 +35,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * - Output buffer (thread-safe, for parallel output from background threads)
  * - Language mode (mtron, gremlin, sql)
  * - Machine reference (for interruption)
+ * - Style support (border, foreground color, etc.)
  *
  * <pre>
  * ┌─────────────────────────────────┐
@@ -46,7 +49,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class Pane implements PaneNode {
+public class Pane implements PaneNode, Stylable<Pane> {
 
     private static final AtomicInteger ID_COUNTER = new AtomicInteger(0);
     private static final int DEFAULT_MAX_OUTPUT_LINES = 1000;
@@ -57,6 +60,9 @@ public class Pane implements PaneNode {
     private final List<String> outputBuffer;
     private final int maxOutputLines;
     private volatile boolean needsRedraw = false;
+
+    // Style support
+    private Style<Pane> style = Style.empty();
 
     // Reference to console for redraw requests
     private Console console;
@@ -77,6 +83,19 @@ public class Pane implements PaneNode {
         this.maxOutputLines = maxOutputLines;
         this.outputBuffer = Collections.synchronizedList(new ArrayList<>());
         this.machine = null;
+        // Default to simple border style (ASCII: +, |, -) for visibility
+        this.style = this.style().border(Border.simple).apply().getStyle();
+    }
+
+    @Override
+    public Pane style(final Style<Pane> style) {
+        this.style = style;
+        return this;
+    }
+
+    @Override
+    public Style<Pane> getStyle() {
+        return this.style;
     }
 
     public void setConsole(final Console console) {
@@ -175,33 +194,33 @@ public class Pane implements PaneNode {
     }
 
     /**
-     * Generate the prompt string for this pane.
+     * Generate the prompt string for this pane (pane ID shown in top border, not needed here).
      */
     public String prompt() {
-        return Graphitty.string("{{g}}[{{y}}%d{{g}}]{{X}} %s".formatted(this.id, this.language.prompt));
+        return Graphitty.string(this.language.prompt);
     }
 
     // ========== Region Tracking ==========
 
     /**
-     * Get the row where the prompt should appear (just above bottom border).
+     * Get the row where the prompt should appear (last content row, above bottom border).
      */
     public int getPromptRow() {
-        return this.lastStartRow + this.lastHeight - 2;
+        return this.lastStartRow + this.lastHeight - 2; // -2 = just above bottom border
     }
 
     /**
-     * Get the column where the prompt should start.
+     * Get the column where the prompt should start (after left border).
      */
     public int getPromptCol() {
-        return this.lastStartCol;
+        return this.lastStartCol + 1; // +1 to skip left border character
     }
 
     /**
      * Get the width available for the prompt line.
      */
     public int getPromptWidth() {
-        return this.lastWidth - 1;
+        return this.lastWidth - 2; // -2 for left border + right border
     }
 
     // ========== PaneNode interface ==========
@@ -218,47 +237,74 @@ public class Pane implements PaneNode {
         final boolean isActive = this == activePane;
         final List<String> visible = this.visibleOutput(height);
 
+        // Get border style - use foreground color based on active state
+        final Border border = this.style.border;
+        final String borderColor = isActive ? "{{g}}" : "{{b}}";
+
         // Build the pane content
         final StringBuilder sb = new StringBuilder();
 
-        // Header line with pane ID
+        // Top border with pane ID
         final String header = isActive
                 ? Graphitty.string("{{[g]}}[%d]{{X}}".formatted(this.id))
                 : Graphitty.string("{{[b]}}[%d]{{X}}".formatted(this.id));
         sb.append("\u001b[").append(startRow).append(";").append(startCol).append("H"); // Move cursor
+        sb.append(Graphitty.string(borderColor));
+        sb.append(border.topLeftCorner());
+        sb.append("{{X}}");
         sb.append(header);
-        sb.append(Graphitty.string("{{%s}}".formatted(isActive ? "g" : "b")));
-        sb.append("─".repeat(Math.max(0, width - 4)));
+        sb.append(Graphitty.string(borderColor));
+        sb.append(border.topSide().repeat(Math.max(0, width - 5))); // -5 for corners + [id]
+        sb.append(border.topRightCorner());
         sb.append("{{X}}");
 
-        // Output lines
+        // Content lines with left and right borders
         int row = startRow + 1;
+        final int contentWidth = width - 2; // -2 for left border + right border
+
         for (final String line : visible) {
             if (row >= startRow + height - 1) break; // Leave room for bottom
             sb.append("\u001b[").append(row).append(";").append(startCol).append("H");
-            // Truncate line to fit width
+            sb.append(Graphitty.string(borderColor));
+            sb.append(border.leftSide());
+            sb.append("{{X}}");
+
+            // Truncate line to fit content width
             final String stripped = Graphitty.strip(line);
-            final String truncated = stripped.length() > width - 1
-                    ? stripped.substring(0, width - 4) + "..."
+            final String truncated = stripped.length() > contentWidth
+                    ? stripped.substring(0, contentWidth - 3) + "..."
                     : line;
             sb.append(truncated);
-            // Clear to end of pane region (not full line to avoid bleeding into other pane)
-            final int clearLen = width - Graphitty.strip(truncated).length() - 1;
-            if (clearLen > 0) sb.append(" ".repeat(clearLen));
+
+            // Pad to fill content width
+            final int padding = contentWidth - Graphitty.strip(truncated).length();
+            if (padding > 0) sb.append(" ".repeat(padding));
+
+            sb.append(Graphitty.string(borderColor));
+            sb.append(border.rightSide());
+            sb.append("{{X}}");
             row++;
         }
 
-        // Clear remaining rows
+        // Clear remaining rows with borders
         while (row < startRow + height - 1) {
             sb.append("\u001b[").append(row).append(";").append(startCol).append("H");
-            sb.append(" ".repeat(width - 1));
+            sb.append(Graphitty.string(borderColor));
+            sb.append(border.leftSide());
+            sb.append("{{X}}");
+            sb.append(" ".repeat(contentWidth));
+            sb.append(Graphitty.string(borderColor));
+            sb.append(border.rightSide());
+            sb.append("{{X}}");
             row++;
         }
 
         // Bottom border
         sb.append("\u001b[").append(startRow + height - 1).append(";").append(startCol).append("H");
-        sb.append(Graphitty.string("{{%s}}".formatted(isActive ? "g" : "b")));
-        sb.append("─".repeat(Math.max(0, width - 1)));
+        sb.append(Graphitty.string(borderColor));
+        sb.append(border.bottomLeftCorner());
+        sb.append(border.bottomSide().repeat(Math.max(0, width - 2))); // -2 for corners
+        sb.append(border.bottomRightCorner());
         sb.append("{{X}}");
 
         terminal.writer().print(Graphitty.string(sb.toString()));
