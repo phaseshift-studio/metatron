@@ -19,17 +19,14 @@
 package studio.phaseshift.metatron.isa.m.type;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.mach.type.Monad;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
-import studio.phaseshift.metatron.util.Tuple;
 
 import java.lang.reflect.Modifier;
 import java.net.URI;
-import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.function.Function;
 
@@ -103,7 +100,7 @@ public interface ObjFactory extends Rec {
         else if (Rec.class.isAssignableFrom(objClass))
             tid = REC_TID;
         else if (Inst.class.isAssignableFrom(objClass))
-            tid = INST_TID;
+            tid = M_ISA_INST_TID;
         else if (Code.class.isAssignableFrom(objClass))
             tid = CODE_TID;
         else if (Objs.class.isAssignableFrom(objClass))

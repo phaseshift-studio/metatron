@@ -51,7 +51,7 @@ public class miotSpace extends mqttSpace {
     public static final Type MIOT_SPACE_TYPE = Type.Builder.build()
             .tid(MQTT_SPACE_TID)
             .vid(MIOT_SPACE_TID)
-            .constructor(instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(MIOT_SPACE_TID),
+            .constructor(instC(mInstSet.M_ISA_INST_TID.dom(ALL.maybe()).rng(MIOT_SPACE_TID),
                     lst(isa_(rec(uri(PATTERN), URI_TYPE)).tryToInst()), (lhs, inst) -> miotSpace.of(inst.arg(0).asRec(), inst.arg(0).vid()))).create();
 
     public static miotSpace of(final Rec config, final fURI vid) {

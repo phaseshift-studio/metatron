@@ -44,7 +44,7 @@ import java.util.Objects;
 import static com.fazecast.jSerialComm.SerialPort.LISTENING_EVENT_DATA_AVAILABLE;
 import static com.fazecast.jSerialComm.SerialPort.LISTENING_EVENT_PORT_DISCONNECTED;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
-import static studio.phaseshift.metatron.isa.m.mInstSet.INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -69,7 +69,7 @@ public class serialSpace extends AbstractSpace<SerialPort[]> {
             .tid(SPACE_TID)
             .vid(SERIAL_SPACE_TID)
             .constructor(
-                    instC(INST_TID.dom(ALL.maybe()).rng(SERIAL_SPACE_TID),
+                    instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(SERIAL_SPACE_TID),
                             lst(isa_(SPACE_CONFIG.plus(rec(uri(Tokens.ROUTE), REC_TYPE))).tryToInst()),
                             (lhs, inst) -> serialSpace.of(inst.arg(0).asRec(), inst.arg(0).vid()))).create();
 

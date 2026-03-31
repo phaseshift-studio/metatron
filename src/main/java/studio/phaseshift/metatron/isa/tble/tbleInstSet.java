@@ -53,7 +53,8 @@ import static studio.phaseshift.metatron.isa.tble.tbleSpace.TABL_SPACE_TYPE;
 public class tbleInstSet extends AbstractInstSet {
 
     public static final fURI TBLE_ISA_TID = M_ISA_TID.extend("tble");
-    public static final fURI INST_TID = TBLE_ISA_TID.extend("inst");
+    public static final fURI TBLE_ISA_INST_TID = TBLE_ISA_TID.extend("inst");
+    public static final fURI TBLE_ISA_REWRITE_TID = TBLE_ISA_INST_TID.extend("rewrite");
     public static final fURI LST_ROW_TID = TBLE_ISA_TID.extend("lrow");
     public static final fURI REC_ROW_TID = TBLE_ISA_TID.extend("rrow");
     public static final fURI TABLE_TID = TBLE_ISA_TID.extend("table");
@@ -99,7 +100,7 @@ public class tbleInstSet extends AbstractInstSet {
     @Override
     public Set<Inst> rewrites() {
         return new LinkedHashSet<>(List.of(
-                InstSet.Helper.rewriter(f("sql_native_count_rewrite"), code ->
+                InstSet.Helper.rewriter(TBLE_ISA_REWRITE_TID.extend("sql_native_count"), code ->
                         code.selfJVM(Rewriter.search(code.insts())
                                 .match(List.of(instB(FROM_INST_TID, lst()), instB(COUNT_INST_TID, lst())))
                                 .rewrite(map -> {

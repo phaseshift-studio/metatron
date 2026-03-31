@@ -59,7 +59,7 @@ public interface Inst extends Call {
 
     fURI ARGS_FURI = fURI.Singleton.f(ARGS);
     Uri ARGS_URI = uri(ARGS_FURI);
-    Type INST_TYPE = Type.Builder.build().tid(INST_TID).vid(INST_TID).create();
+    Type INST_TYPE = Type.Builder.build().tid(M_ISA_INST_TID).vid(M_ISA_INST_TID).create();
 
     enum Form {
         initial,
@@ -265,7 +265,7 @@ public interface Inst extends Call {
                     .map(Obj::asInst)
                     .filter(i -> !this.tid().basePath().equals(AS_INST_TID) || this.arg(0).test(i.arg(0)))
                     .filter(i -> (i.args().isEmpty() && this.arg(0).isNoObj()) || i.args().isRec() || i.args().count() >= this.args().count()) // TODO: check which recs are default
-                    .filter(i -> !lhs.isInst() || (i.dom().baseType().equals(INST_TID)))
+                    .filter(i -> !lhs.isInst() || (i.dom().baseType().equals(M_ISA_INST_TID)))
                     //.sorted(Comparator.comparing(Inst::dom, (a, b) -> lhs.matches(a.dom()) ? -1 : lhs.matches(b.dom()) ? 1 : 0)) // TODO: explore this more fully
                     //.filter(i -> !this.hasDom() || this.dom().matches(i.dom()))
                     //.filter(i -> !this.hasRng() || this.rng().matches(i.rng()))

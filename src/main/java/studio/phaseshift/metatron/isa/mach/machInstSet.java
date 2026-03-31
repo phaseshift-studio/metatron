@@ -127,14 +127,14 @@ public class machInstSet extends AbstractInstSet {
     public static final Type FILE_TYPE = Type.Builder.build()
             .tid(URI_TID)
             .vid(FILE_TID)
-            .constructor(instC(INST_TID.dom(ALL.maybe()).rng(FILE_TID),
+            .constructor(instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(FILE_TID),
                     lst(T(URI_TID)),
                     (lhs, inst) -> makeFile(Path.of(inst.arg(0).uriValue().basePath().toString())))).create();
     public static final Type DIR_TYPE = Type.Builder.build()
             .tid(FILE_TID)
             .vid(DIR_TID)
             .predicate((uri, x) -> uri.uriValue().isBranch() ? uri : noobj())
-            .constructor(instC(INST_TID.dom(ALL.maybe()).rng(DIR_TID.maybe()),
+            .constructor(instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(DIR_TID.maybe()),
                     lst(T(URI_TID)),
                     (lhs, inst) -> inst.arg(0).uriValue().isBranch() ? makeFile(Path.of(inst.arg(0).uriValue().basePath().toString())) : noobj())).create();
     public static final Type IMAGE_FILE_TYPE = Type.Builder.build()
@@ -161,7 +161,7 @@ public class machInstSet extends AbstractInstSet {
     public static final Type MCP_SERVER_TYPE = Type.Builder.build()
             .tid(REC_TID)
             .vid(f(MACH_SERVER_MCP_SERVER_TID))
-            .isaPredicate(rec(uri(f(TOOL).maybe()), T(INST_TID.maybeSome())))
+            .isaPredicate(rec(uri(f(TOOL).maybe()), T(M_ISA_INST_TID.maybeSome())))
             .create();
     public static final Type MACH_MONAD_TYPE = Type.Builder.build().tid(LST_TID).vid(MACH_MONAD_TID).create();
 
@@ -175,7 +175,7 @@ public class machInstSet extends AbstractInstSet {
                     rec(uri(CODE), T(ALL),
                             uri(STATE).maybe().asUri(), is_(or_(eq_(uri(STOPPED)), eq_(uri(RUNNING)), eq_(uri(PAUSED)))),
                             uri(RESULT).maybe(), T(ALL).maybeSome()))
-            .constructor(instC(INST_TID.dom(ALL.maybe()).rng(MACH_CORE_THREAD_TID), lst(T(REC_TID)), (lhs, inst) -> new CoreThread(lhs.asRec().jvm(), MACH_THREAD_TID, inst.arg(0).vid()))) // TODO: need to handle vid
+            .constructor(instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(MACH_CORE_THREAD_TID), lst(T(REC_TID)), (lhs, inst) -> new CoreThread(lhs.asRec().jvm(), MACH_THREAD_TID, inst.arg(0).vid()))) // TODO: need to handle vid
             .inst(MACH_INST_TID.extend("run").dom(MACH_CORE_THREAD_TID).rng(MACH_CORE_THREAD_TID), lst(), (lhs, inst) -> {
                 ((CoreThread) lhs).run();
                 return lhs;
@@ -252,7 +252,9 @@ public class machInstSet extends AbstractInstSet {
                     else
                         return monad;
                 }),
-                instC(REWRITE_INST_TID.dom(ALL.maybe()).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(Router.global().rewrite(inst.arg(0).uriValue(), true))),
+                instC(REWRITE_INST_TID.dom(ALL.maybe()).rng(REC_TID), lst(URI_TYPE), (lhs, inst) -> rec(
+                        uri(SHORT), uri(Router.global().rewrite(inst.arg(0).uriValue(), true)), 
+                        uri(LONG), uri(Router.global().rewrite(inst.arg(0).uriValue(), false)))),
                 instC(MACH_INST_TID.extend("close").dom(ROUTER_TID).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
                     if (lhs instanceof Router)
                         return Stream.of(noobj()).peek(o -> System.exit(0)).iterator().next();

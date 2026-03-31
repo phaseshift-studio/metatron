@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.isa.mach.io.space.file;
 
 import studio.phaseshift.metatron.Tokens;
-import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractSpace;
@@ -69,7 +68,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
             .tid(SPACE_TID)
             .vid(FS_TID)
             .constructor(
-                    instC(INST_TID.dom(ALL.maybe()).rng(FS_TID),
+                    instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(FS_TID),
                             lst(isa_(FS_SPACE_CONFIG).tryToInst()),
                             (lhs, inst) -> fsSpace.of(FileSystems.getDefault(), inst.arg(0).asRec(), inst.arg(0).vid()))).create();
 

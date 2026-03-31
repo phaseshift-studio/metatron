@@ -35,7 +35,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
-import static studio.phaseshift.metatron.isa.m.mInstSet.INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
@@ -165,10 +165,10 @@ public class BaseQ extends MRec implements Q {
                            final TriFunction<fURI, Obj, Obj, Obj> postWrite,
                            final BiFunction<fURI, Obj, Obj> qlessWrite) {
         return new BaseQ(mutableMap(
-                uri(PRE_READ), null == preRead ? noobj() : instC(INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(URI_TYPE), (lhs, inst) -> preRead.apply(inst.arg(0).uriValue())),
-                uri(POST_READ), null == postRead ? noobj() : instC(INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(URI_TYPE,T(ALL)), (lhs, inst) -> postRead.apply(inst.arg(0).uriValue(), inst.arg(1))),
-                uri(PRE_WRITE), null == preWrite ? noobj() : instC(INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(URI_TYPE, T(ALL)), (lhs, inst) -> preWrite.apply(inst.arg(0).uriValue(), inst.arg(1))),
-                uri(POST_WRITE), null == postWrite ? noobj() : instC(INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(URI_TYPE, T(ALL), T(ALL)), (lhs, inst) -> postWrite.apply(inst.arg(0).uriValue(), inst.arg(1), inst.arg(2))),
-                uri(QLESS_WRITE), null == qlessWrite ? noobj() : instC(INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(URI_TYPE, T(ALL)), (lhs, inst) -> qlessWrite.apply(inst.arg(0).uriValue(), inst.arg(1)))), pattern, tid);
+                uri(PRE_READ), null == preRead ? noobj() : instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(URI_TYPE), (lhs, inst) -> preRead.apply(inst.arg(0).uriValue())),
+                uri(POST_READ), null == postRead ? noobj() : instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(URI_TYPE,T(ALL)), (lhs, inst) -> postRead.apply(inst.arg(0).uriValue(), inst.arg(1))),
+                uri(PRE_WRITE), null == preWrite ? noobj() : instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(URI_TYPE, T(ALL)), (lhs, inst) -> preWrite.apply(inst.arg(0).uriValue(), inst.arg(1))),
+                uri(POST_WRITE), null == postWrite ? noobj() : instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(URI_TYPE, T(ALL), T(ALL)), (lhs, inst) -> postWrite.apply(inst.arg(0).uriValue(), inst.arg(1), inst.arg(2))),
+                uri(QLESS_WRITE), null == qlessWrite ? noobj() : instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(URI_TYPE, T(ALL)), (lhs, inst) -> qlessWrite.apply(inst.arg(0).uriValue(), inst.arg(1)))), pattern, tid);
     }
 }

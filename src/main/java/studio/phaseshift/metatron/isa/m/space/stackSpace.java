@@ -52,7 +52,7 @@ public class stackSpace extends AbstractSpace<Stack<Poly<?, ?>>> {
     public static final Type STACK_SPACE_TYPE = Type.Builder.build()
             .tid(SPACE_TID)
             .vid(STACK_SPACE_TID)
-            .constructor(instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(STACK_SPACE_TID),  // constructor
+            .constructor(instC(mInstSet.M_ISA_INST_TID.dom(ALL.maybe()).rng(STACK_SPACE_TID),  // constructor
                     lst(isa_(rec(uri(PATTERN), URI_TYPE)).tryToInst()), (lhs, inst) -> {
                         final Space space = new stackSpace(inst.arg(0).asRec().at(PATTERN).uriValue());
                         Router.global().addSpace(space);

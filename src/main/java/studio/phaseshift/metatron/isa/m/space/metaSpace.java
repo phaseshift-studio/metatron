@@ -66,7 +66,7 @@ public class metaSpace extends AbstractSpace<MServer> {
     public static final Type META_SPACE_TYPE = Type.Builder.build()
             .tid(SPACE_TID)
             .vid(META_SPACE_TID)
-            .constructor(instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(META_SPACE_TID), //constructor
+            .constructor(instC(mInstSet.M_ISA_INST_TID.dom(ALL.maybe()).rng(META_SPACE_TID), //constructor
                     lst(isa_(META_SPACE_CONFIG).tryToInst()),
                     (lhs, inst) -> metaSpace.of(inst.arg(0).asRec(), inst.arg(0).vid()))).create();
 

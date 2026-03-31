@@ -28,7 +28,6 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjCleanStringSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 import studio.phaseshift.metatron.isa.tble.schema.domain.ExistingTableSchema;
 import studio.phaseshift.metatron.isa.tble.schema.domain.SQLSchemaGenerator;
 import studio.phaseshift.metatron.isa.tble.schema.storage.TableSchema;
@@ -149,7 +148,7 @@ public class tbleSpace extends AbstractSpace<Connection> {
                             uri(DRIVER), URI_TYPE,
                             uri(ROUTE), rec(URI_TYPE, URI_TYPE),
                             uri(TABLE).maybe(), LST_TYPE))
-                    .constructor(instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(TBLE_SPACE_TID),
+                    .constructor(instC(mInstSet.M_ISA_INST_TID.dom(ALL.maybe()).rng(TBLE_SPACE_TID),
                             lst(REC_TYPE),
                             (lhs, inst) -> tbleSpace.of(inst.arg(0).asRec().jvm(), inst.arg(0).vid())))
                     .inst(instC(SQL_INST_TID.dom(TBLE_SPACE_TID).rng(REC_ROW_TID.maybeSome()), lst(STR_TYPE), (lhs, inst) -> {

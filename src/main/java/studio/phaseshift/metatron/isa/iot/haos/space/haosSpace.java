@@ -89,7 +89,7 @@ public class haosSpace extends mqttSpace {
     public static final Type HAOS_SPACE_TYPE = Type.Builder.build()
             .tid(MQTT_SPACE_TID)
             .vid(HAOS_SPACE_TID)
-            .constructor(instC(mInstSet.INST_TID.dom(ALL).rng(HAOS_SPACE_TID),
+            .constructor(instC(mInstSet.M_ISA_INST_TID.dom(ALL).rng(HAOS_SPACE_TID),
                     lst(isa_(rec(uri(PATTERN), URI_TYPE)).tryToInst()), (lhs, inst) -> {
                         final Space space = haosSpace.of(inst.arg(0).asRec(), inst.arg(0).vid());
                         Router.global().addSpace(space);

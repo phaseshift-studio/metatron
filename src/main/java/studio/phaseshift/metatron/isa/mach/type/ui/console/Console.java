@@ -64,7 +64,7 @@ import java.util.function.Supplier;
 import static org.jline.keymap.KeyMap.*;
 import static studio.phaseshift.metatron.BootLoader.BOOTING;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
-import static studio.phaseshift.metatron.isa.m.mInstSet.INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.start_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -129,7 +129,7 @@ public class Console extends JRec implements Closeable, Runnable {
             .tid(REC_TID)
             .vid(CONSOLE_TID)
             .isaPredicate(rec())
-            .constructor(instC(INST_TID.dom(ALL.maybe()).rng(CONSOLE_TID), lst(T(REC_TID)), (lhs, inst) -> {
+            .constructor(instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(CONSOLE_TID), lst(T(REC_TID)), (lhs, inst) -> {
                 final Console console = new Console(inst.arg(0).as(), inst.arg(0).vid());
                 BootLoader.getExecutor().submit(console);
                 LOCAL_INSTANCE = console;

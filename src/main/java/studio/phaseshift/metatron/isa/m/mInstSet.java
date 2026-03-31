@@ -79,7 +79,8 @@ public class mInstSet extends AbstractInstSet {
     public static final fURI REL_TID = M_ISA_TID.extend("rel");
     public static final fURI LST_TID = M_ISA_TID.extend("lst");
     public static final fURI REC_TID = M_ISA_TID.extend("rec");
-    public static final fURI INST_TID = M_ISA_TID.extend("inst");
+    public static final fURI M_ISA_INST_TID = M_ISA_TID.extend("inst");
+    public static final fURI M_ISA_REWRITE_TID = M_ISA_INST_TID.extend("rewrite");
     public static final fURI INSTSET_TID = M_ISA_TID.extend("instset");
     public static final fURI OBJS_TID = M_ISA_TID.extend("objs");
     public static final fURI TYPE_TID = M_ISA_TID.extend("type");
@@ -88,108 +89,108 @@ public class mInstSet extends AbstractInstSet {
     public static final fURI ALL_STAR = ALL.maybeSome();
     public static final fURI SPACE_TID = M_ISA_TID.extend("space");
     /// ////////////////////////////////////////////////////////
-    public static final fURI LIKE_INST_TID = INST_TID.extend("like");
-    public static final fURI CAUSE_INST_TID = INST_TID.extend("cause");
-    public static final fURI NATIVE_INST_TID = INST_TID.extend("native");
-    public static final fURI SERIALIZE_INST_TID = INST_TID.extend("serialize");
-    public static final fURI ID_INST_TID = INST_TID.extend("id");
-    public static final fURI DEDUP_INST_TID = INST_TID.extend("dedup");
-    public static final fURI EXPLAIN_INST_TID = INST_TID.extend("explain");
-    public static final fURI HAS_INST_TID = INST_TID.extend("has");
-    public static final fURI EVAL_INST_TID = INST_TID.extend("eval");
-    public static final fURI FORK_INST_TID = INST_TID.extend("fork");
-    public static final fURI CATCH_INST_TID = INST_TID.extend("catch");
-    public static final fURI APPLY_INST_TID = INST_TID.extend("apply");
-    public static final fURI START_INST_TID = INST_TID.extend("start");
-    public static final fURI COUNT_INST_TID = INST_TID.extend("count");
-    public static final fURI SUM_INST_TID = INST_TID.extend("sum");
-    public static final fURI CC_INST_TID = INST_TID.extend("cc");
-    public static final fURI PROD_INST_TID = INST_TID.extend("prod");
-    public static final fURI POW_INST_TID = INST_TID.extend("pow");
-    public static final fURI MOD_INST_TID = INST_TID.extend("mod");
-    public static final fURI REDUCE_INST_TID = INST_TID.extend("reduce");
-    public static final fURI NEG_INST_TID = INST_TID.extend("neg");
-    public static final fURI MULT_INST_TID = INST_TID.extend("mult");
-    public static final fURI DIV_INST_TID = INST_TID.extend("div");
-    public static final fURI INV_INST_TID = INST_TID.extend("inv");
-    public static final fURI ZERO_INST_TID = INST_TID.extend("zero");
-    public static final fURI ONE_INST_TID = INST_TID.extend("one");
-    public static final fURI PLUS_INST_TID = INST_TID.extend("plus");
-    public static final fURI MPLUS_INST_TID = INST_TID.extend("mplus");
-    public static final fURI MINUS_INST_TID = INST_TID.extend("minus");
-    public static final fURI MAP_INST_TID = INST_TID.extend("map");
-    public static final fURI PARENT_INST_TID = INST_TID.extend("parent");
-    public static final fURI FILTER_INST_TID = INST_TID.extend("filter");
-    public static final fURI SIDE_INST_TID = INST_TID.extend("side");
-    public static final fURI TO_INST_TID = INST_TID.extend("to");
-    public static final fURI FROM_INST_TID = INST_TID.extend("from");
-    public static final fURI REF_INST_TID = INST_TID.extend("ref");
-    public static final fURI SPLIT_INST_TID = INST_TID.extend("split"); // -<
-    public static final fURI CHOOSE_INST_TID = INST_TID.extend("choose"); // -<|
-    public static final fURI CHAIN_TID = INST_TID.extend("chain"); // -<;
-    public static final fURI MERGE_INST_TID = INST_TID.extend("merge");
-    public static final fURI FILL_TID = INST_TID.extend("fill");
-    public static final fURI FIND_TID = INST_TID.extend("find");
-    public static final fURI RMERGE_TID = INST_TID.extend("rmerge");
-    public static final fURI RANGE_INST_TID = INST_TID.extend("range");
-    public static final fURI WITHIN_INST_TID = INST_TID.extend("within");
-    public static final fURI LIFT_INST_TID = INST_TID.extend("lift");
-    public static final fURI AUTO_INST_TID = INST_TID.extend("auto");
-    public static final fURI AUTO_FROM_INST_TID = INST_TID.extend("auto_from");
-    public static final fURI BLOCK_INST_TID = INST_TID.extend("block");
-    public static final fURI RNG_INST_TID = INST_TID.extend("rng");
-    public static final fURI DOM_INST_TID = INST_TID.extend("dom");
-    public static final fURI TID_INST_TID = INST_TID.extend("tid");
-    public static final fURI VID_INST_TID = INST_TID.extend("vid");
-    public static final fURI TYPE_INST_TID = INST_TID.extend("type");
-    public static final fURI GET_INST_TID = INST_TID.extend("get");
-    public static final fURI FAILURE_INST_TID = INST_TID.extend("failure");
-    public static final fURI AS_INST_TID = INST_TID.extend("as");
-    public static final fURI REVERSE_INST_TID = INST_TID.extend("reverse");
-    public static final fURI CLOSE_INST_TID = INST_TID.extend("close");
-    public static final fURI REPEAT_INST_TID = INST_TID.extend("repeat");
-    public static final fURI AT_INST_TID = INST_TID.extend("at");
-    public static final fURI IS_INST_TID = INST_TID.extend("is");
-    public static final fURI ISA_INST_TID = INST_TID.extend("isa");
-    public static final fURI OR_INST_TID = INST_TID.extend("or");
-    public static final fURI AND_INST_TID = INST_TID.extend("and");
-    public static final fURI MATCHES_INST_TID = INST_TID.extend("matches");
-    public static final fURI EQ_INST_TID = INST_TID.extend("eq");
-    public static final fURI NEQ_INST_TID = INST_TID.extend("neq");
-    public static final fURI GT_INST_TID = INST_TID.extend("gt");
-    public static final fURI REGEX_INST_TID = INST_TID.extend("regex");
-    public static final fURI ORDER_INST_TID = INST_TID.extend("order");
-    public static final fURI LT_INST_TID = INST_TID.extend("lt");
-    public static final fURI GTE_INST_TID = INST_TID.extend("gte");
-    public static final fURI LTE_INST_TID = INST_TID.extend("lte");
-    public static final fURI NOT_INST_TID = INST_TID.extend("not");
-    public static final fURI TAKE_INST_TID = INST_TID.extend("take");
-    public static final fURI SKIP_INST_TID = INST_TID.extend("skip");
-    public static final fURI BARRIER_INST_TID = INST_TID.extend("barrier");
-    public static final fURI REIFY_INST_TID = INST_TID.extend("reify");
-    public static final fURI SELECT_INST_TID = INST_TID.extend("select");
-    public static final fURI UPDATE_INST_TID = INST_TID.extend("update");
-    public static final fURI WHERE_INST_TID = INST_TID.extend("where");
-    public static final fURI GROUP_INST_TID = INST_TID.extend("group");
-    public static final fURI ELSE_INST_TID = INST_TID.extend("else");
-    public static final fURI END_INST_TID = INST_TID.extend("end");
-    public static final fURI THREAD_INST_TID = INST_TID.extend("thread");
-    public static final fURI IMPORT_INST_TID = INST_TID.extend("import");
-    public static final fURI SOURCE_INST_TID = INST_TID.extend("source");
-    public static final fURI SWAP_TID = INST_TID.extend("swap");
-    public static final fURI PRINT_INST_TID = INST_TID.extend("print");
-    public static final fURI LSHIFT_INST_TID = INST_TID.extend("lshift");
-    public static final fURI RSHIFT_INST_TID = INST_TID.extend("rshift");
-    public static final fURI MATH_INST_TID = INST_TID.extend("math");
-    public static final fURI PATH_TID = INST_TID.extend("path");
-    public static final fURI Q_INST_TID = INST_TID.extend("q");
-    public static final fURI URI_C_TID = INST_TID.extend("uri:c");
-    public static final fURI LCASE_INST_TID = INST_TID.extend("lcase");
-    public static final fURI UCASE_INST_TID = INST_TID.extend("ucase");
-    public static final fURI SCHEME_INST_TID = INST_TID.extend("scheme");
-    public static final fURI AUTHORITY_INST_TID = INST_TID.extend("authority");
-    public static final fURI HOST_INST_TID = INST_TID.extend("host");
-    public static final fURI PORT_INST_TID = INST_TID.extend("port");
+    public static final fURI LIKE_INST_TID = M_ISA_INST_TID.extend("like");
+    public static final fURI CAUSE_INST_TID = M_ISA_INST_TID.extend("cause");
+    public static final fURI NATIVE_INST_TID = M_ISA_INST_TID.extend("native");
+    public static final fURI SERIALIZE_INST_TID = M_ISA_INST_TID.extend("serialize");
+    public static final fURI ID_INST_TID = M_ISA_INST_TID.extend("id");
+    public static final fURI DEDUP_INST_TID = M_ISA_INST_TID.extend("dedup");
+    public static final fURI EXPLAIN_INST_TID = M_ISA_INST_TID.extend("explain");
+    public static final fURI HAS_INST_TID = M_ISA_INST_TID.extend("has");
+    public static final fURI EVAL_INST_TID = M_ISA_INST_TID.extend("eval");
+    public static final fURI FORK_INST_TID = M_ISA_INST_TID.extend("fork");
+    public static final fURI CATCH_INST_TID = M_ISA_INST_TID.extend("catch");
+    public static final fURI APPLY_INST_TID = M_ISA_INST_TID.extend("apply");
+    public static final fURI START_INST_TID = M_ISA_INST_TID.extend("start");
+    public static final fURI COUNT_INST_TID = M_ISA_INST_TID.extend("count");
+    public static final fURI SUM_INST_TID = M_ISA_INST_TID.extend("sum");
+    public static final fURI CC_INST_TID = M_ISA_INST_TID.extend("cc");
+    public static final fURI PROD_INST_TID = M_ISA_INST_TID.extend("prod");
+    public static final fURI POW_INST_TID = M_ISA_INST_TID.extend("pow");
+    public static final fURI MOD_INST_TID = M_ISA_INST_TID.extend("mod");
+    public static final fURI REDUCE_INST_TID = M_ISA_INST_TID.extend("reduce");
+    public static final fURI NEG_INST_TID = M_ISA_INST_TID.extend("neg");
+    public static final fURI MULT_INST_TID = M_ISA_INST_TID.extend("mult");
+    public static final fURI DIV_INST_TID = M_ISA_INST_TID.extend("div");
+    public static final fURI INV_INST_TID = M_ISA_INST_TID.extend("inv");
+    public static final fURI ZERO_INST_TID = M_ISA_INST_TID.extend("zero");
+    public static final fURI ONE_INST_TID = M_ISA_INST_TID.extend("one");
+    public static final fURI PLUS_INST_TID = M_ISA_INST_TID.extend("plus");
+    public static final fURI MPLUS_INST_TID = M_ISA_INST_TID.extend("mplus");
+    public static final fURI MINUS_INST_TID = M_ISA_INST_TID.extend("minus");
+    public static final fURI MAP_INST_TID = M_ISA_INST_TID.extend("map");
+    public static final fURI PARENT_INST_TID = M_ISA_INST_TID.extend("parent");
+    public static final fURI FILTER_INST_TID = M_ISA_INST_TID.extend("filter");
+    public static final fURI SIDE_INST_TID = M_ISA_INST_TID.extend("side");
+    public static final fURI TO_INST_TID = M_ISA_INST_TID.extend("to");
+    public static final fURI FROM_INST_TID = M_ISA_INST_TID.extend("from");
+    public static final fURI REF_INST_TID = M_ISA_INST_TID.extend("ref");
+    public static final fURI SPLIT_INST_TID = M_ISA_INST_TID.extend("split"); // -<
+    public static final fURI CHOOSE_INST_TID = M_ISA_INST_TID.extend("choose"); // -<|
+    public static final fURI CHAIN_TID = M_ISA_INST_TID.extend("chain"); // -<;
+    public static final fURI MERGE_INST_TID = M_ISA_INST_TID.extend("merge");
+    public static final fURI FILL_TID = M_ISA_INST_TID.extend("fill");
+    public static final fURI FIND_TID = M_ISA_INST_TID.extend("find");
+    public static final fURI RMERGE_TID = M_ISA_INST_TID.extend("rmerge");
+    public static final fURI RANGE_INST_TID = M_ISA_INST_TID.extend("range");
+    public static final fURI WITHIN_INST_TID = M_ISA_INST_TID.extend("within");
+    public static final fURI LIFT_INST_TID = M_ISA_INST_TID.extend("lift");
+    public static final fURI AUTO_INST_TID = M_ISA_INST_TID.extend("auto");
+    public static final fURI AUTO_FROM_INST_TID = M_ISA_INST_TID.extend("auto_from");
+    public static final fURI BLOCK_INST_TID = M_ISA_INST_TID.extend("block");
+    public static final fURI RNG_INST_TID = M_ISA_INST_TID.extend("rng");
+    public static final fURI DOM_INST_TID = M_ISA_INST_TID.extend("dom");
+    public static final fURI TID_INST_TID = M_ISA_INST_TID.extend("tid");
+    public static final fURI VID_INST_TID = M_ISA_INST_TID.extend("vid");
+    public static final fURI TYPE_INST_TID = M_ISA_INST_TID.extend("type");
+    public static final fURI GET_INST_TID = M_ISA_INST_TID.extend("get");
+    public static final fURI FAILURE_INST_TID = M_ISA_INST_TID.extend("failure");
+    public static final fURI AS_INST_TID = M_ISA_INST_TID.extend("as");
+    public static final fURI REVERSE_INST_TID = M_ISA_INST_TID.extend("reverse");
+    public static final fURI CLOSE_INST_TID = M_ISA_INST_TID.extend("close");
+    public static final fURI REPEAT_INST_TID = M_ISA_INST_TID.extend("repeat");
+    public static final fURI AT_INST_TID = M_ISA_INST_TID.extend("at");
+    public static final fURI IS_INST_TID = M_ISA_INST_TID.extend("is");
+    public static final fURI ISA_INST_TID = M_ISA_INST_TID.extend("isa");
+    public static final fURI OR_INST_TID = M_ISA_INST_TID.extend("or");
+    public static final fURI AND_INST_TID = M_ISA_INST_TID.extend("and");
+    public static final fURI MATCHES_INST_TID = M_ISA_INST_TID.extend("matches");
+    public static final fURI EQ_INST_TID = M_ISA_INST_TID.extend("eq");
+    public static final fURI NEQ_INST_TID = M_ISA_INST_TID.extend("neq");
+    public static final fURI GT_INST_TID = M_ISA_INST_TID.extend("gt");
+    public static final fURI REGEX_INST_TID = M_ISA_INST_TID.extend("regex");
+    public static final fURI ORDER_INST_TID = M_ISA_INST_TID.extend("order");
+    public static final fURI LT_INST_TID = M_ISA_INST_TID.extend("lt");
+    public static final fURI GTE_INST_TID = M_ISA_INST_TID.extend("gte");
+    public static final fURI LTE_INST_TID = M_ISA_INST_TID.extend("lte");
+    public static final fURI NOT_INST_TID = M_ISA_INST_TID.extend("not");
+    public static final fURI TAKE_INST_TID = M_ISA_INST_TID.extend("take");
+    public static final fURI SKIP_INST_TID = M_ISA_INST_TID.extend("skip");
+    public static final fURI BARRIER_INST_TID = M_ISA_INST_TID.extend("barrier");
+    public static final fURI REIFY_INST_TID = M_ISA_INST_TID.extend("reify");
+    public static final fURI SELECT_INST_TID = M_ISA_INST_TID.extend("select");
+    public static final fURI UPDATE_INST_TID = M_ISA_INST_TID.extend("update");
+    public static final fURI WHERE_INST_TID = M_ISA_INST_TID.extend("where");
+    public static final fURI GROUP_INST_TID = M_ISA_INST_TID.extend("group");
+    public static final fURI ELSE_INST_TID = M_ISA_INST_TID.extend("else");
+    public static final fURI END_INST_TID = M_ISA_INST_TID.extend("end");
+    public static final fURI THREAD_INST_TID = M_ISA_INST_TID.extend("thread");
+    public static final fURI IMPORT_INST_TID = M_ISA_INST_TID.extend("import");
+    public static final fURI SOURCE_INST_TID = M_ISA_INST_TID.extend("source");
+    public static final fURI SWAP_TID = M_ISA_INST_TID.extend("swap");
+    public static final fURI PRINT_INST_TID = M_ISA_INST_TID.extend("print");
+    public static final fURI LSHIFT_INST_TID = M_ISA_INST_TID.extend("lshift");
+    public static final fURI RSHIFT_INST_TID = M_ISA_INST_TID.extend("rshift");
+    public static final fURI MATH_INST_TID = M_ISA_INST_TID.extend("math");
+    public static final fURI PATH_TID = M_ISA_INST_TID.extend("path");
+    public static final fURI Q_INST_TID = M_ISA_INST_TID.extend("q");
+    public static final fURI URI_C_TID = M_ISA_INST_TID.extend("uri:c");
+    public static final fURI LCASE_INST_TID = M_ISA_INST_TID.extend("lcase");
+    public static final fURI UCASE_INST_TID = M_ISA_INST_TID.extend("ucase");
+    public static final fURI SCHEME_INST_TID = M_ISA_INST_TID.extend("scheme");
+    public static final fURI AUTHORITY_INST_TID = M_ISA_INST_TID.extend("authority");
+    public static final fURI HOST_INST_TID = M_ISA_INST_TID.extend("host");
+    public static final fURI PORT_INST_TID = M_ISA_INST_TID.extend("port");
     /// ////////////
     /// ////////////
     public static final fURI POLY_TID = M_ISA_TID.extend("poly");
@@ -200,7 +201,7 @@ public class mInstSet extends AbstractInstSet {
     public static final Set<fURI> BASE_TYPES = Set.of(
             FAIL_TID, BOOL_TID, BYTES_TID, INT_TID, REAL_TID,
             STR_TID, URI_TID, REL_TID,
-            LST_TID, REC_TID, INST_TID,
+            LST_TID, REC_TID, M_ISA_INST_TID,
             CODE_TID, OBJS_TID, NOOBJ_TID);
 
     public static final Type SPACE_TYPE = Type.Builder.build()
@@ -278,14 +279,14 @@ public class mInstSet extends AbstractInstSet {
     public Set<Inst> rewrites() {
         return new LinkedHashSet<>(List.of(
                 // Remove identity instructions (no-op)
-                InstSet.Helper.rewriter(f("id_removal_rewrite"),
+                InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("id_removal"),
                         code -> code.selfJVM(
                                 Rewriter.search(code.insts())
                                         .match(instA(ID_INST_TID).insts())
                                         .rewrite(x -> List.of())).asCode()),
 
                 // Flatten nested map instructions
-                InstSet.Helper.rewriter(f("map_nest_rewrite"),
+                InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("map_nest"),
                         code -> code.selfJVM(
                                 Rewriter.search(code.insts())
                                         .match(instB(MAP_INST_TID, lst(instA(MAP_INST_TID))).insts())
@@ -294,7 +295,7 @@ public class mInstSet extends AbstractInstSet {
 
                 // Eliminate else() after non-maybe instruction (dead code)
                 // Pattern: .count().else(x) → .count() (count always returns a value)
-                InstSet.Helper.rewriter(f("else_after_count_rewrite"),
+                InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("else_after_count"),
                         code -> code.selfJVM(
                                 Rewriter.search(code.insts())
                                         .match(List.of(instA(COUNT_INST_TID), instA(ELSE_INST_TID)))
@@ -309,7 +310,7 @@ public class mInstSet extends AbstractInstSet {
                 // DISABLED: This rewrite is interfering with Rec operations (RecTest.testAt() failures)
                 // The rewrite removes .plus(0) operations that are needed for record access patterns
 
-                InstSet.Helper.rewriter(f("plus_zero_rewrite"),
+                InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("plus_zero"),
                         code -> code.selfJVM(
                                 Rewriter.search(code.insts())
                                         .match(List.of(instB(PLUS_INST_TID, lst(is_(eq_(zero_())).tryToInst()))))
@@ -329,7 +330,7 @@ public class mInstSet extends AbstractInstSet {
                 // Pattern: .mult(1) → identity (no-op)
                 // DISABLED: This rewrite is interfering with list operations
 
-                InstSet.Helper.rewriter(f("mult_one_rewrite"),
+                InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("mult_one"),
                         code -> code.selfJVM(
                                 Rewriter.search(code.insts())
                                         .match(List.of(mult_(is_(eq_(one_()))).tryToInst().as()))
@@ -349,7 +350,7 @@ public class mInstSet extends AbstractInstSet {
                 // Pattern: -<[inst,inst,...]>- → inst{n}
                 // This leverages the ring structure where identical branches collapse on merge
                 // Note: Only applies to split-merge pairs, as split alone creates superposition
-                InstSet.Helper.rewriter(f("split_merge_collapse_rewrite"),
+                InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("split_merge_collapse"),
                         code -> code.selfJVM(
                                 Rewriter.search(code.insts())
                                         .match(List.of(instA(SPLIT_INST_TID), instA(MERGE_INST_TID)))
@@ -396,7 +397,7 @@ public class mInstSet extends AbstractInstSet {
                 // Left factoring: pull out common prefix from split branches
                 // Pattern: a-<[b.c.d, b.c.e]>- → a.b.c-<[d, e]>-
                 // This reduces clock cycles by executing common prefix once
-                InstSet.Helper.rewriter(f("split_merge_left_factor_rewrite"),
+                InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("split_merge_left_factor"),
                         code -> code.selfJVM(
                                 Rewriter.search(code.asCode().insts())
                                         .match(List.of(instA(SPLIT_INST_TID), instA(MERGE_INST_TID)))
@@ -464,7 +465,7 @@ public class mInstSet extends AbstractInstSet {
                 // Right factoring: pull out common suffix from split branches
                 // Pattern: a-<[b.d, c.d]>- → a-<[b, c]>-.d
                 // This reduces clock cycles by executing common suffix once
-                InstSet.Helper.rewriter(f("split_merge_right_factor_rewrite"),
+                InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("split_merge_right_factor"),
                         code -> code.selfJVM(
                                 Rewriter.search(code.asCode().insts())
                                         .match(List.of(instA(SPLIT_INST_TID), instA(MERGE_INST_TID)))

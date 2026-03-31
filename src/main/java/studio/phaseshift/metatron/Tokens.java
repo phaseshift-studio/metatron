@@ -73,6 +73,8 @@ public final class Tokens {
     public static final String THINKING = "thinking";
     public static final String TEXT = "text";
     public static final String MONAD = "monad";
+    public static final String SHORT = "short";
+    public static final String LONG = "long";
     public static final String ONLINE = "online";
     public static final String OFFLINE = "offline";
     public static final String HTML = "html";

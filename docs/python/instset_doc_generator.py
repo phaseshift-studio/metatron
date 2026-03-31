@@ -86,6 +86,29 @@ class MetatronClient:
         logger.debug(f"Result: {result_str[:200]}..." if len(result_str) > 200 else f"Result: {result_str}")
         return result_str.strip()
 
+    async def rewrite(self, uri: str) -> tuple:
+        """
+        Call rewrite(uri) to get short and long forms.
+
+        Returns (short, long) tuple where:
+        - short: shortened form like /m/inst/plus
+        - long: full expanded form like plus
+
+        Example: rewrite(plus) returns [short=>/m/inst/plus,long=>plus]
+        """
+        try:
+            # Call rewrite instruction
+            result = await self.eval(f"rewrite({uri})")
+            # Parse result: [short=>/m/inst/plus,long=>plus]
+            short_match = re.search(r'short\s*=>\s*([^,\]]+)', result)
+            long_match = re.search(r'long\s*=>\s*([^,\]]+)', result)
+            short_val = short_match.group(1).strip() if short_match else uri
+            long_val = long_match.group(1).strip() if long_match else uri
+            return (short_val, long_val)
+        except Exception as e:
+            logger.debug(f"rewrite({uri}) failed: {e}")
+            return (uri, uri)
+
     async def eval_doc(self, expression: str) -> List[str]:
         """
         Evaluate expression via /m/web/inst/doc() for pretty-printed output.
@@ -126,6 +149,9 @@ class TypeInfo:
     name: str  # Short name (e.g., machine)
     definition: str  # Pretty-printed definition in mtron syntax
     raw: str = ""  # Raw entry string
+    super_type: str = ""  # Full URI of super type (e.g., /m/lst)
+    super_type_short: str = ""  # Short name of super type (e.g., lst)
+    super_type_instset: str = ""  # Instruction set containing super type (e.g., /m)
 
 
 @dataclass
@@ -135,6 +161,10 @@ class InstInfo:
     name: str  # Short name (e.g., run)
     signature: str  # Pretty-printed signature in mtron syntax
     raw: str = ""  # Raw entry string
+    domain: str = ""  # Domain type (e.g., str, lst)
+    range: str = ""  # Range type (e.g., int, bool)
+    domain_full: str = ""  # Full domain URI (e.g., /m/str)
+    range_full: str = ""  # Full range URI (e.g., /m/int)
 
 
 @dataclass
@@ -143,6 +173,29 @@ class SpaceInfo:
     vid: str
     name: str
     raw: str = ""
+    type_spec: str = ""  # Type specification from querying */path/to/space
+
+
+@dataclass
+class ConstInfo:
+    """Information about a constant defined in an instruction set."""
+    vid: str
+    name: str
+    definition: str = ""
+    raw: str = ""
+
+
+@dataclass
+class RewriteInfo:
+    """Information about a rewrite rule defined in an instruction set."""
+    vid: str
+    name: str
+    signature: str = ""
+    raw: str = ""
+    domain: str = ""  # Domain type short form
+    range: str = ""  # Range type short form
+    domain_full: str = ""  # Full domain URI
+    range_full: str = ""  # Full range URI
 
 
 @dataclass
@@ -154,7 +207,9 @@ class InstSetInfo:
     children: List[str] = field(default_factory=list)  # Sub instruction sets
     types: List[TypeInfo] = field(default_factory=list)
     insts: List[InstInfo] = field(default_factory=list)
+    rewrites: List[RewriteInfo] = field(default_factory=list)
     spaces: List[SpaceInfo] = field(default_factory=list)
+    consts: List[ConstInfo] = field(default_factory=list)
     raw_metadata: str = ""
 
 
@@ -187,13 +242,20 @@ class InstSetDocFetcher:
         # Fetch instructions via doc() for pretty formatting
         info.insts = await self._fetch_instructions(vid)
 
+        # Fetch rewrites
+        info.rewrites = await self._fetch_rewrites(vid)
+
         # Fetch spaces (sub-instruction sets)
         info.spaces = await self._fetch_spaces(vid)
+
+        # Fetch consts
+        info.consts = await self._fetch_consts(vid)
 
         # Check for parent/child relationships in metadata
         self._parse_hierarchy(info)
 
-        logger.info(f"Fetched {vid}: {len(info.types)} types, {len(info.insts)} instructions, {len(info.spaces)} spaces")
+        logger.info(f"Fetched {vid}: {len(info.types)} types, {len(info.insts)} instructions, "
+                    f"{len(info.rewrites)} rewrites, {len(info.spaces)} spaces, {len(info.consts)} consts")
         return info
 
     async def _fetch_types(self, vid: str) -> List[TypeInfo]:
@@ -205,11 +267,40 @@ class InstSetDocFetcher:
             for entry in entries:
                 type_info = self._parse_type_entry(entry)
                 if type_info:
+                    # Query raw type info to get super type
+                    await self._fetch_type_super(type_info)
                     types.append(type_info)
-                    logger.debug(f"  Found type: {type_info.name}")
+                    logger.debug(f"  Found type: {type_info.name} (refines {type_info.super_type})")
         except Exception as e:
             logger.warning(f"Could not fetch types for {vid}: {e}")
         return types
+
+    async def _fetch_type_super(self, type_info: TypeInfo):
+        """Fetch the super type for a type by querying *typename (raw, not doc())."""
+        try:
+            # Query raw type info: *lrow returns something like lst::T@/m/tble/lrow
+            # The first part before :: is the super type short name
+            raw_result = await self.client.eval(f"*{type_info.vid}")
+            if raw_result and "::" in raw_result:
+                # Parse: lst::T@/m/tble/lrow
+                # The first part (lst) is the short super type name
+                parts = raw_result.split("::")
+                if len(parts) >= 1:
+                    super_short = parts[0].strip()
+                    # Query the super type to get its full URI
+                    if super_short and super_short != type_info.name:
+                        type_info.super_type_short = super_short
+                        super_raw = await self.client.eval(f"*{super_short}")
+                        # Result format: rec::T@/m/rec or similar
+                        # Extract the VID after the @ symbol
+                        if super_raw and "@" in super_raw:
+                            vid_part = super_raw.split("@")[-1].strip()
+                            if vid_part.startswith("/"):
+                                type_info.super_type = vid_part
+                                # Extract instset from super type (e.g., /m/lst -> /m)
+                                type_info.super_type_instset = self._extract_instset(type_info.super_type)
+        except Exception as e:
+            logger.debug(f"Could not fetch super type for {type_info.name}: {e}")
 
     async def _fetch_instructions(self, vid: str) -> List[InstInfo]:
         """Fetch all instructions defined by this instruction set using doc() for pretty output."""
@@ -220,11 +311,28 @@ class InstSetDocFetcher:
             for entry in entries:
                 inst_info = self._parse_inst_entry(entry)
                 if inst_info:
+                    # Get short forms for domain and range using rewrite()
+                    await self._fetch_inst_short_forms(inst_info)
                     insts.append(inst_info)
-                    logger.debug(f"  Found instruction: {inst_info.name}")
+                    logger.debug(f"  Found instruction: {inst_info.name} ({inst_info.domain}=>{inst_info.range})")
         except Exception as e:
             logger.warning(f"Could not fetch instructions for {vid}: {e}")
         return insts
+
+    async def _fetch_inst_short_forms(self, inst_info: InstInfo):
+        """Fetch short forms for domain and range using rewrite()."""
+        # Store full URIs
+        inst_info.domain_full = inst_info.domain
+        inst_info.range_full = inst_info.range
+
+        # Get short forms using rewrite()
+        if inst_info.domain:
+            _, long_form = await self.client.rewrite(inst_info.domain)
+            inst_info.domain = long_form
+
+        if inst_info.range:
+            _, long_form = await self.client.rewrite(inst_info.range)
+            inst_info.range = long_form
 
     async def _fetch_spaces(self, vid: str) -> List[SpaceInfo]:
         """Fetch all sub-spaces defined by this instruction set."""
@@ -239,11 +347,104 @@ class InstSetDocFetcher:
                     space_vid = entry.strip()
                 if space_vid:
                     name = space_vid.split('/')[-1]
-                    spaces.append(SpaceInfo(vid=space_vid, name=name, raw=entry))
+                    space_info = SpaceInfo(vid=space_vid, name=name, raw=entry)
+                    # Fetch type specification for the space
+                    await self._fetch_space_type(space_info)
+                    spaces.append(space_info)
                     logger.debug(f"  Found space: {space_vid}")
         except Exception as e:
             logger.warning(f"Could not fetch spaces for {vid}: {e}")
         return spaces
+
+    async def _fetch_space_type(self, space_info: SpaceInfo):
+        """Fetch the type specification for a space by querying *spacepath."""
+        try:
+            # Query raw space info: */m/tble/space/tble
+            raw_result = await self.client.eval(f"*{space_info.vid}")
+            if raw_result:
+                space_info.type_spec = raw_result
+        except Exception as e:
+            logger.debug(f"Could not fetch type spec for space {space_info.vid}: {e}")
+
+    async def _fetch_rewrites(self, vid: str) -> List[RewriteInfo]:
+        """Fetch all rewrites defined by this instruction set."""
+        rewrites = []
+        try:
+            # Rewrites are at /{base}/inst/rewrite/+/
+            entries = await self.client.eval_doc(f"*{vid}/inst/rewrite/+/")
+            for entry in entries:
+                if "=>" in entry:
+                    arrow_pos = self._find_top_level_arrow(entry)
+                    if arrow_pos >= 0:
+                        rewrite_vid = entry[:arrow_pos].strip()
+                        signature = entry[arrow_pos + 2:].strip()
+                        base_path = rewrite_vid.split('?')[0]
+                        name = base_path.split('/')[-1]
+
+                        # Extract domain and range from vid query string
+                        domain, range_type = self._extract_dom_rng(rewrite_vid)
+
+                        # Convert dom=&rng= to rng<=dom in both vid and signature
+                        rewrite_vid = self._convert_signature_shorthand(rewrite_vid)
+                        signature = self._convert_signature_shorthand(signature)
+
+                        rewrite_info = RewriteInfo(vid=rewrite_vid, name=name, signature=signature, raw=entry,
+                                                   domain=domain, range=range_type)
+                        # Get short forms for domain and range using rewrite()
+                        await self._fetch_rewrite_short_forms(rewrite_info)
+                        rewrites.append(rewrite_info)
+                        logger.debug(f"  Found rewrite: {name} ({rewrite_info.domain}=>{rewrite_info.range})")
+        except Exception as e:
+            logger.debug(f"Could not fetch rewrites for {vid}: {e}")
+        return rewrites
+
+    async def _fetch_rewrite_short_forms(self, rewrite_info: RewriteInfo):
+        """Fetch short forms for domain and range using rewrite()."""
+        # Store full URIs
+        rewrite_info.domain_full = rewrite_info.domain
+        rewrite_info.range_full = rewrite_info.range
+
+        # Get short forms using rewrite()
+        if rewrite_info.domain:
+            _, long_form = await self.client.rewrite(rewrite_info.domain)
+            rewrite_info.domain = long_form
+
+        if rewrite_info.range:
+            _, long_form = await self.client.rewrite(rewrite_info.range)
+            rewrite_info.range = long_form
+
+    async def _fetch_consts(self, vid: str) -> List[ConstInfo]:
+        """Fetch all constants defined by this instruction set."""
+        consts = []
+        try:
+            # Consts are at /{base}/+/ - we need to filter for non-type entries
+            # Types are also at /{base}/+/ so we fetch all and filter
+            entries = await self.client.eval_doc(f"*{vid}/+/")
+            for entry in entries:
+                if "=>" in entry:
+                    arrow_pos = self._find_top_level_arrow(entry)
+                    if arrow_pos >= 0:
+                        const_vid = entry[:arrow_pos].strip()
+                        definition = entry[arrow_pos + 2:].strip()
+                        name = const_vid.split('/')[-1]
+                        # Skip if this looks like a type definition (contains ::T)
+                        if "::T" in definition or "::T@" in entry:
+                            continue
+                        consts.append(ConstInfo(vid=const_vid, name=name, definition=definition, raw=entry))
+                        logger.debug(f"  Found const: {name}")
+        except Exception as e:
+            logger.debug(f"Could not fetch consts for {vid}: {e}")
+        return consts
+
+    def _extract_instset(self, type_uri: str) -> str:
+        """Extract the instruction set from a type URI (e.g., /m/lst -> /m, /m/tble/lrow -> /m/tble)."""
+        if not type_uri:
+            return ""
+        parts = type_uri.strip('/').split('/')
+        if len(parts) <= 1:
+            return "/" + parts[0] if parts else ""
+        # InstSet is all but the last part (which is the type name)
+        return "/" + "/".join(parts[:-1])
 
     def _parse_hierarchy(self, info: InstSetInfo):
         """Parse parent/child instruction set relationships from metadata."""
@@ -304,11 +505,31 @@ class InstSetDocFetcher:
         base_path = vid.split('?')[0]
         name = base_path.split('/')[-1]
 
+        # Extract domain and range from vid query string before conversion
+        domain, range_type = self._extract_dom_rng(vid)
+
         # Convert dom=&rng= to rng<=dom in both vid and signature
         vid = self._convert_signature_shorthand(vid)
         signature = self._convert_signature_shorthand(signature)
 
-        return InstInfo(vid=vid, name=name, signature=signature, raw=entry)
+        return InstInfo(vid=vid, name=name, signature=signature, raw=entry,
+                        domain=domain, range=range_type)
+
+    def _extract_dom_rng(self, vid: str) -> tuple:
+        """Extract domain and range type names from a vid with query string."""
+        domain = ""
+        range_type = ""
+        if '?' in vid:
+            query = vid.split('?', 1)[1]
+            # Parse rng= value
+            rng_match = re.search(r'rng=([^&]+)', query)
+            if rng_match:
+                range_type = rng_match.group(1)
+            # Parse dom= value
+            dom_match = re.search(r'dom=([^&]+)', query)
+            if dom_match:
+                domain = dom_match.group(1)
+        return domain, range_type
 
     def _find_top_level_arrow(self, text: str) -> int:
         """Find the position of the first => at top level (not inside brackets)."""
@@ -402,8 +623,8 @@ class InstSetDocFetcher:
 # HTML Generator
 # ============================================================================
 
-# Path to the external CSS file (relative to this script)
-CSS_FILE_PATH = Path(__file__).parent / "instset_doc.css"
+# Path to the external CSS file (in website css directory)
+CSS_FILE_PATH = Path(__file__).parent.parent / "website" / "css" / "instset_doc.css"
 
 # Path to the website includes directory (header.html, footer.html)
 INCLUDES_PATH = Path(__file__).parent.parent / "website" / "includes"
@@ -514,7 +735,7 @@ def load_website_footer(relative_depth: str = "..") -> str:
 class HTMLDocGenerator:
     """Generates HTML documentation from InstSetInfo using highlight.js for syntax coloring."""
 
-    def __init__(self, instset: InstSetInfo, embed_css: bool = True, css_path: str = "instset_doc.css",
+    def __init__(self, instset: InstSetInfo, embed_css: bool = True, css_path: str = "../css/instset_doc.css",
                  use_website_template: bool = False, relative_depth: str = ".."):
         """
         Initialize the generator.
@@ -531,6 +752,16 @@ class HTMLDocGenerator:
         self.css_path = css_path
         self.use_website_template = use_website_template
         self.relative_depth = relative_depth
+
+    def _extract_instset(self, type_uri: str) -> str:
+        """Extract the instruction set from a type URI (e.g., /m/lst -> /m, /m/tble/lrow -> /m/tble)."""
+        if not type_uri:
+            return ""
+        parts = type_uri.strip('/').split('/')
+        if len(parts) <= 1:
+            return "/" + parts[0] if parts else ""
+        # InstSet is all but the last part (which is the type name)
+        return "/" + "/".join(parts[:-1])
 
     def generate(self) -> str:
         """Generate complete HTML documentation."""
@@ -561,12 +792,13 @@ class HTMLDocGenerator:
         <div class="instset-doc">
             {self._generate_instset_header()}
             {self._generate_nav()}
-            {self._generate_stats()}
             {self._generate_hierarchy()}
             {self._generate_toc()}
             {self._generate_types_section()}
             {self._generate_instructions_section()}
+            {self._generate_rewrites_section()}
             {self._generate_spaces_section()}
+            {self._generate_consts_section()}
             {self._generate_instset_footer()}
         </div>"""
 
@@ -596,12 +828,13 @@ class HTMLDocGenerator:
     <div class="container">
         {self._generate_instset_header()}
         {self._generate_nav()}
-        {self._generate_stats()}
         {self._generate_hierarchy()}
         {self._generate_toc()}
         {self._generate_types_section()}
         {self._generate_instructions_section()}
+        {self._generate_rewrites_section()}
         {self._generate_spaces_section()}
+        {self._generate_consts_section()}
         {self._generate_instset_footer()}
     </div>
     {highlight_js}
@@ -621,43 +854,46 @@ class HTMLDocGenerator:
         </div>"""
 
     def _generate_nav(self) -> str:
-        return """
+        """Generate navigation bar with all 5 categories (disabled if empty)."""
+        def nav_btn(href: str, label: str, count: int) -> str:
+            if count > 0:
+                return f'<a href="#{href}" class="btn btn-outline-primary">{label} <span class="badge bg-secondary">{count}</span></a>'
+            else:
+                return f'<button class="btn btn-outline-secondary" disabled>{label} <span class="badge bg-dark">0</span></button>'
+
+        return f"""
         <div class="container-xxl mb-4">
-            <div class="d-flex justify-content-center gap-3 flex-wrap">
-                <a href="#types" class="btn btn-outline-primary">Types</a>
-                <a href="#instructions" class="btn btn-outline-primary">Instructions</a>
-                <a href="#spaces" class="btn btn-outline-primary">Spaces</a>
+            <div class="d-flex justify-content-center gap-2 flex-wrap">
+                {nav_btn("types", "Types", len(self.instset.types))}
+                {nav_btn("instructions", "Insts", len(self.instset.insts))}
+                {nav_btn("rewrites", "Rewrites", len(self.instset.rewrites))}
+                {nav_btn("spaces", "Spaces", len(self.instset.spaces))}
+                {nav_btn("consts", "Consts", len(self.instset.consts))}
             </div>
         </div>"""
 
     def _generate_stats(self) -> str:
+        """Generate stats cards for all 5 categories."""
+        def stat_card(count: int, label: str, color: str = "primary") -> str:
+            text_class = "text-muted" if count == 0 else f"text-{color}"
+            return f'''
+                <div class="col-auto">
+                    <div class="card text-center" style="min-width: 100px;">
+                        <div class="card-body py-2">
+                            <h3 class="{text_class} mb-0">{count}</h3>
+                            <small class="text-light">{label}</small>
+                        </div>
+                    </div>
+                </div>'''
+
         return f"""
         <div class="container-xxl mb-4">
-            <div class="row g-3 justify-content-center">
-                <div class="col-auto">
-                    <div class="card text-center" style="min-width: 120px;">
-                        <div class="card-body py-2">
-                            <h3 class="text-primary mb-0">{len(self.instset.types)}</h3>
-                            <small class="text-light">Types</small>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-auto">
-                    <div class="card text-center" style="min-width: 120px;">
-                        <div class="card-body py-2">
-                            <h3 class="text-primary mb-0">{len(self.instset.insts)}</h3>
-                            <small class="text-light">Instructions</small>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-auto">
-                    <div class="card text-center" style="min-width: 120px;">
-                        <div class="card-body py-2">
-                            <h3 class="text-primary mb-0">{len(self.instset.spaces)}</h3>
-                            <small class="text-light">Spaces</small>
-                        </div>
-                    </div>
-                </div>
+            <div class="row g-2 justify-content-center">
+                {stat_card(len(self.instset.types), "Types", "info")}
+                {stat_card(len(self.instset.insts), "Insts", "success")}
+                {stat_card(len(self.instset.rewrites), "Rewrites", "warning")}
+                {stat_card(len(self.instset.spaces), "Spaces", "primary")}
+                {stat_card(len(self.instset.consts), "Consts", "secondary")}
             </div>
         </div>"""
 
@@ -693,7 +929,7 @@ class HTMLDocGenerator:
         type_items = []
         for t in sorted(self.instset.types, key=lambda x: x.name):
             type_items.append(f'''
-                <a href="#type-{html.escape(t.name)}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#type-{html.escape(t.name)}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">{html.escape(t.name)}</span>
                     <span class="badge bg-info">T</span>
                 </a>''')
@@ -703,7 +939,7 @@ class HTMLDocGenerator:
         inst_names = sorted(set(i.name for i in self.instset.insts))
         for name in inst_names:
             inst_items.append(f'''
-                <a href="#inst-{html.escape(name)}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-{html.escape(name)}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">{html.escape(name)}</span>
                     <span class="badge bg-success">I</span>
                 </a>''')
@@ -712,17 +948,17 @@ class HTMLDocGenerator:
             return ""
 
         type_list = f'''
-            <div class="col-md-6">
+            <div class="mb-3">
                 <h6 class="text-primary mb-2">Types</h6>
-                <div class="list-group list-group-flush">
+                <div class="index-columns">
                     {''.join(type_items)}
                 </div>
             </div>''' if type_items else ""
 
         inst_list = f'''
-            <div class="col-md-6">
+            <div class="mb-3">
                 <h6 class="text-primary mb-2">Instructions</h6>
-                <div class="list-group list-group-flush">
+                <div class="index-columns">
                     {''.join(inst_items)}
                 </div>
             </div>''' if inst_items else ""
@@ -734,10 +970,8 @@ class HTMLDocGenerator:
                     <h5 class="mb-0 text-primary">Index</h5>
                 </div>
                 <div class="card-body">
-                    <div class="row">
-                        {type_list}
-                        {inst_list}
-                    </div>
+                    {type_list}
+                    {inst_list}
                 </div>
             </div>
         </div>"""
@@ -756,10 +990,27 @@ class HTMLDocGenerator:
                         <pre class="mb-0"><code class="language-mtron">{html.escape(t.definition)}</code></pre>
                     </div>'''
 
+            # Generate "refines" link if super type exists
+            refines_html = ""
+            if t.super_type_short:
+                super_name = t.super_type.split('/')[-1] if t.super_type else t.super_type_short
+                display_name = f"{t.super_type_short}::T"
+                if t.super_type_instset:
+                    instset_file = self._make_filename(t.super_type_instset)
+                    refines_html = f'''
+                        <span class="ms-2 text-muted">
+                            refines <a href="{instset_file}#type-{html.escape(super_name)}" class="text-info code">{html.escape(display_name)}</a>
+                        </span>'''
+                else:
+                    refines_html = f'<span class="ms-2 text-muted">refines <span class="code text-info">{html.escape(display_name)}</span></span>'
+
             items.append(f"""
                 <div class="card mb-3" id="type-{html.escape(t.name)}">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">{html.escape(t.name)}::T</span>
+                        <span>
+                            <span class="code text-primary fw-bold">{html.escape(t.name)}::T</span>
+                            {refines_html}
+                        </span>
                         <small class="text-muted code">{html.escape(t.vid)}</small>
                     </div>
                     {definition}
@@ -794,13 +1045,17 @@ class HTMLDocGenerator:
 
             all_sigs = '\n'.join(signatures)
 
-            # Use first inst for the header vid
+            # Use first inst for the header - show domain => range with subscripts
             first_inst = insts[0]
+            type_sig_html = self._format_inst_type_signature(first_inst)
 
             items.append(f"""
                 <div class="card mb-3" id="inst-{html.escape(name)}">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">{html.escape(name)}</span>
+                        <span>
+                            <span class="code text-primary fw-bold">{html.escape(name)}</span>
+                            {type_sig_html}
+                        </span>
                         <small class="text-muted code">{html.escape(first_inst.vid)}</small>
                     </div>
                     <div class="card-body p-2">
@@ -816,28 +1071,162 @@ class HTMLDocGenerator:
             {''.join(items)}
         </div>"""
 
+    def _format_inst_type_signature(self, inst: InstInfo) -> str:
+        """Format instruction type signature as name_{domain} => _{range} with subscripts and clickable links."""
+        if not inst.domain and not inst.range:
+            return ""
+
+        parts = []
+        if inst.domain:
+            # Make domain clickable - link to type section
+            domain_html = self._make_type_link(inst.domain, inst.domain_full, "text-info")
+            parts.append(f'<sub>{domain_html}</sub>')
+
+        if inst.domain or inst.range:
+            parts.append('<span class="text-muted mx-1">=&gt;</span>')
+
+        if inst.range:
+            # Make range clickable - link to type section
+            range_html = self._make_type_link(inst.range, inst.range_full, "text-success")
+            parts.append(f'<sub>{range_html}</sub>')
+
+        return f'<span class="ms-1">{"".join(parts)}</span>'
+
+    def _make_type_link(self, type_short: str, type_full: str, css_class: str) -> str:
+        """Create a clickable link to a type definition."""
+        if not type_full:
+            return f'<span class="code {css_class}">{html.escape(type_short)}</span>'
+
+        # Extract type name from full URI (e.g., /m/tble/space/tble -> tble)
+        type_name = type_full.split('/')[-1].split('?')[0]
+
+        # Extract instset from full URI
+        type_instset = self._extract_instset(type_full)
+
+        if type_instset and type_instset != self.instset.vid:
+            # Link to different instset file
+            instset_file = self._make_filename(type_instset)
+            return f'<a href="{instset_file}#type-{html.escape(type_name)}" class="code {css_class}">{html.escape(type_short)}</a>'
+        else:
+            # Link within same document
+            return f'<a href="#type-{html.escape(type_name)}" class="code {css_class}">{html.escape(type_short)}</a>'
+
+    def _generate_rewrites_section(self) -> str:
+        if not self.instset.rewrites:
+            return ""
+
+        items = []
+        for rewrite in sorted(self.instset.rewrites, key=lambda x: x.name):
+            signature_html = ""
+            if rewrite.signature:
+                signature_html = f'''
+                    <div class="card-body p-2">
+                        <pre class="mb-0"><code class="language-mtron">{html.escape(rewrite.signature)}</code></pre>
+                    </div>'''
+
+            # Format domain/range with subscripts and clickable links (same as instructions)
+            type_sig_html = self._format_rewrite_type_signature(rewrite)
+
+            items.append(f"""
+                <div class="card mb-3" id="rewrite-{html.escape(rewrite.name)}">
+                    <div class="card-header d-flex justify-content-between align-items-center py-2">
+                        <span>
+                            <span class="code text-warning fw-bold">{html.escape(rewrite.name)}</span>
+                            {type_sig_html}
+                        </span>
+                        <small class="text-muted code">{html.escape(rewrite.vid)}</small>
+                    </div>
+                    {signature_html}
+                </div>""")
+
+        return f"""
+        <div class="container-xxl mb-4" id="rewrites">
+            <h3 class="text-warning mb-3">
+                Rewrites <span class="badge bg-warning text-dark">{len(self.instset.rewrites)}</span>
+            </h3>
+            {''.join(items)}
+        </div>"""
+
+    def _format_rewrite_type_signature(self, rewrite: RewriteInfo) -> str:
+        """Format rewrite type signature as name_{domain} => _{range} with subscripts and clickable links."""
+        if not rewrite.domain and not rewrite.range:
+            return ""
+
+        parts = []
+        if rewrite.domain:
+            # Make domain clickable - link to type section
+            domain_html = self._make_type_link(rewrite.domain, rewrite.domain_full, "text-info")
+            parts.append(f'<sub>{domain_html}</sub>')
+
+        if rewrite.domain or rewrite.range:
+            parts.append('<span class="text-muted mx-1">=&gt;</span>')
+
+        if rewrite.range:
+            # Make range clickable - link to type section
+            range_html = self._make_type_link(rewrite.range, rewrite.range_full, "text-success")
+            parts.append(f'<sub>{range_html}</sub>')
+
+        return f'<span class="ms-1">{"".join(parts)}</span>'
+
     def _generate_spaces_section(self) -> str:
         if not self.instset.spaces:
             return ""
 
         items = []
         for space in sorted(self.instset.spaces, key=lambda x: x.name):
+            # Show type spec if available
+            type_spec_html = ""
+            if space.type_spec:
+                type_spec_html = f'''
+                    <div class="mt-2">
+                        <pre class="mb-0"><code class="language-mtron">{html.escape(space.type_spec)}</code></pre>
+                    </div>'''
+
             items.append(f"""
-                <a href="{self._make_filename(space.vid)}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary" id="space-{html.escape(space.name)}">
-                    <span class="code">{html.escape(space.name)}</span>
-                    <small class="text-muted code">{html.escape(space.vid)}</small>
-                </a>""")
+                <div class="card mb-3" id="space-{html.escape(space.name)}">
+                    <div class="card-header d-flex justify-content-between align-items-center py-2">
+                        <a href="{self._make_filename(space.vid)}" class="code text-primary fw-bold text-decoration-none">{html.escape(space.name)}</a>
+                        <small class="text-muted code">{html.escape(space.vid)}</small>
+                    </div>
+                    {type_spec_html if type_spec_html else ''}
+                </div>""")
 
         return f"""
         <div class="container-xxl mb-4" id="spaces">
             <h3 class="text-primary mb-3">
-                Spaces <span class="badge bg-warning text-dark">{len(self.instset.spaces)}</span>
+                Spaces <span class="badge bg-primary">{len(self.instset.spaces)}</span>
             </h3>
-            <div class="card">
-                <div class="list-group list-group-flush">
-                    {''.join(items)}
-                </div>
-            </div>
+            {''.join(items)}
+        </div>"""
+
+    def _generate_consts_section(self) -> str:
+        if not self.instset.consts:
+            return ""
+
+        items = []
+        for const in sorted(self.instset.consts, key=lambda x: x.name):
+            definition_html = ""
+            if const.definition:
+                definition_html = f'''
+                    <div class="card-body p-2">
+                        <pre class="mb-0"><code class="language-mtron">{html.escape(const.definition)}</code></pre>
+                    </div>'''
+
+            items.append(f"""
+                <div class="card mb-3" id="const-{html.escape(const.name)}">
+                    <div class="card-header d-flex justify-content-between align-items-center py-2">
+                        <span class="code text-secondary fw-bold">{html.escape(const.name)}</span>
+                        <small class="text-muted code">{html.escape(const.vid)}</small>
+                    </div>
+                    {definition_html}
+                </div>""")
+
+        return f"""
+        <div class="container-xxl mb-4" id="consts">
+            <h3 class="text-secondary mb-3">
+                Constants <span class="badge bg-secondary">{len(self.instset.consts)}</span>
+            </h3>
+            {''.join(items)}
         </div>"""
 
     def _generate_instset_footer(self) -> str:
@@ -860,7 +1249,7 @@ class HTMLDocGenerator:
 # Index Page Generator
 # ============================================================================
 
-def generate_index_page(instsets: List[InstSetInfo], embed_css: bool = True, css_path: str = "instset_doc.css",
+def generate_index_page(instsets: List[InstSetInfo], embed_css: bool = True, css_path: str = "../css/instset_doc.css",
                         use_website_template: bool = False, relative_depth: str = "..") -> str:
     """Generate an index page linking to all instruction set docs."""
     items = []
@@ -952,19 +1341,10 @@ async def main_async(args):
     output_dir.mkdir(parents=True, exist_ok=True)
 
     embed_css = not args.link_css
-    css_filename = "instset_doc.css"
+    # CSS file is now in website/css/ directory, referenced via relative path
+    css_path = "../css/instset_doc.css"
     use_website_template = args.website_template
     relative_depth = args.relative_depth
-
-    # Copy instset-specific CSS file to output directory if using linked CSS
-    # (highlight.js and metatron.css are referenced from ../highlight/ and ../css/)
-    if not embed_css or use_website_template:
-        if CSS_FILE_PATH.exists():
-            dest_css = output_dir / css_filename
-            shutil.copy2(CSS_FILE_PATH, dest_css)
-            logger.info(f"Copied CSS to: {dest_css}")
-        else:
-            logger.warning(f"CSS file not found: {CSS_FILE_PATH}")
 
     try:
         await client.connect()
@@ -979,7 +1359,7 @@ async def main_async(args):
                 generator = HTMLDocGenerator(
                     info,
                     embed_css=embed_css,
-                    css_path=css_filename,
+                    css_path=css_path,
                     use_website_template=use_website_template,
                     relative_depth=relative_depth
                 )
@@ -1002,7 +1382,7 @@ async def main_async(args):
             index_html = generate_index_page(
                 instsets,
                 embed_css=embed_css,
-                css_path=css_filename,
+                css_path=css_path,
                 use_website_template=use_website_template,
                 relative_depth=relative_depth
             )
@@ -1052,7 +1432,7 @@ Examples:
     parser.add_argument(
         '--link-css',
         action='store_true',
-        help='Link to external CSS file instead of embedding (copies instset_doc.css to output dir)'
+        help='Link to external CSS file instead of embedding (references ../css/instset_doc.css)'
     )
     parser.add_argument(
         '--website-template',

@@ -44,7 +44,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.LABEL;
 import static studio.phaseshift.metatron.isa.grph.tp3.space.tp3Space.FACTORY;
 import static studio.phaseshift.metatron.isa.m.mInstSet.AUTO_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
@@ -150,7 +150,7 @@ public abstract class ElementMap extends AbstractMap<Uri, Obj> {
         private final E map;
 
         public LazyAutoElmnt(final E map) {
-            super(Tuple.Triplet.with(lst(List.of()), null, noobj()), INST_TID, null);
+            super(Tuple.Triplet.with(lst(List.of()), null, noobj()), M_ISA_INST_TID, null);
             this.map = map;
         }
 

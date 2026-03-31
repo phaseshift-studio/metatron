@@ -70,7 +70,7 @@ public class memSpace extends AbstractSpace<Map<fURI, Obj>> {
             .tid(SPACE_TID)
             .vid(MEM_SPACE_TID)
             .constructor(
-                    instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(MEM_SPACE_TID),
+                    instC(mInstSet.M_ISA_INST_TID.dom(ALL.maybe()).rng(MEM_SPACE_TID),
                             lst(isa_(MEM_SPACE_CONFIG).tryToInst()),
                             (lhs, inst) -> memSpace.of(inst.arg(0).asRec(), inst.arg(0).vid()))).create();
 

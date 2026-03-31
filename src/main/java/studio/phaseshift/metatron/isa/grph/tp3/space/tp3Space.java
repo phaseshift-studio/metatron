@@ -79,7 +79,7 @@ public class tp3Space extends grphSpace<Graph> {
             .tid(GRPH_SPACE_TID)
             .vid(TP3_SPACE_TID)
             .constructor(
-                    instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(TP3_SPACE_TID),
+                    instC(mInstSet.M_ISA_INST_TID.dom(ALL.maybe()).rng(TP3_SPACE_TID),
                             lst(isa_(GRPH_CONFIG).else_(failure_(str("malformed tp3 config"))).tryToInst()),
                             (lhs, inst) -> {
                                 if (inst.arg(0).isFail())

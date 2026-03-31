@@ -206,7 +206,7 @@ public interface Type extends Obj {
                 /// //////////////////
                 /// OBJ <=> TYPE ///
                 /// //////////////////
-                if (rhs.tid().isGeneric() || rhs.test(T(CODE_TID)) || rhs.test(T(INST_TID)))
+                if (rhs.tid().isGeneric() || rhs.test(T(CODE_TID)) || rhs.test(T(M_ISA_INST_TID)))
                     return true;
                 if (rhs.tid().hasPoly()) {
                     if (rhs.tid().hasPoly()) {
@@ -295,7 +295,7 @@ public interface Type extends Obj {
         }
 
         public Builder predicate(final BiFunction<Obj, Inst, Obj> predicate) {
-            return this.predicate(instC(INST_TID.dom(ALL.maybe()).rng(this.vid), lst(), predicate));
+            return this.predicate(instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(this.vid), lst(), predicate));
         }
 
         public Builder isaPredicate(final Obj predicate) {
@@ -308,11 +308,11 @@ public interface Type extends Obj {
         }
 
         public Builder constructor(final Function<Obj, Obj> function) {
-            return this.constructor(instC(INST_TID.dom(ALL.maybe()).rng(this.vid), lst(T(ALL)), (lhs, inst) -> function.apply(inst.arg(0))));
+            return this.constructor(instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(this.vid), lst(T(ALL)), (lhs, inst) -> function.apply(inst.arg(0))));
         }
 
         public Builder constructor(final Supplier<Obj> supplier) {
-            return this.constructor(instC(INST_TID.dom(ALL.maybe()).rng(this.vid), lst(), (lhs, inst) -> supplier.get()));
+            return this.constructor(instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(this.vid), lst(), (lhs, inst) -> supplier.get()));
         }
 
         public Builder inst(final fURI tid, final Poly<?, ?> args, final BiFunction<Obj, Inst, Obj> func) {

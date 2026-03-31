@@ -179,7 +179,7 @@ public class MObjFactory extends MRec implements ObjFactory {
         else if (Rec.class.isAssignableFrom(objClass))
             return (OBJ) new MRec((Map<Obj, Obj>) value, null == tid ? REC_TID : tid, vid);
         else if (Inst.class.isAssignableFrom(objClass))
-            return (OBJ) new MInst((Triplet<Poly, Inst.f, Obj>) value, null == tid ? INST_TID : tid, vid);
+            return (OBJ) new MInst((Triplet<Poly, Inst.f, Obj>) value, null == tid ? M_ISA_INST_TID : tid, vid);
         else if (Code.class.isAssignableFrom(objClass))
             return (OBJ) new MCode((List<Inst>) value, null == tid ? CODE_TID : tid, vid);
         else if (Objs.class.isAssignableFrom(objClass))

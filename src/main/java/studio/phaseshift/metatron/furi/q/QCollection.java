@@ -87,7 +87,7 @@ public final class QCollection {
             .vid(SUBQ_TID)
             .tid(REC_TID)
             .constructor(
-                    instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(SUBQ_TID),
+                    instC(mInstSet.M_ISA_INST_TID.dom(ALL.maybe()).rng(SUBQ_TID),
                             lst(isa_(rec()).tryToInst()),
                             (lhs, inst) -> QCollection.subq())).create();
 

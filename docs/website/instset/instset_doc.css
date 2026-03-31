@@ -28,18 +28,18 @@
 /* Pre blocks containing highlight.js code */
 .instset-doc pre {
     margin: 0.25rem 0;
-    border: 1px solid var(--mdarkgray);
-    border-radius: 4px;
+/*    border: 1px solid var(--mdarkgray);
+    border-radius: 4px;*/
     overflow: hidden;
 }
 
 /* Let highlight.js handle the code styling inside pre */
 .instset-doc pre code.hljs {
-    background: var(--dark);
+   /* background: var(--dark);
     padding: 0.5rem 0.75rem;
-    border-radius: 0;
+    border-radius: 0;*/
     font-family: 'Fira Mono', Consolas, Menlo, Monaco, 'Courier New', Courier, monospace;
-    font-size: 0.85rem;
+   /* font-size: 0.85rem;*/
     line-height: 1.4;
     white-space: pre-wrap;
     word-break: break-word;

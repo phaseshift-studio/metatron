@@ -28,18 +28,18 @@
 /* Pre blocks containing highlight.js code */
 .instset-doc pre {
     margin: 0.25rem 0;
-    border: 1px solid var(--mdarkgray);
-    border-radius: 4px;
+   /* border: 1px solid var(--mdarkgray);
+    border-radius: 4px;*/
     overflow: hidden;
 }
 
 /* Let highlight.js handle the code styling inside pre */
 .instset-doc pre code.hljs {
-    background: var(--dark);
+  /*  background: var(--dark);*/
     padding: 0.5rem 0.75rem;
     border-radius: 0;
     font-family: 'Fira Mono', Consolas, Menlo, Monaco, 'Courier New', Courier, monospace;
-    font-size: 0.85rem;
+    font-size: 1.0rem;
     line-height: 1.4;
     white-space: pre-wrap;
     word-break: break-word;
@@ -110,6 +110,66 @@
 .instset-doc .card:hover {
     border-color: var(--primary);
     transition: border-color 0.2s ease;
+}
+
+/* ==========================================================================
+   Anchor Offset for Fixed Navbar
+   ========================================================================== */
+
+/* Offset anchor targets so they're not hidden behind the fixed navbar */
+.instset-doc [id] {
+    scroll-margin-top: 80px;
+}
+
+/* Section headings need offset too */
+.instset-doc h3[id] {
+    scroll-margin-top: 90px;
+}
+
+/* ==========================================================================
+   Index Multi-Column Layout
+   ========================================================================== */
+
+.instset-doc .index-columns {
+    column-count: 6;
+    column-gap: 0.75rem;
+}
+
+.instset-doc .index-columns .list-group-item {
+    break-inside: avoid;
+    display: block;
+    margin-bottom: 2px;
+}
+
+/* Responsive column counts */
+@media (max-width: 1400px) {
+    .instset-doc .index-columns {
+        column-count: 5;
+    }
+}
+
+@media (max-width: 1200px) {
+    .instset-doc .index-columns {
+        column-count: 4;
+    }
+}
+
+@media (max-width: 992px) {
+    .instset-doc .index-columns {
+        column-count: 3;
+    }
+}
+
+@media (max-width: 768px) {
+    .instset-doc .index-columns {
+        column-count: 2;
+    }
+}
+
+@media (max-width: 576px) {
+    .instset-doc .index-columns {
+        column-count: 1;
+    }
 }
 
 /* ==========================================================================

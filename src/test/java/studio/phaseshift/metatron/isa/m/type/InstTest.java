@@ -114,7 +114,7 @@ public class InstTest extends AbstractObjTest {
 
     @Test
     public void testInstFCode() {
-        Inst i = instC(f("dosomething").dom(INT_TID.maybe()).rng(INT_TID), lst(T(INT_TID), T(INST_TID)), "*b.plus(*a)");
+        Inst i = instC(f("dosomething").dom(INT_TID.maybe()).rng(INT_TID), lst(T(INT_TID), T(M_ISA_INST_TID)), "*b.plus(*a)");
         assertEquals(jnt(4), i.args(rec(uri("a"), jnt(1), uri("b"), jnt(3))).resolve(noobj()).apply());
         //i = instC(f("dosomething"), lst(T(INT_TID), T(STR_TID)), "*b.-<''>-.count().plus(*a)");
         //assertEquals(jnt(4), i.args(rec(uri("a"), jnt(1), uri("b"), str("abc"))).resolve(noobj()).apply());

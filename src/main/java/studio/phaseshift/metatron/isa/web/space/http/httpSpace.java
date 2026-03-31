@@ -137,7 +137,7 @@ public class httpSpace extends AbstractSpace<HttpServer> {
     public static final Type HTTP_SPACE_TYPE = Type.Builder.build()
             .tid(SPACE_TID)
             .vid(HTTP_SPACE_TID)
-            .constructor(instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(HTTP_SPACE_TID),
+            .constructor(instC(mInstSet.M_ISA_INST_TID.dom(ALL.maybe()).rng(HTTP_SPACE_TID),
                     lst(T(REC_TID, isa_(CONFIG))), (lhs, inst) -> httpSpace.of(inst.arg(0).asRec(), inst.arg(0).vid()))).create();
     private static final ObjHTMLSerializer HTML_SERIALIZER = new ObjHTMLSerializer();
     private static final ObjJSONSerializer JSON_TRANSLATOR = new ObjJSONSerializer();

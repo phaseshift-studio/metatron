@@ -55,7 +55,7 @@
     <!-- CUSTOM CSS/JAVASCRIPT -->
     <link href="../css/metatron.css" rel="stylesheet">
     <script src="../js/metatron.js"></script>
-    <link rel="stylesheet" href="instset_doc.css">
+    <link rel="stylesheet" href="../css/instset_doc.css">
 </head>
 <body class="d-flex flex-column min-vh-100">
 <!------------------------------------------------------->
@@ -236,39 +236,12 @@ bin/metatron</code></pre>
         </div>
             
         <div class="container-xxl mb-4">
-            <div class="d-flex justify-content-center gap-3 flex-wrap">
-                <a href="#types" class="btn btn-outline-primary">Types</a>
-                <a href="#instructions" class="btn btn-outline-primary">Instructions</a>
-                <a href="#spaces" class="btn btn-outline-primary">Spaces</a>
-            </div>
-        </div>
-            
-        <div class="container-xxl mb-4">
-            <div class="row g-3 justify-content-center">
-                <div class="col-auto">
-                    <div class="card text-center" style="min-width: 120px;">
-                        <div class="card-body py-2">
-                            <h3 class="text-primary mb-0">26</h3>
-                            <small class="text-light">Types</small>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-auto">
-                    <div class="card text-center" style="min-width: 120px;">
-                        <div class="card-body py-2">
-                            <h3 class="text-primary mb-0">248</h3>
-                            <small class="text-light">Instructions</small>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-auto">
-                    <div class="card text-center" style="min-width: 120px;">
-                        <div class="card-body py-2">
-                            <h3 class="text-primary mb-0">4</h3>
-                            <small class="text-light">Spaces</small>
-                        </div>
-                    </div>
-                </div>
+            <div class="d-flex justify-content-center gap-2 flex-wrap">
+                <a href="#types" class="btn btn-outline-primary">Types <span class="badge bg-secondary">26</span></a>
+                <a href="#instructions" class="btn btn-outline-primary">Insts <span class="badge bg-secondary">248</span></a>
+                <a href="#rewrites" class="btn btn-outline-primary">Rewrites <span class="badge bg-secondary">8</span></a>
+                <a href="#spaces" class="btn btn-outline-primary">Spaces <span class="badge bg-secondary">4</span></a>
+                <a href="#consts" class="btn btn-outline-primary">Consts <span class="badge bg-secondary">8</span></a>
             </div>
         </div>
             
@@ -279,502 +252,500 @@ bin/metatron</code></pre>
                     <h5 class="mb-0 text-primary">Index</h5>
                 </div>
                 <div class="card-body">
-                    <div class="row">
-                        
-            <div class="col-md-6">
-                <h6 class="text-primary mb-2">Types</h6>
-                <div class="list-group list-group-flush">
                     
-                <a href="#type-bool" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+            <div class="mb-3">
+                <h6 class="text-primary mb-2">Types</h6>
+                <div class="index-columns">
+                    
+                <a href="#type-bool" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">bool</span>
                     <span class="badge bg-info">T</span>
                 </a>
-                <a href="#type-bytes" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#type-bytes" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">bytes</span>
                     <span class="badge bg-info">T</span>
                 </a>
-                <a href="#type-code" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#type-code" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">code</span>
                     <span class="badge bg-info">T</span>
                 </a>
-                <a href="#type-doc" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#type-doc" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">doc</span>
                     <span class="badge bg-info">T</span>
                 </a>
-                <a href="#type-fail" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#type-fail" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">fail</span>
                     <span class="badge bg-info">T</span>
                 </a>
-                <a href="#type-grph" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#type-grph" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">grph</span>
                     <span class="badge bg-info">T</span>
                 </a>
-                <a href="#type-inst" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#type-inst" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">inst</span>
                     <span class="badge bg-info">T</span>
                 </a>
-                <a href="#type-instset" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#type-instset" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">instset</span>
                     <span class="badge bg-info">T</span>
                 </a>
-                <a href="#type-int" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#type-int" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">int</span>
                     <span class="badge bg-info">T</span>
                 </a>
-                <a href="#type-iot" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#type-iot" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">iot</span>
                     <span class="badge bg-info">T</span>
                 </a>
-                <a href="#type-llm" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#type-llm" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">llm</span>
                     <span class="badge bg-info">T</span>
                 </a>
-                <a href="#type-lst" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#type-lst" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">lst</span>
                     <span class="badge bg-info">T</span>
                 </a>
-                <a href="#type-mach" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#type-mach" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">mach</span>
                     <span class="badge bg-info">T</span>
                 </a>
-                <a href="#type-math" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#type-math" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">math</span>
                     <span class="badge bg-info">T</span>
                 </a>
-                <a href="#type-mono" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#type-mono" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">mono</span>
                     <span class="badge bg-info">T</span>
                 </a>
-                <a href="#type-num" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#type-num" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">num</span>
                     <span class="badge bg-info">T</span>
                 </a>
-                <a href="#type-objs" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#type-objs" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">objs</span>
                     <span class="badge bg-info">T</span>
                 </a>
-                <a href="#type-poly" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#type-poly" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">poly</span>
                     <span class="badge bg-info">T</span>
                 </a>
-                <a href="#type-real" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#type-real" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">real</span>
                     <span class="badge bg-info">T</span>
                 </a>
-                <a href="#type-rec" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#type-rec" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">rec</span>
                     <span class="badge bg-info">T</span>
                 </a>
-                <a href="#type-rel" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#type-rel" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">rel</span>
                     <span class="badge bg-info">T</span>
                 </a>
-                <a href="#type-space" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#type-space" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">space</span>
                     <span class="badge bg-info">T</span>
                 </a>
-                <a href="#type-str" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#type-str" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">str</span>
                     <span class="badge bg-info">T</span>
                 </a>
-                <a href="#type-tble" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#type-tble" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">tble</span>
                     <span class="badge bg-info">T</span>
                 </a>
-                <a href="#type-uri" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#type-uri" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">uri</span>
                     <span class="badge bg-info">T</span>
                 </a>
-                <a href="#type-web" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#type-web" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">web</span>
                     <span class="badge bg-info">T</span>
                 </a>
                 </div>
             </div>
-                        
-            <div class="col-md-6">
-                <h6 class="text-primary mb-2">Instructions</h6>
-                <div class="list-group list-group-flush">
                     
-                <a href="#inst-and" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+            <div class="mb-3">
+                <h6 class="text-primary mb-2">Instructions</h6>
+                <div class="index-columns">
+                    
+                <a href="#inst-and" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">and</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-apply" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-apply" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">apply</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-as" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-as" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">as</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-at" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-at" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">at</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-authority" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-authority" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">authority</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-auto" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-auto" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">auto</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-auto_from" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-auto_from" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">auto_from</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-barrier" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-barrier" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">barrier</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-block" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-block" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">block</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-catch" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-catch" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">catch</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-cause" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-cause" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">cause</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-cc" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-cc" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">cc</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-choose" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-choose" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">choose</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-count" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-count" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">count</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-dedup" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-dedup" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">dedup</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-div" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-div" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">div</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-dom" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-dom" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">dom</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-else" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-else" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">else</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-end" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-end" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">end</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-eq" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-eq" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">eq</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-eval" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-eval" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">eval</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-failure" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-failure" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">failure</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-filter" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-filter" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">filter</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-fork" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-fork" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">fork</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-from" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-from" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">from</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-get" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-get" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">get</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-group" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-group" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">group</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-gt" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-gt" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">gt</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-gte" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-gte" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">gte</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-has" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-has" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">has</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-host" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-host" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">host</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-id" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-id" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">id</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-import" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-import" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">import</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-inv" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-inv" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">inv</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-is" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-is" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">is</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-isa" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-isa" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">isa</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-lcase" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-lcase" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">lcase</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-lift" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-lift" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">lift</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-lshift" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-lshift" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">lshift</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-lt" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-lt" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">lt</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-lte" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-lte" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">lte</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-map" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-map" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">map</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-matches" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-matches" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">matches</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-math" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-math" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">math</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-merge" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-merge" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">merge</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-minus" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-minus" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">minus</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-mod" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-mod" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">mod</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-mplus" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-mplus" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">mplus</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-mult" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-mult" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">mult</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-neg" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-neg" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">neg</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-neq" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-neq" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">neq</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-not" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-not" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">not</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-one" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-one" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">one</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-or" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-or" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">or</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-order" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-order" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">order</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-parent" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-parent" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">parent</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-path" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-path" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">path</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-plus" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-plus" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">plus</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-port" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-port" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">port</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-pow" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-pow" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">pow</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-print" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-print" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">print</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-prod" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-prod" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">prod</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-q" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-q" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">q</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-range" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-range" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">range</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-reduce" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-reduce" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">reduce</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-ref" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-ref" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">ref</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-regex" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-regex" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">regex</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-reify" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-reify" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">reify</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-repeat" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-repeat" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">repeat</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-reverse" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-reverse" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">reverse</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-rng" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-rng" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">rng</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-rshift" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-rshift" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">rshift</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-scheme" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-scheme" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">scheme</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-select" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-select" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">select</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-serialize" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-serialize" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">serialize</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-side" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-side" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">side</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-skip" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-skip" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">skip</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-source" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-source" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">source</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-split" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-split" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">split</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-start" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-start" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">start</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-sum" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-sum" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">sum</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-swap" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-swap" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">swap</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-take" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-take" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">take</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-thread" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-thread" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">thread</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-tid" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-tid" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">tid</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-to" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-to" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">to</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-type" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-type" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">type</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-ucase" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-ucase" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">ucase</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-update" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-update" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">update</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-uri:c" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-uri:c" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">uri:c</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-vid" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-vid" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">vid</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-where" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-where" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">where</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-within" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-within" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">within</span>
                     <span class="badge bg-success">I</span>
                 </a>
-                <a href="#inst-zero" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                <a href="#inst-zero" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">zero</span>
                     <span class="badge bg-success">I</span>
                 </a>
                 </div>
             </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -786,7 +757,10 @@ bin/metatron</code></pre>
             
                 <div class="card mb-3" id="type-bool">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">bool::T</span>
+                        <span>
+                            <span class="code text-primary fw-bold">bool::T</span>
+                            
+                        </span>
                         <small class="text-muted code">/m/bool</small>
                     </div>
                     
@@ -796,7 +770,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="type-bytes">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">bytes::T</span>
+                        <span>
+                            <span class="code text-primary fw-bold">bytes::T</span>
+                            
+                        </span>
                         <small class="text-muted code">/m/bytes</small>
                     </div>
                     
@@ -806,7 +783,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="type-code">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">code::T</span>
+                        <span>
+                            <span class="code text-primary fw-bold">code::T</span>
+                            
+                        </span>
                         <small class="text-muted code">/m/code</small>
                     </div>
                     
@@ -816,7 +796,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="type-doc">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">doc::T</span>
+                        <span>
+                            <span class="code text-primary fw-bold">doc::T</span>
+                            <span class="ms-2 text-muted">refines <span class="code text-info">&lt;/m/doc&gt;::T</span></span>
+                        </span>
                         <small class="text-muted code">/m/doc</small>
                     </div>
                     
@@ -830,7 +813,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="type-fail">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">fail::T</span>
+                        <span>
+                            <span class="code text-primary fw-bold">fail::T</span>
+                            
+                        </span>
                         <small class="text-muted code">/m/fail</small>
                     </div>
                     
@@ -840,7 +826,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="type-grph">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">grph::T</span>
+                        <span>
+                            <span class="code text-primary fw-bold">grph::T</span>
+                            <span class="ms-2 text-muted">refines <span class="code text-info">&lt;/m/grph&gt;::T</span></span>
+                        </span>
                         <small class="text-muted code">/m/grph</small>
                     </div>
                     
@@ -855,7 +844,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="type-inst">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">inst::T</span>
+                        <span>
+                            <span class="code text-primary fw-bold">inst::T</span>
+                            
+                        </span>
                         <small class="text-muted code">/m/inst</small>
                     </div>
                     
@@ -865,7 +857,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="type-instset">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">instset::T</span>
+                        <span>
+                            <span class="code text-primary fw-bold">instset::T</span>
+                            
+                        </span>
                         <small class="text-muted code">/m/instset</small>
                     </div>
                     
@@ -875,7 +870,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="type-int">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">int::T</span>
+                        <span>
+                            <span class="code text-primary fw-bold">int::T</span>
+                            
+                        </span>
                         <small class="text-muted code">/m/int</small>
                     </div>
                     
@@ -885,7 +883,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="type-iot">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">iot::T</span>
+                        <span>
+                            <span class="code text-primary fw-bold">iot::T</span>
+                            <span class="ms-2 text-muted">refines <span class="code text-info">&lt;/m/iot&gt;::T</span></span>
+                        </span>
                         <small class="text-muted code">/m/iot</small>
                     </div>
                     
@@ -900,7 +901,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="type-llm">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">llm::T</span>
+                        <span>
+                            <span class="code text-primary fw-bold">llm::T</span>
+                            <span class="ms-2 text-muted">refines <span class="code text-info">&lt;/m/llm&gt;::T</span></span>
+                        </span>
                         <small class="text-muted code">/m/llm</small>
                     </div>
                     
@@ -914,7 +918,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="type-lst">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">lst::T</span>
+                        <span>
+                            <span class="code text-primary fw-bold">lst::T</span>
+                            
+                        </span>
                         <small class="text-muted code">/m/lst</small>
                     </div>
                     
@@ -924,7 +931,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="type-mach">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">mach::T</span>
+                        <span>
+                            <span class="code text-primary fw-bold">mach::T</span>
+                            <span class="ms-2 text-muted">refines <span class="code text-info">&lt;/m/mach&gt;::T</span></span>
+                        </span>
                         <small class="text-muted code">/m/mach</small>
                     </div>
                     
@@ -939,7 +949,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="type-math">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">math::T</span>
+                        <span>
+                            <span class="code text-primary fw-bold">math::T</span>
+                            <span class="ms-2 text-muted">refines <span class="code text-info">&lt;/m/math&gt;::T</span></span>
+                        </span>
                         <small class="text-muted code">/m/math</small>
                     </div>
                     
@@ -953,7 +966,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="type-mono">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">mono::T</span>
+                        <span>
+                            <span class="code text-primary fw-bold">mono::T</span>
+                            
+                        </span>
                         <small class="text-muted code">/m/mono</small>
                     </div>
                     
@@ -963,7 +979,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="type-num">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">num::T</span>
+                        <span>
+                            <span class="code text-primary fw-bold">num::T</span>
+                            
+                        </span>
                         <small class="text-muted code">/m/num</small>
                     </div>
                     
@@ -973,7 +992,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="type-objs">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">objs::T</span>
+                        <span>
+                            <span class="code text-primary fw-bold">objs::T</span>
+                            
+                        </span>
                         <small class="text-muted code">/m/objs</small>
                     </div>
                     
@@ -983,7 +1005,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="type-poly">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">poly::T</span>
+                        <span>
+                            <span class="code text-primary fw-bold">poly::T</span>
+                            
+                        </span>
                         <small class="text-muted code">/m/poly</small>
                     </div>
                     
@@ -993,7 +1018,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="type-real">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">real::T</span>
+                        <span>
+                            <span class="code text-primary fw-bold">real::T</span>
+                            
+                        </span>
                         <small class="text-muted code">/m/real</small>
                     </div>
                     
@@ -1003,7 +1031,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="type-rec">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">rec::T</span>
+                        <span>
+                            <span class="code text-primary fw-bold">rec::T</span>
+                            
+                        </span>
                         <small class="text-muted code">/m/rec</small>
                     </div>
                     
@@ -1013,7 +1044,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="type-rel">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">rel::T</span>
+                        <span>
+                            <span class="code text-primary fw-bold">rel::T</span>
+                            
+                        </span>
                         <small class="text-muted code">/m/rel</small>
                     </div>
                     
@@ -1023,7 +1057,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="type-space">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">space::T</span>
+                        <span>
+                            <span class="code text-primary fw-bold">space::T</span>
+                            <span class="ms-2 text-muted">refines <span class="code text-info">rec::T</span></span>
+                        </span>
                         <small class="text-muted code">/m/space</small>
                     </div>
                     
@@ -1033,7 +1070,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="type-str">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">str::T</span>
+                        <span>
+                            <span class="code text-primary fw-bold">str::T</span>
+                            
+                        </span>
                         <small class="text-muted code">/m/str</small>
                     </div>
                     
@@ -1043,7 +1083,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="type-tble">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">tble::T</span>
+                        <span>
+                            <span class="code text-primary fw-bold">tble::T</span>
+                            <span class="ms-2 text-muted">refines <span class="code text-info">&lt;/m/tble&gt;::T</span></span>
+                        </span>
                         <small class="text-muted code">/m/tble</small>
                     </div>
                     
@@ -1057,7 +1100,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="type-uri">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">uri::T</span>
+                        <span>
+                            <span class="code text-primary fw-bold">uri::T</span>
+                            
+                        </span>
                         <small class="text-muted code">/m/uri</small>
                     </div>
                     
@@ -1067,7 +1113,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="type-web">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">web::T</span>
+                        <span>
+                            <span class="code text-primary fw-bold">web::T</span>
+                            <span class="ms-2 text-muted">refines <span class="code text-info">&lt;/m/web&gt;::T</span></span>
+                        </span>
                         <small class="text-muted code">/m/web</small>
                     </div>
                     
@@ -1088,7 +1137,10 @@ bin/metatron</code></pre>
             
                 <div class="card mb-3" id="inst-and">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">and</span>
+                        <span>
+                            <span class="code text-primary fw-bold">and</span>
+                            <span class="ms-1"><sub><a href="A.html#type-A" class="code text-info">A</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-bool" class="code text-success">/m/bool</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/and?/m/bool&lt;=A</small>
                     </div>
                     <div class="card-body p-2">
@@ -1097,7 +1149,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-apply">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">apply</span>
+                        <span>
+                            <span class="code text-primary fw-bold">apply</span>
+                            <span class="ms-1"><sub><a href="#.html#type-#" class="code text-info">#</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#{*}.html#type-#{*}" class="code text-success">#{*}</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/apply?#{*}&lt;=#</small>
                     </div>
                     <div class="card-body p-2">
@@ -1106,7 +1161,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-as">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">as</span>
+                        <span>
+                            <span class="code text-primary fw-bold">as</span>
+                            <span class="ms-1"><sub><a href="#type-bytes" class="code text-info">/m/bytes</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-bool" class="code text-success">/m/bool</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/as?/m/bool&lt;=/m/bytes</small>
                     </div>
                     <div class="card-body p-2">
@@ -1152,11 +1210,11 @@ bin/metatron</code></pre>
 <pre class="mb-1"><code class="language-mtron">as?image&lt;=bytes(file::T@/m/mach/file/image,else(1.00)){&lt;j&gt;}</code></pre>
 <pre class="mb-1"><code class="language-mtron">as?file&lt;=uri(file::T[][inst?file&lt;=#{?}(uri::T){&lt;j&gt;}]){&lt;j&gt;}</code></pre>
 <pre class="mb-1"><code class="language-mtron">as?bytes&lt;=file(bytes::T){&lt;j&gt;}</code></pre>
-<pre class="mb-1"><code class="language-mtron">as?json&lt;=str(json::T[isa([
- uri::T=&gt;is(or(eq(noobj{0}::T[inst?noobj{0}&lt;=#{?}(){&lt;j&gt;}]),eq(bool::T),eq(int::T),eq(str::T),eq(uri::T),eq(lst::T),eq(rec::T)))])][/m/web/inst?json&lt;=#{?}(str::T){&lt;j&gt;}]){&lt;j&gt;}</code></pre>
-<pre class="mb-1"><code class="language-mtron">as?xml&lt;=str(rec::T@/m/web/xml){&lt;j&gt;}</code></pre>
 <pre class="mb-1"><code class="language-mtron">as?html&lt;=str(html::T[isa([
  html=&gt;[head=&gt;rec::T,body=&gt;rec::T]])]){&lt;j&gt;}</code></pre>
+<pre class="mb-1"><code class="language-mtron">as?xml&lt;=str(rec::T@/m/web/xml){&lt;j&gt;}</code></pre>
+<pre class="mb-1"><code class="language-mtron">as?json&lt;=str(json::T[isa([
+ uri::T=&gt;is(or(eq(noobj{0}::T[inst?noobj{0}&lt;=#{?}(){&lt;j&gt;}]),eq(bool::T),eq(int::T),eq(str::T),eq(uri::T),eq(lst::T),eq(rec::T)))])][/m/web/inst?json&lt;=#{?}(str::T){&lt;j&gt;}]){&lt;j&gt;}</code></pre>
 <pre class="mb-1"><code class="language-mtron">as?rrow&lt;=lrow(rec::T[isa([uri::T=&gt;#::T])]@/m/tble/rrow){&lt;j&gt;}</code></pre>
 <pre class="mb-1"><code class="language-mtron">as?lrow&lt;=rrow(lst::T@/m/tble/lrow){&lt;j&gt;}</code></pre>
 <pre class="mb-1"><code class="language-mtron">as?rrow&lt;=lrow(rec::T[isa([uri::T=&gt;#::T])]@/m/tble/rrow){&lt;j&gt;}</code></pre>
@@ -1166,7 +1224,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-at">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">at</span>
+                        <span>
+                            <span class="code text-primary fw-bold">at</span>
+                            <span class="ms-1"><sub><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#{*}.html#type-#{*}" class="code text-success">#{*}</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/at?#{*}&lt;=#{?}</small>
                     </div>
                     <div class="card-body p-2">
@@ -1175,7 +1236,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-authority">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">authority</span>
+                        <span>
+                            <span class="code text-primary fw-bold">authority</span>
+                            <span class="ms-1"><sub><a href="#type-uri" class="code text-info">/m/uri</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-uri{" class="code text-success">/m/uri{?}</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/authority?/m/uri{?}&lt;=/m/uri</small>
                     </div>
                     <div class="card-body p-2">
@@ -1184,7 +1248,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-auto">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">auto</span>
+                        <span>
+                            <span class="code text-primary fw-bold">auto</span>
+                            <span class="ms-1"><sub><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#{*}.html#type-#{*}" class="code text-success">#{*}</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/auto?#{*}&lt;=#{?}</small>
                     </div>
                     <div class="card-body p-2">
@@ -1193,7 +1260,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-auto_from">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">auto_from</span>
+                        <span>
+                            <span class="code text-primary fw-bold">auto_from</span>
+                            <span class="ms-1"><sub><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#{*}.html#type-#{*}" class="code text-success">#{*}</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/auto_from?#{*}&lt;=#{?}</small>
                     </div>
                     <div class="card-body p-2">
@@ -1202,7 +1272,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-barrier">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">barrier</span>
+                        <span>
+                            <span class="code text-primary fw-bold">barrier</span>
+                            <span class="ms-1"><sub><a href="#{*}.html#type-#{*}" class="code text-info">#{*}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-lst" class="code text-success">/m/lst</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/barrier?/m/lst&lt;=#{*}</small>
                     </div>
                     <div class="card-body p-2">
@@ -1214,7 +1287,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-block">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">block</span>
+                        <span>
+                            <span class="code text-primary fw-bold">block</span>
+                            <span class="ms-1"><sub><a href="A{?}.html#type-A{" class="code text-info">A{?}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="B.html#type-B" class="code text-success">B</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/block?B&lt;=A{?}</small>
                     </div>
                     <div class="card-body p-2">
@@ -1223,7 +1299,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-catch">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">catch</span>
+                        <span>
+                            <span class="code text-primary fw-bold">catch</span>
+                            <span class="ms-1"><sub><a href="A.html#type-A" class="code text-info">A</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="A{*}.html#type-A{*}" class="code text-success">A{*}</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/catch?A{*}&lt;=A</small>
                     </div>
                     <div class="card-body p-2">
@@ -1232,7 +1311,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-cause">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">cause</span>
+                        <span>
+                            <span class="code text-primary fw-bold">cause</span>
+                            <span class="ms-1"><sub><a href="#type-fail" class="code text-info">/m/fail</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-fail{" class="code text-success">/m/fail{?}</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/cause?/m/fail{?}&lt;=/m/fail</small>
                     </div>
                     <div class="card-body p-2">
@@ -1241,7 +1323,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-cc">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">cc</span>
+                        <span>
+                            <span class="code text-primary fw-bold">cc</span>
+                            <span class="ms-1"><sub><a href="A{*}.html#type-A{*}" class="code text-info">A{*}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-int" class="code text-success">/m/int</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/cc?/m/int&lt;=A{*}</small>
                     </div>
                     <div class="card-body p-2">
@@ -1251,7 +1336,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-choose">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">choose</span>
+                        <span>
+                            <span class="code text-primary fw-bold">choose</span>
+                            <span class="ms-1"><sub><a href="#.html#type-#" class="code text-info">#</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-rel{" class="code text-success">/m/rel{?}</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/choose?/m/rel{?}&lt;=#</small>
                     </div>
                     <div class="card-body p-2">
@@ -1260,7 +1348,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-count">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">count</span>
+                        <span>
+                            <span class="code text-primary fw-bold">count</span>
+                            <span class="ms-1"><sub><a href="#{*}.html#type-#{*}" class="code text-info">#{*}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-int" class="code text-success">/m/int</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/count?/m/int&lt;=#{*}</small>
                     </div>
                     <div class="card-body p-2">
@@ -1269,7 +1360,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-dedup">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">dedup</span>
+                        <span>
+                            <span class="code text-primary fw-bold">dedup</span>
+                            <span class="ms-1"><sub><a href="A{*}.html#type-A{*}" class="code text-info">A{*}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="A{*}.html#type-A{*}" class="code text-success">A{*}</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/dedup?A{*}&lt;=A{*}</small>
                     </div>
                     <div class="card-body p-2">
@@ -1278,7 +1372,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-div">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">div</span>
+                        <span>
+                            <span class="code text-primary fw-bold">div</span>
+                            <span class="ms-1"><sub><a href="#type-real" class="code text-info">/m/real</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-real" class="code text-success">/m/real</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/div?/m/real&lt;=/m/real</small>
                     </div>
                     <div class="card-body p-2">
@@ -1287,7 +1384,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-dom">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">dom</span>
+                        <span>
+                            <span class="code text-primary fw-bold">dom</span>
+                            <span class="ms-1"><sub><a href="#type-rel" class="code text-info">/m/rel</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#{*}.html#type-#{*}" class="code text-success">#{*}</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/dom?#{*}&lt;=/m/rel</small>
                     </div>
                     <div class="card-body p-2">
@@ -1297,7 +1397,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-else">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">else</span>
+                        <span>
+                            <span class="code text-primary fw-bold">else</span>
+                            <span class="ms-1"><sub><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#.html#type-#" class="code text-success">#</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/else?#&lt;=#{?}</small>
                     </div>
                     <div class="card-body p-2">
@@ -1306,7 +1409,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-end">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">end</span>
+                        <span>
+                            <span class="code text-primary fw-bold">end</span>
+                            <span class="ms-1"><sub><a href="#{*}.html#type-#{*}" class="code text-info">#{*}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="noobj{0}.html#type-noobj{0}" class="code text-success">noobj{0}</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/end?noobj{0}&lt;=#{*}</small>
                     </div>
                     <div class="card-body p-2">
@@ -1315,7 +1421,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-eq">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">eq</span>
+                        <span>
+                            <span class="code text-primary fw-bold">eq</span>
+                            <span class="ms-1"><sub><a href="#.html#type-#" class="code text-info">#</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-bool" class="code text-success">/m/bool</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/eq?/m/bool&lt;=#</small>
                     </div>
                     <div class="card-body p-2">
@@ -1324,7 +1433,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-eval">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">eval</span>
+                        <span>
+                            <span class="code text-primary fw-bold">eval</span>
+                            <span class="ms-1"><sub><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#{*}.html#type-#{*}" class="code text-success">#{*}</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/eval?#{*}&lt;=#{?}</small>
                     </div>
                     <div class="card-body p-2">
@@ -1333,7 +1445,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-failure">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">failure</span>
+                        <span>
+                            <span class="code text-primary fw-bold">failure</span>
+                            <span class="ms-1"><sub><a href="#{*}.html#type-#{*}" class="code text-info">#{*}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-fail" class="code text-success">/m/fail</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/failure?/m/fail&lt;=#{*}</small>
                     </div>
                     <div class="card-body p-2">
@@ -1342,7 +1457,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-filter">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">filter</span>
+                        <span>
+                            <span class="code text-primary fw-bold">filter</span>
+                            <span class="ms-1"><sub><a href="A.html#type-A" class="code text-info">A</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="A{?}.html#type-A{" class="code text-success">A{?}</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/filter?A{?}&lt;=A</small>
                     </div>
                     <div class="card-body p-2">
@@ -1351,7 +1469,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-fork">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">fork</span>
+                        <span>
+                            <span class="code text-primary fw-bold">fork</span>
+                            <span class="ms-1"><sub><a href="A{*}.html#type-A{*}" class="code text-info">A{*}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="A{*}.html#type-A{*}" class="code text-success">A{*}</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/fork?A{*}&lt;=A{*}</small>
                     </div>
                     <div class="card-body p-2">
@@ -1360,7 +1481,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-from">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">from</span>
+                        <span>
+                            <span class="code text-primary fw-bold">from</span>
+                            <span class="ms-1"><sub><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#{*}.html#type-#{*}" class="code text-success">#{*}</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/from?#{*}&lt;=#{?}</small>
                     </div>
                     <div class="card-body p-2">
@@ -1369,7 +1493,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-get">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">get</span>
+                        <span>
+                            <span class="code text-primary fw-bold">get</span>
+                            <span class="ms-1"><sub><a href="#type-rel" class="code text-info">/m/rel</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="A{?}.html#type-A{" class="code text-success">A{?}</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/get?A{?}&lt;=/m/rel</small>
                     </div>
                     <div class="card-body p-2">
@@ -1378,7 +1505,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-group">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">group</span>
+                        <span>
+                            <span class="code text-primary fw-bold">group</span>
+                            <span class="ms-1"><sub><a href="#{*}.html#type-#{*}" class="code text-info">#{*}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-rec" class="code text-success">/m/rec</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/group?/m/rec&lt;=#{*}</small>
                     </div>
                     <div class="card-body p-2">
@@ -1387,7 +1517,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-gt">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">gt</span>
+                        <span>
+                            <span class="code text-primary fw-bold">gt</span>
+                            <span class="ms-1"><sub><a href="#type-int" class="code text-info">/m/int</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-bool" class="code text-success">/m/bool</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/gt?/m/bool&lt;=/m/int</small>
                     </div>
                     <div class="card-body p-2">
@@ -1398,7 +1531,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-gte">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">gte</span>
+                        <span>
+                            <span class="code text-primary fw-bold">gte</span>
+                            <span class="ms-1"><sub><a href="#type-int" class="code text-info">/m/int</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-bool" class="code text-success">/m/bool</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/gte?/m/bool&lt;=/m/int</small>
                     </div>
                     <div class="card-body p-2">
@@ -1409,7 +1545,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-has">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">has</span>
+                        <span>
+                            <span class="code text-primary fw-bold">has</span>
+                            <span class="ms-1"><sub><a href="#type-str" class="code text-info">/m/str</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-str{" class="code text-success">/m/str{?}</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/has?/m/str{?}&lt;=/m/str</small>
                     </div>
                     <div class="card-body p-2">
@@ -1423,7 +1562,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-host">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">host</span>
+                        <span>
+                            <span class="code text-primary fw-bold">host</span>
+                            <span class="ms-1"><sub><a href="#type-uri" class="code text-info">/m/uri</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-uri{" class="code text-success">/m/uri{?}</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/host?/m/uri{?}&lt;=/m/uri</small>
                     </div>
                     <div class="card-body p-2">
@@ -1433,7 +1575,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-id">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">id</span>
+                        <span>
+                            <span class="code text-primary fw-bold">id</span>
+                            <span class="ms-1"><sub><a href="A.html#type-A" class="code text-info">A</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="A.html#type-A" class="code text-success">A</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/id?A&lt;=A</small>
                     </div>
                     <div class="card-body p-2">
@@ -1443,7 +1588,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-import">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">import</span>
+                        <span>
+                            <span class="code text-primary fw-bold">import</span>
+                            <span class="ms-1"><sub><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-space{*}" class="code text-success">/m/space{*}</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/import?/m/space{*}&lt;=#{?}</small>
                     </div>
                     <div class="card-body p-2">
@@ -1452,7 +1600,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-inv">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">inv</span>
+                        <span>
+                            <span class="code text-primary fw-bold">inv</span>
+                            <span class="ms-1"><sub><a href="#type-real" class="code text-info">/m/real</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-real" class="code text-success">/m/real</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/inv?/m/real&lt;=/m/real</small>
                     </div>
                     <div class="card-body p-2">
@@ -1461,7 +1612,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-is">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">is</span>
+                        <span>
+                            <span class="code text-primary fw-bold">is</span>
+                            <span class="ms-1"><sub><a href="A{?}.html#type-A{" class="code text-info">A{?}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="A{?}.html#type-A{" class="code text-success">A{?}</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/is?A{?}&lt;=A{?}</small>
                     </div>
                     <div class="card-body p-2">
@@ -1470,7 +1624,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-isa">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">isa</span>
+                        <span>
+                            <span class="code text-primary fw-bold">isa</span>
+                            <span class="ms-1"><sub><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#{?}.html#type-#{" class="code text-success">#{?}</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/isa?#{?}&lt;=#{?}</small>
                     </div>
                     <div class="card-body p-2">
@@ -1479,7 +1636,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-lcase">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">lcase</span>
+                        <span>
+                            <span class="code text-primary fw-bold">lcase</span>
+                            <span class="ms-1"><sub><a href="#type-str" class="code text-info">/m/str</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-str" class="code text-success">/m/str</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/lcase?/m/str&lt;=/m/str</small>
                     </div>
                     <div class="card-body p-2">
@@ -1488,7 +1648,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-lift">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">lift</span>
+                        <span>
+                            <span class="code text-primary fw-bold">lift</span>
+                            <span class="ms-1"><sub><a href="#.html#type-#" class="code text-info">#</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#.html#type-#" class="code text-success">#</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/lift?#&lt;=#</small>
                     </div>
                     <div class="card-body p-2">
@@ -1499,7 +1662,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-lshift">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">lshift</span>
+                        <span>
+                            <span class="code text-primary fw-bold">lshift</span>
+                            <span class="ms-1"><sub><a href="#type-rel" class="code text-info">/m/rel</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#{*}.html#type-#{*}" class="code text-success">#{*}</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/lshift?#{*}&lt;=/m/rel</small>
                     </div>
                     <div class="card-body p-2">
@@ -1509,7 +1675,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-lt">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">lt</span>
+                        <span>
+                            <span class="code text-primary fw-bold">lt</span>
+                            <span class="ms-1"><sub><a href="#type-int" class="code text-info">/m/int</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-bool" class="code text-success">/m/bool</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/lt?/m/bool&lt;=/m/int</small>
                     </div>
                     <div class="card-body p-2">
@@ -1520,7 +1689,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-lte">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">lte</span>
+                        <span>
+                            <span class="code text-primary fw-bold">lte</span>
+                            <span class="ms-1"><sub><a href="#type-int" class="code text-info">/m/int</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-bool" class="code text-success">/m/bool</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/lte?/m/bool&lt;=/m/int</small>
                     </div>
                     <div class="card-body p-2">
@@ -1531,7 +1703,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-map">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">map</span>
+                        <span>
+                            <span class="code text-primary fw-bold">map</span>
+                            <span class="ms-1"><sub><a href="A.html#type-A" class="code text-info">A</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="B.html#type-B" class="code text-success">B</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/map?B&lt;=A</small>
                     </div>
                     <div class="card-body p-2">
@@ -1541,7 +1716,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-matches">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">matches</span>
+                        <span>
+                            <span class="code text-primary fw-bold">matches</span>
+                            <span class="ms-1"><sub><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-bool" class="code text-success">/m/bool</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/matches?/m/bool&lt;=#{?}</small>
                     </div>
                     <div class="card-body p-2">
@@ -1550,7 +1728,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-math">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">math</span>
+                        <span>
+                            <span class="code text-primary fw-bold">math</span>
+                            <span class="ms-1"><sub><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-real" class="code text-success">/m/real</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/math?/m/real&lt;=#{?}</small>
                     </div>
                     <div class="card-body p-2">
@@ -1559,7 +1740,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-merge">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">merge</span>
+                        <span>
+                            <span class="code text-primary fw-bold">merge</span>
+                            <span class="ms-1"><sub><a href="#type-str{*}" class="code text-info">/m/str{*}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-str" class="code text-success">/m/str</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/merge?/m/str&lt;=/m/str{*}</small>
                     </div>
                     <div class="card-body p-2">
@@ -1577,7 +1761,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-minus">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">minus</span>
+                        <span>
+                            <span class="code text-primary fw-bold">minus</span>
+                            <span class="ms-1"><sub><a href="#type-int" class="code text-info">/m/int</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-int" class="code text-success">/m/int</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/minus?/m/int&lt;=/m/int</small>
                     </div>
                     <div class="card-body p-2">
@@ -1587,7 +1774,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-mod">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">mod</span>
+                        <span>
+                            <span class="code text-primary fw-bold">mod</span>
+                            <span class="ms-1"><sub><a href="#type-int" class="code text-info">/m/int</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-int" class="code text-success">/m/int</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/mod?/m/int&lt;=/m/int</small>
                     </div>
                     <div class="card-body p-2">
@@ -1596,7 +1786,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-mplus">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">mplus</span>
+                        <span>
+                            <span class="code text-primary fw-bold">mplus</span>
+                            <span class="ms-1"><sub><a href="#type-rec" class="code text-info">/m/rec</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-rec" class="code text-success">/m/rec</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/mplus?/m/rec&lt;=/m/rec</small>
                     </div>
                     <div class="card-body p-2">
@@ -1605,7 +1798,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-mult">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">mult</span>
+                        <span>
+                            <span class="code text-primary fw-bold">mult</span>
+                            <span class="ms-1"><sub><a href="#type-bool" class="code text-info">/m/bool</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-bool" class="code text-success">/m/bool</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/mult?/m/bool&lt;=/m/bool</small>
                     </div>
                     <div class="card-body p-2">
@@ -1619,7 +1815,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-neg">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">neg</span>
+                        <span>
+                            <span class="code text-primary fw-bold">neg</span>
+                            <span class="ms-1"><sub><a href="#type-int" class="code text-info">/m/int</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-int" class="code text-success">/m/int</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/neg?/m/int&lt;=/m/int</small>
                     </div>
                     <div class="card-body p-2">
@@ -1630,7 +1829,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-neq">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">neq</span>
+                        <span>
+                            <span class="code text-primary fw-bold">neq</span>
+                            <span class="ms-1"><sub><a href="#.html#type-#" class="code text-info">#</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-bool" class="code text-success">/m/bool</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/neq?/m/bool&lt;=#</small>
                     </div>
                     <div class="card-body p-2">
@@ -1639,7 +1841,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-not">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">not</span>
+                        <span>
+                            <span class="code text-primary fw-bold">not</span>
+                            <span class="ms-1"><sub><a href="#type-bool" class="code text-info">/m/bool</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-bool" class="code text-success">/m/bool</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/not?/m/bool&lt;=/m/bool</small>
                     </div>
                     <div class="card-body p-2">
@@ -1649,7 +1854,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-one">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">one</span>
+                        <span>
+                            <span class="code text-primary fw-bold">one</span>
+                            <span class="ms-1"><sub><a href="#type-int" class="code text-info">/m/int</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-int" class="code text-success">/m/int</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/one?/m/int&lt;=/m/int</small>
                     </div>
                     <div class="card-body p-2">
@@ -1660,7 +1868,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-or">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">or</span>
+                        <span>
+                            <span class="code text-primary fw-bold">or</span>
+                            <span class="ms-1"><sub><a href="A.html#type-A" class="code text-info">A</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-bool" class="code text-success">/m/bool</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/or?/m/bool&lt;=A</small>
                     </div>
                     <div class="card-body p-2">
@@ -1669,7 +1880,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-order">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">order</span>
+                        <span>
+                            <span class="code text-primary fw-bold">order</span>
+                            <span class="ms-1"><sub><a href="#type-int{*}" class="code text-info">/m/int{*}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-lst" class="code text-success">/m/lst</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/order?/m/lst&lt;=/m/int{*}</small>
                     </div>
                     <div class="card-body p-2">
@@ -1680,7 +1894,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-parent">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">parent</span>
+                        <span>
+                            <span class="code text-primary fw-bold">parent</span>
+                            <span class="ms-1"><sub><a href="#.html#type-#" class="code text-info">#</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#{?}.html#type-#{" class="code text-success">#{?}</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/parent?#{?}&lt;=#</small>
                     </div>
                     <div class="card-body p-2">
@@ -1689,7 +1906,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-path">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">path</span>
+                        <span>
+                            <span class="code text-primary fw-bold">path</span>
+                            <span class="ms-1"><sub><a href="#type-uri" class="code text-info">/m/uri</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-uri" class="code text-success">/m/uri</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/path?/m/uri&lt;=/m/uri</small>
                     </div>
                     <div class="card-body p-2">
@@ -1698,7 +1918,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-plus">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">plus</span>
+                        <span>
+                            <span class="code text-primary fw-bold">plus</span>
+                            <span class="ms-1"><sub><a href="#type-bytes" class="code text-info">/m/bytes</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-bytes" class="code text-success">/m/bytes</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/plus?/m/bytes&lt;=/m/bytes</small>
                     </div>
                     <div class="card-body p-2">
@@ -1716,7 +1939,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-port">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">port</span>
+                        <span>
+                            <span class="code text-primary fw-bold">port</span>
+                            <span class="ms-1"><sub><a href="#type-uri" class="code text-info">/m/uri</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-int{" class="code text-success">/m/int{?}</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/port?/m/int{?}&lt;=/m/uri</small>
                     </div>
                     <div class="card-body p-2">
@@ -1726,7 +1952,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-pow">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">pow</span>
+                        <span>
+                            <span class="code text-primary fw-bold">pow</span>
+                            <span class="ms-1"><sub><a href="#type-int" class="code text-info">/m/int</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-int" class="code text-success">/m/int</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/pow?/m/int&lt;=/m/int</small>
                     </div>
                     <div class="card-body p-2">
@@ -1738,7 +1967,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-print">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">print</span>
+                        <span>
+                            <span class="code text-primary fw-bold">print</span>
+                            <span class="ms-1"><sub><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#{*}.html#type-#{*}" class="code text-success">#{*}</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/print?#{*}&lt;=#{?}</small>
                     </div>
                     <div class="card-body p-2">
@@ -1747,7 +1979,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-prod">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">prod</span>
+                        <span>
+                            <span class="code text-primary fw-bold">prod</span>
+                            <span class="ms-1"><sub><a href="#type-int{*}" class="code text-info">/m/int{*}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-int" class="code text-success">/m/int</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/prod?/m/int&lt;=/m/int{*}</small>
                     </div>
                     <div class="card-body p-2">
@@ -1758,7 +1993,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-q">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">q</span>
+                        <span>
+                            <span class="code text-primary fw-bold">q</span>
+                            <span class="ms-1"><sub><a href="#type-uri" class="code text-info">/m/uri</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-uri" class="code text-success">/m/uri</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/q?/m/uri&lt;=/m/uri</small>
                     </div>
                     <div class="card-body p-2">
@@ -1769,7 +2007,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-range">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">range</span>
+                        <span>
+                            <span class="code text-primary fw-bold">range</span>
+                            <span class="ms-1"><sub><a href="A{*}.html#type-A{*}" class="code text-info">A{*}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="A{*}.html#type-A{*}" class="code text-success">A{*}</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/range?A{*}&lt;=A{*}</small>
                     </div>
                     <div class="card-body p-2">
@@ -1778,7 +2019,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-reduce">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">reduce</span>
+                        <span>
+                            <span class="code text-primary fw-bold">reduce</span>
+                            <span class="ms-1"><sub><a href="#{*}.html#type-#{*}" class="code text-info">#{*}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#.html#type-#" class="code text-success">#</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/reduce?#&lt;=#{*}</small>
                     </div>
                     <div class="card-body p-2">
@@ -1787,7 +2031,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-ref">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">ref</span>
+                        <span>
+                            <span class="code text-primary fw-bold">ref</span>
+                            <span class="ms-1"><sub><a href="#.html#type-#" class="code text-info">#</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#{*}.html#type-#{*}" class="code text-success">#{*}</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/ref?#{*}&lt;=#</small>
                     </div>
                     <div class="card-body p-2">
@@ -1796,7 +2043,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-regex">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">regex</span>
+                        <span>
+                            <span class="code text-primary fw-bold">regex</span>
+                            <span class="ms-1"><sub><a href="#type-str" class="code text-info">/m/str</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-lst" class="code text-success">/m/lst</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/regex?/m/lst&lt;=/m/str</small>
                     </div>
                     <div class="card-body p-2">
@@ -1805,7 +2055,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-reify">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">reify</span>
+                        <span>
+                            <span class="code text-primary fw-bold">reify</span>
+                            <span class="ms-1"><sub><a href="#type-fail" class="code text-info">/m/fail</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-rec" class="code text-success">/m/rec</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/reify?/m/rec&lt;=/m/fail</small>
                     </div>
                     <div class="card-body p-2">
@@ -1815,7 +2068,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-repeat">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">repeat</span>
+                        <span>
+                            <span class="code text-primary fw-bold">repeat</span>
+                            <span class="ms-1"><sub><a href="A.html#type-A" class="code text-info">A</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="A{*}.html#type-A{*}" class="code text-success">A{*}</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/repeat?A{*}&lt;=A</small>
                     </div>
                     <div class="card-body p-2">
@@ -1824,7 +2080,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-reverse">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">reverse</span>
+                        <span>
+                            <span class="code text-primary fw-bold">reverse</span>
+                            <span class="ms-1"><sub><a href="#type-str" class="code text-info">/m/str</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-str" class="code text-success">/m/str</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/reverse?/m/str&lt;=/m/str</small>
                     </div>
                     <div class="card-body p-2">
@@ -1836,7 +2095,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-rng">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">rng</span>
+                        <span>
+                            <span class="code text-primary fw-bold">rng</span>
+                            <span class="ms-1"><sub><a href="#type-rel" class="code text-info">/m/rel</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#{*}.html#type-#{*}" class="code text-success">#{*}</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/rng?#{*}&lt;=/m/rel</small>
                     </div>
                     <div class="card-body p-2">
@@ -1846,7 +2108,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-rshift">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">rshift</span>
+                        <span>
+                            <span class="code text-primary fw-bold">rshift</span>
+                            <span class="ms-1"><sub><a href="#type-uri" class="code text-info">/m/uri</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#{*}.html#type-#{*}" class="code text-success">#{*}</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/rshift?#{*}&lt;=/m/uri</small>
                     </div>
                     <div class="card-body p-2">
@@ -1863,7 +2128,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-scheme">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">scheme</span>
+                        <span>
+                            <span class="code text-primary fw-bold">scheme</span>
+                            <span class="ms-1"><sub><a href="#type-uri" class="code text-info">/m/uri</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-uri{" class="code text-success">/m/uri{?}</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/scheme?/m/uri{?}&lt;=/m/uri</small>
                     </div>
                     <div class="card-body p-2">
@@ -1873,7 +2141,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-select">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">select</span>
+                        <span>
+                            <span class="code text-primary fw-bold">select</span>
+                            <span class="ms-1"><sub><a href="#type-uri" class="code text-info">/m/uri</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-uri{" class="code text-success">/m/uri{?}</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/select?/m/uri{?}&lt;=/m/uri</small>
                     </div>
                     <div class="card-body p-2">
@@ -1887,7 +2158,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-serialize">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">serialize</span>
+                        <span>
+                            <span class="code text-primary fw-bold">serialize</span>
+                            <span class="ms-1"><sub><a href="A.html#type-A" class="code text-info">A</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="B.html#type-B" class="code text-success">B</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/serialize?B&lt;=A</small>
                     </div>
                     <div class="card-body p-2">
@@ -1896,7 +2170,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-side">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">side</span>
+                        <span>
+                            <span class="code text-primary fw-bold">side</span>
+                            <span class="ms-1"><sub><a href="A.html#type-A" class="code text-info">A</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="A.html#type-A" class="code text-success">A</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/side?A&lt;=A</small>
                     </div>
                     <div class="card-body p-2">
@@ -1905,7 +2182,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-skip">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">skip</span>
+                        <span>
+                            <span class="code text-primary fw-bold">skip</span>
+                            <span class="ms-1"><sub><a href="A{*}.html#type-A{*}" class="code text-info">A{*}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="A{*}.html#type-A{*}" class="code text-success">A{*}</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/skip?A{*}&lt;=A{*}</small>
                     </div>
                     <div class="card-body p-2">
@@ -1914,7 +2194,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-source">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">source</span>
+                        <span>
+                            <span class="code text-primary fw-bold">source</span>
+                            <span class="ms-1"><sub><a href="#.html#type-#" class="code text-info">#</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#{*}.html#type-#{*}" class="code text-success">#{*}</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/source?#{*}&lt;=#</small>
                     </div>
                     <div class="card-body p-2">
@@ -1923,7 +2206,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-split">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">split</span>
+                        <span>
+                            <span class="code text-primary fw-bold">split</span>
+                            <span class="ms-1"><sub><a href="#type-str" class="code text-info">/m/str</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-lst" class="code text-success">/m/lst</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/split?/m/lst&lt;=/m/str</small>
                     </div>
                     <div class="card-body p-2">
@@ -1936,7 +2222,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-start">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">start</span>
+                        <span>
+                            <span class="code text-primary fw-bold">start</span>
+                            <span class="ms-1"><sub><a href="noobj{0}.html#type-noobj{0}" class="code text-info">noobj{0}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="A{**}.html#type-A{**}" class="code text-success">A{**}</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/start?A{**}&lt;=noobj{0}</small>
                     </div>
                     <div class="card-body p-2">
@@ -1945,7 +2234,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-sum">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">sum</span>
+                        <span>
+                            <span class="code text-primary fw-bold">sum</span>
+                            <span class="ms-1"><sub><a href="#type-int{*}" class="code text-info">/m/int{*}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-int" class="code text-success">/m/int</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/sum?/m/int&lt;=/m/int{*}</small>
                     </div>
                     <div class="card-body p-2">
@@ -1959,7 +2251,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-swap">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">swap</span>
+                        <span>
+                            <span class="code text-primary fw-bold">swap</span>
+                            <span class="ms-1"><sub><a href="A.html#type-A" class="code text-info">A</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="A.html#type-A" class="code text-success">A</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/swap?A&lt;=A</small>
                     </div>
                     <div class="card-body p-2">
@@ -1968,7 +2263,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-take">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">take</span>
+                        <span>
+                            <span class="code text-primary fw-bold">take</span>
+                            <span class="ms-1"><sub><a href="A{*}.html#type-A{*}" class="code text-info">A{*}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="A{*}.html#type-A{*}" class="code text-success">A{*}</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/take?A{*}&lt;=A{*}</small>
                     </div>
                     <div class="card-body p-2">
@@ -1977,7 +2275,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-thread">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">thread</span>
+                        <span>
+                            <span class="code text-primary fw-bold">thread</span>
+                            <span class="ms-1"><sub><a href="A.html#type-A" class="code text-info">A</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="A.html#type-A" class="code text-success">A</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/thread?A&lt;=A</small>
                     </div>
                     <div class="card-body p-2">
@@ -1986,7 +2287,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-tid">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">tid</span>
+                        <span>
+                            <span class="code text-primary fw-bold">tid</span>
+                            <span class="ms-1"><sub><a href="#.html#type-#" class="code text-info">#</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-uri" class="code text-success">/m/uri</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/tid?/m/uri&lt;=#</small>
                     </div>
                     <div class="card-body p-2">
@@ -1995,7 +2299,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-to">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">to</span>
+                        <span>
+                            <span class="code text-primary fw-bold">to</span>
+                            <span class="ms-1"><sub><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#{?}.html#type-#{" class="code text-success">#{?}</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/to?#{?}&lt;=#{?}</small>
                     </div>
                     <div class="card-body p-2">
@@ -2004,7 +2311,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-type">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">type</span>
+                        <span>
+                            <span class="code text-primary fw-bold">type</span>
+                            <span class="ms-1"><sub><a href="#type-type" class="code text-info">/m/type</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-type" class="code text-success">/m/type</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/type?/m/type&lt;=/m/type</small>
                     </div>
                     <div class="card-body p-2">
@@ -2014,7 +2324,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-ucase">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">ucase</span>
+                        <span>
+                            <span class="code text-primary fw-bold">ucase</span>
+                            <span class="ms-1"><sub><a href="#type-str" class="code text-info">/m/str</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-str" class="code text-success">/m/str</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/ucase?/m/str&lt;=/m/str</small>
                     </div>
                     <div class="card-body p-2">
@@ -2023,7 +2336,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-update">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">update</span>
+                        <span>
+                            <span class="code text-primary fw-bold">update</span>
+                            <span class="ms-1"><sub><a href="#type-rec" class="code text-info">/m/rec</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-rec{" class="code text-success">/m/rec{?}</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/update?/m/rec{?}&lt;=/m/rec</small>
                     </div>
                     <div class="card-body p-2">
@@ -2034,7 +2350,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-uri:c">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">uri:c</span>
+                        <span>
+                            <span class="code text-primary fw-bold">uri:c</span>
+                            <span class="ms-1"><sub><a href="#type-uri" class="code text-info">/m/uri</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-lst" class="code text-success">/m/lst</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/uri:c?/m/lst&lt;=/m/uri</small>
                     </div>
                     <div class="card-body p-2">
@@ -2043,7 +2362,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-vid">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">vid</span>
+                        <span>
+                            <span class="code text-primary fw-bold">vid</span>
+                            <span class="ms-1"><sub><a href="A.html#type-A" class="code text-info">A</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="A.html#type-A" class="code text-success">A</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/vid?A&lt;=A</small>
                     </div>
                     <div class="card-body p-2">
@@ -2053,7 +2375,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-where">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">where</span>
+                        <span>
+                            <span class="code text-primary fw-bold">where</span>
+                            <span class="ms-1"><sub><a href="#type-uri" class="code text-info">/m/uri</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-uri{" class="code text-success">/m/uri{?}</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/where?/m/uri{?}&lt;=/m/uri</small>
                     </div>
                     <div class="card-body p-2">
@@ -2063,7 +2388,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-within">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">within</span>
+                        <span>
+                            <span class="code text-primary fw-bold">within</span>
+                            <span class="ms-1"><sub><a href="#type-bytes" class="code text-info">/m/bytes</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="B.html#type-B" class="code text-success">B</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/within?B&lt;=/m/bytes</small>
                     </div>
                     <div class="card-body p-2">
@@ -2075,7 +2403,10 @@ bin/metatron</code></pre>
                 </div>
                 <div class="card mb-3" id="inst-zero">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-primary fw-bold">zero</span>
+                        <span>
+                            <span class="code text-primary fw-bold">zero</span>
+                            <span class="ms-1"><sub><a href="#type-bytes" class="code text-info">/m/bytes</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-bytes" class="code text-success">/m/bytes</a></sub></span>
+                        </span>
                         <small class="text-muted code">/m/inst/zero?/m/bytes&lt;=/m/bytes</small>
                     </div>
                     <div class="card-body p-2">
@@ -2090,37 +2421,300 @@ bin/metatron</code></pre>
                 </div>
         </div>
             
+        <div class="container-xxl mb-4" id="rewrites">
+            <h3 class="text-warning mb-3">
+                Rewrites <span class="badge bg-warning text-dark">8</span>
+            </h3>
+            
+                <div class="card mb-3" id="rewrite-else_after_count">
+                    <div class="card-header d-flex justify-content-between align-items-center py-2">
+                        <span>
+                            <span class="code text-warning fw-bold">else_after_count</span>
+                            <span class="ms-1"><sub><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-code{" class="code text-success">/m/code{?}</a></sub></span>
+                        </span>
+                        <small class="text-muted code">/m/inst/rewrite/else_after_count?/m/code{?}&lt;=#{?}</small>
+                    </div>
+                    
+                    <div class="card-body p-2">
+                        <pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/else_after_count?code{?}&lt;=#{?}(code::T){&lt;j&gt;}</code></pre>
+                    </div>
+                </div>
+                <div class="card mb-3" id="rewrite-id_removal">
+                    <div class="card-header d-flex justify-content-between align-items-center py-2">
+                        <span>
+                            <span class="code text-warning fw-bold">id_removal</span>
+                            <span class="ms-1"><sub><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-code{" class="code text-success">/m/code{?}</a></sub></span>
+                        </span>
+                        <small class="text-muted code">/m/inst/rewrite/id_removal?/m/code{?}&lt;=#{?}</small>
+                    </div>
+                    
+                    <div class="card-body p-2">
+                        <pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/id_removal?code{?}&lt;=#{?}(code::T){&lt;j&gt;}</code></pre>
+                    </div>
+                </div>
+                <div class="card mb-3" id="rewrite-map_nest">
+                    <div class="card-header d-flex justify-content-between align-items-center py-2">
+                        <span>
+                            <span class="code text-warning fw-bold">map_nest</span>
+                            <span class="ms-1"><sub><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-code{" class="code text-success">/m/code{?}</a></sub></span>
+                        </span>
+                        <small class="text-muted code">/m/inst/rewrite/map_nest?/m/code{?}&lt;=#{?}</small>
+                    </div>
+                    
+                    <div class="card-body p-2">
+                        <pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/map_nest?code{?}&lt;=#{?}(code::T){&lt;j&gt;}</code></pre>
+                    </div>
+                </div>
+                <div class="card mb-3" id="rewrite-mult_one">
+                    <div class="card-header d-flex justify-content-between align-items-center py-2">
+                        <span>
+                            <span class="code text-warning fw-bold">mult_one</span>
+                            <span class="ms-1"><sub><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-code{" class="code text-success">/m/code{?}</a></sub></span>
+                        </span>
+                        <small class="text-muted code">/m/inst/rewrite/mult_one?/m/code{?}&lt;=#{?}</small>
+                    </div>
+                    
+                    <div class="card-body p-2">
+                        <pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/mult_one?code{?}&lt;=#{?}(code::T){&lt;j&gt;}</code></pre>
+                    </div>
+                </div>
+                <div class="card mb-3" id="rewrite-plus_zero">
+                    <div class="card-header d-flex justify-content-between align-items-center py-2">
+                        <span>
+                            <span class="code text-warning fw-bold">plus_zero</span>
+                            <span class="ms-1"><sub><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-code{" class="code text-success">/m/code{?}</a></sub></span>
+                        </span>
+                        <small class="text-muted code">/m/inst/rewrite/plus_zero?/m/code{?}&lt;=#{?}</small>
+                    </div>
+                    
+                    <div class="card-body p-2">
+                        <pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/plus_zero?code{?}&lt;=#{?}(code::T){&lt;j&gt;}</code></pre>
+                    </div>
+                </div>
+                <div class="card mb-3" id="rewrite-split_merge_collapse">
+                    <div class="card-header d-flex justify-content-between align-items-center py-2">
+                        <span>
+                            <span class="code text-warning fw-bold">split_merge_collapse</span>
+                            <span class="ms-1"><sub><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-code{" class="code text-success">/m/code{?}</a></sub></span>
+                        </span>
+                        <small class="text-muted code">/m/inst/rewrite/split_merge_collapse?/m/code{?}&lt;=#{?}</small>
+                    </div>
+                    
+                    <div class="card-body p-2">
+                        <pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/split_merge_collapse?code{?}&lt;=#{?}(code::T){&lt;j&gt;}</code></pre>
+                    </div>
+                </div>
+                <div class="card mb-3" id="rewrite-split_merge_left_factor">
+                    <div class="card-header d-flex justify-content-between align-items-center py-2">
+                        <span>
+                            <span class="code text-warning fw-bold">split_merge_left_factor</span>
+                            <span class="ms-1"><sub><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-code{" class="code text-success">/m/code{?}</a></sub></span>
+                        </span>
+                        <small class="text-muted code">/m/inst/rewrite/split_merge_left_factor?/m/code{?}&lt;=#{?}</small>
+                    </div>
+                    
+                    <div class="card-body p-2">
+                        <pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/split_merge_left_factor?code{?}&lt;=#{?}(code::T){&lt;j&gt;}</code></pre>
+                    </div>
+                </div>
+                <div class="card mb-3" id="rewrite-split_merge_right_factor">
+                    <div class="card-header d-flex justify-content-between align-items-center py-2">
+                        <span>
+                            <span class="code text-warning fw-bold">split_merge_right_factor</span>
+                            <span class="ms-1"><sub><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-code{" class="code text-success">/m/code{?}</a></sub></span>
+                        </span>
+                        <small class="text-muted code">/m/inst/rewrite/split_merge_right_factor?/m/code{?}&lt;=#{?}</small>
+                    </div>
+                    
+                    <div class="card-body p-2">
+                        <pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/split_merge_right_factor?code{?}&lt;=#{?}(code::T){&lt;j&gt;}</code></pre>
+                    </div>
+                </div>
+        </div>
+            
         <div class="container-xxl mb-4" id="spaces">
             <h3 class="text-primary mb-3">
-                Spaces <span class="badge bg-warning text-dark">4</span>
+                Spaces <span class="badge bg-primary">4</span>
             </h3>
-            <div class="card">
-                <div class="list-group list-group-flush">
+            
+                <div class="card mb-3" id="space-mem">
+                    <div class="card-header d-flex justify-content-between align-items-center py-2">
+                        <a href="m_space_mem.html" class="code text-primary fw-bold text-decoration-none">mem</a>
+                        <small class="text-muted code">/m/space/mem</small>
+                    </div>
                     
-                <a href="m_space_mem.html" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary" id="space-mem">
-                    <span class="code">mem</span>
-                    <small class="text-muted code">/m/space/mem</small>
-                </a>
-                <a href="m_space_meta.html" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary" id="space-meta">
-                    <span class="code">meta</span>
-                    <small class="text-muted code">/m/space/meta</small>
-                </a>
-                <a href="m_space_q.html" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary" id="space-q">
-                    <span class="code">q</span>
-                    <small class="text-muted code">/m/space/q</small>
-                </a>
-                <a href="m_space_stack.html" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary" id="space-stack">
-                    <span class="code">stack</span>
-                    <small class="text-muted code">/m/space/stack</small>
-                </a>
+                    <div class="mt-2">
+                        <pre class="mb-0"><code class="language-mtron">space::T[][inst?rng=mem&amp;dom=#{?}(isa([pattern=&gt;uri::T,{?}persist=&gt;uri::T[][inst?rng=file&amp;dom=#{?}(uri::T){&lt;j&gt;}]@/m/mach/file])){&lt;j&gt;}]@/m/space/mem</code></pre>
+                    </div>
                 </div>
-            </div>
+                <div class="card mb-3" id="space-meta">
+                    <div class="card-header d-flex justify-content-between align-items-center py-2">
+                        <a href="m_space_meta.html" class="code text-primary fw-bold text-decoration-none">meta</a>
+                        <small class="text-muted code">/m/space/meta</small>
+                    </div>
+                    
+                    <div class="mt-2">
+                        <pre class="mb-0"><code class="language-mtron">space::T[][inst?rng=meta&amp;dom=#{?}(isa([
+ pattern=&gt;uri::T,
+ host   =&gt;uri::T,
+ route  =&gt;[uri::T=&gt;uri::T],
+ peers  =&gt;[uri{*}::T]])){&lt;j&gt;}]@/m/space/meta</code></pre>
+                    </div>
+                </div>
+                <div class="card mb-3" id="space-q">
+                    <div class="card-header d-flex justify-content-between align-items-center py-2">
+                        <a href="m_space_q.html" class="code text-primary fw-bold text-decoration-none">q</a>
+                        <small class="text-muted code">/m/space/q</small>
+                    </div>
+                    
+                    <div class="mt-2">
+                        <pre class="mb-0"><code class="language-mtron">rec::T[][inst?rng=q&amp;dom=#{?}([
+ pattern       =&gt;uri::T,
+ pre_write{?}  =&gt;inst::T,
+ post_write{?} =&gt;inst::T,
+ qless_write{?}=&gt;inst::T,
+ pre_read{?}   =&gt;inst::T,
+ post_read{?}  =&gt;inst::T]){&lt;j&gt;}]@/m/space/q</code></pre>
+                    </div>
+                </div>
+                <div class="card mb-3" id="space-stack">
+                    <div class="card-header d-flex justify-content-between align-items-center py-2">
+                        <a href="m_space_stack.html" class="code text-primary fw-bold text-decoration-none">stack</a>
+                        <small class="text-muted code">/m/space/stack</small>
+                    </div>
+                    
+                    <div class="mt-2">
+                        <pre class="mb-0"><code class="language-mtron">space::T[][inst?rng=stack&amp;dom=#{?}(isa([pattern=&gt;uri::T])){&lt;j&gt;}]@/m/space/stack</code></pre>
+                    </div>
+                </div>
+        </div>
+            
+        <div class="container-xxl mb-4" id="consts">
+            <h3 class="text-secondary mb-3">
+                Constants <span class="badge bg-secondary">8</span>
+            </h3>
+            
+                <div class="card mb-3" id="const-doc">
+                    <div class="card-header d-flex justify-content-between align-items-center py-2">
+                        <span class="code text-secondary fw-bold">doc</span>
+                        <small class="text-muted code">/m/doc</small>
+                    </div>
+                    
+                    <div class="card-body p-2">
+                        <pre class="mb-0"><code class="language-mtron">/m/doc::[
+ pattern=&gt;/m/doc/#,
+ space  =&gt;[
+   super=&gt;!*/m],
+ q      =&gt;[docq::[pattern=&gt;doc]]]@/m/doc</code></pre>
+                    </div>
+                </div>
+                <div class="card mb-3" id="const-grph">
+                    <div class="card-header d-flex justify-content-between align-items-center py-2">
+                        <span class="code text-secondary fw-bold">grph</span>
+                        <small class="text-muted code">/m/grph</small>
+                    </div>
+                    
+                    <div class="card-body p-2">
+                        <pre class="mb-0"><code class="language-mtron">/m/grph::[
+ pattern=&gt;/m/grph/#,
+ space  =&gt;[
+   super=&gt;!*/m,
+   sub  =&gt;{!*/m/grph/tp3,!*g:#/S/modern}],
+ q      =&gt;[docq::[pattern=&gt;doc]]]@/m/grph</code></pre>
+                    </div>
+                </div>
+                <div class="card mb-3" id="const-iot">
+                    <div class="card-header d-flex justify-content-between align-items-center py-2">
+                        <span class="code text-secondary fw-bold">iot</span>
+                        <small class="text-muted code">/m/iot</small>
+                    </div>
+                    
+                    <div class="card-body p-2">
+                        <pre class="mb-0"><code class="language-mtron">/m/iot::[
+ pattern=&gt;/m/iot/#,
+ space  =&gt;[
+   super=&gt;!*/m,
+   sub  =&gt;{!*/m/iot/haos,!*/m/iot/miot}],
+ q      =&gt;[docq::[pattern=&gt;doc]]]@/m/iot</code></pre>
+                    </div>
+                </div>
+                <div class="card mb-3" id="const-llm">
+                    <div class="card-header d-flex justify-content-between align-items-center py-2">
+                        <span class="code text-secondary fw-bold">llm</span>
+                        <small class="text-muted code">/m/llm</small>
+                    </div>
+                    
+                    <div class="card-body p-2">
+                        <pre class="mb-0"><code class="language-mtron">/m/llm::[
+ pattern=&gt;/m/llm/#,
+ space  =&gt;[
+   super=&gt;!*/m],
+ q      =&gt;[docq::[pattern=&gt;doc]]]@/m/llm</code></pre>
+                    </div>
+                </div>
+                <div class="card mb-3" id="const-mach">
+                    <div class="card-header d-flex justify-content-between align-items-center py-2">
+                        <span class="code text-secondary fw-bold">mach</span>
+                        <small class="text-muted code">/m/mach</small>
+                    </div>
+                    
+                    <div class="card-body p-2">
+                        <pre class="mb-0"><code class="language-mtron">/m/mach::[
+ pattern=&gt;/m/mach/#,
+ space  =&gt;[
+   super=&gt;!*/m,
+   sub  =&gt;!*/m/mach/io],
+ q      =&gt;[docq::[pattern=&gt;doc]]]@/m/mach</code></pre>
+                    </div>
+                </div>
+                <div class="card mb-3" id="const-math">
+                    <div class="card-header d-flex justify-content-between align-items-center py-2">
+                        <span class="code text-secondary fw-bold">math</span>
+                        <small class="text-muted code">/m/math</small>
+                    </div>
+                    
+                    <div class="card-body p-2">
+                        <pre class="mb-0"><code class="language-mtron">/m/math::[
+ pattern=&gt;/m/math/#,
+ space  =&gt;[
+   super=&gt;!*/m],
+ q      =&gt;[docq::[pattern=&gt;doc]]]@/m/math</code></pre>
+                    </div>
+                </div>
+                <div class="card mb-3" id="const-tble">
+                    <div class="card-header d-flex justify-content-between align-items-center py-2">
+                        <span class="code text-secondary fw-bold">tble</span>
+                        <small class="text-muted code">/m/tble</small>
+                    </div>
+                    
+                    <div class="card-body p-2">
+                        <pre class="mb-0"><code class="language-mtron">/m/tble::[
+ pattern=&gt;/m/tble/#,
+ space  =&gt;[
+   super=&gt;!*/m],
+ q      =&gt;[docq::[pattern=&gt;doc]]]@/m/tble</code></pre>
+                    </div>
+                </div>
+                <div class="card mb-3" id="const-web">
+                    <div class="card-header d-flex justify-content-between align-items-center py-2">
+                        <span class="code text-secondary fw-bold">web</span>
+                        <small class="text-muted code">/m/web</small>
+                    </div>
+                    
+                    <div class="card-body p-2">
+                        <pre class="mb-0"><code class="language-mtron">/m/web::[
+ pattern=&gt;/m/web/#,
+ space  =&gt;[
+   super=&gt;!*/m],
+ q      =&gt;[docq::[pattern=&gt;doc]]]@/m/web</code></pre>
+                    </div>
+                </div>
         </div>
             
         <div class="container-xxl py-3 text-center">
             <hr class="border-secondary">
             <small class="text-muted">
-                Generated by Metatron InstSet Doc Generator on 2026-03-31 09:16:24<br>
+                Generated by Metatron InstSet Doc Generator on 2026-03-31 13:40:01<br>
                 © PhaseShift Studio, LLC
             </small>
         </div>

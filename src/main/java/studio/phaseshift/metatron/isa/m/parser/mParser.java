@@ -196,7 +196,7 @@ public class mParser {
 
     public static Parser m_inst_c() {
         return seq(
-                choice(m_inst_furi(), m_type_prefix(INST_TID)), // 0 inst_tid
+                choice(m_inst_furi(), m_type_prefix(M_ISA_INST_TID)), // 0 inst_tid
                 seq(of('(').trim(), choice(rec_internal(m_furi().map(t -> ((fURI) t).toUri()), m_call_prefix(MAP_INST_TID)), lst_internal(), of("")).trim(), of(')').trim()).pick(1), // 1 inst_args
                 seq(of('{').trim(), choice(
                                 of('?').map(t -> null),

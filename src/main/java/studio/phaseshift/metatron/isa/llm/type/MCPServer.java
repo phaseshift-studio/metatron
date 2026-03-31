@@ -20,8 +20,6 @@ package studio.phaseshift.metatron.isa.llm.type;
 
 import dev.langchain4j.mcp.client.DefaultMcpClient;
 import dev.langchain4j.mcp.client.McpClient;
-import dev.langchain4j.mcp.client.logging.McpLogMessage;
-import dev.langchain4j.mcp.client.logging.McpLogMessageHandler;
 import dev.langchain4j.mcp.client.transport.McpTransport;
 import dev.langchain4j.mcp.client.transport.http.StreamableHttpMcpTransport;
 import dev.langchain4j.mcp.client.transport.websocket.WebSocketMcpTransport;
@@ -65,7 +63,7 @@ public class MCPServer extends MRec {
                     uri(HOST), URI_TYPE,
                     uri(TOOL).maybe(), rec(URI_TYPE, T(MCP_TOOL_TID)).maybe(),
                     uri(STATUS).maybe(), isa_(BOOL_TYPE).else_(BOOL_FALSE)))
-            .constructor(instC(INST_TID.dom(ALL.maybe()).rng(MCP_SERVER_TID), lst(T(REC_TID)),
+            .constructor(instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(MCP_SERVER_TID), lst(T(REC_TID)),
                     (x, inst) -> new MCPServer(inst.arg(0).asRec().jvm(), MCP_SERVER_TID, inst.arg(0).vid())))
             .create();
 
@@ -91,7 +89,7 @@ public class MCPServer extends MRec {
                 //.autoHealthCheck(true)
                 .cacheToolList(true)
                 .build();
-        this.jvm().put(uri(STATUS), auto_(instC(INST_TID.dom(ALL.maybe()).rng(BOOL_TID), lst(), (lhs, inst) -> {
+        this.jvm().put(uri(STATUS), auto_(instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(BOOL_TID), lst(), (lhs, inst) -> {
             try {
                 this.client.checkHealth();
                 return BOOL_TRUE;
@@ -101,7 +99,7 @@ public class MCPServer extends MRec {
         })));
 
         this.jvm().put(uri(TOOL), auto_(instC(
-                INST_TID.dom(ALL.maybe()).rng(REC_TID), lst(),
+                M_ISA_INST_TID.dom(ALL.maybe()).rng(REC_TID), lst(),
                 (lhs, inst) -> this.client.listTools().stream()
                         .map(t -> {
                             try {

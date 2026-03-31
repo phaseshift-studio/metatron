@@ -45,7 +45,6 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
@@ -151,7 +150,7 @@ public class docSpace extends AbstractSpace<MongoClient> {
                             uri(SERIALIZER).maybe(), URI_TYPE,
                             uri(ROUTE), rec(URI_TYPE, URI_TYPE),
                             uri(COLLECTION).maybe(), LST_TYPE))
-                    .constructor(instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(DOC_SPACE_TID),
+                    .constructor(instC(mInstSet.M_ISA_INST_TID.dom(ALL.maybe()).rng(DOC_SPACE_TID),
                             lst(REC_TYPE),
                             (lhs, inst) -> docSpace.of(inst.arg(0).asRec().jvm(), inst.arg(0).vid()))).create();
 

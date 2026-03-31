@@ -276,7 +276,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                         (this.isRec() && base.equals(REC_TID)) ||
                         (this.isLst() && base.equals(LST_TID)) ||
                         (this.isRel() && base.equals(REL_TID)) ||
-                        (this.isInst() && base.equals(INST_TID)) ||
+                        (this.isInst() && base.equals(M_ISA_INST_TID)) ||
                         (this.isCode() && base.equals(CODE_TID)) ||
                         (this.isType() && base.equals(TYPE_TID)) ||
                         (this.isFail() || this.isCaughtFail() && base.equals(FAIL_TID)))) {
@@ -318,7 +318,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         else if (this.isLst()) return LST_TID.c(this.c());
         else if (this.isRec()) return REC_TID.c(this.c());
         else if (this.isRel()) return REL_TID.c(this.c());
-        else if (this.isInst()) return INST_TID.c(this.c()).dom(this.dom().tid()).rng(this.rng().tid());
+        else if (this.isInst()) return M_ISA_INST_TID.c(this.c()).dom(this.dom().tid()).rng(this.rng().tid());
         else if (this.isCode()) return CODE_TID.c(this.c());
         else if (this.isNoObj()) return NOOBJ_TID.c(this.c());
         else if (this.isFail()) return FAIL_TID.c(this.c());

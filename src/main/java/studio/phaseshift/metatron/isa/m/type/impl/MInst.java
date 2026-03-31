@@ -29,13 +29,13 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.BiFunction;
 
-import static studio.phaseshift.metatron.isa.m.mInstSet.INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
 public class MInst extends MObj implements Inst {
     public MInst(final Triplet<Poly, Inst.f, Obj> jvm, final fURI tid, final fURI vid) {
-        super(jvm, null == tid ? INST_TID : tid, vid);
+        super(jvm, null == tid ? M_ISA_INST_TID : tid, vid);
     }
 
 

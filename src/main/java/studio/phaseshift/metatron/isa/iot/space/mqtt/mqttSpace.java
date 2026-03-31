@@ -72,7 +72,7 @@ public class mqttSpace extends AbstractSpace<Mqtt5Client> {
             uri(ROUTE), REC_TYPE,
             uri(Tokens.QSTRING).c(cInt::maybe), isa_(LST_TYPE));
     public static final Type MQTT_SPACE_TYPE = Type.Builder.build().tid(SPACE_TID).vid(MQTT_SPACE_TID).constructor(
-            instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(MQTT_SPACE_TID),
+            instC(mInstSet.M_ISA_INST_TID.dom(ALL.maybe()).rng(MQTT_SPACE_TID),
                     lst(T(REC_TID, isa_(MQTT_SPACE_CONFIG))), (lhs, inst) ->
                             mqttSpace.of(Poly.Helper.applyObjRecursion(inst.arg(0).asRec(), MQTT_SPACE_CONFIG).asRec(), inst.arg(0).vid()))).create();
 

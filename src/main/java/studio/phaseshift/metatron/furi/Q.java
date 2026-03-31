@@ -59,13 +59,13 @@ public interface Q extends Rec {
     Type Q_TYPE = Type.Builder.build()
             .tid(REC_TID)
             .vid(Q_TID)
-            .constructor(instC(INST_TID.dom(ALL.maybe()).rng(Q_TID),
+            .constructor(instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(Q_TID),
                     lst(rec(uri(PATTERN), T(URI_TID),
-                            uri(PRE_WRITE.maybe()), T(INST_TID),
-                            uri(POST_WRITE.maybe()), T(INST_TID),
-                            uri(QLESS_WRITE.maybe()), T(INST_TID),
-                            uri(PRE_READ.maybe()), T(INST_TID),
-                            uri(POST_READ.maybe()), T(INST_TID))),
+                            uri(PRE_WRITE.maybe()), T(M_ISA_INST_TID),
+                            uri(POST_WRITE.maybe()), T(M_ISA_INST_TID),
+                            uri(QLESS_WRITE.maybe()), T(M_ISA_INST_TID),
+                            uri(PRE_READ.maybe()), T(M_ISA_INST_TID),
+                            uri(POST_READ.maybe()), T(M_ISA_INST_TID))),
                     (lhs, inst) -> new BaseQ(inst.arg(0).asRec().jvm(), inst.arg(0).asRec().at(PATTERN).uriValue(), inst.arg(0).tid()))).create();
 
 
