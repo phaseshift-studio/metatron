@@ -405,6 +405,9 @@ class InstSetDocFetcher:
 # Path to the external CSS file (relative to this script)
 CSS_FILE_PATH = Path(__file__).parent / "instset_doc.css"
 
+# Path to the website includes directory (header.html, footer.html)
+INCLUDES_PATH = Path(__file__).parent.parent / "website" / "includes"
+
 # highlight.js CDN URLs (fallback if local files not available)
 HIGHLIGHT_JS_CDN = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0"
 
@@ -423,11 +426,96 @@ def load_css() -> str:
         """
 
 
+def load_website_header(relative_depth: str = "..", current_subdir: str = "instset") -> str:
+    """
+    Load the website header.html and adjust relative paths for subdirectory usage.
+
+    Args:
+        relative_depth: Path prefix to get back to website root (e.g., ".." for instset/)
+        current_subdir: The subdirectory the generated file will be in (e.g., "instset")
+
+    Returns:
+        Header HTML with adjusted paths
+    """
+    header_path = INCLUDES_PATH / "header.html"
+    if not header_path.exists():
+        logger.warning(f"Header file not found: {header_path}")
+        return ""
+
+    content = header_path.read_text(encoding='utf-8')
+
+    # Adjust relative paths for subdirectory
+    # These patterns match paths that are relative to website root
+    path_adjustments = [
+        ('href="images/', f'href="{relative_depth}/images/'),
+        ('src="images/', f'src="{relative_depth}/images/'),
+        ('href="./images/', f'href="{relative_depth}/images/'),
+        ('src="./images/', f'src="{relative_depth}/images/'),
+        ('href="css/', f'href="{relative_depth}/css/'),
+        ('href="./css/', f'href="{relative_depth}/css/'),
+        ('href="lib/', f'href="{relative_depth}/lib/'),
+        ('href="./lib/', f'href="{relative_depth}/lib/'),
+        ('src="./highlight/', f'src="{relative_depth}/highlight/'),
+        ('src="lib/', f'src="{relative_depth}/lib/'),
+        ('src="./lib/', f'src="{relative_depth}/lib/'),
+        ('src="js/', f'src="{relative_depth}/js/'),
+        ('src="./js/', f'src="{relative_depth}/js/'),
+        ('href="index.html"', f'href="{relative_depth}/index.html"'),
+        ('href="tractatus.html"', f'href="{relative_depth}/tractatus.html"'),
+        ("location.href='./articles/", f"location.href='{relative_depth}/articles/"),
+        # onclick patterns for links that were converted to use location.href
+        ("location.href='tractatus.html'", f"location.href='{relative_depth}/tractatus.html'"),
+        ("location.href='index.html'", f"location.href='{relative_depth}/index.html'"),
+    ]
+
+    for old, new in path_adjustments:
+        content = content.replace(old, new)
+
+    # If we're inside a subdirectory (e.g., instset/), adjust links TO that subdirectory
+    # to be relative within the same directory (remove the subdirectory prefix)
+    if current_subdir:
+        # href="instset/m.html" becomes href="m.html" when viewing from instset/
+        content = content.replace(f'href="{current_subdir}/', 'href="')
+        # onclick="location.href='instset/m.html'" becomes onclick="location.href='m.html'" when viewing from instset/
+        content = content.replace(f"location.href='{current_subdir}/", "location.href='")
+
+    return content
+
+
+def load_website_footer(relative_depth: str = "..") -> str:
+    """
+    Load the website footer.html and adjust relative paths for subdirectory usage.
+
+    Args:
+        relative_depth: Path prefix to get back to website root (e.g., ".." for instset/)
+
+    Returns:
+        Footer HTML with adjusted paths
+    """
+    footer_path = INCLUDES_PATH / "footer.html"
+    if not footer_path.exists():
+        logger.warning(f"Footer file not found: {footer_path}")
+        return ""
+
+    content = footer_path.read_text(encoding='utf-8')
+
+    # Footer typically has fewer path references, but adjust any that exist
+    path_adjustments = [
+        ('href="images/', f'href="{relative_depth}/images/'),
+        ('src="images/', f'src="{relative_depth}/images/'),
+    ]
+
+    for old, new in path_adjustments:
+        content = content.replace(old, new)
+
+    return content
+
+
 class HTMLDocGenerator:
     """Generates HTML documentation from InstSetInfo using highlight.js for syntax coloring."""
 
     def __init__(self, instset: InstSetInfo, embed_css: bool = True, css_path: str = "instset_doc.css",
-                 highlight_path: str = "highlight"):
+                 use_website_template: bool = False, relative_depth: str = ".."):
         """
         Initialize the generator.
 
@@ -435,26 +523,65 @@ class HTMLDocGenerator:
             instset: The instruction set info to generate docs for
             embed_css: If True, embed CSS inline. If False, link to external CSS file.
             css_path: Path to CSS file (used when embed_css=False)
-            highlight_path: Path to highlight.js files directory
+            use_website_template: If True, use website header.html/footer.html for consistent styling
+            relative_depth: Path prefix to website root (e.g., ".." for instset/ subdirectory)
         """
         self.instset = instset
         self.embed_css = embed_css
         self.css_path = css_path
-        self.highlight_path = highlight_path
+        self.use_website_template = use_website_template
+        self.relative_depth = relative_depth
 
     def generate(self) -> str:
         """Generate complete HTML documentation."""
-        if self.embed_css:
-            css_content = load_css()
-            style_tag = f"<style>{css_content}</style>"
+        if self.use_website_template:
+            return self._generate_with_website_template()
         else:
-            style_tag = f'<link rel="stylesheet" href="{self.css_path}">'
+            return self._generate_standalone()
 
-        # highlight.js includes
-        highlight_css = f'<link rel="stylesheet" href="{self.highlight_path}/styles/atom-one-dark.min.css">'
+    def _generate_with_website_template(self) -> str:
+        """Generate HTML using the website header/footer template."""
+        header = load_website_header(self.relative_depth)
+        footer = load_website_footer(self.relative_depth)
+
+        if not header or not footer:
+            logger.warning("Website template not available, falling back to standalone")
+            return self._generate_standalone()
+
+        # Inject instset-specific CSS into the header (before </head>)
+        instset_css = f'<link rel="stylesheet" href="{self.css_path}">'
+        header = header.replace('</head>', f'    {instset_css}\n</head>')
+
+        # Update the page title in the header
+        title = f"{html.escape(self.instset.name)} - Metatron Instruction Set"
+        header = re.sub(r'<title>.*?</title>', f'<title>{title}</title>', header)
+
+        # Generate the main content (goes inside <main> tag)
+        content = f"""
+        <div class="instset-doc">
+            {self._generate_instset_header()}
+            {self._generate_nav()}
+            {self._generate_stats()}
+            {self._generate_hierarchy()}
+            {self._generate_toc()}
+            {self._generate_types_section()}
+            {self._generate_instructions_section()}
+            {self._generate_spaces_section()}
+            {self._generate_instset_footer()}
+        </div>"""
+
+        return header + content + footer
+
+    def _generate_standalone(self) -> str:
+        """Generate standalone HTML (original behavior)."""
+        # Use website's existing CSS and highlight.js (relative paths from instset/ subdirectory)
+        css_links = f'''
+    <link rel="stylesheet" href="{self.relative_depth}/css/metatron.css">
+    <link rel="stylesheet" href="{self.css_path}">''' if not self.embed_css else f"<style>{load_css()}</style>"
+
         highlight_js = f'''
-    <script src="{self.highlight_path}/highlight.min.js"></script>
-    <script src="{self.highlight_path}/languages/mtron.min.js"></script>
+    <script src="{self.relative_depth}/highlight/highlight.min.js"></script>
+    <script src="{self.relative_depth}/highlight/languages/mtron.min.js"></script>
     <script>hljs.highlightAll();</script>'''
 
         return f"""<!DOCTYPE html>
@@ -463,12 +590,11 @@ class HTMLDocGenerator:
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{html.escape(self.instset.name)} - Metatron Instruction Set Documentation</title>
-    {highlight_css}
-    {style_tag}
+    {css_links}
 </head>
 <body>
     <div class="container">
-        {self._generate_header()}
+        {self._generate_instset_header()}
         {self._generate_nav()}
         {self._generate_stats()}
         {self._generate_hierarchy()}
@@ -476,78 +602,143 @@ class HTMLDocGenerator:
         {self._generate_types_section()}
         {self._generate_instructions_section()}
         {self._generate_spaces_section()}
-        {self._generate_footer()}
+        {self._generate_instset_footer()}
     </div>
     {highlight_js}
 </body>
 </html>"""
 
-    def _generate_header(self) -> str:
+    def _generate_instset_header(self) -> str:
         parent_path = '/'.join(self.instset.vid.split('/')[:-1]) or '/'
         return f"""
-        <header>
-            <h1><span class="path">{html.escape(parent_path)}/</span>{html.escape(self.instset.name)}</h1>
-            <p class="subtitle">Metatron Instruction Set Documentation</p>
-        </header>"""
+        <div class="container-xxl py-4">
+            <div class="text-center mb-4">
+                <h1 class="text-primary glow-text">
+                    <span class="text-light">{html.escape(parent_path)}/</span>{html.escape(self.instset.name)}
+                </h1>
+                <p class="subtitle text-light">Instruction Set Reference</p>
+            </div>
+        </div>"""
 
     def _generate_nav(self) -> str:
         return """
-        <nav class="nav">
-            <a href="#types">Types</a>
-            <a href="#instructions">Instructions</a>
-            <a href="#spaces">Spaces</a>
-        </nav>"""
+        <div class="container-xxl mb-4">
+            <div class="d-flex justify-content-center gap-3 flex-wrap">
+                <a href="#types" class="btn btn-outline-primary">Types</a>
+                <a href="#instructions" class="btn btn-outline-primary">Instructions</a>
+                <a href="#spaces" class="btn btn-outline-primary">Spaces</a>
+            </div>
+        </div>"""
 
     def _generate_stats(self) -> str:
         return f"""
-        <div class="stats">
-            <div class="stat">
-                <div class="stat-value">{len(self.instset.types)}</div>
-                <div class="stat-label">Types</div>
-            </div>
-            <div class="stat">
-                <div class="stat-value">{len(self.instset.insts)}</div>
-                <div class="stat-label">Instructions</div>
-            </div>
-            <div class="stat">
-                <div class="stat-value">{len(self.instset.spaces)}</div>
-                <div class="stat-label">Spaces</div>
+        <div class="container-xxl mb-4">
+            <div class="row g-3 justify-content-center">
+                <div class="col-auto">
+                    <div class="card text-center" style="min-width: 120px;">
+                        <div class="card-body py-2">
+                            <h3 class="text-primary mb-0">{len(self.instset.types)}</h3>
+                            <small class="text-light">Types</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-auto">
+                    <div class="card text-center" style="min-width: 120px;">
+                        <div class="card-body py-2">
+                            <h3 class="text-primary mb-0">{len(self.instset.insts)}</h3>
+                            <small class="text-light">Instructions</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-auto">
+                    <div class="card text-center" style="min-width: 120px;">
+                        <div class="card-body py-2">
+                            <h3 class="text-primary mb-0">{len(self.instset.spaces)}</h3>
+                            <small class="text-light">Spaces</small>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>"""
 
     def _generate_hierarchy(self) -> str:
         items = []
         if self.instset.parent:
-            items.append(f'<div class="hierarchy-item">↑ Super: <a href="{self._make_filename(self.instset.parent)}">{html.escape(self.instset.parent)}</a></div>')
+            items.append(f'''
+                <a href="{self._make_filename(self.instset.parent)}" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-up"></i> {html.escape(self.instset.parent)}
+                </a>''')
         for child in self.instset.children:
-            items.append(f'<div class="hierarchy-item">↓ Sub: <a href="{self._make_filename(child)}">{html.escape(child)}</a></div>')
+            items.append(f'''
+                <a href="{self._make_filename(child)}" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-down"></i> {html.escape(child)}
+                </a>''')
 
         if not items:
             return ""
 
         return f"""
-        <div class="section">
-            <h2>Hierarchy</h2>
-            <div class="hierarchy">
-                {''.join(items)}
+        <div class="container-xxl mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0 text-primary">Hierarchy</h5>
+                </div>
+                <div class="card-body d-flex flex-wrap gap-2">
+                    {''.join(items)}
+                </div>
             </div>
         </div>"""
 
     def _generate_toc(self) -> str:
-        items = []
+        type_items = []
         for t in sorted(self.instset.types, key=lambda x: x.name):
-            items.append(f'<div class="toc-item"><a href="#type-{html.escape(t.name)}">{html.escape(t.name)}</a> <span class="badge badge-type">T</span></div>')
-        for i in sorted(self.instset.insts, key=lambda x: x.name):
-            items.append(f'<div class="toc-item"><a href="#inst-{html.escape(i.name)}">{html.escape(i.name)}</a> <span class="badge badge-inst">I</span></div>')
+            type_items.append(f'''
+                <a href="#type-{html.escape(t.name)}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                    <span class="code">{html.escape(t.name)}</span>
+                    <span class="badge bg-info">T</span>
+                </a>''')
 
-        if not items:
+        inst_items = []
+        # Get unique instruction names
+        inst_names = sorted(set(i.name for i in self.instset.insts))
+        for name in inst_names:
+            inst_items.append(f'''
+                <a href="#inst-{html.escape(name)}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary">
+                    <span class="code">{html.escape(name)}</span>
+                    <span class="badge bg-success">I</span>
+                </a>''')
+
+        if not type_items and not inst_items:
             return ""
 
+        type_list = f'''
+            <div class="col-md-6">
+                <h6 class="text-primary mb-2">Types</h6>
+                <div class="list-group list-group-flush">
+                    {''.join(type_items)}
+                </div>
+            </div>''' if type_items else ""
+
+        inst_list = f'''
+            <div class="col-md-6">
+                <h6 class="text-primary mb-2">Instructions</h6>
+                <div class="list-group list-group-flush">
+                    {''.join(inst_items)}
+                </div>
+            </div>''' if inst_items else ""
+
         return f"""
-        <div class="section">
-            <h2>Index</h2>
-            <div class="toc">
-                {''.join(items)}
+        <div class="container-xxl mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0 text-primary">Index</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {type_list}
+                        {inst_list}
+                    </div>
+                </div>
             </div>
         </div>"""
 
@@ -560,20 +751,25 @@ class HTMLDocGenerator:
             # Type definition with highlight.js mtron syntax
             definition = ""
             if t.definition:
-                definition = f'<pre><code class="language-mtron">{html.escape(t.definition)}</code></pre>'
+                definition = f'''
+                    <div class="card-body p-2">
+                        <pre class="mb-0"><code class="language-mtron">{html.escape(t.definition)}</code></pre>
+                    </div>'''
 
             items.append(f"""
-            <div class="item type" id="type-{html.escape(t.name)}">
-                <div class="item-header">
-                    <span class="item-name">{html.escape(t.name)}::T</span>
-                    <span class="item-tid">{html.escape(t.vid)}</span>
-                </div>
-                {definition}
-            </div>""")
+                <div class="card mb-3" id="type-{html.escape(t.name)}">
+                    <div class="card-header d-flex justify-content-between align-items-center py-2">
+                        <span class="code text-primary fw-bold">{html.escape(t.name)}::T</span>
+                        <small class="text-muted code">{html.escape(t.vid)}</small>
+                    </div>
+                    {definition}
+                </div>""")
 
         return f"""
-        <div class="section" id="types">
-            <h2>Types <span class="badge badge-type">{len(self.instset.types)}</span></h2>
+        <div class="container-xxl mb-4" id="types">
+            <h3 class="text-primary mb-3">
+                Types <span class="badge bg-info">{len(self.instset.types)}</span>
+            </h3>
             {''.join(items)}
         </div>"""
 
@@ -594,7 +790,7 @@ class HTMLDocGenerator:
             # Generate signature blocks for each variant
             signatures = []
             for inst in insts:
-                signatures.append(f'<pre><code class="language-mtron">{html.escape(inst.signature)}</code></pre>')
+                signatures.append(f'<pre class="mb-1"><code class="language-mtron">{html.escape(inst.signature)}</code></pre>')
 
             all_sigs = '\n'.join(signatures)
 
@@ -602,17 +798,21 @@ class HTMLDocGenerator:
             first_inst = insts[0]
 
             items.append(f"""
-            <div class="item inst" id="inst-{html.escape(name)}">
-                <div class="item-header">
-                    <span class="item-name">{html.escape(name)}</span>
-                    <span class="item-tid">{html.escape(first_inst.vid)}</span>
-                </div>
-                {all_sigs}
-            </div>""")
+                <div class="card mb-3" id="inst-{html.escape(name)}">
+                    <div class="card-header d-flex justify-content-between align-items-center py-2">
+                        <span class="code text-primary fw-bold">{html.escape(name)}</span>
+                        <small class="text-muted code">{html.escape(first_inst.vid)}</small>
+                    </div>
+                    <div class="card-body p-2">
+                        {all_sigs}
+                    </div>
+                </div>""")
 
         return f"""
-        <div class="section" id="instructions">
-            <h2>Instructions <span class="badge badge-inst">{len(self.instset.insts)}</span></h2>
+        <div class="container-xxl mb-4" id="instructions">
+            <h3 class="text-primary mb-3">
+                Instructions <span class="badge bg-success">{len(self.instset.insts)}</span>
+            </h3>
             {''.join(items)}
         </div>"""
 
@@ -623,26 +823,33 @@ class HTMLDocGenerator:
         items = []
         for space in sorted(self.instset.spaces, key=lambda x: x.name):
             items.append(f"""
-            <div class="item space" id="space-{html.escape(space.name)}">
-                <div class="item-header">
-                    <span class="item-name">{html.escape(space.name)}</span>
-                    <span class="item-tid">{html.escape(space.vid)}</span>
-                </div>
-            </div>""")
+                <a href="{self._make_filename(space.vid)}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary" id="space-{html.escape(space.name)}">
+                    <span class="code">{html.escape(space.name)}</span>
+                    <small class="text-muted code">{html.escape(space.vid)}</small>
+                </a>""")
 
         return f"""
-        <div class="section" id="spaces">
-            <h2>Spaces <span class="badge badge-space">{len(self.instset.spaces)}</span></h2>
-            {''.join(items)}
+        <div class="container-xxl mb-4" id="spaces">
+            <h3 class="text-primary mb-3">
+                Spaces <span class="badge bg-warning text-dark">{len(self.instset.spaces)}</span>
+            </h3>
+            <div class="card">
+                <div class="list-group list-group-flush">
+                    {''.join(items)}
+                </div>
+            </div>
         </div>"""
 
-    def _generate_footer(self) -> str:
+    def _generate_instset_footer(self) -> str:
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         return f"""
-        <footer>
-            <p>Generated by Metatron InstSet Doc Generator on {timestamp}</p>
-            <p>© PhaseShift Studio, LLC</p>
-        </footer>"""
+        <div class="container-xxl py-3 text-center">
+            <hr class="border-secondary">
+            <small class="text-muted">
+                Generated by Metatron InstSet Doc Generator on {timestamp}<br>
+                © PhaseShift Studio, LLC
+            </small>
+        </div>"""
 
     def _make_filename(self, vid: str) -> str:
         """Convert a vid to a safe filename."""
@@ -654,28 +861,67 @@ class HTMLDocGenerator:
 # ============================================================================
 
 def generate_index_page(instsets: List[InstSetInfo], embed_css: bool = True, css_path: str = "instset_doc.css",
-                        highlight_path: str = "highlight") -> str:
+                        use_website_template: bool = False, relative_depth: str = "..") -> str:
     """Generate an index page linking to all instruction set docs."""
     items = []
     for info in sorted(instsets, key=lambda x: x.vid):
         filename = info.vid.replace('/', '_').strip('_') + '.html'
         items.append(f"""
-        <div class="item">
-            <div class="item-header">
-                <a href="{filename}" class="item-name">{html.escape(info.vid)}</a>
-            </div>
-            <div class="item-desc">
-                {len(info.types)} types, {len(info.insts)} instructions, {len(info.spaces)} spaces
-            </div>
-        </div>""")
+                <div class="col-md-6 col-lg-4">
+                    <a href="{filename}" class="text-decoration-none">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title code text-primary">{html.escape(info.vid)}</h5>
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <span class="badge bg-info">{len(info.types)} types</span>
+                                    <span class="badge bg-success">{len(info.insts)} instructions</span>
+                                    <span class="badge bg-warning text-dark">{len(info.spaces)} spaces</span>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>""")
 
-    if embed_css:
-        css_content = load_css()
-        style_tag = f"<style>{css_content}</style>"
-    else:
-        style_tag = f'<link rel="stylesheet" href="{css_path}">'
+    content = f"""
+        <div class="container-xxl py-4">
+            <div class="text-center mb-5">
+                <h1 class="text-primary glow-text">Metatron</h1>
+                <p class="subtitle text-light">Instruction Set Documentation</p>
+            </div>
 
-    highlight_css = f'<link rel="stylesheet" href="{highlight_path}/styles/atom-one-dark.min.css">'
+            <div class="row g-3">
+                {''.join(items)}
+            </div>
+
+            <div class="py-3 text-center mt-5">
+                <hr class="border-secondary">
+                <small class="text-muted">
+                    Generated by Metatron InstSet Doc Generator on {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}<br>
+                    © PhaseShift Studio, LLC
+                </small>
+            </div>
+        </div>"""
+
+    if use_website_template:
+        header = load_website_header(relative_depth)
+        footer = load_website_footer(relative_depth)
+
+        if header and footer:
+            # Inject instset-specific CSS into the header (before </head>)
+            instset_css = f'<link rel="stylesheet" href="{css_path}">'
+            header = header.replace('</head>', f'    {instset_css}\n</head>')
+
+            # Update the page title
+            header = re.sub(r'<title>.*?</title>', '<title>Metatron Instruction Sets</title>', header)
+
+            return header + content + footer
+        else:
+            logger.warning("Website template not available, falling back to standalone")
+
+    # Standalone mode
+    css_links = f'''
+    <link rel="stylesheet" href="{relative_depth}/css/metatron.css">
+    <link rel="stylesheet" href="{css_path}">''' if not embed_css else f"<style>{load_css()}</style>"
 
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -683,23 +929,11 @@ def generate_index_page(instsets: List[InstSetInfo], embed_css: bool = True, css
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Metatron Instruction Set Documentation</title>
-    {highlight_css}
-    {style_tag}
+    {css_links}
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>Metatron</h1>
-            <p class="subtitle">Instruction Set Documentation</p>
-        </header>
-        <div class="section">
-            <h2>Instruction Sets</h2>
-            {''.join(items)}
-        </div>
-        <footer>
-            <p>Generated by Metatron InstSet Doc Generator on {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</p>
-            <p>© PhaseShift Studio, LLC</p>
-        </footer>
+        {content}
     </div>
 </body>
 </html>"""
@@ -708,148 +942,6 @@ def generate_index_page(instsets: List[InstSetInfo], embed_css: bool = True, css
 # ============================================================================
 # Main
 # ============================================================================
-
-# Default path to highlight.js files (relative to this script's location)
-HIGHLIGHT_SRC_PATH = Path(__file__).parent.parent / "website" / "highlight"
-
-
-def copy_highlight_files(output_dir: Path, highlight_src: Path) -> str:
-    """Copy highlight.js files to output directory. Returns the relative path to use in HTML."""
-    highlight_dest = output_dir / "highlight"
-    highlight_dest.mkdir(parents=True, exist_ok=True)
-
-    # Copy main highlight.js
-    src_main = highlight_src / "highlight.min.js"
-    if src_main.exists():
-        shutil.copy2(src_main, highlight_dest / "highlight.min.js")
-        logger.info(f"Copied: {src_main.name}")
-
-    # Copy mtron language
-    lang_dir = highlight_dest / "languages"
-    lang_dir.mkdir(exist_ok=True)
-    src_mtron = highlight_src / "languages" / "mtron.min.js"
-    if src_mtron.exists():
-        shutil.copy2(src_mtron, lang_dir / "mtron.min.js")
-        logger.info(f"Copied: mtron.min.js")
-
-    # Copy styles
-    styles_dir = highlight_dest / "styles"
-    styles_dir.mkdir(exist_ok=True)
-    # Try to find atom-one-dark theme
-    src_styles = highlight_src / "styles"
-    if src_styles.exists():
-        for style_file in src_styles.glob("*.css"):
-            shutil.copy2(style_file, styles_dir / style_file.name)
-            logger.info(f"Copied style: {style_file.name}")
-    else:
-        # Create mtron-themed highlight.js CSS (matching metatron.css color scheme)
-        minimal_css = """
-/* Metatron highlight.js theme - matches metatron.css color scheme */
-:root {
-    --maincolor: #282c34;
-    --secondarycolor: #191C24;
-    --tertiarycolor: #6565f3;
-    --white: #c2c2c2;
-    --mblue: #4669dd;
-    --mmagenta: #9f4040;
-    --mred: #7a2518;
-    --mgreen: #457b02;
-    --mdarkgray: #494554;
-    --mlightgray: #797585;
-    --myellow: #9ba201;
-    --maqua: #008dbf;
-}
-
-.hljs {
-    background: var(--secondarycolor);
-    color: var(--white);
-    display: block;
-    padding: 0.75rem;
-    overflow-x: auto;
-    border-radius: 4px;
-    line-height: 1.4;
-}
-
-/* Yellow tokens - values and literals */
-.hljs-mtron-at-vid,
-.hljs-mtron-real,
-.hljs-mtron-bytes,
-.hljs-mtron-int,
-.hljs-mtron-str,
-.hljs-mtron-bool,
-.hljs-mtron-sugar-inst,
-.hljs-mtron-dom-rng-query,
-.hljs-mtron-sys-furi,
-.hljs-mtron-coefficient,
-.hljs-mtron-log-warn {
-    color: var(--myellow);
-}
-
-/* Aqua tokens - keys */
-.hljs-mtron-rec-key,
-.hljs-mtron-query-key {
-    color: var(--maqua);
-}
-
-/* White tokens - structure and punctuation */
-.hljs-punctuation,
-.hljs-mtron-rec,
-.hljs-mtron-result-prefix,
-.hljs-mtron-type-prefix,
-.hljs-mtron-prompt-end,
-.hljs-mtron-log-info {
-    color: var(--white);
-}
-
-/* Magenta tokens - special values */
-.hljs-mtron-noobj,
-.hljs-mtron-T {
-    color: var(--mmagenta);
-}
-
-/* Red tokens - errors and special markers */
-.hljs-mtron-prompt-begin,
-.hljs-mtron-pipe,
-.hljs-mtron-log-error,
-.hljs-mtron-match-fail,
-.hljs-mtron-fail,
-.hljs-mtron-fail-bar,
-.hljs-mtron-thrown {
-    color: var(--mred);
-}
-
-/* Gray - comments */
-.hljs-comment,
-.hljs-mtron-comment {
-    color: var(--mlightgray);
-}
-
-/* Purple/tertiary - keywords and instructions */
-.hljs-mtron-keyword,
-.hljs-mtron-query-value,
-.hljs-mtron-inst {
-    color: var(--tertiarycolor);
-}
-
-/* Blue tokens - URIs, types, forms */
-.hljs-mtron-uri,
-.hljs-mtron-type,
-.hljs-mtron-form,
-.hljs-mtron-inst-f-jvm {
-    color: var(--mblue);
-}
-
-/* Auto-from - highlighted */
-.hljs-mtron-auto-from {
-    color: #d4de68;
-    font-weight: bold;
-}
-"""
-        (styles_dir / "atom-one-dark.min.css").write_text(minimal_css)
-        logger.info("Created mtron highlight.js theme")
-
-    return "highlight"
-
 
 async def main_async(args):
     """Main async function."""
@@ -861,15 +953,12 @@ async def main_async(args):
 
     embed_css = not args.link_css
     css_filename = "instset_doc.css"
+    use_website_template = args.website_template
+    relative_depth = args.relative_depth
 
-    # Determine highlight.js source path
-    highlight_src = Path(args.highlight_path) if args.highlight_path else HIGHLIGHT_SRC_PATH
-
-    # Copy highlight.js files to output directory
-    highlight_path = copy_highlight_files(output_dir, highlight_src)
-
-    # Copy CSS file to output directory if using linked CSS
-    if not embed_css:
+    # Copy instset-specific CSS file to output directory if using linked CSS
+    # (highlight.js and metatron.css are referenced from ../highlight/ and ../css/)
+    if not embed_css or use_website_template:
         if CSS_FILE_PATH.exists():
             dest_css = output_dir / css_filename
             shutil.copy2(CSS_FILE_PATH, dest_css)
@@ -891,7 +980,8 @@ async def main_async(args):
                     info,
                     embed_css=embed_css,
                     css_path=css_filename,
-                    highlight_path=highlight_path
+                    use_website_template=use_website_template,
+                    relative_depth=relative_depth
                 )
                 html_content = generator.generate()
 
@@ -913,7 +1003,8 @@ async def main_async(args):
                 instsets,
                 embed_css=embed_css,
                 css_path=css_filename,
-                highlight_path=highlight_path
+                use_website_template=use_website_template,
+                relative_depth=relative_depth
             )
             index_path = output_dir / 'index.html'
             index_path.write_text(index_html, encoding='utf-8')
@@ -934,6 +1025,7 @@ Examples:
     python instset_doc_generator.py /m /m/mach /m/tble -o docs/html/
     python instset_doc_generator.py /m/llm --host ws://localhost:8999
     python instset_doc_generator.py /m/mach --link-css  # Use external CSS file
+    python instset_doc_generator.py /m/mach -o docs/website/instset --website-template  # With website navbar/footer
         """
     )
     parser.add_argument(
@@ -963,9 +1055,14 @@ Examples:
         help='Link to external CSS file instead of embedding (copies instset_doc.css to output dir)'
     )
     parser.add_argument(
-        '--highlight-path',
-        default=None,
-        help='Path to highlight.js directory (default: docs/website/highlight)'
+        '--website-template',
+        action='store_true',
+        help='Use website header.html/footer.html for consistent site styling (navbar, footer, etc.)'
+    )
+    parser.add_argument(
+        '--relative-depth',
+        default='..',
+        help='Relative path to website root from output directory (default: ".." for instset/ subdirectory)'
     )
     parser.add_argument(
         '-v', '--verbose',

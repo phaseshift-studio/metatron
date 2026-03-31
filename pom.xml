@@ -49,6 +49,9 @@
         <skipDocker>true</skipDocker>
         <skipRunner>false</skipRunner>
         <skipAdoc>false</skipAdoc>
+        <skipInstSetDocs>false</skipInstSetDocs>
+        <!-- Metatron InstSet Documentation -->
+        <metatron.host>ws://127.0.0.1:8999</metatron.host>
         <main.class>studio.phaseshift.metatron.BootLoader</main.class>
         <!-- DEPENDENCY VERSIONS -->
         <java-websocket.version>1.6.0</java-websocket.version>
@@ -461,6 +464,35 @@
                             </arguments>
                         </configuration>
                     </execution>
+                    <!-- Generate Instruction Set Reference Documentation -->
+                    <execution>
+                        <id>run-instset-doc-generator</id>
+                        <phase>site</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <skip>${skipInstSetDocs}</skip>
+                            <executable>python</executable>
+                            <arguments>
+                                <argument>docs/python/instset_doc_generator.py</argument>
+                                <argument>--host</argument>
+                                <argument>${metatron.host}</argument>
+                                <argument>--link-css</argument>
+                                <argument>--website-template</argument>
+                                <argument>-o</argument>
+                                <argument>${project.basedir}/docs/website/instset</argument>
+                                <!-- Instruction sets to document -->
+                                <argument>/m</argument>
+                                <argument>/m/mach</argument>
+                                <argument>/m/web</argument>
+                                <argument>/m/llm</argument>
+                                <argument>/m/tble</argument>
+                                <argument>/m/doc</argument>
+                                <argument>/m/grph</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
                 </executions>
                 <configuration>
                     <mainClass>${main.class}</mainClass>
@@ -628,7 +660,7 @@
                
                 <executions>
                     <execution>
-                        <id>website-to-html</id>
+                        <id>website-index-to-html</id>
                         <phase>site</phase>
                         <goals>
                             <goal>process-asciidoc</goal>
@@ -636,6 +668,35 @@
                         <configuration>
                             <sourceDirectory>${project.build.directory}/temp</sourceDirectory>
                             <sourceDocumentName>index.adoc</sourceDocumentName>
+                            <outputDirectory>${project.basedir}/docs/website</outputDirectory>
+                            <skip>${skipAdoc}</skip>
+                            <backend>html</backend>
+                            <resources>
+                                <resource>
+                                    <directory>${project.build.directory}/temp/src/adoc</directory>
+                                    <targetPath>${project.build.directory}/temp</targetPath>
+                                    <includes>
+                                        <include>**/*.html</include>
+                                    </includes>
+                                </resource>
+                                <resource>
+                                    <directory>${project.build.directory}/temp/src/includes</directory>
+                                    <targetPath>${project.build.directory}/temp</targetPath>
+                                    <includes>
+                                        <include>**/*.html</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>website-tractatus-to-html</id>
+                        <phase>site</phase>
+                        <goals>
+                            <goal>process-asciidoc</goal>
+                        </goals>
+                        <configuration>
+                            <sourceDirectory>${project.build.directory}/temp</sourceDirectory>
                             <sourceDocumentName>tractatus.adoc</sourceDocumentName>
                             <outputDirectory>${project.basedir}/docs/website</outputDirectory>
                             <skip>${skipAdoc}</skip>
@@ -643,6 +704,13 @@
                             <resources>
                                 <resource>
                                     <directory>${project.build.directory}/temp/src/adoc</directory>
+                                    <targetPath>${project.build.directory}/temp</targetPath>
+                                    <includes>
+                                        <include>**/*.html</include>
+                                    </includes>
+                                </resource>
+                                <resource>
+                                    <directory>${project.build.directory}/temp/src/includes</directory>
                                     <targetPath>${project.build.directory}/temp</targetPath>
                                     <includes>
                                         <include>**/*.html</include>

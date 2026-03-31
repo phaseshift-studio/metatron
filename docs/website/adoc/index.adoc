@@ -71,9 +71,9 @@ include::header.html[]
                         </p>
                     </div>
                 </div>
-                <div class="row g-4">
+                <!--<div class="row g-4">
                     <img src="images/external/docker.svg" width="50%" alt="docker"/>
-                </div>
+                </div>-->
             </div>
             <div class="col-lg-4 wow fadeIn" data-wow-delay="0.5s">
                 <img src="images/metatron-character.png" width="100%"/>
