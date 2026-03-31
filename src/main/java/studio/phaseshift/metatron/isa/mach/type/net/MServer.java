@@ -208,7 +208,8 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Rec 
 
     @Override
     public void onError(final WebSocket conn, final Exception ex) {
-        Router.global().write(conn.<fURI>getAttachment(), fail(ex));
+        if (null != conn)
+            Router.global().write(conn.<fURI>getAttachment(), fail(ex));
         LOG.error("an error occurred on connection %s: %s", null == conn ? "<none>" : conn.getAttachment(), ex);
         if (null == conn || ex instanceof BindException) {
             this.close();

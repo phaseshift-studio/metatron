@@ -28,6 +28,7 @@ import org.java_websocket.drafts.Draft_6455;
 import org.java_websocket.handshake.ServerHandshake;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -40,9 +41,12 @@ import java.nio.ByteBuffer;
 import java.util.*;
 
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
+import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_ISA_TID;
 
 public class MClient extends WebSocketClient implements MConnection {
 
+    public static final fURI MCLIENT_TID = MACH_ISA_TID.extend("client");
+    
     protected final GraphittyLogger LOG = Graphitty.log(this);
     protected final ObjSerializer<?> serializer;
     protected final Map<UUID, FutureObj<Obj>> futures = new HashMap<>();
@@ -197,4 +201,33 @@ public class MClient extends WebSocketClient implements MConnection {
     }
 
 
+    @Override
+    public Rec clone(final Object jvm, final fURI tid, final fURI vid) {
+        return this;
+    }
+
+    @Override
+    public Map<Obj, Obj> jvm() {
+        return Map.of();
+    }
+
+    @Override
+    public Rec self(final Object jvm, final fURI tid, final fURI vid) {
+        return this;
+    }
+
+    @Override
+    public fURI tid() {
+        return MCLIENT_TID;
+    }
+
+    @Override
+    public fURI vid() {
+        return null;
+    }
+
+    @Override
+    public Obj clone() {
+        return this;
+    }
 }

@@ -134,10 +134,10 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
         return Q.Helper.processPreRead(this.qs(), pattern).orElseGet(() -> {
             final Obj result = objs(INST_TABLE.entrySet()
                     .stream()
-                    .filter(kv -> kv.getKey().bimatches(pattern.basePath().asNode()))
+                    .filter(kv -> kv.getKey().test(pattern.basePath().asNode()))
                     .flatMap(kv -> kv.getValue().stream())
-                    .filter(i -> !pattern.hasDom() || i.dom().tid().bimatches(pattern.dom().big()))
-                    .filter(i -> !pattern.hasRng() || i.rng().tid().bimatches(pattern.rng().big()))
+                    .filter(i -> !pattern.hasDom() || i.dom().tid().test(pattern.dom().big()))
+                    .filter(i -> !pattern.hasRng() || i.rng().tid().test(pattern.rng().big()))
                     .map(i -> pattern.isNode() ? i : rel(i.tid().toUri(), i)))
                     .append(objs(TYPE_TABLE.entrySet()
                             .stream()

@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.mach.type.net;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 
 import java.io.Closeable;
@@ -27,7 +28,7 @@ import java.io.Closeable;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public interface MConnection extends Closeable {
+public interface MConnection extends Closeable, Rec {
 
     <T> ObjSerializer<T> getSerializer();
 

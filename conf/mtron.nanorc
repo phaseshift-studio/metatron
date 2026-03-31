@@ -60,16 +60,17 @@ color red "X=>"
 ### auto resolve
 color yellow "!\*" "\{<j>\}"
 color green "\{|\}"
+###  uri
+color blue "[^-][<][^=]([^>])*[>][^-]^(=>)]"
+color green "<" ">"
+icolor blue "[a-z0-9_/]+::"
+color green "::" 
+color yellow "<="
 ### str
 color yellow "[\"][^\"]*[\"]"
 color yellow "['][^']*[']"
 color yellow start="\"\"\"" end="\"\"\""
-###  uri
-color blue "[^-][<][^=]([^>])*[>][^-]^(=>)]"
-color green "<" ">"
-icolor magenta "[a-z0-9_]+::"
-color green "::" 
-color yellow "<="
 ### comments
 color gray start="\[--" end="--]"
 color gray start="\[==" end="==]"
+

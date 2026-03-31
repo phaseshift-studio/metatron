@@ -363,6 +363,7 @@ bin/metatron</code></pre>
                     <div class="card-body p-2">
                         <pre class="mb-0"><code class="language-mtron">rec::T[isa([=&gt;])][inst?console&lt;=#{?}(rec::T){&lt;j&gt;}]@/m/mach/console</code></pre>
                     </div>
+                    
                 </div>
                 <div class="card mb-3" id="type-dir">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -379,6 +380,7 @@ bin/metatron</code></pre>
                     <div class="card-body p-2">
                         <pre class="mb-0"><code class="language-mtron">file::T[inst?dir&lt;=#{?}(){&lt;j&gt;}][inst?dir{?}&lt;=#{?}(uri::T){&lt;j&gt;}]@/m/mach/dir</code></pre>
                     </div>
+                    
                 </div>
                 <div class="card mb-3" id="type-factory">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -392,6 +394,7 @@ bin/metatron</code></pre>
                     <div class="card-body p-2">
                         <pre class="mb-0"><code class="language-mtron">rec::T@/m/mach/factory</code></pre>
                     </div>
+                    
                 </div>
                 <div class="card mb-3" id="type-file">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -405,6 +408,7 @@ bin/metatron</code></pre>
                     <div class="card-body p-2">
                         <pre class="mb-0"><code class="language-mtron">uri::T[][inst?file&lt;=#{?}(uri::T){&lt;j&gt;}]@/m/mach/file</code></pre>
                     </div>
+                    
                 </div>
                 <div class="card mb-3" id="type-io">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -422,6 +426,7 @@ bin/metatron</code></pre>
    super=&gt;!*/m/mach],
  q      =&gt;[docq::[pattern=&gt;doc]]]@/m/mach/io</code></pre>
                     </div>
+                    
                 </div>
                 <div class="card mb-3" id="type-machine">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -435,6 +440,7 @@ bin/metatron</code></pre>
                     <div class="card-body p-2">
                         <pre class="mb-0"><code class="language-mtron">rec::T[isa([halted=&gt;#{*}::T,running=&gt;monad{*}::T,barrier=&gt;lst::T])]@/m/mach/machine</code></pre>
                     </div>
+                    
                 </div>
                 <div class="card mb-3" id="type-mfactory">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -451,6 +457,7 @@ bin/metatron</code></pre>
                     <div class="card-body p-2">
                         <pre class="mb-0"><code class="language-mtron">factory::T[][inst?mfactory&lt;=#{?}(){&lt;j&gt;}]@/m/mach/mfactory</code></pre>
                     </div>
+                    
                 </div>
                 <div class="card mb-3" id="type-monad">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -464,6 +471,7 @@ bin/metatron</code></pre>
                     <div class="card-body p-2">
                         <pre class="mb-0"><code class="language-mtron">lst::T@/m/mach/monad</code></pre>
                     </div>
+                    
                 </div>
                 <div class="card mb-3" id="type-router">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -477,6 +485,7 @@ bin/metatron</code></pre>
                     <div class="card-body p-2">
                         <pre class="mb-0"><code class="language-mtron">rec::T@/m/mach/router</code></pre>
                     </div>
+                    
                 </div>
                 <div class="card mb-3" id="type-server">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -490,6 +499,7 @@ bin/metatron</code></pre>
                     <div class="card-body p-2">
                         <pre class="mb-0"><code class="language-mtron">rec::T@/m/mach/server</code></pre>
                     </div>
+                    
                 </div>
         </div>
             
@@ -510,6 +520,7 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">close?noobj&lt;=router(){&lt;j&gt;}</code></pre>
 <pre class="mb-1"><code class="language-mtron">close?noobj&lt;=router(){&lt;j&gt;}</code></pre>
                     </div>
+                    
                 </div>
                 <div class="card mb-3" id="inst-inject">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -523,6 +534,7 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">inject?#&lt;=#(int::T,#::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1"><code class="language-mtron">inject?#&lt;=#(int::T,#::T){&lt;j&gt;}</code></pre>
                     </div>
+                    
                 </div>
                 <div class="card mb-3" id="inst-less">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -535,6 +547,10 @@ bin/metatron</code></pre>
                     <div class="card-body p-2">
                         <pre class="mb-1"><code class="language-mtron">less?noobj{0}&lt;=str(isa(int::T).else(10)){&lt;j&gt;}</code></pre>
 <pre class="mb-1"><code class="language-mtron">less?noobj{0}&lt;=str(isa(int::T).else(10)){&lt;j&gt;}</code></pre>
+                    </div>
+                    
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">an f(x)-&gt;0 terminal page through the lines of an str</p>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-nano">
@@ -549,6 +565,7 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">nano?#{?}&lt;=#{?}(){&lt;j&gt;}</code></pre>
 <pre class="mb-1"><code class="language-mtron">nano?#{?}&lt;=#{?}(){&lt;j&gt;}</code></pre>
                     </div>
+                    
                 </div>
                 <div class="card mb-3" id="inst-pause">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -561,6 +578,7 @@ bin/metatron</code></pre>
                     <div class="card-body p-2">
                         <pre class="mb-1"><code class="language-mtron">pause?core&lt;=core(){&lt;j&gt;}</code></pre>
                     </div>
+                    
                 </div>
                 <div class="card mb-3" id="inst-rewrite">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -574,6 +592,7 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">rewrite?rec&lt;=#{?}(uri::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1"><code class="language-mtron">rewrite?rec&lt;=#{?}(uri::T){&lt;j&gt;}</code></pre>
                     </div>
+                    
                 </div>
                 <div class="card mb-3" id="inst-run">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -586,6 +605,7 @@ bin/metatron</code></pre>
                     <div class="card-body p-2">
                         <pre class="mb-1"><code class="language-mtron">run?core&lt;=core(){&lt;j&gt;}</code></pre>
                     </div>
+                    
                 </div>
                 <div class="card mb-3" id="inst-stop">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -598,6 +618,7 @@ bin/metatron</code></pre>
                     <div class="card-body p-2">
                         <pre class="mb-1"><code class="language-mtron">stop?core&lt;=core(){&lt;j&gt;}</code></pre>
                     </div>
+                    
                 </div>
                 <div class="card mb-3" id="inst-which">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -611,6 +632,7 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">which?A&lt;=#(uri::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1"><code class="language-mtron">which?A&lt;=#(uri::T){&lt;j&gt;}</code></pre>
                     </div>
+                    
                 </div>
         </div>
             
@@ -632,6 +654,7 @@ bin/metatron</code></pre>
  route    =&gt;[uri::T=&gt;uri::T],
  {?}script=&gt;[uri::T=&gt;uri::T]])){&lt;j&gt;}]@/m/mach/space/fs</code></pre>
                     </div>
+                    
                 </div>
                 <div class="card mb-3" id="space-serial">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -642,6 +665,7 @@ bin/metatron</code></pre>
                     <div class="mt-2">
                         <pre class="mb-0"><code class="language-mtron">space::T[][inst?rng=serial&amp;dom=#{?}(isa([pattern=&gt;uri::T,route=&gt;rec::T])){&lt;j&gt;}]@/m/mach/space/serial</code></pre>
                     </div>
+                    
                 </div>
         </div>
             
@@ -663,13 +687,14 @@ bin/metatron</code></pre>
    super=&gt;!*/m/mach],
  q      =&gt;[docq::[pattern=&gt;doc]]]@/m/mach/io</code></pre>
                     </div>
+                    
                 </div>
         </div>
             
         <div class="container-xxl py-3 text-center">
             <hr class="border-secondary">
             <small class="text-muted">
-                Generated by Metatron InstSet Doc Generator on 2026-03-31 13:40:02<br>
+                Generated by Metatron InstSet Doc Generator on 2026-03-31 14:36:54<br>
                 © PhaseShift Studio, LLC
             </small>
         </div>

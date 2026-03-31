@@ -366,6 +366,10 @@ bin/metatron</code></pre>
  {?}IN =&gt;[uri::T=&gt;edge{*}::T],
  {?}OUT=&gt;[uri::T=&gt;edge{*}::T]])]@/m/grph/vrtx])]@/m/grph/edge</code></pre>
                     </div>
+                    
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">a created</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="type-elmt">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -379,6 +383,7 @@ bin/metatron</code></pre>
                     <div class="card-body p-2">
                         <pre class="mb-0"><code class="language-mtron">rec::T@/m/grph/elmt</code></pre>
                     </div>
+                    
                 </div>
                 <div class="card mb-3" id="type-tp3">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -396,6 +401,7 @@ bin/metatron</code></pre>
    super=&gt;!*/m/grph],
  q      =&gt;[docq::[pattern=&gt;doc]]]@/m/grph/tp3</code></pre>
                     </div>
+                    
                 </div>
                 <div class="card mb-3" id="type-vrtx">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -413,6 +419,10 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">elmt::T[isa([
  {?}IN =&gt;[uri::T=&gt;edge{*}::T],
  {?}OUT=&gt;[uri::T=&gt;edge{*}::T]])]@/m/grph/vrtx</code></pre>
+                    </div>
+                    
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">a software</p>
                     </div>
                 </div>
         </div>
@@ -434,6 +444,7 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">Vx?vrtx{*}&lt;=uri(){&lt;j&gt;}</code></pre>
 <pre class="mb-1"><code class="language-mtron">Vx?vrtx{*}&lt;=uri(){&lt;j&gt;}</code></pre>
                     </div>
+                    
                 </div>
                 <div class="card mb-3" id="inst-addE">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -446,6 +457,7 @@ bin/metatron</code></pre>
                     <div class="card-body p-2">
                         <pre class="mb-1"><code class="language-mtron">addE?edge&lt;=vrtx(#::T,uri::T,rec{?}::T){&lt;j&gt;}</code></pre>
                     </div>
+                    
                 </div>
                 <div class="card mb-3" id="inst-both">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -457,6 +469,10 @@ bin/metatron</code></pre>
                     </div>
                     <div class="card-body p-2">
                         <pre class="mb-1"><code class="language-mtron">both?vrtx{*}&lt;=vrtx(uri{*}::T){&lt;j&gt;}</code></pre>
+                    </div>
+                    
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">returns the lhs vertex arg-adjacent incoming and outgoing vertices</p>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-bothE">
@@ -470,6 +486,10 @@ bin/metatron</code></pre>
                     <div class="card-body p-2">
                         <pre class="mb-1"><code class="language-mtron">bothE?edge{*}&lt;=vrtx(uri{*}::T){&lt;j&gt;}</code></pre>
                     </div>
+                    
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">returns the lhs vertex arg-adjacent incoming and outgoing edges</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-bothV">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -481,6 +501,10 @@ bin/metatron</code></pre>
                     </div>
                     <div class="card-body p-2">
                         <pre class="mb-1"><code class="language-mtron">bothV?vrtx&lt;=edge(){&lt;j&gt;}</code></pre>
+                    </div>
+                    
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">returns the lhs edge</p>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-gremlin">
@@ -495,6 +519,7 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">gremlin?#{*}&lt;=tp3(str::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1"><code class="language-mtron">gremlin?#{*}&lt;=tp3(str::T){&lt;j&gt;}</code></pre>
                     </div>
+                    
                 </div>
                 <div class="card mb-3" id="inst-in">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -506,6 +531,10 @@ bin/metatron</code></pre>
                     </div>
                     <div class="card-body p-2">
                         <pre class="mb-1"><code class="language-mtron">in?vrtx{*}&lt;=vrtx(uri{*}::T){&lt;j&gt;}</code></pre>
+                    </div>
+                    
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">returns the lhs vertex arg-adjacent incoming vertices</p>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-inE">
@@ -519,6 +548,10 @@ bin/metatron</code></pre>
                     <div class="card-body p-2">
                         <pre class="mb-1"><code class="language-mtron">inE?edge{*}&lt;=vrtx(uri{*}::T){&lt;j&gt;}</code></pre>
                     </div>
+                    
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">returns the lhs vertex arg-adjacent incoming edges</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-inV">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -530,6 +563,10 @@ bin/metatron</code></pre>
                     </div>
                     <div class="card-body p-2">
                         <pre class="mb-1"><code class="language-mtron">inV?vrtx&lt;=edge(){&lt;j&gt;}</code></pre>
+                    </div>
+                    
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">returns the lhs edge head vertex</p>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-label">
@@ -543,6 +580,10 @@ bin/metatron</code></pre>
                     <div class="card-body p-2">
                         <pre class="mb-1"><code class="language-mtron">label?uri&lt;=elmt(){&lt;j&gt;}</code></pre>
                     </div>
+                    
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">returns the lhs element label (the tid)</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-out">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -554,6 +595,10 @@ bin/metatron</code></pre>
                     </div>
                     <div class="card-body p-2">
                         <pre class="mb-1"><code class="language-mtron">out?vrtx{*}&lt;=vrtx(uri{*}::T){&lt;j&gt;}</code></pre>
+                    </div>
+                    
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">returns the lhs vertex arg-adjacent outgoing vertices</p>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-outE">
@@ -567,6 +612,10 @@ bin/metatron</code></pre>
                     <div class="card-body p-2">
                         <pre class="mb-1"><code class="language-mtron">outE?edge{*}&lt;=vrtx(uri{*}::T){&lt;j&gt;}</code></pre>
                     </div>
+                    
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">returns the lhs vertex arg-adjacent outgoing edges</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-outV">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -579,6 +628,10 @@ bin/metatron</code></pre>
                     <div class="card-body p-2">
                         <pre class="mb-1"><code class="language-mtron">outV?vrtx&lt;=edge(){&lt;j&gt;}</code></pre>
                     </div>
+                    
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">returns the lhs edge tail vertex</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-values">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -590,6 +643,10 @@ bin/metatron</code></pre>
                     </div>
                     <div class="card-body p-2">
                         <pre class="mb-1"><code class="language-mtron">values?#{*}&lt;=elmt(uri{*}::T){&lt;j&gt;}</code></pre>
+                    </div>
+                    
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">returns the lhs element arg-labeled values</p>
                     </div>
                 </div>
         </div>
@@ -609,6 +666,7 @@ bin/metatron</code></pre>
                     <div class="mt-2">
                         <pre class="mb-0"><code class="language-mtron">space::T@/m/grph/space/grph</code></pre>
                     </div>
+                    
                 </div>
                 <div class="card mb-3" id="space-tp3">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -619,6 +677,7 @@ bin/metatron</code></pre>
                     <div class="mt-2">
                         <pre class="mb-0"><code class="language-mtron">grph::T[][inst?rng=tp3&amp;dom=#{?}(isa([pattern=&gt;uri::T,route=&gt;rec::T]).else(failure(&#x27;malformed tp3 config&#x27;))){&lt;j&gt;}]@/m/grph/space/tp3</code></pre>
                     </div>
+                    
                 </div>
         </div>
             
@@ -640,13 +699,14 @@ bin/metatron</code></pre>
    super=&gt;!*/m/grph],
  q      =&gt;[docq::[pattern=&gt;doc]]]@/m/grph/tp3</code></pre>
                     </div>
+                    
                 </div>
         </div>
             
         <div class="container-xxl py-3 text-center">
             <hr class="border-secondary">
             <small class="text-muted">
-                Generated by Metatron InstSet Doc Generator on 2026-03-31 13:40:04<br>
+                Generated by Metatron InstSet Doc Generator on 2026-03-31 14:36:56<br>
                 © PhaseShift Studio, LLC
             </small>
         </div>

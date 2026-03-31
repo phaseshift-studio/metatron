@@ -137,10 +137,121 @@ class MetatronClient:
         entries = result.split("%%%")
         return [e.strip() for e in entries if e.strip()]
 
+    async def fetch_obj_doc(self, vid: str) -> Optional[DocInfo]:
+        """
+        Fetch documentation for an object via xyz?doc.
+
+        Example response when doc exists:
+        doc::[
+         obj =>start?rng=A{**}&dom=noobj{0}(A{**}::T){<j>},
+         dom =>'noobj',
+         rng =>'initial objs',
+         args=>[0=>'initial objs'],
+         desc=>'the initial function f()->x']
+
+        When no doc exists, returns either:
+        - "noobj"
+        - The object itself (not a doc record)
+
+        Returns DocInfo with parsed fields, or None if no doc available.
+        """
+        try:
+            # Build the doc query:
+            # - If vid has query params (dom/rng), append &doc to get specific polymorphic form
+            # - If vid has no query params, use ?doc
+            # e.g., plus?rng=int&dom=int → *plus?rng=int&dom=int&doc
+            # e.g., /m/lst → */m/lst?doc
+            if '?' in vid:
+                doc_query = f"*{vid}&doc"
+            else:
+                doc_query = f"*{vid}?doc"
+
+            logger.debug(f"Fetching doc with query: {doc_query}")
+
+            # Query the doc for this object
+            result = await self.eval(doc_query)
+
+            logger.debug(f"Doc query result for {vid}: {result[:200] if result else 'None'}...")
+
+            if not result or result == "noobj" or result.startswith("</m/fail>"):
+                return None
+
+            # Check if this is actually a doc record
+            # WebSocket format: </m/space/q/docq/doc>::[</m/uri>::<desc> => </m/str>::'...']
+            # Console format: ==>doc::[desc=>'...']
+            if not ("doc>::[" in result or "<desc>" in result or "desc=>" in result):
+                logger.debug(f"No doc record for {vid}, got object back")
+                return None
+
+            # Parse the doc record
+            doc_info = DocInfo(raw=result)
+
+            # Extract desc field - handle both WebSocket and console formats:
+            # WebSocket: </m/uri>::<desc> => </m/str>::'the initial function f()->x'
+            # Console: desc=>'the initial function f()->x'
+            desc_match = re.search(r"<desc>\s*=>\s*</m/str>::'([^']*)'", result)
+            if not desc_match:
+                desc_match = re.search(r"desc\s*=>\s*'([^']*)'", result)
+            if desc_match:
+                doc_info.desc = desc_match.group(1)
+
+            # Extract dom field
+            # WebSocket: </m/uri>::<dom> => </m/str>::'noobj'
+            dom_match = re.search(r"<dom>\s*=>\s*</m/str>::'([^']*)'", result)
+            if not dom_match:
+                dom_match = re.search(r"dom\s*=>\s*'([^']*)'", result)
+            if dom_match:
+                doc_info.dom = dom_match.group(1)
+
+            # Extract rng field
+            # WebSocket: </m/uri>::<rng> => </m/str>::'initial objs'
+            rng_match = re.search(r"<rng>\s*=>\s*</m/str>::'([^']*)'", result)
+            if not rng_match:
+                rng_match = re.search(r"rng\s*=>\s*'([^']*)'", result)
+            if rng_match:
+                doc_info.rng = rng_match.group(1)
+
+            # Extract obj field
+            # WebSocket: </m/uri>::<obj> => </m/inst/start?rng=A{**}&dom=noobj{0}>(A{**}::T){<j>}
+            obj_match = re.search(r"<obj>\s*=>\s*([^,\]]+)", result)
+            if not obj_match:
+                obj_match = re.search(r"obj\s*=>\s*([^,\]]+)", result)
+            if obj_match:
+                doc_info.obj = obj_match.group(1).strip()
+
+            # Extract args field
+            # WebSocket: </m/uri>::<args> => </m/rec>::[...]
+            args_match = re.search(r"<args>\s*=>\s*</m/rec>::(\[[^\]]*\])", result)
+            if not args_match:
+                args_match = re.search(r"args\s*=>\s*(\[[^\]]*\])", result)
+            if args_match:
+                doc_info.args = args_match.group(1)
+
+            # Return if we got at least desc
+            if doc_info.desc:
+                return doc_info
+
+            return None
+
+        except Exception as e:
+            logger.debug(f"Could not fetch doc for {vid}: {e}")
+            return None
+
 
 # ============================================================================
 # Data Models
 # ============================================================================
+
+@dataclass
+class DocInfo:
+    """Documentation information fetched via xyz?doc."""
+    obj: str = ""  # The object this doc is for
+    dom: str = ""  # Domain description
+    rng: str = ""  # Range description
+    args: str = ""  # Arguments description (raw string)
+    desc: str = ""  # Description text
+    raw: str = ""  # Raw doc response
+
 
 @dataclass
 class TypeInfo:
@@ -152,6 +263,7 @@ class TypeInfo:
     super_type: str = ""  # Full URI of super type (e.g., /m/lst)
     super_type_short: str = ""  # Short name of super type (e.g., lst)
     super_type_instset: str = ""  # Instruction set containing super type (e.g., /m)
+    doc: Optional[DocInfo] = None  # Documentation from xyz?doc
 
 
 @dataclass
@@ -165,6 +277,7 @@ class InstInfo:
     range: str = ""  # Range type (e.g., int, bool)
     domain_full: str = ""  # Full domain URI (e.g., /m/str)
     range_full: str = ""  # Full range URI (e.g., /m/int)
+    doc: Optional[DocInfo] = None  # Documentation from xyz?doc
 
 
 @dataclass
@@ -174,6 +287,7 @@ class SpaceInfo:
     name: str
     raw: str = ""
     type_spec: str = ""  # Type specification from querying */path/to/space
+    doc: Optional[DocInfo] = None  # Documentation from xyz?doc
 
 
 @dataclass
@@ -183,6 +297,7 @@ class ConstInfo:
     name: str
     definition: str = ""
     raw: str = ""
+    doc: Optional[DocInfo] = None  # Documentation from xyz?doc
 
 
 @dataclass
@@ -196,6 +311,7 @@ class RewriteInfo:
     range: str = ""  # Range type short form
     domain_full: str = ""  # Full domain URI
     range_full: str = ""  # Full range URI
+    doc: Optional[DocInfo] = None  # Documentation from xyz?doc
 
 
 @dataclass
@@ -269,6 +385,8 @@ class InstSetDocFetcher:
                 if type_info:
                     # Query raw type info to get super type
                     await self._fetch_type_super(type_info)
+                    # Fetch documentation
+                    type_info.doc = await self.client.fetch_obj_doc(type_info.vid)
                     types.append(type_info)
                     logger.debug(f"  Found type: {type_info.name} (refines {type_info.super_type})")
         except Exception as e:
@@ -313,6 +431,8 @@ class InstSetDocFetcher:
                 if inst_info:
                     # Get short forms for domain and range using rewrite()
                     await self._fetch_inst_short_forms(inst_info)
+                    # Fetch documentation
+                    inst_info.doc = await self.client.fetch_obj_doc(inst_info.vid)
                     insts.append(inst_info)
                     logger.debug(f"  Found instruction: {inst_info.name} ({inst_info.domain}=>{inst_info.range})")
         except Exception as e:
@@ -350,6 +470,8 @@ class InstSetDocFetcher:
                     space_info = SpaceInfo(vid=space_vid, name=name, raw=entry)
                     # Fetch type specification for the space
                     await self._fetch_space_type(space_info)
+                    # Fetch documentation
+                    space_info.doc = await self.client.fetch_obj_doc(space_vid)
                     spaces.append(space_info)
                     logger.debug(f"  Found space: {space_vid}")
         except Exception as e:
@@ -392,6 +514,8 @@ class InstSetDocFetcher:
                                                    domain=domain, range=range_type)
                         # Get short forms for domain and range using rewrite()
                         await self._fetch_rewrite_short_forms(rewrite_info)
+                        # Fetch documentation
+                        rewrite_info.doc = await self.client.fetch_obj_doc(rewrite_vid)
                         rewrites.append(rewrite_info)
                         logger.debug(f"  Found rewrite: {name} ({rewrite_info.domain}=>{rewrite_info.range})")
         except Exception as e:
@@ -430,7 +554,10 @@ class InstSetDocFetcher:
                         # Skip if this looks like a type definition (contains ::T)
                         if "::T" in definition or "::T@" in entry:
                             continue
-                        consts.append(ConstInfo(vid=const_vid, name=name, definition=definition, raw=entry))
+                        const_info = ConstInfo(vid=const_vid, name=name, definition=definition, raw=entry)
+                        # Fetch documentation
+                        const_info.doc = await self.client.fetch_obj_doc(const_vid)
+                        consts.append(const_info)
                         logger.debug(f"  Found const: {name}")
         except Exception as e:
             logger.debug(f"Could not fetch consts for {vid}: {e}")
@@ -1004,6 +1131,19 @@ class HTMLDocGenerator:
                 else:
                     refines_html = f'<span class="ms-2 text-muted">refines <span class="code text-info">{html.escape(display_name)}</span></span>'
 
+            # Generate description from doc if available
+            desc_html = ""
+            if t.doc and t.doc.desc:
+                desc_html = f'''
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">{html.escape(t.doc.desc)}</p>
+                    </div>'''
+                # Commented out: other doc fields available
+                # if t.doc.dom: dom_desc = t.doc.dom
+                # if t.doc.rng: rng_desc = t.doc.rng
+                # if t.doc.args: args_desc = t.doc.args
+                # if t.doc.obj: obj_desc = t.doc.obj
+
             items.append(f"""
                 <div class="card mb-3" id="type-{html.escape(t.name)}">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1014,6 +1154,7 @@ class HTMLDocGenerator:
                         <small class="text-muted code">{html.escape(t.vid)}</small>
                     </div>
                     {definition}
+                    {desc_html}
                 </div>""")
 
         return f"""
@@ -1049,6 +1190,19 @@ class HTMLDocGenerator:
             first_inst = insts[0]
             type_sig_html = self._format_inst_type_signature(first_inst)
 
+            # Generate description from doc if available (use first inst's doc)
+            desc_html = ""
+            if first_inst.doc and first_inst.doc.desc:
+                desc_html = f'''
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">{html.escape(first_inst.doc.desc)}</p>
+                    </div>'''
+                # Commented out: other doc fields available
+                # if first_inst.doc.dom: dom_desc = first_inst.doc.dom
+                # if first_inst.doc.rng: rng_desc = first_inst.doc.rng
+                # if first_inst.doc.args: args_desc = first_inst.doc.args
+                # if first_inst.doc.obj: obj_desc = first_inst.doc.obj
+
             items.append(f"""
                 <div class="card mb-3" id="inst-{html.escape(name)}">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1061,6 +1215,7 @@ class HTMLDocGenerator:
                     <div class="card-body p-2">
                         {all_sigs}
                     </div>
+                    {desc_html}
                 </div>""")
 
         return f"""
@@ -1127,6 +1282,19 @@ class HTMLDocGenerator:
             # Format domain/range with subscripts and clickable links (same as instructions)
             type_sig_html = self._format_rewrite_type_signature(rewrite)
 
+            # Generate description from doc if available
+            desc_html = ""
+            if rewrite.doc and rewrite.doc.desc:
+                desc_html = f'''
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">{html.escape(rewrite.doc.desc)}</p>
+                    </div>'''
+                # Commented out: other doc fields available
+                # if rewrite.doc.dom: dom_desc = rewrite.doc.dom
+                # if rewrite.doc.rng: rng_desc = rewrite.doc.rng
+                # if rewrite.doc.args: args_desc = rewrite.doc.args
+                # if rewrite.doc.obj: obj_desc = rewrite.doc.obj
+
             items.append(f"""
                 <div class="card mb-3" id="rewrite-{html.escape(rewrite.name)}">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1137,6 +1305,7 @@ class HTMLDocGenerator:
                         <small class="text-muted code">{html.escape(rewrite.vid)}</small>
                     </div>
                     {signature_html}
+                    {desc_html}
                 </div>""")
 
         return f"""
@@ -1182,6 +1351,19 @@ class HTMLDocGenerator:
                         <pre class="mb-0"><code class="language-mtron">{html.escape(space.type_spec)}</code></pre>
                     </div>'''
 
+            # Generate description from doc if available
+            desc_html = ""
+            if space.doc and space.doc.desc:
+                desc_html = f'''
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">{html.escape(space.doc.desc)}</p>
+                    </div>'''
+                # Commented out: other doc fields available
+                # if space.doc.dom: dom_desc = space.doc.dom
+                # if space.doc.rng: rng_desc = space.doc.rng
+                # if space.doc.args: args_desc = space.doc.args
+                # if space.doc.obj: obj_desc = space.doc.obj
+
             items.append(f"""
                 <div class="card mb-3" id="space-{html.escape(space.name)}">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1189,6 +1371,7 @@ class HTMLDocGenerator:
                         <small class="text-muted code">{html.escape(space.vid)}</small>
                     </div>
                     {type_spec_html if type_spec_html else ''}
+                    {desc_html}
                 </div>""")
 
         return f"""
@@ -1212,6 +1395,19 @@ class HTMLDocGenerator:
                         <pre class="mb-0"><code class="language-mtron">{html.escape(const.definition)}</code></pre>
                     </div>'''
 
+            # Generate description from doc if available
+            desc_html = ""
+            if const.doc and const.doc.desc:
+                desc_html = f'''
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">{html.escape(const.doc.desc)}</p>
+                    </div>'''
+                # Commented out: other doc fields available
+                # if const.doc.dom: dom_desc = const.doc.dom
+                # if const.doc.rng: rng_desc = const.doc.rng
+                # if const.doc.args: args_desc = const.doc.args
+                # if const.doc.obj: obj_desc = const.doc.obj
+
             items.append(f"""
                 <div class="card mb-3" id="const-{html.escape(const.name)}">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1219,6 +1415,7 @@ class HTMLDocGenerator:
                         <small class="text-muted code">{html.escape(const.vid)}</small>
                     </div>
                     {definition_html}
+                    {desc_html}
                 </div>""")
 
         return f"""
