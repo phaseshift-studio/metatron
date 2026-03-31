@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -85,7 +85,7 @@ public class webInstSet extends AbstractInstSet {
                             eq_(URI_TYPE),
                             eq_(LST_TYPE),
                             eq_(REC_TYPE))))).tryToInst())
-            .constructor(instC(INST_TID.dom(ALL.maybe()).rng(JSON_TID), lst(T(STR_TID)), 
+            .constructor(instC(INST_TID.dom(ALL.maybe()).rng(JSON_TID), lst(T(STR_TID)),
                     (lhs, inst) -> ObjSimpleJSONSerializer.parse(lhs.asStr().strValue()))).create();
     public static final Type CSS_TYPE = Type.Builder.build()
             .tid(REC_TID)
@@ -136,6 +136,25 @@ public class webInstSet extends AbstractInstSet {
                     } catch (final Exception e) {
                         return str(fail(e).toString());
                     }
+                }),
+                instC(INST_TID.extend("pretty_eval").dom(STR_TID).rng(STR_TID), lst(), (lhs, inst) -> {
+                    LOG.trace("processing pretty eval request: %s", lhs);
+                    try {
+                        final String source = lhs.strValue();
+                        final Obj result = mParser.parse(source).apply();
+                        final String resultString = result.isObjs() ?
+                                result.stream()
+                                        .map(Obj::toCleanString)
+                                        //.map(Highlighter::unformat)
+                                        .reduce((a, b) -> a + "%%%" + b)
+                                        .orElse("") :
+                                result.toCleanString();
+                        //Highlighter.unformat(result.toString());
+                        return str(resultString);
+                    } catch (final Exception e) {
+                        return str(fail(e).toString());
+                    }
                 }));
+
     }
 }

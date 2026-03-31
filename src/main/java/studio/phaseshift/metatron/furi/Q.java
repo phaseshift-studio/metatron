@@ -300,6 +300,11 @@ public interface Q extends Rec {
                 this.jvm.put(QLESS_WRITE, qlessWrite);
                 return this;
             }
+            
+            public Builder obj(final fURI key, final Obj value) {
+                this.jvm.put(key, value);
+                return this;
+            }
 
             public Q create() {
                 return BaseQ.create(this.tid, this.pattern,

@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.m.type.impl;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -67,5 +68,12 @@ public class MCode extends MObj implements Code {
     @Override
     public List<Inst> jvm() {
         return (List<Inst>) this.jvm;
+    }
+    
+    public static Code code(final Call call) {
+        if(call.isCode())
+            return call.as();
+        else 
+            return new MCode(call.insts(), CODE_TID, null);
     }
 }

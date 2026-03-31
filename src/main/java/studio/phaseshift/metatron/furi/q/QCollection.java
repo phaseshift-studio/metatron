@@ -18,17 +18,13 @@
 
 package studio.phaseshift.metatron.furi.q;
 
-import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.mach.type.Machine;
-import studio.phaseshift.metatron.isa.mach.type.machine.SwarmMachine;
+import studio.phaseshift.metatron.isa.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
@@ -44,6 +40,7 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
+import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -51,6 +48,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_CORE_THREAD_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -196,43 +194,39 @@ public final class QCollection {
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public static Q subq() {
-        final Rec subscriptions = rec();
+        final memSpace subscriptions = memSpace.of(f("#"), null);
         return studio.phaseshift.metatron.furi.Q.Helper.build(SUBQ_TID, SUBQ_PATTERN)
+                .obj(f("subscription"), subscriptions)
                 .preRead(vid -> {
                     subscriptions.logger().info("reading: %s", vid.basePath());
-                    return subscriptions
-                            .elements()
-                            .map(Rel::second).map(Obj::asRec)
-                            .filter(s -> vid.basePath().bimatches(s.at(TARGET).uriValue()))
-                            .map(Obj::<Obj>as)
-                            .reduce(Obj::append)
-                            .orElse(noobj());
+                    return subscriptions.read(vid.basePath());
                 })
                 .preWrite((vid, obj) -> {
-                    subscriptions.logger().info("subscribing: %s", vid.basePath());
+                    subscriptions.logger().info("subscribing: %s %s", vid.basePath(), obj);
                     final Obj subscription;
                     if (obj.isNoObj()) {
                         subscription = noobj();
-                        subscriptions.jvm().remove(vid.basePath().toUri());
-                        subscription.logger().info("unsubscribing from %s", vid.basePath().toUri());
+                        subscriptions.write(vid.basePath(), subscription);
+                        subscription.logger().info("unsubscribing from %s", vid.basePath());
                     } else if (obj.tid().basePath().equals(SUBSCRIPTION_TID)) {
                         subscription = obj;
-                        subscriptions.jvm().put(vid.basePath().toUri(), obj);
-                        subscription.logger().info("subscribing to %s", vid.basePath().toUri());
+                        subscriptions.write(vid.basePath(), subscription);
+                        subscription.logger().info("subscribing to %s", vid.basePath());
                     } else {
                         subscription = rec(Map.of(uri(TARGET), uri(vid.basePath()), uri(ON_RECV), obj), SUBSCRIPTION_TID, null);
-                        subscriptions.jvm().put(vid.basePath().toUri(), subscription);
-                        subscription.logger().info("subscribing to %s", vid.basePath().toUri());
+                        subscriptions.write(vid.basePath(), subscription);
+                        subscription.logger().info("subscribing to %s", vid.basePath());
                     }
                     //LOG.debug("current subscriptions: %s", subscriptions);
                     return subscription;
                 })
                 .qlessWrite((vid, obj) -> {
                     //   LOG.debug("evaluating {{y}}qless write{{/y}}: %s => %s", obj, vid);
-                   // subscriptions.logger().info("qless write to %s", vid.basePath());
-                    subscriptions.elements().peek(s -> subscriptions.logger().info("testing subscription: %s", s)).map(Rel::second).map(Obj::asRec).filter(s -> vid.basePath().bimatches(s.at(TARGET).uriValue())).forEach(s -> {
-                        subscriptions.logger().info("sending mail: (%s, %s)", obj, s);
-                        BootLoader.getExecutor().submit(() -> SwarmMachine.of(lst(List.of(vid.toUri(), obj)), s.at(ON_RECV).as()).apply());
+                    // subscriptions.logger().info("qless write to %s", vid.basePath());
+                    subscriptions.read(vid.basePath()).stream().forEach(s -> {
+                        new CoreThread(Map.of(
+                                uri(START), lst(List.of(vid.basePath().toUri(), obj)),
+                                uri(CODE), code(s.asRec().at(ON_RECV).as()).as()), MACH_CORE_THREAD_TID, null).run();
                     });
                     return noobj();
                 }).create();

@@ -27,10 +27,12 @@ import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.machine.SwarmMachine;
 import studio.phaseshift.metatron.isa.mach.type.net.FutureObj;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /*
@@ -43,7 +45,7 @@ public class CoreThread extends AbstractThread {
 
     public CoreThread(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
-        this.machine = SwarmMachine.of(this.at(CODE).as());
+        this.machine = SwarmMachine.of(this.at(START), this.at(CODE).as());
     }
 
     @Override

@@ -20,6 +20,8 @@ package studio.phaseshift.metatron.isa.llm.type;
 
 import dev.langchain4j.mcp.client.DefaultMcpClient;
 import dev.langchain4j.mcp.client.McpClient;
+import dev.langchain4j.mcp.client.logging.McpLogMessage;
+import dev.langchain4j.mcp.client.logging.McpLogMessageHandler;
 import dev.langchain4j.mcp.client.transport.McpTransport;
 import dev.langchain4j.mcp.client.transport.http.StreamableHttpMcpTransport;
 import dev.langchain4j.mcp.client.transport.websocket.WebSocketMcpTransport;
@@ -81,6 +83,7 @@ public class MCPServer extends MRec {
         this.client = DefaultMcpClient.builder()
                 .clientName(METATRON)
                 .clientVersion(METATRON_VERSION)
+                .logHandler(message -> as().logger().debug("mcp log: %s", message))
                 .transport(createTransport(
                         jvm.get(uri(TRANSPORT)),
                         jvm.getOrDefault(uri(HEADERS), rec0()).jvm(),

@@ -1,0 +1,461 @@
+/*
+ * Metatron: A Distributed Computing Language and Virtual Machine
+ *  Copyright (C) 2025- PhaseShift Studio, LLC
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+/* ==========================================================================
+   Metatron Instruction Set Documentation Stylesheet
+   Using metatron.css color scheme and styling
+   ========================================================================== */
+
+:root {
+    /* Metatron website color scheme */
+    --maincolor: #282c34;
+    --primarycolor: #952e1e;
+    --secondarycolor: #191C24;
+    --tertiarycolor: #6565f3;
+    --sidebarbackground: #191C24;
+    --linkcolor: #9f4040;
+    --linkcoloralternate: #2652e5;
+    --white: #c2c2c2;
+    --primary: #a30000;
+    --secondary: #191C24;
+    --light: #6C7293;
+    --dark: #000000;
+
+    /* Metatron accent colors */
+    --mblue: #4669dd;
+    --mmagenta: #9f4040;
+    --mred: #7a2518;
+    --mgreen: #457b02;
+    --mdarkgray: #494554;
+    --mlightgray: #797585;
+    --myellow: #9ba201;
+    --maqua: #008dbf;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Fira Mono', Consolas, Menlo, Monaco, 'Courier New', Courier, monospace;
+    background-color: var(--dark);
+    color: var(--white);
+    line-height: 1.45rem;
+    font-size: 1rem;
+    padding: 2rem;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* ==========================================================================
+   Header
+   ========================================================================== */
+
+header {
+    border-bottom: 2px solid var(--mred);
+    padding-bottom: 1rem;
+    margin-bottom: 2rem;
+}
+
+h1 {
+    color: var(--primary);
+    font-size: 2.5rem;
+    font-weight: 600;
+    line-height: 2.5rem;
+}
+
+h1 .path {
+    color: var(--light);
+    font-weight: 400;
+}
+
+h2 {
+    color: var(--maqua);
+    font-size: 1.5rem;
+    margin: 2rem 0 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--mdarkgray);
+}
+
+h3 {
+    color: var(--mgreen);
+    font-size: 1.1rem;
+    margin: 1.5rem 0 0.5rem;
+}
+
+.subtitle {
+    color: var(--light);
+    font-size: 1rem;
+    margin-top: 0.5rem;
+}
+
+/* ==========================================================================
+   Navigation
+   ========================================================================== */
+
+.nav {
+    background: var(--secondarycolor);
+    padding: 1rem;
+    border-radius: 4px;
+    margin-bottom: 2rem;
+    border: 1px solid var(--mdarkgray);
+}
+
+.nav a {
+    color: var(--mmagenta);
+    text-decoration: none;
+    margin-right: 1.5rem;
+}
+
+.nav a:hover {
+    color: var(--primary);
+    text-decoration: underline;
+}
+
+/* ==========================================================================
+   Sections and Items
+   ========================================================================== */
+
+.section {
+    background: var(--secondarycolor);
+    border-radius: 4px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    border: 2px solid var(--mred);
+}
+
+.item {
+    background: var(--maincolor);
+    border-radius: 2px;
+    padding: 1rem;
+    margin: 0.75rem 0;
+    border-left: 3px solid var(--mblue);
+}
+
+.item.type {
+    border-left-color: var(--mgreen);
+}
+
+.item.inst {
+    border-left-color: var(--myellow);
+}
+
+.item.space {
+    border-left-color: var(--tertiarycolor);
+}
+
+.item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 0.5rem;
+}
+
+.item-name {
+    font-weight: 600;
+    color: var(--myellow);
+    font-size: 1.1rem;
+}
+
+.item-tid {
+    color: var(--mlightgray);
+    font-size: 0.85rem;
+}
+
+.item-signature {
+    color: var(--maqua);
+    font-family: inherit;
+    margin: 0.5rem 0;
+}
+
+.item-desc {
+    color: var(--light);
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px dashed var(--mdarkgray);
+}
+
+/* ==========================================================================
+   Type Signature Colors
+   ========================================================================== */
+
+.dom {
+    color: var(--mgreen);
+}
+
+.rng {
+    color: var(--mblue);
+}
+
+.arrow {
+    color: var(--mlightgray);
+}
+
+/* ==========================================================================
+   Badges
+   ========================================================================== */
+
+.badge {
+    display: inline-block;
+    padding: 0.2rem 0.5rem;
+    border-radius: 2px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-left: 0.5rem;
+}
+
+.badge-type {
+    background: var(--mgreen);
+    color: var(--dark);
+}
+
+.badge-inst {
+    background: var(--myellow);
+    color: var(--dark);
+}
+
+.badge-space {
+    background: var(--tertiarycolor);
+    color: var(--white);
+}
+
+/* ==========================================================================
+   Hierarchy
+   ========================================================================== */
+
+.hierarchy {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.hierarchy-item {
+    background: var(--maincolor);
+    padding: 0.5rem 1rem;
+    border-radius: 2px;
+    border: 1px solid var(--mdarkgray);
+}
+
+.hierarchy-item a {
+    color: var(--mmagenta);
+    text-decoration: none;
+}
+
+.hierarchy-item a:hover {
+    color: var(--primary);
+    text-decoration: underline;
+}
+
+/* ==========================================================================
+   Statistics
+   ========================================================================== */
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.stat {
+    background: var(--secondarycolor);
+    padding: 1rem;
+    border-radius: 4px;
+    text-align: center;
+    border: 1px solid var(--mdarkgray);
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--maqua);
+}
+
+.stat-label {
+    color: var(--light);
+    font-size: 0.85rem;
+}
+
+/* ==========================================================================
+   Table of Contents
+   ========================================================================== */
+
+.toc {
+    columns: 3;
+    column-gap: 2rem;
+}
+
+.toc-item {
+    break-inside: avoid;
+    padding: 0.25rem 0;
+}
+
+.toc-item a {
+    color: var(--white);
+    text-decoration: none;
+}
+
+.toc-item a:hover {
+    color: var(--mmagenta);
+}
+
+/* ==========================================================================
+   Footer
+   ========================================================================== */
+
+footer {
+    margin-top: 3rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--mdarkgray);
+    color: var(--light);
+    font-size: 0.85rem;
+    text-align: center;
+}
+
+footer a {
+    color: var(--mmagenta);
+    text-decoration: none;
+}
+
+footer a:hover {
+    color: var(--primary);
+}
+
+/* ==========================================================================
+   Code Blocks - Compatible with highlight.js
+   ========================================================================== */
+
+/* Inline code (not in pre) */
+code:not(.hljs) {
+    background: var(--maincolor);
+    padding: 0.2rem 0.4rem;
+    border-radius: 2px;
+    font-family: inherit;
+    color: var(--maqua);
+}
+
+/* Pre blocks containing highlight.js code */
+pre {
+    margin: 0.5rem 0;
+    border: 1px solid var(--mdarkgray);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+/* Let highlight.js handle the code styling inside pre */
+pre code.hljs {
+    background: var(--secondarycolor);
+    padding: 0.75rem;
+    border-radius: 0;
+    font-family: inherit;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.raw-output {
+    font-size: 0.8rem;
+    color: var(--light);
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+.type-definition {
+    background: var(--dark);
+    border: 1px solid var(--mdarkgray);
+    border-left: 3px solid var(--mgreen);
+    margin: 0.5rem 0;
+    padding: 0.75rem;
+    border-radius: 2px;
+    overflow-x: auto;
+}
+
+.type-definition code {
+    background: none;
+    padding: 0;
+    color: var(--maqua);
+    font-size: 0.9rem;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.inst-signature {
+    background: var(--dark);
+    border: 1px solid var(--mdarkgray);
+    border-left: 3px solid var(--myellow);
+    margin: 0.5rem 0;
+    padding: 0.75rem;
+    border-radius: 2px;
+    overflow-x: auto;
+}
+
+.inst-signature code {
+    background: none;
+    padding: 0;
+    color: var(--maqua);
+    font-size: 0.9rem;
+}
+
+/* ==========================================================================
+   Links
+   ========================================================================== */
+
+a {
+    color: var(--mmagenta);
+    text-decoration: none;
+}
+
+a:hover {
+    color: var(--primary);
+    text-decoration: underline;
+}
+
+/* ==========================================================================
+   Responsive
+   ========================================================================== */
+
+@media (max-width: 768px) {
+    body {
+        padding: 1rem;
+    }
+
+    .toc {
+        columns: 1;
+    }
+
+    h1 {
+        font-size: 1.8rem;
+        line-height: 1.8rem;
+    }
+
+    .item-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .item-tid {
+        margin-top: 0.25rem;
+    }
+}
