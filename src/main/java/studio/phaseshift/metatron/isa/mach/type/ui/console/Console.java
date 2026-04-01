@@ -882,6 +882,21 @@ public class Console extends JRec implements Closeable, Runnable {
                         }
                         return true;
                     }, "\033>");  // Alt+>
+            /// SPLIT PANE VERTICALLY OR HORIZONTALLY
+            getKeyMap().bind((Widget)
+                    () -> {
+                      Console.this.split(SplitLayout.VERTICAL);
+                        Console.this.renderPanes();
+                        Console.this.redrawBuffer();
+                        return true;
+                    }, "\033[1;5C");  // Ctrl+<right>
+            getKeyMap().bind((Widget)
+                    () -> {
+                        Console.this.split(SplitLayout.HORIZONTAL);
+                        Console.this.renderPanes();
+                        Console.this.redrawBuffer();
+                        return true;
+                    }, "\033[1;5A");  // Ctrl+<up>
             /// TURN ON/OFF TYPE CHECKING
             getKeyMap().bind((Widget)
                     () -> {
