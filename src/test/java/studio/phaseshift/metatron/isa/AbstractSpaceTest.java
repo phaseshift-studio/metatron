@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -21,15 +21,15 @@ package studio.phaseshift.metatron.isa;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TestCategory;
 import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -48,6 +48,7 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.furi.q.QCollection.SUBSCRIPTION_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -117,6 +118,27 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
     }
 
     @TestCategory.Crud
+    @TestCategory.Concurrent
+    @ParameterizedTest(name = "[{index}] String: {0}")
+    @CsvSource(value = {
+            "$$/xyz?subq     ->(||(>>1.to($$/abc)))             % $$/xyz -> 32            % *$$/abc.eq(32)",
+            "$$/xyz?subq     ->(||(>>1.plus(10).to($$/abc)))    % $$/xyz -> 12            % *$$/abc.eq(22)",
+            "$$/xyz/a?subq   ->(||(>>0.to($$/abc)))             % $$/xyz/a -> 12          % *$$/abc.eq($$/xyz/a)",
+            "$$/xyz/#?subq   ->(||(>>0.to($$/abc)))             % $$/xyz/a -> 12          % *$$/abc.eq($$/xyz/a)",
+            "$$/xyz/+/+?subq ->(||(>>0.to($$/abc)))             % $$/xyz/a -> 12          % *$$/abc.else(true)",
+            "$$/xyz/+/+?subq ->(||(>>1.to($$/abc)))             % $$/xyz/a/b -> 12        % *$$/abc.eq(12)"
+    }, delimiter = '%')
+    public void testSubQ(String subscription, String writing, String expecting) {
+        space.addQ(QCollection.subq());
+        final Obj sub = mParser.eval(make(subscription));
+        assertEquals(SUBSCRIPTION_TID, sub.tid());
+        final Obj writeObj = mParser.eval(make(writing));
+        //LOG.info("SUBSCRIPTIONS: %s", mParser.eval(make("*$$/xyz?subq")));
+        CommonUtil.sleepThread(100);
+        assertTrue(mParser.eval(make(expecting)).boolValue());
+    }
+
+    @TestCategory.Crud
     @TestCategory.ReadWrite
     @ParameterizedTest
     @TestData(oneTime = false, value = {""})
@@ -142,7 +164,7 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
             ".                                                     % *<$$/+/+/>                         % {$$/1/0=>b,$$/1/1=>[c,d],$$/1/2=>e}",
             ".                                                     % *<$$/+/+/+/>                       % {$$/1/1/0=>c,$$/1/1/1=>d}",
             ".                                                     % *<$$/+/+/+>                        % {c,d}",
-           // ".                                                     % *<$$/+/+/#>                        % {c,d}",
+            // ".                                                     % *<$$/+/+/#>                        % {c,d}",
             ".                                                     % *<$$/+>                            % {a,[b,[c,d],e],f}",
             ".                                                     % *<$$/+/>                           % [$$/0=>a,$$/1=>[b,[c,d],e],$$/2=>f]>-",
             ".                                                     % *<$$/+/+>                          % {b,[c,d],e}",
@@ -167,13 +189,13 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
             ".                                                     % *$$/c                              % 3",
             ".                                                     % *$$/c                              % 3",
             ".                                                     % *$$/+                              % {1,2,3}",
-           // ".                                                     % *$$/#                              % {1,2,3,[a=>1,b=>2,c=>3]}",
-           // ".                                                     % *$$/#/                             % {$$/a=>1,$$/b=>2,$$/c=>3,$$=>[a=>1,b=>2,c=>3]}",
+            // ".                                                     % *$$/#                              % {1,2,3,[a=>1,b=>2,c=>3]}",
+            // ".                                                     % *$$/#/                             % {$$/a=>1,$$/b=>2,$$/c=>3,$$=>[a=>1,b=>2,c=>3]}",
             ".                                                     % *<$$/+>.sum()                      % 6",
-           // ".                                                     % *<$$/#>.>>.sum()                   % .",
+            // ".                                                     % *<$$/#>.>>.sum()                   % .",
             ".                                                     % *<$$/+>.sum?int<=int{*}()          % .",
-           // ".                                                     % *<$$/#>.>>.sum?int<=int{*}()       % .",
-          //  ".                                                     % *</+/+>.sum?int<=int{*}()          % .",
+            // ".                                                     % *<$$/#>.>>.sum?int<=int{*}()       % .",
+            //  ".                                                     % *</+/+>.sum?int<=int{*}()          % .",
             //         "$$/ -> [a=>1,b=>2,c=>3]                               % *<$$/>                               % [$$/a=>1,$$/b=>2,$$/c=>3]>-",
             ".                                                     % *<$$/x>                            % noobj",
             ".                                                     % *$$/a                              % 1",
@@ -181,7 +203,7 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
             //".                                                     % *$$/#                              % [[a=>[b=>2,c=>3],d=>4],[b=>2,c=>3],2,3,4]>-", TODO: make poly.at() consistent with space.read()
             ".                                                     % *<$$/x>                            % noobj",
             //      ".                                                     % *$$/                               % [$$/a=>[b=>2,c=>3],$$/d=>4]>-",
-                   ".                                                     % *$$/+/                             % [$$/a=>[b=>2,c=>3],$$/d=>4]>-",
+            ".                                                     % *$$/+/                             % [$$/a=>[b=>2,c=>3],$$/d=>4]>-",
             ".                                                     % *$$/a/c                            % 3",
             ".                                                     % *$$/a                              % [b=>2,c=>3]",
             ".                                                     % *$$/d                              % 4",
@@ -208,8 +230,8 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
             ".                                                     % *<$$/+/>                           % [$$/a=>1,$$/b=>2,$$/c=>3,$$/d=>4,$$/e=>5]>-",
             "1.vid(abc)                                            % *abc                               % 1@abc",
             "1.vid(abc)                                            % *abc.vid(<.>)                    % 1",
-           // "[1@a,2@b,3@c]@d.map(10).vid(b)                        % *d                               % [1@a,10@b,3@c]@d",
-           // "[1@a,2@b,3@c]@d.map(10@b)                             % *d                               % [1@a,10@b,3@c]@d",
+            // "[1@a,2@b,3@c]@d.map(10).vid(b)                        % *d                               % [1@a,10@b,3@c]@d",
+            // "[1@a,2@b,3@c]@d.map(10@b)                             % *d                               % [1@a,10@b,3@c]@d",
             // "[1@a,2@b,3@c]@d.map(*b + 10@b)                        % *d                               % [1@a,12@b,3@c]@d",
             // "[1@a,2@b,3@c]@d.map(*b + 10@b).to(d)                  % *d                               % 12@d",
             // "[1@a,2@b,3@c]@d                                       % *d._/_.vid(<.>)\\_.vid(<.>)      % [1,2,3]",
@@ -225,10 +247,10 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
             "$$ -> [a=>[],b=>[]]                                   % *<$$/+>                            % {[],[]}",
             // DEEP NESTING - Test limits of nested structures
             "$$ -> [a=>[b=>[c=>[d=>[e=>5]]]]]                      % *$$/a/b/c/d/e                      % 5",
-           // ".                                                     % *<$$/+/+/+/+/+>                    % {5}",
+            // ".                                                     % *<$$/+/+/+/+/+>                    % {5}",
             ".                                                     % *$$/a/b/c/d                        % [e=>5]",
             "$$ -> [a=>[b=>[c=>[d=>[e=>[f=>[g=>[h=>8]]]]]]]]       % *$$/a/b/c/d/e/f/g/h                % 8",
-          //  ".                                                     % *<$$/+/+/+/+/+/+/+/+>              % {8}",
+            //  ".                                                     % *<$$/+/+/+/+/+/+/+/+>              % {8}",
             // MIXED TYPES IN RECORDS - Different value types at same level
             "$$ -> [int=>42,str=><hello>,bool=>true,real=>3.14]   % *$$/int                            % 42",
             ".                                                     % *$$/str                            % <hello>",
@@ -274,9 +296,9 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
             "$$ -> [0=>1,1=>2,2=>3]                                % *$$/0                              % 1",
             ".                                                     % *$$/1                              % 2",
             ".                                                     % *$$/2                              % 3",
-           // "$$ -> [+=>1,-=>2,*=>3]                                % *$$/+                              % 1",
-           // ".                                                     % *$$/-                              % 2",
-           // ".                                                     % *$$/*                              % 3",
+            // "$$ -> [+=>1,-=>2,*=>3]                                % *$$/+                              % 1",
+            // ".                                                     % *$$/-                              % 2",
+            // ".                                                     % *$$/*                              % 3",
             // NUMERIC KEYS IN RECORDS (not list indices)
             "$$ -> [100=>a,200=>b,300=>c]                          % *$$/100                            % a",
             ".                                                     % *$$/200                            % b",

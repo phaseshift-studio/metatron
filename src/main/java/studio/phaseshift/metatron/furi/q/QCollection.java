@@ -23,11 +23,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
-import studio.phaseshift.metatron.isa.m.space.noobjSpace;
-import studio.phaseshift.metatron.isa.m.type.Inst;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.util.MTronException;
@@ -195,40 +191,40 @@ public final class QCollection {
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public static Q subq() {
-        final memSpace subscriptions = memSpace.of(f("#"), null);
+        final Lst subscriptions = lst();
         return studio.phaseshift.metatron.furi.Q.Helper.build(SUBQ_TID, SUBQ_PATTERN)
-                .obj(f("subscription"), subscriptions)
+                .obj(f(OBJ), subscriptions)
                 .preRead(vid -> {
-                    subscriptions.logger().info("reading: %s", vid.basePath());
-                    return subscriptions.read(vid.basePath());
+                    subscriptions.logger().debug("reading: %s", vid.basePath());
+                    return lst(subscriptions.elements().filter(e -> vid.basePath().test(e.asRec().at(TARGET).uriValue())));
                 })
                 .preWrite((vid, obj) -> {
-                    subscriptions.logger().info("subscribing: %s %s", vid.basePath(), obj);
                     final Obj subscription;
                     if (obj.isNoObj()) {
                         subscription = noobj();
-                        subscriptions.write(vid.basePath(), subscription);
+                        subscriptions.lstValue().removeIf(e -> vid.basePath().test(e.asRec().at(TARGET).uriValue()));
                         subscription.logger().info("unsubscribing from %s", vid.basePath());
                     } else if (obj.tid().basePath().equals(SUBSCRIPTION_TID)) {
                         subscription = obj;
-                        subscriptions.write(vid.basePath(), subscription);
+                        subscriptions.lstValue().add(subscription);
                         subscription.logger().info("subscribing to %s", vid.basePath());
                     } else {
                         subscription = rec(Map.of(uri(TARGET), uri(vid.basePath()), uri(ON_RECV), obj), SUBSCRIPTION_TID, null);
-                        subscriptions.write(vid.basePath(), subscription);
+                        subscriptions.lstValue().add(subscription);
                         subscription.logger().info("subscribing to %s", vid.basePath());
                     }
                     //LOG.debug("current subscriptions: %s", subscriptions);
                     return subscription;
                 })
                 .qlessWrite((vid, obj) -> {
-                    //   LOG.debug("evaluating {{y}}qless write{{/y}}: %s => %s", obj, vid);
                     // subscriptions.logger().info("qless write to %s", vid.basePath());
-                    subscriptions.read(vid.basePath()).stream().forEach(s -> {
-                        new CoreThread(Map.of(
-                                uri(START), lst(List.of(vid.basePath().toUri(), obj)),
-                                uri(CODE), code(s.asRec().at(ON_RECV).as()).as()), MACH_CORE_THREAD_TID, null).run();
-                    });
+                    subscriptions.elements().filter(e -> vid.basePath().test(e.asRec().at(TARGET).uriValue()))
+                            .forEach(s -> {
+                                subscriptions.logger().debug("spawning core thread for subscription recv: %s", s);
+                                new CoreThread(Map.of(
+                                        uri(START), lst(List.of(vid.basePath().toUri(), obj)),
+                                        uri(CODE), code(s.asRec().at(ON_RECV).as()).as()), MACH_CORE_THREAD_TID, null).run();
+                            });
                     return noobj();
                 }).create();
     }

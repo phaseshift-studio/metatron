@@ -235,7 +235,9 @@ public interface Q extends Rec {
                     .filter(Optional::isPresent)
                     // .peek(q -> LOG.debug("handling {{g}}qless write{{X}} of %s for %s", source, vid))
                     .map(Optional::get)
+                    
                     .map(q -> q.qlessWrite(vid, obj))
+                  
                     .filter(Optional::isPresent)
                     .map(Optional::get)
                     .reduce(Obj::append)

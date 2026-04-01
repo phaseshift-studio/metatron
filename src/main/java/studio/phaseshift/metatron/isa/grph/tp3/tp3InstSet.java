@@ -38,6 +38,7 @@ import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.*;
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.INV_INST_TID;
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.JREService;
@@ -107,15 +108,15 @@ public class tp3InstSet extends AbstractInstSet {
             .tid(SPACE_TID)
             .vid(GRPH_TID)
             .create(TYPES, INSTS);
-    public static final Type ELMT_TYPE = Type.Builder.build()
+    public static final Type ELMT_TYPE = docWrap(Type.Builder.build()
             .tid(REC_TID)
             .vid(ELMT_TID)
             .inst(LABEL_INST_TID.dom(ELMT_TID).rng(URI_TID), lst(), (lhs, inst) -> lhs.asRec().at(LABEL).orElse(uri(lhs.tid())))
             .doc("an element", "the element label", Map.of(), "returns the lhs element label (the tid)")
             .inst(VALUES_INST_TID.dom(ELMT_TID).rng(ALL.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> lhs.asRec().at(inst.arg(0).isNoObj() ? uri("+") : inst.arg(0).asUri()))
             .doc("an element", "the element values", Map.of(jnt(0), "zero or more element property labels"), "returns the lhs element arg-labeled values")
-            .create(TYPES, INSTS);
-    public static final Type VRTX_TYPE = Type.Builder.build()
+            .create(TYPES, INSTS), "a key/value attributed element that is refined by vrtx::T and edge::T");
+    public static final Type VRTX_TYPE = docWrap(Type.Builder.build()
             .tid(ELMT_TID)
             .vid(VRTX_TID)
             .isaPredicate(rec(
@@ -173,9 +174,9 @@ public class tp3InstSet extends AbstractInstSet {
                     return EdgeMap.edgeToRec(edge, lhs.<VertexMap>jvmAs().space).tid(edgeLabel);
                 }));
             })
-            .create(TYPES, INSTS);
+            .create(TYPES, INSTS), "a key/value attributed vertex");
 
-    public static final Type EDGE_TYPE = Type.Builder.build()
+    public static final Type EDGE_TYPE = docWrap(Type.Builder.build()
             .tid(ELMT_TID)
             .vid(EDGE_TID)
             .isaPredicate(rec(IN, VRTX_TYPE, OUT, VRTX_TYPE))
@@ -185,7 +186,7 @@ public class tp3InstSet extends AbstractInstSet {
             .doc("an edge", "the outgoing vertex", Map.of(), "returns the lhs edge tail vertex")
             .inst(BOTHV_INST_TID.dom(EDGE_TID).rng(VRTX_TID), lst(), (lhs, inst) -> objs(Stream.concat(lhs.asRec().at(IN).stream(), lhs.asRec().at(OUT).stream())))
             .doc("an edge", "both vertices", Map.of(), "returns the lhs edge's head and tail vertices")
-            .create(TYPES, INSTS);
+            .create(TYPES, INSTS), "an directed key/value attributed binary edge");
 
     @Override
     public Set<Obj> consts() {

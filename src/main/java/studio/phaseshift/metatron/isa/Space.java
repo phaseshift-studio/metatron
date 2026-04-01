@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa;
 
 import studio.phaseshift.metatron.Tokens;
+import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.type.Router;
@@ -38,6 +39,7 @@ import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+import static studio.phaseshift.metatron.Tokens.QSTRING;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -54,7 +56,12 @@ public interface Space extends Rec, Closeable {
     }
 
     default Lst qs() {
-        return this.at(uri(Tokens.QSTRING)).orElse(lst());
+        return this.at(uri(QSTRING)).orElse(lst());
+    }
+    
+    default Space addQ(final Q q) {
+         this.at(uri(QSTRING), this.at(uri(QSTRING)).orElse(lst()).add(q,MUTABLE), MUTABLE);
+         return this;
     }
 
     fURI pattern();
