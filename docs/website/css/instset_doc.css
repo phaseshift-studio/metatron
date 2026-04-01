@@ -48,6 +48,13 @@
 /* ==========================================================================
    Card Overrides for Instset Docs
    ========================================================================== */
+.instset-doc-small-code {
+    font-size: 0.9rem !important;
+}
+
+.instset-doc-small-code > a {
+    font-size: 0.9rem !important;
+}
 
 .instset-doc .card {
     margin: 0;

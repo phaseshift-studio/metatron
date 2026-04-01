@@ -18,3 +18,4 @@
 
 dev.langchain4j.model.ollama.OllamaChatModel
 dev.langchain4j.model.openai.OpenAiChatModel
+dev.langchain4j.model.anthropic.AnthropicChatModel

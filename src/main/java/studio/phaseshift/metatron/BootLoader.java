@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -53,7 +53,20 @@ import java.util.stream.Stream;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
+import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Bytes.BYTES_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Code.CODE_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Fail.FAIL_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Inst.INST_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.NOOBJ_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Real.REAL_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Rel.REL_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -157,7 +170,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
             }
             final fURI SYS_VID = f("/sys");
             final Space sysSpace = memSpace.of(SYS_VID.extend("#"), null);
-            sysSpace.jvm().put(uri(QSTRING), lst(QCollection.subq(),QCollection.incrQ()));
+            sysSpace.jvm().put(uri(QSTRING), lst(QCollection.subq(), QCollection.incrQ()));
             ///  LOAD SYSTEM ENVIRONMENTAL VARIABLES
             System.getenv().entrySet().stream()
                     .map(kv -> new AbstractMap.SimpleEntry<>(SYS_VID.extend("env").extend(kv.getKey()), str(kv.getValue())))
@@ -190,9 +203,27 @@ public class BootLoader implements Rec, Feature.SelfClone {
                 LOG.info("\t {{m}}END:{{g}} evaluating provided boot loader: {{b}}%s{{X}}\n", args.at(uri(Tokens.BOOT)).uriValue());
             }
             ///////////////////////////////////////////////////////////////
+            docWrap(BOOL_TYPE, "a 2 valued mono: true or false");
+            docWrap(BYTES_TYPE, "a sequence of 8-bit unsigned integers");
+            docWrap(INT_TYPE, "a 64-bit signed integer");
+            docWrap(REAL_TYPE, "a 64-bit floating point number");
+            docWrap(STR_TYPE, "an ordered sequence of UTF-32 characters");
+            docWrap(URI_TYPE, "a uniform resource identifier");
+            docWrap(REL_TYPE, "a directed binary poly coupling two objs");
+            docWrap(REC_TYPE, "a poly composed of uniquely keyed rels");
+            docWrap(LST_TYPE, "an ordered sequence poly of objs");
+            docWrap(INST_TYPE, "a call with apply defined by an lhs obj, an poly of args, and an body of code");
+            docWrap(CODE_TYPE, "a call with apply defined by an lhs obj and a sequence of insts");
+            docWrap(T(OBJS_TID), "an ordered sequence poly of objs and noobjs");
+            docWrap(NOOBJ_TYPE, "a no object");
+            docWrap(MONO_TYPE, "an atomic obj");
+            docWrap(POLY_TYPE, "a obj composed of other objs");
+            docWrap(NUM_TYPE, "an obj representing a number");
+            docWrap(FAIL_TYPE, "a reified exception handling obj that can be caught");
+            ///////////////////////////////////////////////////////////////
             final Obj log = Router.writeToSpace(LogObj.of(rec(args.at("log").orElse(uri("trace")), lst(uri(ALL))), SYS_VID.extend("log")));
             LOG.info("logging now handled by %s", log);
-            /// ///////////////////////////////////
+            ///////////////////////////////////////////////////////////////
             LOG.info("%s {{g}}successfully{{/g}} booted", Graphitty.sillyPrint("metatron", true, true));
             BOOTING = false;
             System.gc();

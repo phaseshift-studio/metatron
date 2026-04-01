@@ -20,10 +20,15 @@ package studio.phaseshift.metatron.furi.q;
 
 import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
+import studio.phaseshift.metatron.isa.m.space.noobjSpace;
+import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -36,6 +41,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.isa.m.type.Inst.OBJ;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
@@ -63,7 +69,8 @@ public final class QCollection {
     public static final fURI INCRQ_TID = Q_TID.extend("incrq");
     public static final Type INCRQ_TYPE = Type.Builder.build().tid(Q_TID).vid(INCRQ_TID).constructor(QCollection::incrQ).create();
     //
-    public static final fURI DOCQ_PATTERN = f("docq");
+    public static final String DOCQ = "docq";
+    public static final fURI DOCQ_PATTERN = f(DOCQ);
     public static final fURI DOCQ_TID = Q_TID.extend("docq");
     public static final Type DOCQ_TYPE = Type.Builder.build().tid(Q_TID).vid(DOCQ_TID).constructor(QCollection::docQ).create();
     public static final fURI DOCS_TID = DOCQ_TID.extend("docs");
@@ -151,22 +158,16 @@ public final class QCollection {
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+    private static final Rec NO_DOCS = rec(uri(DESC), str("no documentation available"));
 
     public static Q docQ() {
         final memSpace DOC_SPACE = memSpace.of(rec(), null);
+
         return studio.phaseshift.metatron.furi.Q.Helper.build(DOCQ_TID, DOCQ_PATTERN)
-                /*  .preWrite((vid, obj) -> {
-                      DOC_SPACE.write(vid, obj);
-                      return obj;
-                  })
-                  .qlessWrite((vid, obj) -> {
-                      final Obj type = TYPE_SPACE.read(vid);
-                      if (type.isNoObj())
-                          return noobj();
-                      if (!obj.test(type))
-                          throw MTronException.of("[typeq] %s does not match %s", obj, type);
-                      return noobj();
-                  })*/.create();
+                .obj(f(OBJ), DOC_SPACE)
+                .preWrite((vid, obj) -> DOC_SPACE.write(vid.removeQ(DOCQ), obj))
+                .preRead((vid) -> DOC_SPACE.read(vid.removeQ(DOCQ)).orElse(NO_DOCS))
+                .create();
     }
 
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -230,5 +231,37 @@ public final class QCollection {
                     });
                     return noobj();
                 }).create();
+    }
+
+    /// //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public static Inst docWrap(final Inst inst, final String domDesc, final String rngDesc, final Map<Obj, String> argDescription, final String description) {
+        final DocQ.Doc doc = DocQ.Doc.doc(inst, domDesc, rngDesc, argDescription, description);
+        final Space instSpace = Router.global().getSpace(inst.tid());
+        final Optional<Q> docq = instSpace.qs().jvm().stream().filter(q -> q.tid().basePath().equals(DOCQ_TID)).map(Obj::<Q>as).findAny();
+        if (docq.isEmpty())
+            instSpace.logger().warn("no doc query attachment mounted on %s for %s", instSpace, inst.tid());
+        else
+            docq.get().at(OBJ).<Space>as().write(inst.tid(), doc);
+        return inst;
+    }
+
+    public static Type docWrap(final Type type, final String description) {
+        return docWrap(type, null, null, null, description);
+    }
+
+    public static Type docWrap(final Type type, final String predicate, final String constructor, final Map<Obj, String> predicateDescription, final String description) {
+        if (null != type.vid()) {
+            final DocQ.Doc doc = DocQ.Doc.doc(type, predicate, constructor, predicateDescription, description);
+            final Space instSpace = Router.global().getSpace(type.vid());
+            final Optional<Q> docq = instSpace.qs().jvm().stream().filter(q -> q.tid().basePath().equals(DOCQ_TID)).map(Obj::<Q>as).findAny();
+            if (docq.isEmpty())
+                instSpace.logger().warn("no doc query attachment mounted on %s for %s", instSpace, type.tid());
+            else
+                docq.get().at(OBJ).<Space>as().write(type.vid(), doc);
+        } else {
+            Router.global().logger().warn("unable to document a vid-less type: %s", type);
+        }
+        return type;
     }
 }

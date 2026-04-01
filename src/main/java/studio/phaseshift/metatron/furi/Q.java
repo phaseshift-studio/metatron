@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -33,6 +33,7 @@ import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+import static studio.phaseshift.metatron.Tokens.OBJ;
 import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -186,20 +187,20 @@ public interface Q extends Rec {
                     (q.vid() != null && ((Q) other).vid() != null && ((Q) other).vid().equals(q.vid()));
         }
 
-        public static Optional<Obj> processPreWrite(final Lst qs,final fURI vid, final Obj obj) {
+        public static Optional<Obj> processPreWrite(final Lst qs, final fURI vid, final Obj obj) {
             return vid.hasQ() && !qs.isEmpty() ? qs.<Q>elements()
                     .filter(q -> vid.hasQ(q.pattern().toString()))
                     .map(Q::onWrite)
                     .filter(Optional::isPresent)
                     // .peek(q -> LOG.info("handling {{y}}pre write{{X}} of %s for %s %s", source, vid, obj))
                     .map(Optional::get)
-                    .map(q -> q.preWrite( vid, obj))
+                    .map(q -> q.preWrite(vid, obj))
                     .filter(Optional::isPresent)
                     .map(Optional::get)
                     .reduce(Obj::append) : Optional.empty();
         }
 
-        public static Optional<Obj> processPreRead(final Lst qs,final fURI vid) {
+        public static Optional<Obj> processPreRead(final Lst qs, final fURI vid) {
             return vid.hasQ() && !qs.isEmpty() ?
                     qs.<Q>elements()
                             .filter(q -> vid.hasQ(q.pattern().toString()))
@@ -228,7 +229,7 @@ public interface Q extends Rec {
                     .filter(q -> !q.isNoObj()) : Optional.empty();
         }
 
-        public static Optional<Obj> processQlessWrite(final Lst qs,final fURI vid, final Obj obj) {
+        public static Optional<Obj> processQlessWrite(final Lst qs, final fURI vid, final Obj obj) {
             return qs.<Q>elements()
                     .map(Q::onWrite)
                     .filter(Optional::isPresent)
@@ -300,19 +301,22 @@ public interface Q extends Rec {
                 this.jvm.put(QLESS_WRITE, qlessWrite);
                 return this;
             }
-            
+
             public Builder obj(final fURI key, final Obj value) {
                 this.jvm.put(key, value);
                 return this;
             }
 
             public Q create() {
-                return BaseQ.create(this.tid, this.pattern,
+                final Q q = BaseQ.create(this.tid, this.pattern,
                         (Function<fURI, Obj>) this.jvm.get(PRE_READ),
                         (BiFunction<fURI, Obj, Obj>) this.jvm.get(POST_READ),
                         (BiFunction<fURI, Obj, Obj>) this.jvm.get(PRE_WRITE),
                         (TriFunction<fURI, Obj, Obj, Obj>) this.jvm.get(POST_WRITE),
                         (BiFunction<fURI, Obj, Obj>) this.jvm.get(QLESS_WRITE));
+                if (jvm.containsKey(f(OBJ)))
+                    q.jvm().put(uri(OBJ), (Obj) jvm.get(f(OBJ)));
+                return q;
             }
         }
     }

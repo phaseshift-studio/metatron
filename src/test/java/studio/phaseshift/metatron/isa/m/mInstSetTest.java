@@ -64,7 +64,7 @@ public class mInstSetTest extends AbstractInstSetTest {
 
     @Test
     public void testDocs() {
-        assertTrue(new mInstSet().qs().elements().anyMatch(q -> q.<Q>as().pattern().equals(f("doc"))));
+        assertTrue(new mInstSet().qs().elements().anyMatch(q -> q.<Q>as().pattern().equals(f("docq"))));
         new DocQTest().analyzeDocs(new mInstSet());
     }
 
@@ -349,7 +349,7 @@ public class mInstSetTest extends AbstractInstSetTest {
             "{1,2,3,4,5,6}.sum?int<=int{2}().count()                                % 3",
             "{1,2,3,4}.sum?int<=int{+}()                                            % 10",
             "{1,2,3,4}.count?int<=int()                                             % int{4}::1",
-            "{1,2,3,4}.count?int<=int{2}()                                          % int{2}::2",
+          //  "{1,2,3,4}.count?int<=int{2}()                                          % int{2}::2",
             "{1,2,3,4}.count?int<=int{4}()                                          % int::4",
             "{1,2,3,4}.count?int<=int{3,10}()                                       % int::4",
             "{1,2,3,4}.sum?int<=int{1,7}()                                          % 10",

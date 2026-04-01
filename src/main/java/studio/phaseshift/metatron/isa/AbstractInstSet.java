@@ -22,6 +22,7 @@ import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.DocQ;
+import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.type.Router;
@@ -63,7 +64,7 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
     public AbstractInstSet(final fURI tid, final fURI vid) {
         super(new LinkedHashMap<>(), mutableMap(
                 uri(Tokens.PATTERN), uri(tid.extend(ALL))), tid, vid);
-        this.at(uri(Tokens.QSTRING), lst(new DocQ()), MUTABLE);
+        this.at(uri(Tokens.QSTRING), lst(QCollection.docQ()), MUTABLE);
         if (Router.loaded()) {
             this.sugars().forEach(mParser::addSugar);
             this.consts().forEach(c -> Router.global().registerRewrite(f(c.vid().name()), c.vid()));

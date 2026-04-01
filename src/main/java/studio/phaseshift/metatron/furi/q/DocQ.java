@@ -20,10 +20,8 @@ package studio.phaseshift.metatron.furi.q;
 
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
-import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
@@ -179,13 +177,17 @@ public class DocQ extends BaseQ {
         public Doc(final Rec docRec) {
             this(docRec.jvm(), docRec.tid(), docRec.vid());
         }
+        
+        public Doc(final String description) {
+            this(Map.of(uri(DESC), str(description)), DOC_TID, null);
+        }
 
         public static Doc empty(final Obj obj) {
             return new Doc(Map.of(uri("name"), obj), DOC_TID, null);
         }
 
         public Poly<?, ?> args() {
-            return this.at(ARGS);
+            return this.at(ARGS).orElse(rec0());
         }
 
         public String description() {
@@ -287,43 +289,6 @@ public class DocQ extends BaseQ {
                     uri(RNG), null == rngDesc ? noobj() : str(rngDesc),
                     uri(ARGS), null == argDescription ? noobj() : rec(argDescription.entrySet().stream().map(kv -> rel(kv.getKey(), str(kv.getValue())))),
                     uri(DESC), str(description)).jvm(), DOC_TID, null);
-        }
-
-        public static Inst docWrap(final Inst inst, final String domDesc, final String rngDesc, final Map<Obj, String> argDescription, final String description) {
-            final Doc doc = doc(inst, domDesc, rngDesc, argDescription, description);
-            final Space instSpace = Router.global().getSpace(inst.tid());
-            final Optional<DocQ> docq = instSpace.qs().jvm().stream().filter(q -> q.tid().basePath().equals(DOCQ_TID)).map(Obj::<DocQ>as).findAny();
-            if (docq.isEmpty())
-                instSpace.logger().warn("no doc query attachment mounted on %s for %s", instSpace, inst.tid());
-            else
-                docq.get().docSpace.put(inst.tid(), doc);
-            return inst;
-        }
-
-        public static Type docWrap(final Type type, final String description) {
-            final Doc doc = doc(type, null, null, null, description);
-            final Space instSpace = Router.global().getSpace(type.tid());
-            final Optional<DocQ> docq = instSpace.qs().jvm().stream().filter(q -> q.tid().basePath().equals(DOCQ_TID)).map(Obj::<DocQ>as).findAny();
-            if (docq.isEmpty())
-                instSpace.logger().warn("no doc query attachment mounted on %s for %s", instSpace, type.tid());
-            else
-                docq.get().docSpace.put(type.tid(), doc);
-            return type;
-        }
-
-        public static Type docWrap(final Type type, final String predicate, final String constructor, final Map<Obj, String> predicateDescription, final String description) {
-            if (null != type.vid()) {
-                final Doc doc = doc(type, predicate, constructor, predicateDescription, description);
-                final Space instSpace = Router.global().getSpace(type.vid());
-                final Optional<DocQ> docq = instSpace.qs().jvm().stream().filter(q -> q.tid().basePath().equals(DOCQ_TID)).map(Obj::<DocQ>as).findAny();
-                if (docq.isEmpty())
-                    instSpace.logger().warn("no doc query attachment mounted on %s for %s", instSpace, type.tid());
-                else
-                    docq.get().docSpace.put(type.vid(), doc);
-            } else {
-                Router.global().logger().warn("unable to document a vid-less type: %s", type);
-            }
-            return type;
         }
 
     }

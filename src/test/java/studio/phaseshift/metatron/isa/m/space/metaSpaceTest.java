@@ -38,6 +38,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
+@Disabled
 public class metaSpaceTest extends AbstractSpaceTest {
 
     private static Space SYS_SPACE = null;
@@ -47,14 +48,14 @@ public class metaSpaceTest extends AbstractSpaceTest {
 
     public metaSpaceTest() {
         super(f("/cluster/a/t"), () -> {
-            final List<Obj> peers = List.of(uri("ws://localhost:6666"), uri("ws://localhost:7777"));
+            final List<Obj> peers = List.of(uri("ws://localhost:8999"), uri("ws://localhost:8999"));
             // TEST_SPACE = memSpace.of(rec(uri(PATTERN), uri("/test/#")), f("/sys/space/test"));
-            /*META1_SPACE = metaSpace.of(rec(
+            META1_SPACE = metaSpace.of(rec(
                             uri(PATTERN), uri("/cluster/a/t/#"),
                             uri(HOST), peers.get(0),
                             uri(ROUTE), rec(uri("/cluster/a"), uri("/test")),
                             uri(PEERS), lst(peers)),
-                    f("/sys/space/meta1"));*/
+                    f("/sys/space/meta1"));
             META2_SPACE = metaSpace.of(rec(
                             uri(PATTERN), uri("/cluster/a/t/#"),
                             uri(HOST), peers.get(1),

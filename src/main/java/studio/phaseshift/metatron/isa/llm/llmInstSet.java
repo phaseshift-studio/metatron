@@ -34,7 +34,7 @@ import java.util.Set;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
-import static studio.phaseshift.metatron.furi.q.DocQ.Doc.docWrap;
+import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.llm.space.modelCatalogSpace.LLM_CATALOG_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.llm.type.MCPServer.MCP_SERVER_TYPE;
 import static studio.phaseshift.metatron.isa.llm.type.MCPServer.MCP_TOOL_TYPE;

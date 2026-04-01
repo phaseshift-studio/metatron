@@ -160,12 +160,11 @@ bin/metatron</code></pre>
                             src="../images/icons/space/graphql-icon.svg" class="isa-row icon-color me-2" alt="iot"/>/m/iot</a>
                     </li>
                     -->
-                    <!-- TODO: Add /m/sys docs
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='m_sys.html';"><img
-                            src="../images/icons/space/olrp-icon.svg" class="isa-row icon-color me-2"
-                            alt="sys"/>/m/sys</a></li>
-                    -->
+                           onclick="location.href='m_math.html';"><img
+                            src="../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
+                            alt="math"/>/m/math</a>
+                    </li>
                 </ul>
             </li>
             <!----------------------------------------------------------------------------------------------------------
@@ -231,7 +230,7 @@ bin/metatron</code></pre>
                 <h1 class="text-primary glow-text">
                     <span class="text-light">/m/</span>doc
                 </h1>
-                <p class="subtitle text-light">Instruction Set Reference</p>
+                <p class="subtitle text-light">instruction set reference</p>
             </div>
         </div>
             
@@ -259,11 +258,11 @@ bin/metatron</code></pre>
                     
                 <a href="#type-collection" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">collection</span>
-                    <span class="badge bg-info">T</span>
+                    <span class="badge bg-primary">T</span>
                 </a>
                 <a href="#type-document" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">document</span>
-                    <span class="badge bg-info">T</span>
+                    <span class="badge bg-primary">T</span>
                 </a>
                 </div>
             </div>
@@ -274,14 +273,14 @@ bin/metatron</code></pre>
             
         <div class="container-xxl mb-4" id="types">
             <h3 class="text-primary mb-3">
-                Types <span class="badge bg-info">2</span>
+                Types <span class="badge bg-primary">2</span>
             </h3>
             
                 <div class="card mb-3" id="type-collection">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">collection::T</span>
-                            <span class="ms-2 text-muted">refines <span class="code text-info">lst{*}::T</span></span>
+                            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">lst{*}::T</span></span>
                         </span>
                         <small class="text-muted code">/m/doc/collection</small>
                     </div>
@@ -290,12 +289,15 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">lst{*}::T[isa(document{*}::T)]@/m/doc/collection</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="type-document">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">document::T</span>
-                            <span class="ms-2 text-muted">refines <span class="code text-info">rec::T</span></span>
+                            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">rec::T</span></span>
                         </span>
                         <small class="text-muted code">/m/doc/document</small>
                     </div>
@@ -304,6 +306,9 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">rec::T[isa([uri::T=&gt;#::T])]@/m/doc/document</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
         </div>
             
@@ -311,7 +316,7 @@ bin/metatron</code></pre>
             
         <div class="container-xxl mb-4" id="spaces">
             <h3 class="text-primary mb-3">
-                Spaces <span class="badge bg-primary">1</span>
+                Spaces <span class="badge bg-info">1</span>
             </h3>
             
                 <div class="card mb-3" id="space-doc">
@@ -329,6 +334,9 @@ bin/metatron</code></pre>
  {?}collection=&gt;lst::T])][inst?rng=doc&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/doc/space/doc</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
         </div>
             
@@ -336,7 +344,7 @@ bin/metatron</code></pre>
         <div class="container-xxl py-3 text-center">
             <hr class="border-secondary">
             <small class="text-muted">
-                Generated by Metatron InstSet Doc Generator on 2026-03-31 14:36:55<br>
+                generated by metatron instset doc generator on 2026-04-01 01:37:47<br>
                 © PhaseShift Studio, LLC
             </small>
         </div>

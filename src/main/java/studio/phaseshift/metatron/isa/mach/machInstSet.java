@@ -54,7 +54,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.DocQ.DOCQ_TYPE;
 import static studio.phaseshift.metatron.furi.q.DocQ.DOC_TYPE;
-import static studio.phaseshift.metatron.furi.q.DocQ.Doc.docWrap;
+import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.furi.q.QCollection.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
@@ -253,8 +253,8 @@ public class machInstSet extends AbstractInstSet {
                         return monad;
                 }),
                 instC(REWRITE_INST_TID.dom(ALL.maybe()).rng(REC_TID), lst(URI_TYPE), (lhs, inst) -> rec(
-                        uri(SHORT), uri(Router.global().rewrite(inst.arg(0).uriValue(), true)), 
-                        uri(LONG), uri(Router.global().rewrite(inst.arg(0).uriValue(), false)))),
+                        uri(SHORT), uri(Router.global().rewrite(inst.arg(0).uriValue(), false)), 
+                        uri(LONG), uri(Router.global().rewrite(inst.arg(0).uriValue(), true)))),
                 instC(MACH_INST_TID.extend("close").dom(ROUTER_TID).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
                     if (lhs instanceof Router)
                         return Stream.of(noobj()).peek(o -> System.exit(0)).iterator().next();

@@ -291,7 +291,7 @@ public class ObjCleanStringSerializer extends AbstractObjSerializer<String> {
         if (rec.isEmpty()) {
             sb.append("[=>]");
         } else {
-            boolean nested =  rec.jvm().size() > 4 || rec.jvm().values().stream().anyMatch(o -> o.isPoly() || o.isObjCall());
+            boolean nested = rec.jvm().size() > 4 || rec.jvm().values().stream().anyMatch(o -> o.isPoly() || o.isObjCall());
             /*rec.jvm().values().stream().filter(o -> !o.isPoly()).map(this::write).map(String::length).reduce(0, Integer::sum) > (75 - depth);*/
             final int maxKeyLength = nested ? rec.jvm().keySet().stream().map(this::write).map(String::length).reduce(0, Integer::max) : 0;
             final boolean isBaseType = rec.type().isBaseType();
@@ -323,8 +323,7 @@ public class ObjCleanStringSerializer extends AbstractObjSerializer<String> {
 
     private StringBuilder writeClip(final StringBuilder sb, final Obj obj) {
         if (obj.isStr() && obj.strValue().length() > CLIP_LENGTH) {
-            sb.append(write(str(obj.strValue().substring(0, CLIP_LENGTH - 1))));
-            sb.append("...");
+            sb.append(write(str(obj.strValue().substring(0, CLIP_LENGTH - 1) + "...")));
         } else if (obj.isBytes() && obj.bytesValue().capacity() > CLIP_LENGTH) {
             byte[] bb = Arrays.copyOf(obj.bytesValue().array(), CLIP_LENGTH - 1);
             sb.append(write(bytes(ByteBuffer.wrap(bb))));

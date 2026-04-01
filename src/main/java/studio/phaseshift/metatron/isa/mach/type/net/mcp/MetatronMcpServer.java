@@ -44,6 +44,7 @@ import java.util.List;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.furi.q.QCollection.DOCQ;
 import static studio.phaseshift.metatron.isa.m.mInstSet.EVAL_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.Str.str0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -194,7 +195,7 @@ public class MetatronMcpServer extends MRec {
         final String toolName = inst.tid().name();
         LOG.debug("registering inst as an mcp tool: %s", toolName);
         // Query for documentation metadata
-        final Obj docObj = Router.global().read(inst.tid().q("doc", null));
+        final Obj docObj = Router.global().read(inst.tid().q(DOCQ, null));
         // rebuild the doc object just in case the rec is not a true Java class doc (e.g. rec stored in a database)
         final DocQ.Doc doc = docObj.isNoObj() ? DocQ.Doc.empty(inst) : new DocQ.Doc(docObj.asRec());
         // Extract description
@@ -216,7 +217,7 @@ public class MetatronMcpServer extends MRec {
         final JsonRpcToolDispatcher.ToolHandler handler = args -> {
             try {
                 LOG.debug("executing inst tool %s with args: %s", toolName, args);
-                final Obj lhs = MObjFactory.single().toObj(args.remove("lhs"));
+                final Obj lhs = MObjFactory.single().toObj(args.remove(LHS));
                 // execute the inst as lhs => inst(args) => rhs
                 final Obj rhs = inst.args(args
                                 .entrySet()
@@ -247,7 +248,7 @@ public class MetatronMcpServer extends MRec {
         if (args.isNoObj() || args.isEmpty()) 
             return createDefaultArgsSchema();
 
-        final Poly<?, ?> docArgs = doc.args();
+        final Poly<?, ?> docArgs = doc.args().orElse(rec0());
         final JsonObject jsonSchema = new JsonObject();
         jsonSchema.addProperty(TYPE, Tokens.OBJECT);
 

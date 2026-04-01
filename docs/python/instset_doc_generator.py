@@ -162,9 +162,9 @@ class MetatronClient:
             # e.g., plus?rng=int&dom=int → *plus?rng=int&dom=int&doc
             # e.g., /m/lst → */m/lst?doc
             if '?' in vid:
-                doc_query = f"*{vid}&doc"
+                doc_query = f"*{vid}&docq"
             else:
-                doc_query = f"*{vid}?doc"
+                doc_query = f"*{vid}?docq"
 
             logger.debug(f"Fetching doc with query: {doc_query}")
 
@@ -969,14 +969,14 @@ class HTMLDocGenerator:
 </html>"""
 
     def _generate_instset_header(self) -> str:
-        parent_path = '/'.join(self.instset.vid.split('/')[:-1]) or '/'
+        parent_path = '/'.join(self.instset.vid.split('/')[:-1]) or ''
         return f"""
         <div class="container-xxl py-4">
             <div class="text-center mb-4">
                 <h1 class="text-primary glow-text">
                     <span class="text-light">{html.escape(parent_path)}/</span>{html.escape(self.instset.name)}
                 </h1>
-                <p class="subtitle text-light">Instruction Set Reference</p>
+                <p class="subtitle text-light">instruction set reference</p>
             </div>
         </div>"""
 
@@ -1016,10 +1016,10 @@ class HTMLDocGenerator:
         return f"""
         <div class="container-xxl mb-4">
             <div class="row g-2 justify-content-center">
-                {stat_card(len(self.instset.types), "Types", "info")}
+                {stat_card(len(self.instset.types), "Types", "primary")}
                 {stat_card(len(self.instset.insts), "Insts", "success")}
                 {stat_card(len(self.instset.rewrites), "Rewrites", "warning")}
-                {stat_card(len(self.instset.spaces), "Spaces", "primary")}
+                {stat_card(len(self.instset.spaces), "Spaces", "info")}
                 {stat_card(len(self.instset.consts), "Consts", "secondary")}
             </div>
         </div>"""
@@ -1058,7 +1058,7 @@ class HTMLDocGenerator:
             type_items.append(f'''
                 <a href="#type-{html.escape(t.name)}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">{html.escape(t.name)}</span>
-                    <span class="badge bg-info">T</span>
+                    <span class="badge bg-primary">T</span>
                 </a>''')
 
         inst_items = []
@@ -1125,11 +1125,11 @@ class HTMLDocGenerator:
                 if t.super_type_instset:
                     instset_file = self._make_filename(t.super_type_instset)
                     refines_html = f'''
-                        <span class="ms-2 text-muted">
-                            refines <a href="{instset_file}#type-{html.escape(super_name)}" class="text-info code">{html.escape(display_name)}</a>
+                        <span class="ms-2 text-muted instset-doc-small-code">
+                            refines <a href="{instset_file}#type-{html.escape(super_name)}" class="instset-doc-small-code text-info code">{html.escape(display_name)}</a>
                         </span>'''
                 else:
-                    refines_html = f'<span class="ms-2 text-muted">refines <span class="code text-info">{html.escape(display_name)}</span></span>'
+                    refines_html = f'<span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">{html.escape(display_name)}</span></span>'
 
             # Generate description from doc if available
             desc_html = ""
@@ -1160,7 +1160,7 @@ class HTMLDocGenerator:
         return f"""
         <div class="container-xxl mb-4" id="types">
             <h3 class="text-primary mb-3">
-                Types <span class="badge bg-info">{len(self.instset.types)}</span>
+                Types <span class="badge bg-primary">{len(self.instset.types)}</span>
             </h3>
             {''.join(items)}
         </div>"""
@@ -1235,7 +1235,7 @@ class HTMLDocGenerator:
         if inst.domain:
             # Make domain clickable - link to type section
             domain_html = self._make_type_link(inst.domain, inst.domain_full, "text-info")
-            parts.append(f'<sub>{domain_html}</sub>')
+            parts.append(f'<span class="instset-doc-small-code">{domain_html}</span>')
 
         if inst.domain or inst.range:
             parts.append('<span class="text-muted mx-1">=&gt;</span>')
@@ -1243,7 +1243,7 @@ class HTMLDocGenerator:
         if inst.range:
             # Make range clickable - link to type section
             range_html = self._make_type_link(inst.range, inst.range_full, "text-success")
-            parts.append(f'<sub>{range_html}</sub>')
+            parts.append(f'<span class="instset-doc-small-code">{range_html}</span>')
 
         return f'<span class="ms-1">{"".join(parts)}</span>'
 
@@ -1310,7 +1310,7 @@ class HTMLDocGenerator:
 
         return f"""
         <div class="container-xxl mb-4" id="rewrites">
-            <h3 class="text-warning mb-3">
+            <h3 class="text-primary mb-3">
                 Rewrites <span class="badge bg-warning text-dark">{len(self.instset.rewrites)}</span>
             </h3>
             {''.join(items)}
@@ -1325,7 +1325,7 @@ class HTMLDocGenerator:
         if rewrite.domain:
             # Make domain clickable - link to type section
             domain_html = self._make_type_link(rewrite.domain, rewrite.domain_full, "text-info")
-            parts.append(f'<sub>{domain_html}</sub>')
+            parts.append(f'<span class="instset-doc-small-code">{domain_html}</span>')
 
         if rewrite.domain or rewrite.range:
             parts.append('<span class="text-muted mx-1">=&gt;</span>')
@@ -1333,7 +1333,7 @@ class HTMLDocGenerator:
         if rewrite.range:
             # Make range clickable - link to type section
             range_html = self._make_type_link(rewrite.range, rewrite.range_full, "text-success")
-            parts.append(f'<sub>{range_html}</sub>')
+            parts.append(f'<span class="instset-doc-small-code">{range_html}</span>')
 
         return f'<span class="ms-1">{"".join(parts)}</span>'
 
@@ -1377,7 +1377,7 @@ class HTMLDocGenerator:
         return f"""
         <div class="container-xxl mb-4" id="spaces">
             <h3 class="text-primary mb-3">
-                Spaces <span class="badge bg-primary">{len(self.instset.spaces)}</span>
+                Spaces <span class="badge bg-info">{len(self.instset.spaces)}</span>
             </h3>
             {''.join(items)}
         </div>"""
@@ -1432,7 +1432,7 @@ class HTMLDocGenerator:
         <div class="container-xxl py-3 text-center">
             <hr class="border-secondary">
             <small class="text-muted">
-                Generated by Metatron InstSet Doc Generator on {timestamp}<br>
+                generated by metatron instset doc generator on {timestamp}<br>
                 © PhaseShift Studio, LLC
             </small>
         </div>"""
@@ -1459,9 +1459,9 @@ def generate_index_page(instsets: List[InstSetInfo], embed_css: bool = True, css
                             <div class="card-body">
                                 <h5 class="card-title code text-primary">{html.escape(info.vid)}</h5>
                                 <div class="d-flex gap-2 flex-wrap">
-                                    <span class="badge bg-info">{len(info.types)} types</span>
+                                    <span class="badge bg-primary">{len(info.types)} types</span>
                                     <span class="badge bg-success">{len(info.insts)} instructions</span>
-                                    <span class="badge bg-warning text-dark">{len(info.spaces)} spaces</span>
+                                    <span class="badge bg-info text-dark">{len(info.spaces)} spaces</span>
                                 </div>
                             </div>
                         </div>
@@ -1471,8 +1471,8 @@ def generate_index_page(instsets: List[InstSetInfo], embed_css: bool = True, css
     content = f"""
         <div class="container-xxl py-4">
             <div class="text-center mb-5">
-                <h1 class="text-primary glow-text">Metatron</h1>
-                <p class="subtitle text-light">Instruction Set Documentation</p>
+                <h1 class="text-primary glow-text">metatron</h1>
+                <p class="subtitle text-light">instruction set documentation</p>
             </div>
 
             <div class="row g-3">
@@ -1482,7 +1482,7 @@ def generate_index_page(instsets: List[InstSetInfo], embed_css: bool = True, css
             <div class="py-3 text-center mt-5">
                 <hr class="border-secondary">
                 <small class="text-muted">
-                    Generated by Metatron InstSet Doc Generator on {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}<br>
+                    generated by metatron instset doc generator on {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}<br>
                     © PhaseShift Studio, LLC
                 </small>
             </div>

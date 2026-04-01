@@ -19,7 +19,7 @@
     --mdarkgray: #494554;
     --mlightgray: #797585;
     --myellow: #9ba201;
-    --maqua: #008dbf;
+    --maqua: #0082ae;
 }
 
 .float-left-code {
@@ -912,7 +912,6 @@ body {
     .hljs-mtron-coefficient,
     .hljs-mtron-log-warn,
     .hljs-mtron-auto-from,
-    .hljs-mtron-rec-key,
     .hljs-mtron-query-key,
     .hljs-mtron-keyword,
     .hljs-mtron-query-value,
@@ -920,10 +919,7 @@ body {
     .hljs-mtron-uri,
     .hljs-mtron-type,
     .hljs-mtron-type-prefix,
-    .hljs-mtron-form,
-    .hljs-mtron-inst-f-jvm,
     .hljs-mtron-punctuation,
-    .hljs-mtron-rec,
     .hljs-mtron-result-prefix,
     .hljs-mtron-prompt-end,
     .hljs-mtron-log-info,
@@ -1053,6 +1049,7 @@ th {
     font-weight: bold !important;
 }
 
+.hljs-mtron-form,
 .hljs-mtron-rec-key,
 .hljs-mtron-query-key {
     color: var(--maqua);
@@ -1060,7 +1057,6 @@ th {
 
 #header,
 .hljs-punctuation,
-.hljs-mtron-rec,
 .hljs-mtron-result-prefix,
 .hljs-mtron-type-prefix,
 .hljs-mtron-prompt-end,
@@ -1073,6 +1069,7 @@ th {
     color: var(--mmagenta);
 }
 
+.hljs-mtron-rec,
 .hljs-mtron-prompt-begin,
 .hljs-mtron-pipe,
 .hljs-mtron-log-error,
@@ -1083,6 +1080,7 @@ th {
     color: var(--mred);
 }
 
+.hljs-mtron-inst-f-jvm,
 .hljs-comment {
     color: var(--mlightgray);
 }
@@ -1095,9 +1093,7 @@ th {
 
 .hljs-mtron-uri,
 .hljs-mtron-type,
-.hljs-mtron-type-prefix,
-.hljs-mtron-form,
-.hljs-mtron-inst-f-jvm {
+.hljs-mtron-type-prefix {
     color: var(--mblue);
 }
 

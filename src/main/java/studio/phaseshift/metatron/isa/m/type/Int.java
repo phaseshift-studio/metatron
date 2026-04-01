@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -26,7 +26,7 @@ import java.nio.ByteBuffer;
 import java.util.*;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.furi.q.DocQ.Doc.docWrap;
+import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Bytes.BYTES_TYPE;
@@ -46,11 +46,11 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  */
 public interface Int extends Mono, Ring.O<Int> {
 
-    
+
     Type INT_TYPE = Type.Builder.build().tid(INT_TID).vid(INT_TID).create();
     Int ZERO = jnt(0L);
     Int ONE = jnt(1L);
-    
+
     @Override
     Int clone(final Object jvm, final fURI tid, final fURI vid);
 
@@ -101,7 +101,7 @@ public interface Int extends Mono, Ring.O<Int> {
 
     Int self(final Long jvm, final fURI tid, final fURI vid);
     
-    public static final class IntType {
+    final class IntType {
 
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
@@ -124,7 +124,7 @@ public interface Int extends Mono, Ring.O<Int> {
                     instC(SUM_INST_TID.dom(INT_TID.maybeSome()).rng(INT_TID), lst(), (lhs, inst) -> inst.seed().jvm(lhs.stream().reduce(inst.seed(), (a, b) -> ((Int) a).plus((Int) b)).intValue()), jnt(0)),
                     instC(PROD_INST_TID.dom(INT_TID.maybeSome()).rng(INT_TID), lst(), (lhs, inst) -> inst.seed().jvm(lhs.stream().reduce(inst.seed(), (a, b) -> jnt(a.intValue() * (b.intValue() * b.c().max()))).intValue()/* * inst.c().max()*/), jnt(1)),
                     instC(POW_INST_TID.dom(INT_TID).rng(INT_TID), lst(T(INT_TID)), (lhs, inst) -> jnt((long) Math.pow(lhs.intValue(), inst.arg(0).intValue()))),
-                    instC(MOD_INST_TID.dom(INT_TID).rng(INT_TID), lst(INT_TYPE), (lhs,inst) -> jnt(lhs.intValue() % inst.arg(0).intValue())),
+                    instC(MOD_INST_TID.dom(INT_TID).rng(INT_TID), lst(INT_TYPE), (lhs, inst) -> jnt(lhs.intValue() % inst.arg(0).intValue())),
                     instC(ORDER_INST_TID.dom(INT_TID.maybeSome()).rng(LST_TID), lst(), (lhs, inst) -> lst(lhs.stream().sorted(Comparator.comparing(a -> a.asInt().intValue()))))
             ));
         }

@@ -160,12 +160,11 @@ bin/metatron</code></pre>
                             src="../images/icons/space/graphql-icon.svg" class="isa-row icon-color me-2" alt="iot"/>/m/iot</a>
                     </li>
                     -->
-                    <!-- TODO: Add /m/sys docs
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='m_sys.html';"><img
-                            src="../images/icons/space/olrp-icon.svg" class="isa-row icon-color me-2"
-                            alt="sys"/>/m/sys</a></li>
-                    -->
+                           onclick="location.href='m_math.html';"><img
+                            src="../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
+                            alt="math"/>/m/math</a>
+                    </li>
                 </ul>
             </li>
             <!----------------------------------------------------------------------------------------------------------
@@ -231,7 +230,7 @@ bin/metatron</code></pre>
                 <h1 class="text-primary glow-text">
                     <span class="text-light">/m/</span>llm
                 </h1>
-                <p class="subtitle text-light">Instruction Set Reference</p>
+                <p class="subtitle text-light">instruction set reference</p>
             </div>
         </div>
             
@@ -259,11 +258,11 @@ bin/metatron</code></pre>
                     
                 <a href="#type-memory" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">memory</span>
-                    <span class="badge bg-info">T</span>
+                    <span class="badge bg-primary">T</span>
                 </a>
                 <a href="#type-model" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">model</span>
-                    <span class="badge bg-info">T</span>
+                    <span class="badge bg-primary">T</span>
                 </a>
                 </div>
             </div>
@@ -284,14 +283,14 @@ bin/metatron</code></pre>
             
         <div class="container-xxl mb-4" id="types">
             <h3 class="text-primary mb-3">
-                Types <span class="badge bg-info">2</span>
+                Types <span class="badge bg-primary">2</span>
             </h3>
             
                 <div class="card mb-3" id="type-memory">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">memory::T</span>
-                            <span class="ms-2 text-muted">refines <span class="code text-info">lst::T</span></span>
+                            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">lst::T</span></span>
                         </span>
                         <small class="text-muted code">/m/llm/memory</small>
                     </div>
@@ -300,12 +299,15 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">lst::T[isa([,])]@/m/llm/memory</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="type-model">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">model::T</span>
-                            <span class="ms-2 text-muted">refines <span class="code text-info">rec::T</span></span>
+                            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">rec::T</span></span>
                         </span>
                         <small class="text-muted code">/m/llm/model</small>
                     </div>
@@ -327,6 +329,9 @@ bin/metatron</code></pre>
  {?}tool    =&gt;lst::T])]@/m/llm/model</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
         </div>
             
@@ -339,7 +344,7 @@ bin/metatron</code></pre>
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">chat</span>
-                            <span class="ms-1"><sub><a href="#type-model" class="code text-info">/m/llm/model</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#{?}.html#type-#{" class="code text-success">#{?}</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-model" class="code text-info">/m/llm/model</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#{?}.html#type-#{" class="code text-success">#{?}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/llm/inst/chat?#{?}&lt;=/m/llm/model</small>
                     </div>
@@ -347,13 +352,16 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">chat?#{?}&lt;=model(str::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
         </div>
             
             
         <div class="container-xxl mb-4" id="spaces">
             <h3 class="text-primary mb-3">
-                Spaces <span class="badge bg-primary">1</span>
+                Spaces <span class="badge bg-info">1</span>
             </h3>
             
                 <div class="card mb-3" id="space-catalog">
@@ -370,6 +378,9 @@ bin/metatron</code></pre>
  route  =&gt;[uri::T=&gt;uri::T]])][inst?rng=catalog&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/llm/space/catalog</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
         </div>
             
@@ -377,7 +388,7 @@ bin/metatron</code></pre>
         <div class="container-xxl py-3 text-center">
             <hr class="border-secondary">
             <small class="text-muted">
-                Generated by Metatron InstSet Doc Generator on 2026-03-31 14:36:54<br>
+                generated by metatron instset doc generator on 2026-04-01 01:37:46<br>
                 © PhaseShift Studio, LLC
             </small>
         </div>

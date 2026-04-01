@@ -44,8 +44,7 @@ public class grphInstSet extends AbstractInstSet {
     public static final fURI ELMT_TID = GRPH_ISA_TID.extend("elmt");
     public static final fURI VRTX_TID = GRPH_ISA_TID.extend("vrtx");
     public static final fURI EDGE_TID = GRPH_ISA_TID.extend("edge");
-
-    public static final fURI V_INST_TID = GRPH_INST_TID.extend("Vx");
+    
     public static final fURI OUT_INST_TID = GRPH_INST_TID.extend("out");
     public static final fURI IN_INST_TID = GRPH_INST_TID.extend("in");
     public static final fURI OUTE_INST_TID = GRPH_INST_TID.extend("outE");

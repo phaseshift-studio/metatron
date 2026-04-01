@@ -92,8 +92,10 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
 
     @AfterEach
     protected void stop() {
-        if (null == this.space)
+        if (null == this.space) {
             Assertions.fail("space nullified over course of testing");
+            return;
+        }
         if (null != this.space.vid()) {
             Router.global().removeSpace(this.space.vid());
             assertDoesNotThrow(this.space::close);

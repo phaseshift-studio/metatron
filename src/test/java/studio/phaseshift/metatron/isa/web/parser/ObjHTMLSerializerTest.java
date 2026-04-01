@@ -32,7 +32,7 @@ public class ObjHTMLSerializerTest extends AbstractMetatronTest {
     @Test
     public void testWebPageParsing() {
         final ObjHTMLSerializer t = new ObjHTMLSerializer();
-        final Rec page = (Rec) t.translatePage(new File("./docs/images/metatron-character.html"));
+        final Rec page = (Rec) t.translatePage(new File("./docs/website/images/ansi/metatron-character.html"));
         //LOG.info("%s", Jsoup.parse("/home/killswitch/Desktop/funny.html"));
         LOG.info("%s", page);
         LOG.info("%s", t.write(page));

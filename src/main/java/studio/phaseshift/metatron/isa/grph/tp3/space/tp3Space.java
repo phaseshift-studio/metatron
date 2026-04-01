@@ -50,6 +50,7 @@ import java.util.function.Function;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.failure_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
@@ -199,7 +200,7 @@ public class tp3Space extends grphSpace<Graph> {
                     ((ElementMap) e.jvm()).getBase().remove();
                 });
                 return noobj();
-            } else {
+            } else { 
                 if (obj.jvm() instanceof ElementMap) // vertex already exists, all updates already occurred, no need to write it again
                     return obj;
                 final fURI routed = Space.Helper.routeFromSpace(pattern, this.routes());
@@ -304,7 +305,7 @@ public class tp3Space extends grphSpace<Graph> {
 
     public static class TP3SpaceType {
         public static Set<Inst> insts() {
-            return new HashSet<>(List.of((instC(GREMLIN_INST_TID.dom(TP3_SPACE_TID).rng(ALL.maybeSome()), lst(STR_TYPE), (lhs, inst) -> {
+            return new HashSet<>(List.of(docWrap(instC(GREMLIN_INST_TID.dom(TP3_SPACE_TID).rng(ALL.maybeSome()), lst(STR_TYPE), (lhs, inst) -> {
                 try {
                     final GremlinLangScriptEngineFactory factory = new GremlinLangScriptEngineFactory();
                     //factory.setCustomizerManager(new CachedGremlinScriptEngineManager());
@@ -316,7 +317,7 @@ public class tp3Space extends grphSpace<Graph> {
                 } catch (Exception e) {
                     return fail(e);
                 }
-            }))));
+            }), "execute a gremlin traversal", "the gremlin expression", Map.of(), "executes the gremlin expression on the tp3 space graph")));
 
         }
     }

@@ -160,12 +160,11 @@ bin/metatron</code></pre>
                             src="../images/icons/space/graphql-icon.svg" class="isa-row icon-color me-2" alt="iot"/>/m/iot</a>
                     </li>
                     -->
-                    <!-- TODO: Add /m/sys docs
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='m_sys.html';"><img
-                            src="../images/icons/space/olrp-icon.svg" class="isa-row icon-color me-2"
-                            alt="sys"/>/m/sys</a></li>
-                    -->
+                           onclick="location.href='m_math.html';"><img
+                            src="../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
+                            alt="math"/>/m/math</a>
+                    </li>
                 </ul>
             </li>
             <!----------------------------------------------------------------------------------------------------------
@@ -229,19 +228,19 @@ bin/metatron</code></pre>
         <div class="container-xxl py-4">
             <div class="text-center mb-4">
                 <h1 class="text-primary glow-text">
-                    <span class="text-light">//</span>m
+                    <span class="text-light">/</span>m
                 </h1>
-                <p class="subtitle text-light">Instruction Set Reference</p>
+                <p class="subtitle text-light">instruction set reference</p>
             </div>
         </div>
             
         <div class="container-xxl mb-4">
             <div class="d-flex justify-content-center gap-2 flex-wrap">
                 <a href="#types" class="btn btn-outline-primary">Types <span class="badge bg-secondary">26</span></a>
-                <a href="#instructions" class="btn btn-outline-primary">Insts <span class="badge bg-secondary">248</span></a>
+                <a href="#instructions" class="btn btn-outline-primary">Insts <span class="badge bg-secondary">249</span></a>
                 <a href="#rewrites" class="btn btn-outline-primary">Rewrites <span class="badge bg-secondary">8</span></a>
                 <a href="#spaces" class="btn btn-outline-primary">Spaces <span class="badge bg-secondary">4</span></a>
-                <a href="#consts" class="btn btn-outline-primary">Consts <span class="badge bg-secondary">8</span></a>
+                <button class="btn btn-outline-secondary" disabled>Consts <span class="badge bg-dark">0</span></button>
             </div>
         </div>
             
@@ -259,107 +258,107 @@ bin/metatron</code></pre>
                     
                 <a href="#type-bool" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">bool</span>
-                    <span class="badge bg-info">T</span>
+                    <span class="badge bg-primary">T</span>
                 </a>
                 <a href="#type-bytes" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">bytes</span>
-                    <span class="badge bg-info">T</span>
+                    <span class="badge bg-primary">T</span>
                 </a>
                 <a href="#type-code" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">code</span>
-                    <span class="badge bg-info">T</span>
+                    <span class="badge bg-primary">T</span>
                 </a>
                 <a href="#type-doc" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">doc</span>
-                    <span class="badge bg-info">T</span>
+                    <span class="badge bg-primary">T</span>
                 </a>
                 <a href="#type-fail" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">fail</span>
-                    <span class="badge bg-info">T</span>
+                    <span class="badge bg-primary">T</span>
                 </a>
                 <a href="#type-grph" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">grph</span>
-                    <span class="badge bg-info">T</span>
+                    <span class="badge bg-primary">T</span>
                 </a>
                 <a href="#type-inst" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">inst</span>
-                    <span class="badge bg-info">T</span>
+                    <span class="badge bg-primary">T</span>
                 </a>
                 <a href="#type-instset" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">instset</span>
-                    <span class="badge bg-info">T</span>
+                    <span class="badge bg-primary">T</span>
                 </a>
                 <a href="#type-int" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">int</span>
-                    <span class="badge bg-info">T</span>
+                    <span class="badge bg-primary">T</span>
                 </a>
                 <a href="#type-iot" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">iot</span>
-                    <span class="badge bg-info">T</span>
+                    <span class="badge bg-primary">T</span>
                 </a>
                 <a href="#type-llm" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">llm</span>
-                    <span class="badge bg-info">T</span>
+                    <span class="badge bg-primary">T</span>
                 </a>
                 <a href="#type-lst" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">lst</span>
-                    <span class="badge bg-info">T</span>
+                    <span class="badge bg-primary">T</span>
                 </a>
                 <a href="#type-mach" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">mach</span>
-                    <span class="badge bg-info">T</span>
+                    <span class="badge bg-primary">T</span>
                 </a>
                 <a href="#type-math" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">math</span>
-                    <span class="badge bg-info">T</span>
+                    <span class="badge bg-primary">T</span>
                 </a>
                 <a href="#type-mono" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">mono</span>
-                    <span class="badge bg-info">T</span>
+                    <span class="badge bg-primary">T</span>
                 </a>
                 <a href="#type-num" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">num</span>
-                    <span class="badge bg-info">T</span>
+                    <span class="badge bg-primary">T</span>
                 </a>
                 <a href="#type-objs" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">objs</span>
-                    <span class="badge bg-info">T</span>
+                    <span class="badge bg-primary">T</span>
                 </a>
                 <a href="#type-poly" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">poly</span>
-                    <span class="badge bg-info">T</span>
+                    <span class="badge bg-primary">T</span>
                 </a>
                 <a href="#type-real" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">real</span>
-                    <span class="badge bg-info">T</span>
+                    <span class="badge bg-primary">T</span>
                 </a>
                 <a href="#type-rec" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">rec</span>
-                    <span class="badge bg-info">T</span>
+                    <span class="badge bg-primary">T</span>
                 </a>
                 <a href="#type-rel" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">rel</span>
-                    <span class="badge bg-info">T</span>
+                    <span class="badge bg-primary">T</span>
                 </a>
                 <a href="#type-space" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">space</span>
-                    <span class="badge bg-info">T</span>
+                    <span class="badge bg-primary">T</span>
                 </a>
                 <a href="#type-str" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">str</span>
-                    <span class="badge bg-info">T</span>
+                    <span class="badge bg-primary">T</span>
                 </a>
                 <a href="#type-tble" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">tble</span>
-                    <span class="badge bg-info">T</span>
+                    <span class="badge bg-primary">T</span>
                 </a>
                 <a href="#type-uri" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">uri</span>
-                    <span class="badge bg-info">T</span>
+                    <span class="badge bg-primary">T</span>
                 </a>
                 <a href="#type-web" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">web</span>
-                    <span class="badge bg-info">T</span>
+                    <span class="badge bg-primary">T</span>
                 </a>
                 </div>
             </div>
@@ -752,7 +751,7 @@ bin/metatron</code></pre>
             
         <div class="container-xxl mb-4" id="types">
             <h3 class="text-primary mb-3">
-                Types <span class="badge bg-info">26</span>
+                Types <span class="badge bg-primary">26</span>
             </h3>
             
                 <div class="card mb-3" id="type-bool">
@@ -768,6 +767,9 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">bool::T</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">a 2 valued mono: true or false</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="type-bytes">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -782,6 +784,9 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">bytes::T</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">a sequence of 8-bit unsigned integers</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="type-code">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -796,12 +801,15 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">code::T</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">a call with apply defined by an lhs obj and a sequence of insts</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="type-doc">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">doc::T</span>
-                            <span class="ms-2 text-muted">refines <span class="code text-info">&lt;/m/doc&gt;::T</span></span>
+                            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">&lt;/m/doc&gt;::T</span></span>
                         </span>
                         <small class="text-muted code">/m/doc</small>
                     </div>
@@ -811,9 +819,16 @@ bin/metatron</code></pre>
  pattern=&gt;/m/doc/#,
  space  =&gt;[
    super=&gt;!*/m],
- q      =&gt;[docq::[pattern=&gt;doc]]]@/m/doc</code></pre>
+ q      =&gt;[docq::[
+     pre_read =&gt;inst?#{*}&lt;=#{?}(uri::T){&lt;j&gt;},
+     pattern  =&gt;docq,
+     pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T){&lt;j&gt;},
+     obj      =&gt;mem::[=&gt;]]]]@/m/doc</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="type-fail">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -828,12 +843,15 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">fail::T</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">a reified exception handling obj that can be caught</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="type-grph">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">grph::T</span>
-                            <span class="ms-2 text-muted">refines <span class="code text-info">&lt;/m/grph&gt;::T</span></span>
+                            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">&lt;/m/grph&gt;::T</span></span>
                         </span>
                         <small class="text-muted code">/m/grph</small>
                     </div>
@@ -844,9 +862,16 @@ bin/metatron</code></pre>
  space  =&gt;[
    super=&gt;!*/m,
    sub  =&gt;{!*/m/grph/tp3,!*g:#/S/modern}],
- q      =&gt;[docq::[pattern=&gt;doc]]]@/m/grph</code></pre>
+ q      =&gt;[docq::[
+     pre_read =&gt;inst?#{*}&lt;=#{?}(uri::T){&lt;j&gt;},
+     pattern  =&gt;docq,
+     pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T){&lt;j&gt;},
+     obj      =&gt;mem::[=&gt;]]]]@/m/grph</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="type-inst">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -861,6 +886,9 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">inst::T</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">a call with apply defined by an lhs obj, an poly of args, and an body of code</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="type-instset">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -875,6 +903,9 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">instset::T</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="type-int">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -889,12 +920,15 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">int::T</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">a 64-bit signed integer</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="type-iot">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">iot::T</span>
-                            <span class="ms-2 text-muted">refines <span class="code text-info">&lt;/m/iot&gt;::T</span></span>
+                            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">&lt;/m/iot&gt;::T</span></span>
                         </span>
                         <small class="text-muted code">/m/iot</small>
                     </div>
@@ -905,15 +939,22 @@ bin/metatron</code></pre>
  space  =&gt;[
    super=&gt;!*/m,
    sub  =&gt;{!*/m/iot/haos,!*/m/iot/miot}],
- q      =&gt;[docq::[pattern=&gt;doc]]]@/m/iot</code></pre>
+ q      =&gt;[docq::[
+     pre_read =&gt;inst?#{*}&lt;=#{?}(uri::T){&lt;j&gt;},
+     pattern  =&gt;docq,
+     pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T){&lt;j&gt;},
+     obj      =&gt;mem::[=&gt;]]]]@/m/iot</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="type-llm">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">llm::T</span>
-                            <span class="ms-2 text-muted">refines <span class="code text-info">&lt;/m/llm&gt;::T</span></span>
+                            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">&lt;/m/llm&gt;::T</span></span>
                         </span>
                         <small class="text-muted code">/m/llm</small>
                     </div>
@@ -923,9 +964,16 @@ bin/metatron</code></pre>
  pattern=&gt;/m/llm/#,
  space  =&gt;[
    super=&gt;!*/m],
- q      =&gt;[docq::[pattern=&gt;doc]]]@/m/llm</code></pre>
+ q      =&gt;[docq::[
+     pre_read =&gt;inst?#{*}&lt;=#{?}(uri::T){&lt;j&gt;},
+     pattern  =&gt;docq,
+     pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T){&lt;j&gt;},
+     obj      =&gt;mem::[=&gt;]]]]@/m/llm</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="type-lst">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -940,12 +988,15 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">lst::T</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">an ordered sequence poly of objs</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="type-mach">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">mach::T</span>
-                            <span class="ms-2 text-muted">refines <span class="code text-info">&lt;/m/mach&gt;::T</span></span>
+                            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">&lt;/m/mach&gt;::T</span></span>
                         </span>
                         <small class="text-muted code">/m/mach</small>
                     </div>
@@ -956,15 +1007,22 @@ bin/metatron</code></pre>
  space  =&gt;[
    super=&gt;!*/m,
    sub  =&gt;!*/m/mach/io],
- q      =&gt;[docq::[pattern=&gt;doc]]]@/m/mach</code></pre>
+ q      =&gt;[docq::[
+     pre_read =&gt;inst?#{*}&lt;=#{?}(uri::T){&lt;j&gt;},
+     pattern  =&gt;docq,
+     pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T){&lt;j&gt;},
+     obj      =&gt;mem::[=&gt;]]]]@/m/mach</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="type-math">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">math::T</span>
-                            <span class="ms-2 text-muted">refines <span class="code text-info">&lt;/m/math&gt;::T</span></span>
+                            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">&lt;/m/math&gt;::T</span></span>
                         </span>
                         <small class="text-muted code">/m/math</small>
                     </div>
@@ -974,9 +1032,16 @@ bin/metatron</code></pre>
  pattern=&gt;/m/math/#,
  space  =&gt;[
    super=&gt;!*/m],
- q      =&gt;[docq::[pattern=&gt;doc]]]@/m/math</code></pre>
+ q      =&gt;[docq::[
+     pre_read =&gt;inst?#{*}&lt;=#{?}(uri::T){&lt;j&gt;},
+     pattern  =&gt;docq,
+     pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T){&lt;j&gt;},
+     obj      =&gt;mem::[=&gt;]]]]@/m/math</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="type-mono">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -991,6 +1056,9 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">mono::T[inst?mono&lt;=#{?}(){&lt;j&gt;}]</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">an atomic obj</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="type-num">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1005,6 +1073,9 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">num::T[inst?num&lt;=#{?}(){&lt;j&gt;}]</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">an obj representing a number</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="type-objs">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1019,6 +1090,9 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">objs::T</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">an ordered sequence poly of objs and noobjs</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="type-poly">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1033,6 +1107,9 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">poly::T[inst?poly&lt;=#{?}(){&lt;j&gt;}]</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">a obj composed of other objs</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="type-real">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1047,6 +1124,9 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">real::T</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">a 64-bit floating point number</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="type-rec">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1061,6 +1141,9 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">rec::T</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">a poly composed of uniquely keyed rels</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="type-rel">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1075,12 +1158,15 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">rel::T</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">a directed binary poly coupling two objs</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="type-space">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">space::T</span>
-                            <span class="ms-2 text-muted">refines <span class="code text-info">rec::T</span></span>
+                            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">rec::T</span></span>
                         </span>
                         <small class="text-muted code">/m/space</small>
                     </div>
@@ -1089,6 +1175,9 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">rec::T@/m/space</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="type-str">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1103,12 +1192,15 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">str::T</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">an ordered sequence of UTF-32 characters</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="type-tble">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">tble::T</span>
-                            <span class="ms-2 text-muted">refines <span class="code text-info">&lt;/m/tble&gt;::T</span></span>
+                            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">&lt;/m/tble&gt;::T</span></span>
                         </span>
                         <small class="text-muted code">/m/tble</small>
                     </div>
@@ -1118,9 +1210,16 @@ bin/metatron</code></pre>
  pattern=&gt;/m/tble/#,
  space  =&gt;[
    super=&gt;!*/m],
- q      =&gt;[docq::[pattern=&gt;doc]]]@/m/tble</code></pre>
+ q      =&gt;[docq::[
+     pre_read =&gt;inst?#{*}&lt;=#{?}(uri::T){&lt;j&gt;},
+     pattern  =&gt;docq,
+     pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T){&lt;j&gt;},
+     obj      =&gt;mem::[=&gt;]]]]@/m/tble</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="type-uri">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1135,12 +1234,15 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">uri::T</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">a uniform resource identifier</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="type-web">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">web::T</span>
-                            <span class="ms-2 text-muted">refines <span class="code text-info">&lt;/m/web&gt;::T</span></span>
+                            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">&lt;/m/web&gt;::T</span></span>
                         </span>
                         <small class="text-muted code">/m/web</small>
                     </div>
@@ -1150,22 +1252,29 @@ bin/metatron</code></pre>
  pattern=&gt;/m/web/#,
  space  =&gt;[
    super=&gt;!*/m],
- q      =&gt;[docq::[pattern=&gt;doc]]]@/m/web</code></pre>
+ q      =&gt;[docq::[
+     pre_read =&gt;inst?#{*}&lt;=#{?}(uri::T){&lt;j&gt;},
+     pattern  =&gt;docq,
+     pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T){&lt;j&gt;},
+     obj      =&gt;mem::[=&gt;]]]]@/m/web</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
         </div>
             
         <div class="container-xxl mb-4" id="instructions">
             <h3 class="text-primary mb-3">
-                Instructions <span class="badge bg-success">248</span>
+                Instructions <span class="badge bg-success">249</span>
             </h3>
             
                 <div class="card mb-3" id="inst-and">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">and</span>
-                            <span class="ms-1"><sub><a href="A.html#type-A" class="code text-info">A</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-bool" class="code text-success">/m/bool</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="A.html#type-A" class="code text-info">A</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-bool" class="code text-success">/m/bool</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/and?/m/bool&lt;=A</small>
                     </div>
@@ -1173,12 +1282,15 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">and?bool&lt;=A(bool{+}::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">a logical and function f(X)-&gt;true if all X are true</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-apply">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">apply</span>
-                            <span class="ms-1"><sub><a href="#.html#type-#" class="code text-info">#</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#{*}.html#type-#{*}" class="code text-success">#{*}</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#.html#type-#" class="code text-info">#</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#{*}.html#type-#{*}" class="code text-success">#{*}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/apply?#{*}&lt;=#</small>
                     </div>
@@ -1186,17 +1298,21 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">apply?#{*}&lt;=#(#{*}::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-as">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">as</span>
-                            <span class="ms-1"><sub><a href="#type-bytes" class="code text-info">/m/bytes</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-bool" class="code text-success">/m/bool</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="m_space_q_docq.html#type-doc" class="code text-info">/m/space/q/docq/doc</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-str" class="code text-success">/m/str</a></span></span>
                         </span>
-                        <small class="text-muted code">/m/inst/as?/m/bool&lt;=/m/bytes</small>
+                        <small class="text-muted code">/m/inst/as?/m/str&lt;=/m/space/q/docq/doc</small>
                     </div>
                     <div class="card-body p-2">
-                        <pre class="mb-1"><code class="language-mtron">as?bool&lt;=bytes(bool::T){&lt;j&gt;}</code></pre>
+                        <pre class="mb-1"><code class="language-mtron">as?str&lt;=doc(str::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1"><code class="language-mtron">as?bool&lt;=bytes(bool::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1"><code class="language-mtron">as?str&lt;=bytes(str::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1"><code class="language-mtron">as?bool&lt;=bool(bool::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1"><code class="language-mtron">as?bytes&lt;=bool(bytes::T){&lt;j&gt;}</code></pre>
@@ -1238,11 +1354,11 @@ bin/metatron</code></pre>
 <pre class="mb-1"><code class="language-mtron">as?image&lt;=bytes(file::T@/m/mach/file/image,else(1.00)){&lt;j&gt;}</code></pre>
 <pre class="mb-1"><code class="language-mtron">as?file&lt;=uri(file::T[][inst?file&lt;=#{?}(uri::T){&lt;j&gt;}]){&lt;j&gt;}</code></pre>
 <pre class="mb-1"><code class="language-mtron">as?bytes&lt;=file(bytes::T){&lt;j&gt;}</code></pre>
-<pre class="mb-1"><code class="language-mtron">as?xml&lt;=str(rec::T@/m/web/xml){&lt;j&gt;}</code></pre>
-<pre class="mb-1"><code class="language-mtron">as?html&lt;=str(html::T[isa([
- html=&gt;[head=&gt;rec::T,body=&gt;rec::T]])]){&lt;j&gt;}</code></pre>
 <pre class="mb-1"><code class="language-mtron">as?json&lt;=str(json::T[isa([
  uri::T=&gt;is(or(eq(noobj{0}::T[inst?noobj{0}&lt;=#{?}(){&lt;j&gt;}]),eq(bool::T),eq(int::T),eq(str::T),eq(uri::T),eq(lst::T),eq(rec::T)))])][/m/web/inst?json&lt;=#{?}(str::T){&lt;j&gt;}]){&lt;j&gt;}</code></pre>
+<pre class="mb-1"><code class="language-mtron">as?html&lt;=str(html::T[isa([
+ html=&gt;[head=&gt;rec::T,body=&gt;rec::T]])]){&lt;j&gt;}</code></pre>
+<pre class="mb-1"><code class="language-mtron">as?xml&lt;=str(rec::T@/m/web/xml){&lt;j&gt;}</code></pre>
 <pre class="mb-1"><code class="language-mtron">as?rrow&lt;=lrow(rec::T[isa([uri::T=&gt;#::T])]@/m/tble/rrow){&lt;j&gt;}</code></pre>
 <pre class="mb-1"><code class="language-mtron">as?lrow&lt;=rrow(lst::T@/m/tble/lrow){&lt;j&gt;}</code></pre>
 <pre class="mb-1"><code class="language-mtron">as?rrow&lt;=lrow(rec::T[isa([uri::T=&gt;#::T])]@/m/tble/rrow){&lt;j&gt;}</code></pre>
@@ -1250,12 +1366,15 @@ bin/metatron</code></pre>
 <pre class="mb-1"><code class="language-mtron">as?lst&lt;=document(lst::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">a type casting function f(x)-&gt;x</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-at">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">at</span>
-                            <span class="ms-1"><sub><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#{*}.html#type-#{*}" class="code text-success">#{*}</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#{*}.html#type-#{*}" class="code text-success">#{*}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/at?#{*}&lt;=#{?}</small>
                     </div>
@@ -1263,12 +1382,15 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">at?#{*}&lt;=#{?}(uri{?}::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-authority">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">authority</span>
-                            <span class="ms-1"><sub><a href="#type-uri" class="code text-info">/m/uri</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-uri{" class="code text-success">/m/uri{?}</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-uri" class="code text-info">/m/uri</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-uri{" class="code text-success">/m/uri{?}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/authority?/m/uri{?}&lt;=/m/uri</small>
                     </div>
@@ -1276,12 +1398,15 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">authority?uri{?}&lt;=uri(){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-auto">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">auto</span>
-                            <span class="ms-1"><sub><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#{*}.html#type-#{*}" class="code text-success">#{*}</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#{*}.html#type-#{*}" class="code text-success">#{*}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/auto?#{*}&lt;=#{?}</small>
                     </div>
@@ -1289,12 +1414,15 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">!#{?}::T</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-auto_from">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">auto_from</span>
-                            <span class="ms-1"><sub><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#{*}.html#type-#{*}" class="code text-success">#{*}</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#{*}.html#type-#{*}" class="code text-success">#{*}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/auto_from?#{*}&lt;=#{?}</small>
                     </div>
@@ -1302,12 +1430,15 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">!*#{?}::T</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-barrier">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">barrier</span>
-                            <span class="ms-1"><sub><a href="#{*}.html#type-#{*}" class="code text-info">#{*}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-lst" class="code text-success">/m/lst</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#{*}.html#type-#{*}" class="code text-info">#{*}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-lst" class="code text-success">/m/lst</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/barrier?/m/lst&lt;=#{*}</small>
                     </div>
@@ -1318,12 +1449,15 @@ bin/metatron</code></pre>
 <pre class="mb-1"><code class="language-mtron">barrier?A{*}&lt;=A{*}(A{*}::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">an append function f(X)-&gt;X</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-block">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">block</span>
-                            <span class="ms-1"><sub><a href="A{?}.html#type-A{" class="code text-info">A{?}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="B.html#type-B" class="code text-success">B</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="A{?}.html#type-A{" class="code text-info">A{?}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="B.html#type-B" class="code text-success">B</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/block?B&lt;=A{?}</small>
                     </div>
@@ -1339,7 +1473,7 @@ bin/metatron</code></pre>
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">catch</span>
-                            <span class="ms-1"><sub><a href="A.html#type-A" class="code text-info">A</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="A{*}.html#type-A{*}" class="code text-success">A{*}</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="A.html#type-A" class="code text-info">A</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="A{*}.html#type-A{*}" class="code text-success">A{*}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/catch?A{*}&lt;=A</small>
                     </div>
@@ -1347,12 +1481,15 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">catch?A{*}&lt;=A(A{*}::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">a catch function f(x)-&gt;x</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-cause">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">cause</span>
-                            <span class="ms-1"><sub><a href="#type-fail" class="code text-info">/m/fail</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-fail{" class="code text-success">/m/fail{?}</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-fail" class="code text-info">/m/fail</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-fail{" class="code text-success">/m/fail{?}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/cause?/m/fail{?}&lt;=/m/fail</small>
                     </div>
@@ -1360,12 +1497,15 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">cause?fail{?}&lt;=fail(){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-cc">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">cc</span>
-                            <span class="ms-1"><sub><a href="A{*}.html#type-A{*}" class="code text-info">A{*}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-int" class="code text-success">/m/int</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="A{*}.html#type-A{*}" class="code text-info">A{*}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-int" class="code text-success">/m/int</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/cc?/m/int&lt;=A{*}</small>
                     </div>
@@ -1375,14 +1515,14 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">maps an obj to it</p>
+                        <p class="mb-0 text-light">sets the coefficient of the lhs obj via f(lhs,c)-&gt;lhs^c</p>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-choose">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">choose</span>
-                            <span class="ms-1"><sub><a href="#.html#type-#" class="code text-info">#</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-rel{" class="code text-success">/m/rel{?}</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#.html#type-#" class="code text-info">#</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-rel{" class="code text-success">/m/rel{?}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/choose?/m/rel{?}&lt;=#</small>
                     </div>
@@ -1390,12 +1530,15 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">choose?rel{?}&lt;=#(rec::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">a branching function f(x):g(a)-&gt;a</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-count">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">count</span>
-                            <span class="ms-1"><sub><a href="#{*}.html#type-#{*}" class="code text-info">#{*}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-int" class="code text-success">/m/int</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#{*}.html#type-#{*}" class="code text-info">#{*}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-int" class="code text-success">/m/int</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/count?/m/int&lt;=#{*}</small>
                     </div>
@@ -1403,12 +1546,15 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">count?int&lt;=#{*}(){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">counts the number of objs</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-dedup">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">dedup</span>
-                            <span class="ms-1"><sub><a href="A{*}.html#type-A{*}" class="code text-info">A{*}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="A{*}.html#type-A{*}" class="code text-success">A{*}</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="A{*}.html#type-A{*}" class="code text-info">A{*}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="A{*}.html#type-A{*}" class="code text-success">A{*}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/dedup?A{*}&lt;=A{*}</small>
                     </div>
@@ -1416,12 +1562,15 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">dedup?A{*}&lt;=A{*}(){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">a deduplication function f({c}X)-&gt;{d&lt;=c}X</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-div">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">div</span>
-                            <span class="ms-1"><sub><a href="#type-real" class="code text-info">/m/real</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-real" class="code text-success">/m/real</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-real" class="code text-info">/m/real</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-real" class="code text-success">/m/real</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/div?/m/real&lt;=/m/real</small>
                     </div>
@@ -1429,12 +1578,15 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">div?real&lt;=real(real::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-dom">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">dom</span>
-                            <span class="ms-1"><sub><a href="#type-rel" class="code text-info">/m/rel</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#{*}.html#type-#{*}" class="code text-success">#{*}</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-rel" class="code text-info">/m/rel</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#{*}.html#type-#{*}" class="code text-success">#{*}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/dom?#{*}&lt;=/m/rel</small>
                     </div>
@@ -1443,12 +1595,15 @@ bin/metatron</code></pre>
 <pre class="mb-1"><code class="language-mtron">dom?#{*}&lt;=rec(){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-else">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">else</span>
-                            <span class="ms-1"><sub><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#.html#type-#" class="code text-success">#</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#.html#type-#" class="code text-success">#</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/else?#&lt;=#{?}</small>
                     </div>
@@ -1456,12 +1611,15 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">else?#&lt;=#{?}(#{?}::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">f(lhs)-&gt;lhs if lhs is an obj, else f(noobj)-&gt;arg</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-end">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">end</span>
-                            <span class="ms-1"><sub><a href="#{*}.html#type-#{*}" class="code text-info">#{*}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="noobj{0}.html#type-noobj{0}" class="code text-success">noobj{0}</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#{*}.html#type-#{*}" class="code text-info">#{*}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="noobj{0}.html#type-noobj{0}" class="code text-success">noobj{0}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/end?noobj{0}&lt;=#{*}</small>
                     </div>
@@ -1477,7 +1635,7 @@ bin/metatron</code></pre>
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">eq</span>
-                            <span class="ms-1"><sub><a href="#.html#type-#" class="code text-info">#</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-bool" class="code text-success">/m/bool</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#.html#type-#" class="code text-info">#</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-bool" class="code text-success">/m/bool</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/eq?/m/bool&lt;=#</small>
                     </div>
@@ -1485,12 +1643,15 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">eq?bool&lt;=#(#::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">an equality function f(x,y)-&gt;true if x==y</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-eval">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">eval</span>
-                            <span class="ms-1"><sub><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#{*}.html#type-#{*}" class="code text-success">#{*}</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#{*}.html#type-#{*}" class="code text-success">#{*}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/eval?#{*}&lt;=#{?}</small>
                     </div>
@@ -1506,7 +1667,7 @@ bin/metatron</code></pre>
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">failure</span>
-                            <span class="ms-1"><sub><a href="#{*}.html#type-#{*}" class="code text-info">#{*}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-fail" class="code text-success">/m/fail</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#{*}.html#type-#{*}" class="code text-info">#{*}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-fail" class="code text-success">/m/fail</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/failure?/m/fail&lt;=#{*}</small>
                     </div>
@@ -1514,12 +1675,15 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">failure?fail&lt;=#{*}(#{?}::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-filter">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">filter</span>
-                            <span class="ms-1"><sub><a href="A.html#type-A" class="code text-info">A</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="A{?}.html#type-A{" class="code text-success">A{?}</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="A.html#type-A" class="code text-info">A</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="A{?}.html#type-A{" class="code text-success">A{?}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/filter?A{?}&lt;=A</small>
                     </div>
@@ -1527,12 +1691,15 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">filter?A{?}&lt;=A(#{?}::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-fork">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">fork</span>
-                            <span class="ms-1"><sub><a href="A{*}.html#type-A{*}" class="code text-info">A{*}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="A{*}.html#type-A{*}" class="code text-success">A{*}</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="A{*}.html#type-A{*}" class="code text-info">A{*}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="A{*}.html#type-A{*}" class="code text-success">A{*}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/fork?A{*}&lt;=A{*}</small>
                     </div>
@@ -1540,12 +1707,15 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">fork?A{*}&lt;=A{*}(#::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-from">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">from</span>
-                            <span class="ms-1"><sub><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#{*}.html#type-#{*}" class="code text-success">#{*}</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#{*}.html#type-#{*}" class="code text-success">#{*}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/from?#{*}&lt;=#{?}</small>
                     </div>
@@ -1553,12 +1723,15 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">*uri::T</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-get">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">get</span>
-                            <span class="ms-1"><sub><a href="#type-rel" class="code text-info">/m/rel</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="A{?}.html#type-A{" class="code text-success">A{?}</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-rel" class="code text-info">/m/rel</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="A{?}.html#type-A{" class="code text-success">A{?}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/get?A{?}&lt;=/m/rel</small>
                     </div>
@@ -1566,12 +1739,15 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">get?A{?}&lt;=rel(#::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-group">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">group</span>
-                            <span class="ms-1"><sub><a href="#{*}.html#type-#{*}" class="code text-info">#{*}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-rec" class="code text-success">/m/rec</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#{*}.html#type-#{*}" class="code text-info">#{*}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-rec" class="code text-success">/m/rec</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/group?/m/rec&lt;=#{*}</small>
                     </div>
@@ -1579,12 +1755,15 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">group?rec&lt;=#{*}(rec::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-gt">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">gt</span>
-                            <span class="ms-1"><sub><a href="#type-int" class="code text-info">/m/int</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-bool" class="code text-success">/m/bool</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-int" class="code text-info">/m/int</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-bool" class="code text-success">/m/bool</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/gt?/m/bool&lt;=/m/int</small>
                     </div>
@@ -1602,7 +1781,7 @@ bin/metatron</code></pre>
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">gte</span>
-                            <span class="ms-1"><sub><a href="#type-int" class="code text-info">/m/int</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-bool" class="code text-success">/m/bool</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-int" class="code text-info">/m/int</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-bool" class="code text-success">/m/bool</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/gte?/m/bool&lt;=/m/int</small>
                     </div>
@@ -1620,7 +1799,7 @@ bin/metatron</code></pre>
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">has</span>
-                            <span class="ms-1"><sub><a href="#type-str" class="code text-info">/m/str</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-str{" class="code text-success">/m/str{?}</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-str" class="code text-info">/m/str</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-str{" class="code text-success">/m/str{?}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/has?/m/str{?}&lt;=/m/str</small>
                     </div>
@@ -1641,7 +1820,7 @@ bin/metatron</code></pre>
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">host</span>
-                            <span class="ms-1"><sub><a href="#type-uri" class="code text-info">/m/uri</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-uri{" class="code text-success">/m/uri{?}</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-uri" class="code text-info">/m/uri</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-uri{" class="code text-success">/m/uri{?}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/host?/m/uri{?}&lt;=/m/uri</small>
                     </div>
@@ -1650,12 +1829,15 @@ bin/metatron</code></pre>
 <pre class="mb-1"><code class="language-mtron">host?uri&lt;=uri(uri::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-id">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">id</span>
-                            <span class="ms-1"><sub><a href="A.html#type-A" class="code text-info">A</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="A.html#type-A" class="code text-success">A</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="A.html#type-A" class="code text-info">A</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="A.html#type-A" class="code text-success">A</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/id?A&lt;=A</small>
                     </div>
@@ -1665,14 +1847,14 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">the obj identity function f(x)-&gt;x</p>
+                        <p class="mb-0 text-light">a objs barrier identity function f(X)-&gt;X</p>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-import">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">import</span>
-                            <span class="ms-1"><sub><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-space{*}" class="code text-success">/m/space{*}</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-space{*}" class="code text-success">/m/space{*}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/import?/m/space{*}&lt;=#{?}</small>
                     </div>
@@ -1680,12 +1862,15 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">import?space{*}&lt;=#{?}(uri::T,uri{?}::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-inv">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">inv</span>
-                            <span class="ms-1"><sub><a href="#type-real" class="code text-info">/m/real</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-real" class="code text-success">/m/real</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-real" class="code text-info">/m/real</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-real" class="code text-success">/m/real</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/inv?/m/real&lt;=/m/real</small>
                     </div>
@@ -1693,12 +1878,15 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">inv?real&lt;=real(){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-is">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">is</span>
-                            <span class="ms-1"><sub><a href="A{?}.html#type-A{" class="code text-info">A{?}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="A{?}.html#type-A{" class="code text-success">A{?}</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="A{?}.html#type-A{" class="code text-info">A{?}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="A{?}.html#type-A{" class="code text-success">A{?}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/is?A{?}&lt;=A{?}</small>
                     </div>
@@ -1714,7 +1902,7 @@ bin/metatron</code></pre>
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">isa</span>
-                            <span class="ms-1"><sub><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#{?}.html#type-#{" class="code text-success">#{?}</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#{?}.html#type-#{" class="code text-success">#{?}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/isa?#{?}&lt;=#{?}</small>
                     </div>
@@ -1730,7 +1918,7 @@ bin/metatron</code></pre>
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">lcase</span>
-                            <span class="ms-1"><sub><a href="#type-str" class="code text-info">/m/str</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-str" class="code text-success">/m/str</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-str" class="code text-info">/m/str</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-str" class="code text-success">/m/str</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/lcase?/m/str&lt;=/m/str</small>
                     </div>
@@ -1738,12 +1926,15 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">lcase?str&lt;=str(){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-lift">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">lift</span>
-                            <span class="ms-1"><sub><a href="#.html#type-#" class="code text-info">#</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#.html#type-#" class="code text-success">#</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#.html#type-#" class="code text-info">#</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#.html#type-#" class="code text-success">#</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/lift?#&lt;=#</small>
                     </div>
@@ -1753,12 +1944,15 @@ bin/metatron</code></pre>
 <pre class="mb-1"><code class="language-mtron">lift?monad&lt;=#(#{?}::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-lshift">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">lshift</span>
-                            <span class="ms-1"><sub><a href="#type-rel" class="code text-info">/m/rel</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#{*}.html#type-#{*}" class="code text-success">#{*}</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-rel" class="code text-info">/m/rel</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#{*}.html#type-#{*}" class="code text-success">#{*}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/lshift?#{*}&lt;=/m/rel</small>
                     </div>
@@ -1767,12 +1961,15 @@ bin/metatron</code></pre>
 <pre class="mb-1"><code class="language-mtron">lshift?B{?}&lt;=A(){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-lt">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">lt</span>
-                            <span class="ms-1"><sub><a href="#type-int" class="code text-info">/m/int</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-bool" class="code text-success">/m/bool</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-int" class="code text-info">/m/int</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-bool" class="code text-success">/m/bool</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/lt?/m/bool&lt;=/m/int</small>
                     </div>
@@ -1790,7 +1987,7 @@ bin/metatron</code></pre>
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">lte</span>
-                            <span class="ms-1"><sub><a href="#type-int" class="code text-info">/m/int</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-bool" class="code text-success">/m/bool</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-int" class="code text-info">/m/int</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-bool" class="code text-success">/m/bool</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/lte?/m/bool&lt;=/m/int</small>
                     </div>
@@ -1808,7 +2005,7 @@ bin/metatron</code></pre>
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">map</span>
-                            <span class="ms-1"><sub><a href="A.html#type-A" class="code text-info">A</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="B.html#type-B" class="code text-success">B</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="A.html#type-A" class="code text-info">A</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="B.html#type-B" class="code text-success">B</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/map?B&lt;=A</small>
                     </div>
@@ -1817,12 +2014,15 @@ bin/metatron</code></pre>
 <pre class="mb-1"><code class="language-mtron">map?B{?}&lt;=A{?}(B{?}::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-matches">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">matches</span>
-                            <span class="ms-1"><sub><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-bool" class="code text-success">/m/bool</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-bool" class="code text-success">/m/bool</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/matches?/m/bool&lt;=#{?}</small>
                     </div>
@@ -1830,12 +2030,15 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">matches?bool&lt;=#{?}(#{?}::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-math">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">math</span>
-                            <span class="ms-1"><sub><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-real" class="code text-success">/m/real</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-real" class="code text-success">/m/real</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/math?/m/real&lt;=#{?}</small>
                     </div>
@@ -1843,12 +2046,15 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">math?real&lt;=#{?}(str::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-merge">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">merge</span>
-                            <span class="ms-1"><sub><a href="#type-str{*}" class="code text-info">/m/str{*}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-str" class="code text-success">/m/str</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-str{*}" class="code text-info">/m/str{*}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-str" class="code text-success">/m/str</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/merge?/m/str&lt;=/m/str{*}</small>
                     </div>
@@ -1873,7 +2079,7 @@ bin/metatron</code></pre>
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">minus</span>
-                            <span class="ms-1"><sub><a href="#type-int" class="code text-info">/m/int</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-int" class="code text-success">/m/int</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-int" class="code text-info">/m/int</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-int" class="code text-success">/m/int</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/minus?/m/int&lt;=/m/int</small>
                     </div>
@@ -1890,7 +2096,7 @@ bin/metatron</code></pre>
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">mod</span>
-                            <span class="ms-1"><sub><a href="#type-int" class="code text-info">/m/int</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-int" class="code text-success">/m/int</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-int" class="code text-info">/m/int</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-int" class="code text-success">/m/int</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/mod?/m/int&lt;=/m/int</small>
                     </div>
@@ -1898,12 +2104,15 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">mod?int&lt;=int(int::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-mplus">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">mplus</span>
-                            <span class="ms-1"><sub><a href="#type-rec" class="code text-info">/m/rec</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-rec" class="code text-success">/m/rec</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-rec" class="code text-info">/m/rec</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-rec" class="code text-success">/m/rec</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/mplus?/m/rec&lt;=/m/rec</small>
                     </div>
@@ -1911,12 +2120,15 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">mplus?rec&lt;=rec(rec::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-mult">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">mult</span>
-                            <span class="ms-1"><sub><a href="#type-bool" class="code text-info">/m/bool</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-bool" class="code text-success">/m/bool</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-bool" class="code text-info">/m/bool</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-bool" class="code text-success">/m/bool</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/mult?/m/bool&lt;=/m/bool</small>
                     </div>
@@ -1937,7 +2149,7 @@ bin/metatron</code></pre>
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">neg</span>
-                            <span class="ms-1"><sub><a href="#type-int" class="code text-info">/m/int</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-int" class="code text-success">/m/int</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-int" class="code text-info">/m/int</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-int" class="code text-success">/m/int</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/neg?/m/int&lt;=/m/int</small>
                     </div>
@@ -1947,12 +2159,15 @@ bin/metatron</code></pre>
 <pre class="mb-1"><code class="language-mtron">neg?rel&lt;=rel(){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-neq">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">neq</span>
-                            <span class="ms-1"><sub><a href="#.html#type-#" class="code text-info">#</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-bool" class="code text-success">/m/bool</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#.html#type-#" class="code text-info">#</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-bool" class="code text-success">/m/bool</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/neq?/m/bool&lt;=#</small>
                     </div>
@@ -1960,12 +2175,15 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">neq?bool&lt;=#(#::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">an inequality function f(x,y)-&gt;true if x!=y</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-not">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">not</span>
-                            <span class="ms-1"><sub><a href="#type-bool" class="code text-info">/m/bool</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-bool" class="code text-success">/m/bool</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-bool" class="code text-info">/m/bool</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-bool" class="code text-success">/m/bool</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/not?/m/bool&lt;=/m/bool</small>
                     </div>
@@ -1974,12 +2192,15 @@ bin/metatron</code></pre>
 <pre class="mb-1"><code class="language-mtron">not?bool&lt;=#(bool::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-one">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">one</span>
-                            <span class="ms-1"><sub><a href="#type-int" class="code text-info">/m/int</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-int" class="code text-success">/m/int</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-int" class="code text-info">/m/int</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-int" class="code text-success">/m/int</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/one?/m/int&lt;=/m/int</small>
                     </div>
@@ -1989,12 +2210,15 @@ bin/metatron</code></pre>
 <pre class="mb-1"><code class="language-mtron">one?rel&lt;=rel(){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-or">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">or</span>
-                            <span class="ms-1"><sub><a href="A.html#type-A" class="code text-info">A</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-bool" class="code text-success">/m/bool</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="A.html#type-A" class="code text-info">A</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-bool" class="code text-success">/m/bool</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/or?/m/bool&lt;=A</small>
                     </div>
@@ -2002,12 +2226,15 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">or?bool&lt;=A(bool{+}::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">a logical or function f(X)-&gt;true if any X are true</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-order">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">order</span>
-                            <span class="ms-1"><sub><a href="#type-int{*}" class="code text-info">/m/int{*}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-lst" class="code text-success">/m/lst</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-int{*}" class="code text-info">/m/int{*}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-lst" class="code text-success">/m/lst</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/order?/m/lst&lt;=/m/int{*}</small>
                     </div>
@@ -2017,12 +2244,15 @@ bin/metatron</code></pre>
 <pre class="mb-1"><code class="language-mtron">order?A{*}&lt;=A{*}(#::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">a sorting function f(X)-&gt;X</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-parent">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">parent</span>
-                            <span class="ms-1"><sub><a href="#.html#type-#" class="code text-info">#</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#{?}.html#type-#{" class="code text-success">#{?}</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#.html#type-#" class="code text-info">#</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#{?}.html#type-#{" class="code text-success">#{?}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/parent?#{?}&lt;=#</small>
                     </div>
@@ -2030,12 +2260,15 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">parent?#{?}&lt;=#(){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-path">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">path</span>
-                            <span class="ms-1"><sub><a href="#type-uri" class="code text-info">/m/uri</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-uri" class="code text-success">/m/uri</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-uri" class="code text-info">/m/uri</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-uri" class="code text-success">/m/uri</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/path?/m/uri&lt;=/m/uri</small>
                     </div>
@@ -2043,12 +2276,15 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">path?uri&lt;=uri(uri::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-plus">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">plus</span>
-                            <span class="ms-1"><sub><a href="#type-bytes" class="code text-info">/m/bytes</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-bytes" class="code text-success">/m/bytes</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-bytes" class="code text-info">/m/bytes</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-bytes" class="code text-success">/m/bytes</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/plus?/m/bytes&lt;=/m/bytes</small>
                     </div>
@@ -2066,14 +2302,14 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">add the argument int to the lhs int</p>
+                        <p class="mb-0 text-light">add the argument int to each element of the lhs int list</p>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-port">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">port</span>
-                            <span class="ms-1"><sub><a href="#type-uri" class="code text-info">/m/uri</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-int{" class="code text-success">/m/int{?}</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-uri" class="code text-info">/m/uri</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-int{" class="code text-success">/m/int{?}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/port?/m/int{?}&lt;=/m/uri</small>
                     </div>
@@ -2082,12 +2318,15 @@ bin/metatron</code></pre>
 <pre class="mb-1"><code class="language-mtron">port?uri&lt;=uri(int::T[is(gte(-1))]){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-pow">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">pow</span>
-                            <span class="ms-1"><sub><a href="#type-int" class="code text-info">/m/int</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-int" class="code text-success">/m/int</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-int" class="code text-info">/m/int</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-int" class="code text-success">/m/int</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/pow?/m/int&lt;=/m/int</small>
                     </div>
@@ -2098,12 +2337,15 @@ bin/metatron</code></pre>
 <pre class="mb-1"><code class="language-mtron">pow?lst&lt;=lst(int::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-print">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">print</span>
-                            <span class="ms-1"><sub><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#{*}.html#type-#{*}" class="code text-success">#{*}</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#{*}.html#type-#{*}" class="code text-success">#{*}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/print?#{*}&lt;=#{?}</small>
                     </div>
@@ -2119,7 +2361,7 @@ bin/metatron</code></pre>
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">prod</span>
-                            <span class="ms-1"><sub><a href="#type-int{*}" class="code text-info">/m/int{*}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-int" class="code text-success">/m/int</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-int{*}" class="code text-info">/m/int{*}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-int" class="code text-success">/m/int</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/prod?/m/int&lt;=/m/int{*}</small>
                     </div>
@@ -2129,12 +2371,15 @@ bin/metatron</code></pre>
 <pre class="mb-1"><code class="language-mtron">prod?uri&lt;=uri{*}(){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-q">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">q</span>
-                            <span class="ms-1"><sub><a href="#type-uri" class="code text-info">/m/uri</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-uri" class="code text-success">/m/uri</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-uri" class="code text-info">/m/uri</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-uri" class="code text-success">/m/uri</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/q?/m/uri&lt;=/m/uri</small>
                     </div>
@@ -2144,12 +2389,15 @@ bin/metatron</code></pre>
 <pre class="mb-1"><code class="language-mtron">q?rec&lt;=uri(){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-range">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">range</span>
-                            <span class="ms-1"><sub><a href="A{*}.html#type-A{*}" class="code text-info">A{*}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="A{*}.html#type-A{*}" class="code text-success">A{*}</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="A{*}.html#type-A{*}" class="code text-info">A{*}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="A{*}.html#type-A{*}" class="code text-success">A{*}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/range?A{*}&lt;=A{*}</small>
                     </div>
@@ -2157,12 +2405,15 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">range?A{*}&lt;=A{*}(int::T,isa(int::T).else(0)){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-reduce">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">reduce</span>
-                            <span class="ms-1"><sub><a href="#{*}.html#type-#{*}" class="code text-info">#{*}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#.html#type-#" class="code text-success">#</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#{*}.html#type-#{*}" class="code text-info">#{*}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#.html#type-#" class="code text-success">#</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/reduce?#&lt;=#{*}</small>
                     </div>
@@ -2170,12 +2421,15 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">reduce?#&lt;=#{*}(#::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">a reduce function f(X)-&gt;x</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-ref">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">ref</span>
-                            <span class="ms-1"><sub><a href="#.html#type-#" class="code text-info">#</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#{*}.html#type-#{*}" class="code text-success">#{*}</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#.html#type-#" class="code text-info">#</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#{*}.html#type-#{*}" class="code text-success">#{*}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/ref?#{*}&lt;=#</small>
                     </div>
@@ -2183,12 +2437,15 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">ref?#{*}&lt;=#(#{*}::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-regex">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">regex</span>
-                            <span class="ms-1"><sub><a href="#type-str" class="code text-info">/m/str</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-lst" class="code text-success">/m/lst</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-str" class="code text-info">/m/str</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-lst" class="code text-success">/m/lst</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/regex?/m/lst&lt;=/m/str</small>
                     </div>
@@ -2196,12 +2453,15 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">regex?lst&lt;=str(str::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-reify">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">reify</span>
-                            <span class="ms-1"><sub><a href="#type-fail" class="code text-info">/m/fail</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-rec" class="code text-success">/m/rec</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-fail" class="code text-info">/m/fail</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-rec" class="code text-success">/m/rec</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/reify?/m/rec&lt;=/m/fail</small>
                     </div>
@@ -2210,12 +2470,15 @@ bin/metatron</code></pre>
 <pre class="mb-1"><code class="language-mtron">reify?rec&lt;=#{?}(){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-repeat">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">repeat</span>
-                            <span class="ms-1"><sub><a href="A.html#type-A" class="code text-info">A</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="A{*}.html#type-A{*}" class="code text-success">A{*}</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="A.html#type-A" class="code text-info">A</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="A{*}.html#type-A{*}" class="code text-success">A{*}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/repeat?A{*}&lt;=A</small>
                     </div>
@@ -2223,12 +2486,15 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">repeat?A{*}&lt;=A(#::T,#::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-reverse">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">reverse</span>
-                            <span class="ms-1"><sub><a href="#type-str" class="code text-info">/m/str</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-str" class="code text-success">/m/str</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-str" class="code text-info">/m/str</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-str" class="code text-success">/m/str</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/reverse?/m/str&lt;=/m/str</small>
                     </div>
@@ -2239,12 +2505,15 @@ bin/metatron</code></pre>
 <pre class="mb-1"><code class="language-mtron">reverse?lst&lt;=lst(){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-rng">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">rng</span>
-                            <span class="ms-1"><sub><a href="#type-rel" class="code text-info">/m/rel</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#{*}.html#type-#{*}" class="code text-success">#{*}</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-rel" class="code text-info">/m/rel</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#{*}.html#type-#{*}" class="code text-success">#{*}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/rng?#{*}&lt;=/m/rel</small>
                     </div>
@@ -2253,12 +2522,15 @@ bin/metatron</code></pre>
 <pre class="mb-1"><code class="language-mtron">rng?#{*}&lt;=rec(){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-rshift">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">rshift</span>
-                            <span class="ms-1"><sub><a href="#type-uri" class="code text-info">/m/uri</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#{*}.html#type-#{*}" class="code text-success">#{*}</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-uri" class="code text-info">/m/uri</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#{*}.html#type-#{*}" class="code text-success">#{*}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/rshift?#{*}&lt;=/m/uri</small>
                     </div>
@@ -2274,12 +2546,15 @@ bin/metatron</code></pre>
 <pre class="mb-1"><code class="language-mtron">rshift?file{*}&lt;=file(isa(uri::T).else(&lt;#&gt;)){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-scheme">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">scheme</span>
-                            <span class="ms-1"><sub><a href="#type-uri" class="code text-info">/m/uri</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-uri{" class="code text-success">/m/uri{?}</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-uri" class="code text-info">/m/uri</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-uri{" class="code text-success">/m/uri{?}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/scheme?/m/uri{?}&lt;=/m/uri</small>
                     </div>
@@ -2288,12 +2563,15 @@ bin/metatron</code></pre>
 <pre class="mb-1"><code class="language-mtron">scheme?uri&lt;=uri(uri::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-select">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">select</span>
-                            <span class="ms-1"><sub><a href="#type-uri" class="code text-info">/m/uri</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-uri{" class="code text-success">/m/uri{?}</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-uri" class="code text-info">/m/uri</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-uri{" class="code text-success">/m/uri{?}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/select?/m/uri{?}&lt;=/m/uri</small>
                     </div>
@@ -2306,12 +2584,15 @@ bin/metatron</code></pre>
 <pre class="mb-1"><code class="language-mtron">select?lst{?}&lt;=lst(lst::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-serialize">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">serialize</span>
-                            <span class="ms-1"><sub><a href="A.html#type-A" class="code text-info">A</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="B.html#type-B" class="code text-success">B</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="A.html#type-A" class="code text-info">A</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="B.html#type-B" class="code text-success">B</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/serialize?B&lt;=A</small>
                     </div>
@@ -2319,12 +2600,15 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">serialize?B&lt;=A(/m/mach/io::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-side">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">side</span>
-                            <span class="ms-1"><sub><a href="A.html#type-A" class="code text-info">A</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="A.html#type-A" class="code text-success">A</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="A.html#type-A" class="code text-info">A</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="A.html#type-A" class="code text-success">A</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/side?A&lt;=A</small>
                     </div>
@@ -2332,12 +2616,15 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">side?A&lt;=A(#::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-skip">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">skip</span>
-                            <span class="ms-1"><sub><a href="A{*}.html#type-A{*}" class="code text-info">A{*}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="A{*}.html#type-A{*}" class="code text-success">A{*}</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="A{*}.html#type-A{*}" class="code text-info">A{*}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="A{*}.html#type-A{*}" class="code text-success">A{*}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/skip?A{*}&lt;=A{*}</small>
                     </div>
@@ -2345,12 +2632,15 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">skip?A{*}&lt;=A{*}(int::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">skips the first n objs</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-source">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">source</span>
-                            <span class="ms-1"><sub><a href="#.html#type-#" class="code text-info">#</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#{*}.html#type-#{*}" class="code text-success">#{*}</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#.html#type-#" class="code text-info">#</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#{*}.html#type-#{*}" class="code text-success">#{*}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/source?#{*}&lt;=#</small>
                     </div>
@@ -2358,12 +2648,15 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">source?#{*}&lt;=#(str::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-split">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">split</span>
-                            <span class="ms-1"><sub><a href="#type-str" class="code text-info">/m/str</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-lst" class="code text-success">/m/lst</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-str" class="code text-info">/m/str</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-lst" class="code text-success">/m/lst</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/split?/m/lst&lt;=/m/str</small>
                     </div>
@@ -2383,7 +2676,7 @@ bin/metatron</code></pre>
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">start</span>
-                            <span class="ms-1"><sub><a href="noobj{0}.html#type-noobj{0}" class="code text-info">noobj{0}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="A{**}.html#type-A{**}" class="code text-success">A{**}</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="noobj{0}.html#type-noobj{0}" class="code text-info">noobj{0}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="A{**}.html#type-A{**}" class="code text-success">A{**}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/start?A{**}&lt;=noobj{0}</small>
                     </div>
@@ -2399,7 +2692,7 @@ bin/metatron</code></pre>
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">sum</span>
-                            <span class="ms-1"><sub><a href="#type-int{*}" class="code text-info">/m/int{*}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-int" class="code text-success">/m/int</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-int{*}" class="code text-info">/m/int{*}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-int" class="code text-success">/m/int</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/sum?/m/int&lt;=/m/int{*}</small>
                     </div>
@@ -2412,12 +2705,15 @@ bin/metatron</code></pre>
 <pre class="mb-1"><code class="language-mtron">sum?lst&lt;=lst{*}(){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-swap">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">swap</span>
-                            <span class="ms-1"><sub><a href="A.html#type-A" class="code text-info">A</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="A.html#type-A" class="code text-success">A</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="A.html#type-A" class="code text-info">A</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="A.html#type-A" class="code text-success">A</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/swap?A&lt;=A</small>
                     </div>
@@ -2425,12 +2721,15 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">swap?A&lt;=A(B::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-take">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">take</span>
-                            <span class="ms-1"><sub><a href="A{*}.html#type-A{*}" class="code text-info">A{*}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="A{*}.html#type-A{*}" class="code text-success">A{*}</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="A{*}.html#type-A{*}" class="code text-info">A{*}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="A{*}.html#type-A{*}" class="code text-success">A{*}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/take?A{*}&lt;=A{*}</small>
                     </div>
@@ -2438,12 +2737,15 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">take?A{*}&lt;=A{*}(int::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">takes the first n objs</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-thread">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">thread</span>
-                            <span class="ms-1"><sub><a href="A.html#type-A" class="code text-info">A</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="A.html#type-A" class="code text-success">A</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="A.html#type-A" class="code text-info">A</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="A.html#type-A" class="code text-success">A</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/thread?A&lt;=A</small>
                     </div>
@@ -2451,12 +2753,15 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">thread?A&lt;=A(#::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-tid">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">tid</span>
-                            <span class="ms-1"><sub><a href="#.html#type-#" class="code text-info">#</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-uri" class="code text-success">/m/uri</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#.html#type-#" class="code text-info">#</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-uri" class="code text-success">/m/uri</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/tid?/m/uri&lt;=#</small>
                     </div>
@@ -2464,12 +2769,15 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">tid?uri&lt;=#(){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">the geometric location of the lhs obj [equivalent to f(x) ~ vid(type())]</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-to">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">to</span>
-                            <span class="ms-1"><sub><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#{?}.html#type-#{" class="code text-success">#{?}</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#{?}.html#type-#{" class="code text-success">#{?}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/to?#{?}&lt;=#{?}</small>
                     </div>
@@ -2477,12 +2785,15 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">to?#{?}&lt;=#{?}(uri::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-type">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">type</span>
-                            <span class="ms-1"><sub><a href="#type-type" class="code text-info">/m/type</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-type" class="code text-success">/m/type</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-type" class="code text-info">/m/type</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-type" class="code text-success">/m/type</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/type?/m/type&lt;=/m/type</small>
                     </div>
@@ -2491,12 +2802,15 @@ bin/metatron</code></pre>
 <pre class="mb-1"><code class="language-mtron">type?/m/type&lt;=A(){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-ucase">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">ucase</span>
-                            <span class="ms-1"><sub><a href="#type-str" class="code text-info">/m/str</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-str" class="code text-success">/m/str</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-str" class="code text-info">/m/str</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-str" class="code text-success">/m/str</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/ucase?/m/str&lt;=/m/str</small>
                     </div>
@@ -2504,12 +2818,15 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">ucase?str&lt;=str(){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-update">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">update</span>
-                            <span class="ms-1"><sub><a href="#type-rec" class="code text-info">/m/rec</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-rec{" class="code text-success">/m/rec{?}</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-rec" class="code text-info">/m/rec</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-rec{" class="code text-success">/m/rec{?}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/update?/m/rec{?}&lt;=/m/rec</small>
                     </div>
@@ -2519,12 +2836,15 @@ bin/metatron</code></pre>
 <pre class="mb-1"><code class="language-mtron">update?lst&lt;=lst(lst::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-uri:c">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">uri:c</span>
-                            <span class="ms-1"><sub><a href="#type-uri" class="code text-info">/m/uri</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-lst" class="code text-success">/m/lst</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-uri" class="code text-info">/m/uri</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-lst" class="code text-success">/m/lst</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/uri:c?/m/lst&lt;=/m/uri</small>
                     </div>
@@ -2532,12 +2852,15 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">uri:c?lst&lt;=uri(uri::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-vid">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">vid</span>
-                            <span class="ms-1"><sub><a href="A.html#type-A" class="code text-info">A</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="A.html#type-A" class="code text-success">A</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="A.html#type-A" class="code text-info">A</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="A.html#type-A" class="code text-success">A</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/vid?A&lt;=A</small>
                     </div>
@@ -2547,14 +2870,14 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">specifies the spatial location of the lhs obj</p>
+                        <p class="mb-0 text-light">the spatial location of the lhs obj</p>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-where">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">where</span>
-                            <span class="ms-1"><sub><a href="#type-uri" class="code text-info">/m/uri</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-uri{" class="code text-success">/m/uri{?}</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-uri" class="code text-info">/m/uri</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-uri{" class="code text-success">/m/uri{?}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/where?/m/uri{?}&lt;=/m/uri</small>
                     </div>
@@ -2563,12 +2886,15 @@ bin/metatron</code></pre>
 <pre class="mb-1"><code class="language-mtron">where?#{?}&lt;=#(#::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-within">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">within</span>
-                            <span class="ms-1"><sub><a href="#type-bytes" class="code text-info">/m/bytes</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="B.html#type-B" class="code text-success">B</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-bytes" class="code text-info">/m/bytes</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="B.html#type-B" class="code text-success">B</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/within?B&lt;=/m/bytes</small>
                     </div>
@@ -2579,12 +2905,15 @@ bin/metatron</code></pre>
 <pre class="mb-1"><code class="language-mtron">within?lst&lt;=lst(#{*}::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-zero">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">zero</span>
-                            <span class="ms-1"><sub><a href="#type-bytes" class="code text-info">/m/bytes</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-bytes" class="code text-success">/m/bytes</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-bytes" class="code text-info">/m/bytes</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-bytes" class="code text-success">/m/bytes</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/zero?/m/bytes&lt;=/m/bytes</small>
                     </div>
@@ -2598,11 +2927,14 @@ bin/metatron</code></pre>
 <pre class="mb-1"><code class="language-mtron">zero?lst&lt;=lst(){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
         </div>
             
         <div class="container-xxl mb-4" id="rewrites">
-            <h3 class="text-warning mb-3">
+            <h3 class="text-primary mb-3">
                 Rewrites <span class="badge bg-warning text-dark">8</span>
             </h3>
             
@@ -2610,7 +2942,7 @@ bin/metatron</code></pre>
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-warning fw-bold">else_after_count</span>
-                            <span class="ms-1"><sub><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-code{" class="code text-success">/m/code{?}</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-code{" class="code text-success">/m/code{?}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/rewrite/else_after_count?/m/code{?}&lt;=#{?}</small>
                     </div>
@@ -2619,12 +2951,15 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/else_after_count?code{?}&lt;=#{?}(code::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="rewrite-id_removal">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-warning fw-bold">id_removal</span>
-                            <span class="ms-1"><sub><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-code{" class="code text-success">/m/code{?}</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-code{" class="code text-success">/m/code{?}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/rewrite/id_removal?/m/code{?}&lt;=#{?}</small>
                     </div>
@@ -2633,12 +2968,15 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/id_removal?code{?}&lt;=#{?}(code::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="rewrite-map_nest">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-warning fw-bold">map_nest</span>
-                            <span class="ms-1"><sub><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-code{" class="code text-success">/m/code{?}</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-code{" class="code text-success">/m/code{?}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/rewrite/map_nest?/m/code{?}&lt;=#{?}</small>
                     </div>
@@ -2647,12 +2985,15 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/map_nest?code{?}&lt;=#{?}(code::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="rewrite-mult_one">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-warning fw-bold">mult_one</span>
-                            <span class="ms-1"><sub><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-code{" class="code text-success">/m/code{?}</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-code{" class="code text-success">/m/code{?}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/rewrite/mult_one?/m/code{?}&lt;=#{?}</small>
                     </div>
@@ -2661,12 +3002,15 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/mult_one?code{?}&lt;=#{?}(code::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="rewrite-plus_zero">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-warning fw-bold">plus_zero</span>
-                            <span class="ms-1"><sub><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-code{" class="code text-success">/m/code{?}</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-code{" class="code text-success">/m/code{?}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/rewrite/plus_zero?/m/code{?}&lt;=#{?}</small>
                     </div>
@@ -2675,12 +3019,15 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/plus_zero?code{?}&lt;=#{?}(code::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="rewrite-split_merge_collapse">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-warning fw-bold">split_merge_collapse</span>
-                            <span class="ms-1"><sub><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-code{" class="code text-success">/m/code{?}</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-code{" class="code text-success">/m/code{?}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/rewrite/split_merge_collapse?/m/code{?}&lt;=#{?}</small>
                     </div>
@@ -2689,12 +3036,15 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/split_merge_collapse?code{?}&lt;=#{?}(code::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="rewrite-split_merge_left_factor">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-warning fw-bold">split_merge_left_factor</span>
-                            <span class="ms-1"><sub><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-code{" class="code text-success">/m/code{?}</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-code{" class="code text-success">/m/code{?}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/rewrite/split_merge_left_factor?/m/code{?}&lt;=#{?}</small>
                     </div>
@@ -2703,12 +3053,15 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/split_merge_left_factor?code{?}&lt;=#{?}(code::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="rewrite-split_merge_right_factor">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-warning fw-bold">split_merge_right_factor</span>
-                            <span class="ms-1"><sub><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></sub><span class="text-muted mx-1">=&gt;</span><sub><a href="#type-code{" class="code text-success">/m/code{?}</a></sub></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-code{" class="code text-success">/m/code{?}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/inst/rewrite/split_merge_right_factor?/m/code{?}&lt;=#{?}</small>
                     </div>
@@ -2717,12 +3070,15 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/split_merge_right_factor?code{?}&lt;=#{?}(code::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
         </div>
             
         <div class="container-xxl mb-4" id="spaces">
             <h3 class="text-primary mb-3">
-                Spaces <span class="badge bg-primary">4</span>
+                Spaces <span class="badge bg-info">4</span>
             </h3>
             
                 <div class="card mb-3" id="space-mem">
@@ -2735,6 +3091,9 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">space::T[][inst?rng=mem&amp;dom=#{?}(isa([pattern=&gt;uri::T,{?}persist=&gt;uri::T[][inst?rng=file&amp;dom=#{?}(uri::T){&lt;j&gt;}]@/m/mach/file])){&lt;j&gt;}]@/m/space/mem</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="space-meta">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -2750,6 +3109,9 @@ bin/metatron</code></pre>
  peers  =&gt;[uri{*}::T]])){&lt;j&gt;}]@/m/space/meta</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="space-q">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -2767,6 +3129,9 @@ bin/metatron</code></pre>
  post_read{?}  =&gt;inst::T]){&lt;j&gt;}]@/m/space/q</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="space-stack">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -2778,143 +3143,17 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">space::T[][inst?rng=stack&amp;dom=#{?}(isa([pattern=&gt;uri::T])){&lt;j&gt;}]@/m/space/stack</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
         </div>
             
-        <div class="container-xxl mb-4" id="consts">
-            <h3 class="text-secondary mb-3">
-                Constants <span class="badge bg-secondary">8</span>
-            </h3>
-            
-                <div class="card mb-3" id="const-doc">
-                    <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-secondary fw-bold">doc</span>
-                        <small class="text-muted code">/m/doc</small>
-                    </div>
-                    
-                    <div class="card-body p-2">
-                        <pre class="mb-0"><code class="language-mtron">/m/doc::[
- pattern=&gt;/m/doc/#,
- space  =&gt;[
-   super=&gt;!*/m],
- q      =&gt;[docq::[pattern=&gt;doc]]]@/m/doc</code></pre>
-                    </div>
-                    
-                </div>
-                <div class="card mb-3" id="const-grph">
-                    <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-secondary fw-bold">grph</span>
-                        <small class="text-muted code">/m/grph</small>
-                    </div>
-                    
-                    <div class="card-body p-2">
-                        <pre class="mb-0"><code class="language-mtron">/m/grph::[
- pattern=&gt;/m/grph/#,
- space  =&gt;[
-   super=&gt;!*/m,
-   sub  =&gt;{!*/m/grph/tp3,!*g:#/S/modern}],
- q      =&gt;[docq::[pattern=&gt;doc]]]@/m/grph</code></pre>
-                    </div>
-                    
-                </div>
-                <div class="card mb-3" id="const-iot">
-                    <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-secondary fw-bold">iot</span>
-                        <small class="text-muted code">/m/iot</small>
-                    </div>
-                    
-                    <div class="card-body p-2">
-                        <pre class="mb-0"><code class="language-mtron">/m/iot::[
- pattern=&gt;/m/iot/#,
- space  =&gt;[
-   super=&gt;!*/m,
-   sub  =&gt;{!*/m/iot/haos,!*/m/iot/miot}],
- q      =&gt;[docq::[pattern=&gt;doc]]]@/m/iot</code></pre>
-                    </div>
-                    
-                </div>
-                <div class="card mb-3" id="const-llm">
-                    <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-secondary fw-bold">llm</span>
-                        <small class="text-muted code">/m/llm</small>
-                    </div>
-                    
-                    <div class="card-body p-2">
-                        <pre class="mb-0"><code class="language-mtron">/m/llm::[
- pattern=&gt;/m/llm/#,
- space  =&gt;[
-   super=&gt;!*/m],
- q      =&gt;[docq::[pattern=&gt;doc]]]@/m/llm</code></pre>
-                    </div>
-                    
-                </div>
-                <div class="card mb-3" id="const-mach">
-                    <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-secondary fw-bold">mach</span>
-                        <small class="text-muted code">/m/mach</small>
-                    </div>
-                    
-                    <div class="card-body p-2">
-                        <pre class="mb-0"><code class="language-mtron">/m/mach::[
- pattern=&gt;/m/mach/#,
- space  =&gt;[
-   super=&gt;!*/m,
-   sub  =&gt;!*/m/mach/io],
- q      =&gt;[docq::[pattern=&gt;doc]]]@/m/mach</code></pre>
-                    </div>
-                    
-                </div>
-                <div class="card mb-3" id="const-math">
-                    <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-secondary fw-bold">math</span>
-                        <small class="text-muted code">/m/math</small>
-                    </div>
-                    
-                    <div class="card-body p-2">
-                        <pre class="mb-0"><code class="language-mtron">/m/math::[
- pattern=&gt;/m/math/#,
- space  =&gt;[
-   super=&gt;!*/m],
- q      =&gt;[docq::[pattern=&gt;doc]]]@/m/math</code></pre>
-                    </div>
-                    
-                </div>
-                <div class="card mb-3" id="const-tble">
-                    <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-secondary fw-bold">tble</span>
-                        <small class="text-muted code">/m/tble</small>
-                    </div>
-                    
-                    <div class="card-body p-2">
-                        <pre class="mb-0"><code class="language-mtron">/m/tble::[
- pattern=&gt;/m/tble/#,
- space  =&gt;[
-   super=&gt;!*/m],
- q      =&gt;[docq::[pattern=&gt;doc]]]@/m/tble</code></pre>
-                    </div>
-                    
-                </div>
-                <div class="card mb-3" id="const-web">
-                    <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span class="code text-secondary fw-bold">web</span>
-                        <small class="text-muted code">/m/web</small>
-                    </div>
-                    
-                    <div class="card-body p-2">
-                        <pre class="mb-0"><code class="language-mtron">/m/web::[
- pattern=&gt;/m/web/#,
- space  =&gt;[
-   super=&gt;!*/m],
- q      =&gt;[docq::[pattern=&gt;doc]]]@/m/web</code></pre>
-                    </div>
-                    
-                </div>
-        </div>
             
         <div class="container-xxl py-3 text-center">
             <hr class="border-secondary">
             <small class="text-muted">
-                Generated by Metatron InstSet Doc Generator on 2026-03-31 14:36:53<br>
+                generated by metatron instset doc generator on 2026-04-01 01:37:43<br>
                 © PhaseShift Studio, LLC
             </small>
         </div>

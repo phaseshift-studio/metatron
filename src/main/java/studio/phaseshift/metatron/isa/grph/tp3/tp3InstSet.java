@@ -202,7 +202,6 @@ public class tp3InstSet extends AbstractInstSet {
 
     @Override
     public Set<Inst> insts() {
-        INSTS.add(instC(V_INST_TID.dom(URI_TID).rng(VRTX_TID.maybeSome()), lst(), (lhs, inst) -> Router.readFromSpace(lhs.uriValue().extend("V/+"))));
         INSTS.addAll(tp3Space.TP3SpaceType.insts());
         return INSTS;
     }

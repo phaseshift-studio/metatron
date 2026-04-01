@@ -482,9 +482,10 @@
                                 <argument>--website-template</argument>
                                 <argument>-o</argument>
                                 <argument>${project.basedir}/docs/website/instset</argument>
-                                <!-- Instruction sets to document -->
+                                <!-- generate instset docs -->
                                 <argument>/m</argument>
                                 <argument>/m/mach</argument>
+                                <argument>/m/math</argument>
                                 <argument>/m/web</argument>
                                 <argument>/m/llm</argument>
                                 <argument>/m/tble</argument>
