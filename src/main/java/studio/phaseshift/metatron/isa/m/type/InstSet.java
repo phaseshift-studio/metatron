@@ -31,7 +31,6 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.type.Code.CODE_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Inst.INST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Type.TYPE_TYPE;
@@ -57,6 +56,8 @@ public interface InstSet extends Space {
     fURI E = f("E");
     fURI F = f("F");
     fURI G = f("G");
+
+    void setup();
 
     @Override
     fURI pattern();

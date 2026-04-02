@@ -236,6 +236,10 @@ public class mInstSet extends AbstractInstSet {
         super(M_ISA_TID, M_ISA_TID);
     }
 
+    public void setup() {
+        
+    }
+    
     @Override
     public void close() {
         // do nothing

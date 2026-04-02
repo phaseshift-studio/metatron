@@ -44,6 +44,11 @@ public final class noobjSpace implements Space, InstSet {
     }
 
     @Override
+    public void setup() {
+        
+    }
+    
+    @Override
     public Space sjvm() {
         return this;
     }

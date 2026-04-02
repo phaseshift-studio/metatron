@@ -27,6 +27,7 @@
  import studio.phaseshift.metatron.TestData;
  import studio.phaseshift.metatron.algebra.rewrite.CommonRewritesTestContract;
  import studio.phaseshift.metatron.furi.fURI;
+ import studio.phaseshift.metatron.furi.q.SubQTest;
  import studio.phaseshift.metatron.isa.AbstractSpaceTest;
  import studio.phaseshift.metatron.isa.m.parser.mParser;
  import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -59,7 +60,7 @@
   * @author Marko A. Rodriguez (http://markorodriguez.com)
   */
  @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
- public class tbleSpaceTest extends AbstractSpaceTest implements CommonRewritesTestContract {
+ public class tbleSpaceTest extends AbstractSpaceTest implements CommonRewritesTestContract { //, SubQTest {
 
      private static final String DB_PATH = "target/test-tble-space.db";
      private static final fURI SPACE_VID = f("/sys/space/tble/test");

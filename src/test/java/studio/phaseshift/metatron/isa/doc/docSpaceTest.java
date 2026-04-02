@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -30,16 +30,15 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.BootLoader;
-import studio.phaseshift.metatron.TestCategory;
 import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.algebra.rewrite.CommonRewritesTestContract;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.furi.q.SubQTest;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.impl.MStr;
-import studio.phaseshift.metatron.isa.mach.type.Router;
 
 import java.net.InetSocketAddress;
 import java.util.LinkedHashMap;
@@ -64,8 +63,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class docSpaceTest extends AbstractSpaceTest implements CommonRewritesTestContract {
-    
+public class docSpaceTest extends AbstractSpaceTest implements CommonRewritesTestContract {//, SubQTest {
+
     protected static MongoServer mongoServer;
     protected static String connectionString;
     protected static final String DB_NAME = "testdb";
@@ -82,7 +81,7 @@ public class docSpaceTest extends AbstractSpaceTest implements CommonRewritesTes
         ));
         BootLoader.loadInstSetProvider(DOC_ISA_TID);
     }
-    
+
     @Override
     public fURI getTestDataUriPrefix() {
         return f("mongo:test_collection/");

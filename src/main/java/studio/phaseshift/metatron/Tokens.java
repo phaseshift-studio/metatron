@@ -108,6 +108,7 @@ public final class Tokens {
     public static final String SCHEME = "scheme";
     public static final String AUTHORITY = "authority";
     public static final String SUB = "sub";
+    public static final String SUBQ = "subq";
     public static final String PATTERN = "pattern";
     public static final String SERIALIZER = "serializer";
     public static final String LOGG = "log";
@@ -134,6 +135,7 @@ public final class Tokens {
     public static final String INST = "inst";
     public static final String SQL = "sql";
     public static final String STORE = "store";
+    public static final String GRAPH = "graph";
     public static final String PREFIX = "prefix";
     public static final String USER_HOME = "user.home";
     public static final String PREPEND = "prepend";

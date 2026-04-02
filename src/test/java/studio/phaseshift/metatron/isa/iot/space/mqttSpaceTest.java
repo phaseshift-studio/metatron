@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.BootLoader;
+import studio.phaseshift.metatron.furi.q.SubQTest;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
 import studio.phaseshift.metatron.isa.iot.MoquetteServer;
 import studio.phaseshift.metatron.isa.iot.space.mqtt.mqttSpace;
@@ -51,7 +52,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class mqttSpaceTest extends AbstractSpaceTest {
+public class mqttSpaceTest extends AbstractSpaceTest implements SubQTest {
     private static final int PORT = generatePort();
 
     public mqttSpaceTest() {
@@ -85,11 +86,11 @@ public class mqttSpaceTest extends AbstractSpaceTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "/t/a?sub -> sub::[target=>/t/a,on_recv=><abc>->3]                                        % /t/a -> 4                           % *abc.?=3",
-            "/t/b?sub -> sub::[target=>/t/b,on_recv=><abc>->4]                                        % /t/b -> 3                           % *abc.?=4",
+            "/t/a?subq -> /m/space/q/subq/sub::[target=>/t/a,on_recv=><abc>->3]                                        % /t/a -> 4                           % *abc.?=3",
+            "/t/b?subq -> /m/space/q/subq/sub::[target=>/t/b,on_recv=><abc>->4]                                        % /t/b -> 3                           % *abc.?=4",
          //   "/t/c/+?sub -> sub::[src=>a,tgt=>/t/+,on_recv=>(){*<zzz>.else(0).plus(4).to(zzz).print(_)}]   % 3.to(/t/c/b).map(7).to(/t/c/a)      % *zzz.?=8",
            // "/t/c?sub -> sub::[src=>a,tgt=>/t/c,on_recv=>(){*</t/c>.plus(4).to(yyy).print(_)}]            % 3.to(/t/c)                          % *yyy.?=7",
-            "/t/d?sub -> sub::[target=>/t/d,on_recv=><ggg>->1]                                        % /t/d -> 3                           % *ggg.?=1",
+            "/t/d?subq -> /m/space/q/subq/sub::[target=>/t/d,on_recv=><ggg>->1]                                        % /t/d -> 3                           % *ggg.?=1",
     }, delimiter = '%')
     public void testSubscriptions(final String subscription, final String write, final String check) {
         final Rec sub = mParser.eval(subscription);

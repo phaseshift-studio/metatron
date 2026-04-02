@@ -20,13 +20,10 @@ package studio.phaseshift.metatron.isa.llm;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
-import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Type;
 
-import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.Set;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
@@ -44,9 +41,9 @@ import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -62,25 +59,11 @@ public class llmInstSet extends AbstractInstSet {
     public static final fURI MCP_SERVER_TID = LLM_SPACE_TID.extend("mcp").extend("mcpserver");
     public static final fURI MCP_TOOL_TID = LLM_ISA_TID.extend("mcp").extend("tool");
 
-    private static final Set<Type> TYPES = new LinkedHashSet<>();
-    private static final Set<Inst> INSTS = new LinkedHashSet<>();
-
-
-    /*
-     [
-   text                 =>'The file permission `rwxr-xr-x` corresp'...,
-   thinking             =>'Okay, the user is asking about the file'...,
-   toolExecutionRequests=>[,],
-   attributes           =>[=>],
-   type                 =>AI],
-  [
-
-     */
     public static Type LLM_MEMORY_TYPE = Type.Builder.build()
             .tid(LST_TID)
             .vid(LLM_MEMORY_TID)
             .isaPredicate(lst())
-            .create(TYPES, INSTS);
+            .create();
     public static final fURI AI_MEMORY_TID = LLM_MEMORY_TID.extend("ai");
     public static Type LLM_AI_MEMORY_TYPE = Type.Builder.build()
             .tid(REC_TID)
@@ -90,7 +73,7 @@ public class llmInstSet extends AbstractInstSet {
                     uri(THINKING), INT_TYPE,
                     uri("attributes"), REC_TYPE,
                     uri(TYPE), uri("AI")))
-            .create(TYPES, INSTS);
+            .create();
     public static final fURI USER_MEMORY_TID = LLM_MEMORY_TID.extend("user");
     public static Type LLM_USER_MEMORY_TYPE = Type.Builder.build()
             .tid(REC_TID)
@@ -98,48 +81,51 @@ public class llmInstSet extends AbstractInstSet {
             .isaPredicate(rec(
                     uri("contents"), LST_TYPE,
                     uri(TYPE), uri("USER")))
-            .create(TYPES, INSTS);
+            .create();
 
     public llmInstSet() {
-        super(LLM_ISA_TID, LLM_ISA_TID);
+        super(mutableMap(uri(PATTERN), uri(LLM_ISA_TID.extend(ALL))), LLM_ISA_TID, LLM_ISA_TID);
     }
 
-    public Set<Type> types() {
-        TYPES.add(LLM_CATALOG_SPACE_TYPE);
-        TYPES.add(MCP_TOOL_TYPE);
-        TYPES.add(MCP_SERVER_TYPE);
-        TYPES.add(docWrap(Type.Builder.build()
-                        .tid(REC_TID)
-                        .vid(MODEL_TID).
-                        isaPredicate(rec(
-                                uri(PROVIDER), LLM_CATALOG_SPACE_TYPE,
-                                uri(NAME), URI_TYPE,
-                                uri(THINK).maybe(), rec(uri(TO).maybe().asUri(), T(ALL)),
-                                uri(RESPONSE).maybe(), rec(uri(TO).maybe().asUri(), T(ALL), uri(FORMAT).maybe(), T(ALL)),
-                                uri(SIZE).maybe().asUri(), BYTE_TYPE,
-                                uri(MEMORY).maybe(), rec(uri(FROM).maybe().asUri(), URI_TYPE),
-                                uri(DESC).maybe(), STR_TYPE,
-                                uri(SKILL).maybe(), LST_TYPE,
-                                uri(TOOL).maybe(), LST_TYPE))
-                        .inst(docWrap(instC(LLM_INST_TID.extend("chat").dom(MODEL_TID).rng(ALL.maybe()), lst(STR_TYPE),
-                                        (lhs, inst) -> model(lhs.asRec()).chat(inst.arg(0).strValue())),
-                                "a model to chat with",  // dom
-                                "the models chat response", // rng
-                                Map.of(jnt(0),"the message to send the model"), // args
-                                "chat with the lhs model", // desc
-                                "*<ollama:qwen3:latest>+[response=>[to=>print(_)],think=>[to=>print(_)]].chat('what is a database query language?')"))
-                        //  .inst(instC(LLM_INST_TID.extend("chat").dom(MODEL_TID).rng(MODEL_TID), lst(STR_TYPE, T(ALL.maybe())),
-                        //          (lhs, inst) -> model(lhs.asRec()).chat(inst.arg(0).strValue(), inst.arg(1).asInst())))
-                        .create(TYPES, INSTS),
-                "a large language model", "the model construction", Map.of(
-                        uri(NAME), "the name of the model",
-                        uri(HOST).maybe(), "the provider endpoint",
-                        uri(THINK).maybe(), "whether to think before responding",
-                        uri(SIZE).maybe(), "the size of the model in bytes",
-                        uri(MEMORY).maybe(), "a pointer to the llm's memory",
-                        uri(SKILL).maybe(), "the skills to use",
-                        uri(TOOL).maybe(), "the tools to use"), "an mtron interface to a large language model"));
-        return TYPES;
+    @Override
+    public void setup() {
+        this.jvm().putAll(mutableMap(
+                uri(PATTERN), uri(LLM_ISA_TID.extend(ALL)),
+                uri(TYPE), lst(
+                        LLM_CATALOG_SPACE_TYPE,
+                        MCP_TOOL_TYPE,
+                        MCP_SERVER_TYPE,
+                        docWrap(Type.Builder.build()
+                                        .tid(REC_TID)
+                                        .vid(MODEL_TID).
+                                        isaPredicate(rec(
+                                                uri(PROVIDER), LLM_CATALOG_SPACE_TYPE,
+                                                uri(NAME), URI_TYPE,
+                                                uri(THINK).maybe(), rec(uri(TO).maybe().asUri(), T(ALL)),
+                                                uri(RESPONSE).maybe(), rec(uri(TO).maybe().asUri(), T(ALL), uri(FORMAT).maybe(), T(ALL)),
+                                                uri(SIZE).maybe().asUri(), BYTE_TYPE,
+                                                uri(MEMORY).maybe(), rec(uri(FROM).maybe().asUri(), URI_TYPE),
+                                                uri(DESC).maybe(), STR_TYPE,
+                                                uri(SKILL).maybe(), LST_TYPE,
+                                                uri(TOOL).maybe(), LST_TYPE)).create(),
+                                "a large language model", "the model construction", Map.of(
+                                        uri(NAME), "the name of the model",
+                                        uri(HOST).maybe(), "the provider endpoint",
+                                        uri(THINK).maybe(), "whether to think before responding",
+                                        uri(SIZE).maybe(), "the size of the model in bytes",
+                                        uri(MEMORY).maybe(), "a pointer to the llm's memory",
+                                        uri(SKILL).maybe(), "the skills to use",
+                                        uri(TOOL).maybe(), "the tools to use"), "an mtron interface to a large language model")),
+                uri(INST), lst(docWrap(instC(LLM_INST_TID.extend("chat").dom(MODEL_TID).rng(ALL.maybe()),
+                                lst(STR_TYPE),
+                                (lhs, inst) -> model(lhs.asRec()).chat(inst.arg(0).strValue())),
+                        "a model to chat with",  // dom
+                        "the models chat response", // rng
+                        Map.of(jnt(0), "the message to send the model"), // args
+                        "chat with the lhs model", // desc
+                        "*<ollama:qwen3:latest>+[response=>[to=>print(_)],think=>[to=>print(_)]].chat('what is a database query language?')"))));
+        docWrap(this, "large language model emerge from the metatron");
+        super.setup();
     }
     
     /*
@@ -151,8 +137,4 @@ public class llmInstSet extends AbstractInstSet {
             //   put(uri("card"), rec(model.get1().getModelInfo(), MObjFactory.of()));
         }};
      */
-
-    public Set<Inst> insts() {
-        return INSTS;
-    }
 }

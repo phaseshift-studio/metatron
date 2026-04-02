@@ -151,48 +151,7 @@ public class tbleSpace extends AbstractSpace<Connection> {
                     .constructor(instC(mInstSet.M_ISA_INST_TID.dom(ALL.maybe()).rng(TBLE_SPACE_TID),
                             lst(REC_TYPE),
                             (lhs, inst) -> tbleSpace.of(inst.arg(0).asRec().jvm(), inst.arg(0).vid())))
-                    .inst(instC(SQL_INST_TID.dom(TBLE_SPACE_TID).rng(REC_ROW_TID.maybeSome()), lst(STR_TYPE), (lhs, inst) -> {
-                        try {
-                            final Statement statement = lhs.<tbleSpace>as().sjvm().createStatement();
-                            final ResultSet result = statement.executeQuery(inst.arg(0).strValue());
-                            final ResultSetMetaData metadata = result.getMetaData();
-                            Obj objs = objs0();
-                            while (result.next()) {
-                                final Rec row = rec();
-                                for (int i = 1; i <= metadata.getColumnCount(); i++) {
-                                    final int sqlType = metadata.getColumnType(i);
-                                    final String columnName = metadata.getColumnName(i);
-                                    // Use typed getters based on SQL type to avoid database-specific objects
-                                    final Obj value = switch (sqlType) {
-                                        case Types.TINYINT, Types.SMALLINT, Types.INTEGER, Types.BIGINT -> {
-                                            final long val = result.getLong(i);
-                                            yield result.wasNull() ? NoObj.noobj() : jnt(val);
-                                        }
-                                        case Types.FLOAT, Types.REAL, Types.DOUBLE, Types.DECIMAL, Types.NUMERIC -> {
-                                            final double val = result.getDouble(i);
-                                            yield result.wasNull() ? NoObj.noobj() : real(val);
-                                        }
-                                        case Types.BOOLEAN, Types.BIT -> {
-                                            final boolean val = result.getBoolean(i);
-                                            yield result.wasNull() ? NoObj.noobj() : bool(val);
-                                        }
-                                        default -> {
-                                            // String types, dates, binary, etc.
-                                            final String val = result.getString(i);
-                                            yield val == null ? NoObj.noobj() : str(val);
-                                        }
-                                    };
-                                    row.at(uri(columnName), value, MUTABLE);
-                                }
-                                objs = objs.append(row);
-                            }
-                            return objs;
-
-                        } catch (final Exception e) {
-                            throw MTronException.of(e);
-                        }
-                    }))
-                    .create(TBLE_ISA_TYPES, TBLE_ISA_INSTS);
+                    .create();
 
     protected ObjSerializer<?> serializer;
     protected TableSchema schema;

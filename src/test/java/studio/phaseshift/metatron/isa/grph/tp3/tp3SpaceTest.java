@@ -42,30 +42,49 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
-/*
+/**
+ * Test suite for tp3Space demonstrating support for any TinkerPop3-compliant graph database.
+ *
+ * The tests use TinkerGraph with the "modern" dataset, but the same configuration pattern
+ * works with any TP3-enabled graph (JanusGraph, Neo4j, Neptune, etc.).
+ *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class tp3SpaceTest extends AbstractSpaceTest {
-    /**
-     *
-     * tp3::[pattern  => /g/#,
-     * route    => [</g/+/>=><>],
-     * native   => [factory  => mfactory::[=>],
-     * load     => modern]]@/sys/space/modern;
-     */
+
     public tp3SpaceTest() {
         super(() -> {
             BootLoader.loadInstSetProvider(M_ISA_TID);
             BootLoader.loadInstSetProvider(GRPH_ISA_TID);
             BootLoader.loadInstSetProvider(TP3_ISA_TID);
+
+            // Example: TinkerGraph with modern dataset (legacy format - still supported)
             return tp3Space.of(rec(
                     PATTERN, uri("/g/#"),
                     ROUTE, rec(
                             uri("/g/V"), uri("V"),
                             uri("/g/E"), uri("E"),
                             uri("/g/S"), uri(MODERN_SCHEMA_TID)),
-                    NATIVE, rec(uri("factory"), MObjFactory.single(),
-                            uri(LOAD), uri(MODERN.name().toLowerCase()))), f("/sys/space/test")); // GRATEFUL.name().toLowerCase()
+                    NATIVE, rec(
+                            uri("factory"), MObjFactory.single(),
+                            uri(LOAD), uri(MODERN.name().toLowerCase()))),
+                    f("/sys/space/test"));
+
+            /* Alternative: New-style configuration (explicitly using GraphFactory)
+            return tp3Space.of(rec(
+                    PATTERN, uri("/g/#"),
+                    ROUTE, rec(
+                            uri("/g/V"), uri("V"),
+                            uri("/g/E"), uri("E"),
+                            uri("/g/S"), uri(MODERN_SCHEMA_TID)),
+                    GRAPH, rec(
+                            uri("gremlin.graph"),
+                                str("org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph")),
+                    NATIVE, rec(
+                            uri("factory"), MObjFactory.single(),
+                            uri(LOAD), uri(MODERN.name().toLowerCase()))),
+                    f("/sys/space/test"));
+            */
         });
         BootLoader.loadInstSetProvider(GRPH_ISA_TID);
         BootLoader.loadInstSetProvider(TP3_ISA_TID);

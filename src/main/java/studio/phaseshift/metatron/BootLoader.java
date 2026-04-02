@@ -171,7 +171,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
             }
             final fURI SYS_VID = f("/sys");
             final Space sysSpace = memSpace.of(SYS_VID.extend("#"), null);
-            sysSpace.jvm().put(uri(QSTRING), lst(QCollection.subq(), QCollection.incrQ()));
+            sysSpace.jvm().put(uri(QSTRING), lst(QCollection.docQ(), QCollection.subq(), QCollection.incrQ()));
             ///  LOAD SYSTEM ENVIRONMENTAL VARIABLES
             System.getenv().entrySet().stream()
                     .map(kv -> new AbstractMap.SimpleEntry<>(SYS_VID.extend("env").extend(kv.getKey()), str(kv.getValue())))
@@ -182,8 +182,12 @@ public class BootLoader implements Rec, Feature.SelfClone {
             sysSpace.write(ROUTER.vid(), ROUTER);
             Router.global().addSpace(sysSpace.self(sysSpace.jvm(), sysSpace.tid(), SYS_VID).as());
             /// LOAD DEFAULT INSTRUCTION SET (/m and /m/mach)
-            Router.writeToSpace(docWrap(new mInstSet(), "the core instruction set of metatron featuring the base types and an algebra for their manipulation"));
-            Router.writeToSpace(docWrap(new machInstSet(), "the reflective instruction set of metatron featuring process, monad, and code introspection"));
+            final InstSet m = new mInstSet();
+            m.setup();
+            Router.writeToSpace(m);
+            final InstSet mach = new machInstSet();
+            mach.setup();
+            Router.writeToSpace(mach);
             /// WRITE THE BOOT ARGS TO THE ROUTER STACK
             Router.writeToSpace(f("boot/args"), args);
             ///  ADD INCRQ PROCESSOR TO SYS FOR AUTO INCREMENTING FAIL STACK
@@ -294,9 +298,10 @@ public class BootLoader implements Rec, Feature.SelfClone {
     }
 
     public static Stream<InstSet> importInstSet(final fURI tid, final fURI prefix) {
-        if (null != prefix) {
+        if (null != prefix)
             Router.global().registerPrefix(prefix, tid);
-        }
-        return BootLoader.loadInstSetProvider(tid).map(ServiceLoader.Provider::get);
+        return BootLoader.loadInstSetProvider(tid)
+                .map(ServiceLoader.Provider::get)
+                .peek(InstSet::setup);
     }
 }

@@ -232,7 +232,7 @@ bin/metatron</code></pre>
                     <span class="text-light">/m/</span>tble
                 </h1>
                 <p style="line-height:0.1rem;" class="subtitle text-light">instruction set reference</p>
-                
+                <p class="text-light mt-3 mb-0" style="line-height:2.5em; max-width: 1000px; margin-left: auto; margin-right: auto;">&quot;the columns, rows, and entries of the table join the metatron&quot;</p>
             </div>
         </div>
             
@@ -240,7 +240,7 @@ bin/metatron</code></pre>
             <div class="d-flex justify-content-center gap-2 flex-wrap">
                 <a href="#types" class="btn btn-outline-primary">Types <span class="badge bg-secondary">3</span></a>
                 <a href="#instructions" class="btn btn-outline-primary">Insts <span class="badge bg-secondary">1</span></a>
-                <a href="#rewrites" class="btn btn-outline-primary">Rewrites <span class="badge bg-secondary">3</span></a>
+                <button class="btn btn-outline-secondary" disabled>Rewrites <span class="badge bg-dark">0</span></button>
                 <a href="#spaces" class="btn btn-outline-primary">Spaces <span class="badge bg-secondary">1</span></a>
                 <button class="btn btn-outline-secondary" disabled>Consts <span class="badge bg-dark">0</span></button>
             </div>
@@ -284,24 +284,6 @@ bin/metatron</code></pre>
                 </div>
             </div>
                     
-            <div class="mb-3">
-                <h6 class="text-primary mb-2">Rewrites</h6>
-                <div class="index-columns-rewrites">
-                    
-                <a href="#rewrite-sql_native_count" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
-                    <span class="code">sql_native_count</span>
-                    <span class="badge bg-warning text-dark">R</span>
-                </a>
-                <a href="#rewrite-sql_native_mean" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
-                    <span class="code">sql_native_mean</span>
-                    <span class="badge bg-warning text-dark">R</span>
-                </a>
-                <a href="#rewrite-sql_native_sum" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
-                    <span class="code">sql_native_sum</span>
-                    <span class="badge bg-warning text-dark">R</span>
-                </a>
-                </div>
-            </div>
                     
             <div class="mb-3">
                 <h6 class="text-primary mb-2">Spaces</h6>
@@ -336,6 +318,9 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">lst::T@/m/tble/lrow</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">a table row indexed by column number</p>
+                    </div>
                     
                 </div>
                 <div class="card mb-3" id="type-rrow">
@@ -351,6 +336,9 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">rec::T[isa([uri::T=&gt;#::T])]@/m/tble/rrow</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">a table row indexed by column name</p>
+                    </div>
                     
                 </div>
                 <div class="card mb-3" id="type-table">
@@ -366,6 +354,9 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">lst{*}::T[isa(lrow{*}::T)]@/m/tble/table</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">a stream of equally sized rows</p>
+                    </div>
                     
                 </div>
         </div>
@@ -390,57 +381,6 @@ bin/metatron</code></pre>
                 </div>
         </div>
             
-        <div class="container-xxl mb-4" id="rewrites">
-            <h3 class="text-primary mb-3">
-                Rewrites <span class="badge bg-warning text-dark">3</span>
-            </h3>
-            
-                <div class="card mb-3" id="rewrite-sql_native_count">
-                    <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span>
-                            <span class="code text-warning fw-bold">sql_native_count</span>
-                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-code{" class="code text-success">/m/code{?}</a></span></span>
-                        </span>
-                        <small class="text-muted code">/m/tble/inst/rewrite/sql_native_count?/m/code{?}&lt;=#{?}</small>
-                    </div>
-                    
-                    <div class="card-body p-2">
-                        <pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/sql_native_count?code{?}&lt;=#{?}(code::T){&lt;j&gt;}</code></pre>
-                    </div>
-                    
-                    
-                </div>
-                <div class="card mb-3" id="rewrite-sql_native_mean">
-                    <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span>
-                            <span class="code text-warning fw-bold">sql_native_mean</span>
-                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-code{" class="code text-success">/m/code{?}</a></span></span>
-                        </span>
-                        <small class="text-muted code">/m/tble/inst/rewrite/sql_native_mean?/m/code{?}&lt;=#{?}</small>
-                    </div>
-                    
-                    <div class="card-body p-2">
-                        <pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/sql_native_mean?code{?}&lt;=#{?}(code::T){&lt;j&gt;}</code></pre>
-                    </div>
-                    
-                    
-                </div>
-                <div class="card mb-3" id="rewrite-sql_native_sum">
-                    <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span>
-                            <span class="code text-warning fw-bold">sql_native_sum</span>
-                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-code{" class="code text-success">/m/code{?}</a></span></span>
-                        </span>
-                        <small class="text-muted code">/m/tble/inst/rewrite/sql_native_sum?/m/code{?}&lt;=#{?}</small>
-                    </div>
-                    
-                    <div class="card-body p-2">
-                        <pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/sql_native_sum?code{?}&lt;=#{?}(code::T){&lt;j&gt;}</code></pre>
-                    </div>
-                    
-                    
-                </div>
-        </div>
             
         <div class="container-xxl mb-4" id="spaces">
             <h3 class="text-primary mb-3">
@@ -462,6 +402,9 @@ bin/metatron</code></pre>
  {?}table=&gt;lst::T])][inst?rng=tble&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/tble/space/tble</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">the metatron realization of a relational database</p>
+                    </div>
                     
                 </div>
         </div>
@@ -470,7 +413,7 @@ bin/metatron</code></pre>
         <div class="container-xxl py-3 text-center">
             <hr class="border-secondary">
             <small class="text-muted">
-                generated by metatron instset doc generator on 2026-04-02 01:57:53<br>
+                generated by metatron instset doc generator on 2026-04-02 16:28:06<br>
                 © PhaseShift Studio, LLC
             </small>
         </div>

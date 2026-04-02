@@ -21,7 +21,6 @@ package studio.phaseshift.metatron.isa.web;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
-import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
@@ -29,14 +28,9 @@ import studio.phaseshift.metatron.isa.web.parser.ObjHTMLSerializer;
 import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.isa.web.parser.ObjXMLSerializer;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
@@ -52,6 +46,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.space.http.httpSpace.HTTP_SPACE_TYPE;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -92,61 +87,53 @@ public class webInstSet extends AbstractInstSet {
             .vid(CSS_TID).create();
 
     public webInstSet() {
-        super(WEB_ISA_TID, WEB_ISA_TID);
+        super(mutableMap(uri(PATTERN), uri(WEB_ISA_TID.extend(ALL))), WEB_ISA_TID, WEB_ISA_TID);
     }
 
     @Override
-    public Set<Obj> consts() {
-        return new HashSet<>(List.of(
-                new ObjXMLSerializer(),
-                new ObjHTMLSerializer(),
-                new ObjJSONSerializer()));
-    }
-
-    @Override
-    public Set<Type> types() {
-        return Stream.of(
-                HTTP_SPACE_TYPE,
-                XML_TYPE,
-                HTML_TYPE,
-                JSON_TYPE,
-                CSS_TYPE).collect(Collectors.toSet());
-    }
-
-    @Override
-    public Set<Inst> insts() {
-        return Set.of(
-                instC(AS_INST_TID.dom(STR_TID).rng(XML_TID), lst(T(XML_TID)), (lhs, inst) -> ObjXMLSerializer.parse(lhs.asStr().strValue())),
-                instC(AS_INST_TID.dom(STR_TID).rng(HTML_TID), lst(T(HTML_TID)), (lhs, inst) -> ObjHTMLSerializer.parse(lhs.asStr().strValue())),
-                instC(AS_INST_TID.dom(STR_TID).rng(JSON_TID), lst(T(JSON_TID)), (lhs, inst) -> ObjSimpleJSONSerializer.parse(lhs.asStr().strValue())),
-                instC(INST_TID.extend("doc").dom(STR_TID).rng(STR_TID), lst(), (lhs, inst) -> {
-                    LOG.trace("processing doc request: %s", lhs);
-                    try {
-                        final String source = lhs.strValue();
-                        final Obj result = mParser.parse(source).apply();
-                        final String resultString = result.isObjs() ?
-                                result.stream()
-                                        .map(Obj::toCleanString)
-                                        //.map(Highlighter::unformat)
-                                        .reduce((a, b) -> a + "%%%" + b)
-                                        .orElse("") :
-                                result.toCleanString();
-                        //Highlighter.unformat(result.toString());
-                        return str(resultString);
-                    } catch (final Exception e) {
-                        return str(fail(e).toString());
-                    }
-                }),
-                instC(INST_TID.extend("doc_json").dom(STR_TID).rng(STR_TID), lst(), (lhs, inst) -> {
-                    LOG.trace("processing pretty eval request: %s", lhs);
-                    try {
-                        final String source = lhs.strValue();
-                        final Obj result = mParser.parse(source).apply();
-                        return str(ObjSimpleJSONSerializer.single().write(result).toString());
-                    } catch (final Exception e) {
-                        return str(fail(e).toString());
-                    }
-                }));
-
+    public void setup() {
+        this.jvm().putAll(mutableMap(
+                uri(PATTERN), uri(WEB_ISA_TID.extend(ALL)),
+                uri(CONST), lst(ObjXMLSerializer.single(), ObjHTMLSerializer.single(), ObjJSONSerializer.single()),
+                uri(TYPE), lst(
+                        XML_TYPE,
+                        docWrap(HTML_TYPE, "a rec encoding of an html document"),
+                        docWrap(JSON_TYPE, "a rec encoding of a json document"),
+                        CSS_TYPE,
+                        HTTP_SPACE_TYPE),
+                uri(INST), lst(
+                        instC(AS_INST_TID.dom(STR_TID).rng(XML_TID), lst(T(XML_TID)), (lhs, inst) -> ObjXMLSerializer.parse(lhs.asStr().strValue())),
+                        instC(AS_INST_TID.dom(STR_TID).rng(HTML_TID), lst(T(HTML_TID)), (lhs, inst) -> ObjHTMLSerializer.parse(lhs.asStr().strValue())),
+                        instC(AS_INST_TID.dom(STR_TID).rng(JSON_TID), lst(T(JSON_TID)), (lhs, inst) -> ObjSimpleJSONSerializer.parse(lhs.asStr().strValue())),
+                        instC(INST_TID.extend("doc").dom(STR_TID).rng(STR_TID), lst(), (lhs, inst) -> {
+                            try {
+                                final String source = lhs.strValue();
+                                final Obj result = mParser.parse(source).apply();
+                                final String resultString = result.isObjs() ?
+                                        result.stream()
+                                                .map(Obj::toCleanString)
+                                                //.map(Highlighter::unformat)
+                                                .reduce((a, b) -> a + "%%%" + b)
+                                                .orElse("") :
+                                        result.toCleanString();
+                                //Highlighter.unformat(result.toString());
+                                return str(resultString);
+                            } catch (final Exception e) {
+                                return str(fail(e).toString());
+                            }
+                        }),
+                        instC(INST_TID.extend("doc_json").dom(STR_TID).rng(STR_TID), lst(), (lhs, inst) -> {
+                            try {
+                                final String source = lhs.strValue();
+                                final Obj result = mParser.parse(source).apply();
+                                return str(ObjSimpleJSONSerializer.single().write(result).toString());
+                            } catch (final Exception e) {
+                                return str(fail(e).toString());
+                            }
+                        }))));
+        docWrap(this,
+                "the world of the web within the metatron",
+                "/usr/idea -> <http://metatron.phaseshift.studio/html/head/meta>");
+        super.setup();
     }
 }

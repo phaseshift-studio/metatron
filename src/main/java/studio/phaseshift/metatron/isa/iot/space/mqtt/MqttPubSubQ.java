@@ -32,6 +32,7 @@ import java.util.HashMap;
 import java.util.Optional;
 
 import static studio.phaseshift.metatron.Tokens.SUB;
+import static studio.phaseshift.metatron.Tokens.SUBQ;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.iot.space.mqtt.mqttSpace.MQTT_SPACE_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -67,7 +68,7 @@ public class MqttPubSubQ extends BaseQ {
         @Override
         public Optional<Obj> preWrite(final fURI vid, final Obj obj) {
             LOG.trace("evaluating {{y}}prewrite{{/y}}: %s => %s", obj, vid);
-            if (vid.hasQ(SUB)) {
+            if (vid.hasQ(SUBQ)) {
                 if (obj.isNoObj()) {
                     space.sjvm().toAsync()
                             .unsubscribeWith()

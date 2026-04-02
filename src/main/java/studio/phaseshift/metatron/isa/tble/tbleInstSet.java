@@ -22,26 +22,28 @@ import studio.phaseshift.metatron.algebra.rewrite.CommonRewrites;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.sql.*;
+import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs0;
+import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.tble.tbleSpace.TABL_SPACE_TYPE;
+import static studio.phaseshift.metatron.isa.tble.tbleSpace.*;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
@@ -57,41 +59,93 @@ public class tbleInstSet extends AbstractInstSet {
     public static final fURI REC_ROW_TID = TBLE_ISA_TID.extend("rrow");
     public static final fURI TABLE_TID = TBLE_ISA_TID.extend("table");
 
-    static final Set<Inst> TBLE_ISA_INSTS = new LinkedHashSet<>();
-    static final Set<Type> TBLE_ISA_TYPES = new LinkedHashSet<>();
 
     public static final Type LST_ROW_TYPE = Type.Builder.build()
             .tid(LST_TID)
             .vid(LST_ROW_TID)
-            .create(TBLE_ISA_TYPES, TBLE_ISA_INSTS);
+            .create();
 
     public static final Type REC_ROW_TYPE = Type.Builder.build()
             .tid(REC_TID)
             .vid(REC_ROW_TID)
             .isaPredicate(rec(URI_TYPE, T(ALL)))
-            .create(TBLE_ISA_TYPES, TBLE_ISA_INSTS);
+            .create();
 
     public static final Type TABLE_TYPE = Type.Builder.build()
-            .tid(LST_TID.maybeSome())
+            .tid(LST_TID.maybeSome()) // TODO: stream not lst
             .vid(TABLE_TID)
             .predicate(isa_(T(LST_ROW_TID.maybeSome())).tryToInst())
-            .create(TBLE_ISA_TYPES, TBLE_ISA_INSTS);
+            .create();
 
 
     public tbleInstSet() {
-        super(mutableMap(
+        super(mutableMap(uri(PATTERN), uri(TBLE_ISA_TID.extend(ALL))), TBLE_ISA_TID, TBLE_ISA_TID);
+    }
+
+    @Override
+    public void setup() {
+        this.jvm().putAll(mutableMap(
                 uri(PATTERN), uri(TBLE_ISA_TID.extend(ALL)),
                 uri(TYPE), lst(
-                        LST_ROW_TYPE,
-                        REC_ROW_TYPE,
-                        TABLE_TYPE,
-                        TABL_SPACE_TYPE),
+                        docWrap(LST_ROW_TYPE, "a table row indexed by column number"),
+                        docWrap(REC_ROW_TYPE, "a table row indexed by column name"),
+                        docWrap(TABLE_TYPE, "a stream of equally sized rows"),
+                        docWrap(TABL_SPACE_TYPE, "the metatron realization of a relational database")),
                 uri(INST), lst(
-                        instC(AS_INST_TID.dom(LST_ROW_TID).rng(REC_ROW_TID), lst(REC_ROW_TYPE), (lhs, inst) -> lhs.asRec().at(uri(TABLE))),
-                        instC(AS_INST_TID.dom(REC_ROW_TID).rng(LST_ROW_TID), lst(LST_ROW_TYPE), (lhs, inst) -> lst(lhs.asRec().elements().map(Rel::second).toList(), LST_ROW_TID, null))),
-                uri(REWRITE), lst(List.of(
+                        docWrap(instC(AS_INST_TID.dom(LST_ROW_TID).rng(REC_ROW_TID), lst(REC_ROW_TYPE), (lhs, inst) -> lhs.asRec().at(uri(TABLE))),
+                                "a table row indexed by column number",
+                                "a table row indexed by column name",
+                                Map.of(),
+                                "maps a lst row to a rec row"),
+                        docWrap(instC(AS_INST_TID.dom(REC_ROW_TID).rng(LST_ROW_TID), lst(LST_ROW_TYPE), (lhs, inst) -> lst(lhs.asRec().elements().map(Rel::second).toList(), LST_ROW_TID, null)),
+                                "a table row indexed by column name",
+                                "a table row indexed by column number",
+                                Map.of(),
+                                "maps a rec row to a lst row"),
+                        instC(SQL_INST_TID.dom(TBLE_SPACE_TID).rng(REC_ROW_TID.maybeSome()), lst(STR_TYPE), (lhs, inst) -> {
+                            try {
+                                final Statement statement = lhs.<tbleSpace>as().sjvm().createStatement();
+                                final ResultSet result = statement.executeQuery(inst.arg(0).strValue());
+                                final ResultSetMetaData metadata = result.getMetaData();
+                                Obj objs = objs0();
+                                while (result.next()) {
+                                    final Rec row = rec();
+                                    for (int i = 1; i <= metadata.getColumnCount(); i++) {
+                                        final int sqlType = metadata.getColumnType(i);
+                                        final String columnName = metadata.getColumnName(i);
+                                        // Use typed getters based on SQL type to avoid database-specific objects
+                                        final Obj value = switch (sqlType) {
+                                            case Types.TINYINT, Types.SMALLINT, Types.INTEGER, Types.BIGINT -> {
+                                                final long val = result.getLong(i);
+                                                yield result.wasNull() ? NoObj.noobj() : jnt(val);
+                                            }
+                                            case Types.FLOAT, Types.REAL, Types.DOUBLE, Types.DECIMAL, Types.NUMERIC -> {
+                                                final double val = result.getDouble(i);
+                                                yield result.wasNull() ? NoObj.noobj() : real(val);
+                                            }
+                                            case Types.BOOLEAN, Types.BIT -> {
+                                                final boolean val = result.getBoolean(i);
+                                                yield result.wasNull() ? NoObj.noobj() : bool(val);
+                                            }
+                                            default -> {
+                                                // String types, dates, binary, etc.
+                                                final String val = result.getString(i);
+                                                yield val == null ? NoObj.noobj() : str(val);
+                                            }
+                                        };
+                                        row.at(uri(columnName), value, MUTABLE);
+                                    }
+                                    objs = objs.append(row);
+                                }
+                                return objs;
+
+                            } catch (final Exception e) {
+                                throw MTronException.of(e);
+                            }
+                        })),
+                uri(REWRITE), lst(
                         // Optimize: *table.count() → SELECT COUNT(*)
-                        CommonRewrites.countRewrite(
+                        docWrap(CommonRewrites.countRewrite(
                                 tbleSpace.class,
                                 TBLE_ISA_REWRITE_TID.extend("sql_native_count"),
                                 (space, furi) -> {
@@ -103,10 +157,10 @@ public class tbleInstSet extends AbstractInstSet {
                                         throw MTronException.of(e);
                                     }
                                 }
-                        ),
+                        ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages native SELECT COUNT(*) to count rows in a table"),
 
                         // Optimize: *table.sum() → SELECT SUM(*)
-                        CommonRewrites.sumRewrite(
+                        docWrap(CommonRewrites.sumRewrite(
                                 tbleSpace.class,
                                 TBLE_ISA_REWRITE_TID.extend("sql_native_sum"),
                                 (space, furi) -> {
@@ -118,9 +172,9 @@ public class tbleInstSet extends AbstractInstSet {
                                         throw MTronException.of(e);
                                     }
                                 }
-                        ),
+                        ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages native SELECT SUM(*) to sum entries in a table column"),
                         // Optimize: *table.mean() → SELECT AVG(*)
-                        CommonRewrites.meanRewrite(
+                        docWrap(CommonRewrites.meanRewrite(
                                 tbleSpace.class,
                                 TBLE_ISA_REWRITE_TID.extend("sql_native_mean"),
                                 (space, furi) -> {
@@ -132,7 +186,11 @@ public class tbleInstSet extends AbstractInstSet {
                                         throw MTronException.of(e);
                                     }
                                 }
-                        )
-                ))), TBLE_ISA_TID, TBLE_ISA_TID);
+                        ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages native SELECT AVG(*) to average entries in a table column")
+                )));
+        docWrap(this,
+                "the columns, rows, and entries of the table join the metatron",
+                "*acme:customer.where[person=>[name=>_=>age=>?>29]]");
+        super.setup();
     }
 }

@@ -183,8 +183,8 @@ public interface Q extends Rec {
 
         public static boolean qEquals(final Q q, final Object other) {
             return other instanceof Space &&
-                    ((Q) other).tid().equals(q.tid()) &&
-                    (q.vid() != null && ((Q) other).vid() != null && ((Q) other).vid().equals(q.vid()));
+                    ((Obj) other).tid().equals(q.tid()) &&
+                    (q.vid() != null && ((Obj) other).vid() != null && ((Obj) other).vid().equals(q.vid()));
         }
 
         public static Optional<Obj> processPreWrite(final Lst qs, final fURI vid, final Obj obj) {

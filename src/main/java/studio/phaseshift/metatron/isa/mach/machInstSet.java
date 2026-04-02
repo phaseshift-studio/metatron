@@ -52,7 +52,6 @@ import java.util.stream.Stream;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.furi.q.QCollection.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
@@ -79,6 +78,7 @@ import static studio.phaseshift.metatron.isa.mach.type.net.protocol.MServerProto
 import static studio.phaseshift.metatron.isa.mach.type.net.protocol.McpProtocolHandler.MACH_SERVER_MCP_PROTOCOL_TID;
 import static studio.phaseshift.metatron.isa.mach.type.net.protocol.NativeMetatronProtocolHandler.MACH_SERVER_NATIVE_PROTOCOL_TID;
 import static studio.phaseshift.metatron.isa.mach.type.ui.console.Console.CONSOLE_TYPE;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -92,6 +92,9 @@ public class machInstSet extends AbstractInstSet {
     public static final fURI MACH_MACHINE_TID = MACH_ISA_TID.extend("machine");
     public static final fURI MACH_MONAD_TID = MACH_ISA_TID.extend("monad");
     public static final fURI MACH_INST_TID = MACH_ISA_TID.extend("inst");
+    public static final fURI MACH_VIRTUAL_THREAD_TID = MACH_ISA_TID.extend("thread").extend("virtual");
+    public static final fURI MACH_THREAD_TID = MACH_ISA_TID.extend("thread").extend("core");
+    public static final fURI MACH_CORE_THREAD_TID = MACH_ISA_TID.extend("thread").extend("core");
     public static final fURI DROP_TID = MACH_INST_TID.extend("drop");
     public static final fURI INJECT_TID = MACH_INST_TID.extend("inject"); // inj ?
     public static final fURI RING_ZERO_TID = MACH_INST_TID.extend("ring").extend("const").extend("zero");
@@ -110,10 +113,10 @@ public class machInstSet extends AbstractInstSet {
     public static final Rec SPACE_CONFIG = rec(uri(Tokens.PATTERN), T(URI_TID));
 
 
-    public static final Type SPACE_TYPE = Type.Builder.build()
+    /*public static final Type SPACE_TYPE = Type.Builder.build()
             .tid(REC_TID)
             .vid(SPACE_TID)
-            .create();
+            .create();*/
     public static final Type FACTORY_TYPE = Type.Builder.build()
             .tid(REC_TID)
             .vid(FACTORY_TID)
@@ -162,10 +165,6 @@ public class machInstSet extends AbstractInstSet {
             .isaPredicate(rec(uri(f(TOOL).maybe()), T(M_ISA_INST_TID.maybeSome())))
             .create();
     public static final Type MACH_MONAD_TYPE = Type.Builder.build().tid(LST_TID).vid(MACH_MONAD_TID).create();
-
-    public static final fURI MACH_THREAD_TID = MACH_ISA_TID.extend("thread").extend("core");
-    public static final fURI MACH_CORE_THREAD_TID = MACH_ISA_TID.extend("thread").extend("core");
-    public static final fURI MACH_VIRTUAL_THREAD_TID = MACH_ISA_TID.extend("thread").extend("virtual");
     public static final Type MACH_CORE_THREAD_TYPE = Type.Builder.build()
             .tid(MACH_THREAD_TID)
             .vid(MACH_CORE_THREAD_TID)
@@ -174,62 +173,160 @@ public class machInstSet extends AbstractInstSet {
                             uri(STATE).maybe().asUri(), is_(or_(eq_(uri(STOPPED)), eq_(uri(RUNNING)), eq_(uri(PAUSED)))),
                             uri(RESULT).maybe(), T(ALL).maybeSome()))
             .constructor(instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(MACH_CORE_THREAD_TID), lst(T(REC_TID)), (lhs, inst) -> new CoreThread(lhs.asRec().jvm(), MACH_THREAD_TID, inst.arg(0).vid()))) // TODO: need to handle vid
-            .inst(MACH_INST_TID.extend("run").dom(MACH_CORE_THREAD_TID).rng(MACH_CORE_THREAD_TID), lst(), (lhs, inst) -> {
-                ((CoreThread) lhs).run();
-                return lhs;
-            })
-            .inst(MACH_INST_TID.extend("stop").dom(MACH_CORE_THREAD_TID).rng(MACH_CORE_THREAD_TID), lst(), (lhs, inst) -> {
-                ((CoreThread) lhs).stop();
-                return lhs;
-            })
-            .inst(MACH_INST_TID.extend("pause").dom(MACH_CORE_THREAD_TID).rng(MACH_CORE_THREAD_TID), lst(), (lhs, inst) -> {
-                ((CoreThread) lhs).pause();
-                return lhs;
-            })
-            .create(TYPES, INSTS);
+            .create();
 
 
     public machInstSet() {
-        super(MACH_ISA_TID, MACH_ISA_TID);
+        super(mutableMap(uri(PATTERN), uri(MACH_ISA_TID.extend(ALL))), MACH_ISA_TID, MACH_ISA_TID);
         // Router.global().registerPrefix(f("mach"), MACH_ISA_TID);
     }
 
     @Override
-    public Set<Type> types() {
-        TYPES.addAll(new LinkedHashSet<>(List.of(
-                ROUTER_TYPE,
-                SPACE_TYPE,
-                CONSOLE_TYPE,
-                FS_SPACE_TYPE,
-                SERIAL_SPACE_TYPE,
-                FILE_TYPE,
-                DIR_TYPE,
-                IMAGE_FILE_TYPE,
-                FACTORY_TYPE,
-                M_FACTORY_TYPE,
-                /// ////////////////////////////
-                /// Q PROCESSORS ///////////////
-                /// ////////////////////////////
-                INCRQ_TYPE,
-                CONSTQ_TYPE,
-                DOCQ_TYPE,
-                DOCS_TYPE,
-                SUB_TYPE,
-                SUBQ_TYPE,
-                TYPEQ_TYPE,
-                /// /////////////////////
-                SERVER_TYPE,
-                SERVER_PROTOCOL_TYPE,
-                NATIVE_SERVER_PROTOCOL_TYPE,
-                MCP_SERVER_PROTOCOL_TYPE,
-                MCP_SERVER_TYPE,
-                /// /////////////////////
-                MACH_CORE_THREAD_TYPE,
-                /////////////////////
-                MACH_MONAD_TYPE,
-                MACH_MACHINE_TYPE,
-                MACH_SWARM_MACHINE_TYPE)));
-        return TYPES;
+    public void setup() {
+        this.jvm().putAll(mutableMap(
+                uri(PATTERN), uri(MACH_ISA_TID.extend(ALL)),
+                uri(TYPE), lst(
+                        ROUTER_TYPE,
+                        SPACE_TYPE,
+                        CONSOLE_TYPE,
+                        FS_SPACE_TYPE,
+                        SERIAL_SPACE_TYPE,
+                        FILE_TYPE,
+                        DIR_TYPE,
+                        IMAGE_FILE_TYPE,
+                        FACTORY_TYPE,
+                        M_FACTORY_TYPE,
+                        /// ////////////////////////////
+                        /// Q PROCESSORS ///////////////
+                        /// ////////////////////////////
+                        INCRQ_TYPE,
+                        CONSTQ_TYPE,
+                        DOCQ_TYPE,
+                        DOCS_TYPE,
+                        SUB_TYPE,
+                        SUBQ_TYPE,
+                        TYPEQ_TYPE,
+                        /// /////////////////////
+                        SERVER_TYPE,
+                        SERVER_PROTOCOL_TYPE,
+                        NATIVE_SERVER_PROTOCOL_TYPE,
+                        MCP_SERVER_PROTOCOL_TYPE,
+                        MCP_SERVER_TYPE,
+                        /// /////////////////////
+                        MACH_CORE_THREAD_TYPE,
+                        /////////////////////
+                        MACH_MONAD_TYPE,
+                        MACH_MACHINE_TYPE,
+                        MACH_SWARM_MACHINE_TYPE),
+                uri(INST), lst(Stream.concat(Router.RouterType.insts().stream(), Stream.of(instC(LIFT_INST_TID.dom(ALL).rng(MACH_MONAD_TID).q(MONAD, "^"), lst(T(ALL.maybe())), (lhs, inst) -> {
+                            final Monad monad = lhs.asMonad();
+                            if (!inst.arg(0).isNoObj())
+                                return inst.arg(0).apply(monad);
+                            else
+                                return monad;
+                        }),
+                        instC(REWRITE_INST_TID.dom(ALL.maybe()).rng(REC_TID), lst(URI_TYPE), (lhs, inst) -> rec(
+                                uri(SHORT), uri(Router.global().redirect(inst.arg(0).uriValue(), false)),
+                                uri(LONG), uri(Router.global().redirect(inst.arg(0).uriValue(), true)))),
+                        instC(MACH_INST_TID.extend("close").dom(ROUTER_TID).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
+                            if (lhs instanceof Router)
+                                return Stream.of(noobj()).peek(o -> System.exit(0)).iterator().next();
+                            CommonUtil.close(lhs);
+                            return noobj();
+                        }),
+                        instC(MACH_INST_TID.extend("nano").dom(ALL.maybe()).rng(ALL.maybe()), lst(), (lhs, inst) -> {
+                            try {
+                                final File file = Editor.createObjFile(lhs);
+                                Editor.of(Console.LOCAL_INSTANCE, file);
+                                return mParser.parse(Files.readString(file.toPath()).trim());
+                            } catch (final IOException e) {
+                                throw MTronException.of(e);
+                            }
+                        }),
+                        docWrap(instC(MACH_INST_TID.extend("less").dom(STR_TID).rng(NOOBJ_TID.zero()), lst(isa_(T(INT_TID)).else_(jnt(10))), (lhs, inst) -> {
+                            Scanner scanner = new Scanner(System.in);
+                            final int pageSize = inst.arg(0).orElse(jnt(100)).intValue().intValue();
+                            final AtomicInteger page = new AtomicInteger(0);
+                            final AtomicInteger counter = new AtomicInteger(0);
+                            Arrays.stream(lhs.strValue().split("\n")).forEach(line -> {
+                                if (counter.getAndIncrement() < pageSize) {
+                                    LOG.none(line + "\n");
+                                } else {
+                                    LOG.none("{{g}}<{{m}}page %s{{g}}>{{X}}\n", page.incrementAndGet());
+                                    scanner.nextLine();
+                                    LOG.none("{{^2&-X-&v1}}");
+                                    counter.set(0);
+                                }
+                            });
+                            return noobj();
+                        }), "an str to page", "noobj terminal", Map.of(jnt(0), "number of lines per page"), "an f(x)->0 terminal page through the lines of an str"),
+                        /// /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                        instC(RSHIFT_INST_TID.dom(FILE_TID).rng(FILE_TID.maybeSome()), lst(isa_(URI_TYPE).else_(uri("#"))), (lhs, inst) -> {
+                            final File file = fsSpace.resolveFile(lhs);
+                            if (file.isDirectory()) {
+                                if (f(file.getName()).test(inst.arg(0).orElse(uri("#")).uriValue())) { // TODO: need to recurse on name if it has path segments
+                                    if (null == file.listFiles()) return noobj();
+                                    final fsSpace space = Router.global().getSpace(lhs.uriValue());
+                                    return objs(Arrays.stream(Objects.requireNonNull(file.listFiles()))
+                                            //.peek(ff -> LOG.info("reading file %s", f(f(ff.getName()).name())))
+                                            .map(ff -> makeFile(ff.toPath()))
+                                            .map(ff -> uri(space.redirect(ff.uriValue().noQ(), true), ff.uriValue().isBranch() ? DIR_TID : FILE_TID)));
+                                }
+                            }
+                            return noobj();
+                        }),
+                        instC(AS_INST_TID.dom(URI_TID).rng(FILE_TID), lst(T(FILE_TID)), (lhs, inst) -> makeFile(Path.of(lhs.uriValue().toString()))),
+                        instC(AS_INST_TID.dom(BYTES_TID).rng(IMAGE_TID), lst(T(IMAGE_TID), else_(real(1.0d))),
+                                (lhs, inst) -> str(ImageUtil.convertToAscii(lhs.bytesValue(), inst.arg(1).realValue())).tid(IMAGE_TID)),
+                        instC(AS_INST_TID.dom(URI_TID).rng(FILE_TID), lst(T(FILE_TID)), (lhs, inst) -> makeFile(Path.of(lhs.uriValue().toString())).vid(lhs.vid())),
+                        instC(AS_INST_TID.dom(FILE_TID).rng(BYTES_TID), lst(T(BYTES_TID)), (lhs, inst) -> {
+                            try {
+                                final File file = fsSpace.resolveFile(lhs);
+                                LOG.debug("translating file to bytes: %s", file);
+                                final byte[] data;
+                                try (final FileInputStream fis = new FileInputStream(file)) {
+                                    data = fis.readAllBytes();
+                                } catch (final IOException e) {
+                                    throw MTronException.of(e);
+                                }
+                                return bytes(ByteBuffer.wrap(data));
+                            } catch (final Exception e) {
+                                throw MTronException.of(e);
+                            }
+                        }),
+                        instC(RING_ZERO_TID.dom(A).rng(A), lst(), (lhs, inst) -> ((PlusMonoid.O<?>) lhs).zero()),
+                        instC(RING_ONE_TID.dom(A).rng(A), lst(), (lhs, inst) -> ((MultMonoid.O<?>) lhs).one()),
+                        // instC(RING_BINARY.dom(A).rng(ALL.dom(A).rng(A)), lst(), (lhs, inst) -> instB(mtronInstSet.INST_TID.extend(inst.tid().name()), lst(lhs.type())).resolve(lhs)),
+                        //instC(RING_BINARY.dom(A).rng(ALL.dom(A).rng(A)), lst(T(A)), (lhs, inst) -> instB(mtronInstSet.INST_TID.extend(inst.tid().name()), inst.args()).apply(lhs)),
+                        instC(WHICH_INST_TID.dom(ALL).rng(A), lst(URI_TYPE), (lhs, inst) -> {
+                            if (inst.arg(0).uriValue().big().equals(SPACE_TID))
+                                return null == lhs.vid() ? noobjSpace.single() : Router.global().getSpace(lhs.vid());
+                            else
+                                throw MTronException.of("unsupported which %s for %s", inst.arg(0), lhs);
+                        }),
+                        instC(INJECT_TID.dom(ALL).rng(ALL), lst(T(INT_TID), T(ALL)), (lhs, inst) -> {
+                            if (lhs.jvm() instanceof Tuple)
+                                return lhs.jvm(lhs.<Tuple>jvmAs().inject(inst.arg(0).intValue().intValue(), inst.arg(1)));
+                            else if (inst.arg(0).intValue() == 0)
+                                return lhs.jvm(inst.arg(1).jvm());
+                            else
+                                throw MTronException.of("injection larger than tuple: 1 < %d", inst.arg(0).intValue().intValue());
+                        }),
+                        instC(MACH_INST_TID.extend("run").dom(MACH_CORE_THREAD_TID).rng(MACH_CORE_THREAD_TID), lst(), (lhs, inst) -> {
+                            ((CoreThread) lhs).run();
+                            return lhs;
+                        }),
+                        instC(MACH_INST_TID.extend("stop").dom(MACH_CORE_THREAD_TID).rng(MACH_CORE_THREAD_TID), lst(), (lhs, inst) -> {
+                            ((CoreThread) lhs).stop();
+                            return lhs;
+                        }),
+                        instC(MACH_INST_TID.extend("pause").dom(MACH_CORE_THREAD_TID).rng(MACH_CORE_THREAD_TID), lst(), (lhs, inst) -> {
+                            ((CoreThread) lhs).pause();
+                            return lhs;
+                        }))))));
+        docWrap(this, "the reflective instruction set of metatron featuring process, monad, and code introspection");
+        super.setup();
+
     }
 
     @Override
@@ -237,107 +334,5 @@ public class machInstSet extends AbstractInstSet {
         return new LinkedHashSet<>(List.of(
                 Tuple.Triplet.with(Tuple.Pair.with("^", null), List.of(LIFT_INST_TID), 0)
         ));
-    }
-
-    @Override
-    public Set<Inst> insts() {
-        INSTS.addAll(Router.RouterType.insts());
-        INSTS.addAll(List.of(
-                instC(LIFT_INST_TID.dom(ALL).rng(MACH_MONAD_TID).q(MONAD, "^"), lst(T(ALL.maybe())), (lhs, inst) -> {
-                    final Monad monad = lhs.asMonad();
-                    if (!inst.arg(0).isNoObj())
-                        return inst.arg(0).apply(monad);
-                    else
-                        return monad;
-                }),
-                instC(REWRITE_INST_TID.dom(ALL.maybe()).rng(REC_TID), lst(URI_TYPE), (lhs, inst) -> rec(
-                        uri(SHORT), uri(Router.global().redirect(inst.arg(0).uriValue(), false)), 
-                        uri(LONG), uri(Router.global().redirect(inst.arg(0).uriValue(), true)))),
-                instC(MACH_INST_TID.extend("close").dom(ROUTER_TID).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
-                    if (lhs instanceof Router)
-                        return Stream.of(noobj()).peek(o -> System.exit(0)).iterator().next();
-                    CommonUtil.close(lhs);
-                    return noobj();
-                }),
-                instC(MACH_INST_TID.extend("nano").dom(ALL.maybe()).rng(ALL.maybe()), lst(), (lhs, inst) -> {
-                    try {
-                        final File file = Editor.createObjFile(lhs);
-                        Editor.of(Console.LOCAL_INSTANCE, file);
-                        return mParser.parse(Files.readString(file.toPath()).trim());
-                    } catch (final IOException e) {
-                        throw MTronException.of(e);
-                    }
-                }),
-                docWrap(instC(MACH_INST_TID.extend("less").dom(STR_TID).rng(NOOBJ_TID.zero()), lst(isa_(T(INT_TID)).else_(jnt(10))), (lhs, inst) -> {
-                    Scanner scanner = new Scanner(System.in);
-                    final int pageSize = inst.arg(0).orElse(jnt(100)).intValue().intValue();
-                    final AtomicInteger page = new AtomicInteger(0);
-                    final AtomicInteger counter = new AtomicInteger(0);
-                    Arrays.stream(lhs.strValue().split("\n")).forEach(line -> {
-                        if (counter.getAndIncrement() < pageSize) {
-                            LOG.none(line + "\n");
-                        } else {
-                            LOG.none("{{g}}<{{m}}page %s{{g}}>{{X}}\n", page.incrementAndGet());
-                            scanner.nextLine();
-                            LOG.none("{{^2&-X-&v1}}");
-                            counter.set(0);
-                        }
-                    });
-                    return noobj();
-                }), "an str to page", "noobj terminal", Map.of(jnt(0), "number of lines per page"), "an f(x)->0 terminal page through the lines of an str"),
-                /// /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                instC(RSHIFT_INST_TID.dom(FILE_TID).rng(FILE_TID.maybeSome()), lst(isa_(URI_TYPE).else_(uri("#"))), (lhs, inst) -> {
-                    final File file = fsSpace.resolveFile(lhs);
-                    if (file.isDirectory()) {
-                        if (f(file.getName()).test(inst.arg(0).orElse(uri("#")).uriValue())) { // TODO: need to recurse on name if it has path segments
-                            if (null == file.listFiles()) return noobj();
-                            final fsSpace space = Router.global().getSpace(lhs.uriValue());
-                            return objs(Arrays.stream(Objects.requireNonNull(file.listFiles()))
-                                    //.peek(ff -> LOG.info("reading file %s", f(f(ff.getName()).name())))
-                                    .map(ff -> makeFile(ff.toPath()))
-                                    .map(ff -> uri(space.redirect(ff.uriValue().noQ(), true), ff.uriValue().isBranch() ? DIR_TID : FILE_TID)));
-                        }
-                    }
-                    return noobj();
-                }),
-                instC(AS_INST_TID.dom(URI_TID).rng(FILE_TID), lst(T(FILE_TID)), (lhs, inst) -> makeFile(Path.of(lhs.uriValue().toString()))),
-                instC(AS_INST_TID.dom(BYTES_TID).rng(IMAGE_TID), lst(T(IMAGE_TID), else_(real(1.0d))),
-                        (lhs, inst) -> str(ImageUtil.convertToAscii(lhs.bytesValue(), inst.arg(1).realValue())).tid(IMAGE_TID)),
-                instC(AS_INST_TID.dom(URI_TID).rng(FILE_TID), lst(T(FILE_TID)), (lhs, inst) -> makeFile(Path.of(lhs.uriValue().toString())).vid(lhs.vid())),
-                instC(AS_INST_TID.dom(FILE_TID).rng(BYTES_TID), lst(T(BYTES_TID)), (lhs, inst) -> {
-                    try {
-                        final File file = fsSpace.resolveFile(lhs);
-                        LOG.debug("translating file to bytes: %s", file);
-                        final byte[] data;
-                        try (final FileInputStream fis = new FileInputStream(file)) {
-                            data = fis.readAllBytes();
-                        } catch (final IOException e) {
-                            throw MTronException.of(e);
-                        }
-                        return bytes(ByteBuffer.wrap(data));
-                    } catch (final Exception e) {
-                        throw MTronException.of(e);
-                    }
-                }),
-                instC(RING_ZERO_TID.dom(A).rng(A), lst(), (lhs, inst) -> ((PlusMonoid.O<?>) lhs).zero()),
-                instC(RING_ONE_TID.dom(A).rng(A), lst(), (lhs, inst) -> ((MultMonoid.O<?>) lhs).one()),
-                // instC(RING_BINARY.dom(A).rng(ALL.dom(A).rng(A)), lst(), (lhs, inst) -> instB(mtronInstSet.INST_TID.extend(inst.tid().name()), lst(lhs.type())).resolve(lhs)),
-                //instC(RING_BINARY.dom(A).rng(ALL.dom(A).rng(A)), lst(T(A)), (lhs, inst) -> instB(mtronInstSet.INST_TID.extend(inst.tid().name()), inst.args()).apply(lhs)),
-                instC(WHICH_INST_TID.dom(ALL).rng(A), lst(URI_TYPE), (lhs, inst) -> {
-                    if (inst.arg(0).uriValue().big().equals(SPACE_TID))
-                        return null == lhs.vid() ? noobjSpace.single() : Router.global().getSpace(lhs.vid());
-                    else
-                        throw MTronException.of("unsupported which %s for %s", inst.arg(0), lhs);
-                }),
-                instC(INJECT_TID.dom(ALL).rng(ALL), lst(T(INT_TID), T(ALL)), (lhs, inst) -> {
-                    if (lhs.jvm() instanceof Tuple)
-                        return lhs.jvm(lhs.<Tuple>jvmAs().inject(inst.arg(0).intValue().intValue(), inst.arg(1)));
-                    else if (inst.arg(0).intValue() == 0)
-                        return lhs.jvm(inst.arg(1).jvm());
-                    else
-                        throw MTronException.of("injection larger than tuple: 1 < %d", inst.arg(0).intValue().intValue());
-                })
-        ));
-        return INSTS;
     }
 }

@@ -56,11 +56,6 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
         return super.isResolved(nested);
     }
 
-    @Override
-    public Lst qs() {
-        return super.qs();
-    }
-
     protected boolean checkPattern(final Obj obj) {
         if (null != obj.vid() && !obj.vid().test(this.pattern())) {
             LOG.warn("obj at %s outside instset pattern %s: (ignoring) %s", obj.vid(), this.pattern(), obj);
@@ -116,33 +111,37 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
 
     public AbstractInstSet(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(new LinkedHashMap<>(), jvm, tid, vid);
-        old = false;
         this.at(uri(Tokens.QSTRING), lst(QCollection.docQ()), MUTABLE);
+        old = false;
+    }
+
+    @Override
+    public void setup() {
         this.jvm().forEach((k, v) -> {
             if (k.equals(uri(CONST))) {
                 v.lstValue().stream()
                         .filter(this::checkPattern)
-                       //  TODO: .filter(c -> checkDepth(c, this.tid.extend(CONST)))
+                        //  TODO: .filter(c -> checkDepth(c, this.tid.extend(CONST)))
                         .forEach(c -> {
-                    CONST_TABLE.put(c.vid(), c);
-                    Router.global().registerRedirect(f(c.vid().name()), c.vid());
-                });
+                            CONST_TABLE.put(c.vid(), c);
+                            Router.global().registerRedirect(f(c.vid().name()), c.vid());
+                        });
             } else if (k.equals(uri(TYPE))) {
                 v.lstValue().stream()
                         .filter(this::checkPattern)
                         .filter(t -> checkDepth(t, this.tid))
                         .forEach(t -> {
-                    TYPE_TABLE.put(t.vid(), t.as());
-                    Router.global().registerRedirect(f(t.vid().name()), t.vid());
-                });
+                            TYPE_TABLE.put(t.vid(), t.as());
+                            Router.global().registerRedirect(f(t.vid().name()), t.vid());
+                        });
             } else if (k.equals(uri(INST))) {
                 v.lstValue().stream()
                         .filter(this::checkPattern)
                         .filter(r -> checkDepth(r, this.tid.extend(INST)))
                         .forEach(i -> {
-                    INST_TABLE.computeIfAbsent(i.tid().basePath(), kk -> new LinkedHashSet<>()).add(i.as());
-                    Router.global().registerRedirect(f(i.tid().name()), i.tid().basePath());
-                });
+                            INST_TABLE.computeIfAbsent(i.tid().basePath(), kk -> new LinkedHashSet<>()).add(i.as());
+                            Router.global().registerRedirect(f(i.tid().name()), i.tid().basePath());
+                        });
             } else if (k.equals(uri(REWRITE))) {
                 v.lstValue().stream()
                         .filter(this::checkPattern)
@@ -154,7 +153,7 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
             }
         });
     }
-
+    
     @Override
     public Set<Obj> consts() {
         return old ? new LinkedHashSet<>() : new LinkedHashSet<>(CONST_TABLE.values());
