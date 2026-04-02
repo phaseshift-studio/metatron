@@ -18,12 +18,15 @@
 
 package studio.phaseshift.metatron.furi.q;
 
+import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.impl.MRec;
+import studio.phaseshift.metatron.isa.m.type.impl.MStr;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.util.MTronException;
@@ -37,7 +40,11 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.isa.m.type.Inst.*;
+import static studio.phaseshift.metatron.isa.m.type.Inst.DOM;
 import static studio.phaseshift.metatron.isa.m.type.Inst.OBJ;
+import static studio.phaseshift.metatron.isa.m.type.Inst.RNG;
+import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
@@ -46,7 +53,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -74,7 +83,14 @@ public final class QCollection {
             Type.Builder.build()
                     .tid(REC_TID)
                     .vid(DOCS_TID)
-                    .constructor(arg0 -> new DocQ.Doc(arg0.recValue(), DOCS_TID, null))
+                    .isaPredicate(rec(
+                            uri(OBJ).maybe().asUri(), T(ALL),
+                            uri(DOM).maybe(), STR_TYPE,
+                            uri(RNG).maybe(), STR_TYPE,
+                            uri(ARGS).maybe(), T(ALL), // fix: noobj=>noobj slipping trhough the cracks somewhere rec(URI_TYPE,STR_TYPE).maybe(),
+                            uri(DESC), STR_TYPE,
+                            uri(EXAMPLE).maybe(), LST_TYPE))
+                    .constructor(arg0 -> new Doc(arg0.recValue(), DOCS_TID, null))
                     .inst(AS_INST_TID.dom(DOCS_TID).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> str(lhs.toString()))
                     .create();
 
@@ -158,11 +174,17 @@ public final class QCollection {
 
     public static Q docQ() {
         final memSpace DOC_SPACE = memSpace.of(rec(), null);
-
         return studio.phaseshift.metatron.furi.Q.Helper.build(DOCQ_TID, DOCQ_PATTERN)
                 .obj(f(OBJ), DOC_SPACE)
-                .preWrite((vid, obj) -> DOC_SPACE.write(vid.removeQ(DOCQ), obj))
-                .preRead((vid) -> DOC_SPACE.read(vid.removeQ(DOCQ)).orElse(NO_DOCS))
+                .preWrite((vid, obj) -> {
+                    if (obj.tid().equals(DOCS_TID))
+                        DOC_SPACE.write(vid.basePath(), obj);
+                    return obj;
+                })
+                .preRead((vid) -> {
+                    final Obj obj = DOC_SPACE.read(vid.basePath()).orElse(NO_DOCS);
+                    return objs(obj.stream().filter(o -> o.tid().equals(DOCS_TID)));
+                })
                 .create();
     }
 
@@ -231,8 +253,8 @@ public final class QCollection {
 
     /// //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Inst docWrap(final Inst inst, final String domDesc, final String rngDesc, final Map<Obj, String> argDescription, final String description) {
-        final DocQ.Doc doc = DocQ.Doc.doc(inst, domDesc, rngDesc, argDescription, description);
+    public static Inst docWrap(final Inst inst, final String domDesc, final String rngDesc, final Map<Obj, String> argDescription, final String description, final String... examples) {
+        final Doc doc = Doc.doc(inst, domDesc, rngDesc, argDescription, description, examples);
         final Space instSpace = Router.global().getSpace(inst.tid());
         final Optional<Q> docq = instSpace.qs().jvm().stream().filter(q -> q.tid().basePath().equals(DOCQ_TID)).map(Obj::<Q>as).findAny();
         if (docq.isEmpty())
@@ -248,7 +270,7 @@ public final class QCollection {
 
     public static Type docWrap(final Type type, final String predicate, final String constructor, final Map<Obj, String> predicateDescription, final String description) {
         if (null != type.vid()) {
-            final DocQ.Doc doc = DocQ.Doc.doc(type, predicate, constructor, predicateDescription, description);
+            final Doc doc = Doc.doc(type, predicate, constructor, predicateDescription, description);
             final Space instSpace = Router.global().getSpace(type.vid());
             final Optional<Q> docq = instSpace.qs().jvm().stream().filter(q -> q.tid().basePath().equals(DOCQ_TID)).map(Obj::<Q>as).findAny();
             if (docq.isEmpty())
@@ -259,5 +281,55 @@ public final class QCollection {
             Router.global().logger().warn("unable to document a vid-less type: %s", type);
         }
         return type;
+    }
+
+    public static InstSet docWrap(final InstSet instSet, final String description, final String... examples) {
+        final Doc doc = Doc.doc(instSet.<InstSet>as(), null, null, null, description, examples);
+        final Space instSpace = Router.global().getSpace(instSet.vid());
+        final Optional<Q> docq = instSpace.qs().jvm().stream().filter(q -> q.tid().basePath().equals(DOCQ_TID)).map(Obj::<Q>as).findAny();
+        if (docq.isEmpty())
+            instSpace.logger().warn("no doc query attachment mounted on %s for %s", instSpace, instSet.tid());
+        else
+            docq.get().at(OBJ).<Space>as().write(instSet.vid(), doc);
+        return instSet;
+    }
+
+    public static class Doc extends MRec {
+
+        private static final String NONE = "<none>";
+
+        public Doc(final Map<Obj, Obj> value, final fURI tid, final fURI vid) {
+            super(value, tid, vid);
+        }
+
+        public Doc(final Rec docRec) {
+            this(docRec.jvm(), docRec.tid(), docRec.vid());
+        }
+
+        public Doc(final String description) {
+            this(Map.of(uri(DESC), str(description)), DOCS_TID, null);
+        }
+
+        public static Doc empty(final Obj obj) {
+            return new Doc(Map.of(uri(OBJ), obj), DOCS_TID, null);
+        }
+
+        public Poly<?, ?> args() {
+            return this.at(ARGS).orElse(rec0());
+        }
+
+        public String description() {
+            return this.at(Tokens.DESC).isNoObj() ? null : this.at(Tokens.DESC).strValue();
+        }
+
+        public static Doc doc(final Obj inst, final String domDesc, final String rngDesc, final Map<Obj, String> argDescription, final String description, final String... examples) {
+            return new Doc(rec(
+                    uri(OBJ), inst,
+                    uri(DOM), null == domDesc ? noobj() : str(domDesc),
+                    uri(RNG), null == rngDesc ? noobj() : str(rngDesc),
+                    uri(ARGS), null == argDescription ? noobj() : rec(argDescription.entrySet().stream().map(kv -> rel(kv.getKey(), str(kv.getValue())))),
+                    uri(DESC), str(description),
+                    uri(EXAMPLE), lst(Arrays.stream(examples).map(MStr::str))).jvm(), DOCS_TID, null);
+        }
     }
 }

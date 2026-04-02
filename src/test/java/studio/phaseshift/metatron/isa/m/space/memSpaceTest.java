@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.m.space;
 
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.furi.q.SubQTest;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Router;
@@ -34,7 +35,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
-public class memSpaceTest extends AbstractSpaceTest {
+public class memSpaceTest extends AbstractSpaceTest implements SubQTest {
 
     public memSpaceTest() {
         super(() -> memSpace.of(rec(uri(PATTERN), uri("/t/#")/*uri(PERSIST), uri("/tmp/mem")),*/), f("/sys/space/mem")));

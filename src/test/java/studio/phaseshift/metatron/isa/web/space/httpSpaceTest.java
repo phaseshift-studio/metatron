@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.SkipInheritedTests;
 import studio.phaseshift.metatron.SkipInheritedTestsExtension;
 import studio.phaseshift.metatron.TestTag;
+import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.web.space.http.httpSpace;
@@ -65,8 +66,8 @@ public class httpSpaceTest extends AbstractSpaceTest {
     }
 
     @Override
-    protected String getTestDataUriPrefix() {
-        return "http://localhost:8777/test/";
+    public fURI getTestDataUriPrefix() {
+        return f("http://localhost:8777/test/");
     }
 
     @Test

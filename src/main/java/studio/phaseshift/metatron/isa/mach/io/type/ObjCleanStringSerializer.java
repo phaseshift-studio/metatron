@@ -132,9 +132,8 @@ public class ObjCleanStringSerializer extends AbstractObjSerializer<String> {
         return handleIds(real, String.format("%.2f", real.jvm()));
     }
 
-    @Override
-    public String writeUri(final Uri uri) {
-        final String uriString = uri.jvm().toString();
+    private static String wrapUri(final fURI furi) {
+        final String uriString = furi.toString();
         final char startChar = uriString.isEmpty() ? ' ' : uriString.charAt(0);
         final boolean wrap =
                 uriString.isEmpty() ||
@@ -143,7 +142,12 @@ public class ObjCleanStringSerializer extends AbstractObjSerializer<String> {
                         startChar == '+' ||
                         startChar == '#' ||
                         uriString.contains(".");
-        return handleIds(uri, wrap ? ("<" + uriString + ">") : uriString);
+        return wrap ? ("<" + uriString + ">") : uriString;
+    }
+
+    @Override
+    public String writeUri(final Uri uri) {
+        return handleIds(uri, wrapUri(uri.uriValue()));
     }
 
     @Override
@@ -250,7 +254,7 @@ public class ObjCleanStringSerializer extends AbstractObjSerializer<String> {
     private StringBuilder handleVID(final StringBuilder sb, final Obj obj) {
         if (null == obj.vid())
             return sb;
-        return sb.append("@").append(obj.vid());
+        return sb.append("@").append(wrapUri(obj.vid()));
     }
 
     private StringBuilder generateLst(final StringBuilder sb, final Lst lst, final int depth) {

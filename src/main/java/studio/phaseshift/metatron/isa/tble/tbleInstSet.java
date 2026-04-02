@@ -18,15 +18,17 @@
 
 package studio.phaseshift.metatron.isa.tble;
 
+import studio.phaseshift.metatron.algebra.rewrite.CommonRewrites;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
-import studio.phaseshift.metatron.isa.Space;
-import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.m.type.impl.Rewriter;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.m.type.Inst;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
+import studio.phaseshift.metatron.isa.m.type.Rel;
+import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -34,13 +36,10 @@ import java.util.Set;
 
 import static studio.phaseshift.metatron.Tokens.TABLE;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -58,7 +57,7 @@ public class tbleInstSet extends AbstractInstSet {
     public static final fURI LST_ROW_TID = TBLE_ISA_TID.extend("lrow");
     public static final fURI REC_ROW_TID = TBLE_ISA_TID.extend("rrow");
     public static final fURI TABLE_TID = TBLE_ISA_TID.extend("table");
-    
+
     static final Set<Inst> TBLE_ISA_INSTS = new LinkedHashSet<>();
     static final Set<Type> TBLE_ISA_TYPES = new LinkedHashSet<>();
 
@@ -100,30 +99,50 @@ public class tbleInstSet extends AbstractInstSet {
     @Override
     public Set<Inst> rewrites() {
         return new LinkedHashSet<>(List.of(
-                InstSet.Helper.rewriter(TBLE_ISA_REWRITE_TID.extend("sql_native_count"), code ->
-                        code.selfJVM(Rewriter.search(code.insts())
-                                .match(List.of(instB(FROM_INST_TID, lst()), instB(COUNT_INST_TID, lst())))
-                                .rewrite(map -> {
-                                    final fURI oldfURI = code.codeValue().getFirst().arg(0).asUri().uriValue();
-                                    final Space sqlSpace = Router.global().getSpace(oldfURI);
-                                    if (sqlSpace instanceof tbleSpace) {
-                                        return List.of(instC(f("sql_native_count").dom(ALL.zero()).rng(INT_TID), lst(uri(sqlSpace.rewrite(oldfURI, true))), (lhs, inst) -> {
-                                            final fURI expandedfURI = inst.arg(0).asUri().uriValue();
-                                            LOG.debug("evaluating native sql query on table %s in space %s", expandedfURI, sqlSpace);
-                                            try (final Statement stmt = ((tbleSpace) sqlSpace).sjvm().createStatement()) {
-                                                final ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM " + expandedfURI.segments().getFirst());
-                                                if (rs.next()) {
-                                                    return jnt(rs.getInt(1)).c(c -> c.mult(code.codeValue().getLast().c()));
-                                                } else {
-                                                    throw MTronException.of("failed to evaluate native SQL query: %s", stmt);
-                                                }
-                                            } catch (final Exception e) {
-                                                throw MTronException.of(e);
-                                            }
-                                        }));
-                                    }
-                                    return map.values().stream().map(Obj::asInst).toList();
-                                })).asCode())));
+                // Optimize: *table.count() → SELECT COUNT(*)
+                CommonRewrites.countRewrite(
+                        tbleSpace.class,
+                        TBLE_ISA_REWRITE_TID.extend("sql_native_count"),
+                        (space, furi) -> {
+                            final String tableName = furi.segments().getFirst();
+                            try (final Statement stmt = space.sjvm().createStatement();
+                                 final ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM " + tableName)) {
+                                return rs.next() ? (long) rs.getInt(1) : 0L;
+                            } catch (SQLException e) {
+                                throw MTronException.of(e);
+                            }
+                        }
+                ),
 
+                // Optimize: *table.sum() → SELECT SUM(*)
+                CommonRewrites.sumRewrite(
+                        tbleSpace.class,
+                        TBLE_ISA_REWRITE_TID.extend("sql_native_sum"),
+                        (space, furi) -> {
+                            final String tableName = furi.segments().getFirst();
+                            try (final Statement stmt = space.sjvm().createStatement();
+                                 final ResultSet rs = stmt.executeQuery("SELECT SUM(1) FROM " + tableName)) {
+                                return rs.next() ? rs.getLong(1) : 0L;
+                            } catch (SQLException e) {
+                                throw MTronException.of(e);
+                            }
+                        }
+                ),
+
+                // Optimize: *table.mean() → SELECT AVG(*)
+                CommonRewrites.meanRewrite(
+                        tbleSpace.class,
+                        TBLE_ISA_REWRITE_TID.extend("sql_native_mean"),
+                        (space, furi) -> {
+                            final String tableName = furi.segments().getFirst();
+                            try (final Statement stmt = space.sjvm().createStatement();
+                                 final ResultSet rs = stmt.executeQuery("SELECT AVG(1.0) FROM " + tableName)) {
+                                return rs.next() ? rs.getDouble(1) : 0.0;
+                            } catch (SQLException e) {
+                                throw MTronException.of(e);
+                            }
+                        }
+                )
+        ));
     }
 }

@@ -30,8 +30,12 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.BootLoader;
+import studio.phaseshift.metatron.TestCategory;
+import studio.phaseshift.metatron.TestData;
+import studio.phaseshift.metatron.algebra.rewrite.CommonRewritesTestContract;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
+import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.impl.MStr;
@@ -60,15 +64,15 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class docSpaceTest extends AbstractSpaceTest {
-
+public class docSpaceTest extends AbstractSpaceTest implements CommonRewritesTestContract {
+    
     protected static MongoServer mongoServer;
     protected static String connectionString;
     protected static final String DB_NAME = "testdb";
     protected static final fURI SPACE_VID = f("/sys/space/doc/test");
 
     public docSpaceTest() {
-        super(() -> docSpace.of(
+        super(f("mongo:test_collection/rewrite_test"), () -> docSpace.of(
                 rec(
                         uri(PATTERN), uri("mongo:#"),
                         uri(HOST), uri(connectionString + "/" + DB_NAME),
@@ -78,10 +82,10 @@ public class docSpaceTest extends AbstractSpaceTest {
         ));
         BootLoader.loadInstSetProvider(DOC_ISA_TID);
     }
-
+    
     @Override
-    protected String getTestDataUriPrefix() {
-        return "mongo:test_collection/";
+    public fURI getTestDataUriPrefix() {
+        return f("mongo:test_collection/");
     }
 
     // Disable all abstract tests - docSpace has its own comprehensive MongoDB-specific tests
@@ -1038,6 +1042,23 @@ public class docSpaceTest extends AbstractSpaceTest {
         } finally {
             space.close();
         }
+    }
+
+    // ========================================
+    // Common Rewrite Tests
+    // ========================================
+
+    @Disabled("TestData loading issue - writes being batched/nested into single record")
+    @ParameterizedTest
+    @TestData(source = "rewrite_test_dataset.mtron", value = {""})
+    @CsvSource(value = {
+            "$$/+>>value.sum()    % 55",
+            "$$/+.count()         % 10",
+            "$$/+>>value.mean()   % 5.5",
+    }, delimiter = '%')
+    public void testCommonRewrites(String code, String expected) throws Exception {
+        String result = mParser.eval(make(code)).toString();
+        assertEquals(expected, result);
     }
 
     // ========================================

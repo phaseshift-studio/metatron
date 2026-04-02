@@ -40,6 +40,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
@@ -258,6 +259,14 @@ public class mParser {
                                 //.map(l -> (((List) l).get(0) instanceof Obj) ? l : ((List) l).subList(1, ((List) l).size() - 1))
                                 .collect(Collectors.toMap(kv -> pick(kv, 0), kv -> pick(kv, 2), Obj::append, LinkedHashMap::new)));
     }
+    
+    public static <O extends Obj> O eval(final File source) {
+        try {
+            return eval(new String(Files.readAllBytes(source.toPath())));
+        } catch (IOException e) {
+            throw MTronException.of(e);
+        }
+    }
 
     public static <O extends Obj> O eval(final String code) {
         return (O) objs(splitOnNonQuotedSequence(code, ';', false).stream()
@@ -267,18 +276,6 @@ public class mParser {
                         .filter(t -> !t.startsWith("[--"))
                         .reduce("", (a, b) -> a + b + "\n"))
                 .map(s -> mParser.parse(s).apply())
-                .filter(o -> !o.isNoObj())
-                .map(Obj::as));
-    }
-
-    public static <O extends Obj> O parseByLine(final String code) {
-        return (O) objs(splitOnNonQuotedSequence(code, ';', false).stream()
-                .filter(s -> !s.trim().isEmpty())
-                .map(s -> Arrays.stream(s.split("\n"))
-                        .map(String::trim)
-                        .filter(t -> !t.startsWith("[--"))
-                        .reduce("", (a, b) -> a + b + "\n"))
-                .map(s -> mParser.parse(s).<Obj>as())
                 .filter(o -> !o.isNoObj())
                 .map(Obj::as));
     }
@@ -569,6 +566,7 @@ public class mParser {
                         .map(s -> Arrays.stream(s.split("\n"))
                                 .map(String::trim)
                                 .reduce("", (a, b) -> a + b + "\n"))
+                        .peek(s -> LOG.debug("evaluating line: %s", s))
                         .map(s -> {
                             try {
                                 return mParser.parse(s).apply();

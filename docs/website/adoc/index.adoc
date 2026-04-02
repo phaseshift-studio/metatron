@@ -2,12 +2,12 @@
 :author: Marko A. Rodriguez
 :email: marko@markorodriguez.com
 :revnumber: 0.1-alpha
+:stylesheet: ./src/css/metatron.css
 :imagesdir: ../images
 :favicon: ./favicon.ico
 :highlightjsdir: highlight
 :source-highlighter: ./highlight.js
 :highlightjs-languages: mtron,bash,json
-:stylesheet: ./src/css/metatron.css
 :highlightjs-theme: monokai
 :icons: font
 :icon-set: fas

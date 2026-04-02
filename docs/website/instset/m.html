@@ -40,21 +40,22 @@
     <link href="../css/termynal.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/styles/night-owl.min.css" rel="stylesheet">
     <!-- JAVASCRIPT PACKAGES -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="../highlight/highlight.min.js"></script>
-    <script src="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js"></script>
-    <script src="../highlight/languages/mtron.min.js"></script>
-    <script src="../highlight/languages/json.min.js"></script>
-    <script src="../highlight/languages/bash.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
-    <script src="../lib/wow/wow.min.js"></script>
-    <script src="../lib/easing/easing.min.js"></script>
-    <script src="../lib/waypoints/waypoints.min.js"></script>
-    <script src="../lib/termynal/termynal.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" type="text/javascript"></script>
+    <script src="../highlight/highlight.min.js" type="text/javascript"></script>
+    <script src="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js" type="text/javascript"></script>
+    <script src="../highlight/languages/mtron.min.js" type="text/javascript"></script>
+    <script src="../highlight/languages/json.min.js" type="text/javascript"></script>
+    <script src="../highlight/languages/bash.min.js" type="text/javascript"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
+    <script async src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js" type="text/javascript"></script>
+    <script src="../lib/wow/wow.min.js" type="text/javascript"></script>
+    <script src="../lib/easing/easing.min.js" type="text/javascript"></script>
+    <script src="../lib/waypoints/waypoints.min.js" type="text/javascript"></script>
+    <script src="../lib/termynal/termynal.js" type="text/javascript"></script>
     <!-- <script src="data/console.txt"></script>-->
     <!-- CUSTOM CSS/JAVASCRIPT -->
     <link href="../css/metatron.css" rel="stylesheet">
-    <script src="../js/metatron.js"></script>
+    <script src="../js/metatron.js" type="text/javascript"></script>
     <link rel="stylesheet" href="../css/instset_doc.css">
 </head>
 <body class="d-flex flex-column min-vh-100">
@@ -230,7 +231,8 @@ bin/metatron</code></pre>
                 <h1 class="text-primary glow-text">
                     <span class="text-light">/</span>m
                 </h1>
-                <p class="subtitle text-light">instruction set reference</p>
+                <p style="line-height:0.1rem;" class="subtitle text-light">instruction set reference</p>
+                <p class="text-light mt-3 mb-0" style="line-height:2.5em; max-width: 1000px; margin-left: auto; margin-right: auto;">&quot;the core instruction set of metatron featuring the base types and an algebra for their manipulation&quot;</p>
             </div>
         </div>
             
@@ -543,6 +545,10 @@ bin/metatron</code></pre>
                     <span class="code">math</span>
                     <span class="badge bg-success">I</span>
                 </a>
+                <a href="#inst-mean" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
+                    <span class="code">mean</span>
+                    <span class="badge bg-success">I</span>
+                </a>
                 <a href="#inst-merge" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">merge</span>
                     <span class="badge bg-success">I</span>
@@ -745,6 +751,69 @@ bin/metatron</code></pre>
                 </a>
                 </div>
             </div>
+                    
+            <div class="mb-3">
+                <h6 class="text-primary mb-2">Rewrites</h6>
+                <div class="index-columns-rewrites">
+                    
+                <a href="#rewrite-else_after_count" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
+                    <span class="code">else_after_count</span>
+                    <span class="badge bg-warning text-dark">R</span>
+                </a>
+                <a href="#rewrite-id_removal" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
+                    <span class="code">id_removal</span>
+                    <span class="badge bg-warning text-dark">R</span>
+                </a>
+                <a href="#rewrite-map_nest" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
+                    <span class="code">map_nest</span>
+                    <span class="badge bg-warning text-dark">R</span>
+                </a>
+                <a href="#rewrite-mult_one" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
+                    <span class="code">mult_one</span>
+                    <span class="badge bg-warning text-dark">R</span>
+                </a>
+                <a href="#rewrite-plus_zero" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
+                    <span class="code">plus_zero</span>
+                    <span class="badge bg-warning text-dark">R</span>
+                </a>
+                <a href="#rewrite-split_merge_collapse" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
+                    <span class="code">split_merge_collapse</span>
+                    <span class="badge bg-warning text-dark">R</span>
+                </a>
+                <a href="#rewrite-split_merge_left_factor" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
+                    <span class="code">split_merge_left_factor</span>
+                    <span class="badge bg-warning text-dark">R</span>
+                </a>
+                <a href="#rewrite-split_merge_right_factor" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
+                    <span class="code">split_merge_right_factor</span>
+                    <span class="badge bg-warning text-dark">R</span>
+                </a>
+                </div>
+            </div>
+                    
+            <div class="mb-3">
+                <h6 class="text-primary mb-2">Spaces</h6>
+                <div class="index-columns">
+                    
+                <a href="#space-mem" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
+                    <span class="code">mem</span>
+                    <span class="badge bg-info">S</span>
+                </a>
+                <a href="#space-meta" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
+                    <span class="code">meta</span>
+                    <span class="badge bg-info">S</span>
+                </a>
+                <a href="#space-q" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
+                    <span class="code">q</span>
+                    <span class="badge bg-info">S</span>
+                </a>
+                <a href="#space-stack" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
+                    <span class="code">stack</span>
+                    <span class="badge bg-info">S</span>
+                </a>
+                </div>
+            </div>
+                    
                 </div>
             </div>
         </div>
@@ -770,6 +839,7 @@ bin/metatron</code></pre>
                     <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">a 2 valued mono: true or false</p>
                     </div>
+                    
                 </div>
                 <div class="card mb-3" id="type-bytes">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -787,6 +857,7 @@ bin/metatron</code></pre>
                     <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">a sequence of 8-bit unsigned integers</p>
                     </div>
+                    
                 </div>
                 <div class="card mb-3" id="type-code">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -804,6 +875,7 @@ bin/metatron</code></pre>
                     <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">a call with apply defined by an lhs obj and a sequence of insts</p>
                     </div>
+                    
                 </div>
                 <div class="card mb-3" id="type-doc">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -826,9 +898,7 @@ bin/metatron</code></pre>
      obj      =&gt;mem::[=&gt;]]]]@/m/doc</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
+                    
                 </div>
                 <div class="card mb-3" id="type-fail">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -846,6 +916,7 @@ bin/metatron</code></pre>
                     <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">a reified exception handling obj that can be caught</p>
                     </div>
+                    
                 </div>
                 <div class="card mb-3" id="type-grph">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -869,9 +940,7 @@ bin/metatron</code></pre>
      obj      =&gt;mem::[=&gt;]]]]@/m/grph</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
+                    
                 </div>
                 <div class="card mb-3" id="type-inst">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -889,6 +958,7 @@ bin/metatron</code></pre>
                     <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">a call with apply defined by an lhs obj, an poly of args, and an body of code</p>
                     </div>
+                    
                 </div>
                 <div class="card mb-3" id="type-instset">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -903,9 +973,7 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">instset::T</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
+                    
                 </div>
                 <div class="card mb-3" id="type-int">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -923,6 +991,7 @@ bin/metatron</code></pre>
                     <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">a 64-bit signed integer</p>
                     </div>
+                    
                 </div>
                 <div class="card mb-3" id="type-iot">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -946,9 +1015,7 @@ bin/metatron</code></pre>
      obj      =&gt;mem::[=&gt;]]]]@/m/iot</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
+                    
                 </div>
                 <div class="card mb-3" id="type-llm">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -971,9 +1038,7 @@ bin/metatron</code></pre>
      obj      =&gt;mem::[=&gt;]]]]@/m/llm</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
+                    
                 </div>
                 <div class="card mb-3" id="type-lst">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -991,6 +1056,7 @@ bin/metatron</code></pre>
                     <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">an ordered sequence poly of objs</p>
                     </div>
+                    
                 </div>
                 <div class="card mb-3" id="type-mach">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1015,8 +1081,9 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
+                        <p class="mb-0 text-light">the reflective instruction set of metatron featuring process, monad, and code introspection</p>
                     </div>
+                    
                 </div>
                 <div class="card mb-3" id="type-math">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1039,9 +1106,7 @@ bin/metatron</code></pre>
      obj      =&gt;mem::[=&gt;]]]]@/m/math</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
+                    
                 </div>
                 <div class="card mb-3" id="type-mono">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1059,6 +1124,7 @@ bin/metatron</code></pre>
                     <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">an atomic obj</p>
                     </div>
+                    
                 </div>
                 <div class="card mb-3" id="type-num">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1076,6 +1142,7 @@ bin/metatron</code></pre>
                     <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">an obj representing a number</p>
                     </div>
+                    
                 </div>
                 <div class="card mb-3" id="type-objs">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1093,6 +1160,7 @@ bin/metatron</code></pre>
                     <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">an ordered sequence poly of objs and noobjs</p>
                     </div>
+                    
                 </div>
                 <div class="card mb-3" id="type-poly">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1110,6 +1178,7 @@ bin/metatron</code></pre>
                     <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">a obj composed of other objs</p>
                     </div>
+                    
                 </div>
                 <div class="card mb-3" id="type-real">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1127,6 +1196,7 @@ bin/metatron</code></pre>
                     <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">a 64-bit floating point number</p>
                     </div>
+                    
                 </div>
                 <div class="card mb-3" id="type-rec">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1144,6 +1214,7 @@ bin/metatron</code></pre>
                     <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">a poly composed of uniquely keyed rels</p>
                     </div>
+                    
                 </div>
                 <div class="card mb-3" id="type-rel">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1161,6 +1232,7 @@ bin/metatron</code></pre>
                     <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">a directed binary poly coupling two objs</p>
                     </div>
+                    
                 </div>
                 <div class="card mb-3" id="type-space">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1175,9 +1247,7 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">rec::T@/m/space</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
+                    
                 </div>
                 <div class="card mb-3" id="type-str">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1195,6 +1265,7 @@ bin/metatron</code></pre>
                     <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">an ordered sequence of UTF-32 characters</p>
                     </div>
+                    
                 </div>
                 <div class="card mb-3" id="type-tble">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1217,9 +1288,7 @@ bin/metatron</code></pre>
      obj      =&gt;mem::[=&gt;]]]]@/m/tble</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
+                    
                 </div>
                 <div class="card mb-3" id="type-uri">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1237,6 +1306,7 @@ bin/metatron</code></pre>
                     <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">a uniform resource identifier</p>
                     </div>
+                    
                 </div>
                 <div class="card mb-3" id="type-web">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1259,9 +1329,7 @@ bin/metatron</code></pre>
      obj      =&gt;mem::[=&gt;]]]]@/m/web</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
+                    
                 </div>
         </div>
             
@@ -1283,7 +1351,10 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">a logical and function f(X)-&gt;true if all X are true</p>
+                        <p class="mb-0 text-light">a logical and function \(f(X)\to \tt{true}\) if all \(X\) are true</p>
+                    </div>
+                    <div class="card-body py-2">
+                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any objs" <span class="text-light">=&gt;</span> "true if all objs are true"</pre>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-apply">
@@ -1298,21 +1369,17 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">apply?#{*}&lt;=#(#{*}::T){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
                 <div class="card mb-3" id="inst-as">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">as</span>
-                            <span class="ms-1"><span class="instset-doc-small-code"><a href="m_space_q_docq.html#type-doc" class="code text-info">/m/space/q/docq/doc</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-str" class="code text-success">/m/str</a></span></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-bytes" class="code text-info">/m/bytes</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-bool" class="code text-success">/m/bool</a></span></span>
                         </span>
-                        <small class="text-muted code">/m/inst/as?/m/str&lt;=/m/space/q/docq/doc</small>
+                        <small class="text-muted code">/m/inst/as?/m/bool&lt;=/m/bytes</small>
                     </div>
                     <div class="card-body p-2">
-                        <pre class="mb-1"><code class="language-mtron">as?str&lt;=doc(str::T){&lt;j&gt;}</code></pre>
-<pre class="mb-1"><code class="language-mtron">as?bool&lt;=bytes(bool::T){&lt;j&gt;}</code></pre>
+                        <pre class="mb-1"><code class="language-mtron">as?bool&lt;=bytes(bool::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1"><code class="language-mtron">as?str&lt;=bytes(str::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1"><code class="language-mtron">as?bool&lt;=bool(bool::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1"><code class="language-mtron">as?bytes&lt;=bool(bytes::T){&lt;j&gt;}</code></pre>
@@ -1367,7 +1434,11 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">a type casting function f(x)-&gt;x</p>
+                        <p class="mb-0 text-light">a type casting function \(f(x)\to x\)</p>
+                    </div>
+                    <div class="card-body py-2">
+                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any obj" <span class="text-light">=&gt;</span> "the lhs obj as the arg type"
+   [0 <span class="text-light">=&gt;</span> "the type to cast to"]</pre>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-at">
@@ -1382,9 +1453,6 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">at?#{*}&lt;=#{?}(uri{?}::T){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
                 <div class="card mb-3" id="inst-authority">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1398,9 +1466,6 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">authority?uri{?}&lt;=uri(){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
                 <div class="card mb-3" id="inst-auto">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1414,9 +1479,6 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">!#{?}::T</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
                 <div class="card mb-3" id="inst-auto_from">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1430,9 +1492,6 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">!*#{?}::T</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
                 <div class="card mb-3" id="inst-barrier">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1450,7 +1509,11 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">an append function f(X)-&gt;X</p>
+                        <p class="mb-0 text-light">an append function \(f(X)\to X\)</p>
+                    </div>
+                    <div class="card-body py-2">
+                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any objs" <span class="text-light">=&gt;</span> "the objs appended to the arg objs"
+   [0 <span class="text-light">=&gt;</span> "the objs to append"]</pre>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-block">
@@ -1468,6 +1531,10 @@ bin/metatron</code></pre>
                     <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">the lhs obj is halted and the arg is the rhs obj</p>
                     </div>
+                    <div class="card-body py-2">
+                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"a blocked obj" <span class="text-light">=&gt;</span> "the unapplied arg"
+   [0 <span class="text-light">=&gt;</span> "the rhs without evaluation"]</pre>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-catch">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1484,6 +1551,10 @@ bin/metatron</code></pre>
                     <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">a catch function f(x)-&gt;x</p>
                     </div>
+                    <div class="card-body py-2">
+                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any obj" <span class="text-light">=&gt;</span> "uncaught fails go to arg, others mapped by identity"
+   [0 <span class="text-light">=&gt;</span> "the obj triggered on an uncaught fail"]</pre>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-cause">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1497,9 +1568,6 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">cause?fail{?}&lt;=fail(){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
                 <div class="card mb-3" id="inst-cc">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1517,6 +1585,10 @@ bin/metatron</code></pre>
                     <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">sets the coefficient of the lhs obj via f(lhs,c)-&gt;lhs^c</p>
                     </div>
+                    <div class="card-body py-2">
+                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any obj" <span class="text-light">=&gt;</span> "the lhs obj with new coefficient"
+   [0 <span class="text-light">=&gt;</span> "a coefficient for lhs obj"]</pre>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-choose">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1531,7 +1603,11 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">a branching function f(x):g(a)-&gt;a</p>
+                        <p class="mb-0 text-light">a branching function f(x):g(a)-&gt;a&#x27;,g(b)-&gt;b&#x27;,...</p>
+                    </div>
+                    <div class="card-body py-2">
+                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any obj" <span class="text-light">=&gt;</span> "the split as an objs"
+   [0 <span class="text-light">=&gt;</span> "the branches"]</pre>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-count">
@@ -1549,6 +1625,9 @@ bin/metatron</code></pre>
                     <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">counts the number of objs</p>
                     </div>
+                    <div class="card-body py-2">
+                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any objs" <span class="text-light">=&gt;</span> "the count of objs"</pre>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-dedup">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1565,6 +1644,9 @@ bin/metatron</code></pre>
                     <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">a deduplication function f({c}X)-&gt;{d&lt;=c}X</p>
                     </div>
+                    <div class="card-body py-2">
+                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any objs" <span class="text-light">=&gt;</span> "the deduplicated objs"</pre>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-div">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1578,9 +1660,6 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">div?real&lt;=real(real::T){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
                 <div class="card mb-3" id="inst-dom">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1595,9 +1674,6 @@ bin/metatron</code></pre>
 <pre class="mb-1"><code class="language-mtron">dom?#{*}&lt;=rec(){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
                 <div class="card mb-3" id="inst-else">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1612,7 +1688,11 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">f(lhs)-&gt;lhs if lhs is an obj, else f(noobj)-&gt;arg</p>
+                        <p class="mb-0 text-light">\[ f(x)(a) = \left\{ \begin{aligned} \tt{true} &amp; \quad \text{if } x \in \tt{obj} \\ \tt{arg}_0 &amp; \quad \text{otherwise} \end{aligned} \right. \]</p>
+                    </div>
+                    <div class="card-body py-2">
+                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"maybe an obj" <span class="text-light">=&gt;</span> "the lhs obj else the arg obj"
+   [0 <span class="text-light">=&gt;</span> "the rhs obj is the lhs is noobj"]</pre>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-end">
@@ -1628,7 +1708,10 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">the terminal function f(x)-&gt;0</p>
+                        <p class="mb-0 text-light">the terminal function \(f(x)\to \emptyset\)</p>
+                    </div>
+                    <div class="card-body py-2">
+                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"terminal objs" <span class="text-light">=&gt;</span> "noobj"</pre>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-eq">
@@ -1644,7 +1727,11 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">an equality function f(x,y)-&gt;true if x==y</p>
+                        <p class="mb-0 text-light">an equality function \(f(x,y)\to \tt{true} if \(x \eq y\)</p>
+                    </div>
+                    <div class="card-body py-2">
+                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any objs" <span class="text-light">=&gt;</span> "true if lhs equals rhs"
+   [0 <span class="text-light">=&gt;</span> "the rhs obj"]</pre>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-eval">
@@ -1662,6 +1749,10 @@ bin/metatron</code></pre>
                     <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">evaluates mtron source code</p>
                     </div>
+                    <div class="card-body py-2">
+                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"can be any obj as long as the arg generated is a str" <span class="text-light">=&gt;</span> "the result of evaluating the source str arg"
+   [code <span class="text-light">=&gt;</span> "the mtron source code to evaluate"]</pre>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-failure">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1675,9 +1766,6 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">failure?fail&lt;=#{*}(#{?}::T){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
                 <div class="card mb-3" id="inst-filter">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1691,9 +1779,6 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">filter?A{?}&lt;=A(#{?}::T){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
                 <div class="card mb-3" id="inst-fork">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1707,9 +1792,6 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">fork?A{*}&lt;=A{*}(#::T){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
                 <div class="card mb-3" id="inst-from">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1723,9 +1805,6 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">*uri::T</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
                 <div class="card mb-3" id="inst-get">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1739,9 +1818,6 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">get?A{?}&lt;=rel(#::T){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
                 <div class="card mb-3" id="inst-group">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1755,9 +1831,6 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">group?rec&lt;=#{*}(rec::T){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
                 <div class="card mb-3" id="inst-gt">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1776,6 +1849,10 @@ bin/metatron</code></pre>
                     <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">check whether the lhs int is greater than the argument int</p>
                     </div>
+                    <div class="card-body py-2">
+                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"the lhs int" <span class="text-light">=&gt;</span> "whether the lhs is greater than the rhs"
+   [int::T <span class="text-light">=&gt;</span> "the int to compare against the lhs"]</pre>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-gte">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1793,6 +1870,10 @@ bin/metatron</code></pre>
                     
                     <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">check whether the lhs int is greater than or equal to the argument int</p>
+                    </div>
+                    <div class="card-body py-2">
+                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"the lhs int" <span class="text-light">=&gt;</span> "whether the lhs is greater than or equal to the rhs"
+   [int::T <span class="text-light">=&gt;</span> "the int to compare against the lhs"]</pre>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-has">
@@ -1815,6 +1896,10 @@ bin/metatron</code></pre>
                     <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">check whether the lhs str matches the regex arg</p>
                     </div>
+                    <div class="card-body py-2">
+                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"a uri to check" <span class="text-light">=&gt;</span> "whether the domain matches arg regex"
+   [0 <span class="text-light">=&gt;</span> "the regex for matching"]</pre>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-host">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1829,9 +1914,6 @@ bin/metatron</code></pre>
 <pre class="mb-1"><code class="language-mtron">host?uri&lt;=uri(uri::T){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
                 <div class="card mb-3" id="inst-id">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1847,7 +1929,10 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">a objs barrier identity function f(X)-&gt;X</p>
+                        <p class="mb-0 text-light">a objs barrier identity function \(f(X)\to X\)</p>
+                    </div>
+                    <div class="card-body py-2">
+                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"the rhs obj" <span class="text-light">=&gt;</span> "the lhs obj"</pre>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-import">
@@ -1862,9 +1947,6 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">import?space{*}&lt;=#{?}(uri::T,uri{?}::T){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
                 <div class="card mb-3" id="inst-inv">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1878,9 +1960,6 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">inv?real&lt;=real(){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
                 <div class="card mb-3" id="inst-is">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1897,6 +1976,10 @@ bin/metatron</code></pre>
                     <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">filters the lhs obj</p>
                     </div>
+                    <div class="card-body py-2">
+                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any obj" <span class="text-light">=&gt;</span> "the lhs obj if arg is true"
+   [0 <span class="text-light">=&gt;</span> "filter lhs if false"]</pre>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-isa">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1911,7 +1994,11 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">a filter function f(x)-&gt;{0,x}</p>
+                        <p class="mb-0 text-light">a filter function \(f(x)\to \{\emptyset \cup x\}\)</p>
+                    </div>
+                    <div class="card-body py-2">
+                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"an obj to match" <span class="text-light">=&gt;</span> "the unaltered obj if arg matches"
+   [0 <span class="text-light">=&gt;</span> "filter lhs if doesn&#x27;t match arg"]</pre>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-lcase">
@@ -1926,9 +2013,6 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">lcase?str&lt;=str(){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
                 <div class="card mb-3" id="inst-lift">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1944,9 +2028,6 @@ bin/metatron</code></pre>
 <pre class="mb-1"><code class="language-mtron">lift?monad&lt;=#(#{?}::T){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
                 <div class="card mb-3" id="inst-lshift">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1961,9 +2042,6 @@ bin/metatron</code></pre>
 <pre class="mb-1"><code class="language-mtron">lshift?B{?}&lt;=A(){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
                 <div class="card mb-3" id="inst-lt">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1981,6 +2059,10 @@ bin/metatron</code></pre>
                     
                     <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">check whether the lhs int is less than the argument int</p>
+                    </div>
+                    <div class="card-body py-2">
+                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"the lhs int" <span class="text-light">=&gt;</span> "whether the lhs is less than the rhs"
+   [int::T <span class="text-light">=&gt;</span> "the int to compare against the lhs"]</pre>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-lte">
@@ -2000,6 +2082,10 @@ bin/metatron</code></pre>
                     <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">check whether the lhs int is less than or equal to the argument int</p>
                     </div>
+                    <div class="card-body py-2">
+                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"the lhs int" <span class="text-light">=&gt;</span> "whether the lhs is less than or equal to the rhs"
+   [int::T <span class="text-light">=&gt;</span> "the int to compare against the lhs"]</pre>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-map">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -2014,9 +2100,6 @@ bin/metatron</code></pre>
 <pre class="mb-1"><code class="language-mtron">map?B{?}&lt;=A{?}(B{?}::T){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
                 <div class="card mb-3" id="inst-matches">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -2030,9 +2113,6 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">matches?bool&lt;=#{?}(#{?}::T){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
                 <div class="card mb-3" id="inst-math">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -2046,8 +2126,28 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">math?real&lt;=#{?}(str::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                </div>
+                <div class="card mb-3" id="inst-mean">
+                    <div class="card-header d-flex justify-content-between align-items-center py-2">
+                        <span>
+                            <span class="code text-primary fw-bold">mean</span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-real{*}" class="code text-info">/m/real{*}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-real" class="code text-success">/m/real</a></span></span>
+                        </span>
+                        <small class="text-muted code">/m/inst/mean?/m/real&lt;=/m/real{*}</small>
+                    </div>
+                    <div class="card-body p-2">
+                        <pre class="mb-1"><code class="language-mtron">mean?real&lt;=real{*}(){&lt;j&gt;}</code></pre>
+                    </div>
+                    
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
+                        <p class="mb-0 text-light">the mean of a stream of reals</p>
+                    </div>
+                    <div class="card-body py-2">
+                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"a stream of reals" <span class="text-light">=&gt;</span> "the mean of the lhs real stream"</pre>
+                    </div>
+                    <div class="card-body border-top py-2">
+                        <small class="text-muted fw-bold">Examples:</small>
+                        <pre class="mb-1"><code class="language-mtron">{1.0,2.0,3.0}.mean() [-- 2.0 --]</code></pre>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-merge">
@@ -2074,6 +2174,10 @@ bin/metatron</code></pre>
                     <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">join the barrier given the str arg</p>
                     </div>
+                    <div class="card-body py-2">
+                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"an str barrier" <span class="text-light">=&gt;</span> "the join of the str barrier"
+   [0 <span class="text-light">=&gt;</span> "the join token"]</pre>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-minus">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -2091,6 +2195,10 @@ bin/metatron</code></pre>
                     <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">subtract the argument int from the lhs int</p>
                     </div>
+                    <div class="card-body py-2">
+                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"the lhs int" <span class="text-light">=&gt;</span> "the result of the subtraction"
+   [int::T <span class="text-light">=&gt;</span> "the int to subtract from the lhs"]</pre>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-mod">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -2104,9 +2212,6 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">mod?int&lt;=int(int::T){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
                 <div class="card mb-3" id="inst-mplus">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -2120,9 +2225,6 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">mplus?rec&lt;=rec(rec::T){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
                 <div class="card mb-3" id="inst-mult">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -2144,6 +2246,10 @@ bin/metatron</code></pre>
                     <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">multiply the lhs int by the argument int</p>
                     </div>
+                    <div class="card-body py-2">
+                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"the lhs int" <span class="text-light">=&gt;</span> "the result of the multiplication"
+   [int::T <span class="text-light">=&gt;</span> "the int to multiply the lhs by"]</pre>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-neg">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -2159,9 +2265,6 @@ bin/metatron</code></pre>
 <pre class="mb-1"><code class="language-mtron">neg?rel&lt;=rel(){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
                 <div class="card mb-3" id="inst-neq">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -2176,7 +2279,11 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">an inequality function f(x,y)-&gt;true if x!=y</p>
+                        <p class="mb-0 text-light">an inequality function \(f(x,y)\to \tt{true}\) if \(x \neq y\)</p>
+                    </div>
+                    <div class="card-body py-2">
+                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any objs" <span class="text-light">=&gt;</span> "true if lhs does not equal rhs"
+   [0 <span class="text-light">=&gt;</span> "the rhs obj"]</pre>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-not">
@@ -2192,9 +2299,6 @@ bin/metatron</code></pre>
 <pre class="mb-1"><code class="language-mtron">not?bool&lt;=#(bool::T){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
                 <div class="card mb-3" id="inst-one">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -2210,9 +2314,6 @@ bin/metatron</code></pre>
 <pre class="mb-1"><code class="language-mtron">one?rel&lt;=rel(){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
                 <div class="card mb-3" id="inst-or">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -2227,7 +2328,10 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">a logical or function f(X)-&gt;true if any X are true</p>
+                        <p class="mb-0 text-light">a logical or function \(f(X)\to \tt{true}\) if any \(X\) are true</p>
+                    </div>
+                    <div class="card-body py-2">
+                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any objs" <span class="text-light">=&gt;</span> "true if any objs are true"</pre>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-order">
@@ -2245,7 +2349,11 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">a sorting function f(X)-&gt;X</p>
+                        <p class="mb-0 text-light">a sorting function \(f(X)\to X&#x27;\)</p>
+                    </div>
+                    <div class="card-body py-2">
+                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any objs" <span class="text-light">=&gt;</span> "the objs sorted by the arg obj"
+   [0 <span class="text-light">=&gt;</span> "the obj to sort by"]</pre>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-parent">
@@ -2260,9 +2368,6 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">parent?#{?}&lt;=#(){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
                 <div class="card mb-3" id="inst-path">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -2276,9 +2381,6 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">path?uri&lt;=uri(uri::T){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
                 <div class="card mb-3" id="inst-plus">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -2304,6 +2406,10 @@ bin/metatron</code></pre>
                     <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">add the argument int to each element of the lhs int list</p>
                     </div>
+                    <div class="card-body py-2">
+                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"the lhs int list" <span class="text-light">=&gt;</span> "the result of the addition"
+   [int::T <span class="text-light">=&gt;</span> "the int to add to each element of the lhs list"]</pre>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-port">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -2318,9 +2424,6 @@ bin/metatron</code></pre>
 <pre class="mb-1"><code class="language-mtron">port?uri&lt;=uri(int::T[is(gte(-1))]){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
                 <div class="card mb-3" id="inst-pow">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -2337,9 +2440,6 @@ bin/metatron</code></pre>
 <pre class="mb-1"><code class="language-mtron">pow?lst&lt;=lst(int::T){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
                 <div class="card mb-3" id="inst-print">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -2354,7 +2454,11 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">a side-effect function f(x)-|&gt;x</p>
+                        <p class="mb-0 text-light">a side-effect function \(f(x)\nearrow x\)</p>
+                    </div>
+                    <div class="card-body py-2">
+                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"the rhs obj" <span class="text-light">=&gt;</span> "the lhs obj"
+   [0 <span class="text-light">=&gt;</span> "concatenated args followed by newline written to stdout"]</pre>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-prod">
@@ -2371,9 +2475,6 @@ bin/metatron</code></pre>
 <pre class="mb-1"><code class="language-mtron">prod?uri&lt;=uri{*}(){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
                 <div class="card mb-3" id="inst-q">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -2389,9 +2490,6 @@ bin/metatron</code></pre>
 <pre class="mb-1"><code class="language-mtron">q?rec&lt;=uri(){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
                 <div class="card mb-3" id="inst-range">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -2405,9 +2503,6 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">range?A{*}&lt;=A{*}(int::T,isa(int::T).else(0)){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
                 <div class="card mb-3" id="inst-reduce">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -2422,7 +2517,11 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">a reduce function f(X)-&gt;x</p>
+                        <p class="mb-0 text-light">a reduce function \(f(X) \to x\)</p>
+                    </div>
+                    <div class="card-body py-2">
+                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any objs" <span class="text-light">=&gt;</span> "the result of applying the arg inst to each obj"
+   [0 <span class="text-light">=&gt;</span> "the inst to apply to each obj"]</pre>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-ref">
@@ -2437,9 +2536,6 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">ref?#{*}&lt;=#(#{*}::T){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
                 <div class="card mb-3" id="inst-regex">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -2453,9 +2549,6 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">regex?lst&lt;=str(str::T){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
                 <div class="card mb-3" id="inst-reify">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -2470,9 +2563,6 @@ bin/metatron</code></pre>
 <pre class="mb-1"><code class="language-mtron">reify?rec&lt;=#{?}(){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
                 <div class="card mb-3" id="inst-repeat">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -2486,9 +2576,6 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">repeat?A{*}&lt;=A(#::T,#::T){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
                 <div class="card mb-3" id="inst-reverse">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -2505,9 +2592,6 @@ bin/metatron</code></pre>
 <pre class="mb-1"><code class="language-mtron">reverse?lst&lt;=lst(){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
                 <div class="card mb-3" id="inst-rng">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -2522,9 +2606,6 @@ bin/metatron</code></pre>
 <pre class="mb-1"><code class="language-mtron">rng?#{*}&lt;=rec(){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
                 <div class="card mb-3" id="inst-rshift">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -2546,9 +2627,6 @@ bin/metatron</code></pre>
 <pre class="mb-1"><code class="language-mtron">rshift?file{*}&lt;=file(isa(uri::T).else(&lt;#&gt;)){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
                 <div class="card mb-3" id="inst-scheme">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -2563,9 +2641,6 @@ bin/metatron</code></pre>
 <pre class="mb-1"><code class="language-mtron">scheme?uri&lt;=uri(uri::T){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
                 <div class="card mb-3" id="inst-select">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -2584,9 +2659,6 @@ bin/metatron</code></pre>
 <pre class="mb-1"><code class="language-mtron">select?lst{?}&lt;=lst(lst::T){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
                 <div class="card mb-3" id="inst-serialize">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -2600,9 +2672,6 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">serialize?B&lt;=A(/m/mach/io::T){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
                 <div class="card mb-3" id="inst-side">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -2616,9 +2685,6 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">side?A&lt;=A(#::T){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
                 <div class="card mb-3" id="inst-skip">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -2635,6 +2701,10 @@ bin/metatron</code></pre>
                     <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">skips the first n objs</p>
                     </div>
+                    <div class="card-body py-2">
+                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any objs" <span class="text-light">=&gt;</span> "the objs after skipping"
+   [0 <span class="text-light">=&gt;</span> "the number of objs to skip"]</pre>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-source">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -2648,9 +2718,6 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">source?#{*}&lt;=#(str::T){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
                 <div class="card mb-3" id="inst-split">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -2671,6 +2738,10 @@ bin/metatron</code></pre>
                     <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">split the lhs string according to the token arg and insert components into an ordered lst</p>
                     </div>
+                    <div class="card-body py-2">
+                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"a str to split" <span class="text-light">=&gt;</span> "lst encoded components of the split lhs str"
+   [0 <span class="text-light">=&gt;</span> "a token to split on"]</pre>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-start">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -2686,6 +2757,10 @@ bin/metatron</code></pre>
                     
                     <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">the initial function f()-&gt;x</p>
+                    </div>
+                    <div class="card-body py-2">
+                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"noobj" <span class="text-light">=&gt;</span> "initial objs"
+   [0 <span class="text-light">=&gt;</span> "initial objs"]</pre>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-sum">
@@ -2705,9 +2780,6 @@ bin/metatron</code></pre>
 <pre class="mb-1"><code class="language-mtron">sum?lst&lt;=lst{*}(){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
                 <div class="card mb-3" id="inst-swap">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -2721,9 +2793,6 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">swap?A&lt;=A(B::T){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
                 <div class="card mb-3" id="inst-take">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -2740,6 +2809,10 @@ bin/metatron</code></pre>
                     <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">takes the first n objs</p>
                     </div>
+                    <div class="card-body py-2">
+                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any objs" <span class="text-light">=&gt;</span> "the objs before skipping"
+   [0 <span class="text-light">=&gt;</span> "the number of objs to take"]</pre>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-thread">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -2753,9 +2826,6 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">thread?A&lt;=A(#::T){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
                 <div class="card mb-3" id="inst-tid">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -2772,6 +2842,9 @@ bin/metatron</code></pre>
                     <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">the geometric location of the lhs obj [equivalent to f(x) ~ vid(type())]</p>
                     </div>
+                    <div class="card-body py-2">
+                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any obj" <span class="text-light">=&gt;</span> "the lhs obj type id"</pre>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-to">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -2785,9 +2858,6 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">to?#{?}&lt;=#{?}(uri::T){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
                 <div class="card mb-3" id="inst-type">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -2802,9 +2872,6 @@ bin/metatron</code></pre>
 <pre class="mb-1"><code class="language-mtron">type?/m/type&lt;=A(){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
                 <div class="card mb-3" id="inst-ucase">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -2818,9 +2885,6 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">ucase?str&lt;=str(){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
                 <div class="card mb-3" id="inst-update">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -2836,9 +2900,6 @@ bin/metatron</code></pre>
 <pre class="mb-1"><code class="language-mtron">update?lst&lt;=lst(lst::T){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
                 <div class="card mb-3" id="inst-uri:c">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -2852,9 +2913,6 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">uri:c?lst&lt;=uri(uri::T){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
                 <div class="card mb-3" id="inst-vid">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -2872,6 +2930,9 @@ bin/metatron</code></pre>
                     <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">the spatial location of the lhs obj</p>
                     </div>
+                    <div class="card-body py-2">
+                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any obj" <span class="text-light">=&gt;</span> "the lhs obj value id"</pre>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-where">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -2886,9 +2947,6 @@ bin/metatron</code></pre>
 <pre class="mb-1"><code class="language-mtron">where?#{?}&lt;=#(#::T){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
                 <div class="card mb-3" id="inst-within">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -2905,9 +2963,6 @@ bin/metatron</code></pre>
 <pre class="mb-1"><code class="language-mtron">within?lst&lt;=lst(#{*}::T){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
                 <div class="card mb-3" id="inst-zero">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -2927,9 +2982,6 @@ bin/metatron</code></pre>
 <pre class="mb-1"><code class="language-mtron">zero?lst&lt;=lst(){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
                 </div>
         </div>
             
@@ -2951,9 +3003,7 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/else_after_count?code{?}&lt;=#{?}(code::T){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
+                    
                 </div>
                 <div class="card mb-3" id="rewrite-id_removal">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -2968,9 +3018,7 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/id_removal?code{?}&lt;=#{?}(code::T){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
+                    
                 </div>
                 <div class="card mb-3" id="rewrite-map_nest">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -2985,9 +3033,7 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/map_nest?code{?}&lt;=#{?}(code::T){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
+                    
                 </div>
                 <div class="card mb-3" id="rewrite-mult_one">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -3002,9 +3048,7 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/mult_one?code{?}&lt;=#{?}(code::T){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
+                    
                 </div>
                 <div class="card mb-3" id="rewrite-plus_zero">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -3019,9 +3063,7 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/plus_zero?code{?}&lt;=#{?}(code::T){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
+                    
                 </div>
                 <div class="card mb-3" id="rewrite-split_merge_collapse">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -3036,9 +3078,7 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/split_merge_collapse?code{?}&lt;=#{?}(code::T){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
+                    
                 </div>
                 <div class="card mb-3" id="rewrite-split_merge_left_factor">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -3053,9 +3093,7 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/split_merge_left_factor?code{?}&lt;=#{?}(code::T){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
+                    
                 </div>
                 <div class="card mb-3" id="rewrite-split_merge_right_factor">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -3070,9 +3108,7 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/split_merge_right_factor?code{?}&lt;=#{?}(code::T){&lt;j&gt;}</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
+                    
                 </div>
         </div>
             
@@ -3092,8 +3128,9 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
+                        <p class="mb-0 text-light">the reference implementation of a space where objs are store in memory</p>
                     </div>
+                    
                 </div>
                 <div class="card mb-3" id="space-meta">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -3109,9 +3146,7 @@ bin/metatron</code></pre>
  peers  =&gt;[uri{*}::T]])){&lt;j&gt;}]@/m/space/meta</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
+                    
                 </div>
                 <div class="card mb-3" id="space-q">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -3129,9 +3164,7 @@ bin/metatron</code></pre>
  post_read{?}  =&gt;inst::T]){&lt;j&gt;}]@/m/space/q</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
+                    
                 </div>
                 <div class="card mb-3" id="space-stack">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -3144,8 +3177,9 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
+                        <p class="mb-0 text-light">the machine&#x27;s thread local stack exposed as a space</p>
                     </div>
+                    
                 </div>
         </div>
             
@@ -3153,7 +3187,7 @@ bin/metatron</code></pre>
         <div class="container-xxl py-3 text-center">
             <hr class="border-secondary">
             <small class="text-muted">
-                generated by metatron instset doc generator on 2026-04-01 03:21:48<br>
+                generated by metatron instset doc generator on 2026-04-02 01:38:33<br>
                 © PhaseShift Studio, LLC
             </small>
         </div>

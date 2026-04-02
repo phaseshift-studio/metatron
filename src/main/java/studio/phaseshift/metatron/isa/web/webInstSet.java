@@ -137,20 +137,12 @@ public class webInstSet extends AbstractInstSet {
                         return str(fail(e).toString());
                     }
                 }),
-                instC(INST_TID.extend("pretty_eval").dom(STR_TID).rng(STR_TID), lst(), (lhs, inst) -> {
+                instC(INST_TID.extend("doc_json").dom(STR_TID).rng(STR_TID), lst(), (lhs, inst) -> {
                     LOG.trace("processing pretty eval request: %s", lhs);
                     try {
                         final String source = lhs.strValue();
                         final Obj result = mParser.parse(source).apply();
-                        final String resultString = result.isObjs() ?
-                                result.stream()
-                                        .map(Obj::toCleanString)
-                                        //.map(Highlighter::unformat)
-                                        .reduce((a, b) -> a + "%%%" + b)
-                                        .orElse("") :
-                                result.toCleanString();
-                        //Highlighter.unformat(result.toString());
-                        return str(resultString);
+                        return str(ObjSimpleJSONSerializer.single().write(result).toString());
                     } catch (final Exception e) {
                         return str(fail(e).toString());
                     }

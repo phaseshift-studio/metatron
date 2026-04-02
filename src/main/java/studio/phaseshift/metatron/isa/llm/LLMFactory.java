@@ -28,7 +28,7 @@ import dev.langchain4j.model.ollama.OllamaModels;
 import dev.langchain4j.model.ollama.OllamaStreamingChatModel;
 import dev.langchain4j.model.openai.OpenAiModelCatalog;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
-import org.slf4j.LoggerFactory;
+import org.slf4j.event.Level;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.Space;
@@ -37,6 +37,7 @@ import studio.phaseshift.metatron.isa.llm.type.Model;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Str;
 import studio.phaseshift.metatron.isa.m.type.impl.MUri;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
@@ -54,7 +55,6 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.Rec.REC_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Str.str0;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -82,7 +82,7 @@ public final class LLMFactory {
                                 uri(NAME), uri(m.name()),
                                 uri(TYPE), m.type() == null ? noobj() : uri(m.type().name().toLowerCase(Locale.ROOT)),
                                 uri(CREATOR), str(m.provider().name()),
-                                uri(DESC), m.description() == null || m.description().isBlank() ? noobj() :str(m.description()),
+                                uri(DESC), m.description() == null || m.description().isBlank() ? noobj() : str(m.description()),
                                 uri(PROVIDER), auto_from_(spaceRec.vid()).tryToInst()),
                         MODEL_TID, catalogSpace.pattern().retractPattern().extend(m.name())));
                 yield catalogSpace;
@@ -119,6 +119,7 @@ public final class LLMFactory {
         };
     }
 
+
     public static StreamingChatModel createChatInteraction(final Rec model, String modelName) {
         final fURI provider = model.at(f(PROVIDER)).asRec().at(NAME).uriValue();
         final String host = model.at(f(PROVIDER)).asRec().at(HOST).uriValue().toString();
@@ -137,7 +138,7 @@ public final class LLMFactory {
                             .jsonSchema(new JsonSchema.Builder().rootElement(Model.Helper.objToSchema(REC_TYPE, responseFormat, RESPONSE)).build())
                             .type(ResponseFormatType.JSON).build() : null)
                     .build();
-            
+
             case OPENAI -> {
                 // Don't pass empty organizationId - it causes hangs in some LangChain4j versions
                 final String orgId = organization.strValue().isBlank() ? null : organization.strValue();
@@ -152,7 +153,7 @@ public final class LLMFactory {
                         .logRequests(true)
                         .logResponses(true)
                         .timeout(Duration.ofSeconds(60))
-                        .logger(LoggerFactory.getLogger("openai"))
+                        .logger(Graphitty.log(OpenAiStreamingChatModel.class).logger())
                         .responseFormat(!responseFormat.isNoObj() && !responseFormat.isEmpty() ? new ResponseFormat.Builder()
                                 .jsonSchema(new JsonSchema.Builder().rootElement(Model.Helper.objToSchema(REC_TYPE, responseFormat, RESPONSE)).build())
                                 .type(ResponseFormatType.JSON).build() : null)
@@ -163,6 +164,9 @@ public final class LLMFactory {
                     .apiKey(api_key.strValue())
                     .modelName(modelName)
                     .returnThinking(thinking)
+                    .logRequests(true)
+                    .logResponses(true)
+                    .logger(Graphitty.log(AnthropicStreamingChatModel.class).logger())
                     .responseFormat(!responseFormat.isNoObj() && !responseFormat.isEmpty() ? new ResponseFormat.Builder()
                             .jsonSchema(new JsonSchema.Builder().rootElement(Model.Helper.objToSchema(REC_TYPE, responseFormat, RESPONSE)).build())
                             .type(ResponseFormatType.JSON).build() : null)

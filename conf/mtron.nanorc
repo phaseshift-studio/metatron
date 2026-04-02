@@ -19,14 +19,15 @@ color yellow "\{.\}"
 color red "\{\?\}"
 ### int
 color yellow "(0)|(-?[1-9][0-9]*)"
+# common sugars
+color green "[.:;,+|=!\%@]" "<<" ">>" "<=" "=>" "->" ">-" "-<"
+color yellow "[*]"
 ### real
 icolor yellow "(([1-9][0-9]+)|0+)\.[0-9]+(E[-+]?[0-9]+)?"
-# common sugars
-color green "[.:;,+*|=!\%@]" "<<" ">>" "<=" "=>" "->" ">-" "-<"
 # common structural tokens
 color green "\[" "\]" "\(" "\)" "\{" "\}"
 # real exponent
-icolor yellow "\.[0-9]+E[-+]?[0-9]+"
+icolor yellow "(\.|[0-9])+E[-+]?[0-9]+"
 # uri slash or schema
 icolor blue "(/|([a-z]+(://))|[a-z])([0-9]|[a-z]|\.|-|_)+(:)?[0-9]*(/)?([a-z]|/|\_|[0-9])*"
 # rec/rel uri key
@@ -62,10 +63,12 @@ color yellow "!\*" "\{<j>\}"
 color green "\{|\}"
 ###  uri
 color blue "[^-][<][^=]([^>])*[>][^-]^(=>)]"
-color green "<" ">"
-icolor blue "[a-z0-9_/]+::"
+icolor blue "[a-z0-9_/-]+::"
 color green "::" 
 color yellow "<="
+### uri <>
+color blue start="<" end=">"
+color green "<" ">"
 ### str
 color yellow "[\"][^\"]*[\"]"
 color yellow "['][^']*[']"

@@ -1,0 +1,70 @@
+/*
+ * metatron: a distributed virtual machine and language
+ *  Copyright (C) 2025- PhaseShift Studio, LLC
+ *  
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *  
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+:root {
+    --maincolor: #282c34;
+    --primarycolor: #952e1e;
+    --secondarycolor: #191C24;
+    --tertiarycolor: #6565f3;
+    --sidebarbackground: #191C24;
+    --linkcolor: var(--mmagenta);
+    --linkcoloralternate: #2652e5;
+    --white: #c2c2c2;
+    --primary: #a30000;
+    --secondary: #191C24;
+    --light: #6C7293;
+    --dark: #000000;
+    /*------------------------*/
+    --mblue: #4669dd;
+    --mmagenta: #9f4040; /*#825181;*/
+    --mred: #7a2518;
+    --mgreen: #457b02;
+    --mdarkgray: #494554;
+    --mlightgray: #797585;
+    --myellow: #edbf73;
+    --maqua: #0082ae;
+}
+
+body, .quoteblock blockquote, .quoteblock p, .mjx-chtml .MJXc-display span {
+    background-color: var(--secondarycolor);
+    color: #cbcbcb;
+    font-weight: 1;
+}
+
+
+#header>h1:first-child {
+    font-size: 0;
+}
+
+a {
+    color: var(--mred);
+}
+
+.sidebarblock, 
+.content,
+pre .highlight,
+.language-java,
+.hljs {
+    background-color: var(--maincolor);
+    color: #cbcbcb;
+}
+
+#toc.toc2 {
+    background-color: var(--secondarycolor);
+    color: #cbcbcb;
+}

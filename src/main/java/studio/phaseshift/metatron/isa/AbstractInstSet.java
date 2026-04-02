@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -21,7 +21,6 @@ package studio.phaseshift.metatron.isa;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.furi.q.DocQ;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.*;
@@ -158,8 +157,8 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
-        return Q.Helper.processPreWrite(this.qs(), vid, obj).orElse(
-                Q.Helper.processQlessWrite(this.qs(), vid, obj).orElseGet(
+        return Q.Helper.processPreWrite(this.qs(), vid, obj).orElseGet(
+                () -> Q.Helper.processQlessWrite(this.qs(), vid, obj).orElseGet(
                         () -> {
                             if (obj.isInst()) {
                                 final Inst inst = obj.as();

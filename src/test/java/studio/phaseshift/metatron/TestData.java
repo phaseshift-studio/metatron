@@ -64,6 +64,14 @@ public @interface TestData {
     boolean oneTime() default false;
 
     /**
+     * Path to a .mtron file in resources to load as test data.
+     * If specified, the file will be loaded and evaluated before the inline values.
+     *
+     * @return path to .mtron file in resources, or empty string if not used
+     */
+    String source() default "";
+
+    /**
      * The string values to parse and evaluate before test execution.
      *
      * @return an array of string values to be evaluated as test data
@@ -90,10 +98,92 @@ public @interface TestData {
         @Override
         public void beforeTestExecution(final @NonNull ExtensionContext context) {
             try {
-                if (context.getRequiredTestMethod().getAnnotation(TestData.class) != null &&
-                        (!this.testDataLoaded ||
-                                !context.getRequiredTestMethod().getAnnotation(TestData.class).oneTime())) {
-                    Arrays.stream(context.getRequiredTestMethod().getAnnotation(TestData.class).value())
+                final TestData annotation = context.getRequiredTestMethod().getAnnotation(TestData.class);
+                if (annotation != null && (!this.testDataLoaded || !annotation.oneTime())) {
+                    // Load from file if source is specified
+                    if (!annotation.source().isEmpty()) {
+                        System.out.println("==> TestData: loading test data from file: " + annotation.source());
+                        LOG.debug("loading test data from file: %s", annotation.source());
+                        final java.io.InputStream stream = context.getRequiredTestClass()
+                                .getResourceAsStream("/" + annotation.source());
+                        if (stream == null) {
+                            throw new IllegalArgumentException("Test data file not found: " + annotation.source());
+                        }
+
+                        // Get test instance to access make() method for $$ replacement
+                        final Object testInstance = context.getRequiredTestInstance();
+                        if (testInstance instanceof studio.phaseshift.metatron.isa.AbstractSpaceTest) {
+                            final studio.phaseshift.metatron.isa.AbstractSpaceTest spaceTest =
+                                (studio.phaseshift.metatron.isa.AbstractSpaceTest) testInstance;
+
+                            // Read file line by line and eval each statement separately
+                            int recordCount = 0;
+                            int lineNumber = 0;
+                            boolean inBlockComment = false;
+                            try (final java.io.BufferedReader reader = new java.io.BufferedReader(
+                                    new java.io.InputStreamReader(stream))) {
+                                String line;
+                                while ((line = reader.readLine()) != null) {
+                                    lineNumber++;
+                                    final String processedLine = spaceTest.make(line).trim();
+
+                                    // Skip empty lines
+                                    if (processedLine.isEmpty()) {
+                                        continue;
+                                    }
+
+                                    // Handle single-line comments [-- comment --] or [== comment ==]
+                                    if ((processedLine.startsWith("[--") && processedLine.endsWith("--]")) ||
+                                        (processedLine.startsWith("[==") && processedLine.endsWith("==];"))) {
+                                        continue;
+                                    }
+
+                                    // Track multi-line block comment state
+                                    if (processedLine.startsWith("[==") || processedLine.startsWith("[--")) {
+                                        inBlockComment = true;
+                                        continue;
+                                    }
+                                    if (processedLine.equals("==];") || processedLine.equals("--]")) {
+                                        inBlockComment = false;
+                                        continue;
+                                    }
+
+                                    // Skip lines inside block comments
+                                    if (inBlockComment) {
+                                        continue;
+                                    }
+
+                                    System.out.println("==> TestData line " + lineNumber + ": evaluating: " + processedLine);
+                                    LOG.debug("line %d: evaluating: %s", lineNumber, processedLine);
+                                    try {
+                                        // Execute each write statement individually and consume the stream
+                                        mParser.eval(processedLine).forEach(obj -> {});
+                                        System.out.println("==> TestData line " + lineNumber + ": completed");
+                                        LOG.debug("line %d: completed", lineNumber);
+                                        recordCount++;
+                                    } catch (Exception e) {
+                                        LOG.warn("line %d: failed to eval: %s - %s", lineNumber, processedLine, e.getMessage());
+                                    }
+                                }
+                            }
+                            System.out.println("==> TestData: successfully loaded " + recordCount + " records from " + lineNumber + " total lines");
+                            LOG.debug("successfully loaded %d records from %d total lines", recordCount, lineNumber);
+                        } else {
+                            // Fallback for non-AbstractSpaceTest instances
+                            final java.io.File tempFile = java.io.File.createTempFile("test-data-", ".mtron");
+                            try {
+                                java.nio.file.Files.copy(stream, tempFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                                mParser.eval(tempFile).asCall().forEach(o -> o.apply());
+                            } finally {
+                                tempFile.delete();
+                            }
+                        }
+                        this.testDataLoaded = true;
+                    }
+
+                    // Also load inline values
+                    Arrays.stream(annotation.value())
+                            .filter(value -> !value.trim().isEmpty())
                             .peek(value -> LOG.debug("loading test data: %s", value))
                             .peek(v -> this.testDataLoaded = true)
                             .forEach(mParser::eval);

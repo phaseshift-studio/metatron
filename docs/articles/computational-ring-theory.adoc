@@ -4,6 +4,14 @@
 :toc: left
 :toclevels: 3
 :numbered:
+:favicon: ../../website/images/favicon.ico
+:highlightjsdir: ../../website/highlight
+:source-highlighter: ../../website/highlight/highlight.min.js
+:highlightjs-languages: mtron,bash,json,java
+:highlightjs-theme: monokai
+:linkcss: ../../website/css/article.css
+:icons: font
+:icon-set: fas
 :stem: latexmath
 :docinfo: shared
 :lang: en
@@ -11,24 +19,37 @@
 :!revdate:
 :!revremark:
 :!revnumber:
+:license-url: https://www.gnu.org/licenses/agpl-3.0.html
+:license-title: AGPLv3
 :docname: computational-ring-theory
 :doctitle: Computational Ring Theory
 :L: latexmath
+:nofooter:
+
+
+++++
+<script src="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.css"/>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+<script src="../javascript/metatron-docs.js"></script>
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="../../website/css/article.css">
+<script src="../../website/js/metatron.js" type="text/javascript"></script>
+++++
 
 = Computational Ring Theory
 Marko A. Rodriguez <https://markorodriguez.com>; Claude (Anthropic)
 
-
 [abstract]
 --
-We introduce *computational ring theory*, an extension of classical ring theory where identity elements are not passive values but active computational objects. In traditional algebra, identity elements (latexmath:[0], latexmath:[1]) are fixed values satisfying axioms structurally. We demonstrate that in Turing-complete, code-as-data systems, identities can be *instructions* whose axioms are satisfied through runtime evaluation. This principle of *verification-forced reification*—where proving uniqueness of identity requires computation that forces the identity to be unique—enables algebraic structures previously impossible with passive identities. We formalize this framework, prove its consistency with classical ring axioms, and demonstrate applications including list Cartesian products as rings with relation-based multiplication, where the multiplicative identity latexmath:[\left[\mathtt{id}()\right\]] is an active instruction with generic domain/range. This work bridges abstract algebra, computation theory, and stream processing, extending the stream ring theory framework to encompass lazy, non-terminating, and context-dependent algebraic elements.
+We introduce *computational ring theory*, an extension of classical ring theory where identity elements are not passive values but active computational objects. In traditional algebra, identity elements latexmath:[(0,1)] are fixed values satisfying axioms structurally. We demonstrate that in Turing-complete, code-as-data systems, identities can be *instructions* whose axioms are satisfied through runtime evaluation. This principle of *verification-forced reification*—where proving uniqueness of identity requires computation that forces the identity to be unique—enables algebraic structures previously impossible with passive identities. We formalize this framework, prove its consistency with classical ring axioms, and demonstrate a key implementation technique: *coefficient-mediated algebraic structure*, where data structures inherit ring properties by coupling to coefficient rings. Applications include list Cartesian products as rings with relation-based multiplication, where the multiplicative identity latexmath:[[\text{id}()\]] is an active instruction with generic domain/range. This work bridges abstract algebra, computation theory, and category theory, establishing computational rings as a conservative extension of classical ring theory.
 --
 
 == Introduction
 
 Classical ring theory requires concrete identity elements. A ring latexmath:[\langle A, +, \cdot \rangle] must have an additive identity latexmath:[0 \in A] such that latexmath:[0 + a = a + 0 = a] for all latexmath:[a \in A], and a multiplicative identity (unity) latexmath:[1 \in A] such that latexmath:[1 \cdot a = a \cdot 1 = a]. These identities are *passive values*—fixed elements of the set latexmath:[A] whose identity properties arise from their structural position within the algebra.
 
-Stream ring theory <<rodriguez2019>> established that *functions* themselves can form rings, where the set latexmath:[F] of stream functions with parallel composition latexmath:[+] and serial composition latexmath:[\cdot] satisfies all ring axioms. The additive identity is the function latexmath:[0(x) = \emptyset] (producing no output), and the multiplicative identity is latexmath:[1(x) = x] (the identity function). This was a significant advance: identity elements became *functions* rather than mere values.
+Stream ring theory <<rodriguez2019>> established that *functions* themselves can form rings, where the set latexmath:[F] of stream functions with parallel composition latexmath:[+] and serial composition latexmath:[\cdot] satisfies all ring axioms. The additive identity is the function latexmath:[0(x) = \emptyset] (producing no output), and the multiplicative identity is latexmath:[1(x) = x] (the identity function). The significance being that identity elements became *functions* rather than mere values.
 
 However, even in stream ring theory, the identity functions latexmath:[0] and latexmath:[1] are still *passive* in the sense that they are fixed, predetermined functions. The question arises: *What if identity elements themselves could be computational—active objects whose identity properties emerge through runtime evaluation?*
 
@@ -36,16 +57,16 @@ However, even in stream ring theory, the identity functions latexmath:[0] and la
 
 Consider the problem of defining a ring structure on lists where:
 
-* Addition is list concatenation: latexmath:[\left[a,b\right] + \left[c,d\right] = \left[a,b,c,d\right]]
-* Multiplication is Cartesian product producing relations: latexmath:[\left[a,b\right] \times \left[c,d\right] = \left[a \Rightarrow c, a \Rightarrow d, b \Rightarrow c, b \Rightarrow d\right]]
+* Addition is list concatenation: latexmath:[[a,b\] + [c,d\] = [a,b,c,d\]]
+* Multiplication is Cartesian product producing relations: latexmath:[[a,b\] \times [c,d\] = [a \Rightarrow c, a \Rightarrow d, b \Rightarrow c, b \Rightarrow d\]]
 
-The additive identity is straightforward: the empty list latexmath:[\left[\,\right]] satisfies latexmath:[\left[\,\right] + \left[a,b\right] = \left[a,b\right]].
+The additive identity is straightforward: the empty list latexmath:[[,\]] satisfies latexmath:[[,\] + [a,b\] = [a,b\]].
 
 But what is the multiplicative identity? We need some list latexmath:[e] such that:
 
 [stem]
 ++++
-\left[a,b,c\right] \times e = \left[a,b,c\right]
+[a,b,c] \times e = [a,b,c]
 ++++
 
 In traditional Cartesian product semantics, the identity would be the *diagonal relation*—the set of all pairs latexmath:[(x,x)] for all possible latexmath:[x]. But this is *infinite* and cannot be represented as a finite list. There is no passive value that can serve as the multiplicative identity for relation-based Cartesian product.
@@ -58,54 +79,46 @@ For the list multiplication problem, we define:
 
 [stem]
 ++++
-\mathtt{one}() = \left[\mathtt{id}()\right]
+\tt{one}() = [\texttt{id}()]
 ++++
 
-where latexmath:[\mathtt{id}()] is an *instruction* (not data) with generic domain and range. When the multiplication operation encounters latexmath:[\left[\mathtt{id}()\right]], it recognizes this instruction and returns the other operand unchanged:
+where latexmath:[\texttt{id}()] is an *instruction* (not data) with generic domain and range. When the multiplication operation encounters latexmath:[[\texttt{id}()\]], it recognizes this instruction and returns the other operand unchanged:
 
 [stem]
 ++++
-\left[a,b,c\right] \times \left[\mathtt{id}()\right] = \left[a,b,c\right]
+[a,b,c] \times [\texttt{id}()] = [a,b,c]
 ++++
 
 The identity axiom is satisfied not through structural properties of a passive value, but through *computational semantics* of an active instruction.
-
-=== Verification-Forced Reification
-
-The key insight is what we call *verification-forced reification*: any attempt to prove that the identity is unique requires *computing* with it, and the act of computation forces it to behave uniquely.
-
-In classical algebra, we prove uniqueness of identity as follows: suppose latexmath:[e] and latexmath:[e'] are both identities. Then:
-
-[stem]
-++++
-e = e \cdot e' = e'
-++++
-
-where the first equality uses latexmath:[e'] as identity and the second uses latexmath:[e] as identity.
-
-With active identities, this proof still works, but with a crucial difference: the equalities latexmath:[e \cdot e' = e] and latexmath:[e \cdot e' = e'] are not structural facts but *computational results*. The proof requires *evaluating* the multiplication, which triggers the runtime semantics that make the identity unique.
-
-This is analogous to quantum superposition: before measurement (computation), there exist infinitely many potential identities—one for each possible operand. Upon measurement (runtime evaluation), the "wavefunction collapses" to the unique identity for that specific context. The axioms hold because they are only tested through computation, which forces the collapse to the correct value.
 
 === Contributions
 
 This paper makes the following contributions:
 
-1. *Formalization of active identities*: We provide a rigorous definition of computational rings where identity elements are instructions with runtime semantics.
+1. *Formalization of active identities*: We provide a formal definition of computational rings where identity elements are instructions with runtime semantics (Section 3).
 
-2. *Verification-forced reification principle*: We prove that active identities satisfy classical ring axioms under evaluation semantics.
+2. *Verification-forced reification principle*: We prove that active identities satisfy classical ring axioms under evaluation semantics (Section 3.3).
 
-3. *Case study*: We demonstrate that lists with concatenation and relation-based Cartesian product form a ring with active multiplicative identity latexmath:[\left[\mathtt{id}()\right]].
+3. *Coefficient-mediated algebraic structure*: We demonstrate how data structures inherit ring properties by coupling to coefficient rings, enabling modular construction of algebraic types (Section 5).
 
-4. *Non-terminating identities*: We explore the implications of identity elements whose computation may not halt, connecting to the halting problem and domain theory.
+4. *Case study*: We demonstrate that lists with concatenation and relation-based Cartesian product form a ring with active multiplicative identity latexmath:[[\texttt{id}()\]] (Section 4).
 
-5. *Theoretical framework*: We establish computational ring theory as a conservative extension of classical ring theory, where passive identities are a special case of active identities.
+5. *Category-theoretic framework*: We reformulate computational rings in categorical terms, showing how active identities correspond to computational morphisms (Section 7).
+
+6. *Theoretical framework*: We establish computational ring theory as a conservative extension of classical ring theory, where passive identities are a special case of active identities (Section 6).
 
 == Background
 
 === Ring Theory
 
-A *ring* is an algebraic structure latexmath:[\langle A, +, \cdot \rangle] consisting of a set latexmath:[A] with two binary operations: addition latexmath:[+] and multiplication latexmath:[\cdot]. The structure must satisfy the following axioms:
+A *ring* is an algebraic structure 
+
+[stem]
+++++
+\langle A, +, \cdot \rangle
+++++
+
+consisting of a set latexmath:[A] with two binary operations: addition latexmath:[+] and multiplication latexmath:[\cdot]. The structure must satisfy the following axioms:
 
 *Additive Structure (Abelian Group):*
 
@@ -195,16 +208,7 @@ default A mult(A other) {
 }
 ----
 
-The method latexmath:[\mathtt{isOne}()] checks whether an object is the active identity instruction, not by value equality but by inspecting its instruction type.
-
-=== Generic Types
-
-Active identities often use *generic types* to work with any domain. For example, the identity instruction latexmath:[\mathtt{id}()] might have:
-
-* Domain: latexmath:[A] (a generic type variable)
-* Range: latexmath:[A] (the same generic type)
-
-This allows latexmath:[\mathtt{id}()] to serve as identity for operations on any type, with the specific type determined at runtime.
+The method latexmath:[\tt{isOne}()] checks whether an object is the active identity instruction, not by value equality but by inspecting its instruction type.
 
 === Verification-Forced Reification
 
@@ -213,26 +217,32 @@ This allows latexmath:[\mathtt{id}()] to serve as identity for operations on any
 In a computational algebra with active identities, any proof of uniqueness of the identity element requires *computation*, and the act of computation forces the identity to be unique.
 ****
 
-*Proof sketch:* Suppose latexmath:[e] and latexmath:[e'] are both active identities. To prove latexmath:[e = e'], we compute:
+*Proof.* Suppose latexmath:[e] and latexmath:[e'] are both active identities. To prove latexmath:[e = e'], we compute:
 
 [stem]
 ++++
 e = e \star e' = e'
 ++++
 
-But latexmath:[e \star e'] is not a structural equality—it requires *evaluating* the operation latexmath:[\star]. When we evaluate latexmath:[e \star e'], the runtime semantics recognize that latexmath:[e'] is an identity instruction and return latexmath:[e]. Similarly, evaluating from the other direction returns latexmath:[e']. The computation itself forces them to be equal.
+But latexmath:[e \star e'] is not a structural equality—it requires *evaluating* the operation latexmath:[\star]. When we evaluate latexmath:[e \star e'], the runtime semantics recognize that latexmath:[e'] is an identity instruction and return latexmath:[e]. Similarly, evaluating from the other direction returns latexmath:[e']. The computation itself forces them to be equal. ∎
 
 This is fundamentally different from classical algebra, where latexmath:[e = e \star e' = e'] is a structural fact that can be verified without computation.
 
-=== Quantum Superposition Metaphor
+.Theorem: Uniqueness of Active Identity
+****
+If latexmath:[e] and latexmath:[e'] are both active identities for a monoid latexmath:[\langle A, \star \rangle] with runtime semantics, then latexmath:[\mathcal{E}(e \star e') = e = e'], where latexmath:[\mathcal{E}] is the evaluation function.
+****
 
-We can think of active identities as existing in a "superposition" of infinitely many potential values—one for each possible operand:
+*Proof.* By definition of active identity, latexmath:[e \star e' = e'] (using latexmath:[e] as identity) and latexmath:[e \star e' = e] (using latexmath:[e'] as identity). Under evaluation latexmath:[\mathcal{E}], both equalities hold, thus latexmath:[\mathcal{E}(e) = \mathcal{E}(e \star e') = \mathcal{E}(e')]. ∎
 
-* *Before computation*: latexmath:[e] is simultaneously latexmath:[e_a] (identity for latexmath:[a]), latexmath:[e_b] (identity for latexmath:[b]), etc.
-* *Upon computation*: When we evaluate latexmath:[a \star e], the "wavefunction collapses" to the specific identity for latexmath:[a]
-* *Uniqueness*: Any attempt to observe multiple identities requires computation, which forces them to collapse to the same value
+=== Generic Types
 
-This metaphor captures the essence of verification-forced reification: the identity is unique because the act of verifying uniqueness makes it so.
+Active identities often use *generic types* to work with any domain. For example, the identity instruction latexmath:[\tt{id}()] might have:
+
+* Domain: latexmath:[A] (a generic type variable)
+* Range: latexmath:[A] (the same generic type)
+
+This allows latexmath:[\tt{id}()] to serve as identity for operations on any type, with the specific type determined at runtime.
 
 == Case Study: List Cartesian Product Ring
 
@@ -246,14 +256,14 @@ Let latexmath:[L] be the set of all finite lists. We define two operations:
 
 [stem]
 ++++
-\left[a_1, \ldots, a_n\right] + \left[b_1, \ldots, b_m\right] = \left[a_1, \ldots, a_n, b_1, \ldots, b_m\right]
+[a_1, \ldots, a_n] + [b_1, \ldots, b_m] = [a_1, \ldots, a_n, b_1, \ldots, b_m]
 ++++
 
 *Multiplication (Relation-based Cartesian Product):*
 
 [stem]
 ++++
-\left[a_1, \ldots, a_n\right] \times \left[b_1, \ldots, b_m\right] = \left[a_i \Rightarrow b_j \mid 1 \leq i \leq n, 1 \leq j \leq m\right]
+[a_1, \ldots, a_n] \times [b_1, \ldots, b_m] = [a_i \Rightarrow b_j \mid 1 \leq i \leq n, 1 \leq j \leq m]
 ++++
 
 where latexmath:[a \Rightarrow b] denotes a *relation* (key-value pair) from latexmath:[a] to latexmath:[b].
@@ -262,50 +272,30 @@ where latexmath:[a \Rightarrow b] denotes a *relation* (key-value pair) from lat
 
 [stem]
 ++++
-\left[a, b\right] \times \left[c, d\right] = \left[a \Rightarrow c, a \Rightarrow d, b \Rightarrow c, b \Rightarrow d\right]
+[a, b] \times [c, d] = [a \Rightarrow c, a \Rightarrow d, b \Rightarrow c, b \Rightarrow d]
 ++++
 
-=== Additive Identity
+=== Identity Elements
 
-The additive identity is the empty list:
+*Additive Identity:* The empty list latexmath:[[\,]] satisfies:
 
 [stem]
 ++++
-\left[\,\right] + \left[a_1, \ldots, a_n\right] = \left[a_1, \ldots, a_n\right]
+[\,] + [a_1, \ldots, a_n] = [a_1, \ldots, a_n]
 ++++
 
 This is a passive identity—a concrete value with structural identity properties.
 
-=== Multiplicative Identity: The Problem
-
-For multiplication, we need latexmath:[e] such that:
+*Multiplicative Identity:* We define the multiplicative identity as an *active identity*:
 
 [stem]
 ++++
-\left[a_1, \ldots, a_n\right] \times e = \left[a_1, \ldots, a_n\right]
+\tt{one}() = [\tt{id}()]
 ++++
 
-But with relation-based Cartesian product, this would require:
+where latexmath:[\tt{id}()] is an instruction with:
 
-[stem]
-++++
-e = \left[x \mid x \Rightarrow x = x \text{ for all possible } x\right]
-++++
-
-This is the *diagonal relation*—an infinite set. No finite list can serve as a passive multiplicative identity.
-
-=== Multiplicative Identity: The Solution
-
-We define the multiplicative identity as an *active identity*:
-
-[stem]
-++++
-\mathtt{one}() = \left[\mathtt{id}()\right]
-++++
-
-where latexmath:[\mathtt{id}()] is an instruction with:
-
-* Type: latexmath:[\mathtt{ID\_INST\_TID}]
+* Type: latexmath:[\tt{ID\_INST\_TID}]
 * Domain: latexmath:[A] (generic type)
 * Range: latexmath:[A] (generic type)
 
@@ -315,16 +305,10 @@ The multiplication operation has runtime semantics:
 ----
 default Lst mult(Lst other) {
     // Check if this is [id()]
-    if (this.count() == 1 && this.at(0).isInst() &&
-        this.at(0).tid().basePath().equals(ID_INST_TID.basePath())) {
-        return other;
-    }
+    if (this.isOne()) return other;
 
     // Check if other is [id()]
-    if (other.count() == 1 && other.at(0).isInst() &&
-        other.at(0).tid().basePath().equals(ID_INST_TID.basePath())) {
-        return this;
-    }
+    if (other.isOne()) return this;
 
     // Perform Cartesian product
     return lst(this.elements().flatMap(a ->
@@ -334,92 +318,142 @@ default Lst mult(Lst other) {
 
 === Verification of Ring Axioms
 
-We now verify that latexmath:[\langle L, +, \times \rangle] with active identity latexmath:[\left[\mathtt{id}()\right]] satisfies all ring axioms.
+.Theorem: List Ring Structure
+****
+The structure latexmath:[\langle L, +, \times \rangle] with active identity latexmath:[[\texttt{id}()\]] forms a ring with unity.
+****
 
-*Additive Abelian Group:* List concatenation with empty list as identity forms an abelian group (standard result).
+*Proof.* We verify each axiom:
+
+*Additive Abelian Group:* List concatenation with the empty list as identity forms an abelian group (standard result). The additive inverse is defined by negating coefficients (see Section 5).
 
 *Multiplicative Monoid:*
 
-* *Associativity*: Cartesian product is associative (though structure differs: latexmath:[(a \times b) \times c] produces nested relations)
-* *Identity*: We must verify latexmath:[\left[a_1, \ldots, a_n\right] \times \left[\mathtt{id}()\right] = \left[a_1, \ldots, a_n\right]]
+* *Associativity*: Cartesian product is associative: latexmath:[(L_1 \times L_2) \times L_3 \cong L_1 \times (L_2 \times L_3)] (though structure differs due to nested relations).
 
-When we evaluate latexmath:[\left[a_1, \ldots, a_n\right] \times \left[\mathtt{id}()\right]], the runtime semantics detect that latexmath:[\left[\mathtt{id}()\right]] is the identity instruction and return latexmath:[\left[a_1, \ldots, a_n\right]] unchanged. ✓
+* *Identity*: For any list latexmath:[L], when we evaluate latexmath:[L \times [\tt{id}()\]], the runtime semantics detect that latexmath:[[\texttt{id}()\]] is the identity instruction and return latexmath:[L] unchanged. Similarly for latexmath:[[\tt{id}()\] \times L].
 
-*Distributivity:* We must verify:
+*Distributivity:* We verify latexmath:[L_1 \times (L_2 + L_3) = (L_1 \times L_2) + (L_1 \times L_3)]:
 
+Left side:
 [stem]
 ++++
-\left[a_1, \ldots, a_n\right] \times \left(\left[b_1, \ldots, b_m\right] + \left[c_1, \ldots, c_k\right]\right) = \left(\left[a_1, \ldots, a_n\right] \times \left[b_1, \ldots, b_m\right]\right) + \left(\left[a_1, \ldots, a_n\right] \times \left[c_1, \ldots, c_k\right]\right)
+L_1 \times (L_2 + L_3) = L_1 \times [b_1, \ldots, b_m, c_1, \ldots, c_k] = [a_i \Rightarrow b_j] \cup [a_i \Rightarrow c_j]
 ++++
 
-*Left side:*
-
+Right side:
 [stem]
 ++++
-\begin{align}
-&\left[a_1, \ldots, a_n\right] \times \left[b_1, \ldots, b_m, c_1, \ldots, c_k\right] \\
-&= \left[a_i \Rightarrow b_j \mid 1 \leq i \leq n, 1 \leq j \leq m\right] \cup \left[a_i \Rightarrow c_j \mid 1 \leq i \leq n, 1 \leq j \leq k\right]
-\end{align}
+(L_1 \times L_2) + (L_1 \times L_3) = [a_i \Rightarrow b_j] + [a_i \Rightarrow c_j] = [a_i \Rightarrow b_j] \cup [a_i \Rightarrow c_j]
 ++++
 
-*Right side:*
+The two sides are equal. ∎
 
-[stem]
-++++
-\begin{align}
-&\left[a_i \Rightarrow b_j \mid 1 \leq i \leq n, 1 \leq j \leq m\right] + \left[a_i \Rightarrow c_j \mid 1 \leq i \leq n, 1 \leq j \leq k\right] \\
-&= \left[a_i \Rightarrow b_j \mid 1 \leq i \leq n, 1 \leq j \leq m\right] \cup \left[a_i \Rightarrow c_j \mid 1 \leq i \leq n, 1 \leq j \leq k\right]
-\end{align}
-++++
+== Coefficient-Mediated Algebraic Structure
 
-The two sides are equal. ✓
+A key implementation technique for computational rings is *coefficient-mediated algebraic structure*, where data structures inherit ring properties by coupling to coefficient rings.
 
-Therefore, latexmath:[\langle L, +, \times \rangle] with active identity latexmath:[\left[\mathtt{id}()\right]] is a ring with unity.
+=== The Coefficient Pattern
 
-== Non-Terminating Identities
-
-=== The Halting Problem Meets Algebra
-
-Since computational rings can be Turing complete, identity elements can be *non-terminating*—their computation may not halt. This raises profound questions:
-
-* What does it mean for latexmath:[a \star e = a] if evaluating latexmath:[a \star e] doesn't terminate?
-* Can we have identities whose identity property is *undecidable*?
-
-=== Axioms Modulo Halting
-
-We can define a weaker notion of identity:
-
-.Semi-Computable Identity
+.Coefficient-Mediated Structure
 ****
-An element latexmath:[e] is a *semi-computable identity* if, for all latexmath:[a]:
+A data structure latexmath:[D] has *coefficient-mediated algebraic structure* if:
 
-* If latexmath:[a \star e] terminates, then latexmath:[a \star e = a]
-* If latexmath:[e \star a] terminates, then latexmath:[e \star a = a]
+1. Every element latexmath:[d \in D] has an associated *coefficient* latexmath:[c(d) \in R] where latexmath:[R] is a known ring
+2. Operations on latexmath:[D] are defined by applying corresponding operations to coefficients
+3. The algebraic properties of latexmath:[D] are inherited from the algebraic properties of latexmath:[R]
 ****
 
-This allows for identities that may not halt on all inputs, but when they do halt, they satisfy the identity axiom.
+This pattern is analogous to *module theory* in abstract algebra, where a module latexmath:[M] over a ring latexmath:[R] has scalar multiplication latexmath:[R \times M \to M].
 
-=== Bottom (⊥) as Identity
+=== Implementation in Metatron
 
-In domain theory, latexmath:[\bot] (bottom) represents non-terminating computation. We could define:
+In the Metatron system, every object has a coefficient accessible via the latexmath:[\tt{c}()] method:
 
+[source,java]
+----
+// Get coefficient
+cInt coefficient = obj.c();
+
+// Set coefficient
+Obj newObj = obj.c(cInt.of(5));
+
+// Transform coefficient
+Obj transformed = obj.c(c -> c.mult(cInt.of(2)));
+----
+
+=== Additive Inverse via Coefficients
+
+The additive inverse (negation) for lists is implemented by negating coefficients of all elements:
+
+[source,java]
+----
+default Lst neg() {
+    // Negate all elements in the list (negate their coefficients)
+    return this.<Lst>jvm(this.elements()
+        .map(e -> e.c(cInt::neg))
+        .toList());
+}
+----
+
+This demonstrates the power of coefficient-mediated structure: the list doesn't need to know how to negate itself—it delegates to the coefficient ring.
+
+.Theorem: Coefficient-Mediated Negation
+****
+If latexmath:[R] is a ring and latexmath:[D] is a data structure with coefficients in latexmath:[R], then defining latexmath:[\tt{neg}(d)] by negating coefficients of all components of latexmath:[d] satisfies the additive inverse axiom.
+****
+
+*Proof.* Let latexmath:[d \in D] with components latexmath:[d_1, \ldots, d_n] having coefficients latexmath:[c_1, \ldots, c_n \in R]. Define latexmath:[\tt{neg}(d)] to have components with coefficients latexmath:[-c_1, \ldots, -c_n].
+
+Then:
 [stem]
 ++++
-\mathtt{id}_\bot() = \text{an identity that never terminates}
+d + \tt{neg}(d) = \sum_{i=1}^n c_i \cdot d_i + \sum_{i=1}^n (-c_i) \cdot d_i = \sum_{i=1}^n (c_i + (-c_i)) \cdot d_i = \sum_{i=1}^n 0 \cdot d_i = 0
 ++++
 
-Then latexmath:[a \star \mathtt{id}_\bot()] would never produce a result, but "in the limit," it would equal latexmath:[a]. This connects to:
+where latexmath:[0] is the additive identity. ∎
 
-* *Denotational semantics*: latexmath:[\bot] as the least element in a partial order
-* *Lazy evaluation*: The identity is never forced, so non-termination is never observed
+=== Scalar Multiplication
 
-=== Undecidable Identity
+Coefficient-mediated structure naturally supports scalar multiplication:
 
-Consider an identity latexmath:[e] where latexmath:[\mathtt{isOne}(e)] is undecidable (e.g., it depends on solving the halting problem). Then:
+[source,java]
+----
+// Multiply all coefficients by a scalar
+default Lst scalarMult(cInt scalar) {
+    return this.<Lst>jvm(this.elements()
+        .map(e -> e.c(c -> c.mult(scalar)))
+        .toList());
+}
+----
 
-* We cannot algorithmically determine if latexmath:[e] is an identity
-* But if we *assume* it's an identity and use it, the axioms hold
-* This is analogous to axioms in mathematics that cannot be proven within the system (Gödel)
+This makes latexmath:[D] a *module* over the coefficient ring latexmath:[R].
+
+=== Advantages of Coefficient-Mediated Structure
+
+1. *Separation of Concerns*: Data structure logic is separate from algebraic structure
+2. *Reusability*: Any new data structure automatically gets ring operations if it respects coefficients
+3. *Compositionality*: Nested structures inherit the pattern recursively
+4. *Generality*: Works with any coefficient ring (latexmath:[\mathbb{Z}], latexmath:[\mathbb{R}], latexmath:[\mathbb{C}], etc.)
+5. *Modularity*: Changing the coefficient ring changes the algebraic properties
+
+.Theorem: Universal Coefficient Property
+****
+If latexmath:[R] is a ring and latexmath:[D] is a data structure with coefficient-mediated operations, then latexmath:[D] forms a module over latexmath:[R].
+****
+
+*Proof.* We verify the module axioms:
+
+1. *Scalar distributivity*: latexmath:[r \cdot (d_1 + d_2) = r \cdot d_1 + r \cdot d_2] follows from distributing latexmath:[r] to coefficients
+2. *Vector distributivity*: latexmath:[(r_1 + r_2) \cdot d = r_1 \cdot d + r_2 \cdot d] follows from coefficient addition
+3. *Associativity*: latexmath:[(r_1 \cdot r_2) \cdot d = r_1 \cdot (r_2 \cdot d)] follows from coefficient multiplication
+4. *Identity*: latexmath:[1 \cdot d = d] follows from coefficient identity
+
+All properties are inherited from the ring latexmath:[R]. ∎
+
+=== Connection to Vector Spaces
+
+This pattern generalizes the concept of *vector spaces* from linear algebra. In a vector space latexmath:[V] over a field latexmath:[F], vectors don't need to know how to multiply by scalars—they just apply scalar multiplication component-wise. Coefficient-mediated structure extends this to arbitrary data structures over arbitrary rings.
 
 == Theoretical Framework
 
@@ -430,19 +464,19 @@ Consider an identity latexmath:[e] where latexmath:[\mathtt{isOne}(e)] is undeci
 A *computational ring* is a structure latexmath:[\langle A, +, \cdot, \mathcal{E} \rangle] where:
 
 * latexmath:[\langle A, +, \cdot \rangle] is a classical ring
-* latexmath:[\mathcal{E}] is an *evaluation function* latexmath:[\mathcal{E} : A \times A \to A] that computes the result of operations
+* latexmath:[\mathcal{E} : A \times A \to A] is an *evaluation function* that computes the result of operations
 * Identity elements latexmath:[0, 1 \in A] may be *instructions* whose identity properties are realized through latexmath:[\mathcal{E}]
 
 The ring axioms hold under evaluation:
 
 [stem]
 ++++
-\mathcal{E}(a, 0) = \mathcal{E}(0, a) = a
+\mathcal{E}(a + 0) = \mathcal{E}(0 + a) = a
 ++++
 
 [stem]
 ++++
-\mathcal{E}(a, 1) = \mathcal{E}(1, a) = a
+\mathcal{E}(a \cdot 1) = \mathcal{E}(1 \cdot a) = a
 ++++
 ****
 
@@ -453,171 +487,36 @@ The ring axioms hold under evaluation:
 Every classical ring latexmath:[\langle A, +, \cdot \rangle] is a computational ring with evaluation function latexmath:[\mathcal{E}(a, b) = a \star b] (direct application of the operation).
 ****
 
-*Proof:* If latexmath:[0] and latexmath:[1] are passive values, then latexmath:[\mathcal{E}(a, 0) = a + 0 = a] by the classical identity axiom. Thus, computational ring theory is a *conservative extension* of classical ring theory—it adds new possibilities without invalidating existing structures.
+*Proof.* If latexmath:[0] and latexmath:[1] are passive values, then latexmath:[\mathcal{E}(a + 0) = a + 0 = a] by the classical identity axiom. Thus, computational ring theory is a *conservative extension* of classical ring theory—it adds new possibilities without invalidating existing structures. ∎
 
-=== Category-Theoretic Interpretation
+=== Axioms Modulo Evaluation
 
-In category theory, a monoid is a category with one object, where morphisms are monoid elements and composition is the monoid operation. The identity element is the *identity morphism*.
+We formalize the notion that axioms hold "under evaluation":
 
-With active identities, we have:
-
-* *Objects*: Types (domains/ranges)
-* *Morphisms*: Instructions (including latexmath:[\mathtt{id}()])
-* *Composition*: Evaluation of serial composition
-* *Identity morphism*: The latexmath:[\mathtt{id}()] instruction
-
-The identity morphism is not a "do nothing" arrow but an *active arrow* that computes the identity when composed.
-
-== Active Operations: Beyond Active Identities
-
-While we have focused on active *identity elements*, the principle extends to the *operations themselves*. What if latexmath:[+] and latexmath:[\cdot] are not fixed algorithms but active objects that adapt their behavior at runtime to ensure axioms hold?
-
-=== Definition: Active Operations
-
-.Active Operation
+.Definition: Axiom Satisfaction Modulo Evaluation
 ****
-An *active operation* latexmath:[\star : A \times A \to A] is an instruction that:
-
-1. Inspects its operands at runtime
-2. Selects an algorithm based on operand properties
-3. Ensures algebraic axioms hold through adaptive computation
+A computational ring latexmath:[\langle A, +, \cdot, \mathcal{E} \rangle] satisfies an axiom latexmath:[\phi] *modulo evaluation* if latexmath:[\mathcal{E}(\phi)] holds, even if latexmath:[\phi] does not hold structurally.
 ****
 
-*Example:* Consider addition on a heterogeneous set containing both numbers and strings:
+*Example:* The identity axiom latexmath:[a \cdot 1 = a] may not hold structurally (latexmath:[a \cdot 1] might be an unevaluated expression), but latexmath:[\mathcal{E}(a \cdot 1) = a] holds.
 
-[source,java]
-----
-default Obj plus(Obj other) {
-    // Active operation: choose algorithm based on types
-    if (this.isInt() && other.isInt()) {
-        return int(this.intValue() + other.intValue());  // Numeric addition
-    } else if (this.isStr() && other.isStr()) {
-        return str(this.strValue() + other.strValue());  // String concatenation
-    } else if (this.isLst() && other.isLst()) {
-        return lst(this.elements().concat(other.elements()));  // List concatenation
-    } else {
-        // Fallback: ensure commutativity by canonical ordering
-        return this.genericPlus(other);
-    }
-}
-----
+=== Non-Terminating Identities
 
-The operation latexmath:[+] is not a single fixed algorithm but a *dispatch mechanism* that ensures:
+Since computational rings can be Turing complete, identity elements can be *non-terminating*—their computation may not halt.
 
-* Commutativity: latexmath:[a + b = b + a] (by canonical ordering in fallback)
-* Associativity: latexmath:[(a + b) + c = a + (b + c)] (by consistent algorithm selection)
-* Identity: latexmath:[0 + a = a] (by special-casing identity elements)
+.Semi-Computable Identity
+****
+An element latexmath:[e] is a *semi-computable identity* if, for all latexmath:[a]:
 
-=== Forcing Axioms Through Runtime Adaptation
+* If latexmath:[\mathcal{E}(a \star e)] terminates, then latexmath:[\mathcal{E}(a \star e) = a]
+* If latexmath:[\mathcal{E}(e \star a)] terminates, then latexmath:[\mathcal{E}(e \star a) = a]
+****
 
-Active operations can *force* axioms to hold by adapting their algorithm:
-
-*Forcing Commutativity:*
-
-[source,java]
-----
-default Obj mult(Obj other) {
-    // If operands are "incompatible," force commutativity by sorting
-    if (!this.isCompatible(other)) {
-        if (this.compareTo(other) > 0) {
-            return other.mult(this);  // Swap to canonical order
-        }
-    }
-    return this.performMult(other);
-}
-----
-
-*Forcing Associativity:*
-
-[source,java]
-----
-default Obj mult(Obj other) {
-    // Flatten nested multiplications to ensure associativity
-    if (other.isMult()) {
-        // (a * b) * c becomes a * (b * c) by reassociation
-        return this.mult(other.leftOperand()).mult(other.rightOperand());
-    }
-    return this.performMult(other);
-}
-----
-
-*Forcing Distributivity:*
-
-[source,java]
-----
-default Obj mult(Obj other) {
-    // If other is a sum, distribute automatically
-    if (other.isPlus()) {
-        // a * (b + c) becomes (a * b) + (a * c)
-        return this.mult(other.leftOperand()).plus(this.mult(other.rightOperand()));
-    }
-    return this.performMult(other);
-}
-----
-
-=== Implications: Self-Correcting Algebras
-
-With active operations, we have *self-correcting algebras* where:
-
-* Axioms are not *assumed* but *enforced*
-* Operations adapt to ensure correctness
-* Invalid states are impossible by construction
-
-This is analogous to:
-
-* *Type systems*: Prevent invalid programs at compile-time
-* *Active operations*: Prevent invalid algebra at runtime
-
-=== Turing Completeness of Active Operations
-
-Since operations can execute arbitrary code, they are Turing complete. This means:
-
-* Operations can solve undecidable problems (and may not halt)
-* Axiom verification may be undecidable
-* We need "axioms modulo halting" as with active identities
-
-=== Example: Context-Dependent Multiplication
-
-Consider a multiplication operation that changes behavior based on context:
-
-[source,java]
-----
-default Obj mult(Obj other, Context ctx) {
-    if (ctx.isNumeric()) {
-        return this.numericMult(other);  // Standard multiplication
-    } else if (ctx.isCartesian()) {
-        return this.cartesianMult(other);  // Cartesian product
-    } else if (ctx.isBoolean()) {
-        return this.booleanAnd(other);  // Logical AND
-    }
-    // Default: ensure axioms hold by choosing appropriate algorithm
-    return this.adaptiveMult(other, ctx);
-}
-----
-
-The *same operation* latexmath:[\cdot] behaves differently depending on context, but always ensures monoid axioms hold.
+This allows for identities that may not halt on all inputs, but when they do halt, they satisfy the identity axiom.
 
 == Category Theory Perspective
 
-Category theory provides a natural framework for understanding active identities and operations. We now reformulate computational ring theory in categorical terms.
-
-=== Rings as Categories
-
-A ring latexmath:[\langle A, +, \cdot \rangle] can be viewed through multiple categorical lenses:
-
-*As a Monoid Category:*
-
-* *Objects*: Single object latexmath:[*]
-* *Morphisms*: Elements of latexmath:[A]
-* *Composition*: The operation latexmath:[\cdot]
-* *Identity morphism*: The element latexmath:[1 \in A]
-
-*As an Abelian Group Category:*
-
-* *Objects*: Single object latexmath:[*]
-* *Morphisms*: Elements of latexmath:[A]
-* *Composition*: The operation latexmath:[+]
-* *Identity morphism*: The element latexmath:[0 \in A]
+Category theory provides a natural framework for understanding active identities and operations.
 
 === Active Identities as Computational Morphisms
 
@@ -634,14 +533,14 @@ With active identities, latexmath:[\text{id}_A] is not a "do nothing" arrow but 
 
 .Computational Identity Morphism
 ****
-A *computational identity morphism* latexmath:[\mathtt{id}_A] is a morphism that:
+A *computational identity morphism* latexmath:[\tt{id}_A] is a morphism that:
 
 1. Is represented as an *instruction* (not a passive arrow)
-2. Satisfies latexmath:[f \circ \mathtt{id}_A = f] through *evaluation* of composition
+2. Satisfies latexmath:[f \circ \tt{id}_A = f] through *evaluation* of composition
 3. May have different representations for different latexmath:[f], unified through computation
 ****
 
-=== Functors and Natural Transformations
+=== Functors Preserving Structure Up to Evaluation
 
 Consider a functor latexmath:[F : \mathcal{C} \to \mathcal{D}] between categories. In classical category theory:
 
@@ -654,26 +553,20 @@ With computational morphisms, this becomes:
 
 [stem]
 ++++
-\mathcal{E}(F(\mathtt{id}_A)) = \mathtt{id}_{F(A)}
+\mathcal{E}(F(\tt{id}_A)) = \tt{id}_{F(A)}
 ++++
 
 where latexmath:[\mathcal{E}] is the evaluation function. The functor preserves identity *up to evaluation*.
 
-*Natural Transformations:*
+.Definition: Computational Functor
+****
+A *computational functor* latexmath:[F : \mathcal{C} \to \mathcal{D}] between computational categories satisfies:
 
-A natural transformation latexmath:[\eta : F \Rightarrow G] assigns to each object latexmath:[A] a morphism latexmath:[\eta_A : F(A) \to G(A)] such that:
+1. latexmath:[\mathcal{E}(F(f \circ g)) = \mathcal{E}(F(f) \circ F(g))]
+2. latexmath:[\mathcal{E}(F(\tt{id}_A)) = \tt{id}_{F(A)}]
 
-[stem]
-++++
-\eta_B \circ F(f) = G(f) \circ \eta_A
-++++
-
-With active operations, this diagram commutes *under evaluation*:
-
-[stem]
-++++
-\mathcal{E}(\eta_B \circ F(f)) = \mathcal{E}(G(f) \circ \eta_A)
-++++
+where latexmath:[\mathcal{E}] is the evaluation function.
+****
 
 === Monoidal Categories and Coherence
 
@@ -689,9 +582,7 @@ In computational monoidal categories:
 * latexmath:[I] is an *active identity* (computational unit object)
 * Coherence conditions hold *under evaluation*
 
-*Mac Lane's Coherence Theorem* states that all diagrams of natural isomorphisms commute. With active operations, we have:
-
-.Computational Coherence
+.Computational Coherence Theorem
 ****
 In a computational monoidal category, all coherence diagrams commute *under evaluation* latexmath:[\mathcal{E}].
 ****
@@ -707,311 +598,9 @@ With computational rings, we can enrich over the category of *computations*:
 * *Objects*: Types
 * *Hom-objects*: latexmath:[\mathcal{C}(A,B)] is the set of *instructions* from latexmath:[A] to latexmath:[B]
 * *Composition*: Evaluation of serial composition
-* *Identity*: The latexmath:[\mathtt{id}()] instruction
+* *Identity*: The latexmath:[\tt{id}()] instruction
 
 This gives us a *computationally enriched category* where morphisms are not functions but instructions.
-
-=== Limits and Colimits
-
-In category theory, limits and colimits are universal constructions. With active operations:
-
-* *Products*: latexmath:[A \times B] with projections latexmath:[\pi_1, \pi_2] that are *active morphisms*
-* *Coproducts*: latexmath:[A + B] with injections latexmath:[\iota_1, \iota_2] that are *active morphisms*
-* *Equalizers*: Computed at runtime by evaluating morphisms
-
-The universal property holds *under evaluation*:
-
-[stem]
-++++
-\mathcal{E}(f \circ \pi_1) = \mathcal{E}(g \circ \pi_1) \implies \exists! h : \mathcal{E}(f) = \mathcal{E}(h \circ \pi_1)
-++++
-
-=== Computational Adjunctions
-
-An adjunction latexmath:[F \dashv G] between functors latexmath:[F : \mathcal{C} \to \mathcal{D}] and latexmath:[G : \mathcal{D} \to \mathcal{C}] has:
-
-[stem]
-++++
-\mathcal{D}(F(A), B) \cong \mathcal{C}(A, G(B))
-++++
-
-With computational morphisms, this becomes:
-
-[stem]
-++++
-\mathcal{E}(\mathcal{D}(F(A), B)) \cong \mathcal{E}(\mathcal{C}(A, G(B)))
-++++
-
-The bijection is realized through *computation*, not just structural isomorphism.
-
-*Example:* Free-forgetful adjunction where:
-
-* latexmath:[F] constructs free algebraic structures (active operations)
-* latexmath:[G] forgets structure (extracts underlying set)
-* The adjunction holds because latexmath:[F] *computes* the free structure at runtime
-
-=== Yoneda Lemma for Computational Categories
-
-The Yoneda Lemma states:
-
-[stem]
-++++
-\text{Nat}(\mathcal{C}(A, -), F) \cong F(A)
-++++
-
-With computational categories, natural transformations are *computational*:
-
-[stem]
-++++
-\text{Nat}_{\mathcal{E}}(\mathcal{C}(A, -), F) \cong \mathcal{E}(F(A))
-++++
-
-where latexmath:[\text{Nat}_{\mathcal{E}}] denotes natural transformations that commute under evaluation.
-
-This means the Yoneda embedding preserves structure *up to computation*.
-
-=== Higher Category Theory
-
-In higher category theory, we have:
-
-* *1-morphisms*: Morphisms between objects
-* *2-morphisms*: Morphisms between morphisms (natural transformations)
-* *n-morphisms*: Higher-level structure
-
-With computational categories, we can have:
-
-* *Active 1-morphisms*: Instructions (as we've discussed)
-* *Active 2-morphisms*: Transformations between instructions that adapt at runtime
-* *Active n-morphisms*: Arbitrary levels of computational structure
-
-This leads to *computational ∞-categories* where all levels of structure are computational.
-
-=== Implications for Category Theory
-
-Computational category theory suggests:
-
-1. *Evaluation as Fundamental*: Equality of morphisms is not structural but computational
-2. *Coherence Through Computation*: Diagrams commute because operations force them to
-3. *Lazy Universal Properties*: Universal constructions are computed on-demand
-4. *Undecidable Morphisms*: Some morphisms may not halt, requiring "category theory modulo halting"
-
-This is a profound shift: category theory has traditionally been about *structure*, but computational category theory is about *behavior*.
-
-=== Products, Coproducts, and Computational Ontology
-
-The categorical notions of products and coproducts reveal something profound about the nature of objects in computational systems.
-
-==== Classical Ontology: Objects as Spatial Colocation
-
-In classical ontology, we identify objects by their *spatial colocation*. When we say "Marko is an object," we mean there is a collection of particles colocated in 3-dimensional space at a particular time. The object "Marko" exists because:
-
-* All constituent particles are *near each other* in space
-* They persist through time in a coherent configuration
-* We can point to a region of space and say "that's Marko"
-
-This notion of objecthood is fundamentally tied to the *metric of 3D Euclidean space*. Objects are defined by proximity in latexmath:[\mathbb{R}^3].
-
-In computing, this principle manifests as the memory hierarchy: data that is accessed together should be stored together. Rodriguez <<rodriguez2013>> articulated this as: "_It is important to co-locate data in space according to the metric of co-retrieval in time._" In graph computing, vertices that are logically adjacent (connected by edges) should be physically colocated (on the same disk page, in the same server, in the same data center) to minimize access time.
-
-However, this still assumes a *physical metric*—distance in memory, distance in the network. The question arises: what if we generalize beyond physical metrics entirely?
-
-==== Computational Ontology: Objects as Arbitrary Colocation
-
-But what if we generalize? What if "colocation" is not restricted to 3D space but can occur in *any space with any metric*?
-
-Rodriguez <<rodriguez2013>> observed that in graph computing, there is a *morphism* between logical adjacency (the graph structure) and physical adjacency (the memory layout). He noted: "_In the emergent referential structure, a 'thing' can be a 'thing' without its parts 3D-near each other._" This hints at a deeper truth: objecthood is not inherently spatial but *relational*—defined by whatever metric we choose to impose.
-
-We now take this insight to its logical conclusion: objects can be colocated in *any* space with *any* metric, not just physical space or graph-adjacency space.
-
-Consider an "object" defined as:
-
-* Particle latexmath:[p_1] on Earth (spatial coordinates latexmath:[(x_1, y_1, z_1)])
-* Particle latexmath:[p_2] on planet X283-34 (spatial coordinates latexmath:[(x_2, y_2, z_2)], light-years away)
-* Particle latexmath:[p_3] that existed 1 million years ago (temporal coordinate latexmath:[t_3 = -10^6 \text{ years}])
-
-In 3D space, these particles are *not* colocated—they are separated by vast distances and time. But in some *other space*, they might be colocated. For example:
-
-* In *property space*: All three particles have the same charge
-* In *computational space*: All three particles satisfy some predicate latexmath:[P]
-* In *reference space*: All three particles are referenced by the same program
-
-This "object" latexmath:[\{p_1, p_2, p_3\}] exists not in physical space but in *computational space*. It is an object because we have *constructed* it through colocation in a non-physical metric.
-
-==== Products as Ontological Constructors
-
-In category theory, the *product* latexmath:[A \times B] is the universal object that "contains" both latexmath:[A] and latexmath:[B]. The projections latexmath:[\pi_1 : A \times B \to A] and latexmath:[\pi_2 : A \times B \to B] extract the components.
-
-With computational products, we can construct objects by *arbitrary colocation*:
-
-[stem]
-++++
-\text{Object} = \text{Particle}_{\text{Earth}} \times \text{Particle}_{\text{X283-34}} \times \text{Particle}_{\text{Past}}
-++++
-
-This product exists in *computational space*, not physical space. The projections extract references to the constituent particles, but the product itself is a new object that "colocates" things across space and time.
-
-*Example in Metatron:*
-
-[source,java]
-----
-// Create an object by colocating references across different spaces
-Obj cosmicObject = lst(
-    ref("earth://particle/electron/id=12345"),           // Particle on Earth
-    ref("x283-34://particle/quark/id=67890"),            // Particle on X283-34
-    ref("past://particle/photon/time=-1000000years")     // Particle from the past
-);
-----
-
-This object latexmath:[\texttt{cosmicObject}] exists because we have *constructed* it. It is colocated in *reference space*, even though its constituents are separated in physical space-time.
-
-==== Coproducts as Ontological Alternatives
-
-The *coproduct* latexmath:[A + B] is the universal object that represents "either latexmath:[A] or latexmath:[B]." The injections latexmath:[\iota_1 : A \to A + B] and latexmath:[\iota_2 : B \to A + B] embed the alternatives.
-
-With computational coproducts, we can construct objects that exist in *multiple possible states*:
-
-[stem]
-++++
-\text{QuantumObject} = \text{State}_1 + \text{State}_2 + \text{State}_3
-++++
-
-This object is in a superposition of states until we "observe" it (evaluate it), at which point it collapses to one alternative.
-
-*Example in Metatron:*
-
-[source,java]
-----
-// Create an object that is in superposition of states
-Obj quantumObject = split(
-    state1,  // Possible state 1
-    state2,  // Possible state 2
-    state3   // Possible state 3
-);
-
-// Upon evaluation (observation), it collapses to one state
-Obj observed = quantumObject.eval();
-----
-
-==== Metatron: Scraping References to Construct Objects
-
-In Metatron, objects are not assumed to exist in physical space. Instead, objects are *constructed* by:
-
-1. *Scraping references*: Collecting URIs/references from arbitrary sources
-2. *Composing references*: Using products, coproducts, and other categorical constructions
-3. *Defining colocation*: Specifying what it means for references to be "together"
-
-An object in Metatron is a *composition of references*, where the references can point to:
-
-* Data in databases
-* Particles in physical space
-* Events in time
-* Computations in progress
-* Other objects (recursive structure)
-
-*Example: Constructing a "Person" Object:*
-
-[source,java]
-----
-Obj person = rec(
-    "name"     => ref("db://users/marko/name"),           // Reference to name in database
-    "location" => ref("gps://current/marko"),             // Reference to GPS coordinates
-    "history"  => ref("blockchain://events/marko"),       // Reference to historical events
-    "thoughts" => ref("neural://brain/marko/state")       // Reference to neural state
-);
-----
-
-This "person" object exists not because all these things are colocated in 3D space, but because they are *colocated in reference space*. The object is the *product* of these references.
-
-==== Philosophical Implications
-
-This computational ontology has profound implications:
-
-1. *Objects are Constructions, Not Discoveries*: We don't "find" objects in the world; we *construct* them by defining colocation in some space.
-
-2. *Infinite Objects*: There are infinitely many possible objects because there are infinitely many ways to define colocation. The triple latexmath:[\{p_1, p_2, p_3\}] is just one of latexmath:[\binom{N}{3}] possible triples from latexmath:[N] particles.
-
-3. *Context-Dependent Existence*: An object exists *relative to a metric*. In 3D space, latexmath:[\{p_1, p_2, p_3\}] is not an object. In property space, it might be.
-
-4. *Computation as Ontology*: The act of *computing* a product or coproduct *brings an object into existence*. Before computation, the object is potential; after computation, it is actual.
-
-5. *Reference-Based Reality*: In a computational universe, reality is not made of "stuff" but of *references* and *compositions of references*.
-
-==== Connection to Active Identities
-
-This ontological perspective connects to active identities:
-
-* *Active identities* are objects that exist only through computation
-* *Products/coproducts* are constructions that bring objects into existence
-* *Verification-forced reification* is the principle that objects become real when we compute with them
-
-In both cases, *computation is ontologically creative*—it doesn't just manipulate existing objects; it *creates* objects.
-
-==== Example: The "Absurd" Object
-
-Consider the "absurd" object mentioned earlier:
-
-[stem]
-++++
-O = \{\text{particle on Earth}, \text{particle on X283-34}, \text{particle from 1M years ago}\}
-++++
-
-In physical space, this is nonsensical—these particles are not colocated. But suppose we define a metric:
-
-[stem]
-++++
-d(p_i, p_j) = \begin{cases}
-0 & \text{if } \text{charge}(p_i) = \text{charge}(p_j) \\
-\infty & \text{otherwise}
-\end{cases}
-++++
-
-In this *charge space*, particles are colocated if they have the same charge, regardless of spatial or temporal separation. If all three particles have the same charge, then latexmath:[d(p_1, p_2) = d(p_2, p_3) = d(p_1, p_3) = 0], and they are colocated!
-
-The object latexmath:[O] exists in charge space, even though it doesn't exist in physical space.
-
-*In Metatron:*
-
-[source,java]
-----
-// Define a metric based on charge
-Metric chargeMetric = (p1, p2) ->
-    p1.charge().equals(p2.charge()) ? 0.0 : Double.POSITIVE_INFINITY;
-
-// Construct object by colocation in charge space
-Obj absurdObject = product(
-    particle("earth://electron/id=12345"),
-    particle("x283-34://electron/id=67890"),
-    particle("past://electron/time=-1000000years")
-).colocatedBy(chargeMetric);
-
-// This object exists because all particles have the same charge
-assert absurdObject.isColocated();  // true
-----
-
-==== Universal Constructions as Ontological Primitives
-
-In category theory, products and coproducts are *universal constructions*—they are defined by universal properties, not by specific implementations.
-
-In computational ontology, this means:
-
-* *Objects are defined by their relationships*, not by their intrinsic properties
-* *Existence is relational*: An object exists because it satisfies a universal property
-* *Construction is discovery*: Finding the product latexmath:[A \times B] is discovering what it means for latexmath:[A] and latexmath:[B] to coexist
-
-This is a radical departure from classical ontology, where objects exist independently and relationships are secondary.
-
-==== Metatron as an Ontological Engine
-
-Metatron is not just a programming language—it is an *ontological engine* that:
-
-1. *Constructs objects* by composing references
-2. *Defines existence* through computational metrics
-3. *Brings objects into being* through evaluation
-4. *Allows arbitrary colocation* in any definable space
-
-In Metatron, you can create objects that would be "absurd" in physical reality but are perfectly coherent in computational reality.
-
-This is the ultimate expression of computational ring theory: *computation doesn't just manipulate reality; it defines what reality is*.
 
 == Related Work
 
@@ -1021,17 +610,9 @@ Lazy evaluation in functional programming (e.g., Haskell) defers computation unt
 
 However, lazy evaluation typically produces the same result whether eager or lazy. Active identities go further: the identity's *structure* depends on when and how it's evaluated.
 
-=== Effect Systems
-
-Effect systems track computational effects (I/O, state, exceptions) in type systems. Active identities can be seen as having an "identity effect"—the effect of being an identity is realized through computation.
-
 === Computational Type Theory
 
 In computational type theory (e.g., NuPRL), types are defined by their computational behavior. Active identities extend this to algebraic structures: identity elements are defined by their computational behavior, not their structure.
-
-=== Stream Ring Theory
-
-This work directly extends Rodriguez's stream ring theory <<rodriguez2019>>. While stream rings have functional identities latexmath:[0(x) = \emptyset] and latexmath:[1(x) = x], these are still *predetermined* functions. Active identities allow the identity to be *context-dependent* and *lazily computed*.
 
 === Homotopy Type Theory
 
@@ -1041,7 +622,6 @@ Computational ring theory has a similar flavor: equality latexmath:[a = b] is no
 
 * *Path induction*: Proving properties by induction on computational paths
 * *Univalence*: Equivalent structures are equal (under evaluation)
-* *Higher inductive types*: Types defined by computational constructors
 
 == Applications and Future Work
 
@@ -1051,22 +631,14 @@ Just as we have active identities, we can have *active inverses*. For a group la
 
 [stem]
 ++++
-\mathtt{inv}(a) = \text{instruction that computes } a^{-1}
+\tt{inv}(a) = \text{instruction that computes } a^{-1}
 ++++
 
 This enables groups where inverses are expensive to compute or even undecidable.
 
-=== Active Zeros
-
-The additive identity (zero) could also be active. For example, in a stream ring, latexmath:[0] could be an instruction that *decides at runtime* whether to produce empty output based on context.
-
-=== Distributed Memoization
-
-Rodriguez's stream ring theory uses *coefficients* as distributed memoization—the lookup table is distributed among stream objects. Active identities extend this: the identity element itself can carry memoization state.
-
 === Graph Computing
 
-In graph databases (e.g., Apache TinkerPop, which Rodriguez co-created), traversals can be seen as stream functions. Active identities could represent "do nothing" traversals that are optimized away at runtime.
+In graph databases, traversals can be seen as stream functions. Active identities could represent "do nothing" traversals that are optimized away at runtime.
 
 === Quantum Computing
 
@@ -1076,24 +648,46 @@ The quantum superposition metaphor is not just metaphorical. In quantum computin
 
 We have introduced *computational ring theory*, where identity elements are active computational objects rather than passive values. The principle of *verification-forced reification* ensures that axioms hold: any proof of uniqueness requires computation, which forces the identity to be unique.
 
-This framework enables algebraic structures previously impossible, such as lists with relation-based Cartesian product forming a ring with active multiplicative identity latexmath:[\left[\mathtt{id}()\right]]. We have shown that computational rings are a conservative extension of classical rings and explored implications including non-terminating identities and undecidable identity properties.
+A key implementation technique is *coefficient-mediated algebraic structure*, where data structures inherit ring properties by coupling to coefficient rings. This pattern enables modular construction of algebraic types and generalizes the concept of vector spaces to arbitrary data structures over arbitrary rings.
+
+This framework enables algebraic structures previously impossible, such as lists with relation-based Cartesian product forming a ring with active multiplicative identity latexmath:[[[\texttt{id}()\]]]. We have shown that computational rings are a conservative extension of classical rings and explored the category-theoretic foundations.
 
 Computational ring theory opens a new design space for programming languages and algebraic systems. By making identity elements computational, we gain:
 
 * *Expressiveness*: Structures that cannot exist with passive identities
 * *Efficiency*: Identities that adapt to context at runtime
 * *Genericity*: Identities that work across all types via generic type variables
-* *Laziness*: Identities that defer computation until needed
+* *Modularity*: Coefficient-mediated structure enables reusable algebraic patterns
 
 The Metatron programming language serves as a reference implementation, demonstrating that these ideas are not merely theoretical but practically realizable.
 
-Future work includes formalizing active inverses and zeros, exploring connections to quantum computing and category theory, and investigating the decidability and complexity of identity recognition in Turing-complete computational rings.
+Future work includes formalizing active inverses and zeros, exploring connections to quantum computing and homotopy type theory, and investigating the decidability and complexity of identity recognition in Turing-complete computational rings.
 
-*Computation is not just a tool for implementing algebra—computation itself can be algebraic structure.*
+*Computation is not just a tool for implementing algebra—computation itself can be an algebraic structure.*
 
 [bibliography]
 == References
-
+////
 * [[[rodriguez2013]]] Rodriguez, M.A., "Scalable Graph Computing: Der Gekrümmte Graph," Aurelius Blog, July 2013. https://thinkaurelius.wordpress.com/2013/07/22/scalable-graph-computing-der-gekrummte-graph/
 
 * [[[rodriguez2019]]] Rodriguez, M.A., "Stream Ring Theory," S/V Red Herring's Ship's Log: Chronicles in the Sea of Cortez, pages 10–40, Mulegé, Baja California Sur, México, February 2019.
+////
+
+++++
+<script>
+    if (!hljs.initHighlighting.called) {
+        hljs.initHighlighting.called = true
+        ;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) {
+            hljs.highlightBlock(el)
+        })
+    }
+    document.querySelectorAll('.btn[data-bs-toggle="collapse"]').forEach(button => {
+        button.addEventListener('click', () => {
+            button.classList.toggle("active")
+        });
+    });
+    document.querySelectorAll('code').forEach(block => {
+        hljs.highlightBlock(block);
+    });
+</script>
+++++

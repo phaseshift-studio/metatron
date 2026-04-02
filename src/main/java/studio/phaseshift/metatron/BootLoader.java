@@ -143,6 +143,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
 
     public static void load(final Rec args) {
         if (BOOTING) {
+            /// /// PARSING OF BOOT ARGUMENT REC /// ///
             LOG.info("parsed boot args:\n%s", args);
             if (args.has(BOOT))
                 args.at(uri(BOOT), f(Paths.get("").toAbsolutePath().normalize().toString()).extend(args.at(BOOT).uriValue()).toUri(), MUTABLE);
@@ -181,8 +182,8 @@ public class BootLoader implements Rec, Feature.SelfClone {
             sysSpace.write(ROUTER.vid(), ROUTER);
             Router.global().addSpace(sysSpace.self(sysSpace.jvm(), sysSpace.tid(), SYS_VID).as());
             /// LOAD DEFAULT INSTRUCTION SET (/m and /m/mach)
-            Router.writeToSpace(new mInstSet());
-            Router.writeToSpace(new machInstSet());
+            Router.writeToSpace(docWrap(new mInstSet(), "the core instruction set of metatron featuring the base types and an algebra for their manipulation"));
+            Router.writeToSpace(docWrap(new machInstSet(), "the reflective instruction set of metatron featuring process, monad, and code introspection"));
             /// WRITE THE BOOT ARGS TO THE ROUTER STACK
             Router.writeToSpace(f("boot/args"), args);
             ///  ADD INCRQ PROCESSOR TO SYS FOR AUTO INCREMENTING FAIL STACK

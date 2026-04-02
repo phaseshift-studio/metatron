@@ -70,6 +70,10 @@
     background: var(--secondarycolor);
 }
 
+.instset-doc .text-bright {
+    color: var(--myellow);
+}
+
 /* ==========================================================================
    List Group Overrides
    ========================================================================== */
@@ -148,10 +152,35 @@
     margin-bottom: 2px;
 }
 
+/* Rewrites use 4 columns (wider for longer signatures) */
+.instset-doc .index-columns-rewrites {
+    column-count: 4;
+    column-gap: 0.75rem;
+}
+
+.instset-doc .index-columns-rewrites .list-group-item {
+    break-inside: avoid;
+    display: block;
+    margin-bottom: 2px;
+}
+
+/* Clip long text in index with ellipsis */
+.instset-doc .index-columns .list-group-item .code,
+.instset-doc .index-columns-rewrites .list-group-item .code {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: calc(100% - 30px); /* Reserve space for badge */
+    display: inline-block;
+}
+
 /* Responsive column counts */
 @media (max-width: 1400px) {
     .instset-doc .index-columns {
         column-count: 5;
+    }
+    .instset-doc .index-columns-rewrites {
+        column-count: 3;
     }
 }
 
@@ -159,11 +188,17 @@
     .instset-doc .index-columns {
         column-count: 4;
     }
+    .instset-doc .index-columns-rewrites {
+        column-count: 3;
+    }
 }
 
 @media (max-width: 992px) {
     .instset-doc .index-columns {
         column-count: 3;
+    }
+    .instset-doc .index-columns-rewrites {
+        column-count: 2;
     }
 }
 
@@ -171,10 +206,16 @@
     .instset-doc .index-columns {
         column-count: 2;
     }
+    .instset-doc .index-columns-rewrites {
+        column-count: 2;
+    }
 }
 
 @media (max-width: 576px) {
     .instset-doc .index-columns {
+        column-count: 1;
+    }
+    .instset-doc .index-columns-rewrites {
         column-count: 1;
     }
 }

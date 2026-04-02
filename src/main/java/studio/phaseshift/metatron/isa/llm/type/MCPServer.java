@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.llm.type;
 
 import dev.langchain4j.mcp.client.DefaultMcpClient;
 import dev.langchain4j.mcp.client.McpClient;
+import dev.langchain4j.mcp.client.McpRoot;
 import dev.langchain4j.mcp.client.transport.McpTransport;
 import dev.langchain4j.mcp.client.transport.http.StreamableHttpMcpTransport;
 import dev.langchain4j.mcp.client.transport.websocket.WebSocketMcpTransport;
@@ -31,6 +32,7 @@ import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -81,6 +83,7 @@ public class MCPServer extends MRec {
         this.client = DefaultMcpClient.builder()
                 .clientName(METATRON)
                 .clientVersion(METATRON_VERSION)
+                //.roots(List.of(new McpRoot("metatron", "http://localhost:8999")))
                 .logHandler(message -> as().logger().debug("mcp log: %s", message))
                 .transport(createTransport(
                         jvm.get(uri(TRANSPORT)),

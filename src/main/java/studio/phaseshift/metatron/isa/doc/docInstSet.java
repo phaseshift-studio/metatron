@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -18,16 +18,21 @@
 
 package studio.phaseshift.metatron.isa.doc;
 
+import com.mongodb.client.MongoCollection;
+import org.bson.Document;
+import studio.phaseshift.metatron.algebra.rewrite.CommonRewrites;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 
+import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
@@ -35,6 +40,7 @@ import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
  * docInstSet - Instruction set for document database operations
@@ -54,26 +60,30 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 public class docInstSet extends AbstractInstSet {
 
     public static final fURI DOC_ISA_TID = M_ISA_TID.extend("doc");
-    public static final fURI INST_TID = DOC_ISA_TID.extend("inst");
-    public static final fURI DOC_TID = DOC_ISA_TID.extend("document");
+    public static final fURI DOC_ISA_INST_TID = DOC_ISA_TID.extend("inst");
+    public static final fURI DOC_ISA_REWRITE_TID = DOC_ISA_INST_TID.extend("rewrite");
+    public static final fURI DOCUMENT_TID = DOC_ISA_TID.extend("document");
     public static final fURI COLLECTION_TID = DOC_ISA_TID.extend("collection");
+    public static final fURI ID_FIELD = f("_id");
 
     /**
      * Type for a single document (record with _id field)
      */
-    public static final Type DOC_TYPE = Type.Builder.build()
+    public static final Type DOCUMENT_TYPE = Type.Builder.build()
             .tid(REC_TID)
-            .vid(DOC_TID)
-            .isaPredicate(rec(URI_TYPE, T(ALL)))
+            .vid(DOCUMENT_TID)
+            .isaPredicate(rec(
+                    uri(ID_FIELD), URI_TYPE,
+                    URI_TYPE, T(ALL)))
             .create();
 
     /**
      * Type for a collection of documents
      */
     public static final Type COLLECTION_TYPE = Type.Builder.build()
-            .tid(LST_TID.maybeSome())
+            .tid(OBJS_TID.maybeSome())
             .vid(COLLECTION_TID)
-            .predicate(isa_(T(DOC_TID.maybeSome())).tryToInst())
+            .predicate(isa_(T(DOCUMENT_TID.maybeSome())).tryToInst())
             .create();
 
     public docInstSet() {
@@ -82,9 +92,9 @@ public class docInstSet extends AbstractInstSet {
 
     @Override
     public Set<Type> types() {
-        return Set.of(docSpace.DOC_SPACE_TYPE, DOC_TYPE, COLLECTION_TYPE);
+        return Set.of(docSpace.DOC_SPACE_TYPE, DOCUMENT_TYPE, COLLECTION_TYPE);
     }
-    
+
     @Override
     public Set<Obj> consts() {
         return Set.of(ObjSimpleJSONSerializer.single());
@@ -94,14 +104,61 @@ public class docInstSet extends AbstractInstSet {
     public Set<Inst> insts() {
         return new LinkedHashSet<>(List.of(
                 // Convert document to list (extract values)
-                instC(AS_INST_TID.dom(DOC_TID).rng(LST_TID), lst(LST_TYPE),
-                    (lhs, inst) -> lst(lhs.asRec().elements().map(Rel::second).toList()))
+                instC(AS_INST_TID.dom(DOCUMENT_TID).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> lst(lhs.asRec().elements().map(Rel::second).toList()))
         ));
     }
 
     @Override
     public Set<Inst> rewrites() {
-        // TODO: Add query optimization rewrites (e.g., count, aggregation)
-        return new LinkedHashSet<>();
+        return new LinkedHashSet<>(List.of(
+                // Optimize: *collection.count() → MongoDB countDocuments()
+                CommonRewrites.countRewrite(
+                        docSpace.class,
+                        DOC_ISA_REWRITE_TID.extend("native_count"),
+                        (space, furi) -> {
+                            final String collectionName = furi.segments().getFirst();
+                            final MongoCollection<Document> collection = space.database.getCollection(collectionName);
+                            return collection.countDocuments();
+                        }
+                ),
+
+                // Optimize: *collection.sum() → MongoDB aggregation $sum
+                CommonRewrites.sumRewrite(
+                        docSpace.class,
+                        DOC_ISA_REWRITE_TID.extend("native_sum"),
+                        (space, furi) -> {
+                            final String collectionName = furi.segments().getFirst();
+                            final MongoCollection<Document> collection = space.database.getCollection(collectionName);
+                            // MongoDB aggregation pipeline: [{$group: {_id: null, total: {$sum: 1}}}]
+                            final Document result = collection.aggregate(Arrays.asList(
+                                    new Document("$group", new Document("_id", null)
+                                            .append("total", new Document("$sum", 1)))
+                            )).first();
+                            if (result != null && result.containsKey("total")) {
+                                return result.get("total", Number.class);
+                            }
+                            return 0;
+                        }
+                ),
+
+                // Optimize: *collection.mean() → MongoDB aggregation $avg
+                CommonRewrites.meanRewrite(
+                        docSpace.class,
+                        DOC_ISA_REWRITE_TID.extend("native_mean"),
+                        (space, furi) -> {
+                            final String collectionName = furi.segments().getFirst();
+                            final MongoCollection<Document> collection = space.database.getCollection(collectionName);
+                            // MongoDB aggregation pipeline: [{$group: {_id: null, average: {$avg: 1}}}]
+                            final Document result = collection.aggregate(Arrays.asList(
+                                    new Document("$group", new Document("_id", null)
+                                            .append("average", new Document("$avg", 1)))
+                            )).first();
+                            if (result != null && result.containsKey("average")) {
+                                return result.getDouble("average");
+                            }
+                            return 0.0;
+                        }
+                )
+        ));
     }
 }

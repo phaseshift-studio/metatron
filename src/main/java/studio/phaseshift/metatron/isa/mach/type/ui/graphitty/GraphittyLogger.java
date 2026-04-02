@@ -129,7 +129,7 @@ public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
     }
 
 
-    private Logger logger() {
+    public Logger logger() {
         if (null == this.source)
             return LoggerFactory.getLogger(GraphittyLogger.class);
         else if (!(this.source instanceof Logger))

@@ -17,18 +17,13 @@
 """
 Instruction Set Documentation Generator for Metatron
 
-Generates HTML documentation for metatron instruction sets using highlight.js
-with the custom mtron.min.js language grammar for syntax highlighting.
+Generates HTML documentation for metatron instruction sets by connecting to a running
+metatron instance via WebSocket. Uses doc_json() for documentation retrieval and
+highlight.js with mtron.min.js for syntax highlighting.
 
 Usage:
-    python instset_doc_generator.py /m/mach -o docs/html/
-    python instset_doc_generator.py /m /m/mach /m/tble /m/doc /m/grph /m/web /m/llm -o docs/html/
-
-The generator connects to a running metatron instance via WebSocket and uses:
-    - '/*/instset/+/'./m/web/inst/doc()   : Types with pretty formatting
-    - '/*/instset/inst/+/'./m/web/inst/doc() : Instructions with pretty formatting
-
-Output uses highlight.js with mtron.min.js for syntax coloring.
+    python instset_doc_generator.py /m/mach -o docs/website/instset --website-template
+    python instset_doc_generator.py /m /m/mach /m/tble -o docs/html/
 """
 
 from __future__ import annotations
@@ -87,19 +82,9 @@ class MetatronClient:
         return result_str.strip()
 
     async def rewrite(self, uri: str) -> tuple:
-        """
-        Call rewrite(uri) to get short and long forms.
-
-        Returns (short, long) tuple where:
-        - short: shortened form like /m/inst/plus
-        - long: full expanded form like plus
-
-        Example: rewrite(plus) returns [short=>/m/inst/plus,long=>plus]
-        """
+        """Call rewrite(uri) to get short and long forms. Returns (short, long) tuple."""
         try:
-            # Call rewrite instruction
             result = await self.eval(f"rewrite({uri})")
-            # Parse result: [short=>/m/inst/plus,long=>plus]
             short_match = re.search(r'short\s*=>\s*([^,\]]+)', result)
             long_match = re.search(r'long\s*=>\s*([^,\]]+)', result)
             short_val = short_match.group(1).strip() if short_match else uri
@@ -110,131 +95,92 @@ class MetatronClient:
             return (uri, uri)
 
     async def eval_doc(self, expression: str) -> List[str]:
-        """
-        Evaluate expression via /m/web/inst/doc() for pretty-printed output.
-
-        Returns a list of entries split by '%%%' separator.
-        Each entry is in mtron syntax ready for highlight.js.
-        """
-        # Wrap expression in quotes and call doc()
+        """Evaluate via doc() for pretty-printed output. Returns list of entries split by '%%%'."""
         query = f"'{expression}'./m/web/inst/doc()"
         result = await self.eval(query)
 
         if not result or result == "noobj" or result.startswith("</m/fail>"):
             return []
 
-        # Result format: </m/str>::'entry1%%%entry2%%%...'
-        # Strip the </m/str>:: prefix and quotes
+        # Strip </m/str>:: wrapper and quotes
         if result.startswith("</m/str>::"):
             result = result[len("</m/str>::"):]
         if result.startswith("'") and result.endswith("'"):
             result = result[1:-1]
 
-        # Split on %%% separator
         if not result:
             return []
 
-        entries = result.split("%%%")
-        return [e.strip() for e in entries if e.strip()]
+        return [e.strip() for e in result.split("%%%") if e.strip()]
 
     async def fetch_obj_doc(self, vid: str) -> Optional[DocInfo]:
         """
-        Fetch documentation for an object via xyz?doc.
+        Fetch documentation for an object using doc_json() instruction.
 
-        Example response when doc exists:
-        doc::[
-         obj =>start?rng=A{**}&dom=noobj{0}(A{**}::T){<j>},
-         dom =>'noobj',
-         rng =>'initial objs',
-         args=>[0=>'initial objs'],
-         desc=>'the initial function f()->x']
-
-        When no doc exists, returns either:
-        - "noobj"
-        - The object itself (not a doc record)
+        Returns JSON format: {"obj":"...", "desc":"...", "dom":"...", "rng":"...", "args":{...}, "example":[...]}
+        Response wrapper: </m/str>::'json' or </m/str>::'''json''' (triple quotes if json has quotes)
 
         Returns DocInfo with parsed fields, or None if no doc available.
         """
+        import json
+
         try:
-            # Build the doc query:
-            # - If vid has query params (dom/rng), append &doc to get specific polymorphic form
-            # - If vid has no query params, use ?doc
-            # e.g., plus?rng=int&dom=int → *plus?rng=int&dom=int&doc
-            # e.g., /m/lst → */m/lst?doc
-            if '?' in vid:
-                doc_query = f"*{vid}&docq"
-            else:
-                doc_query = f"*{vid}?docq"
+            # Build doc query: "*vid?docq"./m/web/inst/doc_json()
+            vid_escaped = vid.replace("'", "\\'")
+            doc_query = f'"*{vid_escaped}&docq"./m/web/inst/doc_json()' if '?' in vid else f'"*{vid_escaped}?docq"./m/web/inst/doc_json()'
 
-            logger.debug(f"Fetching doc with query: {doc_query}")
-
-            # Query the doc for this object
+            logger.debug(f"Fetching doc: {doc_query}")
             result = await self.eval(doc_query)
-
-            logger.debug(f"Doc query result for {vid}: {result[:200] if result else 'None'}...")
 
             if not result or result == "noobj" or result.startswith("</m/fail>"):
                 return None
 
-            # Check if this is actually a doc record
-            # WebSocket format: </m/space/q/docq/doc>::[</m/uri>::<desc> => </m/str>::'...']
-            # Console format: ==>doc::[desc=>'...']
-            if not ("doc>::[" in result or "<desc>" in result or "desc=>" in result):
-                logger.debug(f"No doc record for {vid}, got object back")
+            # Extract JSON from response: </m/str>::'...' or </m/str>::"""..."""
+            json_match = re.search(r'</m/str>::"""(.+)"""', result, re.DOTALL) or re.search(r"</m/str>::'(.+)'", result, re.DOTALL)
+            if not json_match:
                 return None
 
-            # Parse the doc record
-            doc_info = DocInfo(raw=result)
+            json_str = json_match.group(1)
+            if json_str == 'null':
+                return None
 
-            # Extract desc field - handle both WebSocket and console formats:
-            # WebSocket: </m/uri>::<desc> => </m/str>::'the initial function f()->x'
-            # Console: desc=>'the initial function f()->x'
-            desc_match = re.search(r"<desc>\s*=>\s*</m/str>::'([^']*)'", result)
-            if not desc_match:
-                desc_match = re.search(r"desc\s*=>\s*'([^']*)'", result)
-            if desc_match:
-                doc_info.desc = desc_match.group(1)
+            # Parse JSON
+            doc_data = json.loads(json_str)
 
-            # Extract dom field
-            # WebSocket: </m/uri>::<dom> => </m/str>::'noobj'
-            dom_match = re.search(r"<dom>\s*=>\s*</m/str>::'([^']*)'", result)
-            if not dom_match:
-                dom_match = re.search(r"dom\s*=>\s*'([^']*)'", result)
-            if dom_match:
-                doc_info.dom = dom_match.group(1)
+            # Ensure we got a dict, not a string
+            if not isinstance(doc_data, dict):
+                logger.debug(f"doc_json() returned non-dict for {vid}: {type(doc_data)}")
+                return None
 
-            # Extract rng field
-            # WebSocket: </m/uri>::<rng> => </m/str>::'initial objs'
-            rng_match = re.search(r"<rng>\s*=>\s*</m/str>::'([^']*)'", result)
-            if not rng_match:
-                rng_match = re.search(r"rng\s*=>\s*'([^']*)'", result)
-            if rng_match:
-                doc_info.rng = rng_match.group(1)
+            # Build DocInfo
+            doc_info = DocInfo(
+                raw=result,
+                desc=doc_data.get('desc', ''),
+                dom=doc_data.get('dom', ''),
+                rng=doc_data.get('rng', ''),
+                obj=doc_data.get('obj', '')
+            )
 
-            # Extract obj field
-            # WebSocket: </m/uri>::<obj> => </m/inst/start?rng=A{**}&dom=noobj{0}>(A{**}::T){<j>}
-            obj_match = re.search(r"<obj>\s*=>\s*([^,\]]+)", result)
-            if not obj_match:
-                obj_match = re.search(r"obj\s*=>\s*([^,\]]+)", result)
-            if obj_match:
-                doc_info.obj = obj_match.group(1).strip()
+            # Handle args dict
+            args_data = doc_data.get('args', {})
+            if isinstance(args_data, dict) and args_data:
+                doc_info.args = json.dumps(args_data)
 
-            # Extract args field
-            # WebSocket: </m/uri>::<args> => </m/rec>::[...]
-            args_match = re.search(r"<args>\s*=>\s*</m/rec>::(\[[^\]]*\])", result)
-            if not args_match:
-                args_match = re.search(r"args\s*=>\s*(\[[^\]]*\])", result)
-            if args_match:
-                doc_info.args = args_match.group(1)
+            # Handle examples list
+            examples_data = doc_data.get('example', [])
+            if isinstance(examples_data, list):
+                doc_info.example = examples_data
+            elif isinstance(examples_data, str):
+                doc_info.example = [examples_data]
 
-            # Return if we got at least desc
-            if doc_info.desc:
-                return doc_info
+            return doc_info if doc_info.desc else None
 
+        except json.JSONDecodeError as e:
+            logger.warning(f"JSON parse error for {vid}: {e}")
             return None
 
         except Exception as e:
-            logger.debug(f"Could not fetch doc for {vid}: {e}")
+            logger.error(f"Error fetching doc for {vid}: {e}")
             return None
 
 
@@ -244,40 +190,41 @@ class MetatronClient:
 
 @dataclass
 class DocInfo:
-    """Documentation information fetched via xyz?doc."""
-    obj: str = ""  # The object this doc is for
-    dom: str = ""  # Domain description
-    rng: str = ""  # Range description
-    args: str = ""  # Arguments description (raw string)
-    desc: str = ""  # Description text
-    raw: str = ""  # Raw doc response
+    """Documentation information fetched via doc_json()."""
+    obj: str = ""
+    dom: str = ""
+    rng: str = ""
+    args: str = ""  # JSON string of args dict
+    desc: str = ""
+    example: List[str] = field(default_factory=list)
+    raw: str = ""
 
 
 @dataclass
 class TypeInfo:
     """Information about a type defined in an instruction set."""
-    vid: str  # Full path (e.g., /m/mach/machine)
-    name: str  # Short name (e.g., machine)
-    definition: str  # Pretty-printed definition in mtron syntax
-    raw: str = ""  # Raw entry string
-    super_type: str = ""  # Full URI of super type (e.g., /m/lst)
-    super_type_short: str = ""  # Short name of super type (e.g., lst)
-    super_type_instset: str = ""  # Instruction set containing super type (e.g., /m)
-    doc: Optional[DocInfo] = None  # Documentation from xyz?doc
+    vid: str
+    name: str
+    definition: str
+    raw: str = ""
+    super_type: str = ""
+    super_type_short: str = ""
+    super_type_instset: str = ""
+    doc: Optional[DocInfo] = None
 
 
 @dataclass
 class InstInfo:
     """Information about an instruction."""
-    vid: str  # Full path with signature (e.g., /m/mach/inst/run?rng=...&dom=...)
-    name: str  # Short name (e.g., run)
-    signature: str  # Pretty-printed signature in mtron syntax
-    raw: str = ""  # Raw entry string
-    domain: str = ""  # Domain type (e.g., str, lst)
-    range: str = ""  # Range type (e.g., int, bool)
-    domain_full: str = ""  # Full domain URI (e.g., /m/str)
-    range_full: str = ""  # Full range URI (e.g., /m/int)
-    doc: Optional[DocInfo] = None  # Documentation from xyz?doc
+    vid: str
+    name: str
+    signature: str
+    raw: str = ""
+    domain: str = ""
+    range: str = ""
+    domain_full: str = ""
+    range_full: str = ""
+    doc: Optional[DocInfo] = None
 
 
 @dataclass
@@ -286,32 +233,32 @@ class SpaceInfo:
     vid: str
     name: str
     raw: str = ""
-    type_spec: str = ""  # Type specification from querying */path/to/space
-    doc: Optional[DocInfo] = None  # Documentation from xyz?doc
+    type_spec: str = ""
+    doc: Optional[DocInfo] = None
 
 
 @dataclass
 class ConstInfo:
-    """Information about a constant defined in an instruction set."""
+    """Information about a constant."""
     vid: str
     name: str
     definition: str = ""
     raw: str = ""
-    doc: Optional[DocInfo] = None  # Documentation from xyz?doc
+    doc: Optional[DocInfo] = None
 
 
 @dataclass
 class RewriteInfo:
-    """Information about a rewrite rule defined in an instruction set."""
+    """Information about a rewrite rule."""
     vid: str
     name: str
     signature: str = ""
     raw: str = ""
-    domain: str = ""  # Domain type short form
-    range: str = ""  # Range type short form
-    domain_full: str = ""  # Full domain URI
-    range_full: str = ""  # Full range URI
-    doc: Optional[DocInfo] = None  # Documentation from xyz?doc
+    domain: str = ""
+    range: str = ""
+    domain_full: str = ""
+    range_full: str = ""
+    doc: Optional[DocInfo] = None
 
 
 @dataclass
@@ -319,6 +266,7 @@ class InstSetInfo:
     """Complete information about an instruction set."""
     vid: str  # e.g., /m/mach
     name: str  # e.g., mach
+    desc: str = ""  # Instruction set description
     parent: Optional[str] = None  # Super instruction set
     children: List[str] = field(default_factory=list)  # Sub instruction sets
     types: List[TypeInfo] = field(default_factory=list)
@@ -345,6 +293,9 @@ class InstSetDocFetcher:
 
         name = vid.split('/')[-1] if '/' in vid else vid
         info = InstSetInfo(vid=vid, name=name)
+
+        # Fetch instruction set description
+        info.desc = await self._fetch_instset_desc(vid)
 
         # Fetch the instruction set space metadata
         try:
@@ -374,6 +325,28 @@ class InstSetDocFetcher:
                     f"{len(info.rewrites)} rewrites, {len(info.spaces)} spaces, {len(info.consts)} consts")
         return info
 
+    async def _fetch_instset_desc(self, vid: str) -> str:
+        """Fetch the description for the instruction set itself."""
+        import json
+        try:
+            # Query: "*/m?docq>>desc".doc_json()
+            vid_escaped = vid.replace("'", "\\'")
+            query = f'"*{vid_escaped}?docq>>desc".doc_json()'
+            result = await self.client.eval(query)
+
+            if not result or result == "noobj" or result.startswith("</m/fail>"):
+                return ""
+
+            # Extract the description string from response: </m/str>::'description'
+            match = re.search(r"</m/str>::'(.+)'", result, re.DOTALL)
+            if match:
+                return match.group(1)
+
+            return ""
+        except Exception as e:
+            logger.debug(f"Could not fetch instset desc for {vid}: {e}")
+            return ""
+
     async def _fetch_types(self, vid: str) -> List[TypeInfo]:
         """Fetch all types defined by this instruction set using doc() for pretty output."""
         types = []
@@ -394,29 +367,19 @@ class InstSetDocFetcher:
         return types
 
     async def _fetch_type_super(self, type_info: TypeInfo):
-        """Fetch the super type for a type by querying *typename (raw, not doc())."""
+        """Fetch super type information by querying the raw type."""
         try:
-            # Query raw type info: *lrow returns something like lst::T@/m/tble/lrow
-            # The first part before :: is the super type short name
             raw_result = await self.client.eval(f"*{type_info.vid}")
             if raw_result and "::" in raw_result:
-                # Parse: lst::T@/m/tble/lrow
-                # The first part (lst) is the short super type name
-                parts = raw_result.split("::")
-                if len(parts) >= 1:
-                    super_short = parts[0].strip()
-                    # Query the super type to get its full URI
-                    if super_short and super_short != type_info.name:
-                        type_info.super_type_short = super_short
-                        super_raw = await self.client.eval(f"*{super_short}")
-                        # Result format: rec::T@/m/rec or similar
-                        # Extract the VID after the @ symbol
-                        if super_raw and "@" in super_raw:
-                            vid_part = super_raw.split("@")[-1].strip()
-                            if vid_part.startswith("/"):
-                                type_info.super_type = vid_part
-                                # Extract instset from super type (e.g., /m/lst -> /m)
-                                type_info.super_type_instset = self._extract_instset(type_info.super_type)
+                super_short = raw_result.split("::")[0].strip()
+                if super_short and super_short != type_info.name:
+                    type_info.super_type_short = super_short
+                    super_raw = await self.client.eval(f"*{super_short}")
+                    if super_raw and "@" in super_raw:
+                        vid_part = super_raw.split("@")[-1].strip()
+                        if vid_part.startswith("/"):
+                            type_info.super_type = vid_part
+                            type_info.super_type_instset = self._extract_instset(type_info.super_type)
         except Exception as e:
             logger.debug(f"Could not fetch super type for {type_info.name}: {e}")
 
@@ -440,19 +403,14 @@ class InstSetDocFetcher:
         return insts
 
     async def _fetch_inst_short_forms(self, inst_info: InstInfo):
-        """Fetch short forms for domain and range using rewrite()."""
-        # Store full URIs
+        """Convert domain/range to short forms using rewrite()."""
         inst_info.domain_full = inst_info.domain
         inst_info.range_full = inst_info.range
 
-        # Get short forms using rewrite()
         if inst_info.domain:
-            _, long_form = await self.client.rewrite(inst_info.domain)
-            inst_info.domain = long_form
-
+            _, inst_info.domain = await self.client.rewrite(inst_info.domain)
         if inst_info.range:
-            _, long_form = await self.client.rewrite(inst_info.range)
-            inst_info.range = long_form
+            _, inst_info.range = await self.client.rewrite(inst_info.range)
 
     async def _fetch_spaces(self, vid: str) -> List[SpaceInfo]:
         """Fetch all sub-spaces defined by this instruction set."""
@@ -479,14 +437,13 @@ class InstSetDocFetcher:
         return spaces
 
     async def _fetch_space_type(self, space_info: SpaceInfo):
-        """Fetch the type specification for a space by querying *spacepath."""
+        """Fetch type specification for a space."""
         try:
-            # Query raw space info: */m/tble/space/tble
             raw_result = await self.client.eval(f"*{space_info.vid}")
             if raw_result:
                 space_info.type_spec = raw_result
         except Exception as e:
-            logger.debug(f"Could not fetch type spec for space {space_info.vid}: {e}")
+            logger.debug(f"Could not fetch type spec for {space_info.vid}: {e}")
 
     async def _fetch_rewrites(self, vid: str) -> List[RewriteInfo]:
         """Fetch all rewrites defined by this instruction set."""
@@ -514,8 +471,9 @@ class InstSetDocFetcher:
                                                    domain=domain, range=range_type)
                         # Get short forms for domain and range using rewrite()
                         await self._fetch_rewrite_short_forms(rewrite_info)
-                        # Fetch documentation
-                        rewrite_info.doc = await self.client.fetch_obj_doc(rewrite_vid)
+                        # Fetch documentation using ORIGINAL vid (before conversion to shorthand)
+                        original_vid = entry[:arrow_pos].strip()
+                        rewrite_info.doc = await self.client.fetch_obj_doc(original_vid)
                         rewrites.append(rewrite_info)
                         logger.debug(f"  Found rewrite: {name} ({rewrite_info.domain}=>{rewrite_info.range})")
         except Exception as e:
@@ -523,19 +481,14 @@ class InstSetDocFetcher:
         return rewrites
 
     async def _fetch_rewrite_short_forms(self, rewrite_info: RewriteInfo):
-        """Fetch short forms for domain and range using rewrite()."""
-        # Store full URIs
+        """Convert domain/range to short forms using rewrite()."""
         rewrite_info.domain_full = rewrite_info.domain
         rewrite_info.range_full = rewrite_info.range
 
-        # Get short forms using rewrite()
         if rewrite_info.domain:
-            _, long_form = await self.client.rewrite(rewrite_info.domain)
-            rewrite_info.domain = long_form
-
+            _, rewrite_info.domain = await self.client.rewrite(rewrite_info.domain)
         if rewrite_info.range:
-            _, long_form = await self.client.rewrite(rewrite_info.range)
-            rewrite_info.range = long_form
+            _, rewrite_info.range = await self.client.rewrite(rewrite_info.range)
 
     async def _fetch_consts(self, vid: str) -> List[ConstInfo]:
         """Fetch all constants defined by this instruction set."""
@@ -564,13 +517,12 @@ class InstSetDocFetcher:
         return consts
 
     def _extract_instset(self, type_uri: str) -> str:
-        """Extract the instruction set from a type URI (e.g., /m/lst -> /m, /m/tble/lrow -> /m/tble)."""
+        """Extract instset from type URI: /m/tble/lrow -> /m/tble"""
         if not type_uri:
             return ""
         parts = type_uri.strip('/').split('/')
         if len(parts) <= 1:
             return "/" + parts[0] if parts else ""
-        # InstSet is all but the last part (which is the type name)
         return "/" + "/".join(parts[:-1])
 
     def _parse_hierarchy(self, info: InstSetInfo):
@@ -587,55 +539,34 @@ class InstSetDocFetcher:
             logger.warning(f"Could not parse hierarchy: {e}")
 
     def _parse_type_entry(self, entry: str) -> Optional[TypeInfo]:
-        """
-        Parse a type entry from doc() output.
-
-        Format: /m/mach/machine=>rec::T[isa([...])]@/m/mach/machine
-        """
+        """Parse type entry: /m/mach/machine=>rec::T[...]@/m/mach/machine"""
         if "=>" not in entry:
             return None
 
-        # Split on first => to get vid and definition
         arrow_pos = self._find_top_level_arrow(entry)
         if arrow_pos < 0:
             return None
 
         vid = entry[:arrow_pos].strip()
-        definition = entry[arrow_pos + 2:].strip()
-
-        # Extract simple name from vid
+        definition = self._convert_signature_shorthand(entry[arrow_pos + 2:].strip())
         name = vid.split('/')[-1].split('?')[0]
-
-        # Convert dom=&rng= to rng<=dom in definition
-        definition = self._convert_signature_shorthand(definition)
 
         return TypeInfo(vid=vid, name=name, definition=definition, raw=entry)
 
     def _parse_inst_entry(self, entry: str) -> Optional[InstInfo]:
-        """
-        Parse an instruction entry from doc() output.
-
-        Format: /m/mach/inst/run?rng=core&dom=core=>run?rng=core&dom=core(){<j>}
-        """
+        """Parse instruction entry: /m/mach/inst/run?rng=core&dom=core=>run..."""
         if "=>" not in entry:
             return None
 
-        # Split on first => to get vid and signature
         arrow_pos = self._find_top_level_arrow(entry)
         if arrow_pos < 0:
             return None
 
         vid = entry[:arrow_pos].strip()
         signature = entry[arrow_pos + 2:].strip()
-
-        # Extract simple name from vid (before ?)
-        base_path = vid.split('?')[0]
-        name = base_path.split('/')[-1]
-
-        # Extract domain and range from vid query string before conversion
+        name = vid.split('?')[0].split('/')[-1]
         domain, range_type = self._extract_dom_rng(vid)
 
-        # Convert dom=&rng= to rng<=dom in both vid and signature
         vid = self._convert_signature_shorthand(vid)
         signature = self._convert_signature_shorthand(signature)
 
@@ -643,20 +574,14 @@ class InstSetDocFetcher:
                         domain=domain, range=range_type)
 
     def _extract_dom_rng(self, vid: str) -> tuple:
-        """Extract domain and range type names from a vid with query string."""
-        domain = ""
-        range_type = ""
-        if '?' in vid:
-            query = vid.split('?', 1)[1]
-            # Parse rng= value
-            rng_match = re.search(r'rng=([^&]+)', query)
-            if rng_match:
-                range_type = rng_match.group(1)
-            # Parse dom= value
-            dom_match = re.search(r'dom=([^&]+)', query)
-            if dom_match:
-                domain = dom_match.group(1)
-        return domain, range_type
+        """Extract domain and range from vid query string."""
+        if '?' not in vid:
+            return "", ""
+        query = vid.split('?', 1)[1]
+        rng_match = re.search(r'rng=([^&]+)', query)
+        dom_match = re.search(r'dom=([^&]+)', query)
+        return (dom_match.group(1) if dom_match else "",
+                rng_match.group(1) if rng_match else "")
 
     def _find_top_level_arrow(self, text: str) -> int:
         """Find the position of the first => at top level (not inside brackets)."""
@@ -674,56 +599,37 @@ class InstSetDocFetcher:
         return -1
 
     def _convert_signature_shorthand(self, text: str) -> str:
-        """
-        Convert dom=X&rng=Y or rng=X&dom=Y to X<=Y shorthand.
-
-        Examples:
-            ?rng=core&dom=core -> ?core<=core
-            ?dom=#{?}&rng=uri  -> ?uri<=#{?}
-            ?rng=noobj{0}&dom=str -> ?noobj{0}<=str
-        """
+        """Convert ?rng=X&dom=Y to ?X<=Y shorthand."""
         result = []
         i = 0
         while i < len(text):
             if text[i] == '?':
-                # Found query start - find where it ends
                 query_start = i + 1
                 query_end = len(text)
 
                 # Find end of query (first ( or [ after ?)
                 j = query_start
-                while j < len(text):
-                    if text[j] in '([':
-                        query_end = j
-                        break
+                while j < len(text) and text[j] not in '([':
                     j += 1
+                query_end = j
 
                 query = text[query_start:query_end]
 
-                # Parse rng= and dom= from query
-                # They can be in any order: rng=X&dom=Y or dom=X&rng=Y
+                # Extract rng= and dom= values
                 rng_val = None
                 dom_val = None
 
-                # Find rng= value
                 rng_pos = query.find('rng=')
                 if rng_pos >= 0:
                     rng_start = rng_pos + 4
-                    # Value ends at & or end of query
                     rng_end = query.find('&', rng_start)
-                    if rng_end < 0:
-                        rng_end = len(query)
-                    rng_val = query[rng_start:rng_end]
+                    rng_val = query[rng_start:rng_end] if rng_end >= 0 else query[rng_start:]
 
-                # Find dom= value
                 dom_pos = query.find('dom=')
                 if dom_pos >= 0:
                     dom_start = dom_pos + 4
-                    # Value ends at & or end of query
                     dom_end = query.find('&', dom_start)
-                    if dom_end < 0:
-                        dom_end = len(query)
-                    dom_val = query[dom_start:dom_end]
+                    dom_val = query[dom_start:dom_end] if dom_end >= 0 else query[dom_start:]
 
                 # Build shorthand
                 if rng_val and dom_val:
@@ -733,7 +639,6 @@ class InstSetDocFetcher:
                 elif dom_val:
                     result.append(f"?<={dom_val}")
                 else:
-                    # No rng/dom found, keep original
                     result.append('?' + query)
 
                 i = query_end
@@ -881,13 +786,12 @@ class HTMLDocGenerator:
         self.relative_depth = relative_depth
 
     def _extract_instset(self, type_uri: str) -> str:
-        """Extract the instruction set from a type URI (e.g., /m/lst -> /m, /m/tble/lrow -> /m/tble)."""
+        """Extract instset from type URI: /m/tble/lrow -> /m/tble"""
         if not type_uri:
             return ""
         parts = type_uri.strip('/').split('/')
         if len(parts) <= 1:
             return "/" + parts[0] if parts else ""
-        # InstSet is all but the last part (which is the type name)
         return "/" + "/".join(parts[:-1])
 
     def generate(self) -> str:
@@ -970,13 +874,20 @@ class HTMLDocGenerator:
 
     def _generate_instset_header(self) -> str:
         parent_path = '/'.join(self.instset.vid.split('/')[:-1]) or ''
+
+        # Add description if available (skip if empty or "null")
+        desc_html = ""
+        if self.instset.desc and self.instset.desc != "null":
+            desc_html = f'<p class="text-light mt-3 mb-0" style="line-height:2.5em; max-width: 1000px; margin-left: auto; margin-right: auto;">{html.escape(self.instset.desc)}</p>'
+
         return f"""
         <div class="container-xxl py-4">
             <div class="text-center mb-4">
                 <h1 class="text-primary glow-text">
                     <span class="text-light">{html.escape(parent_path)}/</span>{html.escape(self.instset.name)}
                 </h1>
-                <p class="subtitle text-light">instruction set reference</p>
+                <p style="line-height:0.1rem;" class="subtitle text-light">instruction set reference</p>
+                {desc_html}
             </div>
         </div>"""
 
@@ -999,30 +910,7 @@ class HTMLDocGenerator:
             </div>
         </div>"""
 
-    def _generate_stats(self) -> str:
-        """Generate stats cards for all 5 categories."""
-        def stat_card(count: int, label: str, color: str = "primary") -> str:
-            text_class = "text-muted" if count == 0 else f"text-{color}"
-            return f'''
-                <div class="col-auto">
-                    <div class="card text-center" style="min-width: 100px;">
-                        <div class="card-body py-2">
-                            <h3 class="{text_class} mb-0">{count}</h3>
-                            <small class="text-light">{label}</small>
-                        </div>
-                    </div>
-                </div>'''
 
-        return f"""
-        <div class="container-xxl mb-4">
-            <div class="row g-2 justify-content-center">
-                {stat_card(len(self.instset.types), "Types", "primary")}
-                {stat_card(len(self.instset.insts), "Insts", "success")}
-                {stat_card(len(self.instset.rewrites), "Rewrites", "warning")}
-                {stat_card(len(self.instset.spaces), "Spaces", "info")}
-                {stat_card(len(self.instset.consts), "Consts", "secondary")}
-            </div>
-        </div>"""
 
     def _generate_hierarchy(self) -> str:
         items = []
@@ -1071,7 +959,31 @@ class HTMLDocGenerator:
                     <span class="badge bg-success">I</span>
                 </a>''')
 
-        if not type_items and not inst_items:
+        rewrite_items = []
+        for r in sorted(self.instset.rewrites, key=lambda x: x.name):
+            rewrite_items.append(f'''
+                <a href="#rewrite-{html.escape(r.name)}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
+                    <span class="code">{html.escape(r.name)}</span>
+                    <span class="badge bg-warning text-dark">R</span>
+                </a>''')
+
+        space_items = []
+        for s in sorted(self.instset.spaces, key=lambda x: x.name):
+            space_items.append(f'''
+                <a href="#space-{html.escape(s.name)}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
+                    <span class="code">{html.escape(s.name)}</span>
+                    <span class="badge bg-info">S</span>
+                </a>''')
+
+        const_items = []
+        for c in sorted(self.instset.consts, key=lambda x: x.name):
+            const_items.append(f'''
+                <a href="#const-{html.escape(c.name)}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
+                    <span class="code">{html.escape(c.name)}</span>
+                    <span class="badge bg-secondary">C</span>
+                </a>''')
+
+        if not type_items and not inst_items and not rewrite_items and not space_items and not const_items:
             return ""
 
         type_list = f'''
@@ -1090,6 +1002,30 @@ class HTMLDocGenerator:
                 </div>
             </div>''' if inst_items else ""
 
+        rewrite_list = f'''
+            <div class="mb-3">
+                <h6 class="text-primary mb-2">Rewrites</h6>
+                <div class="index-columns-rewrites">
+                    {''.join(rewrite_items)}
+                </div>
+            </div>''' if rewrite_items else ""
+
+        space_list = f'''
+            <div class="mb-3">
+                <h6 class="text-primary mb-2">Spaces</h6>
+                <div class="index-columns">
+                    {''.join(space_items)}
+                </div>
+            </div>''' if space_items else ""
+
+        const_list = f'''
+            <div class="mb-3">
+                <h6 class="text-primary mb-2">Constants</h6>
+                <div class="index-columns">
+                    {''.join(const_items)}
+                </div>
+            </div>''' if const_items else ""
+
         return f"""
         <div class="container-xxl mb-4">
             <div class="card">
@@ -1099,6 +1035,9 @@ class HTMLDocGenerator:
                 <div class="card-body">
                     {type_list}
                     {inst_list}
+                    {rewrite_list}
+                    {space_list}
+                    {const_list}
                 </div>
             </div>
         </div>"""
@@ -1138,11 +1077,9 @@ class HTMLDocGenerator:
                     <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">{html.escape(t.doc.desc)}</p>
                     </div>'''
-                # Commented out: other doc fields available
-                # if t.doc.dom: dom_desc = t.doc.dom
-                # if t.doc.rng: rng_desc = t.doc.rng
-                # if t.doc.args: args_desc = t.doc.args
-                # if t.doc.obj: obj_desc = t.doc.obj
+
+            # Generate examples
+            examples_html = self._format_examples(t.doc)
 
             items.append(f"""
                 <div class="card mb-3" id="type-{html.escape(t.name)}">
@@ -1155,6 +1092,7 @@ class HTMLDocGenerator:
                     </div>
                     {definition}
                     {desc_html}
+                    {examples_html}
                 </div>""")
 
         return f"""
@@ -1190,18 +1128,8 @@ class HTMLDocGenerator:
             first_inst = insts[0]
             type_sig_html = self._format_inst_type_signature(first_inst)
 
-            # Generate description from doc if available (use first inst's doc)
-            desc_html = ""
-            if first_inst.doc and first_inst.doc.desc:
-                desc_html = f'''
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">{html.escape(first_inst.doc.desc)}</p>
-                    </div>'''
-                # Commented out: other doc fields available
-                # if first_inst.doc.dom: dom_desc = first_inst.doc.dom
-                # if first_inst.doc.rng: rng_desc = first_inst.doc.rng
-                # if first_inst.doc.args: args_desc = first_inst.doc.args
-                # if first_inst.doc.obj: obj_desc = first_inst.doc.obj
+            # Generate full documentation using new inst-specific formatter
+            doc_html = self._format_inst_documentation(first_inst.doc)
 
             items.append(f"""
                 <div class="card mb-3" id="inst-{html.escape(name)}">
@@ -1215,7 +1143,7 @@ class HTMLDocGenerator:
                     <div class="card-body p-2">
                         {all_sigs}
                     </div>
-                    {desc_html}
+                    {doc_html}
                 </div>""")
 
         return f"""
@@ -1266,6 +1194,86 @@ class HTMLDocGenerator:
             # Link within same document
             return f'<a href="#type-{html.escape(type_name)}" class="code {css_class}">{html.escape(type_short)}</a>'
 
+    def _format_inst_documentation(self, doc: Optional[DocInfo]) -> str:
+        """
+        Format instruction documentation with special layout:
+        desc / domain => range [args] / examples
+        """
+        if not doc:
+            return ""
+
+        parts = []
+
+        # Description
+        if doc.desc:
+            parts.append(f'''
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">{html.escape(doc.desc)}</p>
+                    </div>''')
+
+        # Domain => Range with Arguments
+        if doc.dom or doc.rng or doc.args:
+            signature_parts = []
+
+            if doc.dom or doc.rng:
+                dom_text = html.escape(doc.dom) if doc.dom else '?'
+                rng_text = html.escape(doc.rng) if doc.rng else '?'
+                signature_parts.append(f'"{dom_text}" <span class="text-light">=&gt;</span> "{rng_text}"')
+
+            if doc.args:
+                args_html = self._format_args_map(doc.args)
+                if args_html:
+                    signature_parts.append(f'\n   {args_html}')
+
+            if signature_parts:
+                signature_html = ''.join(signature_parts)
+                parts.append(f'''
+                    <div class="card-body py-2">
+                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">{signature_html}</pre>
+                    </div>''')
+
+        # Examples
+        examples_html = self._format_examples(doc)
+        if examples_html:
+            parts.append(examples_html)
+
+        return ''.join(parts)
+
+    def _format_args_map(self, args_str: str) -> str:
+        """Parse JSON args dict and format as multi-line display. Returns empty string if no args."""
+        import json
+
+        if not args_str:
+            return ""
+
+        try:
+            args_dict = json.loads(args_str)
+            if not args_dict or not isinstance(args_dict, dict):
+                return ""
+
+            arg_lines = [f'{html.escape(str(k))} <span class="text-light">=&gt;</span> "{html.escape(str(v))}"'
+                        for k, v in args_dict.items()]
+            return '[' + '\n    '.join(arg_lines) + ']'
+
+        except (json.JSONDecodeError, ValueError):
+            logger.debug(f"Args parse error: {args_str[:100]}")
+            return ""
+
+    def _format_examples(self, doc: Optional[DocInfo]) -> str:
+        """Format examples from doc info as HTML code blocks."""
+        if not doc or not doc.example:
+            return ""
+
+        examples_html = []
+        for example in doc.example:
+            examples_html.append(f'<pre class="mb-1"><code class="language-mtron">{html.escape(example)}</code></pre>')
+
+        return f'''
+                    <div class="card-body border-top py-2">
+                        <small class="text-muted fw-bold">Examples:</small>
+                        {''.join(examples_html)}
+                    </div>'''
+
     def _generate_rewrites_section(self) -> str:
         if not self.instset.rewrites:
             return ""
@@ -1289,11 +1297,9 @@ class HTMLDocGenerator:
                     <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">{html.escape(rewrite.doc.desc)}</p>
                     </div>'''
-                # Commented out: other doc fields available
-                # if rewrite.doc.dom: dom_desc = rewrite.doc.dom
-                # if rewrite.doc.rng: rng_desc = rewrite.doc.rng
-                # if rewrite.doc.args: args_desc = rewrite.doc.args
-                # if rewrite.doc.obj: obj_desc = rewrite.doc.obj
+
+            # Generate examples
+            examples_html = self._format_examples(rewrite.doc)
 
             items.append(f"""
                 <div class="card mb-3" id="rewrite-{html.escape(rewrite.name)}">
@@ -1306,6 +1312,7 @@ class HTMLDocGenerator:
                     </div>
                     {signature_html}
                     {desc_html}
+                    {examples_html}
                 </div>""")
 
         return f"""
@@ -1358,11 +1365,9 @@ class HTMLDocGenerator:
                     <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">{html.escape(space.doc.desc)}</p>
                     </div>'''
-                # Commented out: other doc fields available
-                # if space.doc.dom: dom_desc = space.doc.dom
-                # if space.doc.rng: rng_desc = space.doc.rng
-                # if space.doc.args: args_desc = space.doc.args
-                # if space.doc.obj: obj_desc = space.doc.obj
+
+            # Generate examples
+            examples_html = self._format_examples(space.doc)
 
             items.append(f"""
                 <div class="card mb-3" id="space-{html.escape(space.name)}">
@@ -1372,6 +1377,7 @@ class HTMLDocGenerator:
                     </div>
                     {type_spec_html if type_spec_html else ''}
                     {desc_html}
+                    {examples_html}
                 </div>""")
 
         return f"""
@@ -1402,11 +1408,9 @@ class HTMLDocGenerator:
                     <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">{html.escape(const.doc.desc)}</p>
                     </div>'''
-                # Commented out: other doc fields available
-                # if const.doc.dom: dom_desc = const.doc.dom
-                # if const.doc.rng: rng_desc = const.doc.rng
-                # if const.doc.args: args_desc = const.doc.args
-                # if const.doc.obj: obj_desc = const.doc.obj
+
+            # Generate examples
+            examples_html = self._format_examples(const.doc)
 
             items.append(f"""
                 <div class="card mb-3" id="const-{html.escape(const.name)}">
@@ -1416,6 +1420,7 @@ class HTMLDocGenerator:
                     </div>
                     {definition_html}
                     {desc_html}
+                    {examples_html}
                 </div>""")
 
         return f"""

@@ -26,7 +26,7 @@ import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
-import studio.phaseshift.metatron.isa.m.type.impl.Rewriter;
+import studio.phaseshift.metatron.algebra.rewrite.Rewriter;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.LinkedHashSet;
@@ -40,6 +40,7 @@ import static studio.phaseshift.metatron.furi.Q.Q_TYPE;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.CONSTQ_TYPE;
+import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.space.memSpace.MEM_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.space.metaSpace.META_SPACE_TYPE;
@@ -106,6 +107,7 @@ public class mInstSet extends AbstractInstSet {
     public static final fURI SUM_INST_TID = M_ISA_INST_TID.extend("sum");
     public static final fURI CC_INST_TID = M_ISA_INST_TID.extend("cc");
     public static final fURI PROD_INST_TID = M_ISA_INST_TID.extend("prod");
+    public static final fURI MEAN_INST_TID = M_ISA_INST_TID.extend("mean");
     public static final fURI POW_INST_TID = M_ISA_INST_TID.extend("pow");
     public static final fURI MOD_INST_TID = M_ISA_INST_TID.extend("mod");
     public static final fURI REDUCE_INST_TID = M_ISA_INST_TID.extend("reduce");
@@ -262,8 +264,8 @@ public class mInstSet extends AbstractInstSet {
                 Type.Builder.build().tid(OBJS_TID).vid(OBJS_TID).create(),
                 /// ///////////////////////////////////
                 SPACE_TYPE,
-                MEM_SPACE_TYPE,
-                STACK_SPACE_TYPE,
+                docWrap(MEM_SPACE_TYPE,"the reference implementation of a space where objs are store in memory"),
+                docWrap(STACK_SPACE_TYPE,"the machine's thread local stack exposed as a space"),
                 META_SPACE_TYPE,
                 Q_TYPE,
                 /// ///////////////////////////////////

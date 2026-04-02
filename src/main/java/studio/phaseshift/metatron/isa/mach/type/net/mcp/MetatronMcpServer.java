@@ -27,7 +27,7 @@ import io.modelcontextprotocol.server.McpServer;
 import io.modelcontextprotocol.spec.McpSchema;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.furi.q.DocQ;
+import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
@@ -197,7 +197,7 @@ public class MetatronMcpServer extends MRec {
         // Query for documentation metadata
         final Obj docObj = Router.global().read(inst.tid().q(DOCQ, null));
         // rebuild the doc object just in case the rec is not a true Java class doc (e.g. rec stored in a database)
-        final DocQ.Doc doc = docObj.isNoObj() ? DocQ.Doc.empty(inst) : new DocQ.Doc(docObj.asRec());
+        final QCollection.Doc doc = docObj.isNoObj() ? QCollection.Doc.empty(inst) : new QCollection.Doc(docObj.asRec());
         // Extract description
         final String description = doc.description()!= null || doc.description().isEmpty()
                 ? doc.description()
@@ -243,7 +243,7 @@ public class MetatronMcpServer extends MRec {
      * Build JSON schema from an Inst's type signature and doc metadata.
      * Follows the OLLM pattern for handling both Lst (positional) and Rec (named) args.
      */
-    private String buildSchemaFromInst(final Inst inst, final DocQ.Doc doc) {
+    private String buildSchemaFromInst(final Inst inst, final QCollection.Doc doc) {
         final Poly<?, ?> args = inst.args().orElse(rec0());
         if (args.isNoObj() || args.isEmpty()) 
             return createDefaultArgsSchema();

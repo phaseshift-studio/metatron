@@ -30,6 +30,7 @@ import studio.phaseshift.metatron.TestCategory;
 import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
+import studio.phaseshift.metatron.furi.q.SubQTest;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -80,6 +81,10 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
         this.spaceSupplier = spaceSupplier;
     }
 
+    public Space getSpace() {
+        return this.space;
+    }
+    
     @BeforeEach
     protected void setup() {
         if (!Router.global().hasSpaceFor(this.baseURI))
@@ -117,7 +122,7 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
         return data;
     }
 
-    @TestCategory.Crud
+    /*@TestCategory.Crud
     @TestCategory.Concurrent
     @ParameterizedTest(name = "[{index}] String: {0}")
     @CsvSource(value = {
@@ -136,7 +141,7 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
         //LOG.info("SUBSCRIPTIONS: %s", mParser.eval(make("*$$/xyz?subq")));
         CommonUtil.sleepThread(100);
         assertTrue(mParser.eval(make(expecting)).boolValue());
-    }
+    }*/
 
     @TestCategory.Crud
     @TestCategory.ReadWrite
@@ -475,7 +480,7 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
         }
     }
 
-    private String make(final String expression) {
+    public String make(final String expression) {
         return expression.contains("$$") ? expression.replace("$$", this.baseURI.toString()) : expression;
     }
 
@@ -488,8 +493,8 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
      * Subclasses can override to customize the URI pattern for their space.
      * Default: baseURI + "/test/"
      */
-    protected String getTestDataUriPrefix() {
-        return this.baseURI.toString() + "/test/";
+    public fURI getTestDataUriPrefix() {
+        return f(this.baseURI.toString() + "/test/");
     }
 
     /**

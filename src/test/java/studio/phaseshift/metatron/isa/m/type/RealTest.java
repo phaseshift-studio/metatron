@@ -69,6 +69,20 @@ public class RealTest extends AbstractAlgebraTest<Real> {
 
     @ParameterizedTest
     @CsvSource(value = {
+            "{1.0,2.0,3.0}.mean()                                             % 2.0",
+            "{1.0,0.0}.mean()                                                 % 0.5",
+            "{1.1,2.2,3.3}.mean().?>2.1.lt(2.3)                               % true", // java double too wiggly
+            "1.1.mean()                                                       % 1.1",
+            "{}.mean()                                                        % 0.0",
+            "[1.0,2.0,3.0]>-.mean()                                           % 2.0",
+            "[1.0,2.0,3.0]-<[>-.mean(),>-.sum?real<=(),>-.prod?real<=()]      % [2.0,6.0,6.0]"
+    }, delimiter = '%')
+    public void testMean(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
             "{1.1,2.2,3.3,4.4}                   %order()       %[1.1,2.2,3.3,4.4]",
             "{2.2,3.3,4.4,1.1}                   %order()       %[1.1,2.2,3.3,4.4]",
             "{4.4,2.2,3.3,1.1}                   %order()       %[1.1,2.2,3.3,4.4]",

@@ -27,7 +27,7 @@ import dev.langchain4j.service.AiServices;
 import dev.langchain4j.service.tool.ToolExecutor;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.furi.q.DocQ;
+import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.llm.LLMFactory;
 import studio.phaseshift.metatron.isa.llm.space.SpaceChatMemoryStore;
 import studio.phaseshift.metatron.isa.llm.space.SpaceContentRetriever;
@@ -226,6 +226,7 @@ public class Model extends MRec {
                         isComplete.set(true);
                         isResponding.set(false);
                         Router.global().stats().ioStats().incrBytesRecv(c.aiMessage().text().getBytes().length);
+                        this.processResponse(str(c.aiMessage().text()));
                         this.logger().none("\n");
                     })
                     .onPartialToolCall(partialToolCall -> {
@@ -304,8 +305,8 @@ public class Model extends MRec {
         }
 
         public static Tuple.Pair<ToolSpecification, ToolExecutor> mtronInstToolSpecification(final Inst inst) {
-            final DocQ.Doc doc = Router.readFromSpace(inst.tid().q(DOC, null))
-                    .orSupply(() -> DocQ.Doc.doc(inst,
+            final QCollection.Doc doc = Router.readFromSpace(inst.tid().q(DOC, null))
+                    .orSupply(() -> QCollection.Doc.doc(inst,
                             inst.dom().tid().toString(),
                             inst.rng().tid().toString(),
                             instB(AS_INST_TID, lst(REC_TYPE)).apply(inst.args().orElse(rec0())).asRec().elements().collect(Collectors.toMap(
@@ -355,8 +356,8 @@ public class Model extends MRec {
 
 /*
   public static Tools.Tool mtronInstTool(final Inst inst) {
-        final DocQ.Doc doc = Router.readFromSpace(inst.tid().q("doc", null))
-                .orSupply(() -> DocQ.Doc.doc(inst,
+        final Doc doc = Router.readFromSpace(inst.tid().q("doc", null))
+                .orSupply(() -> Doc.doc(inst,
                         inst.dom().tid().toString(),
                         inst.rng().tid().toString(),
                         instB(AS_INST_TID, lst(REC_TYPE)).apply(inst.args().orElse(rec0())).asRec().elements().collect(Collectors.toMap(

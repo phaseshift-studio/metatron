@@ -24,9 +24,11 @@
  import org.junit.jupiter.params.provider.CsvSource;
  import org.junit.jupiter.params.provider.MethodSource;
  import studio.phaseshift.metatron.AbstractMetatronTest;
- import studio.phaseshift.metatron.BootLoader;
+ import studio.phaseshift.metatron.TestData;
+ import studio.phaseshift.metatron.algebra.rewrite.CommonRewritesTestContract;
  import studio.phaseshift.metatron.furi.fURI;
  import studio.phaseshift.metatron.isa.AbstractSpaceTest;
+ import studio.phaseshift.metatron.isa.m.parser.mParser;
  import studio.phaseshift.metatron.isa.m.type.Obj;
  import studio.phaseshift.metatron.isa.m.type.Rec;
  import studio.phaseshift.metatron.isa.mach.type.Router;
@@ -50,7 +52,6 @@
  import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
  import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
  import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
- import static studio.phaseshift.metatron.isa.tble.tbleInstSet.TBLE_ISA_TID;
 
  /**
   * Test suite for tbleSpace with MQTT-indexed schema.
@@ -58,13 +59,13 @@
   * @author Marko A. Rodriguez (http://markorodriguez.com)
   */
  @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
- public class tbleSpaceTest extends AbstractSpaceTest {
+ public class tbleSpaceTest extends AbstractSpaceTest implements CommonRewritesTestContract {
 
      private static final String DB_PATH = "target/test-tble-space.db";
      private static final fURI SPACE_VID = f("/sys/space/tble/test");
 
      public tbleSpaceTest() {
-         super(() -> {
+         super(f("/tble/rewrite_test"), () -> {
              return tbleSpace.of(
                      rec(
                              uri(PATTERN), uri("/tble/#"),
@@ -1991,4 +1992,22 @@
              }
          }
      }
+
+    // ========================================
+    // Common Rewrite Tests
+    // ========================================
+
+    @Disabled("TestData loading issue - writes being batched/nested into single record")
+    @ParameterizedTest
+    @TestData(source = "rewrite_test_dataset.mtron", value = {""})
+    @CsvSource(value = {
+            "$$/+>>value.sum()    % 55",
+            "$$/+.count()         % 10",
+            "$$/+>>value.mean()   % 5.5",
+    }, delimiter = '%')
+    public void testCommonRewrites(String code, String expected) throws Exception {
+        final Obj obj = mParser.parse(make(code)).apply();
+        final Obj exp = mParser.parse(expected);
+        assertEquals(exp, obj);
+    }
  }

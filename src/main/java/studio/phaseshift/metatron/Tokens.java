@@ -147,6 +147,7 @@ public final class Tokens {
     public static final String EMPTY = "";
     public static final String ARG = "arg";
     public static final String DESC = "desc";
+    public static final String EXAMPLE = "example";
     public static final String MODEL = "model";
     public static final String DOC = "doc";
     public static final String LHS = "lhs";

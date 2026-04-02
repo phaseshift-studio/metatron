@@ -52,8 +52,6 @@ import java.util.stream.Stream;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.furi.q.DocQ.DOCQ_TYPE;
-import static studio.phaseshift.metatron.furi.q.DocQ.DOC_TYPE;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.furi.q.QCollection.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
@@ -215,7 +213,7 @@ public class machInstSet extends AbstractInstSet {
                 INCRQ_TYPE,
                 CONSTQ_TYPE,
                 DOCQ_TYPE,
-                DOC_TYPE,
+                DOCS_TYPE,
                 SUB_TYPE,
                 SUBQ_TYPE,
                 TYPEQ_TYPE,

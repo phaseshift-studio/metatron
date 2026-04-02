@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -65,7 +65,9 @@ public class mInstSetTest extends AbstractInstSetTest {
     @Test
     public void testDocs() {
         assertTrue(new mInstSet().qs().elements().anyMatch(q -> q.<Q>as().pattern().equals(f("docq"))));
-        new DocQTest().analyzeDocs(new mInstSet());
+        DocQTest.testWritingDocs(new mInstSet());
+        DocQTest.analyzeDocs(new mInstSet());
+
     }
 
     @ParameterizedTest
@@ -181,7 +183,7 @@ public class mInstSetTest extends AbstractInstSetTest {
             "1.map?noobj<=int(int{0}::100)                                                % noobj",
             "{1,2,3,4}.map(_).plus(2)                                                     % {3,4,5,6}",
             "{1,2,3,4}.map(+2)                                                            % {3,4,5,6}",
-         //   "{1,2,3,4}.inst(_,+1,+2){ map(*0).plus(*1).plus(*2) }                         % {6,9,12,15}",
+            //   "{1,2,3,4}.inst(_,+1,+2){ map(*0).plus(*1).plus(*2) }                         % {6,9,12,15}",
             "{1,2,3,4}.map(map(+2))                                                       % {3,4,5,6}",
             "{1,2,3,4}.map(map(map(map(map(map(+2))))))                                   % {3,4,5,6}"
     }, delimiter = '%')
@@ -349,7 +351,7 @@ public class mInstSetTest extends AbstractInstSetTest {
             "{1,2,3,4,5,6}.sum?int<=int{2}().count()                                % 3",
             "{1,2,3,4}.sum?int<=int{+}()                                            % 10",
             "{1,2,3,4}.count?int<=int()                                             % int{4}::1",
-          //  "{1,2,3,4}.count?int<=int{2}()                                          % int{2}::2",
+            //  "{1,2,3,4}.count?int<=int{2}()                                          % int{2}::2",
             "{1,2,3,4}.count?int<=int{4}()                                          % int::4",
             "{1,2,3,4}.count?int<=int{3,10}()                                       % int::4",
             "{1,2,3,4}.sum?int<=int{1,7}()                                          % 10",
@@ -512,7 +514,7 @@ public class mInstSetTest extends AbstractInstSetTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
-    
+
     @ParameterizedTest
     @TestData(value = {"nat -> int::T[is(gt(0))]"})
     @CsvSource(value = {
