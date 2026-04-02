@@ -31,8 +31,12 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.Tokens.REWRITE;
+import static studio.phaseshift.metatron.Tokens.TABLE;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.doc.docSpace.DOC_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
@@ -41,6 +45,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.tble.tbleSpace.TABL_SPACE_TYPE;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
  * docInstSet - Instruction set for document database operations
@@ -65,10 +71,7 @@ public class docInstSet extends AbstractInstSet {
     public static final fURI DOCUMENT_TID = DOC_ISA_TID.extend("document");
     public static final fURI COLLECTION_TID = DOC_ISA_TID.extend("collection");
     public static final fURI ID_FIELD = f("_id");
-
-    /**
-     * Type for a single document (record with _id field)
-     */
+    
     public static final Type DOCUMENT_TYPE = Type.Builder.build()
             .tid(REC_TID)
             .vid(DOCUMENT_TID)
@@ -77,9 +80,6 @@ public class docInstSet extends AbstractInstSet {
                     URI_TYPE, T(ALL)))
             .create();
 
-    /**
-     * Type for a collection of documents
-     */
     public static final Type COLLECTION_TYPE = Type.Builder.build()
             .tid(OBJS_TID.maybeSome())
             .vid(COLLECTION_TID)
@@ -87,78 +87,65 @@ public class docInstSet extends AbstractInstSet {
             .create();
 
     public docInstSet() {
-        super(DOC_ISA_TID, DOC_ISA_TID);
-    }
+        super(mutableMap(
+                uri(PATTERN), uri(DOC_ISA_TID.extend(ALL)),
+              uri(CONST), lst(ObjSimpleJSONSerializer.single(),uri(ID_FIELD,URI_TID,DOC_ISA_TID.extend(ID_FIELD))),
+                uri(TYPE), lst(
+                        DOCUMENT_TYPE,
+                        COLLECTION_TYPE,
+                        DOC_SPACE_TYPE),
+                uri(INST), lst(
+                        instC(AS_INST_TID.dom(DOCUMENT_TID).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> lst(lhs.asRec().elements().map(Rel::second).toList()))),
+                uri(REWRITE), lst(
+                        List.of(
+                                // Optimize: *collection.count() → MongoDB countDocuments()
+                                CommonRewrites.countRewrite(
+                                        docSpace.class,
+                                        DOC_ISA_REWRITE_TID.extend("native_count"),
+                                        (space, furi) -> {
+                                            final String collectionName = furi.segments().getFirst();
+                                            final MongoCollection<Document> collection = space.database.getCollection(collectionName);
+                                            return collection.countDocuments();
+                                        }
+                                ),
 
-    @Override
-    public Set<Type> types() {
-        return Set.of(docSpace.DOC_SPACE_TYPE, DOCUMENT_TYPE, COLLECTION_TYPE);
-    }
+                                // Optimize: *collection.sum() → MongoDB aggregation $sum
+                                CommonRewrites.sumRewrite(
+                                        docSpace.class,
+                                        DOC_ISA_REWRITE_TID.extend("native_sum"),
+                                        (space, furi) -> {
+                                            final String collectionName = furi.segments().getFirst();
+                                            final MongoCollection<Document> collection = space.database.getCollection(collectionName);
+                                            // MongoDB aggregation pipeline: [{$group: {_id: null, total: {$sum: 1}}}]
+                                            final Document result = collection.aggregate(Arrays.asList(
+                                                    new Document("$group", new Document("_id", null)
+                                                            .append("total", new Document("$sum", 1)))
+                                            )).first();
+                                            if (result != null && result.containsKey("total")) {
+                                                return result.get("total", Number.class);
+                                            }
+                                            return 0;
+                                        }
+                                ),
 
-    @Override
-    public Set<Obj> consts() {
-        return Set.of(ObjSimpleJSONSerializer.single());
-    }
-
-    @Override
-    public Set<Inst> insts() {
-        return new LinkedHashSet<>(List.of(
-                // Convert document to list (extract values)
-                instC(AS_INST_TID.dom(DOCUMENT_TID).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> lst(lhs.asRec().elements().map(Rel::second).toList()))
-        ));
-    }
-
-    @Override
-    public Set<Inst> rewrites() {
-        return new LinkedHashSet<>(List.of(
-                // Optimize: *collection.count() → MongoDB countDocuments()
-                CommonRewrites.countRewrite(
-                        docSpace.class,
-                        DOC_ISA_REWRITE_TID.extend("native_count"),
-                        (space, furi) -> {
-                            final String collectionName = furi.segments().getFirst();
-                            final MongoCollection<Document> collection = space.database.getCollection(collectionName);
-                            return collection.countDocuments();
-                        }
-                ),
-
-                // Optimize: *collection.sum() → MongoDB aggregation $sum
-                CommonRewrites.sumRewrite(
-                        docSpace.class,
-                        DOC_ISA_REWRITE_TID.extend("native_sum"),
-                        (space, furi) -> {
-                            final String collectionName = furi.segments().getFirst();
-                            final MongoCollection<Document> collection = space.database.getCollection(collectionName);
-                            // MongoDB aggregation pipeline: [{$group: {_id: null, total: {$sum: 1}}}]
-                            final Document result = collection.aggregate(Arrays.asList(
-                                    new Document("$group", new Document("_id", null)
-                                            .append("total", new Document("$sum", 1)))
-                            )).first();
-                            if (result != null && result.containsKey("total")) {
-                                return result.get("total", Number.class);
-                            }
-                            return 0;
-                        }
-                ),
-
-                // Optimize: *collection.mean() → MongoDB aggregation $avg
-                CommonRewrites.meanRewrite(
-                        docSpace.class,
-                        DOC_ISA_REWRITE_TID.extend("native_mean"),
-                        (space, furi) -> {
-                            final String collectionName = furi.segments().getFirst();
-                            final MongoCollection<Document> collection = space.database.getCollection(collectionName);
-                            // MongoDB aggregation pipeline: [{$group: {_id: null, average: {$avg: 1}}}]
-                            final Document result = collection.aggregate(Arrays.asList(
-                                    new Document("$group", new Document("_id", null)
-                                            .append("average", new Document("$avg", 1)))
-                            )).first();
-                            if (result != null && result.containsKey("average")) {
-                                return result.getDouble("average");
-                            }
-                            return 0.0;
-                        }
-                )
-        ));
+                                // Optimize: *collection.mean() → MongoDB aggregation $avg
+                                CommonRewrites.meanRewrite(
+                                        docSpace.class,
+                                        DOC_ISA_REWRITE_TID.extend("native_mean"),
+                                        (space, furi) -> {
+                                            final String collectionName = furi.segments().getFirst();
+                                            final MongoCollection<Document> collection = space.database.getCollection(collectionName);
+                                            // MongoDB aggregation pipeline: [{$group: {_id: null, average: {$avg: 1}}}]
+                                            final Document result = collection.aggregate(Arrays.asList(
+                                                    new Document("$group", new Document("_id", null)
+                                                            .append("average", new Document("$avg", 1)))
+                                            )).first();
+                                            if (result != null && result.containsKey("average")) {
+                                                return result.getDouble("average");
+                                            }
+                                            return 0.0;
+                                        }
+                                )
+                        ))),DOC_ISA_TID, DOC_ISA_TID);
     }
 }

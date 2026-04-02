@@ -59,7 +59,7 @@ public class CodeTest extends AbstractMetatronTest {
         Code obj = mParser.parse(code);
         LOG.debug("testing code resolution %s %s resolve", obj, resolved ? "{{g}}should{{X}}" : "{{r}}should not{{X}}");
         assertFalse(obj.isResolved(true));
-        obj = obj.resolve(noobj());
+        obj = obj.resolve(noobj()).rewrite();
         if (resolved) assertTrue(obj.isResolved(true));
         else assertFalse(obj.isResolved(true));
     }

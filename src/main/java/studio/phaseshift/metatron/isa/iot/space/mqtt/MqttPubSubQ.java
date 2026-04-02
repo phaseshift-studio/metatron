@@ -29,7 +29,6 @@ import studio.phaseshift.metatron.isa.mach.type.Router;
 
 import java.nio.ByteBuffer;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 
 import static studio.phaseshift.metatron.Tokens.SUB;
@@ -37,7 +36,6 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.iot.space.mqtt.mqttSpace.MQTT_SPACE_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -73,7 +71,7 @@ public class MqttPubSubQ extends BaseQ {
                 if (obj.isNoObj()) {
                     space.sjvm().toAsync()
                             .unsubscribeWith()
-                            .topicFilter(space.rewrite(vid.basePath(), true).toString())
+                            .topicFilter(space.redirect(vid.basePath(), true).toString())
                             .send()
                             .whenComplete((m, e) -> {
                                 if (null != e) {
@@ -90,10 +88,10 @@ public class MqttPubSubQ extends BaseQ {
                 } else {
                     space.sjvm().toAsync()
                             .subscribeWith()
-                            .topicFilter(space.rewrite(vid.basePath(), false).toString())
+                            .topicFilter(space.redirect(vid.basePath(), false).toString())
                             .callback(p -> {
                                 LOG.trace("received %s", p);
-                                final fURI topic = space.rewrite(f(p.getTopic().toString()), false);
+                                final fURI topic = space.redirect(f(p.getTopic().toString()), false);
                                 Obj o;
                                 if (p.getPayload().isPresent()) {
                                     Router.global().stats().ioStats().incrBytesRecv(p.toString().length());

@@ -101,7 +101,7 @@ public final class NoObjRouter extends MRec implements Router {
     }
 
     @Override
-    public void registerRewrite(fURI small, fURI big) {
+    public void registerRedirect(fURI small, fURI big) {
 
     }
 
@@ -111,7 +111,7 @@ public final class NoObjRouter extends MRec implements Router {
     }
 
     @Override
-    public fURI rewrite(fURI furi, boolean big) {
+    public fURI redirect(fURI furi, boolean big) {
         return NOOBJ;
     }
 

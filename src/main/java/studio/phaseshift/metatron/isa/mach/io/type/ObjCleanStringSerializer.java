@@ -203,7 +203,7 @@ public class ObjCleanStringSerializer extends AbstractObjSerializer<String> {
     @Override
     public String writeType(final Type type) {
         StringBuilder typeString = new StringBuilder(
-                (Router.loaded() ? Router.global().rewrite(type.tid(), false) : type.tid()).toString())
+                (Router.loaded() ? Router.global().redirect(type.tid(), false) : type.tid()).toString())
                 .append("::T");
         if (type.hasPredicate())
             typeString.append("[").append(type.predicate()).append("]");
@@ -245,7 +245,7 @@ public class ObjCleanStringSerializer extends AbstractObjSerializer<String> {
                 return sb;
             }
         }
-        sb.append(Router.loaded() ? Router.global().rewrite(obj.tid(), false) : obj.tid());
+        sb.append(Router.loaded() ? Router.global().redirect(obj.tid(), false) : obj.tid());
         if (!obj.isInst())
             sb.append("::");
         return sb;
@@ -262,14 +262,12 @@ public class ObjCleanStringSerializer extends AbstractObjSerializer<String> {
         if (lst.isEmpty()) {
             sb.append("[,]");
         } else {
-            boolean nested = lst.elements().anyMatch(Obj::isPoly) ||
-                    lst.jvm().size() > 4;
+            boolean nested = lst.elements().anyMatch(e -> e.isPoly() || e.isInst()) || lst.jvm().size() > 4;
             /* lst.jvm().stream().map(this::write).map(String::length).reduce(0, Integer::sum) > (50 - depth);*/
             final boolean isBaseType = lst.type().isBaseType();
-            sb.append("[").append(nested && !isBaseType ? "\n" : "");
-            final AtomicBoolean first = new AtomicBoolean(isBaseType);
+            sb.append("[").append(nested ? "\n" : "");
             lst.jvm().forEach(v -> {
-                if (nested && !first.getAndSet(false))
+                if (nested)
                     sb.append(" ".repeat(depth + 2));
                 this.processNestedPoly(sb, depth, 0, nested, v);
             });

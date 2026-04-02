@@ -91,7 +91,7 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
 
 
     @Override
-    public fURI rewrite(final fURI furi, final boolean big) {
+    public fURI redirect(final fURI furi, final boolean big) {
         return big ? Space.Helper.routeFromSpace(furi, this.routes()) : Space.Helper.routeToSpace(furi, this.routes());
     }
 

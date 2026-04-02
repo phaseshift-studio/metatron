@@ -163,11 +163,11 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
     }
 
     default fURI big() {
-        return Router.loaded() ? Router.global().rewrite(this, true) : this;
+        return Router.loaded() ? Router.global().redirect(this, true) : this;
     }
 
     default fURI small() {
-        return Router.loaded() ? Router.global().rewrite(this, false) : this;
+        return Router.loaded() ? Router.global().redirect(this, false) : this;
     }
 
     default boolean isEmpty() {

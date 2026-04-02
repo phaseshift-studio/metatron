@@ -251,8 +251,8 @@ public class machInstSet extends AbstractInstSet {
                         return monad;
                 }),
                 instC(REWRITE_INST_TID.dom(ALL.maybe()).rng(REC_TID), lst(URI_TYPE), (lhs, inst) -> rec(
-                        uri(SHORT), uri(Router.global().rewrite(inst.arg(0).uriValue(), false)), 
-                        uri(LONG), uri(Router.global().rewrite(inst.arg(0).uriValue(), true)))),
+                        uri(SHORT), uri(Router.global().redirect(inst.arg(0).uriValue(), false)), 
+                        uri(LONG), uri(Router.global().redirect(inst.arg(0).uriValue(), true)))),
                 instC(MACH_INST_TID.extend("close").dom(ROUTER_TID).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
                     if (lhs instanceof Router)
                         return Stream.of(noobj()).peek(o -> System.exit(0)).iterator().next();
@@ -295,7 +295,7 @@ public class machInstSet extends AbstractInstSet {
                             return objs(Arrays.stream(Objects.requireNonNull(file.listFiles()))
                                     //.peek(ff -> LOG.info("reading file %s", f(f(ff.getName()).name())))
                                     .map(ff -> makeFile(ff.toPath()))
-                                    .map(ff -> uri(space.rewrite(ff.uriValue().noQ(), true), ff.uriValue().isBranch() ? DIR_TID : FILE_TID)));
+                                    .map(ff -> uri(space.redirect(ff.uriValue().noQ(), true), ff.uriValue().isBranch() ? DIR_TID : FILE_TID)));
                         }
                     }
                     return noobj();

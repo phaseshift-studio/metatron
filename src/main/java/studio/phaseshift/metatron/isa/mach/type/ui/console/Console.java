@@ -646,20 +646,19 @@ public class Console extends JRec implements Closeable, Runnable {
                     Graphitty.out(terminal.output(), "{{XX}}");
                     this.status.refresh();
                 } else if (line.equals(":help")) {
-                    new Panel("{{c}}help menu{{X}}", new Table(
+                    Graphitty.out(terminal.output(), new Panel("{{c}}help menu{{X}}", new Table(
                             List.of("name", "short", "description"))
-                            .addRow(List.of("space walk", "<tab>", "explore spaces"))
-                            .addRow(List.of("introspect", "<space><tab>", "analyze machine"))
-                            .addRow(List.of("header", ":header", "random header"))
+                            .addRow(List.of("explain", "<tab>", "a tabular view of the current code"))
+                            .addRow(List.of("header", ":header", "print random metatron header"))
+                            .addRow(List.of("{{[g]&w}}panes", "{{[g]&w}}", "{{[g]&w}}"))
                             .addRow(List.of("split", ":split [v|h]", "split pane vertical/horizontal"))
                             .addRow(List.of("focus", ":focus [id]", "focus pane by id"))
                             .addRow(List.of("panes", ":panes", "list all panes"))
                             .addRow(List.of("close", ":close", "close active pane"))
-                            .addRow(List.of("next pane", "Ctrl+W", "cycle to next pane"))
-                            .addRow(List.of("prev pane", "Alt+W", "cycle to previous pane"))
-                            .addRow(List.of("shrink pane", "Alt+<", "make active pane smaller"))
-                            .addRow(List.of("grow pane", "Alt+>", "make active pane larger"))
-                            .style().headerDivider("{{[b]}} ").apply().format()).style().border(Border.simple.foreground("{{b}}")).apply().run();
+                            .addRow(List.of("next pane", "ctrl+w", "cycle to next pane"))
+                            .addRow(List.of("prev pane", "alt+w", "cycle to previous pane"))
+                            .addRow(List.of("shrink pane", "alt+<", "make active pane smaller"))
+                            .addRow(List.of("grow pane", "alt+>", "make active pane larger")).style().headerDivider("{{[b]&w}}|").margin(0,0,0,0).apply().format()).style().margin(0,0,0,0).border(Border.simple.foreground("{{b}}")).apply().format());
                 } else if (line.startsWith(":log")) {
                     LogObj.setSLF4J(line.substring(4));
                 } else if (line.startsWith(":check")) {

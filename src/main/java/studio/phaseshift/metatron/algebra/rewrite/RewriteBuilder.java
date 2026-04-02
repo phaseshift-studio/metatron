@@ -22,7 +22,6 @@ import studio.phaseshift.metatron.furi.C;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
-import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -108,11 +107,11 @@ public class RewriteBuilder<S extends Space> {
     /**
      * Set the result type ID for the optimized instruction.
      *
-     * @param resultTid The result type ID (e.g., INT_TID, REAL_TID)
+     * @param rngTID The result type ID (e.g., INT_TID, REAL_TID)
      * @return This builder for chaining
      */
-    public RewriteBuilder<S> resultTid(final fURI resultTid) {
-        this.resultTid = resultTid;
+    public RewriteBuilder<S> rng(final fURI rngTID) {
+        this.resultTid = rngTID;
         return this;
     }
 
@@ -122,11 +121,11 @@ public class RewriteBuilder<S extends Space> {
      * <p>The rewrite will only apply when this exact sequence of instructions
      * is found in the code being optimized.
      *
-     * @param instTids The instruction type IDs to match (in order)
+     * @param instTIDs The instruction type IDs to match (in order)
      * @return This builder for chaining
      */
-    public RewriteBuilder<S> match(final fURI... instTids) {
-        this.matchPattern.addAll(Arrays.asList(instTids));
+    public RewriteBuilder<S> match(final fURI... instTIDs) {
+        this.matchPattern.addAll(Arrays.asList(instTIDs));
         return this;
     }
 
@@ -191,7 +190,7 @@ public class RewriteBuilder<S extends Space> {
             // Check if this is the correct space type
             if (this.spaceType.isInstance(space)) {
                 final S typedSpace = this.spaceType.cast(space);
-                final fURI expandedfURI = space.rewrite(oldfURI, true);
+                final fURI expandedfURI = space.redirect(oldfURI, true);
 
                 // Extract coefficient from the last instruction in the chain
                 final C<?,?> coeff = map.values().stream()

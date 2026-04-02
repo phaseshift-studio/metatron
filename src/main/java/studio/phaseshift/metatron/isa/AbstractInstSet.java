@@ -29,6 +29,7 @@ import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.*;
 
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TID;
@@ -60,15 +61,33 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
         return super.qs();
     }
 
+    protected boolean checkPattern(final Obj obj) {
+        if (null != obj.vid() && !obj.vid().test(this.pattern())) {
+            LOG.warn("obj at %s outside instset pattern %s: (ignoring) %s", obj.vid(), this.pattern(), obj);
+            return false;
+        }
+        return true;
+    }
+
+    protected boolean checkDepth(final Obj obj, final fURI requiredPrefix) {
+        if (false && null != obj.tid() && !obj.tid().hasPrefix(requiredPrefix.toString())) {
+            LOG.warn("obj at %s must have prefix at %s: (ignoring) %s", obj.tid(), requiredPrefix, obj);
+            return false;
+        }
+        return true;
+    }
+
+    private boolean old = true;
+
     public AbstractInstSet(final fURI tid, final fURI vid) {
         super(new LinkedHashMap<>(), mutableMap(
                 uri(Tokens.PATTERN), uri(tid.extend(ALL))), tid, vid);
         this.at(uri(Tokens.QSTRING), lst(QCollection.docQ()), MUTABLE);
         if (Router.loaded()) {
             this.sugars().forEach(mParser::addSugar);
-            this.consts().forEach(c -> Router.global().registerRewrite(f(c.vid().name()), c.vid()));
-            this.types().stream().filter(t -> null != t.vid()).forEach(t -> Router.global().registerRewrite(f(t.vid().name()), t.vid()));
-            this.insts().forEach(t -> Router.global().registerRewrite(f(t.tid().name()), t.tid().basePath()));
+            this.consts().forEach(c -> Router.global().registerRedirect(f(c.vid().name()), c.vid()));
+            this.types().stream().filter(t -> null != t.vid()).forEach(t -> Router.global().registerRedirect(f(t.vid().name()), t.vid()));
+            this.insts().forEach(t -> Router.global().registerRedirect(f(t.tid().name()), t.tid().basePath()));
             /// //////////////////////////////////////////////////////////////////////////////////////////////
             this.types().forEach(t -> {
                 if (null != t.vid()) {
@@ -95,24 +114,65 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
         }
     }
 
+    public AbstractInstSet(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
+        super(new LinkedHashMap<>(), jvm, tid, vid);
+        old = false;
+        this.at(uri(Tokens.QSTRING), lst(QCollection.docQ()), MUTABLE);
+        this.jvm().forEach((k, v) -> {
+            if (k.equals(uri(CONST))) {
+                v.lstValue().stream()
+                        .filter(this::checkPattern)
+                       //  TODO: .filter(c -> checkDepth(c, this.tid.extend(CONST)))
+                        .forEach(c -> {
+                    CONST_TABLE.put(c.vid(), c);
+                    Router.global().registerRedirect(f(c.vid().name()), c.vid());
+                });
+            } else if (k.equals(uri(TYPE))) {
+                v.lstValue().stream()
+                        .filter(this::checkPattern)
+                        .filter(t -> checkDepth(t, this.tid))
+                        .forEach(t -> {
+                    TYPE_TABLE.put(t.vid(), t.as());
+                    Router.global().registerRedirect(f(t.vid().name()), t.vid());
+                });
+            } else if (k.equals(uri(INST))) {
+                v.lstValue().stream()
+                        .filter(this::checkPattern)
+                        .filter(r -> checkDepth(r, this.tid.extend(INST)))
+                        .forEach(i -> {
+                    INST_TABLE.computeIfAbsent(i.tid().basePath(), kk -> new LinkedHashSet<>()).add(i.as());
+                    Router.global().registerRedirect(f(i.tid().name()), i.tid().basePath());
+                });
+            } else if (k.equals(uri(REWRITE))) {
+                v.lstValue().stream()
+                        .filter(this::checkPattern)
+                        .filter(r -> checkDepth(r, this.tid.extend(INST).extend(REWRITE)))
+                        .forEach(r -> REWRITE_TABLE.put(r.tid(), r.as()));
+            } else if (k.equals(uri(SUGAR))) {
+                LOG.warn("unable to load sugar: %s", v);
+                //v.lstValue().forEach(s -> Router.global().addSugar(s.as()));
+            }
+        });
+    }
+
     @Override
     public Set<Obj> consts() {
-        return new LinkedHashSet<>();
+        return old ? new LinkedHashSet<>() : new LinkedHashSet<>(CONST_TABLE.values());
     }
 
     @Override
     public Set<Type> types() {
-        return new LinkedHashSet<>();
+        return old ? new LinkedHashSet<>() : new LinkedHashSet<>(TYPE_TABLE.values());
     }
 
     @Override
     public Set<Inst> insts() {
-        return new LinkedHashSet<>();
+        return old ? new LinkedHashSet<>() : new LinkedHashSet<>(INST_TABLE.values().stream().flatMap(Set::stream).toList());
     }
 
     @Override
     public Set<Inst> rewrites() {
-        return new LinkedHashSet<>();
+        return old ? new LinkedHashSet<>() : new LinkedHashSet<>(REWRITE_TABLE.values());
     }
 
     @Override
@@ -165,7 +225,7 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
                                 if (inst.dom().isCode()) {
                                     REWRITE_TABLE.put(inst.tid(), inst);
                                 } else {
-                                    Router.global().registerRewrite(f(vid.name()), vid);
+                                    Router.global().registerRedirect(f(vid.name()), vid);
                                     INST_TABLE.computeIfAbsent(inst.tid().basePath(), k -> new LinkedHashSet<>()).add(inst);
                                 }
                             } else if (obj.isType()) {

@@ -96,6 +96,7 @@ public final class Tokens {
     public static final String CLIENT = "client";
     public static final String SCRIPT = "script";
     public static final String REWRITE = "rewrite";
+    public static final String SUGAR = "sugar";
     public static final String QSTRING = "q";
     public static final String T = "T";
     public static final String C = "c";

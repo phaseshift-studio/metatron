@@ -99,8 +99,8 @@ public class fsSpace extends AbstractSpace<FileSystem> {
     public Obj resolveObj(final Uri path) {
         try {
             final File file = Paths.get(path.uriValue().basePath().toString()).toFile();
-            final fsSpace space = Router.global().getSpace(this.rewrite(f(file.getPath()), false)).as();
-            return uri(this.rewrite(f(file.getPath()), false).q("p", PosixFilePermissions.toString(Files.getPosixFilePermissions(file.toPath()))), file.isDirectory() ? DIR_TID : FILE_TID, null);
+            final fsSpace space = Router.global().getSpace(this.redirect(f(file.getPath()), false)).as();
+            return uri(this.redirect(f(file.getPath()), false).q("p", PosixFilePermissions.toString(Files.getPosixFilePermissions(file.toPath()))), file.isDirectory() ? DIR_TID : FILE_TID, null);
         } catch (final Exception e) {
             throw MTronException.of(e);
         }

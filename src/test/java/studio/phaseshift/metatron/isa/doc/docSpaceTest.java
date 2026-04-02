@@ -223,9 +223,7 @@ public class docSpaceTest extends AbstractSpaceTest implements CommonRewritesTes
     @Test
     public void testReadSingleDocument() {
         LOG.warn("testing read single document");
-
         final docSpace space = (docSpace) this.spaceSupplier.get();
-        LOG.warn("HERE: %s", Router.global().read(space.pattern()));
         try {
             // Read a specific user
             final Obj user1 = space.read(f("mongo:users/user1"));

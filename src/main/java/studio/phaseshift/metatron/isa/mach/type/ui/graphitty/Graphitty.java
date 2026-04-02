@@ -89,6 +89,8 @@ public class Graphitty {
         CURSOR_REWRITES.put("-X-", "\033[2K");  // clear line
         CURSOR_REWRITES.put("Xv", "\033[0J"); // clear to bottom of screen
         CURSOR_REWRITES.put("X^", "\033[1J"); // clear to top of screen
+        CURSOR_REWRITES.put("(s)", "\033[s"); // save
+        CURSOR_REWRITES.put("(e)", "\033[u"); // load
         CURSOR_REWRITES.put("XX", "\033[2J"); // clear screen
         CURSOR_REWRITES.put("*", "\033[?25h"); // show cursor
         CURSOR_REWRITES.put(".", "\033[?25l"); // hide cursor

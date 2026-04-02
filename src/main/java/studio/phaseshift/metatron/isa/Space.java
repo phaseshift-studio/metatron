@@ -84,7 +84,7 @@ public interface Space extends Rec, Closeable {
 
     Obj write(final fURI vid, final Obj obj);
 
-    fURI rewrite(final fURI furi, final boolean big);
+    fURI redirect(final fURI furi, final boolean big);
 
     default Obj[] write(final Object... kv) {
         int count = (int) ((double) kv.length / 2.0d);

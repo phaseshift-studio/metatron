@@ -54,7 +54,7 @@ public class Explain extends AbstractWidget<Explain> {
     private static final GraphittyLogger LOG = Graphitty.log(Explain.class);
 
     private enum Action {
-        QUIT, DOWN_ROW, UP_ROW, RIGHT_COL, LEFT_COL, SELECT
+        QUIT, DOWN_ROW, UP_ROW, RIGHT_COL, LEFT_COL, SELECT, SPACE
     }
 
     /**
@@ -63,6 +63,7 @@ public class Explain extends AbstractWidget<Explain> {
     private static class ExplainLevel {
         final Code code;
         final Profile profile;
+        final boolean rewritten;
         final Table table;
         final int offsetX;
         final int offsetY;
@@ -76,8 +77,9 @@ public class Explain extends AbstractWidget<Explain> {
         final int spawnRow;        // Row in parent that spawned this (-1 if root)
         final int spawnCol;        // Column in parent that spawned this (-1 if root)
 
-        ExplainLevel(Code code, int offsetX, int offsetY, int spawnRow, int spawnCol) {
-            this.code = code.resolve(noobj()).as();
+        ExplainLevel(final Code code, final int offsetX, final int offsetY, final int spawnRow, final int spawnCol) {
+            this.code = code.resolve(noobj());
+            this.rewritten = code.insts().stream().map(Inst::tid).toList().equals(code.rewrite().insts().stream().map(Inst::tid).toList());
             this.profile = new Profile(this.code);
             this.profile.instTable.style()
                     .headerDivider("{{[b]}} ")
@@ -114,17 +116,8 @@ public class Explain extends AbstractWidget<Explain> {
     private final Code rootCode;
     private Attributes savedAttributes;
     private boolean running = false;
-    private int baseRow = 0;  // The row where we start drawing (below prompt)
     private int totalHeightUsed = 0;  // Track how many lines we've used
     private String statusMessage = null;  // Temporary message to show in status bar
-
-    // Column indices for the table
-    private static final int COL_OP = 0;
-    private static final int COL_DOM = 1;
-    private static final int COL_RNG = 2;
-    private static final int COL_F = 3;
-    private static final int COL_ARGS = 4;
-    private static final int COL_DESC = 5;
 
     public Explain(final Code code) {
         this.rootCode = code;
@@ -140,7 +133,8 @@ public class Explain extends AbstractWidget<Explain> {
 
         // Don't clear screen - draw below current position
         // Get current cursor position as our base
-        this.baseRow = 0;  // We'll draw relative to current position
+        // The row where we start drawing (below prompt)
+        //int baseRow = 0;  // We'll draw relative to current position
 
         pushLevel(rootCode, 0, 0, -1, -1);  // Root has no parent spawn position
 
@@ -176,6 +170,7 @@ public class Explain extends AbstractWidget<Explain> {
         keyMap.bind(Action.LEFT_COL, key(terminal, InfoCmp.Capability.key_left));
         keyMap.bind(Action.QUIT, Utilities.esc_key);
         keyMap.bind(Action.SELECT, Utilities.enter_key);
+        keyMap.bind(Action.SPACE," ");
         return keyMap;
     }
 
@@ -203,6 +198,10 @@ public class Explain extends AbstractWidget<Explain> {
             case SELECT:
                 handleSelect(current);
                 break;
+                
+            case SPACE:
+                handleCompile(current);
+                break;
 
             case QUIT:
                 popLevel();
@@ -213,6 +212,12 @@ public class Explain extends AbstractWidget<Explain> {
         }
     }
 
+
+    private void handleCompile(ExplainLevel current) {
+        this.popLevel();
+        this.pushLevel(current.code.rewrite(), current.offsetX, current.offsetY, current.spawnRow, current.spawnCol);
+        
+    }
     private void handleSelect(ExplainLevel current) {
         // Check if we're on the 'args' column
         String header = current.table.header(current.selectedCol);
@@ -353,17 +358,17 @@ public class Explain extends AbstractWidget<Explain> {
             if (valueStr.length() > 30) {
                 valueStr = valueStr.substring(0, 30) + "...";
             }
-
-            output.append(Graphitty.string("{{X-}}{{[b]}}{{w}} ESC{{g}}:back {{w}}↑↓←→{{g}}:nav {{w}}Enter{{g}}:select "));
+            
+            output.append(Graphitty.string("{{(s)}}{{v200}}{{X-}}{{w}}{{" + (top.rewritten ? "[g]" : "[y]") + "}} R {{[b]}}{{w}} esc{{g}}:back | {{w}}<^v>{{g}}:nav | {{w}}enter{{g}}:inspect | {{w}}space{{g}}:rewrite {{(e)}}"));
 
             // Show temporary message or current selection
-            if (statusMessage != null) {
+            /*if (statusMessage != null) {
                 output.append(Graphitty.string("%s {{X}}\n", statusMessage));
                 statusMessage = null;  // Clear after showing
             } else {
                 output.append(Graphitty.string("{{y}}%s{{g}}={{c}}%s {{X}}\n", header, valueStr));
-            }
-            currentLine++;
+            }*/
+            //currentLine++;
         }
 
         // Clear any extra lines from previous (larger) display

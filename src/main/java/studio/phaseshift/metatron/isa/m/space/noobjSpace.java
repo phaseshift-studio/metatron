@@ -104,7 +104,7 @@ public final class noobjSpace implements Space, InstSet {
     }
 
     @Override
-    public fURI rewrite(fURI furi, boolean big) {
+    public fURI redirect(fURI furi, boolean big) {
         return NOOBJ_TID;
     }
 

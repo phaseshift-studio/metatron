@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.isa.mach.type;
 
 import studio.phaseshift.metatron.BootLoader;
-import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.space.stackSpace;
@@ -28,8 +27,6 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.type.net.MServer;
 import studio.phaseshift.metatron.isa.mach.type.router.NoObjRouter;
-import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -118,11 +115,11 @@ public interface Router extends Space {
 
     void removeSpace(final fURI vid);
 
-    void registerRewrite(final fURI small, final fURI big);
+    void registerRedirect(final fURI small, final fURI big);
     
     void registerPrefix(final fURI prefix, final fURI vid);
 
-    fURI rewrite(final fURI furi, final boolean big);
+    fURI redirect(final fURI furi, final boolean big);
 
     <SPACE extends Space> SPACE getSpace(final fURI vid);
 

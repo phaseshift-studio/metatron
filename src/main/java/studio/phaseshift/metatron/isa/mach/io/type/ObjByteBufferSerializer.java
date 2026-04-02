@@ -162,7 +162,7 @@ public class ObjByteBufferSerializer extends AbstractObjSerializer<ByteBuffer> {
 
     @Override
     public ByteBuffer writeType(final Type type) {
-        String typeString = (Router.loaded() ? Router.global().rewrite(type.tid(), false) : type.tid()) + "::T";
+        String typeString = (Router.loaded() ? Router.global().redirect(type.tid(), false) : type.tid()) + "::T";
         if (type.hasPredicate())
             typeString += ("[" + type.predicate() + "]");
         if (type.hasConstructor()) {

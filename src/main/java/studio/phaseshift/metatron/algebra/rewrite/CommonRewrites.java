@@ -87,7 +87,7 @@ public final class CommonRewrites {
 
         return RewriteBuilder.forDatabase(spaceType)
                 .tid(rewriteTid)
-                .resultTid(INT_TID)
+                .rng(INT_TID)
                 .match(FROM_INST_TID, COUNT_INST_TID)
                 .optimize("native_count", (space, furi, coeff) -> {
                     final long count = countFunction.apply(space, furi);
@@ -103,19 +103,19 @@ public final class CommonRewrites {
      * instead of loading all records and summing in memory.
      *
      * @param spaceType   The database space type
-     * @param rewriteTid  The type ID for this specific rewrite
+     * @param rewriteTID  The type ID for this specific rewrite
      * @param sumFunction Function that executes the native sum operation
      * @param <S>         The space type
      * @return The rewrite instruction
      */
     public static <S extends Space> Inst sumRewrite(
             final Class<S> spaceType,
-            final fURI rewriteTid,
+            final fURI rewriteTID,
             final BiFunction<S, fURI, Number> sumFunction) {
 
         return RewriteBuilder.forDatabase(spaceType)
-                .tid(rewriteTid)
-                .resultTid(INT_TID.maybe().some())
+                .tid(rewriteTID)
+                .rng(INT_TID.maybe().some())
                 .match(FROM_INST_TID, SUM_INST_TID)
                 .optimize("native_sum", (space, furi, coeff) -> {
                     final Number sum = sumFunction.apply(space, furi);
@@ -133,19 +133,19 @@ public final class CommonRewrites {
      * instead of loading all records and computing the mean in memory.
      *
      * @param spaceType    The database space type
-     * @param rewriteTid   The type ID for this specific rewrite
+     * @param rewriteTID   The type ID for this specific rewrite
      * @param meanFunction Function that executes the native mean/average operation
      * @param <S>          The space type
      * @return The rewrite instruction
      */
     public static <S extends Space> Inst meanRewrite(
             final Class<S> spaceType,
-            final fURI rewriteTid,
+            final fURI rewriteTID,
             final BiFunction<S, fURI, Double> meanFunction) {
 
         return RewriteBuilder.forDatabase(spaceType)
-                .tid(rewriteTid)
-                .resultTid(REAL_TID)
+                .tid(rewriteTID)
+                .rng(REAL_TID)
                 .match(FROM_INST_TID, MEAN_INST_TID)
                 .optimize("native_mean", (space, furi, coeff) -> {
                     final double mean = meanFunction.apply(space, furi);
@@ -161,19 +161,19 @@ public final class CommonRewrites {
      * where supported.
      *
      * @param spaceType    The database space type
-     * @param rewriteTid   The type ID for this specific rewrite
+     * @param rewriteTID   The type ID for this specific rewrite
      * @param prodFunction Function that executes the native product operation
      * @param <S>          The space type
      * @return The rewrite instruction
      */
     public static <S extends Space> Inst prodRewrite(
             final Class<S> spaceType,
-            final fURI rewriteTid,
+            final fURI rewriteTID,
             final BiFunction<S, fURI, Number> prodFunction) {
 
         return RewriteBuilder.forDatabase(spaceType)
-                .tid(rewriteTid)
-                .resultTid(INT_TID.maybe().some())
+                .tid(rewriteTID)
+                .rng(INT_TID.maybe().some())
                 .match(FROM_INST_TID, PROD_INST_TID)
                 .optimize("native_prod", (space, furi, coeff) -> {
                     final Number prod = prodFunction.apply(space, furi);

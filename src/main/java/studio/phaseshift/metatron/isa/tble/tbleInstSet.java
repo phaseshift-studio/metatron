@@ -21,10 +21,8 @@ package studio.phaseshift.metatron.isa.tble;
 import studio.phaseshift.metatron.algebra.rewrite.CommonRewrites;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
-import studio.phaseshift.metatron.isa.m.type.Inst;
-import studio.phaseshift.metatron.isa.m.type.InstSet;
-import studio.phaseshift.metatron.isa.m.type.Rel;
-import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.sql.ResultSet;
@@ -34,7 +32,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import static studio.phaseshift.metatron.Tokens.TABLE;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
@@ -44,6 +42,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.tble.tbleSpace.TABL_SPACE_TYPE;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -80,69 +79,60 @@ public class tbleInstSet extends AbstractInstSet {
 
 
     public tbleInstSet() {
-        super(TBLE_ISA_TID, TBLE_ISA_TID);
-    }
+        super(mutableMap(
+                uri(PATTERN), uri(TBLE_ISA_TID.extend(ALL)),
+                uri(TYPE), lst(
+                        LST_ROW_TYPE,
+                        REC_ROW_TYPE,
+                        TABLE_TYPE,
+                        TABL_SPACE_TYPE),
+                uri(INST), lst(
+                        instC(AS_INST_TID.dom(LST_ROW_TID).rng(REC_ROW_TID), lst(REC_ROW_TYPE), (lhs, inst) -> lhs.asRec().at(uri(TABLE))),
+                        instC(AS_INST_TID.dom(REC_ROW_TID).rng(LST_ROW_TID), lst(LST_ROW_TYPE), (lhs, inst) -> lst(lhs.asRec().elements().map(Rel::second).toList(), LST_ROW_TID, null))),
+                uri(REWRITE), lst(List.of(
+                        // Optimize: *table.count() → SELECT COUNT(*)
+                        CommonRewrites.countRewrite(
+                                tbleSpace.class,
+                                TBLE_ISA_REWRITE_TID.extend("sql_native_count"),
+                                (space, furi) -> {
+                                    final String tableName = furi.segments().getFirst();
+                                    try (final Statement stmt = space.sjvm().createStatement();
+                                         final ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM " + tableName)) {
+                                        return rs.next() ? (long) rs.getInt(1) : 0L;
+                                    } catch (SQLException e) {
+                                        throw MTronException.of(e);
+                                    }
+                                }
+                        ),
 
-    @Override
-    public Set<Type> types() {
-        TBLE_ISA_TYPES.add(TABL_SPACE_TYPE);
-        return TBLE_ISA_TYPES;
-    }
-
-    @Override
-    public Set<Inst> insts() {
-        TBLE_ISA_INSTS.add(instC(AS_INST_TID.dom(LST_ROW_TID).rng(REC_ROW_TID), lst(REC_ROW_TYPE), (lhs, inst) -> lhs.asRec().at(uri(TABLE))));
-        TBLE_ISA_INSTS.add(instC(AS_INST_TID.dom(REC_ROW_TID).rng(LST_ROW_TID), lst(LST_ROW_TYPE), (lhs, inst) -> lst(lhs.asRec().elements().map(Rel::second).toList(), LST_ROW_TID, null)));
-        return TBLE_ISA_INSTS;
-    }
-
-    @Override
-    public Set<Inst> rewrites() {
-        return new LinkedHashSet<>(List.of(
-                // Optimize: *table.count() → SELECT COUNT(*)
-                CommonRewrites.countRewrite(
-                        tbleSpace.class,
-                        TBLE_ISA_REWRITE_TID.extend("sql_native_count"),
-                        (space, furi) -> {
-                            final String tableName = furi.segments().getFirst();
-                            try (final Statement stmt = space.sjvm().createStatement();
-                                 final ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM " + tableName)) {
-                                return rs.next() ? (long) rs.getInt(1) : 0L;
-                            } catch (SQLException e) {
-                                throw MTronException.of(e);
-                            }
-                        }
-                ),
-
-                // Optimize: *table.sum() → SELECT SUM(*)
-                CommonRewrites.sumRewrite(
-                        tbleSpace.class,
-                        TBLE_ISA_REWRITE_TID.extend("sql_native_sum"),
-                        (space, furi) -> {
-                            final String tableName = furi.segments().getFirst();
-                            try (final Statement stmt = space.sjvm().createStatement();
-                                 final ResultSet rs = stmt.executeQuery("SELECT SUM(1) FROM " + tableName)) {
-                                return rs.next() ? rs.getLong(1) : 0L;
-                            } catch (SQLException e) {
-                                throw MTronException.of(e);
-                            }
-                        }
-                ),
-
-                // Optimize: *table.mean() → SELECT AVG(*)
-                CommonRewrites.meanRewrite(
-                        tbleSpace.class,
-                        TBLE_ISA_REWRITE_TID.extend("sql_native_mean"),
-                        (space, furi) -> {
-                            final String tableName = furi.segments().getFirst();
-                            try (final Statement stmt = space.sjvm().createStatement();
-                                 final ResultSet rs = stmt.executeQuery("SELECT AVG(1.0) FROM " + tableName)) {
-                                return rs.next() ? rs.getDouble(1) : 0.0;
-                            } catch (SQLException e) {
-                                throw MTronException.of(e);
-                            }
-                        }
-                )
-        ));
+                        // Optimize: *table.sum() → SELECT SUM(*)
+                        CommonRewrites.sumRewrite(
+                                tbleSpace.class,
+                                TBLE_ISA_REWRITE_TID.extend("sql_native_sum"),
+                                (space, furi) -> {
+                                    final String tableName = furi.segments().getFirst();
+                                    try (final Statement stmt = space.sjvm().createStatement();
+                                         final ResultSet rs = stmt.executeQuery("SELECT SUM(1) FROM " + tableName)) {
+                                        return rs.next() ? rs.getLong(1) : 0L;
+                                    } catch (SQLException e) {
+                                        throw MTronException.of(e);
+                                    }
+                                }
+                        ),
+                        // Optimize: *table.mean() → SELECT AVG(*)
+                        CommonRewrites.meanRewrite(
+                                tbleSpace.class,
+                                TBLE_ISA_REWRITE_TID.extend("sql_native_mean"),
+                                (space, furi) -> {
+                                    final String tableName = furi.segments().getFirst();
+                                    try (final Statement stmt = space.sjvm().createStatement();
+                                         final ResultSet rs = stmt.executeQuery("SELECT AVG(1.0) FROM " + tableName)) {
+                                        return rs.next() ? rs.getDouble(1) : 0.0;
+                                    } catch (SQLException e) {
+                                        throw MTronException.of(e);
+                                    }
+                                }
+                        )
+                ))), TBLE_ISA_TID, TBLE_ISA_TID);
     }
 }

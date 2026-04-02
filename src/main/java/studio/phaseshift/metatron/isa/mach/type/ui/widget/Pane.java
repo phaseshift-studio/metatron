@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.mach.type.ui.widget;
 import org.jline.terminal.Terminal;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.Border;
 import studio.phaseshift.metatron.isa.mach.type.ui.Stylable;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
@@ -31,6 +32,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.NOOBJ;
+import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 
 /**
  * A Pane is a leaf node in the pane tree - an actual terminal region with:
@@ -68,7 +76,7 @@ public class Pane implements PaneNode, Stylable<Pane> {
 
     // Reference to console for redraw requests
     private Console console;
-    
+
     public Pane() {
         this(Console.Language.MTRON, DEFAULT_MAX_OUTPUT_LINES);
     }
@@ -78,6 +86,10 @@ public class Pane implements PaneNode, Stylable<Pane> {
         this.language = language;
         this.maxOutputLines = maxOutputLines;
         this.outputBuffer = Collections.synchronizedList(new ArrayList<>());
+        /*Router.global().write(Console.CONSOLE_TID + "/" + this.id, instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ), lst(), (lhs, inst) -> {
+            this.outputBuffer.add(lhs.asLst().at(1).toString());
+            return noobj();
+        }));*/
         this.machine = null;
         // Default to simple border style (ASCII: +, |, -) for visibility
         this.style = this.style().border(Border.simple).apply().getStyle();

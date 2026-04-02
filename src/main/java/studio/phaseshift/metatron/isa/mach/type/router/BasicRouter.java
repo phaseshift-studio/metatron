@@ -119,7 +119,7 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
         throw MTronException.of("router not loaded");
     }
 
-    public void registerRewrite(final fURI small, final fURI big) {
+    public void registerRedirect(final fURI small, final fURI big) {
         this.smallToBigRoutes.computeRaw(small, (k, v) -> {
             if (null == v) {
                 final Set<fURI> set = new HashSet<>();
@@ -127,7 +127,7 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
                 return set;
             } else {
                 if (!v.contains(big.basePath()))
-                    LOG.warn("multiple rewrites for {{b}}%s{{X}}: {{b}}%s {{g}}+ {{b}}%s{{X}} (consider prefixing import)", small, big, v.toString().replace("[", "").replaceAll("]", ""));
+                    LOG.warn("multiple redirects for {{b}}%s{{X}}: {{b}}%s {{g}}+ {{b}}%s{{X}} (consider prefixing import)", small, big, v.toString().replace("[", "").replaceAll("]", ""));
                 v.add(big.basePath());
                 return v;
             }
@@ -146,14 +146,14 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
 
 
     @Override
-    public fURI rewrite(final fURI furi, final boolean big) {
+    public fURI redirect(final fURI furi, final boolean big) {
         if (!furi.hasPoly() && furi.isGeneric())
             return furi;
         fURI temp;
         if (big) {
             final Set<fURI> set = this.smallToBigRoutes.getOrDefaultRaw(furi.basePath(), Set.of(furi));
             if (set.isEmpty()) {
-                temp = this.getSpace(furi).rewrite(furi, true);
+                temp = this.getSpace(furi).redirect(furi, true);
             } else if (set.size() > 1) {
                 final Iterator<fURI> furis = set.stream().filter(f -> f.hasPrefix(this.primary.toString())).iterator();
                 temp = furis.hasNext() ? furis.next() : set.iterator().next();
@@ -163,10 +163,10 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
         } else {
             temp = this.bigToSmallRoutes.getOrDefaultRaw(furi.basePath(), furi);
         }
-        temp = furi.hasPoly() ? temp.poly(furi.poly().stream().map(x -> this.rewrite(f(x), big)).map(fURI::toString).toList()) : temp;
+        temp = furi.hasPoly() ? temp.poly(furi.poly().stream().map(x -> this.redirect(f(x), big)).map(fURI::toString).toList()) : temp;
         temp = temp.c(furi.c()).q(furi.qMap());
-        temp = furi.hasDom() ? temp.dom(this.rewrite(furi.dom(), big)) : temp;
-        temp = furi.hasRng() ? temp.rng(this.rewrite(furi.rng(), big)) : temp;
+        temp = furi.hasDom() ? temp.dom(this.redirect(furi.dom(), big)) : temp;
+        temp = furi.hasRng() ? temp.rng(this.redirect(furi.rng(), big)) : temp;
         return temp.resolve();
     }
 

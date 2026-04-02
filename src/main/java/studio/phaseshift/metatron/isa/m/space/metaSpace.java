@@ -98,7 +98,7 @@ public class metaSpace extends AbstractSpace<MServer> {
 
     @Override
     public Obj read(final fURI vid) {
-        final fURI lowerPattern = this.rewrite(vid, false);
+        final fURI lowerPattern = this.redirect(vid, false);
         final int peerIndex = fURIHasher.getNodeIndex(lowerPattern.toString(), this.peers.size());
         if (this.selfIndex == peerIndex) {
             LOG.debug("{{y}}%s{{X}} [{{c}}reading{{X}}]:  {{y}}%s {{g}}=> {{y}}%s", this.host, vid, lowerPattern);
@@ -123,7 +123,7 @@ public class metaSpace extends AbstractSpace<MServer> {
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
-        final fURI lowerPattern = this.rewrite(vid,false);
+        final fURI lowerPattern = this.redirect(vid,false);
         final int peerIndex = fURIHasher.getNodeIndex(lowerPattern.toString(), this.peers.size());
         if (this.selfIndex == peerIndex) {
             LOG.debug("{{y}}%s{{X}} [{{c}}writing{{X}}]:  {{y}}%s {{g}}=> {{y}}%s{{X}} %s", this.host, vid, lowerPattern, obj);

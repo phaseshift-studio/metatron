@@ -43,7 +43,7 @@ import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_ISA_TID;
 public class fsSpaceTest extends AbstractSpaceTest {
 
     public fsSpaceTest() {
-        super(() -> {
+        super(f("test"),() -> {
             BootLoader.loadInstSetProvider(MACH_ISA_TID);
             mParser.eval("boot/script ->\n" +
                     "  [sh     => /bin/sh,\n" +
@@ -54,7 +54,7 @@ public class fsSpaceTest extends AbstractSpaceTest {
                     "   mtron  => /bin/mtron]");
             return fsSpace.of(FileSystems.getDefault(), rec(
                             uri(PATTERN), uri("test:#"), uri(SCRIPT), auto_from_(f("boot/script")),
-                            uri(ROUTE), rec(uri("test:"), uri("src/test/resources/isa/sys/"))),
+                            uri(ROUTE), rec(uri("test:"), uri("src/test/resources/isa/sys/file/"))),
                     f("/sys/space/fs"));
         });
     }
