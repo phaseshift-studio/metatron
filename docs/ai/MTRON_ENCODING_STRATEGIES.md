@@ -241,7 +241,7 @@ When traversed, the `_ref=true` flag triggers resolution via Router.
 ### Implementation
 
 ```java
-// In tp3Space.java
+// In graphSpace.java
 public void put(fURI vid, Obj obj) {
     Vertex root = getOrCreateVertex(vid);
     encodeObject(root, vid, obj);
@@ -658,7 +658,7 @@ public Obj read(fURI vid) {
 
 ## Recommended Hybrid Approach
 
-**The current `tp3Space` implementation already uses an optimal hybrid strategy:**
+**The current `graphSpace` implementation already uses an optimal hybrid strategy:**
 
 ### Current Implementation: Colon-Prefix Convention
 
@@ -799,14 +799,14 @@ The priority is solving **universal encoding** across all backends. Once this wo
 - Tests path with wildcards: `*$$/+/+/+` → `{c,d}`
 
 **Why This Matters:**
-If all three spaces (tp3Space, tbleSpace, docSpace) can pass this test, it proves:
+If all three spaces (graphSpace, tbleSpace, docSpace) can pass this test, it proves:
 1. Universal encoding works across graph, SQL, and document backends
 2. Path navigation is consistent
 3. Nested structures are preserved
 4. Type information is maintained
 5. Redirects will "just work" as regular mtron objects
 
-### Phase 1: Enable tp3Space to Pass testMonoReadWrite()
+### Phase 1: Enable graphSpace to Pass testMonoReadWrite()
 
 **Current State:**
 - ✅ Colon-prefix convention implemented in `ElementMap.java`
@@ -814,7 +814,7 @@ If all three spaces (tp3Space, tbleSpace, docSpace) can pass this test, it prove
 - ✅ Two modes: hierarchical (flat paths) and nested (serialized)
 - ❌ All `AbstractSpaceTest` tests disabled
 
-**What tp3Space Needs:**
+**What graphSpace Needs:**
 
 The test writes objects like `*g:V/1 -> [a=>[b=>2,c=>3],d=>4]` and expects to read:
 - `*g:V/1` → full record
@@ -823,27 +823,27 @@ The test writes objects like `*g:V/1 -> [a=>[b=>2,c=>3],d=>4]` and expects to re
 - `*g:V/1/d` → `4`
 
 **Current Problem:**
-tp3Space is designed for **graph traversals** (vertices, edges, properties), not general key-value storage. The test expects:
+graphSpace is designed for **graph traversals** (vertices, edges, properties), not general key-value storage. The test expects:
 ```mtron
 *g:V/1 -> [a=>[b=>2,c=>3],d=>4]  // Write a record to a vertex
 *g:V/1/a/b                        // Read nested path
 ```
 
-But tp3Space currently treats `/1` as a vertex ID and `/a/b` as property paths.
+But graphSpace currently treats `/1` as a vertex ID and `/a/b` as property paths.
 
 **Two Approaches:**
 
-**Option A: Make tp3Space Support General Storage**
+**Option A: Make graphSpace Support General Storage**
 - Treat vertex properties as a general key-value store
 - Store nested records using colon-prefix convention
 - Enable path navigation through nested structures
-- **Pro:** tp3Space becomes a general-purpose space
+- **Pro:** graphSpace becomes a general-purpose space
 - **Con:** Blurs the line between graph semantics and document storage
 
-**Option B: Keep tp3Space Graph-Specific**
+**Option B: Keep graphSpace Graph-Specific**
 - Keep tests disabled (current state)
 - Focus on tbleSpace and docSpace for universal encoding
-- tp3Space remains specialized for graph operations
+- graphSpace remains specialized for graph operations
 - **Pro:** Clear separation of concerns
 - **Con:** Doesn't prove universal encoding works for graphs
 
@@ -1053,7 +1053,7 @@ Universal encoding is complete when:
 - Universal encoding is proven across SQL and document backends
 
 **Future Work (Not Required Now):**
-- tp3Space general storage support (if needed)
+- graphSpace general storage support (if needed)
 - Key-value space implementations
 - Performance optimization
 - Schema migration tools
@@ -1097,7 +1097,7 @@ These are **not** priorities until universal encoding is solid:
 - ❌ Redirect-specific Q processors
 - ❌ Special redirect tables or properties
 - ❌ Bidirectional edge creation helpers
-- ❌ tp3Space general storage (keep it graph-specific)
+- ❌ graphSpace general storage (keep it graph-specific)
 - ❌ Optimization for specific data shapes
 - ❌ Schema migration tools
 

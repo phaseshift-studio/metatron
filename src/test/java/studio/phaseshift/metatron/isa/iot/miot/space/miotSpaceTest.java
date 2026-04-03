@@ -25,6 +25,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.*;
+import studio.phaseshift.metatron.furi.q.SubQTest;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
 import studio.phaseshift.metatron.isa.iot.MoquetteServer;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
@@ -58,7 +59,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 }, include = {
        // "testMonoReadWrite"  // Include this CRUD test even though CRUD tag is skipped
 })
-public class miotSpaceTest extends AbstractSpaceTest {
+public class miotSpaceTest extends AbstractSpaceTest implements SubQTest {
 
     private static final int PORT = generatePort();
 
@@ -93,8 +94,8 @@ public class miotSpaceTest extends AbstractSpaceTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "/t/a?sub -> sub::[target=>/t/a,on_recv=><abc>->3]                            % /t/a -> 4                       % *abc.?=3",
-            "/t/b?sub -> sub::[target=>/t/b,on_recv=><abc>->4]                            % /t/b -> 3                       % *abc.?=4",
+            "/t/a?subq -> sub::[target=>/t/a,on_recv=><abc>->3]                            % /t/a -> 4                       % *abc.?=3",
+            "/t/b?subq -> sub::[target=>/t/b,on_recv=><abc>->4]                            % /t/b -> 3                       % *abc.?=4",
     }, delimiter = '%')
     public void testSubscriptions(final String subscription, final String write, final String check) {
         final Rec sub = mParser.eval(subscription);

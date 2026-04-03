@@ -1,5 +1,5 @@
 /*
- * Metatron: A Distributed Computing Language and Virtual Machine
+ * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
  *  
  * This program is free software: you can redistribute it and/or modify
@@ -16,10 +16,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.grph.tp3.parser;
+package studio.phaseshift.metatron.isa.grph;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.grph.grphInstSet;
 import studio.phaseshift.metatron.isa.m.parser.mFluent;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -27,7 +26,6 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import java.util.ArrayList;
 import java.util.List;
 
-import static studio.phaseshift.metatron.isa.grph.grphInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 
@@ -53,15 +51,15 @@ public class grphFluent extends mFluent<grphFluent> {
     // ========================================
 
     public grphFluent outE_(final Obj... obj) {
-        return this.addInst(instB(OUTE_INST_TID, lst(obj)));
+        return this.addInst(instB(grphInstSet.OUTE_INST_TID, lst(obj)));
     }
 
     public grphFluent inE_(final Obj... obj) {
-        return this.addInst(instB(INE_INST_TID, lst(obj)));
+        return this.addInst(instB(grphInstSet.INE_INST_TID, lst(obj)));
     }
 
     public grphFluent bothE_(final Obj... obj) {
-        return this.addInst(instB(BOTHE_INST_TID, lst(obj)));
+        return this.addInst(instB(grphInstSet.BOTHE_INST_TID, lst(obj)));
     }
 
     // ========================================
@@ -69,15 +67,15 @@ public class grphFluent extends mFluent<grphFluent> {
     // ========================================
 
     public grphFluent out_(final Obj... obj) {
-        return this.addInst(instB(OUT_INST_TID, lst(obj)));
+        return this.addInst(instB(grphInstSet.OUT_INST_TID, lst(obj)));
     }
 
     public grphFluent in_(final Obj... obj) {
-        return this.addInst(instB(IN_INST_TID, lst(obj)));
+        return this.addInst(instB(grphInstSet.IN_INST_TID, lst(obj)));
     }
 
     public grphFluent both_(final Obj... obj) {
-        return this.addInst(instB(BOTH_INST_TID, lst(obj)));
+        return this.addInst(instB(grphInstSet.BOTH_INST_TID, lst(obj)));
     }
 
     // ========================================
@@ -85,15 +83,15 @@ public class grphFluent extends mFluent<grphFluent> {
     // ========================================
 
     public grphFluent outV_(final Obj... obj) {
-        return this.addInst(instB(OUTV_INST_TID, lst(obj)));
+        return this.addInst(instB(grphInstSet.OUTV_INST_TID, lst(obj)));
     }
 
     public grphFluent inV_(final Obj... obj) {
-        return this.addInst(instB(INV_INST_TID, lst(obj)));
+        return this.addInst(instB(grphInstSet.INV_INST_TID, lst(obj)));
     }
 
     public grphFluent bothV_(final Obj... obj) {
-        return this.addInst(instB(BOTHV_INST_TID, lst(obj)));
+        return this.addInst(instB(grphInstSet.BOTHV_INST_TID, lst(obj)));
     }
 
     // ========================================
@@ -101,11 +99,11 @@ public class grphFluent extends mFluent<grphFluent> {
     // ========================================
 
     public grphFluent values_(final Obj... obj) {
-        return this.addInst(instB(VALUES_INST_TID, lst(obj)));
+        return this.addInst(instB(grphInstSet.VALUES_INST_TID, lst(obj)));
     }
 
     public grphFluent properties_(final Obj... obj) {
-        return this.addInst(instB(PROPERTIES_INST_TID, lst(obj)));
+        return this.addInst(instB(grphInstSet.PROPERTIES_INST_TID, lst(obj)));
     }
 
     @Override

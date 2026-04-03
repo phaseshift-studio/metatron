@@ -1,5 +1,5 @@
 /*
- * Metatron: A Distributed Computing Language and Virtual Machine
+ * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
  *  
  * This program is free software: you can redistribute it and/or modify
@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.grph.tp3.graph;
+package studio.phaseshift.metatron.isa.grph.tp3;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.tinkerpop.gremlin.AbstractGraphProvider;
@@ -25,9 +25,8 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.io.IoRegistry;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.grph.space.graphSpace;
 import studio.phaseshift.metatron.isa.grph.grphInstSet;
-import studio.phaseshift.metatron.isa.grph.tp3.space.tp3Space;
-import studio.phaseshift.metatron.isa.grph.tp3.tp3InstSet;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.mach.machInstSet;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -66,7 +65,7 @@ public class mGraphProvider extends AbstractGraphProvider {
         BootLoader.loadInstSetProvider(mInstSet.M_ISA_TID);
         BootLoader.loadInstSetProvider(machInstSet.MACH_ISA_TID);
         BootLoader.loadInstSetProvider(grphInstSet.GRPH_ISA_TID);
-        BootLoader.loadInstSetProvider(tp3InstSet.TP3_ISA_TID);
+        BootLoader.loadInstSetProvider(grphInstSet.TP3_ISA_TID);
 
     }
 
@@ -76,10 +75,10 @@ public class mGraphProvider extends AbstractGraphProvider {
         //    if (graph != null) {
         //      //    ((mGraph) graph).getBaseGraph().clear();
         //  } else {
-        tp3Space.of(rec(PATTERN, uri("/test/#")), f("/sys/space/graph"));
+        graphSpace.of(rec(PATTERN, uri("/test/#")), f("/sys/space/graph"));
         //final Obj g = Router.global().read(f(configuration.getProperty(SPACE).toString()));
         //  if (!g.isNoObj())
-        //    ((tp3Space) g).close();
+        //    ((graphSpace) g).close();
         //    }
     }
 
@@ -91,7 +90,7 @@ public class mGraphProvider extends AbstractGraphProvider {
         config.put(SPACE, f("/sys/space/graph"));
         config.put(PATTERN, f("/test/#"));
         config.put(NAME, f(graphName));
-        config.put("guice.injector-source", f("studio.phaseshift.metatron.isa.grph.tp3.graph.mGraphFeatureTest$WorldInjectorSource"));
+        config.put("guice.injector-source", f("studio.phaseshift.metatron.isa.grph.tp3.mGraphFeatureTest$WorldInjectorSource"));
         config.put(IoRegistry.IO_REGISTRY, f(mIoRegistry.class.getCanonicalName()));
         return config;
 

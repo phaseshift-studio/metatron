@@ -78,7 +78,7 @@ public abstract class AbstractMetatronTest {
         final Obj a = mParser.m_obj().parse(lhs).get();
         final Obj b = mParser.m_obj().parse(rhs).get();
         final boolean m = a.test(b);
-        LOG.warn("testing %s matches %s: %s [expected:%s]", a, b, m, matches);
+        LOG.debug("testing %s matches %s: %s [expected:%s]", a, b, m, matches);
         assertEquals(matches, m);
     }
 
@@ -86,7 +86,7 @@ public abstract class AbstractMetatronTest {
         final Obj a = mParser.eval(lhs);
         final Obj b = mParser.eval(expected);
         final Obj actual = b.apply(a);
-        LOG.warn("testing %s => %s [expected:%s]", a, b, actual);
+        LOG.debug("testing %s => %s [expected:%s]", a, b, actual);
         if(!expected.trim().equals("<ERROR>")) {
             assertTrue(a.stream().noneMatch(Obj::isFail));
             assertTrue(actual.stream().noneMatch(Obj::isFail));
@@ -98,7 +98,7 @@ public abstract class AbstractMetatronTest {
     }
     
     public static void checkEquality(final GraphittyLogger LOG, final Obj a, final Obj b, final boolean equals) {
-        LOG.warn("testing %s == %s [expected:%s]", a, b, equals);
+        LOG.debug("testing %s == %s [expected:%s]", a, b, equals);
         if (equals)
             assertEquals(a, b, Graphitty.string("failed %s != %s", a, b));
         else

@@ -1,5 +1,5 @@
 /*
- * Metatron: A Distributed Computing Language and Virtual Machine
+ * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
  *  
  * This program is free software: you can redistribute it and/or modify
@@ -16,10 +16,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.grph.tp3.space;
+package studio.phaseshift.metatron.isa.grph.space;
 
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.apache.tinkerpop.gremlin.structure.Edge;
+import studio.phaseshift.metatron.isa.grph.grphInstSet;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -28,14 +29,10 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
-import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.grph.grphInstSet.*;
-import static studio.phaseshift.metatron.isa.grph.tp3.space.VertexMap.lazyVertexToRec;
+import static studio.phaseshift.metatron.isa.grph.space.VertexMap.lazyVertexToRec;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
@@ -49,13 +46,13 @@ public class EdgeMap extends ElementMap {
 
     protected static final GraphittyLogger LOG = Graphitty.log(EdgeMap.class);
 
-    public EdgeMap(final Edge base, final tp3Space space) {
+    public EdgeMap(final Edge base, final graphSpace space) {
         super(base, space);
     }
 
     @Override
     public boolean containsKey(final Object key) {
-        return key.equals(IN) || key.equals(OUT) || key.equals(BOTH) || super.containsKey(key);
+        return key.equals(grphInstSet.IN) || key.equals(grphInstSet.OUT) || key.equals(grphInstSet.BOTH) || super.containsKey(key);
     }
 
     @Override
@@ -65,7 +62,7 @@ public class EdgeMap extends ElementMap {
 
     @Override
     public Obj get(final Object key) {
-        if (key.equals(IN) || key.equals(OUT) || key.equals(BOTH))
+        if (key.equals(grphInstSet.IN) || key.equals(grphInstSet.OUT) || key.equals(grphInstSet.BOTH))
             return objs(IteratorUtil.stream(this.getBase().vertices(Direction.valueOf(((Uri) key).uriValue().toString())))
                     .map(v -> auto_from_(uri(this.space.elementVID(v)), lazyVertexToRec(v, this.space)).tryToInst()));
         return super.get(key);
@@ -90,14 +87,14 @@ public class EdgeMap extends ElementMap {
     }
 
     public static Rec edgeToRec(final Edge edge) {
-        return edgeToRec(edge, tp3Space.from(edge));
+        return edgeToRec(edge, graphSpace.from(edge));
     }
 
     public static Rec edgeToRec(final Edge edge, final Rec lhs) {
         return rec().self(new EdgeMap(edge, lhs.<ElementMap>jvmAs().space), f(edge.label()).c(lhs.c()), lhs.<ElementMap>jvmAs().space.elementVID(edge)).parent(lhs);
     }
 
-    public static Rec edgeToRec(final Edge edge, final tp3Space lhs) {
+    public static Rec edgeToRec(final Edge edge, final graphSpace lhs) {
         return new EdgeMap(edge, lhs).selfRec();
     }
 
@@ -105,7 +102,7 @@ public class EdgeMap extends ElementMap {
         return rec.<EdgeMap>jvmAs().getBase();
     }
 
-    public static Inst lazyEdgeToRec(final Edge base, final tp3Space lhs) {
+    public static Inst lazyEdgeToRec(final Edge base, final graphSpace lhs) {
         return new LazyAutoElmnt(new EdgeMap(base, lhs));
     }
 

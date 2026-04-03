@@ -16,10 +16,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.grph.tp3.space.schema;
+package studio.phaseshift.metatron.isa.grph.space.schema;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
+import studio.phaseshift.metatron.isa.grph.grphInstSet;
 import studio.phaseshift.metatron.isa.m.type.Type;
 
 import java.util.HashSet;
@@ -40,7 +41,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 @JREService(tid = "/m/grph/inst/schema/modern")
 public class modernSchema extends AbstractInstSet {
 
-    public static final fURI MODERN_SCHEMA_TID = GRPH_INST_TID.extend("schema").extend("modern");
+    public static final fURI MODERN_SCHEMA_TID = grphInstSet.GRPH_INST_TID.extend("schema").extend("modern");
     public static final fURI PERSON_TID = MODERN_SCHEMA_TID.extend("person");
     public static final fURI SOFTWARE_TID = MODERN_SCHEMA_TID.extend("software");
     public static final fURI KNOWS_TID = MODERN_SCHEMA_TID.extend("knows");
@@ -49,34 +50,34 @@ public class modernSchema extends AbstractInstSet {
     public static final Type MODERN_SCHEMA_TYPE = T(MODERN_SCHEMA_TID);
 
     public static final Type PERSON_TYPE = Type.Builder.build()
-            .tid(VRTX_TID)
+            .tid(grphInstSet.VRTX_TID)
             .vid(PERSON_TID)
             .isaPredicate(rec(
                     uri("name"), STR_TYPE,
                     uri("age"), INT_TYPE)).create();
 
     public static final Type SOFTWARE_TYPE = Type.Builder.build()
-            .tid(VRTX_TID)
+            .tid(grphInstSet.VRTX_TID)
             .vid(SOFTWARE_TID)
             .isaPredicate(rec(
                     uri("name"), STR_TYPE,
                     uri("lang"), STR_TYPE)).create();
 
     public static final Type KNOWS_TYPE = Type.Builder.build()
-            .tid(EDGE_TID)
+            .tid(grphInstSet.EDGE_TID)
             .vid(KNOWS_TID)
             .isaPredicate(rec(
                     uri("weight"), REAL_TYPE,
-                    OUT, PERSON_TYPE,
-                    IN, PERSON_TYPE)).create();
+                    grphInstSet.OUT, PERSON_TYPE,
+                    grphInstSet.IN, PERSON_TYPE)).create();
 
     public static final Type CREATED_TYPE = Type.Builder.build()
-            .tid(EDGE_TID)
+            .tid(grphInstSet.EDGE_TID)
             .vid(CREATED_TID)
             .isaPredicate(rec(
                     uri("weight"), REAL_TYPE,
-                    OUT, PERSON_TYPE,
-                    IN, SOFTWARE_TYPE)).create();
+                    grphInstSet.OUT, PERSON_TYPE,
+                    grphInstSet.IN, SOFTWARE_TYPE)).create();
 
 
     public modernSchema() {

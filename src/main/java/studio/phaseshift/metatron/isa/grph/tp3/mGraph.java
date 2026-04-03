@@ -1,5 +1,5 @@
 /*
- * Metatron: A Distributed Computing Language and Virtual Machine
+ * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
  *  
  * This program is free software: you can redistribute it and/or modify
@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.grph.tp3.graph;
+package studio.phaseshift.metatron.isa.grph.tp3;
 
 import org.apache.commons.configuration2.BaseConfiguration;
 import org.apache.commons.configuration2.Configuration;
@@ -27,7 +27,7 @@ import org.apache.tinkerpop.gremlin.structure.io.gryo.GryoMapper;
 import org.apache.tinkerpop.gremlin.structure.util.ElementHelper;
 import org.apache.tinkerpop.gremlin.structure.util.wrapped.WrappedGraph;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.grph.tp3.space.tp3Space;
+import studio.phaseshift.metatron.isa.grph.space.graphSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
@@ -65,9 +65,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.WhereTest",
         method = "g_VX1X_repeatXbothEXcreatedX_whereXwithoutXeXX_aggregateXeX_otherVX_emit_path",
         reason = "avoiding grateful dead tests for now")
-public class mGraph implements Graph, WrappedGraph<tp3Space> {
+public class mGraph implements Graph, WrappedGraph<graphSpace> {
 
-    protected final tp3Space space;
+    protected final graphSpace space;
     protected final mVariables variables;
     protected long counter;
     protected final fURI baseURI;
@@ -95,9 +95,9 @@ public class mGraph implements Graph, WrappedGraph<tp3Space> {
         final fURI pattern = f(configuration.getProperty(PATTERN).toString());
         final Obj s = Router.global().read(spacevid);
         if (s.isNoObj()) {
-            this.space = tp3Space.of(rec(configurationToMap(configuration)).plus(rec(uri(PATTERN), uri(pattern))), spacevid);
-        } else if (s instanceof tp3Space) {
-            this.space = (tp3Space) s;
+            this.space = graphSpace.of(rec(configurationToMap(configuration)).plus(rec(uri(PATTERN), uri(pattern))), spacevid);
+        } else if (s instanceof graphSpace) {
+            this.space = (graphSpace) s;
         } else {
             throw MTronException.of("obj is not a grph space: %s", s);
         }
@@ -193,7 +193,7 @@ public class mGraph implements Graph, WrappedGraph<tp3Space> {
     }
 
     @Override
-    public tp3Space getBaseGraph() {
+    public graphSpace getBaseGraph() {
         return this.space;
     }
 

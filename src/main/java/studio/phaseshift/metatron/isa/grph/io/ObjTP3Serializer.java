@@ -1,12 +1,12 @@
 /*
- * Metatron: A Distributed Computing Language and Virtual Machine
+ * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -16,19 +16,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.grph.tp3.parser;
+package studio.phaseshift.metatron.isa.grph.io;
 
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Element;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.grph.tp3.space.EdgeMap;
-import studio.phaseshift.metatron.isa.grph.tp3.space.VertexMap;
+import studio.phaseshift.metatron.isa.grph.space.EdgeMap;
+import studio.phaseshift.metatron.isa.grph.space.VertexMap;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.AbstractObjSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjByteBufferSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
-import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.nio.ByteBuffer;
@@ -42,6 +41,12 @@ public class ObjTP3Serializer extends AbstractObjSerializer<Element> {
 
     public static final fURI OBJ_TP3_SERIALIZER_VID = OBJ_SERIALIZER_TID.extend("tp3");
     private static final ObjSerializer<ByteBuffer> BYTES_SERIALIZER = new ObjByteBufferSerializer();
+
+    private static final ObjTP3Serializer INSTANCE = new ObjTP3Serializer();
+
+    public static ObjTP3Serializer single() {
+        return INSTANCE;
+    }
 
     public ObjTP3Serializer() {
 

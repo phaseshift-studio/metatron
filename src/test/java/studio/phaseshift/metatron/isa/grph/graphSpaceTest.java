@@ -1,5 +1,5 @@
 /*
- * Metatron: A Distributed Computing Language and Virtual Machine
+ * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.grph.tp3;
+package studio.phaseshift.metatron.isa.grph;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -25,7 +25,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
-import studio.phaseshift.metatron.isa.grph.tp3.space.tp3Space;
+import studio.phaseshift.metatron.isa.grph.space.graphSpace;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
@@ -35,43 +35,41 @@ import studio.phaseshift.metatron.util.Tuple;
 import static org.apache.tinkerpop.gremlin.LoadGraphWith.GraphData.MODERN;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.grph.grphInstSet.GRPH_ISA_TID;
-import static studio.phaseshift.metatron.isa.grph.tp3.space.schema.modernSchema.MODERN_SCHEMA_TID;
-import static studio.phaseshift.metatron.isa.grph.tp3.tp3InstSet.TP3_ISA_TID;
+import static studio.phaseshift.metatron.isa.grph.space.schema.modernSchema.MODERN_SCHEMA_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
- * Test suite for tp3Space demonstrating support for any TinkerPop3-compliant graph database.
- *
+ * Test suite for graphSpace demonstrating support for any TinkerPop3-compliant graph database.
+ * <p>
  * The tests use TinkerGraph with the "modern" dataset, but the same configuration pattern
  * works with any TP3-enabled graph (JanusGraph, Neo4j, Neptune, etc.).
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class tp3SpaceTest extends AbstractSpaceTest {
+public class graphSpaceTest extends AbstractSpaceTest {
 
-    public tp3SpaceTest() {
+    public graphSpaceTest() {
         super(() -> {
-            BootLoader.loadInstSetProvider(M_ISA_TID);
-            BootLoader.loadInstSetProvider(GRPH_ISA_TID);
-            BootLoader.loadInstSetProvider(TP3_ISA_TID);
+            BootLoader.importInstSet(M_ISA_TID, null);
+            final grphInstSet isa = new grphInstSet();
+            isa.setup();
 
             // Example: TinkerGraph with modern dataset (legacy format - still supported)
-            return tp3Space.of(rec(
-                    PATTERN, uri("/g/#"),
-                    ROUTE, rec(
-                            uri("/g/V"), uri("V"),
-                            uri("/g/E"), uri("E"),
-                            uri("/g/S"), uri(MODERN_SCHEMA_TID)),
-                    NATIVE, rec(
-                            uri("factory"), MObjFactory.single(),
-                            uri(LOAD), uri(MODERN.name().toLowerCase()))),
+            return graphSpace.of(rec(
+                            PATTERN, uri("/g/#"),
+                            ROUTE, rec(
+                                    uri("/g/V"), uri("V"),
+                                    uri("/g/E"), uri("E"),
+                                    uri("/g/S"), uri(MODERN_SCHEMA_TID)),
+                            NATIVE, rec(
+                                    uri("factory"), MObjFactory.single(),
+                                    uri(LOAD), uri(MODERN.name().toLowerCase()))),
                     f("/sys/space/test"));
 
             /* Alternative: New-style configuration (explicitly using GraphFactory)
-            return tp3Space.of(rec(
+            return graphSpace.of(rec(
                     PATTERN, uri("/g/#"),
                     ROUTE, rec(
                             uri("/g/V"), uri("V"),
@@ -86,8 +84,6 @@ public class tp3SpaceTest extends AbstractSpaceTest {
                     f("/sys/space/test"));
             */
         });
-        BootLoader.loadInstSetProvider(GRPH_ISA_TID);
-        BootLoader.loadInstSetProvider(TP3_ISA_TID);
     }
 
     @Test
@@ -182,8 +178,8 @@ public class tp3SpaceTest extends AbstractSpaceTest {
             "*/g/V/1>>=[likes=>food]                                           % */g/V/1>>likes                   % food",
             "*/g/V/1>>=[likes=>|!*/g/V/2]                                      % */g/V/1>>likes                   % */g/V/2",
             "*/g/V/1>>=[likes=>[!*/g/V/2,!*/g/V/3]]                            % */g/V/1>>likes>-                 % 1-<{*/g/V/2,*/g/V/3}",
-           // "*/g/V/1>>=[worksWith=>|!*/g/V/3]                                  % */g/V/1                          % */g/V/3"
-            
+            // "*/g/V/1>>=[worksWith=>|!*/g/V/3]                                  % */g/V/1                          % */g/V/3"
+
     }, delimiter = '%')
     public void testVertexUpdate(final String update, final String select, final String expected) {
         mParser.eval(update);
@@ -199,7 +195,7 @@ public class tp3SpaceTest extends AbstractSpaceTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, select, expected);
     }
 
-    // Disable all abstract tests - tp3Space is for graph traversals, not general CRUD
+    // Disable all abstract tests - graphSpace is for graph traversals, not general CRUD
     @Override
     @Disabled
     public void testMonoReadWrite(String writeExpression, String readExpression, String expectedExpression) {

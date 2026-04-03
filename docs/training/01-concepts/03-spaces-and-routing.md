@@ -26,10 +26,10 @@ tbleSpace sqlSpace = tbleSpace.of(
 );
 ```
 
-### tp3Space - Graph Databases
+### graphSpace - Graph Databases
 Connects to TinkerPop3 graph databases:
 ```java
-tp3Space graphSpace = tp3Space.of(
+graphSpace graphSpace = graphSpace.of(
     rec(
         uri(PATTERN), uri("graph:#"),
         uri(HOST), uri("localhost:8182"),
@@ -242,7 +242,7 @@ tbleSpace sqlSpace = tbleSpace.of(
 );
 
 // Graph database
-tp3Space graphSpace = tp3Space.of(
+graphSpace graphSpace = graphSpace.of(
     rec(uri(PATTERN), uri("graph:#"), ...),
     f("/sys/space/graph/main")
 );

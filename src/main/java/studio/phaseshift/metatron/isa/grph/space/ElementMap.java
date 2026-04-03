@@ -1,12 +1,12 @@
 /*
- * Metatron: A Distributed Computing Language and Virtual Machine
+ * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *
+ *  
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ *  
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.grph.tp3.space;
+package studio.phaseshift.metatron.isa.grph.space;
 
 import org.apache.tinkerpop.gremlin.structure.Element;
 import org.apache.tinkerpop.gremlin.structure.Property;
@@ -42,7 +42,7 @@ import java.util.stream.Collectors;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.LABEL;
-import static studio.phaseshift.metatron.isa.grph.tp3.space.tp3Space.FACTORY;
+import static studio.phaseshift.metatron.isa.grph.space.graphSpace.FACTORY;
 import static studio.phaseshift.metatron.isa.m.mInstSet.AUTO_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -59,9 +59,9 @@ public abstract class ElementMap extends AbstractMap<Uri, Obj> {
 
     protected static final ObjSerializer<String> SERIALIZER = new ObjCleanStringSerializer();
     protected Element base;
-    transient public final tp3Space space;
+    transient public final graphSpace space;
 
-    public ElementMap(final Element base, final tp3Space space) {
+    public ElementMap(final Element base, final graphSpace space) {
         this.base = base;
         this.space = space;
     }

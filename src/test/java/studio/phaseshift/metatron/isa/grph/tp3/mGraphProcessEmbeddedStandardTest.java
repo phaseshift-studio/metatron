@@ -1,5 +1,5 @@
 /*
- * Metatron: A Distributed Computing Language and Virtual Machine
+ * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
  *  
  * This program is free software: you can redistribute it and/or modify
@@ -16,24 +16,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.grph.hypr;
+package studio.phaseshift.metatron.isa.grph.tp3;
 
-import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.AbstractInstSet;
-import studio.phaseshift.metatron.isa.m.type.InstSet;
-
-import static studio.phaseshift.metatron.isa.grph.grphInstSet.GRPH_ISA_TID;
+import org.apache.tinkerpop.gremlin.GraphProviderClass;
+import org.apache.tinkerpop.gremlin.process.ProcessEmbeddedStandardSuite;
+import org.junit.Ignore;
+import org.junit.runner.RunWith;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@InstSet.JREService(tid = "/m/grph/hypr")
-public class hyprInstSet extends AbstractInstSet {
+@Ignore
+@RunWith(ProcessEmbeddedStandardSuite.class)
+@GraphProviderClass(provider = mGraphProvider.class, graph = mGraph.class)
+public class mGraphProcessEmbeddedStandardTest {
 
-    public static final fURI HYPR_ISA_TID = GRPH_ISA_TID.extend("hypr");
-    public static final fURI HYPR_INST_TID = HYPR_ISA_TID.extend("inst");
-
-    public hyprInstSet() {
-        super(HYPR_ISA_TID, HYPR_ISA_TID);
-    }
 }

@@ -1,5 +1,5 @@
 /*
- * Metatron: A Distributed Computing Language and Virtual Machine
+ * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
@@ -18,73 +18,196 @@
 
 package studio.phaseshift.metatron.isa.grph;
 
-import org.apache.tinkerpop.gremlin.structure.Direction;
+import org.apache.tinkerpop.gremlin.structure.*;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
-import studio.phaseshift.metatron.isa.m.type.Inst;
-import studio.phaseshift.metatron.isa.m.type.InstSet;
-import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.m.type.Uri;
+import studio.phaseshift.metatron.isa.grph.io.ObjTP3Serializer;
+import studio.phaseshift.metatron.isa.grph.space.EdgeMap;
+import studio.phaseshift.metatron.isa.grph.space.VertexMap;
+import studio.phaseshift.metatron.isa.grph.space.graphSpace;
+import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.util.IteratorUtil;
 
-import java.util.*;
+import java.util.Map;
+import java.util.function.BiFunction;
+import java.util.stream.Stream;
 
+import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.grph.space.grphSpace.GRPH_SPACE_TYPE;
-import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_TID;
+import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
+import static studio.phaseshift.metatron.isa.grph.grphInstSet.JREService;
+import static studio.phaseshift.metatron.isa.grph.space.ElementMap.Helper.mtronKV;
+import static studio.phaseshift.metatron.isa.grph.space.graphSpace.*;
+import static studio.phaseshift.metatron.isa.grph.space.graphSpace.SERIALIZER;
+import static studio.phaseshift.metatron.isa.grph.space.schema.modernSchema.MODERN_SCHEMA_TYPE;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
+import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@InstSet.JREService(tid = "/m/grph")
+@JREService(tid = "/m/grph")
 public class grphInstSet extends AbstractInstSet {
 
     public static final fURI GRPH_ISA_TID = M_ISA_TID.extend("grph");
-    public static final fURI GRPH_INST_TID = GRPH_ISA_TID.extend("inst");
-    public static final fURI ELMT_TID = GRPH_ISA_TID.extend("elmt");
-    public static final fURI VRTX_TID = GRPH_ISA_TID.extend("vrtx");
     public static final fURI EDGE_TID = GRPH_ISA_TID.extend("edge");
-    
-    public static final fURI OUT_INST_TID = GRPH_INST_TID.extend("out");
-    public static final fURI IN_INST_TID = GRPH_INST_TID.extend("in");
-    public static final fURI OUTE_INST_TID = GRPH_INST_TID.extend("outE");
-    public static final fURI INE_INST_TID = GRPH_INST_TID.extend("inE");
-    public static final fURI BOTH_INST_TID = GRPH_INST_TID.extend("both");
-    public static final fURI BOTHE_INST_TID = GRPH_INST_TID.extend("bothE");
-    public static final fURI OUTV_INST_TID = GRPH_INST_TID.extend("outV");
-    public static final fURI INV_INST_TID = GRPH_INST_TID.extend("inV");
-    public static final fURI BOTHV_INST_TID = GRPH_INST_TID.extend("bothV");
-    public static final fURI VALUES_INST_TID = GRPH_INST_TID.extend("values");
-    public static final fURI LABEL_INST_TID = GRPH_INST_TID.extend("label");
-    public static final fURI PROPERTIES_INST_TID = GRPH_INST_TID.extend("properties");
-    public static final fURI ADDE_INST_TID = GRPH_INST_TID.extend("addE");
-
+    public static final fURI VRTX_TID = GRPH_ISA_TID.extend("vrtx");
+    public static final fURI ELMT_TID = GRPH_ISA_TID.extend("elmt");
+    public static final fURI GRPH_INST_TID = GRPH_ISA_TID.extend("inst");
     //
     public static final fURI GREMLIN_INST_TID = GRPH_INST_TID.extend("gremlin");
-
-    public static final Uri OUT = uri(Direction.OUT.name());
-    public static final Uri IN = uri(Direction.IN.name());
+    public static final fURI ADDE_INST_TID = GRPH_INST_TID.extend("addE");
+    public static final fURI PROPERTIES_INST_TID = GRPH_INST_TID.extend("properties");
+    public static final fURI LABEL_INST_TID = GRPH_INST_TID.extend("label");
+    public static final fURI VALUES_INST_TID = GRPH_INST_TID.extend("values");
+    public static final fURI BOTHV_INST_TID = GRPH_INST_TID.extend("bothV");
+    public static final fURI INV_INST_TID = GRPH_INST_TID.extend("inV");
+    public static final fURI OUTV_INST_TID = GRPH_INST_TID.extend("outV");
+    public static final fURI BOTHE_INST_TID = GRPH_INST_TID.extend("bothE");
+    public static final fURI BOTH_INST_TID = GRPH_INST_TID.extend("both");
+    public static final fURI INE_INST_TID = GRPH_INST_TID.extend("inE");
+    public static final fURI OUTE_INST_TID = GRPH_INST_TID.extend("outE");
+    public static final fURI IN_INST_TID = GRPH_INST_TID.extend("in");
+    public static final fURI OUT_INST_TID = GRPH_INST_TID.extend("out");
+    public static final fURI TP3_ISA_TID = GRPH_ISA_TID.extend("tp3");
+    public static final fURI GRPH_TID = TP3_ISA_TID.extend("grph");
+    public static final String REDIRECT_STRING = ":redirect";
+    public static final fURI REDIRECT_FURI = f(REDIRECT_STRING);
     public static final Uri BOTH = uri(Direction.BOTH.name());
-    public static final Uri LABEL = uri("LABEL");
     public static final Uri ID = uri("ID");
     public static final fURI IN_FURI = f(Direction.IN.name());
     public static final fURI OUT_FURI = f(Direction.OUT.name());
     public static final fURI BOTH_FURI = f(Direction.BOTH.name());
     public static final fURI LABEL_FURI = f("LABEL");
     public static final fURI ID_FURI = f("ID");
+    public static final Uri LABEL = uri("LABEL");
+    public static final Uri IN = uri(Direction.IN.name());
+    public static final Uri OUT = uri(Direction.OUT.name());
 
     public grphInstSet() {
-        super(GRPH_ISA_TID, GRPH_ISA_TID);
+        super(mutableMap(uri(PATTERN), uri(GRPH_ISA_TID.extend(ALL))), GRPH_ISA_TID, GRPH_ISA_TID);
     }
 
-    @Override
-    public Set<Type> types() {
-        return new HashSet<>(List.of(GRPH_SPACE_TYPE));
+    /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    protected static BiFunction<Obj, Inst, Obj> V_E_FUNCTION(final Direction direction) {
+        return (lhs, inst) -> {
+            final Rec lhsRec = lhs.asRec();
+            final String[] labels = inst.arg(0).isNoObj() ? EMPTY_STRING_ARRAY : inst.arg(0).stream().map(Obj::uriValue).map(fURI::toString).toArray(String[]::new);
+            return objs(IteratorUtil.map(VertexMap.recToVertex(lhsRec).edges(direction, labels), e -> EdgeMap.edgeToRec(e, lhsRec)));
+        };
     }
 
+    public static BiFunction<Obj, Inst, Obj> V_V_FUNCTION(final Direction direction) {
+        return (lhs, inst) -> {
+            final Rec lhsRec = lhs.asRec();
+            final String[] labels = inst.arg(0).isNoObj() ? EMPTY_STRING_ARRAY : inst.arg(0).stream().map(Obj::uriValue).map(fURI::toString).toArray(String[]::new);
+            return objs(IteratorUtil.map(VertexMap.recToVertex(lhs.asRec()).vertices(direction, labels), v -> {
+                final Property<?> redirect = v.property(REDIRECT_STRING);
+                return redirect.isPresent() ? (Obj) mtronKV(redirect).value() : VertexMap.vertexToRec(v, lhsRec);
+            }));
+        };
+    }
+
+    /*BiFunction<Poly<?, ?>, Object, Poly<?, ?>> VERTEX_POLY_MUTABLE = (vertexPoly, vertexPolyJVM) -> {
+        vertexPoly.<ElementMap>jvmAs().putAll((Map<Uri, Obj>) vertexPolyJVM);
+        //Obj.Helper.objCheck(vertexPoly, vertexPolyJVM, vertexPoly.tid(), vertexPoly.vid());
+        return vertexPoly;
+    };*/
+
+    /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     @Override
-    public Set<Inst> insts() {
-        final List<Inst> insts = new ArrayList<>();
-        return new LinkedHashSet<>(insts);
+    public void setup() {
+        this.jvm().putAll(mutableMap(
+                uri(PATTERN), uri(GRPH_ISA_TID.extend(ALL)),
+                uri(CONST), lst(ObjTP3Serializer.single()),
+                uri(TYPE), lst(
+                        docWrap(Type.Builder.build()
+                                .tid(REC_TID)
+                                .vid(ELMT_TID)
+                                .create(), "a key/value attributed element that is refined by vrtx::T and edge::T"),
+                        docWrap(Type.Builder.build()
+                                .tid(ELMT_TID)
+                                .vid(VRTX_TID)
+                                .isaPredicate(rec(
+                                        IN.maybe().<Uri>as(), rec(URI_TYPE, T(EDGE_TID.maybeSome())),
+                                        OUT.maybe(), rec(URI_TYPE, T(EDGE_TID.maybeSome()))))
+                                .create(), "a key/value attributed vertex"),
+                        docWrap(Type.Builder.build()
+                                .tid(ELMT_TID)
+                                .vid(EDGE_TID)
+                                .isaPredicate(rec(IN, T(VRTX_TID), OUT, T(VRTX_TID)))
+                                .create(), "an directed key/value attributed binary edge"),
+                        GRAPH_SPACE_TYPE,
+                        MODERN_SCHEMA_TYPE,
+                        docWrap(Type.Builder.build()
+                                        .tid(SPACE_TID)
+                                        .vid(GRPH_TID)
+                                        .create(),
+                                "a graph space", "the graph space", Map.of(), "a space for graph traversal")
+                ),
+                uri(INST), lst(Stream.concat(graphSpace.TP3SpaceType.insts().stream(), Stream.of(
+                        docWrap(instC(LABEL_INST_TID.dom(ELMT_TID).rng(URI_TID), lst(), (lhs, inst) -> lhs.asRec().at(LABEL).orElse(uri(lhs.tid()))),
+                                "an element", "the element label", Map.of(), "returns the lhs element label (the tid)"),
+                        docWrap(instC(VALUES_INST_TID.dom(ELMT_TID).rng(ALL.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> lhs.asRec().at(inst.arg(0).isNoObj() ? uri("+") : inst.arg(0).asUri())),
+                                "an element", "the element values", Map.of(jnt(0), "zero or more element property labels"), "returns the lhs element arg-labeled values"),
+                        docWrap(instC(INV_INST_TID.dom(EDGE_TID).rng(VRTX_TID), lst(), (lhs, inst) -> lhs.asRec().at(IN)),
+                                "an edge", "the incoming vertex", Map.of(), "returns the lhs edge head vertex"),
+                        docWrap(instC(OUTV_INST_TID.dom(EDGE_TID).rng(VRTX_TID), lst(), (lhs, inst) -> lhs.asRec().at(OUT)),
+                                "an edge", "the outgoing vertex", Map.of(), "returns the lhs edge tail vertex"),
+                        docWrap(instC(BOTHV_INST_TID.dom(EDGE_TID).rng(VRTX_TID), lst(), (lhs, inst) -> objs(Stream.concat(lhs.asRec().at(IN).stream(), lhs.asRec().at(OUT).stream()))),
+                                "an edge", "both vertices", Map.of(), "returns the lhs edge's head and tail vertices"),
+                        docWrap(instC(GRPH_INST_TID.extend("graph").dom(GRPH_TID).rng(GRPH_TID),
+                                        lst(GRAPH_CONFIG),
+                                        (lhs, inst) -> graphSpace.of(inst.arg(0).asRec(), lhs.vid())),
+                                "a graph space", "the graph space", Map.of(jnt(0), "the graph configuration"), "a space for graph traversal"),
+                        docWrap(instC(OUT_INST_TID.dom(VRTX_TID).rng(VRTX_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_V_FUNCTION(Direction.OUT)),
+                                "a vertex", "out adjacent vertices", Map.of(jnt(0), "zero or more edge labels"), "returns the lhs vertex arg-adjacent outgoing vertices"),
+                        docWrap(instC(IN_INST_TID.dom(VRTX_TID).rng(VRTX_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_V_FUNCTION(Direction.IN)),
+                                "a vertex", "in adjacent vertices", Map.of(jnt(0), "zero or more edge labels"), "returns the lhs vertex arg-adjacent incoming vertices"),
+                        docWrap(instC(BOTH_INST_TID.dom(VRTX_TID).rng(VRTX_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_V_FUNCTION(Direction.BOTH)),
+                                "a vertex", "both adjacent vertices", Map.of(jnt(0), "zero or more edge labels"), "returns the lhs vertex arg-adjacent incoming and outgoing vertices"),
+                        docWrap(instC(OUTE_INST_TID.dom(VRTX_TID).rng(EDGE_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_E_FUNCTION(Direction.OUT)),
+                                "a vertex", "out adjacent edges", Map.of(jnt(0), "zero or more edge labels"), "returns the lhs vertex arg-adjacent outgoing edges"),
+                        docWrap(instC(INE_INST_TID.dom(VRTX_TID).rng(EDGE_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_E_FUNCTION(Direction.IN)),
+                                "a vertex", "in adjacent edges", Map.of(jnt(0), "zero or more edge labels"), "returns the lhs vertex arg-adjacent incoming edges"),
+                        docWrap(instC(BOTHE_INST_TID.dom(VRTX_TID).rng(EDGE_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_E_FUNCTION(Direction.BOTH)),
+                                "a vertex", "both adjacent edges", Map.of(jnt(0), "zero or more edge labels"), "returns the lhs vertex arg-adjacent incoming and outgoing edges"),
+                        instC(ADDE_INST_TID.dom(VRTX_TID).rng(EDGE_TID), lst(T(ALL), URI_TYPE, T(REC_TID.maybe())), (lhs, inst) -> {
+                            final Vertex outVertex = ((VertexMap) lhs.jvm()).getBase();
+                            final fURI edgeLabel = inst.arg(0).uriValue().big();
+                            final Graph graph = outVertex.graph();
+                            return objs(inst.arg(1).stream().map(e -> {
+                                final Vertex inVertex;
+                                final Edge edge;
+                                if (e.isUri()) {
+                                    inVertex = graph.addVertex(
+                                            org.apache.tinkerpop.gremlin.structure.T.label, e.tid().equals(URI_TID) ? VRTX_TID.toString() : e.tid().toString(),
+                                            REDIRECT_STRING, SERIALIZER.write(auto_from_(e.asUri()).tryToInst()));
+                                } else {
+                                    inVertex = e.asRec().<VertexMap>jvmAs().getBase();
+                                }
+                                edge = outVertex.addEdge(edgeLabel.toString(), inVertex);
+                                if (inst.arg(2).isRec()) {
+                                    inst.arg(2).asRec().jvm().forEach((key, value) -> edge.property(key.uriValue().toString(), value.jvm()));
+                                }
+                                return EdgeMap.edgeToRec(edge, lhs.<VertexMap>jvmAs().space).tid(edgeLabel);
+                            }));
+                        }))))));
+        docWrap(this, "graph traversal emerges from the metatron");
+        super.setup();
     }
 }

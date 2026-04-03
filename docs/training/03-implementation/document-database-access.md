@@ -162,7 +162,7 @@ docSpace.of(
 ## Related Files
 
 - `/src/main/java/studio/phaseshift/metatron/isa/tble/tbleSpace.java` - SQL reference implementation
-- `/src/main/java/studio/phaseshift/metatron/isa/grph/tp3/space/tp3Space.java` - Graph reference implementation
+- `/src/main/java/studio/phaseshift/metatron/isa/grph/tp3/space/graphSpace.java` - Graph reference implementation
 - `/docs/training/03-implementation/sql-schema-access.md` - SQL schema access documentation
 
 ## Dependencies

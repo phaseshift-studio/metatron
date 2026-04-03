@@ -22,8 +22,6 @@ studio.phaseshift.metatron.isa.mach.machInstSet
 studio.phaseshift.metatron.isa.mach.io.ioInstSet
 studio.phaseshift.metatron.isa.web.webInstSet
 studio.phaseshift.metatron.isa.grph.grphInstSet
-studio.phaseshift.metatron.isa.grph.tp3.tp3InstSet
-studio.phaseshift.metatron.isa.grph.hypr.hyprInstSet
 studio.phaseshift.metatron.isa.iot.iotInstSet
 studio.phaseshift.metatron.isa.iot.haos.haosInstSet
 studio.phaseshift.metatron.isa.iot.miot.miotInstSet

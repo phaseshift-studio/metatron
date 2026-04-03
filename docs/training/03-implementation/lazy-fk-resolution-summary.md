@@ -153,7 +153,7 @@ mvn test -Dtest=tbleSpaceTest
 2. **`jvm().get()` vs `at()`**: Internal vs external access determines when resolution happens
 3. **`auto_from` is an instruction**, not data - it only resolves when applied
 4. **Lazy resolution prevents infinite recursion** in graph-like structures
-5. **Pattern matches graph schemas**: Same behavior as `auto_from()` in `tp3Space`
+5. **Pattern matches graph schemas**: Same behavior as `auto_from()` in `graphSpace`
 
 ## Benefits
 
@@ -176,5 +176,5 @@ Updated `/docs/training/03-implementation/sql-schema-access.md` with:
 
 - **Poly containers**: `Rec`, `Rel`, `Lst` - all use lazy resolution pattern
 - **Instructions**: `auto_from`, `auto`, `type` - resolve when applied
-- **Graph schemas**: `tp3Space` uses same pattern for vertex/edge references
+- **Graph schemas**: `graphSpace` uses same pattern for vertex/edge references
 - **fURI routing**: Paths resolve through spaces on-demand

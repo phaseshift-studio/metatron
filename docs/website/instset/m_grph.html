@@ -232,16 +232,16 @@ bin/metatron</code></pre>
                     <span class="text-light">/m/</span>grph
                 </h1>
                 <p style="line-height:0.1rem;" class="subtitle text-light">instruction set reference</p>
-                
+                <p class="text-light mt-3 mb-0" style="line-height:2.5em; max-width: 1000px; margin-left: auto; margin-right: auto;">&quot;graph traversal emerges from the metatron&quot;</p>
             </div>
         </div>
             
         <div class="container-xxl mb-4">
             <div class="d-flex justify-content-center gap-2 flex-wrap">
-                <a href="#types" class="btn btn-outline-primary">Types <span class="badge bg-secondary">4</span></a>
+                <a href="#types" class="btn btn-outline-primary">Types <span class="badge bg-secondary">3</span></a>
                 <a href="#instructions" class="btn btn-outline-primary">Insts <span class="badge bg-secondary">14</span></a>
                 <button class="btn btn-outline-secondary" disabled>Rewrites <span class="badge bg-dark">0</span></button>
-                <a href="#spaces" class="btn btn-outline-primary">Spaces <span class="badge bg-secondary">2</span></a>
+                <a href="#spaces" class="btn btn-outline-primary">Spaces <span class="badge bg-secondary">1</span></a>
                 <button class="btn btn-outline-secondary" disabled>Consts <span class="badge bg-dark">0</span></button>
             </div>
         </div>
@@ -264,10 +264,6 @@ bin/metatron</code></pre>
                 </a>
                 <a href="#type-elmt" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">elmt</span>
-                    <span class="badge bg-primary">T</span>
-                </a>
-                <a href="#type-tp3" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
-                    <span class="code">tp3</span>
                     <span class="badge bg-primary">T</span>
                 </a>
                 <a href="#type-vrtx" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
@@ -295,6 +291,10 @@ bin/metatron</code></pre>
                 </a>
                 <a href="#inst-bothV" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">bothV</span>
+                    <span class="badge bg-success">I</span>
+                </a>
+                <a href="#inst-graph" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
+                    <span class="code">graph</span>
                     <span class="badge bg-success">I</span>
                 </a>
                 <a href="#inst-gremlin" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
@@ -341,12 +341,8 @@ bin/metatron</code></pre>
                 <h6 class="text-primary mb-2">Spaces</h6>
                 <div class="index-columns">
                     
-                <a href="#space-grph" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
-                    <span class="code">grph</span>
-                    <span class="badge bg-info">S</span>
-                </a>
-                <a href="#space-tp3" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
-                    <span class="code">tp3</span>
+                <a href="#space-graph" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
+                    <span class="code">graph</span>
                     <span class="badge bg-info">S</span>
                 </a>
                 </div>
@@ -358,7 +354,7 @@ bin/metatron</code></pre>
             
         <div class="container-xxl mb-4" id="types">
             <h3 class="text-primary mb-3">
-                Types <span class="badge bg-primary">4</span>
+                Types <span class="badge bg-primary">3</span>
             </h3>
             
                 <div class="card mb-3" id="type-edge">
@@ -374,11 +370,7 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="card-body p-2">
-                        <pre class="mb-0"><code class="language-mtron">elmt::T[isa([IN=&gt;elmt::T[isa([
- {?}IN =&gt;[uri::T=&gt;edge{*}::T],
- {?}OUT=&gt;[uri::T=&gt;edge{*}::T]])]@/m/grph/vrtx,OUT=&gt;elmt::T[isa([
- {?}IN =&gt;[uri::T=&gt;edge{*}::T],
- {?}OUT=&gt;[uri::T=&gt;edge{*}::T]])]@/m/grph/vrtx])]@/m/grph/edge</code></pre>
+                        <pre class="mb-0"><code class="language-mtron">elmt::T[isa([IN=&gt;vrtx::T,OUT=&gt;vrtx::T])]@/m/grph/edge</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -402,30 +394,6 @@ bin/metatron</code></pre>
                     <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">a key/value attributed element that is refined by vrtx::T and edge::T</p>
                     </div>
-                    
-                </div>
-                <div class="card mb-3" id="type-tp3">
-                    <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span>
-                            <span class="code text-primary fw-bold">tp3::T</span>
-                            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">&lt;/m/grph/tp3&gt;::T</span></span>
-                        </span>
-                        <small class="text-muted code">/m/grph/tp3</small>
-                    </div>
-                    
-                    <div class="card-body p-2">
-                        <pre class="mb-0"><code class="language-mtron">/m/grph/tp3::[
- pattern=&gt;/m/grph/tp3/#,
- space  =&gt;[
-   super=&gt;!*/m/grph],
- q      =&gt;[
-   /m/space/q/docq::[
-     pre_read =&gt;inst?#{*}&lt;=#{?}(uri::T){&lt;j&gt;},
-     pattern  =&gt;docq,
-     pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T){&lt;j&gt;},
-     obj      =&gt;mem::[=&gt;]]]]@/m/grph/tp3</code></pre>
-                    </div>
-                    
                     
                 </div>
                 <div class="card mb-3" id="type-vrtx">
@@ -530,17 +498,36 @@ bin/metatron</code></pre>
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"an edge" <span class="text-light">=&gt;</span> "both vertices"</pre>
                     </div>
                 </div>
+                <div class="card mb-3" id="inst-graph">
+                    <div class="card-header d-flex justify-content-between align-items-center py-2">
+                        <span>
+                            <span class="code text-primary fw-bold">graph</span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="m_grph_tp3.html#type-grph" class="code text-info">/m/grph/tp3/grph</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m_grph_tp3.html#type-grph" class="code text-success">/m/grph/tp3/grph</a></span></span>
+                        </span>
+                        <small class="text-muted code">/m/grph/inst/graph?/m/grph/tp3/grph&lt;=/m/grph/tp3/grph</small>
+                    </div>
+                    <div class="card-body p-2">
+                        <pre class="mb-1"><code class="language-mtron">graph?grph&lt;=grph([graph=&gt;uri::T]){&lt;j&gt;}</code></pre>
+                    </div>
+                    
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">a space for graph traversal</p>
+                    </div>
+                    <div class="card-body py-2">
+                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"a graph space" <span class="text-light">=&gt;</span> "the graph space"
+   [0 <span class="text-light">=&gt;</span> "the graph configuration"]</pre>
+                    </div>
+                </div>
                 <div class="card mb-3" id="inst-gremlin">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">gremlin</span>
-                            <span class="ms-1"><span class="instset-doc-small-code"><a href="m_grph_space.html#type-tp3" class="code text-info">/m/grph/space/tp3</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#{*}.html#type-#{*}" class="code text-success">#{*}</a></span></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="m_grph_space.html#type-graph" class="code text-info">/m/grph/space/graph</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#{*}.html#type-#{*}" class="code text-success">#{*}</a></span></span>
                         </span>
-                        <small class="text-muted code">/m/grph/inst/gremlin?#{*}&lt;=/m/grph/space/tp3</small>
+                        <small class="text-muted code">/m/grph/inst/gremlin?#{*}&lt;=/m/grph/space/graph</small>
                     </div>
                     <div class="card-body p-2">
-                        <pre class="mb-1"><code class="language-mtron">gremlin?#{*}&lt;=tp3(str::T){&lt;j&gt;}</code></pre>
-<pre class="mb-1"><code class="language-mtron">gremlin?#{*}&lt;=tp3(str::T){&lt;j&gt;}</code></pre>
+                        <pre class="mb-1"><code class="language-mtron">gremlin?#{*}&lt;=graph(str::T){&lt;j&gt;}</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -712,29 +699,17 @@ bin/metatron</code></pre>
             
         <div class="container-xxl mb-4" id="spaces">
             <h3 class="text-primary mb-3">
-                Spaces <span class="badge bg-info">2</span>
+                Spaces <span class="badge bg-info">1</span>
             </h3>
             
-                <div class="card mb-3" id="space-grph">
+                <div class="card mb-3" id="space-graph">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <a href="m_grph_space_grph.html" class="code text-primary fw-bold text-decoration-none">grph</a>
-                        <small class="text-muted code">/m/grph/space/grph</small>
+                        <a href="m_grph_space_graph.html" class="code text-primary fw-bold text-decoration-none">graph</a>
+                        <small class="text-muted code">/m/grph/space/graph</small>
                     </div>
                     
                     <div class="mt-2">
-                        <pre class="mb-0"><code class="language-mtron">space::T@/m/grph/space/grph</code></pre>
-                    </div>
-                    
-                    
-                </div>
-                <div class="card mb-3" id="space-tp3">
-                    <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <a href="m_grph_space_tp3.html" class="code text-primary fw-bold text-decoration-none">tp3</a>
-                        <small class="text-muted code">/m/grph/space/tp3</small>
-                    </div>
-                    
-                    <div class="mt-2">
-                        <pre class="mb-0"><code class="language-mtron">grph::T[][inst?rng=tp3&amp;dom=#{?}(isa([pattern=&gt;uri::T,route=&gt;rec::T]).else(failure(&#x27;malformed tp3 config&#x27;))){&lt;j&gt;}]@/m/grph/space/tp3</code></pre>
+                        <pre class="mb-0"><code class="language-mtron">space::T[][inst?rng=graph&amp;dom=#{?}(isa([graph=&gt;uri::T]).else(failure(&#x27;malformed tp3 config&#x27;))){&lt;j&gt;}]@/m/grph/space/graph</code></pre>
                     </div>
                     
                     
@@ -745,7 +720,7 @@ bin/metatron</code></pre>
         <div class="container-xxl py-3 text-center">
             <hr class="border-secondary">
             <small class="text-muted">
-                generated by metatron instset doc generator on 2026-04-02 16:28:08<br>
+                generated by metatron instset doc generator on 2026-04-02 20:36:34<br>
                 © PhaseShift Studio, LLC
             </small>
         </div>

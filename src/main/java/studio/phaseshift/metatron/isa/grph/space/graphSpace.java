@@ -1,5 +1,5 @@
  /*
-  * Metatron: A Distributed Computing Language and Virtual Machine
+  * metatron: a distributed virtual machine and language
   *  Copyright (C) 2025- PhaseShift Studio, LLC
   *
   * This program is free software: you can redistribute it and/or modify
@@ -16,7 +16,7 @@
   * along with this program.  If not, see <http://www.gnu.org/licenses/>.
   */
 
- package studio.phaseshift.metatron.isa.grph.tp3.space;
+ package studio.phaseshift.metatron.isa.grph.space;
 
  import org.apache.commons.configuration2.BaseConfiguration;
  import org.apache.commons.configuration2.Configuration;
@@ -32,9 +32,10 @@
  import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
  import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph;
  import studio.phaseshift.metatron.furi.fURI;
+ import studio.phaseshift.metatron.isa.AbstractSpace;
  import studio.phaseshift.metatron.isa.Space;
- import studio.phaseshift.metatron.isa.grph.space.grphSpace;
- import studio.phaseshift.metatron.isa.grph.tp3.space.schema.modernSchema;
+ import studio.phaseshift.metatron.isa.grph.grphInstSet;
+ import studio.phaseshift.metatron.isa.grph.space.schema.modernSchema;
  import studio.phaseshift.metatron.isa.m.mInstSet;
  import studio.phaseshift.metatron.isa.m.type.*;
  import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
@@ -54,11 +55,12 @@
  import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
  import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
  import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
- import static studio.phaseshift.metatron.isa.grph.grphInstSet.*;
+ import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TID;
  import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.failure_;
  import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
  import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
  import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
+ import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
  import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
  import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
  import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -68,35 +70,33 @@
  /*
   * @author Marko A. Rodriguez (http://markorodriguez.com)
   */
- public class tp3Space extends grphSpace<Graph> {
-
-     public static final fURI MTRON_PREFIX = f("mtron:");
-
-     public static final Uri NATIVE_LOAD = uri(f(NATIVE).extend(LOAD));
-     public static final String TP3_GRAPH_CONFIGURATION_KEY = "mtron.grph.vid";
+ public class graphSpace extends AbstractSpace<Graph> {
+     
+     public static final String GRAPH_CONFIGURATION_KEY = "mtron.grph.vid";
      public static final ObjSerializer<String> SERIALIZER = new ObjCleanStringSerializer();
+     public static final Rec GRAPH_CONFIG = rec(uri(GRAPH), URI_TYPE);
 
      protected static ObjFactory FACTORY = null;
      private static final fURI V_SOME = f("V/+");
-     public static final fURI TP3_SPACE_TID = GRPH_ISA_TID.extend(SPACE).extend("tp3");
-     public static final Type TP3_SPACE_TYPE = Type.Builder.build()
-             .tid(GRPH_SPACE_TID)
-             .vid(TP3_SPACE_TID)
+     public static final fURI GRAPH_SPACE_TID = grphInstSet.GRPH_ISA_TID.extend(SPACE).extend("graph");
+     public static final Type GRAPH_SPACE_TYPE = Type.Builder.build()
+             .tid(SPACE_TID)
+             .vid(GRAPH_SPACE_TID)
              .constructor(
-                     instC(mInstSet.M_ISA_INST_TID.dom(ALL.maybe()).rng(TP3_SPACE_TID),
-                             lst(isa_(GRPH_CONFIG).else_(failure_(str("malformed tp3 config"))).tryToInst()),
+                     instC(mInstSet.M_ISA_INST_TID.dom(ALL.maybe()).rng(GRAPH_SPACE_TID),
+                             lst(isa_(GRAPH_CONFIG).else_(failure_(str("malformed tp3 config"))).tryToInst()),
                              (lhs, inst) -> {
                                  if (inst.arg(0).isFail())
                                      throw inst.arg(0).asFail().asException();
-                                 return tp3Space.of(inst.arg(0).asRec(), inst.arg(0).vid());
+                                 return graphSpace.of(inst.arg(0).asRec(), inst.arg(0).vid());
                              })).create();
 
-     public static tp3Space of(final Rec config, final fURI vid) {
+     public static graphSpace of(final Rec config, final fURI vid) {
          Router.global().logger().debug("tp3 space config: %s", config);
          final Configuration graphConfig = toApacheConfiguration(config);
          final Graph graph = GraphFactory.open(graphConfig);
          loadDatasetIfSpecified(graph, config); // only loads if supported and specified
-         return new tp3Space(graph, config.jvm(), vid);
+         return new graphSpace(graph, config.jvm(), vid);
      }
 
      /**
@@ -146,7 +146,7 @@
              final TinkerGraph tinkerGraph = (TinkerGraph) graph;
              final String datasetName = dataset.uriValue().toString();
 
-             Graphitty.log(tp3Space.class).info("loading dataset %s into TinkerGraph", datasetName);
+             Graphitty.log(graphSpace.class).info("loading dataset %s into TinkerGraph", datasetName);
 
              switch (datasetName) {
                  case "modern" -> {
@@ -160,14 +160,14 @@
                  default -> throw MTronException.of("unknown TinkerGraph dataset: %s", datasetName);
              }
          } else {
-             Graphitty.log(tp3Space.class).warn(
+             Graphitty.log(graphSpace.class).warn(
                      "dataset loading requested but graph type %s does not support TinkerFactory datasets",
                      graph.getClass().getSimpleName());
          }
      }
 
-     public static tp3Space from(final Element element) {
-         return (tp3Space) Router.readFromSpace(f(element.graph().configuration().get(String.class, tp3Space.TP3_GRAPH_CONFIGURATION_KEY)));
+     public static graphSpace from(final Element element) {
+         return (graphSpace) Router.readFromSpace(f(element.graph().configuration().get(String.class, graphSpace.GRAPH_CONFIGURATION_KEY)));
      }
 
      protected fURI elementVID(final Element element) {
@@ -180,10 +180,10 @@
          return this.at(ROUTE).asRec().elements().filter(e -> e.first().uriValue().toString().endsWith("S")).findFirst().get().first().uriValue().extend(label);
      }
 
-     protected tp3Space(final Graph graph, final Map<Obj, Obj> config, final fURI vid) {
-         super(graph, config, TP3_SPACE_TID, vid);
+     protected graphSpace(final Graph graph, final Map<Obj, Obj> config, final fURI vid) {
+         super(graph, config, GRAPH_SPACE_TID, vid);
          LOG.debug("tp3 space: %s", this);
-         graph.configuration().setProperty(TP3_GRAPH_CONFIGURATION_KEY, vid.toString());
+         graph.configuration().setProperty(GRAPH_CONFIGURATION_KEY, vid.toString());
          if (null == FACTORY)
              FACTORY = MObjFactory.of()
                      .addExtension(Vertex.class, v -> VertexMap.vertexToRec(v, this))
@@ -272,7 +272,7 @@
                          LOG.info("writing vertex %s => %s", vid, vertex);
                          /// SET VERTEX PROPERTIES
                          obj.asRec().jvm().entrySet().stream()
-                                 .filter(e -> !e.getKey().equals(IN) && !e.getValue().equals(OUT))
+                                 .filter(e -> !e.getKey().equals(grphInstSet.IN) && !e.getValue().equals(grphInstSet.OUT))
                                  .forEach(e -> {
                                      LOG.info("writing vertex property %s =%s=> %s", vertex, e.getKey(), e.getValue());
                                      ElementMap.Helper.tp3KeyValue kv = new ElementMap.Helper.tp3KeyValue(e.getKey(), e.getValue());
@@ -281,7 +281,7 @@
                                          vertex.property((String) kv.key(), kv.value());
                                  });
                          /// SET VERTEX OUT EDGES
-                         obj.asRec().elements().filter(e -> e.first().equals(OUT))
+                         obj.asRec().elements().filter(e -> e.first().equals(grphInstSet.OUT))
                                  .forEach(label -> label.jvm().get1().asRec()
                                          .elements()
                                          .map(Rel::second)
@@ -362,13 +362,13 @@
 
      public static class TP3SpaceType {
          public static Set<Inst> insts() {
-             return new HashSet<>(List.of(docWrap(instC(GREMLIN_INST_TID.dom(TP3_SPACE_TID).rng(ALL.maybeSome()), lst(STR_TYPE), (lhs, inst) -> {
+             return new HashSet<>(List.of(docWrap(instC(grphInstSet.GREMLIN_INST_TID.dom(GRAPH_SPACE_TID).rng(ALL.maybeSome()), lst(STR_TYPE), (lhs, inst) -> {
                  try {
                      final GremlinLangScriptEngineFactory factory = new GremlinLangScriptEngineFactory();
                      //factory.setCustomizerManager(new CachedGremlinScriptEngineManager());
                      factory.setCustomizerManager(new DefaultGremlinScriptEngineManager());
                      final GremlinScriptEngine engine = factory.getScriptEngine();
-                     engine.put("g", ((tp3Space) lhs).sjvm().traversal());
+                     engine.put("g", ((graphSpace) lhs).sjvm().traversal());
                      final Object object = engine.eval(inst.arg(0).strValue());
                      return MObjFactory.of().toObj(object);
                  } catch (Exception e) {

@@ -83,6 +83,6 @@
  * </pre>
  *
  * @see studio.phaseshift.metatron.isa.tble.tbleSpace SQL database space
- * @see studio.phaseshift.metatron.isa.grph.tp3.space.tp3Space Graph database space
+ * @see studio.phaseshift.metatron.isa.grph.space.graphSpace Graph database space
  */
 package studio.phaseshift.metatron.isa.doc;

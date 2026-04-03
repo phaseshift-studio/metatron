@@ -1,5 +1,5 @@
 /*
- * Metatron: A Distributed Computing Language and Virtual Machine
+ * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
  *  
  * This program is free software: you can redistribute it and/or modify
@@ -16,19 +16,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.grph.tp3.graph;
+package studio.phaseshift.metatron.isa.grph.tp3;
 
-import org.apache.tinkerpop.gremlin.GraphProviderClass;
-import org.apache.tinkerpop.gremlin.process.ProcessEmbeddedStandardSuite;
-import org.junit.Ignore;
-import org.junit.runner.RunWith;
+import org.apache.tinkerpop.gremlin.structure.io.AbstractIoRegistry;
+import org.apache.tinkerpop.gremlin.structure.io.gryo.GryoIo;
+import studio.phaseshift.metatron.furi.fURI;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@Ignore
-@RunWith(ProcessEmbeddedStandardSuite.class)
-@GraphProviderClass(provider = mGraphProvider.class, graph = mGraph.class)
-public class mGraphProcessEmbeddedStandardTest {
+public class mIoRegistry extends AbstractIoRegistry {
 
+    private static final mIoRegistry INSTANCE = new mIoRegistry();
+
+    private mIoRegistry() {
+        //try {
+        super.register(GryoIo.class, fURI.class, null);
+        // } catch (final ClassNotFoundException e) {
+        //    throw new IllegalStateException(e);
+        //}
+    }
+
+    public static mIoRegistry instance() {
+        return INSTANCE;
+    }
 }

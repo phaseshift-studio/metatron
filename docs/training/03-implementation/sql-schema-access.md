@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document describes the implementation of SQL schema access in metatron's `tbleSpace`, which allows users to inspect SQL table structures as mtron types before querying data. This feature mirrors the schema access functionality available in `tp3Space` for graph databases.
+This document describes the implementation of SQL schema access in metatron's `tbleSpace`, which allows users to inspect SQL table structures as mtron types before querying data. This feature mirrors the schema access functionality available in `graphSpace` for graph databases.
 
 ## Key Insight: Capital Letter fURIs
 
@@ -168,7 +168,7 @@ Both SQL and graph schemas:
 
 ### Differences
 
-| Aspect | Graph Schema (tp3Space) | SQL Schema (tbleSpace) |
+| Aspect | Graph Schema (graphSpace) | SQL Schema (tbleSpace) |
 |--------|------------------------|------------------------|
 | **Type Source** | Manually defined in schema classes | Auto-generated from SQL metadata |
 | **Structure** | Vertex and edge types | Table row types |
@@ -305,7 +305,7 @@ All 146 tbleSpace tests pass with this implementation (141 original + 4 FK disco
 - `/src/main/java/studio/phaseshift/metatron/isa/tble/schema/domain/ExistingTableSchema.java` - Table discovery and FK lazy resolution
 - `/src/main/java/studio/phaseshift/metatron/isa/tble/tbleSpace.java` - Space integration
 - `/src/test/java/studio/phaseshift/metatron/isa/tble/tbleSpaceTest.java` - Test coverage
-- `/src/main/java/studio/phaseshift/metatron/isa/grph/tp3/space/tp3Space.java` - Graph schema reference
+- `/src/main/java/studio/phaseshift/metatron/isa/grph/tp3/space/graphSpace.java` - Graph schema reference
 
 - `/src/main/java/studio/phaseshift/metatron/isa/m/type/Rec.java` - Shows how `at()` calls `autoResolve()`
 - `/src/main/java/studio/phaseshift/metatron/isa/m/type/Obj.java` - Defines `autoResolve()` behavior

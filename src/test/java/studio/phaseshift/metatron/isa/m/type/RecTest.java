@@ -469,7 +469,7 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
     }, delimiter = '%')
     public void testPoly(final String record, final String type, final boolean matches) {
         final Type t = mParser.parse(type);
-        LOG.error("%s", t);
+        LOG.debug("%s", t);
         AbstractMetatronTest.checkMatches(LOG, record, type, matches);
     }
     
