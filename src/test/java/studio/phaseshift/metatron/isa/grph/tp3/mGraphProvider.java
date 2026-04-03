@@ -65,8 +65,6 @@ public class mGraphProvider extends AbstractGraphProvider {
         BootLoader.loadInstSetProvider(mInstSet.M_ISA_TID);
         BootLoader.loadInstSetProvider(machInstSet.MACH_ISA_TID);
         BootLoader.loadInstSetProvider(grphInstSet.GRPH_ISA_TID);
-        BootLoader.loadInstSetProvider(grphInstSet.TP3_ISA_TID);
-
     }
 
 

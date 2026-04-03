@@ -18,6 +18,9 @@
 
 package studio.phaseshift.metatron.isa.grph;
 
+import org.apache.tinkerpop.gremlin.jsr223.DefaultGremlinScriptEngineManager;
+import org.apache.tinkerpop.gremlin.jsr223.GremlinLangScriptEngineFactory;
+import org.apache.tinkerpop.gremlin.jsr223.GremlinScriptEngine;
 import org.apache.tinkerpop.gremlin.structure.*;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
@@ -26,6 +29,7 @@ import studio.phaseshift.metatron.isa.grph.space.EdgeMap;
 import studio.phaseshift.metatron.isa.grph.space.VertexMap;
 import studio.phaseshift.metatron.isa.grph.space.graphSpace;
 import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
 import java.util.Map;
@@ -43,7 +47,9 @@ import static studio.phaseshift.metatron.isa.grph.space.graphSpace.SERIALIZER;
 import static studio.phaseshift.metatron.isa.grph.space.schema.modernSchema.MODERN_SCHEMA_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
+import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -78,8 +84,6 @@ public class grphInstSet extends AbstractInstSet {
     public static final fURI OUTE_INST_TID = GRPH_INST_TID.extend("outE");
     public static final fURI IN_INST_TID = GRPH_INST_TID.extend("in");
     public static final fURI OUT_INST_TID = GRPH_INST_TID.extend("out");
-    public static final fURI TP3_ISA_TID = GRPH_ISA_TID.extend("tp3");
-    public static final fURI GRPH_TID = TP3_ISA_TID.extend("grph");
     public static final String REDIRECT_STRING = ":redirect";
     public static final fURI REDIRECT_FURI = f(REDIRECT_STRING);
     public static final Uri BOTH = uri(Direction.BOTH.name());
@@ -155,11 +159,24 @@ public class grphInstSet extends AbstractInstSet {
                         MODERN_SCHEMA_TYPE,
                         docWrap(Type.Builder.build()
                                         .tid(SPACE_TID)
-                                        .vid(GRPH_TID)
+                                        .vid(GRAPH_SPACE_TID)
                                         .create(),
                                 "a graph space", "the graph space", Map.of(), "a space for graph traversal")
                 ),
-                uri(INST), lst(Stream.concat(graphSpace.TP3SpaceType.insts().stream(), Stream.of(
+                uri(INST), lst(
+                        docWrap(instC(grphInstSet.GREMLIN_INST_TID.dom(GRAPH_SPACE_TID).rng(ALL.maybeSome()), lst(STR_TYPE), (lhs, inst) -> {
+                            try {
+                                final GremlinLangScriptEngineFactory factory = new GremlinLangScriptEngineFactory();
+                                //factory.setCustomizerManager(new CachedGremlinScriptEngineManager());
+                                factory.setCustomizerManager(new DefaultGremlinScriptEngineManager());
+                                final GremlinScriptEngine engine = factory.getScriptEngine();
+                                engine.put("g", ((graphSpace) lhs).sjvm().traversal());
+                                final Object object = engine.eval(inst.arg(0).strValue());
+                                return MObjFactory.of().toObj(object);
+                            } catch (Exception e) {
+                                return fail(e);
+                            }
+                        }), "execute a gremlin traversal", "the gremlin expression", Map.of(), "executes the gremlin expression on the graph space"),
                         docWrap(instC(LABEL_INST_TID.dom(ELMT_TID).rng(URI_TID), lst(), (lhs, inst) -> lhs.asRec().at(LABEL).orElse(uri(lhs.tid()))),
                                 "an element", "the element label", Map.of(), "returns the lhs element label (the tid)"),
                         docWrap(instC(VALUES_INST_TID.dom(ELMT_TID).rng(ALL.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> lhs.asRec().at(inst.arg(0).isNoObj() ? uri("+") : inst.arg(0).asUri())),
@@ -170,7 +187,7 @@ public class grphInstSet extends AbstractInstSet {
                                 "an edge", "the outgoing vertex", Map.of(), "returns the lhs edge tail vertex"),
                         docWrap(instC(BOTHV_INST_TID.dom(EDGE_TID).rng(VRTX_TID), lst(), (lhs, inst) -> objs(Stream.concat(lhs.asRec().at(IN).stream(), lhs.asRec().at(OUT).stream()))),
                                 "an edge", "both vertices", Map.of(), "returns the lhs edge's head and tail vertices"),
-                        docWrap(instC(GRPH_INST_TID.extend("graph").dom(GRPH_TID).rng(GRPH_TID),
+                        docWrap(instC(GRPH_INST_TID.extend("graph").dom(ALL.maybe()).rng(GRAPH_SPACE_TID),
                                         lst(GRAPH_CONFIG),
                                         (lhs, inst) -> graphSpace.of(inst.arg(0).asRec(), lhs.vid())),
                                 "a graph space", "the graph space", Map.of(jnt(0), "the graph configuration"), "a space for graph traversal"),
@@ -206,8 +223,8 @@ public class grphInstSet extends AbstractInstSet {
                                 }
                                 return EdgeMap.edgeToRec(edge, lhs.<VertexMap>jvmAs().space).tid(edgeLabel);
                             }));
-                        }))))));
-        docWrap(this, "graph traversal emerges from the metatron");
+                        }))));
+        docWrap(this, "from vertex to vertex, the edge of the metatron is traversed");
         super.setup();
     }
 }

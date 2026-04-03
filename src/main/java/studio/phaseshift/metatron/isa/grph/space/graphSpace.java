@@ -359,23 +359,4 @@
             }
         }
     }*/
-
-     public static class TP3SpaceType {
-         public static Set<Inst> insts() {
-             return new HashSet<>(List.of(docWrap(instC(grphInstSet.GREMLIN_INST_TID.dom(GRAPH_SPACE_TID).rng(ALL.maybeSome()), lst(STR_TYPE), (lhs, inst) -> {
-                 try {
-                     final GremlinLangScriptEngineFactory factory = new GremlinLangScriptEngineFactory();
-                     //factory.setCustomizerManager(new CachedGremlinScriptEngineManager());
-                     factory.setCustomizerManager(new DefaultGremlinScriptEngineManager());
-                     final GremlinScriptEngine engine = factory.getScriptEngine();
-                     engine.put("g", ((graphSpace) lhs).sjvm().traversal());
-                     final Object object = engine.eval(inst.arg(0).strValue());
-                     return MObjFactory.of().toObj(object);
-                 } catch (Exception e) {
-                     return fail(e);
-                 }
-             }), "execute a gremlin traversal", "the gremlin expression", Map.of(), "executes the gremlin expression on the tp3 space graph")));
-
-         }
-     }
  }
