@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -122,6 +122,125 @@ public interface Uri extends Mono, Ring.O<Uri> {
         if (obj.isUri())
             return this.uriValue().test(obj.uriValue());
         return Mono.super.test(obj);
+    }
+
+    @Override
+    default Obj apply(final Obj lhs) {
+        // URI Template expansion via apply() using ${expr} syntax
+        // Templates are evaluated as: lhs.apply(mParser.m_obj(expr))
+        if (!this.uriValue().hasTemplates())
+            return Mono.super.apply(lhs);
+
+        // Expand template: ${expr} → lhs.apply(parse(expr)) with context-aware coercion
+        return uri(expandTemplate(this.uriValue(), lhs));
+    }
+
+    static fURI expandTemplate(final fURI template, final Obj lhs) {
+        // Get all template expressions with their component locations
+        final List<studio.phaseshift.metatron.util.Tuple.Pair<fURI.Component, String>> templates = template.templates();
+        if (templates.isEmpty())
+            return template;
+
+        // Build a copy of the URI that we'll modify
+        String scheme = template.scheme();
+        String host = template.host();
+        String portStr = template.port() == -1 ? null : String.valueOf(template.port());
+        List<String> path = new ArrayList<>(template.path());
+        Map<String, String> query = new LinkedHashMap<>(template.qMap());
+
+        // Process each template expression
+        for (studio.phaseshift.metatron.util.Tuple.Pair<fURI.Component, String> tmpl : templates) {
+            final fURI.Component component = tmpl.get0();
+            final String exprStr = tmpl.get1();
+
+            try {
+                // Parse the expression using mParser
+                final studio.phaseshift.metatron.isa.m.parser.mParser parser =
+                        new studio.phaseshift.metatron.isa.m.parser.mParser();
+                final Obj expr = (Obj) parser.m_obj().parse(exprStr);
+
+                // Evaluate: lhs.apply(expr)
+                final Obj result = lhs.apply(expr);
+
+                // Context-aware coercion based on component type
+                final String replacement = coerceByComponent(result, component);
+
+                // Replace template in appropriate component
+                final String templatePlaceholder = "${" + exprStr + "}";
+                switch (component) {
+                    case SCHEME ->
+                            scheme = scheme != null ? scheme.replace(templatePlaceholder, replacement) : replacement;
+                    case HOST -> host = host != null ? host.replace(templatePlaceholder, replacement) : replacement;
+                    case PORT ->
+                            portStr = portStr != null ? portStr.replace(templatePlaceholder, replacement) : replacement;
+                    case PATH -> {
+                        for (int i = 0; i < path.size(); i++) {
+                            path.set(i, path.get(i).replace(templatePlaceholder, replacement));
+                        }
+                    }
+                    case QUERY -> {
+                        Map<String, String> newQuery = new LinkedHashMap<>();
+                        for (Map.Entry<String, String> entry : query.entrySet()) {
+                            String key = entry.getKey().replace(templatePlaceholder, replacement);
+                            String val = entry.getValue().replace(templatePlaceholder, replacement);
+                            newQuery.put(key, val);
+                        }
+                        query = newQuery;
+                    }
+                }
+            } catch (Exception e) {
+                throw MTronException.of("Failed to expand template ${%s}: %s", exprStr, e.getMessage());
+            }
+        }
+
+        // Construct new fURI with expanded values
+        final int finalPort = portStr != null ? Integer.parseInt(portStr) : -1;
+        return fURI.of(scheme, host, finalPort, path, template.c(), template.poly(), query, null);
+    }
+
+    /**
+     * Coerce evaluation result based on URI component type.
+     *
+     * @param result    The result of lhs.apply(expr)
+     * @param component The URI component where this template appears
+     * @return String representation appropriate for the component
+     */
+    static String coerceByComponent(final Obj result, final fURI.Component component) {
+        return switch (component) {
+            case PORT -> {
+                // Port must be an integer
+                if (result.isInt()) {
+                    yield String.valueOf(result.intValue());
+                }
+                throw MTronException.of("PORT template must evaluate to Int, got %s", result.tid());
+            }
+            case QUERY -> {
+                // Query parameters: Rec → k1=v1&k2=v2, otherwise toString
+                if (result.isRec()) {
+                    yield result.asRec().elements()
+                            .map(kv -> objToString(kv.first()) + "=" + objToString(kv.second()))
+                            .collect(Collectors.joining("&"));
+                }
+                yield objToString(result);
+            }
+            case PATH, SCHEME, HOST, AUTHORITY -> {
+                // Simple toString for these components
+                yield objToString(result);
+            }
+            case COEFFICIENT, POLY -> {
+                // These are unlikely but handle gracefully
+                yield objToString(result);
+            }
+        };
+    }
+
+    static String objToString(final Obj obj) {
+        if (obj.isStr()) return obj.strValue();
+        if (obj.isInt()) return String.valueOf(obj.intValue());
+        if (obj.isReal()) return String.valueOf(obj.realValue());
+        if (obj.isBool()) return String.valueOf(obj.boolValue());
+        if (obj.isUri()) return obj.uriValue().toString();
+        return obj.toString();
     }
 
 

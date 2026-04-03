@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.*;
 import java.util.function.Predicate;
@@ -40,6 +41,21 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate<fURI> {
+
+    /**
+     * URI components that can contain template expressions.
+     * Used to identify which part of the URI a template belongs to for proper coercion during expansion.
+     */
+    enum Component {
+        SCHEME,      // URI scheme (e.g., http, https, file)
+        HOST,        // Host name or IP address
+        PORT,        // Port number (must coerce to integer)
+        AUTHORITY,   // Combined user-info, host, and port
+        PATH,        // Path segments (can have multiple templates)
+        QUERY,       // Query parameters (coerce to k=v pairs)
+        COEFFICIENT, // fURI coefficient {min,max}
+        POLY         // Polynomial type annotation [type=>type]
+    }
 
     default boolean classAgnosticEquals(final Object other) {
         if (other instanceof fURI)
@@ -73,6 +89,36 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
         return true;
     }
 
+    ////////////////////////////////////////
+    // URI TEMPLATE SUPPORT (${expr} syntax)
+    ////////////////////////////////////////
+
+    /**
+     * Check if this URI contains template expressions (e.g., ${var}, ${+10}, ${[a=>b]})
+     * Uses ${...} syntax to signal arbitrary Metatron code evaluation.
+     * Distinguished from fURI coefficients: {?}, {*}, {+}, {0}, {1,3}, etc.
+     *
+     * @return true if this fURI contains at least one ${...} template expression
+     */
+    default boolean hasTemplates() {
+        return null != templates() && !templates().isEmpty();
+    }
+
+    /**
+     * Extract all template expressions from this URI with their component locations.
+     * Each template is a pair of (Component, expression_string) where the expression
+     * is the raw Metatron code inside ${...} (without the delimiters).
+     * <p>
+     * Templates are parsed at the fURI level (structural) but evaluated at the Uri level (monadic).
+     * The Component enum indicates which part of the URI the template belongs to, enabling
+     * context-aware coercion during expansion (e.g., PORT→int, QUERY→k=v pairs).
+     *
+     * @return List of template pairs, empty if no templates present
+     */
+    default List<Tuple.Pair<Component, String>> templates() {
+        return List.of();
+    }
+
     default fURI segments(final List<String> segments) {
         final List<String> newPath = new ArrayList<>(segments);
         if (!this.path().isEmpty()) {
@@ -104,7 +150,7 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
     }
 
     default fURI noQ() {
-        return fURI.of(this.scheme(), this.host(), this.port(), this.path(), this.c(), this.poly(), Map.of());
+        return fURI.of(this.scheme(), this.host(), this.port(), this.path(), this.c(), this.poly(), Map.of(), this.templates());
     }
 
     default boolean hasAuthority() {
@@ -315,9 +361,9 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
 
     default fURI qString(final String query) {
         if (null == query || query.isEmpty())
-            return fURI.of(this.scheme(), this.host(), this.port(), this.path(), this.c(), this.poly(), Map.of());
+            return fURI.of(this.scheme(), this.host(), this.port(), this.path(), this.c(), this.poly(), Map.of(), this.templates());
         else
-            return fURI.of(this.scheme(), this.host(), this.port(), this.path(), this.c(), this.poly(), Singleton.parseQuery(query));
+            return fURI.of(this.scheme(), this.host(), this.port(), this.path(), this.c(), this.poly(), Singleton.parseQuery(query), this.templates());
     }
 
     <T> T qValue(final String key, final Class<T> valueClass);
@@ -442,6 +488,17 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
                         "((?<rng>[^<&]+)<=(?<dom>[^&?]+))?" +
                         "&?" +
                         "(?<query>(([^&=]+(=[^&=]+)?&?)+))?)?");
+        // Template-aware pattern: allows ${...} in port, path, query components
+        public static final Pattern FURI_TEMPLATE_PATTERN = Pattern.compile(
+                "((?<scheme>[^:/.]+):)?" +
+                        "(//((?<host>[^?\\[&<>:/]+)(:(?<port>[^?\\[&]+))?))?" +
+                        "(?<path>[^?\\[{&]+)?" +
+                        "(\\[(?<poly>[^]]+)])?" +
+                        "(\\{(?<coefficient>[^}\\]]+)})?" +
+                        "(\\?" +
+                        "((?<rng>[^<&]+)<=(?<dom>[^&?]+))?" +
+                        "&?" +
+                        "(?<query>.+)?)?");
         public static final fURI ALL = new XXPXXXfURI(List.of("#"));
         public static final fURI WILD_ONE = new XXPXXXfURI(List.of("+"));
         public static final fURI NOOBJ = f("noobj").zero();
@@ -465,13 +522,18 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
             if ("{0}".equals(furiParse))
                 return Singleton.NOOBJ;
             if ("/".equals(furiParse))
-                return fURI.of(null, null, -1, List.of("", ""), cInt.ONE(), List.of(), Map.of());
-            final Matcher matcher = Singleton.FURI_PATTERN.matcher(furiParse);
+                return fURI.of(null, null, -1, List.of("", ""), cInt.ONE(), List.of(), Map.of(), null);
+
+            // Quick check: does this fURI contain templates?
+            final boolean hasTemplates = furiParse.contains("${");
+            final Matcher matcher = hasTemplates ? Singleton.FURI_TEMPLATE_PATTERN.matcher(furiParse) : Singleton.FURI_PATTERN.matcher(furiParse);
+
             if (!matcher.matches())
                 throw MTronException.of("unable to parse %s to a furi", furiParse);
             final String scheme = matcher.group(SCHEME);
             final String host = matcher.group(HOST);
-            final int port = matcher.group(PORT) == null ? -1 : Integer.parseInt(matcher.group(PORT));
+            final String portStr = matcher.group(PORT);
+            final int port = portStr == null ? -1 : (hasTemplates && portStr.contains("${") ? -1 : Integer.parseInt(portStr));
             final String pathStr = matcher.group(PATH);
             final List<String> path = null == pathStr ? List.of() : new ArrayList<>(Arrays.asList(pathStr.split("/")));
             if (null != pathStr) {
@@ -508,7 +570,13 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
             } else {
                 query = Map.of();
             }
-            return fURI.of(scheme, host, port, path, coefficient, poly, query);
+
+            // Extract templates if present
+            final List<Tuple.Pair<Component, String>> templates = null;//= hasTemplates ?
+            ///  extractTemplates(portStr, pathStr, queryStr, polyStr, matcher.group(COEFFICIENT)) :
+            ///     null;
+
+            return fURI.of(scheme, host, port, path, coefficient, poly, query, templates);
         }
 
         static Map<String, String> parseQuery(final String query) {
@@ -523,10 +591,12 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
                    final List<String> path,
                    final C<?, ?> coefficient,
                    final List<String> poly,
-                   final Map<String, String> query) {
-        if (null != poly && !poly.isEmpty()) {
+                   final Map<String, String> query,
+                   final List<Tuple.Pair<Component, String>> templates) {
+        if (null != templates && !templates.isEmpty())
+            return new SAPPCQTfURI(scheme, host, port, path, poly, coefficient, query, templates);
+        if (null != poly && !poly.isEmpty())
             return new SAPPCQfURI(scheme, host, port, path, poly, coefficient, query);
-        }
         if (null != coefficient && !coefficient.isOne()) {
             if (!query.isEmpty()) {
                 if (null != poly && !poly.isEmpty())

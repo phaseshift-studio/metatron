@@ -35,6 +35,10 @@
     --maqua: #0082ae;
 }
 
+.stemblock {
+    color: var(--white);
+}
+
 .float-left-code {
     float: left;
     background-color: transparent;
@@ -1800,7 +1804,8 @@ mtron&gt; 1.plus(plus(2))    ​3​
 ==&gt;4
 ​
 mtron&gt; 1.map(bool::T)     ​4​
-==&gt;fail::[unable to convert mfail to code][...]@/sys/fail/198
+==&gt;fail::[classcastexception: null
+  ][...]@/sys/fail/3632
 ​
 mtron&gt; 1.as(bool::T)      ​5​
 ==&gt;true
@@ -1859,24 +1864,57 @@ lhs =&gt; inst(arg1,...,argN){ inst1...instN } =&gt; rhs
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">​
 mtron&gt; *&lt;+/#/&gt;
-==&gt;m/1/2=&gt;6
 ==&gt;boot/script/perl=&gt;/usr/bin/perl
 ==&gt;m/1/1=&gt;5
+==&gt;boot/args/local=&gt;booger
+==&gt;m/1/3=&gt;7
+==&gt;boot/peers/1=&gt;&lt;ws://127.0.0.1:7777&gt;
+==&gt;band=&gt;inst?rng=int{?}&amp;dom=int(min=&gt;isa(int::T[is(gt(0))]@nat).else(-100),max=&gt;isa(int::T[is(gt(0))]@nat).else(100)){is(and(gte(*min),lte(*max)))}
+==&gt;personx=&gt;rec::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;personx{*}::T])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]
+==&gt;triple=&gt;inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}
+==&gt;boot/script/python=&gt;/usr/bin/python3
+==&gt;x/a=&gt;1
+==&gt;marko/age=&gt;29
+==&gt;m/1=&gt;[4,5,6,7]
+==&gt;grant=&gt;personx::[
+ name =&gt;'grant',
+ age  =&gt;23,
+ knows=&gt;!*marko]
+==&gt;m/2/0=&gt;8
+==&gt;odd=&gt;int::T[is(mod(2).eq(1))]
+==&gt;boot/args/host=&gt;&lt;ws://0.0.0.0:8999&gt;
+==&gt;m/0/3=&gt;3
+==&gt;m/2/2=&gt;10
+==&gt;m=&gt;[
+  [0,1,2,3],
+  [4,5,6,7],
+  [8,9,10,11]]
+==&gt;fs_prefix=&gt;booger
+==&gt;nat=&gt;int::T[is(gt(0))]
+==&gt;m/0/1=&gt;1
+==&gt;even=&gt;int::T[is(mod(2).eq(0))]
+==&gt;marko/knows=&gt;!*grant
+==&gt;boot/script/sh=&gt;/bin/sh
+==&gt;grant/name=&gt;'grant'
+==&gt;m/1/2=&gt;6
 ==&gt;x=&gt;[
  a=&gt;1,
  b=&gt;[
    c=&gt;2,
    d=&gt;[3,4,5]]]
-==&gt;boot/args/local=&gt;booger
 ==&gt;boot/args/boot=&gt;&lt;/home/killswitch/software/metatron/boot/boot.mtron&gt;
-==&gt;m/1/3=&gt;7
-==&gt;boot/peers/1=&gt;&lt;ws://127.0.0.1:7777&gt;
+==&gt;marko=&gt;personx::[
+ name =&gt;'marko',
+ age  =&gt;29,
+ knows=&gt;!*grant]
 ==&gt;x/b=&gt;[
  c=&gt;2,
  d=&gt;[3,4,5]]
+==&gt;grant/knows=&gt;!*marko
 ==&gt;m/1/0=&gt;4
 ==&gt;boot/peers/0=&gt;ws://localhost:6666
 ==&gt;boot/args/log=&gt;info
+==&gt;grant/age=&gt;23
 ==&gt;boot/peers=&gt;[ws://localhost:6666,&lt;ws://127.0.0.1:7777&gt;]
 ==&gt;boot/args=&gt;[
  host =&gt;&lt;ws://0.0.0.0:8999&gt;,
@@ -1884,31 +1922,24 @@ mtron&gt; *&lt;+/#/&gt;
  log  =&gt;info,
  local=&gt;booger,
  mqtt =&gt;[broker=&gt;&lt;mqtt://chibi.local:1883&gt;]]
-==&gt;boot/script/python=&gt;/usr/bin/python3
 ==&gt;boot/args/mqtt=&gt;[broker=&gt;&lt;mqtt://chibi.local:1883&gt;]
-==&gt;x/a=&gt;1
+==&gt;age=&gt;int::T[is(lt(120))]@nat
 ==&gt;boot/script/mtron=&gt;/bin/mtron
 ==&gt;m/2/3=&gt;11
-==&gt;m/1=&gt;[4,5,6,7]
 ==&gt;m/2=&gt;[8,9,10,11]
 ==&gt;boot/script/zsh=&gt;/bin/zsh
-==&gt;m/2/0=&gt;8
+==&gt;x=&gt;1
+==&gt;marko/name=&gt;'marko'
+==&gt;x=&gt;2
 ==&gt;m/0/2=&gt;2
-==&gt;boot/args/host=&gt;&lt;ws://0.0.0.0:8999&gt;
-==&gt;m/0/3=&gt;3
+==&gt;x=&gt;3
+==&gt;x=&gt;4
 ==&gt;boot/file=&gt;file::&lt;/home/killswitch/software/metatron/boot/boot.mtron?p=rw-rw-r--&gt;@boot/file
-==&gt;m/2/2=&gt;10
 ==&gt;m/0=&gt;[0,1,2,3]
-==&gt;m=&gt;[
-  [0,1,2,3],
-  [4,5,6,7],
-  [8,9,10,11]]
 ==&gt;m/2/1=&gt;9
-==&gt;fs_prefix=&gt;booger
 ==&gt;boot/script/bash=&gt;/bin/bash
 ==&gt;m/0/0=&gt;0
-==&gt;m/0/1=&gt;1
-==&gt;boot/script/sh=&gt;/bin/sh
+==&gt;name=&gt;str::T[split('').merge(count()).is(lt(30))]
 ==&gt;boot/script=&gt;[
  sh    =&gt;/bin/sh,
  bash  =&gt;/bin/bash,
@@ -1916,6 +1947,7 @@ mtron&gt; *&lt;+/#/&gt;
  python=&gt;/usr/bin/python3,
  perl  =&gt;/usr/bin/perl,
  mtron =&gt;/bin/mtron]
+==&gt;abc=&gt;12
 ​</code></pre>
 </div>
 </div>
@@ -2168,7 +2200,7 @@ mtron&gt; 15.band(10,20)              ​4​
 mtron&gt; -15.band(-20,-10)           ​5​
 ​
 mtron&gt; band -&gt; |inst?int{?}&lt;=int(min=&gt;?nat::T.else(fail()),max=&gt;?nat::T.else(fail())){ is(and(gte(*min),lte(*max))) }
-==&gt;fail::[fail() is not a fail::T][...]@/sys/fail/230
+==&gt;fail::[fail() is not a fail::T][...]@/sys/fail/3658
 ​
 mtron&gt; 15.band(10,20)              ​6​
 ==&gt;15
@@ -2230,18 +2262,18 @@ Finally, a degenerate anonymous <code>inst</code> with no specified variable fra
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">​
 mtron&gt; 10.(min=&gt;2,max=&gt;8){ is(and(gte(*min),lte(*max))) }                ​1​
 ==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/244
+	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/3672
 ​
 mtron&gt; 10.(min=&gt;minus(1),max=&gt;plus(1)){ is(and(gte(*min),lte(*max))) }   ​2​
 ==&gt;10
 ​
 mtron&gt; 10.(min=&gt;2,max=&gt;8){ is(and(gte(*bad_min),lte(*bad_max))) }        ​3​
 ==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/246
+	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/3674
 ​
 mtron&gt; 10.(){ is(and(gte(*min),lte(*max))) }                             ​4​
 ==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/248
+	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/3676
 ​
 mtron&gt; 10.is(and(gte(minus(1)),lte(plus(1))))                            ​5​
 ==&gt;10
@@ -2283,13 +2315,13 @@ mtron&gt; 10.is(and(gte(minus(1)),lte(plus(1))))                            ​5
 mtron&gt; is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;_)[mod(*by).eq(0)]
 ==&gt;fail::[is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;_)[mod(*by).eq(0)]
                                       ^ end of input expected
-][...]@/sys/fail/250
+][...]@/sys/fail/3678
 ​
 mtron&gt; 10.is_divisible(2)
-==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/252
+==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/3680
 ​
 mtron&gt; 10.is_divisible('abc')
-==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/254
+==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/3682
 ​</code></pre>
 </div>
 </div>
@@ -2316,7 +2348,7 @@ mtron&gt; 10.is_divisible('abc')
 mtron&gt; band -&gt; |band?int{?}&lt;=int(min=&gt;_,max=&gt;is(gt(*min)).else(*min.plus(1)))[is(gte(*min)).is(lte(*max))]
 ==&gt;fail::[band -&gt; |band?int{?}&lt;=int(min=&gt;_,max=&gt;is(gt(*min)).else(*min.plus(1)))[is(gte(*min)).is(lte(*max))]
                                                                       ^ end of input expected
-][...]@/sys/fail/256
+][...]@/sys/fail/3684
 ​
 mtron&gt; 2.band(min=&gt;1,max=&gt;1)                 ​1​
 ​</code></pre>
@@ -2341,13 +2373,13 @@ mtron&gt; 2.band(min=&gt;1,max=&gt;1)                 ​1​
 mtron&gt; is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;is(neq(0)).else(print('error').map(1)))[mod(*by).eq(0)]
 ==&gt;fail::[is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;is(neq(0)).else(print('error').map(1)))[mod(*by).eq(0)]
                                       ^ end of input expected
-][...]@/sys/fail/258
+][...]@/sys/fail/3686
 ​
 mtron&gt; 10.is_divisible(2)
-==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/260
+==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/3688
 ​
 mtron&gt; 10.is_divisible('abc')
-==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/262
+==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/3690
 ​</code></pre>
 </div>
 </div>
@@ -2399,10 +2431,10 @@ This ensures the uri <code>triple</code> is not applied to the <code>inst</code>
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">​
 mtron&gt; triple -&gt; inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}
-==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}]][...]@/sys/fail/264
+==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}]][...]@/sys/fail/3692
 ​
 mtron&gt; *triple
-==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}]][...]@/sys/fail/264
+==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}]][...]@/sys/fail/3692
 ​</code></pre>
 </div>
 </div>
@@ -2782,77 +2814,77 @@ mtron&gt; */m/llm/model
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">​
 mtron&gt; *ollama:+
 ==&gt;model::[
- size    =&gt;gB::0.00,
- provider=&gt;!*/sys/space/ollama,
  think   =&gt;[=&gt;],
  name    =&gt;&lt;deepseek-v3.2:cloud&gt;,
- skill   =&gt;[completion,tools,thinking]]@&lt;ollama:deepseek-v3.2:cloud&gt;
-==&gt;model::[
+ skill   =&gt;[completion,tools,thinking],
  size    =&gt;gB::0.00,
- provider=&gt;!*/sys/space/ollama,
+ provider=&gt;!*/sys/space/ollama]@&lt;ollama:deepseek-v3.2:cloud&gt;
+==&gt;model::[
  think   =&gt;[=&gt;],
  name    =&gt;&lt;minimax-m2.5:cloud&gt;,
- skill   =&gt;[completion,tools,thinking]]@&lt;ollama:minimax-m2.5:cloud&gt;
+ skill   =&gt;[completion,tools,thinking],
+ size    =&gt;gB::0.00,
+ provider=&gt;!*/sys/space/ollama]@&lt;ollama:minimax-m2.5:cloud&gt;
 ==&gt;model::[
- size    =&gt;gB::17.71,
- provider=&gt;!*/sys/space/ollama,
  think   =&gt;[=&gt;],
  name    =&gt;&lt;glm-4.7-flash:latest&gt;,
- skill   =&gt;[completion,tools,thinking]]@&lt;ollama:glm-4.7-flash:latest&gt;
+ skill   =&gt;[completion,tools,thinking],
+ size    =&gt;gB::17.71,
+ provider=&gt;!*/sys/space/ollama]@&lt;ollama:glm-4.7-flash:latest&gt;
 ==&gt;model::[
- size    =&gt;gB::0.59,
- provider=&gt;!*/sys/space/ollama,
  think   =&gt;noobj,
  name    =&gt;tinyllama:latest,
- skill   =&gt;[completion]]@ollama:tinyllama:latest
+ skill   =&gt;[completion],
+ size    =&gt;gB::0.59,
+ provider=&gt;!*/sys/space/ollama]@ollama:tinyllama:latest
 ==&gt;model::[
- size    =&gt;gB::12.85,
- provider=&gt;!*/sys/space/ollama,
  think   =&gt;[=&gt;],
  name    =&gt;gpt-oss:latest,
- skill   =&gt;[completion,tools,thinking]]@ollama:gpt-oss:latest
+ skill   =&gt;[completion,tools,thinking],
+ size    =&gt;gB::12.85,
+ provider=&gt;!*/sys/space/ollama]@ollama:gpt-oss:latest
 ==&gt;model::[
- size    =&gt;gB::4.87,
- provider=&gt;!*/sys/space/ollama,
  think   =&gt;[=&gt;],
  name    =&gt;qwen3:8b,
- skill   =&gt;[completion,tools,thinking]]@ollama:qwen3:8b
+ skill   =&gt;[completion,tools,thinking],
+ size    =&gt;gB::4.87,
+ provider=&gt;!*/sys/space/ollama]@ollama:qwen3:8b
 ==&gt;model::[
- size    =&gt;gB::8.37,
- provider=&gt;!*/sys/space/ollama,
  think   =&gt;noobj,
  name    =&gt;deepcoder:latest,
- skill   =&gt;[completion]]@ollama:deepcoder:latest
+ skill   =&gt;[completion],
+ size    =&gt;gB::8.37,
+ provider=&gt;!*/sys/space/ollama]@ollama:deepcoder:latest
 ==&gt;model::[
- size    =&gt;gB::0.72,
- provider=&gt;!*/sys/space/ollama,
  think   =&gt;noobj,
  name    =&gt;deepseek-coder:latest,
- skill   =&gt;[completion]]@ollama:deepseek-coder:latest
+ skill   =&gt;[completion],
+ size    =&gt;gB::0.72,
+ provider=&gt;!*/sys/space/ollama]@ollama:deepseek-coder:latest
 ==&gt;model::[
- size    =&gt;gB::4.34,
- provider=&gt;!*/sys/space/ollama,
  think   =&gt;noobj,
  name    =&gt;llama3-groq-tool-use:latest,
- skill   =&gt;[completion,tools]]@ollama:llama3-groq-tool-use:latest
+ skill   =&gt;[completion,tools],
+ size    =&gt;gB::4.34,
+ provider=&gt;!*/sys/space/ollama]@ollama:llama3-groq-tool-use:latest
 ==&gt;model::[
- size    =&gt;gB::4.41,
- provider=&gt;!*/sys/space/ollama,
  think   =&gt;noobj,
  name    =&gt;llava:latest,
- skill   =&gt;[completion,vision]]@ollama:llava:latest
+ skill   =&gt;[completion,vision],
+ size    =&gt;gB::4.41,
+ provider=&gt;!*/sys/space/ollama]@ollama:llava:latest
 ==&gt;model::[
- size    =&gt;gB::48.19,
- provider=&gt;!*/sys/space/ollama,
  think   =&gt;noobj,
  name    =&gt;qwen3-coder-next:latest,
- skill   =&gt;[completion,tools]]@ollama:qwen3-coder-next:latest
+ skill   =&gt;[completion,tools],
+ size    =&gt;gB::48.19,
+ provider=&gt;!*/sys/space/ollama]@ollama:qwen3-coder-next:latest
 ==&gt;model::[
- size    =&gt;gB::4.87,
- provider=&gt;!*/sys/space/ollama,
  think   =&gt;[=&gt;],
  name    =&gt;qwen3:latest,
- skill   =&gt;[completion,tools,thinking]]@ollama:qwen3:latest
+ skill   =&gt;[completion,tools,thinking],
+ size    =&gt;gB::4.87,
+ provider=&gt;!*/sys/space/ollama]@ollama:qwen3:latest
 ​</code></pre>
 </div>
 </div>
@@ -2990,7 +3022,7 @@ mtron&gt; 1.plus(b).plus(3).mult(5)                 ​1​
 ==&gt;fail::[unable to determine inst function:
 	1           =&gt; plus(b)      | [inst]
 	int::T      =&gt; #::T         |  \_dom
-	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/292
+	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/3720
 ​
 mtron&gt; 1.plus(b).plus(3).catch(2).mult(5)        ​2​
 ==&gt;10
@@ -3052,93 +3084,102 @@ mtron&gt; 1.plus(b)                  ​1​
 ==&gt;fail::[unable to determine inst function:
 	1           =&gt; plus(b)      | [inst]
 	int::T      =&gt; #::T         |  \_dom
-	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/348
+	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/3776
 ​
 mtron&gt; */sys/fail/+               ​2​
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/338
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/337
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/3756
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/3755
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/3750
 ==&gt;fail::[apply failure:
 	[lhs]    | b
 	 \_type  | /m/uri
 	  \_pred | []
 	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
 	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/323
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/322
+	 \_args  | [,]][...]@/sys/fail/3751
 ==&gt;fail::[apply failure:
 	[lhs]    | b
 	 \_type  | /m/uri
 	  \_pred | []
 	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
 	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/324
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/321
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/332
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/331
+	 \_args  | [,]][...]@/sys/fail/3752
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/3765
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/3766
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/3760
 ==&gt;fail::[apply failure:
 	[lhs]    | b
 	 \_type  | /m/uri
 	  \_pred | []
 	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
 	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/342
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/340
+	 \_args  | [,]][...]@/sys/fail/3758
 ==&gt;fail::[apply failure:
 	[lhs]    | b
 	 \_type  | /m/uri
 	  \_pred | []
 	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
 	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/341
+	 \_args  | [,]][...]@/sys/fail/3757
 ==&gt;fail::[apply failure:
 	[lhs]    | b
 	 \_type  | /m/uri
 	  \_pred | []
 	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
 	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/329
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/328
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/327
+	 \_args  | [,]][...]@/sys/fail/3770
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/3759
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/3753
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/3767
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/3772
+==&gt;fail::[apply failure:
+	[lhs]    | b
+	 \_type  | /m/uri
+	  \_pred | []
+	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
+	 \_dom   | uri::T
+	 \_args  | [,]][...]@/sys/fail/3764
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/3762
+==&gt;fail::[apply failure:
+	[lhs]    | b
+	 \_type  | /m/uri
+	  \_pred | []
+	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
+	 \_dom   | uri::T
+	 \_args  | [,]][...]@/sys/fail/3763
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/3754
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/3761
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/3771
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/3749
+==&gt;fail::[apply failure:
+	[lhs]    | b
+	 \_type  | /m/uri
+	  \_pred | []
+	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
+	 \_dom   | uri::T
+	 \_args  | [,]][...]@/sys/fail/3769
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/3768
 ==&gt;fail::[unable to determine inst function:
 	1           =&gt; plus(b)      | [inst]
 	int::T      =&gt; #::T         |  \_dom
-	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/348
+	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/3775
 ==&gt;fail::[unable to determine inst function:
 	1           =&gt; plus(b)      | [inst]
 	int::T      =&gt; #::T         |  \_dom
-	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/347
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/326
-==&gt;fail::[unable to evaluate inst: plus(b)][...]@/sys/fail/345
-==&gt;fail::[unable to evaluate inst: plus(b)][...]@/sys/fail/346
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/333
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/343
-==&gt;fail::[apply failure:
-	[lhs]    | b
-	 \_type  | /m/uri
-	  \_pred | []
-	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
-	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/335
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/334
-==&gt;fail::[apply failure:
-	[lhs]    | b
-	 \_type  | /m/uri
-	  \_pred | []
-	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
-	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/330
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/344
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/325
-==&gt;fail::[apply failure:
-	[lhs]    | b
-	 \_type  | /m/uri
-	  \_pred | []
-	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
-	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/336
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/339
+	int::T     X=&gt; [b]          |  \_args][...]@/sys/fail/3776
+==&gt;fail::[unable to evaluate inst: plus(b)][...]@/sys/fail/3773
+==&gt;fail::[unable to evaluate inst: plus(b)][...]@/sys/fail/3774
 ​
 mtron&gt; */sys/fail/+.catch(_)      ​3​
+==&gt;fail{8}::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}]
+==&gt;fail{8}::[apply failure:
+	[lhs]    | b
+	 \_type  | /m/uri
+	  \_pred | []
+	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
+	 \_dom   | uri::T
+	 \_args  | [,]]
+    \_fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}]
 ==&gt;fail{8}::[unable to convert uri::T to bytes]
     \_fail::[apply failure:
 	[lhs]    | b
@@ -3148,15 +3189,6 @@ mtron&gt; */sys/fail/+.catch(_)      ​3​
 	 \_dom   | uri::T
 	 \_args  | [,]]
     \_fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}]
-==&gt;fail{8}::[apply failure:
-	[lhs]    | b
-	 \_type  | /m/uri
-	  \_pred | []
-	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
-	 \_dom   | uri::T
-	 \_args  | [,]]
-    \_fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}]
-==&gt;fail{8}::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}]
 ==&gt;fail{2}::[unable to determine inst function:
 	1           =&gt; plus(b)      | [inst]
 	int::T      =&gt; #::T         |  \_dom
@@ -3199,7 +3231,7 @@ mtron&gt; *cause                 ​1​
 ​
 mtron&gt; 1+b.catch(cause())     ​2​
 ==&gt;fail::[rhs does not match inst range:
-	fail::[unable to evaluate inst: plus(b)]=&gt;(X=&gt;int{*}::T)][...]@/sys/fail/378
+	fail::[unable to evaluate inst: plus(b)]=&gt;(X=&gt;int{*}::T)][...]@/sys/fail/3806
 ​</code></pre>
 </div>
 </div>
@@ -3318,11 +3350,11 @@ mtron&gt; nat::10
 ==&gt;nat::10
 ​
 mtron&gt; nat::-10
-==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/444
+==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/3872
 ​
 mtron&gt; int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/450
+  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/3878
 ​</code></pre>
 </div>
 </div>
@@ -3422,11 +3454,11 @@ mtron&gt; nat::10
 ==&gt;nat::10
 ​
 mtron&gt; nat::-10
-==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/464
+==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/3892
 ​
 mtron&gt; int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/470
+  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/3898
 ​</code></pre>
 </div>
 </div>
@@ -3458,11 +3490,11 @@ mtron&gt; age:125
 ​
 mtron&gt; nat:125.as(age::T)
 ==&gt;fail::[nat:125 is not a is(lt(120))
-  nat:125=&gt;(==&gt;is(lt(120)))][...]@/sys/fail/512
+  nat:125=&gt;(==&gt;is(lt(120)))][...]@/sys/fail/3940
 ​
 mtron&gt; 125.as(nat::T).as(age::T)
 ==&gt;fail::[nat::125 is not a is(lt(120))
-  nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/518
+  nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/3946
 ​</code></pre>
 </div>
 </div>
@@ -3475,7 +3507,7 @@ mtron&gt; name   -&gt; str::T[-&lt;''&gt;-count().?&lt;30]
 mtron&gt; personx -&gt; rec::T[?[name  =&gt; str::T,
                            age   =&gt; age::T,
                            knows =&gt; personx{*}::T]]
-==&gt;rec::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;personx{*}::T])]
+==&gt;rec::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;rec{*}::T[isa([name=&gt;str::T,age=&gt;nat::T[is(lt(120))]@age,knows=&gt;personx{*}::T])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]@personx{*}])]
 ​
 mtron&gt; marko -&gt; personx::[name=&gt;'marko',age=&gt;29,knows=&gt;!*grant]
 ==&gt;personx::[
@@ -3757,144 +3789,104 @@ mtron&gt; *q
   └─────────────────────────────────────────⮞ scheme</code></pre>
 </div>
 </div>
-<table class="tableblock frame-all grid-all stretch table-bordered small center">
+<table class="tableblock frame-all grid-all stretch noborder">
 <colgroup>
-<col style="width: 28.5714%;">
-<col style="width: 28.5714%;">
-<col style="width: 42.8572%;">
+<col style="width: 58.3333%;">
+<col style="width: 41.6667%;">
 </colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-left valign-top"><span class="red">coefficient</span></th>
-<th class="tableblock halign-left valign-top"><span class="red">shorthand</span></th>
-<th class="tableblock halign-left valign-top"><span class="red">name</span></th>
-</tr>
-</thead>
 <tbody>
 <tr>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>{0,0}</p>
+<p>metatron was designed to support the creation and manipulation of <em>abstract data types</em> in a manner that affords the user a concise, fluid means of maneuvering through a heterogeneous set of data structures, where each is embedded within and across any number of spaces, while being respectfully agnostic to each space&#8217;s espoused perspective on the data maintained therein: e.g., key/value, document, relational, vector, graph, file system, and the various nooks and crannies between.</p>
+</div>
+<div class="paragraph">
+<p>metatron&#8217;s URI addressing scheme makes it possible to <em>embed</em> arbitrary data types into a metatron-specific construct called "space". A space is where URI/obj pairs are written to and read from. Coupling occurs when a URI references an  obj.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">a -&gt; 1  [-- write 1 to a --]
+*a      [-- read 1 from a --]</code></pre>
+</div>
 </div></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>{0}</p>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">               ┌─────── a/b
+ ┌─────────────┼────────────── b
+ │     ┌───────┼─────────── a/b/c
+ │     │   ┌───┼─── http://localhost:8080
+ │   ┌─▼┐  │  ┌▼┐
+┌▼─┐ │  │  │  └─┘
+│  │ └──┘┌─▼┐    ┌──┐
+└──┘  ┌─┐└──┘ ┌─┐│  ◄──────── a.local
+ ┌────►─┘     └▲┘└──┘
+ │ ┌─┐ ┌─◄┐┌──┐│    ┌◄─────── xyz
+ │ └▲┘ └─┘││  ││    └┘
+ │  │ ┌──┐│└─▲┘└─────── mtron:ab
+ │  │ │  ││  └───────────── z
+ │  │ └─▲┘└────────────────── /a/b
+ │  │   └────────────── xx:host.com/abc
+ │  └───────────────────────── yy
+ └────────────────────── xx</code></pre>
+</div>
 </div></div></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">noobj</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>{1,1}</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>{1} or</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">an-obj</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>{-1,-1}</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>{-1}</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">anti-obj</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>{±n,±n}</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>{±n}</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">exactly ±n</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>{±n,±m}</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"></div></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">between ±n and ±m</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>{0,1}</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>{?}</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">maybe</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>{1,}</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>{+}</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">some</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>{0,}</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>{*}</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">maybe some</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>{-,+}</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>{**}</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">polar maybe some</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>{-1,1}</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>{??}</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">polar maybe</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>{-1,0}</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>{-?}</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">anti-maybe</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>{,-1}</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>{-}</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">anti-some</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>{,0}</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>{-*}</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">anti-maybe some</p></td>
 </tr>
 </tbody>
 </table>
-<h3 id="_spatial_embeddings" class="discrete">spatial embeddings</h3>
 <div class="paragraph">
-<p><span class="orange">m</span>​<span class="yellow">e</span>​<strong class="fuchsia">T</strong>​<strong class="green">a</strong>​<strong class="red">T</strong>​<span class="aqua">R</span>​<strong class="blue">o</strong>​<strong class="lime">n</strong>​ was designed to support the creation and manipulation of <em>abstract data types</em> in a compact, fluid manner so as to allow the user to move smoothly between <em>multiple models</em> across different spaces, each espousing a different perspective on the data their maintain: e.g., key/value, document, relational, vector, graph, and the various nooks and crannies between.</p>
+<p>This means that any mono obj (<code>bool</code>, <code>int</code>, etc.), any poly obj such as a <code>rec</code> composed of nested key/value obj pairs or a <code>lst</code> composed of an ordered sequence of objs, and any stream of objs can all be referenced by a single uri.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">​
+mtron&gt; abc -&gt; 12                          ​1​
+==&gt;12
+​
+mtron&gt; /usr/a -&gt; [1,2.0,'text']           ​2​
+==&gt;[1,2.00,'text']
+​
+mtron&gt; /usr/b/c/d -&gt; [e=&gt;[f=&gt;g, h=&gt;i]]    ​3​
+==&gt;[
+ e=&gt;[f=&gt;g,h=&gt;i]]
+​
+mtron&gt; x -&gt; {1,2,3,4}                     ​4​
+==&gt;1
+==&gt;2
+==&gt;3
+==&gt;4
+​</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>the uri <code>abc</code> references the mono <code>int</code> 12.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>the uri <code>/usr/a</code> references a poly <code>lst</code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>the uri <code>/usr/b/c/d</code> references a nested poly <code>rec</code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>the uri <code>x</code> references an <code>obj</code> stream.</td>
+</tr>
+</table>
 </div>
 <div class="paragraph">
-<p><span class="blue">m</span>​<strong class="green">E</strong>​<span class="orange">t</span>​<strong class="yellow">a</strong>​<span class="aqua">T</span>​<strong class="lime">r</strong>​<span class="fuchsia">o</span>​<span class="red">N</span>​'s URI addressing scheme makes it possible to <em>embed</em> arbitrary data types into a space.
-This section will explore the following considerations when designing a <em>multi-model abstract data type</em>.</p>
+<p>This bag of binary relations is metatron&#8217;s global, distributed memory system.</p>
+</div>
+<div class="stemblock center">
+<div class="content">
+\[\tt{SPACE} \in \left(\tt{URI} \times \tt{OBJ}\right)\]
+</div>
+</div>
+<h3 id="_spatial_embeddings" class="discrete">spatial embeddings</h3>
+<div class="paragraph">
+<p>The following considerations apply when performing</p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
@@ -3909,12 +3901,11 @@ This section will explore the following considerations when designing a <em>mult
 </li>
 </ol>
 </div>
-<h3 id="_spatial_consideration_when_embedding" class="discrete">spatial consideration when embedding</h3>
 <div class="paragraph">
 <p>A <em>matrix</em> is an \$n \times m\$ data structure composed of \$n\$ vectors/row, each with \$m\$ elements/columns. A relational database <em>table</em> is an example of a matrix, where the entries typically span numeric and non-numeric data types.
 Three general approaches to embedding a matrix or table into a space are presented below, where each makes different space/time tradeoffs.</p>
 </div>
-<table class="tableblock frame-none grid-cols stretch">
+<table class="tableblock frame-none grid-cols stretch center">
 <colgroup>
 <col style="width: 27.7777%;">
 <col style="width: 27.7777%;">
@@ -4181,6 +4172,138 @@ Once found, it then traverses within the match to resolve the remaining path seg
 </tr>
 </tbody>
 </table>
+<h3 id="_coefficients" class="discrete">coefficients</h3>
+<table class="tableblock frame-all grid-all stretch table-bordered small center">
+<colgroup>
+<col style="width: 28.5714%;">
+<col style="width: 28.5714%;">
+<col style="width: 42.8572%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top"><span class="red">coefficient</span></th>
+<th class="tableblock halign-left valign-top"><span class="red">shorthand</span></th>
+<th class="tableblock halign-left valign-top"><span class="red">name</span></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{0,0}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{0}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">noobj</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{1,1}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{1} or</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">an-obj</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{-1,-1}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{-1}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">anti-obj</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{±n,±n}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{±n}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">exactly ±n</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{±n,±m}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">between ±n and ±m</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{0,1}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{?}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">maybe</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{1,}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{+}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">some</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{0,}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{*}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">maybe some</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{-,+}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{**}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">polar maybe some</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{-1,1}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{??}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">polar maybe</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{-1,0}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{-?}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">anti-maybe</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{,-1}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{-}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">anti-some</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{,0}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>{-*}</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">anti-maybe some</p></td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="collapse position-relative" id="card-14">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-14" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
@@ -4214,22 +4337,22 @@ where \(E\) is typically a <a href="https://en.wikipedia.org/wiki/Partial_functi
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">​
 mtron&gt; *g:V/1                                ​1​
-==&gt;fail::[no active space supports pattern g:V/1][...]@/sys/fail/46
+==&gt;fail::[no active space supports pattern g:V/1][...]@/sys/fail/3480
 ​
 mtron&gt; *g:V/1.outE()                         ​2​
-==&gt;fail::[no active space supports pattern g:V/1][...]@/sys/fail/52
+==&gt;fail::[no active space supports pattern g:V/1][...]@/sys/fail/3486
 ​
 mtron&gt; *g:V/1.outE().inV()                   ​3​
-==&gt;fail::[no active space supports pattern g:V/1][...]@/sys/fail/58
+==&gt;fail::[no active space supports pattern g:V/1][...]@/sys/fail/3492
 ​
 mtron&gt; *g:V/1.out()                          ​4​
-==&gt;fail::[no active space supports pattern g:V/1][...]@/sys/fail/64
+==&gt;fail::[no active space supports pattern g:V/1][...]@/sys/fail/3498
 ​
 mtron&gt; *g:V/1.out(knows).out(created)        ​5​
-==&gt;fail::[no active space supports pattern g:V/1][...]@/sys/fail/70
+==&gt;fail::[no active space supports pattern g:V/1][...]@/sys/fail/3504
 ​
 mtron&gt; *g:V/1.out(knows).out(created)&gt;&gt;name  ​6​
-==&gt;fail::[no active space supports pattern g:V/1][...]@/sys/fail/76
+==&gt;fail::[no active space supports pattern g:V/1][...]@/sys/fail/3510
 ​</code></pre>
 </div>
 </div>
@@ -4379,25 +4502,25 @@ The following examples demonstrate selection and filtering using multi-segment u
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">​
 mtron&gt; *g:V/1&gt;&gt;=[address/home/city =&gt; 'santa fe',
                  address/work/city =&gt; 'nomansland']                    ​1​
-==&gt;fail::[no active space supports pattern g:V/1][...]@/sys/fail/82
+==&gt;fail::[no active space supports pattern g:V/1][...]@/sys/fail/3516
 ​
 mtron&gt; *g:V/1/address/home/city                                        ​2​
-==&gt;fail::[no active space supports pattern g:V/1/address/home/city][...]@/sys/fail/88
+==&gt;fail::[no active space supports pattern g:V/1/address/home/city][...]@/sys/fail/3522
 ​
 mtron&gt; *g:V/+.?==[address/+/city =&gt; 'santa fe']                        ​3​
-==&gt;fail::[no active space supports pattern g:V/+][...]@/sys/fail/94
+==&gt;fail::[no active space supports pattern g:V/+][...]@/sys/fail/3528
 ​
 mtron&gt; *g:V/+.==[address/+/city/ =&gt; _]                                 ​4​
-==&gt;fail::[no active space supports pattern g:V/+][...]@/sys/fail/100
+==&gt;fail::[no active space supports pattern g:V/+][...]@/sys/fail/3534
 ​
 mtron&gt; *g:V/+.&gt;&gt;address/+/city/                                        ​5​
-==&gt;fail::[no active space supports pattern g:V/+][...]@/sys/fail/106
+==&gt;fail::[no active space supports pattern g:V/+][...]@/sys/fail/3540
 ​
 mtron&gt; *g:V/+.&gt;&gt;address/+/city                                         ​6​
-==&gt;fail::[no active space supports pattern g:V/+][...]@/sys/fail/112
+==&gt;fail::[no active space supports pattern g:V/+][...]@/sys/fail/3546
 ​
 mtron&gt; *g:V/+.&gt;&gt;address/#                                              ​7​
-==&gt;fail::[no active space supports pattern g:V/+][...]@/sys/fail/118
+==&gt;fail::[no active space supports pattern g:V/+][...]@/sys/fail/3552
 ​</code></pre>
 </div>
 </div>
@@ -4442,22 +4565,22 @@ mtron&gt; *g:V/+.&gt;&gt;address/#                                              
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">​
 mtron&gt; *g:V/1==[_=&gt;_]                                                  ​1​
-==&gt;fail::[no active space supports pattern g:V/1][...]@/sys/fail/136
+==&gt;fail::[no active space supports pattern g:V/1][...]@/sys/fail/3570
 ​
 mtron&gt; *g:V/1&gt;&gt;=[address=&gt;[
                     home =&gt; [city =&gt;'santa fe',
                              state=&gt;NM],
                     work =&gt; !*&lt;../home&gt;]]                              ​2​
-==&gt;fail::[no active space supports pattern g:V/1][...]@/sys/fail/142
+==&gt;fail::[no active space supports pattern g:V/1][...]@/sys/fail/3576
 ​
 mtron&gt; *g:V/1/address/home/city                                        ​3​
-==&gt;fail::[no active space supports pattern g:V/1/address/home/city][...]@/sys/fail/148
+==&gt;fail::[no active space supports pattern g:V/1/address/home/city][...]@/sys/fail/3582
 ​
 mtron&gt; *g:V/+.?==[address=&gt;[_ =&gt; [state=&gt;NM]]]                         ​4​
-==&gt;fail::[no active space supports pattern g:V/+][...]@/sys/fail/154
+==&gt;fail::[no active space supports pattern g:V/+][...]@/sys/fail/3588
 ​
 mtron&gt; *g:V/+.?==[address=&gt;[_ =&gt; [state=&gt;NM]]].&gt;&gt;address/+/city        ​5​
-==&gt;fail::[no active space supports pattern g:V/+][...]@/sys/fail/160
+==&gt;fail::[no active space supports pattern g:V/+][...]@/sys/fail/3594
 ​</code></pre>
 </div>
 </div>
@@ -4555,7 +4678,7 @@ mtron&gt; *g:V/+.?==[address=&gt;[_ =&gt; [state=&gt;NM]]].&gt;&gt;address/+/cit
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">​
 mtron&gt; *g:V/1
-==&gt;fail::[no active space supports pattern g:V/1][...]@/sys/fail/166
+==&gt;fail::[no active space supports pattern g:V/1][...]@/sys/fail/3600
 ​
 mtron&gt; *acme:customers/357
 ==&gt;[
@@ -4571,16 +4694,16 @@ mtron&gt; *acme:customers/357
  creditLimit           =&gt;77700.00]
 ​
 mtron&gt; *g:V/1.addE(consulted,acme:customers/357)
-==&gt;fail::[no active space supports pattern g:V/1][...]@/sys/fail/172
+==&gt;fail::[no active space supports pattern g:V/1][...]@/sys/fail/3606
 ​
 mtron&gt; *g:V/1&gt;&gt;consulted
-==&gt;fail::[no active space supports pattern g:V/1][...]@/sys/fail/178
+==&gt;fail::[no active space supports pattern g:V/1][...]@/sys/fail/3612
 ​
 mtron&gt; *g:V/1&gt;&gt;consulted&gt;&gt;salesRepEmployeeNumber
-==&gt;fail::[no active space supports pattern g:V/1][...]@/sys/fail/184
+==&gt;fail::[no active space supports pattern g:V/1][...]@/sys/fail/3618
 ​
 mtron&gt; *g:V/1&gt;&gt;consulted&gt;&gt;salesRepEmployeeNumber&gt;&gt;reportsTo
-==&gt;fail::[no active space supports pattern g:V/1][...]@/sys/fail/190
+==&gt;fail::[no active space supports pattern g:V/1][...]@/sys/fail/3624
 ​</code></pre>
 </div>
 </div></div></td>
@@ -4771,15 +4894,31 @@ mtron&gt; x -&gt; [a=&gt;1, b=&gt;[c=&gt;2, d=&gt;[3,4,5]]]
    d=&gt;[3,4,5]]]
 ​
 mtron&gt; *x.&gt;&gt;b
-==&gt;[
+==&gt;{7}[
  c=&gt;2,
  d=&gt;[3,4,5]]
+==&gt;fail{6}::[classcastexception: null
+  ][...]@/sys/fail/3368
+==&gt;fail{6}::[classcastexception: null
+  ][...]@/sys/fail/3374
+==&gt;fail{6}::[classcastexception: null
+  ][...]@/sys/fail/3380
+==&gt;fail{6}::[classcastexception: null
+  ][...]@/sys/fail/3386
 ​
 mtron&gt; *x.&gt;&gt;b&gt;&gt;d
-==&gt;[3,4,5]
+==&gt;{7}[3,4,5]
+==&gt;fail{6}::[classcastexception: null
+  ][...]@/sys/fail/3392
+==&gt;fail{6}::[classcastexception: null
+  ][...]@/sys/fail/3398
+==&gt;fail{6}::[classcastexception: null
+  ][...]@/sys/fail/3404
+==&gt;fail{6}::[classcastexception: null
+  ][...]@/sys/fail/3410
 ​
 mtron&gt; *x.&gt;&gt;b&gt;&gt;d&gt;&gt;1
-==&gt;4
+==&gt;fail::[mAcHinE fAileD][...]@/sys/fail/3440
 ​</code></pre>
 </div>
 </div>
@@ -4790,9 +4929,7 @@ mtron&gt; *x.&gt;&gt;b&gt;&gt;d&gt;&gt;1
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">​
 mtron&gt; *x.&gt;&gt;b&gt;&gt;d.&lt;&lt;
-==&gt;[
- c=&gt;2,
- d=&gt;[3,4,5]]
+==&gt;fail::[MaCHinE faIlEd][...]@/sys/fail/3470
 ​</code></pre>
 </div>
 </div>
@@ -4832,7 +4969,7 @@ mtron&gt; "a b c".-&lt;' '.map(capitalize).&gt;-','
 ==&gt;fail::[unable to determine inst function:
 	capitalize  =&gt; merge(',')   | [inst]
 	uri::T      =&gt; #::T         |  \_dom
-	uri::T     X=&gt; [',']        |  \_args][...]@/sys/fail/34
+	uri::T     X=&gt; [',']        |  \_args][...]@/sys/fail/3474
 ​</code></pre>
 </div>
 </div>

@@ -12,46 +12,79 @@ file://domain.local:22/usr/data/abc{*}?sub
   └─────────────────────────────────────────⮞ scheme
 ----
 
-[cols="2a,2a,3",separator=🧱,options=header,role="table-bordered small center"]
+[cols="7a,5a",separator=🧱,role=noborder]
 |===
-🧱 [.red]#coefficient# 🧱 [.red]#shorthand# 🧱 [.red]#name#
-🧱 {0,0}       🧱 {0}       🧱 noobj
-🧱 {1,1}       🧱 {1} or    🧱 an-obj
-🧱 {-1,-1}     🧱 {-1}      🧱 anti-obj
-🧱 {±n,±n}     🧱 {±n}      🧱 exactly ±n
-🧱 {±n,±m}     🧱           🧱  between ±n and ±m
+🧱
 
-🧱 {0,1}       🧱 {?}      🧱 maybe
-🧱 {1,}        🧱 {+}      🧱 some
-🧱 {0,}        🧱 {*}      🧱 maybe some
+metatron was designed to support the creation and manipulation of _abstract data types_ in a manner that affords the user a concise, fluid means of maneuvering through a heterogeneous set of data structures, where each is embedded within and across any number of spaces, while being respectfully agnostic to each space's espoused perspective on the data maintained therein: e.g., key/value, document, relational, vector, graph, file system, and the various nooks and crannies between.
 
-🧱 {-,+}       🧱 {**}     🧱 polar maybe some
-🧱 {-1,1}      🧱 {??}     🧱 polar maybe
+metatron's URI addressing scheme makes it possible to _embed_ arbitrary data types into a metatron-specific construct called "space". A space is where URI/obj pairs are written to and read from. Coupling occurs when a URI references an  obj.
 
-🧱 {-1,0}      🧱 {-?}     🧱 anti-maybe
-🧱 {,-1}       🧱 {-}      🧱 anti-some
-🧱 {,0}        🧱 {-*}     🧱 anti-maybe some
+[source,mtron]
+----
+a -> 1  [-- write 1 to a --]
+*a      [-- read 1 from a --]
+----
+
+🧱
+[source,mtron]
+----
+               ┌─────── a/b       
+ ┌─────────────┼────────────── b       
+ │     ┌───────┼─────────── a/b/c      
+ │     │   ┌───┼─── http://localhost:8080                
+ │   ┌─▼┐  │  ┌▼┐                           
+┌▼─┐ │  │  │  └─┘                           
+│  │ └──┘┌─▼┐    ┌──┐                       
+└──┘  ┌─┐└──┘ ┌─┐│  ◄──────── a.local         
+ ┌────►─┘     └▲┘└──┘                       
+ │ ┌─┐ ┌─◄┐┌──┐│    ┌◄─────── xyz        
+ │ └▲┘ └─┘││  ││    └┘                      
+ │  │ ┌──┐│└─▲┘└─────── mtron:ab            
+ │  │ │  ││  └───────────── z        
+ │  │ └─▲┘└────────────────── /a/b        
+ │  │   └────────────── xx:host.com/abc        
+ │  └───────────────────────── yy       
+ └────────────────────── xx     
+----
+
 |===
+
+This means that any mono obj (`bool`, `int`, etc.), any poly obj such as a `rec` composed of nested key/value obj pairs or a `lst` composed of an ordered sequence of objs, and any stream of objs can all be referenced by a single uri.
+++++
+<!-- 🐖
+abc -> 12                          [-- <1>
+/usr/a -> [1,2.0,'text']           [-- <2>
+/usr/b/c/d -> [e=>[f=>g, h=>i]]    [-- <3>
+x -> {1,2,3,4}                     [-- <4>
+-->
+++++
+<1> the uri `abc` references the mono `int` 12.
+<2> the uri `/usr/a` references a poly `lst`.
+<3> the uri `/usr/b/c/d` references a nested poly `rec`.
+<4> the uri `x` references an `obj` stream.
+
+This bag of binary relations is metatron's global, distributed memory system.
+
+[.center]
+[stem]
+++++
+\tt{SPACE} \in \left(\tt{URI} \times \tt{OBJ}\right)
+++++
 
 [discrete]
 === spatial embeddings
 
-[metatron] was designed to support the creation and manipulation of _abstract data types_ in a compact, fluid manner so as to allow the user to move smoothly between _multiple models_ across different spaces, each espousing a different perspective on the data their maintain: e.g., key/value, document, relational, vector, graph, and the various nooks and crannies between.
-
-[metatron]'s URI addressing scheme makes it possible to _embed_ arbitrary data types into a space.
-This section will explore the following considerations when designing a _multi-model abstract data type_.
+The following considerations apply when performing
 
 . **spatial encodings**
 . **schema encodings**
 . **language encodings**
 
-[discrete]
-=== spatial consideration when embedding
-
 A _matrix_ is an \$n \times m\$ data structure composed of \$n\$ vectors/row, each with \$m\$ elements/columns. A relational database _table_ is an example of a matrix, where the entries typically span numeric and non-numeric data types.
 Three general approaches to embedding a matrix or table into a space are presented below, where each makes different space/time tradeoffs.
 
-[cols="5,5,8",frame=none,subs="+macros",separator=🧱,grid=cols]
+[cols="5,5,8",frame=none,subs="+macros",separator=🧱,grid=cols, role="center"]
 |===
 
 ^a🧱
@@ -181,4 +214,28 @@ The different embeddings also have different space costs, where space is defined
 | [.red]#entry#          | \[O(1)\]       | \[O(n)\]      | \[O(m)\]
 | [.red]#row#            | \[O(n)\]       | \[O(n)\]      | \[O(n+m)\]
 | [.red]#row_column#     | \[O(n+m)\]     | \[O(n+m)\]    | \[O(n+m)\]
+|===
+
+[discrete]
+=== coefficients
+
+[cols="2a,2a,3",separator=🧱,options=header,role="table-bordered small center"]
+|===
+🧱 [.red]#coefficient# 🧱 [.red]#shorthand# 🧱 [.red]#name#
+🧱 {0,0}       🧱 {0}       🧱 noobj
+🧱 {1,1}       🧱 {1} or    🧱 an-obj
+🧱 {-1,-1}     🧱 {-1}      🧱 anti-obj
+🧱 {±n,±n}     🧱 {±n}      🧱 exactly ±n
+🧱 {±n,±m}     🧱           🧱  between ±n and ±m
+
+🧱 {0,1}       🧱 {?}      🧱 maybe
+🧱 {1,}        🧱 {+}      🧱 some
+🧱 {0,}        🧱 {*}      🧱 maybe some
+
+🧱 {-,+}       🧱 {**}     🧱 polar maybe some
+🧱 {-1,1}      🧱 {??}     🧱 polar maybe
+
+🧱 {-1,0}      🧱 {-?}     🧱 anti-maybe
+🧱 {,-1}       🧱 {-}      🧱 anti-some
+🧱 {,0}        🧱 {-*}     🧱 anti-maybe some
 |===

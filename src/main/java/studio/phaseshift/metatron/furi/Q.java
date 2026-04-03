@@ -197,8 +197,7 @@ public interface Q extends Rec {
                     .map(q -> q.preWrite(vid, obj))
                     .filter(Optional::isPresent)
                     .map(Optional::get)
-                    .reduce(Obj::append)
-                    .filter(o -> !o.isNoObj()) : Optional.empty();
+                    .reduce(Obj::append) : Optional.empty();
         }
 
         public static Optional<Obj> processPreRead(final Lst qs, final fURI vid) {
@@ -212,8 +211,7 @@ public interface Q extends Rec {
                             .map(q -> q.preRead(vid))
                             .filter(Optional::isPresent)
                             .map(Optional::get)
-                            .reduce(Obj::append)
-                            .filter(o -> !o.isNoObj()) :
+                            .reduce(Obj::append):
                     Optional.empty();
         }
 

@@ -18,10 +18,16 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TestData;
+import studio.phaseshift.metatron.furi.fURI;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -204,5 +210,74 @@ public class UriTest extends AbstractMetatronTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
+    @Test
+    public void testHasTemplates() {
+        // Templates contain ${...} expressions
+        assertTrue(uri("http://example.com/${user}").uriValue().hasTemplates());
+        assertTrue(uri("/api/${version}/users").uriValue().hasTemplates());
+        assertTrue(uri("http://blah.com:${+10}").uriValue().hasTemplates());
+
+        // Non-templates
+        assertFalse(uri("http://example.com/static").uriValue().hasTemplates());
+        assertFalse(uri("/api/v1/users").uriValue().hasTemplates());
+
+        // fURI coefficients are NOT templates
+        assertFalse(uri("/path{?}").uriValue().hasTemplates());  // {?} = maybe coefficient
+        assertFalse(uri("/path{+}").uriValue().hasTemplates());  // {+} = some coefficient
+        assertFalse(uri("/path{*}").uriValue().hasTemplates());  // {*} = maybe some coefficient
+    }
+
+    @Test
+    public void testTemplateExtraction() {
+        // Extract template expressions with component locations
+        final var templates = uri("http://example.com:${+10}/${user}").uriValue().templates();
+        assertEquals(2, templates.size());
+
+        // First template is in PORT component
+        assertEquals(fURI.Component.PORT, templates.get(0).get0());
+        assertEquals("+10", templates.get(0).get1());
+
+        // Second template is in PATH component
+        assertEquals(fURI.Component.PATH, templates.get(1).get0());
+        assertEquals("user", templates.get(1).get1());
+    }
+
+    /**
+     * Test URI template expansion with ${expr} syntax.
+     * Format: lhs_value.template_uri % expected_result
+     *
+     * Examples:
+     * - 70.<http://blah.com:${+10}> → evaluates ${+10} as 70.plus(10) = 80, coerced to int for PORT
+     * - rec(user:alice).<http://example.com/${user}> → evaluates ${user} as rec.apply(uri("user")) = "alice"
+     * - 5.<http://api.com/${*2}/data> → evaluates ${*2} as 5.mult(2) = 10
+     */
+    @ParameterizedTest
+    @CsvSource(value = {
+            // PORT component - must coerce to integer
+            "70.map(<http://blah.com:${+10}>)                                            % <http://blah.com:80>",
+            "100.map(<http://api.com:${minus(20)}>)                                      % <http://api.com:80>",
+
+            // PATH component - toString coercion
+            "5.map(<http://example.com/${*2}/data>)                                      % <http://example.com/10/data>",
+            "10.map(<http://api.com/v${+1}/users>)                                       % <http://api.com/v11/users>",
+
+            // Variable reference in PATH
+            "[user=>alice].map(<http://example.com/${user}>)                             % <http://example.com/alice>",
+            "[id=>42].map(<http://api.com/users/${id}>)                                  % <http://api.com/users/42>",
+
+            // QUERY component - Rec coerces to k=v pairs
+            "70.map(<http://api.com/search?${[q=>hello,lang=>en]}>                      % <http://api.com/search?q=hello&lang=en>",
+            "[x=>10,y=>20].map(<http://map.com/point?${x}>                              % <http://map.com/point?x=10>",
+
+            // Multiple templates in same URI
+            "5.map(<http://example.com:${+75}/${*10}>)                                   % <http://example.com:80/50>",
+
+            // Non-template URIs pass through unchanged
+            "anything.map(<http://example.com/static>)                                   % <http://example.com/static>",
+            "42.map(</api/v1/users>)                                                     % </api/v1/users>"
+    }, delimiter = '%')
+    public void testTemplateExpansion(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
 
 }
