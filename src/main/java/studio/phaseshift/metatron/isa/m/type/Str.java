@@ -20,11 +20,13 @@ package studio.phaseshift.metatron.isa.m.type;
 
 import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.impl.MStr;
 
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.regex.MatchResult;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -67,6 +69,53 @@ public interface Str extends Mono, PlusMonoid.O<Str> {
 
     default Str vid(final fURI vid) {
         return this.clone(this.jvm(), this.tid(), vid);
+    }
+
+    // Pattern for matching ${...} template expressions
+    Pattern TEMPLATE_PATTERN = Pattern.compile("\\$\\{([^}]+)}");
+
+    /**
+     * Apply template expansion if this string contains ${...} patterns.
+     * Each ${expr} is parsed, the lhs is applied to the expr, and the result's
+     * string value replaces the ${expr} placeholder.
+     */
+    @Override
+    default Obj apply(final Obj lhs) {
+        final String value = this.strValue();
+        if (!value.contains("${")) {
+            return this;  // No templates, return this unchanged (default Obj behavior)
+        }
+
+        // Expand all ${...} templates
+        final Matcher matcher = TEMPLATE_PATTERN.matcher(value);
+        final StringBuilder result = new StringBuilder();
+        while (matcher.find()) {
+            final String exprStr = matcher.group(1);
+            try {
+                // Parse the expression and apply lhs to it
+                final Obj expr = mParser.parse(exprStr);
+                Obj evaluated;
+                if (expr.isInst()) {
+                    // For instructions like plus(10) or mult(2), apply instruction to lhs
+                    evaluated = expr.apply(lhs);
+                } else if (expr.isUri() && lhs.isRec()) {
+                    // For Uri expressions like 'user', do key lookup in the record
+                    evaluated = lhs.asRec().at(expr);
+                } else {
+                    // Default: apply lhs to expr
+                    evaluated = lhs.apply(expr);
+                }
+                // Get string value - use toString() which works for all types
+                final String strVal = evaluated.toString();
+                // Replace with toString of result
+                matcher.appendReplacement(result, Matcher.quoteReplacement(strVal));
+            } catch (Exception e) {
+                // On error, leave template unchanged
+                matcher.appendReplacement(result, Matcher.quoteReplacement(matcher.group(0)));
+            }
+        }
+        matcher.appendTail(result);
+        return this.jvm(result.toString());
     }
 
     @Override

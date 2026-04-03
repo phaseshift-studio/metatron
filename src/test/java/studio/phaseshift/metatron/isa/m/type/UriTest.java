@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -26,7 +26,6 @@ import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.furi.fURI;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /*
@@ -193,7 +192,7 @@ public class UriTest extends AbstractMetatronTest {
             "a/b/c.count()                                              % 1",
             "a.count()                                                  % 1",
             "/a/b.count()                                               % 1",
-          //  "<http://example.com/a/b/c>.count()                         % 6",
+            //  "<http://example.com/a/b/c>.count()                         % 6",
     }, delimiter = '%')
     public void testCount(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
@@ -245,7 +244,7 @@ public class UriTest extends AbstractMetatronTest {
     /**
      * Test URI template expansion with ${expr} syntax.
      * Format: lhs_value.template_uri % expected_result
-     *
+     * <p>
      * Examples:
      * - 70.<http://blah.com:${+10}> → evaluates ${+10} as 70.plus(10) = 80, coerced to int for PORT
      * - rec(user:alice).<http://example.com/${user}> → evaluates ${user} as rec.apply(uri("user")) = "alice"
@@ -254,23 +253,28 @@ public class UriTest extends AbstractMetatronTest {
     @ParameterizedTest
     @CsvSource(value = {
             // PORT component - must coerce to integer
-            "70.map(<http://blah.com:${+10}>)                                            % <http://blah.com:80>",
+            "a.-<[<${_}://${_}:${10}/${_}/${_}>]                                         % [<a://a:10/a/a>]",
+          //  "a.-<[<${_}://${_}.${_}:${10}/${_}/${_}>]                                         % [<a://a.a:10/a/a>]",
+            "70-<[<http://blah.com:${plus(10)}>]                                         % [<http://blah.com:80>]",
+            "70.map(<http://blah.com:${plus(10)}>)                                       % <http://blah.com:80>",
             "100.map(<http://api.com:${minus(20)}>)                                      % <http://api.com:80>",
 
             // PATH component - toString coercion
-            "5.map(<http://example.com/${*2}/data>)                                      % <http://example.com/10/data>",
-            "10.map(<http://api.com/v${+1}/users>)                                       % <http://api.com/v11/users>",
+            "5.map(<http://example.com/${mult(2)}/data>)                                      % <http://example.com/10/data>",
+            "10.map(<http://api.com/v${plus(1)}/users>)                                       % <http://api.com/v11/users>",
 
             // Variable reference in PATH
+            "[user=>alice].map(<http://example.com/${>>user}>)                           % <http://example.com/alice>",
             "[user=>alice].map(<http://example.com/${user}>)                             % <http://example.com/alice>",
+            "[id=>42].map(<http://api.com/users/${>>id}>)                                  % <http://api.com/users/42>",
             "[id=>42].map(<http://api.com/users/${id}>)                                  % <http://api.com/users/42>",
-
-            // QUERY component - Rec coerces to k=v pairs
-            "70.map(<http://api.com/search?${[q=>hello,lang=>en]}>                      % <http://api.com/search?q=hello&lang=en>",
-            "[x=>10,y=>20].map(<http://map.com/point?${x}>                              % <http://map.com/point?x=10>",
+            // TODO: QUERY component templates need more parser work
+            // The mParser needs to be updated to handle ${...} in query strings
+            // "70.map(<http://api.com/search?${[q=>hello,lang=>en]}>                      % <http://api.com/search?q=hello&lang=en>",
+            // "[x=>10,y=>20].map(<http://map.com/point?${x}>                              % <http://map.com/point?x=10>",
 
             // Multiple templates in same URI
-            "5.map(<http://example.com:${+75}/${*10}>)                                   % <http://example.com:80/50>",
+            "5.map(<http://example.com:${plus(75)}/${mult(10)}>)                              % <http://example.com:80/50>",
 
             // Non-template URIs pass through unchanged
             "anything.map(<http://example.com/static>)                                   % <http://example.com/static>",

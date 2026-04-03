@@ -49,6 +49,7 @@ import java.util.stream.Stream;
 
 import static org.petitparser.parser.primitive.CharacterParser.any;
 import static org.petitparser.parser.primitive.CharacterParser.anyOf;
+import static org.petitparser.parser.primitive.CharacterParser.noneOf;
 import static org.petitparser.parser.primitive.CharacterParser.digit;
 import static org.petitparser.parser.primitive.CharacterParser.of;
 import static org.petitparser.parser.primitive.CharacterParser.word;
@@ -305,7 +306,10 @@ public class mParser {
     }
 
     private static Parser m_furi_internal(final String furiCharacterSet, final boolean polynomial, final boolean coefficient, final boolean query) {
-        return seq(of('-').not(), seq(word().or(seq(of("::").not(), anyOf(furiCharacterSet)))).plus().flatten(),
+        // Content parser: matches words, template expressions ${...}, or furi characters
+        // m_furi_template() is tried first to capture ${...} as atomic units
+        final Parser contentParser = seq(word().or(m_furi_template()).or(seq(of("::").not(), anyOf(furiCharacterSet)))).plus().flatten();
+        return seq(of('-').not(), contentParser,
                 opt(polynomial ? m_furi_poly_type() : none(), null),
                 opt(coefficient ? m_furi_coefficient() : none(), null),
                 opt(query ? m_furi_query() : none(), null)).map(t -> f(pick(t, 1)).poly(pick(t, 2)).c(cInt.of((String) pick(t, 3))).qString(pick(t, 4)));
@@ -343,11 +347,28 @@ public class mParser {
                 of('}')).map(t -> pick(t, 1).toString());
     }
 
+    /**
+     * Parser for template expressions ${...} within fURIs.
+     * Matches ${expr} where expr can be any Metatron expression (including function calls).
+     * Returns the full ${...} string to be preserved in the fURI.
+     */
+    public static Parser m_furi_template() {
+        // Match ${ followed by any characters (including nested parens) until }
+        // We need to handle balanced braces, but for simplicity we'll match non-} chars
+        // For expressions with nested braces like ${[a=>b]}, we'd need more complex parsing
+        return seq(of("${"), noneOf("}").star().flatten(), of("}"))
+                .map(t -> "${" + pick(t, 1) + "}");
+    }
+
     public static Parser m_furi_query() {
+        // Query parser: handles dom<=rng, key=value pairs, and ${...} template expressions
         return seq(of("?"), seq(
                 opt(m_furi_inst_dom_rng(), ""),
                 opt(of("&"), ""),
-                opt(seq((word().or(anyOf("+#_-"))).plus(), opt(seq(of("="), choice(m_furi_no_query(), word().or(anyOf(FULL_FURI_CHARS)).star())), "")).separatedBy(of("&")), "").flatten())
+                opt(choice(
+                        m_furi_template(), // Template expressions like ${[q=>hello]}
+                        seq((word().or(anyOf("+#_-"))).plus(), opt(seq(of("="), choice(m_furi_no_query(), word().or(anyOf(FULL_FURI_CHARS)).star())), ""))
+                ).separatedBy(of("&")), "").flatten())
         ).map(t -> mParser.<List<String>>pick(t, 1).stream().reduce((a, b) -> a + b).orElse(""));
     }
 

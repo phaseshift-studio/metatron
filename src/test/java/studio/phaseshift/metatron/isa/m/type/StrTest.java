@@ -39,6 +39,16 @@ public class StrTest extends AbstractAlgebraTest<Str> {
 
     @ParameterizedTest
     @CsvSource(value = {
+            "1.map(\"the number: ${plus(23)}\")                                                  % \"the number: 24\"",
+            "1.map(\"the number: ${+23}\")                                                       % \"the number: 24\"",
+          //  "[1,2,3,4].map(\"list count: ${merge().count()}\")                                   % \"list count: [4]\"",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testTemplates(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+    
+    @ParameterizedTest
+    @CsvSource(value = {
             "'true'.as(bool::T)                                                             % true",
             "'false'.as(bool::T)                                                            % false",
             "'true'.as(bool::T).as(str::T)                                                  % \"true\"",

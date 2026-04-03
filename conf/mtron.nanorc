@@ -67,8 +67,9 @@ icolor blue "[a-z0-9_/-]+::"
 color green "::" 
 color yellow "<="
 ### uri <>
-color blue start="<" end=">"
+color blue "[<][^>]*[>]"
 color green "<" ">"
+color yellow "[${][^}]*[}]"
 ### str
 color yellow "[\"][^\"]*[\"]"
 color yellow "['][^']*[']"

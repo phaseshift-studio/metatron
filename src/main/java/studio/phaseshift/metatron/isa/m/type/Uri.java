@@ -124,43 +124,93 @@ public interface Uri extends Mono, Ring.O<Uri> {
         return Mono.super.test(obj);
     }
 
+    /**
+     * Check if this Uri has template expressions that need evaluation.
+     */
+    default boolean hasTemplates() {
+        return this.uriValue().hasTemplates();
+    }
+
+    /**
+     * Get the parsed template Obj expressions (memoized).
+     * Each template ${expr} is parsed to an Obj on first call and cached.
+     * Default implementation returns empty list - override in MUri for actual memoization.
+     *
+     * @return List of (Component, Obj) pairs for each template
+     */
+    default List<studio.phaseshift.metatron.util.Tuple.Pair<fURI.Component, Obj>> parsedTemplates() {
+        return List.of();
+    }
+
     @Override
     default Obj apply(final Obj lhs) {
         // URI Template expansion via apply() using ${expr} syntax
-        // Templates are evaluated as: lhs.apply(mParser.m_obj(expr))
-        if (!this.uriValue().hasTemplates())
+        // Templates are evaluated as: lhs.apply(parsedExpr)
+        if (!this.hasTemplates())
             return Mono.super.apply(lhs);
 
         // Expand template: ${expr} → lhs.apply(parse(expr)) with context-aware coercion
-        return uri(expandTemplate(this.uriValue(), lhs));
+        return uri(expandTemplate(this, lhs));
     }
 
-    static fURI expandTemplate(final fURI template, final Obj lhs) {
-        // Get all template expressions with their component locations
-        final List<studio.phaseshift.metatron.util.Tuple.Pair<fURI.Component, String>> templates = template.templates();
-        if (templates.isEmpty())
+    /**
+     * Expand all template expressions in this URI by evaluating them against lhs.
+     *
+     * @param templateUri The Uri containing templates
+     * @param lhs         The left-hand side object to apply templates against
+     * @return A new fURI with all templates expanded
+     */
+    static fURI expandTemplate(final Uri templateUri, final Obj lhs) {
+        final fURI template = templateUri.uriValue();
+        final List<studio.phaseshift.metatron.util.Tuple.Pair<fURI.Component, Obj>> parsedTemplates = templateUri.parsedTemplates();
+
+        if (parsedTemplates.isEmpty())
             return template;
 
-        // Build a copy of the URI that we'll modify
+        // Get raw template strings for reconstruction
+        final List<studio.phaseshift.metatron.util.Tuple.Pair<fURI.Component, String>> rawTemplates = template.templates();
+
+        // Build copies of URI components that we'll modify
         String scheme = template.scheme();
         String host = template.host();
-        String portStr = template.port() == -1 ? null : String.valueOf(template.port());
+        // For port: if there's a PORT template, the raw port was ${expr}, not -1
+        String portStr = null;
+        for (var t : rawTemplates) {
+            if (t.get0() == fURI.Component.PORT) {
+                portStr = "${" + t.get1() + "}";
+                break;
+            }
+        }
+        if (portStr == null && template.port() != -1) {
+            portStr = String.valueOf(template.port());
+        }
+
         List<String> path = new ArrayList<>(template.path());
         Map<String, String> query = new LinkedHashMap<>(template.qMap());
 
-        // Process each template expression
-        for (studio.phaseshift.metatron.util.Tuple.Pair<fURI.Component, String> tmpl : templates) {
-            final fURI.Component component = tmpl.get0();
-            final String exprStr = tmpl.get1();
+        // Process each parsed template expression
+        for (int i = 0; i < parsedTemplates.size(); i++) {
+            final studio.phaseshift.metatron.util.Tuple.Pair<fURI.Component, Obj> parsed = parsedTemplates.get(i);
+            final fURI.Component component = parsed.get0();
+            final Obj expr = parsed.get1();
+            final String exprStr = rawTemplates.get(i).get1();
 
             try {
-                // Parse the expression using mParser
-                final studio.phaseshift.metatron.isa.m.parser.mParser parser =
-                        new studio.phaseshift.metatron.isa.m.parser.mParser();
-                final Obj expr = (Obj) parser.m_obj().parse(exprStr);
-
-                // Evaluate: lhs.apply(expr)
-                final Obj result = lhs.apply(expr);
+                // Evaluate the template expression against LHS
+                final Obj result;
+                if (expr.isInst()) {
+                    // For instructions like +10 or mult(2), apply the instruction to lhs
+                    result = expr.apply(lhs);
+                } else if (expr.isUri() && lhs.isRec()) {
+                    // For Uri expressions like 'user', do key lookup in the record
+                    result = lhs.asRec().at(expr);
+                } else if (expr.isRec() || expr.isLst() || expr.isStr() || expr.isInt() || expr.isReal() || expr.isBool()) {
+                    // For constant values (records, lists, primitives), use the expression itself
+                    result = expr;
+                } else {
+                    // Default: lhs.apply(expr)
+                    result = lhs.apply(expr);
+                }
 
                 // Context-aware coercion based on component type
                 final String replacement = coerceByComponent(result, component);
@@ -168,14 +218,12 @@ public interface Uri extends Mono, Ring.O<Uri> {
                 // Replace template in appropriate component
                 final String templatePlaceholder = "${" + exprStr + "}";
                 switch (component) {
-                    case SCHEME ->
-                            scheme = scheme != null ? scheme.replace(templatePlaceholder, replacement) : replacement;
+                    case SCHEME -> scheme = scheme != null ? scheme.replace(templatePlaceholder, replacement) : replacement;
                     case HOST -> host = host != null ? host.replace(templatePlaceholder, replacement) : replacement;
-                    case PORT ->
-                            portStr = portStr != null ? portStr.replace(templatePlaceholder, replacement) : replacement;
+                    case PORT -> portStr = portStr != null ? portStr.replace(templatePlaceholder, replacement) : replacement;
                     case PATH -> {
-                        for (int i = 0; i < path.size(); i++) {
-                            path.set(i, path.get(i).replace(templatePlaceholder, replacement));
+                        for (int j = 0; j < path.size(); j++) {
+                            path.set(j, path.get(j).replace(templatePlaceholder, replacement));
                         }
                     }
                     case QUERY -> {
@@ -187,6 +235,9 @@ public interface Uri extends Mono, Ring.O<Uri> {
                         }
                         query = newQuery;
                     }
+                    default -> {
+                        // COEFFICIENT, POLY, AUTHORITY - handle gracefully
+                    }
                 }
             } catch (Exception e) {
                 throw MTronException.of("Failed to expand template ${%s}: %s", exprStr, e.getMessage());
@@ -194,7 +245,14 @@ public interface Uri extends Mono, Ring.O<Uri> {
         }
 
         // Construct new fURI with expanded values
-        final int finalPort = portStr != null ? Integer.parseInt(portStr) : -1;
+        int finalPort = -1;
+        if (portStr != null && !portStr.isEmpty()) {
+            try {
+                finalPort = Integer.parseInt(portStr);
+            } catch (NumberFormatException e) {
+                throw MTronException.of("PORT template did not evaluate to integer: %s", portStr);
+            }
+        }
         return fURI.of(scheme, host, finalPort, path, template.c(), template.poly(), query, null);
     }
 
@@ -212,7 +270,16 @@ public interface Uri extends Mono, Ring.O<Uri> {
                 if (result.isInt()) {
                     yield String.valueOf(result.intValue());
                 }
-                throw MTronException.of("PORT template must evaluate to Int, got %s", result.tid());
+                // Try to coerce from string
+                if (result.isStr()) {
+                    try {
+                        Integer.parseInt(result.strValue());
+                        yield result.strValue();
+                    } catch (NumberFormatException e) {
+                        // fall through to error
+                    }
+                }
+                throw MTronException.of("PORT template must evaluate to Int, got %s: %s", result.tid(), result);
             }
             case QUERY -> {
                 // Query parameters: Rec → k1=v1&k2=v2, otherwise toString
@@ -234,6 +301,9 @@ public interface Uri extends Mono, Ring.O<Uri> {
         };
     }
 
+    /**
+     * Convert an Obj to its string representation for URI components.
+     */
     static String objToString(final Obj obj) {
         if (obj.isStr()) return obj.strValue();
         if (obj.isInt()) return String.valueOf(obj.intValue());

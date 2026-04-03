@@ -488,13 +488,19 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
                         "((?<rng>[^<&]+)<=(?<dom>[^&?]+))?" +
                         "&?" +
                         "(?<query>(([^&=]+(=[^&=]+)?&?)+))?)?");
-        // Template-aware pattern: allows ${...} in port, path, query components
+        // Template-aware pattern: allows ${...} in scheme, host, port, path, query components
+        // Key differences from FURI_PATTERN:
+        // - scheme: allows ${...} via alternation
+        // - host: allows ${...} via alternation
+        // - port: stops at / to not consume path, allows ${...}
+        // - path: allows ${...} and captures them fully (including at end of path)
+        // - coefficient: only matches {..} NOT preceded by $ (negative lookbehind)
         public static final Pattern FURI_TEMPLATE_PATTERN = Pattern.compile(
-                "((?<scheme>[^:/.]+):)?" +
-                        "(//((?<host>[^?\\[&<>:/]+)(:(?<port>[^?\\[&]+))?))?" +
-                        "(?<path>[^?\\[{&]+)?" +
+                "((?<scheme>\\$\\{[^}]+}|[^:/.]+):)?" +
+                        "(//((?<host>\\$\\{[^}]+}|[^?\\[&<>:/]+)(:(?<port>\\$\\{[^}]+}|\\d+))?))?" +
+                        "(?<path>([^?\\[&{]|\\$\\{[^}]+})+)?" +
                         "(\\[(?<poly>[^]]+)])?" +
-                        "(\\{(?<coefficient>[^}\\]]+)})?" +
+                        "((?<!\\$)\\{(?<coefficient>[^}\\]]+)})?" +
                         "(\\?" +
                         "((?<rng>[^<&]+)<=(?<dom>[^&?]+))?" +
                         "&?" +
@@ -572,15 +578,83 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
             }
 
             // Extract templates if present
-            final List<Tuple.Pair<Component, String>> templates = null;//= hasTemplates ?
-            ///  extractTemplates(portStr, pathStr, queryStr, polyStr, matcher.group(COEFFICIENT)) :
-            ///     null;
+            final List<Tuple.Pair<Component, String>> templates = hasTemplates ?
+                    extractTemplates(scheme, host, portStr, pathStr, queryStr) :
+                    null;
 
             return fURI.of(scheme, host, port, path, coefficient, poly, query, templates);
         }
 
         static Map<String, String> parseQuery(final String query) {
             return query == null ? Map.of() : Arrays.stream(query.split("&")).map(s -> s.split("=")).collect(Collectors.toMap(a -> a[0], a -> a.length > 1 ? a[1] : ""));
+        }
+
+        /**
+         * Pattern to match template expressions: ${...}
+         * Captures the content inside the braces (without the ${ and } delimiters)
+         */
+        private static final Pattern TEMPLATE_PATTERN = Pattern.compile("\\$\\{([^}]+)}");
+
+        /**
+         * Extract all template expressions from URI components.
+         * Returns a list of pairs containing the component type and the expression string.
+         * Templates are extracted in order: SCHEME, HOST, PORT, PATH, QUERY
+         *
+         * @param schemeStr The scheme string (may contain ${...})
+         * @param hostStr   The host string (may contain ${...})
+         * @param portStr   The port string (may contain ${...})
+         * @param pathStr   The path string (may contain ${...})
+         * @param queryStr  The query string (may contain ${...})
+         * @return List of (Component, expression) pairs, or null if no templates found
+         */
+        static List<Tuple.Pair<Component, String>> extractTemplates(final String schemeStr,
+                                                                     final String hostStr,
+                                                                     final String portStr,
+                                                                     final String pathStr,
+                                                                     final String queryStr) {
+            final List<Tuple.Pair<Component, String>> templates = new ArrayList<>();
+
+            // Extract templates from SCHEME
+            if (schemeStr != null) {
+                final Matcher schemeMatcher = TEMPLATE_PATTERN.matcher(schemeStr);
+                while (schemeMatcher.find()) {
+                    templates.add(Tuple.Pair.with(Component.SCHEME, schemeMatcher.group(1)));
+                }
+            }
+
+            // Extract templates from HOST
+            if (hostStr != null) {
+                final Matcher hostMatcher = TEMPLATE_PATTERN.matcher(hostStr);
+                while (hostMatcher.find()) {
+                    templates.add(Tuple.Pair.with(Component.HOST, hostMatcher.group(1)));
+                }
+            }
+
+            // Extract templates from PORT
+            if (portStr != null) {
+                final Matcher portMatcher = TEMPLATE_PATTERN.matcher(portStr);
+                while (portMatcher.find()) {
+                    templates.add(Tuple.Pair.with(Component.PORT, portMatcher.group(1)));
+                }
+            }
+
+            // Extract templates from PATH
+            if (pathStr != null) {
+                final Matcher pathMatcher = TEMPLATE_PATTERN.matcher(pathStr);
+                while (pathMatcher.find()) {
+                    templates.add(Tuple.Pair.with(Component.PATH, pathMatcher.group(1)));
+                }
+            }
+
+            // Extract templates from QUERY
+            if (queryStr != null) {
+                final Matcher queryMatcher = TEMPLATE_PATTERN.matcher(queryStr);
+                while (queryMatcher.find()) {
+                    templates.add(Tuple.Pair.with(Component.QUERY, queryMatcher.group(1)));
+                }
+            }
+
+            return templates.isEmpty() ? null : templates;
         }
     }
 

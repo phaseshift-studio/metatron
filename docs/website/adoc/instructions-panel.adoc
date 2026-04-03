@@ -406,7 +406,7 @@ This ensures the uri `triple` is not applied to the `inst` prior to the uri bein
 
 ++++
 <!-- 🐖
-triple -> inst?lst[int,int,int]<=int{3}(){>-[,]}
+triple -> |inst?lst[int,int,int]<=int{3}(){>-[,]}
 *triple
 -->
 ++++

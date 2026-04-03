@@ -19,19 +19,74 @@
 package studio.phaseshift.metatron.isa.m.type.impl;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Uri;
+import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.util.Tuple;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TID;
 
 public class MUri extends MObj implements Uri {
 
-    private static final Uri EMPTY_URI = new MUri(f(""), URI_TID,null);
+    private static final Uri EMPTY_URI = new MUri(f(""), URI_TID, null);
+
+    /**
+     * Memoized parsed template expressions.
+     * null = not yet parsed, empty list = no templates or already parsed with no templates
+     */
+    private volatile List<Tuple.Pair<fURI.Component, Obj>> parsedTemplatesCache = null;
 
     public MUri(final fURI jvm, final fURI tid, final fURI vid) {
         super(jvm.resolve(), tid, vid);
         if (jvm.isZero())
             this.tid = this.tid.zero();
+    }
+
+    @Override
+    public List<Tuple.Pair<fURI.Component, Obj>> parsedTemplates() {
+        // Double-checked locking for thread-safe memoization
+        if (parsedTemplatesCache == null) {
+            synchronized (this) {
+                if (parsedTemplatesCache == null) {
+                    parsedTemplatesCache = parseTemplateExpressions();
+                }
+            }
+        }
+        return parsedTemplatesCache;
+    }
+
+    /**
+     * Parse all template expression strings to Obj instances.
+     * Called once and memoized.
+     */
+    private List<Tuple.Pair<fURI.Component, Obj>> parseTemplateExpressions() {
+        final fURI furi = this.jvm();
+        if (!furi.hasTemplates()) {
+            return List.of();
+        }
+
+        final List<Tuple.Pair<fURI.Component, String>> templates = furi.templates();
+        final List<Tuple.Pair<fURI.Component, Obj>> result = new ArrayList<>(templates.size());
+
+        for (final Tuple.Pair<fURI.Component, String> template : templates) {
+            final fURI.Component component = template.get0();
+            final String exprStr = template.get1();
+
+            try {
+                // Parse the expression using mParser
+                final Obj expr = mParser.m_obj().parse(exprStr).get();
+                result.add(Tuple.Pair.with(component, expr));
+            } catch (Exception e) {
+                throw MTronException.of("Failed to parse template expression '${%s}': %s", exprStr, e.getMessage());
+            }
+        }
+
+        return result;
     }
 
     public static Uri uri(final String jvm) {
@@ -63,6 +118,10 @@ public class MUri extends MObj implements Uri {
         MUri clone = super.clone(jvm, tid, vid);
         if (clone.jvm().isZero())
             clone.tid = clone.tid.zero();
+        // Reset parsed templates cache if jvm changed (different fURI means different templates)
+        if (jvm != this.jvm && (jvm == null || !jvm.equals(this.jvm))) {
+            clone.parsedTemplatesCache = null;
+        }
         return clone;
     }
 
