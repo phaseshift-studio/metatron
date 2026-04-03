@@ -39,6 +39,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.AbstractMap;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -90,7 +91,7 @@ public class memSpace extends AbstractSpace<Map<fURI, Obj>> {
     }
 
     public static memSpace of(final Rec config, final fURI vid) {
-        return new memSpace(config.jvm(), vid);
+        return new memSpace(new HashMap<>(config.jvm()), vid);
     }
 
     @Override

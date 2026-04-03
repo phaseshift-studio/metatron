@@ -20,8 +20,10 @@ package studio.phaseshift.metatron.isa;
 
 import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.furi.q.BaseQ;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.type.MStats;
@@ -30,10 +32,14 @@ import studio.phaseshift.metatron.isa.mach.type.Stats;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 public abstract class AbstractSpace<SJVM> extends MRec implements Space {
@@ -49,6 +55,11 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
         InstSet.JREService.Helper.verifyClass(this.getClass(), tid);
         this.sjvm = sjvm;
         this.pattern = this.at(PATTERN).uriValue();
+        /// //////////// BAD
+        final List<Obj> list  = this.jvm().getOrDefault(uri(QSTRING), lst()).lstValue();
+        this.jvm().remove(uri(QSTRING));
+        list.forEach(q -> this.addQ(new BaseQ(new HashMap<>(q.asRec().jvm()), q.asRec().tid(), q.asRec().vid())));
+        /// //////////// BAD
         this.ioStats = new MStats();
         final Obj temp = config.getOrDefault(uri(ROUTE), rec());
         if (temp.isRec())
