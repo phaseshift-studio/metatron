@@ -234,6 +234,96 @@ bin/metatron</code></pre>
                 <p style="line-height:0.1rem;" class="subtitle text-light">instruction set reference</p>
                 <p class="text-light mt-3 mb-0" style="line-height:2.5em; max-width: 1000px; margin-left: auto; margin-right: auto;">&quot;the reflective instruction set of metatron featuring process, monad, and code introspection&quot;</p>
             </div>
+            <div class="accordion" id="accordianInstSet">
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingOne">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseOne" aria-expanded="false" aria-controls="flush-collapseOne">
+                            instset obj
+                        </button>
+                    </h2>
+                    <div id="flush-collapseOne" class="accordion-collapse collapse" aria-labelledby="flush-headingOne" data-bs-parent="#accordianInstSet">
+                        <div class="accordion-body">
+                               <pre><code>/m/mach::[
+ pattern=>/m/mach/#,
+ space  =>[
+   super=>!*/m,
+   sub  =>!*/m/mach/io],
+ q      =>[
+   docq::[
+       pre_read =>inst?rng=#{*}&dom=#{?}(uri::T){<j>},
+       pre_write=>inst?rng=#{*}&dom=#{?}(uri::T,#::T){<j>},
+       pattern  =>docq,
+       obj      =>mem::[=>]]],
+ type   =>[
+   rec::T@/m/mach/router,
+   rec::T[?[
+     pattern=>uri::T,
+     {?}q   =>[
+       uri::T=>rec::T[][inst?rng=q&dom=#{?}([
+ pattern       =>uri::T,
+ pre_write{?}  =>inst::T,
+ post_write{?} =>inst::T,
+ qless_write{?}=>inst::T,
+ pre_read{?}   =>inst::T,
+ post_read{?}  =>inst::T]){<j>}]@/m/space/q]]]@/m/space,
+   rec::T[?[=>]][inst?rng=console&dom=#{?}(rec::T){<j>}]@/m/mach/console,
+   space::T[][inst?rng=fs&dom=#{?}(isa([
+ pattern  =>uri::T,
+ route    =>[uri::T=>uri::T],
+ {?}script=>[uri::T=>uri::T]])){<j>}]@/m/mach/space/fs,
+   space::T[][inst?rng=serial&dom=#{?}(isa([pattern=>uri::T,route=>rec::T])){<j>}]@/m/mach/space/serial,
+   uri::T[][inst?rng=file&dom=#{?}(uri::T){<j>}]@/m/mach/file,
+   file::T[inst?rng=dir&dom=#{?}(){<j>}][inst?rng=dir{?}&dom=#{?}(uri::T){<j>}]@/m/mach/dir,
+   file::T@/m/mach/file/image,
+   rec::T@/m/mach/factory,
+   factory::T[][inst?rng=mfactory&dom=#{?}(){<j>}]@/m/mach/mfactory,
+   q::T[][inst?rng=incrq&dom=#{?}(){<j>}]@/m/space/q/incrq,
+   q::T[][inst?rng=constq&dom=#{?}(){<j>}]@/m/space/q/constq,
+   q::T[][inst?rng=docq&dom=#{?}(){<j>}]@/m/space/q/docq,
+   rec::T[?[
+     {?}obj    =>#::T,
+     {?}dom    =>str::T,
+     {?}rng    =>str::T,
+     {?}args   =>#::T,
+     desc      =>str::T,
+     {?}example=>lst::T]][inst?rng=docs&dom=#{?}(#::T){<j>}]@/m/space/q/docq/docs,
+   rec::T[?[target=>uri::T,on_recv=>#::T]]@/m/space/q/subq/sub,
+   rec::T[][inst?rng=subq&dom=#{?}(isa([=>])){<j>}]@/m/space/q/subq,
+   q::T[][inst?rng=typeq&dom=#{?}(){<j>}]@/m/space/q/typeq,
+   rec::T@/m/mach/server,
+   rec::T@/m/mach/server/protocol,
+   protocol::T@/m/mach/server/protocol/native,
+   protocol::T@/m/mach/server/protocol/mcp,
+   rec::T[?[tool{?}=>inst{*}::T]]@/m/mach/server/mcp/server,
+   core::T[?[
+     code     =>#::T,
+     {?}state =>is(or(eq(stopped),eq(running),eq(paused))),
+     {?}result=>#{*}::T@#]][inst?rng=core&dom=#{?}(rec::T){<j>}],
+   lst::T@/m/mach/monad,
+   rec::T[?[halted=>#{*}::T,running=>monad{*}::T,barrier=>lst::T]]@/m/mach/machine,
+   machine::T[][inst?rng=swarm&dom=#{?}(#::T){<j>}]@/m/mach/machine/swarm],
+ inst   =>[
+   lift?rng=monad&dom=#&monad=^(#{?}::T){<j>},
+   rewrite?rng=rec&dom=#{?}(uri::T){<j>},
+   close?rng=noobj&dom=router(){<j>},
+   nano?rng=#{?}&dom=#{?}(){<j>},
+   less?rng=noobj{0}&dom=str(isa(int::T).else(10)){<j>},
+   rshift?rng=file{*}&dom=file(isa(uri::T).else(<#>)){<j>},
+   as?rng=file&dom=uri(file::T){<j>},
+   as?rng=image&dom=bytes(image::T,else(1.00)){<j>},
+   as?rng=file&dom=uri(file::T){<j>},
+   as?rng=bytes&dom=file(bytes::T){<j>},
+   zero?rng=A&dom=A(){<j>},
+   one?rng=A&dom=A(){<j>},
+   which?rng=A&dom=#(uri::T){<j>},
+   inject?rng=#&dom=#(int::T,#::T){<j>},
+   run?rng=core&dom=core(){<j>},
+   stop?rng=core&dom=core(){<j>},
+   pause?rng=core&dom=core(){<j>}]]@/m/mach</code></pre>
+                        </div>
+                    </div>
+                </div>
+            <div>
         </div>
             
         <div class="container-xxl mb-4">
@@ -379,7 +469,7 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="card-body p-2">
-                        <pre class="mb-0"><code class="language-mtron">rec::T[isa([=&gt;])][inst?console&lt;=#{?}(rec::T){&lt;j&gt;}]@/m/mach/console</code></pre>
+                        <pre class="mb-0"><code class="language-mtron">rec::T[?[=&gt;]][inst?console&lt;=#{?}(rec::T){&lt;j&gt;}]@/m/mach/console</code></pre>
                     </div>
                     
                     
@@ -448,10 +538,10 @@ bin/metatron</code></pre>
    super=&gt;!*/m/mach],
  q      =&gt;[
    docq::[
-     pre_read =&gt;inst?#{*}&lt;=#{?}(uri::T){&lt;j&gt;},
-     pattern  =&gt;docq,
-     pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T){&lt;j&gt;},
-     obj      =&gt;mem::[=&gt;]]]]@/m/mach/io</code></pre>
+       pre_read =&gt;inst?#{*}&lt;=#{?}(uri::T){&lt;j&gt;},
+       pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T){&lt;j&gt;},
+       pattern  =&gt;docq,
+       obj      =&gt;mem::[=&gt;]]]]@/m/mach/io</code></pre>
                     </div>
                     
                     
@@ -466,7 +556,7 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="card-body p-2">
-                        <pre class="mb-0"><code class="language-mtron">rec::T[isa([halted=&gt;#{*}::T,running=&gt;monad{*}::T,barrier=&gt;lst::T])]@/m/mach/machine</code></pre>
+                        <pre class="mb-0"><code class="language-mtron">rec::T[?[halted=&gt;#{*}::T,running=&gt;monad{*}::T,barrier=&gt;lst::T]]@/m/mach/machine</code></pre>
                     </div>
                     
                     
@@ -706,7 +796,7 @@ bin/metatron</code></pre>
         <div class="container-xxl py-3 text-center">
             <hr class="border-secondary">
             <small class="text-muted">
-                generated by metatron instset doc generator on build 0-2026-04-03 17:25:07<br>
+                generated by metatron instset doc generator on build 0-2026-04-04 12:51:24<br>
                 © PhaseShift Studio, LLC
             </small>
         </div>

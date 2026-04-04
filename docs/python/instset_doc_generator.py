@@ -275,6 +275,7 @@ class InstSetInfo:
     spaces: List[SpaceInfo] = field(default_factory=list)
     consts: List[ConstInfo] = field(default_factory=list)
     raw_metadata: str = ""
+    full: str = ""
 
 
 # ============================================================================
@@ -296,7 +297,9 @@ class InstSetDocFetcher:
 
         # Fetch instruction set description
         info.desc = await self._fetch_instset_desc(vid)
-
+        temp = await self.client.eval(f"'*{vid}'./m/web/inst/doc()")
+        temp = temp.removeprefix("</m/str>::'").removesuffix("'")
+        info.full = temp
         # Fetch the instruction set space metadata
         try:
             info.raw_metadata = await self.client.eval(f"*{vid}/")
@@ -887,6 +890,20 @@ class HTMLDocGenerator:
                 <p style="line-height:0.1rem;" class="subtitle text-light">instruction set reference</p>
                 {desc_html}
             </div>
+            <div class="accordion" id="accordianInstSet">
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingOne">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseOne" aria-expanded="false" aria-controls="flush-collapseOne">
+                            instset obj
+                        </button>
+                    </h2>
+                    <div id="flush-collapseOne" class="accordion-collapse collapse" aria-labelledby="flush-headingOne" data-bs-parent="#accordianInstSet">
+                        <div class="accordion-body">
+                               <pre><code>{self.instset.full}</code></pre>
+                        </div>
+                    </div>
+                </div>
+            <div>
         </div>"""
 
     def _generate_nav(self) -> str:

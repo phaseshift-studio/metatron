@@ -232,8 +232,319 @@ bin/metatron</code></pre>
                     <span class="text-light">/</span>m
                 </h1>
                 <p style="line-height:0.1rem;" class="subtitle text-light">instruction set reference</p>
-                <p class="text-light mt-3 mb-0" style="line-height:2.5em; max-width: 1000px; margin-left: auto; margin-right: auto;">&quot;the core instruction of metatron containing the base types and an algebra to manipulate them&quot;</p>
+                <p class="text-light mt-3 mb-0" style="line-height:2.5em; max-width: 1000px; margin-left: auto; margin-right: auto;">&quot;the core instruction set of metatron containing the base types and useful instructions to manipulate them&quot;</p>
             </div>
+            <div class="accordion" id="accordianInstSet">
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingOne">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseOne" aria-expanded="false" aria-controls="flush-collapseOne">
+                            instset obj
+                        </button>
+                    </h2>
+                    <div id="flush-collapseOne" class="accordion-collapse collapse" aria-labelledby="flush-headingOne" data-bs-parent="#accordianInstSet">
+                        <div class="accordion-body">
+                               <pre><code>/m::[
+ pattern=>/m/inst/#,
+ space  =>[sub=>{!*/m/mach,!*/m/math,!*/m/web,!*/m/iot,!*/m/grph,!*/m/llm,!*/m/tble,!*/m/doc}],
+ q      =>[
+   docq::[
+       pre_read =>inst?rng=#{*}&dom=#{?}(uri::T){<j>},
+       pre_write=>inst?rng=#{*}&dom=#{?}(uri::T,#::T){<j>},
+       pattern  =>docq,
+       obj      =>mem::[=>]]],
+ const  =>[noobj],
+ type   =>[
+   mono::T[inst?rng=mono&dom=#{?}(){<j>}],
+   poly::T[inst?rng=poly&dom=#{?}(){<j>}],
+   noobj{0}::T[inst?rng=noobj{0}&dom=#{?}(){<j>}],
+   bool::T,
+   int::T,
+   real::T,
+   bytes::T,
+   str::T,
+   uri::T,
+   rel::T,
+   lst::T,
+   rec::T,
+   rec::T[?[
+     {?}const  =>[#::T],
+     {?}type   =>[T::T],
+     {?}inst   =>[inst::T],
+     {?}rewrite=>[inst::T],
+     {?}sugar  =>[lst::T]]]@/m/instset,
+   inst::T,
+   code::T,
+   objs::T,
+   fail::T,
+   rec::T[?[
+     pattern=>uri::T,
+     {?}q   =>[
+       uri::T=>rec::T[][inst?rng=q&dom=#{?}([
+ pattern       =>uri::T,
+ pre_write{?}  =>inst::T,
+ post_write{?} =>inst::T,
+ qless_write{?}=>inst::T,
+ pre_read{?}   =>inst::T,
+ post_read{?}  =>inst::T]){<j>}]@/m/space/q]]]@/m/space,
+   space::T[][inst?rng=mem&dom=#{?}(isa([
+ pattern   =>uri::T,
+ {?}persist=>uri::T[][inst?rng=file&dom=#{?}(uri::T){<j>}]@/m/mach/file])){<j>}]@/m/space/mem,
+   space::T[][inst?rng=stack&dom=#{?}(isa([pattern=>uri::T])){<j>}]@/m/space/stack,
+   space::T[][inst?rng=meta&dom=#{?}(isa([
+ pattern=>uri::T,
+ host   =>uri::T,
+ route  =>[uri::T=>uri::T],
+ peers  =>[uri{*}::T]])){<j>}]@/m/space/meta,
+   rec::T[][inst?rng=q&dom=#{?}([
+ pattern       =>uri::T,
+ pre_write{?}  =>inst::T,
+ post_write{?} =>inst::T,
+ qless_write{?}=>inst::T,
+ pre_read{?}   =>inst::T,
+ post_read{?}  =>inst::T]){<j>}]@/m/space/q,
+   q::T[][inst?rng=constq&dom=#{?}(){<j>}]@/m/space/q/constq],
+ rewrite=>[
+   /m/inst/rewrite/id_removal?rng=code{?}&dom=code(){<j>},
+   /m/inst/rewrite/map_nest?rng=code{?}&dom=code(){<j>},
+   /m/inst/rewrite/else_after_count?rng=code{?}&dom=code(){<j>},
+   /m/inst/rewrite/plus_zero?rng=code{?}&dom=code(){<j>},
+   /m/inst/rewrite/mult_one?rng=code{?}&dom=code(){<j>},
+   /m/inst/rewrite/split_merge_collapse?rng=code{?}&dom=code(){<j>},
+   /m/inst/rewrite/split_merge_left_factor?rng=code{?}&dom=code(){<j>},
+   /m/inst/rewrite/split_merge_right_factor?rng=code{?}&dom=code(){<j>}],
+ inst   =>[
+   start?rng=A{**}&dom=noobj{0}(A{**}::T){<j>},
+   as?rng=bool&dom=bool(bool::T){<j>},
+   as?rng=bytes&dom=bool(bytes::T){<j>},
+   as?rng=int&dom=bool(int::T){<j>},
+   as?rng=real&dom=bool(real::T){<j>},
+   as?rng=str&dom=bool(str::T){<j>},
+   plus?rng=bool&dom=bool(bool::T){<j>},
+   mult?rng=bool&dom=bool(bool::T){<j>},
+   not?rng=bool&dom=bool(){<j>},
+   as?rng=bool&dom=bytes(bool::T){<j>},
+   as?rng=str&dom=bytes(str::T){<j>},
+   zero?rng=bytes&dom=bytes(){<j>},
+   plus?rng=bytes&dom=bytes(bytes::T){<j>},
+   within?rng=B&dom=bytes(B::T){<j>},
+   as?rng=bool&dom=int(bool::T){<j>},
+   as?rng=bytes&dom=int(bytes::T){<j>},
+   as?rng=real&dom=int(real::T){<j>},
+   as?rng=str&dom=int(str::T){<j>},
+   as?rng=uri&dom=int(uri::T){<j>},
+   zero?rng=int&dom=int(){<j>},
+   one?rng=int&dom=int(){<j>},
+   neg?rng=int&dom=int(){<j>},
+   mult?rng=int&dom=int(int::T){<j>},
+   minus?rng=int&dom=int(int::T){<j>},
+   plus?rng=int&dom=int(int::T){<j>},
+   plus?rng=int{+}&dom=int{+}(int::T){<j>},
+   gt?rng=bool&dom=int(int::T){<j>},
+   gte?rng=bool&dom=int(int::T){<j>},
+   lt?rng=bool&dom=int(int::T){<j>},
+   lte?rng=bool&dom=int(int::T){<j>},
+   sum?rng=int&dom=int{*}(){<j>},
+   prod?rng=int&dom=int{*}(){<j>},
+   pow?rng=int&dom=int(int::T){<j>},
+   mod?rng=int&dom=int(int::T){<j>},
+   order?rng=lst&dom=int{*}(){<j>},
+   as?rng=int&dom=real(int::T){<j>},
+   as?rng=str&dom=real(str::T){<j>},
+   gt?rng=bool&dom=real(real::T){<j>},
+   gte?rng=bool&dom=real(real::T){<j>},
+   lt?rng=bool&dom=real(real::T){<j>},
+   lte?rng=bool&dom=real(real::T){<j>},
+   neg?rng=real&dom=real(){<j>},
+   plus?rng=real&dom=real(real::T){<j>},
+   mult?rng=real&dom=real(real::T){<j>},
+   div?rng=real&dom=real(real::T){<j>},
+   zero?rng=real&dom=real(){<j>},
+   one?rng=real&dom=real(){<j>},
+   inv?rng=real&dom=real(){<j>},
+   minus?rng=real&dom=real(real::T){<j>},
+   sum?rng=real&dom=real{*}(){<j>},
+   prod?rng=real&dom=real{*}(){<j>},
+   mean?rng=real&dom=real{*}(){<j>},
+   pow?rng=real&dom=real(real::T){<j>},
+   math?rng=real&dom=#{?}(str::T){<j>},
+   order?rng=lst&dom=real{*}(){<j>},
+   as?rng=str&dom=str(str::T){<j>},
+   as?rng=bytes&dom=str(bytes::T){<j>},
+   as?rng=bool&dom=str(bool::T){<j>},
+   as?rng=int&dom=str(int::T){<j>},
+   as?rng=real&dom=str(real::T){<j>},
+   as?rng=uri&dom=str(uri::T){<j>},
+   reverse?rng=str&dom=str(){<j>},
+   zero?rng=str&dom=str(){<j>},
+   has?rng=str{?}&dom=str(str::T){<j>},
+   split?rng=lst&dom=str(str::T){<j>},
+   merge?rng=str&dom=str{*}(str::T){<j>},
+   regex?rng=lst&dom=str(str::T){<j>},
+   gt?rng=bool&dom=str(str::T){<j>},
+   gte?rng=bool&dom=str(str::T){<j>},
+   lt?rng=bool&dom=str(str::T){<j>},
+   lte?rng=bool&dom=str(str::T){<j>},
+   plus?rng=str&dom=str(str::T){<j>},
+   sum?rng=str&dom=str{*}(str{?}::T){<j>},
+   ucase?rng=str&dom=str(){<j>},
+   lcase?rng=str&dom=str(){<j>},
+   within?rng=B&dom=str(B::T){<j>},
+   as?rng=int&dom=uri(int::T){<j>},
+   as?rng=uri&dom=uri(uri::T){<j>},
+   as?rng=str&dom=uri(str::T){<j>},
+   as?rng=rec&dom=uri(rec::T){<j>},
+   reverse?rng=uri&dom=uri(){<j>},
+   has?rng=uri{?}&dom=uri(str::T){<j>},
+   has?rng=uri{?}&dom=uri(uri::T){<j>},
+   split?rng=lst&dom=uri(uri::T){<j>},
+   merge?rng=uri&dom=uri{*}(uri::T){<j>},
+   rshift?rng=#{*}&dom=uri(#{*}::T){<j>},
+   plus?rng=uri{?}&dom=uri(uri{?}::T){<j>},
+   mult?rng=uri{?}&dom=uri(uri{?}::T){<j>},
+   sum?rng=uri&dom=uri{*}(){<j>},
+   prod?rng=uri&dom=uri{*}(){<j>},
+   path?rng=uri&dom=uri(uri::T){<j>},
+   q?rng=uri&dom=uri(uri::T){<j>},
+   q?rng=uri&dom=uri(rec::T){<j>},
+   q?rng=rec&dom=uri(){<j>},
+   uri:c?rng=lst&dom=uri(uri::T){<j>},
+   pow?rng=uri&dom=uri(int::T){<j>},
+   scheme?rng=uri{?}&dom=uri(){<j>},
+   scheme?rng=uri&dom=uri(uri::T){<j>},
+   authority?rng=uri{?}&dom=uri(){<j>},
+   host?rng=uri{?}&dom=uri(){<j>},
+   host?rng=uri&dom=uri(uri::T){<j>},
+   port?rng=int{?}&dom=uri(){<j>},
+   port?rng=uri&dom=uri(int::T[is(gte(-1))]){<j>},
+   select?rng=uri{?}&dom=uri(uri::T){<j>},
+   where?rng=uri{?}&dom=uri(uri::T){<j>},
+   lift?rng=#&dom=#(#::T){<j>},
+   as?rng=lst&dom=rel(lst::T){<j>},
+   as?rng=rec&dom=rel(rec::T){<j>},
+   merge?rng=rec&dom=rel{*}(rec::T){<j>},
+   dom?rng=#{*}&dom=rel(){<j>},
+   rng?rng=#{*}&dom=rel(){<j>},
+   lshift?rng=#{*}&dom=rel(){<j>},
+   rshift?rng=#{*}&dom=rel(){<j>},
+   rshift?rng=#{*}&dom=rel(#::T){<j>},
+   get?rng=A{?}&dom=rel(#::T){<j>},
+   select?rng=rel{?}&dom=rel(rel::T){<j>},
+   plus?rng=rel{*}&dom=rel(rel{*}::T){<j>},
+   mult?rng=rel{*}&dom=rel(rel{*}::T){<j>},
+   neg?rng=rel&dom=rel(){<j>},
+   one?rng=rel&dom=rel(){<j>},
+   zero?rng=rel&dom=rel(){<j>},
+   as?rng=lst&dom=lst(lst::T){<j>},
+   as?rng=rec&dom=lst(rec::T){<j>},
+   reverse?rng=lst&dom=lst(){<j>},
+   plus?rng=lst&dom=lst(lst::T){<j>},
+   mult?rng=lst&dom=lst(lst::T){<j>},
+   rshift?rng=#{*}&dom=lst(#{*}::T){<j>},
+   zero?rng=lst&dom=lst(){<j>},
+   split?rng=lst&dom=#(lst::T){<j>},
+   merge?rng=#{*}&dom=lst(){<j>},
+   merge?rng=#{*}&dom=lst(uri::T){<j>},
+   merge?rng=#{*}&dom=lst(str::T){<j>},
+   has?rng=lst{?}&dom=lst(#::T){<j>},
+   within?rng=lst&dom=lst(#{*}::T){<j>},
+   sum?rng=lst&dom=lst{*}(){<j>},
+   select?rng=lst{?}&dom=lst(lst::T){<j>},
+   update?rng=lst&dom=lst(lst::T){<j>},
+   pow?rng=lst&dom=lst(int::T){<j>},
+   as?rng=lst&dom=rec(lst::T){<j>},
+   as?rng=uri&dom=rec(uri::T){<j>},
+   zero?rng=rec&dom=rec(){<j>},
+   reverse?rng=rec&dom=rec(){<j>},
+   has?rng=rec{?}&dom=rec(#::T,#::T){<j>},
+   has?rng=rec{?}&dom=rec(#::T){<j>},
+   split?rng=rec&dom=#(rec::T){<j>},
+   merge?rng=rel{*}&dom=rec(){<j>},
+   dom?rng=#{*}&dom=rec(){<j>},
+   rng?rng=#{*}&dom=rec(){<j>},
+   rshift?rng=#{*}&dom=rec(#{*}::T){<j>},
+   plus?rng=rec&dom=rec(rec{??}::T){<j>},
+   mplus?rng=rec&dom=rec(rec::T){<j>},
+   select?rng=rec{?}&dom=rec(rec::T){<j>},
+   select?rng=#{?}&dom=rec(uri::T){<j>},
+   select?rng=rec{?}&dom=rec(uri{2,}::T){<j>},
+   update?rng=rec{?}&dom=rec(rec::T){<j>},
+   update?rng=rec{?}&dom=rec(rel::T){<j>},
+   within?rng=rec&dom=rec(#{*}::T){<j>},
+   sum?rng=rec&dom=rec{*}(){<j>},
+   cause?rng=fail{?}&dom=fail(){<j>},
+   reify?rng=rec&dom=fail(){<j>},
+   rshift?rng=#{*}&dom=/m/type(uri{*}::T){<j>},
+   serialize?rng=B&dom=A(/m/mach/io::T){<j>},
+   fork?rng=A{*}&dom=A{*}(#::T){<j>},
+   range?rng=A{*}&dom=A{*}(int::T,isa(int::T).else(0)){<j>},
+   order?rng=A{*}&block&dom=A{*}(#::T){<j>},
+   as?rng=noobj{0}&dom=A(){<j>},
+   as?rng=B&dom=A(#::T){<j>},
+   import?rng=space{*}&dom=#{?}(uri::T,uri{?}::T){<j>},
+   dedup?rng=A{*}&dom=A{*}(){<j>},
+   barrier?rng=lst&dom=#{*}(lst::T){<j>},
+   barrier?rng=rec&dom=rel{*}(rec::T){<j>},
+   barrier?rng=A{*}&dom=A{*}(){<j>},
+   barrier?rng=A{*}&dom=A{*}(A{*}::T){<j>},
+   as?rng=A&dom=A(A::T){<j>},
+   repeat?rng=A{*}&dom=A&monad(#::T,#::T){<j>},
+   !#{?}::T,
+   !*#{?}::T,
+   catch?rng=A{*}&dom=A(A{*}::T){<j>},
+   end?rng=noobj{0}&dom=#{*}(){<j>},
+   print?rng=#{*}&dom=#{?}(#{*}::T){<j>},
+   at?rng=#{*}&dom=#{?}(uri{?}::T){<j>},
+   id?rng=A&dom=A(){<j>},
+   id?rng=A{*}&dom=A{*}(){<j>},
+   and?rng=bool&dom=A(bool{+}::T){<j>},
+   or?rng=bool&dom=A(bool{+}::T){<j>},
+   apply?rng=#{*}&dom=#(#{*}::T){<j>},
+   map?rng=B&dom=A(B::T){<j>},
+   map?rng=B{?}&dom=A{?}(B{?}::T){<j>},
+   filter?rng=A{?}&dom=A(#{?}::T){<j>},
+   side?rng=A&dom=A(#::T){<j>},
+   tid?rng=uri&dom=#(){<j>},
+   vid?rng=A&dom=A(uri::T){<j>},
+   vid?rng=uri{?}&dom=#(){<j>},
+   else?rng=#&dom=#{?}(#{?}::T){<j>},
+   is?rng=A{?}&dom=A{?}(bool{?}::T){<j>},
+   isa?rng=#{?}&dom=#{?}(#::T){<j>},
+   matches?rng=bool&dom=#{?}(#{?}::T){<j>},
+   block?rng=B&dom=A{?}(B::T){<j>},
+   split?rng=#{*}&dom=#(#{+}::T){<j>},
+   choose?rng=rel{?}&dom=#(rec::T){<j>},
+   merge?rng=lst&dom=A{*}(lst::T){<j>},
+   merge?rng=#{*}&dom=A{*}(){<j>},
+   merge?rng=A{*}&dom=A{*}(A{*}::T){<j>},
+   not?rng=bool&dom=#(bool::T){<j>},
+   eq?rng=bool&dom=#(#::T){<j>},
+   neq?rng=bool&dom=#(#::T){<j>},
+   to?rng=#{?}&dom=#{?}(uri::T){<j>},
+   *uri::T,
+   ref?rng=#{*}&dom=#(#{*}::T){<j>},
+   thread?rng=A&dom=A(#::T){<j>},
+   source?rng=#{*}&dom=#(str::T){<j>},
+   type?rng=/m/type&dom=/m/type(){<j>},
+   type?rng=/m/type&dom=A(){<j>},
+   cc?rng=int&dom=A{*}(){<j>},
+   cc?rng=A{*}&dom=A{*}(int::T){<j>},
+   failure?rng=fail&dom=#{*}(#{?}::T){<j>},
+   parent?rng=#{?}&dom=#(){<j>},
+   count?rng=int&dom=#{*}(){<j>},
+   skip?rng=A{*}&dom=A{*}(int::T){<j>},
+   take?rng=A{*}&dom=A{*}(int::T){<j>},
+   reify?rng=rec&dom=#{?}(){<j>},
+   reduce?rng=#&dom=#{*}(#::T){<j>},
+   where?rng=#{?}&dom=#(#::T){<j>},
+   group?rng=rec&dom=#{*}(rec::T){<j>},
+   eval?rng=#{*}&dom=#{?}(code=>str::T){<j>},
+   swap?rng=A&dom=A(B::T){<j>},
+   rshift?rng=B{?}&dom=A(){<j>},
+   lshift?rng=B{?}&dom=A(){<j>}]]@/m</code></pre>
+                        </div>
+                    </div>
+                </div>
+            <div>
         </div>
             
         <div class="container-xxl mb-4">
@@ -851,23 +1162,26 @@ bin/metatron</code></pre>
    super=&gt;!*/m],
  q      =&gt;[
    docq::[
-     pre_read =&gt;inst?#{*}&lt;=#{?}(uri::T){&lt;j&gt;},
-     pattern  =&gt;docq,
-     pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T){&lt;j&gt;},
-     obj      =&gt;mem::[=&gt;]]],
+       pre_read =&gt;inst?#{*}&lt;=#{?}(uri::T){&lt;j&gt;},
+       pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T){&lt;j&gt;},
+       pattern  =&gt;docq,
+       obj      =&gt;mem::[=&gt;]]],
+ const  =&gt;[serializer::/m/mach/io/serializer/json/simple@/m/mach/io/serializer/json/simple,_id@/m/doc/_id],
+ type   =&gt;[
+   rec::T[?[_id=&gt;uri::T,uri::T=&gt;#::T]]@/m/doc/document,
+   objs{*}::T[isa(document{*}::T)]@/m/doc/collection,
+   space::T[?[
+     pattern      =&gt;uri::T,
+     host         =&gt;uri::T,
+     {?}serializer=&gt;uri::T,
+     route        =&gt;[uri::T=&gt;uri::T],
+     {?}collection=&gt;lst::T]][inst?doc&lt;=#{?}(rec::T){&lt;j&gt;}]@/m/doc/space/doc],
+ inst   =&gt;[
+   as?lst&lt;=document(lst::T){&lt;j&gt;}],
  rewrite=&gt;[
    /m/doc/inst/rewrite/native_count?code{?}&lt;=code(){&lt;j&gt;},
    /m/doc/inst/rewrite/native_sum?code{?}&lt;=code(){&lt;j&gt;},
-   /m/doc/inst/rewrite/native_mean?code{?}&lt;=code(){&lt;j&gt;}],
- inst   =&gt;[
-   as?lst&lt;=document(lst::T){&lt;j&gt;}],
- type   =&gt;[rec::T[isa([_id=&gt;uri::T,uri::T=&gt;#::T])]@/m/doc/document,objs{*}::T[isa(document{*}::T)]@/m/doc/collection,space::T[isa([
- pattern      =&gt;uri::T,
- host         =&gt;uri::T,
- {?}serializer=&gt;uri::T,
- route        =&gt;[uri::T=&gt;uri::T],
- {?}collection=&gt;lst::T])][inst?doc&lt;=#{?}(rec::T){&lt;j&gt;}]@/m/doc/space/doc],
- const  =&gt;[serializer::/m/mach/io/serializer/json/simple@/m/mach/io/serializer/json/simple,_id@/m/doc/_id]]@/m/doc</code></pre>
+   /m/doc/inst/rewrite/native_mean?code{?}&lt;=code(){&lt;j&gt;}]]@/m/doc</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -913,10 +1227,20 @@ bin/metatron</code></pre>
    super=&gt;!*/m],
  q      =&gt;[
    docq::[
-     pre_read =&gt;inst?#{*}&lt;=#{?}(uri::T){&lt;j&gt;},
-     pattern  =&gt;docq,
-     pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T){&lt;j&gt;},
-     obj      =&gt;mem::[=&gt;]]],
+       pre_read =&gt;inst?#{*}&lt;=#{?}(uri::T){&lt;j&gt;},
+       pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T){&lt;j&gt;},
+       pattern  =&gt;docq,
+       obj      =&gt;mem::[=&gt;]]],
+ const  =&gt;[serializer::/m/mach/io/serializer@/m/mach/io/serializer/tp3],
+ type   =&gt;[
+   rec::T@/m/grph/elmt,
+   elmt::T[?[
+     {?}IN =&gt;[uri::T=&gt;edge{*}::T],
+     {?}OUT=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx,
+   elmt::T[?[IN=&gt;vrtx::T,OUT=&gt;vrtx::T]]@/m/grph/edge,
+   space::T[][inst?graph&lt;=#{?}(isa([graph=&gt;uri::T]).else(failure(&#x27;malformed tp3 config&#x27;))){&lt;j&gt;}]@/m/grph/space/graph,
+   modern::T,
+   space::T@/m/grph/space/graph],
  inst   =&gt;[
    gremlin?#{*}&lt;=graph(str::T){&lt;j&gt;},
    label?uri&lt;=elmt(){&lt;j&gt;},
@@ -931,17 +1255,7 @@ bin/metatron</code></pre>
    outE?edge{*}&lt;=vrtx(uri{*}::T){&lt;j&gt;},
    inE?edge{*}&lt;=vrtx(uri{*}::T){&lt;j&gt;},
    bothE?edge{*}&lt;=vrtx(uri{*}::T){&lt;j&gt;},
-   addE?edge&lt;=vrtx(#::T,uri::T,rec{?}::T){&lt;j&gt;}],
- type   =&gt;[
-   rec::T@/m/grph/elmt,
-   elmt::T[isa([
- {?}IN =&gt;[uri::T=&gt;edge{*}::T],
- {?}OUT=&gt;[uri::T=&gt;edge{*}::T]])]@/m/grph/vrtx,
-   elmt::T[isa([IN=&gt;vrtx::T,OUT=&gt;vrtx::T])]@/m/grph/edge,
-   space::T[][inst?graph&lt;=#{?}(isa([graph=&gt;uri::T]).else(failure(&#x27;malformed tp3 config&#x27;))){&lt;j&gt;}]@/m/grph/space/graph,
-   modern::T,
-   space::T@/m/grph/space/graph],
- const  =&gt;[serializer::/m/mach/io/serializer@/m/mach/io/serializer/tp3]]@/m/grph</code></pre>
+   addE?edge&lt;=vrtx(#::T,uri::T,rec{?}::T){&lt;j&gt;}]]@/m/grph</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -977,12 +1291,12 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="card-body p-2">
-                        <pre class="mb-0"><code class="language-mtron">rec::T[isa([
- {?}const  =&gt;[#::T],
- {?}type   =&gt;[T::T],
- {?}inst   =&gt;[inst::T],
- {?}rewrite=&gt;[inst::T],
- {?}sugar  =&gt;[lst::T]])]@/m/instset</code></pre>
+                        <pre class="mb-0"><code class="language-mtron">rec::T[?[
+     {?}const  =&gt;[#::T],
+     {?}type   =&gt;[T::T],
+     {?}inst   =&gt;[inst::T],
+     {?}rewrite=&gt;[inst::T],
+     {?}sugar  =&gt;[lst::T]]]@/m/instset</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -1025,10 +1339,10 @@ bin/metatron</code></pre>
    sub  =&gt;{!*/m/iot/haos,!*/m/iot/miot}],
  q      =&gt;[
    docq::[
-     pre_read =&gt;inst?#{*}&lt;=#{?}(uri::T){&lt;j&gt;},
-     pattern  =&gt;docq,
-     pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T){&lt;j&gt;},
-     obj      =&gt;mem::[=&gt;]]]]@/m/iot</code></pre>
+       pre_read =&gt;inst?#{*}&lt;=#{?}(uri::T){&lt;j&gt;},
+       pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T){&lt;j&gt;},
+       pattern  =&gt;docq,
+       obj      =&gt;mem::[=&gt;]]]]@/m/iot</code></pre>
                     </div>
                     
                     
@@ -1049,36 +1363,40 @@ bin/metatron</code></pre>
    super=&gt;!*/m],
  q      =&gt;[
    docq::[
-     pre_read =&gt;inst?#{*}&lt;=#{?}(uri::T){&lt;j&gt;},
-     pattern  =&gt;docq,
-     pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T){&lt;j&gt;},
-     obj      =&gt;mem::[=&gt;]]],
+       pre_read =&gt;inst?#{*}&lt;=#{?}(uri::T){&lt;j&gt;},
+       pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T){&lt;j&gt;},
+       pattern  =&gt;docq,
+       obj      =&gt;mem::[=&gt;]]],
+ type   =&gt;[
+   space::T[?[
+     name   =&gt;is(or(eq(anthropic),eq(openai),eq(ollama))),
+     pattern=&gt;uri::T,
+     {?}host=&gt;uri::T,
+     route  =&gt;[uri::T=&gt;uri::T]]][inst?catalog&lt;=#{?}(rec::T){&lt;j&gt;}]@/m/llm/space/catalog,
+   rec::T[?[
+     name  =&gt;uri::T,
+     desc  =&gt;str::T,
+     {?}arg=&gt;{?}[uri::T=&gt;#::T]]]@/m/llm/mcp/tool,
+   rec::T[?[
+     host     =&gt;uri::T,
+     {?}tool  =&gt;{?}[uri::T=&gt;tool::T],
+     {?}status=&gt;isa(bool::T).else(false)]][inst?mcpserver&lt;=#{?}(rec::T){&lt;j&gt;}]@/m/llm/space/mcp/mcpserver,
+   rec::T[?[
+     provider   =&gt;space::T[?[
+     name   =&gt;is(or(eq(anthropic),eq(openai),eq(ollama))),
+     pattern=&gt;uri::T,
+     {?}host=&gt;uri::T,
+     route  =&gt;[uri::T=&gt;uri::T]]][inst?catalog&lt;=#{?}(rec::T){&lt;j&gt;}]@/m/llm/space/catalog,
+     name       =&gt;uri::T,
+     {?}think   =&gt;[{?}to=&gt;#::T],
+     {?}response=&gt;[{?}to=&gt;#::T,{?}format=&gt;#::T],
+     {?}size    =&gt;data_size::T[][inst?bB&lt;=#{?}(#::T){&lt;j&gt;}]@/m/math/bB,
+     {?}memory  =&gt;[{?}from=&gt;uri::T],
+     {?}desc    =&gt;str::T,
+     {?}skill   =&gt;lst::T,
+     {?}tool    =&gt;lst::T]]@/m/llm/model],
  inst   =&gt;[
-   chat?#{?}&lt;=model(str::T){&lt;j&gt;}],
- type   =&gt;[space::T[isa([
- name   =&gt;is(or(eq(anthropic),eq(openai),eq(ollama))),
- pattern=&gt;uri::T,
- {?}host=&gt;uri::T,
- route  =&gt;[uri::T=&gt;uri::T]])][inst?catalog&lt;=#{?}(rec::T){&lt;j&gt;}]@/m/llm/space/catalog,rec::T[isa([
- name  =&gt;uri::T,
- desc  =&gt;str::T,
- {?}arg=&gt;{?}[uri::T=&gt;#::T]])]@/m/llm/mcp/tool,rec::T[isa([
- host     =&gt;uri::T,
- {?}tool  =&gt;{?}[uri::T=&gt;tool::T],
- {?}status=&gt;isa(bool::T).else(false)])][inst?mcpserver&lt;=#{?}(rec::T){&lt;j&gt;}]@/m/llm/space/mcp/mcpserver,rec::T[isa([
- provider   =&gt;space::T[isa([
- name   =&gt;is(or(eq(anthropic),eq(openai),eq(ollama))),
- pattern=&gt;uri::T,
- {?}host=&gt;uri::T,
- route  =&gt;[uri::T=&gt;uri::T]])][inst?catalog&lt;=#{?}(rec::T){&lt;j&gt;}]@/m/llm/space/catalog,
- name       =&gt;uri::T,
- {?}think   =&gt;[{?}to=&gt;#::T],
- {?}response=&gt;[{?}to=&gt;#::T,{?}format=&gt;#::T],
- {?}size    =&gt;data_size::T[][inst?bB&lt;=#{?}(#::T){&lt;j&gt;}]@/m/math/bB,
- {?}memory  =&gt;[{?}from=&gt;uri::T],
- {?}desc    =&gt;str::T,
- {?}skill   =&gt;lst::T,
- {?}tool    =&gt;lst::T])]@/m/llm/model]]@/m/llm</code></pre>
+   chat?#{?}&lt;=model(str::T){&lt;j&gt;}]]@/m/llm</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -1121,10 +1439,58 @@ bin/metatron</code></pre>
    sub  =&gt;!*/m/mach/io],
  q      =&gt;[
    docq::[
-     pre_read =&gt;inst?#{*}&lt;=#{?}(uri::T){&lt;j&gt;},
-     pattern  =&gt;docq,
-     pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T){&lt;j&gt;},
-     obj      =&gt;mem::[=&gt;]]],
+       pre_read =&gt;inst?#{*}&lt;=#{?}(uri::T){&lt;j&gt;},
+       pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T){&lt;j&gt;},
+       pattern  =&gt;docq,
+       obj      =&gt;mem::[=&gt;]]],
+ type   =&gt;[
+   rec::T@/m/mach/router,
+   rec::T[?[
+     pattern=&gt;uri::T,
+     {?}q   =&gt;[
+       uri::T=&gt;rec::T[][inst?q&lt;=#{?}([
+ pattern       =&gt;uri::T,
+ pre_write{?}  =&gt;inst::T,
+ post_write{?} =&gt;inst::T,
+ qless_write{?}=&gt;inst::T,
+ pre_read{?}   =&gt;inst::T,
+ post_read{?}  =&gt;inst::T]){&lt;j&gt;}]@/m/space/q]]]@/m/space,
+   rec::T[?[=&gt;]][inst?console&lt;=#{?}(rec::T){&lt;j&gt;}]@/m/mach/console,
+   space::T[][inst?fs&lt;=#{?}(isa([
+ pattern  =&gt;uri::T,
+ route    =&gt;[uri::T=&gt;uri::T],
+ {?}script=&gt;[uri::T=&gt;uri::T]])){&lt;j&gt;}]@/m/mach/space/fs,
+   space::T[][inst?serial&lt;=#{?}(isa([pattern=&gt;uri::T,route=&gt;rec::T])){&lt;j&gt;}]@/m/mach/space/serial,
+   uri::T[][inst?file&lt;=#{?}(uri::T){&lt;j&gt;}]@/m/mach/file,
+   file::T[inst?dir&lt;=#{?}(){&lt;j&gt;}][inst?dir{?}&lt;=#{?}(uri::T){&lt;j&gt;}]@/m/mach/dir,
+   file::T@/m/mach/file/image,
+   rec::T@/m/mach/factory,
+   factory::T[][inst?mfactory&lt;=#{?}(){&lt;j&gt;}]@/m/mach/mfactory,
+   q::T[][inst?incrq&lt;=#{?}(){&lt;j&gt;}]@/m/space/q/incrq,
+   q::T[][inst?constq&lt;=#{?}(){&lt;j&gt;}]@/m/space/q/constq,
+   q::T[][inst?docq&lt;=#{?}(){&lt;j&gt;}]@/m/space/q/docq,
+   rec::T[?[
+     {?}obj    =&gt;#::T,
+     {?}dom    =&gt;str::T,
+     {?}rng    =&gt;str::T,
+     {?}args   =&gt;#::T,
+     desc      =&gt;str::T,
+     {?}example=&gt;lst::T]][inst?docs&lt;=#{?}(#::T){&lt;j&gt;}]@/m/space/q/docq/docs,
+   rec::T[?[target=&gt;uri::T,on_recv=&gt;#::T]]@/m/space/q/subq/sub,
+   rec::T[][inst?subq&lt;=#{?}(isa([=&gt;])){&lt;j&gt;}]@/m/space/q/subq,
+   q::T[][inst?typeq&lt;=#{?}(){&lt;j&gt;}]@/m/space/q/typeq,
+   rec::T@/m/mach/server,
+   rec::T@/m/mach/server/protocol,
+   protocol::T@/m/mach/server/protocol/native,
+   protocol::T@/m/mach/server/protocol/mcp,
+   rec::T[?[tool{?}=&gt;inst{*}::T]]@/m/mach/server/mcp/server,
+   core::T[?[
+     code     =&gt;#::T,
+     {?}state =&gt;is(or(eq(stopped),eq(running),eq(paused))),
+     {?}result=&gt;#{*}::T@#]][inst?core&lt;=#{?}(rec::T){&lt;j&gt;}],
+   lst::T@/m/mach/monad,
+   rec::T[?[halted=&gt;#{*}::T,running=&gt;monad{*}::T,barrier=&gt;lst::T]]@/m/mach/machine,
+   machine::T[][inst?swarm&lt;=#{?}(#::T){&lt;j&gt;}]@/m/mach/machine/swarm],
  inst   =&gt;[
    lift?monad&lt;=#(#{?rec&lt;=#{?}(uri::T){&lt;j&gt;},
    close?noobj&lt;=router(){&lt;j&gt;},
@@ -1141,54 +1507,7 @@ bin/metatron</code></pre>
    inject?#&lt;=#(int::T,#::T){&lt;j&gt;},
    run?core&lt;=core(){&lt;j&gt;},
    stop?core&lt;=core(){&lt;j&gt;},
-   pause?core&lt;=core(){&lt;j&gt;}],
- type   =&gt;[
-   rec::T@/m/mach/router,
-   rec::T[isa([
- pattern=&gt;uri::T,
- {?}q   =&gt;[uri::T=&gt;rec::T[][inst?q&lt;=#{?}([
- pattern       =&gt;uri::T,
- pre_write{?}  =&gt;inst::T,
- post_write{?} =&gt;inst::T,
- qless_write{?}=&gt;inst::T,
- pre_read{?}   =&gt;inst::T,
- post_read{?}  =&gt;inst::T]){&lt;j&gt;}]@/m/space/q]])]@/m/space,
-   rec::T[isa([=&gt;])][inst?console&lt;=#{?}(rec::T){&lt;j&gt;}]@/m/mach/console,
-   space::T[][inst?fs&lt;=#{?}(isa([
- pattern  =&gt;uri::T,
- route    =&gt;[uri::T=&gt;uri::T],
- {?}script=&gt;[uri::T=&gt;uri::T]])){&lt;j&gt;}]@/m/mach/space/fs,
-   space::T[][inst?serial&lt;=#{?}(isa([pattern=&gt;uri::T,route=&gt;rec::T])){&lt;j&gt;}]@/m/mach/space/serial,
-   uri::T[][inst?file&lt;=#{?}(uri::T){&lt;j&gt;}]@/m/mach/file,
-   file::T[inst?dir&lt;=#{?}(){&lt;j&gt;}][inst?dir{?}&lt;=#{?}(uri::T){&lt;j&gt;}]@/m/mach/dir,
-   file::T@/m/mach/file/image,
-   rec::T@/m/mach/factory,
-   factory::T[][inst?mfactory&lt;=#{?}(){&lt;j&gt;}]@/m/mach/mfactory,
-   q::T[][inst?incrq&lt;=#{?}(){&lt;j&gt;}]@/m/space/q/incrq,
-   q::T[][inst?constq&lt;=#{?}(){&lt;j&gt;}]@/m/space/q/constq,
-   q::T[][inst?docq&lt;=#{?}(){&lt;j&gt;}]@/m/space/q/docq,
-   rec::T[isa([
- {?}obj    =&gt;#::T,
- {?}dom    =&gt;str::T,
- {?}rng    =&gt;str::T,
- {?}args   =&gt;#::T,
- desc      =&gt;str::T,
- {?}example=&gt;lst::T])][inst?docs&lt;=#{?}(#::T){&lt;j&gt;}]@/m/space/q/docq/docs,
-   rec::T[isa([target=&gt;uri::T,on_recv=&gt;#::T])]@/m/space/q/subq/sub,
-   rec::T[][inst?subq&lt;=#{?}(isa([=&gt;])){&lt;j&gt;}]@/m/space/q/subq,
-   q::T[][inst?typeq&lt;=#{?}(){&lt;j&gt;}]@/m/space/q/typeq,
-   rec::T@/m/mach/server,
-   rec::T@/m/mach/server/protocol,
-   protocol::T@/m/mach/server/protocol/native,
-   protocol::T@/m/mach/server/protocol/mcp,
-   rec::T[isa([tool{?}=&gt;inst{*}::T])]@/m/mach/server/mcp/server,
-   core::T[isa([
- code     =&gt;#::T,
- {?}state =&gt;is(or(eq(stopped),eq(running),eq(paused))),
- {?}result=&gt;#{*}::T@#])][inst?core&lt;=#{?}(rec::T){&lt;j&gt;}],
-   lst::T@/m/mach/monad,
-   rec::T[isa([halted=&gt;#{*}::T,running=&gt;monad{*}::T,barrier=&gt;lst::T])]@/m/mach/machine,
-   machine::T[][inst?swarm&lt;=#{?}(#::T){&lt;j&gt;}]@/m/mach/machine/swarm]]@/m/mach</code></pre>
+   pause?core&lt;=core(){&lt;j&gt;}]]@/m/mach</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -1212,10 +1531,18 @@ bin/metatron</code></pre>
    super=&gt;!*/m],
  q      =&gt;[
    docq::[
-     pre_read =&gt;inst?#{*}&lt;=#{?}(uri::T){&lt;j&gt;},
-     pattern  =&gt;docq,
-     pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T){&lt;j&gt;},
-     obj      =&gt;mem::[=&gt;]]],
+       pre_read =&gt;inst?#{*}&lt;=#{?}(uri::T){&lt;j&gt;},
+       pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T){&lt;j&gt;},
+       pattern  =&gt;docq,
+       obj      =&gt;mem::[=&gt;]]],
+ type   =&gt;[
+   real::T@/m/math/data_size,
+   data_size::T[][inst?bB&lt;=#{?}(#::T){&lt;j&gt;}]@/m/math/bB,
+   data_size::T[][inst?kB&lt;=#{?}(#::T){&lt;j&gt;}]@/m/math/kB,
+   data_size::T[][inst?mB&lt;=#{?}(#::T){&lt;j&gt;}]@/m/math/mB,
+   data_size::T[][inst?gB&lt;=#{?}(#::T){&lt;j&gt;}]@/m/math/gB,
+   data_size::T[][inst?tB&lt;=#{?}(#::T){&lt;j&gt;}]@/m/math/tB,
+   data_size::T[][inst?pB&lt;=#{?}(#::T){&lt;j&gt;}]@/m/math/pB],
  inst   =&gt;[
    cos?real&lt;=#{?}(as(real::T)){&lt;j&gt;},
    sin?real&lt;=#{?}(real::T){&lt;j&gt;},
@@ -1231,15 +1558,7 @@ bin/metatron</code></pre>
    ceil?real&lt;=#{?}(real::T){&lt;j&gt;},
    floor?real&lt;=#{?}(real::T){&lt;j&gt;},
    round?int&lt;=#{?}(real::T){&lt;j&gt;}],
- const  =&gt;[2.72@/m/math/e?const,3.14@/m/math/pi?const],
- type   =&gt;[
-   real::T@/m/math/data_size,
-   data_size::T[][inst?bB&lt;=#{?}(#::T){&lt;j&gt;}]@/m/math/bB,
-   data_size::T[][inst?kB&lt;=#{?}(#::T){&lt;j&gt;}]@/m/math/kB,
-   data_size::T[][inst?mB&lt;=#{?}(#::T){&lt;j&gt;}]@/m/math/mB,
-   data_size::T[][inst?gB&lt;=#{?}(#::T){&lt;j&gt;}]@/m/math/gB,
-   data_size::T[][inst?tB&lt;=#{?}(#::T){&lt;j&gt;}]@/m/math/tB,
-   data_size::T[][inst?pB&lt;=#{?}(#::T){&lt;j&gt;}]@/m/math/pB]]@/m/math</code></pre>
+ const  =&gt;[2.72@/m/math/e?const,3.14@/m/math/pi?const]]@/m/math</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -1365,15 +1684,16 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="card-body p-2">
-                        <pre class="mb-0"><code class="language-mtron">rec::T[isa([
- pattern=&gt;uri::T,
- {?}q   =&gt;[uri::T=&gt;rec::T[][inst?q&lt;=#{?}([
+                        <pre class="mb-0"><code class="language-mtron">rec::T[?[
+     pattern=&gt;uri::T,
+     {?}q   =&gt;[
+       uri::T=&gt;rec::T[][inst?q&lt;=#{?}([
  pattern       =&gt;uri::T,
  pre_write{?}  =&gt;inst::T,
  post_write{?} =&gt;inst::T,
  qless_write{?}=&gt;inst::T,
  pre_read{?}   =&gt;inst::T,
- post_read{?}  =&gt;inst::T]){&lt;j&gt;}]@/m/space/q]])]@/m/space</code></pre>
+ post_read{?}  =&gt;inst::T]){&lt;j&gt;}]@/m/space/q]]]@/m/space</code></pre>
                     </div>
                     
                     
@@ -1412,24 +1732,28 @@ bin/metatron</code></pre>
    super=&gt;!*/m],
  q      =&gt;[
    docq::[
-     pre_read =&gt;inst?#{*}&lt;=#{?}(uri::T){&lt;j&gt;},
-     pattern  =&gt;docq,
-     pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T){&lt;j&gt;},
-     obj      =&gt;mem::[=&gt;]]],
+       pre_read =&gt;inst?#{*}&lt;=#{?}(uri::T){&lt;j&gt;},
+       pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T){&lt;j&gt;},
+       pattern  =&gt;docq,
+       obj      =&gt;mem::[=&gt;]]],
+ type   =&gt;[
+   lst::T@/m/tble/lrow,
+   rec::T[?[uri::T=&gt;#::T]]@/m/tble/rrow,
+   lst{*}::T[isa(lrow{*}::T)]@/m/tble/table,
+   space::T[?[
+     pattern =&gt;uri::T,
+     host    =&gt;uri::T,
+     driver  =&gt;uri::T,
+     route   =&gt;[uri::T=&gt;uri::T],
+     {?}table=&gt;lst::T]][inst?tble&lt;=#{?}(rec::T){&lt;j&gt;}]@/m/tble/space/tble],
+ inst   =&gt;[
+   as?rrow&lt;=lrow(rec::T[?[uri::T=&gt;#::T]]@/m/tble/rrow){&lt;j&gt;},
+   as?lrow&lt;=rrow(lst::T@/m/tble/lrow){&lt;j&gt;},
+   sql?rrow{*}&lt;=tble(str::T){&lt;j&gt;}],
  rewrite=&gt;[
    /m/tble/inst/rewrite/sql_native_count?code{?}&lt;=code(){&lt;j&gt;},
    /m/tble/inst/rewrite/sql_native_sum?code{?}&lt;=code(){&lt;j&gt;},
-   /m/tble/inst/rewrite/sql_native_mean?code{?}&lt;=code(){&lt;j&gt;}],
- inst   =&gt;[
-   as?rrow&lt;=lrow(rec::T[isa([uri::T=&gt;#::T])]@/m/tble/rrow){&lt;j&gt;},
-   as?lrow&lt;=rrow(lst::T@/m/tble/lrow){&lt;j&gt;},
-   sql?rrow{*}&lt;=tble(str::T){&lt;j&gt;}],
- type   =&gt;[lst::T@/m/tble/lrow,rec::T[isa([uri::T=&gt;#::T])]@/m/tble/rrow,lst{*}::T[isa(lrow{*}::T)]@/m/tble/table,space::T[isa([
- pattern =&gt;uri::T,
- host    =&gt;uri::T,
- driver  =&gt;uri::T,
- route   =&gt;[uri::T=&gt;uri::T],
- {?}table=&gt;lst::T])][inst?tble&lt;=#{?}(rec::T){&lt;j&gt;}]@/m/tble/space/tble]]@/m/tble</code></pre>
+   /m/tble/inst/rewrite/sql_native_mean?code{?}&lt;=code(){&lt;j&gt;}]]@/m/tble</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -1475,25 +1799,25 @@ bin/metatron</code></pre>
    super=&gt;!*/m],
  q      =&gt;[
    docq::[
-     pre_read =&gt;inst?#{*}&lt;=#{?}(uri::T){&lt;j&gt;},
-     pattern  =&gt;docq,
-     pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T){&lt;j&gt;},
-     obj      =&gt;mem::[=&gt;]]],
+       pre_read =&gt;inst?#{*}&lt;=#{?}(uri::T){&lt;j&gt;},
+       pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T){&lt;j&gt;},
+       pattern  =&gt;docq,
+       obj      =&gt;mem::[=&gt;]]],
+ const  =&gt;[serializer::/m/mach/io/serializer@/m/mach/io/serializer/xml,serializer::/m/mach/io/serializer@/m/mach/io/serializer/html,serializer::/m/mach/io/serializer@/m/mach/io/serializer/json],
+ type   =&gt;[
+   rec::T@/m/web/xml,
+   xml::T[?[
+     html=&gt;[head=&gt;rec::T,body=&gt;rec::T]]]@/m/web/html,
+   rec::T[?[
+     uri::T=&gt;is(or(eq(noobj{0}::T[inst?noobj{0}&lt;=#{?}(){&lt;j&gt;}]),eq(bool::T),eq(int::T),eq(str::T),eq(uri::T),eq(lst::T),eq(rec::T)))]][/m/web/inst?json&lt;=#{?}(str::T){&lt;j&gt;}]@/m/web/json,
+   rec::T@/m/web/css,
+   space::T[][inst?http&lt;=#{?}(rec::T[isa([pattern=&gt;uri::T,host=&gt;uri::T,route=&gt;rec::T])]){&lt;j&gt;}]@/m/web/space/http],
  inst   =&gt;[
    as?xml&lt;=str(xml::T){&lt;j&gt;},
    as?html&lt;=str(html::T){&lt;j&gt;},
    as?json&lt;=str(json::T){&lt;j&gt;},
    doc?str&lt;=str(){&lt;j&gt;},
-   doc_json?str&lt;=str(){&lt;j&gt;}],
- type   =&gt;[
-   rec::T@/m/web/xml,
-   xml::T[isa([
- html=&gt;[head=&gt;rec::T,body=&gt;rec::T]])]@/m/web/html,
-   rec::T[isa([
- uri::T=&gt;is(or(eq(noobj{0}::T[inst?noobj{0}&lt;=#{?}(){&lt;j&gt;}]),eq(bool::T),eq(int::T),eq(str::T),eq(uri::T),eq(lst::T),eq(rec::T)))])][/m/web/inst?json&lt;=#{?}(str::T){&lt;j&gt;}]@/m/web/json,
-   rec::T@/m/web/css,
-   space::T[][inst?http&lt;=#{?}(rec::T[isa([pattern=&gt;uri::T,host=&gt;uri::T,route=&gt;rec::T])]){&lt;j&gt;}]@/m/web/space/http],
- const  =&gt;[serializer::/m/mach/io/serializer@/m/mach/io/serializer/xml,serializer::/m/mach/io/serializer@/m/mach/io/serializer/html,serializer::/m/mach/io/serializer@/m/mach/io/serializer/json]]@/m/web</code></pre>
+   doc_json?str&lt;=str(){&lt;j&gt;}]]@/m/web</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -3148,7 +3472,9 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="mt-2">
-                        <pre class="mb-0"><code class="language-mtron">space::T[][inst?rng=mem&amp;dom=#{?}(isa([pattern=&gt;uri::T,{?}persist=&gt;uri::T[][inst?rng=file&amp;dom=#{?}(uri::T){&lt;j&gt;}]@/m/mach/file])){&lt;j&gt;}]@/m/space/mem</code></pre>
+                        <pre class="mb-0"><code class="language-mtron">space::T[][inst?rng=mem&amp;dom=#{?}(isa([
+ pattern   =&gt;uri::T,
+ {?}persist=&gt;uri::T[][inst?rng=file&amp;dom=#{?}(uri::T){&lt;j&gt;}]@/m/mach/file])){&lt;j&gt;}]@/m/space/mem</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -3211,7 +3537,7 @@ bin/metatron</code></pre>
         <div class="container-xxl py-3 text-center">
             <hr class="border-secondary">
             <small class="text-muted">
-                generated by metatron instset doc generator on build 0-2026-04-03 17:25:05<br>
+                generated by metatron instset doc generator on build 0-2026-04-04 12:51:23<br>
                 © PhaseShift Studio, LLC
             </small>
         </div>

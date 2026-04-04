@@ -30,6 +30,7 @@
     --light: #6C7293;
     --dark: #000000;
     /*------------------------*/
+    --mdirtywhite: #969696;
     --mblue: #4669dd;
     --mmagenta: #9f4040; /*#825181;*/
     --mred: #7a2518;
@@ -42,13 +43,14 @@
 
 body, .quoteblock blockquote, .quoteblock p, .mjx-chtml .MJXc-display span {
     background-color: var(--secondarycolor);
-    color: #cbcbcb;
+    color: var(--mdirtywhite);
     font-weight: 500;
 }
 
-.sidebarblock, .content, pre .highlight, .language-java, .hljs {
+.sidebarblock, .content, pre .highlight, .language-java, .hljs, .literalblock pre, .listingblock>.content>pre:not(.highlight), .listingblock>.content>pre[class=highlight], .listingblock>.content>pre[class^="highlight "] {
     background-color: var(--secondarycolor) !important;
     padding: 1rem;
+    color: var(--mdirtywhite)
 }
 
 #header>h1:first-child {
@@ -73,8 +75,12 @@ a {
 
 table, tr, td {
     border: 0;
-    color: #cbcbcb !important;
+    color: var(--mdirtywhite) !important;
     background: var(--secondarycolor) !important;
+}
+
+strong {
+    color: var(--mred);
 }
 
 th {

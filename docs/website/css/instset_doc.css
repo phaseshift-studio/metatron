@@ -24,6 +24,24 @@
 /* ==========================================================================
    Code Blocks - highlight.js compatibility
    ========================================================================== */
+.accordion-button {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 0.5rem;
+    margin: 5px;
+    font-size: 1rem;
+    color: var(--primary);
+    text-align: center;
+    /*background-color: transparent;*/
+    border: 1px solid var(--mred);
+    border-radius: 2px;
+    overflow-anchor: none;
+    font-family: 'Fira Mono', Consolas, Menlo, Monaco, 'Courier New', Courier, monospace;
+    transition: color 0.15s ease-in-out,background-color 0.15s ease-in-out,border-color 0.15s ease-in-out,box-shadow 0.15s ease-in-out,border-radius 0.15s ease;
+}
+
 
 /* Pre blocks containing highlight.js code */
 .instset-doc pre {

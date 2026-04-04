@@ -42,7 +42,7 @@ Marko A. Rodriguez <https://markorodriguez.com>; Claude <https://www.anthropic.c
 
 [abstract]
 --
-We introduce *parametric identities*, an extension of classical ring theory where identity elements are *instructions* rather than passive values. In classical algebra, identities latexmath:[(0,1)] are fixed values satisfying axioms structurally. We show that in code-as-data systems, identities can be instructions whose axioms are satisfied through runtime evaluation—the principle of *verification-forced reification*. This enables algebraic structures impossible with passive identities: where the identity would require infinite enumeration (e.g., the universal diagonal relation), a single polymorphic instruction suffices. The key insight is that *parametric polymorphism* compresses infinite enumeration into a second-order universal quantifier latexmath:[\forall A], and *parametricity* [1,2] guarantees correct behavior. We formalize computational identities, prove consistency with classical axioms via the Curry-Howard correspondence, and demonstrate *coefficient-mediated algebraic structure* where data structures inherit ring properties from coefficient rings. Rings with parametric identities are a conservative extension of classical ring theory.
+We introduce *parametric identities*, an extension of classical ring theory where identity elements are *instructions* rather than passive values. In classical algebra, identities latexmath:[(0,1)] are fixed values satisfying axioms structurally. We show that in code-as-data systems, identities can be instructions whose axioms are satisfied through runtime evaluation—the principle of *verification-forced reification*. This enables algebraic structures impossible with passive identities: where the identity would require infinite enumeration (e.g., the universal diagonal relation), a single parametric polymorphic instruction suffices. The key insight is that *parametric polymorphism* compresses infinite enumeration into a second-order universal quantifier latexmath:[\forall A], and *parametricity* [1,2] guarantees correct behavior. We formalize computational identities, prove consistency with classical axioms via the Curry-Howard correspondence, and demonstrate *coefficient-mediated algebraic structure* where data structures inherit ring properties from coefficient rings.
 --
 
 == Introduction
@@ -51,7 +51,7 @@ Classical ring theory requires concrete identity elements. A ring latexmath:[\la
 
 Stream ring theory [7] established that *functions* themselves can form rings, where the set latexmath:[F] of stream functions with parallel composition latexmath:[+] and serial composition latexmath:[\cdot] satisfies all ring axioms. The additive identity is the function latexmath:[0(x) = \emptyset] (producing no output), and the multiplicative identity is latexmath:[1(x) = x] (the identity function). The significance being that identity elements became *functions* rather than mere values.
 
-However, even in stream ring theory, the identity functions latexmath:[0] and latexmath:[1] are still *passive* in the sense that they are fixed, predetermined functions. The question arises: *What if identity elements themselves could be computational—active objects whose identity properties emerge through runtime evaluation?*
+However, even in stream ring theory, the identity functions latexmath:[0: (A \times A) \rightarrow A] and latexmath:[1: (A \times A) \rightarrow A] are still *passive* in the sense that they are fixed, predetermined functions. The question arises: *What if identity elements themselves could be computationally—active objects whose identity properties emerge as a function of the supplied arguments and runtime evaluation?*
 
 === The Problem: Impossible Identities
 
@@ -82,7 +82,7 @@ where latexmath:[\texttt{id}()] is an *instruction* (not data) with generic doma
 [a,b,c] \times [\texttt{id}()] = [a,b,c]
 ++++
 
-The identity axiom is satisfied not through structural properties of a passive value, but through *computational semantics* of an active instruction.
+The identity axiom is satisfied not through structural properties of a passive value, but through *computational semantics* of an active instruction. Simple, yet effective.
 
 === Contributions
 
@@ -134,7 +134,7 @@ A ring satisfying these axioms is called a *ring with unity*.
 
 === Stream Ring Theory
 
-Rodriguez <<rodriguez2019>> introduced stream ring theory, where stream functions form a ring. A *stream* is an unordered list of objects that can expand and contract. A *stream function* latexmath:[f : X \to Y^*] consumes objects from an incoming stream and produces objects for an outgoing stream.
+Rodriguez [7] introduced stream ring theory, where stream functions form a ring. A *stream* is an unordered list of objects that can expand and contract. A *stream function* latexmath:[f : X \to Y^*] consumes objects from an incoming stream and produces objects for an outgoing stream.
 
 The set latexmath:[F] of all stream functions forms a ring latexmath:[\langle F, +, \cdot \rangle] where:
 
@@ -152,7 +152,7 @@ Stream ring theory proved that this structure satisfies all ring axioms and is T
 
 In code-as-data systems, programs are first-class objects that can be inspected, transformed, and executed at runtime. An *instruction* is a computational object with:
 
-* A *type identifier* (TID) specifying what operation it performs
+* A *type identifier* (tid) specifying what operation it performs
 * A *domain* specifying the type of input it accepts
 * A *range* specifying the type of output it produces
 * *Arguments* (possibly empty) providing parameters
@@ -189,10 +189,10 @@ The operation latexmath:[\star] must have runtime semantics that recognize when 
 
 [source,java]
 ----
-default A mult(A other) {
-    if (this.isOne()) return other;  // this is identity
-    if (other.isOne()) return this;  // other is identity
-    return this.performMult(other);  // actual multiplication
+A mult(A other) {
+  if (this.isOne()) return other;  // this is identity
+  if (other.isOne()) return this;  // other is identity
+  return this.passiveMult(other);  // a ring-dependent passive multiplication
 }
 ----
 
@@ -225,10 +225,10 @@ The identity instruction has type:
 
 This second-order universal quantifier latexmath:[\forall A] ranges over *all types* without enumerating them. In System F (polymorphic lambda calculus) [3], this is written:
 
-[source]
-----
-id = ΛA. λx:A. x
-----
+[stem]
+++++
+id = \Lambda A. \lambda x:A. x
+++++
 
 where latexmath:[\Lambda A] abstracts over the type variable, and latexmath:[\lambda x:A. x] is the value-level identity function.
 
@@ -241,11 +241,13 @@ The key insight is that *parametric polymorphism* [1] provides a finite represen
 
 we define a single parametric identity that instantiates to any type on demand.
 
-== Case Study: List Cartesian Product Ring
+== Case Studies
+
+=== List Cartesian Product Ring
 
 We now demonstrate computational identities through a concrete example: lists with concatenation and relation-based Cartesian product.
 
-=== List Operations
+==== List Operations
 
 Let latexmath:[L] be the set of all finite lists. We define two operations:
 
@@ -272,7 +274,7 @@ where latexmath:[a \Rightarrow b] denotes a *relation* (key-value pair) from lat
 [a, b] \times [c, d] = [a \Rightarrow c, a \Rightarrow d, b \Rightarrow c, b \Rightarrow d]
 ++++
 
-=== Identity Elements
+==== Identity Elements
 
 *Additive Identity:* The empty list latexmath:[[\,]] satisfies:
 
@@ -302,7 +304,7 @@ default Lst mult(Lst other) {
 }
 ----
 
-=== Verification of Ring Axioms
+==== Verification of Ring Axioms
 
 .Theorem: List Ring Structure
 ****
@@ -335,11 +337,7 @@ Right side:
 
 The two sides are equal. ∎
 
-=== More Value-Impossible Rings
-
-The list Cartesian product is not unique—many algebraic structures require infinite or context-dependent identities impossible as passive values.
-
-==== Relation Composition
+=== Relation Composition
 
 Binary relations compose via latexmath:[R \circ S = \{(a,c) \mid \exists b: (a,b) \in R \land (b,c) \in S\}]. The identity relation is:
 
@@ -350,7 +348,7 @@ Binary relations compose via latexmath:[R \circ S = \{(a,c) \mid \exists b: (a,b
 
 This diagonal of the universe is infinite and unrepresentable. With parametric identity latexmath:[\tt{id}()], the composition operation recognizes the instruction and returns the other relation unchanged.
 
-==== Code Transformation
+=== Code Transformation
 
 AST transformations form a ring under parallel (fanout) and serial composition. The multiplicative identity is "return code unchanged"—but as a concrete rewrite pattern, this requires matching *all possible ASTs*, an infinite set. With parametric identity latexmath:[\tt{id}()], a single instruction handles all code structures.
 
@@ -360,11 +358,11 @@ code.id()       [-- returns code unchanged --]
 code.opt().id() [-- id() composes away --]
 ----
 
-==== Type Constructors
+=== Type Constructors
 
 Type constructors like latexmath:[\tt{List}], latexmath:[\tt{Option}] compose: latexmath:[\tt{List}[\tt{Option}[A\]\]]. The identity constructor latexmath:[F] satisfies latexmath:[F[A\] = A] for all latexmath:[A]. No finite type expresses this—it would require a "universal wrapper" that is every type simultaneously (Russell's paradox territory). With parametric identity latexmath:[\tt{T}(\#)], the generic type adapts at application time.
 
-==== Filter Composition
+=== Filter Composition
 
 Predicates compose serially: latexmath:[p_1 \circ p_2] applies latexmath:[p_1], then latexmath:[p_2] to survivors. The identity filter passes all elements unchanged—but a concrete predicate latexmath:[\lambda x.\, \tt{true}] is typed for *one* domain. You'd need infinitely many identity predicates, one per type. Active identity latexmath:[\tt{id}()] is polymorphic:
 
@@ -374,11 +372,11 @@ Predicates compose serially: latexmath:[p_1 \circ p_2] applies latexmath:[p_1], 
 ['a','b'].filter(id())     [-- ['a','b'] --]
 ----
 
-==== Rewrite Systems
+=== Rewrite Systems
 
 Term rewriting rules compose: latexmath:[r_1 ; r_2] applies latexmath:[r_1] then latexmath:[r_2]. The identity rewrite "matches anything, returns unchanged" cannot be expressed as a finite pattern—it would require enumerating all possible term shapes. With parametric identity, the rewrite engine recognizes latexmath:[\tt{id}()] and short-circuits.
 
-==== The Pattern
+== The Pattern
 
 Each impossible ring shares a common structure:
 
@@ -395,11 +393,11 @@ Each impossible ring shares a common structure:
 
 The common thread: *infinite enumeration* or *universal quantification* required for passive identity, but a *single parametric instruction* suffices for computational identity.
 
-== Coefficient-Mediated Algebraic Structure
+=== Coefficient-Mediated Algebraic Structure
 
 A key implementation technique for computational rings is *coefficient-mediated algebraic structure*, where data structures inherit ring properties by coupling to coefficient rings.
 
-=== The Coefficient Pattern
+==== The Coefficient Pattern
 
 .Coefficient-Mediated Structure
 ****
@@ -412,9 +410,9 @@ A data structure latexmath:[D] has *coefficient-mediated algebraic structure* if
 
 This pattern is analogous to *module theory* in abstract algebra, where a module latexmath:[M] over a ring latexmath:[R] has scalar multiplication latexmath:[R \times M \to M].
 
-=== Implementation in Metatron
+==== Implementation in metatron
 
-In the Metatron system, every object has a coefficient accessible via the latexmath:[\tt{c}()] method:
+In metatron, every object has a coefficient `c`. 
 
 [source,java]
 ----
@@ -428,7 +426,7 @@ Obj newObj = obj.c(cInt.of(5));
 Obj transformed = obj.c(c -> c.mult(cInt.of(2)));
 ----
 
-=== Additive Inverse via Coefficients
+==== Additive Inverse via Coefficients
 
 The additive inverse (negation) for lists is implemented by negating coefficients of all elements:
 
@@ -459,7 +457,7 @@ d + \tt{neg}(d) = \sum_{i=1}^n c_i \cdot d_i + \sum_{i=1}^n (-c_i) \cdot d_i = \
 
 where latexmath:[0] is the additive identity. ∎
 
-=== Scalar Multiplication
+==== Scalar Multiplication
 
 Coefficient-mediated structure naturally supports scalar multiplication:
 
@@ -475,7 +473,7 @@ default Lst scalarMult(cInt scalar) {
 
 This makes latexmath:[D] a *module* over the coefficient ring latexmath:[R].
 
-=== Advantages of Coefficient-Mediated Structure
+==== Advantages of Coefficient-Mediated Structure
 
 1. *Separation of Concerns*: Data structure logic is separate from algebraic structure
 2. *Reusability*: Any new data structure automatically gets ring operations if it respects coefficients
@@ -755,7 +753,7 @@ The Metatron programming language serves as reference implementation, demonstrat
 
 == References
 
-[1] J.C. Reynolds, "Types, Abstraction and Parametric Polymorphism," _Information Processing 83_, pp. 513–523, 1983.
+[1] J.C. Reynolds, "Types, Abstraction, and Parametric Polymorphism," _Information Processing 83_, pp. 513–523, 1983.
 
 [2] P. Wadler, "Theorems for Free!," _Proceedings of the Fourth International Conference on Functional Programming Languages and Computer Architecture (FPCA '89)_, pp. 347–359, 1989.
 
@@ -765,7 +763,7 @@ The Metatron programming language serves as reference implementation, demonstrat
 
 [5] H.B. Curry and R. Feys, _Combinatory Logic_, vol. 1, North-Holland, 1958.
 
-[6] W.A. Howard, "The Formulae-as-Types Notion of Construction," in _To H.B. Curry: Essays on Combinatory Logic, Lambda Calculus and Formalism_, Academic Press, pp. 479–490, 1980. (Manuscript from 1969.)
+[6] W.A. Howard, "The Formulae-as-Types Notion of Construction," in _To H.B. Curry: Essays on Combinatory Logic, Lambda Calculus, and Formalism_, Academic Press, pp. 479–490, 1980. (Manuscript from 1969.)
 
 [7] M.A. Rodriguez, "Stream Ring Theory," _S/V Red Herring's Ship's Log: Chronicles in the Sea of Cortez_, pp. 10–40, Mulegé, Baja California Sur, México, February 2019.
 

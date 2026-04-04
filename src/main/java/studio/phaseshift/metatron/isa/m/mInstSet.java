@@ -236,6 +236,7 @@ public class mInstSet extends AbstractInstSet {
     public void setup() {
         this.jvm().putAll(new LinkedHashMap<>(Map.of(
                 uri(PATTERN), uri(M_ISA_INST_TID.extend(ALL)),
+                uri(CONST), lst(noobj()),
                 uri(TYPE), lst(
                       /*  NOOBJ_TYPE,
                         FAIL_TYPE,
@@ -278,7 +279,6 @@ public class mInstSet extends AbstractInstSet {
                         CONSTQ_TYPE),
                 uri(INST), lst(Stream.of(
                         NoObj.NoObjType.insts().stream(),
-                     
                         Bool.BoolType.insts().stream(),
                         Bytes.BytesType.insts().stream(),
                         Int.IntType.insts().stream(),
@@ -295,7 +295,6 @@ public class mInstSet extends AbstractInstSet {
                         SpaceType.insts().stream(),
                         ObjType.insts().stream()
                 ).flatMap(i -> i)),
-                uri(CONST), lst(noobj()),
                 uri(REWRITE), lst(
                         // Remove identity instructions (no-op)
                         InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("id_removal"),
@@ -554,7 +553,7 @@ public class mInstSet extends AbstractInstSet {
                                                     // No optimization possible, return original
                                                     return matched;
                                                 })).asCode())))));
-        docWrap(this, "the core instruction of metatron containing the base types and an algebra to manipulate them");
+        docWrap(this, "the core instruction set of metatron containing the base types and useful instructions to manipulate them");
         super.setup();
     }
 

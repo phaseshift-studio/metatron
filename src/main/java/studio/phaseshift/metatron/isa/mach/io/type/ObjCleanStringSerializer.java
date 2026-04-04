@@ -202,19 +202,7 @@ public class ObjCleanStringSerializer extends AbstractObjSerializer<String> {
 
     @Override
     public String writeType(final Type type) {
-        StringBuilder typeString = new StringBuilder(
-                (Router.loaded() ? Router.global().redirect(type.tid(), false) : type.tid()).toString())
-                .append("::T");
-        if (type.hasPredicate())
-            typeString.append("[").append(type.predicate()).append("]");
-        if (type.hasConstructor()) {
-            if (!type.hasPredicate())
-                typeString.append("[]");
-            typeString.append("[").append(type.constructor()).append("]");
-        }
-        if (type.vid() != null && !type.tid().equals(type.vid()))
-            typeString.append("@").append(type.vid());
-        return typeString.toString();
+       return this.generateType(new StringBuilder(), type, 0).toString();
     }
 
     @Override
@@ -256,20 +244,20 @@ public class ObjCleanStringSerializer extends AbstractObjSerializer<String> {
             return sb;
         return sb.append("@").append(wrapUri(obj.vid()));
     }
-
+    
     private StringBuilder generateLst(final StringBuilder sb, final Lst lst, final int depth) {
         handleTID(sb, lst, true);
         if (lst.isEmpty()) {
             sb.append("[,]");
         } else {
-            boolean nested = lst.elements().anyMatch(e -> e.isPoly() || e.isInst()) || lst.jvm().size() > 4;
+            boolean nested = lst.elements().anyMatch(e -> e.isPoly() || e.isObjCall() || isComplexType(e)) || lst.jvm().size() > 4;
             /* lst.jvm().stream().map(this::write).map(String::length).reduce(0, Integer::sum) > (50 - depth);*/
             final boolean isBaseType = lst.type().isBaseType();
             sb.append("[").append(nested ? "\n" : "");
             lst.jvm().forEach(v -> {
                 if (nested)
                     sb.append(" ".repeat(depth + 2));
-                this.processNestedPoly(sb, depth, 0, nested, v);
+                this.processNestedPoly(sb, depth+1, 0, nested, v);
             });
             this.cleanEnding(sb);
             sb.append("]");
@@ -286,6 +274,34 @@ public class ObjCleanStringSerializer extends AbstractObjSerializer<String> {
         return sb;
     }
 
+    private StringBuilder generateType(final StringBuilder sb, final Type type, final int depth) {
+        StringBuilder typeString = new StringBuilder(
+                (Router.loaded() ? Router.global().redirect(type.tid(), false) : type.tid()).toString())
+                .append("::T");
+        if (type.hasPredicate()) {
+            if(type.predicate().isInst() && type.predicate().tid().basePath().equals(ISA_INST_TID) && type.predicate().asInst().arg(0).isPoly()) {
+                typeString.append("[?");
+                processNestedPoly(sb, depth+1, 0, true, type.predicate().asInst().arg(0));
+                typeString.append(sb, 0, sb.length()-2); // remove ,\n
+                typeString.append("]");
+            } else {
+                typeString.append("[").append(type.predicate()).append("]");
+            }
+        }
+        if (type.hasConstructor()) {
+            if (!type.hasPredicate())
+                typeString.append("[]");
+            typeString.append("[").append(type.constructor()).append("]");
+        }
+        if (type.vid() != null && !type.tid().equals(type.vid()))
+            typeString.append("@").append(type.vid());
+        return typeString;
+    }
+    
+    private boolean isComplexType(final Obj type) {
+        return type.isType() && (type.asType().hasPredicate() || type.asType().hasConstructor());
+    }
+    
     private StringBuilder generateRec(final StringBuilder sb, final Rec rec, final int depth, final int padding) {
         handleTID(sb, rec, true);
         //   if(rec.tid().basePath().equals(DOC_TID)) // TODO: the concept of toString() needs to exist for metatron
@@ -293,12 +309,12 @@ public class ObjCleanStringSerializer extends AbstractObjSerializer<String> {
         if (rec.isEmpty()) {
             sb.append("[=>]");
         } else {
-            boolean nested = rec.jvm().size() > 4 || rec.jvm().values().stream().anyMatch(o -> o.isPoly() || o.isObjCall());
+            boolean nested = rec.jvm().size() > 4 || rec.jvm().values().stream().anyMatch(o -> o.isPoly() || o.isObjCall() || isComplexType(o));
             /*rec.jvm().values().stream().filter(o -> !o.isPoly()).map(this::write).map(String::length).reduce(0, Integer::sum) > (75 - depth);*/
             final int maxKeyLength = nested ? rec.jvm().keySet().stream().map(this::write).map(String::length).reduce(0, Integer::max) : 0;
             final boolean isBaseType = rec.type().isBaseType();
-            final AtomicBoolean first = new AtomicBoolean(isBaseType);
-            sb.append("[").append(nested && !isBaseType ? "\n" : "");
+            final AtomicBoolean first = new AtomicBoolean(false);
+            sb.append("[").append(nested ? "\n" : "");
             rec.jvm().forEach((k, v) -> {
                 int indent = nested ? (first.getAndSet(false) ?
                         (depth * 2) - (padding + 4) :
@@ -347,6 +363,8 @@ public class ObjCleanStringSerializer extends AbstractObjSerializer<String> {
             this.generateRec(sb, v.as(), depth + 1, padding);
         } else if (v.isLst()) {
             this.generateLst(sb, v.as(), depth + 1);
+        } else if(v.isType() && isComplexType(v)) {
+            sb.append(this.write(v.asType()));
         } else {
             this.writeClip(sb, v);
         }

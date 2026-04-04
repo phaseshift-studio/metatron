@@ -117,31 +117,34 @@ $(addBlockSwitches);
 <li><a href="#_parametric_identity_the_type_theoretic_view">3.4. Parametric Identity: The Type-Theoretic View</a></li>
 </ul>
 </li>
-<li><a href="#_case_study_list_cartesian_product_ring">4. Case Study: List Cartesian Product Ring</a>
+<li><a href="#_case_studies">4. Case Studies</a>
 <ul class="sectlevel2">
-<li><a href="#_list_operations">4.1. List Operations</a></li>
-<li><a href="#_identity_elements">4.2. Identity Elements</a></li>
-<li><a href="#_verification_of_ring_axioms">4.3. Verification of Ring Axioms</a></li>
-<li><a href="#_more_value_impossible_rings">4.4. More Value-Impossible Rings</a>
+<li><a href="#_list_cartesian_product_ring">4.1. List Cartesian Product Ring</a>
 <ul class="sectlevel3">
-<li><a href="#_relation_composition">4.4.1. Relation Composition</a></li>
-<li><a href="#_code_transformation">4.4.2. Code Transformation</a></li>
-<li><a href="#_type_constructors">4.4.3. Type Constructors</a></li>
-<li><a href="#_filter_composition">4.4.4. Filter Composition</a></li>
-<li><a href="#_rewrite_systems">4.4.5. Rewrite Systems</a></li>
-<li><a href="#_the_pattern">4.4.6. The Pattern</a></li>
+<li><a href="#_list_operations">4.1.1. List Operations</a></li>
+<li><a href="#_identity_elements">4.1.2. Identity Elements</a></li>
+<li><a href="#_verification_of_ring_axioms">4.1.3. Verification of Ring Axioms</a></li>
 </ul>
 </li>
+<li><a href="#_relation_composition">4.2. Relation Composition</a></li>
+<li><a href="#_code_transformation">4.3. Code Transformation</a></li>
+<li><a href="#_type_constructors">4.4. Type Constructors</a></li>
+<li><a href="#_filter_composition">4.5. Filter Composition</a></li>
+<li><a href="#_rewrite_systems">4.6. Rewrite Systems</a></li>
 </ul>
 </li>
-<li><a href="#_coefficient_mediated_algebraic_structure">5. Coefficient-Mediated Algebraic Structure</a>
+<li><a href="#_the_pattern">5. The Pattern</a>
 <ul class="sectlevel2">
-<li><a href="#_the_coefficient_pattern">5.1. The Coefficient Pattern</a></li>
-<li><a href="#_implementation_in_metatron">5.2. Implementation in Metatron</a></li>
-<li><a href="#_additive_inverse_via_coefficients">5.3. Additive Inverse via Coefficients</a></li>
-<li><a href="#_scalar_multiplication">5.4. Scalar Multiplication</a></li>
-<li><a href="#_advantages_of_coefficient_mediated_structure">5.5. Advantages of Coefficient-Mediated Structure</a></li>
-<li><a href="#_connection_to_vector_spaces">5.6. Connection to Vector Spaces</a></li>
+<li><a href="#_coefficient_mediated_algebraic_structure">5.1. Coefficient-Mediated Algebraic Structure</a>
+<ul class="sectlevel3">
+<li><a href="#_the_coefficient_pattern">5.1.1. The Coefficient Pattern</a></li>
+<li><a href="#_implementation_in_metatron">5.1.2. Implementation in metatron</a></li>
+<li><a href="#_additive_inverse_via_coefficients">5.1.3. Additive Inverse via Coefficients</a></li>
+<li><a href="#_scalar_multiplication">5.1.4. Scalar Multiplication</a></li>
+<li><a href="#_advantages_of_coefficient_mediated_structure">5.1.5. Advantages of Coefficient-Mediated Structure</a></li>
+</ul>
+</li>
+<li><a href="#_connection_to_vector_spaces">5.2. Connection to Vector Spaces</a></li>
 </ul>
 </li>
 <li><a href="#_theoretical_framework">6. Theoretical Framework</a>
@@ -209,7 +212,7 @@ $(addBlockSwitches);
 <div class="quoteblock abstract">
 <blockquote>
 <div class="paragraph">
-<p>We introduce <strong>parametric identities</strong>, an extension of classical ring theory where identity elements are <strong>instructions</strong> rather than passive values. In classical algebra, identities \((0,1)\) are fixed values satisfying axioms structurally. We show that in code-as-data systems, identities can be instructions whose axioms are satisfied through runtime evaluation—the principle of <strong>verification-forced reification</strong>. This enables algebraic structures impossible with passive identities: where the identity would require infinite enumeration (e.g., the universal diagonal relation), a single polymorphic instruction suffices. The key insight is that <strong>parametric polymorphism</strong> compresses infinite enumeration into a second-order universal quantifier \(\forall A\), and <strong>parametricity</strong> [1,2] guarantees correct behavior. We formalize computational identities, prove consistency with classical axioms via the Curry-Howard correspondence, and demonstrate <strong>coefficient-mediated algebraic structure</strong> where data structures inherit ring properties from coefficient rings. Rings with parametric identities are a conservative extension of classical ring theory.</p>
+<p>We introduce <strong>parametric identities</strong>, an extension of classical ring theory where identity elements are <strong>instructions</strong> rather than passive values. In classical algebra, identities \((0,1)\) are fixed values satisfying axioms structurally. We show that in code-as-data systems, identities can be instructions whose axioms are satisfied through runtime evaluation—the principle of <strong>verification-forced reification</strong>. This enables algebraic structures impossible with passive identities: where the identity would require infinite enumeration (e.g., the universal diagonal relation), a single parametric polymorphic instruction suffices. The key insight is that <strong>parametric polymorphism</strong> compresses infinite enumeration into a second-order universal quantifier \(\forall A\), and <strong>parametricity</strong> [1,2] guarantees correct behavior. We formalize computational identities, prove consistency with classical axioms via the Curry-Howard correspondence, and demonstrate <strong>coefficient-mediated algebraic structure</strong> where data structures inherit ring properties from coefficient rings.</p>
 </div>
 </blockquote>
 </div>
@@ -223,7 +226,7 @@ $(addBlockSwitches);
 <p>Stream ring theory [7] established that <strong>functions</strong> themselves can form rings, where the set \(F\) of stream functions with parallel composition \(+\) and serial composition \(\cdot\) satisfies all ring axioms. The additive identity is the function \(0(x) = \emptyset\) (producing no output), and the multiplicative identity is \(1(x) = x\) (the identity function). The significance being that identity elements became <strong>functions</strong> rather than mere values.</p>
 </div>
 <div class="paragraph">
-<p>However, even in stream ring theory, the identity functions \(0\) and \(1\) are still <strong>passive</strong> in the sense that they are fixed, predetermined functions. The question arises: <strong>What if identity elements themselves could be computational—active objects whose identity properties emerge through runtime evaluation?</strong></p>
+<p>However, even in stream ring theory, the identity functions \(0: (A \times A) \rightarrow A\) and \(1: (A \times A) \rightarrow A\) are still <strong>passive</strong> in the sense that they are fixed, predetermined functions. The question arises: <strong>What if identity elements themselves could be computationally—active objects whose identity properties emerge as a function of the supplied arguments and runtime evaluation?</strong></p>
 </div>
 <div class="sect2">
 <h3 id="_the_problem_impossible_identities">1.1. The Problem: Impossible Identities</h3>
@@ -269,7 +272,7 @@ $(addBlockSwitches);
 </div>
 </div>
 <div class="paragraph">
-<p>The identity axiom is satisfied not through structural properties of a passive value, but through <strong>computational semantics</strong> of an active instruction.</p>
+<p>The identity axiom is satisfied not through structural properties of a passive value, but through <strong>computational semantics</strong> of an active instruction. Simple, yet effective.</p>
 </div>
 </div>
 <div class="sect2">
@@ -370,7 +373,7 @@ $(addBlockSwitches);
 <div class="sect2">
 <h3 id="_stream_ring_theory">2.2. Stream Ring Theory</h3>
 <div class="paragraph">
-<p>Rodriguez <a href="#rodriguez2019">[rodriguez2019]</a> introduced stream ring theory, where stream functions form a ring. A <strong>stream</strong> is an unordered list of objects that can expand and contract. A <strong>stream function</strong> \(f : X \to Y^*\) consumes objects from an incoming stream and produces objects for an outgoing stream.</p>
+<p>Rodriguez [7] introduced stream ring theory, where stream functions form a ring. A <strong>stream</strong> is an unordered list of objects that can expand and contract. A <strong>stream function</strong> \(f : X \to Y^*\) consumes objects from an incoming stream and produces objects for an outgoing stream.</p>
 </div>
 <div class="paragraph">
 <p>The set \(F\) of all stream functions forms a ring \(\langle F, +, \cdot \rangle\) where:</p>
@@ -410,7 +413,7 @@ $(addBlockSwitches);
 <div class="ulist">
 <ul>
 <li>
-<p>A <strong>type identifier</strong> (TID) specifying what operation it performs</p>
+<p>A <strong>type identifier</strong> (tid) specifying what operation it performs</p>
 </li>
 <li>
 <p>A <strong>domain</strong> specifying the type of input it accepts</p>
@@ -477,10 +480,10 @@ $(addBlockSwitches);
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">default A mult(A other) {
-    if (this.isOne()) return other;  // this is identity
-    if (other.isOne()) return this;  // other is identity
-    return this.performMult(other);  // actual multiplication
+<pre class="highlight"><code class="language-java" data-lang="java">A mult(A other) {
+  if (this.isOne()) return other;  // this is identity
+  if (other.isOne()) return this;  // other is identity
+  return this.passiveMult(other);  // a ring-dependent passive multiplication
 }</code></pre>
 </div>
 </div>
@@ -526,9 +529,9 @@ $(addBlockSwitches);
 <div class="paragraph">
 <p>This second-order universal quantifier \(\forall A\) ranges over <strong>all types</strong> without enumerating them. In System F (polymorphic lambda calculus) [3], this is written:</p>
 </div>
-<div class="listingblock">
+<div class="stemblock">
 <div class="content">
-<pre class="highlight"><code>id = ΛA. λx:A. x</code></pre>
+\[id = \Lambda A. \lambda x:A. x\]
 </div>
 </div>
 <div class="paragraph">
@@ -549,13 +552,15 @@ $(addBlockSwitches);
 </div>
 </div>
 <div class="sect1">
-<h2 id="_case_study_list_cartesian_product_ring">4. Case Study: List Cartesian Product Ring</h2>
+<h2 id="_case_studies">4. Case Studies</h2>
 <div class="sectionbody">
+<div class="sect2">
+<h3 id="_list_cartesian_product_ring">4.1. List Cartesian Product Ring</h3>
 <div class="paragraph">
 <p>We now demonstrate computational identities through a concrete example: lists with concatenation and relation-based Cartesian product.</p>
 </div>
-<div class="sect2">
-<h3 id="_list_operations">4.1. List Operations</h3>
+<div class="sect3">
+<h4 id="_list_operations">4.1.1. List Operations</h4>
 <div class="paragraph">
 <p>Let \(L\) be the set of all finite lists. We define two operations:</p>
 </div>
@@ -587,8 +592,8 @@ $(addBlockSwitches);
 </div>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_identity_elements">4.2. Identity Elements</h3>
+<div class="sect3">
+<h4 id="_identity_elements">4.1.2. Identity Elements</h4>
 <div class="paragraph">
 <p><strong>Additive Identity:</strong> The empty list \([\,\)] satisfies:</p>
 </div>
@@ -622,8 +627,8 @@ $(addBlockSwitches);
 </div>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_verification_of_ring_axioms">4.3. Verification of Ring Axioms</h3>
+<div class="sect3">
+<h4 id="_verification_of_ring_axioms">4.1.3. Verification of Ring Axioms</h4>
 <div class="sidebarblock">
 <div class="content">
 <div class="title">Theorem: List Ring Structure</div>
@@ -674,13 +679,9 @@ $(addBlockSwitches);
 <p>The two sides are equal. ∎</p>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_more_value_impossible_rings">4.4. More Value-Impossible Rings</h3>
-<div class="paragraph">
-<p>The list Cartesian product is not unique—many algebraic structures require infinite or context-dependent identities impossible as passive values.</p>
 </div>
-<div class="sect3">
-<h4 id="_relation_composition">4.4.1. Relation Composition</h4>
+<div class="sect2">
+<h3 id="_relation_composition">4.2. Relation Composition</h3>
 <div class="paragraph">
 <p>Binary relations compose via \(R \circ S = \{(a,c) \mid \exists b: (a,b) \in R \land (b,c) \in S\}\). The identity relation is:</p>
 </div>
@@ -693,8 +694,8 @@ $(addBlockSwitches);
 <p>This diagonal of the universe is infinite and unrepresentable. With parametric identity \(\tt{id}()\), the composition operation recognizes the instruction and returns the other relation unchanged.</p>
 </div>
 </div>
-<div class="sect3">
-<h4 id="_code_transformation">4.4.2. Code Transformation</h4>
+<div class="sect2">
+<h3 id="_code_transformation">4.3. Code Transformation</h3>
 <div class="paragraph">
 <p>AST transformations form a ring under parallel (fanout) and serial composition. The multiplicative identity is "return code unchanged"—but as a concrete rewrite pattern, this requires matching <strong>all possible ASTs</strong>, an infinite set. With parametric identity \(\tt{id}()\), a single instruction handles all code structures.</p>
 </div>
@@ -705,14 +706,14 @@ code.opt().id() [-- id() composes away --]</code></pre>
 </div>
 </div>
 </div>
-<div class="sect3">
-<h4 id="_type_constructors">4.4.3. Type Constructors</h4>
+<div class="sect2">
+<h3 id="_type_constructors">4.4. Type Constructors</h3>
 <div class="paragraph">
 <p>Type constructors like \(\tt{List}\), \(\tt{Option}\) compose: \(\tt{List}[\tt{Option}[A]]\). The identity constructor \(F\) satisfies \(F[A] = A\) for all \(A\). No finite type expresses this—it would require a "universal wrapper" that is every type simultaneously (Russell&#8217;s paradox territory). With parametric identity \(\tt{T}(\#)\), the generic type adapts at application time.</p>
 </div>
 </div>
-<div class="sect3">
-<h4 id="_filter_composition">4.4.4. Filter Composition</h4>
+<div class="sect2">
+<h3 id="_filter_composition">4.5. Filter Composition</h3>
 <div class="paragraph">
 <p>Predicates compose serially: \(p_1 \circ p_2\) applies \(p_1\), then \(p_2\) to survivors. The identity filter passes all elements unchanged—but a concrete predicate \(\lambda x.\, \tt{true}\) is typed for <strong>one</strong> domain. You&#8217;d need infinitely many identity predicates, one per type. Active identity \(\tt{id}()\) is polymorphic:</p>
 </div>
@@ -723,14 +724,17 @@ code.opt().id() [-- id() composes away --]</code></pre>
 </div>
 </div>
 </div>
-<div class="sect3">
-<h4 id="_rewrite_systems">4.4.5. Rewrite Systems</h4>
+<div class="sect2">
+<h3 id="_rewrite_systems">4.6. Rewrite Systems</h3>
 <div class="paragraph">
 <p>Term rewriting rules compose: \(r_1 ; r_2\) applies \(r_1\) then \(r_2\). The identity rewrite "matches anything, returns unchanged" cannot be expressed as a finite pattern—it would require enumerating all possible term shapes. With parametric identity, the rewrite engine recognizes \(\tt{id}()\) and short-circuits.</p>
 </div>
 </div>
-<div class="sect3">
-<h4 id="_the_pattern">4.4.6. The Pattern</h4>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_pattern">5. The Pattern</h2>
+<div class="sectionbody">
 <div class="paragraph">
 <p>Each impossible ring shares a common structure:</p>
 </div>
@@ -783,18 +787,13 @@ code.opt().id() [-- id() composes away --]</code></pre>
 <div class="paragraph">
 <p>The common thread: <strong>infinite enumeration</strong> or <strong>universal quantification</strong> required for passive identity, but a <strong>single parametric instruction</strong> suffices for computational identity.</p>
 </div>
-</div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_coefficient_mediated_algebraic_structure">5. Coefficient-Mediated Algebraic Structure</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_coefficient_mediated_algebraic_structure">5.1. Coefficient-Mediated Algebraic Structure</h3>
 <div class="paragraph">
 <p>A key implementation technique for computational rings is <strong>coefficient-mediated algebraic structure</strong>, where data structures inherit ring properties by coupling to coefficient rings.</p>
 </div>
-<div class="sect2">
-<h3 id="_the_coefficient_pattern">5.1. The Coefficient Pattern</h3>
+<div class="sect3">
+<h4 id="_the_coefficient_pattern">5.1.1. The Coefficient Pattern</h4>
 <div class="sidebarblock">
 <div class="content">
 <div class="title">Coefficient-Mediated Structure</div>
@@ -820,10 +819,10 @@ code.opt().id() [-- id() composes away --]</code></pre>
 <p>This pattern is analogous to <strong>module theory</strong> in abstract algebra, where a module \(M\) over a ring \(R\) has scalar multiplication \(R \times M \to M\).</p>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_implementation_in_metatron">5.2. Implementation in Metatron</h3>
+<div class="sect3">
+<h4 id="_implementation_in_metatron">5.1.2. Implementation in metatron</h4>
 <div class="paragraph">
-<p>In the Metatron system, every object has a coefficient accessible via the \(\tt{c}()\) method:</p>
+<p>In metatron, every object has a coefficient <code>c</code>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -838,8 +837,8 @@ Obj transformed = obj.c(c -&gt; c.mult(cInt.of(2)));</code></pre>
 </div>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_additive_inverse_via_coefficients">5.3. Additive Inverse via Coefficients</h3>
+<div class="sect3">
+<h4 id="_additive_inverse_via_coefficients">5.1.3. Additive Inverse via Coefficients</h4>
 <div class="paragraph">
 <p>The additive inverse (negation) for lists is implemented by negating coefficients of all elements:</p>
 </div>
@@ -879,8 +878,8 @@ Obj transformed = obj.c(c -&gt; c.mult(cInt.of(2)));</code></pre>
 <p>where \(0\) is the additive identity. ∎</p>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_scalar_multiplication">5.4. Scalar Multiplication</h3>
+<div class="sect3">
+<h4 id="_scalar_multiplication">5.1.4. Scalar Multiplication</h4>
 <div class="paragraph">
 <p>Coefficient-mediated structure naturally supports scalar multiplication:</p>
 </div>
@@ -898,8 +897,8 @@ default Lst scalarMult(cInt scalar) {
 <p>This makes \(D\) a <strong>module</strong> over the coefficient ring \(R\).</p>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_advantages_of_coefficient_mediated_structure">5.5. Advantages of Coefficient-Mediated Structure</h3>
+<div class="sect3">
+<h4 id="_advantages_of_coefficient_mediated_structure">5.1.5. Advantages of Coefficient-Mediated Structure</h4>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
@@ -950,8 +949,9 @@ default Lst scalarMult(cInt scalar) {
 <p>All properties are inherited from the ring \(R\). ∎</p>
 </div>
 </div>
+</div>
 <div class="sect2">
-<h3 id="_connection_to_vector_spaces">5.6. Connection to Vector Spaces</h3>
+<h3 id="_connection_to_vector_spaces">5.2. Connection to Vector Spaces</h3>
 <div class="paragraph">
 <p>This pattern generalizes the concept of <strong>vector spaces</strong> from linear algebra. In a vector space \(V\) over a field \(F\), vectors don&#8217;t need to know how to multiply by scalars—they just apply scalar multiplication component-wise. Coefficient-mediated structure extends this to arbitrary data structures over arbitrary rings.</p>
 </div>
@@ -1407,7 +1407,7 @@ default Lst scalarMult(cInt scalar) {
 <h2 id="_references">12. References</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>[1] J.C. Reynolds, "Types, Abstraction and Parametric Polymorphism," <em>Information Processing 83</em>, pp. 513–523, 1983.</p>
+<p>[1] J.C. Reynolds, "Types, Abstraction, and Parametric Polymorphism," <em>Information Processing 83</em>, pp. 513–523, 1983.</p>
 </div>
 <div class="paragraph">
 <p>[2] P. Wadler, "Theorems for Free!," <em>Proceedings of the Fourth International Conference on Functional Programming Languages and Computer Architecture (FPCA '89)</em>, pp. 347–359, 1989.</p>
@@ -1422,7 +1422,7 @@ default Lst scalarMult(cInt scalar) {
 <p>[5] H.B. Curry and R. Feys, <em>Combinatory Logic</em>, vol. 1, North-Holland, 1958.</p>
 </div>
 <div class="paragraph">
-<p>[6] W.A. Howard, "The Formulae-as-Types Notion of Construction," in <em>To H.B. Curry: Essays on Combinatory Logic, Lambda Calculus and Formalism</em>, Academic Press, pp. 479–490, 1980. (Manuscript from 1969.)</p>
+<p>[6] W.A. Howard, "The Formulae-as-Types Notion of Construction," in <em>To H.B. Curry: Essays on Combinatory Logic, Lambda Calculus, and Formalism</em>, Academic Press, pp. 479–490, 1980. (Manuscript from 1969.)</p>
 </div>
 <div class="paragraph">
 <p>[7] M.A. Rodriguez, "Stream Ring Theory," <em>S/V Red Herring&#8217;s Ship&#8217;s Log: Chronicles in the Sea of Cortez</em>, pp. 10–40, Mulegé, Baja California Sur, México, February 2019.</p>

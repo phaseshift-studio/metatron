@@ -265,11 +265,11 @@ public final class CommonUtil {
     }
 
     public static <K, V> Map<K, V> mutableMap(final Object... args) {
-        return mapBuilder(HashMap::new, args);
+        return mapBuilder(LinkedHashMap::new, args);
     }
 
     public static <K, V> Map<K, V> immutableMap(final Object... args) {
-        return Map.copyOf(mapBuilder(HashMap::new, args));
+        return Map.copyOf(mapBuilder(LinkedHashMap::new, args));
     }
 
     public static <K, V> Map<K, V> mutableOrderedMap(final Object... args) {
