@@ -49,7 +49,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@InstSet.JREService(tid = "/m/iot/haos")
+@InstSet.JREService(vid = "/m/iot/haos")
 public class haosInstSet extends AbstractInstSet {
 
     public static final fURI HAOS_ISA_TID = IOT_ISA_TID.extend("haos");

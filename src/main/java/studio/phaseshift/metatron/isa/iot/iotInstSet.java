@@ -34,7 +34,7 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.MTRON_TID;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@InstSet.JREService(tid = "/m/iot")
+@InstSet.JREService(vid = "/m/iot")
 public class iotInstSet extends AbstractInstSet {
 
     public static final fURI IOT_ISA_TID = MTRON_TID.extend("iot");

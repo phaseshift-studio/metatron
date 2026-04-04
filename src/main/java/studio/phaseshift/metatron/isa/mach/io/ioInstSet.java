@@ -37,7 +37,7 @@ import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_ISA_TID;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@InstSet.JREService(tid = "/m/mach/io")
+@InstSet.JREService(vid = "/m/mach/io")
 public class ioInstSet extends AbstractInstSet {
 
     public static final fURI IO_ISA_TID = MACH_ISA_TID.extend("io");

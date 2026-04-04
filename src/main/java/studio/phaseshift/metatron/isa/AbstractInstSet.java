@@ -208,6 +208,12 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
                             .map(kv -> pattern.isNode() ?
                                     kv.getValue() :
                                     rel(kv.getKey().toUri(), kv.getValue()))))
+                    .append(objs(REWRITE_TABLE.entrySet()
+                            .stream()
+                            .filter(kv -> kv.getKey().test(pattern.asNode()))
+                            .map(kv -> pattern.isNode() ?
+                                    kv.getValue() :
+                                    rel(kv.getKey().toUri(), kv.getValue()))))
                     .append(objs(CONST_TABLE.entrySet()
                             .stream()
                             .filter(kv -> kv.getKey().test(pattern.asNode()))

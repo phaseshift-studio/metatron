@@ -61,7 +61,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@JREService(tid = "/m/grph")
+@JREService(vid = "/m/grph")
 public class grphInstSet extends AbstractInstSet {
 
     public static final fURI GRPH_ISA_TID = M_ISA_TID.extend("grph");

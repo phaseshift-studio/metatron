@@ -291,12 +291,18 @@ class InstSetDocFetcher:
     async def fetch_instset(self, vid: str) -> InstSetInfo:
         """Fetch complete documentation for an instruction set."""
         logger.info(f"Fetching instruction set: {vid}")
-
+        import json
         name = vid.split('/')[-1] if '/' in vid else vid
         info = InstSetInfo(vid=vid, name=name)
 
         # Fetch instruction set description
         info.desc = await self._fetch_instset_desc(vid)
+        subspaces = await self.client.eval(f"'*{vid}>>space'./m/web/inst/doc_json()")
+        subspaces = json.loads(subspaces.removeprefix("</m/str>::'").removesuffix("'"))
+        if "sub" in subspaces:
+            subspaces = str(subspaces['sub']) # TODO: ghetto (using string matching to remove sub instsets from instset)
+        else:
+            subspaces = ""
         temp = await self.client.eval(f"'*{vid}'./m/web/inst/doc()")
         temp = temp.removeprefix("</m/str>::'").removesuffix("'")
         info.full = temp
@@ -308,15 +314,16 @@ class InstSetDocFetcher:
 
         # Fetch types via doc() for pretty formatting
         info.types = await self._fetch_types(vid)
+        info.types = list(filter(lambda item: item.vid not in subspaces, info.types))  # TODO: ghetto (using string matching to remove sub instsets from instset)
 
         # Fetch instructions via doc() for pretty formatting
         info.insts = await self._fetch_instructions(vid)
 
-        # Fetch rewrites
-        info.rewrites = await self._fetch_rewrites(vid)
-
         # Fetch spaces (sub-instruction sets)
         info.spaces = await self._fetch_spaces(vid)
+
+        # Fetch rewrites
+        info.rewrites = await self._fetch_rewrites(vid)
 
         # Fetch consts
         info.consts = await self._fetch_consts(vid)
@@ -358,7 +365,9 @@ class InstSetDocFetcher:
             entries = await self.client.eval_doc(f"*{vid}/+/")
             for entry in entries:
                 type_info = self._parse_type_entry(entry)
-                if type_info:
+                logger.debug(f"processing {type_info.vid}")
+                # print(type_info)
+                if type_info and ("space" not in type_info.vid):
                     # Query raw type info to get super type
                     await self._fetch_type_super(type_info)
                     # Fetch documentation
@@ -826,11 +835,11 @@ class HTMLDocGenerator:
             {self._generate_nav()}
             {self._generate_hierarchy()}
             {self._generate_toc()}
+            {self._generate_consts_section()}
             {self._generate_types_section()}
             {self._generate_instructions_section()}
-            {self._generate_rewrites_section()}
             {self._generate_spaces_section()}
-            {self._generate_consts_section()}
+            {self._generate_rewrites_section()}
             {self._generate_instset_footer(build_number=build_number)}
         </div>"""
 
@@ -918,11 +927,11 @@ class HTMLDocGenerator:
         return f"""
         <div class="container-xxl mb-4">
             <div class="d-flex justify-content-center gap-2 flex-wrap">
+                {nav_btn("consts", "Consts", len(self.instset.consts))}
                 {nav_btn("types", "Types", len(self.instset.types))}
                 {nav_btn("instructions", "Insts", len(self.instset.insts))}
-                {nav_btn("rewrites", "Rewrites", len(self.instset.rewrites))}
                 {nav_btn("spaces", "Spaces", len(self.instset.spaces))}
-                {nav_btn("consts", "Consts", len(self.instset.consts))}
+                {nav_btn("rewrites", "Rewrites", len(self.instset.rewrites))}
             </div>
         </div>"""
 
@@ -955,6 +964,14 @@ class HTMLDocGenerator:
         </div>"""
 
     def _generate_toc(self) -> str:
+        const_items = []
+        for c in sorted(self.instset.consts, key=lambda x: x.name):
+            const_items.append(f'''
+                <a href="#const-{html.escape(c.name)}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
+                    <span class="code">{html.escape(c.name)}</span>
+                    <span class="badge bg-secondary">C</span>
+                </a>''')
+    
         type_items = []
         for t in sorted(self.instset.types, key=lambda x: x.name):
             type_items.append(f'''
@@ -973,14 +990,6 @@ class HTMLDocGenerator:
                     <span class="badge bg-success">I</span>
                 </a>''')
 
-        rewrite_items = []
-        for r in sorted(self.instset.rewrites, key=lambda x: x.name):
-            rewrite_items.append(f'''
-                <a href="#rewrite-{html.escape(r.name)}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
-                    <span class="code">{html.escape(r.name)}</span>
-                    <span class="badge bg-warning text-dark">R</span>
-                </a>''')
-
         space_items = []
         for s in sorted(self.instset.spaces, key=lambda x: x.name):
             space_items.append(f'''
@@ -989,17 +998,25 @@ class HTMLDocGenerator:
                     <span class="badge bg-info">S</span>
                 </a>''')
 
-        const_items = []
-        for c in sorted(self.instset.consts, key=lambda x: x.name):
-            const_items.append(f'''
-                <a href="#const-{html.escape(c.name)}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
-                    <span class="code">{html.escape(c.name)}</span>
-                    <span class="badge bg-secondary">C</span>
+        rewrite_items = []
+        for r in sorted(self.instset.rewrites, key=lambda x: x.name):
+            rewrite_items.append(f'''
+                <a href="#rewrite-{html.escape(r.name)}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
+                    <span class="code">{html.escape(r.name)}</span>
+                    <span class="badge bg-warning text-dark">R</span>
                 </a>''')
 
         if not type_items and not inst_items and not rewrite_items and not space_items and not const_items:
             return ""
 
+        const_list = f'''
+            <div class="mb-3">
+                <h6 class="text-primary mb-2">Constants</h6>
+                <div class="index-columns">
+                    {''.join(const_items)}
+                </div>
+            </div>''' if const_items else ""
+        
         type_list = f'''
             <div class="mb-3">
                 <h6 class="text-primary mb-2">Types</h6>
@@ -1016,14 +1033,6 @@ class HTMLDocGenerator:
                 </div>
             </div>''' if inst_items else ""
 
-        rewrite_list = f'''
-            <div class="mb-3">
-                <h6 class="text-primary mb-2">Rewrites</h6>
-                <div class="index-columns-rewrites">
-                    {''.join(rewrite_items)}
-                </div>
-            </div>''' if rewrite_items else ""
-
         space_list = f'''
             <div class="mb-3">
                 <h6 class="text-primary mb-2">Spaces</h6>
@@ -1032,13 +1041,13 @@ class HTMLDocGenerator:
                 </div>
             </div>''' if space_items else ""
 
-        const_list = f'''
+        rewrite_list = f'''
             <div class="mb-3">
-                <h6 class="text-primary mb-2">Constants</h6>
-                <div class="index-columns">
-                    {''.join(const_items)}
+                <h6 class="text-primary mb-2">Rewrites</h6>
+                <div class="index-columns-rewrites">
+                    {''.join(rewrite_items)}
                 </div>
-            </div>''' if const_items else ""
+            </div>''' if rewrite_items else ""
 
         return f"""
         <div class="container-xxl mb-4">
@@ -1047,11 +1056,11 @@ class HTMLDocGenerator:
                     <h5 class="mb-0 text-primary">Index</h5>
                 </div>
                 <div class="card-body">
+                    {const_list}
                     {type_list}
                     {inst_list}
-                    {rewrite_list}
                     {space_list}
-                    {const_list}
+                    {rewrite_list}
                 </div>
             </div>
         </div>"""
@@ -1440,7 +1449,7 @@ class HTMLDocGenerator:
 
         return f"""
         <div class="container-xxl mb-4" id="consts">
-            <h3 class="text-secondary mb-3">
+            <h3 class="text-primary mb-3">
                 Constants <span class="badge bg-secondary">{len(self.instset.consts)}</span>
             </h3>
             {''.join(items)}

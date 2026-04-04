@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -23,7 +23,6 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.BaseQ;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.type.MStats;
@@ -38,7 +37,6 @@ import java.util.List;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -56,9 +54,9 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
         this.sjvm = sjvm;
         this.pattern = this.at(PATTERN).uriValue();
         /// //////////// BAD
-        final List<Obj> list  = this.jvm().getOrDefault(uri(QSTRING), lst()).lstValue();
+        final List<Obj> list = this.jvm().getOrDefault(uri(QSTRING), lst()).lstValue();
         this.jvm().remove(uri(QSTRING));
-        list.forEach(q -> this.addQ(new BaseQ(new HashMap<>(q.asRec().jvm()), q.asRec().tid(), q.asRec().vid())));
+        list.forEach(q -> this.addQ(q instanceof Q ? (Q) q : new BaseQ(new HashMap<>(q.asRec().jvm()), q.asRec().tid(), q.asRec().vid())));
         /// //////////// BAD
         this.ioStats = new MStats();
         final Obj temp = config.getOrDefault(uri(ROUTE), rec());

@@ -296,6 +296,13 @@
             <artifactId>mcp-annotated-java-sdk</artifactId>
             <version>${mcp-annotated-java-sdk.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.slj</groupId>
+            <artifactId>mqtt-tree</artifactId>
+            <version>0.5.4</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/lib/mqtt-tree-0.5.4.jar</systemPath>
+        </dependency>
         <!-- TESTING -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>

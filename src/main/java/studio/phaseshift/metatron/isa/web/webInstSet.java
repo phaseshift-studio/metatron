@@ -51,7 +51,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@JREService(tid = "/m/web")
+@JREService(vid = "/m/web")
 public class webInstSet extends AbstractInstSet {
 
     public static final fURI WEB_ISA_TID = MTRON_TID.extend("web");

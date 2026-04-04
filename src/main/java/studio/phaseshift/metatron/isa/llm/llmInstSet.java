@@ -48,7 +48,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@InstSet.JREService(tid = "/m/llm")
+@InstSet.JREService(vid = "/m/llm")
 public class llmInstSet extends AbstractInstSet {
     public static final fURI LLM_ISA_TID = MTRON_TID.extend("llm");
     public static final fURI MODEL_TID = LLM_ISA_TID.extend("model");

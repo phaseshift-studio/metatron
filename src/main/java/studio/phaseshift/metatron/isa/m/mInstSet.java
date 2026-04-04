@@ -61,7 +61,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
-@InstSet.JREService(tid = "/m")
+@InstSet.JREService(vid = "/m")
 public class mInstSet extends AbstractInstSet {
 
     public static final fURI M_ISA_TID = f("/m");

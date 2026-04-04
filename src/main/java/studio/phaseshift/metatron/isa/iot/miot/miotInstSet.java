@@ -39,7 +39,7 @@ import static studio.phaseshift.metatron.isa.iot.space.mqtt.mqttSpace.MQTT_SPACE
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@InstSet.JREService(tid = "/m/iot/miot")
+@InstSet.JREService(vid = "/m/iot/miot")
 public class miotInstSet extends AbstractInstSet {
 
     public static final fURI MIOT_ISA_TID = IOT_ISA_TID.extend("miot");

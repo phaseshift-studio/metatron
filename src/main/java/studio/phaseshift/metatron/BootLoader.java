@@ -53,7 +53,6 @@ import java.util.stream.Stream;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
@@ -62,7 +61,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_ISA_TID;
 
 public class BootLoader implements Rec, Feature.SelfClone {
 
@@ -142,7 +140,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
             LOG.info("available instruction sets\n\t(via %s%s)%s", "META-INF/services/",
                     InstSet.class.getCanonicalName(),
                     BootLoader.loadInstSetProvider(ALL)
-                            .map(p -> p.type().getAnnotation(InstSet.JREService.class).tid())
+                            .map(p -> p.type().getAnnotation(InstSet.JREService.class).vid())
                             .reduce("", (a, b) -> a + "\n\t\t" + b));
             fURI localAuthority = null;
             /// /// START OF BOOTING PROCESS /// /// allow boot description to be read from a mtron file
@@ -264,7 +262,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
                         LOG.warn("an inst set without a service metadata located: %s", p.type().getCanonicalName());
                 })
                 .filter(p -> p.type().isAnnotationPresent(InstSet.JREService.class))
-                .filter(p -> f(p.type().getAnnotation(InstSet.JREService.class).tid()).test(tid));
+                .filter(p -> f(p.type().getAnnotation(InstSet.JREService.class).vid()).test(tid));
     }
 
     public static Stream<InstSet> importInstSet(final fURI tid) {

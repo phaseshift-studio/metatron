@@ -40,7 +40,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@JREService(tid = "/m/math")
+@JREService(vid = "/m/math")
 public class mathInstSet extends AbstractInstSet {
 
     public static final fURI MATH_ISA_TID = M_ISA_TID.extend("math");

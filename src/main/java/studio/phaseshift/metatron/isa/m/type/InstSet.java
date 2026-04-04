@@ -82,17 +82,17 @@ public interface InstSet extends Space {
      */
     @Retention(RetentionPolicy.RUNTIME)
     @interface JREService {
-        String tid();
+        String vid();
 
 
         class Helper {
-            public static fURI tid(final Class<?> spec) {
-                return f(spec.getAnnotation(JREService.class).tid());
+            public static fURI vid(final Class<?> spec) {
+                return f(spec.getAnnotation(JREService.class).vid());
             }
 
-            public static void verifyClass(final Class<?> spec, final fURI tid) throws MTronException {
-                if (!(!spec.isAnnotationPresent(JREService.class) || Helper.tid(spec).equals(tid))) {
-                    throw MTronException.of("invalid service annotation for %s: %s (expected %s)", spec, tid, Helper.tid(spec));
+            public static void verifyClass(final Class<?> spec, final fURI vid) throws MTronException {
+                if (!(!spec.isAnnotationPresent(JREService.class) || Helper.vid(spec).equals(vid))) {
+                    throw MTronException.of("invalid service annotation for %s: %s (expected %s)", spec, vid, Helper.vid(spec));
                 }
             }
         }

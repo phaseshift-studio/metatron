@@ -59,7 +59,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@InstSet.JREService(tid = "/m/doc")
+@InstSet.JREService(vid = "/m/doc")
 public class docInstSet extends AbstractInstSet {
 
     public static final fURI DOC_ISA_TID = M_ISA_TID.extend("doc");

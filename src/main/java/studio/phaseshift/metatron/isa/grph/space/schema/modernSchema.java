@@ -38,7 +38,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@JREService(tid = "/m/grph/inst/schema/modern")
+@JREService(vid = "/m/grph/inst/schema/modern")
 public class modernSchema extends AbstractInstSet {
 
     public static final fURI MODERN_SCHEMA_TID = grphInstSet.GRPH_INST_TID.extend("schema").extend("modern");

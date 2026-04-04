@@ -49,7 +49,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@InstSet.JREService(tid = "/m/tble")
+@InstSet.JREService(vid = "/m/tble")
 public class tbleInstSet extends AbstractInstSet {
 
     public static final fURI TBLE_ISA_TID = M_ISA_TID.extend("tble");

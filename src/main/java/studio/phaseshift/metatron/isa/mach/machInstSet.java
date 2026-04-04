@@ -25,7 +25,6 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.space.noobjSpace;
-import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.io.space.file.fsSpace;
@@ -83,7 +82,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@JREService(tid = "/m/mach")
+@JREService(vid = "/m/mach")
 public class machInstSet extends AbstractInstSet {
     public static final fURI MACH_ISA_TID = M_ISA_TID.extend("mach");
     public static final fURI MACH_MACHINE_TID = MACH_ISA_TID.extend("machine");

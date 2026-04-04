@@ -79,6 +79,7 @@
             <outputDirectory>META-INF/services</outputDirectory>
             <includes>
                 <include>studio.phaseshift.metatron.isa.m.type.InstSet</include>
+                <include>dev.langchain4j.model.chat.ChatModel</include>
             </includes>
         </fileSet>
         <fileSet>
