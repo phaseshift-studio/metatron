@@ -1,4 +1,4 @@
-#  Metatron: A Distributed Computing Language and Virtual Machine
+#  metatron: A Distributed Computing Language and Virtual Machine
 #   Copyright (C) 2025- PhaseShift Studio, LLC
 #
 #  This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Instruction Set Documentation Generator for Metatron
+Instruction Set Documentation Generator for metatron
 
 Generates HTML documentation for metatron instruction sets by connecting to a running
 metatron instance via WebSocket. Uses doc_json() for documentation retrieval and
@@ -34,19 +34,18 @@ import html
 import logging
 import re
 import shutil
+import websockets
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Optional, List
-
-import websockets
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 
 # ============================================================================
-# Metatron WebSocket Client
+# metatron WebSocket Client
 # ============================================================================
 
 class MetatronClient:
@@ -136,7 +135,8 @@ class MetatronClient:
                 return None
 
             # Extract JSON from response: </m/str>::'...' or </m/str>::"""..."""
-            json_match = re.search(r'</m/str>::"""(.+)"""', result, re.DOTALL) or re.search(r"</m/str>::'(.+)'", result, re.DOTALL)
+            json_match = re.search(r'</m/str>::"""(.+)"""', result, re.DOTALL) or re.search(r"</m/str>::'(.+)'", result,
+                                                                                            re.DOTALL)
             if not json_match:
                 return None
 
@@ -593,7 +593,7 @@ class InstSetDocFetcher:
                 depth += 1
             elif char in ']})>':
                 depth -= 1
-            elif depth == 0 and text[i:i+2] == '=>':
+            elif depth == 0 and text[i:i + 2] == '=>':
                 return i
             i += 1
         return -1
@@ -647,8 +647,6 @@ class InstSetDocFetcher:
                 i += 1
 
         return ''.join(result)
-
-
 
 
 # ============================================================================
@@ -794,14 +792,14 @@ class HTMLDocGenerator:
             return "/" + parts[0] if parts else ""
         return "/" + "/".join(parts[:-1])
 
-    def generate(self) -> str:
+    def generate(self, build_number:int = 0) -> str:
         """Generate complete HTML documentation."""
         if self.use_website_template:
-            return self._generate_with_website_template()
+            return self._generate_with_website_template(build_number=build_number)
         else:
             return self._generate_standalone()
 
-    def _generate_with_website_template(self) -> str:
+    def _generate_with_website_template(self, build_number: int = 0) -> str:
         """Generate HTML using the website header/footer template."""
         header = load_website_header(self.relative_depth)
         footer = load_website_footer(self.relative_depth)
@@ -815,7 +813,7 @@ class HTMLDocGenerator:
         header = header.replace('</head>', f'    {instset_css}\n</head>')
 
         # Update the page title in the header
-        title = f"{html.escape(self.instset.name)} - Metatron Instruction Set"
+        title = f"{html.escape(self.instset.name)} - metatron Instruction Set"
         header = re.sub(r'<title>.*?</title>', f'<title>{title}</title>', header)
 
         # Generate the main content (goes inside <main> tag)
@@ -830,7 +828,7 @@ class HTMLDocGenerator:
             {self._generate_rewrites_section()}
             {self._generate_spaces_section()}
             {self._generate_consts_section()}
-            {self._generate_instset_footer()}
+            {self._generate_instset_footer(build_number=build_number)}
         </div>"""
 
         return header + content + footer
@@ -852,7 +850,7 @@ class HTMLDocGenerator:
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{html.escape(self.instset.name)} - Metatron Instruction Set Documentation</title>
+    <title>{html.escape(self.instset.name)} - metatron instruction set reference</title>
     {css_links}
 </head>
 <body>
@@ -866,7 +864,7 @@ class HTMLDocGenerator:
         {self._generate_rewrites_section()}
         {self._generate_spaces_section()}
         {self._generate_consts_section()}
-        {self._generate_instset_footer()}
+        {self._generate_instset_footer(build_number=build_number)}
     </div>
     {highlight_js}
 </body>
@@ -893,6 +891,7 @@ class HTMLDocGenerator:
 
     def _generate_nav(self) -> str:
         """Generate navigation bar with all 5 categories (disabled if empty)."""
+
         def nav_btn(href: str, label: str, count: int) -> str:
             if count > 0:
                 return f'<a href="#{href}" class="btn btn-outline-primary">{label} <span class="badge bg-secondary">{count}</span></a>'
@@ -909,8 +908,6 @@ class HTMLDocGenerator:
                 {nav_btn("consts", "Consts", len(self.instset.consts))}
             </div>
         </div>"""
-
-
 
     def _generate_hierarchy(self) -> str:
         items = []
@@ -1120,7 +1117,8 @@ class HTMLDocGenerator:
             # Generate signature blocks for each variant
             signatures = []
             for inst in insts:
-                signatures.append(f'<pre class="mb-1"><code class="language-mtron">{html.escape(inst.signature)}</code></pre>')
+                signatures.append(
+                    f'<pre class="mb-1"><code class="language-mtron">{html.escape(inst.signature)}</code></pre>')
 
             all_sigs = '\n'.join(signatures)
 
@@ -1252,7 +1250,7 @@ class HTMLDocGenerator:
                 return ""
 
             arg_lines = [f'{html.escape(str(k))} <span class="text-light">=&gt;</span> "{html.escape(str(v))}"'
-                        for k, v in args_dict.items()]
+                         for k, v in args_dict.items()]
             return '[' + '\n    '.join(arg_lines) + ']'
 
         except (json.JSONDecodeError, ValueError):
@@ -1431,13 +1429,13 @@ class HTMLDocGenerator:
             {''.join(items)}
         </div>"""
 
-    def _generate_instset_footer(self) -> str:
+    def _generate_instset_footer(self,build_number:int = 0) -> str:
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         return f"""
         <div class="container-xxl py-3 text-center">
             <hr class="border-secondary">
             <small class="text-muted">
-                generated by metatron instset doc generator on {timestamp}<br>
+                generated by metatron instset doc generator on build {build_number}-{timestamp}<br>
                 © PhaseShift Studio, LLC
             </small>
         </div>"""
@@ -1452,7 +1450,7 @@ class HTMLDocGenerator:
 # ============================================================================
 
 def generate_index_page(instsets: List[InstSetInfo], embed_css: bool = True, css_path: str = "../css/instset_doc.css",
-                        use_website_template: bool = False, relative_depth: str = "..") -> str:
+                        use_website_template: bool = False, relative_depth: str = "..", build_number: int = 0) -> str:
     """Generate an index page linking to all instruction set docs."""
     items = []
     for info in sorted(instsets, key=lambda x: x.vid):
@@ -1487,7 +1485,7 @@ def generate_index_page(instsets: List[InstSetInfo], embed_css: bool = True, css
             <div class="py-3 text-center mt-5">
                 <hr class="border-secondary">
                 <small class="text-muted">
-                    generated by metatron instset doc generator on {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}<br>
+                    metatron instset doc generator on build {build_number}-{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}<br>
                     © PhaseShift Studio, LLC
                 </small>
             </div>
@@ -1503,7 +1501,7 @@ def generate_index_page(instsets: List[InstSetInfo], embed_css: bool = True, css
             header = header.replace('</head>', f'    {instset_css}\n</head>')
 
             # Update the page title
-            header = re.sub(r'<title>.*?</title>', '<title>Metatron Instruction Sets</title>', header)
+            header = re.sub(r'<title>.*?</title>', '<title>metatron instruction sets</title>', header)
 
             return header + content + footer
         else:
@@ -1519,7 +1517,7 @@ def generate_index_page(instsets: List[InstSetInfo], embed_css: bool = True, css
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Metatron Instruction Set Documentation</title>
+    <title>metatron instruction set reference</title>
     {css_links}
 </head>
 <body>
@@ -1565,7 +1563,7 @@ async def main_async(args):
                     use_website_template=use_website_template,
                     relative_depth=relative_depth
                 )
-                html_content = generator.generate()
+                html_content = generator.generate(args.build)
 
                 # Write to file
                 filename = vid.replace('/', '_').strip('_') + '.html'
@@ -1586,7 +1584,8 @@ async def main_async(args):
                 embed_css=embed_css,
                 css_path=css_path,
                 use_website_template=use_website_template,
-                relative_depth=relative_depth
+                relative_depth=relative_depth,
+                build_number=args.build
             )
             index_path = output_dir / 'index.html'
             index_path.write_text(index_html, encoding='utf-8')
@@ -1599,7 +1598,7 @@ async def main_async(args):
 def main():
     """Entry point."""
     parser = argparse.ArgumentParser(
-        description="Generate HTML documentation for Metatron instruction sets.",
+        description="Generate HTML documentation for metatron instruction sets.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -1623,7 +1622,7 @@ Examples:
     parser.add_argument(
         '--host',
         default='ws://127.0.0.1:8999',
-        help='Metatron WebSocket host (default: ws://127.0.0.1:8999)'
+        help='metatron WebSocket host (default: ws://127.0.0.1:8999)'
     )
     parser.add_argument(
         '--timeout',
@@ -1635,6 +1634,12 @@ Examples:
         '--link-css',
         action='store_true',
         help='Link to external CSS file instead of embedding (references ../css/instset_doc.css)'
+    )
+    parser.add_argument(
+        '--build',
+        type=int,
+        default=0,
+        help='Build number for generated docs'
     )
     parser.add_argument(
         '--website-template',

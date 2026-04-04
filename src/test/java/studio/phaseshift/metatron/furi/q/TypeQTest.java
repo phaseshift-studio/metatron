@@ -48,7 +48,7 @@ public class TypeQTest extends AbstractMetatronTest {
 
     public TypeQTest() {
         //super(() -> {
-        BootLoader.loadInstSetProvider(MACH_ISA_TID);
+        BootLoader.importInstSet(MACH_ISA_TID, null);
         this.space = memSpace.of(rec(uri("pattern"), uri("/t/#"), uri("q"), lst(QCollection.typeQ())), f("test"));
         //});
     }

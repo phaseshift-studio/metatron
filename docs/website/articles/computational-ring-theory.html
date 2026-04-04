@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 2.0.26">
 <link rel="icon" type="image/x-icon" href="../../website/images/favicon.ico">
-<title>Computational Ring Theory</title>
+<title>Parametric Identities in Ring Theory</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <link rel="stylesheet" href="./asciidoctor.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
@@ -89,16 +89,16 @@ $(addBlockSwitches);
 </head>
 <body class="article toc2 toc-left">
 <div id="header" style="max-width: 85%;">
-<h1>Computational Ring Theory</h1>
+<h1>Parametric Identities in Ring Theory</h1>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
 <ul class="sectlevel0">
-<li><a href="#_computational_ring_theory"><span class="image header-logo"><img src="../images/metatron-character.png" alt="metatron" width="75px"></span> Computational Ring Theory</a>
+<li><a href="#_parametric_identities_in_ring_theory"><span class="image header-logo"><img src="../images/metatron-character.png" alt="metatron" width="75px"></span> Parametric Identities in Ring Theory</a>
 <ul class="sectlevel1">
 <li><a href="#_introduction">1. Introduction</a>
 <ul class="sectlevel2">
 <li><a href="#_the_problem_impossible_identities">1.1. The Problem: Impossible Identities</a></li>
-<li><a href="#_the_solution_active_identities">1.2. The Solution: Active Identities</a></li>
+<li><a href="#_the_solution_computational_identities">1.2. The Solution: Computational Identities</a></li>
 <li><a href="#_contributions">1.3. Contributions</a></li>
 </ul>
 </li>
@@ -109,12 +109,12 @@ $(addBlockSwitches);
 <li><a href="#_code_as_data_and_instructions">2.3. Code-as-Data and Instructions</a></li>
 </ul>
 </li>
-<li><a href="#_active_identities">3. Active Identities</a>
+<li><a href="#_computational_identities">3. Computational Identities</a>
 <ul class="sectlevel2">
 <li><a href="#_definition">3.1. Definition</a></li>
 <li><a href="#_runtime_semantics">3.2. Runtime Semantics</a></li>
 <li><a href="#_verification_forced_reification">3.3. Verification-Forced Reification</a></li>
-<li><a href="#_generic_types">3.4. Generic Types</a></li>
+<li><a href="#_parametric_identity_the_type_theoretic_view">3.4. Parametric Identity: The Type-Theoretic View</a></li>
 </ul>
 </li>
 <li><a href="#_case_study_list_cartesian_product_ring">4. Case Study: List Cartesian Product Ring</a>
@@ -122,6 +122,16 @@ $(addBlockSwitches);
 <li><a href="#_list_operations">4.1. List Operations</a></li>
 <li><a href="#_identity_elements">4.2. Identity Elements</a></li>
 <li><a href="#_verification_of_ring_axioms">4.3. Verification of Ring Axioms</a></li>
+<li><a href="#_more_value_impossible_rings">4.4. More Value-Impossible Rings</a>
+<ul class="sectlevel3">
+<li><a href="#_relation_composition">4.4.1. Relation Composition</a></li>
+<li><a href="#_code_transformation">4.4.2. Code Transformation</a></li>
+<li><a href="#_type_constructors">4.4.3. Type Constructors</a></li>
+<li><a href="#_filter_composition">4.4.4. Filter Composition</a></li>
+<li><a href="#_rewrite_systems">4.4.5. Rewrite Systems</a></li>
+<li><a href="#_the_pattern">4.4.6. The Pattern</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li><a href="#_coefficient_mediated_algebraic_structure">5. Coefficient-Mediated Algebraic Structure</a>
@@ -142,30 +152,39 @@ $(addBlockSwitches);
 <li><a href="#_non_terminating_identities">6.4. Non-Terminating Identities</a></li>
 </ul>
 </li>
-<li><a href="#_category_theory_perspective">7. Category Theory Perspective</a>
+<li><a href="#_type_theoretic_foundations">7. Type-Theoretic Foundations</a>
 <ul class="sectlevel2">
-<li><a href="#_active_identities_as_computational_morphisms">7.1. Active Identities as Computational Morphisms</a></li>
-<li><a href="#_functors_preserving_structure_up_to_evaluation">7.2. Functors Preserving Structure Up to Evaluation</a></li>
-<li><a href="#_monoidal_categories_and_coherence">7.3. Monoidal Categories and Coherence</a></li>
-<li><a href="#_enriched_categories">7.4. Enriched Categories</a></li>
+<li><a href="#_polymorphism_parametric_vs_ad_hoc">7.1. Polymorphism: Parametric vs. Ad-Hoc</a></li>
+<li><a href="#_system_f_and_second_order_quantification">7.2. System F and Second-Order Quantification</a></li>
+<li><a href="#_the_curry_howard_correspondence">7.3. The Curry-Howard Correspondence</a></li>
+<li><a href="#_reynolds_parametricity">7.4. Reynolds' Parametricity</a></li>
+<li><a href="#_wadlers_theorems_for_free">7.5. Wadler&#8217;s Theorems for Free</a></li>
+<li><a href="#_the_compression_insight">7.6. The Compression Insight</a></li>
 </ul>
 </li>
-<li><a href="#_related_work">8. Related Work</a>
+<li><a href="#_category_theory_perspective">8. Category Theory Perspective</a>
 <ul class="sectlevel2">
-<li><a href="#_lazy_evaluation">8.1. Lazy Evaluation</a></li>
-<li><a href="#_computational_type_theory">8.2. Computational Type Theory</a></li>
-<li><a href="#_homotopy_type_theory">8.3. Homotopy Type Theory</a></li>
+<li><a href="#_computational_morphisms">8.1. Computational Morphisms</a></li>
+<li><a href="#_computational_monoidal_categories">8.2. Computational Monoidal Categories</a></li>
+<li><a href="#_enrichment_over_computations">8.3. Enrichment over Computations</a></li>
 </ul>
 </li>
-<li><a href="#_applications_and_future_work">9. Applications and Future Work</a>
+<li><a href="#_related_work">9. Related Work</a>
 <ul class="sectlevel2">
-<li><a href="#_active_inverses">9.1. Active Inverses</a></li>
-<li><a href="#_graph_computing">9.2. Graph Computing</a></li>
-<li><a href="#_quantum_computing">9.3. Quantum Computing</a></li>
+<li><a href="#_lazy_evaluation">9.1. Lazy Evaluation</a></li>
+<li><a href="#_computational_type_theory">9.2. Computational Type Theory</a></li>
+<li><a href="#_homotopy_type_theory">9.3. Homotopy Type Theory</a></li>
 </ul>
 </li>
-<li><a href="#_conclusion">10. Conclusion</a></li>
-<li><a href="#_references">References</a></li>
+<li><a href="#_applications_and_future_work">10. Applications and Future Work</a>
+<ul class="sectlevel2">
+<li><a href="#_computational_inverses_and_zeros">10.1. Computational Inverses and Zeros</a></li>
+<li><a href="#_graph_and_query_systems">10.2. Graph and Query Systems</a></li>
+<li><a href="#_quantum_computing">10.3. Quantum Computing</a></li>
+</ul>
+</li>
+<li><a href="#_conclusion">11. Conclusion</a></li>
+<li><a href="#_references">12. References</a></li>
 </ul>
 </li>
 </ul>
@@ -183,14 +202,14 @@ $(addBlockSwitches);
 <script src="../js/metatron.js" type="text/javascript"></script>
 </div>
 </div>
-<h1 id="_computational_ring_theory" class="sect0"><span class="image header-logo"><a class="image" href="https://metatron.phaseshift.studio"><img src="../images/metatron-character.png" alt="metatron" width="75px"></a></span> Computational Ring Theory</h1>
+<h1 id="_parametric_identities_in_ring_theory" class="sect0"><span class="image header-logo"><a class="image" href="https://metatron.phaseshift.studio"><img src="../images/metatron-character.png" alt="metatron" width="75px"></a></span> Parametric Identities in Ring Theory</h1>
 <div class="paragraph">
-<p>Marko A. Rodriguez <a href="https://markorodriguez.com" class="bare">https://markorodriguez.com</a>; Claude (Anthropic)</p>
+<p>Marko A. Rodriguez <a href="https://markorodriguez.com" class="bare">https://markorodriguez.com</a>; Claude <a href="https://www.anthropic.com/" class="bare">https://www.anthropic.com/</a></p>
 </div>
 <div class="quoteblock abstract">
 <blockquote>
 <div class="paragraph">
-<p>We introduce <strong>computational ring theory</strong>, an extension of classical ring theory where identity elements are not passive values but active computational objects. In traditional algebra, identity elements \((0,1)\) are fixed values satisfying axioms structurally. We demonstrate that in Turing-complete, code-as-data systems, identities can be <strong>instructions</strong> whose axioms are satisfied through runtime evaluation. This principle of <strong>verification-forced reification</strong>—where proving uniqueness of identity requires computation that forces the identity to be unique—enables algebraic structures previously impossible with passive identities. We formalize this framework, prove its consistency with classical ring axioms, and demonstrate a key implementation technique: <strong>coefficient-mediated algebraic structure</strong>, where data structures inherit ring properties by coupling to coefficient rings. Applications include list Cartesian products as rings with relation-based multiplication, where the multiplicative identity \([\text{id}()]\) is an active instruction with generic domain/range. This work bridges abstract algebra, computation theory, and category theory, establishing computational rings as a conservative extension of classical ring theory.</p>
+<p>We introduce <strong>parametric identities</strong>, an extension of classical ring theory where identity elements are <strong>instructions</strong> rather than passive values. In classical algebra, identities \((0,1)\) are fixed values satisfying axioms structurally. We show that in code-as-data systems, identities can be instructions whose axioms are satisfied through runtime evaluation—the principle of <strong>verification-forced reification</strong>. This enables algebraic structures impossible with passive identities: where the identity would require infinite enumeration (e.g., the universal diagonal relation), a single polymorphic instruction suffices. The key insight is that <strong>parametric polymorphism</strong> compresses infinite enumeration into a second-order universal quantifier \(\forall A\), and <strong>parametricity</strong> [1,2] guarantees correct behavior. We formalize computational identities, prove consistency with classical axioms via the Curry-Howard correspondence, and demonstrate <strong>coefficient-mediated algebraic structure</strong> where data structures inherit ring properties from coefficient rings. Rings with parametric identities are a conservative extension of classical ring theory.</p>
 </div>
 </blockquote>
 </div>
@@ -201,7 +220,7 @@ $(addBlockSwitches);
 <p>Classical ring theory requires concrete identity elements. A ring \(\langle A, +, \cdot \rangle\) must have an additive identity \(0 \in A\) such that \(0 + a = a + 0 = a\) for all \(a \in A\), and a multiplicative identity (unity) \(1 \in A\) such that \(1 \cdot a = a \cdot 1 = a\). These identities are <strong>passive values</strong>—fixed elements of the set \(A\) whose identity properties arise from their structural position within the algebra.</p>
 </div>
 <div class="paragraph">
-<p>Stream ring theory <a href="#rodriguez2019">[rodriguez2019]</a> established that <strong>functions</strong> themselves can form rings, where the set \(F\) of stream functions with parallel composition \(+\) and serial composition \(\cdot\) satisfies all ring axioms. The additive identity is the function \(0(x) = \emptyset\) (producing no output), and the multiplicative identity is \(1(x) = x\) (the identity function). The significance being that identity elements became <strong>functions</strong> rather than mere values.</p>
+<p>Stream ring theory [7] established that <strong>functions</strong> themselves can form rings, where the set \(F\) of stream functions with parallel composition \(+\) and serial composition \(\cdot\) satisfies all ring axioms. The additive identity is the function \(0(x) = \emptyset\) (producing no output), and the multiplicative identity is \(1(x) = x\) (the identity function). The significance being that identity elements became <strong>functions</strong> rather than mere values.</p>
 </div>
 <div class="paragraph">
 <p>However, even in stream ring theory, the identity functions \(0\) and \(1\) are still <strong>passive</strong> in the sense that they are fixed, predetermined functions. The question arises: <strong>What if identity elements themselves could be computational—active objects whose identity properties emerge through runtime evaluation?</strong></p>
@@ -209,12 +228,12 @@ $(addBlockSwitches);
 <div class="sect2">
 <h3 id="_the_problem_impossible_identities">1.1. The Problem: Impossible Identities</h3>
 <div class="paragraph">
-<p>Consider the problem of defining a ring structure on lists where:</p>
+<p>Consider defining a ring on lists where:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p>Addition is list concatenation: \([a,b] + [c,d] = [a,b,c,d]\)</p>
+<p>Addition is concatenation: \([a,b] + [c,d] = [a,b,c,d]\)</p>
 </li>
 <li>
 <p>Multiplication is Cartesian product producing relations: \([a,b] \times [c,d] = [a \Rightarrow c, a \Rightarrow d, b \Rightarrow c, b \Rightarrow d]\)</p>
@@ -222,24 +241,16 @@ $(addBlockSwitches);
 </ul>
 </div>
 <div class="paragraph">
-<p>The additive identity is straightforward: the empty list \([,]\) satisfies \([,] + [a,b] = [a,b]\).</p>
+<p>The additive identity is the empty list \([,]\). But what is the multiplicative identity? We need \(e\) such that \([a,b,c] \times e = [a,b,c]\).</p>
 </div>
 <div class="paragraph">
-<p>But what is the multiplicative identity? We need some list \(e\) such that:</p>
-</div>
-<div class="stemblock">
-<div class="content">
-\[[a,b,c] \times e = [a,b,c]\]
-</div>
-</div>
-<div class="paragraph">
-<p>In traditional Cartesian product semantics, the identity would be the <strong>diagonal relation</strong>—the set of all pairs \((x,x)\) for all possible \(x\). But this is <strong>infinite</strong> and cannot be represented as a finite list. There is no passive value that can serve as the multiplicative identity for relation-based Cartesian product.</p>
+<p>The identity would be the <strong>diagonal relation</strong>—\(\{(x,x) \mid x \in \mathcal{U}\}\)—the set of all self-pairs. This is <strong>infinite</strong> and unrepresentable as a finite list. There is no passive value that works.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_the_solution_active_identities">1.2. The Solution: Active Identities</h3>
+<h3 id="_the_solution_computational_identities">1.2. The Solution: Computational Identities</h3>
 <div class="paragraph">
-<p>We introduce the concept of an <strong>active identity</strong>: an identity element that is not a passive value but an <strong>instruction</strong> whose identity property is realized through runtime computation.</p>
+<p>We introduce the concept of a <strong>computational identity</strong> (or <strong>parametric identity</strong> when emphasizing the type-theoretic basis): an identity element that is not a passive value but an <strong>instruction</strong> whose identity property is realized through runtime computation.</p>
 </div>
 <div class="paragraph">
 <p>For the list multiplication problem, we define:</p>
@@ -269,22 +280,22 @@ $(addBlockSwitches);
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p><strong>Formalization of active identities</strong>: We provide a formal definition of computational rings where identity elements are instructions with runtime semantics (Section 3).</p>
+<p><strong>Formalization of computational identities</strong>: We define computational rings where identity elements are instructions with runtime semantics (Section 3).</p>
 </li>
 <li>
-<p><strong>Verification-forced reification principle</strong>: We prove that active identities satisfy classical ring axioms under evaluation semantics (Section 3.3).</p>
+<p><strong>Type-theoretic foundations</strong>: We show how parametric polymorphism [1], the Curry-Howard correspondence [5,6], and Reynolds' parametricity [1,2] provide the mathematical basis for parametric identities—explaining why infinite enumeration compresses into a single polymorphic instruction (Section 7).</p>
 </li>
 <li>
 <p><strong>Coefficient-mediated algebraic structure</strong>: We demonstrate how data structures inherit ring properties by coupling to coefficient rings, enabling modular construction of algebraic types (Section 5).</p>
 </li>
 <li>
-<p><strong>Case study</strong>: We demonstrate that lists with concatenation and relation-based Cartesian product form a ring with active multiplicative identity \([\texttt{id}()]\) (Section 4).</p>
+<p><strong>Case studies</strong>: We demonstrate multiple "value-impossible" rings—including list Cartesian products, relation composition, and code transformations—that become possible with computational identities (Section 4).</p>
 </li>
 <li>
-<p><strong>Category-theoretic framework</strong>: We reformulate computational rings in categorical terms, showing how active identities correspond to computational morphisms (Section 7).</p>
+<p><strong>Category-theoretic framework</strong>: We reformulate computational rings in categorical terms, showing how computational identities correspond to parametric morphisms (Section 8).</p>
 </li>
 <li>
-<p><strong>Theoretical framework</strong>: We establish computational ring theory as a conservative extension of classical ring theory, where passive identities are a special case of active identities (Section 6).</p>
+<p><strong>Conservative extension</strong>: We establish rings with parametric identities as a conservative extension of classical ring theory (Section 6).</p>
 </li>
 </ol>
 </div>
@@ -435,15 +446,15 @@ $(addBlockSwitches);
 </div>
 </div>
 <div class="sect1">
-<h2 id="_active_identities">3. Active Identities</h2>
+<h2 id="_computational_identities">3. Computational Identities</h2>
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="_definition">3.1. Definition</h3>
 <div class="sidebarblock">
 <div class="content">
-<div class="title">Active Identity</div>
+<div class="title">Computational Identity</div>
 <div class="paragraph">
-<p>Let \(\langle A, \star \rangle\) be a monoid. An <strong>active identity</strong> is an element \(e \in A\) that is an <strong>instruction</strong> (not a passive value) such that for all \(a \in A\):</p>
+<p>Let \(\langle A, \star \rangle\) be a monoid. A <strong>computational identity</strong> is an element \(e \in A\) that is an <strong>instruction</strong> (not a passive value) such that for all \(a \in A\):</p>
 </div>
 <div class="stemblock">
 <div class="content">
@@ -462,24 +473,19 @@ $(addBlockSwitches);
 <div class="sect2">
 <h3 id="_runtime_semantics">3.2. Runtime Semantics</h3>
 <div class="paragraph">
-<p>The operation \(\star\) must have runtime semantics that recognize when one operand is the active identity instruction. For example:</p>
+<p>The operation \(\star\) must have runtime semantics that recognize when one operand is the computational identity instruction:</p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">default A mult(A other) {
-    // Check if this is the identity
-    if (this.isOne()) return other;
-
-    // Check if other is the identity
-    if (other.isOne()) return this;
-
-    // Otherwise, perform the actual multiplication
-    return this.performMult(other);
+    if (this.isOne()) return other;  // this is identity
+    if (other.isOne()) return this;  // other is identity
+    return this.performMult(other);  // actual multiplication
 }</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>The method \(\tt{isOne}()\) checks whether an object is the active identity instruction, not by value equality but by inspecting its instruction type.</p>
+<p>The method \(\tt{isOne}()\) checks whether an object is the identity instruction by inspecting its instruction type, not by value equality.</p>
 </div>
 </div>
 <div class="sect2">
@@ -488,53 +494,56 @@ $(addBlockSwitches);
 <div class="content">
 <div class="title">Verification-Forced Reification Principle</div>
 <div class="paragraph">
-<p>In a computational algebra with active identities, any proof of uniqueness of the identity element requires <strong>computation</strong>, and the act of computation forces the identity to be unique.</p>
+<p>In a computational algebra, any proof of uniqueness of the identity element requires <strong>computation</strong>, and the act of computation forces the identity to be unique.</p>
 </div>
 </div>
 </div>
 <div class="paragraph">
-<p><strong>Proof.</strong> Suppose \(e\) and \(e'\) are both active identities. To prove \(e = e'\), we compute:</p>
-</div>
-<div class="stemblock">
-<div class="content">
-\[e = e \star e' = e'\]
-</div>
-</div>
-<div class="paragraph">
-<p>But \(e \star e'\) is not a structural equality—it requires <strong>evaluating</strong> the operation \(\star\). When we evaluate \(e \star e'\), the runtime semantics recognize that \(e'\) is an identity instruction and return \(e\). Similarly, evaluating from the other direction returns \(e'\). The computation itself forces them to be equal. ∎</p>
-</div>
-<div class="paragraph">
-<p>This is fundamentally different from classical algebra, where \(e = e \star e' = e'\) is a structural fact that can be verified without computation.</p>
+<p><strong>Proof.</strong> Suppose \(e\) and \(e'\) are both computational identities. To prove \(e = e'\), we compute \(e \star e'\). The runtime semantics recognize \(e'\) as identity and return \(e\); symmetrically, they return \(e'\). The computation itself forces equality. ∎</p>
 </div>
 <div class="sidebarblock">
 <div class="content">
-<div class="title">Theorem: Uniqueness of Active Identity</div>
+<div class="title">Theorem: Uniqueness of Computational Identity</div>
 <div class="paragraph">
-<p>If \(e\) and \(e'\) are both active identities for a monoid \(\langle A, \star \rangle\) with runtime semantics, then \(\mathcal{E}(e \star e') = e = e'\), where \(\mathcal{E}\) is the evaluation function.</p>
+<p>If \(e\) and \(e'\) are both computational identities for a monoid \(\langle A, \star \rangle\), then \(\mathcal{E}(e \star e') = e = e'\), where \(\mathcal{E}\) is the evaluation function.</p>
 </div>
 </div>
-</div>
-<div class="paragraph">
-<p><strong>Proof.</strong> By definition of active identity, \(e \star e' = e'\) (using \(e\) as identity) and \(e \star e' = e\) (using \(e'\) as identity). Under evaluation \(\mathcal{E}\), both equalities hold, thus \(\mathcal{E}(e) = \mathcal{E}(e \star e') = \mathcal{E}(e')\). ∎</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_generic_types">3.4. Generic Types</h3>
+<h3 id="_parametric_identity_the_type_theoretic_view">3.4. Parametric Identity: The Type-Theoretic View</h3>
 <div class="paragraph">
-<p>Active identities often use <strong>generic types</strong> to work with any domain. For example, the identity instruction \(\tt{id}()\) might have:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>Domain: \(A\) (a generic type variable)</p>
-</li>
-<li>
-<p>Range: \(A\) (the same generic type)</p>
-</li>
-</ul>
+<p>From a type-theoretic perspective, computational identities are <strong>parametric identities</strong>—they leverage parametric polymorphism to achieve universality without enumeration.</p>
 </div>
 <div class="paragraph">
-<p>This allows \(\tt{id}()\) to serve as identity for operations on any type, with the specific type determined at runtime.</p>
+<p>The identity instruction has type:</p>
+</div>
+<div class="stemblock">
+<div class="content">
+\[\tt{id} : \forall A.\, A \to A\]
+</div>
+</div>
+<div class="paragraph">
+<p>This second-order universal quantifier \(\forall A\) ranges over <strong>all types</strong> without enumerating them. In System F (polymorphic lambda calculus) [3], this is written:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>id = ΛA. λx:A. x</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>where \(\Lambda A\) abstracts over the type variable, and \(\lambda x:A. x\) is the value-level identity function.</p>
+</div>
+<div class="paragraph">
+<p>The key insight is that <strong>parametric polymorphism</strong> [1] provides a finite representation of infinite behavior. Rather than defining:</p>
+</div>
+<div class="stemblock">
+<div class="content">
+\[\tt{id}_{\tt{Int}}, \tt{id}_{\tt{String}}, \tt{id}_{\tt{Bool}}, \ldots \text{ (infinitely many)}\]
+</div>
+</div>
+<div class="paragraph">
+<p>we define a single parametric identity that instantiates to any type on demand.</p>
 </div>
 </div>
 </div>
@@ -543,7 +552,7 @@ $(addBlockSwitches);
 <h2 id="_case_study_list_cartesian_product_ring">4. Case Study: List Cartesian Product Ring</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>We now demonstrate active identities through a concrete example: lists with concatenation and relation-based Cartesian product.</p>
+<p>We now demonstrate computational identities through a concrete example: lists with concatenation and relation-based Cartesian product.</p>
 </div>
 <div class="sect2">
 <h3 id="_list_operations">4.1. List Operations</h3>
@@ -592,7 +601,7 @@ $(addBlockSwitches);
 <p>This is a passive identity—a concrete value with structural identity properties.</p>
 </div>
 <div class="paragraph">
-<p><strong>Multiplicative Identity:</strong> We define the multiplicative identity as an <strong>active identity</strong>:</p>
+<p><strong>Multiplicative Identity:</strong> We define the multiplicative identity as a <strong>computational identity</strong>:</p>
 </div>
 <div class="stemblock">
 <div class="content">
@@ -600,34 +609,13 @@ $(addBlockSwitches);
 </div>
 </div>
 <div class="paragraph">
-<p>where \(\tt{id}()\) is an instruction with:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>Type: \(\tt{ID\_INST\_TID}\)</p>
-</li>
-<li>
-<p>Domain: \(A\) (generic type)</p>
-</li>
-<li>
-<p>Range: \(A\) (generic type)</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>The multiplication operation has runtime semantics:</p>
+<p>where \(\tt{id}()\) is a parametric instruction with type \(\forall A.\, A \to A\). The multiplication operation has runtime semantics:</p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">default Lst mult(Lst other) {
-    // Check if this is [id()]
-    if (this.isOne()) return other;
-
-    // Check if other is [id()]
-    if (other.isOne()) return this;
-
-    // Perform Cartesian product
+    if (this.isOne()) return other;   // this is [id()]
+    if (other.isOne()) return this;   // other is [id()]
     return lst(this.elements().flatMap(a -&gt;
         other.elements().map(b -&gt; rel(a, b))).toList());
 }</code></pre>
@@ -640,7 +628,7 @@ $(addBlockSwitches);
 <div class="content">
 <div class="title">Theorem: List Ring Structure</div>
 <div class="paragraph">
-<p>The structure \(\langle L, +, \times \rangle\) with active identity \([\texttt{id}()]\) forms a ring with unity.</p>
+<p>The structure \(\langle L, +, \times \rangle\) with computational identity \([\texttt{id}()]\) forms a ring with unity.</p>
 </div>
 </div>
 </div>
@@ -648,7 +636,7 @@ $(addBlockSwitches);
 <p><strong>Proof.</strong> We verify each axiom:</p>
 </div>
 <div class="paragraph">
-<p><strong>Additive Abelian Group:</strong> List concatenation with the empty list as identity forms an abelian group (standard result). The additive inverse is defined by negating coefficients (see Section 5).</p>
+<p><strong>Additive Abelian Group:</strong> List concatenation with the empty list as identity forms an abelian group. The additive inverse is defined by negating coefficients (see Section 5).</p>
 </div>
 <div class="paragraph">
 <p><strong>Multiplicative Monoid:</strong></p>
@@ -656,10 +644,10 @@ $(addBlockSwitches);
 <div class="ulist">
 <ul>
 <li>
-<p><strong>Associativity</strong>: Cartesian product is associative: \((L_1 \times L_2) \times L_3 \cong L_1 \times (L_2 \times L_3)\) (though structure differs due to nested relations).</p>
+<p><strong>Associativity</strong>: Cartesian product is associative: \((L_1 \times L_2) \times L_3 \cong L_1 \times (L_2 \times L_3)\).</p>
 </li>
 <li>
-<p><strong>Identity</strong>: For any list \(L\), when we evaluate \(L \times [\tt{id}()]\), the runtime semantics detect that \([\texttt{id}()]\) is the identity instruction and return \(L\) unchanged. Similarly for \([\tt{id}()] \times L\).</p>
+<p><strong>Identity</strong>: For any list \(L\), evaluating \(L \times [\tt{id}()]\) triggers runtime recognition of the identity instruction, returning \(L\) unchanged.</p>
 </li>
 </ul>
 </div>
@@ -684,6 +672,117 @@ $(addBlockSwitches);
 </div>
 <div class="paragraph">
 <p>The two sides are equal. ∎</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_more_value_impossible_rings">4.4. More Value-Impossible Rings</h3>
+<div class="paragraph">
+<p>The list Cartesian product is not unique—many algebraic structures require infinite or context-dependent identities impossible as passive values.</p>
+</div>
+<div class="sect3">
+<h4 id="_relation_composition">4.4.1. Relation Composition</h4>
+<div class="paragraph">
+<p>Binary relations compose via \(R \circ S = \{(a,c) \mid \exists b: (a,b) \in R \land (b,c) \in S\}\). The identity relation is:</p>
+</div>
+<div class="stemblock">
+<div class="content">
+\[\text{Id} = \{(x,x) \mid x \in \mathcal{U}\}\]
+</div>
+</div>
+<div class="paragraph">
+<p>This diagonal of the universe is infinite and unrepresentable. With parametric identity \(\tt{id}()\), the composition operation recognizes the instruction and returns the other relation unchanged.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_code_transformation">4.4.2. Code Transformation</h4>
+<div class="paragraph">
+<p>AST transformations form a ring under parallel (fanout) and serial composition. The multiplicative identity is "return code unchanged"—but as a concrete rewrite pattern, this requires matching <strong>all possible ASTs</strong>, an infinite set. With parametric identity \(\tt{id}()\), a single instruction handles all code structures.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">code.id()       [-- returns code unchanged --]
+code.opt().id() [-- id() composes away --]</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_type_constructors">4.4.3. Type Constructors</h4>
+<div class="paragraph">
+<p>Type constructors like \(\tt{List}\), \(\tt{Option}\) compose: \(\tt{List}[\tt{Option}[A]]\). The identity constructor \(F\) satisfies \(F[A] = A\) for all \(A\). No finite type expresses this—it would require a "universal wrapper" that is every type simultaneously (Russell&#8217;s paradox territory). With parametric identity \(\tt{T}(\#)\), the generic type adapts at application time.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_filter_composition">4.4.4. Filter Composition</h4>
+<div class="paragraph">
+<p>Predicates compose serially: \(p_1 \circ p_2\) applies \(p_1\), then \(p_2\) to survivors. The identity filter passes all elements unchanged—but a concrete predicate \(\lambda x.\, \tt{true}\) is typed for <strong>one</strong> domain. You&#8217;d need infinitely many identity predicates, one per type. Active identity \(\tt{id}()\) is polymorphic:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">[1,2,3].filter(id())       [-- [1,2,3] --]
+['a','b'].filter(id())     [-- ['a','b'] --]</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_rewrite_systems">4.4.5. Rewrite Systems</h4>
+<div class="paragraph">
+<p>Term rewriting rules compose: \(r_1 ; r_2\) applies \(r_1\) then \(r_2\). The identity rewrite "matches anything, returns unchanged" cannot be expressed as a finite pattern—it would require enumerating all possible term shapes. With parametric identity, the rewrite engine recognizes \(\tt{id}()\) and short-circuits.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_the_pattern">4.4.6. The Pattern</h4>
+<div class="paragraph">
+<p>Each impossible ring shares a common structure:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 27.2727%;">
+<col style="width: 36.3636%;">
+<col style="width: 36.3637%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Ring</th>
+<th class="tableblock halign-left valign-top">Impossible Identity</th>
+<th class="tableblock halign-left valign-top">Parametric Solution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">List ×</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Infinite diagonal relation</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">\(\tt{id}()\) instruction</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Relation ∘</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Universal identity relation</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">\(\tt{id}()\) instruction</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Code transform</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Pattern matching all ASTs</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">\(\tt{id}()\) instruction</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Type constructors</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Universal wrapper type</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">\(\tt{T}(\#)\) generic type</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Filter compose</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Infinitely many typed predicates</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Polymorphic \(\tt{id}()\)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Rewrite rules</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Pattern matching all terms</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">\(\tt{id}()\) instruction</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>The common thread: <strong>infinite enumeration</strong> or <strong>universal quantification</strong> required for passive identity, but a <strong>single parametric instruction</strong> suffices for computational identity.</p>
+</div>
 </div>
 </div>
 </div>
@@ -960,145 +1059,232 @@ default Lst scalarMult(cInt scalar) {
 </div>
 </div>
 <div class="sect1">
-<h2 id="_category_theory_perspective">7. Category Theory Perspective</h2>
+<h2 id="_type_theoretic_foundations">7. Type-Theoretic Foundations</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Category theory provides a natural framework for understanding active identities and operations.</p>
+<p>The mathematical foundation of parametric identities lies in the interplay between type theory, logic, and the theory of parametricity.</p>
 </div>
 <div class="sect2">
-<h3 id="_active_identities_as_computational_morphisms">7.1. Active Identities as Computational Morphisms</h3>
+<h3 id="_polymorphism_parametric_vs_ad_hoc">7.1. Polymorphism: Parametric vs. Ad-Hoc</h3>
 <div class="paragraph">
-<p>In classical category theory, the identity morphism \(\text{id}_A : A \to A\) is defined by the property:</p>
+<p>Strachey [4] distinguished two forms of polymorphism:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Ad-hoc polymorphism</strong>: Different implementations for different types (overloading). An identity function would require: \(\tt{id}_{\tt{Int}}\), \(\tt{id}_{\tt{String}}\), \(\tt{id}_{\tt{Bool}}\), &#8230;&#8203; — infinitely many definitions.</p>
+</li>
+<li>
+<p><strong>Parametric polymorphism</strong>: A single implementation uniform across all types. One definition \(\tt{id} : \forall A.\, A \to A\) suffices.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The key insight is that parametric polymorphism provides <strong>finite representation of infinite behavior</strong>. The universal quantifier \(\forall A\) ranges over all types without enumerating them.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_system_f_and_second_order_quantification">7.2. System F and Second-Order Quantification</h3>
+<div class="paragraph">
+<p>Girard [3] and Reynolds [1] independently developed System F (the polymorphic lambda calculus), which formalizes parametric polymorphism. In System F:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Type abstraction</strong>: \(\Lambda A. e\) abstracts over a type variable</p>
+</li>
+<li>
+<p><strong>Type application</strong>: \(e[T]\) instantiates a type variable</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The identity function is:</p>
 </div>
 <div class="stemblock">
 <div class="content">
-\[f \circ \text{id}_A = \text{id}_A \circ f = f\]
+\[\tt{id} = \Lambda A.\, \lambda x:A.\, x\]
 </div>
 </div>
 <div class="paragraph">
-<p>for all morphisms \(f : A \to B\).</p>
+<p>This is a <strong>second-order</strong> construct—it quantifies over types (propositions), not just values (individuals). The quantifier \(\forall A\) in \(\forall A.\, A \to A\) is analogous to second-order universal quantification in logic.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_the_curry_howard_correspondence">7.3. The Curry-Howard Correspondence</h3>
+<div class="paragraph">
+<p>The Curry-Howard correspondence [5,6] establishes a deep connection between logic and type theory:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Logic</th>
+<th class="tableblock halign-left valign-top">Type Theory</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Propositions</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Types</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Proofs</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Programs</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">\(P \to Q\)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Function type \(A \to B\)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">\(\forall x.\, P(x)\)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Polymorphic type \(\forall A.\, \tau\)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Proof of \(\forall x.\, P(x)\)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Polymorphic function</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Under this correspondence:</p>
+</div>
+<div class="stemblock">
+<div class="content">
+\[\forall A.\, A \to A \quad \longleftrightarrow \quad \forall P.\, (P \to P)\]
+</div>
 </div>
 <div class="paragraph">
-<p>With active identities, \(\text{id}_A\) is not a "do nothing" arrow but a <strong>computational morphism</strong>:</p>
+<p>The type \(\forall A.\, A \to A\) corresponds to the logical tautology "for all propositions P, P implies P." A program inhabiting this type <strong>is</strong> a proof of this proposition.</p>
+</div>
+<div class="paragraph">
+<p>The identity function \(\Lambda A.\, \lambda x:A.\, x\) is the canonical proof/inhabitant—and by Curry-Howard, this proof-program duality explains why a single parametric identity suffices for all types.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_reynolds_parametricity">7.4. Reynolds' Parametricity</h3>
+<div class="paragraph">
+<p>Reynolds [1] proved the <strong>parametricity theorem</strong> (also called the <strong>abstraction theorem</strong>), which formalizes the intuition that parametric functions must be "uniform":</p>
 </div>
 <div class="sidebarblock">
 <div class="content">
-<div class="title">Computational Identity Morphism</div>
+<div class="title">Parametricity Theorem (Informal)</div>
 <div class="paragraph">
-<p>A <strong>computational identity morphism</strong> \(\tt{id}_A\) is a morphism that:</p>
+<p>A polymorphic function cannot inspect its type parameter. It must treat all type instantiations uniformly.</p>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>Formally, parametricity states that polymorphic functions preserve <strong>relational parametricity</strong>: if \(R\) is a relation between types \(A\) and \(B\), then a parametric function \(f : \forall X.\, F(X)\) maps \(R\)-related inputs to \(R\)-related outputs.</p>
+</div>
+<div class="paragraph">
+<p>For the identity type \(\forall A.\, A \to A\), parametricity implies:</p>
+</div>
+<div class="sidebarblock">
+<div class="content">
+<div class="title">Corollary</div>
+<div class="paragraph">
+<p>If \(f : \forall A.\, A \to A\) and \(f\) terminates, then \(f = \tt{id}\).</p>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Proof sketch.</strong> By parametricity, \(f\) cannot inspect the type \(A\) or behave differently based on it. Given a value \(x : A\), the only thing \(f\) can do is return \(x\) (or diverge). ∎</p>
+</div>
+<div class="paragraph">
+<p>This is profound: <strong>the type signature entails the implementation</strong>. The identity property is not verified by enumeration—it is <strong>guaranteed by the type system</strong>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_wadlers_theorems_for_free">7.5. Wadler&#8217;s Theorems for Free</h3>
+<div class="paragraph">
+<p>Wadler [2] showed that parametricity yields "theorems for free"—properties derivable from type signatures alone, without examining implementations.</p>
+</div>
+<div class="paragraph">
+<p>For any function \(f : \forall A.\, A \to A\), Wadler&#8217;s theorem gives:</p>
+</div>
+<div class="stemblock">
+<div class="content">
+\[\forall g : B \to C.\quad g \circ f_B = f_C \circ g\]
+</div>
+</div>
+<div class="paragraph">
+<p>Since \(f\) must be the identity, this reduces to \(g = g\)—a tautology. But for more complex types, free theorems yield non-trivial properties.</p>
+</div>
+<div class="paragraph">
+<p>The relevance to computational identities: <strong>we don&#8217;t need to test identity behavior for each type</strong>. Parametricity guarantees it.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_the_compression_insight">7.6. The Compression Insight</h3>
+<div class="paragraph">
+<p>We can now state precisely why parametric identities avoid infinite enumeration:</p>
+</div>
+<div class="sidebarblock">
+<div class="content">
+<div class="title">Theorem: Parametric Compression</div>
+<div class="paragraph">
+<p>Let \(\mathcal{T}\) be a (potentially infinite) set of types. A parametric identity \(\tt{id} : \forall A.\, A \to A\) provides identity behavior for all \(T \in \mathcal{T}\) via:</p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p>Is represented as an <strong>instruction</strong> (not a passive arrow)</p>
+<p><strong>Finite representation</strong>: A single term \(\Lambda A.\, \lambda x:A.\, x\)</p>
 </li>
 <li>
-<p>Satisfies \(f \circ \tt{id}_A = f\) through <strong>evaluation</strong> of composition</p>
+<p><strong>On-demand instantiation</strong>: \(\tt{id}[T]\) yields identity for type \(T\)</p>
 </li>
 <li>
-<p>May have different representations for different \(f\), unified through computation</p>
+<p><strong>Correctness guarantee</strong>: Parametricity ensures \(\tt{id}[T](x) = x\) for all \(T, x\)</p>
 </li>
 </ol>
 </div>
 </div>
 </div>
+<div class="paragraph">
+<p>The infinite enumeration \(\{\tt{id}_T \mid T \in \mathcal{T}\}\) is <strong>compressed</strong> into the second-order quantifier \(\forall A\), and parametricity ensures correct behavior without explicit verification.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_category_theory_perspective">8. Category Theory Perspective</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Category theory provides a natural framework for computational identities.</p>
 </div>
 <div class="sect2">
-<h3 id="_functors_preserving_structure_up_to_evaluation">7.2. Functors Preserving Structure Up to Evaluation</h3>
+<h3 id="_computational_morphisms">8.1. Computational Morphisms</h3>
 <div class="paragraph">
-<p>Consider a functor \(F : \mathcal{C} \to \mathcal{D}\) between categories. In classical category theory:</p>
+<p>In classical category theory, \(\text{id}_A : A \to A\) satisfies \(f \circ \text{id}_A = f\) structurally. With computational identities, \(\tt{id}_A\) is an <strong>instruction</strong> whose identity property emerges through evaluation:</p>
 </div>
 <div class="stemblock">
 <div class="content">
-\[F(\text{id}_A) = \text{id}_{F(A)}\]
+\[\mathcal{E}(f \circ \tt{id}_A) = f\]
 </div>
 </div>
 <div class="paragraph">
-<p>With computational morphisms, this becomes:</p>
+<p>A <strong>computational functor</strong> \(F : \mathcal{C} \to \mathcal{D}\) preserves structure <strong>up to evaluation</strong>:</p>
 </div>
 <div class="stemblock">
 <div class="content">
 \[\mathcal{E}(F(\tt{id}_A)) = \tt{id}_{F(A)}\]
 </div>
 </div>
+</div>
+<div class="sect2">
+<h3 id="_computational_monoidal_categories">8.2. Computational Monoidal Categories</h3>
 <div class="paragraph">
-<p>where \(\mathcal{E}\) is the evaluation function. The functor preserves identity <strong>up to evaluation</strong>.</p>
-</div>
-<div class="sidebarblock">
-<div class="content">
-<div class="title">Definition: Computational Functor</div>
-<div class="paragraph">
-<p>A <strong>computational functor</strong> \(F : \mathcal{C} \to \mathcal{D}\) between computational categories satisfies:</p>
-</div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p>\(\mathcal{E}(F(f \circ g)) = \mathcal{E}(F(f) \circ F(g))\)</p>
-</li>
-<li>
-<p>\(\mathcal{E}(F(\tt{id}_A)) = \tt{id}_{F(A)}\)</p>
-</li>
-</ol>
-</div>
-<div class="paragraph">
-<p>where \(\mathcal{E}\) is the evaluation function.</p>
-</div>
-</div>
+<p>In a monoidal category \((\mathcal{C}, \otimes, I)\), the unit \(I\) and tensor \(\otimes\) can be <strong>active</strong>—adapting at runtime. Coherence diagrams commute under evaluation \(\mathcal{E}\), making coherence a <strong>computational guarantee</strong> rather than structural fact.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_monoidal_categories_and_coherence">7.3. Monoidal Categories and Coherence</h3>
+<h3 id="_enrichment_over_computations">8.3. Enrichment over Computations</h3>
 <div class="paragraph">
-<p>A <strong>monoidal category</strong> \((\mathcal{C}, \otimes, I)\) has:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>A tensor product \(\otimes : \mathcal{C} \times \mathcal{C} \to \mathcal{C}\)</p>
-</li>
-<li>
-<p>A unit object \(I\)</p>
-</li>
-<li>
-<p>Natural isomorphisms for associativity and unit laws</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>In computational monoidal categories:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>\(\otimes\) is an <strong>active operation</strong> (adapts algorithm at runtime)</p>
-</li>
-<li>
-<p>\(I\) is an <strong>active identity</strong> (computational unit object)</p>
-</li>
-<li>
-<p>Coherence conditions hold <strong>under evaluation</strong></p>
-</li>
-</ul>
-</div>
-<div class="sidebarblock">
-<div class="content">
-<div class="title">Computational Coherence Theorem</div>
-<div class="paragraph">
-<p>In a computational monoidal category, all coherence diagrams commute <strong>under evaluation</strong> \(\mathcal{E}\).</p>
-</div>
-</div>
-</div>
-<div class="paragraph">
-<p>This means coherence is not a structural property but a <strong>computational guarantee</strong>.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_enriched_categories">7.4. Enriched Categories</h3>
-<div class="paragraph">
-<p>An <strong>enriched category</strong> \(\mathcal{C}\) has hom-objects \(\mathcal{C}(A,B)\) that are objects in some monoidal category \(\mathcal{V}\).</p>
-</div>
-<div class="paragraph">
-<p>With computational rings, we can enrich over the category of <strong>computations</strong>:</p>
+<p>We can enrich over the category of <strong>computations</strong>:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -1106,7 +1292,7 @@ default Lst scalarMult(cInt scalar) {
 <p><strong>Objects</strong>: Types</p>
 </li>
 <li>
-<p><strong>Hom-objects</strong>: \(\mathcal{C}(A,B)\) is the set of <strong>instructions</strong> from \(A\) to \(B\)</p>
+<p><strong>Hom-objects</strong>: Instructions from \(A\) to \(B\)</p>
 </li>
 <li>
 <p><strong>Composition</strong>: Evaluation of serial composition</p>
@@ -1117,126 +1303,130 @@ default Lst scalarMult(cInt scalar) {
 </ul>
 </div>
 <div class="paragraph">
-<p>This gives us a <strong>computationally enriched category</strong> where morphisms are not functions but instructions.</p>
+<p>This yields <strong>computationally enriched categories</strong> where morphisms are instructions, not functions.</p>
 </div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_related_work">8. Related Work</h2>
+<h2 id="_related_work">9. Related Work</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_lazy_evaluation">8.1. Lazy Evaluation</h3>
+<h3 id="_lazy_evaluation">9.1. Lazy Evaluation</h3>
 <div class="paragraph">
-<p>Lazy evaluation in functional programming (e.g., Haskell) defers computation until a value is needed. Active identities share this philosophy: the identity doesn&#8217;t "exist" until it&#8217;s computed with.</p>
-</div>
-<div class="paragraph">
-<p>However, lazy evaluation typically produces the same result whether eager or lazy. Active identities go further: the identity&#8217;s <strong>structure</strong> depends on when and how it&#8217;s evaluated.</p>
+<p>Lazy evaluation defers computation until needed. Computational identities share this philosophy but go further: the identity&#8217;s <strong>structure</strong> depends on when and how it&#8217;s evaluated, not just <strong>when</strong> it&#8217;s evaluated.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_computational_type_theory">8.2. Computational Type Theory</h3>
+<h3 id="_computational_type_theory">9.2. Computational Type Theory</h3>
 <div class="paragraph">
-<p>In computational type theory (e.g., NuPRL), types are defined by their computational behavior. Active identities extend this to algebraic structures: identity elements are defined by their computational behavior, not their structure.</p>
+<p>In computational type theory (NuPRL), types are defined by computational behavior. Computational identities extend this principle to algebraic structures: identities are defined by what they <strong>do</strong>, not what they <strong>are</strong>.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_homotopy_type_theory">8.3. Homotopy Type Theory</h3>
+<h3 id="_homotopy_type_theory">9.3. Homotopy Type Theory</h3>
 <div class="paragraph">
-<p>Homotopy Type Theory (HoTT) identifies types with topological spaces and equalities with paths. In HoTT, equality is not a proposition but a type of paths.</p>
+<p>In HoTT, equality is not a proposition but a type of <strong>paths</strong>. Computational ring theory resonates: equality \(a = b\) is a <strong>computational path</strong> through evaluation. This suggests connections to path induction and univalence (equivalent structures are equal under evaluation).</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_applications_and_future_work">10. Applications and Future Work</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_computational_inverses_and_zeros">10.1. Computational Inverses and Zeros</h3>
+<div class="paragraph">
+<p>Just as identities can be computational, so can <strong>inverses</strong>. For a group \(\langle G, \star \rangle\), the inverse \(a^{-1}\) could be a parametric instruction \(\tt{inv}(a)\) that computes the inverse at runtime—enabling groups where inverses are expensive or undecidable.</p>
 </div>
 <div class="paragraph">
-<p>Computational ring theory has a similar flavor: equality \(a = b\) is not a structural fact but a <strong>computational path</strong> from \(a\) to \(b\) through evaluation. This suggests connections to:</p>
+<p>Similarly, <strong>computational zeros</strong> (additive identities) could represent "empty" or "null" states that adapt to context—useful for nullable types, optional values, and error handling.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_graph_and_query_systems">10.2. Graph and Query Systems</h3>
+<div class="paragraph">
+<p>Graph traversals are stream functions. Computational identities represent "stay here" traversals optimized away at runtime. Query optimizers can recognize \(\tt{id}()\) and eliminate redundant operations.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_quantum_computing">10.3. Quantum Computing</h3>
+<div class="paragraph">
+<p>Computational identities naturally model quantum gates in superposition until measured—the identity gate "exists" in all bases simultaneously until observation collapses it.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_conclusion">11. Conclusion</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>We have introduced <strong>parametric identities</strong> in ring theory, where identity elements are instructions rather than passive values. The key contributions are:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Computational identities</strong> enable algebraic structures previously impossible—where passive identity would require infinite enumeration, a single parametric instruction suffices.</p>
+</li>
+<li>
+<p><strong>Type-theoretic foundation</strong>: Parametric polymorphism [1] compresses infinite enumeration into the second-order quantifier \(\forall A\), and parametricity [2] guarantees correct behavior. The Curry-Howard correspondence [5,6] reveals that a parametric identity <strong>is</strong> a proof of identity for all types.</p>
+</li>
+<li>
+<p><strong>Coefficient-mediated structure</strong> lets data structures inherit ring properties by coupling to coefficient rings, generalizing vector spaces to arbitrary structures over arbitrary rings.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>Rings with parametric identities are a conservative extension of classical rings. By making identities computational, we gain:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p><strong>Path induction</strong>: Proving properties by induction on computational paths</p>
+<p><strong>Expressiveness</strong>: Structures impossible with passive identities</p>
 </li>
 <li>
-<p><strong>Univalence</strong>: Equivalent structures are equal (under evaluation)</p>
-</li>
-</ul>
-</div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_applications_and_future_work">9. Applications and Future Work</h2>
-<div class="sectionbody">
-<div class="sect2">
-<h3 id="_active_inverses">9.1. Active Inverses</h3>
-<div class="paragraph">
-<p>Just as we have active identities, we can have <strong>active inverses</strong>. For a group \(\langle G, \star \rangle\), the inverse \(a^{-1}\) could be an instruction that computes the inverse at runtime:</p>
-</div>
-<div class="stemblock">
-<div class="content">
-\[\tt{inv}(a) = \text{instruction that computes } a^{-1}\]
-</div>
-</div>
-<div class="paragraph">
-<p>This enables groups where inverses are expensive to compute or even undecidable.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_graph_computing">9.2. Graph Computing</h3>
-<div class="paragraph">
-<p>In graph databases, traversals can be seen as stream functions. Active identities could represent "do nothing" traversals that are optimized away at runtime.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_quantum_computing">9.3. Quantum Computing</h3>
-<div class="paragraph">
-<p>The quantum superposition metaphor is not just metaphorical. In quantum computing, superposition is real. Active identities could model quantum gates where the identity gate is in superposition until measured.</p>
-</div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_conclusion">10. Conclusion</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>We have introduced <strong>computational ring theory</strong>, where identity elements are active computational objects rather than passive values. The principle of <strong>verification-forced reification</strong> ensures that axioms hold: any proof of uniqueness requires computation, which forces the identity to be unique.</p>
-</div>
-<div class="paragraph">
-<p>A key implementation technique is <strong>coefficient-mediated algebraic structure</strong>, where data structures inherit ring properties by coupling to coefficient rings. This pattern enables modular construction of algebraic types and generalizes the concept of vector spaces to arbitrary data structures over arbitrary rings.</p>
-</div>
-<div class="paragraph">
-<p>This framework enables algebraic structures previously impossible, such as lists with relation-based Cartesian product forming a ring with active multiplicative identity \([[\texttt{id}()]\)]. We have shown that computational rings are a conservative extension of classical rings and explored the category-theoretic foundations.</p>
-</div>
-<div class="paragraph">
-<p>Computational ring theory opens a new design space for programming languages and algebraic systems. By making identity elements computational, we gain:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>Expressiveness</strong>: Structures that cannot exist with passive identities</p>
+<p><strong>Correctness</strong>: Parametricity guarantees identity behavior</p>
 </li>
 <li>
-<p><strong>Efficiency</strong>: Identities that adapt to context at runtime</p>
+<p><strong>Genericity</strong>: Single identity working across all types</p>
 </li>
 <li>
-<p><strong>Genericity</strong>: Identities that work across all types via generic type variables</p>
-</li>
-<li>
-<p><strong>Modularity</strong>: Coefficient-mediated structure enables reusable algebraic patterns</p>
+<p><strong>Modularity</strong>: Reusable algebraic patterns via coefficients</p>
 </li>
 </ul>
 </div>
 <div class="paragraph">
-<p>The Metatron programming language serves as a reference implementation, demonstrating that these ideas are not merely theoretical but practically realizable.</p>
+<p>The Metatron programming language serves as reference implementation, demonstrating these ideas are practically realizable.</p>
 </div>
 <div class="paragraph">
-<p>Future work includes formalizing active inverses and zeros, exploring connections to quantum computing and homotopy type theory, and investigating the decidability and complexity of identity recognition in Turing-complete computational rings.</p>
-</div>
-<div class="paragraph">
-<p><strong>Computation is not just a tool for implementing algebra—computation itself can be an algebraic structure.</strong></p>
+<p><strong>Computation is not just a tool for implementing algebra—computation itself is algebraic structure.</strong></p>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_references">References</h2>
+<h2 id="_references">12. References</h2>
 <div class="sectionbody">
+<div class="paragraph">
+<p>[1] J.C. Reynolds, "Types, Abstraction and Parametric Polymorphism," <em>Information Processing 83</em>, pp. 513–523, 1983.</p>
+</div>
+<div class="paragraph">
+<p>[2] P. Wadler, "Theorems for Free!," <em>Proceedings of the Fourth International Conference on Functional Programming Languages and Computer Architecture (FPCA '89)</em>, pp. 347–359, 1989.</p>
+</div>
+<div class="paragraph">
+<p>[3] J.-Y. Girard, "Interprétation fonctionnelle et élimination des coupures de l&#8217;arithmétique d&#8217;ordre supérieur," Ph.D. thesis, Université Paris VII, 1972. (See also: J.C. Reynolds, "Towards a Theory of Type Structure," <em>Colloque sur la Programmation</em>, pp. 408–425, 1974.)</p>
+</div>
+<div class="paragraph">
+<p>[4] C. Strachey, "Fundamental Concepts in Programming Languages," <em>Higher-Order and Symbolic Computation</em>, vol. 13, pp. 11–49, 2000. (Lecture notes from 1967.)</p>
+</div>
+<div class="paragraph">
+<p>[5] H.B. Curry and R. Feys, <em>Combinatory Logic</em>, vol. 1, North-Holland, 1958.</p>
+</div>
+<div class="paragraph">
+<p>[6] W.A. Howard, "The Formulae-as-Types Notion of Construction," in <em>To H.B. Curry: Essays on Combinatory Logic, Lambda Calculus and Formalism</em>, Academic Press, pp. 479–490, 1980. (Manuscript from 1969.)</p>
+</div>
+<div class="paragraph">
+<p>[7] M.A. Rodriguez, "Stream Ring Theory," <em>S/V Red Herring&#8217;s Ship&#8217;s Log: Chronicles in the Sea of Cortez</em>, pp. 10–40, Mulegé, Baja California Sur, México, February 2019.</p>
+</div>
 <script>
     if (!hljs.initHighlighting.called) {
         hljs.initHighlighting.called = true

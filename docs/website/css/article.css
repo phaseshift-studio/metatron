@@ -43,16 +43,42 @@
 body, .quoteblock blockquote, .quoteblock p, .mjx-chtml .MJXc-display span {
     background-color: var(--secondarycolor);
     color: #cbcbcb;
-    font-weight: 1;
+    font-weight: 500;
 }
 
+.sidebarblock, .content, pre .highlight, .language-java, .hljs {
+    background-color: var(--secondarycolor) !important;
+    padding: 1rem;
+}
 
 #header>h1:first-child {
     font-size: 0;
 }
 
+.literalblock pre, .listingblock>.content>pre:not(.highlight), .listingblock>.content>pre[class=highlight], .listingblock>.content>pre[class^="highlight "] {
+    background: #cbcbcb;
+    padding: 1px;
+    border: 1px solid var(--mred);
+}
+
+
+p {
+    font-size: 1.1em;
+    font-weight: lighter;
+}
+
 a {
     color: var(--mred);
+}
+
+table, tr, td {
+    border: 0;
+    color: #cbcbcb !important;
+    background: var(--secondarycolor) !important;
+}
+
+th {
+    color: var(--mred) !important;  
 }
 
 .sidebarblock, 

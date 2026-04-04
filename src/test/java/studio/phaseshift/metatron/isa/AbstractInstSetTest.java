@@ -23,6 +23,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 
@@ -32,6 +33,7 @@ import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -49,6 +51,7 @@ public abstract class AbstractInstSetTest extends AbstractMetatronTest {
     protected void setup() {
         this.space = this.spaceSupplier.get();
         if (null != this.space) {
+            this.space.setup();
             if (this.space.vid() == null)
                 LOG.warn("provided space has no vid and thus can not be shutdown automatically");
             Router.global().addSpace(this.space);

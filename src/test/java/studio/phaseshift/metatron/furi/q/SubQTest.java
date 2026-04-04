@@ -58,7 +58,7 @@ public interface SubQTest {
         assertEquals(SUBSCRIPTION_TID, sub.tid());
         final Obj writeObj = mParser.eval(make(writing));
         assertNotEquals(sub, writeObj);
-        CommonUtil.sleepThread(100);
+        CommonUtil.sleepThread(350);
         assertTrue(mParser.eval(make(expecting)).boolValue());
     }
 

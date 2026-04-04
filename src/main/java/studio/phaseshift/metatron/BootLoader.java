@@ -53,20 +53,8 @@ import java.util.stream.Stream;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
-import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Bytes.BYTES_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Code.CODE_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Fail.FAIL_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Inst.INST_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.NOOBJ_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Real.REAL_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Rel.REL_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
+import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -74,6 +62,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_ISA_TID;
 
 public class BootLoader implements Rec, Feature.SelfClone {
 
@@ -183,11 +172,11 @@ public class BootLoader implements Rec, Feature.SelfClone {
             Router.global().addSpace(sysSpace.self(sysSpace.jvm(), sysSpace.tid(), SYS_VID).as());
             /// LOAD DEFAULT INSTRUCTION SET (/m and /m/mach)
             final InstSet m = new mInstSet();
-            m.setup();
             Router.writeToSpace(m);
+            m.setup();
             final InstSet mach = new machInstSet();
-            mach.setup();
             Router.writeToSpace(mach);
+            mach.setup();
             /// WRITE THE BOOT ARGS TO THE ROUTER STACK
             Router.writeToSpace(f("boot/args"), args);
             ///  ADD INCRQ PROCESSOR TO SYS FOR AUTO INCREMENTING FAIL STACK
@@ -207,25 +196,6 @@ public class BootLoader implements Rec, Feature.SelfClone {
                 }
                 LOG.info("\t {{m}}END:{{g}} evaluating provided boot loader: {{b}}%s{{X}}\n", args.at(uri(Tokens.BOOT)).uriValue());
             }
-            ///////////////////////////////////////////////////////////////
-            docWrap(BOOL_TYPE, "a 2 valued mono: true or false");
-            docWrap(BYTES_TYPE, "a sequence of 8-bit unsigned integers");
-            docWrap(INT_TYPE, "a 64-bit signed integer");
-            docWrap(REAL_TYPE, "a 64-bit floating point number");
-            docWrap(STR_TYPE, "an ordered sequence of UTF-32 characters");
-            docWrap(URI_TYPE, "a uniform resource identifier");
-            docWrap(REL_TYPE, "a directed binary poly coupling two objs");
-            docWrap(REC_TYPE, "a poly composed of uniquely keyed rels");
-            docWrap(LST_TYPE, "an ordered sequence poly of objs");
-            docWrap(INST_TYPE, "a call with apply defined by an lhs obj, an poly of args, and an body of code");
-            docWrap(CODE_TYPE, "a call with apply defined by an lhs obj and a sequence of insts");
-            docWrap(T(OBJS_TID), "an ordered sequence poly of objs and noobjs");
-            docWrap(NOOBJ_TYPE, "a no object");
-            docWrap(MONO_TYPE, "an atomic obj");
-            docWrap(POLY_TYPE, "a obj composed of other objs");
-            docWrap(NUM_TYPE, "an obj representing a number");
-            docWrap(FAIL_TYPE, "a reified exception handling obj that can be caught");
-            ///////////////////////////////////////////////////////////////
             final Obj log = Router.writeToSpace(LogObj.of(rec(args.at("log").orElse(uri("trace")), lst(uri(ALL))), SYS_VID.extend("log")));
             LOG.info("logging now handled by %s", log);
             ///////////////////////////////////////////////////////////////
@@ -297,11 +267,16 @@ public class BootLoader implements Rec, Feature.SelfClone {
                 .filter(p -> f(p.type().getAnnotation(InstSet.JREService.class).tid()).test(tid));
     }
 
+    public static Stream<InstSet> importInstSet(final fURI tid) {
+        return importInstSet(tid, null);
+    }
+
     public static Stream<InstSet> importInstSet(final fURI tid, final fURI prefix) {
         if (null != prefix)
             Router.global().registerPrefix(prefix, tid);
         return BootLoader.loadInstSetProvider(tid)
-                .map(ServiceLoader.Provider::get)
-                .peek(InstSet::setup);
+                .map(ServiceLoader.Provider::get)///  new
+                .peek(isa -> Router.global().addSpace(isa)) // add to router
+                .peek(InstSet::setup); // setup
     }
 }

@@ -106,9 +106,7 @@ public interface Real extends Mono, Ring.O<Real>, MultGroup.O<Real> {
         return this.jvm(-1.0d * this.realValue());
     }
 
-    final class TypeObj {
-
-        Type REAL_TYPE = T(REAL_TID);
+    final class RealType {
 
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(

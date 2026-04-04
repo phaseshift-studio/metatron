@@ -50,7 +50,8 @@
         <skipRunner>false</skipRunner>
         <skipAdoc>false</skipAdoc>
         <skipInstSetDocs>false</skipInstSetDocs>
-        <!-- Metatron InstSet Documentation -->
+        <buildNumber>0</buildNumber>
+        <!-- metatron instset documentation -->
         <metatron.host>ws://127.0.0.1:8999</metatron.host>
         <main.class>studio.phaseshift.metatron.BootLoader</main.class>
         <!-- DEPENDENCY VERSIONS -->
@@ -83,7 +84,6 @@
         <sqlite.version>3.51.3.0</sqlite.version>
         <mcp-annotated-java-sdk.version>0.13.0</mcp-annotated-java-sdk.version>
         <mcp.version>1.1.1</mcp.version>
-
         <!-- LOGBACK PROPERTIES -->
     </properties>
     <dependencyManagement>
@@ -488,6 +488,8 @@
                                 <argument>${metatron.host}</argument>
                                 <argument>--link-css</argument>
                                 <argument>--website-template</argument>
+                                <argument>--build</argument>
+                                <argument>${buildNumber}</argument>
                                 <argument>-o</argument>
                                 <argument>${project.basedir}/docs/website/instset</argument>
                                 <!-- generate instset docs -->
@@ -736,7 +738,7 @@
                         </goals>
                         <configuration>
                             <sourceDirectory>${project.basedir}/docs/articles</sourceDirectory>
-                            <sourceDocumentName>computational-ring-theory.adoc</sourceDocumentName>
+                            <sourceDocumentName>parametric-identities-in-ring-theory.adoc</sourceDocumentName>
                             <outputDirectory>${project.basedir}/docs/website/articles</outputDirectory>
                             <skip>${skipAdoc}</skip>
                             <backend>html</backend>
@@ -795,6 +797,29 @@
                 <plugin>
                     <artifactId>maven-resources-plugin</artifactId>
                     <version>3.5.0</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>buildnumber-maven-plugin</artifactId>
+                    <version>1.4</version>
+                    <executions>
+                        <execution>
+                            <phase>validate</phase>
+                            <goals>
+                                <goal>create</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                    <configuration>
+                        <scmConnectionUrl>scm:svn:http://none</scmConnectionUrl>
+                        <buildNumberPropertiesFileLocation>buildNumber.properties</buildNumberPropertiesFileLocation>
+                        <buildNumberPropertyName>buildNumber</buildNumberPropertyName>
+                        <timestampFormat>{0,date}</timestampFormat>
+                        <timezone>UTC</timezone>
+                        <format>build:#{0}-({1,date})</format>
+                        <doUpdate>true</doUpdate>
+                        <doCheck>false</doCheck>
+                    </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>

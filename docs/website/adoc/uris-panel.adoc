@@ -219,7 +219,7 @@ The different embeddings also have different space costs, where space is defined
 [discrete]
 === coefficients
 
-[cols="2a,2a,3",separator=🧱,options=header,role="table-bordered small center"]
+[cols="3a,3a,3",separator=🧱,options=header,role="table-bordered small center"]
 |===
 🧱 [.red]#coefficient# 🧱 [.red]#shorthand# 🧱 [.red]#name#
 🧱 {0,0}       🧱 {0}       🧱 noobj

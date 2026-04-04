@@ -59,7 +59,7 @@ color green "==>"
 color yellow "/=>"
 color red "X=>"
 ### auto resolve
-color yellow "!\*" "\{<j>\}"
+color yellow "!\*" "!" "\{<j>\}"
 color green "\{|\}"
 ###  uri
 color blue "[^-][<][^=]([^>])*[>][^-]^(=>)]"

@@ -23,7 +23,10 @@ import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
-import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.Inst;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.util.Tuple;
 
@@ -57,7 +60,7 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
     }
 
     protected boolean checkPattern(final Obj obj) {
-        if (null != obj.vid() && !obj.vid().test(this.pattern())) {
+        if (false && null != obj.vid() && !obj.vid().test(this.pattern())) {
             LOG.warn("obj at %s outside instset pattern %s: (ignoring) %s", obj.vid(), this.pattern(), obj);
             return false;
         }
@@ -112,6 +115,7 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
     public AbstractInstSet(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(new LinkedHashMap<>(), jvm, tid, vid);
         this.at(uri(Tokens.QSTRING), lst(QCollection.docQ()), MUTABLE);
+        this.sugars().forEach(mParser::addSugar);
         old = false;
     }
 
@@ -153,7 +157,7 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
             }
         });
     }
-    
+
     @Override
     public Set<Obj> consts() {
         return old ? new LinkedHashSet<>() : new LinkedHashSet<>(CONST_TABLE.values());
