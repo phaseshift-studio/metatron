@@ -27,11 +27,7 @@ import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.util.Tuple;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.DOM;
@@ -225,7 +221,7 @@ public class ifURITest extends AbstractMetatronTest {
             // Multiple PATH templates
             "</data/${>>id}/${>>type}>                  | [id=>123,type=>json]   | /data/123/json",
             // QUERY template expansion
-            "<http://api.com/search?${>>query}>       | [query=>q=test]        | http://api.com/search?q=test",
+            "<http://api.com/search?${>>query}>       | [query=>[q=>test]]     | http://api.com/search?q=test",
             // Mixed templates (PORT + PATH)
             "<http://api.com:${>>port}/${>>version}>    | [port=>9000,version=>v1] | http://api.com:9000/v1",
     }, delimiter = '|')
@@ -236,7 +232,7 @@ public class ifURITest extends AbstractMetatronTest {
 
         // Parse the LHS record [key=>value, ...]
         final studio.phaseshift.metatron.isa.m.type.Obj lhs =
-            studio.phaseshift.metatron.isa.m.parser.mParser.m_obj().parse(lhsRec).get();
+                studio.phaseshift.metatron.isa.m.parser.mParser.m_obj().parse(lhsRec).get();
 
         // Apply template expansion
         final studio.phaseshift.metatron.isa.m.type.Obj result = uri.apply(lhs);
