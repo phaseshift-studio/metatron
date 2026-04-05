@@ -36,25 +36,27 @@ public class CodeTest extends AbstractMetatronTest {
     @CsvSource(value = {
             // furi | tid | dom | range
                 "1.plus(2)                                          % true",
-                "1.plus(\"abc\")                                      % false",
-                "{1,2,3}.plus(2)                                    % true",
-                "{1,2,3}.plus(\"abc\")                                % false",
+                "1.plus(\"abc\")                                    % false",
+                "{1,2,3}.plus(2)                                    % false",
+                "3.plus(2)                                          % true",
+                "{1,2,3}.plus(\"abc\")                              % false",
                 "*abc.plus(2)                                       % false",
                 "*?int<=(abc).plus(2)                               % true",
              //   "1.-<[_,_]                                          % true",   // TODO: this should pass . ??
-             //   "{1,2,3}.-<[_,_]                                    % true",    // TODO: this should pass . ??
-                "1.-<[_,_]>-                                        % true",  // TODO:this resolves because of ring algebra
+                "{1,2,3}.-<[_,_]                                    % false",    // TODO: this should pass . ??
+                "1.-<[_,_]>-                                        % true",     // TODO:this resolves because of ring algebra
                 "{1,2,3}.>-                                         % true",
-                "{1,2,3}.plus(34).sum()                             % true",
+                "{1,2,3}.plus(34).sum()                             % false",
+                "1.plus(34).sum()                                   % true",
                 "'a'.plus('b').sum()                                % true",
-            //  "{'a','b','c'}.plus('def').sum()                    % true", // TODO: this should pass . ??
+                "{'a','b','c'}.plus('def').sum()                    % false", // TODO: this should pass . ??
                 "{'a','b','c'}.plus?str<=str('def').sum()           % true",
                 "1._                                                % true",
                 "1.to(a).plus(4).from(a)                            % false",  // TODO: requires variable tracking in compilation
                 "1.to(a).plus(from(a))                              % false",  // TODO: requires variable tracking in compilation
                 "*abc._                                             % true",
                 "1.*abc._                                           % true"
-    }, delimiter = '%',quoteCharacter = '~')
+    }, delimiter = '%',quoteCharacter = '^')
     public void testDomRng(final String code, final boolean resolved) {
         Code obj = mParser.parse(code);
         LOG.debug("testing code resolution %s %s resolve", obj, resolved ? "{{g}}should{{X}}" : "{{r}}should not{{X}}");

@@ -23,12 +23,12 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.q.SubQTest;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
 import studio.phaseshift.metatron.isa.iot.MoquetteServer;
 import studio.phaseshift.metatron.isa.iot.space.mqtt.mqttSpace;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -58,7 +58,7 @@ public class mqttSpaceTest extends AbstractSpaceTest implements SubQTest {
     public mqttSpaceTest() {
         super(() -> {
             try {
-                BootLoader.loadInstSetProvider(IOT_ISA_TID);
+                InstSet.loadInstSetProvider(IOT_ISA_TID);
                 return mqttSpace.of(rec(
                         uri(HOST), uri("mqtt://127.0.0.1:" + PORT),
                         uri(PATTERN), uri("/t/#"),

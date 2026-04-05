@@ -155,8 +155,12 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
             if (set.isEmpty()) {
                 temp = this.getSpace(furi).redirect(furi, true);
             } else if (set.size() > 1) {
-                final Iterator<fURI> furis = set.stream().filter(f -> f.hasPrefix(this.primary.toString())).iterator();
-                temp = furis.hasNext() ? furis.next() : set.iterator().next();
+                // when multiple redirects exist, prefer shorter paths (closer to primary instruction set)
+                // this ensures /m/inst/zero is preferred over /m/mach/inst/ring/const/zero
+                final Optional<fURI> preferred = set.stream()
+                        .filter(f -> f.hasPrefix(this.primary.toString()))
+                        .min(Comparator.comparingInt(fURI::pathLength));
+                temp = preferred.orElse(set.iterator().next());
             } else {
                 temp = set.iterator().next();
             }

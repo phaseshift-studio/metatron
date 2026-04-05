@@ -20,12 +20,16 @@ package studio.phaseshift.metatron.isa.m.type;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
+import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
@@ -40,7 +44,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 public interface InstSet extends Space {
-
     Type INSTSET_TYPE = Type.Builder.build().tid(REC_TID).vid(INSTSET_TID)
             .isaPredicate(rec(
                     uri(CONST).maybe().asUri(), lst(T(ALL)),
@@ -96,6 +99,31 @@ public interface InstSet extends Space {
                 }
             }
         }
+    }
 
+    /// ///////////////////////////////////////////////////////////////////////////////////////
+
+    static Stream<ServiceLoader.Provider<InstSet>> loadInstSetProvider(final fURI vid) {
+        return ServiceLoader.load(InstSet.class)
+                .stream()
+                .peek(p -> {
+                    if (!p.type().isAnnotationPresent(JREService.class))
+                        Graphitty.log(InstSet.class).warn("an inst set without a service metadata located: %s", p.type().getCanonicalName());
+                })
+                .filter(p -> p.type().isAnnotationPresent(JREService.class))
+                .filter(p -> f(p.type().getAnnotation(JREService.class).vid()).test(vid));
+    }
+
+    static Stream<InstSet> importInstSet(final fURI vid) {
+        return importInstSet(vid, null);
+    }
+
+    static Stream<InstSet> importInstSet(final fURI vid, final fURI prefix) {
+        if (null != prefix)
+            Router.global().registerPrefix(prefix, vid);
+        return loadInstSetProvider(vid)
+                .map(ServiceLoader.Provider::get)///  new
+                .peek(isa -> Router.global().addSpace(isa)) // add to router
+                .peek(InstSet::setup); // setup
     }
 }

@@ -30,8 +30,10 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -58,6 +60,15 @@ public interface Inst extends Call {
     String OBJ = "obj";
 
     fURI ARGS_FURI = fURI.Singleton.f(ARGS);
+
+    /**
+     * Cache for fully resolved instructions when ALL arguments are literals (non-call objects).
+     * Key: "lhsType|instBasePath|args" - includes lhs type, instruction name, and literal args
+     * Value: The fully resolved instruction (safe to reuse since literal args don't depend on lhs)
+     * Call args (inst, code, type) are NOT cached because they depend on the lhs value.
+     */
+    Map<String, Inst> RESOLUTION_CACHE = new ConcurrentHashMap<>();
+
     Uri ARGS_URI = uri(ARGS_FURI);
     Type INST_TYPE = Type.Builder.build().tid(M_ISA_INST_TID).vid(M_ISA_INST_TID).create();
 
@@ -243,6 +254,25 @@ public interface Inst extends Call {
         if (this.hasf())
             return this;
         final GraphittyLogger LOG = Graphitty.log(lhs);
+
+        // Resolution cache: only cache when ALL arguments are literals (non-call objects)
+        // Call args (inst, code, type) depend on lhs and can't be cached
+        // Literal args (int, real, str, bool, etc.) always resolve to the same value
+        // TODO: Need to recursively check for calls inside polys (rec/lst)
+        //       e.g., [a=>plus(2)] has plus(2) nested inside the rec
+        /*final boolean allArgsLiteral = this.args().stream().noneMatch(Obj::isObjCall);
+        final boolean canUseCache = allArgsLiteral
+                && !lhs.tid().isGeneric() && !this.tid().isGeneric()
+                && !this.tid().basePath().equals(AS_INST_TID)
+                && !this.hasDom() && !this.hasRng(); // dom/rng are context-specific
+        final String cacheKey = canUseCache ? lhs.tid() + "|" + this.tid().basePath() + "|" + this.args() : null;
+        if (cacheKey != null) {
+            final Inst cached = RESOLUTION_CACHE.get(cacheKey);
+            if (cached != null) {
+                return cached.c(this.c()); // apply coefficient from this invocation
+            }
+        }*/
+
         try {
             Obj fetched = Router.global().read(this.tid().basePath());
             /// //////////////////////////////////////////////////
@@ -255,53 +285,33 @@ public interface Inst extends Call {
             /// //////////////////////////////////////////////////
             LOG.debug("fetched insts: %s => %s", this.tid().basePath(), fetched);
             final Inst resolved = fetched.stream()
-                    // .sorted(Comparator.comparing(i -> 
-                    //        i.tid().dom().isGeneric() || 
-                    //                i.tid().rng().isGeneric() ||
-                    //               i.tid().dom().basePath().equals(ALL) ? 1 :  -1)) // TODO: can this be memoized?
-                    //.map(i -> i.isCode() ? i.asCode().tryToInst() : i)
-                    //.map(i -> i.isInst() ? i.asInst() : instC(this.tid().dom(lhs.tid()).rng(ALL.maybeSome()), this.args(), (lhs2, inst) -> Router.global().write(this.tid(), inst.args())))
                     .filter(Obj::isInst)
                     .map(Obj::asInst)
                     .filter(i -> !this.tid().basePath().equals(AS_INST_TID) || this.arg(0).test(i.arg(0)))
-                    .filter(i -> (i.args().isEmpty() && this.arg(0).isNoObj()) || i.args().isRec() || i.args().count() >= this.args().count()) // TODO: check which recs are default
+                    .filter(i -> (i.args().isEmpty() && this.arg(0).isNoObj()) || i.args().isRec() || i.args().count() >= this.args().count())
                     .filter(i -> !lhs.isInst() || (i.dom().baseType().equals(M_ISA_INST_TID)))
-                    //.sorted(Comparator.comparing(Inst::dom, (a, b) -> lhs.matches(a.dom()) ? -1 : lhs.matches(b.dom()) ? 1 : 0)) // TODO: explore this more fully
-                    //.filter(i -> !this.hasDom() || this.dom().matches(i.dom()))
-                    //.filter(i -> !this.hasRng() || this.rng().matches(i.rng()))
                     .map(i -> this.hasDom() ? i.dom(this.dom()) : i)
                     .map(i -> this.hasRng() ? i.rng(this.rng()) : i)
-                    /*.map(i -> { // TODO: expand this concept
-                        if (this.hasRng())
-                            return i.rng(this.rng());
-                        else if (!this.tid().basePath().equals(AS_INST_TID))
-                            return i;
-                        else if (this.arg(0).asType().matches(i.rng())) {
-                            return i.rng(this.arg(0).asType());
-                        } else
-                            return null;
-                    })*/
-                    //.filter(i -> !Objects.isNull(i))
                     .map(i -> lhs.isInst() ? i : Helper.bindGenerics(lhs, i, this))
                     .filter(i -> !Objects.isNull(i))
                     .filter(i -> lhs.isInst() || lhs.test(i.dom()))
-                    //.filter(i -> lhs.matches(i.dom()) || (Form.of(i).equals(Form.mapper) && lhs.unique() && lhs.c(cInt.ONE()).matches(i.dom())))
-                    //.map(i -> lhs.isType() && !lhs.isNoObj() && i.tid().dom().hasPattern() ? i.dom(lhs.as()) : i)
                     .map(i -> {
                         final Poly<?, ?> resolvedArgs = resolveArgs(this, i, lhs);
                         if (null == resolvedArgs)
-                            return null; // TODO: backtrack the resolution to the outer inst to see if adjusting the coefficient can resolve the internal resolution
+                            return null;
                         return i.args(resolvedArgs);
                     })
                     .filter(i -> !Objects.isNull(i))
-                    .map(i -> i.isInitial() ? i.rng(i.arg(0).type()) : i) // TODO: only start()?
-                    //.map(i -> lhs.isType() ?  i.dom(lhs.c(i.dom().c()).as()).<Inst>as() : i)
+                    .map(i -> i.isInitial() ? i.rng(i.arg(0).type()) : i)
                     .map(i -> i.c(this.c()))
                     .findFirst()
-                    // .map(i -> i.args().isEmpty() ? i.args(lst(noobj())).resolve(lhs) : i.resolve(lhs))
                     .orElse(null);
             if (null != resolved) {
                 LOG.trace("%s => %s is %s resolved", lhs, resolved, CommonUtil.lambda(() -> resolved.isResolved(false) ? "" : "not"));
+                // Cache the resolved instruction if args are all literals
+                /*if (cacheKey != null) {
+                    RESOLUTION_CACHE.putIfAbsent(cacheKey, resolved);
+                }*/
                 return resolved;
             }
         } catch (final Exception e) {

@@ -29,12 +29,12 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
-import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.algebra.rewrite.CommonRewritesTestContract;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.impl.MStr;
@@ -79,7 +79,7 @@ public class docdbSpaceTest extends AbstractSpaceTest implements CommonRewritesT
                 ).jvm(),
                 SPACE_VID
         ));
-        BootLoader.loadInstSetProvider(DCMNT_ISA_TID);
+        InstSet.loadInstSetProvider(DCMNT_ISA_TID);
     }
 
     @Override

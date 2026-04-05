@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.grph.space.graphSpace;
 import studio.phaseshift.metatron.isa.grph.grphInstSet;
 import studio.phaseshift.metatron.isa.m.mInstSet;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.mach.machInstSet;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
@@ -62,9 +63,9 @@ public class mGraphProvider extends AbstractGraphProvider {
 
     static {
         BootLoader.load(rec());
-        BootLoader.loadInstSetProvider(mInstSet.M_ISA_TID);
-        BootLoader.loadInstSetProvider(machInstSet.MACH_ISA_TID);
-        BootLoader.loadInstSetProvider(grphInstSet.GRPH_ISA_TID);
+        InstSet.loadInstSetProvider(mInstSet.M_ISA_TID);
+        InstSet.loadInstSetProvider(machInstSet.MACH_ISA_TID);
+        InstSet.loadInstSetProvider(grphInstSet.GRPH_ISA_TID);
     }
 
 

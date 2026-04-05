@@ -89,7 +89,7 @@ public class llmInstSet extends AbstractInstSet {
             uri(ARG).maybe(), rec(URI_TYPE, T(ALL)).maybe())).create();
 
     public llmInstSet() {
-        super(mutableMap(uri(PATTERN), uri(LLM_ISA_TID.extend(ALL))), LLM_ISA_TID, LLM_ISA_TID);
+        super(mutableMap(uri(PATTERN), uri(LLM_ISA_TID.extend(ALL))), INSTSET_TID, LLM_ISA_TID);
     }
 
     @Override

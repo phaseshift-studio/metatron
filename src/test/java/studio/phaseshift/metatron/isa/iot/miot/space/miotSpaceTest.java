@@ -20,7 +20,6 @@ package studio.phaseshift.metatron.isa.iot.miot.space;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -29,6 +28,7 @@ import studio.phaseshift.metatron.furi.q.SubQTest;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
 import studio.phaseshift.metatron.isa.iot.MoquetteServer;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.util.MTronException;
@@ -75,8 +75,8 @@ public class miotSpaceTest extends AbstractSpaceTest implements SubQTest {
                 throw MTronException.of(e);
             }
         });
-        BootLoader.loadInstSetProvider(IOT_ISA_TID);
-        BootLoader.loadInstSetProvider(MIOT_ISA_TID);
+        InstSet.loadInstSetProvider(IOT_ISA_TID);
+        InstSet.loadInstSetProvider(MIOT_ISA_TID);
     }
     
     @BeforeAll

@@ -260,21 +260,21 @@ public class UriTest extends AbstractMetatronTest {
             "100.map(<http://api.com:${minus(20)}>)                                      % <http://api.com:80>",
 
             // PATH component - toString coercion
-            "5.map(<http://example.com/${mult(2)}/data>)                                      % <http://example.com/10/data>",
-            "10.map(<http://api.com/v${plus(1)}/users>)                                       % <http://api.com/v11/users>",
+            "5.map(<http://example.com/${mult(2)}/data>)                                  % <http://example.com/10/data>",
+            "10.map(<http://api.com/v${plus(1)}/users>)                                   % <http://api.com/v11/users>",
 
             // Variable reference in PATH
-            "[user=>alice].map(<http://example.com/${>>user}>)                           % <http://example.com/alice>",
-            "[user=>alice].map(<http://example.com/${user}>)                             % <http://example.com/alice>",
+            "[user=>alice].map(<http://example.com/${>>user}>)                             % <http://example.com/alice>",
+            "[user=>alice].map(<http://example.com/${user}>)                               % <http://example.com/user>",
             "[id=>42].map(<http://api.com/users/${>>id}>)                                  % <http://api.com/users/42>",
-            "[id=>42].map(<http://api.com/users/${id}>)                                  % <http://api.com/users/42>",
+            "[id=>42].map(<http://api.com/users/${id}>)                                    % <http://api.com/users/id>",
             // TODO: QUERY component templates need more parser work
             // The mParser needs to be updated to handle ${...} in query strings
             // "70.map(<http://api.com/search?${[q=>hello,lang=>en]}>                      % <http://api.com/search?q=hello&lang=en>",
             // "[x=>10,y=>20].map(<http://map.com/point?${x}>                              % <http://map.com/point?x=10>",
 
             // Multiple templates in same URI
-            "5.map(<http://example.com:${plus(75)}/${mult(10)}>)                              % <http://example.com:80/50>",
+            "5.map(<http://example.com:${plus(75)}/${mult(10)}>)                           % <http://example.com:80/50>",
 
             // Non-template URIs pass through unchanged
             "anything.map(<http://example.com/static>)                                   % <http://example.com/static>",

@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.furi.q.SubQTest;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 
 import java.io.File;
 import java.util.Map;
@@ -38,7 +39,15 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 public class memSpaceTest extends AbstractSpaceTest implements SubQTest {
 
     public memSpaceTest() {
-        super(() -> memSpace.of(rec(uri(PATTERN), uri("/t/#")/*uri(PERSIST), uri("/tmp/mem")),*/), f("/sys/space/mem")));
+        super(() -> {
+            if (RANDOM.nextInt(10) < 3) {
+                Graphitty.log(memSpaceTest.class).debug("deleting persisted memspace data at {{y}}/tmp/memspace-test.mtron{{X}}");
+                final File file = new File("/tmp/memspace-test.mtron");
+                if (file.exists())
+                    file.delete();
+            }
+            return memSpace.of(rec(uri(PATTERN), uri("/t/#"), uri(PERSIST), uri("/tmp/memspace-test.mtron")), f("/sys/space/mem"));
+        });
     }
 
     @Test

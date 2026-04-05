@@ -87,7 +87,7 @@ public class webInstSet extends AbstractInstSet {
             .vid(CSS_TID).create();
 
     public webInstSet() {
-        super(mutableMap(uri(PATTERN), uri(WEB_ISA_TID.extend(ALL))), WEB_ISA_TID, WEB_ISA_TID);
+        super(mutableMap(uri(PATTERN), uri(WEB_ISA_TID.extend(ALL))), INSTSET_TID, WEB_ISA_TID);
     }
 
     @Override

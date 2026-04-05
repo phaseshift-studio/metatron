@@ -29,7 +29,6 @@ import java.util.Set;
 import static studio.phaseshift.metatron.algebra.Form.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 
-@Disabled
 public class IntTest extends AbstractAlgebraTest<Int> {
 
     public IntTest() {

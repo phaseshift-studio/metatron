@@ -23,10 +23,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
-import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
 import studio.phaseshift.metatron.isa.grph.space.graphSpace;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.util.CommonUtil;
@@ -52,7 +52,7 @@ public class graphSpaceTest extends AbstractSpaceTest {
 
     public graphSpaceTest() {
         super(() -> {
-            BootLoader.importInstSet(M_ISA_TID, null);
+            InstSet.importInstSet(M_ISA_TID, null);
             final grphInstSet isa = new grphInstSet();
             isa.setup();
 
@@ -109,11 +109,11 @@ public class graphSpaceTest extends AbstractSpaceTest {
     @ParameterizedTest
     @CsvSource(value = {
             "*/g/S.count()                                                                  % 1",
-            "*/g/S>>pattern                                                                  % /m/grph/inst/schema/modern/#",
-            "*/g/S>>pattern.*(_).count()                                                       % 4",
-            "*/g/S>>pattern.*_.count()                                                       % 4",
+            "*/g/S>>pattern                                                                  % /m/grph/schema/modern/#",
+            "*/g/S>>pattern.*(_).count()                                                       % 5",
+            "*/g/S>>pattern.*_.count()                                                       % 5",
             //  "**/g/S/pattern.count()                                                       % 4",
-            "*/g/S>>pattern.*(_).vid()                                                         % {/m/grph/inst/schema/modern/person,/m/grph/inst/schema/modern/software,/m/grph/inst/schema/modern/created,/m/grph/inst/schema/modern/knows}",
+            "*/g/S>>pattern.*(_).vid()                                                         % {/m/grph/schema/modern, /m/grph/schema/modern/person,/m/grph/schema/modern/software,/m/grph/schema/modern/created,/m/grph/schema/modern/knows}",
     }, delimiter = '%')
     public void testSchemaTraversal(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);

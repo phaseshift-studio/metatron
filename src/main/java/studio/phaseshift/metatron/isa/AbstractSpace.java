@@ -50,7 +50,7 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
 
     public AbstractSpace(final SJVM sjvm, final Map<Obj, Obj> config, final fURI tid, final fURI vid) {
         super(config, tid, vid);
-        InstSet.JREService.Helper.verifyClass(this.getClass(), tid);
+        InstSet.JREService.Helper.verifyClass(this.getClass(), vid);
         this.sjvm = sjvm;
         this.pattern = this.at(PATTERN).uriValue();
         /// //////////// BAD

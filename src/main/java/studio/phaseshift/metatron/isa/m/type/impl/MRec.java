@@ -83,8 +83,8 @@ public class MRec extends MObj implements Rec {
 
     public static <K, V> Rec rec(final Map<K, V> map, final ObjFactory factory) {
         return rec(map.entrySet().stream()
-                //.filter(kv -> !(kv.getKey() instanceof Obj) || !((Obj) kv.getKey()).isNoObj())
-                // .filter(kv -> !(kv.getValue() instanceof Obj) || !((Obj) kv.getValue()).isNoObj())
+                .filter(kv -> !(kv.getKey() instanceof Obj) || !((Obj) kv.getKey()).isNoObj())
+                .filter(kv -> !(kv.getValue() instanceof Obj) || !((Obj) kv.getValue()).isNoObj())
                 .map(kv -> rel(kv.getKey() instanceof String && !((String) kv.getKey()).contains(" ") ? uri((String) kv.getKey()) : factory.toObj(kv.getKey()), factory.toObj(kv.getValue()))));
     }
 

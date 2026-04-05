@@ -98,7 +98,7 @@ public class grphInstSet extends AbstractInstSet {
     public static final Uri OUT = uri(Direction.OUT.name());
 
     public grphInstSet() {
-        super(mutableMap(uri(PATTERN), uri(GRPH_ISA_TID.extend(ALL))), GRPH_ISA_TID, GRPH_ISA_TID);
+        super(mutableMap(uri(PATTERN), uri(GRPH_ISA_TID.extend(ALL))), INSTSET_TID, GRPH_ISA_TID);
     }
 
     /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -234,8 +234,9 @@ public class mInstSet extends AbstractInstSet {
     }
 
     public void setup() {
+        this.selfTID(INSTSET_TID);
         this.jvm().putAll(new LinkedHashMap<>(Map.of(
-                uri(PATTERN), uri(M_ISA_INST_TID.extend(ALL)),
+                uri(PATTERN), uri(M_ISA_TID.extend(ALL)),
                 uri(CONST), lst(docWrap(noobj(), "a no object")),
                 uri(TYPE), lst(
                       /*  NOOBJ_TYPE,
@@ -267,7 +268,7 @@ public class mInstSet extends AbstractInstSet {
                         docWrap(INSTSET_TYPE, "an aggregate of types, insts, consts, rewrites, and sugars structuring a domain of discourse"),
                         docWrap(INST_TYPE, "a call with apply defined by an lhs obj, an poly of args, and an body of code"),
                         docWrap(CODE_TYPE, "a call with apply defined by an lhs obj and a sequence of insts"),
-                        docWrap(OBJS_TYPE, "an ordered sequence poly of objs and noobjs"),
+                      //  docWrap(OBJS_TYPE, "an ordered sequence poly of objs and noobjs"),
                         docWrap(FAIL_TYPE, "a reified exception handling obj that can be caught"),
                         /// ///////////////////////////////////
                         SPACE_TYPE,
@@ -289,7 +290,7 @@ public class mInstSet extends AbstractInstSet {
                         Lst.LstType.insts().stream(),
                         RecType.insts().stream(),
                         Fail.FailType.insts().stream(),
-                        Objs.ObjsType.insts().stream(),
+                      //  Objs.ObjsType.insts().stream(),
                         Type.TypeType.insts().stream(),
                         SpaceType.insts().stream(),
                         ObjType.insts().stream(),

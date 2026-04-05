@@ -57,7 +57,7 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
   graphdb::[pattern  => g:#,
         route    => [<g:V>=><V>,
                      <g:E>=><E>,
-                     <g:S>=>/m/grph/inst/schema/modern],
+                     <g:S>=>/m/grph/schema/modern],
         native   => [factory  => mfactory::[=>],
                      load     => modern]]@/sys/space/modern;
   mqtt::[pattern => <mqtt:#>,

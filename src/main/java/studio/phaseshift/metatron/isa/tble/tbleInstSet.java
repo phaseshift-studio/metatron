@@ -79,7 +79,7 @@ public class tbleInstSet extends AbstractInstSet {
 
 
     public tbleInstSet() {
-        super(mutableMap(uri(PATTERN), uri(TBLE_ISA_TID.extend(ALL))), TBLE_ISA_TID, TBLE_ISA_TID);
+        super(mutableMap(uri(PATTERN), uri(TBLE_ISA_TID.extend(ALL))), INSTSET_TID, TBLE_ISA_TID);
     }
 
     @Override

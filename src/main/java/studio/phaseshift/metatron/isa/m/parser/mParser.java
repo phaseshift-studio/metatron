@@ -471,7 +471,7 @@ public class mParser {
     }
 
     public static Parser m_real() {
-        return seq(m_type_prefix(REAL_TID), seq(opt(of('-'), '+'), choice(of('0'), digit().plus()), of('.'), digit().plus())
+        return seq(m_type_prefix(REAL_TID), seq(opt(of('-'), '+'), choice(of('0'), digit().plus()), of('.'), digit().plus(), opt(seq(of("E"),opt(of("-"),""),digit().plus()),""))
                 .flatten().trim(), m_vid_postfix())
                 .map(t -> new MReal(Double.parseDouble(pick(t, 1).toString()), pick(t, 0), pick(t, 2)));
     }

@@ -186,7 +186,7 @@ public class memSpace extends AbstractSpace<Map<fURI, Obj>> {
                         throw MTronException.of(e);
                     }
                 });
-                out.write("print('complete.\\n');\n".getBytes(StandardCharsets.UTF_8));
+                //out.write("print('complete.\\n');\n".getBytes(StandardCharsets.UTF_8));
 
             } catch (final Exception e) {
                 throw MTronException.of(e);

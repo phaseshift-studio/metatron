@@ -245,8 +245,8 @@ bin/metatron</code></pre>
                     </h2>
                     <div id="flush-collapseOne" class="accordion-collapse collapse" aria-labelledby="flush-headingOne" data-bs-parent="#accordianInstSet">
                         <div class="accordion-body">
-                               <pre><code>/m::[
- pattern=>/m/inst/#,
+                               <pre><code>instset::[
+ pattern=>/m/#,
  space  =>[sub=>{!*/m/mach,!*/m/math,!*/m/web,!*/m/iot,!*/m/grph,!*/m/llm,!*/m/tble,!*/m/dcmnt}],
  q      =>[
    docq::[
@@ -254,56 +254,6 @@ bin/metatron</code></pre>
        pre_write=>inst?rng=#{*}&dom=#{?}(uri::T,#::T){<j>},
        pattern  =>docq,
        obj      =>mem::[=>]]],
- type   =>[
-   mono::T[inst?rng=mono&dom=#{?}(){<j>}],
-   poly::T[inst?rng=poly&dom=#{?}(){<j>}],
-   bool::T,
-   int::T,
-   real::T,
-   bytes::T,
-   str::T,
-   uri::T,
-   rel::T,
-   lst::T,
-   rec::T,
-   rec::T[?[
-     {?}const  =>[#::T],
-     {?}type   =>[T::T],
-     {?}inst   =>[inst::T],
-     {?}rewrite=>[inst::T],
-     {?}sugar  =>[lst::T]]]@/m/instset,
-   inst::T,
-   code::T,
-   objs::T,
-   fail::T,
-   rec::T[?[
-     pattern=>uri::T,
-     {?}q   =>[
-       uri::T=>rec::T[][inst?rng=q&dom=#{?}([
- pattern       =>uri::T,
- pre_write{?}  =>inst::T,
- post_write{?} =>inst::T,
- qless_write{?}=>inst::T,
- pre_read{?}   =>inst::T,
- post_read{?}  =>inst::T]){<j>}]@/m/space/q]]]@/m/space,
-   space::T[][inst?rng=mem&dom=#{?}(isa([
- pattern   =>uri::T,
- {?}persist=>uri::T[][inst?rng=file&dom=#{?}(uri::T){<j>}]@/m/mach/file])){<j>}]@/m/space/mem,
-   space::T[][inst?rng=stack&dom=#{?}(isa([pattern=>uri::T])){<j>}]@/m/space/stack,
-   space::T[][inst?rng=meta&dom=#{?}(isa([
- pattern=>uri::T,
- host   =>uri::T,
- route  =>[uri::T=>uri::T],
- peers  =>[uri{*}::T]])){<j>}]@/m/space/meta,
-   rec::T[][inst?rng=q&dom=#{?}([
- pattern       =>uri::T,
- pre_write{?}  =>inst::T,
- post_write{?} =>inst::T,
- qless_write{?}=>inst::T,
- pre_read{?}   =>inst::T,
- post_read{?}  =>inst::T]){<j>}]@/m/space/q,
-   q::T[][inst?rng=constq&dom=#{?}(){<j>}]@/m/space/q/constq],
- const  =>[noobj],
  rewrite=>[
    /m/inst/rewrite/id_removal?rng=code{?}&dom=code(){<j>},
    /m/inst/rewrite/map_nest?rng=code{?}&dom=code(){<j>},
@@ -338,7 +288,6 @@ bin/metatron</code></pre>
    mult?rng=int&dom=int(int::T){<j>},
    minus?rng=int&dom=int(int::T){<j>},
    plus?rng=int&dom=int(int::T){<j>},
-   plus?rng=int{+}&dom=int{+}(int::T){<j>},
    gt?rng=bool&dom=int(int::T){<j>},
    gte?rng=bool&dom=int(int::T){<j>},
    lt?rng=bool&dom=int(int::T){<j>},
@@ -473,7 +422,6 @@ bin/metatron</code></pre>
    sum?rng=rec&dom=rec{*}(){<j>},
    cause?rng=fail{?}&dom=fail(){<j>},
    reify?rng=rec&dom=fail(){<j>},
-   as?rng=lst&dom=#{*}(lst::T){<j>},
    rshift?rng=#{*}&dom=/m/type(uri{*}::T){<j>},
    serialize?rng=B&dom=A(/m/mach/io::T){<j>},
    fork?rng=A{*}&dom=A{*}(#::T){<j>},
@@ -542,7 +490,56 @@ bin/metatron</code></pre>
    swap?rng=A&dom=A(B::T){<j>},
    rshift?rng=B{?}&dom=A(){<j>},
    lshift?rng=B{?}&dom=A(){<j>},
-   start?rng=A{**}&dom=noobj{0}(A{**}::T){<j>}]]@/m</code></pre>
+   start?rng=A{**}&dom=noobj{0}(A{**}::T){<j>}],
+ type   =>[
+   mono::T[inst?rng=mono&dom=#{?}(){<j>}],
+   poly::T[inst?rng=poly&dom=#{?}(){<j>}],
+   bool::T,
+   int::T,
+   real::T,
+   bytes::T,
+   str::T,
+   uri::T,
+   rel::T,
+   lst::T,
+   rec::T,
+   rec::T[?[
+     {?}const  =>[#::T],
+     {?}type   =>[T::T],
+     {?}inst   =>[inst::T],
+     {?}rewrite=>[inst::T],
+     {?}sugar  =>[lst::T]]]@/m/instset,
+   inst::T,
+   code::T,
+   fail::T,
+   rec::T[?[
+     pattern=>uri::T,
+     {?}q   =>[
+       uri::T=>rec::T[][inst?rng=q&dom=#{?}([
+ pattern       =>uri::T,
+ pre_write{?}  =>inst::T,
+ post_write{?} =>inst::T,
+ qless_write{?}=>inst::T,
+ pre_read{?}   =>inst::T,
+ post_read{?}  =>inst::T]){<j>}]@/m/space/q]]]@/m/space,
+   space::T[][inst?rng=mem&dom=#{?}(isa([
+ pattern   =>uri::T,
+ {?}persist=>uri::T[][inst?rng=file&dom=#{?}(uri::T){<j>}]@/m/mach/file])){<j>}]@/m/space/mem,
+   space::T[][inst?rng=stack&dom=#{?}(isa([pattern=>uri::T])){<j>}]@/m/space/stack,
+   space::T[][inst?rng=meta&dom=#{?}(isa([
+ pattern=>uri::T,
+ host   =>uri::T,
+ route  =>[uri::T=>uri::T],
+ peers  =>[uri{*}::T]])){<j>}]@/m/space/meta,
+   rec::T[][inst?rng=q&dom=#{?}([
+ pattern       =>uri::T,
+ pre_write{?}  =>inst::T,
+ post_write{?} =>inst::T,
+ qless_write{?}=>inst::T,
+ pre_read{?}   =>inst::T,
+ post_read{?}  =>inst::T]){<j>}]@/m/space/q,
+   q::T[][inst?rng=constq&dom=#{?}(){<j>}]@/m/space/q/constq],
+ const  =>[noobj]]@/m</code></pre>
                         </div>
                     </div>
                 </div>
@@ -552,8 +549,8 @@ bin/metatron</code></pre>
         <div class="container-xxl mb-4">
             <div class="d-flex justify-content-center gap-2 flex-wrap">
                 <button class="btn btn-outline-secondary" disabled>Consts <span class="badge bg-dark">0</span></button>
-                <a href="#types" class="btn btn-outline-primary">Types <span class="badge bg-secondary">16</span></a>
-                <a href="#instructions" class="btn btn-outline-primary">Insts <span class="badge bg-secondary">229</span></a>
+                <a href="#types" class="btn btn-outline-primary">Types <span class="badge bg-secondary">15</span></a>
+                <a href="#instructions" class="btn btn-outline-primary">Insts <span class="badge bg-secondary">227</span></a>
                 <a href="#spaces" class="btn btn-outline-primary">Spaces <span class="badge bg-secondary">4</span></a>
                 <a href="#rewrites" class="btn btn-outline-primary">Rewrites <span class="badge bg-secondary">8</span></a>
             </div>
@@ -606,10 +603,6 @@ bin/metatron</code></pre>
                 </a>
                 <a href="#type-mono" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">mono</span>
-                    <span class="badge bg-primary">T</span>
-                </a>
-                <a href="#type-objs" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
-                    <span class="code">objs</span>
                     <span class="badge bg-primary">T</span>
                 </a>
                 <a href="#type-poly" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
@@ -1094,7 +1087,7 @@ bin/metatron</code></pre>
             
         <div class="container-xxl mb-4" id="types">
             <h3 class="text-primary mb-3">
-                Types <span class="badge bg-primary">16</span>
+                Types <span class="badge bg-primary">15</span>
             </h3>
             
                 <div class="card mb-3" id="type-bool">
@@ -1264,24 +1257,6 @@ bin/metatron</code></pre>
                     </div>
                     
                 </div>
-                <div class="card mb-3" id="type-objs">
-                    <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span>
-                            <span class="code text-primary fw-bold">objs::T</span>
-                            
-                        </span>
-                        <small class="text-muted code">/m/objs</small>
-                    </div>
-                    
-                    <div class="card-body p-2">
-                        <pre class="mb-0"><code class="language-mtron">objs::T</code></pre>
-                    </div>
-                    
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">an ordered sequence poly of objs and noobjs</p>
-                    </div>
-                    
-                </div>
                 <div class="card mb-3" id="type-poly">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
@@ -1394,7 +1369,7 @@ bin/metatron</code></pre>
             
         <div class="container-xxl mb-4" id="instructions">
             <h3 class="text-primary mb-3">
-                Instructions <span class="badge bg-success">229</span>
+                Instructions <span class="badge bg-success">227</span>
             </h3>
             
                 <div class="card mb-3" id="inst-and">
@@ -1468,7 +1443,6 @@ bin/metatron</code></pre>
 <pre class="mb-1"><code class="language-mtron">as?rec&lt;=lst(rec::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1"><code class="language-mtron">as?lst&lt;=rec(lst::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1"><code class="language-mtron">as?uri&lt;=rec(uri::T){&lt;j&gt;}</code></pre>
-<pre class="mb-1"><code class="language-mtron">as?lst&lt;=#{*}(lst::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1"><code class="language-mtron">as?noobj{0}&lt;=A(){&lt;j&gt;}</code></pre>
 <pre class="mb-1"><code class="language-mtron">as?B&lt;=A(#::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1"><code class="language-mtron">as?A&lt;=A(A::T){&lt;j&gt;}</code></pre>
@@ -2432,7 +2406,6 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">plus?bool&lt;=bool(bool::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1"><code class="language-mtron">plus?bytes&lt;=bytes(bytes::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1"><code class="language-mtron">plus?int&lt;=int(int::T){&lt;j&gt;}</code></pre>
-<pre class="mb-1"><code class="language-mtron">plus?int{+}&lt;=int{+}(int::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1"><code class="language-mtron">plus?real&lt;=real(real::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1"><code class="language-mtron">plus?str&lt;=str(str::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1"><code class="language-mtron">plus?uri{?}&lt;=uri(uri{?}::T){&lt;j&gt;}</code></pre>
@@ -2442,11 +2415,11 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">add the argument int to each element of the lhs int list</p>
+                        <p class="mb-0 text-light">add the argument int to the lhs int</p>
                     </div>
                     <div class="card-body py-2">
-                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"the lhs int list" <span class="text-light">=&gt;</span> "the result of the addition"
-   [int::T <span class="text-light">=&gt;</span> "the int to add to each element of the lhs list"]</pre>
+                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"the lhs int" <span class="text-light">=&gt;</span> "the result of the addition"
+   [int::T <span class="text-light">=&gt;</span> "the int to add to the lhs"]</pre>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-port">
@@ -3239,7 +3212,7 @@ bin/metatron</code></pre>
         <div class="container-xxl py-3 text-center">
             <hr class="border-secondary">
             <small class="text-muted">
-                generated by metatron instset doc generator on build 0-2026-04-05 03:55:49<br>
+                generated by metatron instset doc generator on build 0-2026-04-05 14:37:18<br>
                 © PhaseShift Studio, LLC
             </small>
         </div>

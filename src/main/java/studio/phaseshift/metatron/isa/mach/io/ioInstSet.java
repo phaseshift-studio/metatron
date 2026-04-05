@@ -31,6 +31,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import static studio.phaseshift.metatron.isa.m.mInstSet.INSTSET_TID;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_ISA_TID;
 
 
@@ -49,7 +50,7 @@ public class ioInstSet extends AbstractInstSet {
     public static final Type OBJ_SERIAL_TYPE = Type.Builder.build().tid(OBJ_SERIALIZER_TID).vid(OBJ_SERIALIZER_TID).create();
 
     public ioInstSet() {
-        super(IO_ISA_TID, IO_ISA_TID);
+        super(INSTSET_TID, IO_ISA_TID);
     }
 
     @Override

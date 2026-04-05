@@ -45,19 +45,14 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 public class ifURITest extends AbstractMetatronTest {
 
     protected static fURI idem(final String furi) {
-        if (furi == null)
-            return f(furi);
+        if (furi == null) return f(null);
         final fURI f = f(furi);
-        /*final String f2 = f.toString();
-        if (f.c().isOne())
-            assertTrue(f.equals(f(f2)));
-        //      assertEquals(f2.startsWith("<") ? f2.substring(1, f2.length() - 1) : f2, furi.startsWith("<") ? furi.substring(1, furi.length() - 1) : furi);
+        final String f2 = f.toString();
         final fURI f3 = f(f2);
         assertEquals(f, f3);
         final fURI f4 = mParser.m_furi().parse(furi).get();
         assertEquals(f, f4);
-        if (f3.c().isOne())
-            assertTrue(f3.equals(f4));*/
+        assertEquals(f3, f4);
         return f;
     }
 
@@ -204,7 +199,8 @@ public class ifURITest extends AbstractMetatronTest {
             "</api/${>>version}/users>                            | [version=>v2]                             | /api/v2/users",
             "</data/${>>id}/${>>type}>                            | [id=>123,type=>json]                      | /data/123/json",
             "<http://api.com/search?${>>query}>                   | [query=>[q=>test]]                        | http://api.com/search?q=test",
-            "<http://api.com/search?${>>query>>q>>}>              | [query=>[q=>test]]                        | http://api.com/search?test",
+            "<http://api.com/search?${>>query>>q}>              | [query=>[q=>test]]                          | http://api.com/search?test",
+            "<http://api.com/search?${>>query>>q>>}>              | [query=>[q=>test]]                        | http://api.com/search?noobj",
             "<http://api.com:${>>port}${>>version}>               | [port=>9000,version=>v1]                  | http://api.com:9000/v1",
             "<http://api.com:${>>port}${>>version}/${>>path}>     | [port=>9000,version=>v1,path=>[a,b,c]]    | http://api.com:9000/v1/a/b/c",
             "<http://api.com/${plus([d])}>                        | [a,b,c]                                   | http://api.com/a/b/c/d",

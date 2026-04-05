@@ -164,7 +164,7 @@ public abstract class AbstractfURI implements fURI {
 
     @Override
     public fURI path(final List<String> path) {
-        if (this.host() != null && (!path.isEmpty() && !path.getFirst().isEmpty())) {
+        if (this.host() != null && (!path.isEmpty() && !path.getFirst().isEmpty() && !path.getFirst().startsWith("/"))) {
             final List<String> newPath = new ArrayList<>(path);
             newPath.addFirst("");
             return fURI.of(this.scheme(), this.host(), this.port(), newPath, this.c(), this.poly(), this.qMap(), this.templates());
@@ -678,10 +678,11 @@ public abstract class AbstractfURI implements fURI {
             this.getTemplate(SCHEME).map(s -> "${" + s + "}").or(() -> Optional.ofNullable(this.scheme())).ifPresent(s -> sb.append(s).append(":"));
             this.getTemplate(HOST).map(s -> "${" + s + "}").or(() -> Optional.ofNullable(this.host())).ifPresent(s -> sb.append("//").append(s));
             this.getTemplate(PORT).map(s -> "${" + s + "}").or(() -> Optional.ofNullable(-1 == this.port() ? null : "" + this.port())).ifPresent(s -> sb.append(":").append(s));
-            /*if (this.path().size() == 1 && this.path().getFirst().isEmpty())
+            // Output path for template URIs (same logic as non-template)
+            if (this.path().size() == 1 && this.path().getFirst().isEmpty())
                 sb.append("/");
             else
-                sb.append(String.join("/", this.path().subList(0, this.path().size())));*/
+                sb.append(this.path().stream().collect(Collectors.joining("/")));
             this.getTemplate(QUERY).map(s -> "${" + s + "}").or(() -> Optional.ofNullable(this.qString().isEmpty() ? null : this.qString())).ifPresent(s -> sb.append("?").append(s));
         } else {
             if (null != scheme())

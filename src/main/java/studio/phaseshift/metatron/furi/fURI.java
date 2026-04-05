@@ -362,8 +362,19 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
     default fURI qString(final String query) {
         if (null == query || query.isEmpty())
             return fURI.of(this.scheme(), this.host(), this.port(), this.path(), this.c(), this.poly(), Map.of(), this.templates());
-        else
-            return fURI.of(this.scheme(), this.host(), this.port(), this.path(), this.c(), this.poly(), Singleton.parseQuery(query), this.templates());
+        else {
+            // Extract and merge any templates from the query string
+            List<Tuple.Pair<Component, String>> mergedTemplates = null;
+            if (query.contains("${")) {
+                mergedTemplates = new ArrayList<>(this.templates());
+                final Matcher m = Singleton.MERGE_PATTERN.matcher(query);
+                while (m.find()) {
+                    mergedTemplates.add(Tuple.Pair.with(Component.QUERY, m.group(1)));
+                }
+            }
+            return fURI.of(this.scheme(), this.host(), this.port(), this.path(), this.c(), this.poly(), Singleton.parseQuery(query),
+                    mergedTemplates != null && !mergedTemplates.isEmpty() ? mergedTemplates : this.templates());
+        }
     }
 
     <T> T qValue(final String key, final Class<T> valueClass);
@@ -476,6 +487,7 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
     /// ////////////////////////////////////////////////
 
     class Singleton {
+        public static final Pattern MERGE_PATTERN = Pattern.compile("\\$\\{([^}]+)}");
         public static final Pattern POLY_PATTERN = Pattern.compile(
                 "(?<poly>[^\\[{?&*+},]+(\\{([^}\\]]+))?}?[^,])");
         public static final Pattern FURI_PATTERN = Pattern.compile(

@@ -45,10 +45,8 @@ import java.nio.file.Paths;
 import java.util.AbstractMap;
 import java.util.Comparator;
 import java.util.Map;
-import java.util.ServiceLoader;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
@@ -139,7 +137,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
             Runtime.getRuntime().addShutdownHook(new Thread(BootLoader::close));
             LOG.info("available instruction sets\n\t(via %s%s)%s", "META-INF/services/",
                     InstSet.class.getCanonicalName(),
-                    BootLoader.loadInstSetProvider(ALL)
+                    InstSet.loadInstSetProvider(ALL)
                             .map(p -> p.type().getAnnotation(InstSet.JREService.class).vid())
                             .reduce("", (a, b) -> a + "\n\t\t" + b));
             fURI localAuthority = null;
@@ -253,29 +251,4 @@ public class BootLoader implements Rec, Feature.SelfClone {
         return Feature.SelfClone.super.clone();
     }
 
-    /// ///////////////////////////////////////////////////////////////////////////////////////
-
-    public static Stream<ServiceLoader.Provider<InstSet>> loadInstSetProvider(final fURI tid) {
-        return ServiceLoader.load(InstSet.class)
-                .stream()
-                .peek(p -> {
-                    if (!p.type().isAnnotationPresent(InstSet.JREService.class))
-                        LOG.warn("an inst set without a service metadata located: %s", p.type().getCanonicalName());
-                })
-                .filter(p -> p.type().isAnnotationPresent(InstSet.JREService.class))
-                .filter(p -> f(p.type().getAnnotation(InstSet.JREService.class).vid()).test(tid));
-    }
-
-    public static Stream<InstSet> importInstSet(final fURI tid) {
-        return importInstSet(tid, null);
-    }
-
-    public static Stream<InstSet> importInstSet(final fURI tid, final fURI prefix) {
-        if (null != prefix)
-            Router.global().registerPrefix(prefix, tid);
-        return BootLoader.loadInstSetProvider(tid)
-                .map(ServiceLoader.Provider::get)///  new
-                .peek(isa -> Router.global().addSpace(isa)) // add to router
-                .peek(InstSet::setup); // setup
-    }
 }

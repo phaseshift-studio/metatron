@@ -84,7 +84,7 @@ public class mathInstSet extends AbstractInstSet {
 
 
     public mathInstSet() {
-        super(mutableMap(uri(PATTERN), uri(MATH_ISA_TID.extend(HASH_FURI))), MATH_ISA_TID, MATH_ISA_TID);
+        super(mutableMap(uri(PATTERN), uri(MATH_ISA_TID.extend(HASH_FURI))), INSTSET_TID, MATH_ISA_TID);
         //this.at(Tokens.Q, this.at(Tokens.Q).asLst().add(QCollection.constQ(), MUTABLE), MUTABLE);
     }
 

@@ -44,14 +44,14 @@
  import studio.phaseshift.metatron.util.IteratorUtil;
  import studio.phaseshift.metatron.util.MTronException;
 
- import java.util.*;
+ import java.util.Iterator;
+ import java.util.Map;
  import java.util.function.BiFunction;
  import java.util.function.Function;
 
  import static studio.phaseshift.metatron.Tokens.*;
  import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
  import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
- import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
  import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TID;
  import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.failure_;
  import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
@@ -67,7 +67,7 @@
   * @author Marko A. Rodriguez (http://markorodriguez.com)
   */
  public class graphSpace extends AbstractSpace<Graph> {
-     
+
      public static final String GRAPH_CONFIGURATION_KEY = "mtron.grph.vid";
      public static final ObjSerializer<String> SERIALIZER = new ObjCleanStringSerializer();
      public static final Rec GRAPH_CONFIG = rec(uri(GRAPH).maybe().asUri(), URI_TYPE);
@@ -147,9 +147,7 @@
              switch (datasetName) {
                  case "modern" -> {
                      TinkerFactory.generateModern(tinkerGraph);
-                     config.at(uri(SCHEMA),
-                             new modernSchema(config.at(PATTERN).uriValue().head(1).extend("S").extend("modern")),
-                             MUTABLE);
+                     config.at(uri(SCHEMA), new modernSchema(), MUTABLE);
                  }
                  case "grateful" -> TinkerFactory.generateGratefulDead(tinkerGraph);
                  case "air_routes" -> TinkerFactory.generateAirRoutes(tinkerGraph);

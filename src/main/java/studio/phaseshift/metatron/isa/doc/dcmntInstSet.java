@@ -87,7 +87,7 @@ public class dcmntInstSet extends AbstractInstSet {
             .create();
 
     public dcmntInstSet() {
-        super(mutableMap(uri(PATTERN), uri(DCMNT_ISA_TID.extend(ALL))), DCMNT_ISA_TID, DCMNT_ISA_TID);
+        super(mutableMap(uri(PATTERN), uri(DCMNT_ISA_TID.extend(ALL))), INSTSET_TID, DCMNT_ISA_TID);
     }
 
     @Override

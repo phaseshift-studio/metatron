@@ -1,0 +1,72 @@
+{
+  "suiteName": "inst-resolution",
+  "timestamp": "2026-04-05T19:54:45.336698045Z",
+  "gitCommit": "16147a41",
+  "javaVersion": "25.0.1",
+  "measurements": {
+    "plus(real)": {
+      "name": "plus(real)",
+      "avgNanos": 190275.976,
+      "minNanos": 109647.0,
+      "maxNanos": 1441651.0,
+      "opsPerSecond": 5255.524218149326,
+      "iterations": 1000
+    },
+    "plus(int)": {
+      "name": "plus(int)",
+      "avgNanos": 194071.038,
+      "minNanos": 103294.0,
+      "maxNanos": 1489701.0,
+      "opsPerSecond": 5152.7523648325105,
+      "iterations": 1000
+    },
+    "mult(real)": {
+      "name": "mult(real)",
+      "avgNanos": 105714.239,
+      "minNanos": 97854.0,
+      "maxNanos": 971878.0,
+      "opsPerSecond": 9459.463639519743,
+      "iterations": 1000
+    },
+    "zero()": {
+      "name": "zero()",
+      "avgNanos": 99512.757,
+      "minNanos": 93175.0,
+      "maxNanos": 936541.0,
+      "opsPerSecond": 10048.96286814765,
+      "iterations": 1000
+    },
+    "one()": {
+      "name": "one()",
+      "avgNanos": 96187.129,
+      "minNanos": 89749.0,
+      "maxNanos": 1089819.0,
+      "opsPerSecond": 10396.401372994509,
+      "iterations": 1000
+    },
+    "neg()": {
+      "name": "neg()",
+      "avgNanos": 93264.64,
+      "minNanos": 87845.0,
+      "maxNanos": 1026350.0,
+      "opsPerSecond": 10722.17723673195,
+      "iterations": 1000
+    },
+    "gt(int)": {
+      "name": "gt(int)",
+      "avgNanos": 99188.921,
+      "minNanos": 90831.0,
+      "maxNanos": 1059733.0,
+      "opsPerSecond": 10081.771128450928,
+      "iterations": 1000
+    },
+    "eq(int)": {
+      "name": "eq(int)",
+      "avgNanos": 96832.355,
+      "minNanos": 89318.0,
+      "maxNanos": 1222438.0,
+      "opsPerSecond": 10327.126712966963,
+      "iterations": 1000
+    }
+  }
+}

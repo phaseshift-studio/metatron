@@ -173,7 +173,7 @@ public class machInstSet extends AbstractInstSet {
 
 
     public machInstSet() {
-        super(mutableMap(uri(PATTERN), uri(MACH_ISA_TID.extend(ALL))), MACH_ISA_TID, MACH_ISA_TID);
+        super(mutableMap(uri(PATTERN), uri(MACH_ISA_TID.extend(ALL))), INSTSET_TID, MACH_ISA_TID);
         // Router.global().registerPrefix(f("mach"), MACH_ISA_TID);
     }
 

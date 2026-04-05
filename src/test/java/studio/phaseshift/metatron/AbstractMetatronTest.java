@@ -23,10 +23,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.ExtendWith;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
-import studio.phaseshift.metatron.isa.m.type.Call;
-import studio.phaseshift.metatron.isa.m.type.Code;
-import studio.phaseshift.metatron.isa.m.type.Fail;
-import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.type.LogObj;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -41,7 +38,6 @@ import java.util.function.Supplier;
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.HOST;
 import static studio.phaseshift.metatron.Tokens.LOGG;
-import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -66,7 +62,7 @@ public abstract class AbstractMetatronTest {
         BootLoader.BOOTING = true;
         BootLoader.TESTING = true;
         BootLoader.load(rec(uri(HOST), uri("ws://localhost:" + generatePort()), uri(LOGG), uri(LogObj.getSLF4J().toString().toLowerCase())));
-        BootLoader.loadInstSetProvider(IO_ISA_TID);
+        InstSet.loadInstSetProvider(IO_ISA_TID);
     }
 
     @AfterAll

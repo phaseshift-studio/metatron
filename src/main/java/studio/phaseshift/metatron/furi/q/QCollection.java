@@ -254,8 +254,10 @@ public final class QCollection {
     /// //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     private static void internalDocWrap(final Obj obj, final String domDesc, final String rngDesc, final Map<Obj, String> argDescription, final String description, final String... examples) {
+        if (obj.isNoObj())
+            return;
         final fURI objID = obj.isInst() ? obj.tid() : obj.vid();
-        if(null == objID) {
+        if (null == objID) {
             obj.logger().warn("unable to generate docs for a vid-less obj: %s", obj);
             return;
         }

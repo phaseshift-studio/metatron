@@ -215,7 +215,19 @@ public interface Uri extends Mono, Ring.O<Uri> {
                 throw MTronException.of("PORT template did not evaluate to integer: %s", portStr);
             }
         }
-        return fURI.of(scheme, host, finalPort, path, template.c(), template.poly(), query, null);
+        // Normalize path: split any elements containing "/" so the path representation
+        // matches what you'd get from parsing the URI string directly
+        final List<String> normalizedPath = new ArrayList<>();
+        for (final String segment : path) {
+            if (segment.contains("/")) {
+                for (final String part : segment.split("/", -1)) {
+                    normalizedPath.add(part);
+                }
+            } else {
+                normalizedPath.add(segment);
+            }
+        }
+        return fURI.of(scheme, host, finalPort, normalizedPath, template.c(), template.poly(), query, null);
     }
 
     /**

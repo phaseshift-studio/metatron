@@ -21,11 +21,11 @@ package studio.phaseshift.metatron.furi.q;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
-import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 
@@ -48,7 +48,7 @@ public class TypeQTest extends AbstractMetatronTest {
 
     public TypeQTest() {
         //super(() -> {
-        BootLoader.importInstSet(MACH_ISA_TID, null);
+        InstSet.importInstSet(MACH_ISA_TID, null);
         this.space = memSpace.of(rec(uri("pattern"), uri("/t/#"), uri("q"), lst(QCollection.typeQ())), f("test"));
         //});
     }

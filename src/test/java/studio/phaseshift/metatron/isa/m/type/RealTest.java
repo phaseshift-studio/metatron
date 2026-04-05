@@ -23,6 +23,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.algebra.AbstractAlgebraTest;
+import studio.phaseshift.metatron.isa.m.mInstSet;
 
 import java.util.Set;
 

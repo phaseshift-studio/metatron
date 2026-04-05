@@ -79,7 +79,7 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
 
     public AbstractInstSet(final fURI tid, final fURI vid) {
         super(new LinkedHashMap<>(), mutableMap(
-                uri(Tokens.PATTERN), uri(tid.extend(ALL))), tid, vid);
+                uri(Tokens.PATTERN), uri(vid.extend(ALL))), tid, vid);
         this.at(uri(Tokens.QSTRING), lst(QCollection.docQ()), MUTABLE);
         if (Router.loaded()) {
             this.sugars().forEach(mParser::addSugar);
@@ -125,7 +125,7 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
             if (k.equals(uri(CONST))) {
                 v.lstValue().stream()
                         .filter(this::checkPattern)
-                        //  TODO: .filter(c -> checkDepth(c, this.tid.extend(CONST)))
+                        .filter(c -> checkDepth(c, this.tid.extend(CONST)))
                         .forEach(c -> {
                             CONST_TABLE.put(c.vid(), c);
                             Router.global().registerRedirect(f(c.vid().name()), c.vid());
@@ -192,7 +192,7 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
 
     @Override
     public Obj read(final fURI pattern) {
-        if (Objects.equals(this.tid, pattern))
+        if (Objects.equals(this.vid, pattern))
             return this;
         return Q.Helper.processPreRead(this.qs(), pattern).orElseGet(() -> {
             final Obj result = objs(INST_TABLE.entrySet()

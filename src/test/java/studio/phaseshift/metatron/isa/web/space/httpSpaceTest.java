@@ -21,12 +21,12 @@ package studio.phaseshift.metatron.isa.web.space;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.SkipInheritedTests;
 import studio.phaseshift.metatron.SkipInheritedTestsExtension;
 import studio.phaseshift.metatron.TestTag;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.web.space.http.httpSpace;
 
@@ -62,7 +62,7 @@ public class httpSpaceTest extends AbstractSpaceTest {
                 uri(HOST), uri("http://localhost:8777"),
                 uri(PATTERN), uri("http://#"),
                 uri(ROUTE), rec(uri("/"), uri("src/test/resources/web"))), f("/sys/space/web")));
-        BootLoader.loadInstSetProvider(WEB_ISA_TID.extend("#"));
+        InstSet.loadInstSetProvider(WEB_ISA_TID.extend("#"));
     }
 
     @Override

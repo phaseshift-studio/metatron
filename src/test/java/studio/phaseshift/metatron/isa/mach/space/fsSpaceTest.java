@@ -21,9 +21,9 @@ package studio.phaseshift.metatron.isa.mach.space;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.space.file.fsSpace;
 import studio.phaseshift.metatron.AbstractMetatronTest;
@@ -44,7 +44,7 @@ public class fsSpaceTest extends AbstractSpaceTest {
 
     public fsSpaceTest() {
         super(f("test"),() -> {
-            BootLoader.loadInstSetProvider(MACH_ISA_TID);
+            InstSet.loadInstSetProvider(MACH_ISA_TID);
             mParser.eval("boot/script ->\n" +
                     "  [sh     => /bin/sh,\n" +
                     "   bash   => /bin/bash,\n" +
