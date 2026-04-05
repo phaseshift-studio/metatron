@@ -155,11 +155,11 @@ public class grphInstSet extends AbstractInstSet {
                                 .vid(EDGE_TID)
                                 .isaPredicate(rec(IN, T(VRTX_TID), OUT, T(VRTX_TID)))
                                 .create(), "an directed key/value attributed binary edge"),
-                        docWrap(GRAPH_SPACE_TYPE, "a space for graph traversal"),
+                        docWrap(GRAPHDB_SPACE_TYPE, "a space for graph traversal"),
                         docWrap(MODERN_SCHEMA_TYPE, "a schema for the modern graph dataset")
                 ),
                 uri(INST), lst(
-                        docWrap(instC(grphInstSet.GREMLIN_INST_TID.dom(GRAPH_SPACE_TID).rng(ALL.maybeSome()), lst(STR_TYPE), (lhs, inst) -> {
+                        docWrap(instC(grphInstSet.GREMLIN_INST_TID.dom(GRAPHDB_SPACE_TID).rng(ALL.maybeSome()), lst(STR_TYPE), (lhs, inst) -> {
                             try {
                                 final GremlinLangScriptEngineFactory factory = new GremlinLangScriptEngineFactory();
                                 //factory.setCustomizerManager(new CachedGremlinScriptEngineManager());

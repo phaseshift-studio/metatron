@@ -59,7 +59,7 @@ public class ObjBSONSerializer extends AbstractObjSerializer<BsonValue> {
 
     private static final Codec<BsonValue> BSON_VALUE_CODEC = new BsonValueCodec();
 
-    // Optional: Function to build reference paths (set by docSpace)
+    // Optional: Function to build reference paths (set by docdbSpace)
     private Function<ReferenceInfo, fURI> referencePathBuilder = null;
   //  private ObjFactory objFactory = MObjFactory.single();
 

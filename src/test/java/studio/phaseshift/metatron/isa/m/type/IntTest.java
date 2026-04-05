@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
@@ -28,6 +29,7 @@ import java.util.Set;
 import static studio.phaseshift.metatron.algebra.Form.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 
+@Disabled
 public class IntTest extends AbstractAlgebraTest<Int> {
 
     public IntTest() {

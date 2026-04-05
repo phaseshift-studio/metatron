@@ -65,7 +65,7 @@ include::header.html[]
                             referential record-oriented data model and schema. Higher-order
                             structures are captured across a cluster of relational databases, graph
                             databases,
-                            web servers, JSON documents, MQTT brokers, AI vectors, IoT microprocessors,
+                            web servers, JSON documents, MQTT brokers, AI memory, IoT microprocessors,
                             file systems,
                             and more.
                         </p>
@@ -172,7 +172,7 @@ include::header.html[]
                 featurePanel(
                     "oltp_features",
                     "OLTP",
-                    "images/icons/oltp-icon.svg",
+                    "images/icons/mach-icon.svg",
                     "a <b class=\"metatron-name\">monad iterator</b> machine supports speedy traversals over localized regions of space",
                     "images/modal/oltp-modal.svg");
             </script>

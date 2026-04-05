@@ -34,6 +34,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
@@ -51,7 +53,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * <h2>Example Usage</h2>
  * <pre>{@code
  * // Optimize from().count() to use native COUNT(*)
- * Inst countRewrite = RewriteBuilder.forDatabase(tbleSpace.class)
+ * Inst countRewrite = RewriteBuilder.forDatabase(tabledbSpace.class)
  *     .tid(TBLE_ISA_REWRITE_TID.extend("native_count"))
  *     .match(FROM_INST_TID, COUNT_INST_TID)
  *     .optimize("sql_native_count", (space, furi, coeff) -> {
@@ -73,6 +75,7 @@ public class RewriteBuilder<S extends Space> {
 
     protected final Class<S> spaceType;
     protected final List<fURI> matchPattern = new ArrayList<>();
+    protected Predicate<List<Inst>> matchPredicate = null;
     protected String rewriteName;
     protected fURI rewriteTid;
     protected fURI resultTid;
@@ -128,6 +131,11 @@ public class RewriteBuilder<S extends Space> {
         this.matchPattern.addAll(Arrays.asList(instTIDs));
         return this;
     }
+    
+    public RewriteBuilder<S> matchPredicate(final Predicate<List<Inst>> matchPredicate) {
+        this.matchPredicate = matchPredicate;
+        return this;
+    }
 
     /**
      * Define the native optimization with a type-safe lambda.
@@ -181,14 +189,14 @@ public class RewriteBuilder<S extends Space> {
     /**
      * Create the rewrite function that will be applied when the pattern matches.
      */
-    protected java.util.function.Function<Map<Inst, Inst>, List<Inst>> createRewriteFunction() {
+    protected Function<Map<Inst, Inst>, List<Inst>> createRewriteFunction() {
         return map -> {
             // Extract fURI from the first instruction (FROM instruction)
             final fURI oldfURI = map.values().iterator().next().arg(0).asUri().uriValue();
             final Space space = Router.global().getSpace(oldfURI);
 
             // Check if this is the correct space type
-            if (this.spaceType.isInstance(space)) {
+            if (this.spaceType.isInstance(space) && (this.matchPredicate == null || this.matchPredicate.test(map.values().stream().toList()))) {
                 final S typedSpace = this.spaceType.cast(space);
                 final fURI expandedfURI = space.redirect(oldfURI, true);
 
@@ -204,7 +212,8 @@ public class RewriteBuilder<S extends Space> {
                 return List.of(this.createOptimizedInst(typedSpace, expandedfURI, coeff));
             }
 
-            // Not the right space type - return original instructions
+            // not the right space type or the final match predicate failed - return original instructions
+            
             return map.values().stream().map(Obj::asInst).toList();
         };
     }

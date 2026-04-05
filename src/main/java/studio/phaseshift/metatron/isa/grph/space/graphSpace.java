@@ -21,9 +21,6 @@
  import org.apache.commons.configuration2.BaseConfiguration;
  import org.apache.commons.configuration2.Configuration;
  import org.apache.commons.configuration2.ConfigurationMap;
- import org.apache.tinkerpop.gremlin.jsr223.DefaultGremlinScriptEngineManager;
- import org.apache.tinkerpop.gremlin.jsr223.GremlinLangScriptEngineFactory;
- import org.apache.tinkerpop.gremlin.jsr223.GremlinScriptEngine;
  import org.apache.tinkerpop.gremlin.structure.Edge;
  import org.apache.tinkerpop.gremlin.structure.Element;
  import org.apache.tinkerpop.gremlin.structure.Graph;
@@ -59,7 +56,6 @@
  import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.failure_;
  import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
  import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
- import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
  import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
  import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
  import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -78,12 +74,12 @@
 
      protected static ObjFactory FACTORY = null;
      private static final fURI V_SOME = f("V/+");
-     public static final fURI GRAPH_SPACE_TID = grphInstSet.GRPH_ISA_TID.extend(SPACE).extend("graph");
-     public static final Type GRAPH_SPACE_TYPE = Type.Builder.build()
+     public static final fURI GRAPHDB_SPACE_TID = grphInstSet.GRPH_ISA_TID.extend(SPACE).extend("graphdb");
+     public static final Type GRAPHDB_SPACE_TYPE = Type.Builder.build()
              .tid(SPACE_TID)
-             .vid(GRAPH_SPACE_TID)
+             .vid(GRAPHDB_SPACE_TID)
              .constructor(
-                     instC(mInstSet.M_ISA_INST_TID.dom(ALL.maybe()).rng(GRAPH_SPACE_TID),
+                     instC(mInstSet.M_ISA_INST_TID.dom(ALL.maybe()).rng(GRAPHDB_SPACE_TID),
                              lst(isa_(GRAPH_CONFIG).else_(failure_(str("malformed tp3 config"))).tryToInst()),
                              (lhs, inst) -> {
                                  if (inst.arg(0).isFail())
@@ -181,7 +177,7 @@
      }
 
      protected graphSpace(final Graph graph, final Map<Obj, Obj> config, final fURI vid) {
-         super(graph, config, GRAPH_SPACE_TID, vid);
+         super(graph, config, GRAPHDB_SPACE_TID, vid);
          LOG.debug("tp3 space: %s", this);
          graph.configuration().setProperty(GRAPH_CONFIGURATION_KEY, vid.toString());
          if (null == FACTORY)

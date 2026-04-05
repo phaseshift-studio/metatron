@@ -65,10 +65,10 @@ Obj user = Router.readFromSpace(f("db:users/1"));
 
 // Router's process:
 // 1. Receive URI: "db:users/1"
-// 2. Find Space with pattern "db:#" → tbleSpace
+// 2. Find Space with pattern "db:#" → tabledbSpace
 // 3. Apply route mapping: "db:" → ""
 //    Result: "users/1"
-// 4. Call: tbleSpace.directReader().apply(f("users/1"))
+// 4. Call: tabledbSpace.directReader().apply(f("users/1"))
 // 5. Return: User object
 ```
 

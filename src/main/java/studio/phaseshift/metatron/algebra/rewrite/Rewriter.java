@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -27,6 +27,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -35,6 +36,7 @@ public class Rewriter {
 
     protected final List<Inst> sourceInsts;
     protected List<Inst> matchInsts;
+    protected Predicate<List<Inst>> matchPredicate = null;
     protected boolean repeat = false;
     protected boolean matchC = true;
 
@@ -45,6 +47,12 @@ public class Rewriter {
 
     public static Rewriter search(final List<Inst> sourceInsts) {
         return new Rewriter(sourceInsts);
+    }
+
+    public Rewriter match(final List<Inst> matchInsts, final Predicate<List<Inst>> predicate) {
+        this.matchInsts = matchInsts;
+        this.matchPredicate = predicate;
+        return this;
     }
 
     public Rewriter match(final List<Inst> matchInsts) {
@@ -98,6 +106,8 @@ public class Rewriter {
 
     public List<Inst> rewrite(final Function<Map<Inst, Inst>, List<Inst>> rewriteFunc) {
         List<Inst> current = this.sourceInsts;
+        if (this.matchPredicate != null && !this.matchPredicate.test(this.matchInsts))
+            return current;
         List<Inst> last = List.of();
         while (!Objects.equal(current, last)) {
             last = current;

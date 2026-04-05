@@ -23,18 +23,19 @@ import org.bson.Document;
 import studio.phaseshift.metatron.algebra.rewrite.CommonRewrites;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
+import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 
 import java.util.Arrays;
+import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
-import static studio.phaseshift.metatron.isa.doc.docSpace.DOC_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
@@ -46,7 +47,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
- * docInstSet - Instruction set for document database operations
+ * dcmntInstSet - Instruction set for document database operations
  *
  * <p>Defines types and instructions for working with MongoDB/DocumentDB through Metatron.
  *
@@ -59,15 +60,17 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@InstSet.JREService(vid = "/m/doc")
-public class docInstSet extends AbstractInstSet {
+@InstSet.JREService(vid = "/m/dcmnt")
+public class dcmntInstSet extends AbstractInstSet {
 
-    public static final fURI DOC_ISA_TID = M_ISA_TID.extend("doc");
-    public static final fURI DOC_ISA_INST_TID = DOC_ISA_TID.extend("inst");
-    public static final fURI DOC_ISA_REWRITE_TID = DOC_ISA_INST_TID.extend("rewrite");
-    public static final fURI DOCUMENT_TID = DOC_ISA_TID.extend("document");
-    public static final fURI COLLECTION_TID = DOC_ISA_TID.extend("collection");
+    public static final fURI DCMNT_ISA_TID = M_ISA_TID.extend("dcmnt");
+    public static final fURI DCMNT_ISA_INST_TID = DCMNT_ISA_TID.extend("inst");
+    public static final fURI DCMNT_ISA_REWRITE_TID = DCMNT_ISA_INST_TID.extend("rewrite");
+    public static final fURI DOCUMENT_TID = DCMNT_ISA_TID.extend("document");
+    public static final fURI COLLECTION_TID = DCMNT_ISA_TID.extend("collection");
     public static final fURI ID_FIELD = f("_id");
+    public static fURI DOCDB_SPACE_TID = DCMNT_ISA_TID.extend(SPACE).extend("docdb");
+
 
     public static final Type DOCUMENT_TYPE = Type.Builder.build()
             .tid(REC_TID)
@@ -83,26 +86,60 @@ public class docInstSet extends AbstractInstSet {
             .predicate(isa_(T(DOCUMENT_TID.maybeSome())).tryToInst())
             .create();
 
-    public docInstSet() {
-        super(mutableMap(uri(PATTERN), uri(DOC_ISA_TID.extend(ALL))), DOC_ISA_TID, DOC_ISA_TID);
+    public dcmntInstSet() {
+        super(mutableMap(uri(PATTERN), uri(DCMNT_ISA_TID.extend(ALL))), DCMNT_ISA_TID, DCMNT_ISA_TID);
     }
 
     @Override
     public void setup() {
         this.jvm().putAll(mutableMap(
-                uri(PATTERN), uri(DOC_ISA_TID.extend(ALL)),
-                uri(CONST), lst(ObjSimpleJSONSerializer.single(), uri(ID_FIELD, URI_TID, DOC_ISA_TID.extend(ID_FIELD))),
+                uri(PATTERN), uri(DCMNT_ISA_TID.extend(ALL)),
+                uri(CONST), lst(ObjSimpleJSONSerializer.single(), uri(ID_FIELD, URI_TID, DCMNT_ISA_TID.extend(ID_FIELD))),
                 uri(TYPE), lst(
                         docWrap(DOCUMENT_TYPE, "a document (record) from a collection"),
                         COLLECTION_TYPE,
-                        DOC_SPACE_TYPE),
+                        docWrap(Type.Builder.build()
+                                        .tid(SPACE_TID)
+                                        .vid(DOCDB_SPACE_TID)
+                                        .isaPredicate(rec(
+                                                uri(PATTERN), URI_TYPE,
+                                                uri(HOST), URI_TYPE,
+                                                uri(SERIALIZER).maybe(), URI_TYPE,
+                                                uri(ROUTE), rec(URI_TYPE, URI_TYPE),
+                                                uri(COLLECTION).maybe(), LST_TYPE,
+                                                uri(SCHEMA).maybe(), T(ALL)
+                                        ))
+                                        .constructor(instC(mInstSet.M_ISA_INST_TID.dom(ALL.maybe()).rng(DOCDB_SPACE_TID),
+                                                lst(REC_TYPE),
+                                                (lhs, inst) -> docdbSpace.of(inst.arg(0).asRec().jvm(), inst.arg(0).vid()))).create().asType(),
+                                "a rec describing a document database connection",
+                                "a rec with fields for configuring a document database connection",
+                                Map.of(
+                                        uri(PATTERN), "the pattern for accessing documents",
+                                        uri(HOST), "connection uri (mongodb://host:port/database?options)",
+                                        uri(SERIALIZER).maybe(), "the serializer for BSON documents",
+                                        uri(ROUTE), "the route for accessing documents",
+                                        uri(COLLECTION).maybe(), "schema discovery on collections (empty discovers all collections)"
+                                ),
+                                "an interface to document-oriented databases",
+                                """
+                                docdb::[pattern     => moviedb:#,
+                                       host        => <mongodb://localhost:27017/movies>,
+                                       serializer  => !*</m/mach/io/serializer/bson>,
+                                       collection  => [,],
+                                       route       => [moviedb:=>/moviedb/]]@/usr/entertainment/moviedb;
+                                """,
+                                """
+                                *moviedb:schema
+                                *moviedb:
+                                """)),
                 uri(INST), lst(
                         instC(AS_INST_TID.dom(DOCUMENT_TID).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> lst(lhs.asRec().elements().map(Rel::second).toList()))),
                 uri(REWRITE), lst(
                         // Optimize: *collection.count() → MongoDB countDocuments()
                         CommonRewrites.countRewrite(
-                                docSpace.class,
-                                DOC_ISA_REWRITE_TID.extend("native_count"),
+                                docdbSpace.class,
+                                DCMNT_ISA_REWRITE_TID.extend("native_count"),
                                 (space, furi) -> {
                                     final String collectionName = furi.segments().getFirst();
                                     final MongoCollection<Document> collection = space.database.getCollection(collectionName);
@@ -112,8 +149,8 @@ public class docInstSet extends AbstractInstSet {
 
                         // Optimize: *collection.sum() → MongoDB aggregation $sum
                         CommonRewrites.sumRewrite(
-                                docSpace.class,
-                                DOC_ISA_REWRITE_TID.extend("native_sum"),
+                                docdbSpace.class,
+                                DCMNT_ISA_REWRITE_TID.extend("native_sum"),
                                 (space, furi) -> {
                                     final String collectionName = furi.segments().getFirst();
                                     final MongoCollection<Document> collection = space.database.getCollection(collectionName);
@@ -131,8 +168,8 @@ public class docInstSet extends AbstractInstSet {
 
                         // Optimize: *collection.mean() → MongoDB aggregation $avg
                         CommonRewrites.meanRewrite(
-                                docSpace.class,
-                                DOC_ISA_REWRITE_TID.extend("native_mean"),
+                                docdbSpace.class,
+                                DCMNT_ISA_REWRITE_TID.extend("native_mean"),
                                 (space, furi) -> {
                                     final String collectionName = furi.segments().getFirst();
                                     final MongoCollection<Document> collection = space.database.getCollection(collectionName);
@@ -149,7 +186,18 @@ public class docInstSet extends AbstractInstSet {
                         )
                 )));
         docWrap(this,
-                "collections of nested documents accessible via the metatron",
+                """
+                collections of nested documents accessible via the metatron
+                <br>
+                Supports:
+                <ol>
+                    <li> MongoDB (Community or Enterprise)
+                    <li> DocumentDB (MIT licensed, PostgreSQL-based, open source)
+                    <li> Amazon DocumentDB (MongoDB-compatible)
+                    <li> Azure Cosmos DB for MongoDB
+                    <li> Any database implementing the MongoDB wire protocol
+                </ol>
+                """,
                 "mongodb:people/6/address>>=[street=>Elm Street,city=>Gotham,zipcode=>90210]");
         super.setup();
 

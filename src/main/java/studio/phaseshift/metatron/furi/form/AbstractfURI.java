@@ -42,7 +42,7 @@ public abstract class AbstractfURI implements fURI {
         final List<String> path = this.path();
         if (path.isEmpty() || (!path.getFirst().isEmpty() && !path.getLast().isEmpty()))
             return path;
-        if (path.getFirst().isEmpty() && path.getLast().isEmpty())
+        if (path.getFirst().isEmpty() && path.getLast().isEmpty() && path.size() > 1)
             return path.subList(1, path.size() - 1);
         if (path.getFirst().isEmpty())
             return path.subList(1, path.size());

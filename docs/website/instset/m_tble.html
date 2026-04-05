@@ -121,19 +121,19 @@ bin/metatron</code></pre>
                             alt="mtron"/>/m</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
                            onclick="location.href='m_mach.html';"><img
-                            src="../images/icons/space/oltp-icon.svg" class="isa-row icon-color me-2" alt="mach"/>/m/mach</a>
+                            src="../images/icons/space/mach-icon.svg" class="isa-row icon-color me-2" alt="mach"/>/m/mach</a>
                     </li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
                            onclick="location.href='m_tble.html';"><img
-                            src="../images/icons/space/tblespace-icon.svg" class="isa-row icon-color me-2" alt="tble"/>/m/tble</a>
+                            src="../images/icons/space/tble-icon.svg" class="isa-row icon-color me-2" alt="tble"/>/m/tble</a>
                     </li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='m_doc.html';"><img
-                            src="../images/icons/space/docspace-icon.svg" class="isa-row icon-color me-2" alt="doc"/>/m/doc</a>
+                           onclick="location.href='m_dcmnt.html';"><img
+                            src="../images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2" alt="dcmnt"/>/m/dcmnt</a>
                     </li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
                            onclick="location.href='m_grph.html';"><img
-                            src="../images/icons/space/grphspace-icon.svg" class="isa-row icon-color me-2" alt="grph"/>/m/grph</a>
+                            src="../images/icons/space/grph-icon.svg" class="isa-row icon-color me-2" alt="grph"/>/m/grph</a>
                     </li>
                     <!-- TODO: Add /m/grph/tp3 docs
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
@@ -232,7 +232,9 @@ bin/metatron</code></pre>
                     <span class="text-light">/m/</span>tble
                 </h1>
                 <p style="line-height:0.1rem;" class="subtitle text-light">instruction set reference</p>
-                <p class="text-light mt-3 mb-0" style="line-height:2.5em; max-width: 1000px; margin-left: auto; margin-right: auto;">&quot;the columns, rows, and entries of the table join the metatron&quot;</p>
+            </div>
+            <div class="text-light">
+                <p class="text-light mt-3 mb-0" style="line-height:2.5em; max-width: 1000px; margin-left: auto; margin-right: auto;">"the columns, rows, and entries of the table join the metatron"</p>
             </div>
             <div class="accordion" id="accordianInstSet">
                 <div class="accordion-item">
@@ -262,11 +264,11 @@ bin/metatron</code></pre>
      host    =>uri::T,
      driver  =>uri::T,
      route   =>[uri::T=>uri::T],
-     {?}table=>lst::T]][inst?rng=tble&dom=#{?}(rec::T){<j>}]@/m/tble/space/tble],
+     {?}table=>lst::T]][inst?rng=tabledb&dom=#{?}(rec::T){<j>}]@/m/tble/space/tabledb],
  inst   =>[
    as?rng=rrow&dom=lrow(rec::T[?[uri::T=>#::T]]@/m/tble/rrow){<j>},
    as?rng=lrow&dom=rrow(lst::T@/m/tble/lrow){<j>},
-   sql?rng=rrow{*}&dom=tble(str::T){<j>}],
+   sql?rng=rrow{*}&dom=tabledb(str::T){<j>}],
  rewrite=>[
    /m/tble/inst/rewrite/sql_native_count?rng=code{?}&dom=code(){<j>},
    /m/tble/inst/rewrite/sql_native_sum?rng=code{?}&dom=code(){<j>},
@@ -330,8 +332,8 @@ bin/metatron</code></pre>
                 <h6 class="text-primary mb-2">Spaces</h6>
                 <div class="index-columns">
                     
-                <a href="#space-tble" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
-                    <span class="code">tble</span>
+                <a href="#space-tabledb" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
+                    <span class="code">tabledb</span>
                     <span class="badge bg-info">S</span>
                 </a>
                 </div>
@@ -378,6 +380,9 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">lst::T@/m/tble/lrow</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">a table row indexed by column number</p>
+                    </div>
                     
                 </div>
                 <div class="card mb-3" id="type-rrow">
@@ -393,6 +398,9 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">rec::T[?[uri::T=&gt;#::T]]@/m/tble/rrow</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">a table row indexed by column name</p>
+                    </div>
                     
                 </div>
                 <div class="card mb-3" id="type-table">
@@ -408,6 +416,9 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">lst{*}::T[isa(lrow{*}::T)]@/m/tble/table</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">a stream of equally sized rows</p>
+                    </div>
                     
                 </div>
         </div>
@@ -421,12 +432,12 @@ bin/metatron</code></pre>
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">sql</span>
-                            <span class="ms-1"><span class="instset-doc-small-code"><a href="m_tble_space.html#type-tble" class="code text-info">/m/tble/space/tble</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-rrow{*}" class="code text-success">/m/tble/rrow{*}</a></span></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="m_tble_space.html#type-tabledb" class="code text-info">/m/tble/space/tabledb</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-rrow{*}" class="code text-success">/m/tble/rrow{*}</a></span></span>
                         </span>
-                        <small class="text-muted code">/m/tble/inst/sql?/m/tble/rrow{*}&lt;=/m/tble/space/tble</small>
+                        <small class="text-muted code">/m/tble/inst/sql?/m/tble/rrow{*}&lt;=/m/tble/space/tabledb</small>
                     </div>
                     <div class="card-body p-2">
-                        <pre class="mb-1"><code class="language-mtron">sql?rrow{*}&lt;=tble(str::T){&lt;j&gt;}</code></pre>
+                        <pre class="mb-1"><code class="language-mtron">sql?rrow{*}&lt;=tabledb(str::T){&lt;j&gt;}</code></pre>
                     </div>
                     
                 </div>
@@ -437,10 +448,10 @@ bin/metatron</code></pre>
                 Spaces <span class="badge bg-info">1</span>
             </h3>
             
-                <div class="card mb-3" id="space-tble">
+                <div class="card mb-3" id="space-tabledb">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <a href="m_tble_space_tble.html" class="code text-primary fw-bold text-decoration-none">tble</a>
-                        <small class="text-muted code">/m/tble/space/tble</small>
+                        <a href="m_tble_space_tabledb.html" class="code text-primary fw-bold text-decoration-none">tabledb</a>
+                        <small class="text-muted code">/m/tble/space/tabledb</small>
                     </div>
                     
                     <div class="mt-2">
@@ -449,9 +460,12 @@ bin/metatron</code></pre>
  host    =&gt;uri::T,
  driver  =&gt;uri::T,
  route   =&gt;[uri::T=&gt;uri::T],
- {?}table=&gt;lst::T])][inst?rng=tble&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/tble/space/tble</code></pre>
+ {?}table=&gt;lst::T])][inst?rng=tabledb&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/tble/space/tabledb</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">a metatron realization of a relational database</p>
+                    </div>
                     
                 </div>
         </div>
@@ -520,7 +534,7 @@ bin/metatron</code></pre>
         <div class="container-xxl py-3 text-center">
             <hr class="border-secondary">
             <small class="text-muted">
-                generated by metatron instset doc generator on build 0-2026-04-04 20:16:57<br>
+                generated by metatron instset doc generator on build 0-2026-04-05 03:55:56<br>
                 © PhaseShift Studio, LLC
             </small>
         </div>

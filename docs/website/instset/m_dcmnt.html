@@ -19,7 +19,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>doc - metatron Instruction Set</title>
+    <title>dcmnt - metatron Instruction Set</title>
     <!-- METADATA -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -121,19 +121,19 @@ bin/metatron</code></pre>
                             alt="mtron"/>/m</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
                            onclick="location.href='m_mach.html';"><img
-                            src="../images/icons/space/oltp-icon.svg" class="isa-row icon-color me-2" alt="mach"/>/m/mach</a>
+                            src="../images/icons/space/mach-icon.svg" class="isa-row icon-color me-2" alt="mach"/>/m/mach</a>
                     </li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
                            onclick="location.href='m_tble.html';"><img
-                            src="../images/icons/space/tblespace-icon.svg" class="isa-row icon-color me-2" alt="tble"/>/m/tble</a>
+                            src="../images/icons/space/tble-icon.svg" class="isa-row icon-color me-2" alt="tble"/>/m/tble</a>
                     </li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='m_doc.html';"><img
-                            src="../images/icons/space/docspace-icon.svg" class="isa-row icon-color me-2" alt="doc"/>/m/doc</a>
+                           onclick="location.href='m_dcmnt.html';"><img
+                            src="../images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2" alt="dcmnt"/>/m/dcmnt</a>
                     </li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
                            onclick="location.href='m_grph.html';"><img
-                            src="../images/icons/space/grphspace-icon.svg" class="isa-row icon-color me-2" alt="grph"/>/m/grph</a>
+                            src="../images/icons/space/grph-icon.svg" class="isa-row icon-color me-2" alt="grph"/>/m/grph</a>
                     </li>
                     <!-- TODO: Add /m/grph/tp3 docs
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
@@ -229,10 +229,12 @@ bin/metatron</code></pre>
         <div class="container-xxl py-4">
             <div class="text-center mb-4">
                 <h1 class="text-primary glow-text">
-                    <span class="text-light">/m/</span>doc
+                    <span class="text-light">/m/</span>dcmnt
                 </h1>
                 <p style="line-height:0.1rem;" class="subtitle text-light">instruction set reference</p>
-                <p class="text-light mt-3 mb-0" style="line-height:2.5em; max-width: 1000px; margin-left: auto; margin-right: auto;">&quot;collections of nested documents accessible via the metatron&quot;</p>
+            </div>
+            <div class="text-light">
+                <p class="text-light mt-3 mb-0" style="line-height:2.5em; max-width: 1000px; margin-left: auto; margin-right: auto;">"collections of nested documents accessible via the metatron<br>Supports:<ol>    <li> MongoDB (Community or Enterprise)    <li> DocumentDB (MIT licensed, PostgreSQL-based, open source)    <li> Amazon DocumentDB (MongoDB-compatible)    <li> Azure Cosmos DB for MongoDB    <li> Any database implementing the MongoDB wire protocol</ol>"</p>
             </div>
             <div class="accordion" id="accordianInstSet">
                 <div class="accordion-item">
@@ -243,8 +245,8 @@ bin/metatron</code></pre>
                     </h2>
                     <div id="flush-collapseOne" class="accordion-collapse collapse" aria-labelledby="flush-headingOne" data-bs-parent="#accordianInstSet">
                         <div class="accordion-body">
-                               <pre><code>/m/doc::[
- pattern=>/m/doc/#,
+                               <pre><code>/m/dcmnt::[
+ pattern=>/m/dcmnt/#,
  space  =>[
    super=>!*/m],
  q      =>[
@@ -253,22 +255,23 @@ bin/metatron</code></pre>
        pre_write=>inst?rng=#{*}&dom=#{?}(uri::T,#::T){<j>},
        pattern  =>docq,
        obj      =>mem::[=>]]],
- const  =>[serializer::/m/mach/io/serializer/json/simple@/m/mach/io/serializer/json/simple,_id@/m/doc/_id],
+ const  =>[serializer::/m/mach/io/serializer/json/simple@/m/mach/io/serializer/json/simple,_id@/m/dcmnt/_id],
  type   =>[
-   rec::T[?[_id=>uri::T,uri::T=>#::T]]@/m/doc/document,
-   objs{*}::T[isa(document{*}::T)]@/m/doc/collection,
+   rec::T[?[_id=>uri::T,uri::T=>#::T]]@/m/dcmnt/document,
+   objs{*}::T[isa(document{*}::T)]@/m/dcmnt/collection,
    space::T[?[
      pattern      =>uri::T,
      host         =>uri::T,
      {?}serializer=>uri::T,
      route        =>[uri::T=>uri::T],
-     {?}collection=>lst::T]][inst?rng=doc&dom=#{?}(rec::T){<j>}]@/m/doc/space/doc],
+     {?}collection=>lst::T,
+     {?}schema    =>#::T]][inst?rng=docdb&dom=#{?}(rec::T){<j>}]@/m/dcmnt/space/docdb],
  inst   =>[
    as?rng=lst&dom=document(lst::T){<j>}],
  rewrite=>[
-   /m/doc/inst/rewrite/native_count?rng=code{?}&dom=code(){<j>},
-   /m/doc/inst/rewrite/native_sum?rng=code{?}&dom=code(){<j>},
-   /m/doc/inst/rewrite/native_mean?rng=code{?}&dom=code(){<j>}]]@/m/doc</code></pre>
+   /m/dcmnt/inst/rewrite/native_count?rng=code{?}&dom=code(){<j>},
+   /m/dcmnt/inst/rewrite/native_sum?rng=code{?}&dom=code(){<j>},
+   /m/dcmnt/inst/rewrite/native_mean?rng=code{?}&dom=code(){<j>}]]@/m/dcmnt</code></pre>
                         </div>
                     </div>
                 </div>
@@ -328,8 +331,8 @@ bin/metatron</code></pre>
                 <h6 class="text-primary mb-2">Spaces</h6>
                 <div class="index-columns">
                     
-                <a href="#space-doc" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
-                    <span class="code">doc</span>
+                <a href="#space-docdb" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
+                    <span class="code">docdb</span>
                     <span class="badge bg-info">S</span>
                 </a>
                 </div>
@@ -365,11 +368,11 @@ bin/metatron</code></pre>
                 <div class="card mb-3" id="const-_id">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span class="code text-secondary fw-bold">_id</span>
-                        <small class="text-muted code">/m/doc/_id</small>
+                        <small class="text-muted code">/m/dcmnt/_id</small>
                     </div>
                     
                     <div class="card-body p-2">
-                        <pre class="mb-0"><code class="language-mtron">_id@/m/doc/_id</code></pre>
+                        <pre class="mb-0"><code class="language-mtron">_id@/m/dcmnt/_id</code></pre>
                     </div>
                     
                     
@@ -387,11 +390,11 @@ bin/metatron</code></pre>
                             <span class="code text-primary fw-bold">_id::T</span>
                             <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">&lt;/m/uri&gt;::T</span></span>
                         </span>
-                        <small class="text-muted code">/m/doc/_id</small>
+                        <small class="text-muted code">/m/dcmnt/_id</small>
                     </div>
                     
                     <div class="card-body p-2">
-                        <pre class="mb-0"><code class="language-mtron">_id@/m/doc/_id</code></pre>
+                        <pre class="mb-0"><code class="language-mtron">_id@/m/dcmnt/_id</code></pre>
                     </div>
                     
                     
@@ -402,11 +405,11 @@ bin/metatron</code></pre>
                             <span class="code text-primary fw-bold">collection::T</span>
                             <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">objs{*}::T</span></span>
                         </span>
-                        <small class="text-muted code">/m/doc/collection</small>
+                        <small class="text-muted code">/m/dcmnt/collection</small>
                     </div>
                     
                     <div class="card-body p-2">
-                        <pre class="mb-0"><code class="language-mtron">objs{*}::T[isa(document{*}::T)]@/m/doc/collection</code></pre>
+                        <pre class="mb-0"><code class="language-mtron">objs{*}::T[isa(document{*}::T)]@/m/dcmnt/collection</code></pre>
                     </div>
                     
                     
@@ -417,13 +420,16 @@ bin/metatron</code></pre>
                             <span class="code text-primary fw-bold">document::T</span>
                             <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">rec::T</span></span>
                         </span>
-                        <small class="text-muted code">/m/doc/document</small>
+                        <small class="text-muted code">/m/dcmnt/document</small>
                     </div>
                     
                     <div class="card-body p-2">
-                        <pre class="mb-0"><code class="language-mtron">rec::T[?[_id=&gt;uri::T,uri::T=&gt;#::T]]@/m/doc/document</code></pre>
+                        <pre class="mb-0"><code class="language-mtron">rec::T[?[_id=&gt;uri::T,uri::T=&gt;#::T]]@/m/dcmnt/document</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">a document (record) from a collection</p>
+                    </div>
                     
                 </div>
         </div>
@@ -434,10 +440,10 @@ bin/metatron</code></pre>
                 Spaces <span class="badge bg-info">1</span>
             </h3>
             
-                <div class="card mb-3" id="space-doc">
+                <div class="card mb-3" id="space-docdb">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <a href="m_doc_space_doc.html" class="code text-primary fw-bold text-decoration-none">doc</a>
-                        <small class="text-muted code">/m/doc/space/doc</small>
+                        <a href="m_dcmnt_space_docdb.html" class="code text-primary fw-bold text-decoration-none">docdb</a>
+                        <small class="text-muted code">/m/dcmnt/space/docdb</small>
                     </div>
                     
                     <div class="mt-2">
@@ -446,10 +452,25 @@ bin/metatron</code></pre>
  host         =&gt;uri::T,
  {?}serializer=&gt;uri::T,
  route        =&gt;[uri::T=&gt;uri::T],
- {?}collection=&gt;lst::T])][inst?rng=doc&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/doc/space/doc</code></pre>
+ {?}collection=&gt;lst::T,
+ {?}schema    =&gt;#::T])][inst?rng=docdb&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/dcmnt/space/docdb</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">an interface to document-oriented databases</p>
+                    </div>
                     
+                    <div class="card-body border-top py-2">
+                        <small class="text-muted fw-bold">Examples:</small>
+                        <pre class="mb-1"><code class="language-mtron">docdb::[pattern     =&gt; moviedb:#,
+       host        =&gt; &lt;mongodb://localhost:27017/movies&gt;,
+       serializer  =&gt; !*&lt;/m/mach/io/serializer/bson&gt;,
+       collection  =&gt; [,],
+       route       =&gt; [moviedb:=&gt;/moviedb/]]@/usr/entertainment/moviedb;
+</code></pre><pre class="mb-1"><code class="language-mtron">*moviedb:schema
+*moviedb:
+</code></pre>
+                    </div>
                 </div>
         </div>
             
@@ -464,11 +485,11 @@ bin/metatron</code></pre>
                             <span class="code text-warning fw-bold">native_count</span>
                             <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#type-code" class="code text-info">/m/code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-code{" class="code text-success">/m/code{?}</a></span></span>
                         </span>
-                        <small class="text-muted code">/m/doc/inst/rewrite/native_count?/m/code{?}&lt;=/m/code</small>
+                        <small class="text-muted code">/m/dcmnt/inst/rewrite/native_count?/m/code{?}&lt;=/m/code</small>
                     </div>
                     
                     <div class="card-body p-2">
-                        <pre class="mb-0"><code class="language-mtron">/m/doc/inst/rewrite/native_count?code{?}&lt;=code(){&lt;j&gt;}</code></pre>
+                        <pre class="mb-0"><code class="language-mtron">/m/dcmnt/inst/rewrite/native_count?code{?}&lt;=code(){&lt;j&gt;}</code></pre>
                     </div>
                     
                     
@@ -479,11 +500,11 @@ bin/metatron</code></pre>
                             <span class="code text-warning fw-bold">native_mean</span>
                             <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#type-code" class="code text-info">/m/code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-code{" class="code text-success">/m/code{?}</a></span></span>
                         </span>
-                        <small class="text-muted code">/m/doc/inst/rewrite/native_mean?/m/code{?}&lt;=/m/code</small>
+                        <small class="text-muted code">/m/dcmnt/inst/rewrite/native_mean?/m/code{?}&lt;=/m/code</small>
                     </div>
                     
                     <div class="card-body p-2">
-                        <pre class="mb-0"><code class="language-mtron">/m/doc/inst/rewrite/native_mean?code{?}&lt;=code(){&lt;j&gt;}</code></pre>
+                        <pre class="mb-0"><code class="language-mtron">/m/dcmnt/inst/rewrite/native_mean?code{?}&lt;=code(){&lt;j&gt;}</code></pre>
                     </div>
                     
                     
@@ -494,11 +515,11 @@ bin/metatron</code></pre>
                             <span class="code text-warning fw-bold">native_sum</span>
                             <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#type-code" class="code text-info">/m/code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-code{" class="code text-success">/m/code{?}</a></span></span>
                         </span>
-                        <small class="text-muted code">/m/doc/inst/rewrite/native_sum?/m/code{?}&lt;=/m/code</small>
+                        <small class="text-muted code">/m/dcmnt/inst/rewrite/native_sum?/m/code{?}&lt;=/m/code</small>
                     </div>
                     
                     <div class="card-body p-2">
-                        <pre class="mb-0"><code class="language-mtron">/m/doc/inst/rewrite/native_sum?code{?}&lt;=code(){&lt;j&gt;}</code></pre>
+                        <pre class="mb-0"><code class="language-mtron">/m/dcmnt/inst/rewrite/native_sum?code{?}&lt;=code(){&lt;j&gt;}</code></pre>
                     </div>
                     
                     
@@ -508,7 +529,7 @@ bin/metatron</code></pre>
         <div class="container-xxl py-3 text-center">
             <hr class="border-secondary">
             <small class="text-muted">
-                generated by metatron instset doc generator on build 0-2026-04-04 20:16:58<br>
+                generated by metatron instset doc generator on build 0-2026-04-05 03:55:57<br>
                 © PhaseShift Studio, LLC
             </small>
         </div>

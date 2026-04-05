@@ -506,7 +506,7 @@
                                 <argument>/m/web</argument>
                                 <argument>/m/llm</argument>
                                 <argument>/m/tble</argument>
-                                <argument>/m/doc</argument>
+                                <argument>/m/dcmnt</argument>
                                 <argument>/m/grph</argument>
                             </arguments>
                         </configuration>

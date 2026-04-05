@@ -22,6 +22,7 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.Inst;
+import studio.phaseshift.metatron.isa.m.type.Obj;
 
 import java.util.function.BiFunction;
 
@@ -41,7 +42,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
  * <pre>{@code
  * // In tbleInstSet:
  * CommonRewrites.countRewrite(
- *     tbleSpace.class,
+ *     tabledbSpace.class,
  *     TBLE_ISA_REWRITE_TID.extend("native_count"),
  *     (space, furi) -> {
  *         String table = furi.segments().getFirst();
@@ -52,9 +53,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
  *     }
  * )
  *
- * // In docInstSet:
+ * // In dcmntInstSet:
  * CommonRewrites.countRewrite(
- *     docSpace.class,
+ *     docdbSpace.class,
  *     DOC_ISA_REWRITE_TID.extend("native_count"),
  *     (space, furi) -> space.database.getCollection(furi.segments().getFirst()).countDocuments()
  * )
@@ -74,7 +75,7 @@ public final class CommonRewrites {
      * <p>Optimizes {@code from(furi).count()} to use native database COUNT operations
      * instead of loading all records and counting in memory.
      *
-     * @param spaceType     The database space type (e.g., tbleSpace.class, docSpace.class)
+     * @param spaceType     The database space type (e.g., tabledbSpace.class, docdbSpace.class)
      * @param rewriteTid    The type ID for this specific rewrite
      * @param countFunction Function that executes the native count operation
      * @param <S>           The space type
@@ -89,6 +90,12 @@ public final class CommonRewrites {
                 .tid(rewriteTid)
                 .rng(INT_TID)
                 .match(FROM_INST_TID, COUNT_INST_TID)
+                .matchPredicate(matches -> {
+                    final Obj ref = matches.getFirst().arg(0);
+                    if (ref.isUri() && ref.uriValue().retract(1).hasPattern())
+                        return false;
+                    return true;
+                })
                 .optimize("native_count", (space, furi, coeff) -> {
                     final long count = countFunction.apply(space, furi);
                     return jnt(count).c(c -> c.mult((cInt) coeff));

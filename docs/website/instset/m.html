@@ -121,19 +121,19 @@ bin/metatron</code></pre>
                             alt="mtron"/>/m</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
                            onclick="location.href='m_mach.html';"><img
-                            src="../images/icons/space/oltp-icon.svg" class="isa-row icon-color me-2" alt="mach"/>/m/mach</a>
+                            src="../images/icons/space/mach-icon.svg" class="isa-row icon-color me-2" alt="mach"/>/m/mach</a>
                     </li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
                            onclick="location.href='m_tble.html';"><img
-                            src="../images/icons/space/tblespace-icon.svg" class="isa-row icon-color me-2" alt="tble"/>/m/tble</a>
+                            src="../images/icons/space/tble-icon.svg" class="isa-row icon-color me-2" alt="tble"/>/m/tble</a>
                     </li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='m_doc.html';"><img
-                            src="../images/icons/space/docspace-icon.svg" class="isa-row icon-color me-2" alt="doc"/>/m/doc</a>
+                           onclick="location.href='m_dcmnt.html';"><img
+                            src="../images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2" alt="dcmnt"/>/m/dcmnt</a>
                     </li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
                            onclick="location.href='m_grph.html';"><img
-                            src="../images/icons/space/grphspace-icon.svg" class="isa-row icon-color me-2" alt="grph"/>/m/grph</a>
+                            src="../images/icons/space/grph-icon.svg" class="isa-row icon-color me-2" alt="grph"/>/m/grph</a>
                     </li>
                     <!-- TODO: Add /m/grph/tp3 docs
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
@@ -232,7 +232,9 @@ bin/metatron</code></pre>
                     <span class="text-light">/</span>m
                 </h1>
                 <p style="line-height:0.1rem;" class="subtitle text-light">instruction set reference</p>
-                <p class="text-light mt-3 mb-0" style="line-height:2.5em; max-width: 1000px; margin-left: auto; margin-right: auto;">&quot;the core instruction set of metatron containing the base types and useful instructions to manipulate them&quot;</p>
+            </div>
+            <div class="text-light">
+                <p class="text-light mt-3 mb-0" style="line-height:2.5em; max-width: 1000px; margin-left: auto; margin-right: auto;">"the core instruction set of metatron containing the base types and useful instructions to manipulate them"</p>
             </div>
             <div class="accordion" id="accordianInstSet">
                 <div class="accordion-item">
@@ -245,7 +247,7 @@ bin/metatron</code></pre>
                         <div class="accordion-body">
                                <pre><code>/m::[
  pattern=>/m/inst/#,
- space  =>[sub=>{!*/m/mach,!*/m/math,!*/m/web,!*/m/iot,!*/m/grph,!*/m/llm,!*/m/tble,!*/m/doc}],
+ space  =>[sub=>{!*/m/mach,!*/m/math,!*/m/web,!*/m/iot,!*/m/grph,!*/m/llm,!*/m/tble,!*/m/dcmnt}],
  q      =>[
    docq::[
        pre_read =>inst?rng=#{*}&dom=#{?}(uri::T){<j>},
@@ -1203,6 +1205,9 @@ bin/metatron</code></pre>
      {?}sugar  =&gt;[lst::T]]]@/m/instset</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">an aggregate of types, insts, consts, rewrites, and sugars structuring a domain of discourse</p>
+                    </div>
                     
                 </div>
                 <div class="card mb-3" id="type-int">
@@ -1237,7 +1242,7 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">a stream of equally sized rows</p>
+                        <p class="mb-0 text-light">an ordered sequence poly of objs</p>
                     </div>
                     
                 </div>
@@ -1327,7 +1332,7 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">a document (record) from a collection</p>
+                        <p class="mb-0 text-light">a poly composed of uniquely keyed rels</p>
                     </div>
                     
                 </div>
@@ -3033,6 +3038,9 @@ bin/metatron</code></pre>
  {?}persist=&gt;uri::T[][inst?rng=file&amp;dom=#{?}(uri::T){&lt;j&gt;}]@/m/mach/file])){&lt;j&gt;}]@/m/space/mem</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">the reference implementation of a space where objs are stored in memory</p>
+                    </div>
                     
                 </div>
                 <div class="card mb-3" id="space-meta">
@@ -3079,6 +3087,9 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">space::T[][inst?rng=stack&amp;dom=#{?}(isa([pattern=&gt;uri::T])){&lt;j&gt;}]@/m/space/stack</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">the machine&#x27;s thread local stack exposed as a space</p>
+                    </div>
                     
                 </div>
         </div>
@@ -3228,7 +3239,7 @@ bin/metatron</code></pre>
         <div class="container-xxl py-3 text-center">
             <hr class="border-secondary">
             <small class="text-muted">
-                generated by metatron instset doc generator on build 0-2026-04-04 20:16:50<br>
+                generated by metatron instset doc generator on build 0-2026-04-05 03:55:49<br>
                 © PhaseShift Studio, LLC
             </small>
         </div>

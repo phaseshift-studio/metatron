@@ -12,8 +12,8 @@ Instead of writing database-specific setup code (SQL INSERTs, MongoDB insertOne,
 // This single line works for BOTH SQL and MongoDB:
 baseUri/1 -> [id:1, value:1, name:'item1', weight:1.5]
 
-// tbleSpace.write() → INSERT INTO rewrite_test VALUES (1, 1, 'item1', 1.5)
-// docSpace.write() → db.rewrite_test.insertOne({_id: 1, id: 1, value: 1, ...})
+// tabledbSpace.write() → INSERT INTO rewrite_test VALUES (1, 1, 'item1', 1.5)
+// docdbSpace.write() → db.rewrite_test.insertOne({_id: 1, id: 1, value: 1, ...})
 ```
 
 The Router delegates to each space's `write()` method, which handles database-specific encoding automatically!

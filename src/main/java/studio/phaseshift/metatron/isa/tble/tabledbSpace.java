@@ -22,9 +22,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mInstSet;
-import studio.phaseshift.metatron.isa.m.type.NoObj;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjCleanStringSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
@@ -49,20 +47,18 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TID;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.tble.tbleInstSet.*;
 
 /**
- * tbleSpace - A dual-mode SQL database connector for Metatron with pluggable schema support
+ * tabledbSpace - A dual-mode SQL database connector for Metatron with pluggable schema support
  *
  * <p>Provides two modes of operation:
  * <ol>
@@ -85,7 +81,7 @@ import static studio.phaseshift.metatron.isa.tble.tbleInstSet.*;
  *
  * <h2>Configuration</h2>
  * <pre>{@code
- * tbleSpace space = tbleSpace.of(
+ * tabledbSpace space = tabledbSpace.of(
  *     rec(
  *         uri(PATTERN), uri("/tble/#"),
  *         uri(HOST), uri("postgresql://localhost:5432/mydb"),  // Note: no "jdbc:" prefix
@@ -97,7 +93,7 @@ import static studio.phaseshift.metatron.isa.tble.tbleInstSet.*;
  * }</pre>
  *
  * <h2>Table Mapping Mode</h2>
- * <p>When table mapping is enabled (default), tbleSpace automatically discovers existing SQL tables
+ * <p>When table mapping is enabled (default), tabledbSpace automatically discovers existing SQL tables
  * and makes them accessible via fURIs:
  *
  * <pre>{@code
@@ -122,7 +118,7 @@ import static studio.phaseshift.metatron.isa.tble.tbleInstSet.*;
  * The Space.Helper.resolveWrite() method automatically handles poly unrolling for nested writes.
  *
  * <h2>Key-Value Store Mode</h2>
- * <p>For paths that don't match existing tables, tbleSpace uses its key-value store:
+ * <p>For paths that don't match existing tables, tabledbSpace uses its key-value store:
  *
  * <pre>{@code
  * // Store arbitrary objects
@@ -134,42 +130,41 @@ import static studio.phaseshift.metatron.isa.tble.tbleInstSet.*;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class tbleSpace extends AbstractSpace<Connection> {
+public class tabledbSpace extends AbstractSpace<Connection> {
 
     public static fURI SQL_INST_TID = TBLE_ISA_TID.extend(INST).extend(SQL);
-    public static fURI TBLE_SPACE_TID = TBLE_ISA_TID.extend(SPACE).extend("tble");
-    public static final Type TABL_SPACE_TYPE =
+    public static fURI TABLEDB_SPACE_TID = TBLE_ISA_TID.extend(SPACE).extend("tabledb");
+    public static final Type TABLE_SPACE_TYPE =
             Type.Builder.build()
                     .tid(SPACE_TID)
-                    .vid(TBLE_SPACE_TID)
+                    .vid(TABLEDB_SPACE_TID)
                     .isaPredicate(rec(
                             uri(PATTERN), URI_TYPE,
                             uri(HOST), URI_TYPE,
                             uri(DRIVER), URI_TYPE,
                             uri(ROUTE), rec(URI_TYPE, URI_TYPE),
                             uri(TABLE).maybe(), LST_TYPE))
-                    .constructor(instC(mInstSet.M_ISA_INST_TID.dom(ALL.maybe()).rng(TBLE_SPACE_TID),
+                    .constructor(instC(mInstSet.M_ISA_INST_TID.dom(ALL.maybe()).rng(TABLEDB_SPACE_TID),
                             lst(REC_TYPE),
-                            (lhs, inst) -> tbleSpace.of(inst.arg(0).asRec().jvm(), inst.arg(0).vid())))
+                            (lhs, inst) -> tabledbSpace.of(inst.arg(0).asRec().jvm(), inst.arg(0).vid())))
                     .create();
 
     protected ObjSerializer<?> serializer;
     protected TableSchema schema;
     protected ExistingTableSchema existingTableSchema;
-    protected String schemaPrefix;
     protected SQLSchemaGenerator schemaGenerator;
 
-    public static tbleSpace of(final Map<Obj, Obj> config, final fURI vid) {
+    public static tabledbSpace of(final Map<Obj, Obj> config, final fURI vid) {
         MTronException.wrap(() -> Class.forName(config.get(uri(DRIVER)).uriValue().toString()));
         try {
             final Connection conn = DriverManager.getConnection(JDBC + config.get(uri(HOST)).uriValue().toString());
-            return new tbleSpace(conn, config, TBLE_SPACE_TID, vid);
+            return new tabledbSpace(conn, config, TABLEDB_SPACE_TID, vid);
         } catch (final SQLException ex) {
             throw MTronException.of(ex);
         }
     }
 
-    protected tbleSpace(final Connection sjvm, final Map<Obj, Obj> config, final fURI tid, final fURI vid) {
+    protected tabledbSpace(final Connection sjvm, final Map<Obj, Obj> config, final fURI tid, final fURI vid) {
         super(sjvm, config, tid, vid);
         LOG.info("connected {{b}}%s{{X}}", config.get(uri(HOST)));
         // Initialize schema - auto-detect based on database type
@@ -202,22 +197,23 @@ public class tbleSpace extends AbstractSpace<Connection> {
                         this.existingTableSchema.getTableNames().size(), this.sjvm().getCatalog());
                 this.at(uri(TABLE), lst(this.existingTableSchema.getTableMetadata().stream().map(t -> (Obj) uri(t.tableName())).toList()), MUTABLE);
 
-                // Initialize SQL schema generator for type definitions (lazy - will generate types on first access)
-                this.schemaPrefix = this.pattern.retractPattern().extend("schema").toString();
+                // Initialize SQL schema generator and store in configuration (not data namespace)
                 final String dbName = sjvm.getCatalog() != null ? sjvm.getCatalog() : "db";
-                final fURI schemaPath = f(this.schemaPrefix).extend(dbName);
+                final fURI schemaPath = this.pattern.retractPattern().extend("schema").extend(dbName);
 
                 this.schemaGenerator = new SQLSchemaGenerator(
                         this.existingTableSchema.getTableMetadata(),
                         schemaPath
                 );
 
-                LOG.info("initialized {{g}}SQL schema{{X}} at %s (lazy) with %s table types",
-                        schemaPath, this.existingTableSchema.getTableNames().size());
+                // Store schema in configuration so it doesn't interfere with pattern queries on data
+                this.at(uri(SCHEMA), this.schemaGenerator.generateSchema(), MUTABLE);
+
+                LOG.info("initialized {{g}}SQL schema{{X}} in config with %s table types",
+                        this.existingTableSchema.getTableNames().size());
 
             } else {
                 this.existingTableSchema = null;
-                this.schemaPrefix = null;
                 this.schemaGenerator = null;
                 LOG.info("table mapping {{y}}disabled{{X}}");
             }
@@ -231,15 +227,12 @@ public class tbleSpace extends AbstractSpace<Connection> {
         return (pattern, obj) -> {
             try {
                 if (pattern.hasPattern()) {
-                    // Pattern write - write to all matching fURIs
                     this.directReader().apply(pattern).forEachRemaining(kv -> this.write(kv.furi(), obj));
                 } else {
-                    // Strip the space's pattern prefix to get the relative path
-                    final fURI relativePath = stripPatternPrefix(pattern);
-
+                    final fURI alignedPattern = Space.Helper.routeFromSpace(pattern, this.routes());
                     // Check if this is a table mapping path (existing table)
-                    if (this.existingTableSchema != null && this.existingTableSchema.isTablePath(relativePath)) {
-                        this.existingTableSchema.write(this.sjvm(), relativePath, obj);
+                    if (this.existingTableSchema != null && this.existingTableSchema.isTablePath(alignedPattern)) {
+                        this.existingTableSchema.write(this.sjvm(), alignedPattern, obj);
                     } else {
                         // Use key-value schema
                         if (this.schema instanceof TypedKeyValueSchema) {
@@ -263,24 +256,13 @@ public class tbleSpace extends AbstractSpace<Connection> {
     public Function<fURI, Iterator<IdObj>> directReader() {
         return (pattern) -> {
             try {
-                LOG.debug("looking for tble vid: %s", pattern);
-
-                // Check if this is a schema path (e.g., */netflix/schema or */netflix/schema/movie)
-                // Only if table mapping is enabled (schemaPrefix will be non-null)
-                if (this.schemaPrefix != null && this.schemaGenerator != null) {
-                    if (f(this.schemaPrefix).test(pattern)) {
-                        // Return the schema object itself - includes tables and foreign keys
-                        return IdObj.of(f(this.schemaPrefix), this.schemaGenerator.generateSchema()).iterator();
-                    } else if (pattern.hasPrefix(this.schemaPrefix)) {
-                        // Schema subpath - let the schema InstSet handle it
-                        return Collections.emptyIterator();
-                    }
-                }
+                LOG.debug("looking for table vid: %s", pattern);
+                final fURI alignedPattern = Space.Helper.routeFromSpace(pattern, this.routes());
 
                 // Check if this is a table mapping path (existing table)
-                if (this.existingTableSchema != null && this.existingTableSchema.isTablePath(pattern)) {
-                    // Use existing table schema - get raw results and add poly unrolling
-                    final Iterator<IdObj> rawResults = this.existingTableSchema.read(this.sjvm(), pattern);
+                if (this.existingTableSchema != null && this.existingTableSchema.isTablePath(alignedPattern)) {
+                    // Known table from schema - use existing table schema
+                    final Iterator<IdObj> rawResults = this.existingTableSchema.read(this.sjvm(), alignedPattern);
                     final List<IdObj> allResults = new ArrayList<>();
                     rawResults.forEachRemaining(kv -> {
                         allResults.add(kv);  // Add the base object
@@ -293,14 +275,21 @@ public class tbleSpace extends AbstractSpace<Connection> {
                 }
 
                 // Use key-value schema (TypedKeyValueSchema or SimpleKeyValueSchema)
-                // Get raw results and add poly unrolling
+                // Get raw results and add poly unrolling (matching memSpace pattern)
                 final Iterator<IdObj> rawResults = this.schema.read(this.sjvm(), pattern);
                 final List<IdObj> allResults = new ArrayList<>();
                 rawResults.forEachRemaining(kv -> {
-                    allResults.add(kv);  // Add the base object
-                    if (pattern.hasPattern() && kv.obj().isPoly()) {
-                        // Add unrolled nested paths (like memSpace does) - only when pattern has wildcards
-                        allResults.addAll(Space.Helper.unrollPoly(kv.furi(), kv.obj().as(), pattern.asNode()));
+                    if (pattern.hasPattern()) {
+                        // For pattern queries: add base if matches, AND unroll poly independently
+                        if (kv.furi().test(pattern.asNode())) {
+                            allResults.add(kv);  // Add the base object if it matches the pattern
+                        }
+                        if (kv.obj().isPoly()) {
+                            // Unroll poly independently - children might match even if base doesn't
+                            allResults.addAll(Space.Helper.unrollPoly(kv.furi(), kv.obj().as(), pattern.asNode()));
+                        }
+                    } else {
+                        allResults.add(kv);  // Exact match - add the result
                     }
                 });
                 return allResults.iterator();
@@ -310,43 +299,4 @@ public class tbleSpace extends AbstractSpace<Connection> {
         };
     }
 
-    /**
-     * Strip the space's route prefix from a fURI to get the relative path.
-     * For example, if route maps db: to /tble/ and fURI is /tble/users/1, returns /users/1
-     */
-    private fURI stripPatternPrefix(final fURI furi) {
-        // If there are routes, use the route target as the prefix to strip
-        if (!this.routes().isEmpty()) {
-            // Get the first route's target (e.g., /tble/)
-            final studio.phaseshift.metatron.isa.m.type.Uri routeTarget = this.routes().values().iterator().next();
-            final fURI prefix = routeTarget.asUri().uriValue().asNode();
-            // Only use the route if it's not empty (has actual path segments)
-            if (!prefix.path().isEmpty() && prefix.path().stream().anyMatch(s -> !s.isEmpty())) {
-                return furi.removePrefix(prefix);
-            }
-        }
-        // Fallback to using the pattern if no routes or route is empty
-        final fURI patternBase = this.pattern().asNode();
-        return furi.removePrefix(patternBase);
-    }
-
-    /**
-     * Add the space's route prefix to a relative fURI.
-     * For example, if route maps db: to /tble/ and fURI is /users/1, returns /tble/users/1
-     */
-    private fURI addPatternPrefix(final fURI furi) {
-        // If there are routes, use the route target as the prefix to add
-        if (!this.routes().isEmpty()) {
-            // Get the first route's target (e.g., /tble/)
-            final studio.phaseshift.metatron.isa.m.type.Uri routeTarget = this.routes().values().iterator().next();
-            final fURI prefix = routeTarget.asUri().uriValue().asNode();
-            // Only use the route if it's not empty (has actual path segments)
-            if (!prefix.path().isEmpty() && prefix.path().stream().anyMatch(s -> !s.isEmpty())) {
-                return prefix.extend(furi);
-            }
-        }
-        // Fallback to using the pattern if no routes or route is empty
-        final fURI patternBase = this.pattern().asNode();
-        return patternBase.extend(furi);
-    }
 }

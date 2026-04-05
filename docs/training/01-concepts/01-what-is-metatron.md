@@ -66,7 +66,7 @@ The **Router** maps URIs to Spaces and handles path translation:
 ```java
 // Router sees: db:users/1
 // Translates to: users/1 (strips "db:" prefix)
-// Routes to: tbleSpace
+// Routes to: tabledbSpace
 // Returns: User object
 ```
 

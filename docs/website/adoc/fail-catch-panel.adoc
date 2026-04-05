@@ -33,6 +33,8 @@ The exception handling architecture of metatron leverages a fail monad with some
 
 [.card]
 --
+[discrete,.center]
+==== fail monad
 The diagram above illustrates the concept of https://en.wikipedia.org/wiki/Monad_(functional_programming)[monadic computing], where the obj being computed on is "lifted" out of the instruction stream when an exception occurs. The lifted `fail::T` obj is remains unaffected by the sequence of instructions below until it reaches a "flattening" instruction -- namely `catch()`. At which point, the `fail::T` value is brought back down, tagged "caught", and can be operated on like any other obj.
 --
 

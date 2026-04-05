@@ -255,7 +255,7 @@ public tbleSpace(Connection sjvm, Map<Obj, Obj> config, fURI tid, fURI vid) {
 # Test MQTT pattern matching
 mvn test -Dtest=MqttIndexedSchemaTest
 
-# Test tbleSpace integration
+# Test tabledbSpace integration
 mvn test -Dtest=tbleSpaceTest
 
 # Run all tble tests

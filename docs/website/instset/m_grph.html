@@ -121,19 +121,19 @@ bin/metatron</code></pre>
                             alt="mtron"/>/m</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
                            onclick="location.href='m_mach.html';"><img
-                            src="../images/icons/space/oltp-icon.svg" class="isa-row icon-color me-2" alt="mach"/>/m/mach</a>
+                            src="../images/icons/space/mach-icon.svg" class="isa-row icon-color me-2" alt="mach"/>/m/mach</a>
                     </li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
                            onclick="location.href='m_tble.html';"><img
-                            src="../images/icons/space/tblespace-icon.svg" class="isa-row icon-color me-2" alt="tble"/>/m/tble</a>
+                            src="../images/icons/space/tble-icon.svg" class="isa-row icon-color me-2" alt="tble"/>/m/tble</a>
                     </li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='m_doc.html';"><img
-                            src="../images/icons/space/docspace-icon.svg" class="isa-row icon-color me-2" alt="doc"/>/m/doc</a>
+                           onclick="location.href='m_dcmnt.html';"><img
+                            src="../images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2" alt="dcmnt"/>/m/dcmnt</a>
                     </li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
                            onclick="location.href='m_grph.html';"><img
-                            src="../images/icons/space/grphspace-icon.svg" class="isa-row icon-color me-2" alt="grph"/>/m/grph</a>
+                            src="../images/icons/space/grph-icon.svg" class="isa-row icon-color me-2" alt="grph"/>/m/grph</a>
                     </li>
                     <!-- TODO: Add /m/grph/tp3 docs
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
@@ -232,7 +232,9 @@ bin/metatron</code></pre>
                     <span class="text-light">/m/</span>grph
                 </h1>
                 <p style="line-height:0.1rem;" class="subtitle text-light">instruction set reference</p>
-                <p class="text-light mt-3 mb-0" style="line-height:2.5em; max-width: 1000px; margin-left: auto; margin-right: auto;">&quot;from vertex to vertex, the edge of the metatron is traversed&quot;</p>
+            </div>
+            <div class="text-light">
+                <p class="text-light mt-3 mb-0" style="line-height:2.5em; max-width: 1000px; margin-left: auto; margin-right: auto;">"from vertex to vertex, the edge of the metatron is traversed"</p>
             </div>
             <div class="accordion" id="accordianInstSet">
                 <div class="accordion-item">
@@ -261,10 +263,10 @@ bin/metatron</code></pre>
      {?}IN =>[uri::T=>edge{*}::T],
      {?}OUT=>[uri::T=>edge{*}::T]]]@/m/grph/vrtx,
    elmt::T[?[IN=>vrtx::T,OUT=>vrtx::T]]@/m/grph/edge,
-   space::T[][inst?rng=graph&dom=#{?}(isa([{?}graph=>uri::T]).else(failure('malformed tp3 config'))){<j>}]@/m/grph/space/graph,
+   space::T[][inst?rng=graphdb&dom=#{?}(isa([{?}graph=>uri::T]).else(failure('malformed tp3 config'))){<j>}]@/m/grph/space/graphdb,
    modern::T],
  inst   =>[
-   gremlin?rng=#{*}&dom=graph(str::T){<j>},
+   gremlin?rng=#{*}&dom=graphdb(str::T){<j>},
    label?rng=uri&dom=elmt(){<j>},
    values?rng=#{*}&dom=elmt(uri{*}::T){<j>},
    inV?rng=vrtx&dom=edge(){<j>},
@@ -384,8 +386,8 @@ bin/metatron</code></pre>
                 <h6 class="text-primary mb-2">Spaces</h6>
                 <div class="index-columns">
                     
-                <a href="#space-graph" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
-                    <span class="code">graph</span>
+                <a href="#space-graphdb" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
+                    <span class="code">graphdb</span>
                     <span class="badge bg-info">S</span>
                 </a>
                 </div>
@@ -418,7 +420,7 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">a created</p>
+                        <p class="mb-0 text-light">an directed key/value attributed binary edge</p>
                     </div>
                     
                 </div>
@@ -436,7 +438,7 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">an directed key/value attributed binary edge</p>
+                        <p class="mb-0 text-light">a key/value attributed element that is refined by vrtx::T and edge::T</p>
                     </div>
                     
                 </div>
@@ -459,7 +461,7 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">a software</p>
+                        <p class="mb-0 text-light">a key/value attributed vertex</p>
                     </div>
                     
                 </div>
@@ -546,12 +548,12 @@ bin/metatron</code></pre>
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">gremlin</span>
-                            <span class="ms-1"><span class="instset-doc-small-code"><a href="m_grph_space.html#type-graph" class="code text-info">/m/grph/space/graph</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#{*}.html#type-#{*}" class="code text-success">#{*}</a></span></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="m_grph_space.html#type-graphdb" class="code text-info">/m/grph/space/graphdb</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#{*}.html#type-#{*}" class="code text-success">#{*}</a></span></span>
                         </span>
-                        <small class="text-muted code">/m/grph/inst/gremlin?#{*}&lt;=/m/grph/space/graph</small>
+                        <small class="text-muted code">/m/grph/inst/gremlin?#{*}&lt;=/m/grph/space/graphdb</small>
                     </div>
                     <div class="card-body p-2">
-                        <pre class="mb-1"><code class="language-mtron">gremlin?#{*}&lt;=graph(str::T){&lt;j&gt;}</code></pre>
+                        <pre class="mb-1"><code class="language-mtron">gremlin?#{*}&lt;=graphdb(str::T){&lt;j&gt;}</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -725,16 +727,19 @@ bin/metatron</code></pre>
                 Spaces <span class="badge bg-info">1</span>
             </h3>
             
-                <div class="card mb-3" id="space-graph">
+                <div class="card mb-3" id="space-graphdb">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <a href="m_grph_space_graph.html" class="code text-primary fw-bold text-decoration-none">graph</a>
-                        <small class="text-muted code">/m/grph/space/graph</small>
+                        <a href="m_grph_space_graphdb.html" class="code text-primary fw-bold text-decoration-none">graphdb</a>
+                        <small class="text-muted code">/m/grph/space/graphdb</small>
                     </div>
                     
                     <div class="mt-2">
-                        <pre class="mb-0"><code class="language-mtron">space::T[][inst?rng=graph&amp;dom=#{?}(isa([{?}graph=&gt;uri::T]).else(failure(&#x27;malformed tp3 config&#x27;))){&lt;j&gt;}]@/m/grph/space/graph</code></pre>
+                        <pre class="mb-0"><code class="language-mtron">space::T[][inst?rng=graphdb&amp;dom=#{?}(isa([{?}graph=&gt;uri::T]).else(failure(&#x27;malformed tp3 config&#x27;))){&lt;j&gt;}]@/m/grph/space/graphdb</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">a space for graph traversal</p>
+                    </div>
                     
                 </div>
         </div>
@@ -743,7 +748,7 @@ bin/metatron</code></pre>
         <div class="container-xxl py-3 text-center">
             <hr class="border-secondary">
             <small class="text-muted">
-                generated by metatron instset doc generator on build 0-2026-04-04 20:17:00<br>
+                generated by metatron instset doc generator on build 0-2026-04-05 03:55:59<br>
                 © PhaseShift Studio, LLC
             </small>
         </div>

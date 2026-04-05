@@ -1,0 +1,65 @@
+[discrete]
+== Document Space
+
+A document is a key/value-pair structure, where the keys are uris and the values are any obj. When the values are polys such as `rec` and `lst`, the document is considered a *nested document*. Modern document databases use JSON as their serialization format (or the more compact BSON binary encoding). JSON is a natural subset of metatron's data model. Two semantically equivalent structures are provided below, side-by-side, demonstrating a well formed alignment between the two.
+
+[.card]
+--
+[discrete,.center]
+==== uri keys vs str keys
+One nicety that immediately jumps out when comparing JSON and mtron is mtron's lack of quotes. This is because the mtron keys are not strings, but URIs. It is typically best to use URIs over strings for the following reasons:
+
+* URIs are **less verbose** as they don't require quotes.
+* URIs have a well-defined **hierarchical structure** that is useful for referencing nested structures.
+* URIs support **wildcards and templates** for pattern matching and bulk read/writes.
+
+--
+
+[cols=".^6a,.^6a",separator=🧱,options=header,role="table-bordered small center",align="center"]
+|===
+^🧱 JSON ^🧱 mtron
+🧱
+[source,json]
+----
+{ "databases" : {
+  "graphdb": {"vertices":10234,"edges":1234545 },
+  "docdb": {"collections": 2, "documents":{
+   "users": 102,
+   "data": 234335
+  }},
+  "tabledb": {"tables": 2,"rows": [1334,34345]}
+}}
+----
+🧱
+[source,mtron]
+----
+[ databases => [
+  graphdb => [vertices => 10234, edges => 1234545],
+  docdb => [collections => 2, documents => [
+    users => 102,
+    data => 234335
+  ]],
+  tabledb => [tables => 2, rows => [1334,34345]]
+]]
+----
+|===
+
+Some example uses are provided below.
+
+++++
+<!-- 🐖
+docdb::[pattern     => farm:#,                             /
+        host        => <mongodb://localhost:27017/farm>,   /
+        serializer  => !*</m/mach/io/serializer/bson>,     /
+        collection  => [,],                                /
+        route       => [farm:=><>]]@/sys/space/farm;              [-- <1>
+farm:animals/1 -> [type => chicken, name => 'trill', age => 7]    [-- <2>
+*/sys/space/farm                                                  [-- <3>
+*/sys/space/farm/schema                                           [-- <4>
+-->
+++++
+
+<1> A MongoDB compliant document database is connected to.
+<2> Add a 3 entry document to the `animal` collection of the `farm` database.
+<3> Read the `farm` configuration structure. Note that `schema` is denotes an `auto` instruction.
+<4> Read the `farm` schema by triggering its generation and rendering its result.

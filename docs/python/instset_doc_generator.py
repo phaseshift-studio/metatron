@@ -888,7 +888,7 @@ class HTMLDocGenerator:
         # Add description if available (skip if empty or "null")
         desc_html = ""
         if self.instset.desc and self.instset.desc != "null":
-            desc_html = f'<p class="text-light mt-3 mb-0" style="line-height:2.5em; max-width: 1000px; margin-left: auto; margin-right: auto;">{html.escape(self.instset.desc)}</p>'
+            desc_html = f'<p class="text-light mt-3 mb-0" style="line-height:2.5em; max-width: 1000px; margin-left: auto; margin-right: auto;">{self.instset.desc.replace("\\n","")}</p>'
 
         return f"""
         <div class="container-xxl py-4">
@@ -897,6 +897,8 @@ class HTMLDocGenerator:
                     <span class="text-light">{html.escape(parent_path)}/</span>{html.escape(self.instset.name)}
                 </h1>
                 <p style="line-height:0.1rem;" class="subtitle text-light">instruction set reference</p>
+            </div>
+            <div class="text-light">
                 {desc_html}
             </div>
             <div class="accordion" id="accordianInstSet">

@@ -22,7 +22,7 @@ import(/m/iot/miot);
 import(/m/grph);
 import(/m/llm);
 import(/m/tble);
-import(/m/doc);
+import(/m/dcmnt);
 [== global settings store in boot ==]
 print("{{y}}mqtt broker location{{X}}: ", <boot/args/mqtt>.else(boot/args/mqtt -> [broker => <mqtt://chibi.local:1883>]),"\n");
 print("{{y}}cluster peers{{X}}: ", *<boot/peers>.else(boot/peers -> [ws://localhost:6666,<ws://127.0.0.1:7777>]),"\n");
@@ -50,11 +50,11 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
         pattern  => http://#,
         route    => [/     => examples/www,
                      /docs => target/docs ]]@/sys/space/www;
-  graph::[pattern  => /h/#,
+  graphdb::[pattern  => /h/#,
         route    => [</h/+/>=><>],
         native   => [factory  => mfactory::[=>],
                      load     => grateful]]@/sys/space/grateful;                    
-  graph::[pattern  => g:#,
+  graphdb::[pattern  => g:#,
         route    => [<g:V>=><V>,
                      <g:E>=><E>,
                      <g:S>=>/m/grph/inst/schema/modern],
@@ -93,25 +93,26 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
            pattern => <openai:#>,
            name    => <openai>,
            route   => [<openai:>=><>]]@/sys/space/openai;
- tble::[pattern    => netflix:#,
+ tabledb::[pattern    => netflix:#,
         host       => <mariadb://localhost:3306/netflix?user=mtron&password=mtron>,
         route      => [<netflix:>=><>],
         serializer => !*</m/mach/io/serializer/json/simple>,
         table      => [,],
         driver     => <org.mariadb.jdbc.Driver>]@/sys/space/netflix;
- tble::[pattern    => acme:#,
+ tabledb::[pattern    => acme:#,
         host       => <mariadb://localhost:3306/classicmodels?user=mtron&password=mtron>,
         route      => [<acme:>=><>],
         serializer => !*</m/mach/io/serializer/string/clean>,
         table      => [,],
         driver     => <org.mariadb.jdbc.Driver>]@/sys/space/acme;
- tble::[pattern    => db:#,
+ tabledb::[pattern    => db:#,
         host       => <mariadb://localhost:3306/tble_space?user=mtron&password=mtron>,
         route      => [db:=><>],
         driver     => <org.mariadb.jdbc.Driver>]@/sys/space/db;
- doc::[pattern     => mongo:#,
+ docdb::[pattern     => mongo:#,
        host        => <mongodb://localhost:27017/mflix>,
        serializer  => !*</m/mach/io/serializer/bson>,
+       collection  => [,],
        route       => [mongo:=><>]]@/sys/space/mongo;
  mcp::[host      => <ws://localhost:8999>]@/usr/ai/mcp/mtron;
  mcp::[host      => <http://127.0.0.1:29170/index-mcp/streamable-http>]@/usr/ai/mcp/intellij;

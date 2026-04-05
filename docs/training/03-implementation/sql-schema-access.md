@@ -293,7 +293,7 @@ mvn test -Dtest=tbleSpaceTest#testForeignKeyDiscovery
 # Test lazy FK resolution (prevents infinite recursion)
 mvn test -Dtest=tbleSpaceTest#testLazyForeignKeyResolution
 
-# Run all tbleSpace tests
+# Run all tabledbSpace tests
 mvn test -Dtest=tbleSpaceTest
 ```
 

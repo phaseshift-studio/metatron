@@ -43,7 +43,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.tble.tbleSpace.*;
+import static studio.phaseshift.metatron.isa.tble.tabledbSpace.*;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
@@ -90,7 +90,7 @@ public class tbleInstSet extends AbstractInstSet {
                         docWrap(LST_ROW_TYPE, "a table row indexed by column number"),
                         docWrap(REC_ROW_TYPE, "a table row indexed by column name"),
                         docWrap(TABLE_TYPE, "a stream of equally sized rows"),
-                        docWrap(TABL_SPACE_TYPE, "the metatron realization of a relational database")),
+                        docWrap(TABLE_SPACE_TYPE, "a metatron realization of a relational database")),
                 uri(INST), lst(
                         docWrap(instC(AS_INST_TID.dom(LST_ROW_TID).rng(REC_ROW_TID), lst(REC_ROW_TYPE), (lhs, inst) -> lhs.asRec().at(uri(TABLE))),
                                 "a table row indexed by column number",
@@ -102,9 +102,9 @@ public class tbleInstSet extends AbstractInstSet {
                                 "a table row indexed by column number",
                                 Map.of(),
                                 "maps a rec row to a lst row"),
-                        instC(SQL_INST_TID.dom(TBLE_SPACE_TID).rng(REC_ROW_TID.maybeSome()), lst(STR_TYPE), (lhs, inst) -> {
+                        instC(SQL_INST_TID.dom(TABLEDB_SPACE_TID).rng(REC_ROW_TID.maybeSome()), lst(STR_TYPE), (lhs, inst) -> {
                             try {
-                                final Statement statement = lhs.<tbleSpace>as().sjvm().createStatement();
+                                final Statement statement = lhs.<tabledbSpace>as().sjvm().createStatement();
                                 final ResultSet result = statement.executeQuery(inst.arg(0).strValue());
                                 final ResultSetMetaData metadata = result.getMetaData();
                                 Obj objs = objs0();
@@ -146,7 +146,7 @@ public class tbleInstSet extends AbstractInstSet {
                 uri(REWRITE), lst(
                         // Optimize: *table.count() → SELECT COUNT(*)
                         docWrap(CommonRewrites.countRewrite(
-                                tbleSpace.class,
+                                tabledbSpace.class,
                                 TBLE_ISA_REWRITE_TID.extend("sql_native_count"),
                                 (space, furi) -> {
                                     final String tableName = furi.segments().getFirst();
@@ -161,7 +161,7 @@ public class tbleInstSet extends AbstractInstSet {
 
                         // Optimize: *table.sum() → SELECT SUM(*)
                         docWrap(CommonRewrites.sumRewrite(
-                                tbleSpace.class,
+                                tabledbSpace.class,
                                 TBLE_ISA_REWRITE_TID.extend("sql_native_sum"),
                                 (space, furi) -> {
                                     final String tableName = furi.segments().getFirst();
@@ -175,7 +175,7 @@ public class tbleInstSet extends AbstractInstSet {
                         ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages native SELECT SUM(*) to sum entries in a table column"),
                         // Optimize: *table.mean() → SELECT AVG(*)
                         docWrap(CommonRewrites.meanRewrite(
-                                tbleSpace.class,
+                                tabledbSpace.class,
                                 TBLE_ISA_REWRITE_TID.extend("sql_native_mean"),
                                 (space, furi) -> {
                                     final String tableName = furi.segments().getFirst();

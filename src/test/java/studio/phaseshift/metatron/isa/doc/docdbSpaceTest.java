@@ -33,7 +33,6 @@ import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.algebra.rewrite.CommonRewritesTestContract;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.furi.q.SubQTest;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -47,7 +46,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.doc.docInstSet.DOC_ISA_TID;
+import static studio.phaseshift.metatron.isa.doc.dcmntInstSet.DCMNT_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -58,28 +57,29 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
- * Test suite for docSpace with in-memory MongoDB.
- * Excludes abstract tests as docSpace has its own comprehensive MongoDB-specific tests.
+ * Test suite for docdbSpace with in-memory MongoDB.
+ * Excludes abstract tests as docdbSpace has its own comprehensive MongoDB-specific tests.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class docSpaceTest extends AbstractSpaceTest implements CommonRewritesTestContract {//, SubQTest {
+public class docdbSpaceTest extends AbstractSpaceTest implements CommonRewritesTestContract {//, SubQTest {
 
     protected static MongoServer mongoServer;
     protected static String connectionString;
     protected static final String DB_NAME = "testdb";
     protected static final fURI SPACE_VID = f("/sys/space/doc/test");
 
-    public docSpaceTest() {
-        super(f("mongo:test_collection/rewrite_test"), () -> docSpace.of(
+    public docdbSpaceTest() {
+        super(f("mongo:test_collection/rewrite_test"), () -> docdbSpace.of(
                 rec(
                         uri(PATTERN), uri("mongo:#"),
                         uri(HOST), uri(connectionString + "/" + DB_NAME),
-                        uri(ROUTE), rec(uri("mongo:"), uri(""))
+                        uri(ROUTE), rec(uri("mongo:"), uri("")),
+                        uri(COLLECTION), lst()
                 ).jvm(),
                 SPACE_VID
         ));
-        BootLoader.loadInstSetProvider(DOC_ISA_TID);
+        BootLoader.loadInstSetProvider(DCMNT_ISA_TID);
     }
 
     @Override
@@ -87,7 +87,7 @@ public class docSpaceTest extends AbstractSpaceTest implements CommonRewritesTes
         return f("mongo:test_collection/");
     }
 
-    // Disable all abstract tests - docSpace has its own comprehensive MongoDB-specific tests
+    // Disable all abstract tests - docdbSpace has its own comprehensive MongoDB-specific tests
     @Override
     @Disabled
     public void testStringCornerCases(String description, String value) {
@@ -222,7 +222,7 @@ public class docSpaceTest extends AbstractSpaceTest implements CommonRewritesTes
     @Test
     public void testReadSingleDocument() {
         LOG.warn("testing read single document");
-        final docSpace space = (docSpace) this.spaceSupplier.get();
+        final docdbSpace space = (docdbSpace) this.spaceSupplier.get();
         try {
             // Read a specific user
             final Obj user1 = space.read(f("mongo:users/user1"));
@@ -246,7 +246,7 @@ public class docSpaceTest extends AbstractSpaceTest implements CommonRewritesTes
     public void testReadNonExistentDocument() {
         LOG.info("Testing read non-existent document");
 
-        final docSpace space = (docSpace) this.spaceSupplier.get();
+        final docdbSpace space = (docdbSpace) this.spaceSupplier.get();
         try {
             final Obj result = space.read(f("mongo:users/nonexistent"));
             assertTrue(result.isNoObj(), "Non-existent document should return noobj");
@@ -259,7 +259,7 @@ public class docSpaceTest extends AbstractSpaceTest implements CommonRewritesTes
     public void testReadAllDocumentsInCollection() {
         LOG.info("Testing read all documents in collection");
 
-        final docSpace space = (docSpace) this.spaceSupplier.get();
+        final docdbSpace space = (docdbSpace) this.spaceSupplier.get();
         try {
             // Read all users using + pattern
             final Obj allUsers = space.read(f("mongo:users/+"));
@@ -285,7 +285,7 @@ public class docSpaceTest extends AbstractSpaceTest implements CommonRewritesTes
     public void testWriteNewDocument() {
         LOG.info("Testing write new document");
 
-        final docSpace space = (docSpace) this.spaceSupplier.get();
+        final docdbSpace space = (docdbSpace) this.spaceSupplier.get();
         try {
             // Write a new user
             final Rec newUser = rec(
@@ -316,7 +316,7 @@ public class docSpaceTest extends AbstractSpaceTest implements CommonRewritesTes
     public void testUpdateExistingDocument() {
         LOG.info("Testing update existing document");
 
-        final docSpace space = (docSpace) this.spaceSupplier.get();
+        final docdbSpace space = (docdbSpace) this.spaceSupplier.get();
         try {
             // Update user1
             final Rec updatedUser = rec(
@@ -346,7 +346,7 @@ public class docSpaceTest extends AbstractSpaceTest implements CommonRewritesTes
     public void testDeleteDocument() {
         LOG.info("Testing delete document");
 
-        final docSpace space = (docSpace) this.spaceSupplier.get();
+        final docdbSpace space = (docdbSpace) this.spaceSupplier.get();
         try {
             // Verify user2 exists
             Obj user2 = space.read(f("mongo:users/user2"));
@@ -369,7 +369,7 @@ public class docSpaceTest extends AbstractSpaceTest implements CommonRewritesTes
     public void testNestedDocuments() {
         LOG.info("Testing nested documents");
 
-        final docSpace space = (docSpace) this.spaceSupplier.get();
+        final docdbSpace space = (docdbSpace) this.spaceSupplier.get();
         try {
             // Write a document with nested structure
             final Rec nestedDoc = rec(
@@ -412,7 +412,7 @@ public class docSpaceTest extends AbstractSpaceTest implements CommonRewritesTes
     public void testMultipleDataTypes() {
         LOG.info("Testing multiple data types");
 
-        final docSpace space = (docSpace) this.spaceSupplier.get();
+        final docdbSpace space = (docdbSpace) this.spaceSupplier.get();
         try {
             // Write a document with various data types
             final Rec multiTypeDoc = rec(
@@ -452,7 +452,7 @@ public class docSpaceTest extends AbstractSpaceTest implements CommonRewritesTes
     public void testReadMultipleCollections() {
         LOG.info("Testing read from multiple collections");
 
-        final docSpace space = (docSpace) this.spaceSupplier.get();
+        final docdbSpace space = (docdbSpace) this.spaceSupplier.get();
         try {
             // Read from users collection
             final Obj user = space.read(f("mongo:users/user1"));
@@ -474,7 +474,7 @@ public class docSpaceTest extends AbstractSpaceTest implements CommonRewritesTes
     public void testEmptyList() {
         LOG.info("Testing empty list handling");
 
-        final docSpace space = (docSpace) this.spaceSupplier.get();
+        final docdbSpace space = (docdbSpace) this.spaceSupplier.get();
         try {
             final Rec docWithEmptyList = rec(
                     uri("name"), str("Test"),
@@ -499,7 +499,7 @@ public class docSpaceTest extends AbstractSpaceTest implements CommonRewritesTes
     public void testLargeDocument() {
         LOG.info("Testing large document with many fields");
 
-        final docSpace space = (docSpace) this.spaceSupplier.get();
+        final docdbSpace space = (docdbSpace) this.spaceSupplier.get();
         try {
             // Create a document with many fields
             final Map<Obj, Obj> fields = new LinkedHashMap<>();
@@ -542,7 +542,7 @@ public class docSpaceTest extends AbstractSpaceTest implements CommonRewritesTes
     }, delimiter = '|')
     public void testReadUserByIdParameterized(final String userId, final String expectedName,
                                               final int expectedAge, final boolean shouldBeNoObj) {
-        final docSpace space = (docSpace) this.spaceSupplier.get();
+        final docdbSpace space = (docdbSpace) this.spaceSupplier.get();
         try {
             final Obj user = space.read(f("mongo:users/" + userId));
 
@@ -568,7 +568,7 @@ public class docSpaceTest extends AbstractSpaceTest implements CommonRewritesTes
     }, delimiter = '|')
     public void testReadProductByIdParameterized(final String productId, final String expectedName,
                                                  final double expectedPrice, final int expectedQuantity) {
-        final docSpace space = (docSpace) this.spaceSupplier.get();
+        final docdbSpace space = (docdbSpace) this.spaceSupplier.get();
         try {
             final Obj product = space.read(f("mongo:products/" + productId));
             assertFalse(product.isNoObj(), "Product " + productId + " should exist");
@@ -598,7 +598,7 @@ public class docSpaceTest extends AbstractSpaceTest implements CommonRewritesTes
     }, delimiter = '|')
     public void testWriteAndReadParameterized(final String userId, final String name,
                                               final int age, final String email) {
-        final docSpace space = (docSpace) this.spaceSupplier.get();
+        final docdbSpace space = (docdbSpace) this.spaceSupplier.get();
         try {
             // Write user
             final Rec newUser = rec(
@@ -634,7 +634,7 @@ public class docSpaceTest extends AbstractSpaceTest implements CommonRewritesTes
     }, delimiter = '|')
     public void testUpdateParameterized(final String userId, final String originalName, final int originalAge,
                                         final String updatedName, final int updatedAge) {
-        final docSpace space = (docSpace) this.spaceSupplier.get();
+        final docdbSpace space = (docdbSpace) this.spaceSupplier.get();
         try {
             // Write original
             space.write(f("mongo:users/" + userId), rec(
@@ -665,7 +665,7 @@ public class docSpaceTest extends AbstractSpaceTest implements CommonRewritesTes
             "deleteUser3 | Test User 3"
     }, delimiter = '|')
     public void testDeleteParameterized(final String userId, final String name) {
-        final docSpace space = (docSpace) this.spaceSupplier.get();
+        final docdbSpace space = (docdbSpace) this.spaceSupplier.get();
         try {
             // Create user
             space.write(f("mongo:users/" + userId), rec(uri("name"), str(name)));
@@ -696,7 +696,7 @@ public class docSpaceTest extends AbstractSpaceTest implements CommonRewritesTes
     }, delimiter = '|')
     public void testNestedDocumentsParameterized(final String userId, final String name,
                                                  final String street, final String city, final String zip) {
-        final docSpace space = (docSpace) this.spaceSupplier.get();
+        final docdbSpace space = (docdbSpace) this.spaceSupplier.get();
         try {
             final Rec nestedDoc = rec(
                     uri("name"), str(name),
@@ -735,7 +735,7 @@ public class docSpaceTest extends AbstractSpaceTest implements CommonRewritesTes
             "listUser7 | Grace   | a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z"  // large list
     }, delimiter = '|')
     public void testListFieldsParameterized(final String userId, final String name, final String tagsStr) {
-        final docSpace space = (docSpace) this.spaceSupplier.get();
+        final docdbSpace space = (docdbSpace) this.spaceSupplier.get();
         try {
             final String[] tagArray = tagsStr.equals("<EMPTY>") ? new String[0] : tagsStr.split(",");
             final Rec docWithList = rec(
@@ -767,7 +767,7 @@ public class docSpaceTest extends AbstractSpaceTest implements CommonRewritesTes
     }, delimiter = '|')
     public void testMultipleDataTypesParameterized(final String docId, final String strVal,
                                                    final int intVal, final double realVal, final boolean boolVal) {
-        final docSpace space = (docSpace) this.spaceSupplier.get();
+        final docdbSpace space = (docdbSpace) this.spaceSupplier.get();
         try {
             final Rec multiTypeDoc = rec(
                     uri("stringField"), str(strVal),
@@ -804,7 +804,7 @@ public class docSpaceTest extends AbstractSpaceTest implements CommonRewritesTes
             "verylongidthatgoesonyesverylongidthatgoesonyesverylongidthatgoesonyesverylongidthatgoeson"  // very long ID
     })
     public void testReadNonExistentDocumentParameterized(final String docId) {
-        final docSpace space = (docSpace) this.spaceSupplier.get();
+        final docdbSpace space = (docdbSpace) this.spaceSupplier.get();
         try {
             final Obj result = space.read(f("mongo:users/" + docId));
             assertTrue(result.isNoObj(), "Non-existent document " + docId + " should return noobj");
@@ -819,7 +819,7 @@ public class docSpaceTest extends AbstractSpaceTest implements CommonRewritesTes
             "products  | 2"   // 2 products from setup
     }, delimiter = '|')
     public void testCollectionCountParameterized(final String collectionName, final int expectedMinCount) {
-        final docSpace space = (docSpace) this.spaceSupplier.get();
+        final docdbSpace space = (docdbSpace) this.spaceSupplier.get();
         try {
             final Obj allDocs = space.read(f("mongo:" + collectionName + "/+"));
             assertFalse(allDocs.isNoObj(), "Should return results for " + collectionName);
@@ -845,7 +845,7 @@ public class docSpaceTest extends AbstractSpaceTest implements CommonRewritesTes
             "emptyRec3  | <EMPTY_REC>"
     }, delimiter = '|')
     public void testWriteEmptyRecordParameterized(final String docId, final String marker) {
-        final docSpace space = (docSpace) this.spaceSupplier.get();
+        final docdbSpace space = (docdbSpace) this.spaceSupplier.get();
         try {
             // Write empty record
             final Rec emptyRec = rec();
@@ -873,7 +873,7 @@ public class docSpaceTest extends AbstractSpaceTest implements CommonRewritesTes
             "boundaryTest5 | -1          | -1"                     // negative ones
     }, delimiter = '|')
     public void testBoundaryValuesParameterized(final String docId, final int intVal, final long longVal) {
-        final docSpace space = (docSpace) this.spaceSupplier.get();
+        final docdbSpace space = (docdbSpace) this.spaceSupplier.get();
         try {
             final Rec boundaryDoc = rec(
                     uri("intField"), jnt(intVal),
@@ -903,7 +903,7 @@ public class docSpaceTest extends AbstractSpaceTest implements CommonRewritesTes
             "specialStr7 | MixedCaseString"
     }, delimiter = '|')
     public void testSpecialStringValuesParameterized(final String docId, final String specialStr) {
-        final docSpace space = (docSpace) this.spaceSupplier.get();
+        final docdbSpace space = (docdbSpace) this.spaceSupplier.get();
         try {
             final Rec doc = rec(uri("specialField"), str(specialStr));
             space.write(f("mongo:users/" + docId), doc);
@@ -926,7 +926,7 @@ public class docSpaceTest extends AbstractSpaceTest implements CommonRewritesTes
             "deepNest5 | 10"
     }, delimiter = '|')
     public void testDeeplyNestedDocumentsParameterized(final String docId, final int depth) {
-        final docSpace space = (docSpace) this.spaceSupplier.get();
+        final docdbSpace space = (docdbSpace) this.spaceSupplier.get();
         try {
             // Build deeply nested structure
             Obj nested = str("deepest value");
@@ -963,7 +963,7 @@ public class docSpaceTest extends AbstractSpaceTest implements CommonRewritesTes
     }, delimiter = '|')
     public void testMixedTypeListsParameterized(final String docId, final int intVal,
                                                 final String strVal, final double realVal, final boolean boolVal) {
-        final docSpace space = (docSpace) this.spaceSupplier.get();
+        final docdbSpace space = (docdbSpace) this.spaceSupplier.get();
         try {
             final Rec doc = rec(
                     uri("mixedList"), lst(
@@ -993,7 +993,7 @@ public class docSpaceTest extends AbstractSpaceTest implements CommonRewritesTes
             "deleteNonExist3 | <ERROR>"
     }, delimiter = '|')
     public void testDeleteNonExistentDocumentParameterized(final String docId, final String marker) {
-        final docSpace space = (docSpace) this.spaceSupplier.get();
+        final docdbSpace space = (docdbSpace) this.spaceSupplier.get();
         try {
             // Verify doesn't exist
             assertTrue(space.read(f("mongo:users/" + docId)).isNoObj(),
@@ -1017,7 +1017,7 @@ public class docSpaceTest extends AbstractSpaceTest implements CommonRewritesTes
             "multiWrite3 | 20"
     }, delimiter = '|')
     public void testMultipleWritesSameDocumentParameterized(final String docId, final int iterations) {
-        final docSpace space = (docSpace) this.spaceSupplier.get();
+        final docdbSpace space = (docdbSpace) this.spaceSupplier.get();
         try {
             // Write same document multiple times with different values
             for (int i = 0; i < iterations; i++) {
@@ -1077,7 +1077,7 @@ public class docSpaceTest extends AbstractSpaceTest implements CommonRewritesTes
                     .append("createdAt", new java.util.Date(timestamp)));
         }
 
-        final docSpace space = (docSpace) this.spaceSupplier.get();
+        final docdbSpace space = (docdbSpace) this.spaceSupplier.get();
         try {
             final Obj event = space.read(f("mongo:events/event1"));
             assertFalse(event.isNoObj(), "Event should exist");
@@ -1117,7 +1117,7 @@ public class docSpaceTest extends AbstractSpaceTest implements CommonRewritesTes
                     .append("timestamp", new java.util.Date(expectedMillis)));
         }
 
-        final docSpace space = (docSpace) this.spaceSupplier.get();
+        final docdbSpace space = (docdbSpace) this.spaceSupplier.get();
         try {
             final Obj event = space.read(f("mongo:events/" + eventId));
             final Rec eventRec = event.asRec();
@@ -1148,7 +1148,7 @@ public class docSpaceTest extends AbstractSpaceTest implements CommonRewritesTes
                     .append("completedAt", null));  // null date
         }
 
-        final docSpace space = (docSpace) this.spaceSupplier.get();
+        final docdbSpace space = (docdbSpace) this.spaceSupplier.get();
         try {
             final Obj task = space.read(f("mongo:tasks/task1"));
             final Rec taskRec = task.asRec();
@@ -1194,7 +1194,7 @@ public class docSpaceTest extends AbstractSpaceTest implements CommonRewritesTes
                     .append("description", "Event at " + milliseconds + " ms"));
         }
 
-        final docSpace space = (docSpace) this.spaceSupplier.get();
+        final docdbSpace space = (docdbSpace) this.spaceSupplier.get();
         try {
             final Obj event = space.read(f("mongo:events/" + eventId));
             final Rec eventRec = event.asRec();
@@ -1228,7 +1228,7 @@ public class docSpaceTest extends AbstractSpaceTest implements CommonRewritesTes
                             .append("carrier", "FedEx")));
         }
 
-        final docSpace space = (docSpace) this.spaceSupplier.get();
+        final docdbSpace space = (docdbSpace) this.spaceSupplier.get();
         try {
             final Obj order = space.read(f("mongo:orders/order1"));
             final Rec orderRec = order.asRec();
@@ -1267,7 +1267,7 @@ public class docSpaceTest extends AbstractSpaceTest implements CommonRewritesTes
                     .append("timestamp4", new java.util.Date(now + 3000)));
         }
 
-        final docSpace space = (docSpace) this.spaceSupplier.get();
+        final docdbSpace space = (docdbSpace) this.spaceSupplier.get();
         try {
             final Obj log = space.read(f("mongo:logs/log1"));
             final Rec logRec = log.asRec();
@@ -1303,7 +1303,7 @@ public class docSpaceTest extends AbstractSpaceTest implements CommonRewritesTes
             events.drop();
         }
 
-        final docSpace space = (docSpace) this.spaceSupplier.get();
+        final docdbSpace space = (docdbSpace) this.spaceSupplier.get();
         try {
             // Note: We write as int (milliseconds), MongoDB will store as int64
             final long timestamp = System.currentTimeMillis();
@@ -1352,7 +1352,7 @@ public class docSpaceTest extends AbstractSpaceTest implements CommonRewritesTes
                     .append("endTime", new java.util.Date(endTime)));
         }
 
-        final docSpace space = (docSpace) this.spaceSupplier.get();
+        final docdbSpace space = (docdbSpace) this.spaceSupplier.get();
         try {
             final Obj event = space.read(f("mongo:events/" + eventId));
             final Rec eventRec = event.asRec();
@@ -1398,7 +1398,7 @@ public class docSpaceTest extends AbstractSpaceTest implements CommonRewritesTes
                             .append("nestedString", "nested")));
         }
 
-        final docSpace space = (docSpace) this.spaceSupplier.get();
+        final docdbSpace space = (docdbSpace) this.spaceSupplier.get();
         try {
             final Obj doc = space.read(f("mongo:mixed/mixed1"));
             final Rec docRec = doc.asRec();
@@ -1431,7 +1431,7 @@ public class docSpaceTest extends AbstractSpaceTest implements CommonRewritesTes
             // Don't insert anything
         }
 
-        final docSpace space = (docSpace) this.spaceSupplier.get();
+        final docdbSpace space = (docdbSpace) this.spaceSupplier.get();
         try {
             final Obj result = space.read(f("mongo:emptyEvents/+"));
             // Should return noobj or empty results
@@ -1465,7 +1465,7 @@ public class docSpaceTest extends AbstractSpaceTest implements CommonRewritesTes
                     .append("timestamp", new java.util.Date(originalTime)));
         }
 
-        final docSpace space = (docSpace) this.spaceSupplier.get();
+        final docdbSpace space = (docdbSpace) this.spaceSupplier.get();
         try {
             // Verify original
             Obj event = space.read(f("mongo:events/" + eventId));
@@ -1509,7 +1509,7 @@ public class docSpaceTest extends AbstractSpaceTest implements CommonRewritesTes
             }
         }
 
-        final docSpace space = (docSpace) this.spaceSupplier.get();
+        final docdbSpace space = (docdbSpace) this.spaceSupplier.get();
         try {
             final Obj allEvents = space.read(f("mongo:allEvents/+"));
             assertFalse(allEvents.isNoObj(), "Should return results");
@@ -1575,14 +1575,14 @@ public class docSpaceTest extends AbstractSpaceTest implements CommonRewritesTes
                     .append("text", "Great post!")
                     .append("postId", new org.bson.types.ObjectId("507f1f77bcf86cd799439021")));
 
-            LOG.info("[docSpaceTest] test data with references setup complete");
+            LOG.info("[docdbSpaceTest] test data with references setup complete");
         }
     }
 
     @Test
     public void testObjectIdReferenceDetection() {
         setupTestDataWithReferences();
-        final docSpace space = (docSpace) this.spaceSupplier.get();
+        final docdbSpace space = (docdbSpace) this.spaceSupplier.get();
         try {
             // Read a post with authorId reference
             final Obj post = space.read(f("mongo:posts/507f1f77bcf86cd799439021"));
@@ -1606,7 +1606,7 @@ public class docSpaceTest extends AbstractSpaceTest implements CommonRewritesTes
     @Test
     public void testLazyReferenceResolution() {
         setupTestDataWithReferences();
-        final docSpace space = (docSpace) this.spaceSupplier.get();
+        final docdbSpace space = (docdbSpace) this.spaceSupplier.get();
         try {
             // Read a post with authorId reference
             final Obj post = space.read(f("mongo:posts/507f1f77bcf86cd799439021"));
@@ -1634,7 +1634,7 @@ public class docSpaceTest extends AbstractSpaceTest implements CommonRewritesTes
     @Test
     public void testObjectIdReferenceInComments() {
         setupTestDataWithReferences();
-        final docSpace space = (docSpace) this.spaceSupplier.get();
+        final docdbSpace space = (docdbSpace) this.spaceSupplier.get();
         try {
             // Read a comment with postId reference
             final Obj comment = space.read(f("mongo:comments/507f1f77bcf86cd799439031"));
@@ -1657,7 +1657,7 @@ public class docSpaceTest extends AbstractSpaceTest implements CommonRewritesTes
     @Test
     public void testCommentPostReferenceLazyResolution() {
         setupTestDataWithReferences();
-        final docSpace space = (docSpace) this.spaceSupplier.get();
+        final docdbSpace space = (docdbSpace) this.spaceSupplier.get();
         try {
             // Read a comment with postId reference
             final Obj comment = space.read(f("mongo:comments/507f1f77bcf86cd799439031"));
@@ -1685,7 +1685,7 @@ public class docSpaceTest extends AbstractSpaceTest implements CommonRewritesTes
     @Test
     public void testNoInfiniteRecursionWithReferences() {
         setupTestDataWithReferences();
-        final docSpace space = (docSpace) this.spaceSupplier.get();
+        final docdbSpace space = (docdbSpace) this.spaceSupplier.get();
         try {
             // Read a post - should not cause infinite recursion
             final Obj post = space.read(f("mongo:posts/507f1f77bcf86cd799439021"));
@@ -1714,7 +1714,7 @@ public class docSpaceTest extends AbstractSpaceTest implements CommonRewritesTes
     public void testMultipleReferencesParameterized(final String postId, final String expectedTitle,
                                                     final String expectedAuthorName) {
         setupTestDataWithReferences();
-        final docSpace space = (docSpace) this.spaceSupplier.get();
+        final docdbSpace space = (docdbSpace) this.spaceSupplier.get();
         try {
             // Read post
             final Obj post = space.read(f("mongo:posts/" + postId));

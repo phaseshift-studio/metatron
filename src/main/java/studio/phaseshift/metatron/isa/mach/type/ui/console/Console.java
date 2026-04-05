@@ -610,7 +610,7 @@ public class Console extends JRec implements Closeable, Runnable {
     protected void executeSql(final String line) {
         try {
             // TODO: Implement SQL execution
-            // The result should be converted to Metatron objects (similar to tbleSpace.sql())
+            // The result should be converted to Metatron objects (similar to tabledbSpace.sql())
             LOG.warn("SQL execution not yet implemented");
             this.printResult(fail(new UnsupportedOperationException("SQL mode not yet implemented")));
         } catch (final Exception e) {

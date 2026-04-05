@@ -19,8 +19,8 @@ Instead of writing database-specific SQL or MongoDB setup code, we use **Metatro
 // This single line of Metatron code works for BOTH SQL and MongoDB:
 /tble/rewrite_test/1 -> [id:1, value:1, name:'item1', weight:1.5]
 
-// For SQL: tbleSpace.write() converts it to: INSERT INTO rewrite_test ...
-// For MongoDB: docSpace.write() converts it to: db.collection.insertOne(...)
+// For SQL: tabledbSpace.write() converts it to: INSERT INTO rewrite_test ...
+// For MongoDB: docdbSpace.write() converts it to: db.collection.insertOne(...)
 ```
 
 ## Implementation Steps

@@ -254,49 +254,38 @@ public final class QCollection {
     /// //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     private static void internalDocWrap(final Obj obj, final String domDesc, final String rngDesc, final Map<Obj, String> argDescription, final String description, final String... examples) {
+        final fURI objID = obj.isInst() ? obj.tid() : obj.vid();
+        if(null == objID) {
+            obj.logger().warn("unable to generate docs for a vid-less obj: %s", obj);
+            return;
+        }
         final Doc doc = Doc.doc(obj, domDesc, rngDesc, argDescription, description, examples);
-        final Space instSpace = Router.global().getSpace(obj.tid());
-        final Optional<Q> docq = instSpace.qs().jvm().stream().filter(q -> q.tid().basePath().equals(DOCQ_TID)).map(Obj::<Q>as).findAny();
+        final Space objSpace = Router.global().getSpace(objID);
+        final Optional<Q> docq = objSpace.qs().jvm().stream().filter(q -> q.tid().basePath().equals(DOCQ_TID)).map(Obj::<Q>as).findAny();
         if (docq.isEmpty())
-            instSpace.logger().warn("no doc query attachment mounted on %s for %s", instSpace, obj.tid());
+            objSpace.logger().warn("no doc query attachment mounted on %s for %s", objSpace, objID);
         else
-            docq.get().at(OBJ).<Space>as().write(obj.tid(), doc);
-  
+            docq.get().at(OBJ).<Space>as().write(objID, doc);
+
     }
-    
+
     public static Inst docWrap(final Inst inst, final String domDesc, final String rngDesc, final Map<Obj, String> argDescription, final String description, final String... examples) {
         internalDocWrap(inst, domDesc, rngDesc, argDescription, description, examples);
         return inst;
     }
 
-    public static <OBJ extends Obj> OBJ docWrap(final OBJ obj, final String description) {
-         internalDocWrap(obj, null, null, null, description);
-         return obj;
+    public static <OBJ extends Obj> OBJ docWrap(final OBJ obj, final String description, final String... examples) {
+        internalDocWrap(obj, null, null, null, description, examples);
+        return obj;
     }
 
-    public static Type docWrap(final Type type, final String predicate, final String constructor, final Map<Obj, String> predicateDescription, final String description) {
-        if (null != type.vid()) {
-            final Doc doc = Doc.doc(type, predicate, constructor, predicateDescription, description);
-            final Space instSpace = Router.global().getSpace(type.vid());
-            final Optional<Q> docq = instSpace.qs().jvm().stream().filter(q -> q.tid().basePath().equals(DOCQ_TID)).map(Obj::<Q>as).findAny();
-            if (docq.isEmpty())
-                instSpace.logger().warn("no doc query attachment mounted on %s for %s", instSpace, type.tid());
-            else
-                docq.get().at(OBJ).<Space>as().write(type.vid(), doc);
-        } else {
-            Router.global().logger().warn("unable to document a vid-less type: %s", type);
-        }
+    public static Type docWrap(final Type type, final String predicate, final String constructor, final Map<Obj, String> predicateDescription, final String description, final String... examples) {
+        internalDocWrap(type, predicate, constructor, predicateDescription, description, examples);
         return type;
     }
 
     public static InstSet docWrap(final InstSet instSet, final String description, final String... examples) {
-        final Doc doc = Doc.doc(instSet.<InstSet>as(), null, null, null, description, examples);
-        final Space instSpace = Router.global().getSpace(instSet.vid());
-        final Optional<Q> docq = instSpace.qs().jvm().stream().filter(q -> q.tid().basePath().equals(DOCQ_TID)).map(Obj::<Q>as).findAny();
-        if (docq.isEmpty())
-            instSpace.logger().warn("no doc query attachment mounted on %s for %s", instSpace, instSet.tid());
-        else
-            docq.get().at(OBJ).<Space>as().write(instSet.vid(), doc);
+        internalDocWrap(instSet, null, null, null, description, examples);
         return instSet;
     }
 

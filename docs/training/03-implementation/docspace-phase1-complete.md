@@ -81,7 +81,7 @@ public static final String COLLECTION = "collection";
 
 **META-INF/services/studio.phaseshift.metatron.isa.m.type.InstSet**:
 ```
-studio.phaseshift.metatron.isa.doc.docInstSet
+studio.phaseshift.metatron.isa.doc.dcmntInstSet
 ```
 
 ## Configuration Example
