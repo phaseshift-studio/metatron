@@ -22,6 +22,7 @@ import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.impl.MStr;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -49,7 +50,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 public interface Str extends Mono, PlusMonoid.O<Str> {
-
+    Pattern STR_TEMPLATE_PATTERN = Pattern.compile("\\$\\{([^}]+)}");
     Type STR_TYPE = Type.Builder.build().tid(STR_TID).vid(STR_TID).create();
     Str ZERO = str("");
 
@@ -71,9 +72,6 @@ public interface Str extends Mono, PlusMonoid.O<Str> {
         return this.clone(this.jvm(), this.tid(), vid);
     }
 
-    // Pattern for matching ${...} template expressions
-    Pattern TEMPLATE_PATTERN = Pattern.compile("\\$\\{([^}]+)}");
-
     /**
      * Apply template expansion if this string contains ${...} patterns.
      * Each ${expr} is parsed, the lhs is applied to the expr, and the result's
@@ -81,37 +79,19 @@ public interface Str extends Mono, PlusMonoid.O<Str> {
      */
     @Override
     default Obj apply(final Obj lhs) {
-        final String value = this.strValue();
-        if (!value.contains("${")) {
-            return this;  // No templates, return this unchanged (default Obj behavior)
-        }
-
-        // Expand all ${...} templates
-        final Matcher matcher = TEMPLATE_PATTERN.matcher(value);
+        if (!this.jvm().contains("${"))
+            return this;
+        final Matcher matcher = STR_TEMPLATE_PATTERN.matcher(this.strValue());
         final StringBuilder result = new StringBuilder();
         while (matcher.find()) {
             final String exprStr = matcher.group(1);
             try {
-                // Parse the expression and apply lhs to it
-                final Obj expr = mParser.parse(exprStr);
-                Obj evaluated;
-                if (expr.isInst()) {
-                    // For instructions like plus(10) or mult(2), apply instruction to lhs
-                    evaluated = expr.apply(lhs);
-                } else if (expr.isUri() && lhs.isRec()) {
-                    // For Uri expressions like 'user', do key lookup in the record
-                    evaluated = lhs.asRec().at(expr);
-                } else {
-                    // Default: apply lhs to expr
-                    evaluated = lhs.apply(expr);
-                }
-                // Get string value - use toString() which works for all types
-                final String strVal = evaluated.toString();
-                // Replace with toString of result
+                final String strVal = mParser.parse(exprStr).apply(lhs).toString();
                 matcher.appendReplacement(result, Matcher.quoteReplacement(strVal));
             } catch (Exception e) {
-                // On error, leave template unchanged
-                matcher.appendReplacement(result, Matcher.quoteReplacement(matcher.group(0)));
+               throw MTronException.of("failed to expand template ${%s}: %s", exprStr, e.getMessage());
+                /// // On error, leave template unchanged
+               /// matcher.appendReplacement(result, Matcher.quoteReplacement(matcher.group(0)));
             }
         }
         matcher.appendTail(result);

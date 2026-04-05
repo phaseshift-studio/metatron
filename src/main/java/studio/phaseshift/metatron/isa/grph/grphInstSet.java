@@ -155,13 +155,8 @@ public class grphInstSet extends AbstractInstSet {
                                 .vid(EDGE_TID)
                                 .isaPredicate(rec(IN, T(VRTX_TID), OUT, T(VRTX_TID)))
                                 .create(), "an directed key/value attributed binary edge"),
-                        GRAPH_SPACE_TYPE,
-                        MODERN_SCHEMA_TYPE,
-                        docWrap(Type.Builder.build()
-                                        .tid(SPACE_TID)
-                                        .vid(GRAPH_SPACE_TID)
-                                        .create(),
-                                "a graph space", "the graph space", Map.of(), "a space for graph traversal")
+                        docWrap(GRAPH_SPACE_TYPE, "a space for graph traversal"),
+                        docWrap(MODERN_SCHEMA_TYPE, "a schema for the modern graph dataset")
                 ),
                 uri(INST), lst(
                         docWrap(instC(grphInstSet.GREMLIN_INST_TID.dom(GRAPH_SPACE_TID).rng(ALL.maybeSome()), lst(STR_TYPE), (lhs, inst) -> {
@@ -187,10 +182,10 @@ public class grphInstSet extends AbstractInstSet {
                                 "an edge", "the outgoing vertex", Map.of(), "returns the lhs edge tail vertex"),
                         docWrap(instC(BOTHV_INST_TID.dom(EDGE_TID).rng(VRTX_TID), lst(), (lhs, inst) -> objs(Stream.concat(lhs.asRec().at(IN).stream(), lhs.asRec().at(OUT).stream()))),
                                 "an edge", "both vertices", Map.of(), "returns the lhs edge's head and tail vertices"),
-                        docWrap(instC(GRPH_INST_TID.extend("graph").dom(ALL.maybe()).rng(GRAPH_SPACE_TID),
+                    /*    docWrap(instC(GRPH_INST_TID.extend("graph").dom(ALL.maybe()).rng(GRAPH_SPACE_TID),
                                         lst(GRAPH_CONFIG),
                                         (lhs, inst) -> graphSpace.of(inst.arg(0).asRec(), lhs.vid())),
-                                "a graph space", "the graph space", Map.of(jnt(0), "the graph configuration"), "a space for graph traversal"),
+                                "a graph space", "the graph space", Map.of(jnt(0), "the graph configuration"), "a space for graph traversal"),*/
                         docWrap(instC(OUT_INST_TID.dom(VRTX_TID).rng(VRTX_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_V_FUNCTION(Direction.OUT)),
                                 "a vertex", "out adjacent vertices", Map.of(jnt(0), "zero or more edge labels"), "returns the lhs vertex arg-adjacent outgoing vertices"),
                         docWrap(instC(IN_INST_TID.dom(VRTX_TID).rng(VRTX_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_V_FUNCTION(Direction.IN)),

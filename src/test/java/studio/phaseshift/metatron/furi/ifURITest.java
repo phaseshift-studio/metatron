@@ -25,6 +25,8 @@ import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Lst;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.*;
@@ -34,6 +36,7 @@ import static studio.phaseshift.metatron.Tokens.DOM;
 import static studio.phaseshift.metatron.Tokens.RNG;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.parseQuery;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 
 /*
@@ -45,15 +48,16 @@ public class ifURITest extends AbstractMetatronTest {
         if (furi == null)
             return f(furi);
         final fURI f = f(furi);
-        final String f2 = f.toString();
-        //if(f.c().isOne())
-        //    assertEquals(f2, furi);
-        //final fURI f3 = f(f2);
-        // assertEquals(f, f3);
-        //   final fURI f4 = mParser.m_furi().parse(furi).get();
-        //   assertEquals(f, f4);
-        // if(f3.c().isOne())
-        //assertEquals(f3.toString(), furi);
+        /*final String f2 = f.toString();
+        if (f.c().isOne())
+            assertTrue(f.equals(f(f2)));
+        //      assertEquals(f2.startsWith("<") ? f2.substring(1, f2.length() - 1) : f2, furi.startsWith("<") ? furi.substring(1, furi.length() - 1) : furi);
+        final fURI f3 = f(f2);
+        assertEquals(f, f3);
+        final fURI f4 = mParser.m_furi().parse(furi).get();
+        assertEquals(f, f4);
+        if (f3.c().isOne())
+            assertTrue(f3.equals(f4));*/
         return f;
     }
 
@@ -129,41 +133,23 @@ public class ifURITest extends AbstractMetatronTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            // No templates - static URIs (baseline - should work now)
-            "<http://fhatos.org/a>                              | []                    | []",
-            "</api/v1/users>                                    | []                    | []",
-            "<ftp://files.org:21/docs>                          | []                    | []",
-
-            // TODO: Template support requires updating both FURI_PATTERN regex and mParser.m_furi()
-            // Commenting out until parsers support ${...} syntax
-
-            // PORT templates
-            "<http://fhatos.org:${port}/a/b>                    | [port]                | [PORT]",
-            "<http://api.com:${+80}>                            | [+80]                 | [PORT]",
-
-            // PATH templates
-            "<http://example.com/${user}/profile>               | [user]                | [PATH]",
-            "</api/${version}/users>                            | [version]             | [PATH]",
-            "</data/${id}/${type}>                              | [id,type]             | [PATH,PATH]",
-
-            // SCHEME templates
-            "<${proto}://example.com/data>                      | [proto]               | [SCHEME]",
-
-            // HOST templates
-            "<http://${domain}/api>                             | [domain]              | [HOST]",
-
-            // QUERY templates
-            "<http://search.com?${query}>                       | [query]               | [QUERY]",
-            "<http://api.com/data?${params}>                    | [params]              | [QUERY]",
-
-            // Multiple templates across components
+            "<http://fhatos.org/a>                              | []                      | []",
+            "</api/v1/users>                                    | []                      | []",
+            "<ftp://files.org:21/docs>                          | []                      | []",
+            "<http://fhatos.org:${port}/a/b>                    | [port]                  | [PORT]",
+            "<http://api.com:${+80}>                            | [+80]                   | [PORT]",
+            "<http://example.com/${user}/profile>               | [user]                  | [PATH]",
+            "</api/${version}/users>                            | [version]               | [PATH]",
+            "</data/${id}/${type}>                              | [id,type]               | [PATH,PATH]",
+            "<${proto}://example.com/data>                      | [proto]                 | [SCHEME]",
+            "<http://${domain}/api>                             | [domain]                | [HOST]",
+            "<http://search.com?${query}>                       | [query]                 | [QUERY]",
+            "<http://api.com/data?${params}>                    | [params]                | [QUERY]",
             "<${scheme}://${host}:${port}/${path}>              | [scheme,host,port,path] | [SCHEME,HOST,PORT,PATH]",
-            "<http://api.com:${port}/${version}/users?${q}>     | [port,version,q]      | [PORT,PATH,QUERY]",
-
-            // Complex expressions in templates
-            "<http://example.com:${+10}>                        | [+10]                 | [PORT]",
-            "<http://api.com/${*2}/data>                        | [*2]                  | [PATH]",
-            "<http://search.com?${[a=>b,c=>d]}>                 | [[a=>b,c=>d]]         | [QUERY]",
+            "<http://api.com:${port}/${version}/users?${q}>     | [port,version,q]        | [PORT,PATH,QUERY]",
+            "<http://example.com:${+10}>                        | [+10]                   | [PORT]",
+            "<http://api.com/${*2}/data>                        | [*2]                    | [PATH]",
+            "<http://search.com?${[a=>b,c=>d]}>                 | [[a=>b,c=>d]]           | [QUERY]",
     }, delimiter = '|')
     public void testTemplates(final String furi, final String expectedTemplates, final String expectedComponents) {
         final fURI start = idem(furi);
@@ -213,34 +199,26 @@ public class ifURITest extends AbstractMetatronTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            // PORT template expansion - lhs >> port extracts value from record
-            "<http://example.com:${>>port}/api>       | [port=>8080]           | http://example.com:8080/api",
-            // PATH template expansion using >> to extract from record
-            "<http://example.com/${>>user}/profile>   | [user=>john]           | http://example.com/john/profile",
-            "</api/${>>version}/users>                | [version=>v2]          | /api/v2/users",
-            // Multiple PATH templates
-            "</data/${>>id}/${>>type}>                  | [id=>123,type=>json]   | /data/123/json",
-            // QUERY template expansion
-            "<http://api.com/search?${>>query}>       | [query=>[q=>test]]     | http://api.com/search?q=test",
-            // Mixed templates (PORT + PATH)
-            "<http://api.com:${>>port}/${>>version}>    | [port=>9000,version=>v1] | http://api.com:9000/v1",
+            "<http://example.com:${>>port}/api>                   | [port=>8080]                              | http://example.com:8080/api",
+            "<http://example.com/${>>user}/profile>               | [user=>john]                              | http://example.com/john/profile",
+            "</api/${>>version}/users>                            | [version=>v2]                             | /api/v2/users",
+            "</data/${>>id}/${>>type}>                            | [id=>123,type=>json]                      | /data/123/json",
+            "<http://api.com/search?${>>query}>                   | [query=>[q=>test]]                        | http://api.com/search?q=test",
+            "<http://api.com/search?${>>query>>q>>}>              | [query=>[q=>test]]                        | http://api.com/search?test",
+            "<http://api.com:${>>port}${>>version}>               | [port=>9000,version=>v1]                  | http://api.com:9000/v1",
+            "<http://api.com:${>>port}${>>version}/${>>path}>     | [port=>9000,version=>v1,path=>[a,b,c]]    | http://api.com:9000/v1/a/b/c",
+            "<http://api.com/${plus([d])}>                        | [a,b,c]                                   | http://api.com/a/b/c/d",
+            "<http://api.com/${within(>-.mult(x))}>               | [a,b,c]                                   | http://api.com/a/x/b/x/c/x",
+            "<${>>1}://api.com/${within(>-.mult(x))}>             | [a,b,c]                                   | b://api.com/a/x/b/x/c/x",
     }, delimiter = '|')
     public void testUriTemplateExpansion(final String templateUri, final String lhsRec, final String expectedUri) {
-        // Parse the template URI
         final fURI template = idem(templateUri);
-        final studio.phaseshift.metatron.isa.m.type.Uri uri = studio.phaseshift.metatron.isa.m.type.impl.MUri.uri(template);
-
-        // Parse the LHS record [key=>value, ...]
-        final studio.phaseshift.metatron.isa.m.type.Obj lhs =
-                studio.phaseshift.metatron.isa.m.parser.mParser.m_obj().parse(lhsRec).get();
-
-        // Apply template expansion
-        final studio.phaseshift.metatron.isa.m.type.Obj result = uri.apply(lhs);
-
-        // Verify result
-        assertTrue(result.isUri(), "Result should be a Uri");
-        assertEquals(expectedUri, result.uriValue().toString(),
-                String.format("Template expansion mismatch for %s with %s", templateUri, lhsRec));
+        final Uri uri = uri(template);
+        final Obj lhs = mParser.m_obj().parse(lhsRec).get();
+        final Obj result = uri.apply(lhs);
+        assertTrue(result.isUri(), "result should be a uri");
+        assertEquals(f(expectedUri), f(result.uriValue().toString()));
+        assertEquals(expectedUri, result.uriValue().toString(), String.format("template expansion mismatch for %s with %s", templateUri, lhsRec));
         LOG.debug("testing {} with {} = {}", templateUri, lhsRec, result.uriValue());
     }
 

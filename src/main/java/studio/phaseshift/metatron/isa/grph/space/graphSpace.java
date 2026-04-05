@@ -74,7 +74,7 @@
      
      public static final String GRAPH_CONFIGURATION_KEY = "mtron.grph.vid";
      public static final ObjSerializer<String> SERIALIZER = new ObjCleanStringSerializer();
-     public static final Rec GRAPH_CONFIG = rec(uri(GRAPH), URI_TYPE);
+     public static final Rec GRAPH_CONFIG = rec(uri(GRAPH).maybe().asUri(), URI_TYPE);
 
      protected static ObjFactory FACTORY = null;
      private static final fURI V_SOME = f("V/+");

@@ -246,7 +246,8 @@ bin/metatron</code></pre>
                                <pre><code>/m/grph::[
  pattern=>/m/grph/#,
  space  =>[
-   super=>!*/m],
+   super=>!*/m,
+   sub  =>!*g:#/S/modern],
  q      =>[
    docq::[
        pre_read =>inst?rng=#{*}&dom=#{?}(uri::T){<j>},
@@ -260,9 +261,8 @@ bin/metatron</code></pre>
      {?}IN =>[uri::T=>edge{*}::T],
      {?}OUT=>[uri::T=>edge{*}::T]]]@/m/grph/vrtx,
    elmt::T[?[IN=>vrtx::T,OUT=>vrtx::T]]@/m/grph/edge,
-   space::T[][inst?rng=graph&dom=#{?}(isa([graph=>uri::T]).else(failure('malformed tp3 config'))){<j>}]@/m/grph/space/graph,
-   modern::T,
-   space::T@/m/grph/space/graph],
+   space::T[][inst?rng=graph&dom=#{?}(isa([{?}graph=>uri::T]).else(failure('malformed tp3 config'))){<j>}]@/m/grph/space/graph,
+   modern::T],
  inst   =>[
    gremlin?rng=#{*}&dom=graph(str::T){<j>},
    label?rng=uri&dom=elmt(){<j>},
@@ -270,7 +270,6 @@ bin/metatron</code></pre>
    inV?rng=vrtx&dom=edge(){<j>},
    outV?rng=vrtx&dom=edge(){<j>},
    bothV?rng=vrtx&dom=edge(){<j>},
-   graph?rng=graph&dom=#{?}([graph=>uri::T]){<j>},
    out?rng=vrtx{*}&dom=vrtx(uri{*}::T){<j>},
    in?rng=vrtx{*}&dom=vrtx(uri{*}::T){<j>},
    both?rng=vrtx{*}&dom=vrtx(uri{*}::T){<j>},
@@ -288,7 +287,7 @@ bin/metatron</code></pre>
             <div class="d-flex justify-content-center gap-2 flex-wrap">
                 <button class="btn btn-outline-secondary" disabled>Consts <span class="badge bg-dark">0</span></button>
                 <a href="#types" class="btn btn-outline-primary">Types <span class="badge bg-secondary">3</span></a>
-                <a href="#instructions" class="btn btn-outline-primary">Insts <span class="badge bg-secondary">14</span></a>
+                <a href="#instructions" class="btn btn-outline-primary">Insts <span class="badge bg-secondary">13</span></a>
                 <a href="#spaces" class="btn btn-outline-primary">Spaces <span class="badge bg-secondary">1</span></a>
                 <button class="btn btn-outline-secondary" disabled>Rewrites <span class="badge bg-dark">0</span></button>
             </div>
@@ -340,10 +339,6 @@ bin/metatron</code></pre>
                 </a>
                 <a href="#inst-bothV" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">bothV</span>
-                    <span class="badge bg-success">I</span>
-                </a>
-                <a href="#inst-graph" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
-                    <span class="code">graph</span>
                     <span class="badge bg-success">I</span>
                 </a>
                 <a href="#inst-gremlin" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
@@ -472,7 +467,7 @@ bin/metatron</code></pre>
             
         <div class="container-xxl mb-4" id="instructions">
             <h3 class="text-primary mb-3">
-                Instructions <span class="badge bg-success">14</span>
+                Instructions <span class="badge bg-success">13</span>
             </h3>
             
                 <div class="card mb-3" id="inst-addE">
@@ -545,26 +540,6 @@ bin/metatron</code></pre>
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"an edge" <span class="text-light">=&gt;</span> "both vertices"</pre>
-                    </div>
-                </div>
-                <div class="card mb-3" id="inst-graph">
-                    <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span>
-                            <span class="code text-primary fw-bold">graph</span>
-                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#{?}.html#type-#{" class="code text-info">#{?}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m_grph_space.html#type-graph" class="code text-success">/m/grph/space/graph</a></span></span>
-                        </span>
-                        <small class="text-muted code">/m/grph/inst/graph?/m/grph/space/graph&lt;=#{?}</small>
-                    </div>
-                    <div class="card-body p-2">
-                        <pre class="mb-1"><code class="language-mtron">graph?graph&lt;=#{?}([graph=&gt;uri::T]){&lt;j&gt;}</code></pre>
-                    </div>
-                    
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">a space for graph traversal</p>
-                    </div>
-                    <div class="card-body py-2">
-                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"a graph space" <span class="text-light">=&gt;</span> "the graph space"
-   [0 <span class="text-light">=&gt;</span> "the graph configuration"]</pre>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-gremlin">
@@ -757,7 +732,7 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="mt-2">
-                        <pre class="mb-0"><code class="language-mtron">space::T@/m/grph/space/graph</code></pre>
+                        <pre class="mb-0"><code class="language-mtron">space::T[][inst?rng=graph&amp;dom=#{?}(isa([{?}graph=&gt;uri::T]).else(failure(&#x27;malformed tp3 config&#x27;))){&lt;j&gt;}]@/m/grph/space/graph</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -771,7 +746,7 @@ bin/metatron</code></pre>
         <div class="container-xxl py-3 text-center">
             <hr class="border-secondary">
             <small class="text-muted">
-                generated by metatron instset doc generator on build 0-2026-04-04 15:47:04<br>
+                generated by metatron instset doc generator on build 0-2026-04-04 19:06:53<br>
                 © PhaseShift Studio, LLC
             </small>
         </div>

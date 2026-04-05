@@ -159,15 +159,16 @@ public class BootLoader implements Rec, Feature.SelfClone {
             final fURI SYS_VID = f("/sys");
             final Space sysSpace = memSpace.of(SYS_VID.extend("#"), null);
             sysSpace.jvm().put(uri(QSTRING), lst(QCollection.docQ(), QCollection.subq(), QCollection.incrQ()));
+            /// CREATE A ROUTER AND ATTACH IT TO SYS
+            ROUTER = new BasicRouter(localAuthority, SYS_VID.extend("router"));
+            sysSpace.write(ROUTER.vid(), ROUTER);
+            Router.global().addSpace(sysSpace.self(sysSpace.jvm(), sysSpace.tid(), SYS_VID).as());
+            LOG.warn("router location: %s",ROUTER.vid());
             ///  LOAD SYSTEM ENVIRONMENTAL VARIABLES
             System.getenv().entrySet().stream()
                     .map(kv -> new AbstractMap.SimpleEntry<>(SYS_VID.extend("env").extend(kv.getKey()), str(kv.getValue())))
                     .sorted(Map.Entry.comparingByKey(Comparator.comparing(fURI::name)))
                     .forEach(kv -> sysSpace.write(kv.getKey(), kv.getValue()));
-            /// CREATE A ROUTER AND ATTACH IT TO SYS
-            ROUTER = new BasicRouter(localAuthority, SYS_VID.extend("router"));
-            sysSpace.write(ROUTER.vid(), ROUTER);
-            Router.global().addSpace(sysSpace.self(sysSpace.jvm(), sysSpace.tid(), SYS_VID).as());
             /// LOAD DEFAULT INSTRUCTION SET (/m and /m/mach)
             final InstSet m = new mInstSet();
             Router.writeToSpace(m);

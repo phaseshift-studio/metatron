@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.isa.m.type.impl.MUri;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.*;
 import java.util.regex.Pattern;
@@ -124,32 +125,18 @@ public interface Uri extends Mono, Ring.O<Uri> {
         return Mono.super.test(obj);
     }
 
-    /**
-     * Check if this Uri has template expressions that need evaluation.
-     */
     default boolean hasTemplates() {
         return this.uriValue().hasTemplates();
     }
 
-    /**
-     * Get the parsed template Obj expressions (memoized).
-     * Each template ${expr} is parsed to an Obj on first call and cached.
-     * Default implementation returns empty list - override in MUri for actual memoization.
-     *
-     * @return List of (Component, Obj) pairs for each template
-     */
     default List<studio.phaseshift.metatron.util.Tuple.Pair<fURI.Component, Obj>> parsedTemplates() {
         return List.of();
     }
 
     @Override
     default Obj apply(final Obj lhs) {
-        // URI Template expansion via apply() using ${expr} syntax
-        // Templates are evaluated as: lhs.apply(parsedExpr)
         if (!this.hasTemplates())
             return Mono.super.apply(lhs);
-
-        // Expand template: ${expr} → lhs.apply(parse(expr)) with context-aware coercion
         return uri(expandTemplate(this, lhs));
     }
 
@@ -162,15 +149,12 @@ public interface Uri extends Mono, Ring.O<Uri> {
      */
     static fURI expandTemplate(final Uri templateUri, final Obj lhs) {
         final fURI template = templateUri.uriValue();
-        final List<studio.phaseshift.metatron.util.Tuple.Pair<fURI.Component, Obj>> parsedTemplates = templateUri.parsedTemplates();
+        final List<Tuple.Pair<fURI.Component, Obj>> parsedTemplates = templateUri.parsedTemplates();
 
         if (parsedTemplates.isEmpty())
             return template;
 
-        // Get raw template strings for reconstruction
-        final List<studio.phaseshift.metatron.util.Tuple.Pair<fURI.Component, String>> rawTemplates = template.templates();
-
-        // Build copies of URI components that we'll modify
+        final List<Tuple.Pair<fURI.Component, String>> rawTemplates = template.templates();
         String scheme = template.scheme();
         String host = template.host();
         // For port: if there's a PORT template, the raw port was ${expr}, not -1
@@ -184,47 +168,25 @@ public interface Uri extends Mono, Ring.O<Uri> {
         if (portStr == null && template.port() != -1) {
             portStr = String.valueOf(template.port());
         }
-
-        List<String> path = new ArrayList<>(template.path());
+        List<String> path = new ArrayList<>(templateUri.uriValue().path());
         Map<String, String> query = new LinkedHashMap<>(template.qMap());
-
-        // Process each parsed template expression
         for (int i = 0; i < parsedTemplates.size(); i++) {
-            final studio.phaseshift.metatron.util.Tuple.Pair<fURI.Component, Obj> parsed = parsedTemplates.get(i);
+            final Tuple.Pair<fURI.Component, Obj> parsed = parsedTemplates.get(i);
             final fURI.Component component = parsed.get0();
             final Obj expr = parsed.get1();
             final String exprStr = rawTemplates.get(i).get1();
-
             try {
-                // Evaluate the template expression against LHS
-                final Obj result;
-                if (expr.isInst()) {
-                    // For instructions like +10 or mult(2), apply the instruction to lhs
-                    result = expr.apply(lhs);
-                } else if (expr.isUri() && lhs.isRec()) {
-                    // For Uri expressions like 'user', do key lookup in the record
-                    result = lhs.asRec().at(expr);
-                } else if (expr.isRec() || expr.isLst() || expr.isStr() || expr.isInt() || expr.isReal() || expr.isBool()) {
-                    // For constant values (records, lists, primitives), use the expression itself
-                    result = expr;
-                } else {
-                    // Default: lhs.apply(expr)
-                    result = lhs.apply(expr);
-                }
-
-                // Context-aware coercion based on component type
+                final Obj result = expr.apply(lhs);
                 final String replacement = coerceByComponent(result, component);
-
-                // Replace template in appropriate component
                 final String templatePlaceholder = "${" + exprStr + "}";
                 switch (component) {
-                    case SCHEME -> scheme = scheme != null ? scheme.replace(templatePlaceholder, replacement) : replacement;
+                    case SCHEME ->
+                            scheme = scheme != null ? scheme.replace(templatePlaceholder, replacement) : replacement;
                     case HOST -> host = host != null ? host.replace(templatePlaceholder, replacement) : replacement;
-                    case PORT -> portStr = portStr != null ? portStr.replace(templatePlaceholder, replacement) : replacement;
+                    case PORT ->
+                            portStr = portStr != null ? portStr.replace(templatePlaceholder, replacement) : replacement;
                     case PATH -> {
-                        for (int j = 0; j < path.size(); j++) {
-                            path.set(j, path.get(j).replace(templatePlaceholder, replacement));
-                        }
+                        path.replaceAll(s -> s.replace(templatePlaceholder, replacement));
                     }
                     case QUERY -> {
                         Map<String, String> newQuery = new LinkedHashMap<>();
@@ -290,9 +252,20 @@ public interface Uri extends Mono, Ring.O<Uri> {
                 }
                 yield objToString(result);
             }
-            case PATH, SCHEME, HOST, AUTHORITY -> {
+            case PATH -> {
+                if (result.isLst()) {
+                    result.logger().warn("coercing Lst to PATH: {}", result);
+                    yield result.lstValue().stream().map(Uri::objToString).collect(Collectors.joining("/"));
+                } else
+                    yield objToString(result);
+            }
+            case SCHEME, HOST, AUTHORITY -> {
                 // Simple toString for these components
-                yield objToString(result);
+                if (result.isLst()) {
+                    final String x = result.lstValue().stream().map(Uri::objToString).collect(Collectors.joining("/"));
+                    yield x;
+                } else
+                    yield objToString(result);
             }
             case COEFFICIENT, POLY -> {
                 // These are unlikely but handle gracefully

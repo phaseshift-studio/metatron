@@ -50,11 +50,11 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
         pattern  => http://#,
         route    => [/     => examples/www,
                      /docs => target/docs ]]@/sys/space/www;
-  tp3::[pattern  => /h/#,
+  graph::[pattern  => /h/#,
         route    => [</h/+/>=><>],
         native   => [factory  => mfactory::[=>],
                      load     => grateful]]@/sys/space/grateful;                    
-  tp3::[pattern  => g:#,
+  graph::[pattern  => g:#,
         route    => [<g:V>=><V>,
                      <g:E>=><E>,
                      <g:S>=>/m/grph/inst/schema/modern],

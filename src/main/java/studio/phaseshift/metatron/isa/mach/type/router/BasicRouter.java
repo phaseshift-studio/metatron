@@ -248,6 +248,8 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
     public Obj read(final fURI vid) {
         if (null == vid || NOOBJ.equals(vid.basePath()) || vid.isZero() || READ_AS_NOOBJ.contains(vid))
             return noobj();
+        if(vid.equals(this.vid()))
+            return this;
         // if (vid.hasAuthority())
         //   return this.server().sendRecv((a, b) -> a.authority().matches(b.remoteHost().authority()), vid, from_(vid.localize().toUri()).tryToInst());
         final fURI readableVID = this.alignPrefix(vid);

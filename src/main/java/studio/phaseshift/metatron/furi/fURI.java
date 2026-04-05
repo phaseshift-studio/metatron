@@ -541,7 +541,7 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
             final String portStr = matcher.group(PORT);
             final int port = portStr == null ? -1 : (hasTemplates && portStr.contains("${") ? -1 : Integer.parseInt(portStr));
             final String pathStr = matcher.group(PATH);
-            final List<String> path = null == pathStr ? List.of() : new ArrayList<>(Arrays.asList(pathStr.split("/")));
+            final List<String> path = null == pathStr ? List.of() : (hasTemplates && pathStr.contains("${")) ? List.of(pathStr) : new ArrayList<>(Arrays.asList(pathStr.split("/")));
             if (null != pathStr) {
                 if (pathStr.endsWith("/"))
                     path.add("");
@@ -608,10 +608,10 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
          * @return List of (Component, expression) pairs, or null if no templates found
          */
         static List<Tuple.Pair<Component, String>> extractTemplates(final String schemeStr,
-                                                                     final String hostStr,
-                                                                     final String portStr,
-                                                                     final String pathStr,
-                                                                     final String queryStr) {
+                                                                    final String hostStr,
+                                                                    final String portStr,
+                                                                    final String pathStr,
+                                                                    final String queryStr) {
             final List<Tuple.Pair<Component, String>> templates = new ArrayList<>();
 
             // Extract templates from SCHEME

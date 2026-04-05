@@ -79,7 +79,7 @@ public class MUri extends MObj implements Uri {
 
             try {
                 // Parse the expression using mParser
-                final Obj expr = mParser.m_obj().parse(exprStr).get();
+                final Obj expr = mParser.parse(exprStr);
                 result.add(Tuple.Pair.with(component, expr));
             } catch (Exception e) {
                 throw MTronException.of("Failed to parse template expression '${%s}': %s", exprStr, e.getMessage());

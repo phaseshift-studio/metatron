@@ -56,20 +56,4 @@ public class SAPPCQTfURI extends SAPPCQfURI {
     public boolean hasTemplates() {
         return !this.templates.isEmpty();
     }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (!super.equals(obj))
-            return false;
-        if (obj instanceof SAPPCQTfURI other) {
-            return this.templates.equals(other.templates);
-        }
-        // If other is not template-aware but we have templates, not equal
-        return this.templates.isEmpty();
-    }
-
-    @Override
-    public int hashCode() {
-        return super.hashCode() * 31 + this.templates.hashCode();
-    }
 }

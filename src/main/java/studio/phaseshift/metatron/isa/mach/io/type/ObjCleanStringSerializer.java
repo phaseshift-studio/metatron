@@ -137,6 +137,7 @@ public class ObjCleanStringSerializer extends AbstractObjSerializer<String> {
         final char startChar = uriString.isEmpty() ? ' ' : uriString.charAt(0);
         final boolean wrap =
                 uriString.isEmpty() ||
+                        furi.hasTemplates() ||
                         CommonUtil.isInt(uriString.substring(0, 1)) ||
                         uriString.contains(" ") ||
                         startChar == '+' ||
