@@ -52,6 +52,7 @@ import java.util.stream.Stream;
 
 import static dev.langchain4j.internal.Json.fromJson;
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.q.QCollection.DOCQ;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.MCP_SERVER_TID;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.MODEL_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
@@ -166,7 +167,7 @@ public class Model extends MRec {
                         if (t.tid().equals(MCP_SERVER_TID)) {
                             service.toolProvider(McpToolProvider.builder().mcpClients(((MCPServer) t).client()).build()).executeToolsConcurrently(BootLoader.getExecutor());
                         } else if (t.isInst()) {
-                            if (!Router.global().read(t.tid().q(DOC, null)).isNoObj()) {
+                            if (!Router.global().read(t.tid().q(DOCQ, null)).isNoObj()) {
                                 final Tuple.Pair<ToolSpecification, ToolExecutor> pair = Model.Helper.mtronInstToolSpecification(t.asInst());
                                 tools.put(pair.get0(), pair.get1());
                             } else {
@@ -305,7 +306,7 @@ public class Model extends MRec {
         }
 
         public static Tuple.Pair<ToolSpecification, ToolExecutor> mtronInstToolSpecification(final Inst inst) {
-            final QCollection.Doc doc = Router.readFromSpace(inst.tid().q(DOC, null))
+            final QCollection.Doc doc = Router.readFromSpace(inst.tid().q(DOCQ, null))
                     .orSupply(() -> QCollection.Doc.doc(inst,
                             inst.dom().tid().toString(),
                             inst.rng().tid().toString(),

@@ -40,8 +40,7 @@ import java.util.stream.Collectors;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.MCP_SERVER_TID;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.MCP_TOOL_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
@@ -63,18 +62,18 @@ public class MCPServer extends MRec {
     public static final Type MCP_SERVER_TYPE = Type.Builder.build().tid(REC_TID).vid(MCP_SERVER_TID)
             .isaPredicate(rec(
                     uri(HOST), URI_TYPE,
-                    uri(TOOL).maybe(), rec(URI_TYPE, T(MCP_TOOL_TID)).maybe(),
+                    uri(TOOL).maybe(), rec(URI_TYPE, T(LLM_TOOL_TID)).maybe(),
                     uri(STATUS).maybe(), isa_(BOOL_TYPE).else_(BOOL_FALSE)))
             .constructor(instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(MCP_SERVER_TID), lst(T(REC_TID)),
                     (x, inst) -> new MCPServer(inst.arg(0).asRec().jvm(), MCP_SERVER_TID, inst.arg(0).vid())))
             .create();
 
-    public static final Type MCP_TOOL_TYPE = Type.Builder.build().tid(REC_TID).vid(MCP_TOOL_TID)
+    /*public static final Type MCP_TOOL_TYPE = Type.Builder.build().tid(REC_TID).vid(MCP_TOOL_TID)
             .isaPredicate(rec(
                     uri(NAME), URI_TYPE,
                     uri(DESC), STR_TYPE,
                     uri(ARG).maybe(), rec(URI_TYPE, T(ALL)).maybe()))
-            .create();
+            .create();*/
 
     protected final McpClient client;
 

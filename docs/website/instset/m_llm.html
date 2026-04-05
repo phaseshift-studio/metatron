@@ -260,13 +260,14 @@ bin/metatron</code></pre>
      {?}host=>uri::T,
      route  =>[uri::T=>uri::T]]][inst?rng=catalog&dom=#{?}(rec::T){<j>}]@/m/llm/space/catalog,
    rec::T[?[
-     name  =>uri::T,
-     desc  =>str::T,
-     {?}arg=>{?}[uri::T=>#::T]]]@/m/llm/mcp/tool,
-   rec::T[?[
      host     =>uri::T,
      {?}tool  =>{?}[uri::T=>tool::T],
-     {?}status=>isa(bool::T).else(false)]][inst?rng=mcpserver&dom=#{?}(rec::T){<j>}]@/m/llm/space/mcp/mcpserver,
+     {?}status=>isa(bool::T).else(false)]][inst?rng=mcp&dom=#{?}(rec::T){<j>}]@/m/llm/mcp,
+   rec::T[?[
+     name  =>uri::T,
+     desc  =>str::T,
+     {?}arg=>{?}[uri::T=>#::T]]]@/m/llm/tool,
+   lst::T[?[,]]@/m/llm/memory,
    rec::T[?[
      provider   =>space::T[?[
      name   =>is(or(eq(anthropic),eq(openai),eq(ollama))),
@@ -292,7 +293,7 @@ bin/metatron</code></pre>
         <div class="container-xxl mb-4">
             <div class="d-flex justify-content-center gap-2 flex-wrap">
                 <button class="btn btn-outline-secondary" disabled>Consts <span class="badge bg-dark">0</span></button>
-                <a href="#types" class="btn btn-outline-primary">Types <span class="badge bg-secondary">1</span></a>
+                <a href="#types" class="btn btn-outline-primary">Types <span class="badge bg-secondary">4</span></a>
                 <a href="#instructions" class="btn btn-outline-primary">Insts <span class="badge bg-secondary">1</span></a>
                 <a href="#spaces" class="btn btn-outline-primary">Spaces <span class="badge bg-secondary">1</span></a>
                 <button class="btn btn-outline-secondary" disabled>Rewrites <span class="badge bg-dark">0</span></button>
@@ -312,8 +313,20 @@ bin/metatron</code></pre>
                 <h6 class="text-primary mb-2">Types</h6>
                 <div class="index-columns">
                     
+                <a href="#type-mcp" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
+                    <span class="code">mcp</span>
+                    <span class="badge bg-primary">T</span>
+                </a>
+                <a href="#type-memory" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
+                    <span class="code">memory</span>
+                    <span class="badge bg-primary">T</span>
+                </a>
                 <a href="#type-model" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">model</span>
+                    <span class="badge bg-primary">T</span>
+                </a>
+                <a href="#type-tool" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
+                    <span class="code">tool</span>
                     <span class="badge bg-primary">T</span>
                 </a>
                 </div>
@@ -348,9 +361,42 @@ bin/metatron</code></pre>
             
         <div class="container-xxl mb-4" id="types">
             <h3 class="text-primary mb-3">
-                Types <span class="badge bg-primary">1</span>
+                Types <span class="badge bg-primary">4</span>
             </h3>
             
+                <div class="card mb-3" id="type-mcp">
+                    <div class="card-header d-flex justify-content-between align-items-center py-2">
+                        <span>
+                            <span class="code text-primary fw-bold">mcp::T</span>
+                            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">rec::T</span></span>
+                        </span>
+                        <small class="text-muted code">/m/llm/mcp</small>
+                    </div>
+                    
+                    <div class="card-body p-2">
+                        <pre class="mb-0"><code class="language-mtron">rec::T[?[
+     host     =&gt;uri::T,
+     {?}tool  =&gt;{?}[uri::T=&gt;tool::T],
+     {?}status=&gt;isa(bool::T).else(false)]][inst?mcp&lt;=#{?}(rec::T){&lt;j&gt;}]@/m/llm/mcp</code></pre>
+                    </div>
+                    
+                    
+                </div>
+                <div class="card mb-3" id="type-memory">
+                    <div class="card-header d-flex justify-content-between align-items-center py-2">
+                        <span>
+                            <span class="code text-primary fw-bold">memory::T</span>
+                            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">lst::T</span></span>
+                        </span>
+                        <small class="text-muted code">/m/llm/memory</small>
+                    </div>
+                    
+                    <div class="card-body p-2">
+                        <pre class="mb-0"><code class="language-mtron">lst::T[?[,]]@/m/llm/memory</code></pre>
+                    </div>
+                    
+                    
+                </div>
                 <div class="card mb-3" id="type-model">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
@@ -380,6 +426,24 @@ bin/metatron</code></pre>
                     <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">an mtron interface to a large language model</p>
                     </div>
+                    
+                </div>
+                <div class="card mb-3" id="type-tool">
+                    <div class="card-header d-flex justify-content-between align-items-center py-2">
+                        <span>
+                            <span class="code text-primary fw-bold">tool::T</span>
+                            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">rec::T</span></span>
+                        </span>
+                        <small class="text-muted code">/m/llm/tool</small>
+                    </div>
+                    
+                    <div class="card-body p-2">
+                        <pre class="mb-0"><code class="language-mtron">rec::T[?[
+     name  =&gt;uri::T,
+     desc  =&gt;str::T,
+     {?}arg=&gt;{?}[uri::T=&gt;#::T]]]@/m/llm/tool</code></pre>
+                    </div>
+                    
                     
                 </div>
         </div>
@@ -442,7 +506,7 @@ bin/metatron</code></pre>
         <div class="container-xxl py-3 text-center">
             <hr class="border-secondary">
             <small class="text-muted">
-                generated by metatron instset doc generator on build 0-2026-04-04 19:06:50<br>
+                generated by metatron instset doc generator on build 0-2026-04-04 20:16:56<br>
                 © PhaseShift Studio, LLC
             </small>
         </div>

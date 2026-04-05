@@ -113,9 +113,9 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
        host        => <mongodb://localhost:27017/mflix>,
        serializer  => !*</m/mach/io/serializer/bson>,
        route       => [mongo:=><>]]@/sys/space/mongo;
- mcpserver::[host      => <ws://localhost:8999>]@/usr/ai/mcp/mtron;
- mcpserver::[host      => <http://127.0.0.1:29170/index-mcp/streamable-http>]@/usr/ai/mcp/intellij;
- [==mcpserver::[host      => <http://192.168.88.231:3721/mcp>,
+ mcp::[host      => <ws://localhost:8999>]@/usr/ai/mcp/mtron;
+ mcp::[host      => <http://127.0.0.1:29170/index-mcp/streamable-http>]@/usr/ai/mcp/intellij;
+ [==mcp::[host      => <http://192.168.88.231:3721/mcp>,
              transport => <streamable-http>,
              headers   => [authorization => "Bearer yFCufT0BTOHuvnmXod8sissMvzIMsmAlsKBtkEb/0j0="]]@/usr/ai/mcp/openclaw;==]
                        

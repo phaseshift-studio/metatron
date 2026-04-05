@@ -253,19 +253,25 @@ public final class QCollection {
 
     /// //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Inst docWrap(final Inst inst, final String domDesc, final String rngDesc, final Map<Obj, String> argDescription, final String description, final String... examples) {
-        final Doc doc = Doc.doc(inst, domDesc, rngDesc, argDescription, description, examples);
-        final Space instSpace = Router.global().getSpace(inst.tid());
+    private static void internalDocWrap(final Obj obj, final String domDesc, final String rngDesc, final Map<Obj, String> argDescription, final String description, final String... examples) {
+        final Doc doc = Doc.doc(obj, domDesc, rngDesc, argDescription, description, examples);
+        final Space instSpace = Router.global().getSpace(obj.tid());
         final Optional<Q> docq = instSpace.qs().jvm().stream().filter(q -> q.tid().basePath().equals(DOCQ_TID)).map(Obj::<Q>as).findAny();
         if (docq.isEmpty())
-            instSpace.logger().warn("no doc query attachment mounted on %s for %s", instSpace, inst.tid());
+            instSpace.logger().warn("no doc query attachment mounted on %s for %s", instSpace, obj.tid());
         else
-            docq.get().at(OBJ).<Space>as().write(inst.tid(), doc);
+            docq.get().at(OBJ).<Space>as().write(obj.tid(), doc);
+  
+    }
+    
+    public static Inst docWrap(final Inst inst, final String domDesc, final String rngDesc, final Map<Obj, String> argDescription, final String description, final String... examples) {
+        internalDocWrap(inst, domDesc, rngDesc, argDescription, description, examples);
         return inst;
     }
 
-    public static Type docWrap(final Type type, final String description) {
-        return docWrap(type, null, null, null, description);
+    public static <OBJ extends Obj> OBJ docWrap(final OBJ obj, final String description) {
+         internalDocWrap(obj, null, null, null, description);
+         return obj;
     }
 
     public static Type docWrap(final Type type, final String predicate, final String constructor, final Map<Obj, String> predicateDescription, final String description) {

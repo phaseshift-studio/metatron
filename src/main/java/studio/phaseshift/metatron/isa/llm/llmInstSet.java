@@ -20,7 +20,9 @@ package studio.phaseshift.metatron.isa.llm;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
+import studio.phaseshift.metatron.isa.llm.type.Model;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
+import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 
 import java.util.Map;
@@ -30,7 +32,6 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.llm.space.modelCatalogSpace.LLM_CATALOG_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.llm.type.MCPServer.MCP_SERVER_TYPE;
-import static studio.phaseshift.metatron.isa.llm.type.MCPServer.MCP_TOOL_TYPE;
 import static studio.phaseshift.metatron.isa.llm.type.Model.model;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.BYTE_TYPE;
@@ -56,9 +57,9 @@ public class llmInstSet extends AbstractInstSet {
     public static final fURI LLM_SPACE_TID = LLM_ISA_TID.extend("space");
     public static final fURI LLM_TOOL_TID = LLM_ISA_TID.extend("tool");
     public static final fURI LLM_MEMORY_TID = LLM_ISA_TID.extend("memory");
-    public static final fURI MCP_SERVER_TID = LLM_SPACE_TID.extend("mcp").extend("mcpserver");
-    public static final fURI MCP_TOOL_TID = LLM_ISA_TID.extend("mcp").extend("tool");
-
+    public static final fURI MCP_SERVER_TID = LLM_ISA_TID.extend("mcp");
+    //public static final fURI MCP_TOOL_TID = LLM_ISA_TID.extend("mcp");
+   // public static Obj MTRON_EVAL_TOOL = Model.Helper.mtronInstToolSpecification(ObjType.insts().stream().filter(i -> i.tid().equals(EVAL_INST_TID)).findFirst().orElse(null));    
     public static Type LLM_MEMORY_TYPE = Type.Builder.build()
             .tid(LST_TID)
             .vid(LLM_MEMORY_TID)
@@ -82,6 +83,10 @@ public class llmInstSet extends AbstractInstSet {
                     uri("contents"), LST_TYPE,
                     uri(TYPE), uri("USER")))
             .create();
+    public static final Type LLM_TOOL_TYPE = Type.Builder.build().tid(REC_TID).vid(LLM_TOOL_TID).isaPredicate(rec(
+            uri(NAME), URI_TYPE,
+            uri(DESC), STR_TYPE,
+            uri(ARG).maybe(), rec(URI_TYPE, T(ALL)).maybe())).create();
 
     public llmInstSet() {
         super(mutableMap(uri(PATTERN), uri(LLM_ISA_TID.extend(ALL))), LLM_ISA_TID, LLM_ISA_TID);
@@ -91,10 +96,12 @@ public class llmInstSet extends AbstractInstSet {
     public void setup() {
         this.jvm().putAll(mutableMap(
                 uri(PATTERN), uri(LLM_ISA_TID.extend(ALL)),
+              //  uri(CONST), lst(MTRON_EVAL_TOOL)),
                 uri(TYPE), lst(
                         LLM_CATALOG_SPACE_TYPE,
-                        MCP_TOOL_TYPE,
                         MCP_SERVER_TYPE,
+                        LLM_TOOL_TYPE,
+                        LLM_MEMORY_TYPE,
                         docWrap(Type.Builder.build()
                                         .tid(REC_TID)
                                         .vid(MODEL_TID).

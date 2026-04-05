@@ -236,7 +236,7 @@ public class mInstSet extends AbstractInstSet {
     public void setup() {
         this.jvm().putAll(new LinkedHashMap<>(Map.of(
                 uri(PATTERN), uri(M_ISA_INST_TID.extend(ALL)),
-                uri(CONST), lst(noobj()),
+                uri(CONST), lst(docWrap(noobj(), "a no object")),
                 uri(TYPE), lst(
                       /*  NOOBJ_TYPE,
                         FAIL_TYPE,
@@ -254,7 +254,7 @@ public class mInstSet extends AbstractInstSet {
                         CODE_TYPE,*/
                         docWrap(MONO_TYPE, "an atomic obj"),
                         docWrap(POLY_TYPE, "a obj composed of other objs"),
-                        docWrap(NOOBJ_TYPE, "a no object"),
+                      //  docWrap(NOOBJ_TYPE, "a no object"),
                         docWrap(BOOL_TYPE, "a 2 valued mono: true or false"),
                         docWrap(INT_TYPE, "a 64-bit signed integer"),
                         docWrap(REAL_TYPE, "a 64-bit floating point number"),
@@ -271,14 +271,13 @@ public class mInstSet extends AbstractInstSet {
                         docWrap(FAIL_TYPE, "a reified exception handling obj that can be caught"),
                         /// ///////////////////////////////////
                         SPACE_TYPE,
-                        docWrap(MEM_SPACE_TYPE, "the reference implementation of a space where objs are store in memory"),
+                        docWrap(MEM_SPACE_TYPE, "the reference implementation of a space where objs are stored in memory"),
                         docWrap(STACK_SPACE_TYPE, "the machine's thread local stack exposed as a space"),
                         META_SPACE_TYPE,
                         Q_TYPE,
                         /// ///////////////////////////////////
                         CONSTQ_TYPE),
                 uri(INST), lst(Stream.of(
-                        NoObj.NoObjType.insts().stream(),
                         Bool.BoolType.insts().stream(),
                         Bytes.BytesType.insts().stream(),
                         Int.IntType.insts().stream(),
@@ -290,26 +289,27 @@ public class mInstSet extends AbstractInstSet {
                         Lst.LstType.insts().stream(),
                         RecType.insts().stream(),
                         Fail.FailType.insts().stream(),
-                       // Objs.ObjsType.insts().stream(),
+                        Objs.ObjsType.insts().stream(),
                         Type.TypeType.insts().stream(),
                         SpaceType.insts().stream(),
-                        ObjType.insts().stream()
+                        ObjType.insts().stream(),
+                        NoObj.NoObjType.insts().stream()
                 ).flatMap(i -> i)),
                 uri(REWRITE), lst(
                         // Remove identity instructions (no-op)
-                        InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("id_removal"),
+                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("id_removal"),
                                 code -> code.selfJVM(
                                         Rewriter.search(code.insts())
                                                 .match(instA(ID_INST_TID).insts())
-                                                .rewrite(x -> List.of())).asCode()),
+                                                .rewrite(x -> List.of())).asCode()), "removes identity instructions"),
 
                         // Flatten nested map instructions
-                        InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("map_nest"),
+                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("map_nest"),
                                 code -> code.selfJVM(
                                         Rewriter.search(code.insts())
                                                 .match(instB(MAP_INST_TID, lst(instA(MAP_INST_TID))).insts())
                                                 .repeat()
-                                                .rewrite(map -> map.values().stream().map(objs -> objs.arg(0).asInst()).toList())).asCode()),
+                                                .rewrite(map -> map.values().stream().map(objs -> objs.arg(0).asInst()).toList())).asCode()), "flattens nested map instructions"),
 
                         // Eliminate else() after non-maybe instruction (dead code)
                         // Pattern: .count().else(x) → .count() (count always returns a value)
@@ -368,7 +368,7 @@ public class mInstSet extends AbstractInstSet {
                         // Pattern: -<[inst,inst,...]>- → inst{n}
                         // This leverages the ring structure where identical branches collapse on merge
                         // Note: Only applies to split-merge pairs, as split alone creates superposition
-                        InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("split_merge_collapse"),
+                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("split_merge_collapse"),
                                 code -> code.selfJVM(
                                         Rewriter.search(code.insts())
                                                 .match(List.of(instA(SPLIT_INST_TID), instA(MERGE_INST_TID)))
@@ -410,12 +410,12 @@ public class mInstSet extends AbstractInstSet {
                                                         }
                                                     }
                                                     return matched;
-                                                })).asCode()),
+                                                })).asCode()),"applies abelian monoid law on split code paths"),
 
                         // Left factoring: pull out common prefix from split branches
                         // Pattern: a-<[b.c.d, b.c.e]>- → a.b.c-<[d, e]>-
                         // This reduces clock cycles by executing common prefix once
-                        InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("split_merge_left_factor"),
+                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("split_merge_left_factor"),
                                 code -> code.selfJVM(
                                         Rewriter.search(code.asCode().insts())
                                                 .match(List.of(instA(SPLIT_INST_TID), instA(MERGE_INST_TID)))
@@ -478,12 +478,12 @@ public class mInstSet extends AbstractInstSet {
                                                     }
                                                     // No optimization possible, return original
                                                     return matched;
-                                                })).asCode()),
+                                                })).asCode()),"leverages distributive ring law to pull common monoidally bound components to the right"),
 
                         // Right factoring: pull out common suffix from split branches
                         // Pattern: a-<[b.d, c.d]>- → a-<[b, c]>-.d
                         // This reduces clock cycles by executing common suffix once
-                        InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("split_merge_right_factor"),
+                        docWrap(InstSet.Helper.rewriter(M_ISA_REWRITE_TID.extend("split_merge_right_factor"),
                                 code -> code.selfJVM(
                                         Rewriter.search(code.asCode().insts())
                                                 .match(List.of(instA(SPLIT_INST_TID), instA(MERGE_INST_TID)))
@@ -552,7 +552,7 @@ public class mInstSet extends AbstractInstSet {
                                                     }
                                                     // No optimization possible, return original
                                                     return matched;
-                                                })).asCode())))));
+                                                })).asCode()),"leverages distributive ring law to pull common monoidally bound components to the left")))));
         docWrap(this, "the core instruction set of metatron containing the base types and useful instructions to manipulate them");
         super.setup();
     }

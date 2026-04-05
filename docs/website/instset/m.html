@@ -252,20 +252,9 @@ bin/metatron</code></pre>
        pre_write=>inst?rng=#{*}&dom=#{?}(uri::T,#::T){<j>},
        pattern  =>docq,
        obj      =>mem::[=>]]],
- rewrite=>[
-   /m/inst/rewrite/id_removal?rng=code{?}&dom=code(){<j>},
-   /m/inst/rewrite/map_nest?rng=code{?}&dom=code(){<j>},
-   /m/inst/rewrite/else_after_count?rng=code{?}&dom=code(){<j>},
-   /m/inst/rewrite/plus_zero?rng=code{?}&dom=code(){<j>},
-   /m/inst/rewrite/mult_one?rng=code{?}&dom=code(){<j>},
-   /m/inst/rewrite/split_merge_collapse?rng=code{?}&dom=code(){<j>},
-   /m/inst/rewrite/split_merge_left_factor?rng=code{?}&dom=code(){<j>},
-   /m/inst/rewrite/split_merge_right_factor?rng=code{?}&dom=code(){<j>}],
- const  =>[noobj],
  type   =>[
    mono::T[inst?rng=mono&dom=#{?}(){<j>}],
    poly::T[inst?rng=poly&dom=#{?}(){<j>}],
-   noobj{0}::T[inst?rng=noobj{0}&dom=#{?}(){<j>}],
    bool::T,
    int::T,
    real::T,
@@ -312,8 +301,17 @@ bin/metatron</code></pre>
  pre_read{?}   =>inst::T,
  post_read{?}  =>inst::T]){<j>}]@/m/space/q,
    q::T[][inst?rng=constq&dom=#{?}(){<j>}]@/m/space/q/constq],
+ const  =>[noobj],
+ rewrite=>[
+   /m/inst/rewrite/id_removal?rng=code{?}&dom=code(){<j>},
+   /m/inst/rewrite/map_nest?rng=code{?}&dom=code(){<j>},
+   /m/inst/rewrite/else_after_count?rng=code{?}&dom=code(){<j>},
+   /m/inst/rewrite/plus_zero?rng=code{?}&dom=code(){<j>},
+   /m/inst/rewrite/mult_one?rng=code{?}&dom=code(){<j>},
+   /m/inst/rewrite/split_merge_collapse?rng=code{?}&dom=code(){<j>},
+   /m/inst/rewrite/split_merge_left_factor?rng=code{?}&dom=code(){<j>},
+   /m/inst/rewrite/split_merge_right_factor?rng=code{?}&dom=code(){<j>}],
  inst   =>[
-   start?rng=A{**}&dom=noobj{0}(A{**}::T){<j>},
    as?rng=bool&dom=bool(bool::T){<j>},
    as?rng=bytes&dom=bool(bytes::T){<j>},
    as?rng=int&dom=bool(int::T){<j>},
@@ -473,6 +471,7 @@ bin/metatron</code></pre>
    sum?rng=rec&dom=rec{*}(){<j>},
    cause?rng=fail{?}&dom=fail(){<j>},
    reify?rng=rec&dom=fail(){<j>},
+   as?rng=lst&dom=#{*}(lst::T){<j>},
    rshift?rng=#{*}&dom=/m/type(uri{*}::T){<j>},
    serialize?rng=B&dom=A(/m/mach/io::T){<j>},
    fork?rng=A{*}&dom=A{*}(#::T){<j>},
@@ -540,7 +539,8 @@ bin/metatron</code></pre>
    eval?rng=#{*}&dom=#{?}(code=>str::T){<j>},
    swap?rng=A&dom=A(B::T){<j>},
    rshift?rng=B{?}&dom=A(){<j>},
-   lshift?rng=B{?}&dom=A(){<j>}]]@/m</code></pre>
+   lshift?rng=B{?}&dom=A(){<j>},
+   start?rng=A{**}&dom=noobj{0}(A{**}::T){<j>}]]@/m</code></pre>
                         </div>
                     </div>
                 </div>
@@ -551,7 +551,7 @@ bin/metatron</code></pre>
             <div class="d-flex justify-content-center gap-2 flex-wrap">
                 <button class="btn btn-outline-secondary" disabled>Consts <span class="badge bg-dark">0</span></button>
                 <a href="#types" class="btn btn-outline-primary">Types <span class="badge bg-secondary">16</span></a>
-                <a href="#instructions" class="btn btn-outline-primary">Insts <span class="badge bg-secondary">228</span></a>
+                <a href="#instructions" class="btn btn-outline-primary">Insts <span class="badge bg-secondary">229</span></a>
                 <a href="#spaces" class="btn btn-outline-primary">Spaces <span class="badge bg-secondary">4</span></a>
                 <a href="#rewrites" class="btn btn-outline-primary">Rewrites <span class="badge bg-secondary">8</span></a>
             </div>
@@ -1203,9 +1203,6 @@ bin/metatron</code></pre>
      {?}sugar  =&gt;[lst::T]]]@/m/instset</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">an aggregate of types, insts, consts, rewrites, and sugars structuring a domain of discourse</p>
-                    </div>
                     
                 </div>
                 <div class="card mb-3" id="type-int">
@@ -1240,7 +1237,7 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">an ordered sequence poly of objs</p>
+                        <p class="mb-0 text-light">a stream of equally sized rows</p>
                     </div>
                     
                 </div>
@@ -1330,7 +1327,7 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">a poly composed of uniquely keyed rels</p>
+                        <p class="mb-0 text-light">a document (record) from a collection</p>
                     </div>
                     
                 </div>
@@ -1392,7 +1389,7 @@ bin/metatron</code></pre>
             
         <div class="container-xxl mb-4" id="instructions">
             <h3 class="text-primary mb-3">
-                Instructions <span class="badge bg-success">228</span>
+                Instructions <span class="badge bg-success">229</span>
             </h3>
             
                 <div class="card mb-3" id="inst-and">
@@ -1466,6 +1463,7 @@ bin/metatron</code></pre>
 <pre class="mb-1"><code class="language-mtron">as?rec&lt;=lst(rec::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1"><code class="language-mtron">as?lst&lt;=rec(lst::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1"><code class="language-mtron">as?uri&lt;=rec(uri::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1"><code class="language-mtron">as?lst&lt;=#{*}(lst::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1"><code class="language-mtron">as?noobj{0}&lt;=A(){&lt;j&gt;}</code></pre>
 <pre class="mb-1"><code class="language-mtron">as?B&lt;=A(#::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1"><code class="language-mtron">as?A&lt;=A(A::T){&lt;j&gt;}</code></pre>
@@ -3035,9 +3033,6 @@ bin/metatron</code></pre>
  {?}persist=&gt;uri::T[][inst?rng=file&amp;dom=#{?}(uri::T){&lt;j&gt;}]@/m/mach/file])){&lt;j&gt;}]@/m/space/mem</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">the reference implementation of a space where objs are store in memory</p>
-                    </div>
                     
                 </div>
                 <div class="card mb-3" id="space-meta">
@@ -3084,9 +3079,6 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">space::T[][inst?rng=stack&amp;dom=#{?}(isa([pattern=&gt;uri::T])){&lt;j&gt;}]@/m/space/stack</code></pre>
                     </div>
                     
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">the machine&#x27;s thread local stack exposed as a space</p>
-                    </div>
                     
                 </div>
         </div>
@@ -3124,6 +3116,9 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/id_removal?code{?}&lt;=code(){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">removes identity instructions</p>
+                    </div>
                     
                 </div>
                 <div class="card mb-3" id="rewrite-map_nest">
@@ -3139,6 +3134,9 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/map_nest?code{?}&lt;=code(){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">flattens nested map instructions</p>
+                    </div>
                     
                 </div>
                 <div class="card mb-3" id="rewrite-mult_one">
@@ -3184,6 +3182,9 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">applies abelian monoid law on split code paths</p>
+                    </div>
                     
                 </div>
                 <div class="card mb-3" id="rewrite-split_merge_left_factor">
@@ -3199,6 +3200,9 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">leverages distributive ring law to pull common monoidally bound components to the right</p>
+                    </div>
                     
                 </div>
                 <div class="card mb-3" id="rewrite-split_merge_right_factor">
@@ -3214,6 +3218,9 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code(){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">leverages distributive ring law to pull common monoidally bound components to the left</p>
+                    </div>
                     
                 </div>
         </div>
@@ -3221,7 +3228,7 @@ bin/metatron</code></pre>
         <div class="container-xxl py-3 text-center">
             <hr class="border-secondary">
             <small class="text-muted">
-                generated by metatron instset doc generator on build 0-2026-04-04 19:06:45<br>
+                generated by metatron instset doc generator on build 0-2026-04-04 20:16:50<br>
                 © PhaseShift Studio, LLC
             </small>
         </div>
