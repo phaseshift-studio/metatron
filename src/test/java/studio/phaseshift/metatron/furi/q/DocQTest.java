@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.furi.q;
 
+import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.c.cInt;
@@ -34,10 +35,13 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static studio.phaseshift.metatron.Tokens.DESC;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.furi.q.QCollection.DOCQ;
-import static studio.phaseshift.metatron.furi.q.QCollection.DOCS_TID;
+import static studio.phaseshift.metatron.furi.q.QCollection.*;
+import static studio.phaseshift.metatron.isa.m.mInstSet.AND_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TID;
+import static studio.phaseshift.metatron.isa.m.type.Inst.OBJ;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
@@ -54,6 +58,51 @@ public class DocQTest extends AbstractMetatronTest {
 
     private DocQTest() {
         // do nothing
+    }
+
+    @Test
+    public void testDocStructure() {
+        final Inst inst = Router.readFromSpace(AND_INST_TID).asInst();
+        final QCollection.Doc doc = new QCollection.Doc(Router.readFromSpace(AND_INST_TID.addQ(DOCQ)).asRec());
+        assertTrue(doc.test(DOCQ_TYPE));
+        assertTrue("and() documentation has latex formatting in its description", doc.description().contains("\\("));
+        assertEquals(doc.at(DESC).strValue(), doc.description());
+        assertEquals(inst, doc.at(OBJ));
+    }
+
+    @Test
+    public void testNoDocumentation() {
+        final fURI dummyURI = f("/m/inst/NoTAInsT");
+        final Inst inst = Router.readFromSpace(dummyURI).asInst();
+        final QCollection.Doc doc = new QCollection.Doc(Router.readFromSpace(dummyURI.addQ(DOCQ)).asRec());
+        assertTrue(doc.test(DOCQ_TYPE));
+        assertEquals(NO_DOCS.at(DESC).strValue(), doc.description());
+        assertTrue(inst.isNoObj());
+    }
+
+    @Test
+    public void testWritingDocumentation() {
+        final fURI newURI = f("/m/some_obj");
+        Router.global().write(newURI, str("some obj"));
+        QCollection.Doc doc = new QCollection.Doc(Router.readFromSpace(newURI.addQ(DOCQ)).asRec());
+        assertEquals(NO_DOCS.at(DESC).strValue(), doc.description());
+        /// //
+        Router.global().write(newURI.addQ(DOCQ), str("some obj"));
+        doc = new QCollection.Doc(Router.readFromSpace(newURI.addQ(DOCQ)).asRec());
+        assertTrue(doc.test(DOCQ_TYPE));
+        assertEquals("some obj", doc.description());
+        assertEquals("some obj", doc.at(DESC).strValue());
+        /// //
+        final fURI newURI2 = f("/m/some_obj_2");
+        docWrap(str("some obj 2",STR_TID,newURI2), "a test str", "aa", "bb");
+        doc = new QCollection.Doc(Router.readFromSpace(newURI2.addQ(DOCQ)).asRec());
+        assertTrue(doc.test(DOCQ_TYPE));
+        assertEquals("a test str", doc.description());
+        assertTrue(doc.examples().contains("aa"));
+        assertTrue(doc.examples().contains("bb"));
+        assertEquals(noobj(), doc.at(RNG));
+        assertEquals(noobj(), doc.at(DOM));
+        assertEquals(str("some obj 2").selfVID(newURI2), doc.at(OBJ));
     }
 
     public static void testWritingDocs(final Space space) {

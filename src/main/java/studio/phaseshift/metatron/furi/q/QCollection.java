@@ -160,19 +160,15 @@ public final class QCollection {
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-    private static final Rec NO_DOCS = rec(uri(DESC), str("no documentation available"));
+    protected static final Rec NO_DOCS = rec(Map.of(uri(DESC), str("no documentation available")), DOCS_TID, null);
 
     public static Q docQ() {
         final memSpace DOC_SPACE = memSpace.of(rec(), null);
         return studio.phaseshift.metatron.furi.Q.Helper.build(DOCQ_TID, DOCQ_PATTERN)
                 .obj(f(OBJ), DOC_SPACE)
-                .preWrite((vid, obj) -> {
-                    if (obj.tid().equals(DOCS_TID))
-                        DOC_SPACE.write(vid.basePath(), obj);
-                    return obj;
-                })
+                .preWrite((vid, obj) -> DOC_SPACE.write(vid.basePath(), obj.tid().equals(DOCS_TID) ? obj : new Doc(obj.toCleanString())))
                 .preRead((vid) -> {
-                    final Obj obj = DOC_SPACE.read(vid.basePath()).orElse(NO_DOCS);
+                    final Obj obj = DOC_SPACE.read(vid.basePath()).orElse(NO_DOCS.plus(rec(uri(OBJ), Router.global().read(vid.basePath()))));
                     return objs(obj.stream().filter(o -> o.tid().equals(DOCS_TID)));
                 })
                 .create();
@@ -307,6 +303,10 @@ public final class QCollection {
 
         public String description() {
             return this.at(Tokens.DESC).isNoObj() ? null : this.at(Tokens.DESC).strValue();
+        }
+        
+        public List<String> examples() {
+            return this.at(EXAMPLE).elements().map(Obj::strValue).toList();
         }
 
         public static Doc doc(final Obj inst, final String domDesc, final String rngDesc, final Map<Obj, String> argDescription, final String description, final String... examples) {
