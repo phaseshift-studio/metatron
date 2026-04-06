@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -38,10 +38,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.AbstractMap;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -106,37 +103,29 @@ public class memSpace extends AbstractSpace<TopicTrie> {
                 return this.sjvm().entrySet().stream().map(kv -> IdObj.of(kv.getKey(), kv.getValue())).iterator();
             else {
                 if (pattern.hasPattern()) {
-                    // TopicTrie provides efficient MQTT-style wildcard matching by path segments,
-                    // then we do a "mini-linear scan" at matching nodes using fURI.test()
-                    // to handle query params, coefficients, polys, etc.
                     final fURI nodePattern = pattern.asNode();
-
-                    // Stream 1: Direct matches from trie
-                    Stream<Map.Entry<fURI, Obj>> directMatches = this.sjvm().match(nodePattern).stream();
-
-                    // Stream 2: Check parent paths for polys that can expand to match
-                    // For pattern /t/+, check if /t has a poly; for /t/+/+, check /t/+ and /t, etc.
+                    // stream 1: direct matches from trie
+                    final List<Map.Entry<fURI, Obj>> directMatches = this.sjvm().match(nodePattern);
                     Stream<Map.Entry<fURI, Obj>> polyParents = Stream.empty();
-                    fURI parent = nodePattern.retract(1);
-                    while (parent.segmentLength() > 0) {
-                        final Obj parentValue = this.sjvm().get(parent);
-                        if (parentValue != null && parentValue.isPoly()) {
-                            final fURI parentKey = parent;
-                            polyParents = Stream.concat(polyParents,
-                                Stream.of(new AbstractMap.SimpleEntry<>(parentKey, parentValue)));
+                    // stream 2: check parent paths for polys that can expand to match (no matches, requires deeper inspection)
+                    if (directMatches.isEmpty() && nodePattern.hasPattern()) {
+                        fURI parent = nodePattern.retract(1);
+                        while (parent.segmentLength() > 0) {
+                            final Obj parentValue = this.sjvm().get(parent);
+                            if (parentValue != null && parentValue.isPoly()) {
+                                polyParents = Stream.of(new AbstractMap.SimpleEntry<>(parent, parentValue));
+                                break;
+                            }
+                            parent = parent.retract(1);
                         }
-                        parent = parent.retract(1);
+                        /*  // also check root MIGHT NOT REQUIRED (WAITING FOR A FAILURE TO SHOW ITSELF)
+                        final Obj rootValue = this.sjvm().get(parent);
+                        if (rootValue != null && rootValue.isPoly()) {
+                            polyParents = Stream.concat(polyParents, Stream.of(new AbstractMap.SimpleEntry<>(parent, rootValue)));
+                        }*/
                     }
-                    // Also check root
-                    final Obj rootValue = this.sjvm().get(parent);
-                    if (rootValue != null && rootValue.isPoly()) {
-                        final fURI rootKey = parent;
-                        polyParents = Stream.concat(polyParents,
-                            Stream.of(new AbstractMap.SimpleEntry<>(rootKey, rootValue)));
-                    }
-
-                    return Stream.concat(directMatches, polyParents)
-                            .flatMap(kv -> kv.getValue().isObjs() ? kv.getValue().stream().map(vv -> new AbstractMap.SimpleEntry<>(kv.getKey(), vv)) : Stream.of(kv))
+                    return Stream.concat(directMatches.stream(), polyParents)
+                            //.flatMap(kv -> kv.getValue().isObjs() ? kv.getValue().stream().map(vv -> new AbstractMap.SimpleEntry<>(kv.getKey(), vv)) : Stream.of(kv))
                             .flatMap(kv -> Stream.concat(
                                     kv.getKey().test(nodePattern) ?
                                             Stream.of(IdObj.of(kv.getKey(), kv.getValue())) :
@@ -145,7 +134,7 @@ public class memSpace extends AbstractSpace<TopicTrie> {
                                             Space.Helper.unrollPoly(kv.getKey(), kv.getValue().as(), nodePattern).stream() :
                                             Stream.empty())).iterator();
                 } else {
-                    // Exact lookup - trie navigates to node, then Map.get() uses fURI.equals()
+                    // exact lookup - trie navigates to node, get() if furi.equals()
                     final Obj value = this.sjvm().get(pattern);
                     return null == value ? IteratorUtil.of() : IteratorUtil.of(IdObj.of(pattern, value));
                 }

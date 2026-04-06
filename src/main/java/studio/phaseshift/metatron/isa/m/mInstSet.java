@@ -48,9 +48,7 @@ import static studio.phaseshift.metatron.isa.m.type.Fail.FAIL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Inst.INST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.NOOBJ_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.Objs.OBJS_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Real.REAL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Rel.REL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
@@ -208,7 +206,8 @@ public class mInstSet extends AbstractInstSet {
             .vid(SPACE_TID)
             .isaPredicate(rec(
                     uri(PATTERN), URI_TYPE,
-                    uri(QSTRING).maybe(), rec(URI_TYPE, Q_TYPE))).create();
+                    uri(QSTRING).maybe(), rec(URI_TYPE, Q_TYPE),
+                    uri(SCHEMA).maybe(), REC_TYPE)).create();
 
     public static final Type MONO_TYPE = Type.Builder.build()
             .tid(MONO_TID)
@@ -255,7 +254,7 @@ public class mInstSet extends AbstractInstSet {
                         CODE_TYPE,*/
                         docWrap(MONO_TYPE, "an atomic obj"),
                         docWrap(POLY_TYPE, "a obj composed of other objs"),
-                      //  docWrap(NOOBJ_TYPE, "a no object"),
+                        //  docWrap(NOOBJ_TYPE, "a no object"),
                         docWrap(BOOL_TYPE, "a 2 valued mono: true or false"),
                         docWrap(INT_TYPE, "a 64-bit signed integer"),
                         docWrap(REAL_TYPE, "a 64-bit floating point number"),
@@ -268,7 +267,7 @@ public class mInstSet extends AbstractInstSet {
                         docWrap(INSTSET_TYPE, "an aggregate of types, insts, consts, rewrites, and sugars structuring a domain of discourse"),
                         docWrap(INST_TYPE, "a call with apply defined by an lhs obj, an poly of args, and an body of code"),
                         docWrap(CODE_TYPE, "a call with apply defined by an lhs obj and a sequence of insts"),
-                      //  docWrap(OBJS_TYPE, "an ordered sequence poly of objs and noobjs"),
+                        //  docWrap(OBJS_TYPE, "an ordered sequence poly of objs and noobjs"),
                         docWrap(FAIL_TYPE, "a reified exception handling obj that can be caught"),
                         /// ///////////////////////////////////
                         SPACE_TYPE,
@@ -290,7 +289,7 @@ public class mInstSet extends AbstractInstSet {
                         Lst.LstType.insts().stream(),
                         RecType.insts().stream(),
                         Fail.FailType.insts().stream(),
-                      //  Objs.ObjsType.insts().stream(),
+                        //  Objs.ObjsType.insts().stream(),
                         Type.TypeType.insts().stream(),
                         SpaceType.insts().stream(),
                         ObjType.insts().stream(),
@@ -411,7 +410,7 @@ public class mInstSet extends AbstractInstSet {
                                                         }
                                                     }
                                                     return matched;
-                                                })).asCode()),"applies abelian monoid law on split code paths"),
+                                                })).asCode()), "applies abelian monoid law on split code paths"),
 
                         // Left factoring: pull out common prefix from split branches
                         // Pattern: a-<[b.c.d, b.c.e]>- → a.b.c-<[d, e]>-
@@ -479,7 +478,7 @@ public class mInstSet extends AbstractInstSet {
                                                     }
                                                     // No optimization possible, return original
                                                     return matched;
-                                                })).asCode()),"leverages distributive ring law to pull common monoidally bound components to the right"),
+                                                })).asCode()), "leverages distributive ring law to pull common monoidally bound components to the right"),
 
                         // Right factoring: pull out common suffix from split branches
                         // Pattern: a-<[b.d, c.d]>- → a-<[b, c]>-.d
@@ -553,7 +552,7 @@ public class mInstSet extends AbstractInstSet {
                                                     }
                                                     // No optimization possible, return original
                                                     return matched;
-                                                })).asCode()),"leverages distributive ring law to pull common monoidally bound components to the left")))));
+                                                })).asCode()), "leverages distributive ring law to pull common monoidally bound components to the left")))));
         docWrap(this, "the core instruction set of metatron containing the base types and useful instructions to manipulate them");
         super.setup();
     }

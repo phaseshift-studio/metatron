@@ -20,8 +20,10 @@ package studio.phaseshift.metatron.isa.m.space;
 
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.furi.q.SubQTest;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
+import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -40,13 +42,15 @@ public class memSpaceTest extends AbstractSpaceTest implements SubQTest {
 
     public memSpaceTest() {
         super(() -> {
-            if (RANDOM.nextInt(10) < 3) {
+            if (RANDOM.nextInt(10) < 50) {
                 Graphitty.log(memSpaceTest.class).debug("deleting persisted memspace data at {{y}}/tmp/memspace-test.mtron{{X}}");
                 final File file = new File("/tmp/memspace-test.mtron");
                 if (file.exists())
                     file.delete();
             }
-            return memSpace.of(rec(uri(PATTERN), uri("/t/#"), uri(PERSIST), uri("/tmp/memspace-test.mtron")), f("/sys/space/mem"));
+            final Space space = memSpace.of(rec(uri(PATTERN), uri("/t/#"), uri(PERSIST), uri("/tmp/memspace-test.mtron")), f("/sys/space/mem"));
+            space.addQ(QCollection.subq());
+            return space;
         });
     }
 

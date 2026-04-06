@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
@@ -93,6 +94,7 @@ public class MRec extends MObj implements Rec {
             return jvm;
         try {
             jvm.remove(noobj());
+            jvm.values().removeIf(Objects::isNull);
             if (jvm.containsValue(noobj())) {
                 jvm.entrySet().stream().filter(kv -> kv.getKey().isNoObj() || kv.getValue().isNoObj()).toList().forEach(kv -> jvm.remove(kv.getKey()));
                 return jvm;

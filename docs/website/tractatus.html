@@ -1865,26 +1865,27 @@ lhs =&gt; inst(arg1,...,argN){ inst1...instN } =&gt; rhs
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">​
 mtron&gt; *&lt;+/#/&gt;
-==&gt;x=&gt;1
-==&gt;x=&gt;2
 ==&gt;m=&gt;[
   [0,1,2,3],
   [4,5,6,7],
   [8,9,10,11]]
-==&gt;x=&gt;3
 ==&gt;abc=&gt;12
-==&gt;x=&gt;4
 ==&gt;boot/script/python=&gt;/usr/bin/python3
 ==&gt;boot/args/mqtt=&gt;[broker=&gt;&lt;mqtt://chibi.local:1883&gt;]
 ==&gt;boot/script/bash=&gt;/bin/bash
 ==&gt;m/1/0=&gt;4
-==&gt;m/1/2=&gt;6
 ==&gt;boot/args/local=&gt;booger
-==&gt;m/1=&gt;[4,5,6,7]
+==&gt;m/1/2=&gt;6
+==&gt;x=&gt;{[
+ a=&gt;1,
+ b=&gt;[
+   c=&gt;2,
+   d=&gt;[3,4,5]]],1,2,3,4}
 ==&gt;boot/peers/1=&gt;&lt;ws://127.0.0.1:7777&gt;
+==&gt;m/1=&gt;[4,5,6,7]
 ==&gt;boot/script/sh=&gt;/bin/sh
-==&gt;m/0/2=&gt;2
 ==&gt;boot/args/host=&gt;&lt;ws://0.0.0.0:8999&gt;
+==&gt;m/0/2=&gt;2
 ==&gt;m/0/0=&gt;0
 ==&gt;boot/script=&gt;[
  sh    =&gt;/bin/sh,
@@ -1900,30 +1901,21 @@ mtron&gt; *&lt;+/#/&gt;
  local=&gt;booger,
  mqtt =&gt;[broker=&gt;&lt;mqtt://chibi.local:1883&gt;]]
 ==&gt;m/2/3=&gt;11
-==&gt;m/2/1=&gt;9
 ==&gt;boot/args/boot=&gt;&lt;/home/killswitch/software/metatron/boot/boot.mtron&gt;
-==&gt;x=&gt;[
- a=&gt;1,
- b=&gt;[
-   c=&gt;2,
-   d=&gt;[3,4,5]]]
+==&gt;m/2/1=&gt;9
 ==&gt;fs_prefix=&gt;booger
-==&gt;x/a=&gt;1
 ==&gt;m/1/1=&gt;5
-==&gt;m/1/3=&gt;7
 ==&gt;boot/script/perl=&gt;/usr/bin/perl
-==&gt;boot/peers=&gt;[ws://localhost:6666,&lt;ws://127.0.0.1:7777&gt;]
+==&gt;m/1/3=&gt;7
 ==&gt;boot/args/log=&gt;info
+==&gt;boot/peers=&gt;[ws://localhost:6666,&lt;ws://127.0.0.1:7777&gt;]
 ==&gt;m/2=&gt;[8,9,10,11]
-==&gt;m/0=&gt;[0,1,2,3]
 ==&gt;boot/script/zsh=&gt;/bin/zsh
-==&gt;m/0/3=&gt;3
+==&gt;m/0=&gt;[0,1,2,3]
 ==&gt;boot/peers/0=&gt;ws://localhost:6666
 ==&gt;boot/script/mtron=&gt;/bin/mtron
+==&gt;m/0/3=&gt;3
 ==&gt;m/0/1=&gt;1
-==&gt;x/b=&gt;[
- c=&gt;2,
- d=&gt;[3,4,5]]
 ==&gt;m/2/2=&gt;10
 ==&gt;m/2/0=&gt;8
 ==&gt;boot/file=&gt;file::&lt;/home/killswitch/software/metatron/boot/boot.mtron?p=rw-rw-r--&gt;@boot/file
@@ -2789,76 +2781,76 @@ mtron&gt; */m/llm/model
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">​
 mtron&gt; *ollama:+
 ==&gt;model::[
- think   =&gt;noobj,
- name    =&gt;deepseek-coder:latest,
- provider=&gt;!*/sys/space/ollama,
  size    =&gt;gB::0.72,
+ provider=&gt;!*/sys/space/ollama,
+ name    =&gt;deepseek-coder:latest,
+ think   =&gt;noobj,
  skill   =&gt;[completion]]@ollama:deepseek-coder:latest
 ==&gt;model::[
- think   =&gt;[=&gt;],
- name    =&gt;&lt;deepseek-v3.2:cloud&gt;,
- provider=&gt;!*/sys/space/ollama,
- size    =&gt;gB::0.00,
- skill   =&gt;[completion,tools,thinking]]@&lt;ollama:deepseek-v3.2:cloud&gt;
-==&gt;model::[
- think   =&gt;[=&gt;],
- name    =&gt;qwen3:latest,
- provider=&gt;!*/sys/space/ollama,
  size    =&gt;gB::4.87,
+ provider=&gt;!*/sys/space/ollama,
+ name    =&gt;qwen3:latest,
+ think   =&gt;[=&gt;],
  skill   =&gt;[completion,tools,thinking]]@ollama:qwen3:latest
 ==&gt;model::[
- think   =&gt;noobj,
- name    =&gt;llama3-groq-tool-use:latest,
- provider=&gt;!*/sys/space/ollama,
  size    =&gt;gB::4.34,
+ provider=&gt;!*/sys/space/ollama,
+ name    =&gt;llama3-groq-tool-use:latest,
+ think   =&gt;noobj,
  skill   =&gt;[completion,tools]]@ollama:llama3-groq-tool-use:latest
 ==&gt;model::[
- think   =&gt;[=&gt;],
- name    =&gt;&lt;glm-4.7-flash:latest&gt;,
+ size    =&gt;gB::0.00,
  provider=&gt;!*/sys/space/ollama,
+ name    =&gt;&lt;deepseek-v3.2:cloud&gt;,
+ think   =&gt;[=&gt;],
+ skill   =&gt;[completion,tools,thinking]]@&lt;ollama:deepseek-v3.2:cloud&gt;
+==&gt;model::[
  size    =&gt;gB::17.71,
+ provider=&gt;!*/sys/space/ollama,
+ name    =&gt;&lt;glm-4.7-flash:latest&gt;,
+ think   =&gt;[=&gt;],
  skill   =&gt;[completion,tools,thinking]]@&lt;ollama:glm-4.7-flash:latest&gt;
 ==&gt;model::[
- think   =&gt;noobj,
- name    =&gt;tinyllama:latest,
- provider=&gt;!*/sys/space/ollama,
  size    =&gt;gB::0.59,
+ provider=&gt;!*/sys/space/ollama,
+ name    =&gt;tinyllama:latest,
+ think   =&gt;noobj,
  skill   =&gt;[completion]]@ollama:tinyllama:latest
 ==&gt;model::[
- think   =&gt;noobj,
- name    =&gt;deepcoder:latest,
- provider=&gt;!*/sys/space/ollama,
  size    =&gt;gB::8.37,
+ provider=&gt;!*/sys/space/ollama,
+ name    =&gt;deepcoder:latest,
+ think   =&gt;noobj,
  skill   =&gt;[completion]]@ollama:deepcoder:latest
 ==&gt;model::[
- think   =&gt;[=&gt;],
- name    =&gt;gpt-oss:latest,
- provider=&gt;!*/sys/space/ollama,
  size    =&gt;gB::12.85,
+ provider=&gt;!*/sys/space/ollama,
+ name    =&gt;gpt-oss:latest,
+ think   =&gt;[=&gt;],
  skill   =&gt;[completion,tools,thinking]]@ollama:gpt-oss:latest
 ==&gt;model::[
- think   =&gt;[=&gt;],
- name    =&gt;qwen3:8b,
- provider=&gt;!*/sys/space/ollama,
  size    =&gt;gB::4.87,
+ provider=&gt;!*/sys/space/ollama,
+ name    =&gt;qwen3:8b,
+ think   =&gt;[=&gt;],
  skill   =&gt;[completion,tools,thinking]]@ollama:qwen3:8b
 ==&gt;model::[
- think   =&gt;[=&gt;],
- name    =&gt;&lt;minimax-m2.5:cloud&gt;,
- provider=&gt;!*/sys/space/ollama,
- size    =&gt;gB::0.00,
- skill   =&gt;[completion,tools,thinking]]@&lt;ollama:minimax-m2.5:cloud&gt;
-==&gt;model::[
- think   =&gt;noobj,
- name    =&gt;qwen3-coder-next:latest,
- provider=&gt;!*/sys/space/ollama,
  size    =&gt;gB::48.19,
+ provider=&gt;!*/sys/space/ollama,
+ name    =&gt;qwen3-coder-next:latest,
+ think   =&gt;noobj,
  skill   =&gt;[completion,tools]]@ollama:qwen3-coder-next:latest
 ==&gt;model::[
- think   =&gt;noobj,
- name    =&gt;llava:latest,
+ size    =&gt;gB::0.00,
  provider=&gt;!*/sys/space/ollama,
+ name    =&gt;&lt;minimax-m2.5:cloud&gt;,
+ think   =&gt;[=&gt;],
+ skill   =&gt;[completion,tools,thinking]]@&lt;ollama:minimax-m2.5:cloud&gt;
+==&gt;model::[
  size    =&gt;gB::4.41,
+ provider=&gt;!*/sys/space/ollama,
+ name    =&gt;llava:latest,
+ think   =&gt;noobj,
  skill   =&gt;[completion,vision]]@ollama:llava:latest
 ​</code></pre>
 </div>
@@ -3082,8 +3074,8 @@ mtron&gt; */sys/fail/+               ​2​
 	 \_dom   | uri::T
 	 \_args  | [,]][...]@/sys/fail/173
 ==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/164
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/178
 ==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/177
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/178
 ==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/182
 ==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/188
 ==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/160
@@ -3994,8 +3986,8 @@ mtron&gt; *m/0/0       ​1​
 ==&gt;0
 ​
 mtron&gt; *m/0/+       ​2​
-==&gt;3
 ==&gt;2
+==&gt;3
 ==&gt;0
 ==&gt;1
 ​
@@ -4026,8 +4018,8 @@ mtron&gt; *m/0/0       ​1​
 ==&gt;0
 ​
 mtron&gt; *m/0/+       ​2​
-==&gt;3
 ==&gt;2
+==&gt;3
 ==&gt;0
 ==&gt;1
 ​
@@ -4055,8 +4047,8 @@ mtron&gt; *m/0/0       ​1​
 ==&gt;0
 ​
 mtron&gt; *m/0/+       ​2​
-==&gt;3
 ==&gt;2
+==&gt;3
 ==&gt;0
 ==&gt;1
 ​
@@ -4875,7 +4867,7 @@ vertexA vertexB   redirect  ┌─┬─┬─┬┼┬─┐   ┌┼┬─┬�
 </div>
 </div>
 </div>
-<table class="tableblock frame-all grid-all stretch table-bordered small center">
+<table class="tableblock frame-all grid-all stretch mx-auto">
 <colgroup>
 <col style="width: 50%;">
 <col style="width: 50%;">

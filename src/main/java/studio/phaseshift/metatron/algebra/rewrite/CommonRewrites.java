@@ -92,9 +92,8 @@ public final class CommonRewrites {
                 .match(FROM_INST_TID, COUNT_INST_TID)
                 .matchPredicate(matches -> {
                     final Obj ref = matches.getFirst().arg(0);
-                    if (ref.isUri() && ref.uriValue().retract(1).hasPattern())
-                        return false;
-                    return true;
+                    // patterns operate across collections/tables and require different rewrtting
+                    return !ref.isUri() || !ref.uriValue().retract(1).hasPattern();
                 })
                 .optimize("native_count", (space, furi, coeff) -> {
                     final long count = countFunction.apply(space, furi);

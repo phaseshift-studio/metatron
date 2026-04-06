@@ -22,6 +22,7 @@ import org.apache.tinkerpop.gremlin.jsr223.DefaultGremlinScriptEngineManager;
 import org.apache.tinkerpop.gremlin.jsr223.GremlinLangScriptEngineFactory;
 import org.apache.tinkerpop.gremlin.jsr223.GremlinScriptEngine;
 import org.apache.tinkerpop.gremlin.structure.*;
+import studio.phaseshift.metatron.algebra.rewrite.Rewriter;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.grph.io.ObjTP3Serializer;
@@ -32,6 +33,7 @@ import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
+import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.stream.Stream;
@@ -50,7 +52,7 @@ import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_fro
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
@@ -218,7 +220,16 @@ public class grphInstSet extends AbstractInstSet {
                                 }
                                 return EdgeMap.edgeToRec(edge, lhs.<VertexMap>jvmAs().space).tid(edgeLabel);
                             }));
-                        }))));
+                        })),
+                uri(REWRITE), lst(
+                        InstSet.Helper.rewriter(GRPH_INST_TID.extend(REWRITE).extend("out_incident_adjacent"), code -> code.selfJVM(
+                                Rewriter.search(code.insts())
+                                        .match(List.of(instA(OUTE_INST_TID), instA(INV_INST_TID)))
+                                        .rewrite(map -> List.of(instB(OUT_INST_TID, map.entrySet().iterator().next().getValue().args())))).asCode()),
+                        InstSet.Helper.rewriter(GRPH_INST_TID.extend(REWRITE).extend("in_incident_adjacent"), code -> code.selfJVM(
+                                Rewriter.search(code.insts())
+                                        .match(List.of(instA(INE_INST_TID), instA(OUTV_INST_TID)))
+                                        .rewrite(map -> List.of(instB(IN_INST_TID, map.entrySet().iterator().next().getValue().args())))).asCode()))));
         docWrap(this, "from vertex to vertex, the edge of the metatron is traversed");
         super.setup();
     }

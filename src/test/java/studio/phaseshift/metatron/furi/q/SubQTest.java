@@ -26,9 +26,8 @@ import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.util.CommonUtil;
 
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.furi.q.QCollection.SUBQ_TID;
 import static studio.phaseshift.metatron.furi.q.QCollection.SUBSCRIPTION_TID;
 
 /*
@@ -53,14 +52,12 @@ public interface SubQTest {
             "$$/xyz/+/+?subq ->(||(>>1.to($$/abc)))             % $$/xyz/a/b -> 12        % *$$/abc.eq(12)"
     }, delimiter = '%')
     default void testSubQ(String subscription, String writing, String expecting) {
-        getSpace().addQ(QCollection.subq());
+        getSpace().qs().lstValue().stream().filter(x -> x.tid().equals(SUBQ_TID)).findAny().orElseThrow();
         final Obj sub = mParser.eval(make(subscription));
         assertEquals(SUBSCRIPTION_TID, sub.tid());
         final Obj writeObj = mParser.eval(make(writing));
         assertNotEquals(sub, writeObj);
-        CommonUtil.sleepThread(350);
+        CommonUtil.sleepThread(750);
         assertTrue(mParser.eval(make(expecting)).boolValue());
     }
-
-
 }

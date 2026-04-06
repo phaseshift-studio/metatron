@@ -131,19 +131,15 @@
          if (!config.has(NATIVE)) {
              return;
          }
-
          final Obj dataset = config.at(NATIVE).asRec().at(LOAD);
          if (dataset.isNoObj()) {
              return;
          }
-
          // Only TinkerGraph has the TinkerFactory datasets
          if (graph instanceof TinkerGraph) {
              final TinkerGraph tinkerGraph = (TinkerGraph) graph;
              final String datasetName = dataset.uriValue().toString();
-
              Graphitty.log(graphSpace.class).info("loading dataset %s into TinkerGraph", datasetName);
-
              switch (datasetName) {
                  case "modern" -> {
                      TinkerFactory.generateModern(tinkerGraph);
@@ -178,10 +174,12 @@
          super(graph, config, GRAPHDB_SPACE_TID, vid);
          LOG.debug("tp3 space: %s", this);
          graph.configuration().setProperty(GRAPH_CONFIGURATION_KEY, vid.toString());
-         if (null == FACTORY)
+         if (null == FACTORY) {
+             LOG.warn("no obj factory specified. defaulting to an extended mobjfactory that assumes 64-bit long element ids");
              FACTORY = MObjFactory.of()
                      .addExtension(Vertex.class, v -> VertexMap.vertexToRec(v, this))
                      .addExtension(Edge.class, e -> EdgeMap.edgeToRec(e, this));
+         }
          final Rec tp3Config = rec();
          new ConfigurationMap(sjvm.configuration()).forEach((key, value) -> {
              try {
