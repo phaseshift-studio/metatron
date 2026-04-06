@@ -22,7 +22,6 @@ import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
-import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
@@ -39,7 +38,6 @@ import static studio.phaseshift.metatron.furi.Q.Q_TID;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.Inst.*;
 import static studio.phaseshift.metatron.isa.m.type.Inst.DOM;
 import static studio.phaseshift.metatron.isa.m.type.Inst.OBJ;
@@ -51,7 +49,6 @@ import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -102,14 +99,7 @@ public final class QCollection {
     public static final fURI SUBQ_PATTERN = f("subq");
     public static final fURI SUBQ_TID = Q_TID.extend("subq");
     public static final fURI SUBSCRIPTION_TID = SUBQ_TID.extend("sub");
-    public static final Type SUBQ_TYPE = Type.Builder.build()
-            .vid(SUBQ_TID)
-            .tid(REC_TID)
-            .constructor(
-                    instC(mInstSet.M_ISA_INST_TID.dom(ALL.maybe()).rng(SUBQ_TID),
-                            lst(isa_(rec()).tryToInst()),
-                            (lhs, inst) -> QCollection.subq())).create();
-
+    public static final Type SUBQ_TYPE = Type.Builder.build().vid(SUBQ_TID).tid(Q_TID).constructor(QCollection::subq).create();
     public static final Type SUB_TYPE =
             Type.Builder.build()
                     .vid(SUBSCRIPTION_TID)

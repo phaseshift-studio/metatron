@@ -274,6 +274,7 @@ class InstSetInfo:
     rewrites: List[RewriteInfo] = field(default_factory=list)
     spaces: List[SpaceInfo] = field(default_factory=list)
     consts: List[ConstInfo] = field(default_factory=list)
+    json: Optional[dict] = None
     raw_metadata: str = ""
     full: str = ""
 
@@ -281,6 +282,29 @@ class InstSetInfo:
 # ============================================================================
 # Documentation Fetcher
 # ============================================================================
+
+async def getJSON(client: MetatronClient, query: str, endpoint: str = "/m/web/inst/doc_json()") -> Optional[str]:
+    import json
+    result = await client.eval(query + '.' + endpoint)
+    if not result or result == "noobj" or result.startswith("</m/fail>"):
+        logger.debug(f"Could not fetch JSON for query: {query}")
+        return None
+    match = re.search(r"</m/str>::'(.+)'", result, re.DOTALL)
+    if match:
+        return json.loads(match.group(1))
+    return None
+
+
+async def getNative(client: MetatronClient, query: str, endpoint: str = "/m/web/inst/doc()") -> Optional[str]:
+    result = await client.eval(query + '.' + endpoint)
+    if not result or result == "noobj" or result.startswith("</m/fail>"):
+        logger.debug(f"Could not fetch result for query: {query}")
+        return None
+    match = re.search(r"</m/str>::'(.+)'", result, re.DOTALL)
+    if match:
+        return match.group(1)
+    return None
+
 
 class InstSetDocFetcher:
     """Fetches instruction set documentation from a running metatron instance."""
@@ -294,29 +318,32 @@ class InstSetDocFetcher:
         import json
         name = vid.split('/')[-1] if '/' in vid else vid
         info = InstSetInfo(vid=vid, name=name)
-
-        # Fetch instruction set description
-        info.desc = await self._fetch_instset_desc(vid)
-        subspaces = await self.client.eval(f"'*{vid}>>space'./m/web/inst/doc_json()")
-        subspaces = json.loads(subspaces.removeprefix("</m/str>::'").removesuffix("'"))
+        info.json = await getJSON(self.client, f"'*{vid}'")
+        logger.debug(f"complete: {info.full}")
+        info.desc = info.json['desc'] if 'desc' in info.json else ""
+        subspaces = info.json['space'] if 'space' in info.json else dict()
         if "sub" in subspaces:
-            subspaces = str(subspaces['sub']) # TODO: ghetto (using string matching to remove sub instsets from instset)
+            info.children = subspaces['sub']  # TODO: ghetto (using string matching to remove sub instsets from instset)
         else:
-            subspaces = ""
-        temp = await self.client.eval(f"'*{vid}'./m/web/inst/doc()")
-        temp = temp.removeprefix("</m/str>::'").removesuffix("'")
-        info.full = temp
-        # Fetch the instruction set space metadata
+            info.children = []
+        info.full = await getNative(self.client, f"'*{vid}'")
         try:
             info.raw_metadata = await self.client.eval(f"*{vid}/")
         except Exception as e:
             logger.warning(f"Could not fetch metadata for {vid}: {e}")
-
+        logger.info(f"""
+            vid: {info.vid}
+            name: {info.name}
+            children: {info.children}
+            desc: {info.desc}
+            full: {info.full}
+            raw_metadata: {info.raw_metadata}
+        """)
         # Fetch types via doc() for pretty formatting
         info.types = await self._fetch_types(vid)
-        info.types = list(filter(lambda item: item.vid not in subspaces, info.types))  # TODO: ghetto (using string matching to remove sub instsets from instset)
+        # TODO: ghetto (using string matching to remove sub instsets from instset)
+        info.types = list(filter(lambda item: item.vid not in str(info.children), info.types))
 
-        # Fetch instructions via doc() for pretty formatting
         info.insts = await self._fetch_instructions(vid)
 
         # Fetch spaces (sub-instruction sets)
@@ -334,28 +361,6 @@ class InstSetDocFetcher:
         logger.info(f"Fetched {vid}: {len(info.types)} types, {len(info.insts)} instructions, "
                     f"{len(info.rewrites)} rewrites, {len(info.spaces)} spaces, {len(info.consts)} consts")
         return info
-
-    async def _fetch_instset_desc(self, vid: str) -> str:
-        """Fetch the description for the instruction set itself."""
-        import json
-        try:
-            # Query: "*/m?docq>>desc".doc_json()
-            vid_escaped = vid.replace("'", "\\'")
-            query = f'"*{vid_escaped}?docq>>desc".doc_json()'
-            result = await self.client.eval(query)
-
-            if not result or result == "noobj" or result.startswith("</m/fail>"):
-                return ""
-
-            # Extract the description string from response: </m/str>::'description'
-            match = re.search(r"</m/str>::'(.+)'", result, re.DOTALL)
-            if match:
-                return match.group(1)
-
-            return ""
-        except Exception as e:
-            logger.debug(f"Could not fetch instset desc for {vid}: {e}")
-            return ""
 
     async def _fetch_types(self, vid: str) -> List[TypeInfo]:
         """Fetch all types defined by this instruction set using doc() for pretty output."""
@@ -804,7 +809,7 @@ class HTMLDocGenerator:
             return "/" + parts[0] if parts else ""
         return "/" + "/".join(parts[:-1])
 
-    def generate(self, build_number:int = 0) -> str:
+    def generate(self, build_number: int = 0) -> str:
         """Generate complete HTML documentation."""
         if self.use_website_template:
             return self._generate_with_website_template(build_number=build_number)
@@ -888,7 +893,7 @@ class HTMLDocGenerator:
         # Add description if available (skip if empty or "null")
         desc_html = ""
         if self.instset.desc and self.instset.desc != "null":
-            desc_html = f'<p class="text-light mt-3 mb-0" style="line-height:2.5em; max-width: 1000px; margin-left: auto; margin-right: auto;">{self.instset.desc.replace("\\n","")}</p>'
+            desc_html = f'<p class="text-light mt-3 mb-0" style="line-height:2.5em; max-width: 1000px; margin-left: auto; margin-right: auto;">{self.instset.desc.replace("\\n", "")}</p>'
 
         return f"""
         <div class="container-xxl py-4">
@@ -973,7 +978,7 @@ class HTMLDocGenerator:
                     <span class="code">{html.escape(c.name)}</span>
                     <span class="badge bg-secondary">C</span>
                 </a>''')
-    
+
         type_items = []
         for t in sorted(self.instset.types, key=lambda x: x.name):
             type_items.append(f'''
@@ -1018,7 +1023,7 @@ class HTMLDocGenerator:
                     {''.join(const_items)}
                 </div>
             </div>''' if const_items else ""
-        
+
         type_list = f'''
             <div class="mb-3">
                 <h6 class="text-primary mb-2">Types</h6>
@@ -1457,7 +1462,7 @@ class HTMLDocGenerator:
             {''.join(items)}
         </div>"""
 
-    def _generate_instset_footer(self,build_number:int = 0) -> str:
+    def _generate_instset_footer(self, build_number: int = 0) -> str:
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         return f"""
         <div class="container-xxl py-3 text-center">

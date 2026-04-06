@@ -35,8 +35,7 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.Q.Q_TYPE;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.furi.q.QCollection.CONSTQ_TYPE;
-import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
+import static studio.phaseshift.metatron.furi.q.QCollection.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.space.memSpace.MEM_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.space.metaSpace.META_SPACE_TYPE;
@@ -238,20 +237,6 @@ public class mInstSet extends AbstractInstSet {
                 uri(PATTERN), uri(M_ISA_TID.extend(ALL)),
                 uri(CONST), lst(docWrap(noobj(), "a no object")),
                 uri(TYPE), lst(
-                      /*  NOOBJ_TYPE,
-                        FAIL_TYPE,
-                        BOOL_TYPE,
-                        INT_TYPE,
-                        REAL_TYPE,
-                        BYTES_TYPE,
-                        STR_TYPE,
-                        URI_TYPE,
-                        REL_TYPE,
-                        LST_TYPE,
-                        REC_TYPE,
-                        INST_TYPE,
-                        INSTSET_TYPE,
-                        CODE_TYPE,*/
                         docWrap(MONO_TYPE, "an atomic obj"),
                         docWrap(POLY_TYPE, "a obj composed of other objs"),
                         //  docWrap(NOOBJ_TYPE, "a no object"),
@@ -276,6 +261,10 @@ public class mInstSet extends AbstractInstSet {
                         META_SPACE_TYPE,
                         Q_TYPE,
                         /// ///////////////////////////////////
+                        SUBQ_TYPE,
+                        TYPEQ_TYPE,
+                        DOCQ_TYPE,
+                        INCRQ_TYPE,
                         CONSTQ_TYPE),
                 uri(INST), lst(Stream.of(
                         Bool.BoolType.insts().stream(),

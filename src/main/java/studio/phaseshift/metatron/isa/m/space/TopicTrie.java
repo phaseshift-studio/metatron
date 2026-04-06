@@ -25,6 +25,8 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+
 /**
  * A Topic Trie (prefix tree) for efficient MQTT-style wildcard matching on fURIs.
  * <p>

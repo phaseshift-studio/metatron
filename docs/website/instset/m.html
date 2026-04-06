@@ -234,7 +234,7 @@ bin/metatron</code></pre>
                 <p style="line-height:0.1rem;" class="subtitle text-light">instruction set reference</p>
             </div>
             <div class="text-light">
-                <p class="text-light mt-3 mb-0" style="line-height:2.5em; max-width: 1000px; margin-left: auto; margin-right: auto;">"the core instruction set of metatron containing the base types and useful instructions to manipulate them"</p>
+                
             </div>
             <div class="accordion" id="accordianInstSet">
                 <div class="accordion-item">
@@ -254,55 +254,15 @@ bin/metatron</code></pre>
        pre_write=>inst?rng=#{*}&dom=#{?}(uri::T,#::T){<j>},
        pattern  =>docq,
        obj      =>mem::[=>]]],
- const  =>[noobj],
- type   =>[
-   mono::T[inst?rng=mono&dom=#{?}(){<j>}],
-   poly::T[inst?rng=poly&dom=#{?}(){<j>}],
-   bool::T,
-   int::T,
-   real::T,
-   bytes::T,
-   str::T,
-   uri::T,
-   rel::T,
-   lst::T,
-   rec::T,
-   rec::T[?[
-     {?}const  =>[#::T],
-     {?}type   =>[T::T],
-     {?}inst   =>[inst::T],
-     {?}rewrite=>[inst::T],
-     {?}sugar  =>[lst::T]]]@/m/instset,
-   inst::T,
-   code::T,
-   fail::T,
-   rec::T[?[
-     pattern=>uri::T,
-     {?}q   =>[
-       uri::T=>rec::T[][inst?rng=q&dom=#{?}([
- pattern       =>uri::T,
- pre_write{?}  =>inst::T,
- post_write{?} =>inst::T,
- qless_write{?}=>inst::T,
- pre_read{?}   =>inst::T,
- post_read{?}  =>inst::T]){<j>}]@/m/space/q]]]@/m/space,
-   space::T[][inst?rng=mem&dom=#{?}(isa([
- pattern   =>uri::T,
- {?}persist=>uri::T[][inst?rng=file&dom=#{?}(uri::T){<j>}]@/m/mach/file])){<j>}]@/m/space/mem,
-   space::T[][inst?rng=stack&dom=#{?}(isa([pattern=>uri::T])){<j>}]@/m/space/stack,
-   space::T[][inst?rng=meta&dom=#{?}(isa([
- pattern=>uri::T,
- host   =>uri::T,
- route  =>[uri::T=>uri::T],
- peers  =>[uri{*}::T]])){<j>}]@/m/space/meta,
-   rec::T[][inst?rng=q&dom=#{?}([
- pattern       =>uri::T,
- pre_write{?}  =>inst::T,
- post_write{?} =>inst::T,
- qless_write{?}=>inst::T,
- pre_read{?}   =>inst::T,
- post_read{?}  =>inst::T]){<j>}]@/m/space/q,
-   q::T[][inst?rng=constq&dom=#{?}(){<j>}]@/m/space/q/constq],
+ rewrite=>[
+   /m/inst/rewrite/id_removal?rng=code{?}&dom=code(){<j>},
+   /m/inst/rewrite/map_nest?rng=code{?}&dom=code(){<j>},
+   /m/inst/rewrite/else_after_count?rng=code{?}&dom=code(){<j>},
+   /m/inst/rewrite/plus_zero?rng=code{?}&dom=code(){<j>},
+   /m/inst/rewrite/mult_one?rng=code{?}&dom=code(){<j>},
+   /m/inst/rewrite/split_merge_collapse?rng=code{?}&dom=code(){<j>},
+   /m/inst/rewrite/split_merge_left_factor?rng=code{?}&dom=code(){<j>},
+   /m/inst/rewrite/split_merge_right_factor?rng=code{?}&dom=code(){<j>}],
  inst   =>[
    as?rng=bool&dom=bool(bool::T){<j>},
    as?rng=bytes&dom=bool(bytes::T){<j>},
@@ -531,15 +491,59 @@ bin/metatron</code></pre>
    rshift?rng=B{?}&dom=A(){<j>},
    lshift?rng=B{?}&dom=A(){<j>},
    start?rng=A{**}&dom=noobj{0}(A{**}::T){<j>}],
- rewrite=>[
-   /m/inst/rewrite/id_removal?rng=code{?}&dom=code(){<j>},
-   /m/inst/rewrite/map_nest?rng=code{?}&dom=code(){<j>},
-   /m/inst/rewrite/else_after_count?rng=code{?}&dom=code(){<j>},
-   /m/inst/rewrite/plus_zero?rng=code{?}&dom=code(){<j>},
-   /m/inst/rewrite/mult_one?rng=code{?}&dom=code(){<j>},
-   /m/inst/rewrite/split_merge_collapse?rng=code{?}&dom=code(){<j>},
-   /m/inst/rewrite/split_merge_left_factor?rng=code{?}&dom=code(){<j>},
-   /m/inst/rewrite/split_merge_right_factor?rng=code{?}&dom=code(){<j>}]]@/m</code></pre>
+ type   =>[
+   mono::T[inst?rng=mono&dom=#{?}(){<j>}],
+   poly::T[inst?rng=poly&dom=#{?}(){<j>}],
+   bool::T,
+   int::T,
+   real::T,
+   bytes::T,
+   str::T,
+   uri::T,
+   rel::T,
+   lst::T,
+   rec::T,
+   rec::T[?[
+     {?}const  =>[#::T],
+     {?}type   =>[T::T],
+     {?}inst   =>[inst::T],
+     {?}rewrite=>[inst::T],
+     {?}sugar  =>[lst::T]]]@/m/instset,
+   inst::T,
+   code::T,
+   fail::T,
+   rec::T[?[
+     pattern=>uri::T,
+     {?}q   =>[
+       uri::T=>rec::T[][inst?rng=q&dom=#{?}([
+ pattern       =>uri::T,
+ pre_write{?}  =>inst::T,
+ post_write{?} =>inst::T,
+ qless_write{?}=>inst::T,
+ pre_read{?}   =>inst::T,
+ post_read{?}  =>inst::T]){<j>}]@/m/space/q]]]@/m/space,
+   space::T[][inst?rng=mem&dom=#{?}(isa([
+ pattern   =>uri::T,
+ {?}persist=>uri::T[][inst?rng=file&dom=#{?}(uri::T){<j>}]@/m/mach/file])){<j>}]@/m/space/mem,
+   space::T[][inst?rng=stack&dom=#{?}(isa([pattern=>uri::T])){<j>}]@/m/space/stack,
+   space::T[][inst?rng=meta&dom=#{?}(isa([
+ pattern=>uri::T,
+ host   =>uri::T,
+ route  =>[uri::T=>uri::T],
+ peers  =>[uri{*}::T]])){<j>}]@/m/space/meta,
+   rec::T[][inst?rng=q&dom=#{?}([
+ pattern       =>uri::T,
+ pre_write{?}  =>inst::T,
+ post_write{?} =>inst::T,
+ qless_write{?}=>inst::T,
+ pre_read{?}   =>inst::T,
+ post_read{?}  =>inst::T]){<j>}]@/m/space/q,
+   q::T[][inst?rng=subq&dom=#{?}(){<j>}]@/m/space/q/subq,
+   q::T[][inst?rng=typeq&dom=#{?}(){<j>}]@/m/space/q/typeq,
+   q::T[][inst?rng=docq&dom=#{?}(){<j>}]@/m/space/q/docq,
+   q::T[][inst?rng=incrq&dom=#{?}(){<j>}]@/m/space/q/incrq,
+   q::T[][inst?rng=constq&dom=#{?}(){<j>}]@/m/space/q/constq],
+ const  =>[noobj]]@/m</code></pre>
                         </div>
                     </div>
                 </div>
@@ -3212,7 +3216,7 @@ bin/metatron</code></pre>
         <div class="container-xxl py-3 text-center">
             <hr class="border-secondary">
             <small class="text-muted">
-                generated by metatron instset doc generator on build 0-2026-04-05 21:40:02<br>
+                generated by metatron instset doc generator on build 0-2026-04-06 09:28:22<br>
                 © PhaseShift Studio, LLC
             </small>
         </div>
