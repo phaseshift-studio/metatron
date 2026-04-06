@@ -15,7 +15,7 @@ One nicety that immediately jumps out when comparing JSON and mtron is mtron's l
 
 --
 
-[cols=".^6a,.^6a",separator=🧱,options=header,role="table-bordered small center",align="center"]
+[cols=".^6a,.^6a",separator=🧱,options=header,role="table-bordered small",role="mx-auto"]
 |===
 ^🧱 JSON ^🧱 mtron
 🧱

@@ -42,7 +42,6 @@ import java.util.AbstractMap;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -61,7 +60,7 @@ import static studio.phaseshift.metatron.isa.mach.machInstSet.SPACE_CONFIG;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 
-public class memSpace extends AbstractSpace<Map<fURI, Obj>> {
+public class memSpace extends AbstractSpace<TopicTrie> {
 
     public static final fURI MEM_SPACE_TID = M_ISA_TID.extend("space/mem");
 
@@ -76,12 +75,12 @@ public class memSpace extends AbstractSpace<Map<fURI, Obj>> {
                             (lhs, inst) -> memSpace.of(inst.arg(0).asRec(), inst.arg(0).vid()))).create();
 
     protected memSpace(final Map<Obj, Obj> config, final fURI vid) {
-        super(new ConcurrentHashMap<>(), config, MEM_SPACE_TID, vid);
+        super(new TopicTrie(), config, MEM_SPACE_TID, vid);
         load();
     }
 
     protected memSpace(final Map<Obj, Obj> config, final fURI tid, final fURI vid) {
-        super(new ConcurrentHashMap<>(), config, tid, vid);
+        super(new TopicTrie(), config, tid, vid);
         load();
     }
 
@@ -107,17 +106,46 @@ public class memSpace extends AbstractSpace<Map<fURI, Obj>> {
                 return this.sjvm().entrySet().stream().map(kv -> IdObj.of(kv.getKey(), kv.getValue())).iterator();
             else {
                 if (pattern.hasPattern()) {
-                    return this.sjvm().entrySet()
-                            .stream()
+                    // TopicTrie provides efficient MQTT-style wildcard matching by path segments,
+                    // then we do a "mini-linear scan" at matching nodes using fURI.test()
+                    // to handle query params, coefficients, polys, etc.
+                    final fURI nodePattern = pattern.asNode();
+
+                    // Stream 1: Direct matches from trie
+                    Stream<Map.Entry<fURI, Obj>> directMatches = this.sjvm().match(nodePattern).stream();
+
+                    // Stream 2: Check parent paths for polys that can expand to match
+                    // For pattern /t/+, check if /t has a poly; for /t/+/+, check /t/+ and /t, etc.
+                    Stream<Map.Entry<fURI, Obj>> polyParents = Stream.empty();
+                    fURI parent = nodePattern.retract(1);
+                    while (parent.segmentLength() > 0) {
+                        final Obj parentValue = this.sjvm().get(parent);
+                        if (parentValue != null && parentValue.isPoly()) {
+                            final fURI parentKey = parent;
+                            polyParents = Stream.concat(polyParents,
+                                Stream.of(new AbstractMap.SimpleEntry<>(parentKey, parentValue)));
+                        }
+                        parent = parent.retract(1);
+                    }
+                    // Also check root
+                    final Obj rootValue = this.sjvm().get(parent);
+                    if (rootValue != null && rootValue.isPoly()) {
+                        final fURI rootKey = parent;
+                        polyParents = Stream.concat(polyParents,
+                            Stream.of(new AbstractMap.SimpleEntry<>(rootKey, rootValue)));
+                    }
+
+                    return Stream.concat(directMatches, polyParents)
                             .flatMap(kv -> kv.getValue().isObjs() ? kv.getValue().stream().map(vv -> new AbstractMap.SimpleEntry<>(kv.getKey(), vv)) : Stream.of(kv))
                             .flatMap(kv -> Stream.concat(
-                                    kv.getKey().test(pattern.asNode()) ?
+                                    kv.getKey().test(nodePattern) ?
                                             Stream.of(IdObj.of(kv.getKey(), kv.getValue())) :
                                             Stream.empty(),
                                     kv.getValue().isPoly() ?
-                                            Space.Helper.unrollPoly(kv.getKey(), kv.getValue().as(), pattern.asNode()).stream() :
+                                            Space.Helper.unrollPoly(kv.getKey(), kv.getValue().as(), nodePattern).stream() :
                                             Stream.empty())).iterator();
                 } else {
+                    // Exact lookup - trie navigates to node, then Map.get() uses fURI.equals()
                     final Obj value = this.sjvm().get(pattern);
                     return null == value ? IteratorUtil.of() : IteratorUtil.of(IdObj.of(pattern, value));
                 }
@@ -136,8 +164,10 @@ public class memSpace extends AbstractSpace<Map<fURI, Obj>> {
                     LOG.trace("removing %s", pattern);
                     this.sjvm().remove(pattern);
                     CommonUtil.close(current);
-                } else
-                    this.sjvm().put(pattern, (null != current && (obj.isObjs() || current.isObjs())) ? current.append(obj) : obj);
+                } else {
+                    final Obj newValue = (null != current && (obj.isObjs() || current.isObjs())) ? current.append(obj) : obj;
+                    this.sjvm().put(pattern, newValue);
+                }
             }
             return obj;
         };
@@ -179,6 +209,7 @@ public class memSpace extends AbstractSpace<Map<fURI, Obj>> {
             }
             try (final FileOutputStream out = new FileOutputStream(path.uriValue().toString())) {
                 out.write("print('loading persisted data\\n');\n".getBytes());
+                // TopicTrie.forEach() iterates all entries across all nodes
                 this.sjvm().forEach((key, value) -> {
                     try {
                         out.write((key + " -> " + new String(serializer.outputBytes(value).array(), StandardCharsets.UTF_8) + ";\n").getBytes(StandardCharsets.UTF_8));
@@ -186,8 +217,6 @@ public class memSpace extends AbstractSpace<Map<fURI, Obj>> {
                         throw MTronException.of(e);
                     }
                 });
-                //out.write("print('complete.\\n');\n".getBytes(StandardCharsets.UTF_8));
-
             } catch (final Exception e) {
                 throw MTronException.of(e);
             }
