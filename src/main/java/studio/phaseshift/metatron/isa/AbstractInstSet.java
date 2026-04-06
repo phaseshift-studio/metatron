@@ -60,7 +60,12 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
     }
 
     protected boolean checkPattern(final Obj obj) {
-        if (false && null != obj.vid() && !obj.vid().test(this.pattern())) {
+        if (obj.isInst()) {
+            if (!obj.tid().test(this.pattern())) {
+                LOG.warn("obj at %s outside instset pattern %s: (ignoring) %s", obj.tid(), this.pattern(), obj);
+                return false;
+            }
+        } else if (null != obj.vid() && !obj.vid().test(this.pattern())) {
             LOG.warn("obj at %s outside instset pattern %s: (ignoring) %s", obj.vid(), this.pattern(), obj);
             return false;
         }
@@ -124,33 +129,50 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
         this.jvm().forEach((k, v) -> {
             if (k.equals(uri(CONST))) {
                 v.lstValue().stream()
-                        .filter(this::checkPattern)
+                        //.filter(this::checkPattern)
                         .filter(c -> checkDepth(c, this.tid.extend(CONST)))
                         .forEach(c -> {
-                            CONST_TABLE.put(c.vid(), c);
-                            Router.global().registerRedirect(f(c.vid().name()), c.vid());
+                            if (!checkPattern(c))
+                                Router.writeToSpace(c);
+                            else {
+                                CONST_TABLE.put(c.vid(), c);
+                                Router.global().registerRedirect(f(c.vid().name()), c.vid());
+                            }
                         });
             } else if (k.equals(uri(TYPE))) {
                 v.lstValue().stream()
-                        .filter(this::checkPattern)
+                        //.filter(this::checkPattern)
                         .filter(t -> checkDepth(t, this.tid))
                         .forEach(t -> {
-                            TYPE_TABLE.put(t.vid(), t.as());
-                            Router.global().registerRedirect(f(t.vid().name()), t.vid());
+                            if (!checkPattern(t))
+                                Router.writeToSpace(t);
+                            else {
+                                TYPE_TABLE.put(t.vid(), t.as());
+                                Router.global().registerRedirect(f(t.vid().name()), t.vid());
+                            }
                         });
             } else if (k.equals(uri(INST))) {
                 v.lstValue().stream()
-                        .filter(this::checkPattern)
+                        //.filter(this::checkPattern)
                         .filter(r -> checkDepth(r, this.tid.extend(INST)))
                         .forEach(i -> {
-                            INST_TABLE.computeIfAbsent(i.tid().basePath(), kk -> new LinkedHashSet<>()).add(i.as());
-                            Router.global().registerRedirect(f(i.tid().name()), i.tid().basePath());
+                            if (!checkPattern(i))
+                                Router.writeToSpace(i.tid(), i);
+                            else {
+                                INST_TABLE.computeIfAbsent(i.tid().basePath(), kk -> new LinkedHashSet<>()).add(i.as());
+                                Router.global().registerRedirect(f(i.tid().name()), i.tid().basePath());
+                            }
                         });
             } else if (k.equals(uri(REWRITE))) {
                 v.lstValue().stream()
-                        .filter(this::checkPattern)
+                        //.filter(this::checkPattern)
                         .filter(r -> checkDepth(r, this.tid.extend(INST).extend(REWRITE)))
-                        .forEach(r -> REWRITE_TABLE.put(r.tid(), r.as()));
+                        .forEach(r -> {
+                            if (!checkPattern(r))
+                                Router.writeToSpace(r.tid(), r);
+                            else
+                                REWRITE_TABLE.put(r.tid(), r.as());
+                        });
             } else if (k.equals(uri(SUGAR))) {
                 LOG.warn("unable to load sugar: %s", v);
                 //v.lstValue().forEach(s -> Router.global().addSugar(s.as()));

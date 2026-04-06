@@ -54,6 +54,8 @@ public final class Tokens {
     public static final String ORG = "org";
     public static final String BLOCK = "block";
     public static final String AI = "AI";
+    public static final String TIME = "time";
+    public static final String ENTRY = "entry";
     public static final String ID = "id";
     public static final String COEFFICIENT = "coefficient";
     public static final String QUERY = "query";
@@ -150,6 +152,8 @@ public final class Tokens {
     public static final String EMPTY = "";
     public static final String ARG = "arg";
     public static final String DESC = "desc";
+    public static final String DIR = "dir";
+    public static final String CONTENT = "content";
     public static final String EXAMPLE = "example";
     public static final String MODEL = "model";
     public static final String DOC = "doc";

@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -39,33 +39,30 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class JRec extends MObj implements Rec {
+public class JRec<T> extends MObj implements Rec {
 
     protected final GraphittyLogger LOG = Graphitty.log(this);
-    protected final Map<Obj, Obj> sjvm;
+    protected T sjvm;
 
-    public JRec(final Object jvm, final Map<Obj, Obj> sjvm, final fURI tid, final fURI vid) {
-        super(jvm, tid, vid);
-        this.sjvm = new LinkedHashMap<>(sjvm);
+    public JRec(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
+        super();
+        this.self(jvm, tid.big(), vid);
+        this.sjvm = (T) this;
+        Obj.Helper.objCheckAndSave(this);
     }
-
-    public JRec(final Map<Obj, Obj> sjvm, final fURI tid, final fURI vid) {
-        super(null, tid, vid);
-        this.jvm = this;
-        this.sjvm = new LinkedHashMap<>(sjvm);
-    }
-
 
     @Override
     public Rec clone(final Object jvm, final fURI tid, final fURI vid) {
-        return super.clone(jvm, tid, vid);
+        final JRec<T> clone = super.clone(jvm, tid, vid);
+        clone.sjvm = (T) clone;
+        return this;
     }
 
     @Override
     public <O extends Obj> O at(final Obj key) {
         return (O) objs(this.findField(key).stream().map(f -> {
-            final O temp = (O) JObjFactory.single().create(f, MTronException.wrap(() -> f.get(this.jvm)), null);
-            this.sjvm.put(key, temp);
+            final O temp = (O) JObjFactory.single().create(f, MTronException.wrap(() -> f.get(this.sjvm)), null);
+            this.jvm().put(key, temp);
             return temp;
         }));
     }
@@ -73,8 +70,8 @@ public class JRec extends MObj implements Rec {
     @Override
     public Rec at(final Obj key, final Obj value) {
         try {
-            this.sjvm.put(key, value);
-            this.findField(key).forEach(f -> MTronException.wrap(() -> f.set(this.jvm, value.jvm())));
+            this.jvm().put(key, value);
+            this.findField(key).forEach(f -> MTronException.wrap(() -> f.set(this.sjvm, value.jvm())));
             return this;
         } catch (final Exception e) {
             throw MTronException.of(e);
@@ -83,9 +80,12 @@ public class JRec extends MObj implements Rec {
 
     @Override
     public Map<Obj, Obj> jvm() {
-        final Map<Obj, Obj> base = null == this.sjvm ? new LinkedHashMap<>() : this.sjvm;
-        //return this.cache;
-        final Map<Obj, Obj> temp = new LinkedHashMap<>(this.findField(uri("#")).stream().collect(Collectors.toMap(f -> uri(f.getName()), f -> JObjFactory.single().toObj(MTronException.wrap(() -> f.get(this.jvm))))));
+        final Map<Obj, Obj> base = (Map<Obj, Obj>) (null == this.jvm ? new LinkedHashMap<>() : this.jvm);
+        if (null == this.sjvm)
+            return base;
+        final Map<Obj, Obj> temp = new LinkedHashMap<>(this.findField(uri("#"))
+                .stream()
+                .collect(Collectors.toMap(f -> uri(f.getName()), f -> JObjFactory.single().toObj(MTronException.wrap(() -> f.get(this.sjvm))))));
         temp.putAll(base);
         return temp;
     }

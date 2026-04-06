@@ -36,10 +36,7 @@ import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.m.type.Rel;
-import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.reflect.JRec;
 import studio.phaseshift.metatron.isa.m.type.reflect.ObjFieldReflection;
 import studio.phaseshift.metatron.isa.mach.type.LogObj;
@@ -51,6 +48,7 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.*;
 import studio.phaseshift.metatron.util.CommonUtil;
+import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.*;
@@ -63,19 +61,28 @@ import java.util.function.Supplier;
 
 import static org.jline.keymap.KeyMap.*;
 import static studio.phaseshift.metatron.BootLoader.BOOTING;
+import static studio.phaseshift.metatron.Tokens.ENTRY;
+import static studio.phaseshift.metatron.Tokens.TIME;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.start_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instA;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.mach.machInstSet.FILE_TID_STRING;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_ISA_TID;
 
-public class Console extends JRec implements Closeable, Runnable {
+public class Console extends JRec<Console> implements Closeable, Runnable {
 
     public static final fURI CONSOLE_TID = MACH_ISA_TID.extend("console");
     @ObjFieldReflection(tid = "/m/uri")
@@ -88,7 +95,8 @@ public class Console extends JRec implements Closeable, Runnable {
     public static String HEADER_FILE = "./conf/ansi_headers.txt";
     //@ObjFieldReflection(tid = FILE_TID_STRING)
     public static Path HISTORY_FILE = Paths.get(".metatron.history");
-
+    @ObjFieldReflection(tid = "/m/inst")
+    public Inst history = instA(f("dummy"));
     private final GraphittyLogger LOG = Graphitty.log(this);
     public static String HEADER_SEPARATOR = "####################";
     private static Terminal terminal;
@@ -137,8 +145,7 @@ public class Console extends JRec implements Closeable, Runnable {
             })).create();
 
     public Console(final Rec options, final fURI vid) {
-        super(null, options.jvm(), CONSOLE_TID, vid);
-        this.jvm = this;
+        super(options.jvm(), CONSOLE_TID, vid);
         try {
             // Initialize pane system with a single pane
             this.activePane = new Pane();
@@ -183,6 +190,9 @@ public class Console extends JRec implements Closeable, Runnable {
             new CustomWidgets(this.reader);
             this.status = new StatusLine(this);
             BootLoader.getExecutor().submit(this.status);
+            this.history = auto_(instC(f("history").dom(ALL).rng(REC_TID.maybeSome()), lst(T(ALL)),
+                    (lhs, inst) -> objs(IteratorUtil.stream(this.reader.getHistory().reverseIterator())
+                            .map(s -> rec(uri(TIME), str(s.time().toString()), uri(ENTRY), str(s.line())))))).tryToInst().as();
         } catch (final Exception e) {
             throw MTronException.of(e);
         }
@@ -658,7 +668,7 @@ public class Console extends JRec implements Closeable, Runnable {
                             .addRow(List.of("next pane", "ctrl+w", "cycle to next pane"))
                             .addRow(List.of("prev pane", "alt+w", "cycle to previous pane"))
                             .addRow(List.of("shrink pane", "alt+<", "make active pane smaller"))
-                            .addRow(List.of("grow pane", "alt+>", "make active pane larger")).style().headerDivider("{{[b]&w}}|").margin(0,0,0,0).apply().format()).style().margin(0,0,0,0).border(Border.simple.foreground("{{b}}")).apply().format());
+                            .addRow(List.of("grow pane", "alt+>", "make active pane larger")).style().headerDivider("{{[b]&w}}|").margin(0, 0, 0, 0).apply().format()).style().margin(0, 0, 0, 0).border(Border.simple.foreground("{{b}}")).apply().format());
                 } else if (line.startsWith(":log")) {
                     LogObj.setSLF4J(line.substring(4));
                 } else if (line.startsWith(":check")) {
@@ -884,7 +894,7 @@ public class Console extends JRec implements Closeable, Runnable {
             /// SPLIT PANE VERTICALLY OR HORIZONTALLY
             getKeyMap().bind((Widget)
                     () -> {
-                      Console.this.split(SplitLayout.VERTICAL);
+                        Console.this.split(SplitLayout.VERTICAL);
                         Console.this.renderPanes();
                         Console.this.redrawBuffer();
                         return true;

@@ -101,6 +101,7 @@ public class machInstSet extends AbstractInstSet {
     public static final fURI ROUTER_TID = MACH_ISA_TID.extend("router");
     public static final fURI MACH_SPACE_TID = MACH_ISA_TID.extend("space");
     public static final fURI FILE_TID = MACH_ISA_TID.extend("file");
+    public static final String FILE_TID_STRING = "/m/mach/file";
     public static final fURI DIR_TID = MACH_ISA_TID.extend("dir");
     public static final fURI IMAGE_TID = FILE_TID.extend("image");
     public static final fURI Q_TID = MACH_SPACE_TID.extend("q");

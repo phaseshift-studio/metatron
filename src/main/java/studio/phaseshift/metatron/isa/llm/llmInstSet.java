@@ -18,13 +18,14 @@
 
 package studio.phaseshift.metatron.isa.llm;
 
+import dev.langchain4j.skills.FileSystemSkillLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
-import studio.phaseshift.metatron.isa.llm.type.Model;
+import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
-import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 
+import java.nio.file.Paths;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
@@ -44,6 +45,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.mach.io.space.file.fsSpace.makeFile;
+import static studio.phaseshift.metatron.isa.mach.io.space.file.fsSpace.resolveFile;
+import static studio.phaseshift.metatron.isa.mach.machInstSet.DIR_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
@@ -52,14 +56,15 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 @InstSet.JREService(vid = "/m/llm")
 public class llmInstSet extends AbstractInstSet {
     public static final fURI LLM_ISA_TID = MTRON_TID.extend("llm");
-    public static final fURI MODEL_TID = LLM_ISA_TID.extend("model");
-    public static final fURI LLM_INST_TID = LLM_ISA_TID.extend("inst");
-    public static final fURI LLM_SPACE_TID = LLM_ISA_TID.extend("space");
-    public static final fURI LLM_TOOL_TID = LLM_ISA_TID.extend("tool");
-    public static final fURI LLM_MEMORY_TID = LLM_ISA_TID.extend("memory");
+    public static final fURI MODEL_TID = LLM_ISA_TID.extend(MODEL);
+    public static final fURI LLM_INST_TID = LLM_ISA_TID.extend(INST);
+    public static final fURI LLM_SPACE_TID = LLM_ISA_TID.extend(SPACE);
+    public static final fURI LLM_TOOL_TID = LLM_ISA_TID.extend(TOOL);
+    public static final fURI LLM_MEMORY_TID = LLM_ISA_TID.extend(MEMORY);
     public static final fURI MCP_SERVER_TID = LLM_ISA_TID.extend("mcp");
+    public static final fURI LLM_SKILL_TID = LLM_ISA_TID.extend(SKILL);
     //public static final fURI MCP_TOOL_TID = LLM_ISA_TID.extend("mcp");
-   // public static Obj MTRON_EVAL_TOOL = Model.Helper.mtronInstToolSpecification(ObjType.insts().stream().filter(i -> i.tid().equals(EVAL_INST_TID)).findFirst().orElse(null));    
+    // public static Obj MTRON_EVAL_TOOL = Model.Helper.mtronInstToolSpecification(ObjType.insts().stream().filter(i -> i.tid().equals(EVAL_INST_TID)).findFirst().orElse(null));    
     public static Type LLM_MEMORY_TYPE = Type.Builder.build()
             .tid(LST_TID)
             .vid(LLM_MEMORY_TID)
@@ -88,6 +93,12 @@ public class llmInstSet extends AbstractInstSet {
             uri(DESC), STR_TYPE,
             uri(ARG).maybe(), rec(URI_TYPE, T(ALL)).maybe())).create();
 
+    public static final Type LLM_SKILL_TYPE = Type.Builder.build().tid(REC_TID).vid(LLM_SKILL_TID).isaPredicate(rec(
+            uri(NAME), URI_TYPE,
+            uri(DESC), STR_TYPE,
+            uri(CONTENT).maybe(), STR_TYPE,
+            uri(ENTRY).maybe(), lst(rec(uri(DIR), URI_TYPE, uri(CONTENT), STR_TYPE)))).create();
+
     public llmInstSet() {
         super(mutableMap(uri(PATTERN), uri(LLM_ISA_TID.extend(ALL))), INSTSET_TID, LLM_ISA_TID);
     }
@@ -96,12 +107,13 @@ public class llmInstSet extends AbstractInstSet {
     public void setup() {
         this.jvm().putAll(mutableMap(
                 uri(PATTERN), uri(LLM_ISA_TID.extend(ALL)),
-              //  uri(CONST), lst(MTRON_EVAL_TOOL)),
+                //  uri(CONST), lst(MTRON_EVAL_TOOL)),
                 uri(TYPE), lst(
                         LLM_CATALOG_SPACE_TYPE,
                         MCP_SERVER_TYPE,
                         LLM_TOOL_TYPE,
                         LLM_MEMORY_TYPE,
+                        LLM_SKILL_TYPE,
                         docWrap(Type.Builder.build()
                                         .tid(REC_TID)
                                         .vid(MODEL_TID).
@@ -123,14 +135,21 @@ public class llmInstSet extends AbstractInstSet {
                                         uri(MEMORY).maybe(), "a pointer to the llm's memory",
                                         uri(SKILL).maybe(), "the skills to use",
                                         uri(TOOL).maybe(), "the tools to use"), "an mtron interface to a large language model")),
-                uri(INST), lst(docWrap(instC(LLM_INST_TID.extend("chat").dom(MODEL_TID).rng(ALL.maybe()),
-                                lst(STR_TYPE),
-                                (lhs, inst) -> model(lhs.asRec()).chat(inst.arg(0).strValue())),
-                        "a model to chat with",  // dom
-                        "the models chat response", // rng
-                        Map.of(jnt(0), "the message to send the model"), // args
-                        "chat with the lhs model", // desc
-                        "*<ollama:qwen3:latest>+[response=>[to=>print(_)],think=>[to=>print(_)]].chat('what is a database query language?')"))));
+                uri(INST), lst(
+                        docWrap(instC(AS_INST_TID.dom(DIR_TID).rng(LLM_SKILL_TID), lst(LLM_SKILL_TYPE),
+                                        (lhs, inst) -> new mSkill(FileSystemSkillLoader.loadSkill(Paths.get(resolveFile(lhs).getAbsolutePath())), LLM_SKILL_TID, lhs.vid())),
+                                "a dir containing the llm SKILL.md file",
+                                "a mtron encoding of the specified skill", 
+                                Map.of(jnt(0),"the skill type"), "maps a directory to an llm skill where the dir follows the standard SKILL.md structure"),
+                        docWrap(instC(LLM_INST_TID.extend("chat").dom(MODEL_TID).rng(ALL.maybe()),
+                                        lst(STR_TYPE),
+                                        (lhs, inst) -> model(lhs.asRec()).chat(inst.arg(0).strValue())),
+                                "a model to chat with",  // dom
+                                "the models chat response", // rng
+                                Map.of(jnt(0), "the message to send the model"), // args
+                                "chat with the lhs model", // desc
+                                "*<ollama:qwen3:latest>+[response=>[to=>print(_)],think=>[to=>print(_)]].chat('what is a database query language?')"))))
+        ;
         docWrap(this, "large language model emerge from the metatron");
         super.setup();
     }

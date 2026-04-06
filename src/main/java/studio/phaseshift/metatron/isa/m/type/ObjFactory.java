@@ -49,7 +49,7 @@ public interface ObjFactory extends Rec {
     }
 
     default Obj toObj(final Object value) {
-        return this.toObj(value, null, null);
+        return value instanceof Obj ? (Obj) value : this.toObj(value, null, null);
     }
 
     default Obj createOrFail(final Object value) {

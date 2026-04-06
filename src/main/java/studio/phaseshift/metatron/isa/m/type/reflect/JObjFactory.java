@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -19,16 +19,22 @@
 package studio.phaseshift.metatron.isa.m.type.reflect;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
+import studio.phaseshift.metatron.isa.mach.io.space.file.fsSpace;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.lang.reflect.Field;
+import java.nio.file.Path;
 import java.util.Map;
+import java.util.function.BiFunction;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.mach.machInstSet.FILE_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -55,22 +61,22 @@ public class JObjFactory extends MObjFactory {
         final fURI tid = (null == annotation || annotation.tid().equals("noobj")) ? f(value.getClass().getCanonicalName().replace(".", "/")) : f(annotation.tid());
         //final fURI basetid = annotation.basetid().equals("noobj") ? null : f(annotation.basetid());
         Object newValue = value;
+        if (value instanceof Obj)
+            return (Obj)value;
         if (tid.equals(STR_TID)) {
             newValue = value.toString();
         } else if (tid.equals(URI_TID)) {
             newValue = f(value.toString());
-        }// else if (tid.equals(FILE_TID))
-        //return fileSpace.makeFile(Path.of(value.toString()));
+        } else if (tid.equals(FILE_TID)) {
+            return fsSpace.makeFile((Path) value);
+        } else if (tid.equals(f("/m/inst"))) {
+            return instC(f(field.getName()), lst(), (BiFunction<Obj, Inst, Obj>) value);
+        }
         return this.toObj(newValue, tid, vid);
     }
 
     @Override
     public Obj toObj(final Object value, final fURI tid, final fURI vid) {
-        try {
-            return super.toObj(value, tid, vid);
-        } catch (final MTronException e) {
-            // do nothing
-        }
-        return new JRec(value, Map.of(), null == tid ? f(value.getClass().getCanonicalName().replace(".", "/")) : tid, null);
+        return super.toObj(value, tid, vid);
     }
 }

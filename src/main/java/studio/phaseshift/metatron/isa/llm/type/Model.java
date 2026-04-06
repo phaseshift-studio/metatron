@@ -25,6 +25,8 @@ import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.request.json.*;
 import dev.langchain4j.service.AiServices;
 import dev.langchain4j.service.tool.ToolExecutor;
+import dev.langchain4j.skills.ActivateSkillToolConfig;
+import dev.langchain4j.skills.Skills;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
@@ -122,6 +124,10 @@ public class Model extends MRec {
         return Optional.<Obj>ofNullable(this.at(TOOL).orElse(null)).map(o -> o.autoResolve(this)).map(Obj::asLst);
     }
 
+    public Optional<Lst> skills() {
+        return Optional.<Obj>ofNullable(this.at(SKILL).orElse(null)).map(o -> o.autoResolve(this)).map(Obj::asLst);
+    }
+
     /**
      * RAG (Retrieval Augmented Generation) configuration.
      *
@@ -154,7 +160,15 @@ public class Model extends MRec {
         ///////////////  RESPONSE  ///////////////
         //////////////////////////////////////////
         // HANDLED IN LLMFACTORY
-
+        //////////////////////////////////////////
+        ///////////////   SKILLS /////////////////
+        //////////////////////////////////////////
+        if (this.skills().isPresent()) {
+            final Skills skills = new Skills.Builder().skills(this.skills().get().elements().map(s -> mSkill.of(s.asRec())).toList()).build();
+            service.toolProvider(skills.toolProvider());
+            service.systemMessage("You have access to the following skills:\n" + skills.formatAvailableSkills()
+                    + "\nWhen the user's request relates to one of these skills, activate it first using the `activate_skill` tool before proceeding.");
+        }
         //////////////////////////////////////////
         ///////////////  TOOLS  //////////////////
         //////////////////////////////////////////
@@ -178,7 +192,6 @@ public class Model extends MRec {
             if (!tools.isEmpty())
                 service.tools(tools).executeToolsConcurrently(BootLoader.getExecutor());
         }
-
         //////////////////////////////////////////
         ///////////////   RAG   //////////////////
         //////////////////////////////////////////

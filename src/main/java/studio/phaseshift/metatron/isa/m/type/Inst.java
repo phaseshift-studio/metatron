@@ -287,7 +287,7 @@ public interface Inst extends Call {
             final Inst resolved = fetched.stream()
                     .filter(Obj::isInst)
                     .map(Obj::asInst)
-                    .filter(i -> !this.tid().basePath().equals(AS_INST_TID) || this.arg(0).test(i.arg(0)))
+                    .filter(i -> !this.tid().basePath().equals(AS_INST_TID) || this.arg(0).tid().big().equals(i.arg(0).tid().big()))
                     .filter(i -> (i.args().isEmpty() && this.arg(0).isNoObj()) || i.args().isRec() || i.args().count() >= this.args().count())
                     .filter(i -> !lhs.isInst() || (i.dom().baseType().equals(M_ISA_INST_TID)))
                     .map(i -> this.hasDom() ? i.dom(this.dom()) : i)
