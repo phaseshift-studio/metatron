@@ -75,12 +75,12 @@ public class miotSpaceTest extends AbstractSpaceTest implements SubQTest {
                 throw MTronException.of(e);
             }
         });
-        InstSet.loadInstSetProvider(IOT_ISA_TID);
-        InstSet.loadInstSetProvider(MIOT_ISA_TID);
     }
     
     @BeforeAll
     public static void setupAll() {
+        InstSet.importInstSet(IOT_ISA_TID);
+        InstSet.importInstSet(MIOT_ISA_TID);
         AbstractMetatronTest.begin();
         MoquetteServer.run(PORT);
     }

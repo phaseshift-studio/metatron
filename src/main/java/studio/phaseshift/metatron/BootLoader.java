@@ -18,7 +18,7 @@
 
 package studio.phaseshift.metatron;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import org.jspecify.annotations.NonNull;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.Space;
@@ -47,6 +47,7 @@ import java.util.Comparator;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
@@ -76,7 +77,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
     static {
         LOG = Graphitty.log(new BootLoader());
         //EXECUTOR = Executors.newCachedThreadPool(new VirtualThreadFactory());
-        EXECUTOR = Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("metatron-%d").setUncaughtExceptionHandler((a, b) -> LOG.error("%s %s", a, b)).build());
+        EXECUTOR = Executors.newCachedThreadPool(r -> new Thread(r, "metatron-" + Thread.currentThread().getId()));
     }
 
     public static ExecutorService getExecutor() {
@@ -161,7 +162,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
             ROUTER = new BasicRouter(localAuthority, SYS_VID.extend("router"));
             sysSpace.write(ROUTER.vid(), ROUTER);
             Router.global().addSpace(sysSpace.self(sysSpace.jvm(), sysSpace.tid(), SYS_VID).as());
-            LOG.warn("router location: %s",ROUTER.vid());
+            LOG.debug("router location: %s",ROUTER.vid());
             ///  LOAD SYSTEM ENVIRONMENTAL VARIABLES
             System.getenv().entrySet().stream()
                     .map(kv -> new AbstractMap.SimpleEntry<>(SYS_VID.extend("env").extend(kv.getKey()), str(kv.getValue())))

@@ -62,7 +62,7 @@ public abstract class AbstractMetatronTest {
         BootLoader.BOOTING = true;
         BootLoader.TESTING = true;
         BootLoader.load(rec(uri(HOST), uri("ws://localhost:" + generatePort()), uri(LOGG), uri(LogObj.getSLF4J().toString().toLowerCase())));
-        InstSet.loadInstSetProvider(IO_ISA_TID);
+        InstSet.importInstSet(IO_ISA_TID);
     }
 
     @AfterAll

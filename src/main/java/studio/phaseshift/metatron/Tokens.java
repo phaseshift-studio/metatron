@@ -117,6 +117,7 @@ public final class Tokens {
     public static final String DRIVER = "driver";
     public static final String TABLE = "table";
     public static final String COLLECTION = "collection";
+    public static final String REFERENCE = "reference";
     public static final String VALUE = "value";
     public static final String FURI = "furi";
     public static final String OBJ = "obj";
@@ -162,6 +163,8 @@ public final class Tokens {
     public static final String QUANT = "quant";
     public static final String FAMILY = "family";
     public static final String FROM = "from";
+    public static final String PROBABILITY = "probability";
+    public static final String FIELD = "field";
     public static final String CLUSTER = "cluster";
     public static final String BOOT = "boot";
     public static final String ON_RECV = "on_recv";

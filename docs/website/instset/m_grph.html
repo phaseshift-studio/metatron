@@ -493,7 +493,7 @@ bin/metatron</code></pre>
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">addE</span>
-                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-vrtx" class="code text-info">/m/grph/vrtx</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-edge" class="code text-success">/m/grph/edge</a></span></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-vrtx" data-bs-toggle="tooltip" title="domain" class="code text-info">/m/grph/vrtx</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-edge" data-bs-toggle="tooltip" title="range" class="code text-success">/m/grph/edge</a></span></span>
                         </span>
                         <small class="text-muted code">/m/grph/inst/addE?/m/grph/edge&lt;=/m/grph/vrtx</small>
                     </div>
@@ -501,12 +501,15 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">addE?edge&lt;=vrtx(#::T,uri::T,rec{?}::T){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-both">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">both</span>
-                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-vrtx" class="code text-info">/m/grph/vrtx</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-vrtx{*}" class="code text-success">/m/grph/vrtx{*}</a></span></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-vrtx" data-bs-toggle="tooltip" title="domain" class="code text-info">/m/grph/vrtx</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-vrtx" data-bs-toggle="tooltip" title="maybe some range" class="code text-success">/m/grph/vrtx{*}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/grph/inst/both?/m/grph/vrtx{*}&lt;=/m/grph/vrtx</small>
                     </div>
@@ -526,7 +529,7 @@ bin/metatron</code></pre>
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">bothE</span>
-                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-vrtx" class="code text-info">/m/grph/vrtx</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-edge{*}" class="code text-success">/m/grph/edge{*}</a></span></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-vrtx" data-bs-toggle="tooltip" title="domain" class="code text-info">/m/grph/vrtx</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-edge" data-bs-toggle="tooltip" title="maybe some range" class="code text-success">/m/grph/edge{*}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/grph/inst/bothE?/m/grph/edge{*}&lt;=/m/grph/vrtx</small>
                     </div>
@@ -546,7 +549,7 @@ bin/metatron</code></pre>
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">bothV</span>
-                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-edge" class="code text-info">/m/grph/edge</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-vrtx" class="code text-success">/m/grph/vrtx</a></span></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-edge" data-bs-toggle="tooltip" title="domain" class="code text-info">/m/grph/edge</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-vrtx" data-bs-toggle="tooltip" title="range" class="code text-success">/m/grph/vrtx</a></span></span>
                         </span>
                         <small class="text-muted code">/m/grph/inst/bothV?/m/grph/vrtx&lt;=/m/grph/edge</small>
                     </div>
@@ -565,7 +568,7 @@ bin/metatron</code></pre>
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">gremlin</span>
-                            <span class="ms-1"><span class="instset-doc-small-code"><a href="m_grph_space.html#type-graphdb" class="code text-info">/m/grph/space/graphdb</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#{*}.html#type-#{*}" class="code text-success">#{*}</a></span></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="m_grph_space.html#type-graphdb" data-bs-toggle="tooltip" title="domain" class="code text-info">/m/grph/space/graphdb</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#{*}.html#type-#" data-bs-toggle="tooltip" title="maybe some range" class="code text-success">#{*}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/grph/inst/gremlin?#{*}&lt;=/m/grph/space/graphdb</small>
                     </div>
@@ -584,7 +587,7 @@ bin/metatron</code></pre>
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">in</span>
-                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-vrtx" class="code text-info">/m/grph/vrtx</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-vrtx{*}" class="code text-success">/m/grph/vrtx{*}</a></span></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-vrtx" data-bs-toggle="tooltip" title="domain" class="code text-info">/m/grph/vrtx</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-vrtx" data-bs-toggle="tooltip" title="maybe some range" class="code text-success">/m/grph/vrtx{*}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/grph/inst/in?/m/grph/vrtx{*}&lt;=/m/grph/vrtx</small>
                     </div>
@@ -604,7 +607,7 @@ bin/metatron</code></pre>
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">inE</span>
-                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-vrtx" class="code text-info">/m/grph/vrtx</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-edge{*}" class="code text-success">/m/grph/edge{*}</a></span></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-vrtx" data-bs-toggle="tooltip" title="domain" class="code text-info">/m/grph/vrtx</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-edge" data-bs-toggle="tooltip" title="maybe some range" class="code text-success">/m/grph/edge{*}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/grph/inst/inE?/m/grph/edge{*}&lt;=/m/grph/vrtx</small>
                     </div>
@@ -624,7 +627,7 @@ bin/metatron</code></pre>
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">inV</span>
-                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-edge" class="code text-info">/m/grph/edge</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-vrtx" class="code text-success">/m/grph/vrtx</a></span></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-edge" data-bs-toggle="tooltip" title="domain" class="code text-info">/m/grph/edge</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-vrtx" data-bs-toggle="tooltip" title="range" class="code text-success">/m/grph/vrtx</a></span></span>
                         </span>
                         <small class="text-muted code">/m/grph/inst/inV?/m/grph/vrtx&lt;=/m/grph/edge</small>
                     </div>
@@ -643,7 +646,7 @@ bin/metatron</code></pre>
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">label</span>
-                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-elmt" class="code text-info">/m/grph/elmt</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-uri" class="code text-success">/m/uri</a></span></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-elmt" data-bs-toggle="tooltip" title="domain" class="code text-info">/m/grph/elmt</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-uri" data-bs-toggle="tooltip" title="range" class="code text-success">/m/uri</a></span></span>
                         </span>
                         <small class="text-muted code">/m/grph/inst/label?/m/uri&lt;=/m/grph/elmt</small>
                     </div>
@@ -662,7 +665,7 @@ bin/metatron</code></pre>
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">out</span>
-                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-vrtx" class="code text-info">/m/grph/vrtx</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-vrtx{*}" class="code text-success">/m/grph/vrtx{*}</a></span></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-vrtx" data-bs-toggle="tooltip" title="domain" class="code text-info">/m/grph/vrtx</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-vrtx" data-bs-toggle="tooltip" title="maybe some range" class="code text-success">/m/grph/vrtx{*}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/grph/inst/out?/m/grph/vrtx{*}&lt;=/m/grph/vrtx</small>
                     </div>
@@ -682,7 +685,7 @@ bin/metatron</code></pre>
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">outE</span>
-                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-vrtx" class="code text-info">/m/grph/vrtx</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-edge{*}" class="code text-success">/m/grph/edge{*}</a></span></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-vrtx" data-bs-toggle="tooltip" title="domain" class="code text-info">/m/grph/vrtx</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-edge" data-bs-toggle="tooltip" title="maybe some range" class="code text-success">/m/grph/edge{*}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/grph/inst/outE?/m/grph/edge{*}&lt;=/m/grph/vrtx</small>
                     </div>
@@ -702,7 +705,7 @@ bin/metatron</code></pre>
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">outV</span>
-                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-edge" class="code text-info">/m/grph/edge</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-vrtx" class="code text-success">/m/grph/vrtx</a></span></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-edge" data-bs-toggle="tooltip" title="domain" class="code text-info">/m/grph/edge</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-vrtx" data-bs-toggle="tooltip" title="range" class="code text-success">/m/grph/vrtx</a></span></span>
                         </span>
                         <small class="text-muted code">/m/grph/inst/outV?/m/grph/vrtx&lt;=/m/grph/edge</small>
                     </div>
@@ -721,7 +724,7 @@ bin/metatron</code></pre>
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">values</span>
-                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-elmt" class="code text-info">/m/grph/elmt</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#{*}.html#type-#{*}" class="code text-success">#{*}</a></span></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-elmt" data-bs-toggle="tooltip" title="domain" class="code text-info">/m/grph/elmt</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#{*}.html#type-#" data-bs-toggle="tooltip" title="maybe some range" class="code text-success">#{*}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/grph/inst/values?#{*}&lt;=/m/grph/elmt</small>
                     </div>
@@ -770,7 +773,7 @@ bin/metatron</code></pre>
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-warning fw-bold">in_incident_adjacent</span>
-                            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#type-code" class="code text-info">/m/code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-code{" class="code text-success">/m/code{?}</a></span></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#type-code" data-bs-toggle="tooltip" title="domain" class="code text-info">/m/code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-code" data-bs-toggle="tooltip" title="maybe range" class="code text-success">/m/code{?}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/grph/inst/rewrite/in_incident_adjacent?/m/code{?}&lt;=/m/code</small>
                     </div>
@@ -779,13 +782,16 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">/m/grph/inst/rewrite/in_incident_adjacent?code{?}&lt;=code(){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                     
                 </div>
                 <div class="card mb-3" id="rewrite-out_incident_adjacent">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-warning fw-bold">out_incident_adjacent</span>
-                            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#type-code" class="code text-info">/m/code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-code{" class="code text-success">/m/code{?}</a></span></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#type-code" data-bs-toggle="tooltip" title="domain" class="code text-info">/m/code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-code" data-bs-toggle="tooltip" title="maybe range" class="code text-success">/m/code{?}</a></span></span>
                         </span>
                         <small class="text-muted code">/m/grph/inst/rewrite/out_incident_adjacent?/m/code{?}&lt;=/m/code</small>
                     </div>
@@ -794,6 +800,9 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">/m/grph/inst/rewrite/out_incident_adjacent?code{?}&lt;=code(){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                     
                 </div>
         </div>
@@ -801,7 +810,7 @@ bin/metatron</code></pre>
         <div class="container-xxl py-3 text-center">
             <hr class="border-secondary">
             <small class="text-muted">
-                generated by metatron instset doc generator on build 0-2026-04-06 09:28:31<br>
+                generated by metatron instset doc generator on build 0-2026-04-07 02:40:56<br>
                 © PhaseShift Studio, LLC
             </small>
         </div>

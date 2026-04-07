@@ -47,6 +47,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.doc.dcmntInstSet.DCMNT_ISA_TID;
+import static studio.phaseshift.metatron.isa.grph.grphInstSet.GRPH_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -79,7 +80,11 @@ public class docdbSpaceTest extends AbstractSpaceTest implements CommonRewritesT
                 ).jvm(),
                 SPACE_VID
         ));
-        InstSet.loadInstSetProvider(DCMNT_ISA_TID);
+    }
+    
+    @BeforeAll
+    public static void setupInstSet() {
+        InstSet.importInstSet(DCMNT_ISA_TID);
     }
 
     @Override

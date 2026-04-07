@@ -81,7 +81,7 @@ public final class QCollection {
                     .tid(REC_TID)
                     .vid(DOCS_TID)
                     .isaPredicate(rec(
-                            uri(OBJ).maybe().asUri(), T(ALL),
+                            uri(OBJ).maybe().asUri(), T(ALL.maybeSome()),
                             uri(DOM).maybe(), STR_TYPE,
                             uri(RNG).maybe(), STR_TYPE,
                             uri(ARGS).maybe(), T(ALL), // fix: noobj=>noobj slipping trhough the cracks somewhere rec(URI_TYPE,STR_TYPE).maybe(),
@@ -304,7 +304,7 @@ public final class QCollection {
         public String description() {
             return this.at(Tokens.DESC).isNoObj() ? null : this.at(Tokens.DESC).strValue();
         }
-        
+
         public List<String> examples() {
             return this.at(EXAMPLE).elements().map(Obj::strValue).toList();
         }

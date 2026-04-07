@@ -132,7 +132,7 @@ import static studio.phaseshift.metatron.isa.tble.tbleInstSet.*;
  */
 public class tabledbSpace extends AbstractSpace<Connection> {
 
-    public static fURI SQL_INST_TID = TBLE_ISA_TID.extend(INST).extend(SQL);
+    public static fURI SQL_INST_TID =TBLE_ISA_INST_TID.extend(SQL);
     public static fURI TABLEDB_SPACE_TID = TBLE_ISA_TID.extend(SPACE).extend("tabledb");
     public static final Type TABLE_SPACE_TYPE =
             Type.Builder.build()
@@ -144,7 +144,7 @@ public class tabledbSpace extends AbstractSpace<Connection> {
                             uri(DRIVER), URI_TYPE,
                             uri(ROUTE), rec(URI_TYPE, URI_TYPE),
                             uri(TABLE).maybe(), LST_TYPE))
-                    .constructor(instC(mInstSet.M_ISA_INST_TID.dom(ALL.maybe()).rng(TABLEDB_SPACE_TID),
+                    .constructor(instC(TBLE_ISA_INST_TID.extend("tabledb_cons").dom(ALL.maybe()).rng(TABLEDB_SPACE_TID),
                             lst(REC_TYPE),
                             (lhs, inst) -> tabledbSpace.of(inst.arg(0).asRec().jvm(), inst.arg(0).vid())))
                     .create();

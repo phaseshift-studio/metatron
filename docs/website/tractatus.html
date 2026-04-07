@@ -1806,7 +1806,7 @@ mtron&gt; 1.plus(plus(2))    ​3​
 ==&gt;4
 ​
 mtron&gt; 1.map(bool::T)     ​4​
-==&gt;fail::[unable to convert mfail to code][...]@/sys/fail/1422
+==&gt;fail::[unable to convert mfail to code][...]@/sys/fail/46
 ​
 mtron&gt; 1.as(bool::T)      ​5​
 ==&gt;true
@@ -2171,7 +2171,7 @@ mtron&gt; 15.band(10,20)              ​4​
 mtron&gt; -15.band(-20,-10)           ​5​
 ​
 mtron&gt; band -&gt; |inst?int{?}&lt;=int(min=&gt;?nat::T.else(fail()),max=&gt;?nat::T.else(fail())){ is(and(gte(*min),lte(*max))) }
-==&gt;fail::[fail() is not a fail::T][...]@/sys/fail/1448
+==&gt;fail::[fail() is not a fail::T][...]@/sys/fail/72
 ​
 mtron&gt; 15.band(10,20)              ​6​
 ==&gt;15
@@ -2233,18 +2233,18 @@ Finally, a degenerate anonymous <code>inst</code> with no specified variable fra
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">​
 mtron&gt; 10.(min=&gt;2,max=&gt;8){ is(and(gte(*min),lte(*max))) }                ​1​
 ==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/1462
+	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/86
 ​
 mtron&gt; 10.(min=&gt;minus(1),max=&gt;plus(1)){ is(and(gte(*min),lte(*max))) }   ​2​
 ==&gt;10
 ​
 mtron&gt; 10.(min=&gt;2,max=&gt;8){ is(and(gte(*bad_min),lte(*bad_max))) }        ​3​
 ==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/1464
+	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/88
 ​
 mtron&gt; 10.(){ is(and(gte(*min),lte(*max))) }                             ​4​
 ==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/1466
+	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/90
 ​
 mtron&gt; 10.is(and(gte(minus(1)),lte(plus(1))))                            ​5​
 ==&gt;10
@@ -2286,13 +2286,13 @@ mtron&gt; 10.is(and(gte(minus(1)),lte(plus(1))))                            ​5
 mtron&gt; is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;_)[mod(*by).eq(0)]
 ==&gt;fail::[is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;_)[mod(*by).eq(0)]
                                       ^ end of input expected
-][...]@/sys/fail/1468
+][...]@/sys/fail/92
 ​
 mtron&gt; 10.is_divisible(2)
-==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/1470
+==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/94
 ​
 mtron&gt; 10.is_divisible('abc')
-==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/1472
+==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/96
 ​</code></pre>
 </div>
 </div>
@@ -2319,7 +2319,7 @@ mtron&gt; 10.is_divisible('abc')
 mtron&gt; band -&gt; |band?int{?}&lt;=int(min=&gt;_,max=&gt;is(gt(*min)).else(*min.plus(1)))[is(gte(*min)).is(lte(*max))]
 ==&gt;fail::[band -&gt; |band?int{?}&lt;=int(min=&gt;_,max=&gt;is(gt(*min)).else(*min.plus(1)))[is(gte(*min)).is(lte(*max))]
                                                                       ^ end of input expected
-][...]@/sys/fail/1474
+][...]@/sys/fail/98
 ​
 mtron&gt; 2.band(min=&gt;1,max=&gt;1)                 ​1​
 ​</code></pre>
@@ -2344,13 +2344,13 @@ mtron&gt; 2.band(min=&gt;1,max=&gt;1)                 ​1​
 mtron&gt; is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;is(neq(0)).else(print('error').map(1)))[mod(*by).eq(0)]
 ==&gt;fail::[is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;is(neq(0)).else(print('error').map(1)))[mod(*by).eq(0)]
                                       ^ end of input expected
-][...]@/sys/fail/1476
+][...]@/sys/fail/100
 ​
 mtron&gt; 10.is_divisible(2)
-==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/1478
+==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/102
 ​
 mtron&gt; 10.is_divisible('abc')
-==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/1480
+==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/104
 ​</code></pre>
 </div>
 </div>
@@ -2768,7 +2768,7 @@ mtron&gt; */m/llm/model
      name       =&gt;uri::T,
      {?}think   =&gt;[{?}to=&gt;#::T],
      {?}response=&gt;[{?}to=&gt;#::T,{?}format=&gt;#::T],
-     {?}size    =&gt;data_size::T[][inst?rng=bB&amp;dom=#{?}(#::T){&lt;j&gt;}]@/m/math/bB,
+     {?}size    =&gt;data_size::T[][/m/math/bB/cons?rng=bB&amp;dom=#{?}(#::T){&lt;j&gt;}]@/m/math/bB,
      {?}memory  =&gt;[{?}from=&gt;uri::T],
      {?}desc    =&gt;str::T,
      {?}skill   =&gt;lst::T,
@@ -2781,77 +2781,77 @@ mtron&gt; */m/llm/model
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">​
 mtron&gt; *ollama:+
 ==&gt;model::[
- skill   =&gt;[completion],
- think   =&gt;noobj,
+ size    =&gt;gB::0.72,
+ provider=&gt;!*/sys/space/ollama,
  name    =&gt;deepseek-coder:latest,
- provider=&gt;!*/sys/space/ollama,
- size    =&gt;gB::0.72]@ollama:deepseek-coder:latest
+ think   =&gt;noobj,
+ skill   =&gt;[completion]]@ollama:deepseek-coder:latest
 ==&gt;model::[
- skill   =&gt;[completion,tools,thinking],
- think   =&gt;[=&gt;],
+ size    =&gt;gB::4.87,
+ provider=&gt;!*/sys/space/ollama,
  name    =&gt;qwen3:latest,
- provider=&gt;!*/sys/space/ollama,
- size    =&gt;gB::4.87]@ollama:qwen3:latest
+ think   =&gt;[=&gt;],
+ skill   =&gt;[completion,tools,thinking]]@ollama:qwen3:latest
 ==&gt;model::[
- skill   =&gt;[completion,tools],
- think   =&gt;noobj,
+ size    =&gt;gB::4.34,
+ provider=&gt;!*/sys/space/ollama,
  name    =&gt;llama3-groq-tool-use:latest,
- provider=&gt;!*/sys/space/ollama,
- size    =&gt;gB::4.34]@ollama:llama3-groq-tool-use:latest
+ think   =&gt;noobj,
+ skill   =&gt;[completion,tools]]@ollama:llama3-groq-tool-use:latest
 ==&gt;model::[
- skill   =&gt;[completion,tools,thinking],
- think   =&gt;[=&gt;],
+ size    =&gt;gB::0.00,
+ provider=&gt;!*/sys/space/ollama,
  name    =&gt;&lt;deepseek-v3.2:cloud&gt;,
- provider=&gt;!*/sys/space/ollama,
- size    =&gt;gB::0.00]@&lt;ollama:deepseek-v3.2:cloud&gt;
-==&gt;model::[
- skill   =&gt;[completion,tools,thinking],
  think   =&gt;[=&gt;],
+ skill   =&gt;[completion,tools,thinking]]@&lt;ollama:deepseek-v3.2:cloud&gt;
+==&gt;model::[
+ size    =&gt;gB::17.71,
+ provider=&gt;!*/sys/space/ollama,
  name    =&gt;&lt;glm-4.7-flash:latest&gt;,
- provider=&gt;!*/sys/space/ollama,
- size    =&gt;gB::17.71]@&lt;ollama:glm-4.7-flash:latest&gt;
+ think   =&gt;[=&gt;],
+ skill   =&gt;[completion,tools,thinking]]@&lt;ollama:glm-4.7-flash:latest&gt;
 ==&gt;model::[
- skill   =&gt;[completion],
- think   =&gt;noobj,
+ size    =&gt;gB::0.59,
+ provider=&gt;!*/sys/space/ollama,
  name    =&gt;tinyllama:latest,
- provider=&gt;!*/sys/space/ollama,
- size    =&gt;gB::0.59]@ollama:tinyllama:latest
-==&gt;model::[
- skill   =&gt;[completion],
  think   =&gt;noobj,
+ skill   =&gt;[completion]]@ollama:tinyllama:latest
+==&gt;model::[
+ size    =&gt;gB::8.37,
+ provider=&gt;!*/sys/space/ollama,
  name    =&gt;deepcoder:latest,
- provider=&gt;!*/sys/space/ollama,
- size    =&gt;gB::8.37]@ollama:deepcoder:latest
+ think   =&gt;noobj,
+ skill   =&gt;[completion]]@ollama:deepcoder:latest
 ==&gt;model::[
- skill   =&gt;[completion,tools,thinking],
- think   =&gt;[=&gt;],
+ size    =&gt;gB::12.85,
+ provider=&gt;!*/sys/space/ollama,
  name    =&gt;gpt-oss:latest,
- provider=&gt;!*/sys/space/ollama,
- size    =&gt;gB::12.85]@ollama:gpt-oss:latest
-==&gt;model::[
- skill   =&gt;[completion,tools,thinking],
  think   =&gt;[=&gt;],
+ skill   =&gt;[completion,tools,thinking]]@ollama:gpt-oss:latest
+==&gt;model::[
+ size    =&gt;gB::4.87,
+ provider=&gt;!*/sys/space/ollama,
  name    =&gt;qwen3:8b,
- provider=&gt;!*/sys/space/ollama,
- size    =&gt;gB::4.87]@ollama:qwen3:8b
-==&gt;model::[
- skill   =&gt;[completion,tools],
- think   =&gt;noobj,
- name    =&gt;qwen3-coder-next:latest,
- provider=&gt;!*/sys/space/ollama,
- size    =&gt;gB::48.19]@ollama:qwen3-coder-next:latest
-==&gt;model::[
- skill   =&gt;[completion,tools,thinking],
  think   =&gt;[=&gt;],
- name    =&gt;&lt;minimax-m2.5:cloud&gt;,
- provider=&gt;!*/sys/space/ollama,
- size    =&gt;gB::0.00]@&lt;ollama:minimax-m2.5:cloud&gt;
+ skill   =&gt;[completion,tools,thinking]]@ollama:qwen3:8b
 ==&gt;model::[
- skill   =&gt;[completion,vision],
- think   =&gt;noobj,
- name    =&gt;llava:latest,
+ size    =&gt;gB::48.19,
  provider=&gt;!*/sys/space/ollama,
- size    =&gt;gB::4.41]@ollama:llava:latest
+ name    =&gt;qwen3-coder-next:latest,
+ think   =&gt;noobj,
+ skill   =&gt;[completion,tools]]@ollama:qwen3-coder-next:latest
+==&gt;model::[
+ size    =&gt;gB::0.00,
+ provider=&gt;!*/sys/space/ollama,
+ name    =&gt;&lt;minimax-m2.5:cloud&gt;,
+ think   =&gt;[=&gt;],
+ skill   =&gt;[completion,tools,thinking]]@&lt;ollama:minimax-m2.5:cloud&gt;
+==&gt;model::[
+ size    =&gt;gB::4.41,
+ provider=&gt;!*/sys/space/ollama,
+ name    =&gt;llava:latest,
+ think   =&gt;noobj,
+ skill   =&gt;[completion,vision]]@ollama:llava:latest
 ​</code></pre>
 </div>
 </div>
@@ -2986,7 +2986,7 @@ primary_planets =&gt; &gt;&gt;planets.order(&gt;&gt;mass).take(1).&gt;&gt;name]<
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">​
 mtron&gt; 1.plus(b).plus(3).mult(5)                 ​1​
-==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/1510
+==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/134
 ​
 mtron&gt; 1.plus(b).plus(3).catch(2).mult(5)        ​2​
 ==&gt;10
@@ -3046,101 +3046,111 @@ mtron&gt; 1.plus(b).plus(3).catch(2).mult(5)        ​2​
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">​
 mtron&gt; 1.plus(b)                  ​1​
-==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/1570
+==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/194
 ​
 mtron&gt; */sys/fail/+               ​2​
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/1551
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/1548
-==&gt;fail::[apply failure:
-	[lhs]    | b
-	 \_type  | /m/uri
-	  \_pred | []
-	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
-	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/1550
-==&gt;fail::[apply failure:
-	[lhs]    | b
-	 \_type  | /m/uri
-	  \_pred | []
-	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
-	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/1544
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/1542
-==&gt;fail::[unable to evaluate inst: plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}][...]@/sys/fail/1565
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/1557
-==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/1569
-==&gt;fail::[apply failure:
-	[lhs]    | b
-	 \_type  | /m/uri
-	  \_pred | []
-	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
-	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/1556
-==&gt;fail::[apply failure:
-	[lhs]    | b
-	 \_type  | /m/uri
-	  \_pred | []
-	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
-	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/1561
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/1554
+==&gt;fail::[unable to evaluate inst: plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}][...]@/sys/fail/190
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/165
 ==&gt;fail::[apply failure:
 	[lhs]    | 1
 	 \_type  | /m/int
 	  \_pred | []
 	[inst]   | plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}
 	 \_dom   | int::T
-	 \_args  | [b]][...]@/sys/fail/1568
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/1545
-==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/1570
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/1564
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/1547
+	 \_args  | [b]][...]@/sys/fail/191
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/187
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/171
 ==&gt;fail::[apply failure:
 	[lhs]    | b
 	 \_type  | /m/uri
 	  \_pred | []
 	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
 	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/1549
+	 \_args  | [,]][...]@/sys/fail/173
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/177
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/178
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/182
+==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/194
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/183
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/176
 ==&gt;fail::[apply failure:
 	[lhs]    | b
 	 \_type  | /m/uri
 	  \_pred | []
 	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
 	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/1543
-==&gt;fail::[unable to evaluate inst: plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}][...]@/sys/fail/1566
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/1558
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/1552
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/1560
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/1559
+	 \_args  | [,]][...]@/sys/fail/168
 ==&gt;fail::[apply failure:
 	[lhs]    | b
 	 \_type  | /m/uri
 	  \_pred | []
 	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
 	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/1562
-==&gt;fail::[apply failure:
-	[lhs]    | b
-	 \_type  | /m/uri
-	  \_pred | []
-	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
-	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/1555
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/1541
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/1553
+	 \_args  | [,]][...]@/sys/fail/185
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/170
+==&gt;fail::[unable to evaluate inst: plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}][...]@/sys/fail/189
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/166
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/169
 ==&gt;fail::[apply failure:
 	[lhs]    | 1
 	 \_type  | /m/int
 	  \_pred | []
 	[inst]   | plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}
 	 \_dom   | int::T
-	 \_args  | [b]][...]@/sys/fail/1567
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/1546
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/1563
+	 \_args  | [b]][...]@/sys/fail/192
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/188
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/172
+==&gt;fail::[apply failure:
+	[lhs]    | b
+	 \_type  | /m/uri
+	  \_pred | []
+	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
+	 \_dom   | uri::T
+	 \_args  | [,]][...]@/sys/fail/174
+==&gt;fail::[apply failure:
+	[lhs]    | b
+	 \_type  | /m/uri
+	  \_pred | []
+	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
+	 \_dom   | uri::T
+	 \_args  | [,]][...]@/sys/fail/179
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/181
+==&gt;fail::[apply failure:
+	[lhs]    | b
+	 \_type  | /m/uri
+	  \_pred | []
+	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
+	 \_dom   | uri::T
+	 \_args  | [,]][...]@/sys/fail/180
+==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/193
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/184
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/175
+==&gt;fail::[apply failure:
+	[lhs]    | b
+	 \_type  | /m/uri
+	  \_pred | []
+	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
+	 \_dom   | uri::T
+	 \_args  | [,]][...]@/sys/fail/186
+==&gt;fail::[apply failure:
+	[lhs]    | b
+	 \_type  | /m/uri
+	  \_pred | []
+	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
+	 \_dom   | uri::T
+	 \_args  | [,]][...]@/sys/fail/167
 ​
 mtron&gt; */sys/fail/+.catch(_)      ​3​
+==&gt;fail{2}::[unable to evaluate inst: plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}]
+==&gt;fail{8}::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}]
+==&gt;fail{2}::[apply failure:
+	[lhs]    | 1
+	 \_type  | /m/int
+	  \_pred | []
+	[inst]   | plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}
+	 \_dom   | int::T
+	 \_args  | [b]]
+    \_fail::[unable to evaluate inst: plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}]
 ==&gt;fail{8}::[unable to convert uri::T to bytes]
     \_fail::[apply failure:
 	[lhs]    | b
@@ -3150,7 +3160,6 @@ mtron&gt; */sys/fail/+.catch(_)      ​3​
 	 \_dom   | uri::T
 	 \_args  | [,]]
     \_fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}]
-==&gt;fail{8}::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}]
 ==&gt;fail{8}::[apply failure:
 	[lhs]    | b
 	 \_type  | /m/uri
@@ -3159,17 +3168,8 @@ mtron&gt; */sys/fail/+.catch(_)      ​3​
 	 \_dom   | uri::T
 	 \_args  | [,]]
     \_fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}]
-==&gt;fail{2}::[unable to evaluate inst: plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}]
 ==&gt;fail{2}::[1 [int::T] unable to convert uri::T]
     \_fail::[apply failure:
-	[lhs]    | 1
-	 \_type  | /m/int
-	  \_pred | []
-	[inst]   | plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}
-	 \_dom   | int::T
-	 \_args  | [b]]
-    \_fail::[unable to evaluate inst: plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}]
-==&gt;fail{2}::[apply failure:
 	[lhs]    | 1
 	 \_type  | /m/int
 	  \_pred | []
@@ -3338,11 +3338,10 @@ mtron&gt; nat::10
 ==&gt;nat::10
 ​
 mtron&gt; nat::-10
-==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/1666
+==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/290
 ​
 mtron&gt; int::-10.as(nat::T)
-==&gt;fail::[-10 is not a is(gt(0))
-  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/1672
+==&gt;fail::[-10 [int::T] unable to convert bool::T][...]@/sys/fail/296
 ​</code></pre>
 </div>
 </div>
@@ -3442,11 +3441,10 @@ mtron&gt; nat::10
 ==&gt;nat::10
 ​
 mtron&gt; nat::-10
-==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/1686
+==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/310
 ​
 mtron&gt; int::-10.as(nat::T)
-==&gt;fail::[-10 is not a is(gt(0))
-  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/1692
+==&gt;fail::[-10 [int::T] unable to convert bool::T][...]@/sys/fail/316
 ​</code></pre>
 </div>
 </div>
@@ -3477,12 +3475,10 @@ mtron&gt; age:125
 ==&gt;age:125
 ​
 mtron&gt; nat:125.as(age::T)
-==&gt;fail::[nat:125 is not a is(lt(120))
-  nat:125=&gt;(==&gt;is(lt(120)))][...]@/sys/fail/1734
+==&gt;fail::[age::nat:125 is not a nat::T[is(lt(120))]@age][...]@/sys/fail/344
 ​
 mtron&gt; 125.as(nat::T).as(age::T)
-==&gt;fail::[nat::125 is not a is(lt(120))
-  nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/1740
+==&gt;fail::[125 [int::T] unable to convert bool::T][...]@/sys/fail/350
 ​</code></pre>
 </div>
 </div>
@@ -4925,7 +4921,7 @@ mtron&gt; farm:animals/1 -&gt; [type =&gt; chicken, name =&gt; 'trill', age =&gt
   	studio.phaseshift.metatron.isa.doc.schema.storage.ObjBSONSerializer [line 185]
   	studio.phaseshift.metatron.isa.doc.schema.storage.ObjBSONSerializer [line 132]
   	studio.phaseshift.metatron.isa.doc.schema.storage.ObjBSONSerializer [line 242]
-  	java.util.stream.ReferencePipeline$3$1 [line 214]][...]@/sys/fail/1782
+  	java.util.stream.ReferencePipeline$3$1 [line 214]][...]@/sys/fail/392
 ​
 mtron&gt; */sys/space/farm                                                  ​3​
 ==&gt;docdb::[
@@ -4941,13 +4937,13 @@ mtron&gt; */sys/space/farm                                                  ​3
 ​
 mtron&gt; */sys/space/farm/schema                                           ​4​
 ==&gt;[
- database   =&gt;'farm',
- collections=&gt;[
+ name      =&gt;'farm',
+ collection=&gt;[
    [
        name       =&gt;'animals',
        schema     =&gt;[_id=&gt;str::T,type=&gt;str::T,name=&gt;str::T,age=&gt;int::T],
        probability=&gt;[_id=&gt;1.00,type=&gt;1.00,name=&gt;1.00,age=&gt;1.00]]],
- references =&gt;[,]]
+ reference =&gt;[,]]
 ​</code></pre>
 </div>
 </div>

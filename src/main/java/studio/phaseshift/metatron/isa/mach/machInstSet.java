@@ -88,6 +88,7 @@ public class machInstSet extends AbstractInstSet {
     public static final fURI MACH_MACHINE_TID = MACH_ISA_TID.extend("machine");
     public static final fURI MACH_MONAD_TID = MACH_ISA_TID.extend("monad");
     public static final fURI MACH_INST_TID = MACH_ISA_TID.extend("inst");
+    public static final fURI LIFT_INST_TID = MACH_INST_TID.extend("lift");
     public static final fURI MACH_VIRTUAL_THREAD_TID = MACH_ISA_TID.extend("thread").extend("virtual");
     public static final fURI MACH_THREAD_TID = MACH_ISA_TID.extend("thread").extend("core");
     public static final fURI MACH_CORE_THREAD_TID = MACH_ISA_TID.extend("thread").extend("core");
@@ -196,13 +197,13 @@ public class machInstSet extends AbstractInstSet {
                         /// ////////////////////////////
                         /// Q PROCESSORS ///////////////
                         /// ////////////////////////////
-                        INCRQ_TYPE,
+                        /*INCRQ_TYPE,
                         CONSTQ_TYPE,
                         DOCQ_TYPE,
                         DOCS_TYPE,
                         SUB_TYPE,
                         SUBQ_TYPE,
-                        TYPEQ_TYPE,
+                        TYPEQ_TYPE,*/
                         /// /////////////////////
                         SERVER_TYPE,
                         SERVER_PROTOCOL_TYPE,

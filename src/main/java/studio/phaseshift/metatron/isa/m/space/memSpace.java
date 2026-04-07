@@ -197,7 +197,7 @@ public class memSpace extends AbstractSpace<TopicTrie> {
                 throw MTronException.of(e);
             }
             try (final FileOutputStream out = new FileOutputStream(path.uriValue().toString())) {
-                out.write("print('loading persisted data\\n');\n".getBytes());
+                out.write("print('loading persisted data');\n".getBytes());
                 // TopicTrie.forEach() iterates all entries across all nodes
                 this.sjvm().forEach((key, value) -> {
                     try {

@@ -58,7 +58,6 @@ public class mqttSpaceTest extends AbstractSpaceTest implements SubQTest {
     public mqttSpaceTest() {
         super(() -> {
             try {
-                InstSet.loadInstSetProvider(IOT_ISA_TID);
                 return mqttSpace.of(rec(
                         uri(HOST), uri("mqtt://127.0.0.1:" + PORT),
                         uri(PATTERN), uri("/t/#"),
@@ -73,7 +72,7 @@ public class mqttSpaceTest extends AbstractSpaceTest implements SubQTest {
 
     @BeforeAll
     public static void setupAll() {
-        AbstractMetatronTest.begin();
+        InstSet.importInstSet(IOT_ISA_TID);
         MoquetteServer.run(PORT);
     }
 

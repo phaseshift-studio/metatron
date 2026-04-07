@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.grph;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -35,8 +36,8 @@ import studio.phaseshift.metatron.util.Tuple;
 import static org.apache.tinkerpop.gremlin.LoadGraphWith.GraphData.MODERN;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.grph.grphInstSet.GRPH_ISA_TID;
 import static studio.phaseshift.metatron.isa.grph.space.schema.modernSchema.MODERN_SCHEMA_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -52,10 +53,6 @@ public class graphSpaceTest extends AbstractSpaceTest {
 
     public graphSpaceTest() {
         super(() -> {
-            InstSet.importInstSet(M_ISA_TID, null);
-            final grphInstSet isa = new grphInstSet();
-            isa.setup();
-
             // Example: TinkerGraph with modern dataset (legacy format - still supported)
             return graphSpace.of(rec(
                             PATTERN, uri("/g/#"),
@@ -84,6 +81,12 @@ public class graphSpaceTest extends AbstractSpaceTest {
                     f("/sys/space/test"));
             */
         });
+    }
+
+    @BeforeAll
+    public static void setupInstSet() {
+        InstSet.importInstSet(GRPH_ISA_TID);
+        InstSet.importInstSet(MODERN_SCHEMA_TID);
     }
 
     @Test

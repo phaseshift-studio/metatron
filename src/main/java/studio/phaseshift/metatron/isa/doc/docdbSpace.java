@@ -347,25 +347,25 @@ public class docdbSpace extends AbstractSpace<MongoClient> {
     private Obj generateSchema() {
         this.existingCollectionSchema.initialize(this.database);
         final List<Obj> collections = this.existingCollectionSchema.getCollectionMetadata().stream()
-                .map(coll -> (Obj) rec(
-                        uri("name"), str(coll.collectionName()),
-                        uri("schema"), buildNestedTypeRec(coll.fields()),
-                        uri("probability"), buildNestedProbabilityRec(coll.fields())))
+                .map(collection -> (Obj) rec(
+                        uri(NAME), str(collection.collectionName()),
+                        uri(SCHEMA), buildNestedTypeRec(collection.fields()),
+                        uri(PROBABILITY), buildNestedProbabilityRec(collection.fields())))
                 .toList();
 
         final List<Obj> references = this.existingCollectionSchema.getCollectionMetadata().stream()
-                .flatMap(coll -> coll.references().stream())
+                .flatMap(collection -> collection.references().stream())
                 .map(ref -> (Obj) rec(
-                        uri("from"), str(ref.fromCollection()),
-                        uri("field"), str(ref.fromField()),
-                        uri("to"), str(ref.toCollection()),
-                        uri("type"), str(ref.type().name())))
+                        uri(FROM), str(ref.fromCollection()),
+                        uri(FIELD), str(ref.fromField()),
+                        uri(TO), str(ref.toCollection()),
+                        uri(TYPE), str(ref.type().name())))
                 .toList();
 
         return rec(
-                uri("database"), str(this.databaseName),
-                uri("collections"), lst(collections),
-                uri("references"), lst(references));
+                uri(NAME), str(this.databaseName),
+                uri(COLLECTION), lst(collections),
+                uri(REFERENCE), lst(references));
     }
 
     /**

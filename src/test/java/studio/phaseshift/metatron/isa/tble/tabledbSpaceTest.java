@@ -29,6 +29,7 @@
  import studio.phaseshift.metatron.furi.fURI;
  import studio.phaseshift.metatron.isa.AbstractSpaceTest;
  import studio.phaseshift.metatron.isa.m.parser.mParser;
+ import studio.phaseshift.metatron.isa.m.type.InstSet;
  import studio.phaseshift.metatron.isa.m.type.Obj;
  import studio.phaseshift.metatron.isa.m.type.Rec;
  import studio.phaseshift.metatron.isa.mach.type.Router;
@@ -45,6 +46,7 @@
  import static org.junit.jupiter.api.Assertions.*;
  import static studio.phaseshift.metatron.Tokens.*;
  import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+ import static studio.phaseshift.metatron.isa.grph.grphInstSet.GRPH_ISA_TID;
  import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
  import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
  import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -53,6 +55,7 @@
  import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
  import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
  import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+ import static studio.phaseshift.metatron.isa.tble.tbleInstSet.TBLE_ISA_TID;
 
  /**
   * Test suite for tabledbSpace with MQTT-indexed schema.
@@ -71,7 +74,6 @@
          // which is MORE SPECIFIC than the tabledbSpace pattern (tble:#)
          // so that tble:users routes to tabledbSpace, not the parent memSpace
          super(f("tble:kv/test"), () -> {
-             new tbleInstSet().setup();
              return tabledbSpace.of(
                      rec(
                              uri(PATTERN), uri("tble:#"),
@@ -88,6 +90,7 @@
      @BeforeAll
      public static void setupDatabase() throws Exception {
          // Load SQLite JDBC driver
+         InstSet.importInstSet(TBLE_ISA_TID);
          Class.forName("org.sqlite.JDBC");
 
          // Delete existing test database

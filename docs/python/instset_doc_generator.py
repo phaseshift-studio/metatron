@@ -331,7 +331,7 @@ class InstSetDocFetcher:
             info.raw_metadata = await self.client.eval(f"*{vid}/")
         except Exception as e:
             logger.warning(f"Could not fetch metadata for {vid}: {e}")
-        logger.info(f"""
+        logger.debug(f"""
             vid: {info.vid}
             name: {info.name}
             children: {info.children}
@@ -372,7 +372,7 @@ class InstSetDocFetcher:
                 type_info = self._parse_type_entry(entry)
                 logger.debug(f"processing {type_info.vid}")
                 # print(type_info)
-                if type_info and ("space" not in type_info.vid):
+                if type_info and ("space" not in type_info.vid) and ("::T" in type_info.raw):
                     # Query raw type info to get super type
                     await self._fetch_type_super(type_info)
                     # Fetch documentation
@@ -1193,7 +1193,7 @@ class HTMLDocGenerator:
         parts = []
         if inst.domain:
             # Make domain clickable - link to type section
-            domain_html = self._make_type_link(inst.domain, inst.domain_full, "text-info")
+            domain_html = self._make_type_link(inst.domain, inst.domain_full, "text-info", "domain")
             parts.append(f'<span class="instset-doc-small-code">{domain_html}</span>')
 
         if inst.domain or inst.range:
@@ -1201,29 +1201,47 @@ class HTMLDocGenerator:
 
         if inst.range:
             # Make range clickable - link to type section
-            range_html = self._make_type_link(inst.range, inst.range_full, "text-success")
+            range_html = self._make_type_link(inst.range, inst.range_full, "text-success", "range")
             parts.append(f'<span class="instset-doc-small-code">{range_html}</span>')
 
         return f'<span class="ms-1">{"".join(parts)}</span>'
 
-    def _make_type_link(self, type_short: str, type_full: str, css_class: str) -> str:
+    def _make_type_link(self, type_short: str, type_full: str, css_class: str, tooltip: str = "") -> str:
         """Create a clickable link to a type definition."""
         if not type_full:
             return f'<span class="code {css_class}">{html.escape(type_short)}</span>'
 
         # Extract type name from full URI (e.g., /m/tble/space/tble -> tble)
-        type_name = type_full.split('/')[-1].split('?')[0]
-
+        type_name = type_full.split('/')[-1]
+        qless_name = type_name.split('?')[0]
+        cless_name = qless_name.split('{')[0]
+        cardinality = type_name.split('{')[1].split('}')[0] if '{' in type_name else None
+        if cardinality:
+            if cardinality == "*":
+                cardinality = "maybe some "
+            elif cardinality == "?":
+                cardinality = "maybe "
+            elif cardinality == "+":
+                cardinality = "some "
+            elif cardinality == "0":
+                cardinality = "noobj "
+            else:
+                cardinality = ""
+        else:
+            cardinality = ""
+        generic = cless_name.isupper()
         # Extract instset from full URI
         type_instset = self._extract_instset(type_full)
 
+        if generic:
+            return f'<a href="#" data-bs-toggle="tooltip" title="{cardinality}generic {tooltip}" class="code {css_class}">{html.escape(type_short)}</a>'
         if type_instset and type_instset != self.instset.vid:
             # Link to different instset file
             instset_file = self._make_filename(type_instset)
-            return f'<a href="{instset_file}#type-{html.escape(type_name)}" class="code {css_class}">{html.escape(type_short)}</a>'
+            return f'<a href="{instset_file}#type-{html.escape(cless_name)}" data-bs-toggle="tooltip" title="{cardinality}{tooltip}" class="code {css_class}">{html.escape(type_short)}</a>'
         else:
             # Link within same document
-            return f'<a href="#type-{html.escape(type_name)}" class="code {css_class}">{html.escape(type_short)}</a>'
+            return f'<a href="#type-{html.escape(cless_name)}" data-bs-toggle="tooltip" title="{cardinality}{tooltip}" class="code {css_class}">{html.escape(type_short)}</a>'
 
     def _format_inst_documentation(self, doc: Optional[DocInfo]) -> str:
         """
@@ -1267,7 +1285,6 @@ class HTMLDocGenerator:
         examples_html = self._format_examples(doc)
         if examples_html:
             parts.append(examples_html)
-
         return ''.join(parts)
 
     def _format_args_map(self, args_str: str) -> str:
@@ -1297,13 +1314,13 @@ class HTMLDocGenerator:
 
         examples_html = []
         for example in doc.example:
-            examples_html.append(f'<pre class="mb-1"><code class="language-mtron">{html.escape(example)}</code></pre>')
+            examples_html.append(html.escape(example))
 
         return f'''
-                    <div class="card-body border-top py-2">
-                        <small class="text-muted fw-bold">Examples:</small>
-                        {''.join(examples_html)}
-                    </div>'''
+        <div class="card-body border-top py-2">
+            <small class="text-muted fw-bold">examples:</small>
+            <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">{'\n'.join(examples_html)}</code></pre>
+        </div>'''
 
     def _generate_rewrites_section(self) -> str:
         if not self.instset.rewrites:
@@ -1362,7 +1379,7 @@ class HTMLDocGenerator:
         parts = []
         if rewrite.domain:
             # Make domain clickable - link to type section
-            domain_html = self._make_type_link(rewrite.domain, rewrite.domain_full, "text-info")
+            domain_html = self._make_type_link(rewrite.domain, rewrite.domain_full, "text-info", "domain")
             parts.append(f'<span class="instset-doc-small-code">{domain_html}</span>')
 
         if rewrite.domain or rewrite.range:
@@ -1370,7 +1387,7 @@ class HTMLDocGenerator:
 
         if rewrite.range:
             # Make range clickable - link to type section
-            range_html = self._make_type_link(rewrite.range, rewrite.range_full, "text-success")
+            range_html = self._make_type_link(rewrite.range, rewrite.range_full, "text-success", "range")
             parts.append(f'<span class="instset-doc-small-code">{range_html}</span>')
 
         return f'<span class="ms-1">{"".join(parts)}</span>'

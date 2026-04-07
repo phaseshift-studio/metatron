@@ -261,7 +261,7 @@ bin/metatron</code></pre>
    xml::T[?[
      html=>[head=>rec::T,body=>rec::T]]]@/m/web/html,
    rec::T[?[
-     uri::T=>is(or(eq(noobj{0}::T[inst?rng=noobj{0}&dom=#{?}(){<j>}]),eq(bool::T),eq(int::T),eq(str::T),eq(uri::T),eq(lst::T),eq(rec::T)))]][/m/web/inst?rng=json&dom=#{?}(str::T){<j>}]@/m/web/json,
+     uri::T=>is(or(eq(noobj{0}::T),eq(bool::T),eq(int::T),eq(str::T),eq(uri::T),eq(lst::T),eq(rec::T)))]][/m/web/inst?rng=json&dom=#{?}(str::T){<j>}]@/m/web/json,
    rec::T@/m/web/css,
    space::T[][inst?rng=http&dom=#{?}(rec::T[isa([pattern=>uri::T,host=>uri::T,route=>rec::T])]){<j>}]@/m/web/space/http],
  inst   =>[
@@ -367,6 +367,9 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">rec::T@/m/web/css</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                     
                 </div>
                 <div class="card mb-3" id="type-html">
@@ -402,7 +405,7 @@ bin/metatron</code></pre>
                     
                     <div class="card-body p-2">
                         <pre class="mb-0"><code class="language-mtron">rec::T[?[
-     uri::T=&gt;is(or(eq(noobj{0}::T[inst?noobj{0}&lt;=#{?}(){&lt;j&gt;}]),eq(bool::T),eq(int::T),eq(str::T),eq(uri::T),eq(lst::T),eq(rec::T)))]][/m/web/inst?json&lt;=#{?}(str::T){&lt;j&gt;}]@/m/web/json</code></pre>
+     uri::T=&gt;is(or(eq(noobj{0}::T),eq(bool::T),eq(int::T),eq(str::T),eq(uri::T),eq(lst::T),eq(rec::T)))]][/m/web/inst?json&lt;=#{?}(str::T){&lt;j&gt;}]@/m/web/json</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -423,6 +426,9 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">rec::T@/m/web/xml</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                     
                 </div>
         </div>
@@ -436,7 +442,7 @@ bin/metatron</code></pre>
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">doc</span>
-                            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#type-str" class="code text-info">/m/str</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-str" class="code text-success">/m/str</a></span></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#type-str" data-bs-toggle="tooltip" title="domain" class="code text-info">/m/str</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-str" data-bs-toggle="tooltip" title="range" class="code text-success">/m/str</a></span></span>
                         </span>
                         <small class="text-muted code">/m/web/inst/doc?/m/str&lt;=/m/str</small>
                     </div>
@@ -444,12 +450,15 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">doc?str&lt;=str(){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
                 <div class="card mb-3" id="inst-doc_json">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">doc_json</span>
-                            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#type-str" class="code text-info">/m/str</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-str" class="code text-success">/m/str</a></span></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#type-str" data-bs-toggle="tooltip" title="domain" class="code text-info">/m/str</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-str" data-bs-toggle="tooltip" title="range" class="code text-success">/m/str</a></span></span>
                         </span>
                         <small class="text-muted code">/m/web/inst/doc_json?/m/str&lt;=/m/str</small>
                     </div>
@@ -457,6 +466,9 @@ bin/metatron</code></pre>
                         <pre class="mb-1"><code class="language-mtron">doc_json?str&lt;=str(){&lt;j&gt;}</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                 </div>
         </div>
             
@@ -475,6 +487,9 @@ bin/metatron</code></pre>
                         <pre class="mb-0"><code class="language-mtron">space::T[][inst?rng=http&amp;dom=#{?}(rec::T[isa([pattern=&gt;uri::T,host=&gt;uri::T,route=&gt;rec::T])]){&lt;j&gt;}]@/m/web/space/http</code></pre>
                     </div>
                     
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
                     
                 </div>
         </div>
@@ -483,7 +498,7 @@ bin/metatron</code></pre>
         <div class="container-xxl py-3 text-center">
             <hr class="border-secondary">
             <small class="text-muted">
-                generated by metatron instset doc generator on build 0-2026-04-06 09:28:27<br>
+                generated by metatron instset doc generator on build 0-2026-04-07 02:40:52<br>
                 © PhaseShift Studio, LLC
             </small>
         </div>

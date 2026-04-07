@@ -42,7 +42,7 @@ public class memSpaceTest extends AbstractSpaceTest implements SubQTest {
 
     public memSpaceTest() {
         super(() -> {
-            if (RANDOM.nextInt(10) < 50) {
+            if (RANDOM.nextInt(10) < 20) {
                 Graphitty.log(memSpaceTest.class).debug("deleting persisted memspace data at {{y}}/tmp/memspace-test.mtron{{X}}");
                 final File file = new File("/tmp/memspace-test.mtron");
                 if (file.exists())

@@ -62,11 +62,11 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
     protected boolean checkPattern(final Obj obj) {
         if (obj.isInst()) {
             if (!obj.tid().test(this.pattern())) {
-                LOG.warn("obj at %s outside instset pattern %s: (ignoring) %s", obj.tid(), this.pattern(), obj);
+                LOG.warn("migrating obj at {{b}}%s{{X}} to respective instset: %s", obj.tid(), obj);
                 return false;
             }
         } else if (null != obj.vid() && !obj.vid().test(this.pattern())) {
-            LOG.warn("obj at %s outside instset pattern %s: (ignoring) %s", obj.vid(), this.pattern(), obj);
+            LOG.warn("migrating obj at {{b}}%s{{X}} to respective instset: %s", obj.tid(), obj);
             return false;
         }
         return true;

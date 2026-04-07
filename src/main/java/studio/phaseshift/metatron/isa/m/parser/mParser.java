@@ -308,7 +308,7 @@ public class mParser {
     private static Parser m_furi_internal(final String furiCharacterSet, final boolean polynomial, final boolean coefficient, final boolean query) {
         // Content parser: matches words, template expressions ${...}, or furi characters
         // m_furi_template() is tried first to capture ${...} as atomic units
-        final Parser contentParser = seq(word().or(m_furi_template()).or(seq(of("::").not(), anyOf(furiCharacterSet)))).plus().flatten();
+        final Parser contentParser = seq(word().or(m_furi_template()).or(seq(of("::").not(), of("->").not(), anyOf(furiCharacterSet)))).plus().flatten();
         return seq(of('-').not(), contentParser,
                 opt(polynomial ? m_furi_poly_type() : none(), null),
                 opt(coefficient ? m_furi_coefficient() : none(), null),

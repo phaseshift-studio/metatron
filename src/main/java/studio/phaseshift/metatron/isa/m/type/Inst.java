@@ -30,7 +30,6 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
-import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -40,11 +39,9 @@ import java.util.function.Function;
 
 import static studio.phaseshift.metatron.Tokens.LHS;
 import static studio.phaseshift.metatron.Tokens.MONAD;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
@@ -221,6 +218,10 @@ public interface Inst extends Call {
         return null == this.jvm() ? null : this.jvm().get1();
     }
 
+    default Inst f(final Inst.f func) {
+        return this.clone(Triplet.with(this.args(), func, this.seed()), this.tid(), this.vid());
+    }
+
     default boolean hasf() {
         return null != this.jvm() && null != this.jvm().get1();
     }
@@ -368,10 +369,13 @@ public interface Inst extends Call {
         if (!clhs.isFail() || cinst.isCatch()) {
             try {
                 if (null == cinst.f()) {
-                    throw MTronException.of("unable to determine inst function:" +
-                            "\n\t%-10s  => %-10s   | [inst]" +
-                            "\n\t%-10s  => %-10s   |  \\_dom" +
-                            "\n\t%-10s %s=> %-10s   |  \\_args", clhs, cinst, clhs.type(), cinst.dom(), clhs.type(), cinst.args().elements().allMatch(clhs::test) ? "=" : "X", cinst.args());
+                    if (cinst.tid().basePath().equals(AS_INST_TID)) {
+                        cinst = cinst.f(Inst.f.of((x, y) -> x.tid(y.arg(0).vid())));
+                    } else
+                        throw MTronException.of("unable to determine inst function:" +
+                                "\n\t%-10s  => %-10s   | [inst]" +
+                                "\n\t%-10s  => %-10s   |  \\_dom" +
+                                "\n\t%-10s %s=> %-10s   |  \\_args", clhs, cinst, clhs.type(), cinst.dom(), clhs.type(), cinst.args().elements().allMatch(clhs::test) ? "=" : "X", cinst.args());
                 }
                 cinst = Helper.applyArgs(clhs, cinst);
                 Router.stack().push(cinst.args());
@@ -511,7 +515,7 @@ public interface Inst extends Call {
                                     final Obj r = Objs.trySingleton(arg.apply(lhs));
                                     // Allow template expansion: if arg is Uri or Str with templates, always return expanded result
                                     final boolean isTemplateExpansion = (arg.isUri() && arg.asUri().hasTemplates()) ||
-                                                                        (arg.isStr() && arg.strValue().contains("${"));
+                                            (arg.isStr() && arg.strValue().contains("${"));
                                     if (!arg.isCall() && !isTemplateExpansion && !r.test(arg)) {
                                         // LOG.error("unmatched inst arg in %s: %s ({{y}}lhs{{/y}}) {{g}}=>{{/g}} %s ({{y}}arg{{/y}}) {{r}}~!>{{/r}} %s ", this, lhs, arg, r);
                                         return arg;
@@ -681,8 +685,8 @@ public interface Inst extends Call {
     public static final class InstType {
 
         public static Set<Inst> insts() {
-            return new LinkedHashSet<>(List.of(
-                    instC(LIFT_INST_TID.dom(ALL).rng(ALL), lst(T(ALL)), (lhs, inst) -> inst.arg(0).<Inst>as().args(lhs.<Poly>as()))));
+            return new LinkedHashSet<>(List.of());
+            // instC(LIFT_INST_TID.dom(ALL).rng(ALL), lst(T(ALL)), (lhs, inst) -> inst.arg(0).<Inst>as().args(lhs.<Poly>as()))));
             //instC(LSHIFT_INST_TID.dom(INST_TID).rng(ALL), lst(), (lhs, inst) -> lhs.dom()),
                     /*instC(RSHIFT_INST_TID.dom(INST_TID).rng(ALL.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(inst.arg(0).orElse((Obj) uri(ONE_WILD_STRING)).stream().map(u ->
                             rec(uri(ARGS), lhs.asInst().args(),

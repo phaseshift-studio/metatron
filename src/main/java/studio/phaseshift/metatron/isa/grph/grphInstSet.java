@@ -71,6 +71,7 @@ public class grphInstSet extends AbstractInstSet {
     public static final fURI VRTX_TID = GRPH_ISA_TID.extend("vrtx");
     public static final fURI ELMT_TID = GRPH_ISA_TID.extend("elmt");
     public static final fURI GRPH_INST_TID = GRPH_ISA_TID.extend("inst");
+    public static final fURI GRPH_REWRITE_TID = GRPH_INST_TID.extend("rewrite");
     //
     public static final fURI GREMLIN_INST_TID = GRPH_INST_TID.extend("gremlin");
     public static final fURI ADDE_INST_TID = GRPH_INST_TID.extend("addE");
@@ -161,7 +162,7 @@ public class grphInstSet extends AbstractInstSet {
                         docWrap(MODERN_SCHEMA_TYPE, "a schema for the modern graph dataset")
                 ),
                 uri(INST), lst(
-                        docWrap(instC(grphInstSet.GREMLIN_INST_TID.dom(GRAPHDB_SPACE_TID).rng(ALL.maybeSome()), lst(STR_TYPE), (lhs, inst) -> {
+                        docWrap(instC(GREMLIN_INST_TID.dom(GRAPHDB_SPACE_TID).rng(ALL.maybeSome()), lst(STR_TYPE), (lhs, inst) -> {
                             try {
                                 final GremlinLangScriptEngineFactory factory = new GremlinLangScriptEngineFactory();
                                 //factory.setCustomizerManager(new CachedGremlinScriptEngineManager());
@@ -222,11 +223,11 @@ public class grphInstSet extends AbstractInstSet {
                             }));
                         })),
                 uri(REWRITE), lst(
-                        InstSet.Helper.rewriter(GRPH_INST_TID.extend(REWRITE).extend("out_incident_adjacent"), code -> code.selfJVM(
+                        InstSet.Helper.rewriter(GRPH_REWRITE_TID.extend("out_incident_adjacent"), code -> code.selfJVM(
                                 Rewriter.search(code.insts())
                                         .match(List.of(instA(OUTE_INST_TID), instA(INV_INST_TID)))
                                         .rewrite(map -> List.of(instB(OUT_INST_TID, map.entrySet().iterator().next().getValue().args())))).asCode()),
-                        InstSet.Helper.rewriter(GRPH_INST_TID.extend(REWRITE).extend("in_incident_adjacent"), code -> code.selfJVM(
+                        InstSet.Helper.rewriter(GRPH_REWRITE_TID.extend("in_incident_adjacent"), code -> code.selfJVM(
                                 Rewriter.search(code.insts())
                                         .match(List.of(instA(INE_INST_TID), instA(OUTV_INST_TID)))
                                         .rewrite(map -> List.of(instB(IN_INST_TID, map.entrySet().iterator().next().getValue().args())))).asCode()))));
