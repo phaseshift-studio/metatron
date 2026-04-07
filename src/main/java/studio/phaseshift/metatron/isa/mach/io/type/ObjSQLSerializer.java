@@ -28,17 +28,23 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.tble.tbleInstSet.LST_ROW_TID;
+import static studio.phaseshift.metatron.isa.tble.tbleInstSet.REC_ROW_TID;
 
 /**
  * Serializer for converting between SQL types and Metatron objects.
@@ -123,7 +129,7 @@ public class ObjSQLSerializer extends AbstractObjSerializer<ResultSet> {
     }
 
     /**
-     * Read a Metatron object from a SQL ResultSet column.
+     * Read a metatron object from a SQL ResultSet column.
      *
      * @param rs         the ResultSet
      * @param columnName the column name to read
@@ -175,6 +181,204 @@ public class ObjSQLSerializer extends AbstractObjSerializer<ResultSet> {
             default -> str(value.toString());
         };
     }
+
+    // ==================== Bulk ResultSet Conversion Helpers ====================
+
+    /**
+     * Read all rows from a ResultSet as a list of Rec (rrows).
+     * Each row becomes a Rec with column names as Uri keys.
+     * The ResultSet cursor is advanced until exhausted.
+     *
+     * @param rs the ResultSet to read from (cursor should be before first row)
+     * @return a list of Rec objects, one per row
+     * @throws SQLException if reading fails
+     */
+    public static List<Rec> readAllAsRec(final ResultSet rs) throws SQLException {
+        final List<Rec> rows = new ArrayList<>();
+        final ResultSetMetaData metaData = rs.getMetaData();
+        final int columnCount = metaData.getColumnCount();
+
+        while (rs.next()) {
+            final Map<Obj, Obj> rowData = new LinkedHashMap<>();
+            for (int i = 1; i <= columnCount; i++) {
+                final String columnName = metaData.getColumnName(i);
+                final int sqlType = metaData.getColumnType(i);
+                final Obj value = readColumnStatic(rs, i, sqlType);
+                rowData.put(uri(columnName), value);
+            }
+            rows.add(rec(rowData, REC_ROW_TID, null));
+        }
+        return rows;
+    }
+
+    /**
+     * Read all rows from a ResultSet as an Objs stream of Rec (rrows).
+     * This is useful for returning from instruction implementations.
+     *
+     * @param rs the ResultSet to read from
+     * @return an Objs containing all rows as Rec objects
+     * @throws SQLException if reading fails
+     */
+    public static Objs readAllAsRecObjs(final ResultSet rs) throws SQLException {
+        Obj result = objs0();
+        for (final Rec row : readAllAsRec(rs)) {
+            result = result.append(row);
+        }
+        return result.asObjs();
+    }
+
+    /**
+     * Read all rows from a ResultSet as a list of Lst (lrows).
+     * Each row becomes a Lst with values in column order.
+     * The ResultSet cursor is advanced until exhausted.
+     *
+     * @param rs the ResultSet to read from (cursor should be before first row)
+     * @return a list of Lst objects, one per row
+     * @throws SQLException if reading fails
+     */
+    public static List<Lst> readAllAsLst(final ResultSet rs) throws SQLException {
+        final List<Lst> rows = new ArrayList<>();
+        final ResultSetMetaData metaData = rs.getMetaData();
+        final int columnCount = metaData.getColumnCount();
+
+        while (rs.next()) {
+            final List<Obj> rowData = new ArrayList<>();
+            for (int i = 1; i <= columnCount; i++) {
+                final int sqlType = metaData.getColumnType(i);
+                rowData.add(readColumnStatic(rs, i, sqlType));
+            }
+            rows.add(lst(rowData, LST_ROW_TID, null));
+        }
+        return rows;
+    }
+
+    /**
+     * Read all rows from a ResultSet as an Objs stream of Lst (lrows).
+     * This is useful for returning from instruction implementations.
+     *
+     * @param rs the ResultSet to read from
+     * @return an Objs containing all rows as Lst objects
+     * @throws SQLException if reading fails
+     */
+    public static Objs readAllAsLstObjs(final ResultSet rs) throws SQLException {
+        Obj result = objs0();
+        for (final Lst row : readAllAsLst(rs)) {
+            result = result.append(row);
+        }
+        return result.asObjs();
+    }
+
+    /**
+     * Read up to 'limit' rows from a ResultSet as a list of Rec (rrows).
+     * Each row becomes a Rec with column names as Uri keys.
+     *
+     * @param rs    the ResultSet to read from
+     * @param limit maximum number of rows to read
+     * @return a list of Rec objects, up to 'limit' rows
+     * @throws SQLException if reading fails
+     */
+    public static List<Rec> readLimitedAsRec(final ResultSet rs, final int limit) throws SQLException {
+        final List<Rec> rows = new ArrayList<>();
+        final ResultSetMetaData metaData = rs.getMetaData();
+        final int columnCount = metaData.getColumnCount();
+        int count = 0;
+
+        while (rs.next() && count < limit) {
+            final Map<Obj, Obj> rowData = new LinkedHashMap<>();
+            for (int i = 1; i <= columnCount; i++) {
+                final String columnName = metaData.getColumnName(i);
+                final int sqlType = metaData.getColumnType(i);
+                final Obj value = readColumnStatic(rs, i, sqlType);
+                rowData.put(uri(columnName), value);
+            }
+            rows.add(rec(rowData, REC_ROW_TID, null));
+            count++;
+        }
+        return rows;
+    }
+
+    /**
+     * Read up to 'limit' rows from a ResultSet as an Objs stream of Rec (rrows).
+     *
+     * @param rs    the ResultSet to read from
+     * @param limit maximum number of rows to read
+     * @return an Objs containing up to 'limit' rows as Rec objects
+     * @throws SQLException if reading fails
+     */
+    public static Objs readLimitedAsRecObjs(final ResultSet rs, final int limit) throws SQLException {
+        Obj result = objs0();
+        for (final Rec row : readLimitedAsRec(rs, limit)) {
+            result = result.append(row);
+        }
+        return result.asObjs();
+    }
+
+    /**
+     * Read up to 'limit' rows from a ResultSet as a list of Lst (lrows).
+     * Each row becomes a Lst with values in column order.
+     *
+     * @param rs    the ResultSet to read from
+     * @param limit maximum number of rows to read
+     * @return a list of Lst objects, up to 'limit' rows
+     * @throws SQLException if reading fails
+     */
+    public static List<Lst> readLimitedAsLst(final ResultSet rs, final int limit) throws SQLException {
+        final List<Lst> rows = new ArrayList<>();
+        final ResultSetMetaData metaData = rs.getMetaData();
+        final int columnCount = metaData.getColumnCount();
+        int count = 0;
+
+        while (rs.next() && count < limit) {
+            final List<Obj> rowData = new ArrayList<>();
+            for (int i = 1; i <= columnCount; i++) {
+                final int sqlType = metaData.getColumnType(i);
+                rowData.add(readColumnStatic(rs, i, sqlType));
+            }
+            rows.add(lst(rowData, LST_ROW_TID, null));
+            count++;
+        }
+        return rows;
+    }
+
+    /**
+     * Read up to 'limit' rows from a ResultSet as an Objs stream of Lst (lrows).
+     *
+     * @param rs    the ResultSet to read from
+     * @param limit maximum number of rows to read
+     * @return an Objs containing up to 'limit' rows as Lst objects
+     * @throws SQLException if reading fails
+     */
+    public static Objs readLimitedAsLstObjs(final ResultSet rs, final int limit) throws SQLException {
+        Obj result = objs0();
+        for (final Lst row : readLimitedAsLst(rs, limit)) {
+            result = result.append(row);
+        }
+        return result.asObjs();
+    }
+
+    /**
+     * Static helper to read a column value by index.
+     * This is used by the static bulk conversion methods.
+     */
+    private static Obj readColumnStatic(final ResultSet rs, final int columnIndex, final int sqlType) throws SQLException {
+        final Object value = rs.getObject(columnIndex);
+        if (value == null || rs.wasNull()) {
+            return noobj();
+        }
+
+        return switch (sqlType) {
+            case Types.BOOLEAN, Types.BIT -> bool(rs.getBoolean(columnIndex));
+            case Types.TINYINT, Types.SMALLINT, Types.INTEGER, Types.BIGINT -> jnt(rs.getLong(columnIndex));
+            case Types.REAL, Types.FLOAT, Types.DOUBLE, Types.DECIMAL, Types.NUMERIC -> real(rs.getDouble(columnIndex));
+            case Types.CHAR, Types.VARCHAR, Types.LONGVARCHAR, Types.NCHAR, Types.NVARCHAR, Types.LONGNVARCHAR ->
+                    str(rs.getString(columnIndex));
+            case Types.DATE, Types.TIME, Types.TIMESTAMP -> str(rs.getString(columnIndex));
+            case Types.BINARY, Types.VARBINARY, Types.LONGVARBINARY -> str(rs.getString(columnIndex));
+            default -> str(value.toString());
+        };
+    }
+
+    // ==================== End Bulk ResultSet Conversion Helpers ====================
 
     /**
      * Write a Metatron object to a PreparedStatement parameter.

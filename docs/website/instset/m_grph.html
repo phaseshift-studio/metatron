@@ -94,6 +94,7 @@
                     </li>
                     <li>
                         <div class="terminal-box">
+                            <span class="badge bg-danger">only linux tested</span>
                             <pre><code>git clone https://github.com/phaseshift-studio/metatron.git
 mvn clean install -DskipTests=true
 bin/metatron</code></pre>
@@ -101,6 +102,7 @@ bin/metatron</code></pre>
                     </li>
                     <li>
                         <div class="terminal-box">
+                            <span class="badge bg-danger">only linux tested</span>
                             <pre><code>curl -L https://github.com/phaseshift-studio/metatron.git</code></pre>
                         </div>
                     </li>
@@ -135,12 +137,6 @@ bin/metatron</code></pre>
                            onclick="location.href='m_grph.html';"><img
                             src="../images/icons/space/grph-icon.svg" class="isa-row icon-color me-2" alt="grph"/>/m/grph</a>
                     </li>
-                    <!-- TODO: Add /m/grph/tp3 docs
-                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='m_grph_tp3.html';"><img
-                            src="../images/icons/space/gremlin-icon.svg" class="isa-row icon-color me-2" alt="tp3"/>/m/grph/tp3</a>
-                    </li>
-                    -->
                     <!-- TODO: Add /m/vec docs
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
                            onclick="location.href='m_vec.html';"><img
@@ -177,13 +173,15 @@ bin/metatron</code></pre>
             <!----------------------------------------------------------------------------------------------------------
             ----------------------------------- ARTICLES DROPDOWN ------------------------------------------------------
             ----------------------------------------------------------------------------------------------------------->
-            <li class="nav-item dropdown">
+            <li class="nav-item dropdown dropstart">
                 <a id="articles-dropdown" class="nav-link dropdown-toggle" href="#" role="button"
                    data-bs-toggle="dropdown" aria-expanded="false">articles</a>
-                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="articles-dropdown">
-                    <li><a class="dropdown-item" href="#"
-                           onclick="location.href='../articles/parametric-identities-in-ring-theory.html';">computational ring
-                        theory</a></li>
+                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="articles-dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../articles/stream-ring-theory.pdf';">stream ring theory</a></li>
+                    <li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../articles/parametric-identities-in-ring-theory.html';">parametric identities</a></li>
                     <li>
                 </ul>
             </li>
@@ -196,13 +194,13 @@ bin/metatron</code></pre>
                     software guild
                 </a>
                 <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="guild_dropdown">
-                    <li><a class="dropdown-item" href="#"
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
                            onclick="location.href='https://opencollective.com/metatron';">open collective</a></li>
-                    <li><a class="dropdown-item" href="#"
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
                            onclick="location.href='https://github.com/phaseshift-studio/metatron';">github</a></li>
-                    <li><a class="dropdown-item" href="#" onclick="location.href='../index.html';">mailing list</a></li>
-                    <!--<li><a class="dropdown-item" href="#" onclick="location.href='../index.html';">live coding</a></li>-->
-                    <li><a class="dropdown-item" href="#" onclick="location.href='../index.html';">artifacts</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='../index.html';">mailing list</a></li>
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='../index.html';">live coding</a></li>-->
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='../index.html';">artifacts</a></li>
                 </ul>
             </li>
             <!--<li class="nav-item dropdown">
@@ -810,7 +808,7 @@ bin/metatron</code></pre>
         <div class="container-xxl py-3 text-center">
             <hr class="border-secondary">
             <small class="text-muted">
-                generated by metatron instset doc generator on build 0-2026-04-07 02:40:56<br>
+                generated by metatron instset doc generator on build 0-2026-04-07 08:46:37<br>
                 © PhaseShift Studio, LLC
             </small>
         </div>

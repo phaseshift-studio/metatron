@@ -339,33 +339,56 @@ public class docdbSpace extends AbstractSpace<MongoClient> {
 
     /**
      * Generate a schema object from the discovered collection metadata.
-     * Returns a rec with:
-     * - pattern: base pattern for schema access
-     * - collections: list of collection metadata with nested type/probability recs
-     * - references: list of detected references
+     * <p>
+     * Returns a rec with unified structure (aligned with tabledbSpace schema):
+     * <ul>
+     *   <li>pattern: base pattern for schema access</li>
+     *   <li>name: database name</li>
+     *   <li>tables: list of table/collection definitions with name, uri, schema, probability</li>
+     *   <li>references: list of detected references</li>
+     * </ul>
      */
     private Obj generateSchema() {
         this.existingCollectionSchema.initialize(this.database);
-        final List<Obj> collections = this.existingCollectionSchema.getCollectionMetadata().stream()
-                .map(collection -> (Obj) rec(
-                        uri(NAME), str(collection.collectionName()),
-                        uri(SCHEMA), buildNestedTypeRec(collection.fields()),
-                        uri(PROBABILITY), buildNestedProbabilityRec(collection.fields())))
+
+        // Build schema pattern (e.g., mongo:schema/mflix/#)
+        final fURI schemaPattern = this.pattern.retractPattern()
+                .extend(SCHEMA)
+                .extend(this.databaseName)
+                .extend("#");
+
+        // Generate table/collection entries with unified structure
+        final List<Obj> tables = this.existingCollectionSchema.getCollectionMetadata().stream()
+                .map(collection -> {
+                    final fURI collectionUri = this.pattern.retractPattern()
+                            .extend(SCHEMA)
+                            .extend(this.databaseName)
+                            .extend(collection.collectionName());
+
+                    return (Obj) rec(
+                            uri(NAME), str(collection.collectionName()),
+                            uri(URI), uri(collectionUri),
+                            uri(SCHEMA), buildNestedTypeRec(collection.fields()),
+                            uri(PROBABILITY), buildNestedProbabilityRec(collection.fields()));
+                })
                 .toList();
 
+        // Generate references with unified field names (aligned with tabledb foreign_keys)
         final List<Obj> references = this.existingCollectionSchema.getCollectionMetadata().stream()
                 .flatMap(collection -> collection.references().stream())
                 .map(ref -> (Obj) rec(
-                        uri(FROM), str(ref.fromCollection()),
-                        uri(FIELD), str(ref.fromField()),
-                        uri(TO), str(ref.toCollection()),
+                        uri(FROM_TABLE), str(ref.fromCollection()),
+                        uri(FROM_COLUMN), str(ref.fromField()),
+                        uri(TO_TABLE), str(ref.toCollection()),
+                        uri(TO_COLUMN), str("_id"),  // MongoDB references typically point to _id
                         uri(TYPE), str(ref.type().name())))
                 .toList();
 
         return rec(
+                uri(PATTERN), uri(schemaPattern),
                 uri(NAME), str(this.databaseName),
-                uri(COLLECTION), lst(collections),
-                uri(REFERENCE), lst(references));
+                uri(TABLES), lst(tables),
+                uri(REFERENCES), lst(references));
     }
 
     /**

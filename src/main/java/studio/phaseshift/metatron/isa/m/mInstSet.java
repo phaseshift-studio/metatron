@@ -177,6 +177,7 @@ public class mInstSet extends AbstractInstSet {
     public static final fURI LSHIFT_INST_TID = M_ISA_INST_TID.extend("lshift");
     public static final fURI RSHIFT_INST_TID = M_ISA_INST_TID.extend("rshift");
     public static final fURI MATH_INST_TID = M_ISA_INST_TID.extend("math");
+    public static final fURI LIMIT_INST_TID = M_ISA_INST_TID.extend("limit");
     public static final fURI PATH_TID = M_ISA_INST_TID.extend("path");
     public static final fURI Q_INST_TID = M_ISA_INST_TID.extend("q");
     public static final fURI URI_C_TID = M_ISA_INST_TID.extend("uri:c");

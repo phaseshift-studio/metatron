@@ -1376,6 +1376,7 @@ $(addBlockSwitches);
                     </li>
                     <li>
                         <div class="terminal-box">
+                            <span class="badge bg-danger">only linux tested</span>
                             <pre><code>git clone https://github.com/phaseshift-studio/metatron.git
 mvn clean install -DskipTests=true
 bin/metatron</code></pre>
@@ -1383,6 +1384,7 @@ bin/metatron</code></pre>
                     </li>
                     <li>
                         <div class="terminal-box">
+                            <span class="badge bg-danger">only linux tested</span>
                             <pre><code>curl -L https://github.com/phaseshift-studio/metatron.git</code></pre>
                         </div>
                     </li>
@@ -1417,12 +1419,6 @@ bin/metatron</code></pre>
                            onclick="location.href='instset/m_grph.html';"><img
                             src="./images/icons/space/grph-icon.svg" class="isa-row icon-color me-2" alt="grph"/>/m/grph</a>
                     </li>
-                    <!-- TODO: Add /m/grph/tp3 docs
-                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='instset/m_grph_tp3.html';"><img
-                            src="./images/icons/space/gremlin-icon.svg" class="isa-row icon-color me-2" alt="tp3"/>/m/grph/tp3</a>
-                    </li>
-                    -->
                     <!-- TODO: Add /m/vec docs
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
                            onclick="location.href='instset/m_vec.html';"><img
@@ -1459,13 +1455,15 @@ bin/metatron</code></pre>
             <!----------------------------------------------------------------------------------------------------------
             ----------------------------------- ARTICLES DROPDOWN ------------------------------------------------------
             ----------------------------------------------------------------------------------------------------------->
-            <li class="nav-item dropdown">
+            <li class="nav-item dropdown dropstart">
                 <a id="articles-dropdown" class="nav-link dropdown-toggle" href="#" role="button"
                    data-bs-toggle="dropdown" aria-expanded="false">articles</a>
-                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="articles-dropdown">
-                    <li><a class="dropdown-item" href="#"
-                           onclick="location.href='./articles/parametric-identities-in-ring-theory.html';">computational ring
-                        theory</a></li>
+                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="articles-dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='./articles/stream-ring-theory.pdf';">stream ring theory</a></li>
+                    <li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='./articles/parametric-identities-in-ring-theory.html';">parametric identities</a></li>
                     <li>
                 </ul>
             </li>
@@ -1478,13 +1476,13 @@ bin/metatron</code></pre>
                     software guild
                 </a>
                 <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="guild_dropdown">
-                    <li><a class="dropdown-item" href="#"
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
                            onclick="location.href='https://opencollective.com/metatron';">open collective</a></li>
-                    <li><a class="dropdown-item" href="#"
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
                            onclick="location.href='https://github.com/phaseshift-studio/metatron';">github</a></li>
-                    <li><a class="dropdown-item" href="#" onclick="location.href='index.html';">mailing list</a></li>
-                    <!--<li><a class="dropdown-item" href="#" onclick="location.href='index.html';">live coding</a></li>-->
-                    <li><a class="dropdown-item" href="#" onclick="location.href='index.html';">artifacts</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='index.html';">mailing list</a></li>
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='index.html';">live coding</a></li>-->
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='index.html';">artifacts</a></li>
                 </ul>
             </li>
             <!--<li class="nav-item dropdown">
@@ -2782,76 +2780,76 @@ mtron&gt; */m/llm/model
 mtron&gt; *ollama:+
 ==&gt;model::[
  size    =&gt;gB::0.72,
- provider=&gt;!*/sys/space/ollama,
- name    =&gt;deepseek-coder:latest,
+ skill   =&gt;[completion],
  think   =&gt;noobj,
- skill   =&gt;[completion]]@ollama:deepseek-coder:latest
+ name    =&gt;deepseek-coder:latest,
+ provider=&gt;!*/sys/space/ollama]@ollama:deepseek-coder:latest
 ==&gt;model::[
  size    =&gt;gB::4.87,
- provider=&gt;!*/sys/space/ollama,
- name    =&gt;qwen3:latest,
+ skill   =&gt;[completion,tools,thinking],
  think   =&gt;[=&gt;],
- skill   =&gt;[completion,tools,thinking]]@ollama:qwen3:latest
+ name    =&gt;qwen3:latest,
+ provider=&gt;!*/sys/space/ollama]@ollama:qwen3:latest
 ==&gt;model::[
  size    =&gt;gB::4.34,
- provider=&gt;!*/sys/space/ollama,
- name    =&gt;llama3-groq-tool-use:latest,
+ skill   =&gt;[completion,tools],
  think   =&gt;noobj,
- skill   =&gt;[completion,tools]]@ollama:llama3-groq-tool-use:latest
+ name    =&gt;llama3-groq-tool-use:latest,
+ provider=&gt;!*/sys/space/ollama]@ollama:llama3-groq-tool-use:latest
 ==&gt;model::[
  size    =&gt;gB::0.00,
- provider=&gt;!*/sys/space/ollama,
- name    =&gt;&lt;deepseek-v3.2:cloud&gt;,
+ skill   =&gt;[completion,tools,thinking],
  think   =&gt;[=&gt;],
- skill   =&gt;[completion,tools,thinking]]@&lt;ollama:deepseek-v3.2:cloud&gt;
+ name    =&gt;&lt;deepseek-v3.2:cloud&gt;,
+ provider=&gt;!*/sys/space/ollama]@&lt;ollama:deepseek-v3.2:cloud&gt;
 ==&gt;model::[
  size    =&gt;gB::17.71,
- provider=&gt;!*/sys/space/ollama,
- name    =&gt;&lt;glm-4.7-flash:latest&gt;,
+ skill   =&gt;[completion,tools,thinking],
  think   =&gt;[=&gt;],
- skill   =&gt;[completion,tools,thinking]]@&lt;ollama:glm-4.7-flash:latest&gt;
+ name    =&gt;&lt;glm-4.7-flash:latest&gt;,
+ provider=&gt;!*/sys/space/ollama]@&lt;ollama:glm-4.7-flash:latest&gt;
 ==&gt;model::[
  size    =&gt;gB::0.59,
- provider=&gt;!*/sys/space/ollama,
- name    =&gt;tinyllama:latest,
+ skill   =&gt;[completion],
  think   =&gt;noobj,
- skill   =&gt;[completion]]@ollama:tinyllama:latest
+ name    =&gt;tinyllama:latest,
+ provider=&gt;!*/sys/space/ollama]@ollama:tinyllama:latest
 ==&gt;model::[
  size    =&gt;gB::8.37,
- provider=&gt;!*/sys/space/ollama,
- name    =&gt;deepcoder:latest,
+ skill   =&gt;[completion],
  think   =&gt;noobj,
- skill   =&gt;[completion]]@ollama:deepcoder:latest
+ name    =&gt;deepcoder:latest,
+ provider=&gt;!*/sys/space/ollama]@ollama:deepcoder:latest
 ==&gt;model::[
  size    =&gt;gB::12.85,
- provider=&gt;!*/sys/space/ollama,
- name    =&gt;gpt-oss:latest,
+ skill   =&gt;[completion,tools,thinking],
  think   =&gt;[=&gt;],
- skill   =&gt;[completion,tools,thinking]]@ollama:gpt-oss:latest
+ name    =&gt;gpt-oss:latest,
+ provider=&gt;!*/sys/space/ollama]@ollama:gpt-oss:latest
 ==&gt;model::[
  size    =&gt;gB::4.87,
- provider=&gt;!*/sys/space/ollama,
- name    =&gt;qwen3:8b,
+ skill   =&gt;[completion,tools,thinking],
  think   =&gt;[=&gt;],
- skill   =&gt;[completion,tools,thinking]]@ollama:qwen3:8b
+ name    =&gt;qwen3:8b,
+ provider=&gt;!*/sys/space/ollama]@ollama:qwen3:8b
 ==&gt;model::[
  size    =&gt;gB::48.19,
- provider=&gt;!*/sys/space/ollama,
- name    =&gt;qwen3-coder-next:latest,
+ skill   =&gt;[completion,tools],
  think   =&gt;noobj,
- skill   =&gt;[completion,tools]]@ollama:qwen3-coder-next:latest
+ name    =&gt;qwen3-coder-next:latest,
+ provider=&gt;!*/sys/space/ollama]@ollama:qwen3-coder-next:latest
 ==&gt;model::[
  size    =&gt;gB::0.00,
- provider=&gt;!*/sys/space/ollama,
- name    =&gt;&lt;minimax-m2.5:cloud&gt;,
+ skill   =&gt;[completion,tools,thinking],
  think   =&gt;[=&gt;],
- skill   =&gt;[completion,tools,thinking]]@&lt;ollama:minimax-m2.5:cloud&gt;
+ name    =&gt;&lt;minimax-m2.5:cloud&gt;,
+ provider=&gt;!*/sys/space/ollama]@&lt;ollama:minimax-m2.5:cloud&gt;
 ==&gt;model::[
  size    =&gt;gB::4.41,
- provider=&gt;!*/sys/space/ollama,
- name    =&gt;llava:latest,
+ skill   =&gt;[completion,vision],
  think   =&gt;noobj,
- skill   =&gt;[completion,vision]]@ollama:llava:latest
+ name    =&gt;llava:latest,
+ provider=&gt;!*/sys/space/ollama]@ollama:llava:latest
 ​</code></pre>
 </div>
 </div>
@@ -4937,13 +4935,15 @@ mtron&gt; */sys/space/farm                                                  ​3
 ​
 mtron&gt; */sys/space/farm/schema                                           ​4​
 ==&gt;[
+ pattern   =&gt;farm:schema/farm/#,
  name      =&gt;'farm',
- collection=&gt;[
+ tables    =&gt;[
    [
        name       =&gt;'animals',
+       uri        =&gt;farm:schema/farm/animals,
        schema     =&gt;[_id=&gt;str::T,type=&gt;str::T,name=&gt;str::T,age=&gt;int::T],
        probability=&gt;[_id=&gt;1.00,type=&gt;1.00,name=&gt;1.00,age=&gt;1.00]]],
- reference =&gt;[,]]
+ references=&gt;[,]]
 ​</code></pre>
 </div>
 </div>

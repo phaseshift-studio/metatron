@@ -19,17 +19,19 @@
 package studio.phaseshift.metatron.isa.doc;
 
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.model.Filters;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 import studio.phaseshift.metatron.algebra.rewrite.CommonRewrites;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.m.mInstSet;
-import studio.phaseshift.metatron.isa.m.type.InstSet;
-import studio.phaseshift.metatron.isa.m.type.Rel;
-import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
@@ -183,6 +185,62 @@ public class dcmntInstSet extends AbstractInstSet {
                                     }
                                     return 0.0;
                                 }
+                        ),
+
+                        // Optimize: *collection.take(n) → MongoDB find().limit(n)
+                        CommonRewrites.limitRewrite(
+                                docdbSpace.class,
+                                DCMNT_ISA_REWRITE_TID.extend("native_limit"),
+                                (space, furi, limit) -> {
+                                    final String collectionName = furi.segments().getFirst();
+                                    final MongoCollection<Document> collection = space.database.getCollection(collectionName);
+                                    final fURI baseUri = furi.retract(1);
+                                    return readDocumentsAsObjs(collection, baseUri, space, (int) limit);
+                                }
+                        ),
+
+                        // Optimize: *collection.has() → MongoDB countDocuments() > 0
+                        CommonRewrites.hasRewrite(
+                                docdbSpace.class,
+                                DCMNT_ISA_REWRITE_TID.extend("native_has"),
+                                (space, furi) -> {
+                                    final String collectionName = furi.segments().getFirst();
+                                    final MongoCollection<Document> collection = space.database.getCollection(collectionName);
+                                    // Use limit(1) for efficiency - we only need to know if at least one exists
+                                    return collection.find().limit(1).first() != null;
+                                }
+                        ),
+
+                        // Optimize: *collection.where([field=>value]) → MongoDB find(filter)
+                        CommonRewrites.whereRewrite(
+                                docdbSpace.class,
+                                DCMNT_ISA_REWRITE_TID.extend("native_where"),
+                                (space, furi, predicateStr) -> {
+                                    final String collectionName = furi.segments().getFirst();
+                                    final MongoCollection<Document> collection = space.database.getCollection(collectionName);
+                                    final fURI baseUri = furi.retract(1);
+                                    final Bson filter = parseMongoFilter(predicateStr);
+                                    if (filter == null) {
+                                        throw new IllegalArgumentException("Could not parse filter: " + predicateStr);
+                                    }
+                                    return readFilteredDocumentsAsObjs(collection, baseUri, space, filter);
+                                }
+                        ),
+
+                        // Optimize: native_where.count() → MongoDB countDocuments(filter)
+                        CommonRewrites.whereCountRewrite(
+                                docdbSpace.class,
+                                DCMNT_ISA_REWRITE_TID.extend("native_where"),
+                                DCMNT_ISA_REWRITE_TID.extend("native_where_count"),
+                                (space, furi, predicateStr) -> {
+                                    final String collectionName = furi.segments().getFirst();
+                                    final MongoCollection<Document> collection = space.database.getCollection(collectionName);
+                                    final Bson filter = parseMongoFilter(predicateStr);
+                                    if (filter == null) {
+                                        throw new IllegalArgumentException("Could not parse filter: " + predicateStr);
+                                    }
+                                    return collection.countDocuments(filter);
+                                }
                         )
                 )));
         docWrap(this,
@@ -201,5 +259,153 @@ public class dcmntInstSet extends AbstractInstSet {
                 "mongodb:people/6/address>>=[street=>Elm Street,city=>Gotham,zipcode=>90210]");
         super.setup();
 
+    }
+
+    // ==================== Helper Methods for Rewrites ====================
+
+    /**
+     * Read documents from a collection with an optional limit, returning as Objs.
+     */
+    private static Obj readDocumentsAsObjs(final MongoCollection<Document> collection,
+                                           final fURI baseUri,
+                                           final docdbSpace space,
+                                           final int limit) {
+        final List<Obj> results = new ArrayList<>();
+        final var cursor = collection.find().limit(limit).iterator();
+        while (cursor.hasNext()) {
+            final Document doc = cursor.next();
+            final Object docId = doc.get("_id");
+            final String idStr = docId instanceof org.bson.types.ObjectId
+                    ? ((org.bson.types.ObjectId) docId).toHexString()
+                    : docId.toString();
+            final fURI docUri = baseUri.extend(collection.getNamespace().getCollectionName()).extend(idStr);
+            results.add(space.serializer.read(doc.toBsonDocument()).selfVID(docUri));
+        }
+        return studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs(results.iterator());
+    }
+
+    /**
+     * Read filtered documents from a collection, returning as Objs.
+     */
+    private static Obj readFilteredDocumentsAsObjs(final MongoCollection<Document> collection,
+                                                   final fURI baseUri,
+                                                   final docdbSpace space,
+                                                   final Bson filter) {
+        final List<Obj> results = new ArrayList<>();
+        final var cursor = collection.find(filter).iterator();
+        while (cursor.hasNext()) {
+            final Document doc = cursor.next();
+            final Object docId = doc.get("_id");
+            final String idStr = docId instanceof org.bson.types.ObjectId
+                    ? ((org.bson.types.ObjectId) docId).toHexString()
+                    : docId.toString();
+            final fURI docUri = baseUri.extend(collection.getNamespace().getCollectionName()).extend(idStr);
+            results.add(space.serializer.read(doc.toBsonDocument()).selfVID(docUri));
+        }
+        return studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs(results.iterator());
+    }
+
+    /**
+     * Parse a SQL-like WHERE clause string into a MongoDB Bson filter.
+     * Handles the same format as CommonRewrites.WhereRewriteBuilder produces:
+     * - "field = value"
+     * - "field > value"
+     * - "field < value"
+     * - "field >= value"
+     * - "field <= value"
+     * - "field <> value"
+     * - "field IS NOT NULL"
+     * - Multiple conditions joined by " AND "
+     *
+     * @return Bson filter, or null if parsing fails
+     */
+    private static Bson parseMongoFilter(final String whereClause) {
+        if (whereClause == null || whereClause.isBlank()) {
+            return null;
+        }
+
+        // Split by AND (case insensitive)
+        final String[] conditions = whereClause.split("\\s+AND\\s+", -1);
+        final List<Bson> filters = new ArrayList<>();
+
+        for (final String condition : conditions) {
+            final Bson filter = parseSingleCondition(condition.trim());
+            if (filter == null) {
+                return null; // If any condition fails, fail the whole parse
+            }
+            filters.add(filter);
+        }
+
+        if (filters.isEmpty()) {
+            return null;
+        } else if (filters.size() == 1) {
+            return filters.getFirst();
+        } else {
+            return Filters.and(filters);
+        }
+    }
+
+    /**
+     * Parse a single SQL condition into a MongoDB Bson filter.
+     */
+    private static Bson parseSingleCondition(final String condition) {
+        // Handle IS NOT NULL
+        if (condition.toUpperCase().endsWith(" IS NOT NULL")) {
+            final String field = condition.substring(0, condition.length() - " IS NOT NULL".length()).trim();
+            return Filters.exists(field, true);
+        }
+
+        // Handle comparison operators: >=, <=, <>, >, <, =
+        final String[] operators = {">=", "<=", "<>", ">", "<", "="};
+        for (final String op : operators) {
+            final int idx = condition.indexOf(op);
+            if (idx > 0) {
+                final String field = condition.substring(0, idx).trim();
+                final String valueStr = condition.substring(idx + op.length()).trim();
+                final Object value = parseValue(valueStr);
+
+                return switch (op) {
+                    case "=" -> Filters.eq(field, value);
+                    case ">" -> Filters.gt(field, value);
+                    case "<" -> Filters.lt(field, value);
+                    case ">=" -> Filters.gte(field, value);
+                    case "<=" -> Filters.lte(field, value);
+                    case "<>" -> Filters.ne(field, value);
+                    default -> null;
+                };
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Parse a value string into the appropriate Java type.
+     */
+    private static Object parseValue(final String valueStr) {
+        // Handle quoted strings
+        if (valueStr.startsWith("'") && valueStr.endsWith("'")) {
+            return valueStr.substring(1, valueStr.length() - 1).replace("''", "'");
+        }
+
+        // Handle booleans
+        if ("TRUE".equalsIgnoreCase(valueStr)) {
+            return true;
+        }
+        if ("FALSE".equalsIgnoreCase(valueStr)) {
+            return false;
+        }
+
+        // Handle numbers
+        try {
+            if (valueStr.contains(".")) {
+                return Double.parseDouble(valueStr);
+            } else {
+                return Long.parseLong(valueStr);
+            }
+        } catch (final NumberFormatException e) {
+            // Fall back to string
+            return valueStr;
+        }
     }
 }

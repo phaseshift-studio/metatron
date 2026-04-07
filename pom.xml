@@ -49,7 +49,7 @@
         <skipDocker>true</skipDocker>
         <skipRunner>false</skipRunner>
         <skipAdoc>false</skipAdoc>
-        <skipInstSetDocs>false</skipInstSetDocs>
+        <skipInstSet>false</skipInstSet>
         <buildNumber>0</buildNumber>
         <!-- metatron instset documentation -->
         <metatron.host>ws://127.0.0.1:8999</metatron.host>
@@ -139,6 +139,7 @@
             <version>${mongodb.version}</version>
         </dependency>
         <!-- LANGCHAIN -->
+        <!-- MCP, SKILLS, AGENTS -->
         <dependency>
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j-mcp</artifactId>
@@ -150,6 +151,12 @@
             <artifactId>langchain4j-skills</artifactId>
             <version>1.12.2-beta22</version>
         </dependency>
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-agentic</artifactId>
+            <version>1.12.2-beta22</version>
+        </dependency>
+        <!-- ANTHROPIC, OPENAI, OLLAMA -->
         <dependency>
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j-anthropic</artifactId>
@@ -264,11 +271,6 @@
             <groupId>io.modelcontextprotocol.sdk</groupId>
             <artifactId>mcp</artifactId>
             <version>${mcp.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.github.thought2code</groupId>
-            <artifactId>mcp-annotated-java-sdk</artifactId>
-            <version>${mcp-annotated-java-sdk.version}</version>
         </dependency>
         <!-- TESTING -->
         <dependency>
@@ -395,7 +397,7 @@
                             <goal>exec</goal>
                         </goals>
                         <configuration>
-                            <skip>${skipInstSetDocs}</skip>
+                            <skip>${skipInstSet}</skip>
                             <executable>python</executable>
                             <arguments>
                                 <argument>docs/python/instset_doc_generator.py</argument>

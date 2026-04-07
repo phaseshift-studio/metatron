@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.isa.m.type.Type;
 import java.sql.Types;
 import java.util.*;
 
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Real.REAL_TYPE;
@@ -51,6 +52,7 @@ public class SQLSchemaGenerator {
 
     private final List<ExistingTableSchema.TableMetadata> tableMetadata;
     private final fURI schemaBasePath;
+    private final String databaseName;
     private Map<String, Type> tableTypes;
 
     /**
@@ -58,12 +60,26 @@ public class SQLSchemaGenerator {
      *
      * @param tableMetadata metadata for all tables in the database
      * @param schemaBasePath base path for schema types (e.g., /m/tble/inst/schema/db)
+     * @param databaseName the name of the database (for alignment with docdb schema)
+     */
+    public SQLSchemaGenerator(final List<ExistingTableSchema.TableMetadata> tableMetadata,
+                             final fURI schemaBasePath,
+                             final String databaseName) {
+        this.tableMetadata = tableMetadata;
+        this.schemaBasePath = schemaBasePath;
+        this.databaseName = databaseName;
+        this.tableTypes = null; // Lazy initialization
+    }
+
+    /**
+     * Create a schema generator for a SQL database (without explicit database name)
+     *
+     * @param tableMetadata metadata for all tables in the database
+     * @param schemaBasePath base path for schema types (e.g., /m/tble/inst/schema/db)
      */
     public SQLSchemaGenerator(final List<ExistingTableSchema.TableMetadata> tableMetadata,
                              final fURI schemaBasePath) {
-        this.tableMetadata = tableMetadata;
-        this.schemaBasePath = schemaBasePath;
-        this.tableTypes = null; // Lazy initialization
+        this(tableMetadata, schemaBasePath, schemaBasePath.name());
     }
 
     /**
@@ -155,48 +171,92 @@ public class SQLSchemaGenerator {
     }
 
     /**
-     * Generate a complete schema object including tables and foreign keys
-     * Returns a rec with:
-     * - pattern: base pattern for table types
-     * - tables: list of table type definitions
-     * - foreign_keys: list of foreign key relationships
+     * Generate a complete schema object including tables and references.
+     * <p>
+     * Returns a rec with unified structure (aligned with docdbSpace schema):
+     * <ul>
+     *   <li>pattern: base pattern for table types</li>
+     *   <li>name: database name</li>
+     *   <li>tables: list of table definitions with name, uri, schema, type</li>
+     *   <li>references: list of foreign key relationships</li>
+     * </ul>
      */
     public Obj generateSchema() {
         final Map<Obj, Obj> schemaMap = new LinkedHashMap<>();
 
-        // Add pattern
-        schemaMap.put(uri("pattern"), uri(this.schemaBasePath.extend("#")));
+        // Add pattern (aligned with docdb)
+        schemaMap.put(uri(PATTERN), uri(this.schemaBasePath.extend("#")));
 
-        // Add table types
-        schemaMap.put(uri("tables"), lst(getTableTypes().stream()
-            .map(t -> (Obj) t).toList()));
+        // Add database name (aligned with docdb)
+        schemaMap.put(uri(NAME), str(this.databaseName));
 
-        // Add foreign key metadata
-        schemaMap.put(uri("foreign_keys"), generateForeignKeyList());
+        // Add table definitions with unified structure
+        schemaMap.put(uri(TABLES), lst(generateTableList()));
+
+        // Add references (unified name, was foreign_keys)
+        schemaMap.put(uri(REFERENCES), generateReferenceList());
 
         return rec(schemaMap);
     }
 
     /**
-     * Generate a list of foreign key relationships as mtron objects
+     * Generate a list of table definitions with unified structure.
+     * Each table entry contains: name, uri, schema, type
      */
-    private Obj generateForeignKeyList() {
-        final List<Obj> fkList = new ArrayList<>();
+    private List<Obj> generateTableList() {
+        final List<Obj> tableList = new ArrayList<>();
+
+        for (final ExistingTableSchema.TableMetadata table : tableMetadata) {
+            final Type tableType = generateTableType(table);
+            final fURI tableUri = schemaBasePath.extend(table.tableName().toLowerCase());
+
+            // Build schema rec (field => type mappings)
+            final Map<Obj, Obj> schemaRec = new LinkedHashMap<>();
+            for (final ExistingTableSchema.ColumnMetadata column : table.columns()) {
+                schemaRec.put(uri(column.name()), sqlTypeToMtronType(column));
+            }
+
+            // Build table entry with unified structure
+            final Map<Obj, Obj> tableEntry = new LinkedHashMap<>();
+            tableEntry.put(uri(NAME), str(table.tableName()));
+            tableEntry.put(uri(URI), uri(tableUri));
+            tableEntry.put(uri(SCHEMA), rec(schemaRec));
+            tableEntry.put(uri(TYPE), tableType);
+
+            tableList.add(rec(tableEntry));
+
+            // Also cache the type
+            if (tableTypes == null) {
+                tableTypes = new LinkedHashMap<>();
+            }
+            tableTypes.put(table.tableName().toLowerCase(), tableType);
+        }
+
+        return tableList;
+    }
+
+    /**
+     * Generate a list of reference relationships as mtron objects.
+     * Uses unified field names aligned with docdb schema.
+     */
+    private Obj generateReferenceList() {
+        final List<Obj> refList = new ArrayList<>();
 
         for (final ExistingTableSchema.TableMetadata table : tableMetadata) {
             for (final ExistingTableSchema.ForeignKeyMetadata fk : table.foreignKeys()) {
-                final Map<Obj, Obj> fkRec = new LinkedHashMap<>();
-                fkRec.put(uri("table"), str(fk.fromTable()));
-                fkRec.put(uri("column"), str(fk.fromColumn()));
-                fkRec.put(uri("references"), str(fk.toTable()));
-                fkRec.put(uri("ref_column"), str(fk.toColumn()));
+                final Map<Obj, Obj> refRec = new LinkedHashMap<>();
+                refRec.put(uri(FROM_TABLE), str(fk.fromTable()));
+                refRec.put(uri(FROM_COLUMN), str(fk.fromColumn()));
+                refRec.put(uri(TO_TABLE), str(fk.toTable()));
+                refRec.put(uri(TO_COLUMN), str(fk.toColumn()));
                 if (fk.fkName() != null) {
-                    fkRec.put(uri("name"), str(fk.fkName()));
+                    refRec.put(uri(NAME), str(fk.fkName()));
                 }
-                fkList.add(rec(fkRec));
+                refRec.put(uri(TYPE), str("FOREIGN_KEY"));
+                refList.add(rec(refRec));
             }
         }
 
-        return lst(fkList);
+        return lst(refList);
     }
 }

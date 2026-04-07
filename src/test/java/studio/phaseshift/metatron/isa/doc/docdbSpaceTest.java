@@ -27,7 +27,9 @@ import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
 import org.bson.Document;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.algebra.rewrite.CommonRewritesTestContract;
@@ -42,6 +44,7 @@ import studio.phaseshift.metatron.isa.m.type.impl.MStr;
 import java.net.InetSocketAddress;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
@@ -85,11 +88,6 @@ public class docdbSpaceTest extends AbstractSpaceTest implements CommonRewritesT
     @BeforeAll
     public static void setupInstSet() {
         InstSet.importInstSet(DCMNT_ISA_TID);
-    }
-
-    @Override
-    public fURI getTestDataUriPrefix() {
-        return f("mongo:test_collection/");
     }
 
     // Disable all abstract tests - docdbSpace has its own comprehensive MongoDB-specific tests
@@ -220,6 +218,21 @@ public class docdbSpaceTest extends AbstractSpaceTest implements CommonRewritesT
                     .append("inStock", true)
                     .append("quantity", 50));
 
+            // Create rewrite_test collection for CommonRewritesTestContract
+            // 10 docs: id=1-10, value=1-10, name='item1'-'item10', active=alternating true/false
+            final MongoCollection<Document> rewriteTest = db.getCollection("rewrite_test");
+            rewriteTest.drop();
+
+            for (int i = 1; i <= 10; i++) {
+                final boolean active = (i % 2 == 1); // odd = true, even = false
+                rewriteTest.insertOne(new Document()
+                        .append("_id", String.valueOf(i))
+                        .append("id", i)
+                        .append("value", i)
+                        .append("name", "item" + i)
+                        .append("active", active));
+            }
+
             LOG.info("test data setup complete");
         }
     }
@@ -236,7 +249,7 @@ public class docdbSpaceTest extends AbstractSpaceTest implements CommonRewritesT
             assertTrue(user1.isRec(), "User1 should be a record");
 
             final Rec user1Rec = user1.asRec();
-            assertEquals(str("Alice"), user1Rec.at(uri("name")), "Name should be Alice");
+            assertEquals(str("Alice"), user1Rec.at(uri(NAME)), "Name should be Alice");
             assertEquals(jnt(30), user1Rec.at(uri("age")), "Age should be 30");
             assertEquals(str("alice@example.com"), user1Rec.at(uri("email")), "Email should match");
             assertEquals(bool(true), user1Rec.at(uri("active")), "Should be active");
@@ -294,7 +307,7 @@ public class docdbSpaceTest extends AbstractSpaceTest implements CommonRewritesT
         try {
             // Write a new user
             final Rec newUser = rec(
-                    uri("name"), str("Diana"),
+                    uri(NAME), str("Diana"),
                     uri("age"), jnt(28),
                     uri("email"), str("diana@example.com"),
                     uri("active"), bool(true)
@@ -308,7 +321,7 @@ public class docdbSpaceTest extends AbstractSpaceTest implements CommonRewritesT
             assertTrue(readBack.isRec(), "New user should be a record");
 
             final Rec readBackRec = readBack.asRec();
-            assertEquals(str("Diana"), readBackRec.at(uri("name")), "Name should be Diana");
+            assertEquals(str("Diana"), readBackRec.at(uri(NAME)), "Name should be Diana");
             assertEquals(jnt(28), readBackRec.at(uri("age")), "Age should be 28");
 
             LOG.info("Successfully wrote and read back new user");
@@ -325,7 +338,7 @@ public class docdbSpaceTest extends AbstractSpaceTest implements CommonRewritesT
         try {
             // Update user1
             final Rec updatedUser = rec(
-                    uri("name"), str("Alice Updated"),
+                    uri(NAME), str("Alice Updated"),
                     uri("age"), jnt(31),
                     uri("email"), str("alice.new@example.com"),
                     uri("active"), bool(true)
@@ -337,7 +350,7 @@ public class docdbSpaceTest extends AbstractSpaceTest implements CommonRewritesT
             final Obj readBack = space.read(f("mongo:users/user1"));
             final Rec readBackRec = readBack.asRec();
 
-            assertEquals(str("Alice Updated"), readBackRec.at(uri("name")), "Name should be updated");
+            assertEquals(str("Alice Updated"), readBackRec.at(uri(NAME)), "Name should be updated");
             assertEquals(jnt(31), readBackRec.at(uri("age")), "Age should be updated");
             assertEquals(str("alice.new@example.com"), readBackRec.at(uri("email")), "Email should be updated");
 
@@ -378,7 +391,7 @@ public class docdbSpaceTest extends AbstractSpaceTest implements CommonRewritesT
         try {
             // Write a document with nested structure
             final Rec nestedDoc = rec(
-                    uri("name"), str("Eve"),
+                    uri(NAME), str("Eve"),
                     uri("age"), jnt(40),
                     uri("address"), rec(
                             uri("street"), str("123 Main St"),
@@ -395,7 +408,7 @@ public class docdbSpaceTest extends AbstractSpaceTest implements CommonRewritesT
             assertFalse(readBack.isNoObj(), "Nested document should exist");
 
             final Rec readBackRec = readBack.asRec();
-            assertEquals(str("Eve"), readBackRec.at(uri("name")), "Name should be Eve");
+            assertEquals(str("Eve"), readBackRec.at(uri(NAME)), "Name should be Eve");
 
             // Check nested address
             final Obj address = readBackRec.at(uri("address"));
@@ -462,12 +475,12 @@ public class docdbSpaceTest extends AbstractSpaceTest implements CommonRewritesT
             // Read from users collection
             final Obj user = space.read(f("mongo:users/user1"));
             assertFalse(user.isNoObj(), "User should exist");
-            assertEquals(str("Alice"), user.asRec().at(uri("name")), "User name should be Alice");
+            assertEquals(str("Alice"), user.asRec().at(uri(NAME)), "User name should be Alice");
 
             // Read from products collection
             final Obj product = space.read(f("mongo:products/prod1"));
             assertFalse(product.isNoObj(), "Product should exist");
-            assertEquals(str("Laptop"), product.asRec().at(uri("name")), "Product name should be Laptop");
+            assertEquals(str("Laptop"), product.asRec().at(uri(NAME)), "Product name should be Laptop");
 
             LOG.info("Successfully read from multiple collections");
         } finally {
@@ -482,7 +495,7 @@ public class docdbSpaceTest extends AbstractSpaceTest implements CommonRewritesT
         final docdbSpace space = (docdbSpace) this.spaceSupplier.get();
         try {
             final Rec docWithEmptyList = rec(
-                    uri("name"), str("Test"),
+                    uri(NAME), str("Test"),
                     uri("emptyList"), lst()
             );
 
@@ -558,7 +571,7 @@ public class docdbSpaceTest extends AbstractSpaceTest implements CommonRewritesT
                 assertTrue(user.isRec(), "User should be a record");
 
                 final Rec userRec = user.asRec();
-                assertEquals(str(expectedName), userRec.at(uri("name")), "Name should match");
+                assertEquals(str(expectedName), userRec.at(uri(NAME)), "Name should match");
                 assertEquals(jnt(expectedAge), userRec.at(uri("age")), "Age should match");
             }
         } finally {
@@ -580,7 +593,7 @@ public class docdbSpaceTest extends AbstractSpaceTest implements CommonRewritesT
             assertTrue(product.isRec(), "Product should be a record");
 
             final Rec productRec = product.asRec();
-            assertEquals(str(expectedName), productRec.at(uri("name")), "Name should match");
+            assertEquals(str(expectedName), productRec.at(uri(NAME)), "Name should match");
             assertEquals(real(expectedPrice), productRec.at(uri("price")), "Price should match");
             assertEquals(jnt(expectedQuantity), productRec.at(uri("quantity")), "Quantity should match");
         } finally {
@@ -607,7 +620,7 @@ public class docdbSpaceTest extends AbstractSpaceTest implements CommonRewritesT
         try {
             // Write user
             final Rec newUser = rec(
-                    uri("name"), str(name),
+                    uri(NAME), str(name),
                     uri("age"), jnt(age),
                     uri("email"), str(email),
                     uri("active"), bool(true)
@@ -619,7 +632,7 @@ public class docdbSpaceTest extends AbstractSpaceTest implements CommonRewritesT
             assertFalse(readBack.isNoObj(), "User " + userId + " should exist");
 
             final Rec readBackRec = readBack.asRec();
-            assertEquals(str(name), readBackRec.at(uri("name")), "Name should match");
+            assertEquals(str(name), readBackRec.at(uri(NAME)), "Name should match");
             assertEquals(jnt(age), readBackRec.at(uri("age")), "Age should match");
             assertEquals(str(email), readBackRec.at(uri("email")), "Email should match");
         } finally {
@@ -643,20 +656,20 @@ public class docdbSpaceTest extends AbstractSpaceTest implements CommonRewritesT
         try {
             // Write original
             space.write(f("mongo:users/" + userId), rec(
-                    uri("name"), str(originalName),
+                    uri(NAME), str(originalName),
                     uri("age"), jnt(originalAge)
             ));
 
             // Update
             space.write(f("mongo:users/" + userId), rec(
-                    uri("name"), str(updatedName),
+                    uri(NAME), str(updatedName),
                     uri("age"), jnt(updatedAge)
             ));
 
             // Verify update
             final Obj readBack = space.read(f("mongo:users/" + userId));
             final Rec readBackRec = readBack.asRec();
-            assertEquals(str(updatedName), readBackRec.at(uri("name")), "Name should be updated");
+            assertEquals(str(updatedName), readBackRec.at(uri(NAME)), "Name should be updated");
             assertEquals(jnt(updatedAge), readBackRec.at(uri("age")), "Age should be updated");
         } finally {
             space.close();
@@ -673,7 +686,7 @@ public class docdbSpaceTest extends AbstractSpaceTest implements CommonRewritesT
         final docdbSpace space = (docdbSpace) this.spaceSupplier.get();
         try {
             // Create user
-            space.write(f("mongo:users/" + userId), rec(uri("name"), str(name)));
+            space.write(f("mongo:users/" + userId), rec(uri(NAME), str(name)));
 
             // Verify exists
             assertFalse(space.read(f("mongo:users/" + userId)).isNoObj(),
@@ -704,7 +717,7 @@ public class docdbSpaceTest extends AbstractSpaceTest implements CommonRewritesT
         final docdbSpace space = (docdbSpace) this.spaceSupplier.get();
         try {
             final Rec nestedDoc = rec(
-                    uri("name"), str(name),
+                    uri(NAME), str(name),
                     uri("address"), rec(
                             uri("street"), str(street),
                             uri("city"), str(city),
@@ -717,7 +730,7 @@ public class docdbSpaceTest extends AbstractSpaceTest implements CommonRewritesT
             final Obj readBack = space.read(f("mongo:users/" + userId));
             final Rec readBackRec = readBack.asRec();
 
-            assertEquals(str(name), readBackRec.at(uri("name")), "Name should match");
+            assertEquals(str(name), readBackRec.at(uri(NAME)), "Name should match");
 
             final Obj address = readBackRec.at(uri("address"));
             assertTrue(address.isRec(), "Address should be a record");
@@ -744,7 +757,7 @@ public class docdbSpaceTest extends AbstractSpaceTest implements CommonRewritesT
         try {
             final String[] tagArray = tagsStr.equals("<EMPTY>") ? new String[0] : tagsStr.split(",");
             final Rec docWithList = rec(
-                    uri("name"), str(name),
+                    uri(NAME), str(name),
                     uri("tags"), lst(java.util.Arrays.stream(tagArray).<Obj>map(MStr::str))
             );
 
@@ -1050,18 +1063,46 @@ public class docdbSpaceTest extends AbstractSpaceTest implements CommonRewritesT
     // Common Rewrite Tests
     // ========================================
 
-    @Disabled("TestData loading issue - writes being batched/nested into single record")
-    @ParameterizedTest
-    @TestData(source = "rewrite_test_dataset.mtron", value = {""})
-    @CsvSource(value = {
-            "$$/+>>value.sum()    % 55",
-            "$$/+.count()         % 10",
-            "$$/+>>value.mean()   % 5.5",
-    }, delimiter = '%')
-    public void testCommonRewrites(String code, String expected) throws Exception {
-        String result = mParser.eval(make(code)).toString();
-        assertEquals(expected, result);
+    /**
+     * Override to provide the rewrite test data URI prefix.
+     * Uses the mongo: scheme for MongoDB collections.
+     * Test data is created in @BeforeEach setupTestData().
+     */
+    @Override
+    public fURI getTestDataUriPrefix() {
+        return f("mongo:rewrite_test");
     }
+
+    /**
+     * Parameterized test for all rewrite optimizations.
+     * Tests count, limit, has, where, where+count, aggregations, and compositions.
+     * Test data (rewrite_test collection with 10 docs) is created in @BeforeEach.
+     */
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("provideAllRewriteTestCases")
+    public void testRewriteOptimizations(String description, String code, Obj expected) throws Exception {
+        runRewriteTest(description, code, expected);
+    }
+
+    /**
+     * Provides all rewrite test cases from the contract.
+     */
+    static Stream<Arguments> provideAllRewriteTestCases() {
+        return new docdbSpaceTest().generateAllRewriteTestCases();
+    }
+
+    // Plan verification tests disabled - mParser.parse().rewrite() doesn't trigger space-specific rewrites
+    // The rewrites are registered in dcmntInstSet and only apply during actual evaluation through a space
+    //
+    // @ParameterizedTest(name = "[{index}] {0}")
+    // @MethodSource("providePlanVerificationTestCases")
+    // public void testRewritePlanContainsNative(String description, String code, String expectedNativeInst) throws Exception {
+    //     runRewritePlanTest(description, code, expectedNativeInst);
+    // }
+    //
+    // static Stream<Arguments> providePlanVerificationTestCases() {
+    //     return new docdbSpaceTest().generatePlanVerificationTestCases();
+    // }
 
     // ========================================
     // DateTime Tests
@@ -1089,7 +1130,7 @@ public class docdbSpaceTest extends AbstractSpaceTest implements CommonRewritesT
             assertTrue(event.isRec(), "Event should be a record");
 
             final Rec eventRec = event.asRec();
-            assertEquals(str("Test Event"), eventRec.at(uri("name")), "Name should match");
+            assertEquals(str("Test Event"), eventRec.at(uri(NAME)), "Name should match");
 
             // DateTime should be read as int (milliseconds since epoch)
             final Obj createdAt = eventRec.at(uri("createdAt"));
@@ -1313,7 +1354,7 @@ public class docdbSpaceTest extends AbstractSpaceTest implements CommonRewritesT
             // Note: We write as int (milliseconds), MongoDB will store as int64
             final long timestamp = System.currentTimeMillis();
             final Rec eventDoc = rec(
-                    uri("name"), str("Test Event"),
+                    uri(NAME), str("Test Event"),
                     uri("timestamp"), jnt(timestamp)
             );
 
@@ -1326,7 +1367,7 @@ public class docdbSpaceTest extends AbstractSpaceTest implements CommonRewritesT
 
             final Rec readBackRec = readBack.asRec();
 
-            assertEquals(str("Test Event"), readBackRec.at(uri("name")), "Name should match");
+            assertEquals(str("Test Event"), readBackRec.at(uri(NAME)), "Name should match");
             assertEquals(jnt(timestamp), readBackRec.at(uri("timestamp")), "Timestamp should match");
 
             LOG.info("Write and read back timestamp: %s", timestamp);
@@ -1362,7 +1403,7 @@ public class docdbSpaceTest extends AbstractSpaceTest implements CommonRewritesT
             final Obj event = space.read(f("mongo:events/" + eventId));
             final Rec eventRec = event.asRec();
 
-            assertEquals(str(name), eventRec.at(uri("name")), "Name should match");
+            assertEquals(str(name), eventRec.at(uri(NAME)), "Name should match");
 
             final Obj start = eventRec.at(uri("startTime"));
             final Obj end = eventRec.at(uri("endTime"));
@@ -1627,7 +1668,7 @@ public class docdbSpaceTest extends AbstractSpaceTest implements CommonRewritesT
             assertTrue(author.isRec(), "Author should be a record");
 
             final Rec authorRec = author.asRec();
-            assertEquals(str("John Doe"), authorRec.at(uri("name")), "Author name should match");
+            assertEquals(str("John Doe"), authorRec.at(uri(NAME)), "Author name should match");
             assertEquals(str("john@example.com"), authorRec.at(uri("email")), "Author email should match");
 
             LOG.info("Resolved author: %s", author);
@@ -1734,7 +1775,7 @@ public class docdbSpaceTest extends AbstractSpaceTest implements CommonRewritesT
             final Obj author = authorInst.asInst().apply();
             final Rec authorRec = author.asRec();
 
-            assertEquals(str(expectedAuthorName), authorRec.at(uri("name")), "Author name should match");
+            assertEquals(str(expectedAuthorName), authorRec.at(uri(NAME)), "Author name should match");
         } finally {
             space.close();
         }
