@@ -61,7 +61,7 @@
         <langchain4j.version>1.12.2</langchain4j.version>
         <langgraph4j.version>1.8.11</langgraph4j.version>
         <junit.version>6.0.3</junit.version>
-        <tinkerpop.version>3.8.0</tinkerpop.version>
+        <tinkerpop.version>3.8.1</tinkerpop.version>
         <jlama.version>0.8.4</jlama.version>
         <gson.version>2.13.2</gson.version>
         <petitparser.version>2.4.0</petitparser.version>
@@ -718,7 +718,7 @@
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>buildnumber-maven-plugin</artifactId>
-                    <version>1.4</version>
+                    <version>3.3.0</version>
                     <executions>
                         <execution>
                             <phase>validate</phase>
