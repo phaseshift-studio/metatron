@@ -328,6 +328,7 @@ public class mInstSet extends AbstractInstSet {
                         Rel.RelType.insts().stream(),
                         Lst.LstType.insts().stream(),
                         RecType.insts().stream(),
+                        Code.CodeType.insts().stream(),
                         Fail.FailType.insts().stream(),
                         //  Objs.ObjsType.insts().stream(),
                         Type.TypeType.insts().stream(),

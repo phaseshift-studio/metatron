@@ -83,6 +83,8 @@ include::header.html[]
                         <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-19" aria-expanded="false" aria-controls="card-19" disabled>Web Space</button></div>
                          <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-20" aria-expanded="false" aria-controls="card-20">Document Space</button></div>
                          <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-21" aria-expanded="false" aria-controls="card-21">Table Space</button></div>
+                        <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-22" aria-expanded="false" aria-controls="card-22">Boot</button></div>
+
                     </div>
                 </div>
                 <!-- Theory Slide -->
@@ -330,6 +332,16 @@ include::docdb-space.adoc[]
 <button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
 ++++
 include::tabledb-space.adoc[]
+++++
+</div>
+++++
+
+++++ 
+<div class="collapse position-relative" id="card-22">
+<button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-22" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
+<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
+++++
+include::boot.adoc[]
 ++++
 </div>
 ++++

@@ -847,7 +847,7 @@ public class mInstSetTest extends AbstractInstSetTest {
     public void testAs(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
-
+ 
     @ParameterizedTest
     @TestData(value = {
             "a -> [x=>!(*(b))]",

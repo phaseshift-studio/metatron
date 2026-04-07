@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -35,7 +35,7 @@ public class MCode extends MObj implements Code {
     }
 
     public static Code of(final List<Inst> insts) {
-        return new MCode(insts, CODE_TID,null);
+        return new MCode(insts, CODE_TID, null);
     }
 
     public static Code of(final List<Inst> insts, final fURI tid, final fURI vid) {
@@ -69,11 +69,15 @@ public class MCode extends MObj implements Code {
     public List<Inst> jvm() {
         return (List<Inst>) this.jvm;
     }
-    
+
+    public static Code code(final List<Inst> insts) {
+        return MCode.of(insts);
+    }
+
     public static Code code(final Call call) {
-        if(call.isCode())
+        if (call.isCode())
             return call.as();
-        else 
+        else
             return new MCode(call.insts(), CODE_TID, null);
     }
 }

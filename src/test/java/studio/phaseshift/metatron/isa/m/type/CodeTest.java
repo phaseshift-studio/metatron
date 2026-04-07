@@ -65,5 +65,4 @@ public class CodeTest extends AbstractMetatronTest {
         if (resolved) assertTrue(obj.isResolved(true));
         else assertFalse(obj.isResolved(true));
     }
-
 }
