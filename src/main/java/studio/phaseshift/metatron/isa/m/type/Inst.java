@@ -288,8 +288,8 @@ public interface Inst extends Call {
             final Inst resolved = fetched.stream()
                     .filter(Obj::isInst)
                     .map(Obj::asInst)
-                    .filter(i -> !this.tid().basePath().equals(AS_INST_TID) ||
-                            (this.arg(0).vid().big().test(i.arg(0).vid().big()) && lhs.tid().big().basePath().test(i.arg(0).dom().vid().big().basePath())))
+                    // .filter(i -> !this.tid().basePath().equals(AS_INST_TID) ||
+                    //         (this.arg(0).vid().big().test(i.arg(0).vid().big()) && lhs.tid().big().basePath().test(i.arg(0).dom().vid().big().basePath())))
                     .filter(i -> (i.args().isEmpty() && this.arg(0).isNoObj()) || i.args().isRec() || i.args().count() >= this.args().count())
                     .filter(i -> !lhs.isInst() || (i.dom().baseType().equals(M_ISA_INST_TID)))
                     .map(i -> this.hasDom() ? i.dom(this.dom()) : i)
@@ -401,7 +401,7 @@ public interface Inst extends Call {
                     //  Router.stack().pop();
                 }
             } catch (final Exception e) {
-                rhs = fail(e, fail(MTronException.of("unable to evaluate inst: %s", cinst)));
+                rhs = fail(MTronException.of("unable to evaluate inst: %s", cinst), fail(e));
                 if (e.getCause() != null)
                     rhs = fail(e.getCause(), (Fail) rhs);
             }

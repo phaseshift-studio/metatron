@@ -309,6 +309,10 @@ public final class QCollection {
             return this.at(EXAMPLE).elements().map(Obj::strValue).toList();
         }
 
+        public static Doc doc(final Rec docRec) {
+            return new Doc(docRec.jvm(), docRec.tid(), docRec.vid());
+        }
+        
         public static Doc doc(final Obj inst, final String domDesc, final String rngDesc, final Map<Obj, String> argDescription, final String description, final String... examples) {
             return new Doc(rec(
                     uri(OBJ), inst,

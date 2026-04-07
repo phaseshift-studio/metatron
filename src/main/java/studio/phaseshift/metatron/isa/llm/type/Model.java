@@ -25,7 +25,6 @@ import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.request.json.*;
 import dev.langchain4j.service.AiServices;
 import dev.langchain4j.service.tool.ToolExecutor;
-import dev.langchain4j.skills.ActivateSkillToolConfig;
 import dev.langchain4j.skills.Skills;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
@@ -55,8 +54,8 @@ import java.util.stream.Stream;
 import static dev.langchain4j.internal.Json.fromJson;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.q.QCollection.DOCQ;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.MCP_SERVER_TID;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.MODEL_TID;
+import static studio.phaseshift.metatron.furi.q.QCollection.Doc.doc;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
@@ -181,12 +180,15 @@ public class Model extends MRec {
                         if (t.tid().equals(MCP_SERVER_TID)) {
                             service.toolProvider(McpToolProvider.builder().mcpClients(((MCPServer) t).client()).build()).executeToolsConcurrently(BootLoader.getExecutor());
                         } else if (t.isInst()) {
-                            if (!Router.global().read(t.tid().q(DOCQ, null)).isNoObj()) {
-                                final Tuple.Pair<ToolSpecification, ToolExecutor> pair = Model.Helper.mtronInstToolSpecification(t.asInst());
+                            if (!Router.global().read(t.tid().addQ(DOCQ)).isNoObj()) {
+                                final Tuple.Pair<ToolSpecification, ToolExecutor> pair = Model.Helper.mtronInstToolSpecification(Model.Helper.mtronInstToTool(t.asInst()));
                                 tools.put(pair.get0(), pair.get1());
                             } else {
-                                t.logger().warn("ignoring inst as it has no associated ?doc: %s", t);
+                                t.logger().warn("ignoring inst as it has no associated ?docq: %s", t);
                             }
+                        } else if (t.test(LLM_TOOL_TYPE)) {
+                            final Tuple.Pair<ToolSpecification, ToolExecutor> pair = Model.Helper.mtronInstToolSpecification(t.asRec());
+                            tools.put(pair.get0(), pair.get1());
                         }
                     });
             if (!tools.isEmpty())
@@ -318,17 +320,9 @@ public class Model extends MRec {
             return schema.build();
         }
 
-        public static Tuple.Pair<ToolSpecification, ToolExecutor> mtronInstToolSpecification(final Inst inst) {
-            final QCollection.Doc doc = Router.readFromSpace(inst.tid().q(DOCQ, null))
-                    .orSupply(() -> QCollection.Doc.doc(inst,
-                            inst.dom().tid().toString(),
-                            inst.rng().tid().toString(),
-                            instB(AS_INST_TID, lst(REC_TYPE)).apply(inst.args().orElse(rec0())).asRec().elements().collect(Collectors.toMap(
-                                    Rel::first,
-                                    e -> e.second().tid().toString()
-                            )),
-                            "<no description>"));
-            inst.logger().info("building ai compliant tool from mtron inst: %s => %s", inst.tid(), doc);
+        public static Tuple.Pair<ToolSpecification, ToolExecutor> mtronInstToolSpecification(final Rec tool) {
+            final Inst inst = tool.at(INST);
+            final QCollection.Doc doc = doc(tool.at(DOC).as());
             JsonObjectSchema.Builder parameters = new JsonObjectSchema.Builder();
             List<String> required = new ArrayList<>();
             parameters.addProperty(LHS, objToSchema(inst.dom(), Type.Helper.polyTypePredicateObj(inst.dom()), doc.at(DOM).orElse(str("<no description>")).strValue()));
@@ -364,6 +358,25 @@ public class Model extends MRec {
             return Tuple.Pair.with(toolSpecBuilder.build(), toolExecutor);
         }
 
+        public static Rec mtronDocToTool(final QCollection.Doc doc) {
+            final Inst inst = doc.at(INST);
+            return rec(Map.of(uri(INST), inst, uri(NAME), uri(inst.tid()), uri(DESC), str(doc.description()), uri(ARG), doc.args()), LLM_TOOL_TID, null);
+        }
+ 
+
+       public static Rec mtronInstToTool(final Inst inst) {
+            final QCollection.Doc doc = Router.readFromSpace(inst.tid().addQ(DOCQ))
+                    .orSupply(() -> doc(inst,
+                            inst.dom().tid().toString(),
+                            inst.rng().tid().toString(),
+                            instB(AS_INST_TID, lst(REC_TYPE)).apply(inst.args().orElse(rec0())).asRec().elements().collect(Collectors.toMap(
+                                    Rel::first,
+                                    e -> e.second().tid().toString()
+                            )),
+                            "<no description>"));
+            inst.logger().info("building ai compliant tool from mtron inst: %s => %s", inst.tid(), doc);
+            return rec(Map.of(uri(INST), inst, uri(NAME), uri(inst.tid()), uri(DESC), str(doc.description()), uri(ARG), doc.args()), LLM_TOOL_TID, null);
+        }
     }
 }
     
