@@ -1,12 +1,12 @@
 /*
- * Metatron: A Distributed Computing Language and Virtual Machine
+ * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *
+ *  
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ *  
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -16,12 +16,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.m.type;
+package studio.phaseshift.metatron.isa.m.type.resolver;
 
 import org.junit.jupiter.api.*;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.benchmark.BenchmarkTracker;
 import studio.phaseshift.metatron.isa.m.mInstSet;
+import studio.phaseshift.metatron.isa.m.type.Inst;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Type;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -38,13 +41,13 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 /**
  * Benchmark tests for instruction resolution performance.
  * <p>
- * Run with: mvn test -Dtest=InstResolutionBenchmarkTest
+ * Run with: mvn test -Dtest=InstResolverBenchmarkTest
  * <p>
  * These tests measure the time taken to resolve instructions under various conditions.
  * Use these benchmarks to compare performance before and after optimization changes.
  */
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class InstResolutionBenchmarkTest extends AbstractMetatronTest {
+public class InstResolverBenchmarkTest extends AbstractMetatronTest {
 
     private static final int WARMUP_ITERATIONS = 100;
     private static final int BENCHMARK_ITERATIONS = 1000;
@@ -384,10 +387,10 @@ public class InstResolutionBenchmarkTest extends AbstractMetatronTest {
      * Run benchmarks with tracking - saves results to benchmark/ folder and
      * compares against baseline. Fails if regression exceeds threshold.
      * <p>
-     * Run with: mvn test -Dtest=InstResolutionBenchmarkTest#benchmarkTracked
+     * Run with: mvn test -Dtest=InstResolverBenchmarkTest#benchmarkTracked
      * <p>
      * To update baseline after intentional changes:
-     * mvn test -Dtest=InstResolutionBenchmarkTest#benchmarkUpdateBaseline
+     * mvn test -Dtest=InstResolverBenchmarkTest#benchmarkUpdateBaseline
      */
     @Test
     @Order(101)
@@ -422,7 +425,7 @@ public class InstResolutionBenchmarkTest extends AbstractMetatronTest {
     @Test
     @Order(102)
     @DisplayName("Update baseline with current results")
-    @Disabled("Run manually: mvn test -Dtest=InstResolutionBenchmarkTest#benchmarkUpdateBaseline")
+    @Disabled("Run manually: mvn test -Dtest=InstResolverBenchmarkTest#benchmarkUpdateBaseline")
     void benchmarkUpdateBaseline() throws IOException {
         BenchmarkTracker tracker = new BenchmarkTracker("inst-resolution");
 

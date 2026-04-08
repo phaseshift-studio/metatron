@@ -48,8 +48,8 @@ public class Profile extends AbstractWidget<Profile> {
             boolean found = !Router.global().read(i.tid().basePath()).isNoObj();
             this.instTable.addRow(List.of(
                     (found ? "{{b}}" : "{{r}}") + i.tid().name(),
-                    i.dom(),
-                    i.rng(),
+                    i.dom().vid().small() + "::T",
+                    i.rng().vid().small() + "::T",
                     i.hasf() ? (i.f().isLambda() ? "{{y}}<j>" : "{{y}}<m>") : "{{r}}<?>",
                     i.args().elements().allMatch(x -> x.isResolved(true)) ? "{{y}}<,>" : "{{r}}<?,?>",
                     "{{m}}" + Inst.Form.of(i).toString(),

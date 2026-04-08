@@ -228,7 +228,7 @@ public interface Space extends Rec, Closeable {
                 }
             }
             if (listing.isEmpty() || pattern.hasPattern()) {
-                final IdObj base = Helper.locateBasePoly(space, pattern);
+                final IdObj base = Helper.locateBasePoly(space, pattern.basePath());
                 if (null != base) {
                     final Poly<?, ?> poly = base.obj().as();
                     Graphitty.log(space).trace("base poly found at %s: %s", base.furi(), poly);
@@ -260,7 +260,7 @@ public interface Space extends Rec, Closeable {
                 writeComplete(obj, current.next().obj());
                 return directWriter.apply(vid, obj);
             } else {
-                final IdObj base = Helper.locateBasePoly(space, vid);
+                final IdObj base = Helper.locateBasePoly(space, vid.basePath());
                 if (null == base) {
                     if (vid.isNode() || !obj.isPoly()) {
                         return directWriter.apply(vid, obj);
