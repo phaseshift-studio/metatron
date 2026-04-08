@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.furi.C;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.m.type.resolver.InstResolver;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.net.FutureObj;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -110,55 +111,7 @@ public interface Inst extends Call {
         }
     }
 
-    private static Poly resolveArgs(final Inst userInst, final Inst apiInst, final Obj lhs) {
-        final GraphittyLogger LOG = Graphitty.log(userInst);
-        if (apiInst.args().isLst()) {
-            LOG.trace("resolving lst args of %s", apiInst);
-            final List<Obj> resolvedArgs = new ArrayList<>();
-            for (int i = 0; i < apiInst.args().count(); i++) {
-                /*if (userInst.arg(i) instanceof FutureObj)
-                    LOG.error(userInst.arg(i) + " is a future");
-                if (apiInst.arg(i) instanceof FutureObj)
-                    LOG.error(apiInst.arg(i) + " is a future");*/
-                final Obj usrArg = Optional.ofNullable(userInst.arg(i)).orElse(noobj()); //FutureObj.resolveFuture(userInst.arg(i));
-                final Obj apiArg = Optional.ofNullable(apiInst.arg(i)).orElse(noobj()); // FutureObj.resolveFuture(apiInst.arg(i));
-                if (!usrArg.c().within(apiArg.c()))
-                    return null;
-                if (userInst.isBlocking()) {
-                    resolvedArgs.add(usrArg);
-                } else if (apiArg.isCall() && usrArg.isNoObj()) { // used for default args (when user arg is noobj)
-                    final Obj r = apiArg.apply(usrArg).resolve(lhs);
-                    if (r.rng().test(apiArg))
-                        resolvedArgs.add(r);
-                    else return null;
-                } else if (usrArg.isObjCall()) {
-                    final Inst firstInst = usrArg.<Call>as().insts().getFirst();
-                    if (!firstInst.hasDomAndRng() && (firstInst.tid().basePath().equals(FROM_INST_TID))) { // from() is a side-effect and the type can't be known unless explicitly specified (need a way to denote side-effect insts).
-                        resolvedArgs.add(usrArg.resolve(lhs));
-                    } else {
-                        final Obj r = usrArg.resolve(lhs);
-                        if (r.rng().test(apiArg)) // && userArg.rng().c().within(apiArg.c()))
-                            resolvedArgs.add(r);
-                        else return null;
-                    }
-                } else {
-                    if (!usrArg.test(apiArg))
-                        return null;
-                    resolvedArgs.add(usrArg.resolve(lhs));
-                }
-            }
-            return lst(resolvedArgs);
-        } else if (apiInst.args().isRec()) {
-            LOG.trace("processing rec args of %s", apiInst);
-            final AtomicInteger counter = new AtomicInteger(0);
-            return rec(apiInst.args().asRec().elements()
-                    .map(kv -> {
-                        Obj this_arg = userInst.arg(kv.first().uriValue(), counter.getAndIncrement());
-                        return rel(kv.first(), kv.second().isCall() ? kv.second().apply(this_arg) : this_arg);
-                    }));
-        } else
-            throw MTronException.of("inst args must be a lst or rec: %s", apiInst);
-    }
+    // resolveArgs moved to Helper class for use by InstResolver implementations
 
     @Override
     Inst clone(final Object jvm, final fURI tid, final fURI vid);
@@ -285,29 +238,7 @@ public interface Inst extends Call {
             }
             /// //////////////////////////////////////////////////
             LOG.debug("fetched insts: %s => %s", this.tid().basePath(), fetched);
-            final Inst resolved = fetched.stream()
-                    .filter(Obj::isInst)
-                    .map(Obj::asInst)
-                    // .filter(i -> !this.tid().basePath().equals(AS_INST_TID) ||
-                    //         (this.arg(0).vid().big().test(i.arg(0).vid().big()) && lhs.tid().big().basePath().test(i.arg(0).dom().vid().big().basePath())))
-                    .filter(i -> (i.args().isEmpty() && this.arg(0).isNoObj()) || i.args().isRec() || i.args().count() >= this.args().count())
-                    .filter(i -> !lhs.isInst() || (i.dom().baseType().equals(M_ISA_INST_TID)))
-                    .map(i -> this.hasDom() ? i.dom(this.dom()) : i)
-                    .map(i -> this.hasRng() ? i.rng(this.rng()) : i)
-                    .map(i -> lhs.isInst() ? i : Helper.bindGenerics(lhs, i, this))
-                    .filter(i -> !Objects.isNull(i))
-                    .filter(i -> lhs.isInst() || lhs.test(i.dom()))
-                    .map(i -> {
-                        final Poly<?, ?> resolvedArgs = resolveArgs(this, i, lhs);
-                        if (null == resolvedArgs)
-                            return null;
-                        return i.args(resolvedArgs);
-                    })
-                    .filter(i -> !Objects.isNull(i))
-                    .map(i -> i.isInitial() ? i.rng(i.arg(0).type()) : i)
-                    .map(i -> i.c(this.c()))
-                    .findFirst()
-                    .orElse(null);
+            final Inst resolved = InstResolver.get().resolve(lhs, this, fetched.stream());
             if (null != resolved) {
                 LOG.trace("%s => %s is %s resolved", lhs, resolved, CommonUtil.lambda(() -> resolved.isResolved(false) ? "" : "not"));
                 // Cache the resolved instruction if args are all literals
@@ -332,7 +263,7 @@ public interface Inst extends Call {
             return noobj();
         } else if (!resolved2.isInst()) {
             LOG.debug("unable to resolve %s to a single inst in %s", domainInst, resolved2);
-            final Poly args = resolveArgs(domainInst, domainInst, lhs);
+            final Poly args = Helper.resolveArgs(domainInst, domainInst, lhs);
             return null == args ? domainInst : domainInst.args(args);
         } else {
             LOG.debug("resolved %s from global router", resolved2);
@@ -493,6 +424,61 @@ public interface Inst extends Call {
             return (O) (lhs.type().equals(rhs.type()) ? rhs : rhs.as(lhs.type()));
 
 
+        }
+
+        /**
+         * Resolve arguments from the user instruction against the API instruction signature.
+         * Used by InstResolver implementations during instruction resolution.
+         *
+         * @param userInst the user instruction containing actual arguments
+         * @param apiInst  the API instruction containing expected argument types
+         * @param lhs      the left-hand-side object for argument resolution
+         * @return resolved arguments as Poly, or null if arguments don't match
+         */
+        public static Poly resolveArgs(final Inst userInst, final Inst apiInst, final Obj lhs) {
+            final GraphittyLogger LOG = Graphitty.log(userInst);
+            if (apiInst.args().isLst()) {
+                LOG.trace("resolving lst args of %s", apiInst);
+                final List<Obj> resolvedArgs = new ArrayList<>();
+                for (int i = 0; i < apiInst.args().count(); i++) {
+                    final Obj usrArg = Optional.ofNullable(userInst.arg(i)).orElse(noobj());
+                    final Obj apiArg = Optional.ofNullable(apiInst.arg(i)).orElse(noobj());
+                    if (!usrArg.c().within(apiArg.c()))
+                        return null;
+                    if (userInst.isBlocking()) {
+                        resolvedArgs.add(usrArg);
+                    } else if (apiArg.isCall() && usrArg.isNoObj()) { // used for default args (when user arg is noobj)
+                        final Obj r = apiArg.apply(usrArg).resolve(lhs);
+                        if (r.rng().test(apiArg))
+                            resolvedArgs.add(r);
+                        else return null;
+                    } else if (usrArg.isObjCall()) {
+                        final Inst firstInst = usrArg.<Call>as().insts().getFirst();
+                        if (!firstInst.hasDomAndRng() && (firstInst.tid().basePath().equals(FROM_INST_TID))) {
+                            resolvedArgs.add(usrArg.resolve(lhs));
+                        } else {
+                            final Obj r = usrArg.resolve(lhs);
+                            if (r.rng().test(apiArg))
+                                resolvedArgs.add(r);
+                            else return null;
+                        }
+                    } else {
+                        if (!usrArg.test(apiArg))
+                            return null;
+                        resolvedArgs.add(usrArg.resolve(lhs));
+                    }
+                }
+                return lst(resolvedArgs);
+            } else if (apiInst.args().isRec()) {
+                LOG.trace("processing rec args of %s", apiInst);
+                final AtomicInteger counter = new AtomicInteger(0);
+                return rec(apiInst.args().asRec().elements()
+                        .map(kv -> {
+                            Obj this_arg = userInst.arg(kv.first().uriValue(), counter.getAndIncrement());
+                            return rel(kv.first(), kv.second().isCall() ? kv.second().apply(this_arg) : this_arg);
+                        }));
+            } else
+                throw MTronException.of("inst args must be a lst or rec: %s", apiInst);
         }
 
         public static Inst applyArgs(final Obj lhs, final Inst inst) {
