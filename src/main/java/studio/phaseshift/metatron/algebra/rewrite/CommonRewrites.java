@@ -345,6 +345,172 @@ public final class CommonRewrites {
                 })
                 .build();
     }
+    
+    /**
+     * Functional interface for select/projection operations.
+     *
+     * @param <S> The space type
+     */
+    @FunctionalInterface
+    public interface SelectOperation<S extends Space> {
+        /**
+         * Execute the native select/projection operation.
+         *
+         * @param space   The database space
+         * @param furi    The resolved fURI for the table/collection
+         * @param columns The list of column/field names to select
+         * @return The projected results (typically an Objs of rows with only selected fields)
+         * @throws Exception if the operation fails
+         */
+        Obj execute(S space, fURI furi, java.util.List<String> columns) throws Exception;
+    }
+
+    /**
+     * Create a select/projection optimization rewrite.
+     *
+     * <p>Optimizes {@code from(furi).>>{field1,field2}} to use native database SELECT projections
+     * instead of loading all fields and projecting in memory.
+     *
+     * <p>Examples:
+     * <ul>
+     *   <li>{@code *table/+>>{name,age}} → {@code SELECT name, age FROM table}</li>
+     *   <li>{@code *collection/+>>{title,year}} → MongoDB projection {@code {title: 1, year: 1}}</li>
+     * </ul>
+     *
+     * @param spaceType      The database space type
+     * @param rewriteTID     The type ID for this specific rewrite
+     * @param selectFunction Function that executes the native select operation
+     * @param <S>            The space type
+     * @return The rewrite instruction
+     */
+    public static <S extends Space> Inst selectRewrite(
+            final Class<S> spaceType,
+            final fURI rewriteTID,
+            final SelectOperation<S> selectFunction) {
+
+        return new SelectRewriteBuilder<>(spaceType, selectFunction)
+                .tid(rewriteTID)
+                .rng(ALL_STAR)
+                .match(FROM_INST_TID, RSHIFT_INST_TID)
+                .build();
+    }
+
+    /**
+     * Specialized RewriteBuilder for select/projection operations that extracts
+     * the field list from the rshift (>>) instruction.
+     */
+    private static class SelectRewriteBuilder<S extends Space> extends RewriteBuilder<S> {
+        private final SelectOperation<S> selectOperation;
+
+        SelectRewriteBuilder(final Class<S> spaceType, final SelectOperation<S> selectOperation) {
+            super(spaceType);
+            this.selectOperation = selectOperation;
+            this.rewriteName = "mql_select";
+            this.optimization = (space, furi, coeff) -> null;
+        }
+
+        @Override
+        protected java.util.function.Function<java.util.Map<Inst, Inst>, java.util.List<Inst>> createRewriteFunction() {
+            return map -> {
+                final java.util.List<Inst> matchedInsts = new java.util.ArrayList<>(map.values());
+                final Inst fromInst = matchedInsts.get(0);
+                final Inst rshiftInst = matchedInsts.get(1);
+
+                final fURI oldfURI = fromInst.arg(0).asUri().uriValue();
+                final Space space = studio.phaseshift.metatron.isa.mach.type.Router.global().getSpace(oldfURI);
+
+                if (!this.spaceType.isInstance(space)) {
+                    return matchedInsts.stream().map(Obj::asInst).toList();
+                }
+
+                // Extract column names from the rshift argument
+                // >>{name, age} -> arg(0) is a rec/lst with the field names
+                final Obj fieldsArg = rshiftInst.arg(0);
+                final java.util.List<String> columns = extractColumnNames(fieldsArg);
+
+                // If we couldn't extract columns, fall back to normal execution
+                if (columns == null || columns.isEmpty()) {
+                    LOG.debug("select fields too complex for native projection: %s", fieldsArg);
+                    return matchedInsts.stream().map(Obj::asInst).toList();
+                }
+
+                final S typedSpace = this.spaceType.cast(space);
+                final fURI expandedfURI = space.redirect(oldfURI, true);
+
+                LOG.debug("evaluating native select operation on %s with columns %s in space %s",
+                        expandedfURI, columns, space);
+
+                // Create a list of column name strings for the instruction args
+                final java.util.List<Obj> colObjs = columns.stream()
+                        .map(c -> (Obj) studio.phaseshift.metatron.isa.m.type.impl.MStr.str(c))
+                        .toList();
+
+                return java.util.List.of(
+                        studio.phaseshift.metatron.isa.m.type.impl.MInst.instC(
+                                this.rewriteTid.dom(fURI.Singleton.ALL.zero()).rng(this.resultTid),
+                                studio.phaseshift.metatron.isa.m.type.impl.MLst.lst(
+                                        studio.phaseshift.metatron.isa.m.type.impl.MUri.uri(expandedfURI),
+                                        studio.phaseshift.metatron.isa.m.type.impl.MLst.lst(colObjs)),
+                                (lhs, inst) -> {
+                                    try {
+                                        return this.selectOperation.execute(typedSpace, expandedfURI, columns);
+                                    } catch (final Exception e) {
+                                        throw studio.phaseshift.metatron.util.MTronException.of(e,
+                                                "failed to execute native select operation");
+                                    }
+                                }
+                        )
+                );
+            };
+        }
+
+        /**
+         * Extract column names from the rshift argument.
+         * Handles both rec syntax {name, age} and list syntax [name, age].
+         */
+        private java.util.List<String> extractColumnNames(final Obj fieldsArg) {
+            if (fieldsArg == null || fieldsArg.isNoObj()) {
+                return null;
+            }
+
+            final java.util.List<String> columns = new java.util.ArrayList<>();
+
+            if (fieldsArg.isRec()) {
+                // Rec syntax: {name, age} - keys are the field names
+                for (final var rel : (Iterable<studio.phaseshift.metatron.isa.m.type.Rel>) fieldsArg.asRec().elements()::iterator) {
+                    final Obj key = rel.first();
+                    if (key.isUri()) {
+                        columns.add(key.uriValue().name());
+                    } else if (key.isStr()) {
+                        columns.add(key.strValue());
+                    } else {
+                        return null; // Complex key, can't translate
+                    }
+                }
+            } else if (fieldsArg.isLst()) {
+                // List syntax: [name, age]
+                for (final Obj item : fieldsArg.asLst().lstValue()) {
+                    if (item.isUri()) {
+                        columns.add(item.uriValue().name());
+                    } else if (item.isStr()) {
+                        columns.add(item.strValue());
+                    } else {
+                        return null; // Complex item, can't translate
+                    }
+                }
+            } else if (fieldsArg.isUri()) {
+                // Single field: >>name
+                columns.add(fieldsArg.uriValue().name());
+            } else if (fieldsArg.isStr()) {
+                // Single field as string
+                columns.add(fieldsArg.strValue());
+            } else {
+                return null; // Unknown format
+            }
+
+            return columns;
+        }
+    }
 
     /**
      * Functional interface for where operations that need access to the predicate.

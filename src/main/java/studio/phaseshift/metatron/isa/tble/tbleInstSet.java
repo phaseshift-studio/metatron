@@ -249,7 +249,43 @@ public class tbleInstSet extends AbstractInstSet {
                                         throw MTronException.of(e, "SQL failed: %s", sql);
                                     }
                                 }
-                        ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages native SELECT COUNT(*) ... WHERE to count filtered rows")
+                        ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages native SELECT COUNT(*) ... WHERE to count filtered rows"),
+
+                        // Optimize: from(table/+).>>{col1,col2} → SELECT col1, col2 FROM table
+                        docWrap(CommonRewrites.selectRewrite(
+                                tabledbSpace.class,
+                                TBLE_ISA_REWRITE_TID.extend("sql_select"),
+                                (space, furi, columns) -> {
+                                    final String tableName = furi.segments().getFirst();
+                                    final String columnList = String.join(", ", columns);
+                                    final String sql = "SELECT " + columnList + " FROM " + tableName;
+                                    try (final Statement stmt = space.sjvm().createStatement();
+                                         final ResultSet rs = stmt.executeQuery(sql)) {
+                                        final java.sql.ResultSetMetaData metaData = rs.getMetaData();
+                                        Obj result = objs0();
+                                        while (rs.next()) {
+                                            final java.util.Map<Obj, Obj> rowMap = new java.util.LinkedHashMap<>();
+                                            for (int i = 1; i <= metaData.getColumnCount(); i++) {
+                                                final String colName = metaData.getColumnName(i);
+                                                final Object value = rs.getObject(i);
+                                                if (value != null) {
+                                                    final Obj objValue = switch (metaData.getColumnType(i)) {
+                                                        case java.sql.Types.BOOLEAN, java.sql.Types.BIT -> bool(rs.getBoolean(i));
+                                                        case java.sql.Types.TINYINT, java.sql.Types.SMALLINT, java.sql.Types.INTEGER, java.sql.Types.BIGINT -> jnt(rs.getLong(i));
+                                                        case java.sql.Types.REAL, java.sql.Types.FLOAT, java.sql.Types.DOUBLE, java.sql.Types.DECIMAL, java.sql.Types.NUMERIC -> real(rs.getDouble(i));
+                                                        default -> str(value.toString());
+                                                    };
+                                                    rowMap.put(uri(colName), objValue);
+                                                }
+                                            }
+                                            result = result.append(rec(rowMap));
+                                        }
+                                        return result.asObjs();
+                                    } catch (SQLException e) {
+                                        throw MTronException.of(e, "SQL failed: %s", sql);
+                                    }
+                                }
+                        ), "*table/+>>{name,age}", "sql_select(table, [name,age])", Map.of(), "leverages native SELECT col1, col2 FROM table for projections")
 
                 )));
         docWrap(this,

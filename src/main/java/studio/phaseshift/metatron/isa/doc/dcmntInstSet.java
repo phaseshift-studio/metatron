@@ -241,6 +241,37 @@ public class dcmntInstSet extends AbstractInstSet {
                                     }
                                     return collection.countDocuments(filter);
                                 }
+                        ),
+
+                        // Optimize: from(collection/+).>>{field1,field2} → MongoDB projection
+                        CommonRewrites.selectRewrite(
+                                docdbSpace.class,
+                                DCMNT_ISA_REWRITE_TID.extend("mql_select"),
+                                (space, furi, columns) -> {
+                                    final String collectionName = furi.segments().getFirst();
+                                    final MongoCollection<Document> collection = space.database.getCollection(collectionName);
+
+                                    // Build MongoDB projection: {field1: 1, field2: 1, _id: 0}
+                                    final Document projection = new Document();
+                                    for (final String col : columns) {
+                                        projection.append(col, 1);
+                                    }
+                                    // Exclude _id unless explicitly requested
+                                    if (!columns.contains("_id")) {
+                                        projection.append("_id", 0);
+                                    }
+
+                                    final List<Obj> results = new ArrayList<>();
+                                    try (var cursor = collection.find().projection(projection).iterator()) {
+                                        while (cursor.hasNext()) {
+                                            final Document doc = cursor.next();
+                                            // Convert the projected document using the space's serializer
+                                            final Obj row = space.serializer.read(doc.toBsonDocument());
+                                            results.add(row);
+                                        }
+                                    }
+                                    return studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs(results.iterator());
+                                }
                         )
                 )));
         docWrap(this,
