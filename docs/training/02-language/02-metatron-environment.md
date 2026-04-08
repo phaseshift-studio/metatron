@@ -268,7 +268,7 @@ They transform instruction sequences into more efficient equivalents.
 ```java
 public Obj rewrites() {
     return rec(
-        kv("sql_native_count_rewrite",
+        kv("sql_count_rewrite",
             // Pattern: [from, count]
             // Rewrite to: native SQL COUNT query
         )

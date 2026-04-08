@@ -184,7 +184,7 @@ public class ObjJSONSerializer extends AbstractObjSerializer<JsonElement> {
                 element = new JsonPrimitive(obj.strValue());
                 //else if (!obj.isPoly() && !obj.isCall())
                 //    element = JsonParser.parseString(this.serializer.write(obj));
-            else if (obj.isCall())
+            else if (obj.isObjCall())
                 element = new JsonPrimitive(SERIALIZER.write(obj.<Call>as().tryToInst()));
             else if (obj.isRel()) {
                 final JsonArray array = new JsonArray();
@@ -210,7 +210,7 @@ public class ObjJSONSerializer extends AbstractObjSerializer<JsonElement> {
             /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             if (!obj.type().isBaseType() || obj.isObjs() || obj.isType() || obj.isObjCall() || obj.isFail() || obj.isRel()) {
                 final JsonObject typedObj = new JsonObject();
-                typedObj.add(BID_KEY, new JsonPrimitive(Router.global().redirect(obj.isType() ? TYPE_TID : (obj.isObjs() ? OBJS_TID : (obj.isCode() ? CODE_TID : (obj.isInst() ? M_ISA_INST_TID : obj.baseType().basePath()))), true).toString()));
+                typedObj.add(BID_KEY, new JsonPrimitive(Router.global().redirect(obj.isType() ? TYPE_TID : (obj.isObjs() ? OBJS_TID : (obj.isCode() ? CODE_TID : (obj.isObjInst() ? M_ISA_INST_TID : obj.baseType().basePath()))), true).toString()));
                 // if (!obj.type().isBaseType())
                 typedObj.add(TID_KEY, new JsonPrimitive(Router.global().redirect(obj.tid(), true).toString()));
                 typedObj.add(VALUE_KEY, element);

@@ -141,7 +141,7 @@ public class dcmntInstSet extends AbstractInstSet {
                         // Optimize: *collection.count() → MongoDB countDocuments()
                         CommonRewrites.countRewrite(
                                 docdbSpace.class,
-                                DCMNT_ISA_REWRITE_TID.extend("native_count"),
+                                DCMNT_ISA_REWRITE_TID.extend("mql_count"),
                                 (space, furi) -> {
                                     final String collectionName = furi.segments().getFirst();
                                     final MongoCollection<Document> collection = space.database.getCollection(collectionName);
@@ -152,7 +152,7 @@ public class dcmntInstSet extends AbstractInstSet {
                         // Optimize: *collection.sum() → MongoDB aggregation $sum
                         CommonRewrites.sumRewrite(
                                 docdbSpace.class,
-                                DCMNT_ISA_REWRITE_TID.extend("native_sum"),
+                                DCMNT_ISA_REWRITE_TID.extend("mql_sum"),
                                 (space, furi) -> {
                                     final String collectionName = furi.segments().getFirst();
                                     final MongoCollection<Document> collection = space.database.getCollection(collectionName);
@@ -171,7 +171,7 @@ public class dcmntInstSet extends AbstractInstSet {
                         // Optimize: *collection.mean() → MongoDB aggregation $avg
                         CommonRewrites.meanRewrite(
                                 docdbSpace.class,
-                                DCMNT_ISA_REWRITE_TID.extend("native_mean"),
+                                DCMNT_ISA_REWRITE_TID.extend("mql_mean"),
                                 (space, furi) -> {
                                     final String collectionName = furi.segments().getFirst();
                                     final MongoCollection<Document> collection = space.database.getCollection(collectionName);
@@ -190,7 +190,7 @@ public class dcmntInstSet extends AbstractInstSet {
                         // Optimize: *collection.take(n) → MongoDB find().limit(n)
                         CommonRewrites.limitRewrite(
                                 docdbSpace.class,
-                                DCMNT_ISA_REWRITE_TID.extend("native_limit"),
+                                DCMNT_ISA_REWRITE_TID.extend("mql_limit"),
                                 (space, furi, limit) -> {
                                     final String collectionName = furi.segments().getFirst();
                                     final MongoCollection<Document> collection = space.database.getCollection(collectionName);
@@ -202,7 +202,7 @@ public class dcmntInstSet extends AbstractInstSet {
                         // Optimize: *collection.has() → MongoDB countDocuments() > 0
                         CommonRewrites.hasRewrite(
                                 docdbSpace.class,
-                                DCMNT_ISA_REWRITE_TID.extend("native_has"),
+                                DCMNT_ISA_REWRITE_TID.extend("mql_has"),
                                 (space, furi) -> {
                                     final String collectionName = furi.segments().getFirst();
                                     final MongoCollection<Document> collection = space.database.getCollection(collectionName);
@@ -214,7 +214,7 @@ public class dcmntInstSet extends AbstractInstSet {
                         // Optimize: *collection.where([field=>value]) → MongoDB find(filter)
                         CommonRewrites.whereRewrite(
                                 docdbSpace.class,
-                                DCMNT_ISA_REWRITE_TID.extend("native_where"),
+                                DCMNT_ISA_REWRITE_TID.extend("mql_where"),
                                 (space, furi, predicateStr) -> {
                                     final String collectionName = furi.segments().getFirst();
                                     final MongoCollection<Document> collection = space.database.getCollection(collectionName);
@@ -227,11 +227,11 @@ public class dcmntInstSet extends AbstractInstSet {
                                 }
                         ),
 
-                        // Optimize: native_where.count() → MongoDB countDocuments(filter)
+                        // Optimize: mql_where.count() → MongoDB countDocuments(filter)
                         CommonRewrites.whereCountRewrite(
                                 docdbSpace.class,
-                                DCMNT_ISA_REWRITE_TID.extend("native_where"),
-                                DCMNT_ISA_REWRITE_TID.extend("native_where_count"),
+                                DCMNT_ISA_REWRITE_TID.extend("mql_where"),
+                                DCMNT_ISA_REWRITE_TID.extend("mql_where_count"),
                                 (space, furi, predicateStr) -> {
                                     final String collectionName = furi.segments().getFirst();
                                     final MongoCollection<Document> collection = space.database.getCollection(collectionName);

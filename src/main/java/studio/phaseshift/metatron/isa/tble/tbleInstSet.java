@@ -148,7 +148,7 @@ public class tbleInstSet extends AbstractInstSet {
                         // Optimize: *table.count() → SELECT COUNT(*)
                         docWrap(CommonRewrites.countRewrite(
                                 tabledbSpace.class,
-                                TBLE_ISA_REWRITE_TID.extend("sql_native_count"),
+                                TBLE_ISA_REWRITE_TID.extend("sql_count"),
                                 (space, furi) -> {
                                     final String tableName = furi.segments().getFirst();
                                     try (final Statement stmt = space.sjvm().createStatement();
@@ -163,7 +163,7 @@ public class tbleInstSet extends AbstractInstSet {
                         // Optimize: *table.sum() → SELECT SUM(*)
                         docWrap(CommonRewrites.sumRewrite(
                                 tabledbSpace.class,
-                                TBLE_ISA_REWRITE_TID.extend("sql_native_sum"),
+                                TBLE_ISA_REWRITE_TID.extend("sql_sum"),
                                 (space, furi) -> {
                                     final String tableName = furi.segments().getFirst();
                                     try (final Statement stmt = space.sjvm().createStatement();
@@ -177,7 +177,7 @@ public class tbleInstSet extends AbstractInstSet {
                         // Optimize: *table.mean() → SELECT AVG(*)
                         docWrap(CommonRewrites.meanRewrite(
                                 tabledbSpace.class,
-                                TBLE_ISA_REWRITE_TID.extend("sql_native_mean"),
+                                TBLE_ISA_REWRITE_TID.extend("sql_mean"),
                                 (space, furi) -> {
                                     final String tableName = furi.segments().getFirst();
                                     try (final Statement stmt = space.sjvm().createStatement();
@@ -190,7 +190,7 @@ public class tbleInstSet extends AbstractInstSet {
                         ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages native SELECT AVG(*) to average entries in a table column"),
                         docWrap(CommonRewrites.limitRewrite(
                                 tabledbSpace.class,
-                                TBLE_ISA_REWRITE_TID.extend("sql_native_limit"),
+                                TBLE_ISA_REWRITE_TID.extend("sql_limit"),
                                 (space, furi, limit) -> {
                                     final String tableName = furi.segments().getFirst();
                                     final String sql = "SELECT * FROM " + tableName + " LIMIT " + limit;
@@ -206,7 +206,7 @@ public class tbleInstSet extends AbstractInstSet {
                         // Optimize: *table.has() → SELECT EXISTS(SELECT 1 FROM table LIMIT 1)
                         docWrap(CommonRewrites.hasRewrite(
                                 tabledbSpace.class,
-                                TBLE_ISA_REWRITE_TID.extend("sql_native_has"),
+                                TBLE_ISA_REWRITE_TID.extend("sql_has"),
                                 (space, furi) -> {
                                     final String tableName = furi.segments().getFirst();
                                     try (final Statement stmt = space.sjvm().createStatement();
@@ -221,7 +221,7 @@ public class tbleInstSet extends AbstractInstSet {
                         // Optimize: *table.where([col=>val]) → SELECT * FROM table WHERE col = val
                         docWrap(CommonRewrites.whereRewrite(
                                 tabledbSpace.class,
-                                TBLE_ISA_REWRITE_TID.extend("sql_native_where"),
+                                TBLE_ISA_REWRITE_TID.extend("sql_where"),
                                 (space, furi, sqlWhere) -> {
                                     final String tableName = furi.segments().getFirst();
                                     final String sql = "SELECT * FROM " + tableName + " WHERE " + sqlWhere;
@@ -234,11 +234,11 @@ public class tbleInstSet extends AbstractInstSet {
                                 }
                         ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages native SELECT ... WHERE to filter rows in a table"),
 
-                        // Optimize: sql_native_where.count() → SELECT COUNT(*) FROM table WHERE ...
+                        // Optimize: sql_where.count() → SELECT COUNT(*) FROM table WHERE ...
                         docWrap(CommonRewrites.whereCountRewrite(
                                 tabledbSpace.class,
-                                TBLE_ISA_REWRITE_TID.extend("sql_native_where"),
-                                TBLE_ISA_REWRITE_TID.extend("sql_native_where_count"),
+                                TBLE_ISA_REWRITE_TID.extend("sql_where"),
+                                TBLE_ISA_REWRITE_TID.extend("sql_where_count"),
                                 (space, furi, sqlWhere) -> {
                                     final String tableName = furi.segments().getFirst();
                                     final String sql = "SELECT COUNT(*) FROM " + tableName + " WHERE " + sqlWhere;

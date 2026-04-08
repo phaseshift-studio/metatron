@@ -54,9 +54,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * <pre>{@code
  * // Optimize from().count() to use native COUNT(*)
  * Inst countRewrite = RewriteBuilder.forDatabase(tabledbSpace.class)
- *     .tid(TBLE_ISA_REWRITE_TID.extend("native_count"))
+ *     .tid(TBLE_ISA_REWRITE_TID.extend("mql_count"))
  *     .match(FROM_INST_TID, COUNT_INST_TID)
- *     .optimize("sql_native_count", (space, furi, coeff) -> {
+ *     .optimize("sql_count", (space, furi, coeff) -> {
  *         String table = furi.segments().getFirst();
  *         try (Statement stmt = space.sjvm().createStatement();
  *              ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM " + table)) {

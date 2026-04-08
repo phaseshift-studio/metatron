@@ -283,9 +283,9 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                         (this.isFail() || this.isCaughtFail() && base.equals(FAIL_TID)))) {
             return false;
         }
-        if (this.isCall())
+        if (this.isObjCall())
             return this.tid().c().within(rhs.tid().c()); // TODO: this is really flimsy.
-        if (rhs.isCall())
+        if (rhs.isObjCall())
             return this.test(rhs.dom()) && rhs.apply(this).test(rhs.rng());
         if (!this.c().within(rhs.c()))
             return false;
@@ -421,11 +421,11 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     }
 
     default boolean isRing() {
-        return this instanceof Ring;
+        return this instanceof Ring.O;
     }
 
     default boolean isPlusMonoid() {
-        return this instanceof PlusMonoid;
+        return this instanceof PlusMonoid.O;
     }
 
     default boolean isMultMonoid() {
@@ -686,7 +686,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         private static final ObjSerializer<String> SERIALIZER = new ObjCleanStringSerializer();
 
         public static boolean isAuto(final Obj obj) {
-            return obj.isCall() && ((Call) obj).isAuto();
+            return obj.isObjCall() && ((Call) obj).isAuto();
         }
 
         public static int objHashCode(final Obj obj) {
@@ -836,8 +836,8 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                     docWrap(instC(ORDER_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()).q(BLOCK, null), lst(T(ALL)), (lhs, inst) -> objs(lhs.stream().sorted(new ObjSelectComparator(inst.arg(0))))),
                             "any objs", "the objs sorted by the arg obj", Map.of(jnt(0), "the obj to sort by"), "a sorting function \\(f(X)\\to X'\\)"),
                     instC(AS_INST_TID.dom(A).rng(NOOBJ_TID.zero()), lst(), (lhs, inst) -> noobj()),
-                    // docWrap(instC(AS_INST_TID.dom(A).rng(B), lst(T(ALL)), (lhs, inst) -> inst.arg(0).isType() ? lhs.as(inst.arg(0).asType()) : fail(MTronException.of("%s is not a %s", lhs, inst.arg(0)))),
-                    //        "any obj", "the lhs obj as the arg type", Map.of(jnt(0), "the type to cast to"), "a type casting function \\(f(x)\\to x\\)"),
+                    docWrap(instC(AS_INST_TID.dom(A).rng(B), lst(T(ALL)), (lhs, inst) -> inst.arg(0).isType() ? lhs.as(inst.arg(0).asType()) : fail(MTronException.of("%s is not a %s", lhs, inst.arg(0)))),
+                            "any obj", "the lhs obj as the arg type", Map.of(jnt(0), "the type to cast to"), "a type casting function \\(f(x)\\to x\\)"),
                     instC(IMPORT_INST_TID.dom(ALL.maybe()).rng(SPACE_TID.maybeSome()), lst(URI_TYPE, T(URI_TID.maybe())), (lhs, inst) -> MTronException.wrap(() -> objs((Stream) InstSet.importInstSetStream(inst.arg(0).uriValue(), inst.arg(1).isNoObj() ? null : inst.arg(1).uriValue())))),
                     docWrap(instC(DEDUP_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(), (lhs, inst) -> objs(lhs.stream().map(o -> o.c().gt(cInt.ZERO()) ? o.c(cInt::one) : o.c(c -> cInt.of(-1))).distinct())),
                             "any objs", "the deduplicated objs", Map.of(), "a deduplication function f({c}X)->{d<=c}X"),
@@ -888,7 +888,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                             "terminal objs", "noobj", Map.of(), "the terminal function \\(f(x)\\to \\emptyset\\)"),
                     docWrap(instC(PRINTLN_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL_STAR)), (lhs, inst) -> objs(inst.args().elements().peek(o -> inst.logger().none("%s", o.isStr() ? o.strValue() : o.toString())).filter(x -> false).findAny().orElse(lhs).stream().peek(x -> inst.logger().none(lineSeparator())))),
                             "the rhs obj", "the lhs obj", Map.of(jnt(0), "concatenated args followed by newline written to stdout"), "a side-effect function \\(f(x)\\nearrow x\\)"),
-                    docWrap(instC(PRINT_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL_STAR)), (lhs, inst) -> objs(inst.args().elements().peek(o -> inst.logger().none("%s{{v1&^1}}", o.isStr() ? o.strValue() : o.toString())).filter(x -> false).findAny().orElse(lhs))),
+                    docWrap(instC(PRINT_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL_STAR)), (lhs, inst) -> objs(inst.args().elements().peek(o -> inst.logger().none("%s", o.isStr() ? o.strValue() : o.toString())).filter(x -> false).findAny().orElse(lhs))),
                             "the rhs obj", "the lhs obj", Map.of(jnt(0), "concatenated args followed by newline written to stdout"), "a side-effect function \\(f(x)\\nearrow x\\)"),
                     instC(AT_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(URI_TID.maybe())), (lhs, inst) -> inst.arg(0).isNoObj() ? lhs.vid(null) : (lhs.isNoObj() ? Router.readFromSpace(inst.arg(0).uriValue()).vid(inst.arg(0).uriValue()) : lhs.vid(inst.arg(0).uriValue()))),
                     docWrap(instC(ID_INST_TID.dom(A).rng(A), lst(), (lhs, inst) -> lhs),
@@ -990,12 +990,12 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                                                             rec(jnt(0), MObjFactory.of().toObj(lhs.jvm()))))))),
                     docWrap(instC(REDUCE_INST_TID.dom(ALL.maybeSome()).rng(ALL), lst(T(ALL)), (lhs, inst) -> Stream.concat(inst.arg(0).<Inst>as().arg(0).stream(), lhs.stream()).reduce((a, b) -> inst.arg(0).<Inst>as().args(lst(a)).apply(b)).orElse(noobj())),
                             "any objs", "the result of applying the arg inst to each obj", Map.of(jnt(0), "the inst to apply to each obj"), "a reduce function \\(f(X) \\to x\\)"),
-                    docWrap(instC(WHERE_INST_TID.dom(ALL).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> inst.arg(0).isCall() ? (inst.arg(0).apply(lhs).isNoObj() ? noobj() : lhs) : (lhs.test(inst.arg(0)) ? lhs : noobj())),
+                    docWrap(instC(WHERE_INST_TID.dom(ALL).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> inst.arg(0).isObjCall() ? (inst.arg(0).apply(lhs).isNoObj() ? noobj() : lhs) : (lhs.test(inst.arg(0)) ? lhs : noobj())),
                             "any obj", "filter the lhs obj based on whether the arg yields noobj or not", Map.of(jnt(0), "the inst to filter objs by"), "a filter function \\(f(x)\\to \\{\\emptyset \\cup x\\}\\)"),
                     instC(GROUP_INST_TID.dom(ALL.maybeSome()).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> {
                         final Map<Obj, Obj> result = new LinkedHashMap<>();
                         lhs.stream().forEach(e -> inst.arg(0).asRec().elements().forEach(kv -> {
-                            final Obj kk = kv.first().isCall() ? kv.first().apply(e) : (e.isRec() ? e.asRec().at(kv.first()) : e);
+                            final Obj kk = kv.first().isObjCall() ? kv.first().apply(e) : (e.isRec() ? e.asRec().at(kv.first()) : e);
                             if (!kk.isNoObj()) // TODO: if the group value is not a barrier, then process immediately.
                                 result.compute(kk, (k, v) -> (v == null) ? lst(kv.second(), e) : v.asLst().at(jnt(1), e, MUTABLE));
                         }));

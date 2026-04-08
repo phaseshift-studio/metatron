@@ -184,7 +184,7 @@ public class Model extends MRec {
                     .forEach(t -> {
                         if (t.tid().equals(MCP_SERVER_TID)) {
                             service.toolProvider(McpToolProvider.builder().mcpClients(((MCPServer) t).client()).build()).executeToolsConcurrently(BootLoader.getExecutor());
-                        } else if (t.isInst()) {
+                        } else if (t.isObjInst()) {
                             if (!Router.global().read(t.tid().addQ(DOCQ)).isNoObj()) {
                                 final Tuple.Pair<ToolSpecification, ToolExecutor> pair = Model.Helper.mtronInstToolSpecification(Model.Helper.mtronInstToTool(t.asInst()));
                                 tools.put(pair.get0(), pair.get1());

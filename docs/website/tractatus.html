@@ -2758,29 +2758,29 @@ mtron&gt; {1,2,3,4,5}-&lt;[?&gt;2 =&gt; as(str::T) + ' greater than 2',
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p><strong>Pair Programmer</strong>: LLMs can connect to a console session, be provided a terminal split screen, and evaluate mtron expressions alongside the user. This is especially useful when developing strategies for interlinking spaces via schema alignment and entity resolution as well as quickly creating domain specific rewrite rules to optimize mtron compilation (using mtron).</p>
+<p><strong>Pair Programmer</strong>: LLMs can connect to a console session, be provided a terminal split screen, and evaluate mtron expressions alongside the user. This is especially useful when developing strategies for interlinking spaces via schema alignment and entity resolution as well as quickly creating domain-specific rewrite rules to optimize mtron compilation (using mtron).</p>
 </li>
 <li>
 <p><strong>Agent Development</strong>: A large portion of an LLM&#8217;s functional elements are embedded in the URI address space and made accessible to mtron via respective spaces. Such components include:</p>
 <div class="ulist">
 <ul>
 <li>
-<p><strong>tools</strong>: every mtron <code>inst</code> has an <code>as()</code>-mapping to <code>tool</code>, where the <code>docq</code> q processor of the <code>inst</code> provides the name, description, and argument notes necessary for LLM tool selection. While most mtron instructions are low-level and not necessarily "tool-oriented", user defined custom instruction can be as tool/service oriented as needed.</p>
+<p><strong>tools</strong>: every mtron <code>inst</code> has an <code>as()</code>-mapping to <code>tool</code>, where the <code>docq</code> q processor of the <code>inst</code> provides the name, description, and argument notes necessary for LLM tool selection. While most mtron instructions are low-level and not necessarily "tool-oriented", user-defined custom instruction can be as tool/service oriented as needed.</p>
 </li>
 <li>
-<p><strong>thoughts</strong>: when enabling internal reasoning with a supporting llm, the stream of thought is published streamed and can be directed to system output, to a memory structure, to another llm for review, etc.</p>
+<p><strong>thoughts</strong>: when enabling internal reasoning with a supporting LLM, the stream of thought is published streamed and can be directed to system output, to a memory structure, to another LLM for review, etc.</p>
 </li>
 <li>
-<p><strong>memory</strong>: an llms interaction/thought history can be stored and retrieved at a later time to enable long-term memory and context awareness.</p>
+<p><strong>memory</strong>: an LLMs interaction/thought history can be stored and retrieved at a later time to enable long-term memory and context awareness.</p>
 </li>
 <li>
-<p><strong>skills</strong>: a llm can be trained on a wide range of skills and domains, allowing them to perform complex tasks and solve problems. Skills can be pulled from the Anthropic-designed <code>.agent</code> directory that has a corresponding <code>SKILL.md</code> file and associated resources. Or, can be created programmatically in metaron.</p>
+<p><strong>skills</strong>: an LLM can be trained on a wide range of skills and domains, allowing them to perform complex tasks and solve problems. Skills can be pulled from the Anthropic-designed <code>.agent</code> directory that has a corresponding <code>SKILL.md</code> file and associated resources. Or, can be created programmatically in metaron.</p>
 </li>
 <li>
-<p><strong>prompts</strong>: specific prompts or instructions can be stored and retrieved to help guide an llm&#8217;s response.</p>
+<p><strong>prompts</strong>: specific prompts or instructions can be stored and retrieved to help guide an LLM&#8217;s response.</p>
 </li>
 <li>
-<p><strong>response formats</strong>: a mtron <code>rec</code> can serve as a schema object instructing the llm to populate the <code>rec</code> with their answer to avoid arbitrary string responses in favor of structured responses.</p>
+<p><strong>response formats</strong>: a mtron <code>rec</code> can serve as a schema object instructing the LLM to populate the <code>rec</code> with their answer to avoid arbitrary string responses in favor of structured responses.</p>
 </li>
 <li>
 <p><strong>gguff vector files</strong>: &#8230;&#8203;</p>
@@ -2823,77 +2823,77 @@ mtron&gt; */m/llm/model
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">​
 mtron&gt; *ollama:+
 ==&gt;model::[
- size    =&gt;gB::0.72,
  skill   =&gt;[completion],
  think   =&gt;noobj,
  name    =&gt;deepseek-coder:latest,
- provider=&gt;!*/sys/space/ollama]@ollama:deepseek-coder:latest
+ provider=&gt;!*/sys/space/ollama,
+ size    =&gt;gB::0.72]@ollama:deepseek-coder:latest
 ==&gt;model::[
- size    =&gt;gB::4.87,
  skill   =&gt;[completion,tools,thinking],
  think   =&gt;[=&gt;],
  name    =&gt;qwen3:latest,
- provider=&gt;!*/sys/space/ollama]@ollama:qwen3:latest
+ provider=&gt;!*/sys/space/ollama,
+ size    =&gt;gB::4.87]@ollama:qwen3:latest
 ==&gt;model::[
- size    =&gt;gB::4.34,
  skill   =&gt;[completion,tools],
  think   =&gt;noobj,
  name    =&gt;llama3-groq-tool-use:latest,
- provider=&gt;!*/sys/space/ollama]@ollama:llama3-groq-tool-use:latest
+ provider=&gt;!*/sys/space/ollama,
+ size    =&gt;gB::4.34]@ollama:llama3-groq-tool-use:latest
 ==&gt;model::[
- size    =&gt;gB::0.00,
  skill   =&gt;[completion,tools,thinking],
  think   =&gt;[=&gt;],
  name    =&gt;&lt;deepseek-v3.2:cloud&gt;,
- provider=&gt;!*/sys/space/ollama]@&lt;ollama:deepseek-v3.2:cloud&gt;
+ provider=&gt;!*/sys/space/ollama,
+ size    =&gt;gB::0.00]@&lt;ollama:deepseek-v3.2:cloud&gt;
 ==&gt;model::[
- size    =&gt;gB::17.71,
  skill   =&gt;[completion,tools,thinking],
  think   =&gt;[=&gt;],
  name    =&gt;&lt;glm-4.7-flash:latest&gt;,
- provider=&gt;!*/sys/space/ollama]@&lt;ollama:glm-4.7-flash:latest&gt;
+ provider=&gt;!*/sys/space/ollama,
+ size    =&gt;gB::17.71]@&lt;ollama:glm-4.7-flash:latest&gt;
 ==&gt;model::[
- size    =&gt;gB::0.59,
  skill   =&gt;[completion],
  think   =&gt;noobj,
  name    =&gt;tinyllama:latest,
- provider=&gt;!*/sys/space/ollama]@ollama:tinyllama:latest
+ provider=&gt;!*/sys/space/ollama,
+ size    =&gt;gB::0.59]@ollama:tinyllama:latest
 ==&gt;model::[
- size    =&gt;gB::8.37,
  skill   =&gt;[completion],
  think   =&gt;noobj,
  name    =&gt;deepcoder:latest,
- provider=&gt;!*/sys/space/ollama]@ollama:deepcoder:latest
+ provider=&gt;!*/sys/space/ollama,
+ size    =&gt;gB::8.37]@ollama:deepcoder:latest
 ==&gt;model::[
- size    =&gt;gB::12.85,
  skill   =&gt;[completion,tools,thinking],
  think   =&gt;[=&gt;],
  name    =&gt;gpt-oss:latest,
- provider=&gt;!*/sys/space/ollama]@ollama:gpt-oss:latest
+ provider=&gt;!*/sys/space/ollama,
+ size    =&gt;gB::12.85]@ollama:gpt-oss:latest
 ==&gt;model::[
- size    =&gt;gB::4.87,
  skill   =&gt;[completion,tools,thinking],
  think   =&gt;[=&gt;],
  name    =&gt;qwen3:8b,
- provider=&gt;!*/sys/space/ollama]@ollama:qwen3:8b
+ provider=&gt;!*/sys/space/ollama,
+ size    =&gt;gB::4.87]@ollama:qwen3:8b
 ==&gt;model::[
- size    =&gt;gB::48.19,
  skill   =&gt;[completion,tools],
  think   =&gt;noobj,
  name    =&gt;qwen3-coder-next:latest,
- provider=&gt;!*/sys/space/ollama]@ollama:qwen3-coder-next:latest
+ provider=&gt;!*/sys/space/ollama,
+ size    =&gt;gB::48.19]@ollama:qwen3-coder-next:latest
 ==&gt;model::[
- size    =&gt;gB::0.00,
  skill   =&gt;[completion,tools,thinking],
  think   =&gt;[=&gt;],
  name    =&gt;&lt;minimax-m2.5:cloud&gt;,
- provider=&gt;!*/sys/space/ollama]@&lt;ollama:minimax-m2.5:cloud&gt;
+ provider=&gt;!*/sys/space/ollama,
+ size    =&gt;gB::0.00]@&lt;ollama:minimax-m2.5:cloud&gt;
 ==&gt;model::[
- size    =&gt;gB::4.41,
  skill   =&gt;[completion,vision],
  think   =&gt;noobj,
  name    =&gt;llava:latest,
- provider=&gt;!*/sys/space/ollama]@ollama:llava:latest
+ provider=&gt;!*/sys/space/ollama,
+ size    =&gt;gB::4.41]@ollama:llava:latest
 ​</code></pre>
 </div>
 </div>
@@ -3537,7 +3537,8 @@ mtron&gt; nat:125.as(age::T)
 	{0}&lt;&gt;=&gt;(X=&gt;int::T[is(gt(0))]@nat)][...]@/sys/fail/330
 ​
 mtron&gt; 125.as(nat::T).as(age::T)
-==&gt;fail::[age::125 is not a nat::T[is(lt(120))]@age][...]@/sys/fail/336
+==&gt;fail::[nat::125 is not a is(lt(120))
+  nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/336
 ​</code></pre>
 </div>
 </div>
@@ -4975,12 +4976,7 @@ mtron&gt; docdb::[pattern     =&gt; farm:#,
                route       =&gt; [farm:=&gt;&lt;&gt;]]@/sys/space/farm;              ​1​
 ​
 mtron&gt; farm:animals/1 -&gt; [type =&gt; chicken, name =&gt; 'trill', age =&gt; 7]    ​2​
-==&gt;fail::[indexoutofboundsexception: null
-  	java.nio.ByteBuffer [line 445]
-  	studio.phaseshift.metatron.isa.doc.schema.storage.ObjBSONSerializer [line 185]
-  	studio.phaseshift.metatron.isa.doc.schema.storage.ObjBSONSerializer [line 132]
-  	studio.phaseshift.metatron.isa.doc.schema.storage.ObjBSONSerializer [line 242]
-  	java.util.stream.ReferencePipeline$3$1 [line 214]][...]@/sys/fail/378
+==&gt;[type=&gt;chicken,name=&gt;'trill',age=&gt;7]
 ​
 mtron&gt; */sys/space/farm                                                  ​3​
 ==&gt;docdb::[

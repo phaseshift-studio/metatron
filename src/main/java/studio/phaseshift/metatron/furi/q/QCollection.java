@@ -166,9 +166,9 @@ public final class QCollection {
         final memSpace DOC_SPACE = memSpace.of(rec(), null);
         return studio.phaseshift.metatron.furi.Q.Helper.build(DOCQ_TID, DOCQ_PATTERN)
                 .obj(f(OBJ), DOC_SPACE)
-                .preWrite((vid, obj) -> DOC_SPACE.write(vid.basePath(), obj.tid().equals(DOCS_TID) ? obj : new Doc(obj.toCleanString())))
+                .preWrite((vid, obj) -> DOC_SPACE.write(vid, obj.tid().equals(DOCS_TID) ? obj : new Doc(obj.toCleanString())))
                 .preRead((vid) -> {
-                    final Obj obj = DOC_SPACE.read(vid.basePath()).orElse(NO_DOCS.plus(rec(uri(OBJ), Router.global().read(vid.basePath()))));
+                    final Obj obj = DOC_SPACE.read(vid).orElse(NO_DOCS.plus(rec(uri(OBJ), Router.global().read(vid.basePath()))));
                     return objs(obj.stream().filter(o -> o.tid().equals(DOCS_TID)));
                 })
                 .create();

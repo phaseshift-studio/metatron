@@ -43,7 +43,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
  * // In tbleInstSet:
  * CommonRewrites.countRewrite(
  *     tabledbSpace.class,
- *     TBLE_ISA_REWRITE_TID.extend("native_count"),
+ *     TBLE_ISA_REWRITE_TID.extend("mql_count"),
  *     (space, furi) -> {
  *         String table = furi.segments().getFirst();
  *         try (Statement stmt = space.sjvm().createStatement();
@@ -56,7 +56,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
  * // In dcmntInstSet:
  * CommonRewrites.countRewrite(
  *     docdbSpace.class,
- *     DOC_ISA_REWRITE_TID.extend("native_count"),
+ *     DOC_ISA_REWRITE_TID.extend("mql_count"),
  *     (space, furi) -> space.database.getCollection(furi.segments().getFirst()).countDocuments()
  * )
  * }</pre>
@@ -95,7 +95,7 @@ public final class CommonRewrites {
                     // patterns operate across collections/tables and require different rewrtting
                     return !ref.isUri() || !ref.uriValue().retract(1).hasPattern();
                 })
-                .optimize("native_count", (space, furi, coeff) -> {
+                .optimize("mql_count", (space, furi, coeff) -> {
                     final long count = countFunction.apply(space, furi);
                     return jnt(count).c(c -> c.mult((cInt) coeff));
                 })
@@ -123,7 +123,7 @@ public final class CommonRewrites {
                 .tid(rewriteTID)
                 .rng(INT_TID.maybe().some())
                 .match(FROM_INST_TID, SUM_INST_TID)
-                .optimize("native_sum", (space, furi, coeff) -> {
+                .optimize("mql_sum", (space, furi, coeff) -> {
                     final Number sum = sumFunction.apply(space, furi);
                     return (sum instanceof Double || sum instanceof Float)
                             ? real(sum.doubleValue())
@@ -153,7 +153,7 @@ public final class CommonRewrites {
                 .tid(rewriteTID)
                 .rng(REAL_TID)
                 .match(FROM_INST_TID, MEAN_INST_TID)
-                .optimize("native_mean", (space, furi, coeff) -> {
+                .optimize("mql_mean", (space, furi, coeff) -> {
                     final double mean = meanFunction.apply(space, furi);
                     return real(mean);
                 })
@@ -189,7 +189,7 @@ public final class CommonRewrites {
      * <pre>{@code
      * CommonRewrites.limitRewrite(
      *     tabledbSpace.class,
-     *     TBLE_ISA_REWRITE_TID.extend("native_limit"),
+     *     TBLE_ISA_REWRITE_TID.extend("mql_limit"),
      *     (space, furi, limit) -> {
      *         String table = furi.segments().getFirst();
      *         String sql = "SELECT * FROM " + table + " LIMIT " + limit;
@@ -229,7 +229,7 @@ public final class CommonRewrites {
         LimitRewriteBuilder(final Class<S> spaceType, final LimitOperation<S> limitOperation) {
             super(spaceType);
             this.limitOperation = limitOperation;
-            this.rewriteName = "native_limit";
+            this.rewriteName = "mql_limit";
             // Set a dummy optimization since we override createRewriteFunction
             this.optimization = (space, furi, coeff) -> null;
         }
@@ -302,7 +302,7 @@ public final class CommonRewrites {
                 .tid(rewriteTID)
                 .rng(INT_TID.maybe().some())
                 .match(FROM_INST_TID, PROD_INST_TID)
-                .optimize("native_prod", (space, furi, coeff) -> {
+                .optimize("mql_prod", (space, furi, coeff) -> {
                     final Number prod = prodFunction.apply(space, furi);
                     return (prod instanceof Double || prod instanceof Float)
                             ? real(prod.doubleValue())
@@ -339,7 +339,7 @@ public final class CommonRewrites {
                     // patterns operate across collections/tables and require different rewriting
                     return !ref.isUri() || !ref.uriValue().retract(1).hasPattern();
                 })
-                .optimize("native_has", (space, furi, coeff) -> {
+                .optimize("mql_has", (space, furi, coeff) -> {
                     final boolean exists = hasFunction.apply(space, furi);
                     return studio.phaseshift.metatron.isa.m.type.impl.MBool.bool(exists);
                 })
@@ -411,7 +411,7 @@ public final class CommonRewrites {
         WhereRewriteBuilder(final Class<S> spaceType, final WhereOperation<S> whereOperation) {
             super(spaceType);
             this.whereOperation = whereOperation;
-            this.rewriteName = "native_where";
+            this.rewriteName = "mql_where";
             this.optimization = (space, furi, coeff) -> null;
         }
 
@@ -596,19 +596,19 @@ public final class CommonRewrites {
     /**
      * Create a where+count optimization rewrite.
      *
-     * <p>Optimizes {@code sql_native_where.count()} to use native database
+     * <p>Optimizes {@code sql_where.count()} to use native database
      * {@code SELECT COUNT(*) FROM table WHERE conditions} instead of fetching
      * all filtered rows and counting in memory.
      *
      * <p>This rewrite composes with whereRewrite:
      * <pre>
      * from.where.count
-     *   → sql_native_where.count      (whereRewrite)
-     *   → sql_native_where_count      (this rewrite)
+     *   → sql_where.count      (whereRewrite)
+     *   → sql_where_count      (this rewrite)
      * </pre>
      *
      * @param spaceType           The database space type
-     * @param whereRewriteTID     The TID of the sql_native_where instruction to match
+     * @param whereRewriteTID     The TID of the sql_where instruction to match
      * @param rewriteTID          The TID for this rewrite's output instruction
      * @param whereCountFunction  Function that executes the native count with where
      * @param <S>                 The space type
@@ -629,7 +629,7 @@ public final class CommonRewrites {
 
     /**
      * Specialized RewriteBuilder for where+count operations that extracts
-     * the fURI and WHERE clause from the preceding sql_native_where instruction.
+     * the fURI and WHERE clause from the preceding sql_where instruction.
      */
     private static class WhereCountRewriteBuilder<S extends Space> extends RewriteBuilder<S> {
         private final fURI whereRewriteTID;
@@ -640,7 +640,7 @@ public final class CommonRewrites {
             super(spaceType);
             this.whereRewriteTID = whereRewriteTID;
             this.whereCountOperation = whereCountOperation;
-            this.rewriteName = "native_where_count";
+            this.rewriteName = "mql_where_count";
             this.optimization = (space, furi, coeff) -> null;
         }
 
@@ -648,10 +648,10 @@ public final class CommonRewrites {
         protected java.util.function.Function<java.util.Map<Inst, Inst>, java.util.List<Inst>> createRewriteFunction() {
             return map -> {
                 final java.util.List<Inst> matchedInsts = new java.util.ArrayList<>(map.values());
-                final Inst whereInst = matchedInsts.get(0);  // sql_native_where instruction
+                final Inst whereInst = matchedInsts.get(0);  // sql_where instruction
                 // matchedInsts.get(1) is count - we don't need it, just matching it
 
-                // Extract fURI and sqlWhere from sql_native_where's args: [furi, sqlWhere]
+                // Extract fURI and sqlWhere from sql_where's args: [furi, sqlWhere]
                 final Obj args = whereInst.args();
                 if (!args.isLst() || args.asLst().count() < 2) {
                     return matchedInsts.stream().map(Obj::asInst).toList();

@@ -182,7 +182,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
     default Rec plus(final Rec rhs) {
         final Map<Obj, Obj> newMap = new LinkedHashMap<>(this.recValue());
         rhs.elements().forEach(o -> newMap.compute(o.jvm().get0(), (k, v) -> null == v ? o.jvm().get1() :
-                v.isPlusMonoid() && o.isPlusMonoid() ? (Obj) v.<PlusMonoid.O>as().plus(o.jvm().get1().<PlusMonoid.O>as()) :
+                v.isPlusMonoid() && o.jvm().get1().isPlusMonoid() ? (Obj) v.<PlusMonoid.O>as().plus(o.jvm().get1().<PlusMonoid.O>as()) :
                         v.append(o.jvm().get1())));
         return this.jvm(newMap);
     }
@@ -216,6 +216,26 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
 
     @Override
     Rec self(final Object jvm, final fURI tid, final fURI vid);
+
+    final class Helper {
+        public Helper() {
+            // do nothing
+        }
+
+
+        public static Map<Obj, Obj> cleanMap(final Map<Obj, Obj> jvm) {
+            if (jvm.isEmpty())
+                return jvm;
+            try {
+                jvm.remove(noobj());
+                jvm.values().removeIf(Objects::isNull);
+                jvm.values().removeIf(Obj::isNoObj);
+            } catch (final UnsupportedOperationException e) {
+                // do nothing
+            }
+            return jvm;
+        }
+    }
 
     final class RecType {
 

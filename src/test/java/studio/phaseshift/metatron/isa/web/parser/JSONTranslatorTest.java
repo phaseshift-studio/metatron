@@ -70,7 +70,7 @@ public class JSONTranslatorTest extends AbstractMetatronTest {
         final ObjJSONSerializer translator = new ObjJSONSerializer();
         final Obj j_obj = translator.read(JsonParser.parseString(json));
         final Obj m_obj = mParser.parse(mtron);
-        assertEquals(m_obj.isCall() ? ((Call) m_obj).tryToInst() : m_obj, j_obj);
+        assertEquals(m_obj.isObjCall() ? ((Call) m_obj).tryToInst() : m_obj, j_obj);
     }
 
 }

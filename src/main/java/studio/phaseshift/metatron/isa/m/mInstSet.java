@@ -212,7 +212,7 @@ public class mInstSet extends AbstractInstSet {
     public static final Type MONO_TYPE = Type.Builder.build()
             .tid(MONO_TID)
             .vid(MONO_TID)
-            .predicate((lhs, inst) -> bool(lhs.isBytes() || lhs.isBool() || lhs.isInt() || lhs.isReal() || lhs.isStr() || lhs.isUri() || lhs.isInst()))
+            .predicate((lhs, inst) -> bool(lhs.isBytes() || lhs.isBool() || lhs.isInt() || lhs.isReal() || lhs.isStr() || lhs.isUri() || lhs.isObjInst()))
             .create();
 
    /* public static final Type NUM_TYPE = Type.Builder.build()

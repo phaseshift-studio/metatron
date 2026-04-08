@@ -261,7 +261,7 @@ public interface Inst extends Call {
         if (resolved2.isNoObj()) {
             LOG.debug("%s could not be resolved in any space", domainInst);
             return noobj();
-        } else if (!resolved2.isInst()) {
+        } else if (!resolved2.isObjInst()) {
             LOG.debug("unable to resolve %s to a single inst in %s", domainInst, resolved2);
             final Poly args = Helper.resolveArgs(domainInst, domainInst, lhs);
             return null == args ? domainInst : domainInst.args(args);
@@ -447,7 +447,7 @@ public interface Inst extends Call {
                         return null;
                     if (userInst.isBlocking()) {
                         resolvedArgs.add(usrArg);
-                    } else if (apiArg.isCall() && usrArg.isNoObj()) { // used for default args (when user arg is noobj)
+                    } else if (apiArg.isObjCall() && usrArg.isNoObj()) { // used for default args (when user arg is noobj)
                         final Obj r = apiArg.apply(usrArg).resolve(lhs);
                         if (r.rng().test(apiArg))
                             resolvedArgs.add(r);
@@ -475,7 +475,7 @@ public interface Inst extends Call {
                 return rec(apiInst.args().asRec().elements()
                         .map(kv -> {
                             Obj this_arg = userInst.arg(kv.first().uriValue(), counter.getAndIncrement());
-                            return rel(kv.first(), kv.second().isCall() ? kv.second().apply(this_arg) : this_arg);
+                            return rel(kv.first(), kv.second().isObjCall() ? kv.second().apply(this_arg) : this_arg);
                         }));
             } else
                 throw MTronException.of("inst args must be a lst or rec: %s", apiInst);
@@ -503,7 +503,7 @@ public interface Inst extends Call {
                                     // Allow template expansion: if arg is Uri or Str with templates, always return expanded result
                                     final boolean isTemplateExpansion = (arg.isUri() && arg.asUri().hasTemplates()) ||
                                             (arg.isStr() && arg.strValue().contains("${"));
-                                    if (!arg.isCall() && !isTemplateExpansion && !r.test(arg)) {
+                                    if (!arg.isObjCall() && !isTemplateExpansion && !r.test(arg)) {
                                         // LOG.error("unmatched inst arg in %s: %s ({{y}}lhs{{/y}}) {{g}}=>{{/g}} %s ({{y}}arg{{/y}}) {{r}}~!>{{/r}} %s ", this, lhs, arg, r);
                                         return arg;
                                     }
@@ -557,20 +557,20 @@ public interface Inst extends Call {
                     final List<Obj> resolvedArgs = new ArrayList<>();
                     for (int i = 0; i < apiInst.args().count(); i++) {
                         Obj apiArg = apiInst.arg(i);
-                        Obj userArg = userInst.isInst() ? userInst.<Inst>as().arg(i) : userInst;
+                        Obj userArg = userInst.isObjInst() ? userInst.<Inst>as().arg(i) : userInst;
                         if (apiArg.tid().isGeneric()) {
                             final fURI lastBinding = generics.get(apiArg.tid().one());
                             if (null != lastBinding && !userArg.tid().test(lastBinding))
                                 LOG.debug("existing generic doesn't match current usage: [{{m}}generic{{/m}}] %s [{{m}}past{{/m}}] %s [{{m}}present{{/m}}] %s", userArg.tid(), lastBinding, apiArg.tid());
-                            if (!userArg.isCall()) // TODO: can this be more specialized (currently necessary for when arg is a call and we want the result of the call to be the binding, not the call itself
+                            if (!userArg.isObjCall()) // TODO: can this be more specialized (currently necessary for when arg is a call and we want the result of the call to be the binding, not the call itself
                                 generics.computeIfAbsent(apiArg.tid().one(), k -> userArg.tid().one()); // beware of int[0] yielding noobj across all bindings
                         }
-                        if (apiArg.isInst()) { // todo: isCall()?
+                        if (apiArg.isObjInst()) { // todo: isCall()?
                             apiArg = Helper.bindGenerics(lhs, apiArg.asInst(), userArg);
                         } else {
                             if (apiArg.tid().one().isGeneric())
                                 apiArg = apiArg.tid(generics.getOrDefault(apiArg.tid().one(), userArg.tid())).c(apiArg.c());
-                            if (null != apiArg && !apiArg.isCall() && !userArg.tid().one().isGeneric() && !userArg.test(apiArg)) {
+                            if (null != apiArg && !apiArg.isObjCall() && !userArg.tid().one().isGeneric() && !userArg.test(apiArg)) {
                                 // TODO: isClessGeneric() and cLess.isGeneric() behave differently
                                 return null;
                             }

@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TID;
@@ -119,7 +120,7 @@ public class MUri extends MObj implements Uri {
         if (clone.jvm().isZero())
             clone.tid = clone.tid.zero();
         // Reset parsed templates cache if jvm changed (different fURI means different templates)
-        if (jvm != this.jvm && (jvm == null || !jvm.equals(this.jvm))) {
+        if (!Objects.equals(jvm, this.jvm)) {
             clone.parsedTemplatesCache = null;
         }
         return clone;

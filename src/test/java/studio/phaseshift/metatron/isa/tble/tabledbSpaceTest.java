@@ -177,8 +177,8 @@
      @Order(1)
      @ParameterizedTest
      @CsvSource(value = {
-             "*tble:users.count()                                 % /m/tble/inst/rewrite/sql_native_count?int<=#{0}(tble:users)   % 3",
-             "*tble:products.count()                              % /m/tble/inst/rewrite/sql_native_count?int<=#{0}(tble:products)   % 10",
+             "*tble:users.count()                                 % /m/tble/inst/rewrite/sql_count?int<=#{0}(tble:users)   % 3",
+             "*tble:products.count()                              % /m/tble/inst/rewrite/sql_count?int<=#{0}(tble:products)   % 10",
      }, delimiter = '%')
      public void testRewrites(final String code, final String expected, final String expectedResult) throws Exception {
     //     AbstractMetatronTest.checkCodeRewrite(LOG, code, expected, expectedResult, true);
@@ -2046,7 +2046,7 @@
 
     @Override
     public String getNativeInstructionPrefix() {
-        return "sql_";  // SQL uses sql_native_count, sql_native_limit, etc.
+        return "sql_";  // SQL uses sql_count, sql_limit, etc.
     }
 
     /**

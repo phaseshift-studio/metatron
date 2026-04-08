@@ -109,8 +109,8 @@ public interface CommonRewritesTestContract {
      * <p>
      * Examples:
      * <ul>
-     *   <li>SQL: {@code "sql_"} (produces sql_native_count, sql_native_limit, etc.)</li>
-     *   <li>MongoDB: {@code ""} (produces native_count, native_limit, etc.)</li>
+     *   <li>SQL: {@code "sql_"} (produces sql_count, sql_limit, etc.)</li>
+     *   <li>MongoDB: {@code ""} (produces mql_count, mql_limit, etc.)</li>
      * </ul>
      *
      * @return the prefix for native instruction names (default: "")

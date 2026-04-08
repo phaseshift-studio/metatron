@@ -64,7 +64,7 @@ public class ScoringInstResolver implements InstResolver {
         final GraphittyLogger LOG = Graphitty.log(lhs);
 
         return candidates
-                .filter(Obj::isInst)
+                .filter(Obj::isObjInst)
                 .map(Obj::asInst)
                 // Basic compatibility filters (same as FirstFindInstResolver)
                 .filter(i -> (i.args().isEmpty() && userInst.arg(0).isNoObj()) || i.args().isRec() || i.args().count() >= userInst.args().count())

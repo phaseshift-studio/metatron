@@ -73,7 +73,7 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
     public Obj read(final fURI vid) {
         // LOG.warn("reading %s => %s", vid, Space.Helper.routeFromSpace(vid, this.routes()));
         return Q.Helper.processPreRead(this.qs(), vid).orElseGet(() -> {
-            Obj result = Space.Helper.resolveRead(this, vid.basePath(), directReader());
+            Obj result = Space.Helper.resolveRead(this, vid, directReader());
             return Q.Helper.processPostRead(this.qs(), vid, result).orElse(result);
         });
     }
@@ -83,7 +83,7 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
         // LOG.warn("writing %s => %s", vid, Space.Helper.routeFromSpace(vid, this.routes()));
         return Q.Helper.processPreWrite(this.qs(), vid, obj)
                 .orElseGet(() -> Q.Helper.processQlessWrite(this.qs(), vid, obj).orElseGet(() -> {
-                    Space.Helper.resolveWrite(LOG, this, vid.basePath(), obj, this.directWriter(), this.directReader());
+                    Space.Helper.resolveWrite(LOG, this, vid, obj, this.directWriter(), this.directReader());
                     return Q.Helper.processPostWrite(this.qs(), vid, obj).orElse(obj);
                 }));
     }

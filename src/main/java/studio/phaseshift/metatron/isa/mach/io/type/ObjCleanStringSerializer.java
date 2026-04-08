@@ -76,7 +76,7 @@ public class ObjCleanStringSerializer extends AbstractObjSerializer<String> {
 
     private String handleIds(final Obj obj, final String objString) {
         final StringBuilder sb = new StringBuilder();
-        this.handleTID(sb, obj, !obj.isInst()).append(objString);
+        this.handleTID(sb, obj, !obj.isObjInst()).append(objString);
         this.handleVID(sb, obj);
         return sb.toString();
     }
@@ -235,7 +235,7 @@ public class ObjCleanStringSerializer extends AbstractObjSerializer<String> {
             }
         }
         sb.append(Router.loaded() ? Router.global().redirect(obj.tid(), false) : obj.tid());
-        if (!obj.isInst())
+        if (!obj.isObjInst())
             sb.append("::");
         return sb;
     }
@@ -280,7 +280,7 @@ public class ObjCleanStringSerializer extends AbstractObjSerializer<String> {
                 (Router.loaded() ? Router.global().redirect(type.tid(), false) : type.tid()).toString())
                 .append("::T");
         if (type.hasPredicate()) {
-            if (type.predicate().isInst() && type.predicate().tid().basePath().equals(ISA_INST_TID) && type.predicate().asInst().arg(0).isPoly()) {
+            if (type.predicate().isObjInst() && type.predicate().tid().basePath().equals(ISA_INST_TID) && type.predicate().asInst().arg(0).isPoly()) {
                 typeString.append("[?");
                 processNestedPoly(sb, depth + 1, 0, true, type.predicate().asInst().arg(0));
                 typeString.append(sb, 0, sb.length() - 2); // remove ,\n
@@ -330,6 +330,8 @@ public class ObjCleanStringSerializer extends AbstractObjSerializer<String> {
                 sb.append(" ".repeat(nested && !leftJustify ? childPadding : 0))
                         .append(keyString)
                         .append(" ".repeat(nested && leftJustify ? childPadding : 0)).append("=>");
+                if (v == rec)
+                    throw MTronException.of("prevented infinite recursion on nested rec: key %s",k);
                 this.processNestedPoly(sb, depth, leftJustify ? 0 : childPadding, nested, v);
             });
             this.cleanEnding(sb);
@@ -379,12 +381,12 @@ public class ObjCleanStringSerializer extends AbstractObjSerializer<String> {
             for (final Inst inst : call.<Code>as().codeValue()) {
                 prettyPrintCode(sb, inst, depth);
             }
-        } else if (!call.isNoObj() && call.isInst()) {
+        } else if (!call.isNoObj() && call.isObjInst()) {
             final Inst inst = call.as();
             sb.append("  ".repeat(depth)).append(this.write(inst)).append("\n");
             if (null != inst.jvm()) {
                 inst.args().elements().forEach(arg -> {
-                    if (arg.isCall() || arg.isObjs()) {
+                    if (arg.isObjCall() || arg.isObjs()) {
                         prettyPrintCode(sb, arg, depth + 1);
                     }
                 });

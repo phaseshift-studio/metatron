@@ -29,7 +29,7 @@ Both `tbleInstSet` and `docInstSet` have similar rewrite patterns but with code 
 // Define rewrite with minimal boilerplate
 return RewriteBuilder.forDatabase(docSpace.class)
     .match(FROM_INST_TID, COUNT_INST_TID)
-    .optimize("mongo_native_count", (space, furi, coeff) -> {
+    .optimize("mongo_mql_count", (space, furi, coeff) -> {
         String collection = furi.segments().getFirst();
         long count = space.database.getCollection(collection).countDocuments();
         return jnt(count).c(c -> c.mult(coeff));
@@ -121,9 +121,9 @@ public Set<Inst> rewrites() {
     return new LinkedHashSet<>(List.of(
         // Count optimization
         RewriteBuilder.forDatabase(docSpace.class)
-            .tid(DOC_ISA_REWRITE_TID.extend("native_count"))
+            .tid(DOC_ISA_REWRITE_TID.extend("mql_count"))
             .match(FROM_INST_TID, COUNT_INST_TID)
-            .optimize("mongo_native_count", (space, furi, coeff) -> {
+            .optimize("mongo_mql_count", (space, furi, coeff) -> {
                 String collection = furi.segments().getFirst();
                 long count = space.database.getCollection(collection).countDocuments();
                 return jnt(count).c(c -> c.mult(coeff));
@@ -132,9 +132,9 @@ public Set<Inst> rewrites() {
 
         // Sum optimization
         RewriteBuilder.forDatabase(docSpace.class)
-            .tid(DOC_ISA_REWRITE_TID.extend("native_sum"))
+            .tid(DOC_ISA_REWRITE_TID.extend("mql_sum"))
             .match(FROM_INST_TID, SUM_INST_TID)
-            .optimize("mongo_native_sum", (space, furi, coeff) -> {
+            .optimize("mongo_mql_sum", (space, furi, coeff) -> {
                 String collection = furi.segments().getFirst();
                 Document result = space.database.getCollection(collection)
                     .aggregate(Arrays.asList(
@@ -159,9 +159,9 @@ public Set<Inst> rewrites() {
     return new LinkedHashSet<>(List.of(
         // Count optimization
         RewriteBuilder.forDatabase(tbleSpace.class)
-            .tid(TBLE_ISA_REWRITE_TID.extend("sql_native_count"))
+            .tid(TBLE_ISA_REWRITE_TID.extend("sql_count"))
             .match(FROM_INST_TID, COUNT_INST_TID)
-            .optimize("sql_native_count", (space, furi, coeff) -> {
+            .optimize("sql_count", (space, furi, coeff) -> {
                 String table = furi.segments().getFirst();
                 try (Statement stmt = space.sjvm().createStatement();
                      ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM " + table)) {
@@ -223,7 +223,7 @@ public class CommonRewrites {
         return RewriteBuilder.forDatabase(spaceType)
             .tid(rewriteTid)
             .match(FROM_INST_TID, COUNT_INST_TID)
-            .optimize("native_count", (space, furi, coeff) -> {
+            .optimize("mql_count", (space, furi, coeff) -> {
                 long count = countFunction.apply(space, furi);
                 return jnt(count).c(c -> c.mult(coeff));
             })
@@ -241,7 +241,7 @@ public class CommonRewrites {
         return RewriteBuilder.forDatabase(spaceType)
             .tid(rewriteTid)
             .match(FROM_INST_TID, SUM_INST_TID)
-            .optimize("native_sum", (space, furi, coeff) -> {
+            .optimize("mql_sum", (space, furi, coeff) -> {
                 Number sum = sumFunction.apply(space, furi);
                 return (sum instanceof Double)
                     ? real(sum.doubleValue())
@@ -260,7 +260,7 @@ public Set<Inst> rewrites() {
     return new LinkedHashSet<>(List.of(
         CommonRewrites.countRewrite(
             docSpace.class,
-            DOC_ISA_REWRITE_TID.extend("native_count"),
+            DOC_ISA_REWRITE_TID.extend("mql_count"),
             (space, furi) -> {
                 String collection = furi.segments().getFirst();
                 return space.database.getCollection(collection).countDocuments();
@@ -269,7 +269,7 @@ public Set<Inst> rewrites() {
 
         CommonRewrites.sumRewrite(
             docSpace.class,
-            DOC_ISA_REWRITE_TID.extend("native_sum"),
+            DOC_ISA_REWRITE_TID.extend("mql_sum"),
             (space, furi) -> {
                 String collection = furi.segments().getFirst();
                 Document result = space.database.getCollection(collection)
@@ -292,7 +292,7 @@ public Set<Inst> rewrites() {
     return new LinkedHashSet<>(List.of(
         CommonRewrites.countRewrite(
             tbleSpace.class,
-            TBLE_ISA_REWRITE_TID.extend("sql_native_count"),
+            TBLE_ISA_REWRITE_TID.extend("sql_count"),
             (space, furi) -> {
                 String table = furi.segments().getFirst();
                 try (Statement stmt = space.sjvm().createStatement();

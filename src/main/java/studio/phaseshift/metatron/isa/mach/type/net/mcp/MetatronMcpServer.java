@@ -171,7 +171,7 @@ public class MetatronMcpServer extends MRec {
      */
     public void register(final Obj toolObj) {
         // Primary path: Register an Inst directly
-        if (toolObj.isInst()) {
+        if (toolObj.isObjInst()) {
             registerInst((Inst) toolObj);
             return;
         }

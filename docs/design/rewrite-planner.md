@@ -31,12 +31,12 @@ while (done != 0) {
 
 **Example of implicit linking:**
 ```java
-// whereRewrite outputs TID: sql_native_where
-// whereCountRewrite matches TID: sql_native_where, then count
+// whereRewrite outputs TID: sql_where
+// whereCountRewrite matches TID: sql_where, then count
 CommonRewrites.whereCountRewrite(
     tabledbSpace.class,
-    TBLE_ISA_REWRITE_TID.extend("sql_native_where"),  // ← matches output of whereRewrite
-    TBLE_ISA_REWRITE_TID.extend("sql_native_where_count"),
+    TBLE_ISA_REWRITE_TID.extend("sql_where"),  // ← matches output of whereRewrite
+    TBLE_ISA_REWRITE_TID.extend("sql_where_count"),
     ...
 )
 ```
@@ -266,24 +266,24 @@ If plans live in schema, how to handle:
 ```mtron
 sql_plan = {
   // Aggregations - try to push to SQL
-  from => count -> sql_native_count,
-  from => sum -> sql_native_sum,
-  from => mean -> sql_native_mean,
+  from => count -> sql_count,
+  from => sum -> sql_sum,
+  from => mean -> sql_mean,
 
   // Filtering - with follow-up optimizations
-  from => where -> sql_native_where => {
-    _ => count -> sql_native_where_count,
-    _ => take -> sql_native_where_limit,
-    _ => has -> sql_native_where_has
+  from => where -> sql_where => {
+    _ => count -> sql_where_count,
+    _ => take -> sql_where_limit,
+    _ => has -> sql_where_has
   },
 
   // Limiting
-  from => take -> sql_native_limit => {
-    _ => count -> sql_native_limit_count
+  from => take -> sql_limit => {
+    _ => count -> sql_limit_count
   },
 
   // Existence
-  from => has -> sql_native_has
+  from => has -> sql_has
 }
 ```
 

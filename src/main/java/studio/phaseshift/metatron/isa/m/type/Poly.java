@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -29,7 +29,6 @@ import java.util.*;
 import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -37,7 +36,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
-import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 public interface Poly<P extends Poly<P, J>, J> extends Obj {
@@ -137,9 +135,9 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
     default Stream<Rel> indexedStream() {
         return Stream.of(rel(this.vid().toUri(), this));
     }
-    
+
     Stream<Obj> values();
-    
+
     Stream<Obj> keys();
 
     @Override
@@ -259,14 +257,17 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
                 if (null == b) {
                     if (kv.second().isPoly()) {
                         return updatePolyRecursion(kv.second().as(), lhs.as(), operation);
+                    }
+                    if (kv.second().isNoObj()) {
+                        return null;
                     } else {
                         return kv.second().apply(lhs);
                     }
                 } else {
-                    if(b.isNoObj() || (b.isUri() && b.uriValue().equals(uri("/noobj")))) {
-                      //  lhs.logger().warn("FOUND");
+                    if (b.isNoObj()) {
+                        //  lhs.logger().warn("FOUND");
                         return null;
-                     
+
                     }
                     return b;
                 }

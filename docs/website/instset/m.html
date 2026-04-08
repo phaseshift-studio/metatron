@@ -252,60 +252,6 @@ bin/metatron</code></pre>
        pre_write=>inst?rng=#{*}&dom=#{?}(uri::T,#::T){<j>},
        pattern  =>docq,
        obj      =>mem::[=>]]],
- type   =>[
-   mono::T[/m/mono/pred?rng=mono&dom=#{?}(){<j>}],
-   poly::T[/m/poly/pred?rng=poly&dom=#{?}(){<j>}],
-   bool::T,
-   int::T,
-   real::T,
-   bytes::T,
-   str::T,
-   uri::T,
-   rel::T,
-   lst::T,
-   rec::T,
-   rec::T[?[
-     {?}const  =>[#::T],
-     {?}type   =>[T::T],
-     {?}inst   =>[inst::T],
-     {?}rewrite=>[inst::T],
-     {?}sugar  =>[lst::T]]]@/m/instset,
-   inst::T,
-   code::T,
-   fail::T,
-   rec::T[?[
-     pattern=>uri::T,
-     {?}q   =>[
-       uri::T=>rec::T[][inst?rng=q&dom=#{?}([
- pattern       =>uri::T,
- pre_write{?}  =>inst::T,
- post_write{?} =>inst::T,
- qless_write{?}=>inst::T,
- pre_read{?}   =>inst::T,
- post_read{?}  =>inst::T]){<j>}]@/m/space/q]]]@/m/space,
-   space::T[][inst?rng=mem&dom=#{?}(isa([
- pattern   =>uri::T,
- {?}persist=>uri::T[][inst?rng=file&dom=#{?}(uri::T){<j>}]@/m/mach/file])){<j>}]@/m/space/mem,
-   space::T[][inst?rng=stack&dom=#{?}(isa([pattern=>uri::T])){<j>}]@/m/space/stack,
-   space::T[][inst?rng=meta&dom=#{?}(isa([
- pattern=>uri::T,
- host   =>uri::T,
- route  =>[uri::T=>uri::T],
- peers  =>[uri{*}::T]])){<j>}]@/m/space/meta,
-   rec::T[][inst?rng=q&dom=#{?}([
- pattern       =>uri::T,
- pre_write{?}  =>inst::T,
- post_write{?} =>inst::T,
- qless_write{?}=>inst::T,
- pre_read{?}   =>inst::T,
- post_read{?}  =>inst::T]){<j>}]@/m/space/q,
-   q::T[][/m/space/q/subq/cons?rng=subq&dom=#{?}(){<j>}]@/m/space/q/subq,
-   rec::T[?[target=>uri::T,on_recv=>#::T]]@/m/space/q/subq/sub,
-   q::T[][/m/space/q/typeq/cons?rng=typeq&dom=#{?}(){<j>}]@/m/space/q/typeq,
-   q::T[][/m/space/q/docq/cons?rng=docq&dom=#{?}(){<j>}]@/m/space/q/docq,
-   q::T[][/m/space/q/incrq/cons?rng=incrq&dom=#{?}(){<j>}]@/m/space/q/incrq,
-   q::T[][/m/space/q/constq/cons?rng=constq&dom=#{?}(){<j>}]@/m/space/q/constq],
- const  =>[noobj],
  rewrite=>[
    /m/inst/rewrite/id_removal?rng=code{?}&dom=code(){<j>},
    /m/inst/rewrite/map_nest?rng=code{?}&dom=code(){<j>},
@@ -475,12 +421,12 @@ bin/metatron</code></pre>
    as?rng=lst&dom=code(lst::T){<j>},
    cause?rng=fail{?}&dom=fail(){<j>},
    reify?rng=rec&dom=fail(){<j>},
-   rshift?rng=#{*}&dom=/m/type(uri{*}::T){<j>},
    serialize?rng=B&dom=A(/m/mach/io::T){<j>},
    fork?rng=A{*}&dom=A{*}(#::T){<j>},
    range?rng=A{*}&dom=A{*}(int::T,isa(int::T).else(0)){<j>},
    order?rng=A{*}&block&dom=A{*}(#::T){<j>},
    as?rng=noobj{0}&dom=A(){<j>},
+   as?rng=B&dom=A(#::T){<j>},
    import?rng=space{*}&dom=#{?}(uri::T,uri{?}::T){<j>},
    dedup?rng=A{*}&dom=A{*}(){<j>},
    barrier?rng=lst&dom=#{*}(lst::T){<j>},
@@ -493,6 +439,7 @@ bin/metatron</code></pre>
    !*#{?}::T,
    catch?rng=A{*}&dom=A(A{*}::T){<j>},
    end?rng=noobj{0}&dom=#{*}(){<j>},
+   println?rng=#{*}&dom=#{?}(#{*}::T){<j>},
    print?rng=#{*}&dom=#{?}(#{*}::T){<j>},
    at?rng=#{*}&dom=#{?}(uri{?}::T){<j>},
    id?rng=A&dom=A(){<j>},
@@ -542,7 +489,61 @@ bin/metatron</code></pre>
    swap?rng=A&dom=A(B::T){<j>},
    rshift?rng=B{?}&dom=A(){<j>},
    lshift?rng=B{?}&dom=A(){<j>},
-   start?rng=A{**}&dom=noobj{0}(A{**}::T){<j>}]]@/m</code></pre>
+   start?rng=A{**}&dom=noobj{0}(A{**}::T){<j>}],
+ type   =>[
+   mono::T[/m/mono/pred?rng=mono&dom=#{?}(){<j>}],
+   poly::T[/m/poly/pred?rng=poly&dom=#{?}(){<j>}],
+   bool::T,
+   int::T,
+   real::T,
+   bytes::T,
+   str::T,
+   uri::T,
+   rel::T,
+   lst::T,
+   rec::T,
+   rec::T[?[
+     {?}const  =>[#::T],
+     {?}type   =>[T::T],
+     {?}inst   =>[inst::T],
+     {?}rewrite=>[inst::T],
+     {?}sugar  =>[lst::T]]]@/m/instset,
+   inst::T,
+   code::T,
+   fail::T,
+   rec::T[?[
+     pattern=>uri::T,
+     {?}q   =>[
+       uri::T=>rec::T[][inst?rng=q&dom=#{?}([
+ pattern       =>uri::T,
+ pre_write{?}  =>inst::T,
+ post_write{?} =>inst::T,
+ qless_write{?}=>inst::T,
+ pre_read{?}   =>inst::T,
+ post_read{?}  =>inst::T]){<j>}]@/m/space/q]]]@/m/space,
+   space::T[][inst?rng=mem&dom=#{?}(isa([
+ pattern   =>uri::T,
+ {?}persist=>uri::T[][inst?rng=file&dom=#{?}(uri::T){<j>}]@/m/mach/file])){<j>}]@/m/space/mem,
+   space::T[][inst?rng=stack&dom=#{?}(isa([pattern=>uri::T])){<j>}]@/m/space/stack,
+   space::T[][inst?rng=meta&dom=#{?}(isa([
+ pattern=>uri::T,
+ host   =>uri::T,
+ route  =>[uri::T=>uri::T],
+ peers  =>[uri{*}::T]])){<j>}]@/m/space/meta,
+   rec::T[][inst?rng=q&dom=#{?}([
+ pattern       =>uri::T,
+ pre_write{?}  =>inst::T,
+ post_write{?} =>inst::T,
+ qless_write{?}=>inst::T,
+ pre_read{?}   =>inst::T,
+ post_read{?}  =>inst::T]){<j>}]@/m/space/q,
+   q::T[][/m/space/q/subq/cons?rng=subq&dom=#{?}(){<j>}]@/m/space/q/subq,
+   rec::T[?[target=>uri::T,on_recv=>#::T]]@/m/space/q/subq/sub,
+   q::T[][/m/space/q/typeq/cons?rng=typeq&dom=#{?}(){<j>}]@/m/space/q/typeq,
+   q::T[][/m/space/q/docq/cons?rng=docq&dom=#{?}(){<j>}]@/m/space/q/docq,
+   q::T[][/m/space/q/incrq/cons?rng=incrq&dom=#{?}(){<j>}]@/m/space/q/incrq,
+   q::T[][/m/space/q/constq/cons?rng=constq&dom=#{?}(){<j>}]@/m/space/q/constq],
+ const  =>[noobj]]@/m</code></pre>
                         </div>
                     </div>
                 </div>
@@ -553,7 +554,7 @@ bin/metatron</code></pre>
             <div class="d-flex justify-content-center gap-2 flex-wrap">
                 <button class="btn btn-outline-secondary" disabled>Consts <span class="badge bg-dark">0</span></button>
                 <a href="#types" class="btn btn-outline-primary">Types <span class="badge bg-secondary">15</span></a>
-                <a href="#instructions" class="btn btn-outline-primary">Insts <span class="badge bg-secondary">241</span></a>
+                <a href="#instructions" class="btn btn-outline-primary">Insts <span class="badge bg-secondary">242</span></a>
                 <a href="#spaces" class="btn btn-outline-primary">Spaces <span class="badge bg-secondary">4</span></a>
                 <a href="#rewrites" class="btn btn-outline-primary">Rewrites <span class="badge bg-secondary">8</span></a>
             </div>
@@ -883,6 +884,10 @@ bin/metatron</code></pre>
                     <span class="code">print</span>
                     <span class="badge bg-success">I</span>
                 </a>
+                <a href="#inst-println" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
+                    <span class="code">println</span>
+                    <span class="badge bg-success">I</span>
+                </a>
                 <a href="#inst-prod" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">prod</span>
                     <span class="badge bg-success">I</span>
@@ -1103,16 +1108,9 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">a 2 valued mono: true or false</p>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                     
-        <div class="card-body border-top py-2">
-            <small class="text-muted fw-bold">examples:</small>
-            <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">true
-false
-true.and(_,not(_)) [-- false --]
-true.or(_,not(_))  [-- true -- ]</code></pre>
-        </div>
                 </div>
                 <div class="card mb-3" id="type-bytes">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1128,15 +1126,9 @@ true.or(_,not(_))  [-- true -- ]</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">a sequence of 8-bit unsigned integers</p>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                     
-        <div class="card-body border-top py-2">
-            <small class="text-muted fw-bold">examples:</small>
-            <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">0xab12
-0xab + 0x12                            [-- 0xab12 --]
-0x6d+0x74+0x72+0x6f+0x6e.as(str::T)    [-- mtron  --]</code></pre>
-        </div>
                 </div>
                 <div class="card mb-3" id="type-code">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1152,14 +1144,9 @@ true.or(_,not(_))  [-- true -- ]</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">a call with apply defined by an lhs obj and a sequence of insts</p>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                     
-        <div class="card-body border-top py-2">
-            <small class="text-muted fw-bold">examples:</small>
-            <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">12.plus(mult(_))            [-- 2-depth code           --]
-1-&lt;[_,-&lt;[_,_]&gt;-]&gt;-.sum()    [-- sugar&#x27;d branching code --]</code></pre>
-        </div>
                 </div>
                 <div class="card mb-3" id="type-fail">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1175,15 +1162,9 @@ true.or(_,not(_))  [-- true -- ]</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">a reified exception handling obj that can be caught</p>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                     
-        <div class="card-body border-top py-2">
-            <small class="text-muted fw-bold">examples:</small>
-            <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">fail::[ouch]                [-- a fail obj with message --]
-fail::[doh] + 2             [-- plus(2) skipped over    --]
-fail::[dah] + 2 + catch(9)  [-- fail flattened to 9       --]</code></pre>
-        </div>
                 </div>
                 <div class="card mb-3" id="type-inst">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1199,18 +1180,9 @@ fail::[dah] + 2 + catch(9)  [-- fail flattened to 9       --]</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">a call with apply defined by an lhs obj, an poly of args, and an body of code</p>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                     
-        <div class="card-body border-top py-2">
-            <small class="text-muted fw-bold">examples:</small>
-            <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">abc(?int::T,?int::T){ *&lt;0&gt; + *&lt;1&gt; }        [-- position args inst    --]
-abc(a=&gt;?int::T,b=&gt;?int::T){ *a + *b }      [-- named args inst       --]
-abc(a=&gt;else(1),b=&gt;else(2)){ *a + *b }      [-- default args inst     --]
-abc(a=&gt;?int::T,b=&gt;?&gt;3.else(4)){ *a + *b }  [-- contextual args inst  --]
-abc(a=&gt;?int::T,b=&gt;|(*a +10)){ _.*b }       [-- dependent arg inst    --]
-(_,_){*&lt;0&gt;+*&lt;1&gt;}                           [-- 2-arg lambda inst     --]</code></pre>
-        </div>
                 </div>
                 <div class="card mb-3" id="type-instset">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1231,7 +1203,7 @@ abc(a=&gt;?int::T,b=&gt;|(*a +10)){ _.*b }       [-- dependent arg inst    --]
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">an aggregate of types, insts, consts, rewrites, and sugars structuring a domain of discourse</p>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                     
                 </div>
@@ -1249,15 +1221,9 @@ abc(a=&gt;?int::T,b=&gt;|(*a +10)){ _.*b }       [-- dependent arg inst    --]
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">a 64-bit signed integer</p>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                     
-        <div class="card-body border-top py-2">
-            <small class="text-muted fw-bold">examples:</small>
-            <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">123
--234
-123+(-234) [-- -111 --]</code></pre>
-        </div>
                 </div>
                 <div class="card mb-3" id="type-lst">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1273,16 +1239,9 @@ abc(a=&gt;?int::T,b=&gt;|(*a +10)){ _.*b }       [-- dependent arg inst    --]
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">an ordered sequence poly of objs</p>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                     
-        <div class="card-body border-top py-2">
-            <small class="text-muted fw-bold">examples:</small>
-            <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">[,]              [-- empty lst  --]
-[a,b,c]          [-- 3 uri lst  --]
-[&#x27;a&#x27;,&#x27;b&#x27;,&#x27;c&#x27;]    [-- 3 str lst  --]
-[a,[b,[c,d],e]]  [-- nested lst --]</code></pre>
-        </div>
                 </div>
                 <div class="card mb-3" id="type-mono">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1298,7 +1257,7 @@ abc(a=&gt;?int::T,b=&gt;|(*a +10)){ _.*b }       [-- dependent arg inst    --]
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">an atomic obj</p>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                     
                 </div>
@@ -1316,7 +1275,7 @@ abc(a=&gt;?int::T,b=&gt;|(*a +10)){ _.*b }       [-- dependent arg inst    --]
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">a obj composed of other objs</p>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                     
                 </div>
@@ -1334,16 +1293,9 @@ abc(a=&gt;?int::T,b=&gt;|(*a +10)){ _.*b }       [-- dependent arg inst    --]
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">a 64-bit floating point number</p>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                     
-        <div class="card-body border-top py-2">
-            <small class="text-muted fw-bold">examples:</small>
-            <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">123.45
--234.56
-123.45+(-234.56) [-- -111.11   --]
-12.34E-5         [-- 0.0001234 --]</code></pre>
-        </div>
                 </div>
                 <div class="card mb-3" id="type-rec">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1359,15 +1311,9 @@ abc(a=&gt;?int::T,b=&gt;|(*a +10)){ _.*b }       [-- dependent arg inst    --]
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">a poly composed of uniquely keyed rels</p>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                     
-        <div class="card-body border-top py-2">
-            <small class="text-muted fw-bold">examples:</small>
-            <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">[=&gt;]                  [-- empty rec      --]
-[a=&gt;1,b=&gt;2]           [-- 2 uri=&gt;int rec --]
-[a=&gt;[b=&gt;1,c=&gt;[d=&gt;3]]] [-- nested rec     --]</code></pre>
-        </div>
                 </div>
                 <div class="card mb-3" id="type-rel">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1383,19 +1329,9 @@ abc(a=&gt;?int::T,b=&gt;|(*a +10)){ _.*b }       [-- dependent arg inst    --]
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">a directed binary poly coupling two objs</p>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                     
-        <div class="card-body border-top py-2">
-            <small class="text-muted fw-bold">examples:</small>
-            <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">a=&gt;b
-a=&gt;b=&gt;c=&gt;d       [-- a=&gt;(b=&gt;(c=&gt;d)) --]
-a=&gt;b=&gt;c=&gt;d.&gt;&gt;    [-- b=&gt;(c=&gt;d)      --]
-a=&gt;b=&gt;c=&gt;d&gt;&gt;.&gt;&gt;  [-- c=&gt;d           --]
-(a=&gt;b)(b=&gt;c)     [-- a=&gt;c           --]
-{a,b}=&gt;{c,d}     [-- 2-2 hyper-rel  --]
-{a=&gt;b}=&gt;{e=&gt;f}   [-- functor rel    --]</code></pre>
-        </div>
                 </div>
                 <div class="card mb-3" id="type-str">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1411,16 +1347,9 @@ a=&gt;b=&gt;c=&gt;d&gt;&gt;.&gt;&gt;  [-- c=&gt;d           --]
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">an ordered sequence of UTF-32 characters</p>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                     
-        <div class="card-body border-top py-2">
-            <small class="text-muted fw-bold">examples:</small>
-            <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">&quot;double quoted&quot;
-&#x27;singled quoted&#x27;
-&quot;&quot;&quot; multi-line triple double quoted &quot;&quot;&quot;
-&#x27;&#x27;&#x27; multi-line triple single quoted &#x27;&#x27;&#x27;</code></pre>
-        </div>
                 </div>
                 <div class="card mb-3" id="type-uri">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1436,23 +1365,15 @@ a=&gt;b=&gt;c=&gt;d&gt;&gt;.&gt;&gt;  [-- c=&gt;d           --]
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">a uniform resource identifier</p>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                     
-        <div class="card-body border-top py-2">
-            <small class="text-muted fw-bold">examples:</small>
-            <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">a/b/c                            [-- relative/node uri              --]
-/a/b/c/                          [-- absolute/branch uri            --]
-a/b/c/                           [-- relative/branch uri            --]
-/a/b/c                           [-- absolute/node uri              --]
-&lt;http://mtron.gov/tax?a=b&amp;c=d&gt;   [-- use &lt; &gt; when . or space in uri --]</code></pre>
-        </div>
                 </div>
         </div>
             
         <div class="container-xxl mb-4" id="instructions">
             <h3 class="text-primary mb-3">
-                Instructions <span class="badge bg-success">241</span>
+                Instructions <span class="badge bg-success">242</span>
             </h3>
             
                 <div class="card mb-3" id="inst-and">
@@ -1468,10 +1389,7 @@ a/b/c/                           [-- relative/branch uri            --]
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">a logical and function \(f(X)\to \tt{true}\) if all \(X\) are true</p>
-                    </div>
-                    <div class="card-body py-2">
-                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any objs" <span class="text-light">=&gt;</span> "true if all objs are true"</pre>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-apply">
@@ -1532,6 +1450,7 @@ a/b/c/                           [-- relative/branch uri            --]
 <pre class="mb-1"><code class="language-mtron">as?uri&lt;=rec(uri::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1"><code class="language-mtron">as?lst&lt;=code(lst::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1"><code class="language-mtron">as?noobj{0}&lt;=A(){&lt;j&gt;}</code></pre>
+<pre class="mb-1"><code class="language-mtron">as?B&lt;=A(#::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1"><code class="language-mtron">as?A&lt;=A(A::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1"><code class="language-mtron">as?file&lt;=uri(file::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1"><code class="language-mtron">as?image&lt;=bytes(image::T,else(1.00)){&lt;j&gt;}</code></pre>
@@ -1554,10 +1473,7 @@ a/b/c/                           [-- relative/branch uri            --]
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">maps a rec row to a lst row</p>
-                    </div>
-                    <div class="card-body py-2">
-                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"a table row indexed by column name" <span class="text-light">=&gt;</span> "a table row indexed by column number"</pre>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-at">
@@ -1640,11 +1556,7 @@ a/b/c/                           [-- relative/branch uri            --]
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">an append function \(f(X)\to X\)</p>
-                    </div>
-                    <div class="card-body py-2">
-                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any objs" <span class="text-light">=&gt;</span> "the objs appended to the arg objs"
-   [0 <span class="text-light">=&gt;</span> "the objs to append"]</pre>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-block">
@@ -1660,11 +1572,7 @@ a/b/c/                           [-- relative/branch uri            --]
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">the lhs obj is halted and the arg is the rhs obj</p>
-                    </div>
-                    <div class="card-body py-2">
-                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"a blocked obj" <span class="text-light">=&gt;</span> "the unapplied arg"
-   [0 <span class="text-light">=&gt;</span> "the rhs without evaluation"]</pre>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-catch">
@@ -1680,11 +1588,7 @@ a/b/c/                           [-- relative/branch uri            --]
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">a catch function f(x)-&gt;x</p>
-                    </div>
-                    <div class="card-body py-2">
-                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any obj" <span class="text-light">=&gt;</span> "uncaught fails go to arg, others mapped by identity"
-   [0 <span class="text-light">=&gt;</span> "the obj triggered on an uncaught fail"]</pre>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-cause">
@@ -1717,11 +1621,7 @@ a/b/c/                           [-- relative/branch uri            --]
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">sets the coefficient of the lhs obj via f(lhs,c)-&gt;lhs^c</p>
-                    </div>
-                    <div class="card-body py-2">
-                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any obj" <span class="text-light">=&gt;</span> "the lhs obj with new coefficient"
-   [0 <span class="text-light">=&gt;</span> "a coefficient for lhs obj"]</pre>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-choose">
@@ -1737,11 +1637,7 @@ a/b/c/                           [-- relative/branch uri            --]
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">a branching function f(x):g(a)-&gt;a&#x27;,g(b)-&gt;b&#x27;,...</p>
-                    </div>
-                    <div class="card-body py-2">
-                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any obj" <span class="text-light">=&gt;</span> "the split as an objs"
-   [0 <span class="text-light">=&gt;</span> "the branches"]</pre>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-count">
@@ -1757,10 +1653,7 @@ a/b/c/                           [-- relative/branch uri            --]
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">counts the number of objs</p>
-                    </div>
-                    <div class="card-body py-2">
-                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any objs" <span class="text-light">=&gt;</span> "the count of objs"</pre>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-dedup">
@@ -1776,10 +1669,7 @@ a/b/c/                           [-- relative/branch uri            --]
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">a deduplication function f({c}X)-&gt;{d&lt;=c}X</p>
-                    </div>
-                    <div class="card-body py-2">
-                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any objs" <span class="text-light">=&gt;</span> "the deduplicated objs"</pre>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-div">
@@ -1828,11 +1718,7 @@ a/b/c/                           [-- relative/branch uri            --]
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">\[ f(\tt{lhs}) = \left\{ \begin{aligned} \tt{lhs} &amp; \quad \text{if } \tt{lhs} \neq \emptyset \\ \tt{arg}_0 &amp; \quad \text{otherwise.} \end{aligned} \right. \]</p>
-                    </div>
-                    <div class="card-body py-2">
-                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"maybe an obj" <span class="text-light">=&gt;</span> "the lhs obj else the arg obj"
-   [0 <span class="text-light">=&gt;</span> "the rhs obj is the lhs is noobj"]</pre>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-end">
@@ -1848,10 +1734,7 @@ a/b/c/                           [-- relative/branch uri            --]
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">the terminal function \(f(x)\to \emptyset\)</p>
-                    </div>
-                    <div class="card-body py-2">
-                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"terminal objs" <span class="text-light">=&gt;</span> "noobj"</pre>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-eq">
@@ -1867,11 +1750,7 @@ a/b/c/                           [-- relative/branch uri            --]
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">an equality function \[ f(\tt{lhs}) = \left\{ \begin{aligned} \tt{true} &amp; \quad \text{if } \tt{lhs} == \tt{arg}_0 \\ \tt{false} &amp; \quad \text{otherwise.} \end{aligned} \right. \]</p>
-                    </div>
-                    <div class="card-body py-2">
-                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any objs" <span class="text-light">=&gt;</span> "true if lhs equals rhs"
-   [0 <span class="text-light">=&gt;</span> "the rhs obj"]</pre>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-eval">
@@ -1887,11 +1766,7 @@ a/b/c/                           [-- relative/branch uri            --]
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">evaluates mtron source code</p>
-                    </div>
-                    <div class="card-body py-2">
-                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"can be any obj as long as the arg generated is a str" <span class="text-light">=&gt;</span> "the result of evaluating the source str arg"
-   [code <span class="text-light">=&gt;</span> "the mtron source code to evaluate"]</pre>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-failure">
@@ -1955,19 +1830,8 @@ a/b/c/                           [-- relative/branch uri            --]
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">dereferences a uri to an obj (sugar&#x27;d *)</p>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
-                    <div class="card-body py-2">
-                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any obj" <span class="text-light">=&gt;</span> "the obj referred to by the arg uri"
-   [0 <span class="text-light">=&gt;</span> "the uri to dereference"]</pre>
-                    </div>
-        <div class="card-body border-top py-2">
-            <small class="text-muted fw-bold">examples:</small>
-            <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*abc        [-- obj at abc                            --]
-abc.*_      [-- obj at abc via dynamic arg generation --]
-c.*ab${_}   [-- obj at abc via uri template parameter --]
-from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
-        </div>
                 </div>
                 <div class="card mb-3" id="inst-get">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -2016,11 +1880,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">check whether the lhs int is greater than the argument int</p>
-                    </div>
-                    <div class="card-body py-2">
-                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"the lhs int" <span class="text-light">=&gt;</span> "whether the lhs is greater than the rhs"
-   [int::T <span class="text-light">=&gt;</span> "the int to compare against the lhs"]</pre>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-gte">
@@ -2038,11 +1898,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">check whether the lhs int is greater than or equal to the argument int</p>
-                    </div>
-                    <div class="card-body py-2">
-                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"the lhs int" <span class="text-light">=&gt;</span> "whether the lhs is greater than or equal to the rhs"
-   [int::T <span class="text-light">=&gt;</span> "the int to compare against the lhs"]</pre>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-has">
@@ -2063,11 +1919,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">check whether the lhs str matches the regex arg</p>
-                    </div>
-                    <div class="card-body py-2">
-                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"a uri to check" <span class="text-light">=&gt;</span> "whether the domain matches arg regex"
-   [0 <span class="text-light">=&gt;</span> "the regex for matching"]</pre>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-host">
@@ -2101,10 +1953,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">a objs barrier identity function \(f(X)\to X\)</p>
-                    </div>
-                    <div class="card-body py-2">
-                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"the rhs obj" <span class="text-light">=&gt;</span> "the lhs obj"</pre>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-import">
@@ -2152,11 +2001,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">filters the lhs obj</p>
-                    </div>
-                    <div class="card-body py-2">
-                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any obj" <span class="text-light">=&gt;</span> "the lhs obj if arg is true"
-   [0 <span class="text-light">=&gt;</span> "filter lhs if false"]</pre>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-isa">
@@ -2172,11 +2017,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">a filter function \(f(x)\to \{\emptyset \cup x\}\)</p>
-                    </div>
-                    <div class="card-body py-2">
-                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"an obj to match" <span class="text-light">=&gt;</span> "the unaltered obj if arg matches"
-   [0 <span class="text-light">=&gt;</span> "filter lhs if doesn&#x27;t match arg"]</pre>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-lcase">
@@ -2227,11 +2068,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">check whether the lhs int is less than the argument int</p>
-                    </div>
-                    <div class="card-body py-2">
-                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"the lhs int" <span class="text-light">=&gt;</span> "whether the lhs is less than the rhs"
-   [int::T <span class="text-light">=&gt;</span> "the int to compare against the lhs"]</pre>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-lte">
@@ -2249,11 +2086,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">check whether the lhs int is less than or equal to the argument int</p>
-                    </div>
-                    <div class="card-body py-2">
-                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"the lhs int" <span class="text-light">=&gt;</span> "whether the lhs is less than or equal to the rhs"
-   [int::T <span class="text-light">=&gt;</span> "the int to compare against the lhs"]</pre>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-map">
@@ -2318,15 +2151,8 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">the mean of a stream of reals</p>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
-                    <div class="card-body py-2">
-                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"a stream of reals" <span class="text-light">=&gt;</span> "the mean of the lhs real stream"</pre>
-                    </div>
-        <div class="card-body border-top py-2">
-            <small class="text-muted fw-bold">examples:</small>
-            <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">{1.0,2.0,3.0}.mean() [-- 2.0 --]</code></pre>
-        </div>
                 </div>
                 <div class="card mb-3" id="inst-merge">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -2350,11 +2176,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">join the barrier given the str arg</p>
-                    </div>
-                    <div class="card-body py-2">
-                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"an str barrier" <span class="text-light">=&gt;</span> "the join of the str barrier"
-   [0 <span class="text-light">=&gt;</span> "the join token"]</pre>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-minus">
@@ -2371,11 +2193,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">subtract the argument int from the lhs int</p>
-                    </div>
-                    <div class="card-body py-2">
-                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"the lhs int" <span class="text-light">=&gt;</span> "the result of the subtraction"
-   [int::T <span class="text-light">=&gt;</span> "the int to subtract from the lhs"]</pre>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-mod">
@@ -2428,11 +2246,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">multiply the lhs int by the argument int</p>
-                    </div>
-                    <div class="card-body py-2">
-                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"the lhs int" <span class="text-light">=&gt;</span> "the result of the multiplication"
-   [int::T <span class="text-light">=&gt;</span> "the int to multiply the lhs by"]</pre>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-neg">
@@ -2466,11 +2280,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">an inequality function \[ f(\tt{lhs}) = \left\{ \begin{aligned} \tt{true} &amp; \quad \text{if } \tt{lhs} \neq 	t{arg}_0 \\ \tt{false} &amp; \quad \text{otherwise.} \end{aligned} \right. \]</p>
-                    </div>
-                    <div class="card-body py-2">
-                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any objs" <span class="text-light">=&gt;</span> "true if lhs does not equal rhs"
-   [0 <span class="text-light">=&gt;</span> "the rhs obj"]</pre>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-not">
@@ -2521,10 +2331,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">a logical or function \(f(X)\to \tt{true}\) if any \(X\) are true</p>
-                    </div>
-                    <div class="card-body py-2">
-                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any objs" <span class="text-light">=&gt;</span> "true if any objs are true"</pre>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-order">
@@ -2542,11 +2349,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">a sorting function \(f(X)\to X&#x27;\)</p>
-                    </div>
-                    <div class="card-body py-2">
-                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any objs" <span class="text-light">=&gt;</span> "the objs sorted by the arg obj"
-   [0 <span class="text-light">=&gt;</span> "the obj to sort by"]</pre>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-parent">
@@ -2602,11 +2405,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">add the argument int to the lhs int</p>
-                    </div>
-                    <div class="card-body py-2">
-                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"the lhs int" <span class="text-light">=&gt;</span> "the result of the addition"
-   [int::T <span class="text-light">=&gt;</span> "the int to add to the lhs"]</pre>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-port">
@@ -2658,11 +2457,23 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">a side-effect function \(f(x)\nearrow x\)</p>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
-                    <div class="card-body py-2">
-                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"the rhs obj" <span class="text-light">=&gt;</span> "the lhs obj"
-   [0 <span class="text-light">=&gt;</span> "concatenated args followed by newline written to stdout"]</pre>
+                </div>
+                <div class="card mb-3" id="inst-println">
+                    <div class="card-header d-flex justify-content-between align-items-center py-2">
+                        <span>
+                            <span class="code text-primary fw-bold">println</span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#{?}.html#type-#" data-bs-toggle="tooltip" title="maybe domain" class="code text-info">#{?}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#{*}.html#type-#" data-bs-toggle="tooltip" title="maybe some range" class="code text-success">#{*}</a></span></span>
+                        </span>
+                        <small class="text-muted code">/m/inst/println?#{*}&lt;=#{?}</small>
+                    </div>
+                    <div class="card-body p-2">
+                        <pre class="mb-1"><code class="language-mtron">println?#{*}&lt;=#{?}(#{*}::T){&lt;j&gt;}</code></pre>
+                    </div>
+                    
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-prod">
@@ -2730,11 +2541,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">a reduce function \(f(X) \to x\)</p>
-                    </div>
-                    <div class="card-body py-2">
-                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any objs" <span class="text-light">=&gt;</span> "the result of applying the arg inst to each obj"
-   [0 <span class="text-light">=&gt;</span> "the inst to apply to each obj"]</pre>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-ref">
@@ -2750,11 +2557,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">associates the arg obj to the lhs uri (inverse of /m/inst/to)</p>
-                    </div>
-                    <div class="card-body py-2">
-                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any obj" <span class="text-light">=&gt;</span> "writes the arg obj to the lhs uri"
-   [0 <span class="text-light">=&gt;</span> "the uri to write to"]</pre>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-regex">
@@ -2856,7 +2659,6 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
 <pre class="mb-1"><code class="language-mtron">rshift?#{*}&lt;=rel(#::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1"><code class="language-mtron">rshift?#{*}&lt;=lst(#{*}::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1"><code class="language-mtron">rshift?#{*}&lt;=rec(#{*}::T){&lt;j&gt;}</code></pre>
-<pre class="mb-1"><code class="language-mtron">rshift?#{*}&lt;=/m/type(uri{*}::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1"><code class="language-mtron">rshift?B{?}&lt;=A(){&lt;j&gt;}</code></pre>
 <pre class="mb-1"><code class="language-mtron">rshift?file{*}&lt;=file(isa(uri::T).else(&lt;#&gt;)){&lt;j&gt;}</code></pre>
                     </div>
@@ -2948,11 +2750,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">skips the first n objs</p>
-                    </div>
-                    <div class="card-body py-2">
-                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any objs" <span class="text-light">=&gt;</span> "the objs after skipping"
-   [0 <span class="text-light">=&gt;</span> "the number of objs to skip"]</pre>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-source">
@@ -2988,11 +2786,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">split the lhs string according to the token arg and insert components into an ordered lst</p>
-                    </div>
-                    <div class="card-body py-2">
-                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"a str to split" <span class="text-light">=&gt;</span> "lst encoded components of the split lhs str"
-   [0 <span class="text-light">=&gt;</span> "a token to split on"]</pre>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-start">
@@ -3008,11 +2802,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">the initial function f()-&gt;x</p>
-                    </div>
-                    <div class="card-body py-2">
-                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"noobj" <span class="text-light">=&gt;</span> "initial objs"
-   [0 <span class="text-light">=&gt;</span> "initial objs"]</pre>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-sum">
@@ -3065,11 +2855,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">takes the first n objs</p>
-                    </div>
-                    <div class="card-body py-2">
-                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any objs" <span class="text-light">=&gt;</span> "the objs before skipping"
-   [0 <span class="text-light">=&gt;</span> "the number of objs to take"]</pre>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-thread">
@@ -3101,10 +2887,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">the geometric location of the lhs obj [equivalent to f(x) ~ vid(type())]</p>
-                    </div>
-                    <div class="card-body py-2">
-                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any obj" <span class="text-light">=&gt;</span> "the lhs obj type id"</pre>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-to">
@@ -3120,11 +2903,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">associates the lhs obj to the arg uri</p>
-                    </div>
-                    <div class="card-body py-2">
-                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any obj" <span class="text-light">=&gt;</span> "writes the lhs obj to the arg uri"
-   [0 <span class="text-light">=&gt;</span> "the uri to write to"]</pre>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-type">
@@ -3208,10 +2987,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">the spatial location of the lhs obj</p>
-                    </div>
-                    <div class="card-body py-2">
-                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any obj" <span class="text-light">=&gt;</span> "the lhs obj value id"</pre>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-where">
@@ -3228,11 +3004,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">a filter function \(f(x)\to \{\emptyset \cup x\}\)</p>
-                    </div>
-                    <div class="card-body py-2">
-                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any obj" <span class="text-light">=&gt;</span> "filter the lhs obj based on whether the arg yields noobj or not"
-   [0 <span class="text-light">=&gt;</span> "the inst to filter objs by"]</pre>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-within">
@@ -3296,7 +3068,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">the reference implementation of a space where objs are stored in memory</p>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                     
                 </div>
@@ -3351,14 +3123,9 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">the machine&#x27;s thread local stack exposed as a space</p>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                     
-        <div class="card-body border-top py-2">
-            <small class="text-muted fw-bold">examples:</small>
-            <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">2.to(a).plus(from(a))     [-- 4 via writing/reading a         --]
-a-&gt;2+*a                   [-- 4 via sugar&#x27;d writing/reading a --]</code></pre>
-        </div>
                 </div>
         </div>
             
@@ -3399,7 +3166,7 @@ a-&gt;2+*a                   [-- 4 via sugar&#x27;d writing/reading a --]</code>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">removes identity instructions</p>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                     
                 </div>
@@ -3417,7 +3184,7 @@ a-&gt;2+*a                   [-- 4 via sugar&#x27;d writing/reading a --]</code>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">flattens nested map instructions</p>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                     
                 </div>
@@ -3471,7 +3238,7 @@ a-&gt;2+*a                   [-- 4 via sugar&#x27;d writing/reading a --]</code>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">applies abelian monoid law on split code paths</p>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                     
                 </div>
@@ -3489,7 +3256,7 @@ a-&gt;2+*a                   [-- 4 via sugar&#x27;d writing/reading a --]</code>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">leverages distributive ring law to pull common monoidally bound components to the right</p>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                     
                 </div>
@@ -3507,7 +3274,7 @@ a-&gt;2+*a                   [-- 4 via sugar&#x27;d writing/reading a --]</code>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">leverages distributive ring law to pull common monoidally bound components to the left</p>
+                        <p class="mb-0 text-light">no documentation available</p>
                     </div>
                     
                 </div>
@@ -3516,7 +3283,7 @@ a-&gt;2+*a                   [-- 4 via sugar&#x27;d writing/reading a --]</code>
         <div class="container-xxl py-3 text-center">
             <hr class="border-secondary">
             <small class="text-muted">
-                generated by metatron instset doc generator on build 0-2026-04-07 15:30:46<br>
+                generated by metatron instset doc generator on build 0-2026-04-08 16:05:14<br>
                 © PhaseShift Studio, LLC
             </small>
         </div>

@@ -478,7 +478,9 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
             "[a=>1,b=>2]                            % [a=>+7,b=>+1]         %  [a=>8,b=>3]",
             "[a=>1,b=>[c=>3]]                       % [a=>+2,b=>[c=>+10]]   %  [a=>3,b=>[c=>13]]",
             "[a=>1,b=>[c=>3]]                       % [b=>_]                %  [a=>1,b=>[c=>3]]",
-            //"[a=>1,b=>[c=>3]]                       % [b=>/noobj]         %  [a=>1]"
+            "[a=>1,b=>[c=>3]]                       % [b=>3]                %  [a=>1,b=>3]",
+            "[a=>1,b=>[c=>3]]                       % [b=>[c=>[d=>e]]]      %  [a=>1,b=>[c=>[d=>e]]]",
+           // "[a=>1,b=>[c=>3]]                       % [b=>noobj]            %  [a=>1]"
     }, delimiter = '%')
     public void testUpdate(final String original, final String update, final String expected) {
         final Rec originalRec = mParser.parse(original);

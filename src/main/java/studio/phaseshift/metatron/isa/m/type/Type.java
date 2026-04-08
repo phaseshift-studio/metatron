@@ -188,7 +188,7 @@ public interface Type extends Obj {
                     return true;
                 if (rhs.isNoObj() && lhs.c().isZeroable())
                     return true;
-                if (rhs.isCall())
+                if (rhs.isObjCall())
                     return lhs.test(rhs.dom());
                 if (!rhs.isType())
                     return false;
@@ -216,7 +216,7 @@ public interface Type extends Obj {
                             return false;
                     }
                 }
-                if (lhs.isObjs() && lhs.stream().anyMatch(Obj::isCall)) // TODO: a hack (see RecTest requirements vs. TypeTest requirements)
+                if (lhs.isObjs() && lhs.stream().anyMatch(Obj::isObjCall)) // TODO: a hack (see RecTest requirements vs. TypeTest requirements)
                     return false;
                 if (lhs.isObjs() && lhs.stream().allMatch(o -> o.test(rhs.tid(rhs.tid().c(o.c())))))
                     return true;

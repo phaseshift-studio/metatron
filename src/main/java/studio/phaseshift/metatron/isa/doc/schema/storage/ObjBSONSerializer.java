@@ -22,6 +22,7 @@ import org.bson.*;
 import org.bson.codecs.*;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.io.BasicOutputBuffer;
+import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
@@ -33,6 +34,7 @@ import java.nio.ByteBuffer;
 import java.util.Objects;
 import java.util.function.Function;
 
+import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
@@ -182,7 +184,9 @@ public class ObjBSONSerializer extends AbstractObjSerializer<BsonValue> {
         } else {
             // Custom binary encoding
             final byte[] b = bson.asBinary().getData();
-            return uri(new String(ByteBuffer.wrap(b, 2, b.length).array()));
+            if(b.length > 8 && b[0] != -1) // else npe on what is seemingly a noobj uri ?
+                return uri(new String(ByteBuffer.wrap(b, 2, b.length).array()));
+            return uri(NOOBJ_TID).c(cInt.ZERO()).as();
         }
     }
 
