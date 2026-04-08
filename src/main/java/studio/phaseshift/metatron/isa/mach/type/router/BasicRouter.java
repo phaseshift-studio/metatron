@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -137,8 +137,8 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
 
     @Override
     public void registerPrefix(final fURI prefix, final fURI vid) {
-        final fURI existing =this.prefixToVID.getRaw(prefix);
-        if(existing != null && !Objects.equals(vid,existing))
+        final fURI existing = this.prefixToVID.getRaw(prefix);
+        if (existing != null && !Objects.equals(vid, existing))
             throw MTronException.of("%s prefix already bound: %s + %s", prefix, vid, existing);
         this.prefixToVID.putRaw(prefix, vid);
         this.at(uri(PREFIX), this.prefixToVID.toRec(), MUTABLE);
@@ -204,13 +204,13 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
     }
 
     @Override
-    public void removeSpace(final fURI vid) {
-        if (null == vid)
+    public void removeSpace(final fURI pattern) {
+        if (null == pattern)
             return;
         this.spaces().jvm()
                 .entrySet()
                 .stream()
-                .filter(kv -> vid.equals(kv.getKey().uriValue()))
+                .filter(kv -> kv.getKey().uriValue().test(pattern))
                 .toList()
                 .stream()
                 .peek(kv -> this.spaces().jvm().remove(kv.getKey()))
@@ -252,7 +252,7 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
     public Obj read(final fURI vid) {
         if (null == vid || NOOBJ.equals(vid.basePath()) || vid.isZero() || READ_AS_NOOBJ.contains(vid))
             return noobj();
-        if(vid.equals(this.vid()))
+        if (vid.equals(this.vid()))
             return this;
         // if (vid.hasAuthority())
         //   return this.server().sendRecv((a, b) -> a.authority().matches(b.remoteHost().authority()), vid, from_(vid.localize().toUri()).tryToInst());

@@ -24,7 +24,7 @@ import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.m.type.impl.MInst;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
-import studio.phaseshift.metatron.isa.mach.type.Monad;
+import studio.phaseshift.metatron.isa.mach.type.PCMonad;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
@@ -45,7 +45,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_ISA_TID;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MACHINE_TID;
-import static studio.phaseshift.metatron.isa.mach.type.monad.BasicMonad.monad;
+import static studio.phaseshift.metatron.isa.mach.type.monad.BasicPCMonad.monad;
+import static studio.phaseshift.metatron.isa.mach.type.monad.BasicPCMonad.pcmonad;
 
 ;
 
@@ -100,11 +101,11 @@ public class SwarmMachine extends AbstractMachine implements Machine {
         for (final Inst inst : mach.code().jvm()) {
             if (inst.isInitial()) {
                 LOG.trace("  {{g}}==>{{/g}} creating {{y}}initial{{/y}} monad at %s", inst);
-                this.running().append(monad(noobj(), inst, resolvedCode));
+                this.running().append(pcmonad(noobj(), inst, resolvedCode));
             } else if (inst.isGather()) {
                 // many-to-?
                 LOG.trace("  {{m}}==|{{/m}} creating {{y}}barrier{{/y}} monad at %s", inst);
-                final Monad m = monad(objs0(), inst, resolvedCode);
+                final PCMonad m = pcmonad(objs0(), inst, resolvedCode);
                 mach.barriers().<LinkedList<Obj>>jvmAs().add(m);
             }
         }
@@ -118,21 +119,21 @@ public class SwarmMachine extends AbstractMachine implements Machine {
             Router.global().stats().monadicStats().resetMonads();
             final Code code = this.resolve(lhs).code();
             if (this.running().c().isZero()) {
-                this.running().append(monad(noobj(), code.insts().getFirst(), code));
+                this.running().append(pcmonad(noobj(), code.insts().getFirst(), code));
             }
       //  }
         while (this.doProcessing() && this.infiniteFailCounter.get() < MAX_FAILS) {
-            final Monad m = (Monad) this.running().take();
+            final PCMonad m = (PCMonad) this.running().take();
             if (null != m) {
                 LOG.trace("   {{g}}=>{{/g}} processing monad %s [%s]", m, m.inst().isInitial() ? "initial" : "midway");
-                final Monad x = this.split(m);
-                final Monad n = x.apply();
+                final PCMonad x = this.split(m);
+                final PCMonad n = x.apply();
                 LOG.trace(" {{g}}===>{{/g}} post-processing monad %s", n);
                 if (n.obj().isFail())
                     this.infiniteFailCounter.incrementAndGet();
                 if (n.inst().isBatching() && (!n.dead() || n.inst().dom().c().isZeroable())) {
                     if (n.inst().isGather()) {
-                        final Monad barrier = this.barriers().<LinkedList<Monad>>jvmAs().peek();
+                        final PCMonad barrier = this.barriers().<LinkedList<PCMonad>>jvmAs().peek();
                         LOG.trace("{{m}}====|{{/m}} appending living obj to barrier %s", n);
                         if (null == barrier)
                             throw MTronException.of("barrier should exist: %s", n.inst());
@@ -165,25 +166,25 @@ public class SwarmMachine extends AbstractMachine implements Machine {
                     LOG.trace("{{r}}====>{{/r}} killing monad %s", n);
                 }
             } else if (!this.barriers().isEmpty()) {
-                final Monad barrier = this.barriers().<LinkedList<Monad>>jvmAs().poll();
+                final PCMonad barrier = this.barriers().<LinkedList<PCMonad>>jvmAs().poll();
                 if (null != barrier) {
                     LOG.trace("   {{m}}=|{{/m}} processing barrier monad %s", barrier);
                     final Obj result = barrier.inst().apply(barrier.obj());
                     final Inst nextInst = code.nextInst(barrier.inst());
                     if (nextInst.isGather()) { // barrier-to-barrier can do direct handoff of result set
                         LOG.trace("  {{m}}==|{{/m}} passing barrier obj %s to %s", result, nextInst);
-                        final Monad nextBarrier = this.barriers().<LinkedList<Monad>>jvmAs().peek();
+                        final PCMonad nextBarrier = this.barriers().<LinkedList<PCMonad>>jvmAs().peek();
                         if (null == nextBarrier)
                             throw MTronException.of("barrier should exist: %s", nextInst);
                         nextBarrier.obj().append(result);
                     } else if (nextInst.isBatching()) {
                         Router.global().stats().monadicStats().incrBarrierMonads(-1L);
-                        this.running().append(monad(result, nextInst, code));
+                        this.running().append(pcmonad(result, nextInst, code));
                         Router.global().stats().monadicStats().incrRunningMonads(1L);
                     } else { // barrier-to-other requires an unrolling of result set
                         LOG.trace("  {{m}}==|{{/m}} scattering barrier obj %s to %s", result, nextInst);
                         result.forEach(o -> {
-                            final Monad n = monad(o, nextInst, code);
+                            final PCMonad n = pcmonad(o, nextInst, code);
                             Router.global().stats().monadicStats().incrBarrierMonads(-1L);
                             LOG.trace(" {{m}}===|{{/m}} scattering %s", n);
                             this.running().append(n);

@@ -29,6 +29,7 @@ import java.util.Comparator;
 import java.util.Objects;
 import java.util.stream.Stream;
 
+import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
 
 /**
@@ -138,6 +139,19 @@ public class ScoringInstResolver implements InstResolver {
                 if (userFirstArg != null && !userFirstArg.isNoObj()
                         && userFirstArg.tid().basePath().equals(apiFirstArg.tid().basePath())) {
                     score += 250;
+                }
+            }
+
+            // Range-to-argument alignment (critical for as() instructions specifically)
+            // When user passes a Type argument to as(), heavily favor instructions whose range matches that type
+            // e.g., as(skill::T) should strongly prefer as?skill<=dir over as?file<=uri
+            // IMPORTANT: Only apply this to actual 'as' instructions, not constructors or other instructions
+            if (apiInst.tid().basePath().equals(AS_INST_TID) && userFirstArg != null && userFirstArg.isType() && !apiRngTid.isGeneric()) {
+                // Extract the actual type being requested (the Type's tid, not the Type object's own tid)
+                final fURI requestedTypeTid = userFirstArg.asType().tid();
+                if (!requestedTypeTid.isGeneric() && apiRngTid.basePath().equals(requestedTypeTid.basePath())) {
+                    // Huge bonus: the API's output type matches what the user asked for
+                    score += 2000;
                 }
             }
         }

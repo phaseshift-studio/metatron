@@ -24,8 +24,9 @@ import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.AbstractInstSetTest;
 import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.m.type.Obj;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -139,6 +140,27 @@ public class mathInstSetTest extends AbstractInstSetTest {
     }, delimiter = '%', quoteCharacter = '~')
     public void testConversionRelations(final String code, final boolean match) {
         assertEquals(match, mParser.eval(code).boolValue());
+    }
 
+    @ParameterizedTest
+    @CsvSource(value = {
+            // Byte unit as() conversions - verifies resolver picks correct as?X<=Y instruction
+            "bB::1024.0.as(kB::T)         | *kB   | true",
+            "kB::1024.0.as(mB::T)         | *mB   | true",
+            "mB::1024.0.as(gB::T)         | *gB   | true",
+            "gB::1024.0.as(tB::T)         | *tB   | true",
+            "tB::1024.0.as(pB::T)         | *pB   | true",
+            // Downward conversions
+            "kB::1.0.as(bB::T)            | *bB   | true",
+            "mB::1.0.as(kB::T)            | *kB   | true",
+            "gB::1.0.as(mB::T)            | *mB   | true",
+            "tB::1.0.as(gB::T)            | *gB   | true",
+            "pB::1.0.as(tB::T)            | *tB   | true",
+    }, delimiter = '|')
+    public void testAs(String code, String expectedType, boolean shouldMatch) {
+        Obj result = mParser.eval(code);
+        Obj expected = mParser.eval(expectedType);
+        LOG.debug("result [%s] expected [%s] [should match: %b]", result, expected, shouldMatch);
+        assertEquals(shouldMatch, result.test(expected));
     }
 }

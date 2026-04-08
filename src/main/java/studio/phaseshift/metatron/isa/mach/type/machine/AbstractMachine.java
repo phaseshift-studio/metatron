@@ -22,7 +22,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjs;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
-import studio.phaseshift.metatron.isa.mach.type.Monad;
+import studio.phaseshift.metatron.isa.mach.type.PCMonad;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
@@ -181,7 +181,7 @@ public abstract class AbstractMachine implements Machine {
         }
     }
 
-    protected Monad split(final Monad monad) {
+    protected PCMonad split(final PCMonad monad) {
         if (monad.obj().unique() && (monad.inst().dom().c().isOne() || monad.inst().dom().c().isAny()))
             return monad;
         if (monad.inst().dom().c().isZero() && !monad.obj().c().isZeroable()) // TODO: create a less than window c.ltFull()

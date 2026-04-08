@@ -570,7 +570,6 @@ public interface Inst extends Call {
                         } else {
                             if (apiArg.tid().one().isGeneric())
                                 apiArg = apiArg.tid(generics.getOrDefault(apiArg.tid().one(), userArg.tid())).c(apiArg.c());
-                            //LOG.warn(apiArg + "----" + userArg);
                             if (null != apiArg && !apiArg.isCall() && !userArg.tid().one().isGeneric() && !userArg.test(apiArg)) {
                                 // TODO: isClessGeneric() and cLess.isGeneric() behave differently
                                 return null;

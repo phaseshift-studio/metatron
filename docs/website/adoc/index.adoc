@@ -160,7 +160,7 @@ include::header.html[]
             <script type="text/javascript">
                 featurePanel(
                     "monad_features",
-                    "Monad",
+                    "PCMonad",
                     "images/icons/cluster-icon.svg",
                     "processes are realized as the propagation of atomic <b class=\"metatron-name\">monads</b>  through instruction graphs which guide them over the underlying data spaces",
                     "images/modal/monad-modal.svg");

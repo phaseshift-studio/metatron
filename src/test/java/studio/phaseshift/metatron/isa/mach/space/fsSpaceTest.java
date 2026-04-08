@@ -66,9 +66,9 @@ public class fsSpaceTest extends AbstractSpaceTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "*<test:#>.count().?>3             % 5",
+            "*<test:#>.count().?>3             % 14",
             "*boot/script/sh                   % /bin/sh",
-            "*<test:+>                         % {dir::<test:db?p=rwxrwxr-x>,dir::<test:file?p=rwxrwxr-x>}",
+            "*<test:+>                         % {dir::<test:db?p=rwxrwxr-x>,dir::<test:file?p=rwxrwxr-x>,dir::<test:llm?p=rwxrwxr-x>}",
             "*<test:file/test-py.py>           % file::<test:file/test-py.py?p=rwxrwxr-x>",
             "*<test:file/test-sh.sh>           % file::<test:file/test-sh.sh?p=rwxrwxr-x>",
             "*<test:file/test-bash.bash>       % file::<test:file/test-bash.bash?p=rwxrwxr-x>",

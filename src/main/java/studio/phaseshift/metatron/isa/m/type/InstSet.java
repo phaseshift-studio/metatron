@@ -114,16 +114,25 @@ public interface InstSet extends Space {
                 .filter(p -> f(p.type().getAnnotation(JREService.class).vid()).test(vid));
     }
 
-    static Stream<InstSet> importInstSet(final fURI vid) {
-        return importInstSet(vid, null);
+    static Stream<InstSet> importInstSetStream(final fURI vid) {
+        return importInstSetStream(vid, null);
     }
 
-    static Stream<InstSet> importInstSet(final fURI vid, final fURI prefix) {
+    static Stream<InstSet> importInstSetStream(final fURI vid, final fURI prefix) {
         if (null != prefix)
             Router.global().registerPrefix(prefix, vid);
         return loadInstSetProvider(vid)
                 .map(ServiceLoader.Provider::get)///  new
                 .peek(isa -> Router.global().addSpace(isa)) // add to router
                 .peek(InstSet::setup); // setup
+    }
+
+    static void importInstSet(final fURI vid, final fURI prefix) {
+        importInstSetStream(vid, prefix).forEach(isa -> {
+        });
+    }
+
+    static void importInstSet(final fURI vid) {
+        importInstSet(vid, null);
     }
 }

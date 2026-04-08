@@ -292,6 +292,8 @@ public abstract class AbstractfURI implements fURI {
 
     @Override
     public boolean test(final fURI rhs) {
+        if (null == rhs)
+            return false;
         final cInt c = this.c();
         final cInt d = rhs.c();
         if (c.isZero() && d.isZero())
@@ -720,7 +722,7 @@ public abstract class AbstractfURI implements fURI {
                 && Objects.equals(this.host(), that.host())
                 && this.port() == that.port()
                 && Objects.equals(this.path(), that.path())
-                && ((!this.hasPoly() && !that.hasPoly()) ||Objects.equals(this.poly(), that.poly()))
+                && ((!this.hasPoly() && !that.hasPoly()) || Objects.equals(this.poly(), that.poly()))
                 && Objects.equals(this.c(), that.c())
                 && ((!this.hasTemplates() && !that.hasTemplates()) || Objects.equals(this.templates(), that.templates()))
                 && ((!this.hasQ() && !that.hasQ()) || Objects.equals(new HashMap<>(this.qMap()), new HashMap<>(that.qMap())));

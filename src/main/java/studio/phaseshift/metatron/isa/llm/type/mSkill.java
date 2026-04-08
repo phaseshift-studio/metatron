@@ -20,11 +20,15 @@ package studio.phaseshift.metatron.isa.llm.type;
 
 import dev.langchain4j.skills.DefaultSkill;
 import dev.langchain4j.skills.DefaultSkillResource;
+import dev.langchain4j.skills.FileSystemSkillLoader;
 import dev.langchain4j.skills.Skill;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
+
+import java.io.File;
+import java.nio.file.Path;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SKILL_TID;
@@ -61,19 +65,20 @@ public class mSkill extends MRec {
             skill = skill.content(this.at(CONTENT).strValue());
         if (this.has(ENTRY))
             skill = skill.resources(this.at(ENTRY).asLst().elements()
-                            .map(Obj::asRec)
-                            .map(e -> new DefaultSkillResource.Builder()
-                                    .relativePath(e.at(DIR).uriValue().toString())
-                                    .content(e.at(CONTENT).strValue())
-                                    .build())
-                            .toList());
+                    .map(Obj::asRec)
+                    .map(e -> new DefaultSkillResource.Builder()
+                            .relativePath(e.at(DIR).uriValue().toString())
+                            .content(e.at(CONTENT).strValue())
+                            .build())
+                    .toList());
         return skill.build();
     }
 
-    public static Skill of(final Rec skillRec) {
-        if (skillRec instanceof mSkill)
-            return ((mSkill) skillRec).toSkill();
-        else
-            return new mSkill(skillRec, LLM_SKILL_TID, skillRec.vid()).toSkill();
+    public static mSkill of(final File skillDir) {
+        return new mSkill(FileSystemSkillLoader.loadSkill(Path.of(skillDir.getAbsolutePath())), LLM_SKILL_TID, null);
+    }
+    
+    public static mSkill of(final Rec skillRec) {
+        return new mSkill(skillRec, LLM_SKILL_TID, skillRec.vid());
     }
 }

@@ -20,7 +20,7 @@ package studio.phaseshift.metatron.isa.m.type;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
-import studio.phaseshift.metatron.isa.mach.type.Monad;
+import studio.phaseshift.metatron.isa.mach.type.PCMonad;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
@@ -71,7 +71,7 @@ public interface ObjFactory extends Rec {
     Bytes bytes(final ByteBuffer jvm, final fURI tid, final fURI vid);
     Uri uri(final fURI jvm, final fURI tid, final fURI vid);
     Fail fail(final Throwable jvm, final fURI tid, final fURI vid);
-    Monad monad(final List<Obj> jvm, final fURI tid, final fURI vid);
+    PCMonad monad(final List<Obj> jvm, final fURI tid, final fURI vid);
     Objs objs(final List<Obj> jvm, final fURI tid, final fURI vid);
     Type type(final Tuple.Pair<Call, Call> jvm, final fURI tid, final fURI vid);
     Space space(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid);
@@ -111,7 +111,7 @@ public interface ObjFactory extends Rec {
             tid = FAIL_TID;
         else if (NoObj.class.isAssignableFrom(objClass))
             tid = NOOBJ;
-        else if (Monad.class.isAssignableFrom(objClass))
+        else if (PCMonad.class.isAssignableFrom(objClass))
             tid = MACH_MONAD_TID;
         else
             throw MTronException.of("unable to convert to requested obj class: %s", objClass);

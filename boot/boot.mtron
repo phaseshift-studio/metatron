@@ -33,9 +33,12 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
   python => /usr/bin/python3,
   perl   => /usr/bin/perl,
   mtron  => /bin/mtron]),"\n");
+   
 [== mount computing spaces ==];
  mem::[pattern   => /usr/#,                                 
        q         => [subq::[=>]]]@/sys/space/usr;
+ /usr/ai/pattern/template -> [think=>[to=>print(_)],response=>[to=>print(_)],memory=>[from=>/usr/ai/memory]];
+       
  mem::[pattern   => /shared/#,
        persist   => </tmp/shared.mtron>]@/sys/space/shared;
  [==meta::[pattern  => </a/cluster/#>,

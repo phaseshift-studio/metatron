@@ -28,7 +28,7 @@ import studio.phaseshift.metatron.isa.m.space.noobjSpace;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.io.space.file.fsSpace;
-import studio.phaseshift.metatron.isa.mach.type.Monad;
+import studio.phaseshift.metatron.isa.mach.type.PCMonad;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.thread.CoreThread;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
@@ -130,9 +130,9 @@ public class machInstSet extends AbstractInstSet {
                     lst(T(URI_TID)),
                     (lhs, inst) -> makeFile(Path.of(inst.arg(0).uriValue().basePath().toString())))).create();
     public static final Type DIR_TYPE = Type.Builder.build()
-            .tid(FILE_TID)
+            .tid(URI_TID)
             .vid(DIR_TID)
-            .predicate((uri, x) -> uri.uriValue().isBranch() ? uri : noobj())
+           // .predicate((uri, x) -> uri.uriValue().isBranch() ? uri : noobj())
             .constructor(instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(DIR_TID.maybe()),
                     lst(T(URI_TID)),
                     (lhs, inst) -> inst.arg(0).uriValue().isBranch() ? makeFile(Path.of(inst.arg(0).uriValue().basePath().toString())) : noobj())).create();
@@ -217,7 +217,7 @@ public class machInstSet extends AbstractInstSet {
                         MACH_MACHINE_TYPE,
                         MACH_SWARM_MACHINE_TYPE),
                 uri(INST), lst(Stream.concat(Router.RouterType.insts().stream(), Stream.of(instC(LIFT_INST_TID.dom(ALL).rng(MACH_MONAD_TID).q(MONAD, "^"), lst(T(ALL.maybe())), (lhs, inst) -> {
-                            final Monad monad = lhs.asMonad();
+                            final PCMonad monad = lhs.asMonad();
                             if (!inst.arg(0).isNoObj())
                                 return inst.arg(0).apply(monad);
                             else

@@ -86,7 +86,7 @@ public class graphSpaceTest extends AbstractSpaceTest {
     @BeforeAll
     public static void setupInstSet() {
         InstSet.importInstSet(GRPH_ISA_TID);
-        InstSet.importInstSet(MODERN_SCHEMA_TID);
+      //  InstSet.importInstSet(MODERN_SCHEMA_TID);
     }
 
     @Test

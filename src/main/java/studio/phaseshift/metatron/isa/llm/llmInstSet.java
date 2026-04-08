@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.isa.llm;
 
-import dev.langchain4j.skills.FileSystemSkillLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
@@ -27,7 +26,6 @@ import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Type;
 
-import java.nio.file.Paths;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
@@ -39,7 +37,6 @@ import static studio.phaseshift.metatron.isa.llm.type.MCPServer.MCP_SERVER_TYPE;
 import static studio.phaseshift.metatron.isa.llm.type.Model.model;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.BYTE_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Inst.INST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
@@ -142,8 +139,7 @@ public class llmInstSet extends AbstractInstSet {
                 uri(INST), lst(
                         docWrap(instC(AS_INST_TID.dom(DOCS_TID).rng(LLM_TOOL_TID), lst(), (lhs, inst) -> Model.Helper.mtronDocToTool(QCollection.Doc.doc(lhs.asRec()))), "a tool to use with the llm"),
                         docWrap(instC(AS_INST_TID.dom(M_ISA_INST_TID).rng(LLM_TOOL_TID), lst(), (lhs, inst) -> Model.Helper.mtronInstToTool(inst.asInst())), "a tool to use with the llm"),
-                        docWrap(instC(AS_INST_TID.dom(DIR_TID).rng(LLM_SKILL_TID), lst(LLM_SKILL_TYPE),
-                                        (lhs, inst) -> new mSkill(FileSystemSkillLoader.loadSkill(Paths.get(resolveFile(lhs).getAbsolutePath())), LLM_SKILL_TID, lhs.vid())),
+                        docWrap(instC(AS_INST_TID.dom(DIR_TID).rng(LLM_SKILL_TID), lst(LLM_SKILL_TYPE), (lhs, inst) -> mSkill.of(resolveFile(lhs))),
                                 "a dir containing the llm SKILL.md file",
                                 "a mtron encoding of the specified skill",
                                 Map.of(jnt(0), "the skill type"), "maps a directory to an llm skill where the dir follows the standard SKILL.md structure"),

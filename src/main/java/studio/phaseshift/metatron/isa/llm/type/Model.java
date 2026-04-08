@@ -162,8 +162,13 @@ public class Model extends MRec {
         //////////////////////////////////////////
         ///////////////   SKILLS /////////////////
         //////////////////////////////////////////
-        if (this.skills().isPresent()) {
-            final Skills skills = new Skills.Builder().skills(this.skills().get().elements().map(s -> mSkill.of(s.asRec())).toList()).build();
+        if (this.skills().isPresent() && !this.skills().get().elements().allMatch(Obj::isUri)) {
+            final Skills skills = new Skills.Builder().skills(
+                    this.skills().get()
+                            .elements()
+                            .filter(s -> !s.isUri())
+                            .map(s -> mSkill.of(s.asRec()).toSkill())
+                            .toList()).build();
             service.toolProvider(skills.toolProvider());
             service.systemMessage("You have access to the following skills:\n" + skills.formatAvailableSkills()
                     + "\nWhen the user's request relates to one of these skills, activate it first using the `activate_skill` tool before proceeding.");
@@ -362,9 +367,9 @@ public class Model extends MRec {
             final Inst inst = doc.at(INST);
             return rec(Map.of(uri(INST), inst, uri(NAME), uri(inst.tid()), uri(DESC), str(doc.description()), uri(ARG), doc.args()), LLM_TOOL_TID, null);
         }
- 
 
-       public static Rec mtronInstToTool(final Inst inst) {
+
+        public static Rec mtronInstToTool(final Inst inst) {
             final QCollection.Doc doc = Router.readFromSpace(inst.tid().addQ(DOCQ))
                     .orSupply(() -> doc(inst,
                             inst.dom().tid().toString(),

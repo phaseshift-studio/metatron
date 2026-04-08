@@ -21,38 +21,25 @@ package studio.phaseshift.metatron.util.thread;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class VThread<T> extends Thread implements Iterator<T> {
-    private final VirtualThreadFactory factory;
-    private final Supplier<T> runnable;
+public class mVirtualThread<T> extends Thread {
+   
     private final List<T> result = new ArrayList<>();
 
-    public VThread(final VirtualThreadFactory factory, final Supplier<T> runnable) {
-        this.factory = factory;
-        this.runnable = runnable;
+    public mVirtualThread(final mThreadFactory factory, final Supplier<T> runnable) {
+        
     }
 
     @Override
     public void run() {
         while (!this.isInterrupted()) {
-            this.result.add(this.runnable.get());
+          //  this.result.add(this.runnable.get());
         }
     }
     
-    @Override
-    public boolean hasNext() {
-        return this.result != null && !this.result.isEmpty();
-    }
-
-    @Override
-    public T next() {
-        if (this.result == null || this.result.isEmpty())
-            return null;
-        return this.result.getFirst();
-    }
+    
 }

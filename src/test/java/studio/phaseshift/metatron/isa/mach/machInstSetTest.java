@@ -21,8 +21,12 @@ package studio.phaseshift.metatron.isa.mach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.isa.AbstractInstSetTest;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.isa.AbstractInstSetTest;
+import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -77,4 +81,17 @@ public class machInstSetTest extends AbstractInstSetTest {
     public void testRingAlgebra(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
+
+    // TODO: Add testAs() for file/bytes conversions that work without filesystem dependencies
+    // File/bytes conversions: uri→file, file→bytes, bytes→image
+    // @ParameterizedTest
+    // @CsvSource(value = {
+    //         "file_expression.as(bytes::T) | *bytes | true",
+    // }, delimiter = '|')
+    // public void testAs(String code, String expectedType, boolean shouldMatch) {
+    //     Obj result = mParser.eval(code);
+    //     Obj expected = mParser.eval(expectedType);
+    //     LOG.debug("result [%s] expected [%s] [should match: %b]", result, expected, shouldMatch);
+    //     assertEquals(shouldMatch, result.test(expected));
+    // }
 }

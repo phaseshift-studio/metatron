@@ -19,10 +19,11 @@
 package studio.phaseshift.metatron.isa.mach.type.monad;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.Inst;
+import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.mach.type.Monad;
+import studio.phaseshift.metatron.isa.mach.type.PCMonad;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.CommonUtil;
@@ -30,65 +31,61 @@ import studio.phaseshift.metatron.util.CommonUtil;
 import java.util.List;
 
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MONAD_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class StatelessMonad extends AbstractMonad implements Monad {
-    private static final GraphittyLogger LOG = Graphitty.log(StatelessMonad.class);
-    public static final fURI MACH_STATELESS_MONAD_TID = MACH_MONAD_TID.extend("stateless");
+public class BasicPCMonad extends AbstractPCMonad implements PCMonad {
 
-    Obj obj;
-    Inst inst;
+    private static final GraphittyLogger LOG = Graphitty.log(BasicPCMonad.class);
+    public static final fURI MACH_BASIC_MONAD_TID = MACH_MONAD_TID; // .extend("basic");
 
-    protected StatelessMonad(final List<Obj> jvm, final fURI tid, final fURI vid) {
+    Lst jvm;
+
+    public BasicPCMonad(final Lst jvm, final fURI tid, final fURI vid) {
         super(tid, vid);
-        this.obj = jvm.getFirst();
-        this.inst = (Inst) jvm.get(1);
+        this.jvm = jvm;
     }
 
     @Override
-    public Monad clone(final Object jvm, final fURI tid, final fURI vid) {
-        return new StatelessMonad((List<Obj>) jvm, tid, vid);
+    public PCMonad clone(final Object jvm, final fURI tid, final fURI vid) {
+        return new BasicPCMonad((Lst) jvm, tid, vid);
     }
 
     @Override
-    public List<Obj> jvm() {
-        return List.of(this.obj, this.inst, noobj());
+    public Lst jvm() {
+        return this.jvm;
     }
 
     @Override
-    public Monad clone() {
-        final StatelessMonad clone = (StatelessMonad) super.clone();
+    public PCMonad clone() {
+        final BasicPCMonad clone = (BasicPCMonad) super.clone();
+        clone.jvm = (Lst) this.jvm.clone();
         return clone;
     }
 
     @Override
     public <OBJ extends Obj> OBJ self(final Object jvm, final fURI tid, final fURI vid) {
-        this.obj = (Obj) jvm;
-        this.inst = (Inst) ((List<Obj>) jvm).get(1);
+        this.jvm = (Lst) jvm;
         this.tid = tid;
         this.vid = vid;
         return (OBJ) this;
     }
 
-    @Override
-    public Rec state() {
-        return rec0();
-    }
-
     /*@Override
-    public Monad plus(final Monad objs) {
-        return new StatelessMonad(List.of(this, objs), this.tid().plus(objs.tid()), this.vid());
+    public PCMonad plus(final PCMonad objs) {
+        return new BasicPCMonad(List.of(this, objs), this.tid().plus(objs.tid()), this.vid());
     }*/
 
-    public static Monad monad(final Obj obj, final Inst inst) {
-        return new StatelessMonad(CommonUtil.arrayList(obj, inst, noobj()), MACH_STATELESS_MONAD_TID, null);
+    /// //////////////////////////////////////////////////////////////////////////////////////
+    
+    public static PCMonad pcmonad(final Obj obj, final Inst inst, final Call code) {
+        return new BasicPCMonad(lst(CommonUtil.arrayList(obj, inst, noobj(), code)), MACH_BASIC_MONAD_TID, null);
     }
 
-    public static Monad monad(final Obj obj) {
-        return monad(obj, noobj());
+    public static PCMonad monad(final Obj obj) {
+        return pcmonad(obj, noobj(), noobj());
     }
 }

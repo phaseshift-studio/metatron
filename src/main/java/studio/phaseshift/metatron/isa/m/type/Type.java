@@ -40,9 +40,7 @@ import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
-import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 public interface Type extends Obj {
 
@@ -134,6 +132,10 @@ public interface Type extends Obj {
             return this.test(rhs.dom());
         if (!rhs.isType())
             return false;
+        if (null != this.vid() &&
+                this.vid().test(rhs.vid()) &&
+                (!rhs.asType().hasPredicate() || (Objects.equals(this.predicate(), rhs.asType().predicate()))))
+            return true;
         if (!this.c().within(rhs.c()))
             return false;
         // if(rhs.asType().parentType()!= null && !this.test(rhs.asType().parentType()))
@@ -230,9 +232,9 @@ public interface Type extends Obj {
     final class TypeType {
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
-                    instC(RSHIFT_INST_TID.dom(TYPE_TID).rng(ALL_STAR), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(inst.arg(0).orElse((Obj) uri(ALL)).stream().flatMap(u -> rec(
-                            uri("pred"), lhs.asType().hasPredicate() ? lhs.asType().predicate() : noobj(),
-                            uri("cons"), lhs.asType().hasConstructor() ? lhs.asType().constructor() : noobj()).at(u).stream())))
+                    //        instC(RSHIFT_INST_TID.dom(TYPE_TID).rng(ALL_STAR), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(inst.arg(0).orElse((Obj) uri(ALL)).stream().flatMap(u -> rec(
+                    //            uri("pred"), lhs.asType().hasPredicate() ? lhs.asType().predicate() : noobj(),
+                    //           uri("cons"), lhs.asType().hasConstructor() ? lhs.asType().constructor() : noobj()).at(u).stream())))
             ));
         }
     }
@@ -295,7 +297,7 @@ public interface Type extends Obj {
         }
 
         public Builder predicate(final BiFunction<Obj, Inst, Obj> predicate) {
-            if(null == this.vid)
+            if (null == this.vid)
                 throw MTronException.of("vid must be set prior to specifying predicate");
             return this.predicate(instC(this.vid.extend("pred").dom(ALL.maybe()).rng(this.vid), lst(), predicate));
         }
@@ -310,13 +312,13 @@ public interface Type extends Obj {
         }
 
         public Builder constructor(final Function<Obj, Obj> function) {
-            if(null == this.vid)
+            if (null == this.vid)
                 throw MTronException.of("vid must be set prior to specifying constructor");
             return this.constructor(instC(this.vid.extend("cons").dom(ALL.maybe()).rng(this.vid), lst(T(ALL)), (lhs, inst) -> function.apply(inst.arg(0))));
         }
 
         public Builder constructor(final Supplier<Obj> supplier) {
-            if(null == this.vid)
+            if (null == this.vid)
                 throw MTronException.of("vid must be set prior to specifying constructor");
             return this.constructor(instC(this.vid.extend("cons").dom(ALL.maybe()).rng(this.vid), lst(), (lhs, inst) -> supplier.get()));
         }
@@ -337,7 +339,7 @@ public interface Type extends Obj {
         }
 
         public Type create(final Set<Type> typeSet, final Set<Inst> instSet) {
-          //  LOG.info("installing %s type", this.vid);
+            //  LOG.info("installing %s type", this.vid);
             final Type type = this.create();
             typeSet.add(type);
             instSet.addAll(this.insts);

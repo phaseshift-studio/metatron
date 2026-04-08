@@ -19,18 +19,18 @@
 package studio.phaseshift.metatron.isa.mach.type.monad;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.mach.type.Monad;
+import studio.phaseshift.metatron.isa.mach.type.PCMonad;
 import studio.phaseshift.metatron.util.MTronException;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public abstract class AbstractMonad implements Monad {
+public abstract class AbstractPCMonad implements PCMonad {
 
     protected fURI tid;
     protected fURI vid;
 
-    public AbstractMonad(final fURI tid, final fURI vid) {
+    public AbstractPCMonad(final fURI tid, final fURI vid) {
         this.tid = tid;
         this.vid = vid;
     }
@@ -46,40 +46,40 @@ public abstract class AbstractMonad implements Monad {
     }
 
     @Override
-    public Monad tid(final fURI tid) {
+    public PCMonad tid(final fURI tid) {
         return this.clone(this.jvm(), tid, this.vid());
     }
 
     @Override
-    public Monad vid(final fURI vid) {
+    public PCMonad vid(final fURI vid) {
         return this.clone(this.jvm(), this.tid(), vid);
     }
 
     @Override
-    public Monad jvm(final Object jvm) {
+    public PCMonad jvm(final Object jvm) {
         return this.clone(jvm, this.tid(), this.vid());
     }
 
     @Override
     public boolean equals(final Object other) {
-        return Monad.Helpers.monadEquals(this, other);
+        return PCMonad.Helpers.monadEquals(this, other);
     }
 
     @Override
     public int hashCode() {
-        return Monad.Helpers.monadHashCode(this);
+        return PCMonad.Helpers.monadHashCode(this);
     }
 
 
     @Override
     public String toString() {
-        return Monad.Helpers.monadToString(this);
+        return PCMonad.Helpers.monadToString(this);
     }
 
     @Override
-    public Monad clone() {
+    public PCMonad clone() {
         try {
-            return (Monad) super.clone();
+            return (PCMonad) super.clone();
         } catch (final CloneNotSupportedException e) {
             throw MTronException.of(e);
         }
