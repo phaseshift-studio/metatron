@@ -1,3 +1,6 @@
+[== boot args ==];
+[host=><ws://0.0.0.0:8999>]
+[===============];
 [== metatron example boot ==];
 print("""
 {{y}} ____    ___    ___   ______    ___ ___  ______  ____    ___   ____  
@@ -36,7 +39,7 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
    
 [== mount computing spaces ==];
  mem::[pattern   => /usr/#,                                 
-       q         => [subq::[=>]]]@/sys/space/usr;
+       q         => [subq::[=>],incrq::[=>]]]@/sys/space/usr;
  /usr/ai/pattern/template -> [think=>[to=>print(_)],response=>[to=>print(_)],memory=>[from=>/usr/ai/memory]];
        
  mem::[pattern   => /shared/#,
@@ -127,6 +130,7 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
                        
 [== load user console ==]
 console::[        => ]@/sys/console;
+*openai:gpt-4o-2024-11-20 + [think=>print(_),response=>[to=>print(_)],memory=>!*/usr/ai/memory].to(agent);
 *boot/args.print(_)
 
  

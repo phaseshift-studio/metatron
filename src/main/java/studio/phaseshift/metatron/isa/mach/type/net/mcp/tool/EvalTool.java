@@ -50,7 +50,7 @@ public class EvalTool {
 
     @McpHandler
     public Obj execute() {
-        LOG.info("evaluating code: %s", this.code);
+        LOG.debug("evaluating code: %s", this.code);
         return mParser.eval(this.code);
     }
 }

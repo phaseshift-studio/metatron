@@ -61,8 +61,7 @@ import java.util.function.Supplier;
 
 import static org.jline.keymap.KeyMap.*;
 import static studio.phaseshift.metatron.BootLoader.BOOTING;
-import static studio.phaseshift.metatron.Tokens.ENTRY;
-import static studio.phaseshift.metatron.Tokens.TIME;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
@@ -79,7 +78,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.mach.machInstSet.FILE_TID_STRING;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_ISA_TID;
 
 public class Console extends JRec<Console> implements Closeable, Runnable {
@@ -581,6 +579,29 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     }
 
     protected void executeMtron(final String line) {
+        /// ///////////////////////////////////////////////////
+        ////////////////// PANEL SUBSCRIPTIONS ////////////////
+        /// ///////////////////////////////////////////////////
+        if (line.trim().startsWith(":" + SUBQ)) {
+            final String strip = line.substring(5).trim();
+            final fURI subURI = strip.isEmpty() ?
+                    this.vid().extend("pane").extend(this.activePane.id() + "") :
+                    f(strip);
+            final Pane pane = this.getAllPanes()
+                    .stream()
+                    .filter(p -> p.id() == this.activePane.id())
+                    .findFirst()
+                    .orElse(null);
+            if (pane == null) {
+                LOG.error("unable to find active pane: %d", this.activePane.id());
+            } else {
+                pane.unsubscribe();
+                pane.vid(subURI);
+                pane.subscribe();
+            }
+            return;
+        }
+        /// /////////////////////////////////////////////////////
         CommonUtil.splitOnNonQuotedSequence(line, ';', false).forEach(l -> {
             try {
                 final Obj parseResult = mParser.parse(l);

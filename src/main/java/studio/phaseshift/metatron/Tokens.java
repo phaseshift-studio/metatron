@@ -57,6 +57,8 @@ public final class Tokens {
     public static final String TIME = "time";
     public static final String ENTRY = "entry";
     public static final String ID = "id";
+    public static final String IN = "in";
+    public static final String OUT = "out";
     public static final String COEFFICIENT = "coefficient";
     public static final String QUERY = "query";
     public static final String DOM = "dom";

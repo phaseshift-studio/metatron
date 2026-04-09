@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.isa.mach.io.type.ObjSQLSerializer;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.sql.*;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
@@ -264,7 +265,7 @@ public class tbleInstSet extends AbstractInstSet {
                                         final java.sql.ResultSetMetaData metaData = rs.getMetaData();
                                         Obj result = objs0();
                                         while (rs.next()) {
-                                            final java.util.Map<Obj, Obj> rowMap = new java.util.LinkedHashMap<>();
+                                            final Map<Obj, Obj> rowMap = new LinkedHashMap<>();
                                             for (int i = 1; i <= metaData.getColumnCount(); i++) {
                                                 final String colName = metaData.getColumnName(i);
                                                 final Object value = rs.getObject(i);

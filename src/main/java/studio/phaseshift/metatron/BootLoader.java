@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron;
 
-import org.jspecify.annotations.NonNull;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.Space;
@@ -37,17 +36,16 @@ import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.router.BasicRouter;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.util.IteratorUtil;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.AbstractMap;
-import java.util.Comparator;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
@@ -123,6 +121,27 @@ public class BootLoader implements Rec, Feature.SelfClone {
             if (args.length > 0)
                 LOG.info("unparsed boot args:\n%s", args[0]);
             ARGS = args.length > 0 ? mParser.parse(args[0]).as() : rec();
+            if (ARGS.has(BOOT)) {
+                final Path bootPath = Paths.get(f(Paths.get("").toAbsolutePath().normalize().toString()).extend(ARGS.at(BOOT).uriValue()).toString());
+                fsSpace.makeFile(bootPath).vid(f("boot/file"));
+                try (final FileInputStream bootReader = new FileInputStream(bootPath.toFile())) {
+                    final List<String> bootLines = Arrays.asList(new String(bootReader.readAllBytes()).split("\n"));
+                    final int argsStart = IteratorUtil.indexedStream(bootLines.iterator()).filter(x -> x.get1().startsWith("[== boot args ==]")).map(x -> x.get0()).findFirst().orElse(-1);
+                    if (argsStart != -1) {
+                        final int argsEnd = IteratorUtil.indexedStream(bootLines.iterator()).filter(x -> x.get1().startsWith("[===============]")).map(x -> x.get0()).findFirst().orElse(-1);
+                        if (argsEnd != -1) {
+                            final List<String> bootArgs = bootLines.subList(argsStart + 1, argsEnd);
+                            LOG.info("header boot args:\n%s", String.join("\n", bootArgs));
+                            ARGS.jvm().putAll(mParser.parse(String.join("\n", bootArgs)).as().jvmAs());
+                        } else {
+                            LOG.warn("boot args section not properly closed in %s", bootPath);
+                        }
+                    }
+                } catch (IOException e) {
+                    LOG.error(e);
+                    System.exit(0);
+                }
+            }
             BootLoader.load(ARGS);
         }
     }
@@ -130,7 +149,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
     public static void load(final Rec args) {
         if (BOOTING) {
             /// /// PARSING OF BOOT ARGUMENT REC /// ///
-            LOG.info("parsed boot args:\n%s", args);
+            LOG.info("final boot args:\n%s", args);
             if (args.has(BOOT))
                 args.at(uri(BOOT), f(Paths.get("").toAbsolutePath().normalize().toString()).extend(args.at(BOOT).uriValue()).toUri(), MUTABLE);
             LogObj.setSLF4J(args.has(uri("log")) ? args.at(uri("log")).uriValue().toString() : "info");
@@ -162,7 +181,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
             ROUTER = new BasicRouter(localAuthority, SYS_VID.extend("router"));
             sysSpace.write(ROUTER.vid(), ROUTER);
             Router.global().addSpace(sysSpace.self(sysSpace.jvm(), sysSpace.tid(), SYS_VID).as());
-            LOG.debug("router location: %s",ROUTER.vid());
+            LOG.debug("router location: %s", ROUTER.vid());
             ///  LOAD SYSTEM ENVIRONMENTAL VARIABLES
             System.getenv().entrySet().stream()
                     .map(kv -> new AbstractMap.SimpleEntry<>(SYS_VID.extend("env").extend(kv.getKey()), str(kv.getValue())))

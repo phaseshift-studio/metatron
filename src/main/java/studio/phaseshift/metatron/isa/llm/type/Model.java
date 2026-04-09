@@ -53,6 +53,7 @@ import java.util.stream.Stream;
 
 import static dev.langchain4j.internal.Json.fromJson;
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.DOCQ;
 import static studio.phaseshift.metatron.furi.q.QCollection.Doc.doc;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
@@ -68,6 +69,7 @@ import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -100,18 +102,22 @@ public class Model extends MRec {
     }
 
     public Obj processThought(final Str thought) {
-        return this.at(THINK).orElse(rec0()).at(TO).apply(thought);
+        return this.at(THINK).apply(thought);
     }
 
     public Obj processResponse(final Str response) {
-        final Obj result = this.at(RESPONSE).orElse(rec0()).has(FORMAT) ?
+        boolean hasFormat = this.at(RESPONSE).orElse(rec0()).has(FORMAT);
+        final Obj result = hasFormat ?
                 ObjSimpleJSONSerializer.single().inputBytes(ByteBuffer.wrap(response.strValue().getBytes(StandardCharsets.UTF_8))) :
                 response;
-        return this.at(RESPONSE).orElse(rec0()).at(TO).apply(result);
+        //if (hasFormat && !this.fetchMemory().orElse(lst0()).isEmpty())
+         //   this.fetchMemory().asLst().lstValue().getLast().asRec().recValue().put(uri(FORMAT), result);
+        this.asRec().at(f(RESPONSE).extend(TO)).apply(result);
+        return result;
     }
 
     public Obj fetchMemory() {
-        return this.at(MEMORY).orElse(rec0()).at(FROM);
+        return this.at(MEMORY).orElse(lst0());
     }
 
     public Obj processMemory(final ChatMessage message) {
@@ -125,6 +131,18 @@ public class Model extends MRec {
 
     public Optional<Lst> skills() {
         return Optional.<Obj>ofNullable(this.at(SKILL).orElse(null)).map(o -> o.autoResolve(this)).map(Obj::asLst);
+    }
+
+    public Optional<Rec> responseFormat() {
+        return Optional.<Obj>ofNullable(this.at(RESPONSE).orElse(null)).map(o -> o.autoResolve(this)).map(Obj::asRec);
+    }
+
+    public Obj memory() {
+        return this.at(MEMORY);
+    }
+
+    public Optional<Rec> lastResponse() {
+        return Optional.<Obj>ofNullable(this.at(RESPONSE).orElse(null)).map(o -> o.autoResolve(this)).map(Obj::asRec);
     }
 
     /**
@@ -148,12 +166,19 @@ public class Model extends MRec {
         //////////////////////////////////////////
         /////////////// MEMORY ///////////////////
         //////////////////////////////////////////
-        if (!this.fetchMemory().isNoObj())
-            service.chatMemory(MessageWindowChatMemory.builder()
-                    .maxMessages(Router.readFromSpace(this.fetchMemory().uriValue().extend(MAX)).orElse(jnt(15)).intValue().intValue())
-                    .id(this.fetchMemory().uriValue())
-                    .chatMemoryStore(SpaceChatMemoryStore.single())
-                    .build());
+        if (!this.fetchMemory().isNoObj()) {
+            final fURI memoryVID = this.fetchMemory().vid();
+            if (memoryVID == null)
+                this.logger().warn("llm memory has no vid (ignoring): %s", this.fetchMemory());
+            else {
+                service.chatMemory(MessageWindowChatMemory.builder()
+                        //.maxMessages(Router.readFromSpace(this.fetchMemory().uriValue().extend(MAX)).orElse(jnt(15)).intValue().intValue())
+                        .maxMessages(15)
+                        .id(this.fetchMemory().vid())
+                        .chatMemoryStore(SpaceChatMemoryStore.single())
+                        .build());
+            }
+        }
 
         //////////////////////////////////////////
         ///////////////  RESPONSE  ///////////////
@@ -220,6 +245,12 @@ public class Model extends MRec {
   /*  public Rec query(final Rec query) {
         this.agent()
     }*/
+
+    public Model do_(final String action, final Rec response) {
+        final Agent agent = this.agent().streamingChatModel(LLMFactory.createChatInteraction(this, response)).build();
+        agent.chat(action);
+        return this;
+    }
 
     public Model chat(final String message, final Inst onResponse) {
         BootLoader.getExecutor().submit(() -> {

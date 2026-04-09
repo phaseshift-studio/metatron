@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.mach.type.ui.graphitty;
 
 import org.jline.utils.AttributedString;
+import org.slf4j.event.Level;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjCleanStringSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
@@ -117,6 +118,10 @@ public class Graphitty {
     public static GraphittyLogger log(final Object source) {
         return source instanceof Obj && !(source instanceof Router) ? new GraphittyObjLogger((Obj) source) : new GraphittyLogger(source);
     }
+
+    /*    public static GraphittyLogger log(final Object source, final Level level) {
+        final GraphittyLogger logger = source instanceof Obj && !(source instanceof Router) ? new GraphittyObjLogger((Obj) source) : new GraphittyLogger(source);
+    }*/
 
     public static void out(final OutputStream out, final String f, final Object... args) {
         final Graphitty g = new Graphitty(out);

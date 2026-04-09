@@ -65,40 +65,41 @@ public class llmInstSet extends AbstractInstSet {
     public static final fURI LLM_SKILL_TID = LLM_ISA_TID.extend(SKILL);
     //public static final fURI MCP_TOOL_TID = LLM_ISA_TID.extend("mcp");
     // public static Obj MTRON_EVAL_TOOL = Model.Helper.mtronInstToolSpecification(ObjType.insts().stream().filter(i -> i.tid().equals(EVAL_INST_TID)).findFirst().orElse(null));    
-    public static Type LLM_MEMORY_TYPE = Type.Builder.build()
-            .tid(LST_TID)
-            .vid(LLM_MEMORY_TID)
-            .isaPredicate(lst())
-            .create();
+
     public static final fURI AI_MEMORY_TID = LLM_MEMORY_TID.extend("ai");
     public static Type LLM_AI_MEMORY_TYPE = Type.Builder.build()
             .tid(REC_TID)
             .vid(AI_MEMORY_TID)
             .isaPredicate(rec(
-                    uri(TEXT), STR_TYPE,
-                    uri(THINKING), INT_TYPE,
-                    uri("attributes"), REC_TYPE,
-                    uri(TYPE), uri("AI")))
+                    uri(TEXT).maybe().asUri(), STR_TYPE,
+                    uri(THINKING).maybe(), INT_TYPE,
+                    uri("attributes").maybe(), REC_TYPE,
+                    uri(TYPE), uri(AI)))
             .create();
     public static final fURI USER_MEMORY_TID = LLM_MEMORY_TID.extend("user");
     public static Type LLM_USER_MEMORY_TYPE = Type.Builder.build()
             .tid(REC_TID)
             .vid(USER_MEMORY_TID)
             .isaPredicate(rec(
-                    uri("contents"), LST_TYPE,
-                    uri(TYPE), uri("USER")))
+                    uri("contents"), rec(uri(TEXT), STR_TYPE),
+                    uri(TYPE), uri(USER)))
             .create();
     public static final Type LLM_TOOL_TYPE = Type.Builder.build().tid(REC_TID).vid(LLM_TOOL_TID).isaPredicate(rec(
             uri(INST), T(ALL),
             uri(NAME), URI_TYPE,
             uri(DESC), STR_TYPE,
             uri(ARG).maybe(), rec(URI_TYPE, T(ALL)).maybe())).create();
-
     public static final Type LLM_SKILL_TYPE = Type.Builder.build().tid(REC_TID).vid(LLM_SKILL_TID).isaPredicate(rec(
             uri(NAME), URI_TYPE,
             uri(DESC), STR_TYPE,
             uri(CONTENT).maybe(), STR_TYPE,
             uri(ENTRY).maybe(), lst(rec(uri(DIR), URI_TYPE, uri(CONTENT), STR_TYPE)))).create();
+    public static Type LLM_MEMORY_TYPE = Type.Builder.build()
+            .tid(LST_TID)
+            .vid(LLM_MEMORY_TID)
+            .isaPredicate(LST_TYPE)
+            .create();
+
 
     public llmInstSet() {
         super(mutableMap(uri(PATTERN), uri(LLM_ISA_TID.extend(ALL))), INSTSET_TID, LLM_ISA_TID);
@@ -121,13 +122,13 @@ public class llmInstSet extends AbstractInstSet {
                                         isaPredicate(rec(
                                                 uri(PROVIDER), LLM_CATALOG_SPACE_TYPE,
                                                 uri(NAME), URI_TYPE,
-                                                uri(THINK).maybe(), rec(uri(TO).maybe().asUri(), T(ALL)),
-                                                uri(RESPONSE).maybe(), rec(uri(TO).maybe().asUri(), T(ALL), uri(FORMAT).maybe(), T(ALL)),
+                                                uri(THINK).maybe(), T(ALL),
+                                                uri(RESPONSE).maybe(), rec(uri(TO).maybe().asUri(), T(ALL), uri(FORMAT).maybe(), T(ALL)).maybe(),
                                                 uri(SIZE).maybe().asUri(), BYTE_TYPE,
-                                                uri(MEMORY).maybe(), rec(uri(FROM).maybe().asUri(), URI_TYPE),
+                                                uri(MEMORY).maybe(), LLM_MEMORY_TYPE.maybe(),
                                                 uri(DESC).maybe(), STR_TYPE,
-                                                uri(SKILL).maybe(), LST_TYPE,
-                                                uri(TOOL).maybe(), LST_TYPE)).create(),
+                                                uri(SKILL).maybe(), LST_TYPE.maybe(),//lst(LLM_SKILL_TYPE).maybe(),
+                                                uri(TOOL).maybe(), lst(LLM_TOOL_TYPE).maybe())).create(),
                                 "a large language model", "the model construction", Map.of(
                                         uri(NAME), "the name of the model",
                                         uri(HOST).maybe(), "the provider endpoint",
@@ -144,14 +145,13 @@ public class llmInstSet extends AbstractInstSet {
                                 "a mtron encoding of the specified skill",
                                 Map.of(jnt(0), "the skill type"), "maps a directory to an llm skill where the dir follows the standard SKILL.md structure"),
                         docWrap(instC(LLM_INST_TID.extend("chat").dom(MODEL_TID).rng(ALL.maybe()),
-                                        lst(STR_TYPE),
-                                        (lhs, inst) -> model(lhs.asRec()).chat(inst.arg(0).strValue())),
+                                        lst(STR_TYPE, T(ALL.maybe())),
+                                        (lhs, inst) -> model(inst.arg(1).isNoObj() ? lhs.asRec() : lhs.vid(null).asRec().plus(rec(uri(RESPONSE),rec(uri(FORMAT),inst.arg(1))))).chat(inst.arg(0).strValue())),
                                 "a model to chat with",  // dom
                                 "the models chat response", // rng
-                                Map.of(jnt(0), "the message to send the model"), // args
+                                Map.of(jnt(0), "the message to send the model",jnt(1),"an optional response format"), // args
                                 "chat with the lhs model", // desc
-                                "*<ollama:qwen3:latest>+[response=>[to=>print(_)],think=>[to=>print(_)]].chat('what is a database query language?')"))))
-        ;
+                                "*<ollama:qwen3:latest>+[response=>[to=>print(_)],think=>to(/usr/ai/thoughts?incrq)].chat('what is a database query language?')"))));
         docWrap(this, "large language model emerge from the metatron");
         super.setup();
     }

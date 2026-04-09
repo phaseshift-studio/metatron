@@ -30,10 +30,12 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import java.nio.ByteBuffer;
 import java.util.Map;
 
-import static studio.phaseshift.metatron.Tokens.NAME;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.type.net.MServer.MSERVER_TID;
 import static studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty.sillyPrint;
@@ -97,6 +99,7 @@ public class NativeMetatronProtocolHandler extends MRec implements MServerProtoc
         LOG.debug("received from %s byte buffer [length:%d]", conn, message.array().length);
         Router.global().stats().ioStats().incrBytesRecv(message.array().length);
         try {
+            Router.global().write(conn.<fURI>getAttachment().extend(IN), str(new String(message.array())));
             final Obj obj = this.serializer.inputBytes(message);
             processObj(conn, obj);
         } catch (final Exception e) {
@@ -112,7 +115,7 @@ public class NativeMetatronProtocolHandler extends MRec implements MServerProtoc
         try {
             LOG.debug("processing %s for {{b}}%s{{/b}}", obj, conn);
             result = obj.apply();
-
+            Router.global().write(conn.<fURI>getAttachment().extend(OUT),  result);
             final ByteBuffer bytes = result.isNoObj() ?
                     (ByteBuffer) this.serializer.writeNoObj(noobj()) :
                     this.serializer.outputBytes(result);

@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -29,6 +29,7 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -88,6 +89,10 @@ public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
         return this;
     }
 
+    protected String localLog(final Level level, final Object f, final Object... args) {
+        return this.makeMessage(true, f, args);
+    }
+
     private GraphittyLogger otherLevel(final OtherLevel level, final Object f, final Object... args) {
         if (OtherLevel.NONE == level)
             System.out.print(this.makeMessage(false, f, args));
@@ -95,6 +100,14 @@ public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
             throw MTronException.of(f, args);
         }
         return this;
+    }
+
+    public Optional<String> localInfo(final Object f, final Object... args) {
+        return Optional.ofNullable(this.logger().isEnabledForLevel(Level.INFO) ? this.localLog(Level.INFO, f, args) : null);
+    }
+
+    public Optional<String> localError(final Object f, final Object... args) {
+        return Optional.ofNullable(this.logger().isEnabledForLevel(Level.ERROR) ? this.localLog(Level.ERROR, f, args) : null);
     }
 
     public GraphittyLogger info(final Object f, final Object... args) {

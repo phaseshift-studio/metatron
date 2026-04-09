@@ -119,7 +119,12 @@ public final class LLMFactory {
         };
     }
 
-
+    public static StreamingChatModel createChatInteraction(final Rec model, Rec responseFormat) {
+        final Rec modelFree = model.vid(null);
+        modelFree.at(RESPONSE, responseFormat,MUTABLE);
+        return createChatInteraction(modelFree, modelFree.at(NAME).uriValue().toString());
+    }
+    
     public static StreamingChatModel createChatInteraction(final Rec model, String modelName) {
         final fURI provider = model.at(f(PROVIDER)).asRec().at(NAME).uriValue();
         final String host = model.at(f(PROVIDER)).asRec().at(HOST).uriValue().toString();
@@ -135,7 +140,7 @@ public final class LLMFactory {
                     .think(thinking)
                     .returnThinking(thinking)
                     .responseFormat(!responseFormat.isNoObj() && !responseFormat.isEmpty() ? new ResponseFormat.Builder()
-                            .jsonSchema(new JsonSchema.Builder().rootElement(Model.Helper.objToSchema(REC_TYPE, responseFormat, RESPONSE)).build())
+                            .jsonSchema(new JsonSchema.Builder().name(RESPONSE).rootElement(Model.Helper.objToSchema(REC_TYPE, responseFormat, RESPONSE)).build())
                             .type(ResponseFormatType.JSON).build() : null)
                     .build();
 
@@ -155,7 +160,7 @@ public final class LLMFactory {
                         .timeout(Duration.ofSeconds(60))
                         .logger(Graphitty.log(OpenAiStreamingChatModel.class).logger())
                         .responseFormat(!responseFormat.isNoObj() && !responseFormat.isEmpty() ? new ResponseFormat.Builder()
-                                .jsonSchema(new JsonSchema.Builder().rootElement(Model.Helper.objToSchema(REC_TYPE, responseFormat, RESPONSE)).build())
+                                .jsonSchema(new JsonSchema.Builder().name(RESPONSE).rootElement(Model.Helper.objToSchema(REC_TYPE, responseFormat, RESPONSE)).build())
                                 .type(ResponseFormatType.JSON).build() : null)
                         .build();
             }
@@ -168,7 +173,7 @@ public final class LLMFactory {
                     .logResponses(true)
                     .logger(Graphitty.log(AnthropicStreamingChatModel.class).logger())
                     .responseFormat(!responseFormat.isNoObj() && !responseFormat.isEmpty() ? new ResponseFormat.Builder()
-                            .jsonSchema(new JsonSchema.Builder().rootElement(Model.Helper.objToSchema(REC_TYPE, responseFormat, RESPONSE)).build())
+                            .jsonSchema(new JsonSchema.Builder().name(RESPONSE).rootElement(Model.Helper.objToSchema(REC_TYPE, responseFormat, RESPONSE)).build())
                             .type(ResponseFormatType.JSON).build() : null)
                     .build();
 

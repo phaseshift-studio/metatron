@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -34,9 +34,9 @@ import java.util.stream.Collectors;
 
 import static dev.langchain4j.data.message.ChatMessageDeserializer.messageFromJson;
 import static dev.langchain4j.data.message.ChatMessageSerializer.messagesToJson;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_MEMORY_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst0;
-import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -55,7 +55,7 @@ public class SpaceChatMemoryStore implements ChatMemoryStore {
     }
 
     public List<ChatMessage> getMessages(final Object memoryId) {
-        final Lst messages = Router.readFromSpace((fURI) memoryId).orElse(lst0());
+        final Lst messages = Router.readFromSpace((fURI) memoryId).orSupply(() -> lst(new ArrayList<>(), LLM_MEMORY_TID, (fURI) memoryId));
         final List<ChatMessage> llmMessages = messages.isEmpty() ?
                 new ArrayList<>() :
                 messages.elements().map(e -> messageFromJson(ObjSimpleJSONSerializer.single().write(e).toString())).collect(Collectors.toCollection(ArrayList::new));
@@ -68,11 +68,7 @@ public class SpaceChatMemoryStore implements ChatMemoryStore {
         final String json = messagesToJson(messages);
         final Obj obj = ObjSimpleJSONSerializer.parse(json);//.as(OLLM_AI_MEMORY);
         LOG.debug("updating messages for %s: %s", memoryId, obj);
-        //obj.clone(obj.asLst().elements().map(e -> e.asRec().at(TYPE).equals(uri(AI)) ? e.as(OLLM_AI_MEMORY) : e.as(OLLM_USER_MEMORY)).toList(),LST_TID,(fURI))
-        Router.writeToSpace((fURI) memoryId, obj);/* obj.tid(
-                obj.asRec().at(TYPE).uriValue().classAgnosticEquals(AI) ?
-                        OLLM_AI_MEMORY_TID :
-                        OLLM_USER_MEMORY_TID));*/
+        obj.vid((fURI) memoryId);
     }
 
     @Override

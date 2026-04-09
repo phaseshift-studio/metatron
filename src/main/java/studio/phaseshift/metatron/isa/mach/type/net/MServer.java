@@ -47,7 +47,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
+import static studio.phaseshift.metatron.Tokens.OUT;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_ISA_TID;
@@ -153,27 +153,29 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Rec 
     }
 
     @Override
-    public void onOpen(final WebSocket ws, final ClientHandshake handshake) {
+    public void onOpen(final WebSocket conn, final ClientHandshake handshake) {
         // ws.setAttachment("ws://" + ws.getRemoteSocketAddress());
-        LOG.debug("new connection from %s", ws.getRemoteSocketAddress());
-        ws.setAttachment(this.vid().extend("ws").extend(sessionCounter.incrementAndGet() + ""));
+        LOG.debug("new connection from %s", conn.getRemoteSocketAddress());
+        conn.setAttachment(this.vid().extend("ws").extend(sessionCounter.incrementAndGet() + ""));
+        LOG.localInfo("new connection from %s", conn.getRemoteSocketAddress()).ifPresent(msg -> Router.global().write(conn.<fURI>getAttachment().extend(OUT), str(msg)));
         this.running.set(true);
         // Notify all protocol handlers of new connection
-        protocolHandlers.forEach(handler -> handler.onConnectionOpen(ws));
+        protocolHandlers.forEach(handler -> handler.onConnectionOpen(conn));
         Router.global().stats().ioStats().setConnections(protocolHandlers.stream().mapToInt(MServerProtocolHandler::connections).sum());
     }
 
     @Override
     public void onClose(final WebSocket conn, final int code, final String reason, final boolean remote) {
         // Notify all protocol handlers of connection close
+        LOG.localInfo("closed connection from %s", conn.getRemoteSocketAddress()).ifPresent(msg -> Router.global().write(conn.<fURI>getAttachment().extend(OUT), str(msg)));
         protocolHandlers.forEach(handler -> handler.onConnectionClose(conn, code, reason));
         Router.global().stats().ioStats().setConnections(protocolHandlers.stream().mapToInt(MServerProtocolHandler::connections).sum());
+
     }
 
     @Override
     public void onMessage(final WebSocket conn, final String message) {
         //LOG.debug("received from %s string [length:%d]", conn.getAttachment(), message.length());
-        Router.global().write(conn.<fURI>getAttachment(), str(message));
         // Try each protocol handler until one accepts the message
         for (final MServerProtocolHandler handler : protocolHandlers) {
             if (handler.canHandle(message)) {
@@ -191,7 +193,6 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Rec 
     @Override
     public void onMessage(final WebSocket conn, final ByteBuffer message) {
         //  LOG.debug("received from %s byte buffer [length:%d]", conn.getAttachment(), message.array().length);
-        Router.global().write(conn.<fURI>getAttachment(), ObjByteBufferSerializer.singleton().inputBytes(message));
         // Try each protocol handler until one accepts the message
         for (final MServerProtocolHandler handler : protocolHandlers) {
             if (handler.canHandle(message)) {
@@ -208,8 +209,9 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Rec 
 
     @Override
     public void onError(final WebSocket conn, final Exception ex) {
-        if (null != conn)
-            Router.global().write(conn.<fURI>getAttachment(), fail(ex));
+        if (null != conn) {
+            LOG.localError("error on connection %s: %s", conn.getRemoteSocketAddress(), ex).ifPresent(msg -> Router.global().write(conn.<fURI>getAttachment().extend(OUT), str(msg)));
+        }
         LOG.error("an error occurred on connection %s: %s", null == conn ? "<none>" : conn.getAttachment(), ex);
         if (null == conn || ex instanceof BindException) {
             this.close();

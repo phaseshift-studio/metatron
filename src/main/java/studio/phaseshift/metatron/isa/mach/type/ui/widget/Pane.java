@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.mach.type.ui.widget;
 
 import org.jline.terminal.Terminal;
+import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Router;
@@ -31,14 +32,20 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.Tokens.ON_RECV;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.NOOBJ;
-import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.furi.q.QCollection.SUBSCRIPTION_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
  * A Pane is a leaf node in the pane tree - an actual terminal region with:
@@ -65,6 +72,7 @@ public class Pane implements PaneNode, Stylable<Pane> {
     private static final int DEFAULT_MAX_OUTPUT_LINES = 1000;
 
     private final int id;
+    private fURI vid;
     private Console.Language language;
     private Machine machine;
     private final List<String> outputBuffer;
@@ -83,13 +91,10 @@ public class Pane implements PaneNode, Stylable<Pane> {
 
     public Pane(final Console.Language language, final int maxOutputLines) {
         this.id = ID_COUNTER.getAndIncrement();
+        this.vid = f("" + this.id);
         this.language = language;
         this.maxOutputLines = maxOutputLines;
         this.outputBuffer = Collections.synchronizedList(new ArrayList<>());
-        /*Router.global().write(Console.CONSOLE_TID + "/" + this.id, instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ), lst(), (lhs, inst) -> {
-            this.outputBuffer.add(lhs.asLst().at(1).toString());
-            return noobj();
-        }));*/
         this.machine = null;
         // Default to simple border style (ASCII: +, |, -) for visibility
         this.style = this.style().border(Border.simple).apply().getStyle();
@@ -106,8 +111,38 @@ public class Pane implements PaneNode, Stylable<Pane> {
         return this.style;
     }
 
+    public Pane vid(final fURI vid) {
+        this.vid = vid;
+        return this;
+    }
+
+    public fURI vid() {
+        return this.vid;
+    }
+
     public void setConsole(final Console console) {
         this.console = console;
+    }
+    
+    public void unsubscribe() {
+        Router.global().write(this.vid().extend(IN).addQ(SUBQ), noobj());
+        Router.global().write(this.vid().extend(OUT).addQ(SUBQ), noobj());
+    }
+    public void subscribe() {
+        Router.global().write(this.vid().extend(IN).addQ(SUBQ), rec(Map.of(
+                uri(TARGET), uri(this.vid().extend(IN)),
+                uri(ON_RECV), instC(f("in_pane").dom(ALL).rng(NOOBJ_TID.zero()), lst(), (lhs, inst) -> {
+                    this.appendInput(lhs.asLst().at(1));
+                    this.console.renderPanes();
+                    return noobj();
+                })), SUBSCRIPTION_TID, null));
+        Router.global().write(this.vid().extend(OUT).addQ(SUBQ), rec(Map.of(
+                uri(TARGET), uri(this.vid().extend(OUT)),
+                uri(ON_RECV), instC(f("out_pane").dom(ALL).rng(NOOBJ_TID.zero()), lst(), (lhs, inst) -> {
+                    this.appendResult(lhs.asLst().at(1));
+                    this.console.renderPanes();
+                    return noobj();
+                })), SUBSCRIPTION_TID, null));
     }
 
     public int id() {
@@ -155,6 +190,13 @@ public class Pane implements PaneNode, Stylable<Pane> {
         if (this.console != null) {
             this.console.requestRedraw();
         }
+    }
+
+    /**
+     * Append a result object to output (formatted with ==> and syntax highlighted). Thread-safe.
+     */
+    public void appendInput(final Obj input) {
+        this.appendOutput(this.prompt() + Highlighter.format(input.isStr() ? input.strValue() : input.toString()));
     }
 
     /**
@@ -212,15 +254,15 @@ public class Pane implements PaneNode, Stylable<Pane> {
 
         // Top border with pane ID
         final String header = isActive
-                ? Graphitty.string("{{[g]}}[%d]{{X}}".formatted(this.id))
-                : Graphitty.string("{{[b]}}[%d]{{X}}".formatted(this.id));
+                ? Graphitty.string("{{[g]}}[%s]{{X}}".formatted(this.vid))
+                : Graphitty.string("{{[b]}}[%s]{{X}}".formatted(this.vid));
         sb.append("\u001b[").append(startRow).append(";").append(startCol).append("H"); // Move cursor
         sb.append(Graphitty.string(borderColor));
         sb.append(border.topLeftCorner());
         sb.append("{{X}}");
         sb.append(header);
         sb.append(Graphitty.string(borderColor));
-        sb.append(border.topSide().repeat(Math.max(0, width - 5))); // -5 for corners + [id]
+        sb.append(border.topSide().repeat(Math.max(0, width - 4 - this.vid().toString().length()))); // -5 for corners + [id]
         sb.append(border.topRightCorner());
         sb.append("{{X}}");
 

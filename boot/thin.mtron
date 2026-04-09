@@ -1,0 +1,7 @@
+[== boot args ==];
+[host=><ws://127.0.0.1:8998>]
+[===============];
+[== mount instruction sets ==]
+print("{{y}}mounting instruction sets\n{{X}}");
+import(/m/mach/io);
+console::[remote=><ws://127.0.0.1:8999]@/sys/console;
