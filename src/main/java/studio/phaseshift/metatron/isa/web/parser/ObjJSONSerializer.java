@@ -21,10 +21,9 @@ package studio.phaseshift.metatron.isa.web.parser;
 import com.google.gson.*;
 import com.google.gson.stream.JsonReader;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.io.type.AbstractObjSerializer;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjCleanStringSerializer;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
@@ -68,7 +67,7 @@ public class ObjJSONSerializer extends AbstractObjSerializer<JsonElement> {
 
     private static final GraphittyLogger LOG = Graphitty.log(ObjJSONSerializer.class);
 
-    private static final ObjCleanStringSerializer SERIALIZER = new ObjCleanStringSerializer();
+    private static final ObjmtronSerializer SERIALIZER = new ObjmtronSerializer();
 
     private static final ObjJSONSerializer INSTANCE = new ObjJSONSerializer();
 
@@ -106,9 +105,9 @@ public class ObjJSONSerializer extends AbstractObjSerializer<JsonElement> {
                         } else if (bid.equals(STR_TID)) {
                             obj = str(jpstr, tid, null);
                         } else if (bid.equals(CODE_TID)) {
-                            obj = mParser.parse(jpstr);
+                            obj = ObjmtronSerializer.parse(jpstr);
                         } else if (bid.equals(M_ISA_INST_TID)) {
-                            obj = mParser.parse(jpstr).<Call>as().tryToInst().vid(null);
+                            obj = ObjmtronSerializer.parse(jpstr).<Call>as().tryToInst().vid(null);
                             if (null != tid) {
                                 if (tid.equals(AUTO_FROM_INST_TID)) {
                                     obj = auto_from_(obj.asUri()).tryToInst();

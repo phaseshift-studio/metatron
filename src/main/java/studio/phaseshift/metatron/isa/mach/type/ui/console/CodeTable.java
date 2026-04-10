@@ -19,7 +19,7 @@
 package studio.phaseshift.metatron.isa.mach.type.ui.console;
 
 import studio.phaseshift.metatron.isa.m.type.Code;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjCleanStringSerializer;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.ui.Border;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.AbstractWidget;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.Panel;
@@ -40,7 +40,7 @@ public class CodeTable extends AbstractWidget<CodeTable> {
     public CodeTable(final Code code) {
         this.code = code;
         this.table = new Table(List.of("code")).style().background("{{[b]}}").foreground("{{y}}").divider("{{r}}|").apply();
-        final String codeString = ObjCleanStringSerializer.prettyPrintCode(code);
+        final String codeString = ObjmtronSerializer.prettyPrintCode(code);
         for (final String line : codeString.split("\n")) {
             this.table.addRow(List.of(line.replace(" ", ".")));
         }

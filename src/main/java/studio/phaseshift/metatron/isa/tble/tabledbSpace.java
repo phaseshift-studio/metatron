@@ -21,10 +21,9 @@ package studio.phaseshift.metatron.isa.tble;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.Space;
-import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjCleanStringSerializer;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.isa.tble.schema.domain.ExistingTableSchema;
 import studio.phaseshift.metatron.isa.tble.schema.domain.SQLSchemaGenerator;
@@ -35,7 +34,6 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -44,7 +42,6 @@ import java.util.function.Function;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TID;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
@@ -172,14 +169,14 @@ public class tabledbSpace extends AbstractSpace<Connection> {
             final String dbProductName = sjvm.getMetaData().getDatabaseProductName().toLowerCase();
             if (dbProductName.contains("mariadb") || dbProductName.contains("mysql")) {
                 this.schema = new fURIAwareIndexedSchema();
-                // Use ObjCleanStringSerializer for fURIAwareIndexedSchema to avoid JSON parsing issues
-                this.serializer = this.at(uri(SERIALIZER)).orElse(new ObjCleanStringSerializer());
+                // Use ObjmtronSerializer for fURIAwareIndexedSchema to avoid JSON parsing issues
+                this.serializer = this.at(uri(SERIALIZER)).orElse(new ObjmtronSerializer());
                 LOG.info("detected {{b}}mariadb/mysql{{X}} - using {{g}}mqtt schema with clean string serializer");
             } else {
                 // Use TypedKeyValueSchema for isomorphic type-preserving storage
                 this.schema = new TypedKeyValueSchema();
                 // TypedKeyValueSchema handles serialization internally, but set a default anyway
-                this.serializer = this.at(uri(SERIALIZER)).orElse(new ObjCleanStringSerializer());
+                this.serializer = this.at(uri(SERIALIZER)).orElse(new ObjmtronSerializer());
                 LOG.info("detected {{b}}%s{{X}} - using {{g}}typed schema", dbProductName);
             }
             this.schema.initialize(sjvm);

@@ -28,9 +28,9 @@ import org.junit.jupiter.params.provider.ValueSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TestCategory;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjByteBufferSerializer;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.net.URI;
@@ -199,7 +199,7 @@ public class MServerTest extends AbstractMetatronTest {
                 LOG.debug("Connected, sending test object");
                 openLatch.countDown();
                 // Send a simple expression to evaluate
-                final Obj testObj = mParser.parse("1.plus(2)");
+                final Obj testObj = ObjmtronSerializer.parse("1.plus(2)");
                 final ByteBuffer buffer = serializer.outputBytes(testObj);
                 send(buffer);
             }
@@ -268,7 +268,7 @@ public class MServerTest extends AbstractMetatronTest {
             @Override
             public void onOpen(final ServerHandshake handshake) {
                 openLatch.countDown();
-                final Obj testObj = mParser.parse(expression.trim());
+                final Obj testObj = ObjmtronSerializer.parse(expression.trim());
                 final ByteBuffer buffer = serializer.outputBytes(testObj);
                 send(buffer);
             }
@@ -301,7 +301,7 @@ public class MServerTest extends AbstractMetatronTest {
 
         assertNotNull(receivedObj.get(), "Should receive response object");
 
-        final Obj expected = mParser.parse(expectedResult.trim());
+        final Obj expected = ObjmtronSerializer.parse(expectedResult.trim());
         assertTrue(receivedObj.get().stream().anyMatch(o -> o.equals(expected)),
                 String.format("Response should contain %s for expression %s, but got %s",
                         expected, expression, receivedObj.get()));
@@ -333,13 +333,13 @@ public class MServerTest extends AbstractMetatronTest {
         final CountDownLatch responseLatch = new CountDownLatch(1);
         final AtomicReference<Obj> receivedObj = new AtomicReference<>();
 
-        final Obj originalObj = mParser.parse(objString);
+        final Obj originalObj = ObjmtronSerializer.parse(objString);
 
         final WebSocketClient client = new WebSocketClient(URI.create(serverHost.toString())) {
             @Override
             public void onOpen(final ServerHandshake handshake) {
                 openLatch.countDown();
-                final Obj testObj = mParser.parse(objString);
+                final Obj testObj = ObjmtronSerializer.parse(objString);
                 final ByteBuffer buffer = serializer.outputBytes(testObj);
                 send(buffer);
             }
@@ -490,7 +490,7 @@ public class MServerTest extends AbstractMetatronTest {
                 public void onOpen(final ServerHandshake handshake) {
                     allOpenLatch.countDown();
                     // Each client sends a different expression
-                    final Obj testObj = mParser.parse(clientId + ".plus(10)");
+                    final Obj testObj = ObjmtronSerializer.parse(clientId + ".plus(10)");
                     final ByteBuffer buffer = serializer.outputBytes(testObj);
                     send(buffer);
                 }
@@ -560,7 +560,7 @@ public class MServerTest extends AbstractMetatronTest {
             @Override
             public void onOpen(final ServerHandshake handshake) {
                 nativeOpenLatch.countDown();
-                final Obj testObj = mParser.parse("100.plus(200)");
+                final Obj testObj = ObjmtronSerializer.parse("100.plus(200)");
                 send(serializer.outputBytes(testObj));
             }
 
@@ -784,7 +784,7 @@ public class MServerTest extends AbstractMetatronTest {
                 openLatch.countDown();
                 // Send multiple requests rapidly
                 for (int i = 0; i < requestCount; i++) {
-                    final Obj testObj = mParser.parse(i + ".plus(1)");
+                    final Obj testObj = ObjmtronSerializer.parse(i + ".plus(1)");
                     send(serializer.outputBytes(testObj));
                     sentCount++;
                 }

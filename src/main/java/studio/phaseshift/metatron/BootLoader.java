@@ -30,6 +30,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.impl.MFail;
 import studio.phaseshift.metatron.isa.mach.io.space.file.fsSpace;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.machInstSet;
 import studio.phaseshift.metatron.isa.mach.type.LogObj;
 import studio.phaseshift.metatron.isa.mach.type.Router;
@@ -112,7 +113,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
             System.exit(0);
         } else {
             try {
-                ARGS = args.length > 0 ? mParser.parse(args[0]).as() : rec();
+                ARGS = args.length > 0 ? ObjmtronSerializer.parse(args[0]).as() : rec();
                 LogObj.setSLF4J(ARGS.has(uri("log")) ? ARGS.at(uri("log")).uriValue().toString() : "info");
             } catch (final Exception e) {
                 LOG.error(e);
@@ -120,7 +121,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
             }
             if (args.length > 0)
                 LOG.info("unparsed boot args:\n%s", args[0]);
-            ARGS = args.length > 0 ? mParser.parse(args[0]).as() : rec();
+            ARGS = args.length > 0 ?  ObjmtronSerializer.parse(args[0]).as() : rec();
             if (ARGS.has(BOOT)) {
                 final Path bootPath = Paths.get(f(Paths.get("").toAbsolutePath().normalize().toString()).extend(ARGS.at(BOOT).uriValue()).toString());
                 fsSpace.makeFile(bootPath).vid(f("boot/file"));
@@ -132,7 +133,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
                         if (argsEnd != -1) {
                             final List<String> bootArgs = bootLines.subList(argsStart + 1, argsEnd);
                             LOG.info("header boot args:\n%s", String.join("\n", bootArgs));
-                            ARGS.jvm().putAll(mParser.parse(String.join("\n", bootArgs)).as().jvmAs());
+                            ARGS.jvm().putAll( ObjmtronSerializer.parse(String.join("\n", bootArgs)).as().jvmAs());
                         } else {
                             LOG.warn("boot args section not properly closed in %s", bootPath);
                         }
@@ -199,7 +200,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
             /// WRITE THE BOOT ARGS TO THE ROUTER STACK
             Router.writeToSpace(f("boot/args"), args);
             ///  ADD INCRQ PROCESSOR TO SYS FOR AUTO INCREMENTING FAIL STACK
-            MFail.FAIL_STACK_PATTERN = args.at("fail_stack_pattern").orElse(uri("/sys/fail?incr=./+")).uriValue();
+            MFail.FAIL_STACK_PATTERN = args.at("fail_stack_pattern").orElse(uri("/sys/fail?incrq=./+")).uriValue();
             ROUTER.start();
             ///////////////////////////////////////////////////////////////
             if (args.has(uri(Tokens.BOOT))) {

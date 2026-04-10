@@ -28,7 +28,7 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.impl.*;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjCleanStringSerializer;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.isa.mach.type.PCMonad;
 import studio.phaseshift.metatron.isa.mach.type.Router;
@@ -683,7 +683,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
 
     class Helper {
 
-        private static final ObjSerializer<String> SERIALIZER = new ObjCleanStringSerializer();
+        private static final ObjSerializer<String> SERIALIZER = new ObjmtronSerializer();
 
         public static boolean isAuto(final Obj obj) {
             return obj.isObjCall() && ((Call) obj).isAuto();

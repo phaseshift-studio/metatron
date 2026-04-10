@@ -35,10 +35,10 @@ import org.slf4j.event.Level;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.reflect.JRec;
 import studio.phaseshift.metatron.isa.m.type.reflect.ObjFieldReflection;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.LogObj;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Router;
@@ -604,7 +604,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
         /// /////////////////////////////////////////////////////
         CommonUtil.splitOnNonQuotedSequence(line, ';', false).forEach(l -> {
             try {
-                final Obj parseResult = mParser.parse(l);
+                final Obj parseResult = ObjmtronSerializer.parse(l);
                 if (null != parseResult && !parseResult.isNoObj()) {
                     final Machine mach = SwarmMachine.of(parseResult.isCall() ? parseResult.as() : start_(parseResult)).onHalt(this::printResult);
 
@@ -955,7 +955,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
             /// EXPLAIN BUFFER CODE (IF IS CODE)
             getKeyMap().bind((Widget) () -> {
                 try {
-                    final Obj code = mParser.parse(this.reader.getBuffer().toString());
+                    final Obj code = ObjmtronSerializer.parse(this.reader.getBuffer().toString());
                     if (code.isCode()) {
                         terminal.writer().write("\n");
                         final Explain explain = new Explain(code.as());

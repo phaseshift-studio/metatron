@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.isa.tble.schema.storage;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjCleanStringSerializer;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -37,7 +37,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 
 /**
  * Typed key-value schema that stores primitive types (Bool, Int, Real, Str) natively
- * and complex types (Inst, Code, Rec, Lst, etc.) as strings using ObjCleanStringSerializer.
+ * and complex types (Inst, Code, Rec, Lst, etc.) as strings using ObjmtronSerializer.
  *
  * This provides an isomorphic, error-free mapping between Metatron objects and SQL,
  * avoiding JSON conversion peculiarities.
@@ -56,7 +56,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 public class TypedKeyValueSchema implements TableSchema {
 
     private static final String TABLE_NAME = "objs";
-    private static final ObjCleanStringSerializer SERIALIZER = new ObjCleanStringSerializer();
+    private static final ObjmtronSerializer SERIALIZER = new ObjmtronSerializer();
 
     @Override
     public void initialize(final Connection conn) throws SQLException {
@@ -137,7 +137,7 @@ public class TypedKeyValueSchema implements TableSchema {
             } else if (obj.isStr()) {
                 stmt.setString(3, obj.asStr().strValue());
             } else {
-                // Use ObjCleanStringSerializer for complex types
+                // Use ObjmtronSerializer for complex types
                 stmt.setString(3, SERIALIZER.write(obj));
             }
 
@@ -184,7 +184,7 @@ public class TypedKeyValueSchema implements TableSchema {
                     obj = str(rs.getString("str_val"));
                     break;
                 case "complex":
-                    // Use ObjCleanStringSerializer to parse complex types
+                    // Use ObjmtronSerializer to parse complex types
                     obj = SERIALIZER.read(rs.getString("complex_val"));
                     break;
                 default:

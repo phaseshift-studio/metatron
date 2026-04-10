@@ -1,8 +1,7 @@
 package studio.phaseshift.metatron.isa.mach.io.jdbc;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjCleanStringSerializer;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.net.MClient;
 
 import java.sql.*;
@@ -40,7 +39,7 @@ public class MetatronConnection implements Connection {
         try {
             String wsUrl = "ws://" + host + ":" + port;
             fURI serverUri = f(wsUrl);
-            this.client = new MClient(serverUri, new ObjCleanStringSerializer());
+            this.client = new MClient(serverUri, new ObjmtronSerializer());
             this.client.connect();
 
             // Wait for connection to establish (max 5 seconds)

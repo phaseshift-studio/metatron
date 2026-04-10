@@ -668,7 +668,7 @@ vertex.property("name", "marko");
 vertex.property("age", 29);
 vertex.property("address/home/city", "santa fe");  // Hierarchical property
 
-// Complex properties: Prefix with ':' and serialize using ObjCleanStringSerializer
+// Complex properties: Prefix with ':' and serialize using ObjmtronSerializer
 vertex.property(":address", "[home=>[city=>'santa fe',state=>NM],work=>!*<../home>]");
 
 // Graph relationships: Use native edges

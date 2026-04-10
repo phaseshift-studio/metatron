@@ -22,8 +22,8 @@ import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.furi.C;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.resolver.InstResolver;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.net.FutureObj;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -640,7 +640,7 @@ public interface Inst extends Call {
 
         private f(final String func) {
             this.bi = false;
-            this.func = mParser.parse(func);
+            this.func = ObjmtronSerializer.parse(func);
         }
 
         public static f of(final BiFunction<Obj, Inst, Obj> func) {

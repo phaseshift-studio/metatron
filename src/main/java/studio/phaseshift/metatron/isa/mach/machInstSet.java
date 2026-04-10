@@ -23,11 +23,11 @@ import studio.phaseshift.metatron.algebra.MultMonoid;
 import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
-import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.space.noobjSpace;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.io.space.file.fsSpace;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.PCMonad;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.thread.CoreThread;
@@ -236,7 +236,7 @@ public class machInstSet extends AbstractInstSet {
                             try {
                                 final File file = Editor.createObjFile(lhs);
                                 Editor.of(Console.LOCAL_INSTANCE, file);
-                                return mParser.parse(Files.readString(file.toPath()).trim());
+                                return ObjmtronSerializer.parse(Files.readString(file.toPath()).trim());
                             } catch (final IOException e) {
                                 throw MTronException.of(e);
                             }

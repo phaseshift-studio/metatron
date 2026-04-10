@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.isa.mach.type.ui.console;
 import org.jline.builtins.Nano;
 import org.jline.builtins.Options;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjCleanStringSerializer;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -78,7 +78,7 @@ public class Editor {
     public static File createObjFile(final Obj obj) {
         try {
             final File objFile = File.createTempFile("console-", ".mtron");
-            final ObjCleanStringSerializer serializer = new ObjCleanStringSerializer();
+            final ObjmtronSerializer serializer = new ObjmtronSerializer();
             Files.writeString(objFile.toPath(), Highlighter.unformat(serializer.write(obj)));
             return objFile;
         } catch (final Exception e) {

@@ -22,7 +22,6 @@ import com.google.gson.*;
 import com.google.gson.stream.JsonReader;
 import org.petitparser.context.Result;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
@@ -135,8 +134,8 @@ public class ObjSimpleJSONSerializer extends AbstractObjSerializer<JsonElement> 
                     else if (this.biasTowardsURI && !jpstr.contains(" ") && !jpstr.contains("^") && !jpstr.contains("|"))
                         return uri(jpstr);
                     try {
-                        final Result r = mParser.parse(jpstr);
-                        return r.isSuccess() ? r.get() : mParser.parse(jpstr);
+                        final Result r = ObjmtronSerializer.parse(jpstr);
+                        return r.isSuccess() ? r.get() : ObjmtronSerializer.parse(jpstr);
                         // if (jpstr.charAt(0) == '"' && jpstr.charAt(jpstr.length() - 1) == '"')
                         //     jpstr = jpstr.substring(1, jpstr.length() - 1);
                     } catch (Exception e) {
@@ -174,7 +173,7 @@ public class ObjSimpleJSONSerializer extends AbstractObjSerializer<JsonElement> 
             throw new IllegalStateException("unknown type: " + json + "::" + json.getAsInt());
         } catch (final Exception e) {
             try {
-                return mParser.parse(json.getAsString()).apply();
+                return ObjmtronSerializer.parse(json.getAsString()).apply();
             } catch (final Exception e2) {
                 LOG.warn("ignoring json parse problem with %s: %s", json, e);
                 return NoObj.noobj();

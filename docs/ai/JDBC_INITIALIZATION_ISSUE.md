@@ -6,7 +6,7 @@ When trying to use the metatron JDBC driver from external tools (IntelliJ Databa
 we encountered a `NullPointerException` which was actually masking the real error:
 
 ```
-Could not initialize class studio.phaseshift.metatron.isa.mach.io.type.ObjCleanStringSerializer
+Could not initialize class studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer
 ```
 
 ## Root Cause Analysis

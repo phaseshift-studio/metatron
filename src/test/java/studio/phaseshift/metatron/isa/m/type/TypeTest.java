@@ -23,6 +23,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
@@ -331,7 +332,7 @@ public class TypeTest extends AbstractMetatronTest {
             "[int::T,nat::T,bignat::T]",
     }, delimiter = '%')
     public void testTypeType(final String typeList) {
-        final Lst typesObj = mParser.parse(typeList);
+        final Lst typesObj = ObjmtronSerializer.parse(typeList);
         for (int i = 0; i < typesObj.count() - 1; i++) {
             final Type typeObj = typesObj.at(i).asType();
             final Type parentObj = typesObj.at(i + 1).asType();
@@ -498,7 +499,7 @@ public class TypeTest extends AbstractMetatronTest {
     public void testTyping(final String tid, final String typeDef, final String instance, final boolean shouldSucceed) {
         try {
             Router.writeToSpace(tid, noobj());
-            Obj type = mParser.parse(typeDef.trim().equals(".") ? LAST_TYPE_DEF : typeDef.trim());
+            Obj type = ObjmtronSerializer.parse(typeDef.trim().equals(".") ? LAST_TYPE_DEF : typeDef.trim());
             LAST_TYPE_DEF = typeDef.trim().equals(".") ? LAST_TYPE_DEF : typeDef.trim();
             Router.writeToSpace(tid, type);
             assertEquals(type, Router.readFromSpace(tid));
@@ -574,7 +575,7 @@ public class TypeTest extends AbstractMetatronTest {
     public void testTypeRecursion(final String instance, final String type, final boolean matches, final String stack) {
         //LOG.debug("testing %s %s", mParser.eval("*h"), mParser.eval("*h").asType().parentType());
         final Obj instanceObj = mParser.m_obj().parse(instance).get();
-        final List<Type> expectedTypeStack = mParser.parse(stack).lstValue().stream().map(o -> mParser.<Type>parse(o.toString() + "::T")).toList();
+        final List<Type> expectedTypeStack = ObjmtronSerializer.parse(stack).lstValue().stream().map(o -> ObjmtronSerializer.<Type>parse(o.toString() + "::T")).toList();
         final List<Type> deducedTypeStack = deducedTypeStack(mParser.m_obj().parse(type).get());
         final List<Boolean> matchesTypeStack = deducedTypeStack.stream().map(instanceObj::test).toList();
         LOG.debug("testing type stack of %s:\n\t%s\n\t%s\n\t%s", instanceObj, expectedTypeStack, deducedTypeStack, matchesTypeStack);
@@ -621,8 +622,8 @@ public class TypeTest extends AbstractMetatronTest {
     public void testComplexTypes(final String instance, final String type, final boolean matches) {
         LOG.debug("testing %s %s %s", instance, matches ? "{{g}}matches{{/g}}" : "{{r}}doesn't match{{/r}}", type);
         try {
-            final Obj instanceObj = mParser.parse(instance);
-            final Obj typeObj = mParser.parse(type);
+            final Obj instanceObj = ObjmtronSerializer.parse(instance);
+            final Obj typeObj = ObjmtronSerializer.parse(type);
             if (matches) {
                 try {
                     assertTrue(instanceObj.test(typeObj));

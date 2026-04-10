@@ -21,9 +21,9 @@ package studio.phaseshift.metatron.isa.web.parser;
 import com.google.gson.JsonParser;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.AbstractMetatronTest;
-import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 
@@ -69,7 +69,7 @@ public class JSONTranslatorTest extends AbstractMetatronTest {
         Router.writeToSpace("nat", INT_TYPE.predicate(is_(gt_(jnt(0)))));
         final ObjJSONSerializer translator = new ObjJSONSerializer();
         final Obj j_obj = translator.read(JsonParser.parseString(json));
-        final Obj m_obj = mParser.parse(mtron);
+        final Obj m_obj = ObjmtronSerializer.parse(mtron);
         assertEquals(m_obj.isObjCall() ? ((Call) m_obj).tryToInst() : m_obj, j_obj);
     }
 

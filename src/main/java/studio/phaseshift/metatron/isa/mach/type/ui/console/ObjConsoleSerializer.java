@@ -20,7 +20,7 @@ package studio.phaseshift.metatron.isa.mach.type.ui.console;
 
 import org.jline.builtins.Commands;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjCleanStringSerializer;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.ByteArrayInputStream;
@@ -32,7 +32,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class ObjConsoleSerializer extends ObjCleanStringSerializer {
+public class ObjConsoleSerializer extends ObjmtronSerializer {
 
     public ObjConsoleSerializer() {
         super(true);

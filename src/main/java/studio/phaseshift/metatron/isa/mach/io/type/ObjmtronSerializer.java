@@ -39,31 +39,36 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
-import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.OBJ_CLEAN_STRING_SERIALIZER_VID;
+import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.OBJ_MTRON_STRING_SERIALIZER_VID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class ObjCleanStringSerializer extends AbstractObjSerializer<String> {
+public class ObjmtronSerializer extends AbstractObjSerializer<String> {
     private static final String NOOBJ_STRING = "noobj";
     protected boolean leftJustify;
 
-    public ObjCleanStringSerializer() {
+    public ObjmtronSerializer() {
         this.leftJustify = true;
     }
 
-    public ObjCleanStringSerializer(final boolean leftJustify) {
+    public ObjmtronSerializer(final boolean leftJustify) {
         this.leftJustify = leftJustify;
     }
 
     public fURI vid() {
-        return OBJ_CLEAN_STRING_SERIALIZER_VID;
+        return OBJ_MTRON_STRING_SERIALIZER_VID;
     }
 
     public fURI jvm() {
-        return OBJ_CLEAN_STRING_SERIALIZER_VID;
+        return OBJ_MTRON_STRING_SERIALIZER_VID;
     }
 
+    public static <OBJ extends Obj> OBJ parse(final String code) {
+        return mParser.parse(code);
+    }
+    
+    
     @Override
     public ByteBuffer outputBytes(final Obj obj) {
         return ByteBuffer.wrap(this.write(obj).getBytes(StandardCharsets.UTF_8));
@@ -399,6 +404,6 @@ public class ObjCleanStringSerializer extends AbstractObjSerializer<String> {
 
     public static String prettyPrintCode(final Call code) {
         final StringBuilder sb = new StringBuilder();
-        return new ObjCleanStringSerializer().prettyPrintCode(sb, code, 0).toString();
+        return new ObjmtronSerializer().prettyPrintCode(sb, code, 0).toString();
     }
 }

@@ -804,7 +804,9 @@
                                 ${basedir}/src/test/resources/logback-testing.xml
                             </logback.configurationFile>
                         </systemPropertyVariables>
-
+                        <!-- Ensure each test class runs in a fresh JVM to avoid test pollution -->
+                        <!--<forkCount>1</forkCount>
+                        <reuseForks>false</reuseForks>-->
                     </configuration>
                 </plugin>
                 <plugin>

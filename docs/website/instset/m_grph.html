@@ -252,7 +252,8 @@ bin/metatron</code></pre>
        pattern  =>docq,
        obj      =>mem::[pattern=><#>]]],
  space  =>[
-   super=>!*/m],
+   super=>!*/m,
+   sub  =>!*/m/grph/schema/modern],
  const  =>[serializer::/m/mach/io/serializer@/m/mach/io/serializer/tp3],
  type   =>[
    rec::T@/m/grph/elmt,
@@ -275,7 +276,7 @@ bin/metatron</code></pre>
    outE?rng=edge{*}&dom=vrtx(uri{*}::T){<j>},
    inE?rng=edge{*}&dom=vrtx(uri{*}::T){<j>},
    bothE?rng=edge{*}&dom=vrtx(uri{*}::T){<j>},
-   addE?rng=edge&dom=vrtx(#::T,uri::T,rec{?}::T){<j>}],
+   addE?rng=edge&dom=vrtx(uri::T,vrtx{+}::T,rec{?}::T){<j>}],
  rewrite=>[
    /m/grph/inst/rewrite/out_incident_adjacent?rng=code{?}&dom=code(){<j>},
    /m/grph/inst/rewrite/in_incident_adjacent?rng=code{?}&dom=code(){<j>}]]@/m/grph</code></pre>
@@ -295,6 +296,85 @@ bin/metatron</code></pre>
             </div>
         </div>
             
+        <div class="container-xxl mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0 text-primary">Hierarchy</h5>
+                </div>
+                <div class="card-body d-flex flex-wrap gap-2">
+                    
+                <a href="!.html" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-down"></i> !
+                </a>
+                <a href="*.html" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-down"></i> *
+                </a>
+                <a href=".html" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-down"></i> /
+                </a>
+                <a href="m.html" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-down"></i> m
+                </a>
+                <a href=".html" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-down"></i> /
+                </a>
+                <a href="g.html" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-down"></i> g
+                </a>
+                <a href="r.html" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-down"></i> r
+                </a>
+                <a href="p.html" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-down"></i> p
+                </a>
+                <a href="h.html" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-down"></i> h
+                </a>
+                <a href=".html" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-down"></i> /
+                </a>
+                <a href="s.html" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-down"></i> s
+                </a>
+                <a href="c.html" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-down"></i> c
+                </a>
+                <a href="h.html" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-down"></i> h
+                </a>
+                <a href="e.html" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-down"></i> e
+                </a>
+                <a href="m.html" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-down"></i> m
+                </a>
+                <a href="a.html" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-down"></i> a
+                </a>
+                <a href=".html" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-down"></i> /
+                </a>
+                <a href="m.html" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-down"></i> m
+                </a>
+                <a href="o.html" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-down"></i> o
+                </a>
+                <a href="d.html" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-down"></i> d
+                </a>
+                <a href="e.html" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-down"></i> e
+                </a>
+                <a href="r.html" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-down"></i> r
+                </a>
+                <a href="n.html" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-down"></i> n
+                </a>
+                </div>
+            </div>
+        </div>
             
         <div class="container-xxl mb-4">
             <div class="card">
@@ -498,7 +578,7 @@ bin/metatron</code></pre>
                         <small class="text-muted code">/m/grph/inst/addE?/m/grph/edge&lt;=/m/grph/vrtx</small>
                     </div>
                     <div class="card-body p-2">
-                        <pre class="mb-1"><code class="language-mtron">addE?edge&lt;=vrtx(#::T,uri::T,rec{?}::T){&lt;j&gt;}</code></pre>
+                        <pre class="mb-1"><code class="language-mtron">addE?edge&lt;=vrtx(uri::T,vrtx{+}::T,rec{?}::T){&lt;j&gt;}</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -811,7 +891,7 @@ bin/metatron</code></pre>
         <div class="container-xxl py-3 text-center">
             <hr class="border-secondary">
             <small class="text-muted">
-                generated by metatron instset doc generator on build 0-2026-04-10 09:34:33<br>
+                generated by metatron instset doc generator on build 0-2026-04-10 13:35:02<br>
                 © PhaseShift Studio, LLC
             </small>
         </div>

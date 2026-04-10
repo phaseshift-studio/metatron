@@ -20,8 +20,8 @@ package studio.phaseshift.metatron.isa.m.type;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -58,7 +58,7 @@ public class CodeTest extends AbstractMetatronTest {
                 "1.*abc._                                           % true"
     }, delimiter = '%',quoteCharacter = '^')
     public void testDomRng(final String code, final boolean resolved) {
-        Code obj = mParser.parse(code);
+        Code obj = ObjmtronSerializer.parse(code);
         LOG.debug("testing code resolution %s %s resolve", obj, resolved ? "{{g}}should{{X}}" : "{{r}}should not{{X}}");
         assertFalse(obj.isResolved(true));
         obj = obj.resolve(noobj()).rewrite();

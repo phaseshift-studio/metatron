@@ -359,6 +359,10 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
 
     fURI removeQ(final String key);
 
+    default fURI removeQ(final fURI key) {
+        return this.removeQ(key.toString());
+    }
+
     default fURI qString(final String query) {
         if (null == query || query.isEmpty())
             return fURI.of(this.scheme(), this.host(), this.port(), this.path(), this.c(), this.poly(), Map.of(), this.templates());
@@ -378,6 +382,10 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
     }
 
     <T> T qValue(final String key, final Class<T> valueClass);
+
+    default <T> T qValue(final fURI key, final Class<T> valueClass) {
+        return this.qValue(key.toString(), valueClass);
+    }
 
     String q(final String key);
 

@@ -24,6 +24,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.LogObj;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -123,10 +124,10 @@ public abstract class AbstractMetatronTest {
     }
 
     public static void checkCodeRewrite(final GraphittyLogger LOG, final String code, final String expected, final String expectedResult, boolean checkTIDs) {
-        final Code firstStage = mParser.parse(code);
-        final Call secondStage = mParser.parse(expected);
+        final Code firstStage = ObjmtronSerializer.parse(code);
+        final Call secondStage =  ObjmtronSerializer.parse(expected);
         final Call compilation = firstStage.rewrite().tryToInst();
-        final Obj result = mParser.parse(expectedResult);
+        final Obj result =  ObjmtronSerializer.parse(expectedResult);
         if (checkTIDs) {
             assertFalse(secondStage.insts().isEmpty());
             assertEquals(secondStage.insts().size(), compilation.insts().size());

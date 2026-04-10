@@ -20,9 +20,9 @@ package studio.phaseshift.metatron.isa.web;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
-import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 import studio.phaseshift.metatron.isa.web.parser.ObjHTMLSerializer;
 import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
@@ -108,7 +108,7 @@ public class webInstSet extends AbstractInstSet {
                         instC(INST_TID.extend("doc").dom(STR_TID).rng(STR_TID), lst(), (lhs, inst) -> {
                             try {
                                 final String source = lhs.strValue();
-                                final Obj result = mParser.parse(source).apply();
+                                final Obj result = ObjmtronSerializer.parse(source).apply();
                                 final String resultString = result.isObjs() ?
                                         result.stream()
                                                 .map(Obj::toCleanString)
@@ -125,7 +125,7 @@ public class webInstSet extends AbstractInstSet {
                         instC(INST_TID.extend("doc_json").dom(STR_TID).rng(STR_TID), lst(), (lhs, inst) -> {
                             try {
                                 final String source = lhs.strValue();
-                                final Obj result = mParser.parse(source).apply();
+                                final Obj result = ObjmtronSerializer.parse(source).apply();
                                 return str(ObjSimpleJSONSerializer.single().write(result).toString());
                             } catch (final Exception e) {
                                 return str(fail(e).toString());

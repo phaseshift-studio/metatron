@@ -23,8 +23,8 @@ import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 
 import static org.junit.Assert.assertEquals;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -47,7 +47,7 @@ public class LazyObjsTest extends AbstractMetatronTest {
             "{1,'a',int{10}::3,4,4}                                 %     #{14}         % 14",
     }, delimiter = '%')
     public void testLazyObjs(final String objs, final String tid, final String coefficient) {
-        final Obj o = mParser.parse(objs);
+        final Obj o = ObjmtronSerializer.parse(objs);
         final Obj lo = lazyObjs(o.clone().iterator());
         final fURI t = f(tid).big();
         assertEquals(t, o.tid());

@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.algebra.AbstractAlgebraTest;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 
 import java.util.Set;
@@ -325,7 +326,7 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
             "[a=>[b=>1,c=>2]].has(a,|isa(lst::T))                   % false",
     }, delimiter = '%', quoteCharacter = '~')
     public void testHas(final String code, final boolean matches) {
-        final Obj codeObj = mParser.parse(code);
+        final Obj codeObj = ObjmtronSerializer.parse(code);
         LOG.debug("testing has %s [expected:%s]", codeObj, matches);
         if (matches)
             assertFalse(codeObj.apply().isNoObj());
@@ -466,7 +467,7 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
             //"[a=>1]                                      % rec[uri=>#]::T               % true"
     }, delimiter = '%')
     public void testPoly(final String record, final String type, final boolean matches) {
-        final Type t = mParser.parse(type);
+        final Type t = ObjmtronSerializer.parse(type);
         LOG.debug("%s", t);
         AbstractMetatronTest.checkMatches(LOG, record, type, matches);
     }
@@ -483,9 +484,9 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
            // "[a=>1,b=>[c=>3]]                       % [b=>noobj]            %  [a=>1]"
     }, delimiter = '%')
     public void testUpdate(final String original, final String update, final String expected) {
-        final Rec originalRec = mParser.parse(original);
-        final Rec updateRec = mParser.parse(update);
-        final Rec expectedRec = mParser.parse(expected);
+        final Rec originalRec = ObjmtronSerializer.parse(original);
+        final Rec updateRec = ObjmtronSerializer.parse(update);
+        final Rec expectedRec = ObjmtronSerializer.parse(expected);
         final Rec actualRec = update_(updateRec).apply(originalRec).as();
         AbstractMetatronTest.checkEquality(LOG, expectedRec, actualRec, true);
     }

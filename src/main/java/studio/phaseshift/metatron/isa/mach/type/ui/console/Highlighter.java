@@ -23,7 +23,7 @@ import org.jline.builtins.SyntaxHighlighter;
 import org.jline.reader.LineReader;
 import org.jline.utils.AttributedString;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjCleanStringSerializer;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 
@@ -60,7 +60,7 @@ public class Highlighter implements org.jline.reader.Highlighter {
     private Highlighter(final SyntaxHighlighter syntaxHighlighter) {
         this.syntaxHighlighter = syntaxHighlighter;
         this.graphitty = new Graphitty(Map.of(), new ByteArrayOutputStream());
-        this.serializer = new ObjCleanStringSerializer(true);
+        this.serializer = new ObjmtronSerializer(true);
     }
 
     public Highlighter(final ObjSerializer<String> serializer) {
@@ -70,7 +70,7 @@ public class Highlighter implements org.jline.reader.Highlighter {
     }
 
     public Highlighter justify(final boolean leftJustify) {
-        this.serializer = new ObjCleanStringSerializer(leftJustify);
+        this.serializer = new ObjmtronSerializer(leftJustify);
         return this;
     }
 

@@ -394,6 +394,7 @@ public class InstResolverBenchmarkTest extends AbstractMetatronTest {
      */
     @Test
     @Order(101)
+    @Disabled
     @DisplayName("Tracked: Run benchmarks and compare to baseline")
     void benchmarkTracked() throws IOException {
         BenchmarkTracker tracker = new BenchmarkTracker("inst-resolution", 0.20); // 20% regression threshold

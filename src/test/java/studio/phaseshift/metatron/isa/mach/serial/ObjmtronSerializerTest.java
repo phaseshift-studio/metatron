@@ -19,11 +19,11 @@
 package studio.phaseshift.metatron.isa.mach.serial;
 
 import studio.phaseshift.metatron.AbstractSerializerTest;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjCleanStringSerializer;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 
-public class ObjCleanStringSerializerTest extends AbstractSerializerTest<String> {
-    public ObjCleanStringSerializerTest() {
-        super(new ObjCleanStringSerializer());
+public class ObjmtronSerializerTest extends AbstractSerializerTest<String> {
+    public ObjmtronSerializerTest() {
+        super(new ObjmtronSerializer());
     }
 }
 

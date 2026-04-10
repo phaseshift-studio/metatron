@@ -20,8 +20,8 @@ package studio.phaseshift.metatron.isa.m.type;
 
 import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.impl.MStr;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.nio.ByteBuffer;
@@ -86,7 +86,7 @@ public interface Str extends Mono, PlusMonoid.O<Str> {
         while (matcher.find()) {
             final String exprStr = matcher.group(1);
             try {
-                final String strVal = mParser.parse(exprStr).apply(lhs).toString();
+                final String strVal = ObjmtronSerializer.parse(exprStr).apply(lhs).toString();
                 matcher.appendReplacement(result, Matcher.quoteReplacement(strVal));
             } catch (Exception e) {
                throw MTronException.of("failed to expand template ${%s}: %s", exprStr, e.getMessage());

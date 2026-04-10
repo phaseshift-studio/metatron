@@ -24,7 +24,7 @@ import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjByteBufferSerializer;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjCleanStringSerializer;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 
 import java.util.LinkedHashSet;
@@ -43,7 +43,7 @@ public class ioInstSet extends AbstractInstSet {
 
     public static final fURI IO_ISA_TID = MACH_ISA_TID.extend("io");
     public static final fURI OBJ_SERIALIZER_TID = IO_ISA_TID.extend("serializer");
-    public static final fURI OBJ_CLEAN_STRING_SERIALIZER_VID = OBJ_SERIALIZER_TID.extend("string").extend("clean");
+    public static final fURI OBJ_MTRON_STRING_SERIALIZER_VID = OBJ_SERIALIZER_TID.extend("string").extend("clean");
     public static final fURI OBJ_BYTE_BUFFER_SERIALIZER_VID = OBJ_SERIALIZER_TID.extend("bytebuffer");
     public static final fURI OBJ_SIMPLE_JSON_SERIALIZER_VID = OBJ_SERIALIZER_TID.extend("json").extend("simple");
 
@@ -56,7 +56,7 @@ public class ioInstSet extends AbstractInstSet {
     @Override
     public Set<Obj> consts() {
         return new LinkedHashSet<>(List.of(
-                new ObjCleanStringSerializer(),
+                new ObjmtronSerializer(),
                 new ObjByteBufferSerializer(),
                 new ObjSimpleJSONSerializer()
         ));

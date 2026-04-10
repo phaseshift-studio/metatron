@@ -2922,8 +2922,9 @@ mtron&gt; *ollama:+
 </div>
 <!-- 🐖 [SKIP]
 ai -> *ollama:+                            /
-       .where([think=>true,size=>?<mB::5000.0]) /
-       .order(>>?real<=rec(size).mult(-1.0))    /
+      .where([skill=>has(thinking),
+              size =>is(and(gt(mB::1000.0),lt(mB::5000.0)))]) /
+       .order(>>size.mult(-1.0))    /
        .take(1)
 *ai>>=[think=>true,
        memory=>/usr/ai/memory,
@@ -2991,18 +2992,28 @@ of the code.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron"> ┌─────────────────┐
- │memory  thoughts │
- │tools   skills   │
- │response formats │
- └┬────┬────────┬──┘
-  │    │       ┌┴┐
-  │    │     ┌─► │───┐
- ┌┴┐  ┌┴┐  ┌─┤ └─┘  ┌▼┐
- │ │──► │──► │      │ │──►
- └─┘  └─┘  └─┤ ┌─┐  └▲┘
-             └─► │───┘
-               └─┘</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">----                                                                                                                                enriched llm
+       ┌──────────────────────────────────────────────────┐
+       │       memory                       thoughts      │
+       │       tools                        skills        │
+       │       response format                            │
+       └──────────────────────────────────────────────────┘
+                   .               .              .
+                   .               .              .
+                   .             ┌────┐           .
+                   .          ┌─►│chat│           .
+                   .          │  └────┘           .
+                   .          │                   .
+                   .          │                   .
+   ┌────┐        ┌────┐       │  ┌────┐         ┌────┐
+---│    ├───────►│chat├───────┼─►│    ├────────►│chat│----
+   └────┘        └────┘       │  └────┘         └────┘
+                              │
+                              │
+                              │  ┌────┐
+                              └─►│    │
+                                 └────┘
+----</code></pre>
 </div>
 </div>
 <div class="listingblock">

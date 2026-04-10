@@ -31,6 +31,7 @@ import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -90,6 +91,7 @@ public class miotSpaceTest extends AbstractSpaceTest implements SubQTest {
         MoquetteServer.clear();
         MoquetteServer.stop();
         AbstractMetatronTest.end();
+        CommonUtil.sleepThread(1000);
     }
 
     @ParameterizedTest

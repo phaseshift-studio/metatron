@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 
 import static org.junit.Assert.assertEquals;
@@ -71,7 +72,7 @@ public class TypeQTest extends AbstractMetatronTest {
     }, delimiter = '%')
     public void testTypedVID(final String specifyType, final String writeTo, final String readFrom, final String result) {
         LOG.warn("%s\n%s", this.space, Router.global().spaces());
-        final Obj obj = mParser.parse(specifyType).apply();
+        final Obj obj = ObjmtronSerializer.parse(specifyType).apply();
         if (obj.isType())
             assertEquals(obj.isType() ? obj : T(ALL).maybeSome(), Router.global().read(readFrom.substring(1).trim() + "?T"));
         checkCodeParseApply(LOG, writeTo, result);

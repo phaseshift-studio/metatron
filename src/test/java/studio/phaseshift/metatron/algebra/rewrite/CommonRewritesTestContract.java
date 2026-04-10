@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 
 import java.util.stream.Stream;
 
@@ -144,7 +145,7 @@ public interface CommonRewritesTestContract {
      * @param nativeInstName  The expected native instruction name (partial match)
      */
     default void runRewritePlanTest(String description, String code, String nativeInstName) throws Exception {
-        final Code parsed = mParser.parse(code);
+        final Code parsed = ObjmtronSerializer.parse(code);
         final Code rewritten = parsed.rewrite();
         final String plan = rewritten.toString();
         assertTrue(plan.contains(nativeInstName),

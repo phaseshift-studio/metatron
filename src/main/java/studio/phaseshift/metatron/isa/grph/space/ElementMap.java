@@ -27,7 +27,7 @@ import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.m.type.impl.MInst;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjCleanStringSerializer;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
@@ -57,7 +57,7 @@ public abstract class ElementMap extends AbstractMap<Uri, Obj> {
 
     protected static final GraphittyLogger LOG = Graphitty.log(ElementMap.class);
 
-    protected static final ObjSerializer<String> SERIALIZER = new ObjCleanStringSerializer();
+    protected static final ObjSerializer<String> SERIALIZER = new ObjmtronSerializer();
     protected Element base;
     transient public final graphSpace space;
 

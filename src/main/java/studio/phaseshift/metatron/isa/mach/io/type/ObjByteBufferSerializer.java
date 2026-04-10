@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.isa.mach.io.type;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.util.IteratorUtil;
@@ -178,12 +177,12 @@ public class ObjByteBufferSerializer extends AbstractObjSerializer<ByteBuffer> {
     @Override
     public Obj read(final ByteBuffer data) throws MTronException {
         //Router.global().logger().info("received %s", new String(data.array(), StandardCharsets.UTF_8));
-        return mParser.parse(new String(data.array(), StandardCharsets.UTF_8));
+        return ObjmtronSerializer.parse(new String(data.array(), StandardCharsets.UTF_8));
     }
 
     @Override
     public Objs readObjs(final ByteBuffer data) throws MTronException {
         //Router.global().logger().info("received %s", new String(data.array(), StandardCharsets.UTF_8));
-        return mParser.parse(new String(data.array(), StandardCharsets.UTF_8));
+        return ObjmtronSerializer.parse(new String(data.array(), StandardCharsets.UTF_8));
     }
 }

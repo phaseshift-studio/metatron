@@ -20,7 +20,6 @@ package studio.phaseshift.metatron.isa;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -30,12 +29,10 @@ import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TestCategory;
 import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.furi.q.QCollection;
-import studio.phaseshift.metatron.furi.q.SubQTest;
-import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.CommonUtil;
@@ -50,7 +47,6 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.furi.q.QCollection.SUBSCRIPTION_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -403,7 +399,8 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
             "$$ -> <user@domain.com>                               % *$$                                % <user@domain.com>",
             "$$ -> <192.168.1.1>                                   % *$$                                % <192.168.1.1>",
             // Strings with special characters that were problematic
-            "$$ -> <hello world>                                   % *$$                                % <hello world>",
+            // <hello world> not allowed by MQTT ... force fURI to have no spaces?
+            "$$ -> <hello_world>                                   % *$$                                % <hello_world>",
             "$$ -> <a+b>                                           % *$$                                % <a+b>",
             "$$ -> <a-b>                                           % *$$                                % <a-b>",
             "$$ -> <a*b>                                           % *$$                                % <a*b>",
@@ -459,11 +456,11 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
             ".                                                     % *<$$/data/+>                       % {1,2,[a=>3,b=>4]}"
     }, delimiter = '%')
     public void testMonoReadWrite(final String writeExpression, final String readExpression, final String expectedExpression) {
-        final Obj writeObj = mParser.parse(make(writeExpression.equals(".") ? PREVIOUS_LINE.get(0) : writeExpression)).apply();
+        final Obj writeObj = ObjmtronSerializer.parse(make(writeExpression.equals(".") ? PREVIOUS_LINE.get(0) : writeExpression)).apply();
         if (this.sleepBetweenReads > 0)
             CommonUtil.sleepThread(this.sleepBetweenReads);
-        final Obj readObj = mParser.parse(make(readExpression.equals(".") ? PREVIOUS_LINE.get(1) : readExpression)).apply();
-        final Obj resultObj = mParser.parse(make(expectedExpression.equals(".") ? PREVIOUS_LINE.get(2) : expectedExpression)).apply();
+        final Obj readObj = ObjmtronSerializer.parse(make(readExpression.equals(".") ? PREVIOUS_LINE.get(1) : readExpression)).apply();
+        final Obj resultObj = ObjmtronSerializer.parse(make(expectedExpression.equals(".") ? PREVIOUS_LINE.get(2) : expectedExpression)).apply();
         if (!writeExpression.equals("."))
             PREVIOUS_LINE.set(0, make(writeExpression));
         if (!readExpression.equals("."))

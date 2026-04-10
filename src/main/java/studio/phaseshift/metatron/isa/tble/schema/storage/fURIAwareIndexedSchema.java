@@ -20,8 +20,7 @@ package studio.phaseshift.metatron.isa.tble.schema.storage;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjCleanStringSerializer;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -45,7 +44,7 @@ public class fURIAwareIndexedSchema implements TableSchema {
 
     private static final int MAX_SEGMENTS = 5;
     private static final String TABLE_NAME = "objs";
-    private static final ObjCleanStringSerializer SERIALIZER = new ObjCleanStringSerializer();
+    private static final ObjmtronSerializer SERIALIZER = new ObjmtronSerializer();
 
     @Override
     public void initialize(final Connection conn) throws SQLException {

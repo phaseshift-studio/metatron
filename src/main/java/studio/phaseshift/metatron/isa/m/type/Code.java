@@ -19,7 +19,7 @@
 package studio.phaseshift.metatron.isa.m.type;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjCleanStringSerializer;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.machine.SwarmMachine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -92,10 +92,10 @@ public interface Code extends Call {
         //if(this.insts().stream().noneMatch(x -> x.resolution().equals(Inst.Resolution.A)))
         //  return this;
         GraphittyLogger LOG = Graphitty.log(this);
-        LOG.debug("reading code:\n        [{{y}}PREPILED{{/y}}] %s {{g}}=>{{/g}}\n%s", lhs, ObjCleanStringSerializer.prettyPrintCode(this));
+        LOG.debug("reading code:\n        [{{y}}PREPILED{{/y}}] %s {{g}}=>{{/g}}\n%s", lhs, ObjmtronSerializer.prettyPrintCode(this));
         /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////
         final Code rewrittenCode = this.rewrite();
-        LOG.debug("rewriting code:\n        [{{y}}REWRITTEN{{/y}}] %s {{g}}=>{{/g}}\n%s", lhs, ObjCleanStringSerializer.prettyPrintCode(rewrittenCode));
+        LOG.debug("rewriting code:\n        [{{y}}REWRITTEN{{/y}}] %s {{g}}=>{{/g}}\n%s", lhs, ObjmtronSerializer.prettyPrintCode(rewrittenCode));
         Obj token = lhs.isType() ? lhs : lhs.type();
         final List<Inst> resolvedCode = new ArrayList<>();
         boolean fullResolution = true;
@@ -128,7 +128,7 @@ public interface Code extends Call {
             }
         }
         final Code resolved = this.jvm(resolvedCode);
-        LOG.debug("%s code:\n        [{{g}}COMPILED{{/g}}]\n%s", fullResolution ? "{{g}}resolved{{/g}}" : "{{y}}semi-resolved{{/y}}", ObjCleanStringSerializer.prettyPrintCode(resolved));
+        LOG.debug("%s code:\n        [{{g}}COMPILED{{/g}}]\n%s", fullResolution ? "{{g}}resolved{{/g}}" : "{{y}}semi-resolved{{/y}}", ObjmtronSerializer.prettyPrintCode(resolved));
         return resolved;
 
     }

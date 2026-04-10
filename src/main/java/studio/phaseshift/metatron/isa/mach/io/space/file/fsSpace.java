@@ -23,9 +23,9 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.Space;
-import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjs;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
 import studio.phaseshift.metatron.util.IteratorUtil;
@@ -185,7 +185,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
             while ((line = reader.readLine()) != null) {
                 Obj x;
                 try {
-                    x = mParser.parse(line);
+                    x = ObjmtronSerializer.parse(line);
                 } catch (final Exception e) {
                     x = str(line);
                 }

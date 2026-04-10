@@ -22,10 +22,10 @@ import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Bytes;
 import studio.phaseshift.metatron.isa.m.type.NoObj;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.HexFormat;
@@ -52,18 +52,18 @@ public class mParserTest extends AbstractMetatronTest {
 
     @Test
     public void testCommentParse() {
-        assertEquals(NoObj.noobj(), mParser.parse("[-- a comment"));
-        assertEquals(NoObj.noobj(), mParser.parse("[-- a comment --]"));
-        // assertThrows(Exception.class, () -> mParser.parse("[-- a comment\n\r\n\r --]"));
-        assertThrows(Exception.class, () -> mParser.parse("-- a comment\n\n --"));
-        assertEquals(NoObj.noobj(), mParser.parse("[--- a comment\n\n ---]"));
+        assertEquals(NoObj.noobj(), ObjmtronSerializer.parse("[-- a comment"));
+        assertEquals(NoObj.noobj(), ObjmtronSerializer.parse("[-- a comment --]"));
+        // assertThrows(Exception.class, () -> ObjmtronSerializer.parse("[-- a comment\n\r\n\r --]"));
+        assertThrows(Exception.class, () -> ObjmtronSerializer.parse("-- a comment\n\n --"));
+        assertEquals(NoObj.noobj(), ObjmtronSerializer.parse("[--- a comment\n\n ---]"));
     }
 
     @Test
     public void testBoolParse() {
         assertEquals(BOOL_TID, m_bool().parse("true").<Obj>get().tid());
-        assertEquals(bool(true), mParser.parse("true"));
-        assertEquals(bool(false), mParser.parse("false"));
+        assertEquals(bool(true), ObjmtronSerializer.parse("true"));
+        assertEquals(bool(false), ObjmtronSerializer.parse("false"));
     }
 
     @Test
@@ -75,9 +75,9 @@ public class mParserTest extends AbstractMetatronTest {
 
     @Test
     public void testIntParse() {
-        assertEquals(jnt(1234), mParser.parse("1234 "));
+        assertEquals(jnt(1234), ObjmtronSerializer.parse("1234 "));
         Obj t = jnt(1);
-        assertEquals(t, mParser.parse("1 "));
+        assertEquals(t, ObjmtronSerializer.parse("1 "));
         assertEquals(objs(List.of(jnt(1), jnt(5))), t.append(jnt(5)));
         assertEquals(objs(List.of(jnt(1), jnt(4))), t.append(jnt(4)));
         assertEquals(objs(List.of(jnt(1), jnt(3), jnt(4), jnt(5))),
@@ -90,14 +90,14 @@ public class mParserTest extends AbstractMetatronTest {
 
     @Test
     public void testRealParse() {
-        assertEquals(real(1234.23), mParser.parse("1234.23"));
+        assertEquals(real(1234.23), ObjmtronSerializer.parse("1234.23"));
     }
 
 
     @Test
     public void testStrParse() {
-        assertEquals(str("abc").jvm(), mParser.parse("'abc'").jvm());
-        assertEquals(str("aBc35 4e6").jvm(), mParser.parse("'aBc35 4e6'").jvm());
+        assertEquals(str("abc").jvm(), ObjmtronSerializer.parse("'abc'").jvm());
+        assertEquals(str("aBc35 4e6").jvm(), ObjmtronSerializer.parse("'aBc35 4e6'").jvm());
     }
 
     @Test
@@ -107,12 +107,12 @@ public class mParserTest extends AbstractMetatronTest {
                 uri("http://metatron.com?a=2&b=3").uriValue());
         assertEquals(
                 uri("http://metatron.com?a=2&b=3").uriValue(),
-                mParser.parse("<http://metatron.com?a=2&b=3>").uriValue());
+                ObjmtronSerializer.parse("<http://metatron.com?a=2&b=3>").uriValue());
         assertEquals(
                 f("http://metatron.com?a=2&b=3"),
-                mParser.parse("<http://metatron.com?a=2&b=3>").uriValue());
+                ObjmtronSerializer.parse("<http://metatron.com?a=2&b=3>").uriValue());
         for (fURI x : List.of(
-                mParser.parse("<http://metatron.com?a=2&b=3>").uriValue(),
+                ObjmtronSerializer.parse("<http://metatron.com?a=2&b=3>").uriValue(),
                 f("http://metatron.com?a=2&b=3"),
                 uri("http://metatron.com?a=2&b=3").uriValue())) {
             assertEquals("http", x.scheme());
@@ -124,30 +124,30 @@ public class mParserTest extends AbstractMetatronTest {
             assertEquals(Map.of("a", "2", "b", "3"), x.qMap());
         }
         /// ///////////////////////////////////
-        assertEquals(uri("http://metatron.com?a&b").uriValue(), mParser.parse("<http://metatron.com?a&b>").uriValue());
-        assertEquals(uri("http://metatron.com?a&b"), mParser.parse("<http://metatron.com?a&b>"));
-        assertEquals(uri("http://metatron.com?a=a/b/c&b=a"), mParser.parse("<http://metatron.com?a=a/b/c&b=a>"));
-        assertThrows(MTronException.class, () -> mParser.parse("/metatron.com?a&b")); // TODO: this will be needed moving forward with monad distribution and uri authorities
-        assertEquals(uri("metatron/com?a&b"), mParser.parse("metatron/com?a&b"));
+        assertEquals(uri("http://metatron.com?a&b").uriValue(), ObjmtronSerializer.parse("<http://metatron.com?a&b>").uriValue());
+        assertEquals(uri("http://metatron.com?a&b"), ObjmtronSerializer.parse("<http://metatron.com?a&b>"));
+        assertEquals(uri("http://metatron.com?a=a/b/c&b=a"), ObjmtronSerializer.parse("<http://metatron.com?a=a/b/c&b=a>"));
+        assertThrows(MTronException.class, () -> ObjmtronSerializer.parse("/metatron.com?a&b")); // TODO: this will be needed moving forward with monad distribution and uri authorities
+        assertEquals(uri("metatron/com?a&b"), ObjmtronSerializer.parse("metatron/com?a&b"));
     }
 
     @Test
     public void testRelParse() {
-        assertEquals(rel(uri("a"), uri("b")).jvm(), mParser.parse("a => b").jvm());
-        assertEquals(rel(jnt(1), uri("b")).jvm(), mParser.parse("1 => b").jvm());
-        assertEquals(rel(jnt(1), real(4.3)).jvm(), mParser.parse("1 => 4.3").jvm());
+        assertEquals(rel(uri("a"), uri("b")).jvm(), ObjmtronSerializer.parse("a => b").jvm());
+        assertEquals(rel(jnt(1), uri("b")).jvm(), ObjmtronSerializer.parse("1 => b").jvm());
+        assertEquals(rel(jnt(1), real(4.3)).jvm(), ObjmtronSerializer.parse("1 => 4.3").jvm());
     }
 
     @Test
     public void testInstParse() {
-        assertEquals(instB(PLUS_INST_TID, lst(jnt(1), jnt(2))), mParser.parse("plus(1,2)"));
-        assertEquals(instB(PLUS_INST_TID, lst()), mParser.parse("plus()"));
-        assertTrue(mParser.parse("plus()").asInst().jvm().get0().isEmpty());
-        assertEquals(0, mParser.parse("plus()").asInst().jvm().get0().count());
+        assertEquals(instB(PLUS_INST_TID, lst(jnt(1), jnt(2))), ObjmtronSerializer.parse("plus(1,2)"));
+        assertEquals(instB(PLUS_INST_TID, lst()), ObjmtronSerializer.parse("plus()"));
+        assertTrue(ObjmtronSerializer.parse("plus()").asInst().jvm().get0().isEmpty());
+        assertEquals(0, ObjmtronSerializer.parse("plus()").asInst().jvm().get0().count());
     }
 
     @Test
     public void testSugar() {
-        assertEquals(lst(jnt(1), lst(jnt(1), lst(jnt(1)))), mParser.parse("1-<[_,-<[_,-<[_]]]").apply());
+        assertEquals(lst(jnt(1), lst(jnt(1), lst(jnt(1)))), ObjmtronSerializer.parse("1-<[_,-<[_,-<[_]]]").apply());
     }
 }

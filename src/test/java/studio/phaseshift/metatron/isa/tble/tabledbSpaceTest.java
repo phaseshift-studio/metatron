@@ -899,7 +899,7 @@
                  Arguments.of("String with spaces", "/tble/test/str3", str("hello world"), str("hello world")),
                  Arguments.of("String with special chars", "/tble/test/str4", str("test@example.com"), str("test@example.com")),
 
-                 // Complex types should use ObjCleanStringSerializer
+                 // Complex types should use ObjmtronSerializer
                  Arguments.of("Record", "/tble/test/rec1",
                          rec(uri(NAME), str("Alice"), uri("age"), jnt(30)),
                          rec(uri(NAME), str("Alice"), uri("age"), jnt(30))),

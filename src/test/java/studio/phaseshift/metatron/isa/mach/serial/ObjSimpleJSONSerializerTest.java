@@ -21,8 +21,8 @@ package studio.phaseshift.metatron.isa.mach.serial;
 import com.google.gson.JsonElement;
 import studio.phaseshift.metatron.AbstractSerializerTest;
 import studio.phaseshift.metatron.furi.c.cInt;
-import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 
 /*
@@ -34,7 +34,7 @@ public class ObjSimpleJSONSerializerTest extends AbstractSerializerTest<JsonElem
     }
 
     public boolean ignoreFail(final String toSerialize) {
-        final Obj obj = mParser.parse(toSerialize);
+        final Obj obj = ObjmtronSerializer.parse(toSerialize);
         if(!obj.c().within(cInt.MAYBE()))
             return true;
         return !obj.isNoObj() && (obj.isObjs() ||

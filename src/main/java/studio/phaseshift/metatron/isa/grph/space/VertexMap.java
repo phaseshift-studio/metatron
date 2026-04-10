@@ -79,6 +79,10 @@ public class VertexMap extends ElementMap {
             else {
                 try {
                     Obj obj = instB(grphInstSet.OUT_INST_TID.dom(grphInstSet.VRTX_TID).rng(grphInstSet.VRTX_TID.maybeSome()), lst((Uri) key)).apply(vertexToRec(this.getBase()));
+                    // If instruction resolution failed (returned fail), fall back to direct property access
+                    if (obj.isFail() || obj.stream().anyMatch(Obj::isFail)) {
+                        return super.get(key);
+                    }
                     return obj.append(super.get(key));
                 } catch (Exception e) {
                     return super.get(key);
@@ -90,7 +94,11 @@ public class VertexMap extends ElementMap {
                 obj = objs(IteratorUtil.stream(this.getBase().edges(Direction.OUT)).map(e -> rel(uri(e.label()), auto_from_(uri(this.space.elementVID(e)), lazyEdgeToRec(e, this.space)).tryToInst())));
             if (grphInstSet.IN_FURI.test(keyF) || grphInstSet.BOTH_FURI.test(keyF))
                 obj = objs(IteratorUtil.stream(this.getBase().edges(Direction.IN)).map(e -> rel(uri(e.label()), auto_from_(uri(this.space.elementVID(e)), lazyEdgeToRec(e, this.space)).tryToInst())));
-            obj = obj.append(instB(grphInstSet.OUT_INST_TID.dom(grphInstSet.VRTX_TID).rng(grphInstSet.VRTX_TID.maybeSome()), lst((Uri) key)).apply(vertexToRec(this.getBase())));
+            Obj instResult = instB(grphInstSet.OUT_INST_TID.dom(grphInstSet.VRTX_TID).rng(grphInstSet.VRTX_TID.maybeSome()), lst((Uri) key)).apply(vertexToRec(this.getBase()));
+            // Only append instruction result if it didn't fail
+            if (!instResult.isFail() && instResult.stream().noneMatch(Obj::isFail)) {
+                obj = obj.append(instResult);
+            }
             return obj.append(super.get(key));
         }
     }

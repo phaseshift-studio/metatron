@@ -116,7 +116,7 @@ public final class QCollection {
 
     public static Q constQ() {
         final Set<fURI> CONSTQ_FURIS = new HashSet<>();
-        return Q.Helper.build(CONSTQ_TID, f(CONST))
+        return Q.Helper.build(CONSTQ_TID, CONSTQ_PATTERN)
                 .preRead(furi -> bool(CONSTQ_FURIS.contains(furi.noQ())))
                 .preWrite((furi, obj) -> {
                     if (obj.isNoObj()) CONSTQ_FURIS.remove(furi.noQ());
@@ -159,7 +159,7 @@ public final class QCollection {
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-    private final static Rec NO_DOCS = rec(Map.of(uri(DESC), str("no documentation available")), DOCS_TID, null);
+    protected final static Rec NO_DOCS = rec(Map.of(uri(DESC), str("no documentation available")), DOCS_TID, null);
 
     public static Q docQ() {
         final memSpace DOC_SPACE = memSpace.of(ALL, null);
@@ -176,9 +176,9 @@ public final class QCollection {
 
     public static Q incrQ() {
         final AtomicLong counter = new AtomicLong(0);
-        return Q.Helper.build(INCRQ_TID, f(INCR)).
+        return Q.Helper.build(INCRQ_TID, INCRQ_PATTERN).
                 preWrite((vid, obj) -> {
-                    final fURI incrPattern = vid.extend(vid.qValue(INCR, fURI.class)).resolve();
+                    final fURI incrPattern = vid.extend(vid.qValue(INCRQ_PATTERN, fURI.class)).resolve();
                     final List<String> newPath = new ArrayList<>();
                     for (final String p : incrPattern.path()) {
                         if (fURI.isPattern(p))
@@ -186,7 +186,7 @@ public final class QCollection {
                         else
                             newPath.add(p);
                     }
-                    return obj.vid(vid.removeQ(INCR).path(newPath));
+                    return obj.vid(vid.removeQ(INCRQ_PATTERN).path(newPath));
                 }).create();
     }
 

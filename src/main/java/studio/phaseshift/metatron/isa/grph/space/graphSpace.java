@@ -36,7 +36,7 @@
  import studio.phaseshift.metatron.isa.m.mInstSet;
  import studio.phaseshift.metatron.isa.m.type.*;
  import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
- import studio.phaseshift.metatron.isa.mach.io.type.ObjCleanStringSerializer;
+ import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
  import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
  import studio.phaseshift.metatron.isa.mach.type.Router;
  import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -69,7 +69,7 @@
  public class graphSpace extends AbstractSpace<Graph> {
 
      public static final String GRAPH_CONFIGURATION_KEY = "mtron.grph.vid";
-     public static final ObjSerializer<String> SERIALIZER = new ObjCleanStringSerializer();
+     public static final ObjSerializer<String> SERIALIZER = new ObjmtronSerializer();
      public static final Rec GRAPH_CONFIG = rec(uri(GRAPH).maybe().asUri(), URI_TYPE);
 
      protected static ObjFactory FACTORY = null;
@@ -143,7 +143,11 @@
              switch (datasetName) {
                  case "modern" -> {
                      TinkerFactory.generateModern(tinkerGraph);
-                     config.at(uri(SCHEMA), new modernSchema(), MUTABLE);
+                     final modernSchema schema = new modernSchema();
+                     // InstSets created directly (not via importInstSetStream) need explicit registration
+                     Router.global().addSpace(schema);
+                     schema.setup();
+                     config.at(uri(SCHEMA), schema, MUTABLE);
                  }
                  case "grateful" -> TinkerFactory.generateGratefulDead(tinkerGraph);
                  case "air_routes" -> TinkerFactory.generateAirRoutes(tinkerGraph);
@@ -167,7 +171,8 @@
      }
 
      protected fURI schemaVID(final String label) {
-         return this.at(ROUTE).asRec().elements().filter(e -> e.first().uriValue().toString().endsWith("S")).findFirst().get().first().uriValue().extend(label);
+         // Get the schema route value (e.g., /m/grph/schema/modern), not the route key (/g/S)
+         return this.at(ROUTE).asRec().elements().filter(e -> e.first().uriValue().toString().endsWith("S")).findFirst().get().second().uriValue().extend(label);
      }
 
      protected graphSpace(final Graph graph, final Map<Obj, Obj> config, final fURI vid) {

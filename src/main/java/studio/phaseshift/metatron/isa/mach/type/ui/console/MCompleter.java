@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Rel;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 
@@ -48,14 +49,14 @@ public class MCompleter implements Completer {
             final Buffer buffer = reader.getBuffer();
             if (!buffer.toString().isEmpty() && buffer.toString().endsWith(". ")) {
                 final String b = buffer.toString().substring(0, buffer.toString().length() - 2);
-                final Obj o = mParser.parse(b);
+                final Obj o = ObjmtronSerializer.parse(b);
                 if (o.isCode()) {
                     final Inst lastInst = o.resolve(noobj()).codeValue().getLast();
                     final Obj insts = Router.readFromSpace(f("/m/inst/#?dom=" + lastInst.tid().rng()));
                     insts.forEach(i -> candidates.add(new Candidate(i.<Inst>as().tid().basePath() + "(" + (i.<Inst>as().args().isEmpty() ? ")" : ""), Graphitty.string(i.toString()), null, null, "", null, false)));
                 }
             } else if (!buffer.toString().isEmpty() && buffer.toString().charAt(buffer.toString().length() - 1) == ' ') {
-                final Obj o = mParser.parse(buffer.toString());
+                final Obj o = ObjmtronSerializer.parse(buffer.toString());
                 if (o.isCode())
                     candidates.add(new Candidate("", new Explain(o.as()).format(), null, null, "", null, false));
             } else {

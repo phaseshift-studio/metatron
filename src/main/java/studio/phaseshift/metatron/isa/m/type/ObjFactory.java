@@ -19,7 +19,7 @@
 package studio.phaseshift.metatron.isa.m.type;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.PCMonad;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
@@ -45,7 +45,7 @@ public interface ObjFactory extends Rec {
     <OBJ extends Obj> OBJ toObj(final Object value, final fURI tid, final fURI vid, final Class<OBJ> objClass);
 
     default Obj toObjFromString(final String value) {
-        return mParser.parse(value);
+        return ObjmtronSerializer.parse(value);
     }
 
     default Obj toObj(final Object value) {

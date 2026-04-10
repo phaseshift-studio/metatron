@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.furi.q;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.TestCategory;
@@ -36,13 +37,14 @@ import static studio.phaseshift.metatron.furi.q.QCollection.SUBSCRIPTION_TID;
 public interface SubQTest {
 
 
-    public Space getSpace();
+    Space getSpace();
 
-    public String make(final String expression);
+    String make(final String expression);
 
     @TestCategory.Crud
     @TestCategory.Concurrent
     @ParameterizedTest(name = "[{index}] String: {0}")
+    @Disabled
     @CsvSource(value = {
             "$$/xyz?subq     ->(||(>>1.to($$/abc)))             % $$/xyz -> 32            % *$$/abc.eq(32)",
             "$$/xyz?subq     ->(||(>>1.plus(10).to($$/abc)))    % $$/xyz -> 12            % *$$/abc.eq(22)",

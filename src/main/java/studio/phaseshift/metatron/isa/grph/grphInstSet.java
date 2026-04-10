@@ -201,7 +201,7 @@ public class  grphInstSet extends AbstractInstSet {
                                 "a vertex", "in adjacent edges", Map.of(jnt(0), "zero or more edge labels"), "returns the lhs vertex arg-adjacent incoming edges"),
                         docWrap(instC(BOTHE_INST_TID.dom(VRTX_TID).rng(EDGE_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_E_FUNCTION(Direction.BOTH)),
                                 "a vertex", "both adjacent edges", Map.of(jnt(0), "zero or more edge labels"), "returns the lhs vertex arg-adjacent incoming and outgoing edges"),
-                        instC(ADDE_INST_TID.dom(VRTX_TID).rng(EDGE_TID), lst(T(ALL), URI_TYPE, T(REC_TID.maybe())), (lhs, inst) -> {
+                        instC(ADDE_INST_TID.dom(VRTX_TID).rng(EDGE_TID), lst(URI_TYPE, T(VRTX_TID.some()), T(REC_TID.maybe())), (lhs, inst) -> {
                             final Vertex outVertex = ((VertexMap) lhs.jvm()).getBase();
                             final fURI edgeLabel = inst.arg(0).uriValue().big();
                             final Graph graph = outVertex.graph();

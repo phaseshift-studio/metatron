@@ -19,9 +19,9 @@
 package studio.phaseshift.metatron.isa.m.type.impl;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Uri;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
@@ -80,7 +80,7 @@ public class MUri extends MObj implements Uri {
 
             try {
                 // Parse the expression using mParser
-                final Obj expr = mParser.parse(exprStr);
+                final Obj expr = ObjmtronSerializer.parse(exprStr);
                 result.add(Tuple.Pair.with(component, expr));
             } catch (Exception e) {
                 throw MTronException.of("Failed to parse template expression '${%s}': %s", exprStr, e.getMessage());

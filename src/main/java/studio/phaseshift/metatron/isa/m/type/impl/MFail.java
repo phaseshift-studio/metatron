@@ -33,7 +33,7 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.FAIL_TID;
  */
 public class MFail extends MObj implements Fail {
 
-    public static fURI FAIL_STACK_PATTERN = f("/sys/fail?incr=./+");
+    public static fURI FAIL_STACK_PATTERN = f("/sys/fail?incrq=./+");
     
     protected MFail(Tuple.Pair<Throwable, Fail> jvm, final fURI tid, final fURI vid) {
         super(jvm, null == tid ? FAIL_TID : tid, vid);

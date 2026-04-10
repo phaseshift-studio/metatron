@@ -56,7 +56,7 @@ import static org.petitparser.parser.primitive.CharacterParser.word;
 import static org.petitparser.parser.primitive.StringParser.of;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.from_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
@@ -84,6 +84,7 @@ public class mParser {
     private static final SettableParser rel_parser = SettableParser.undefined();
     private static final SettableParser obj_rel_back_parser = SettableParser.undefined();
     private static final SettableParser obj_rel_back_parser2 = SettableParser.undefined();
+    private static final SettableParser and_or_parser = SettableParser.undefined();
     // private static final SettableParser branch_parser = SettableParser.undefined();
     private static final LinkedHashSet<Parser> PARSERS = new LinkedHashSet<>(List.of(seq(of('*').trim(), digit().plus().flatten()).map(t -> from_(uri(pick(t, 1).toString()))))); // sugar for *0 vs. *<0>
 
@@ -173,6 +174,12 @@ public class mParser {
 
         rec_parser.set(seq(m_type_prefix(REC_TID), of('[').trim(), rec_internal(obj_rel_back_parser, m_call_prefix(MAP_INST_TID)), of(']').trim(), m_vid_postfix()).trim().map(t -> rec((Map<Obj, Obj>) pick(t, 2), pick(t, 0), pick(t, 4))));
         inst_parser.set(choice(m_inst_b(), m_inst_c()));
+        and_or_parser.set(seq(m_obj(), choice(of("||").trim(),of("&&").trim()), m_obj()).map(t -> {
+            final Obj lhs = pick(t, 0);
+            final Obj rhs = pick(t, 2);
+            final String op = pick(t, 1).toString();
+            return (op.equals("||") ? or_(lhs,rhs) : and_(lhs,rhs)).tryToInst();
+        }));
 
     }
 
