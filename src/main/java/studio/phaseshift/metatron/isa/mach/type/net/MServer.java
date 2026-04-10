@@ -157,7 +157,7 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Rec 
         // ws.setAttachment("ws://" + ws.getRemoteSocketAddress());
         LOG.debug("new connection from %s", conn.getRemoteSocketAddress());
         conn.setAttachment(this.vid().extend("ws").extend(sessionCounter.incrementAndGet() + ""));
-        LOG.localInfo("new connection from %s", conn.getRemoteSocketAddress()).ifPresent(msg -> Router.global().write(conn.<fURI>getAttachment().extend(OUT), str(msg)));
+      //  LOG.localInfo("new connection from %s", conn.getRemoteSocketAddress()).ifPresent(msg -> Router.global().write(conn.<fURI>getAttachment().extend(OUT), str(msg)));
         this.running.set(true);
         // Notify all protocol handlers of new connection
         protocolHandlers.forEach(handler -> handler.onConnectionOpen(conn));
@@ -167,7 +167,7 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Rec 
     @Override
     public void onClose(final WebSocket conn, final int code, final String reason, final boolean remote) {
         // Notify all protocol handlers of connection close
-        LOG.localInfo("closed connection from %s", conn.getRemoteSocketAddress()).ifPresent(msg -> Router.global().write(conn.<fURI>getAttachment().extend(OUT), str(msg)));
+       // LOG.localInfo("closed connection from %s", conn.getRemoteSocketAddress()).ifPresent(msg -> Router.global().write(conn.<fURI>getAttachment().extend(OUT), str(msg)));
         protocolHandlers.forEach(handler -> handler.onConnectionClose(conn, code, reason));
         Router.global().stats().ioStats().setConnections(protocolHandlers.stream().mapToInt(MServerProtocolHandler::connections).sum());
 
@@ -210,7 +210,7 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Rec 
     @Override
     public void onError(final WebSocket conn, final Exception ex) {
         if (null != conn) {
-            LOG.localError("error on connection %s: %s", conn.getRemoteSocketAddress(), ex).ifPresent(msg -> Router.global().write(conn.<fURI>getAttachment().extend(OUT), str(msg)));
+           // LOG.localError("error on connection %s: %s", conn.getRemoteSocketAddress(), ex).ifPresent(msg -> Router.global().write(conn.<fURI>getAttachment().extend(OUT), str(msg)));
         }
         LOG.error("an error occurred on connection %s: %s", null == conn ? "<none>" : conn.getAttachment(), ex);
         if (null == conn || ex instanceof BindException) {

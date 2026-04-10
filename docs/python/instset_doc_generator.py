@@ -1099,7 +1099,7 @@ class HTMLDocGenerator:
                         </span>'''
                 else:
                     refines_html = f'<span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">{html.escape(display_name)}</span></span>'
-
+        
             # Generate description from doc if available
             desc_html = ""
             if t.doc and t.doc.desc:
@@ -1108,9 +1108,18 @@ class HTMLDocGenerator:
                         <p class="mb-0 text-light">{html.escape(t.doc.desc)}</p>
                     </div>'''
 
+            args_html = self._format_args_map(t.doc.args) if t.doc and t.doc.args else ""
+            if len(args_html) > 0:
+                args_html = f"""
+                            <div class="card-body border-top py-2">
+                                <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">{args_html}</code></pre>
+                            </div>
+                            """
+
             # Generate examples
             examples_html = self._format_examples(t.doc)
-
+            # logger.info(examples_html)
+            
             items.append(f"""
                 <div class="card mb-3" id="type-{html.escape(t.name)}">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1122,6 +1131,7 @@ class HTMLDocGenerator:
                     </div>
                     {definition}
                     {desc_html}
+                    {args_html}
                     {examples_html}
                 </div>""")
 
@@ -1414,6 +1424,14 @@ class HTMLDocGenerator:
                         <p class="mb-0 text-light">{html.escape(space.doc.desc)}</p>
                     </div>'''
 
+            args_html = self._format_args_map(space.doc.args) if space.doc and space.doc.args else ""
+            if len(args_html) > 0:
+                args_html = f"""
+                            <div class="card-body border-top py-2">
+                                <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">{args_html}</code></pre>
+                            </div>
+                            """
+
             # Generate examples
             examples_html = self._format_examples(space.doc)
 
@@ -1425,6 +1443,7 @@ class HTMLDocGenerator:
                     </div>
                     {type_spec_html if type_spec_html else ''}
                     {desc_html}
+                    {args_html}
                     {examples_html}
                 </div>""")
 

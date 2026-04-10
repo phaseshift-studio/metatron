@@ -40,6 +40,7 @@ import java.util.stream.Collectors;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
@@ -59,14 +60,21 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  */
 public class MCPServer extends MRec {
 
-    public static final Type MCP_SERVER_TYPE = Type.Builder.build().tid(REC_TID).vid(MCP_SERVER_TID)
+    public static final Type MCP_SERVER_TYPE = docWrap(Type.Builder.build().tid(REC_TID).vid(MCP_SERVER_TID)
             .isaPredicate(rec(
                     uri(HOST), URI_TYPE,
                     uri(TOOL).maybe(), rec(URI_TYPE, T(LLM_TOOL_TID)).maybe(),
                     uri(STATUS).maybe(), isa_(BOOL_TYPE).else_(BOOL_FALSE)))
             .constructor(instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(MCP_SERVER_TID), lst(T(REC_TID)),
                     (x, inst) -> new MCPServer(inst.arg(0).asRec().jvm(), MCP_SERVER_TID, inst.arg(0).vid())))
-            .create();
+            .create(),"a mcp server specification","creates a connection to an existing mcp server",
+            Map.of(
+                    uri(HOST), "the mcp server endpoint",
+                    uri(TOOL).maybe(), "the tools/functions available for use on the mcp server",
+                    uri(STATUS).maybe(), "the current status of the mcp server"), 
+            "a server implementing the model content protocol used by llms for the acquisition of tools and access to extenal software systems",
+            "mcp::[host => <http://127.0.0.1:29170/index-mcp/streamable-http>]@/usr/ai/mcp/intellij [-- connection populates tool and status      --]",
+            "mcp::[host => <ws://localhost:8999>]@/usr/ai/mcp/mtron                                 [-- mtron router server exposes an mcp server --]");
 
     /*public static final Type MCP_TOOL_TYPE = Type.Builder.build().tid(REC_TID).vid(MCP_TOOL_TID)
             .isaPredicate(rec(

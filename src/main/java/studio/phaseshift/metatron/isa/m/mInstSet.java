@@ -209,11 +209,11 @@ public class mInstSet extends AbstractInstSet {
                     uri(QSTRING).maybe(), rec(URI_TYPE, Q_TYPE),
                     uri(SCHEMA).maybe(), REC_TYPE)).create();
 
-    public static final Type MONO_TYPE = Type.Builder.build()
+   /* public static final Type MONO_TYPE = Type.Builder.build()
             .tid(MONO_TID)
             .vid(MONO_TID)
             .predicate((lhs, inst) -> bool(lhs.isBytes() || lhs.isBool() || lhs.isInt() || lhs.isReal() || lhs.isStr() || lhs.isUri() || lhs.isObjInst()))
-            .create();
+            .create();*/
 
    /* public static final Type NUM_TYPE = Type.Builder.build()
             .tid(NUM_TID)
@@ -221,11 +221,11 @@ public class mInstSet extends AbstractInstSet {
             .predicate((lhs, inst) -> bool(lhs.isInt() || lhs.isReal()))
             .create();*/
 
-    public static final Type POLY_TYPE = Type.Builder.build()
+   /* public static final Type POLY_TYPE = Type.Builder.build()
             .tid(POLY_TID)
             .vid(POLY_TID)
             .predicate((lhs, inst) -> bool(lhs.isLst() || lhs.isRec() || lhs.isRel() || lhs.isCode()))
-            .create();
+            .create();*/
 
 
     public mInstSet() {
@@ -238,8 +238,8 @@ public class mInstSet extends AbstractInstSet {
                 uri(PATTERN), uri(M_ISA_TID.extend(ALL)),
                 uri(CONST), lst(docWrap(noobj(), "a no object")),
                 uri(TYPE), lst(
-                        docWrap(MONO_TYPE, "an atomic obj"),
-                        docWrap(POLY_TYPE, "a obj composed of other objs"),
+                        //  docWrap(MONO_TYPE, "an atomic obj"),
+                        //  docWrap(POLY_TYPE, "a obj composed of other objs"),
                         //  docWrap(NOOBJ_TYPE, "a no object"),
                         docWrap(BOOL_TYPE, "a 2 valued mono: true or false",
                                 "true",
@@ -263,7 +263,8 @@ public class mInstSet extends AbstractInstSet {
                                 "\"double quoted\"",
                                 "'singled quoted'",
                                 "\"\"\" multi-line triple double quoted \"\"\"",
-                                "''' multi-line triple single quoted '''"),
+                                "''' multi-line triple single quoted '''",
+                                "\"lhs processed by ${_} template parameter\""),
                         docWrap(URI_TYPE, "a uniform resource identifier",
                                 "a/b/c                            [-- relative/node uri              --]",
                                 "/a/b/c/                          [-- absolute/branch uri            --]",

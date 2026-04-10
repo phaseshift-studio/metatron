@@ -50,7 +50,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -117,7 +116,7 @@ public final class QCollection {
 
     public static Q constQ() {
         final Set<fURI> CONSTQ_FURIS = new HashSet<>();
-        return studio.phaseshift.metatron.furi.Q.Helper.build(CONSTQ_TID, f(CONST))
+        return Q.Helper.build(CONSTQ_TID, f(CONST))
                 .preRead(furi -> bool(CONSTQ_FURIS.contains(furi.noQ())))
                 .preWrite((furi, obj) -> {
                     if (obj.isNoObj()) CONSTQ_FURIS.remove(furi.noQ());
@@ -136,7 +135,7 @@ public final class QCollection {
 
     public static Q typeQ() {
         final memSpace TYPE_SPACE = memSpace.of(rec(uri(PATTERN), uri("#")), null);
-        return studio.phaseshift.metatron.furi.Q.Helper.build(TYPEQ_TID, TYPEQ_PATTERN)
+        return Q.Helper.build(TYPEQ_TID, TYPEQ_PATTERN)
                 .preWrite((vid, obj) -> {
                     TYPE_SPACE.write(vid.qLess(), obj);
                     return obj;
@@ -160,17 +159,14 @@ public final class QCollection {
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-    protected static final Rec NO_DOCS = rec(Map.of(uri(DESC), str("no documentation available")), DOCS_TID, null);
+    private final static Rec NO_DOCS = rec(Map.of(uri(DESC), str("no documentation available")), DOCS_TID, null);
 
     public static Q docQ() {
-        final memSpace DOC_SPACE = memSpace.of(rec(), null);
-        return studio.phaseshift.metatron.furi.Q.Helper.build(DOCQ_TID, DOCQ_PATTERN)
+        final memSpace DOC_SPACE = memSpace.of(ALL, null);
+        return Q.Helper.build(DOCQ_TID, DOCQ_PATTERN)
                 .obj(f(OBJ), DOC_SPACE)
-                .preWrite((vid, obj) -> DOC_SPACE.write(vid, obj.tid().equals(DOCS_TID) ? obj : new Doc(obj.toCleanString())))
-                .preRead((vid) -> {
-                    final Obj obj = DOC_SPACE.read(vid).orElse(NO_DOCS.plus(rec(uri(OBJ), Router.global().read(vid.basePath()))));
-                    return objs(obj.stream().filter(o -> o.tid().equals(DOCS_TID)));
-                })
+                .preWrite((vid, obj) -> DOC_SPACE.write(obj.isInst() ? obj.tid().basePath() : vid.removeQ(DOCQ), obj.tid().equals(DOCS_TID) ? obj : new Doc(obj.toCleanString())))
+                .preRead((vid) -> DOC_SPACE.read(vid.basePath()).orElse(NO_DOCS.plus(rec(uri(OBJ), Router.global().read(vid.basePath())))))
                 .create();
     }
 
@@ -180,7 +176,7 @@ public final class QCollection {
 
     public static Q incrQ() {
         final AtomicLong counter = new AtomicLong(0);
-        return studio.phaseshift.metatron.furi.Q.Helper.build(INCRQ_TID, f(INCR)).
+        return Q.Helper.build(INCRQ_TID, f(INCR)).
                 preWrite((vid, obj) -> {
                     final fURI incrPattern = vid.extend(vid.qValue(INCR, fURI.class)).resolve();
                     final List<String> newPath = new ArrayList<>();
@@ -200,7 +196,7 @@ public final class QCollection {
 
     public static Q subq() {
         final Lst subscriptions = lst();
-        return studio.phaseshift.metatron.furi.Q.Helper.build(SUBQ_TID, SUBQ_PATTERN)
+        return Q.Helper.build(SUBQ_TID, SUBQ_PATTERN)
                 .obj(f(OBJ), subscriptions)
                 .preRead(vid -> {
                     subscriptions.logger().debug("reading: %s", vid.basePath());
@@ -253,7 +249,7 @@ public final class QCollection {
         if (docq.isEmpty())
             objSpace.logger().warn("no doc query attachment mounted on %s for %s", objSpace, objID);
         else
-            docq.get().at(OBJ).<Space>as().write(objID, doc);
+            docq.get().at(OBJ).<Space>as().write(obj.isInst() ? objID.basePath() : objID, doc);
 
     }
 
@@ -312,7 +308,7 @@ public final class QCollection {
         public static Doc doc(final Rec docRec) {
             return new Doc(docRec.jvm(), docRec.tid(), docRec.vid());
         }
-        
+
         public static Doc doc(final Obj inst, final String domDesc, final String rngDesc, final Map<Obj, String> argDescription, final String description, final String... examples) {
             return new Doc(rec(
                     uri(OBJ), inst,

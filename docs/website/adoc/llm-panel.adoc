@@ -122,14 +122,14 @@ of the code.
 *openai:gpt-4o-2024-11-20 +   /
    [think=>print(_),          /
     response=>[to=>print(_)], /
-    memory=>!*/usr/ai/memory].to(agent)                                         [-- <1> --]
-[,]@/usr/ai/memory                                                              [-- <2> --]
-*agent.chat('what is 6 + 23? (response format is important)',[answer=>int::T]). /
-       where([answer => ?>20]).                                                 /  
-       *agent.chat('what was the last answer you gave me?',[answer=>int::T]).   /
-       >>answer.                                                                /
-       -<|[?>23 => print('a big answer'),                                       /
-              _ => print('a small answer')].>>.mult(1000).to(final)            [-- <3> --]
+    memory=>!*/usr/ai/memory].to(agent)                                         [-- <1>
+[,]@/usr/ai/memory                                                              [-- <2>
+*agent.chat('what is 6 + 23?',[answer=>int::T])                                 /
+       .where([answer => ?>20])                                                 /  
+       .*agent.chat('what was the last answer you gave me?',[answer=>int::T])   /
+       .>>answer                                                                /
+       .-<|[?>23 => print('a big answer'),                                      /
+               _ => print('a small answer')].>>.mult(1000).to(final)             [-- <3>
 -->
 ++++
 

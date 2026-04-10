@@ -189,9 +189,11 @@ public class BootLoader implements Rec, Feature.SelfClone {
                     .forEach(kv -> sysSpace.write(kv.getKey(), kv.getValue()));
             /// LOAD DEFAULT INSTRUCTION SET (/m and /m/mach)
             final InstSet m = new mInstSet();
+            Router.global().addSpace(m);  // explicit registration after full construction
             Router.writeToSpace(m);
             m.setup();
             final InstSet mach = new machInstSet();
+            Router.global().addSpace(mach);  // explicit registration after full construction
             Router.writeToSpace(mach);
             mach.setup();
             /// WRITE THE BOOT ARGS TO THE ROUTER STACK

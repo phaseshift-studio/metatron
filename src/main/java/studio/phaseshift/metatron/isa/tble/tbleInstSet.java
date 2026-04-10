@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.sql.*;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
@@ -91,9 +92,9 @@ public class tbleInstSet extends AbstractInstSet {
                 uri(TYPE), lst(
                         docWrap(LST_ROW_TYPE, "a table row indexed by column number"),
                         docWrap(REC_ROW_TYPE, "a table row indexed by column name"),
-                        docWrap(TABLE_TYPE, "a stream of equally sized rows"),
+                        docWrap(TABLE_TYPE, "a stream of equally wide rows"),
                         docWrap(TABLE_SPACE_TYPE, "a metatron realization of a relational database")),
-                uri(INST), lst(
+                uri(INST), lst(Stream.of(
                         docWrap(instC(AS_INST_TID.dom(LST_ROW_TID).rng(REC_ROW_TID), lst(REC_ROW_TYPE), (lhs, inst) -> lhs.asRec().at(uri(TABLE))),
                                 "a table row indexed by column number",
                                 "a table row indexed by column name",
@@ -104,191 +105,198 @@ public class tbleInstSet extends AbstractInstSet {
                                 "a table row indexed by column number",
                                 Map.of(),
                                 "maps a rec row to a lst row"),
-                        instC(SQL_INST_TID.dom(TABLEDB_SPACE_TID).rng(REC_ROW_TID.maybeSome()), lst(STR_TYPE), (lhs, inst) -> {
-                            try {
-                                final Statement statement = lhs.<tabledbSpace>as().sjvm().createStatement();
-                                final ResultSet result = statement.executeQuery(inst.arg(0).strValue());
-                                final ResultSetMetaData metadata = result.getMetaData();
-                                Obj objs = objs0();
-                                while (result.next()) {
-                                    final Rec row = rec();
-                                    for (int i = 1; i <= metadata.getColumnCount(); i++) {
-                                        final int sqlType = metadata.getColumnType(i);
-                                        final String columnName = metadata.getColumnName(i);
-                                        // Use typed getters based on SQL type to avoid database-specific objects
-                                        final Obj value = switch (sqlType) {
-                                            case Types.TINYINT, Types.SMALLINT, Types.INTEGER, Types.BIGINT -> {
-                                                final long val = result.getLong(i);
-                                                yield result.wasNull() ? NoObj.noobj() : jnt(val);
+                        docWrap(instC(SQL_INST_TID.dom(TABLEDB_SPACE_TID).rng(REC_ROW_TID.maybeSome()), lst(STR_TYPE), (lhs, inst) -> {
+                                    try {
+                                        final Statement statement = lhs.<tabledbSpace>as().sjvm().createStatement();
+                                        final ResultSet result = statement.executeQuery(inst.arg(0).strValue());
+                                        final ResultSetMetaData metadata = result.getMetaData();
+                                        Obj objs = objs0();
+                                        while (result.next()) {
+                                            final Rec row = rec();
+                                            for (int i = 1; i <= metadata.getColumnCount(); i++) {
+                                                final int sqlType = metadata.getColumnType(i);
+                                                final String columnName = metadata.getColumnName(i);
+                                                // Use typed getters based on SQL type to avoid database-specific objects
+                                                final Obj value = switch (sqlType) {
+                                                    case Types.TINYINT, Types.SMALLINT, Types.INTEGER, Types.BIGINT -> {
+                                                        final long val = result.getLong(i);
+                                                        yield result.wasNull() ? NoObj.noobj() : jnt(val);
+                                                    }
+                                                    case Types.FLOAT, Types.REAL, Types.DOUBLE, Types.DECIMAL, Types.NUMERIC -> {
+                                                        final double val = result.getDouble(i);
+                                                        yield result.wasNull() ? NoObj.noobj() : real(val);
+                                                    }
+                                                    case Types.BOOLEAN, Types.BIT -> {
+                                                        final boolean val = result.getBoolean(i);
+                                                        yield result.wasNull() ? NoObj.noobj() : bool(val);
+                                                    }
+                                                    default -> {
+                                                        // String types, dates, binary, etc.
+                                                        final String val = result.getString(i);
+                                                        yield val == null ? NoObj.noobj() : str(val);
+                                                    }
+                                                };
+                                                row.at(uri(columnName), value, MUTABLE);
                                             }
-                                            case Types.FLOAT, Types.REAL, Types.DOUBLE, Types.DECIMAL, Types.NUMERIC -> {
-                                                final double val = result.getDouble(i);
-                                                yield result.wasNull() ? NoObj.noobj() : real(val);
-                                            }
-                                            case Types.BOOLEAN, Types.BIT -> {
-                                                final boolean val = result.getBoolean(i);
-                                                yield result.wasNull() ? NoObj.noobj() : bool(val);
-                                            }
-                                            default -> {
-                                                // String types, dates, binary, etc.
-                                                final String val = result.getString(i);
-                                                yield val == null ? NoObj.noobj() : str(val);
-                                            }
-                                        };
-                                        row.at(uri(columnName), value, MUTABLE);
-                                    }
-                                    objs = objs.append(row);
-                                }
-                                return objs;
-
-                            } catch (final Exception e) {
-                                throw MTronException.of(e);
-                            }
-                        })),
-                uri(REWRITE), lst(
-                        // Optimize: *table.count() → SELECT COUNT(*)
-                        docWrap(CommonRewrites.countRewrite(
-                                tabledbSpace.class,
-                                TBLE_ISA_REWRITE_TID.extend("sql_count"),
-                                (space, furi) -> {
-                                    final String tableName = furi.segments().getFirst();
-                                    try (final Statement stmt = space.sjvm().createStatement();
-                                         final ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM " + tableName)) {
-                                        return rs.next() ? (long) rs.getInt(1) : 0L;
-                                    } catch (SQLException e) {
-                                        throw MTronException.of(e);
-                                    }
-                                }
-                        ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages native SELECT COUNT(*) to count rows in a table"),
-
-                        // Optimize: *table.sum() → SELECT SUM(*)
-                        docWrap(CommonRewrites.sumRewrite(
-                                tabledbSpace.class,
-                                TBLE_ISA_REWRITE_TID.extend("sql_sum"),
-                                (space, furi) -> {
-                                    final String tableName = furi.segments().getFirst();
-                                    try (final Statement stmt = space.sjvm().createStatement();
-                                         final ResultSet rs = stmt.executeQuery("SELECT SUM(1) FROM " + tableName)) {
-                                        return rs.next() ? rs.getLong(1) : 0L;
-                                    } catch (SQLException e) {
-                                        throw MTronException.of(e);
-                                    }
-                                }
-                        ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages native SELECT SUM(*) to sum entries in a table column"),
-                        // Optimize: *table.mean() → SELECT AVG(*)
-                        docWrap(CommonRewrites.meanRewrite(
-                                tabledbSpace.class,
-                                TBLE_ISA_REWRITE_TID.extend("sql_mean"),
-                                (space, furi) -> {
-                                    final String tableName = furi.segments().getFirst();
-                                    try (final Statement stmt = space.sjvm().createStatement();
-                                         final ResultSet rs = stmt.executeQuery("SELECT AVG(1.0) FROM " + tableName)) {
-                                        return rs.next() ? rs.getDouble(1) : 0.0;
-                                    } catch (SQLException e) {
-                                        throw MTronException.of(e);
-                                    }
-                                }
-                        ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages native SELECT AVG(*) to average entries in a table column"),
-                        docWrap(CommonRewrites.limitRewrite(
-                                tabledbSpace.class,
-                                TBLE_ISA_REWRITE_TID.extend("sql_limit"),
-                                (space, furi, limit) -> {
-                                    final String tableName = furi.segments().getFirst();
-                                    final String sql = "SELECT * FROM " + tableName + " LIMIT " + limit;
-                                    try (final Statement stmt = space.sjvm().createStatement();
-                                         final ResultSet rs = stmt.executeQuery(sql)) {
-                                        return ObjSQLSerializer.readLimitedAsRecObjs(rs, (int) limit);
-                                    } catch (SQLException e) {
-                                        throw MTronException.of(e);
-                                    }
-                                }
-                        ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages native SELECT ... LIMIT to take first n rows from a table"),
-
-                        // Optimize: *table.has() → SELECT EXISTS(SELECT 1 FROM table LIMIT 1)
-                        docWrap(CommonRewrites.hasRewrite(
-                                tabledbSpace.class,
-                                TBLE_ISA_REWRITE_TID.extend("sql_has"),
-                                (space, furi) -> {
-                                    final String tableName = furi.segments().getFirst();
-                                    try (final Statement stmt = space.sjvm().createStatement();
-                                         final ResultSet rs = stmt.executeQuery("SELECT EXISTS(SELECT 1 FROM " + tableName + " LIMIT 1)")) {
-                                        return rs.next() && rs.getBoolean(1);
-                                    } catch (SQLException e) {
-                                        throw MTronException.of(e);
-                                    }
-                                }
-                        ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages native SELECT EXISTS to check if table has any rows"),
-
-                        // Optimize: *table.where([col=>val]) → SELECT * FROM table WHERE col = val
-                        docWrap(CommonRewrites.whereRewrite(
-                                tabledbSpace.class,
-                                TBLE_ISA_REWRITE_TID.extend("sql_where"),
-                                (space, furi, sqlWhere) -> {
-                                    final String tableName = furi.segments().getFirst();
-                                    final String sql = "SELECT * FROM " + tableName + " WHERE " + sqlWhere;
-                                    try (final Statement stmt = space.sjvm().createStatement();
-                                         final ResultSet rs = stmt.executeQuery(sql)) {
-                                        return ObjSQLSerializer.readAllAsRecObjs(rs);
-                                    } catch (SQLException e) {
-                                        throw MTronException.of(e, "SQL failed: %s", sql);
-                                    }
-                                }
-                        ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages native SELECT ... WHERE to filter rows in a table"),
-
-                        // Optimize: sql_where.count() → SELECT COUNT(*) FROM table WHERE ...
-                        docWrap(CommonRewrites.whereCountRewrite(
-                                tabledbSpace.class,
-                                TBLE_ISA_REWRITE_TID.extend("sql_where"),
-                                TBLE_ISA_REWRITE_TID.extend("sql_where_count"),
-                                (space, furi, sqlWhere) -> {
-                                    final String tableName = furi.segments().getFirst();
-                                    final String sql = "SELECT COUNT(*) FROM " + tableName + " WHERE " + sqlWhere;
-                                    try (final Statement stmt = space.sjvm().createStatement();
-                                         final ResultSet rs = stmt.executeQuery(sql)) {
-                                        return rs.next() ? rs.getLong(1) : 0L;
-                                    } catch (SQLException e) {
-                                        throw MTronException.of(e, "SQL failed: %s", sql);
-                                    }
-                                }
-                        ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages native SELECT COUNT(*) ... WHERE to count filtered rows"),
-
-                        // Optimize: from(table/+).>>{col1,col2} → SELECT col1, col2 FROM table
-                        docWrap(CommonRewrites.selectRewrite(
-                                tabledbSpace.class,
-                                TBLE_ISA_REWRITE_TID.extend("sql_select"),
-                                (space, furi, columns) -> {
-                                    final String tableName = furi.segments().getFirst();
-                                    final String columnList = String.join(", ", columns);
-                                    final String sql = "SELECT " + columnList + " FROM " + tableName;
-                                    try (final Statement stmt = space.sjvm().createStatement();
-                                         final ResultSet rs = stmt.executeQuery(sql)) {
-                                        final java.sql.ResultSetMetaData metaData = rs.getMetaData();
-                                        Obj result = objs0();
-                                        while (rs.next()) {
-                                            final Map<Obj, Obj> rowMap = new LinkedHashMap<>();
-                                            for (int i = 1; i <= metaData.getColumnCount(); i++) {
-                                                final String colName = metaData.getColumnName(i);
-                                                final Object value = rs.getObject(i);
-                                                if (value != null) {
-                                                    final Obj objValue = switch (metaData.getColumnType(i)) {
-                                                        case java.sql.Types.BOOLEAN, java.sql.Types.BIT -> bool(rs.getBoolean(i));
-                                                        case java.sql.Types.TINYINT, java.sql.Types.SMALLINT, java.sql.Types.INTEGER, java.sql.Types.BIGINT -> jnt(rs.getLong(i));
-                                                        case java.sql.Types.REAL, java.sql.Types.FLOAT, java.sql.Types.DOUBLE, java.sql.Types.DECIMAL, java.sql.Types.NUMERIC -> real(rs.getDouble(i));
-                                                        default -> str(value.toString());
-                                                    };
-                                                    rowMap.put(uri(colName), objValue);
-                                                }
-                                            }
-                                            result = result.append(rec(rowMap));
+                                            objs = objs.append(row);
                                         }
-                                        return result.asObjs();
-                                    } catch (SQLException e) {
-                                        throw MTronException.of(e, "SQL failed: %s", sql);
-                                    }
-                                }
-                        ), "*table/+>>{name,age}", "sql_select(table, [name,age])", Map.of(), "leverages native SELECT col1, col2 FROM table for projections")
+                                        return objs;
 
-                )));
+                                    } catch (final Exception e) {
+                                        throw MTronException.of(e);
+                                    }
+                                }), "a table space typically backed by an sql-compliant relational database",
+                                "a result set as a stream of rows in mtron",
+                                Map.of(jnt(0), "an sql query"),
+                                "query a relational database in native sql and yield an mtron mapped result set",
+                                "*/sys/space/netflix.sql('SELECT * FROM movie WHERE runtime < ${*next_event - time(now)') [-- str templates are useful --]"))),
+                        uri(REWRITE), lst(
+                                // Optimize: *table.count() → SELECT COUNT(*)
+                                docWrap(CommonRewrites.countRewrite(
+                                        tabledbSpace.class,
+                                        TBLE_ISA_REWRITE_TID.extend("sql_count"),
+                                        (space, furi) -> {
+                                            final String tableName = furi.segments().getFirst();
+                                            try (final Statement stmt = space.sjvm().createStatement();
+                                                 final ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM " + tableName)) {
+                                                return rs.next() ? (long) rs.getInt(1) : 0L;
+                                            } catch (SQLException e) {
+                                                throw MTronException.of(e);
+                                            }
+                                        }
+                                ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages native SELECT COUNT(*) to count rows in a table"),
+
+                                // Optimize: *table.sum() → SELECT SUM(*)
+                                docWrap(CommonRewrites.sumRewrite(
+                                        tabledbSpace.class,
+                                        TBLE_ISA_REWRITE_TID.extend("sql_sum"),
+                                        (space, furi) -> {
+                                            final String tableName = furi.segments().getFirst();
+                                            try (final Statement stmt = space.sjvm().createStatement();
+                                                 final ResultSet rs = stmt.executeQuery("SELECT SUM(1) FROM " + tableName)) {
+                                                return rs.next() ? rs.getLong(1) : 0L;
+                                            } catch (SQLException e) {
+                                                throw MTronException.of(e);
+                                            }
+                                        }
+                                ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages native SELECT SUM(*) to sum entries in a table column"),
+                                // Optimize: *table.mean() → SELECT AVG(*)
+                                docWrap(CommonRewrites.meanRewrite(
+                                        tabledbSpace.class,
+                                        TBLE_ISA_REWRITE_TID.extend("sql_mean"),
+                                        (space, furi) -> {
+                                            final String tableName = furi.segments().getFirst();
+                                            try (final Statement stmt = space.sjvm().createStatement();
+                                                 final ResultSet rs = stmt.executeQuery("SELECT AVG(1.0) FROM " + tableName)) {
+                                                return rs.next() ? rs.getDouble(1) : 0.0;
+                                            } catch (SQLException e) {
+                                                throw MTronException.of(e);
+                                            }
+                                        }
+                                ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages native SELECT AVG(*) to average entries in a table column"),
+                                docWrap(CommonRewrites.limitRewrite(
+                                        tabledbSpace.class,
+                                        TBLE_ISA_REWRITE_TID.extend("sql_limit"),
+                                        (space, furi, limit) -> {
+                                            final String tableName = furi.segments().getFirst();
+                                            final String sql = "SELECT * FROM " + tableName + " LIMIT " + limit;
+                                            try (final Statement stmt = space.sjvm().createStatement();
+                                                 final ResultSet rs = stmt.executeQuery(sql)) {
+                                                return ObjSQLSerializer.readLimitedAsRecObjs(rs, (int) limit);
+                                            } catch (SQLException e) {
+                                                throw MTronException.of(e);
+                                            }
+                                        }
+                                ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages native SELECT ... LIMIT to take first n rows from a table"),
+
+                                // Optimize: *table.has() → SELECT EXISTS(SELECT 1 FROM table LIMIT 1)
+                                docWrap(CommonRewrites.hasRewrite(
+                                        tabledbSpace.class,
+                                        TBLE_ISA_REWRITE_TID.extend("sql_has"),
+                                        (space, furi) -> {
+                                            final String tableName = furi.segments().getFirst();
+                                            try (final Statement stmt = space.sjvm().createStatement();
+                                                 final ResultSet rs = stmt.executeQuery("SELECT EXISTS(SELECT 1 FROM " + tableName + " LIMIT 1)")) {
+                                                return rs.next() && rs.getBoolean(1);
+                                            } catch (SQLException e) {
+                                                throw MTronException.of(e);
+                                            }
+                                        }
+                                ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages native SELECT EXISTS to check if table has any rows"),
+
+                                // Optimize: *table.where([col=>val]) → SELECT * FROM table WHERE col = val
+                                docWrap(CommonRewrites.whereRewrite(
+                                        tabledbSpace.class,
+                                        TBLE_ISA_REWRITE_TID.extend("sql_where"),
+                                        (space, furi, sqlWhere) -> {
+                                            final String tableName = furi.segments().getFirst();
+                                            final String sql = "SELECT * FROM " + tableName + " WHERE " + sqlWhere;
+                                            try (final Statement stmt = space.sjvm().createStatement();
+                                                 final ResultSet rs = stmt.executeQuery(sql)) {
+                                                return ObjSQLSerializer.readAllAsRecObjs(rs);
+                                            } catch (SQLException e) {
+                                                throw MTronException.of(e, "SQL failed: %s", sql);
+                                            }
+                                        }
+                                ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages native SELECT ... WHERE to filter rows in a table"),
+
+                                // Optimize: sql_where.count() → SELECT COUNT(*) FROM table WHERE ...
+                                docWrap(CommonRewrites.whereCountRewrite(
+                                        tabledbSpace.class,
+                                        TBLE_ISA_REWRITE_TID.extend("sql_where"),
+                                        TBLE_ISA_REWRITE_TID.extend("sql_where_count"),
+                                        (space, furi, sqlWhere) -> {
+                                            final String tableName = furi.segments().getFirst();
+                                            final String sql = "SELECT COUNT(*) FROM " + tableName + " WHERE " + sqlWhere;
+                                            try (final Statement stmt = space.sjvm().createStatement();
+                                                 final ResultSet rs = stmt.executeQuery(sql)) {
+                                                return rs.next() ? rs.getLong(1) : 0L;
+                                            } catch (SQLException e) {
+                                                throw MTronException.of(e, "SQL failed: %s", sql);
+                                            }
+                                        }
+                                ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages native SELECT COUNT(*) ... WHERE to count filtered rows"),
+
+                                // Optimize: from(table/+).>>{col1,col2} → SELECT col1, col2 FROM table
+                                docWrap(CommonRewrites.selectRewrite(
+                                        tabledbSpace.class,
+                                        TBLE_ISA_REWRITE_TID.extend("sql_select"),
+                                        (space, furi, columns) -> {
+                                            final String tableName = furi.segments().getFirst();
+                                            final String columnList = String.join(", ", columns);
+                                            final String sql = "SELECT " + columnList + " FROM " + tableName;
+                                            try (final Statement stmt = space.sjvm().createStatement();
+                                                 final ResultSet rs = stmt.executeQuery(sql)) {
+                                                final java.sql.ResultSetMetaData metaData = rs.getMetaData();
+                                                Obj result = objs0();
+                                                while (rs.next()) {
+                                                    final Map<Obj, Obj> rowMap = new LinkedHashMap<>();
+                                                    for (int i = 1; i <= metaData.getColumnCount(); i++) {
+                                                        final String colName = metaData.getColumnName(i);
+                                                        final Object value = rs.getObject(i);
+                                                        if (value != null) {
+                                                            final Obj objValue = switch (metaData.getColumnType(i)) {
+                                                                case java.sql.Types.BOOLEAN, java.sql.Types.BIT ->
+                                                                        bool(rs.getBoolean(i));
+                                                                case java.sql.Types.TINYINT, java.sql.Types.SMALLINT, java.sql.Types.INTEGER, java.sql.Types.BIGINT ->
+                                                                        jnt(rs.getLong(i));
+                                                                case java.sql.Types.REAL, java.sql.Types.FLOAT, java.sql.Types.DOUBLE, java.sql.Types.DECIMAL, java.sql.Types.NUMERIC ->
+                                                                        real(rs.getDouble(i));
+                                                                default -> str(value.toString());
+                                                            };
+                                                            rowMap.put(uri(colName), objValue);
+                                                        }
+                                                    }
+                                                    result = result.append(rec(rowMap));
+                                                }
+                                                return result.asObjs();
+                                            } catch (SQLException e) {
+                                                throw MTronException.of(e, "SQL failed: %s", sql);
+                                            }
+                                        }
+                                ), "*table/+>>{name,age}", "sql_select(table, [name,age])", Map.of(), "leverages native SELECT col1, col2 FROM table for projections")
+
+                        )));
         docWrap(this,
                 "the columns, rows, and entries of the table join the metatron",
                 "*acme:customer.where[person=>[name=>_=>age=>?>29]]");

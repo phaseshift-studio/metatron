@@ -245,14 +245,14 @@ bin/metatron</code></pre>
                         <div class="accordion-body">
                                <pre><code>instset::[
  pattern=>/m/llm/#,
- space  =>[
-   super=>!*/m],
  q      =>[
    docq::[
        pre_read =>inst?rng=#{*}&dom=#{?}(uri::T){<j>},
        pre_write=>inst?rng=#{*}&dom=#{?}(uri::T,#::T){<j>},
        pattern  =>docq,
-       obj      =>mem::[=>]]],
+       obj      =>mem::[pattern=><#>]]],
+ space  =>[
+   super=>!*/m],
  type   =>[
    space::T[?[
      name   =>is(or(eq(anthropic),eq(openai),eq(ollama))),
@@ -268,7 +268,11 @@ bin/metatron</code></pre>
      name  =>uri::T,
      desc  =>str::T,
      {?}arg=>{?}[uri::T=>#::T]]]@/m/llm/tool,
-   lst::T[?[,]]@/m/llm/memory,
+   lst::T@/m/llm/memory,
+   rec::T[?[
+     contents=>[text=>str::T],
+     type    =>user]]@/m/llm/user,
+   rec::T[?[{?}text=>str::T,{?}thinking=>int::T,{?}attributes=>rec::T,type=>AI]]@/m/llm/ai,
    rec::T[?[
      name      =>uri::T,
      desc      =>str::T,
@@ -282,23 +286,36 @@ bin/metatron</code></pre>
      {?}host=>uri::T,
      route  =>[uri::T=>uri::T]]][inst?rng=catalog&dom=#{?}(rec::T){<j>}]@/m/llm/space/catalog,
      name       =>uri::T,
-     {?}think   =>[{?}to=>#::T],
-     {?}response=>[{?}to=>#::T,{?}format=>#::T],
+     {?}think   =>#::T,
+     {?}response=>{?}[{?}to=>inst::T,{?}format=>#::T],
      {?}size    =>data_size::T[][/m/math/bB/cons?rng=bB&dom=#{?}(#::T){<j>}]@/m/math/bB,
-     {?}memory  =>[{?}from=>uri::T],
+     {?}memory  =>lst{?}::T@/m/llm/memory,
      {?}desc    =>str::T,
-     {?}skill   =>lst::T,
-     {?}tool    =>lst::T]]@/m/llm/model],
+     {?}skill   =>lst{?}::T,
+     {?}tool    =>{?}[
+     rec::T[?[
+     inst  =>#::T,
+     name  =>uri::T,
+     desc  =>str::T,
+     {?}arg=>{?}[uri::T=>#::T]]]@/m/llm/tool]]]@/m/llm/model],
  inst   =>[
-   as?rng=tool&dom=/m/space/q/docq/docs(){<j>},
-   as?rng=tool&dom=inst(){<j>},
+   as?rng=tool&dom=/m/space/q/docq/docs(rec::T[?[
+     inst  =>#::T,
+     name  =>uri::T,
+     desc  =>str::T,
+     {?}arg=>{?}[uri::T=>#::T]]]@/m/llm/tool){<j>},
+   as?rng=tool&dom=inst(rec::T[?[
+     inst  =>#::T,
+     name  =>uri::T,
+     desc  =>str::T,
+     {?}arg=>{?}[uri::T=>#::T]]]@/m/llm/tool){<j>},
    as?rng=skill&dom=dir(rec::T[?[
      name      =>uri::T,
      desc      =>str::T,
      {?}content=>str::T,
      {?}entry  =>[
      [dir=>uri::T,content=>str::T]]]]@/m/llm/skill){<j>},
-   chat?rng=#{?}&dom=model(str::T){<j>}]]@/m/llm</code></pre>
+   chat?rng=#{?}&dom=model(str::T,#{?}::T){<j>}]]@/m/llm</code></pre>
                         </div>
                     </div>
                 </div>
@@ -308,7 +325,7 @@ bin/metatron</code></pre>
         <div class="container-xxl mb-4">
             <div class="d-flex justify-content-center gap-2 flex-wrap">
                 <button class="btn btn-outline-secondary" disabled>Consts <span class="badge bg-dark">0</span></button>
-                <a href="#types" class="btn btn-outline-primary">Types <span class="badge bg-secondary">5</span></a>
+                <a href="#types" class="btn btn-outline-primary">Types <span class="badge bg-secondary">7</span></a>
                 <a href="#instructions" class="btn btn-outline-primary">Insts <span class="badge bg-secondary">1</span></a>
                 <a href="#spaces" class="btn btn-outline-primary">Spaces <span class="badge bg-secondary">1</span></a>
                 <button class="btn btn-outline-secondary" disabled>Rewrites <span class="badge bg-dark">0</span></button>
@@ -328,6 +345,10 @@ bin/metatron</code></pre>
                 <h6 class="text-primary mb-2">Types</h6>
                 <div class="index-columns">
                     
+                <a href="#type-ai" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
+                    <span class="code">ai</span>
+                    <span class="badge bg-primary">T</span>
+                </a>
                 <a href="#type-mcp" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">mcp</span>
                     <span class="badge bg-primary">T</span>
@@ -346,6 +367,10 @@ bin/metatron</code></pre>
                 </a>
                 <a href="#type-tool" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">tool</span>
+                    <span class="badge bg-primary">T</span>
+                </a>
+                <a href="#type-user" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
+                    <span class="code">user</span>
                     <span class="badge bg-primary">T</span>
                 </a>
                 </div>
@@ -380,9 +405,28 @@ bin/metatron</code></pre>
             
         <div class="container-xxl mb-4" id="types">
             <h3 class="text-primary mb-3">
-                Types <span class="badge bg-primary">5</span>
+                Types <span class="badge bg-primary">7</span>
             </h3>
             
+                <div class="card mb-3" id="type-ai">
+                    <div class="card-header d-flex justify-content-between align-items-center py-2">
+                        <span>
+                            <span class="code text-primary fw-bold">ai::T</span>
+                            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">rec::T</span></span>
+                        </span>
+                        <small class="text-muted code">/m/llm/ai</small>
+                    </div>
+                    
+                    <div class="card-body p-2">
+                        <pre class="mb-0"><code class="language-mtron">rec::T[?[{?}text=&gt;str::T,{?}thinking=&gt;int::T,{?}attributes=&gt;rec::T,type=&gt;AI]]@/m/llm/ai</code></pre>
+                    </div>
+                    
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
+                    
+                    
+                </div>
                 <div class="card mb-3" id="type-mcp">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
@@ -400,9 +444,21 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
+                        <p class="mb-0 text-light">a server implementing the model content protocol used by llms for the acquisition of tools and access to extenal software systems</p>
                     </div>
                     
+                            <div class="card-body border-top py-2">
+                                <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">[{?}status <span class="text-light">=&gt;</span> "the current status of the mcp server"
+    host <span class="text-light">=&gt;</span> "the mcp server endpoint"
+    {?}tool <span class="text-light">=&gt;</span> "the tools/functions available for use on the mcp server"]</code></pre>
+                            </div>
+                            
+                    
+        <div class="card-body border-top py-2">
+            <small class="text-muted fw-bold">examples:</small>
+            <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">mcp::[host =&gt; &lt;http://127.0.0.1:29170/index-mcp/streamable-http&gt;]@/usr/ai/mcp/intellij [-- connection populates tool and status      --]
+mcp::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron                                 [-- mtron router server exposes an mcp server --]</code></pre>
+        </div>
                 </div>
                 <div class="card mb-3" id="type-memory">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -414,12 +470,13 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="card-body p-2">
-                        <pre class="mb-0"><code class="language-mtron">lst::T[?[,]]@/m/llm/memory</code></pre>
+                        <pre class="mb-0"><code class="language-mtron">lst::T@/m/llm/memory</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
+                        <p class="mb-0 text-light">llm memory structure as a lst of past interactions</p>
                     </div>
+                    
                     
                 </div>
                 <div class="card mb-3" id="type-model">
@@ -439,18 +496,34 @@ bin/metatron</code></pre>
      {?}host=&gt;uri::T,
      route  =&gt;[uri::T=&gt;uri::T]]][inst?catalog&lt;=#{?}(rec::T){&lt;j&gt;}]@/m/llm/space/catalog,
      name       =&gt;uri::T,
-     {?}think   =&gt;[{?}to=&gt;#::T],
-     {?}response=&gt;[{?}to=&gt;#::T,{?}format=&gt;#::T],
+     {?}think   =&gt;#::T,
+     {?}response=&gt;{?}[{?}to=&gt;inst::T,{?}format=&gt;#::T],
      {?}size    =&gt;data_size::T[][/m/math/bB/cons?bB&lt;=#{?}(#::T){&lt;j&gt;}]@/m/math/bB,
-     {?}memory  =&gt;[{?}from=&gt;uri::T],
+     {?}memory  =&gt;lst{?}::T@/m/llm/memory,
      {?}desc    =&gt;str::T,
-     {?}skill   =&gt;lst::T,
-     {?}tool    =&gt;lst::T]]@/m/llm/model</code></pre>
+     {?}skill   =&gt;lst{?}::T,
+     {?}tool    =&gt;{?}[
+     rec::T[?[
+     inst  =&gt;#::T,
+     name  =&gt;uri::T,
+     desc  =&gt;str::T,
+     {?}arg=&gt;{?}[uri::T=&gt;#::T]]]@/m/llm/tool]]]@/m/llm/model</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
+                        <p class="mb-0 text-light">an mtron interface to a large language model</p>
                     </div>
+                    
+                            <div class="card-body border-top py-2">
+                                <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">[{?}size <span class="text-light">=&gt;</span> "the size of the model in bytes"
+    {?}skill <span class="text-light">=&gt;</span> "skill to extend the llm&#x27;s abilities"
+    {?}memory <span class="text-light">=&gt;</span> "llm&#x27;s memory of previous interactions"
+    {?}think <span class="text-light">=&gt;</span> "whether the llm should think before responding"
+    {?}tool <span class="text-light">=&gt;</span> "tool functions the llm can use to solve problems"
+    name <span class="text-light">=&gt;</span> "the model name from the host catalog"
+    {?}host <span class="text-light">=&gt;</span> "the llm inferencing provider endpoint"]</code></pre>
+                            </div>
+                            
                     
                 </div>
                 <div class="card mb-3" id="type-skill">
@@ -472,9 +545,21 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
+                        <p class="mb-0 text-light">a skill.md specification to augment llm with specialized abilities</p>
                     </div>
                     
+                            <div class="card-body border-top py-2">
+                                <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">[name <span class="text-light">=&gt;</span> "skill name"
+    {?}entry <span class="text-light">=&gt;</span> "skill assets, references, and scripts"
+    desc <span class="text-light">=&gt;</span> "skill description"
+    {?}content <span class="text-light">=&gt;</span> "skill.md document content"]</code></pre>
+                            </div>
+                            
+                    
+        <div class="card-body border-top py-2">
+            <small class="text-muted fw-bold">examples:</small>
+            <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;local:.agent/skills&gt;.as(skill::T)   [-- see as?skill&lt;=dir() --]</code></pre>
+        </div>
                 </div>
                 <div class="card mb-3" id="type-tool">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -494,8 +579,40 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">a tool function for the llm to use</p>
+                    </div>
+                    
+                            <div class="card-body border-top py-2">
+                                <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">[{?}arg <span class="text-light">=&gt;</span> "tool arguments"
+    desc <span class="text-light">=&gt;</span> "tool description"
+    name <span class="text-light">=&gt;</span> "tool name"]</code></pre>
+                            </div>
+                            
+                    
+        <div class="card-body border-top py-2">
+            <small class="text-muted fw-bold">examples:</small>
+            <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*eval.as(tool::T)   [-- see as?tool&lt;=inst() --]</code></pre>
+        </div>
+                </div>
+                <div class="card mb-3" id="type-user">
+                    <div class="card-header d-flex justify-content-between align-items-center py-2">
+                        <span>
+                            <span class="code text-primary fw-bold">user::T</span>
+                            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">rec::T</span></span>
+                        </span>
+                        <small class="text-muted code">/m/llm/user</small>
+                    </div>
+                    
+                    <div class="card-body p-2">
+                        <pre class="mb-0"><code class="language-mtron">rec::T[?[
+     contents=&gt;[text=&gt;str::T],
+     type    =&gt;user]]@/m/llm/user</code></pre>
+                    </div>
+                    
+                    <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">no documentation available</p>
                     </div>
+                    
                     
                 </div>
         </div>
@@ -514,12 +631,21 @@ bin/metatron</code></pre>
                         <small class="text-muted code">/m/llm/inst/chat?#{?}&lt;=/m/llm/model</small>
                     </div>
                     <div class="card-body p-2">
-                        <pre class="mb-1"><code class="language-mtron">chat?#{?}&lt;=model(str::T){&lt;j&gt;}</code></pre>
+                        <pre class="mb-1"><code class="language-mtron">chat?#{?}&lt;=model(str::T,#{?}::T){&lt;j&gt;}</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
+                        <p class="mb-0 text-light">communicate with a tool, skill, etc.-enriched llm model</p>
                     </div>
+                    <div class="card-body py-2">
+                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"a model to chat with" <span class="text-light">=&gt;</span> "the models chat response"
+   [0 <span class="text-light">=&gt;</span> "the message to send the model"
+    1 <span class="text-light">=&gt;</span> "an optional response format"]</pre>
+                    </div>
+        <div class="card-body border-top py-2">
+            <small class="text-muted fw-bold">examples:</small>
+            <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;ollama:qwen3:latest&gt;+[response=&gt;[to=&gt;print(_)],think=&gt;to(/usr/ai/thoughts?incrq)].chat(&#x27;what is a database query language?&#x27;)</code></pre>
+        </div>
                 </div>
         </div>
             
@@ -543,8 +669,16 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
+                        <p class="mb-0 text-light">a space for accessing llm models</p>
                     </div>
+                    
+                            <div class="card-body border-top py-2">
+                                <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">[name <span class="text-light">=&gt;</span> "the provider name (anthropic, openai, or ollama)"
+    pattern <span class="text-light">=&gt;</span> "catalog address space"
+    {?}host <span class="text-light">=&gt;</span> "the llm inferencing provider endpoint"
+    route <span class="text-light">=&gt;</span> "internal space routes"]</code></pre>
+                            </div>
+                            
                     
                 </div>
         </div>
@@ -553,7 +687,7 @@ bin/metatron</code></pre>
         <div class="container-xxl py-3 text-center">
             <hr class="border-secondary">
             <small class="text-muted">
-                generated by metatron instset doc generator on build 0-2026-04-08 16:05:22<br>
+                generated by metatron instset doc generator on build 0-2026-04-10 09:34:26<br>
                 © PhaseShift Studio, LLC
             </small>
         </div>

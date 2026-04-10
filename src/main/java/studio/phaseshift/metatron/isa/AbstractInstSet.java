@@ -35,6 +35,7 @@ import java.util.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.mInstSet.INSTSET_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.NOOBJ_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -81,6 +82,11 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
     }
 
     private boolean old = true;
+
+    public AbstractInstSet(final boolean noDocq) {
+        super(new LinkedHashMap<>(), mutableMap(
+                uri(Tokens.PATTERN), uri(ALL)), INSTSET_TID, null);
+    }
 
     public AbstractInstSet(final fURI tid, final fURI vid) {
         super(new LinkedHashMap<>(), mutableMap(

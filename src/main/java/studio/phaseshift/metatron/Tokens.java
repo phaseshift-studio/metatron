@@ -66,6 +66,8 @@ public final class Tokens {
     public static final String LOOP = "loop";
     public static final String SIZE = "size";
     public static final String SKILL = "skill";
+    public static final String LLM = "llm";
+    public static final String MCP = "mcp";
     public static final String THINK = "think";
     public static final String THOUGHT = "thought";
     public static final String MEMORY = "memory";

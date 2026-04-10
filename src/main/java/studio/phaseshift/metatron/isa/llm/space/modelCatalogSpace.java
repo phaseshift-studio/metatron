@@ -28,6 +28,7 @@ import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SPACE_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
@@ -44,15 +45,23 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 public class modelCatalogSpace<CATALOG> extends memSpace {
 
     public static final fURI LLM_CATALOG_SPACE_TID = LLM_SPACE_TID.extend("catalog");
-    public static final Type LLM_CATALOG_SPACE_TYPE = Type.Builder.build()
-            .tid(SPACE_TID)
-            .vid(LLM_CATALOG_SPACE_TID)
-            .isaPredicate(rec(
-                    uri(NAME), is_(or_(eq_(uri(ANTHROPIC)), eq_(uri(OPENAI)), eq_(uri(OLLAMA)))),
-                    uri(PATTERN), URI_TYPE,
-                    uri(HOST).maybe(), URI_TYPE,
-                    uri(ROUTE), rec(URI_TYPE, URI_TYPE)))
-            .constructor(instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(LLM_CATALOG_SPACE_TID), lst(T(REC_TID)), (x, inst) -> LLMFactory.createModelCatalog(inst.arg(0).asRec()))).create();
+    public static final Type LLM_CATALOG_SPACE_TYPE = docWrap(Type.Builder.build()
+                    .tid(SPACE_TID)
+                    .vid(LLM_CATALOG_SPACE_TID)
+                    .isaPredicate(rec(
+                            uri(NAME), is_(or_(eq_(uri(ANTHROPIC)), eq_(uri(OPENAI)), eq_(uri(OLLAMA)))),
+                            uri(PATTERN), URI_TYPE,
+                            uri(HOST).maybe(), URI_TYPE,
+                            uri(ROUTE), rec(URI_TYPE, URI_TYPE)))
+                    .constructor(instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(LLM_CATALOG_SPACE_TID), lst(T(REC_TID)), (x, inst) -> LLMFactory.createModelCatalog(inst.arg(0).asRec()))).create(),
+            "llm model catalog specification",
+            "creates a model catalog",
+            Map.of(
+                    uri(NAME), "the provider name (anthropic, openai, or ollama)",
+                    uri(PATTERN), "catalog address space",
+                    uri(HOST).maybe(), "the llm inferencing provider endpoint",
+                    uri(ROUTE), "internal space routes"),
+            "a space for accessing llm models");
 
     private final CATALOG models;
 

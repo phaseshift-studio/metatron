@@ -37,6 +37,7 @@ import static studio.phaseshift.metatron.isa.llm.type.MCPServer.MCP_SERVER_TYPE;
 import static studio.phaseshift.metatron.isa.llm.type.Model.model;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.BYTE_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Inst.INST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
@@ -55,50 +56,25 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  */
 @InstSet.JREService(vid = "/m/llm")
 public class llmInstSet extends AbstractInstSet {
-    public static final fURI LLM_ISA_TID = MTRON_TID.extend("llm");
+    public static final fURI LLM_ISA_TID = MTRON_TID.extend(LLM);
     public static final fURI MODEL_TID = LLM_ISA_TID.extend(MODEL);
     public static final fURI LLM_INST_TID = LLM_ISA_TID.extend(INST);
     public static final fURI LLM_SPACE_TID = LLM_ISA_TID.extend(SPACE);
     public static final fURI LLM_TOOL_TID = LLM_ISA_TID.extend(TOOL);
     public static final fURI LLM_MEMORY_TID = LLM_ISA_TID.extend(MEMORY);
-    public static final fURI MCP_SERVER_TID = LLM_ISA_TID.extend("mcp");
+    public static final fURI MCP_SERVER_TID = LLM_ISA_TID.extend(MCP);
     public static final fURI LLM_SKILL_TID = LLM_ISA_TID.extend(SKILL);
+    public static final fURI AI_MEMORY_TID = LLM_ISA_TID.extend("ai");
+    public static final fURI USER_MEMORY_TID = LLM_ISA_TID.extend(USER);
     //public static final fURI MCP_TOOL_TID = LLM_ISA_TID.extend("mcp");
     // public static Obj MTRON_EVAL_TOOL = Model.Helper.mtronInstToolSpecification(ObjType.insts().stream().filter(i -> i.tid().equals(EVAL_INST_TID)).findFirst().orElse(null));    
 
-    public static final fURI AI_MEMORY_TID = LLM_MEMORY_TID.extend("ai");
-    public static Type LLM_AI_MEMORY_TYPE = Type.Builder.build()
-            .tid(REC_TID)
-            .vid(AI_MEMORY_TID)
-            .isaPredicate(rec(
-                    uri(TEXT).maybe().asUri(), STR_TYPE,
-                    uri(THINKING).maybe(), INT_TYPE,
-                    uri("attributes").maybe(), REC_TYPE,
-                    uri(TYPE), uri(AI)))
-            .create();
-    public static final fURI USER_MEMORY_TID = LLM_MEMORY_TID.extend("user");
-    public static Type LLM_USER_MEMORY_TYPE = Type.Builder.build()
-            .tid(REC_TID)
-            .vid(USER_MEMORY_TID)
-            .isaPredicate(rec(
-                    uri("contents"), rec(uri(TEXT), STR_TYPE),
-                    uri(TYPE), uri(USER)))
-            .create();
-    public static final Type LLM_TOOL_TYPE = Type.Builder.build().tid(REC_TID).vid(LLM_TOOL_TID).isaPredicate(rec(
-            uri(INST), T(ALL),
-            uri(NAME), URI_TYPE,
-            uri(DESC), STR_TYPE,
-            uri(ARG).maybe(), rec(URI_TYPE, T(ALL)).maybe())).create();
-    public static final Type LLM_SKILL_TYPE = Type.Builder.build().tid(REC_TID).vid(LLM_SKILL_TID).isaPredicate(rec(
-            uri(NAME), URI_TYPE,
-            uri(DESC), STR_TYPE,
-            uri(CONTENT).maybe(), STR_TYPE,
-            uri(ENTRY).maybe(), lst(rec(uri(DIR), URI_TYPE, uri(CONTENT), STR_TYPE)))).create();
-    public static Type LLM_MEMORY_TYPE = Type.Builder.build()
-            .tid(LST_TID)
-            .vid(LLM_MEMORY_TID)
-            .isaPredicate(LST_TYPE)
-            .create();
+
+    public static Type LLM_AI_MEMORY_TYPE;
+    public static Type LLM_USER_MEMORY_TYPE;
+    public static Type LLM_TOOL_TYPE;
+    public static Type LLM_SKILL_TYPE;
+    public static Type LLM_MEMORY_TYPE;
 
 
     public llmInstSet() {
@@ -113,9 +89,52 @@ public class llmInstSet extends AbstractInstSet {
                 uri(TYPE), lst(
                         LLM_CATALOG_SPACE_TYPE,
                         MCP_SERVER_TYPE,
-                        LLM_TOOL_TYPE,
-                        LLM_MEMORY_TYPE,
-                        LLM_SKILL_TYPE,
+                        docWrap(LLM_TOOL_TYPE = Type.Builder.build().tid(REC_TID).vid(LLM_TOOL_TID).isaPredicate(rec(
+                                        uri(INST), T(ALL),
+                                        uri(NAME), URI_TYPE,
+                                        uri(DESC), STR_TYPE,
+                                        uri(ARG).maybe(), rec(URI_TYPE, T(ALL)).maybe())).create(),
+                                "a tool specification", "",
+                                Map.of(
+                                        uri(NAME), "tool name",
+                                        uri(DESC), "tool description",
+                                        uri(ARG).maybe(), "tool arguments"),
+                                "a tool function for the llm to use",
+                                "*eval.as(tool::T)   [-- see as?tool<=inst() --]"),
+                        docWrap(LLM_MEMORY_TYPE = Type.Builder.build()
+                                .tid(LST_TID)
+                                .vid(LLM_MEMORY_TID)
+                                .create(), "llm memory structure as a lst of past interactions"),
+                        LLM_USER_MEMORY_TYPE = Type.Builder.build()
+                                .tid(REC_TID)
+                                .vid(USER_MEMORY_TID)
+                                .isaPredicate(rec(
+                                        uri("contents"), rec(uri(TEXT), STR_TYPE),
+                                        uri(TYPE), uri(USER)))
+                                .create(),
+                        LLM_AI_MEMORY_TYPE = Type.Builder.build()
+                                .tid(REC_TID)
+                                .vid(AI_MEMORY_TID)
+                                .isaPredicate(rec(
+                                        uri(TEXT).maybe().asUri(), STR_TYPE,
+                                        uri(THINKING).maybe(), INT_TYPE,
+                                        uri("attributes").maybe(), REC_TYPE,
+                                        uri(TYPE), uri(AI)))
+                                .create(),
+                        docWrap(LLM_SKILL_TYPE = Type.Builder.build().tid(REC_TID).vid(LLM_SKILL_TID)
+                                        .isaPredicate(rec(
+                                                uri(NAME), URI_TYPE,
+                                                uri(DESC), STR_TYPE,
+                                                uri(CONTENT).maybe(), STR_TYPE,
+                                                uri(ENTRY).maybe(), lst(rec(uri(DIR), URI_TYPE, uri(CONTENT), STR_TYPE)))).create(),
+                                "a skill.md specification", "",
+                                Map.of(
+                                        uri(NAME), "skill name",
+                                        uri(DESC), "skill description",
+                                        uri(CONTENT).maybe(), "skill.md document content",
+                                        uri(ENTRY).maybe(), "skill assets, references, and scripts"),
+                                "a skill.md specification to augment llm with specialized abilities",
+                                "*<local:.agent/skills>.as(skill::T)   [-- see as?skill<=dir() --]"),
                         docWrap(Type.Builder.build()
                                         .tid(REC_TID)
                                         .vid(MODEL_TID).
@@ -123,36 +142,50 @@ public class llmInstSet extends AbstractInstSet {
                                                 uri(PROVIDER), LLM_CATALOG_SPACE_TYPE,
                                                 uri(NAME), URI_TYPE,
                                                 uri(THINK).maybe(), T(ALL),
-                                                uri(RESPONSE).maybe(), rec(uri(TO).maybe().asUri(), T(ALL), uri(FORMAT).maybe(), T(ALL)).maybe(),
+                                                uri(RESPONSE).maybe(), rec(uri(TO).maybe().asUri(), INST_TYPE, uri(FORMAT).maybe(), T(ALL)).maybe(),
                                                 uri(SIZE).maybe().asUri(), BYTE_TYPE,
                                                 uri(MEMORY).maybe(), LLM_MEMORY_TYPE.maybe(),
                                                 uri(DESC).maybe(), STR_TYPE,
                                                 uri(SKILL).maybe(), LST_TYPE.maybe(),//lst(LLM_SKILL_TYPE).maybe(),
                                                 uri(TOOL).maybe(), lst(LLM_TOOL_TYPE).maybe())).create(),
                                 "a large language model", "the model construction", Map.of(
-                                        uri(NAME), "the name of the model",
-                                        uri(HOST).maybe(), "the provider endpoint",
-                                        uri(THINK).maybe(), "whether to think before responding",
+                                        uri(NAME), "the model name from the host catalog",
+                                        uri(HOST).maybe(), "the llm inferencing provider endpoint",
+                                        uri(THINK).maybe(), "whether the llm should think before responding",
                                         uri(SIZE).maybe(), "the size of the model in bytes",
-                                        uri(MEMORY).maybe(), "a pointer to the llm's memory",
-                                        uri(SKILL).maybe(), "the skills to use",
-                                        uri(TOOL).maybe(), "the tools to use"), "an mtron interface to a large language model")),
+                                        uri(MEMORY).maybe(), "llm's memory of previous interactions",
+                                        uri(SKILL).maybe(), "skill to extend the llm's abilities",
+                                        uri(TOOL).maybe(), "tool functions the llm can use to solve problems"), "an mtron interface to a large language model")),
                 uri(INST), lst(
-                        docWrap(instC(AS_INST_TID.dom(DOCS_TID).rng(LLM_TOOL_TID), lst(), (lhs, inst) -> Model.Helper.mtronDocToTool(QCollection.Doc.doc(lhs.asRec()))), "a tool to use with the llm"),
-                        docWrap(instC(AS_INST_TID.dom(M_ISA_INST_TID).rng(LLM_TOOL_TID), lst(), (lhs, inst) -> Model.Helper.mtronInstToTool(inst.asInst())), "a tool to use with the llm"),
+                        docWrap(instC(AS_INST_TID.dom(DOCS_TID).rng(LLM_TOOL_TID),
+                                        lst(LLM_TOOL_TYPE),
+                                        (lhs, inst) -> Model.Helper.mtronDocToTool(QCollection.Doc.doc(lhs.asRec()))),
+                                "instruction documentation",
+                                "a tool specification",
+                                Map.of(jnt(0), "the tool type"),
+                                "maps an instruction doc to a tool specification for llm use",
+                                "*eval?docq.as(tool::T)"),
+                        docWrap(instC(AS_INST_TID.dom(M_ISA_INST_TID).rng(LLM_TOOL_TID), lst(LLM_TOOL_TYPE), (lhs, inst) -> Model.Helper.mtronInstToTool(inst.asInst())),
+                                "an instruction",
+                                "a tool specification",
+                                Map.of(jnt(0), "the tool type"),
+                                "maps an instruction to a tool specification for llm use",
+                                "*eval.as(tool::T)"),
                         docWrap(instC(AS_INST_TID.dom(DIR_TID).rng(LLM_SKILL_TID), lst(LLM_SKILL_TYPE), (lhs, inst) -> mSkill.of(resolveFile(lhs))),
                                 "a dir containing the llm SKILL.md file",
                                 "a mtron encoding of the specified skill",
-                                Map.of(jnt(0), "the skill type"), "maps a directory to an llm skill where the dir follows the standard SKILL.md structure"),
+                                Map.of(jnt(0), "the skill type"),
+                                "maps a directory to an llm skill where the dir follows the standard SKILL.md structure",
+                                "*<local:.agent/skills>.as(skill::T)"),
                         docWrap(instC(LLM_INST_TID.extend("chat").dom(MODEL_TID).rng(ALL.maybe()),
                                         lst(STR_TYPE, T(ALL.maybe())),
-                                        (lhs, inst) -> model(inst.arg(1).isNoObj() ? lhs.asRec() : lhs.vid(null).asRec().plus(rec(uri(RESPONSE),rec(uri(FORMAT),inst.arg(1))))).chat(inst.arg(0).strValue())),
+                                        (lhs, inst) -> model(inst.arg(1).isNoObj() ? lhs.asRec() : lhs.vid(null).asRec().plus(rec(uri(RESPONSE), rec(uri(FORMAT), inst.arg(1))))).chat(inst.arg(0).strValue())),
                                 "a model to chat with",  // dom
                                 "the models chat response", // rng
-                                Map.of(jnt(0), "the message to send the model",jnt(1),"an optional response format"), // args
-                                "chat with the lhs model", // desc
+                                Map.of(jnt(0), "the message to send the model", jnt(1), "an optional response format"), // args
+                                "communicate with a tool, skill, etc.-enriched llm model", // desc
                                 "*<ollama:qwen3:latest>+[response=>[to=>print(_)],think=>to(/usr/ai/thoughts?incrq)].chat('what is a database query language?')"))));
-        docWrap(this, "large language model emerge from the metatron");
+        docWrap(this, "large language model think and reason within the metatron");
         super.setup();
     }
     

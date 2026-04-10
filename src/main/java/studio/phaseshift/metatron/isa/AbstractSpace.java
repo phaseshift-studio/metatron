@@ -65,7 +65,9 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
         else
             this.routes.put(temp.asRel().first().asUri(), temp.asRel().second().asUri());
         LOG = Graphitty.log(this);
-        if (Router.loaded() && !this.pattern.equals(STACK_PATTERN) && !(this instanceof Router))
+        // Don't auto-register InstSets - they're registered via importInstSetStream AFTER full construction
+        // This ensures docq and other post-super() setup is complete before registration
+        if (Router.loaded() && !this.pattern.equals(STACK_PATTERN) && !(this instanceof Router) && !(this instanceof InstSet))
             Router.global().addSpace(this);
     }
 
