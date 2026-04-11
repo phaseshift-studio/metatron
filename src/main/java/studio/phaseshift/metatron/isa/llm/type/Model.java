@@ -110,8 +110,8 @@ public class Model extends MRec {
         final Obj result = hasFormat ?
                 ObjSimpleJSONSerializer.single().inputBytes(ByteBuffer.wrap(response.strValue().getBytes(StandardCharsets.UTF_8))) :
                 response;
-        //if (hasFormat && !this.fetchMemory().orElse(lst0()).isEmpty())
-         //   this.fetchMemory().asLst().lstValue().getLast().asRec().recValue().put(uri(FORMAT), result);
+        if (hasFormat && !this.fetchMemory().orElse(lst0()).isEmpty())
+           this.fetchMemory().asLst().lstValue().getLast().asRec().recValue().put(uri(FORMAT), result);
         this.asRec().at(f(RESPONSE).extend(TO)).apply(result);
         return result;
     }
@@ -134,7 +134,7 @@ public class Model extends MRec {
     }
 
     public Optional<Rec> responseFormat() {
-        return Optional.<Obj>ofNullable(this.at(RESPONSE).orElse(null)).map(o -> o.autoResolve(this)).map(Obj::asRec);
+        return Optional.ofNullable(this.at(RESPONSE + "/" + FORMAT).orElse(null));
     }
 
     public Obj memory() {
@@ -245,7 +245,7 @@ public class Model extends MRec {
   /*  public Rec query(final Rec query) {
         this.agent()
     }*/
-    
+
     public Model chat(final String message, final Inst onResponse) {
         BootLoader.getExecutor().submit(() -> {
             onResponse.apply(this.chat(message));

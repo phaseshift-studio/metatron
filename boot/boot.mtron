@@ -139,8 +139,9 @@ console::[=>]@/sys/console;
                                skill   =>[!*(<local:/software/metatron/.agent/skills>)],
                                response=>[to=>print(_)],
                                memory  =>!*/usr/ai/memory].to(agent2);
-<openai:gpt-4o-2024-08-06/skill> ->(*agent2>>skill>>0.as(skill::T).>-[,]);
+<openai:gpt-4o-2024-08-06/skill> ->(*agent2>>skill>>0.as(skill::T).>-[,]).to(agent2);
 <openai:gpt-4o-2024-08-06/tool> ->([!*eval]);
+*<openai:gpt-4o-2024-08-06>.to(agent2);
 *boot/args.print(_)
 
  
