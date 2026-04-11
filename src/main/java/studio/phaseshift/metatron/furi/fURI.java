@@ -401,6 +401,10 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
 
     boolean hasQ(final String key);
 
+    default boolean hasQ(final fURI key) {
+        return this.hasQ(key.toString());
+    }
+
     default boolean hasQ() {
         return !this.qMap().isEmpty();
     }
@@ -492,7 +496,7 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
     /// ///////////////////////////////////////////////////
 
     default fURI constant() {
-        return this.q(CONST, null);
+        return this.q(CONSTQ, null);
     }
 
     default fURI type(final fURI type) {

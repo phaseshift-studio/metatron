@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static studio.phaseshift.metatron.isa.m.mInstSet.CODE_TID;
@@ -44,7 +45,7 @@ public class MCode extends MObj implements Code {
 
     @Override
     public Code clone(final Object jvm, final fURI tid, final fURI vid) {
-        return super.clone(jvm, tid, vid);
+        return super.clone(new ArrayList<>((List<Inst>) jvm), tid, vid);
     }
 
     @Override

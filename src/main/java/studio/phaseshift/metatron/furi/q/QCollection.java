@@ -119,11 +119,15 @@ public final class QCollection {
         return Q.Helper.build(CONSTQ_TID, CONSTQ_PATTERN)
                 .preRead(furi -> bool(CONSTQ_FURIS.contains(furi.noQ())))
                 .preWrite((furi, obj) -> {
-                    if (obj.isNoObj()) CONSTQ_FURIS.remove(furi.noQ());
-                    else CONSTQ_FURIS.add(furi.noQ());
+                    if (obj.isNoObj()) {
+                        CONSTQ_FURIS.remove(furi.noQ());
+                    }  else {
+                        CONSTQ_FURIS.add(furi.noQ());
+                        return obj;
+                    }
                     return noobj();
                 }).qlessWrite((furi, obj) -> {
-                    if (!furi.hasQ(CONST) && CONSTQ_FURIS.contains(furi.noQ()))
+                    if (!furi.hasQ(CONSTQ) && CONSTQ_FURIS.contains(furi.noQ()))
                         return fail(MTronException.of("%s is a constant", furi.noQ()));
                     return noobj();
                 }).create();

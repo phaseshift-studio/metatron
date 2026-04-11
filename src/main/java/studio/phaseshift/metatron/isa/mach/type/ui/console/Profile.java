@@ -27,6 +27,8 @@ import studio.phaseshift.metatron.isa.mach.type.ui.widget.Table;
 
 import java.util.List;
 
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -55,7 +57,7 @@ public class Profile extends AbstractWidget<Profile> {
                     "{{m}}" + Inst.Form.of(i).toString(),
                     "{{g}}{{{" + (inDom ? "y" : "r") + "}}" + dom.toString() + "{{g}}}{{X}}",
                     "{{g}}{{{y}}" + rng.toString() + "{{g}}}{{X}}")).style().background("{{[b]}}").foreground("{{y}}").divider("{{r}}|").apply();
-            this.instTable.addMetadata(List.of(i, i.dom(), i.rng(), i.f(), i.args(), Router.global().read(i.tid().q("doc", null)), i.dom().c(), i.rng().c()));
+            this.instTable.addMetadata(List.of(i, i.dom(), i.rng(), null == i.f() ? Inst.f.of(noobj()) : i.f(), i.args(), Router.global().read(i.tid().q("doc", null)), i.dom().c(), i.rng().c()));
         }
         this.style().attachment(this.instTable, true).apply();
     }

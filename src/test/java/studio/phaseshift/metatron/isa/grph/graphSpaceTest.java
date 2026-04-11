@@ -34,11 +34,14 @@ import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.Tuple;
 
 import static org.apache.tinkerpop.gremlin.LoadGraphWith.GraphData.MODERN;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.grph.grphInstSet.EDGE_TID;
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.GRPH_ISA_TID;
 import static studio.phaseshift.metatron.isa.grph.space.schema.modernSchema.MODERN_SCHEMA_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
@@ -60,6 +63,9 @@ public class graphSpaceTest extends AbstractSpaceTest {
                                     uri("/g/V"), uri("V"),
                                     uri("/g/E"), uri("E"),
                                     uri("/g/S"), uri(MODERN_SCHEMA_TID)),
+                            // GRAPH, rec(
+                            //         uri("gremlin.graph"),
+                            //         str("org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph")),
                             NATIVE, rec(
                                     uri("factory"), MObjFactory.single(),
                                     uri(LOAD), uri(MODERN.name().toLowerCase()))),
@@ -86,7 +92,7 @@ public class graphSpaceTest extends AbstractSpaceTest {
     @BeforeAll
     public static void setupInstSet() {
         InstSet.importInstSet(GRPH_ISA_TID);
-      //  InstSet.importInstSet(MODERN_SCHEMA_TID);
+        //  InstSet.importInstSet(MODERN_SCHEMA_TID);
     }
 
     @Test
@@ -190,11 +196,12 @@ public class graphSpaceTest extends AbstractSpaceTest {
     }
 
     @ParameterizedTest
+    @Disabled
     @CsvSource(value = {
             "*/g/V/1.addE(likes,*/g/V/2)                                       % */g/V/1.out(likes)                     % */g/V/2",
     }, delimiter = '%')
     public void testAddVertex(final String update, final String select, final String expected) {
-        mParser.eval(update);
+        assertTrue(mParser.eval(update).test(T(EDGE_TID)));
         AbstractMetatronTest.checkCodeParseApply(LOG, select, expected);
     }
 

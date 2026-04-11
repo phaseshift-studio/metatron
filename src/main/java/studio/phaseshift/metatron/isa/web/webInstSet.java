@@ -94,7 +94,7 @@ public class webInstSet extends AbstractInstSet {
     public void setup() {
         this.jvm().putAll(mutableMap(
                 uri(PATTERN), uri(WEB_ISA_TID.extend(ALL)),
-                uri(CONST), lst(ObjXMLSerializer.single(), ObjHTMLSerializer.single(), ObjJSONSerializer.single()),
+                uri(CONSTQ), lst(ObjXMLSerializer.single(), ObjHTMLSerializer.single(), ObjJSONSerializer.single()),
                 uri(TYPE), lst(
                         XML_TYPE,
                         docWrap(HTML_TYPE, "a rec encoding of an html document"),

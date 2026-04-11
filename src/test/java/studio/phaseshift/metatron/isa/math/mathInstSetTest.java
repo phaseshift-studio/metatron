@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -18,15 +18,27 @@
 
 package studio.phaseshift.metatron.isa.math;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.Tokens;
+import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.AbstractInstSetTest;
 import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.Tokens.PATTERN;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -162,5 +174,22 @@ public class mathInstSetTest extends AbstractInstSetTest {
         Obj expected = mParser.eval(expectedType);
         LOG.debug("result [%s] expected [%s] [should match: %b]", result, expected, shouldMatch);
         assertEquals(shouldMatch, result.test(expected));
+    }
+
+    @Test
+    public void testConstants() {
+        Router.global().addSpace(memSpace.of(rec(uri(PATTERN), uri("/abc/#"), uri(Tokens.QSTRING), lst(QCollection.constQ())), f("abc")));
+        assertEquals(jnt(34), mParser.eval("/abc/xyz -> 34"));
+        assertEquals(jnt(34), mParser.eval("*/abc/xyz"));
+        assertEquals(jnt(99), mParser.eval("/abc/xyz -> 99"));
+        assertEquals(jnt(99), mParser.eval("*/abc/xyz"));
+        assertFalse(mParser.eval("*/abc/xyz?constq").boolValue());
+        assertEquals(noobj(), mParser.eval("/abc/xyz?constq -> noobj"));
+        assertEquals(jnt(989), mParser.eval("/abc/xyz?constq -> 989"));
+        assertTrue(mParser.eval("*/abc/xyz?constq").boolValue());
+        //assertEquals(jnt(989), mParser.eval("*/abc/xyz"));
+        assertTrue(mParser.eval("/abc/xyz -> 100").isFail());
+        assertEquals(jnt(88), mParser.eval("/abc/xyz?constq -> 88"));
+        //assertEquals(jnt(88), mParser.eval("*/abc/xyz"));
     }
 }

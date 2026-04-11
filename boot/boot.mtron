@@ -129,8 +129,18 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
              headers   => [authorization => "Bearer yFCufT0BTOHuvnmXod8sissMvzIMsmAlsKBtkEb/0j0="]]@/usr/ai/mcp/openclaw;==]
                        
 [== load user console ==]
-console::[        => ]@/sys/console;
-[-- *openai:gpt-4o-2024-11-20 + [think=>print(_),response=>[to=>print(_)],memory=>!*/usr/ai/memory].to(agent);
+console::[=>]@/sys/console;
+[,]@/usr/ai/memory;
+*openai:gpt-4o-2024-11-20 + [think   =>print(_),
+                             skill   =>[!*(<local:/software/metatron/.agent/skills>)],
+                             response=>[to=>print(_)],
+                             memory  =>!*/usr/ai/memory].to(agent);
+*<openai:gpt-4o-2024-08-06> + [think   =>print(_),
+                               skill   =>[!*(<local:/software/metatron/.agent/skills>)],
+                               response=>[to=>print(_)],
+                               memory  =>!*/usr/ai/memory].to(agent2);
+<openai:gpt-4o-2024-08-06/skill> ->(*agent2>>skill>>0.as(skill::T).>-[,]);
+<openai:gpt-4o-2024-08-06/tool> ->([!*eval]);
 *boot/args.print(_)
 
  

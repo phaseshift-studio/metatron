@@ -96,7 +96,7 @@ public class dcmntInstSet extends AbstractInstSet {
     public void setup() {
         this.jvm().putAll(mutableMap(
                 uri(PATTERN), uri(DCMNT_ISA_TID.extend(ALL)),
-                uri(CONST), lst(ObjSimpleJSONSerializer.single(), uri(ID_FIELD, URI_TID, DCMNT_ISA_TID.extend(ID_FIELD))),
+                uri(CONSTQ), lst(ObjSimpleJSONSerializer.single(), uri(ID_FIELD, URI_TID, DCMNT_ISA_TID.extend(ID_FIELD))),
                 uri(TYPE), lst(
                         docWrap(DOCUMENT_TYPE, "a document (record) from a collection"),
                         COLLECTION_TYPE,

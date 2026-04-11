@@ -133,10 +133,10 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
     @Override
     public void setup() {
         this.jvm().forEach((k, v) -> {
-            if (k.equals(uri(CONST))) {
+            if (k.equals(uri(CONSTQ))) {
                 v.lstValue().stream()
                         //.filter(this::checkPattern)
-                        .filter(c -> checkDepth(c, this.tid.extend(CONST)))
+                        .filter(c -> checkDepth(c, this.tid.extend(CONSTQ)))
                         .forEach(c -> {
                             if (!checkPattern(c))
                                 Router.writeToSpace(c);

@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -30,6 +30,7 @@ import java.util.function.Function;
 
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.split_;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 
@@ -53,7 +54,7 @@ public interface Call extends Obj, Ring<Call> {
 
     static Call from(final List<Inst> insts) {
         if (insts.isEmpty())
-            return NoObj.noobj();
+            return noobj();
         else if (insts.size() == 1)
             return insts.get(0);
         else
@@ -63,7 +64,7 @@ public interface Call extends Obj, Ring<Call> {
     default Call tryToInst() {
         if (this.isCode()) {
             if (this.codeValue().isEmpty())
-                return NoObj.noobj();
+                return noobj();
             else if (this.codeValue().size() == 1)
                 return this.codeValue().getFirst();
         }
@@ -74,7 +75,7 @@ public interface Call extends Obj, Ring<Call> {
         if (this.isCode())
             return (Code) this;
         else
-            return new MCode(List.of(this.as()), CODE_TID,null);
+            return new MCode(List.of(this.as()), CODE_TID, null);
     }
 
     default boolean isAuto() {
@@ -88,7 +89,13 @@ public interface Call extends Obj, Ring<Call> {
     }
 
     default List<Inst> insts() {
-        return this.isCode() ? this.codeValue() : List.of(this.as());
+        if (this.isCode()) {
+            return new ArrayList<>(this.codeValue());
+        } else if(this.isInst()) {
+            return List.of((Inst)this.clone());
+        } else {
+            return List.of();
+        }
     }
 
     @Override
@@ -144,7 +151,7 @@ public interface Call extends Obj, Ring<Call> {
     @Override
     default Call mult(final Call rhs) {
         if (rhs.isZero() || this.isZero())
-            return NoObj.noobj();
+            return noobj();
         if (rhs.isOne()) return this;
         if (this.isOne()) return rhs;
         final List<Inst> insts = new ArrayList<>(this.insts());
@@ -154,6 +161,6 @@ public interface Call extends Obj, Ring<Call> {
 
     @Override
     default Call zero() {
-        return NoObj.noobj();
+        return noobj();
     }
 }

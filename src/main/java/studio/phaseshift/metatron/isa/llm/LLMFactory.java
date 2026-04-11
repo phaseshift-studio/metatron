@@ -118,21 +118,15 @@ public final class LLMFactory {
             default -> throw new IllegalArgumentException("unsupported llm provider: " + spaceRec.at(PROVIDER));
         };
     }
-
-    public static StreamingChatModel createChatInteraction(final Rec model, Rec responseFormat) {
-        final Rec modelFree = model.vid(null);
-        modelFree.at(RESPONSE, responseFormat,MUTABLE);
-        return createChatInteraction(modelFree, modelFree.at(NAME).uriValue().toString());
-    }
     
-    public static StreamingChatModel createChatInteraction(final Rec model, String modelName) {
+    public static StreamingChatModel createChatInteraction(final Model model, String modelName) {
         final fURI provider = model.at(f(PROVIDER)).asRec().at(NAME).uriValue();
         final String host = model.at(f(PROVIDER)).asRec().at(HOST).uriValue().toString();
         final boolean thinking = model.has(THINK);
         final Str api_key = model.at(f(PROVIDER)).asRec().at(API_KEY).orElse(str0());
         final Str organization = model.at(f(PROVIDER)).asRec().at(ORG).orElse(str0());
         final String name = model.at(NAME).uriValue().toString();
-        final Rec responseFormat = model.at(RESPONSE).orElse(rec0()).at(FORMAT).orElse(rec0().zero());
+        final Rec responseFormat = model.responseFormat().orElse(rec0().zero());
         return switch (provider.toString().toLowerCase()) {
             case OLLAMA -> OllamaStreamingChatModel.builder()
                     .baseUrl(host)

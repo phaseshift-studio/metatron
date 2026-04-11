@@ -99,6 +99,7 @@ public final class Tokens {
     public static final String PEERS = "peers";
     public static final String CACHE = "cache";
     public static final String CONST = "const";
+    public static final String CONSTQ = "constq";
     public static final String CLIENT = "client";
     public static final String SCRIPT = "script";
     public static final String REWRITE = "rewrite";

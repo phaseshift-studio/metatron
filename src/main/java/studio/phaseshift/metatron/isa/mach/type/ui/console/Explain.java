@@ -78,8 +78,8 @@ public class Explain extends AbstractWidget<Explain> {
         final int spawnCol;        // Column in parent that spawned this (-1 if root)
 
         ExplainLevel(final Code code, final int offsetX, final int offsetY, final int spawnRow, final int spawnCol) {
-            this.code = code.resolve(noobj());
-            this.rewritten = code.insts().stream().map(Inst::tid).toList().equals(code.rewrite().insts().stream().map(Inst::tid).toList());
+            this.code = code;//.resolve(noobj());
+            this.rewritten = code.insts().stream().map(Inst::tid).toList().equals(code.clone().asCode().rewrite().insts().stream().map(Inst::tid).toList());
             this.profile = new Profile(this.code);
             this.profile.instTable.style()
                     .headerDivider("{{[b]}} ")

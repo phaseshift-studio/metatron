@@ -46,7 +46,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 public interface InstSet extends Space {
     Type INSTSET_TYPE = Type.Builder.build().tid(REC_TID).vid(INSTSET_TID)
             .isaPredicate(rec(
-                    uri(CONST).maybe().asUri(), lst(T(ALL)),
+                    uri(CONSTQ).maybe().asUri(), lst(T(ALL)),
                     uri(TYPE).maybe(), lst(TYPE_TYPE),
                     uri(INST).maybe(), lst(INST_TYPE),
                     uri(REWRITE).maybe(), lst(INST_TYPE),

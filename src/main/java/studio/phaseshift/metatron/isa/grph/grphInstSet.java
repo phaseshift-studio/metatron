@@ -140,7 +140,7 @@ public class  grphInstSet extends AbstractInstSet {
     public void setup() {
         this.jvm().putAll(mutableMap(
                 uri(PATTERN), uri(GRPH_ISA_TID.extend(ALL)),
-                uri(CONST), lst(ObjTP3Serializer.single()),
+                uri(CONSTQ), lst(ObjTP3Serializer.single()),
                 uri(TYPE), lst(
                         docWrap(Type.Builder.build()
                                 .tid(REC_TID)

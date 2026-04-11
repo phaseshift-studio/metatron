@@ -106,7 +106,7 @@ public class Model extends MRec {
     }
 
     public Obj processResponse(final Str response) {
-        boolean hasFormat = this.at(RESPONSE).orElse(rec0()).has(FORMAT);
+        boolean hasFormat = this.has(RESPONSE + "/" + FORMAT);
         final Obj result = hasFormat ?
                 ObjSimpleJSONSerializer.single().inputBytes(ByteBuffer.wrap(response.strValue().getBytes(StandardCharsets.UTF_8))) :
                 response;
@@ -245,13 +245,7 @@ public class Model extends MRec {
   /*  public Rec query(final Rec query) {
         this.agent()
     }*/
-
-    public Model do_(final String action, final Rec response) {
-        final Agent agent = this.agent().streamingChatModel(LLMFactory.createChatInteraction(this, response)).build();
-        agent.chat(action);
-        return this;
-    }
-
+    
     public Model chat(final String message, final Inst onResponse) {
         BootLoader.getExecutor().submit(() -> {
             onResponse.apply(this.chat(message));
@@ -358,7 +352,7 @@ public class Model extends MRec {
 
         public static Tuple.Pair<ToolSpecification, ToolExecutor> mtronInstToolSpecification(final Rec tool) {
             final Inst inst = tool.at(INST);
-            final QCollection.Doc doc = doc(tool.at(DOC).as());
+            final QCollection.Doc doc = doc(Router.global().read(inst.tid().addQ(DOCQ)).as());
             JsonObjectSchema.Builder parameters = new JsonObjectSchema.Builder();
             List<String> required = new ArrayList<>();
             parameters.addProperty(LHS, objToSchema(inst.dom(), Type.Helper.polyTypePredicateObj(inst.dom()), doc.at(DOM).orElse(str("<no description>")).strValue()));
@@ -376,7 +370,7 @@ public class Model extends MRec {
             });
             parameters.required(required);
             ToolSpecification.Builder toolSpecBuilder = ToolSpecification.builder()
-                    .name(inst.tid().basePath().toString())
+                    .name(inst.tid().basePath().toString().replaceAll("^/+", "").replace("/", "_"))
                     .description(doc.description())
                     .parameters(parameters.build());
 
