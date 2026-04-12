@@ -1,5 +1,5 @@
 /*
- * Metatron: A Distributed Computing Language and Virtual Machine
+ * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
@@ -16,14 +16,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.doc;
+package studio.phaseshift.metatron.isa.doc.space;
 
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.ReplaceOptions;
-import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import studio.phaseshift.metatron.furi.fURI;
@@ -36,7 +35,6 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -145,8 +143,9 @@ public class docdbSpace extends AbstractSpace<MongoClient> {
 
     protected MongoDatabase database;
     protected String databaseName;
-    protected ObjSerializer<BsonValue> serializer;
+    protected ObjBSONSerializer serializer;
     protected ExistingCollectionSchema existingCollectionSchema;
+    protected DocdbSubQ docdbSubQ;
 
     public static docdbSpace of(final Map<Obj, Obj> config, final fURI vid) {
         final MongoClient client = MongoClients.create(config.get(uri(HOST)).uriValue().toString());
@@ -161,19 +160,21 @@ public class docdbSpace extends AbstractSpace<MongoClient> {
         this.databaseName = connectionfURI.segments(0, null);
         this.database = this.sjvm().getDatabase(this.databaseName);
         this.serializer = this.at(uri(SERIALIZER)).orElse(new ObjBSONSerializer());
-
         // Configure serializer with reference path builder for lazy resolution
-        if (this.serializer instanceof ObjBSONSerializer) {
-            ((ObjBSONSerializer) this.serializer).setReferencePathBuilder(refInfo ->
-                    this.pattern.retractPattern()
-                            .extend(refInfo.collection())
-                            .extend(refInfo.id())
-            );
-        }
+        this.serializer.setReferencePathBuilder(refInfo ->
+                this.pattern.retractPattern()
+                        .extend(refInfo.collection())
+                        .extend(refInfo.id())
+        );
         final Rec conn = MObjFactory.of().toObj(this.sjvm()).asRec();
         LOG.debug("{{g}}connected{{X}} %s", conn);
         this.at(uri(NATIVE_CONNACK), conn, MUTABLE);
         LOG.info("using document database {{b}}%s{{X}}", this.databaseName);
+
+        // Initialize subscription query for change streams
+        this.docdbSubQ = new DocdbSubQ(this);
+        this.at(uri(QSTRING), this.at(uri(QSTRING)).orElse(lst()).plus(lst(List.of(this.docdbSubQ))), MUTABLE);
+        LOG.debug("initialized {{g}}change stream subscription{{X}} support");
 
         // Initialize collection schema discovery (optional - enabled if COLLECTION is in config)
         final boolean enableSchemaDiscovery = config.getOrDefault(uri(COLLECTION), null) != null;
@@ -198,6 +199,14 @@ public class docdbSpace extends AbstractSpace<MongoClient> {
             LOG.info("schema discovery {{y}}disabled{{X}} - discovered {{y}}%d{{X}} collections: %s",
                     collections.size(), collections);
         }
+    }
+
+    public MongoDatabase getDatabase() {
+        return this.database;
+    }
+
+    public ObjBSONSerializer getSerializer() {
+        return this.serializer;
     }
 
     @Override
@@ -284,7 +293,7 @@ public class docdbSpace extends AbstractSpace<MongoClient> {
                 documentID = segments.size() > 1 ? segments.get(1) : null;
             }
 
-            LOG.info("searching [collection: %s][document: %s]", collectionName, documentID);
+            LOG.debug("searching [collection: %s][document: %s]", collectionName, documentID);
             if (collectionName == null)
                 return IteratorUtil.of();
             Stream<String> collectionStream;
@@ -296,7 +305,7 @@ public class docdbSpace extends AbstractSpace<MongoClient> {
             if (null == documentID) {
                 return collectionStream.map(c -> {
                     final fURI collectionVID = Space.Helper.routeToSpace(f(c), this.routes());
-                    LOG.info("collection lookup: %s", collectionVID);
+                    LOG.debug("collection lookup: %s", collectionVID);
                     return IdObj.of(collectionVID, uri(collectionVID, COLLECTION_TID, null).selfVID(collectionVID));
                 }).iterator();
             }
@@ -336,6 +345,10 @@ public class docdbSpace extends AbstractSpace<MongoClient> {
 
     @Override
     public void close() {
+        // Close all change stream watchers first
+        if (this.docdbSubQ != null) {
+            this.docdbSubQ.closeAll();
+        }
         if (this.sjvm() != null) {
             this.sjvm().close();
             LOG.info("closed document store connection at {{b}}%s{{X}}", this.databaseName);

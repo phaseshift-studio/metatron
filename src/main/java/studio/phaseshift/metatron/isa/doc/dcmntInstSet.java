@@ -25,6 +25,7 @@ import org.bson.conversions.Bson;
 import studio.phaseshift.metatron.algebra.rewrite.CommonRewrites;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
+import studio.phaseshift.metatron.isa.doc.space.docdbSpace;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -160,7 +161,7 @@ public class dcmntInstSet extends AbstractInstSet {
                                 DCMNT_ISA_REWRITE_TID.extend("mql_count"),
                                 (space, furi) -> {
                                     final String collectionName = furi.segments().getFirst();
-                                    final MongoCollection<Document> collection = space.database.getCollection(collectionName);
+                                    final MongoCollection<Document> collection = space.getDatabase().getCollection(collectionName);
                                     return collection.countDocuments();
                                 }
                         ),
@@ -171,7 +172,7 @@ public class dcmntInstSet extends AbstractInstSet {
                                 DCMNT_ISA_REWRITE_TID.extend("mql_sum"),
                                 (space, furi) -> {
                                     final String collectionName = furi.segments().getFirst();
-                                    final MongoCollection<Document> collection = space.database.getCollection(collectionName);
+                                    final MongoCollection<Document> collection = space.getDatabase().getCollection(collectionName);
                                     // MongoDB aggregation pipeline: [{$group: {_id: null, total: {$sum: 1}}}]
                                     final Document result = collection.aggregate(Arrays.asList(
                                             new Document("$group", new Document("_id", null)
@@ -190,7 +191,7 @@ public class dcmntInstSet extends AbstractInstSet {
                                 DCMNT_ISA_REWRITE_TID.extend("mql_mean"),
                                 (space, furi) -> {
                                     final String collectionName = furi.segments().getFirst();
-                                    final MongoCollection<Document> collection = space.database.getCollection(collectionName);
+                                    final MongoCollection<Document> collection = space.getDatabase().getCollection(collectionName);
                                     // MongoDB aggregation pipeline: [{$group: {_id: null, average: {$avg: 1}}}]
                                     final Document result = collection.aggregate(Arrays.asList(
                                             new Document("$group", new Document("_id", null)
@@ -209,7 +210,7 @@ public class dcmntInstSet extends AbstractInstSet {
                                 DCMNT_ISA_REWRITE_TID.extend("mql_limit"),
                                 (space, furi, limit) -> {
                                     final String collectionName = furi.segments().getFirst();
-                                    final MongoCollection<Document> collection = space.database.getCollection(collectionName);
+                                    final MongoCollection<Document> collection = space.getDatabase().getCollection(collectionName);
                                     final fURI baseUri = furi.retract(1);
                                     return readDocumentsAsObjs(collection, baseUri, space, (int) limit);
                                 }
@@ -221,7 +222,7 @@ public class dcmntInstSet extends AbstractInstSet {
                                 DCMNT_ISA_REWRITE_TID.extend("mql_has"),
                                 (space, furi) -> {
                                     final String collectionName = furi.segments().getFirst();
-                                    final MongoCollection<Document> collection = space.database.getCollection(collectionName);
+                                    final MongoCollection<Document> collection = space.getDatabase().getCollection(collectionName);
                                     // Use limit(1) for efficiency - we only need to know if at least one exists
                                     return collection.find().limit(1).first() != null;
                                 }
@@ -233,7 +234,7 @@ public class dcmntInstSet extends AbstractInstSet {
                                 DCMNT_ISA_REWRITE_TID.extend("mql_where"),
                                 (space, furi, predicateStr) -> {
                                     final String collectionName = furi.segments().getFirst();
-                                    final MongoCollection<Document> collection = space.database.getCollection(collectionName);
+                                    final MongoCollection<Document> collection = space.getDatabase().getCollection(collectionName);
                                     final fURI baseUri = furi.retract(1);
                                     final Bson filter = parseMongoFilter(predicateStr);
                                     if (filter == null) {
@@ -250,7 +251,7 @@ public class dcmntInstSet extends AbstractInstSet {
                                 DCMNT_ISA_REWRITE_TID.extend("mql_where_count"),
                                 (space, furi, predicateStr) -> {
                                     final String collectionName = furi.segments().getFirst();
-                                    final MongoCollection<Document> collection = space.database.getCollection(collectionName);
+                                    final MongoCollection<Document> collection = space.getDatabase().getCollection(collectionName);
                                     final Bson filter = parseMongoFilter(predicateStr);
                                     if (filter == null) {
                                         throw new IllegalArgumentException("Could not parse filter: " + predicateStr);
@@ -265,7 +266,7 @@ public class dcmntInstSet extends AbstractInstSet {
                                 DCMNT_ISA_REWRITE_TID.extend("mql_select"),
                                 (space, furi, columns) -> {
                                     final String collectionName = furi.segments().getFirst();
-                                    final MongoCollection<Document> collection = space.database.getCollection(collectionName);
+                                    final MongoCollection<Document> collection = space.getDatabase().getCollection(collectionName);
 
                                     // Build MongoDB projection: {field1: 1, field2: 1, _id: 0}
                                     final Document projection = new Document();
@@ -278,7 +279,7 @@ public class dcmntInstSet extends AbstractInstSet {
                                     }
 
                                     return objs(IteratorUtil.stream(collection.find().projection(projection).iterator())
-                                            .map(doc -> space.serializer.read(doc.toBsonDocument())));
+                                            .map(doc -> space.getSerializer().read(doc.toBsonDocument())));
                                 }
                         )
                 )));
@@ -315,7 +316,7 @@ public class dcmntInstSet extends AbstractInstSet {
                     ? ((org.bson.types.ObjectId) docId).toHexString()
                     : docId.toString();
             final fURI docUri = baseUri.extend(collection.getNamespace().getCollectionName()).extend(idStr);
-            return space.serializer.read(doc.toBsonDocument()).selfVID(docUri);
+            return space.getSerializer().read(doc.toBsonDocument()).selfVID(docUri);
         }));
     }
 
@@ -332,7 +333,7 @@ public class dcmntInstSet extends AbstractInstSet {
                     ? ((org.bson.types.ObjectId) docId).toHexString()
                     : docId.toString();
             final fURI docUri = baseUri.extend(collection.getNamespace().getCollectionName()).extend(idStr);
-            return space.serializer.read(doc.toBsonDocument()).selfVID(docUri);
+            return space.getSerializer().read(doc.toBsonDocument()).selfVID(docUri);
         }));
     }
 

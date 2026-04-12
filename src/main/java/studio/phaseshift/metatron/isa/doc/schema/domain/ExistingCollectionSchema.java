@@ -22,7 +22,7 @@ import com.mongodb.client.MongoDatabase;
 import org.bson.BsonType;
 import org.bson.BsonValue;
 import org.bson.Document;
-import studio.phaseshift.metatron.isa.doc.docdbSpace;
+import studio.phaseshift.metatron.isa.doc.space.docdbSpace;
 
 import studio.phaseshift.metatron.furi.fURI;
 
