@@ -252,61 +252,6 @@ bin/metatron</code></pre>
        pattern  =>docq,
        obj      =>mem::[pattern=><#>]]],
  space  =>[sub=>{!*/m/mach,!*/m/math,!*/m/web,!*/m/iot,!*/m/grph,!*/m/llm,!*/m/tble,!*/m/dcmnt}],
- type   =>[
-   bool::T,
-   int::T,
-   real::T,
-   bytes::T,
-   str::T,
-   uri::T,
-   rel::T,
-   lst::T,
-   rec::T,
-   rec::T[?[
-     {?}constq =>[#::T],
-     {?}type   =>[T::T],
-     {?}inst   =>[inst::T],
-     {?}rewrite=>[inst::T],
-     {?}sugar  =>[lst::T]]]@/m/instset,
-   inst::T,
-   code::T,
-   fail::T,
-   rec::T[?[
-     pattern=>uri::T,
-     {?}q   =>[
-       uri::T=>rec::T[][inst?rng=q&dom=#{?}([
- pattern       =>uri::T,
- pre_write{?}  =>inst::T,
- post_write{?} =>inst::T,
- qless_write{?}=>inst::T,
- pre_read{?}   =>inst::T,
- post_read{?}  =>inst::T]){<j>}]@/m/space/q]]]@/m/space,
-   space::T[][inst?rng=mem&dom=#{?}(isa([
- pattern   =>uri::T,
- {?}persist=>uri::T[][inst?rng=file&dom=#{?}(uri::T){<j>}]@/m/mach/file])){<j>}]@/m/space/mem,
-   space::T[][inst?rng=stack&dom=#{?}(isa([
- pattern=>uri::T])){<j>}]@/m/space/stack,
-   space::T[][inst?rng=meta&dom=#{?}(isa([
- pattern=>uri::T,
- host   =>uri::T,
- route  =>[
-   uri::T=>uri::T],
- peers  =>[uri{*}::T]])){<j>}]@/m/space/meta,
-   rec::T[][inst?rng=q&dom=#{?}([
- pattern       =>uri::T,
- pre_write{?}  =>inst::T,
- post_write{?} =>inst::T,
- qless_write{?}=>inst::T,
- pre_read{?}   =>inst::T,
- post_read{?}  =>inst::T]){<j>}]@/m/space/q,
-   q::T[][/m/space/q/subq/cons?rng=subq&dom=#{?}(){<j>}]@/m/space/q/subq,
-   rec::T[?[
-     target =>uri::T,
-     on_recv=>#::T]]@/m/space/q/subq/sub,
-   q::T[][/m/space/q/typeq/cons?rng=typeq&dom=#{?}(){<j>}]@/m/space/q/typeq,
-   q::T[][/m/space/q/docq/cons?rng=docq&dom=#{?}(){<j>}]@/m/space/q/docq,
-   q::T[][/m/space/q/incrq/cons?rng=incrq&dom=#{?}(){<j>}]@/m/space/q/incrq,
-   q::T[][/m/space/q/constq/cons?rng=constq&dom=#{?}(){<j>}]@/m/space/q/constq],
  const  =>[noobj],
  rewrite=>[
    /m/inst/rewrite/id_removal?rng=code{?}&dom=code(){<j>},
@@ -493,11 +438,12 @@ bin/metatron</code></pre>
    repeat?rng=A{*}&dom=A&monad(#::T,#::T){<j>},
    !#{?}::T,
    !*#{?}::T,
+   auto_to(){<j>},
    catch?rng=A{*}&dom=A(A{*}::T){<j>},
    end?rng=noobj{0}&dom=#{*}(){<j>},
    println?rng=#{*}&dom=#{?}(#{*}::T){<j>},
    print?rng=#{*}&dom=#{?}(#{*}::T){<j>},
-   at?rng=#{*}&dom=#{?}(uri{?}::T){<j>},
+   at?rng=A&dom=A(uri{?}::T){<j>},
    id?rng=A&dom=A(){<j>},
    id?rng=A{*}&dom=A{*}(){<j>},
    and?rng=bool&dom=A(bool{+}::T){<j>},
@@ -545,7 +491,62 @@ bin/metatron</code></pre>
    swap?rng=A&dom=A(B::T){<j>},
    rshift?rng=B{?}&dom=A(){<j>},
    lshift?rng=B{?}&dom=A(){<j>},
-   start?rng=A{**}&dom=noobj{0}(A{**}::T){<j>}]]@/m</code></pre>
+   start?rng=A{**}&dom=noobj{0}(A{**}::T){<j>}],
+ type   =>[
+   bool::T,
+   int::T,
+   real::T,
+   bytes::T,
+   str::T,
+   uri::T,
+   rel::T,
+   lst::T,
+   rec::T,
+   rec::T[?[
+     {?}constq =>[#::T],
+     {?}type   =>[T::T],
+     {?}inst   =>[inst::T],
+     {?}rewrite=>[inst::T],
+     {?}sugar  =>[lst::T]]]@/m/instset,
+   inst::T,
+   code::T,
+   fail::T,
+   rec::T[?[
+     pattern=>uri::T,
+     {?}q   =>[
+       uri::T=>rec::T[][inst?rng=q&dom=#{?}([
+ pattern       =>uri::T,
+ pre_write{?}  =>inst::T,
+ post_write{?} =>inst::T,
+ qless_write{?}=>inst::T,
+ pre_read{?}   =>inst::T,
+ post_read{?}  =>inst::T]){<j>}]@/m/space/q]]]@/m/space,
+   space::T[][inst?rng=mem&dom=#{?}(isa([
+ pattern   =>uri::T,
+ {?}persist=>uri::T[][inst?rng=file&dom=#{?}(uri::T){<j>}]@/m/mach/file])){<j>}]@/m/space/mem,
+   space::T[][inst?rng=stack&dom=#{?}(isa([
+ pattern=>uri::T])){<j>}]@/m/space/stack,
+   space::T[][inst?rng=meta&dom=#{?}(isa([
+ pattern=>uri::T,
+ host   =>uri::T,
+ route  =>[
+   uri::T=>uri::T],
+ peers  =>[uri{*}::T]])){<j>}]@/m/space/meta,
+   rec::T[][inst?rng=q&dom=#{?}([
+ pattern       =>uri::T,
+ pre_write{?}  =>inst::T,
+ post_write{?} =>inst::T,
+ qless_write{?}=>inst::T,
+ pre_read{?}   =>inst::T,
+ post_read{?}  =>inst::T]){<j>}]@/m/space/q,
+   q::T[][/m/space/q/subq/cons?rng=subq&dom=#{?}(){<j>}]@/m/space/q/subq,
+   rec::T[?[
+     target =>uri::T,
+     on_recv=>#::T]]@/m/space/q/subq/sub,
+   q::T[][/m/space/q/typeq/cons?rng=typeq&dom=#{?}(){<j>}]@/m/space/q/typeq,
+   q::T[][/m/space/q/docq/cons?rng=docq&dom=#{?}(){<j>}]@/m/space/q/docq,
+   q::T[][/m/space/q/incrq/cons?rng=incrq&dom=#{?}(){<j>}]@/m/space/q/incrq,
+   q::T[][/m/space/q/constq/cons?rng=constq&dom=#{?}(){<j>}]@/m/space/q/constq]]@/m</code></pre>
                         </div>
                     </div>
                 </div>
@@ -556,7 +557,7 @@ bin/metatron</code></pre>
             <div class="d-flex justify-content-center gap-2 flex-wrap">
                 <button class="btn btn-outline-secondary" disabled>Consts <span class="badge bg-dark">0</span></button>
                 <a href="#types" class="btn btn-outline-primary">Types <span class="badge bg-secondary">13</span></a>
-                <a href="#instructions" class="btn btn-outline-primary">Insts <span class="badge bg-secondary">243</span></a>
+                <a href="#instructions" class="btn btn-outline-primary">Insts <span class="badge bg-secondary">244</span></a>
                 <a href="#spaces" class="btn btn-outline-primary">Spaces <span class="badge bg-secondary">4</span></a>
                 <a href="#rewrites" class="btn btn-outline-primary">Rewrites <span class="badge bg-secondary">8</span></a>
             </div>
@@ -660,6 +661,10 @@ bin/metatron</code></pre>
                 </a>
                 <a href="#inst-auto_from" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">auto_from</span>
+                    <span class="badge bg-success">I</span>
+                </a>
+                <a href="#inst-auto_to" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
+                    <span class="code">auto_to</span>
                     <span class="badge bg-success">I</span>
                 </a>
                 <a href="#inst-barrier" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
@@ -1429,7 +1434,7 @@ a/b/c/                           [-- relative/branch uri            --]
             
         <div class="container-xxl mb-4" id="instructions">
             <h3 class="text-primary mb-3">
-                Instructions <span class="badge bg-success">243</span>
+                Instructions <span class="badge bg-success">244</span>
             </h3>
             
                 <div class="card mb-3" id="inst-and">
@@ -1561,12 +1566,12 @@ a/b/c/                           [-- relative/branch uri            --]
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">at</span>
-                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#{?}.html#type-#" data-bs-toggle="tooltip" title="maybe domain" class="code text-info">#{?}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#{*}.html#type-#" data-bs-toggle="tooltip" title="maybe some range" class="code text-success">#{*}</a></span></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#" data-bs-toggle="tooltip" title="generic domain" class="code text-info">A</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#" data-bs-toggle="tooltip" title="generic range" class="code text-success">A</a></span></span>
                         </span>
-                        <small class="text-muted code">/m/inst/at?#{*}&lt;=#{?}</small>
+                        <small class="text-muted code">/m/inst/at?A&lt;=A</small>
                     </div>
                     <div class="card-body p-2">
-                        <pre class="mb-1"><code class="language-mtron">at?#{*}&lt;=#{?}(uri{?}::T){&lt;j&gt;}</code></pre>
+                        <pre class="mb-1"><code class="language-mtron">at?A&lt;=A(uri{?}::T){&lt;j&gt;}</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -1615,6 +1620,22 @@ a/b/c/                           [-- relative/branch uri            --]
                     </div>
                     <div class="card-body p-2">
                         <pre class="mb-1"><code class="language-mtron">!*#{?}::T</code></pre>
+                    </div>
+                    
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
+                </div>
+                <div class="card mb-3" id="inst-auto_to">
+                    <div class="card-header d-flex justify-content-between align-items-center py-2">
+                        <span>
+                            <span class="code text-primary fw-bold">auto_to</span>
+                            
+                        </span>
+                        <small class="text-muted code">/m/inst/auto_to</small>
+                    </div>
+                    <div class="card-body p-2">
+                        <pre class="mb-1"><code class="language-mtron">auto_to(){&lt;j&gt;}</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -3538,7 +3559,7 @@ a-&gt;2+*a                   [-- 4 via sugar&#x27;d writing/reading a --]</code>
         <div class="container-xxl py-3 text-center">
             <hr class="border-secondary">
             <small class="text-muted">
-                generated by metatron instset doc generator on build 0-2026-04-11 20:49:29<br>
+                generated by metatron instset doc generator on build 0-2026-04-12 03:03:49<br>
                 © PhaseShift Studio, LLC
             </small>
         </div>

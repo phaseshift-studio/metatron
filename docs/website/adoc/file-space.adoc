@@ -1,0 +1,32 @@
+[discrete]
+== File Space
+
+The underlying operating system's resources are explicitly accessible to metatron: threads, files, network, etc. This
+section focuses on `fs::T` (file system space). The primary types of this space are `file::T` and `dir::T`.
+
+[discrete]
+++++
+<!-- 🐖 
+*/sys/space/fs                                          [-- <1>
+*local:Desktop                                          [-- <2>
+*local:Desktop/+                                        [-- <3>
+-->
+++++
+<1> `fs` is mounted to `/sys` (other deployments may have another mount address).
+<2> `local` is a special furi that references the local filesystem (see space routes for root directory).
+<3> Listing file contents of a directory.
+
+++++
+<!-- 🐖 
+*/sys/space/fs                                          [-- <1>
+*/sys/space/fs/script                                   [-- <2>
+*<local:Desktop/test_bash.bash>                         [-- <3>
+*<local:Desktop/test_bash.bash>.as(bytes::T)            [-- <4>
+*<local:Desktop/test_bash.bash>.as(bytes::T).as(str::T) [-- <5>
+-->
+++++
+<1> `fs` is mounted to `/sys` (other deployments may have another mount address).
+<2> set of scripting environments accessible to metatron.
+<3> Files and directories are accessible through dereferencing.
+<4> The binary content of a file is accessed by transforming `file::T` to `bytes:::T`.
+<5> Acccessing the text content of a file requires a `file => bytes => str` chain of transformations.

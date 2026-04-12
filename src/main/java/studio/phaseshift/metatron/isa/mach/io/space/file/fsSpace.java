@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -82,7 +82,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
         final String prepend = this.routes.values().stream().map(objs -> objs.autoResolve(this).uriValue().toString().replace("~", System.getProperty(USER_HOME))).iterator().next();
         this.routes.put(uri(prefix), uri(prepend));
     }
-    
+
     @Override
     public void close() {
     }
@@ -142,7 +142,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
                     try {
                         final Path vidPath = Path.of(Space.Helper.routeFromSpace(key.name().equals("apply") ? key.retract(1) : key, this.routes).toString());
                         if (Files.isDirectory(vidPath)) {
-                            return Files.list(vidPath).map(fsSpace::makeFile).map(p -> IdObj.of(p.uriValue(), resolveObj(p))).iterator();
+                            return Stream.of(fsSpace.makeFile(vidPath)).map(p -> IdObj.of(p.uriValue(), resolveObj(p))).iterator();
                         } else {
                             return IteratorUtil.of(IdObj.of(Space.Helper.routeToSpace(f(vidPath.toString()), this.routes), key.name().equals("apply") ?
                                     instC(key.retract(1).dom(ALL.maybe()).rng(ALL_STAR), lst(T(ALL_STAR)), (lhs, inst) -> {
@@ -154,10 +154,10 @@ public class fsSpace extends AbstractSpace<FileSystem> {
                                     }) :
                                     this.resolveObj(makeFile(vidPath))));
                         }
-                    } catch (final NoSuchFileException e) {
+                    } /*catch (final NoSuchFileException e) {
                         LOG.warn("no such file: %s", key);
                         return IteratorUtil.of();
-                    } catch (final Exception e) {
+                    } */catch (final Exception e) {
                         throw MTronException.of(e);
                     }
                 }

@@ -89,7 +89,45 @@ The memory is referenced again below, where it is both read (the previous intera
 ++++
 
 [discrete]
-=== LLM MCP Servers
+=== LLM Tools, Skills, and MCP Servers
+
+++++
+<!-- 🐖
+[,]@/usr/ai/memory                                             [-- <1>
+*openai:gpt-4o-2024-11-20 +   /
+   [think=>print(_),          /
+    response=>[to=>print(_)]].to(agent)                        [-- <2>
+<openai:gpt-4o-2024-08-06/skill>                    /
+  ->(*<local:software/metatron/.agent/skills/mtron> / 
+      .as(skill::T).>-[,])                                     [-- <3>
+<openai:gpt-4o-2024-08-06/tool> ->([!*eval])                   [-- <4>
+<openai:gpt-4o-2024-08-06/memory> ->(|!*/usr/ai/memory)        [-- <5>
+*<openai:gpt-4o-2024-08-06>                                    [-- <6>
+*<openai:gpt-4o-2024-08-06>.>>=[_=>^*]                         [-- <7>
+agent -> *<openai:gpt-4o-2024-08-06>                           [-- <8>
+-->
+++++
+<1> an address to store agent memory
+<2> a rudimentary chat-oriented agent.
+<3> giving the agent the mtron `eval` instruction as a tool.
+<4> giving the agent the mtron `mtron` skill (`SKILL.md`).
+<5> linking the agent's memory to the specified address.
+<6> an stateful, computationally enriched agent.
+<7> compressing the agent `model::T` by using `!*` references.
+<8> a stack-patterned uri referencing enriched llm created for convenience
+
+++++
+<!-- 🐖 
+*agent.chat('what tools do you have access to?',          /
+            [number_of_tools=>int::T,tool_names=>str::T])      [-- <1>
+*agent.chat('what skills do you have?')                        [-- <2>
+*agent>>memory                                                 [-- <3>
+*agent>>memory/2/attributes/format                             [-- <4>
+-->
+++++
+<1> providing a response format `rec` yields a structured response.
+<2> without a response format, the agent replies in free, unstructured text.
+<3> the agent's memory records structured responses.
 
 
 [discrete]
@@ -127,24 +165,22 @@ can access it accordingly and naturally.
                                  └────┘                           
 ----
 
+The mtron example below contains two structured response calls to the agent used in the running examples thus far. Note the use of the tools provided to
+the agent.
+
 ++++
 <!-- 🐖
-*openai:gpt-4o-2024-11-20 +   /
-   [think=>print(_),          /
-    response=>[to=>print(_)], /
-    memory=>!*/usr/ai/memory].to(agent)                                         [-- <1>
-[,]@/usr/ai/memory                                                              [-- <2>
+*agent                                                                          [-- <1>
 *agent.chat('what is 6 + 23?',[answer=>int::T])                                 /
        .where([answer => ?>20])                                                 /  
        .*agent.chat('what was the last answer you gave me?',[answer=>int::T])   /
        .>>answer                                                                /
        .-<|[?>23 => print('a big answer'),                                      /
-               _ => print('a small answer')].>>.mult(1000)                      [-- <3>
-*/usr/ai/memory                                                                 [-- <4>
+               _ => print('a small answer')].>>.mult(1000)                      [-- <2>
+*/usr/ai/memory                                                                 [-- <3>
 -->
 ++++
 
-<1> Fetch `gpt-4o` from the OpenAI catalog and link it to a memory address.
-<2> Create a `lst` at the agent's memory location. 
-<3> Treat `chat()` like any other instruction within a larger mtron composition.
-<4> The llm's memory structure with requests and responses accessible.
+<1> The agent used in the previous examples.
+<2> Treat `chat()` like any other instruction within a larger mtron composition.
+<3> The llm's memory structure with requests and responses accessible.

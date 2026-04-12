@@ -73,7 +73,7 @@ include::header.html[]
                         <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-9" aria-expanded="false" aria-controls="card-9" disabled>Relational Space</button></div>
                         <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-10" aria-expanded="false" aria-controls="card-10">Q Processors</button></div>
                         <div class="col"><button class="w-100 btn btn-outline-primary text-nowrap" type="button" data-bs-toggle="collapse" data-bs-target="#card-11" aria-expanded="false" aria-controls="card-11">Uniform Resource Identifiers</button></div>
-                        <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-12" aria-expanded="false" aria-controls="card-12" disabled>File Space</button></div>
+                        <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-12" aria-expanded="false" aria-controls="card-12">File Space</button></div>
                         <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-13" aria-expanded="false" aria-controls="card-13" disabled>The Router</button></div>
                         <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-14" aria-expanded="false" aria-controls="card-14">Graph Space</button></div>
                         <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-15" aria-expanded="false" aria-controls="card-15" disabled>Coefficients</button></div>
@@ -304,6 +304,18 @@ include::uris-panel.adoc[]
 ++++
 </div>
 ++++
+
+
+++++ 
+<div class="collapse position-relative" id="card-12">
+<button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-12" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
+<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
+++++
+include::file-space.adoc[]
+++++
+</div>
+++++
+
 
 
 ++++ 
