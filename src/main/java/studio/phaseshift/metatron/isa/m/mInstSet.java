@@ -650,6 +650,7 @@ public class mInstSet extends AbstractInstSet {
                 Tuple.Triplet.with(Tuple.Pair.with(";", null), List.of(END_INST_TID), 0),
                 //  Tuple.Triplet.with(Tuple.Pair.with("(", ")"), List.of(GET_INST_TID), 1),
                 //Tuple.Triplet.with(Tuple.Pair.with("./", null), List.of(GET_INST_TID), 1),
+                Tuple.Triplet.with(Tuple.Pair.with("^*", null), List.of(M_ISA_INST_TID.extend("auto_to")), 0),
                 Tuple.Triplet.with(Tuple.Pair.with("!*", null), List.of(AUTO_FROM_INST_TID), 1),
                 Tuple.Triplet.with(Tuple.Pair.with("!", null), List.of(AUTO_INST_TID), 1)));
         //   Tuple.Triplet.with(Tuple.Pair.with("^", null), List.of(PARENT_INST_TID), 0)));

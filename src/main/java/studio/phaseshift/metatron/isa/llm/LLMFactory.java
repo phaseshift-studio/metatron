@@ -28,12 +28,12 @@ import dev.langchain4j.model.ollama.OllamaModels;
 import dev.langchain4j.model.ollama.OllamaStreamingChatModel;
 import dev.langchain4j.model.openai.OpenAiModelCatalog;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
-import org.slf4j.event.Level;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.llm.space.modelCatalogSpace;
 import studio.phaseshift.metatron.isa.llm.type.Model;
+import studio.phaseshift.metatron.isa.m.type.Poly;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Str;
 import studio.phaseshift.metatron.isa.m.type.impl.MUri;
@@ -118,7 +118,13 @@ public final class LLMFactory {
             default -> throw new IllegalArgumentException("unsupported llm provider: " + spaceRec.at(PROVIDER));
         };
     }
-    
+
+    private static ResponseFormat createResponseFormat(final Poly<?, ?> responseFormat) {
+        return !responseFormat.isNoObj() && !responseFormat.isEmpty() ? new ResponseFormat.Builder()
+                .jsonSchema(new JsonSchema.Builder().name(RESPONSE).rootElement(Model.Helper.objToSchema(REC_TYPE, responseFormat, RESPONSE)).build())
+                .type(ResponseFormatType.JSON).build() : null;
+    }
+
     public static StreamingChatModel createChatInteraction(final Model model, String modelName) {
         final fURI provider = model.at(f(PROVIDER)).asRec().at(NAME).uriValue();
         final String host = model.at(f(PROVIDER)).asRec().at(HOST).uriValue().toString();
@@ -133,9 +139,7 @@ public final class LLMFactory {
                     .modelName(name)
                     .think(thinking)
                     .returnThinking(thinking)
-                    .responseFormat(!responseFormat.isNoObj() && !responseFormat.isEmpty() ? new ResponseFormat.Builder()
-                            .jsonSchema(new JsonSchema.Builder().name(RESPONSE).rootElement(Model.Helper.objToSchema(REC_TYPE, responseFormat, RESPONSE)).build())
-                            .type(ResponseFormatType.JSON).build() : null)
+                    .responseFormat(createResponseFormat(responseFormat))
                     .build();
 
             case OPENAI -> {
@@ -153,9 +157,7 @@ public final class LLMFactory {
                         .logResponses(true)
                         .timeout(Duration.ofSeconds(60))
                         .logger(Graphitty.log(OpenAiStreamingChatModel.class).logger())
-                        .responseFormat(!responseFormat.isNoObj() && !responseFormat.isEmpty() ? new ResponseFormat.Builder()
-                                .jsonSchema(new JsonSchema.Builder().name(RESPONSE).rootElement(Model.Helper.objToSchema(REC_TYPE, responseFormat, RESPONSE)).build())
-                                .type(ResponseFormatType.JSON).build() : null)
+                        .responseFormat(createResponseFormat(responseFormat))
                         .build();
             }
 
@@ -166,9 +168,7 @@ public final class LLMFactory {
                     .logRequests(true)
                     .logResponses(true)
                     .logger(Graphitty.log(AnthropicStreamingChatModel.class).logger())
-                    .responseFormat(!responseFormat.isNoObj() && !responseFormat.isEmpty() ? new ResponseFormat.Builder()
-                            .jsonSchema(new JsonSchema.Builder().name(RESPONSE).rootElement(Model.Helper.objToSchema(REC_TYPE, responseFormat, RESPONSE)).build())
-                            .type(ResponseFormatType.JSON).build() : null)
+                    .responseFormat(createResponseFormat(responseFormat))
                     .build();
 
             default -> throw MTronException.of("unsupported LLM provider: %s", provider);

@@ -154,14 +154,14 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
 
     class Helper {
         public static Rec transformLstToRec(final Lst lhs, final fURI tid, final fURI vid) {
-            return IteratorUtil.indexedStream(lhs.elements().iterator())
+            return IteratorUtil.indexedStream(lhs.lstValue().iterator())
                     .map(r -> rel(jnt(r.get0()), r.get1()))
                     .collect(new CommonUtil.RecCollector(tid, vid));
         }
 
         public static Lst transformRecToLst(final Rec lhs, final fURI tid, final fURI vid) {
-            return lst(IteratorUtil.indexedStream(lhs.elements().iterator())
-                    .map(r -> rel(jnt(r.get0()), r.get1()))
+            return lst(IteratorUtil.indexedStream(lhs.recValue().entrySet().iterator())
+                    .map(r -> rel(jnt(r.get0()), rel(r.get1().getKey(),r.get1().getValue())))
                     .reduce(new ArrayList<>(), (a, b) -> {
                         a.add(b);
                         return a;
@@ -220,14 +220,15 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
 
         public static Map<Obj, Obj> selectRecRecursionRaw(final Rec lhs, final Rec rhs, final BiFunction<Poly<?, ?>, Poly<?, ?>, Obj> polyRecursion) {
             final Map<Obj, Obj> result = new LinkedHashMap<>();
-            rhs.elements().forEach(kv -> {
-                final Obj selectKeys = objs(lhs.elements().map(kv2 -> kv.first().apply(kv2.first())).filter(v2 -> !v2.isNoObj()));
+            rhs.jvm().forEach((key, value) -> {
+                final Obj selectKeys = objs(lhs.jvm().keySet().stream().map(key).filter(k2 -> !k2.isNoObj()));
                 selectKeys.stream().forEach(selectKey -> {
                     final Obj selectKeyOne = selectKey.c(cInt::one);
                     final Obj lhsValue = lhs.asRec().at(selectKeyOne);
-                    final Obj selectValue = lhsValue.isPoly() && kv.second().isPoly() ?
-                            polyRecursion.apply(lhsValue.as(), kv.second().as()) :
-                            kv.second().apply(lhsValue);
+                    final Obj rhsValue = value.isAutoFrom() ? value : value.autoResolve(rhs);
+                    final Obj selectValue = lhsValue.isPoly() && rhsValue.isPoly() ?
+                            polyRecursion.apply(lhsValue.as(), rhsValue.as()) :
+                            rhsValue.apply(lhsValue);
                     if (!selectValue.isNoObj() && (!selectValue.isRec() || !selectValue.asRec().isEmpty()))
                         result.compute(selectKeyOne, (a, b) -> null == b ? selectValue : b.append(selectValue)); // TODO: the c(1) may not be necessary
                 });
@@ -253,20 +254,20 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
            /* if(operation == MUTABLE) {
                 result.forEach((k, v) -> lhs.recValue().compute(k.c(cInt::one), (a, b) -> v));
             } else */
-            lhs.elements().forEach(kv -> result.compute(kv.first().c(cInt::one), (a, b) -> {
+            lhs.jvm().entrySet().forEach(kv -> result.compute(kv.getKey().c(cInt::one), (a, b) -> {
                 if (null == b) {
-                    if (kv.second().isPoly()) {
-                        return updatePolyRecursion(kv.second().as(), lhs.as(), operation);
+                    if (kv.getValue().isPoly()) {
+                        return updatePolyRecursion(kv.getValue().as(), lhs.as(), operation);
                     }
-                    if (kv.second().isNoObj()) {
-                        return null;
+                    if (kv.getValue().isNoObj()) {
+                        return noobj();
                     } else {
-                        return kv.second().apply(lhs);
+                        return a.isAutoFrom() ? a : kv.getValue().apply(lhs);
                     }
                 } else {
                     if (b.isNoObj()) {
                         //  lhs.logger().warn("FOUND");
-                        return null;
+                        return noobj();
 
                     }
                     return b;

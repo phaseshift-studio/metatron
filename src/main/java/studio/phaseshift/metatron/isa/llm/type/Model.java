@@ -321,9 +321,9 @@ public class Model extends MRec {
             else if (type.test(STR_TYPE))
                 return new JsonStringSchema.Builder().description(description).build();
             else if (type.test(LST_TYPE))
-                return lstToSchema(depth.asLst(), description);
+                return lstToSchema(null == depth ? lst() : depth.asLst(), description);
             else if (type.test(REC_TYPE))
-                return recToSchema(depth.asRec(), description);
+                return recToSchema(null == depth ? rec() : depth.asRec(), description);
             else if (type.test(REL_TYPE))
                 return recToSchema(rec(depth.asRel().first().type(), depth.asRel().second()), description);
             else
