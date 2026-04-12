@@ -220,8 +220,8 @@ public class ExistingCollectionSchema {
             return null;
         final List<String> collectionPath = new ArrayList<>(segments);
         // Default to wildcard if only collection name is provided
-        if (segments.size() == 1)
-            collectionPath.add("+");
+        //if (segments.size() == 1)
+        //    collectionPath.add("+");
         return collectionPath;
     }
     

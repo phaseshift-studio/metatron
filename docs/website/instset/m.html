@@ -263,7 +263,7 @@ bin/metatron</code></pre>
    lst::T,
    rec::T,
    rec::T[?[
-     {?}const  =>[#::T],
+     {?}constq =>[#::T],
      {?}type   =>[T::T],
      {?}inst   =>[inst::T],
      {?}rewrite=>[inst::T],
@@ -284,11 +284,13 @@ bin/metatron</code></pre>
    space::T[][inst?rng=mem&dom=#{?}(isa([
  pattern   =>uri::T,
  {?}persist=>uri::T[][inst?rng=file&dom=#{?}(uri::T){<j>}]@/m/mach/file])){<j>}]@/m/space/mem,
-   space::T[][inst?rng=stack&dom=#{?}(isa([pattern=>uri::T])){<j>}]@/m/space/stack,
+   space::T[][inst?rng=stack&dom=#{?}(isa([
+ pattern=>uri::T])){<j>}]@/m/space/stack,
    space::T[][inst?rng=meta&dom=#{?}(isa([
  pattern=>uri::T,
  host   =>uri::T,
- route  =>[uri::T=>uri::T],
+ route  =>[
+   uri::T=>uri::T],
  peers  =>[uri{*}::T]])){<j>}]@/m/space/meta,
    rec::T[][inst?rng=q&dom=#{?}([
  pattern       =>uri::T,
@@ -298,11 +300,23 @@ bin/metatron</code></pre>
  pre_read{?}   =>inst::T,
  post_read{?}  =>inst::T]){<j>}]@/m/space/q,
    q::T[][/m/space/q/subq/cons?rng=subq&dom=#{?}(){<j>}]@/m/space/q/subq,
-   rec::T[?[target=>uri::T,on_recv=>#::T]]@/m/space/q/subq/sub,
+   rec::T[?[
+     target =>uri::T,
+     on_recv=>#::T]]@/m/space/q/subq/sub,
    q::T[][/m/space/q/typeq/cons?rng=typeq&dom=#{?}(){<j>}]@/m/space/q/typeq,
    q::T[][/m/space/q/docq/cons?rng=docq&dom=#{?}(){<j>}]@/m/space/q/docq,
    q::T[][/m/space/q/incrq/cons?rng=incrq&dom=#{?}(){<j>}]@/m/space/q/incrq,
    q::T[][/m/space/q/constq/cons?rng=constq&dom=#{?}(){<j>}]@/m/space/q/constq],
+ const  =>[noobj],
+ rewrite=>[
+   /m/inst/rewrite/id_removal?rng=code{?}&dom=code(){<j>},
+   /m/inst/rewrite/map_nest?rng=code{?}&dom=code(){<j>},
+   /m/inst/rewrite/else_after_count?rng=code{?}&dom=code(){<j>},
+   /m/inst/rewrite/plus_zero?rng=code{?}&dom=code(){<j>},
+   /m/inst/rewrite/mult_one?rng=code{?}&dom=code(){<j>},
+   /m/inst/rewrite/split_merge_collapse?rng=code{?}&dom=code(){<j>},
+   /m/inst/rewrite/split_merge_left_factor?rng=code{?}&dom=code(){<j>},
+   /m/inst/rewrite/split_merge_right_factor?rng=code{?}&dom=code(){<j>}],
  inst   =>[
    as?rng=bool&dom=bool(bool::T){<j>},
    as?rng=bytes&dom=bool(bytes::T){<j>},
@@ -531,17 +545,7 @@ bin/metatron</code></pre>
    swap?rng=A&dom=A(B::T){<j>},
    rshift?rng=B{?}&dom=A(){<j>},
    lshift?rng=B{?}&dom=A(){<j>},
-   start?rng=A{**}&dom=noobj{0}(A{**}::T){<j>}],
- rewrite=>[
-   /m/inst/rewrite/id_removal?rng=code{?}&dom=code(){<j>},
-   /m/inst/rewrite/map_nest?rng=code{?}&dom=code(){<j>},
-   /m/inst/rewrite/else_after_count?rng=code{?}&dom=code(){<j>},
-   /m/inst/rewrite/plus_zero?rng=code{?}&dom=code(){<j>},
-   /m/inst/rewrite/mult_one?rng=code{?}&dom=code(){<j>},
-   /m/inst/rewrite/split_merge_collapse?rng=code{?}&dom=code(){<j>},
-   /m/inst/rewrite/split_merge_left_factor?rng=code{?}&dom=code(){<j>},
-   /m/inst/rewrite/split_merge_right_factor?rng=code{?}&dom=code(){<j>}],
- const  =>[noobj]]@/m</code></pre>
+   start?rng=A{**}&dom=noobj{0}(A{**}::T){<j>}]]@/m</code></pre>
                         </div>
                     </div>
                 </div>
@@ -552,7 +556,7 @@ bin/metatron</code></pre>
             <div class="d-flex justify-content-center gap-2 flex-wrap">
                 <button class="btn btn-outline-secondary" disabled>Consts <span class="badge bg-dark">0</span></button>
                 <a href="#types" class="btn btn-outline-primary">Types <span class="badge bg-secondary">13</span></a>
-                <a href="#instructions" class="btn btn-outline-primary">Insts <span class="badge bg-secondary">242</span></a>
+                <a href="#instructions" class="btn btn-outline-primary">Insts <span class="badge bg-secondary">243</span></a>
                 <a href="#spaces" class="btn btn-outline-primary">Spaces <span class="badge bg-secondary">4</span></a>
                 <a href="#rewrites" class="btn btn-outline-primary">Rewrites <span class="badge bg-secondary">8</span></a>
             </div>
@@ -1223,7 +1227,7 @@ abc(a=&gt;?int::T,b=&gt;|(*a +10)){ _.*b }       [-- dependent arg inst    --]
                     
                     <div class="card-body p-2">
                         <pre class="mb-0"><code class="language-mtron">rec::T[?[
-     {?}const  =&gt;[#::T],
+     {?}constq =&gt;[#::T],
      {?}type   =&gt;[T::T],
      {?}inst   =&gt;[inst::T],
      {?}rewrite=&gt;[inst::T],
@@ -1425,7 +1429,7 @@ a/b/c/                           [-- relative/branch uri            --]
             
         <div class="container-xxl mb-4" id="instructions">
             <h3 class="text-primary mb-3">
-                Instructions <span class="badge bg-success">242</span>
+                Instructions <span class="badge bg-success">243</span>
             </h3>
             
                 <div class="card mb-3" id="inst-and">
@@ -1514,23 +1518,34 @@ a/b/c/                           [-- relative/branch uri            --]
 <pre class="mb-1"><code class="language-mtron">as?xml&lt;=str(xml::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1"><code class="language-mtron">as?html&lt;=str(html::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1"><code class="language-mtron">as?json&lt;=str(json::T){&lt;j&gt;}</code></pre>
-<pre class="mb-1"><code class="language-mtron">as?tool&lt;=/m/space/q/docq/docs(rec::T[?[
-     inst  =&gt;#::T,
-     name  =&gt;uri::T,
-     desc  =&gt;str::T,
-     {?}arg=&gt;{?}[uri::T=&gt;#::T]]]@/m/llm/tool){&lt;j&gt;}</code></pre>
 <pre class="mb-1"><code class="language-mtron">as?tool&lt;=inst(rec::T[?[
      inst  =&gt;#::T,
      name  =&gt;uri::T,
      desc  =&gt;str::T,
-     {?}arg=&gt;{?}[uri::T=&gt;#::T]]]@/m/llm/tool){&lt;j&gt;}</code></pre>
+     {?}arg=&gt;{?}[
+       uri::T=&gt;#::T]]]@/m/llm/tool){&lt;j&gt;}</code></pre>
+<pre class="mb-1"><code class="language-mtron">as?tool&lt;=/m/space/q/docq/docs(rec::T[?[
+     inst  =&gt;#::T,
+     name  =&gt;uri::T,
+     desc  =&gt;str::T,
+     {?}arg=&gt;{?}[
+       uri::T=&gt;#::T]]]@/m/llm/tool){&lt;j&gt;}</code></pre>
+<pre class="mb-1"><code class="language-mtron">as?tool&lt;=inst(rec::T[?[
+     inst  =&gt;#::T,
+     name  =&gt;uri::T,
+     desc  =&gt;str::T,
+     {?}arg=&gt;{?}[
+       uri::T=&gt;#::T]]]@/m/llm/tool){&lt;j&gt;}</code></pre>
 <pre class="mb-1"><code class="language-mtron">as?skill&lt;=dir(rec::T[?[
      name      =&gt;uri::T,
      desc      =&gt;str::T,
      {?}content=&gt;str::T,
      {?}entry  =&gt;[
-     [dir=&gt;uri::T,content=&gt;str::T]]]]@/m/llm/skill){&lt;j&gt;}</code></pre>
-<pre class="mb-1"><code class="language-mtron">as?rrow&lt;=lrow(rec::T[?[uri::T=&gt;#::T]]@/m/tble/rrow){&lt;j&gt;}</code></pre>
+     [
+           dir    =&gt;uri::T,
+           content=&gt;str::T]]]]@/m/llm/skill){&lt;j&gt;}</code></pre>
+<pre class="mb-1"><code class="language-mtron">as?rrow&lt;=lrow(rec::T[?[
+     uri::T=&gt;#::T]]@/m/tble/rrow){&lt;j&gt;}</code></pre>
 <pre class="mb-1"><code class="language-mtron">as?lrow&lt;=rrow(lst::T@/m/tble/lrow){&lt;j&gt;}</code></pre>
 <pre class="mb-1"><code class="language-mtron">as?lst&lt;=document(lst::T){&lt;j&gt;}</code></pre>
                     </div>
@@ -3312,7 +3327,8 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                         <pre class="mb-0"><code class="language-mtron">space::T[][inst?rng=meta&amp;dom=#{?}(isa([
  pattern=&gt;uri::T,
  host   =&gt;uri::T,
- route  =&gt;[uri::T=&gt;uri::T],
+ route  =&gt;[
+   uri::T=&gt;uri::T],
  peers  =&gt;[uri{*}::T]])){&lt;j&gt;}]@/m/space/meta</code></pre>
                     </div>
                     
@@ -3351,7 +3367,8 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     
                     <div class="mt-2">
-                        <pre class="mb-0"><code class="language-mtron">space::T[][inst?rng=stack&amp;dom=#{?}(isa([pattern=&gt;uri::T])){&lt;j&gt;}]@/m/space/stack</code></pre>
+                        <pre class="mb-0"><code class="language-mtron">space::T[][inst?rng=stack&amp;dom=#{?}(isa([
+ pattern=&gt;uri::T])){&lt;j&gt;}]@/m/space/stack</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -3521,7 +3538,7 @@ a-&gt;2+*a                   [-- 4 via sugar&#x27;d writing/reading a --]</code>
         <div class="container-xxl py-3 text-center">
             <hr class="border-secondary">
             <small class="text-muted">
-                generated by metatron instset doc generator on build 0-2026-04-10 13:34:50<br>
+                generated by metatron instset doc generator on build 0-2026-04-11 20:49:29<br>
                 © PhaseShift Studio, LLC
             </small>
         </div>

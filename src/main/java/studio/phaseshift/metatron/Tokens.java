@@ -107,6 +107,7 @@ public final class Tokens {
     public static final String QSTRING = "q";
     public static final String T = "T";
     public static final String C = "c";
+    public static final String MQL = "mql";
     public static final String MIN = "min";
     public static final String MAX = "max";
     public static final String PATH = "path";

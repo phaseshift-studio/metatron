@@ -1873,8 +1873,8 @@ mtron&gt; *&lt;+/#/&gt;
 ==&gt;agent/name=&gt;gpt-4o-2024-11-20
 ==&gt;abc=&gt;12
 ==&gt;agent=&gt;model::[
- name    =&gt;gpt-4o-2024-11-20,
  provider=&gt;!*/sys/space/openai,
+ name    =&gt;gpt-4o-2024-11-20,
  think   =&gt;print(id()),
  response=&gt;[
    to=&gt;print(id())],
@@ -1916,7 +1916,6 @@ mtron&gt; *&lt;+/#/&gt;
 ==&gt;agent/response=&gt;[
  to=&gt;print(id())]
 ==&gt;fs_prefix=&gt;booger
-==&gt;final=&gt;29000
 ==&gt;m/1/1=&gt;5
 ==&gt;boot/script/perl=&gt;/usr/bin/perl
 ==&gt;m/1/3=&gt;7
@@ -2820,10 +2819,13 @@ mtron&gt; */m/llm/model
      name   =&gt;is(or(eq(anthropic),eq(openai),eq(ollama))),
      pattern=&gt;uri::T,
      {?}host=&gt;uri::T,
-     route  =&gt;[uri::T=&gt;uri::T]]][inst?rng=catalog&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/llm/space/catalog,
+     route  =&gt;[
+       uri::T=&gt;uri::T]]][inst?rng=catalog&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/llm/space/catalog,
      name       =&gt;uri::T,
      {?}think   =&gt;#::T,
-     {?}response=&gt;{?}[{?}to=&gt;inst::T,{?}format=&gt;#::T],
+     {?}response=&gt;{?}[
+       {?}to    =&gt;inst::T,
+       {?}format=&gt;#::T],
      {?}size    =&gt;data_size::T[][/m/math/bB/cons?rng=bB&amp;dom=#{?}(#::T){&lt;j&gt;}]@/m/math/bB,
      {?}memory  =&gt;lst{?}::T@/m/llm/memory,
      {?}desc    =&gt;str::T,
@@ -2833,7 +2835,8 @@ mtron&gt; */m/llm/model
      inst  =&gt;#::T,
      name  =&gt;uri::T,
      desc  =&gt;str::T,
-     {?}arg=&gt;{?}[uri::T=&gt;#::T]]]@/m/llm/tool]]]@/m/llm/model
+     {?}arg=&gt;{?}[
+       uri::T=&gt;#::T]]]@/m/llm/tool]]]@/m/llm/model
 ​</code></pre>
 </div>
 </div>
@@ -2843,76 +2846,76 @@ mtron&gt; */m/llm/model
 mtron&gt; *ollama:+
 ==&gt;model::[
  size    =&gt;gB::0.72,
- provider=&gt;!*/sys/space/ollama,
- name    =&gt;deepseek-coder:latest,
+ skill   =&gt;[completion],
  think   =&gt;noobj,
- skill   =&gt;[completion]]@ollama:deepseek-coder:latest
+ name    =&gt;deepseek-coder:latest,
+ provider=&gt;!*/sys/space/ollama]@ollama:deepseek-coder:latest
 ==&gt;model::[
  size    =&gt;gB::4.87,
- provider=&gt;!*/sys/space/ollama,
- name    =&gt;qwen3:latest,
+ skill   =&gt;[completion,tools,thinking],
  think   =&gt;[=&gt;],
- skill   =&gt;[completion,tools,thinking]]@ollama:qwen3:latest
+ name    =&gt;qwen3:latest,
+ provider=&gt;!*/sys/space/ollama]@ollama:qwen3:latest
 ==&gt;model::[
  size    =&gt;gB::4.34,
- provider=&gt;!*/sys/space/ollama,
- name    =&gt;llama3-groq-tool-use:latest,
+ skill   =&gt;[completion,tools],
  think   =&gt;noobj,
- skill   =&gt;[completion,tools]]@ollama:llama3-groq-tool-use:latest
+ name    =&gt;llama3-groq-tool-use:latest,
+ provider=&gt;!*/sys/space/ollama]@ollama:llama3-groq-tool-use:latest
 ==&gt;model::[
  size    =&gt;gB::0.00,
- provider=&gt;!*/sys/space/ollama,
- name    =&gt;&lt;deepseek-v3.2:cloud&gt;,
+ skill   =&gt;[completion,tools,thinking],
  think   =&gt;[=&gt;],
- skill   =&gt;[completion,tools,thinking]]@&lt;ollama:deepseek-v3.2:cloud&gt;
+ name    =&gt;&lt;deepseek-v3.2:cloud&gt;,
+ provider=&gt;!*/sys/space/ollama]@&lt;ollama:deepseek-v3.2:cloud&gt;
 ==&gt;model::[
  size    =&gt;gB::17.71,
- provider=&gt;!*/sys/space/ollama,
- name    =&gt;&lt;glm-4.7-flash:latest&gt;,
+ skill   =&gt;[completion,tools,thinking],
  think   =&gt;[=&gt;],
- skill   =&gt;[completion,tools,thinking]]@&lt;ollama:glm-4.7-flash:latest&gt;
+ name    =&gt;&lt;glm-4.7-flash:latest&gt;,
+ provider=&gt;!*/sys/space/ollama]@&lt;ollama:glm-4.7-flash:latest&gt;
 ==&gt;model::[
  size    =&gt;gB::0.59,
- provider=&gt;!*/sys/space/ollama,
- name    =&gt;tinyllama:latest,
+ skill   =&gt;[completion],
  think   =&gt;noobj,
- skill   =&gt;[completion]]@ollama:tinyllama:latest
+ name    =&gt;tinyllama:latest,
+ provider=&gt;!*/sys/space/ollama]@ollama:tinyllama:latest
 ==&gt;model::[
  size    =&gt;gB::8.37,
- provider=&gt;!*/sys/space/ollama,
- name    =&gt;deepcoder:latest,
+ skill   =&gt;[completion],
  think   =&gt;noobj,
- skill   =&gt;[completion]]@ollama:deepcoder:latest
+ name    =&gt;deepcoder:latest,
+ provider=&gt;!*/sys/space/ollama]@ollama:deepcoder:latest
 ==&gt;model::[
  size    =&gt;gB::12.85,
- provider=&gt;!*/sys/space/ollama,
- name    =&gt;gpt-oss:latest,
+ skill   =&gt;[completion,tools,thinking],
  think   =&gt;[=&gt;],
- skill   =&gt;[completion,tools,thinking]]@ollama:gpt-oss:latest
+ name    =&gt;gpt-oss:latest,
+ provider=&gt;!*/sys/space/ollama]@ollama:gpt-oss:latest
 ==&gt;model::[
  size    =&gt;gB::4.87,
- provider=&gt;!*/sys/space/ollama,
- name    =&gt;qwen3:8b,
+ skill   =&gt;[completion,tools,thinking],
  think   =&gt;[=&gt;],
- skill   =&gt;[completion,tools,thinking]]@ollama:qwen3:8b
+ name    =&gt;qwen3:8b,
+ provider=&gt;!*/sys/space/ollama]@ollama:qwen3:8b
 ==&gt;model::[
  size    =&gt;gB::48.19,
- provider=&gt;!*/sys/space/ollama,
- name    =&gt;qwen3-coder-next:latest,
+ skill   =&gt;[completion,tools],
  think   =&gt;noobj,
- skill   =&gt;[completion,tools]]@ollama:qwen3-coder-next:latest
+ name    =&gt;qwen3-coder-next:latest,
+ provider=&gt;!*/sys/space/ollama]@ollama:qwen3-coder-next:latest
 ==&gt;model::[
  size    =&gt;gB::0.00,
- provider=&gt;!*/sys/space/ollama,
- name    =&gt;&lt;minimax-m2.5:cloud&gt;,
+ skill   =&gt;[completion,tools,thinking],
  think   =&gt;[=&gt;],
- skill   =&gt;[completion,tools,thinking]]@&lt;ollama:minimax-m2.5:cloud&gt;
+ name    =&gt;&lt;minimax-m2.5:cloud&gt;,
+ provider=&gt;!*/sys/space/ollama]@&lt;ollama:minimax-m2.5:cloud&gt;
 ==&gt;model::[
  size    =&gt;gB::4.41,
- provider=&gt;!*/sys/space/ollama,
- name    =&gt;llava:latest,
+ skill   =&gt;[completion,vision],
  think   =&gt;noobj,
- skill   =&gt;[completion,vision]]@ollama:llava:latest
+ name    =&gt;llava:latest,
+ provider=&gt;!*/sys/space/ollama]@ollama:llava:latest
 ​</code></pre>
 </div>
 </div>
@@ -2983,37 +2986,36 @@ mtron&gt; */usr/mem
 <h3 id="_llm_mcp_servers" class="discrete">LLM MCP Servers</h3>
 <h3 id="_agent_based_programming_language" class="discrete">Agent-Based Programming Language</h3>
 <div class="paragraph">
-<p>The LLM, its memory, tools, skills, thoughts, and response formats are all first class entities in mtron. Interacting
-with an LLM is equivalent to evaluating an instruction. Moreover, the LLM&#8217;s response is equivalent to the <code>rhs</code> of
-an instruction evaluation. Thus, in mtron, LLM&#8217;s are instructions and composing instructions into larger programs
-creates executable code. In this way, large agent computations can be defined and executed in a "workflow" type manner.
-Conceptually, the LLM&#8217;s state exists in space and is accessed as needed by instructions along the execution path
-of the code.</p>
+<p>The LLM, its memory, tools, skills, thoughts, and response formats are all first class entities in the metatron. Interacting
+with an LLM is equivalent to evaluating an instruction. Moreover, an LLM&#8217;s response is simply the <code>rhs</code> of
+the instruction. As such, in mtron, function composition applies to LLM interactions.
+Agent-oriented computations can be defined and executed in a "workflow" type manner.
+Conceptually, the LLM&#8217;s state exists in (side-effect/monadic) space, where instructions along the execution path of the code
+can access it accordingly.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">----                                                                                                                                enriched llm
-       ┌──────────────────────────────────────────────────┐
-       │       memory                       thoughts      │
-       │       tools                        skills        │
-       │       response format                            │
-       └──────────────────────────────────────────────────┘
-                   .               .              .
-                   .               .              .
-                   .             ┌────┐           .
-                   .          ┌─►│chat│           .
-                   .          │  └────┘           .
-                   .          │                   .
-                   .          │                   .
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">    enriched llm
+   ┌──────────────────────────────────────────────────┐
+   │       memory                       thoughts      │
+   │       tools                        skills        │
+   │       response format                            │
+   └──────────────────────────────────────────────────┘
+                   .               .               .
+                   .               .               .
+                   .             ┌────┐            .
+                   .          ┌─►│chat├──────────┐ .
+                   .          │  └────┘          │ .
+                   .          │                  │ .
+                   .          │                  ▼ .
    ┌────┐        ┌────┐       │  ┌────┐         ┌────┐
 ---│    ├───────►│chat├───────┼─►│    ├────────►│chat│----
    └────┘        └────┘       │  └────┘         └────┘
-                              │
-                              │
-                              │  ┌────┐
-                              └─►│    │
-                                 └────┘
-----</code></pre>
+                              │                  ▲
+                              │                  │
+                              │  ┌────┐          │
+                              └─►│    ├──────────┘
+                                 └────┘</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -3024,8 +3026,8 @@ mtron&gt; *openai:gpt-4o-2024-11-20 +
            response=&gt;[to=&gt;print(_)],
            memory=&gt;!*/usr/ai/memory].to(agent)                                         ​1​
 ==&gt;model::[
- name    =&gt;gpt-4o-2024-11-20,
  provider=&gt;!*/sys/space/openai,
+ name    =&gt;gpt-4o-2024-11-20,
  think   =&gt;print(id()),
  response=&gt;[
    to=&gt;print(id())],
@@ -3039,8 +3041,31 @@ mtron&gt; *agent.chat('what is 6 + 23?',[answer=&gt;int::T])
               .*agent.chat('what was the last answer you gave me?',[answer=&gt;int::T])
               .&gt;&gt;answer
               .-&lt;|[?&gt;23 =&gt; print('a big answer'),
-                      _ =&gt; print('a small answer')].&gt;&gt;.mult(1000).to(final)             ​3​
+                      _ =&gt; print('a small answer')].&gt;&gt;.mult(1000)                      ​3​
 ==&gt;29000
+​
+mtron&gt; */usr/ai/memory                                                                 ​4​
+==&gt;[
+  [
+     contents=&gt;[
+     [text=&gt;'what is 6 + 23?',type=&gt;TEXT]],
+     type    =&gt;USER],
+  [
+     text                 =&gt;{"answer":29},
+     toolExecutionRequests=&gt;[,],
+     attributes           =&gt;[
+       format=&gt;[answer=&gt;29]],
+     type                 =&gt;AI],
+  [
+     contents=&gt;[
+     [text=&gt;'what was the last answer you gave me?',type=&gt;TEXT]],
+     type    =&gt;USER],
+  [
+     text                 =&gt;{"answer":29},
+     toolExecutionRequests=&gt;[,],
+     attributes           =&gt;[
+       format=&gt;[answer=&gt;29]],
+     type                 =&gt;AI]]@/usr/ai/memory
 ​</code></pre>
 </div>
 </div>
@@ -3057,6 +3082,10 @@ mtron&gt; *agent.chat('what is 6 + 23?',[answer=&gt;int::T])
 <tr>
 <td><i class="conum" data-value="3"></i><b>3</b></td>
 <td>Treat <code>chat()</code> like any other instruction within a larger mtron composition.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>The llm&#8217;s memory structure with requests and responses accessible.</td>
 </tr>
 </table>
 </div>
@@ -5097,7 +5126,11 @@ mtron&gt; */sys/space/farm/schema                                           ​4
    [
        name       =&gt;'animals',
        uri        =&gt;farm:schema/farm/animals,
-       schema     =&gt;[_id=&gt;str::T,type=&gt;str::T,name=&gt;str::T,age=&gt;int::T],
+       schema     =&gt;[
+         _id =&gt;str::T,
+         type=&gt;str::T,
+         name=&gt;str::T,
+         age =&gt;int::T],
        probability=&gt;[_id=&gt;1.00,type=&gt;1.00,name=&gt;1.00,age=&gt;1.00]]],
  references=&gt;[,]]
 ​</code></pre>

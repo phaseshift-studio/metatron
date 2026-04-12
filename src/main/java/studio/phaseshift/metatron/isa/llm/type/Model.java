@@ -111,7 +111,7 @@ public class Model extends MRec {
                 ObjSimpleJSONSerializer.single().inputBytes(ByteBuffer.wrap(response.strValue().getBytes(StandardCharsets.UTF_8))) :
                 response;
         if (hasFormat && !this.fetchMemory().orElse(lst0()).isEmpty())
-           this.fetchMemory().asLst().lstValue().getLast().asRec().recValue().put(uri(FORMAT), result);
+           this.fetchMemory().asLst().lstValue().getLast().asRec().recValue().put(uri("attributes"), rec(uri(FORMAT), result));
         this.asRec().at(f(RESPONSE).extend(TO)).apply(result);
         return result;
     }

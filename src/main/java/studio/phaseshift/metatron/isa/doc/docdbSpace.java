@@ -38,12 +38,9 @@ import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.util.IteratorUtil;
+import studio.phaseshift.metatron.util.MTronException;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -57,6 +54,7 @@ import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -189,7 +187,7 @@ public class docdbSpace extends AbstractSpace<MongoClient> {
                     .map(c -> (Obj) uri(c)).toList()), MUTABLE);
 
             // Store schema in configuration so it doesn't interfere with pattern queries on data
-            this.at(uri(SCHEMA), auto_(instC(DCMNT_ISA_INST_TID.dom(ALL.maybe()).rng(REC_TID),lst(),(lhs,inst)-> generateSchema())).tryToInst(), MUTABLE);
+            this.at(uri(SCHEMA), auto_(instC(DCMNT_ISA_INST_TID.dom(ALL.maybe()).rng(REC_TID), lst(), (lhs, inst) -> generateSchema())).tryToInst(), MUTABLE);
             this.generateSchema();
             LOG.info("initialized {{g}}collection schema{{X}} in config for %d collections",
                     this.existingCollectionSchema.getCollectionNames().size());
@@ -211,12 +209,12 @@ public class docdbSpace extends AbstractSpace<MongoClient> {
             } else {
                 // Strip the space's route prefix to get the relative path
                 final fURI relativePath = stripPatternPrefix(pattern);
-                
+
                 // Determine collection name - either from schema or first segment
                 final String collectionName;
                 final String documentID;
                 final List<String> fieldPath;
-                
+
                 if (this.existingCollectionSchema != null && this.existingCollectionSchema.isCollectionPath(relativePath)) {
                     // Known collection from schema
                     collectionName = this.existingCollectionSchema.getCollectionName(relativePath);
@@ -229,7 +227,7 @@ public class docdbSpace extends AbstractSpace<MongoClient> {
                     documentID = segments.size() > 1 ? segments.get(1) : null;
                     fieldPath = segments.size() > 2 ? segments.subList(2, segments.size()) : null;
                 }
-                
+
                 if (collectionName == null)
                     return noobj();
                 Stream<String> collectionStream;
@@ -269,12 +267,12 @@ public class docdbSpace extends AbstractSpace<MongoClient> {
     @Override
     public Function<fURI, Iterator<IdObj>> directReader() {
         return (pattern) -> {
-            final fURI alignedPattern = Space.Helper.routeFromSpace(pattern,this.routes());
+            final fURI alignedPattern = Space.Helper.routeFromSpace(pattern, this.routes());
 
             // Determine collection name - either from schema or first segment
             final String collectionName;
             final String documentID;
-            
+
             if (this.existingCollectionSchema != null && this.existingCollectionSchema.isCollectionPath(alignedPattern)) {
                 // Known collection from schema
                 collectionName = this.existingCollectionSchema.getCollectionName(alignedPattern);
@@ -285,8 +283,8 @@ public class docdbSpace extends AbstractSpace<MongoClient> {
                 collectionName = segments.isEmpty() ? null : segments.getFirst();
                 documentID = segments.size() > 1 ? segments.get(1) : null;
             }
-            
-            LOG.debug("searching: %s", collectionName);
+
+            LOG.info("searching [collection: %s][document: %s]", collectionName, documentID);
             if (collectionName == null)
                 return IteratorUtil.of();
             Stream<String> collectionStream;
@@ -295,12 +293,19 @@ public class docdbSpace extends AbstractSpace<MongoClient> {
             } else {
                 collectionStream = Stream.of(collectionName);
             }
-            
+            if (null == documentID) {
+                return collectionStream.map(c -> {
+                    final fURI collectionVID = Space.Helper.routeToSpace(f(c), this.routes());
+                    LOG.info("collection lookup: %s", collectionVID);
+                    return IdObj.of(collectionVID, uri(collectionVID, COLLECTION_TID, null).selfVID(collectionVID));
+                }).iterator();
+            }
+
             final List<IdObj> allResults = new ArrayList<>();
             collectionStream.map(c -> this.database.getCollection(c)).forEach(collection -> {
                 final String collName = collection.getNamespace().getCollectionName();
                 LOG.debug("READING: %s %s", collName, documentID);
-                if (documentID == null || documentID.equals("+") || documentID.equals("#")) {
+                if (documentID.equals("+") || documentID.equals("#")) {
                     // Pattern query - return all documents in collection
                     LOG.debug("reading all documents from collection %s", collName);
                     IteratorUtil.stream(collection.find()).forEach(doc -> {
@@ -334,6 +339,18 @@ public class docdbSpace extends AbstractSpace<MongoClient> {
         if (this.sjvm() != null) {
             this.sjvm().close();
             LOG.info("closed document store connection at {{b}}%s{{X}}", this.databaseName);
+        }
+    }
+
+    public Obj mql(final String collection, final Rec query) {
+        try {
+            return objs(IteratorUtil
+                    .stream(this.sjvm().getDatabase(this.databaseName)
+                            .getCollection(collection)
+                            .find(ObjBSONSerializer.single().writeRec(query)))
+                    .map(doc -> ObjBSONSerializer.single().read(doc.toBsonDocument())));
+        } catch (final Exception e) {
+            throw MTronException.of(e);
         }
     }
 

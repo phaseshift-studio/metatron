@@ -26,8 +26,13 @@ import studio.phaseshift.metatron.algebra.rewrite.CommonRewrites;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.m.mInstSet;
-import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rel;
+import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
+import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.util.IteratorUtil;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -39,11 +44,12 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -66,10 +72,11 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 public class dcmntInstSet extends AbstractInstSet {
 
     public static final fURI DCMNT_ISA_TID = M_ISA_TID.extend("dcmnt");
-    public static final fURI DCMNT_ISA_INST_TID = DCMNT_ISA_TID.extend("inst");
-    public static final fURI DCMNT_ISA_REWRITE_TID = DCMNT_ISA_INST_TID.extend("rewrite");
+    public static final fURI DCMNT_ISA_INST_TID = DCMNT_ISA_TID.extend(INST);
+    public static final fURI DCMNT_ISA_REWRITE_TID = DCMNT_ISA_INST_TID.extend(REWRITE);
+    public static final fURI MQL_INST_TID = DCMNT_ISA_INST_TID.extend(MQL);
     public static final fURI DOCUMENT_TID = DCMNT_ISA_TID.extend("document");
-    public static final fURI COLLECTION_TID = DCMNT_ISA_TID.extend("collection");
+    public static final fURI COLLECTION_TID = DCMNT_ISA_TID.extend(COLLECTION);
     public static final fURI ID_FIELD = f("_id");
     public static fURI DOCDB_SPACE_TID = DCMNT_ISA_TID.extend(SPACE).extend("docdb");
 
@@ -83,9 +90,9 @@ public class dcmntInstSet extends AbstractInstSet {
             .create();
 
     public static final Type COLLECTION_TYPE = Type.Builder.build()
-            .tid(OBJS_TID.maybeSome())
+            .tid(URI_TID)
             .vid(COLLECTION_TID)
-            .predicate(isa_(T(DOCUMENT_TID.maybeSome())).tryToInst())
+            //.isaPredicate(rec(uri(NAME),URI_TYPE))
             .create();
 
     public dcmntInstSet() {
@@ -136,7 +143,16 @@ public class dcmntInstSet extends AbstractInstSet {
                                 *moviedb:
                                 """)),
                 uri(INST), lst(
-                        instC(AS_INST_TID.dom(DOCUMENT_TID).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> lst(lhs.asRec().elements().map(Rel::second).toList()))),
+                        instC(AS_INST_TID.dom(DOCUMENT_TID).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> lst(lhs.asRec().elements().map(Rel::second).toList())),
+                        instC(MQL_INST_TID.dom(DOCDB_SPACE_TID).rng(REC_TID.maybeSome()), lst(URI_TYPE, REC_TYPE), (lhs, inst) -> lhs.<docdbSpace>as().mql(inst.arg(0).uriValue().toString(), inst.arg(1).as())),
+                        docWrap(instC(MQL_INST_TID.dom(COLLECTION_TID).rng(REC_TID.maybeSome()), lst(REC_TYPE), (lhs, inst) -> Router.global().<docdbSpace>getSpace(lhs.uriValue()).mql(lhs.uriValue().name(), inst.arg(0).as())),
+                                "a document collection",
+                                "the result of the mql query",
+                                Map.of(jnt(0), "an mql query represented as a rec"),
+                                "the provided rec is translated to an bson query document and evaluated against the domain collection",
+                                """
+                                *moviedb:movies.mql([title => 'The Matrix'])  [-- movies.find({"title":"The Matrix"}) --]
+                                """)),
                 uri(REWRITE), lst(
                         // Optimize: *collection.count() → MongoDB countDocuments()
                         CommonRewrites.countRewrite(
@@ -261,16 +277,8 @@ public class dcmntInstSet extends AbstractInstSet {
                                         projection.append("_id", 0);
                                     }
 
-                                    final List<Obj> results = new ArrayList<>();
-                                    try (var cursor = collection.find().projection(projection).iterator()) {
-                                        while (cursor.hasNext()) {
-                                            final Document doc = cursor.next();
-                                            // Convert the projected document using the space's serializer
-                                            final Obj row = space.serializer.read(doc.toBsonDocument());
-                                            results.add(row);
-                                        }
-                                    }
-                                    return studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs(results.iterator());
+                                    return objs(IteratorUtil.stream(collection.find().projection(projection).iterator())
+                                            .map(doc -> space.serializer.read(doc.toBsonDocument())));
                                 }
                         )
                 )));
@@ -301,18 +309,14 @@ public class dcmntInstSet extends AbstractInstSet {
                                            final fURI baseUri,
                                            final docdbSpace space,
                                            final int limit) {
-        final List<Obj> results = new ArrayList<>();
-        final var cursor = collection.find().limit(limit).iterator();
-        while (cursor.hasNext()) {
-            final Document doc = cursor.next();
+        return objs(IteratorUtil.stream(collection.find().limit(limit).iterator()).map(doc -> {
             final Object docId = doc.get("_id");
             final String idStr = docId instanceof org.bson.types.ObjectId
                     ? ((org.bson.types.ObjectId) docId).toHexString()
                     : docId.toString();
             final fURI docUri = baseUri.extend(collection.getNamespace().getCollectionName()).extend(idStr);
-            results.add(space.serializer.read(doc.toBsonDocument()).selfVID(docUri));
-        }
-        return studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs(results.iterator());
+            return space.serializer.read(doc.toBsonDocument()).selfVID(docUri);
+        }));
     }
 
     /**
@@ -322,18 +326,14 @@ public class dcmntInstSet extends AbstractInstSet {
                                                    final fURI baseUri,
                                                    final docdbSpace space,
                                                    final Bson filter) {
-        final List<Obj> results = new ArrayList<>();
-        final var cursor = collection.find(filter).iterator();
-        while (cursor.hasNext()) {
-            final Document doc = cursor.next();
+        return objs(IteratorUtil.stream(collection.find(filter).iterator()).map(doc -> {
             final Object docId = doc.get("_id");
             final String idStr = docId instanceof org.bson.types.ObjectId
                     ? ((org.bson.types.ObjectId) docId).toHexString()
                     : docId.toString();
             final fURI docUri = baseUri.extend(collection.getNamespace().getCollectionName()).extend(idStr);
-            results.add(space.serializer.read(doc.toBsonDocument()).selfVID(docUri));
-        }
-        return studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs(results.iterator());
+            return space.serializer.read(doc.toBsonDocument()).selfVID(docUri);
+        }));
     }
 
     /**

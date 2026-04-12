@@ -95,34 +95,35 @@ The memory is referenced again below, where it is both read (the previous intera
 [discrete]
 === Agent-Based Programming Language
 
-The LLM, its memory, tools, skills, thoughts, and response formats are all first class entities in mtron. Interacting
-with an LLM is equivalent to evaluating an instruction. Moreover, the LLM's response is equivalent to the `rhs` of
-an instruction evaluation. Thus, in mtron, LLM's are instructions and composing instructions into larger programs
-creates executable code. In this way, large agent computations can be defined and executed in a "workflow" type manner.
-Conceptually, the LLM's state exists in space and is accessed as needed by instructions along the execution path
-of the code.
+The LLM, its memory, tools, skills, thoughts, and response formats are all first class entities in the metatron. Interacting
+with an LLM is equivalent to evaluating an instruction. Moreover, an LLM's response is simply the `rhs` of
+the instruction. As such, in mtron, function composition applies to LLM interactions. 
+Agent-oriented computations can be defined and executed in a "workflow" type manner.
+Conceptually, the LLM's state exists in (side effect/monadic) space, where instructions along the code's execution path 
+can access it accordingly and naturally.
 
 [source,mtron]
-----                                                                                                                                enriched llm                                                  
-       ┌──────────────────────────────────────────────────┐           
-       │       memory                       thoughts      │           
-       │       tools                        skills        │           
-       │       response format                            │           
-       └──────────────────────────────────────────────────┘           
-                   .               .              .               
-                   .               .              .               
-                   .             ┌────┐           .               
-                   .          ┌─►│chat│           .               
-                   .          │  └────┘           .               
-                   .          │                   .               
-                   .          │                   .               
+----
+    enriched llm                                                  
+   ┌──────────────────────────────────────────────────┐           
+   │       memory                       thoughts      │           
+   │       tools                        skills        │           
+   │       response format                            │           
+   └──────────────────────────────────────────────────┘           
+                   .               .               .              
+                   .               .               .              
+                   .             ┌────┐            .              
+                   .          ┌─►│chat├──────────┐ .              
+                   .          │  └────┘          │ .              
+                   .          │                  │ .              
+                   .          │                  ▼ .              
    ┌────┐        ┌────┐       │  ┌────┐         ┌────┐            
----│    ├───────►│chat├───────┼─►│    ├────────►│chat│----        
+---│    ├───────►│chat├───────┼─►│    ├────────►│chat│---        
    └────┘        └────┘       │  └────┘         └────┘            
-                              │                                   
-                              │                                   
-                              │  ┌────┐                           
-                              └─►│    │                           
+                              │                  ▲                
+                              │                  │                
+                              │  ┌────┐          │                
+                              └─►│    ├──────────┘                
                                  └────┘                           
 ----
 
@@ -138,10 +139,12 @@ of the code.
        .*agent.chat('what was the last answer you gave me?',[answer=>int::T])   /
        .>>answer                                                                /
        .-<|[?>23 => print('a big answer'),                                      /
-               _ => print('a small answer')].>>.mult(1000).to(final)             [-- <3>
+               _ => print('a small answer')].>>.mult(1000)                      [-- <3>
+*/usr/ai/memory                                                                 [-- <4>
 -->
 ++++
 
 <1> Fetch `gpt-4o` from the OpenAI catalog and link it to a memory address.
 <2> Create a `lst` at the agent's memory location. 
 <3> Treat `chat()` like any other instruction within a larger mtron composition.
+<4> The llm's memory structure with requests and responses accessible.

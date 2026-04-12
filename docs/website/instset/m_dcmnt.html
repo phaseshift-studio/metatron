@@ -253,19 +253,24 @@ bin/metatron</code></pre>
        obj      =>mem::[pattern=><#>]]],
  space  =>[
    super=>!*/m],
- const  =>[serializer::/m/mach/io/serializer/json/simple@/m/mach/io/serializer/json/simple,_id@/m/dcmnt/_id],
+ constq =>[serializer::/m/mach/io/serializer/json/simple@/m/mach/io/serializer/json/simple,_id@/m/dcmnt/_id],
  type   =>[
-   rec::T[?[_id=>uri::T,uri::T=>#::T]]@/m/dcmnt/document,
-   /m/objs{*}::T[isa(document{*}::T)]@/m/dcmnt/collection,
+   rec::T[?[
+     _id   =>uri::T,
+     uri::T=>#::T]]@/m/dcmnt/document,
+   uri::T@/m/dcmnt/collection,
    space::T[?[
      pattern      =>uri::T,
      host         =>uri::T,
      {?}serializer=>uri::T,
-     route        =>[uri::T=>uri::T],
+     route        =>[
+       uri::T=>uri::T],
      {?}collection=>lst::T,
      {?}schema    =>#::T]][inst?rng=docdb&dom=#{?}(rec::T){<j>}]@/m/dcmnt/space/docdb],
  inst   =>[
-   as?rng=lst&dom=document(lst::T){<j>}],
+   as?rng=lst&dom=document(lst::T){<j>},
+   mql?rng=rec{*}&dom=docdb(uri::T,rec::T){<j>},
+   mql?rng=rec{*}&dom=collection(rec::T){<j>}],
  rewrite=>[
    /m/dcmnt/inst/rewrite/mql_count?rng=code{?}&dom=code(){<j>},
    /m/dcmnt/inst/rewrite/mql_sum?rng=code{?}&dom=code(){<j>},
@@ -285,7 +290,7 @@ bin/metatron</code></pre>
             <div class="d-flex justify-content-center gap-2 flex-wrap">
                 <a href="#consts" class="btn btn-outline-primary">Consts <span class="badge bg-secondary">1</span></a>
                 <a href="#types" class="btn btn-outline-primary">Types <span class="badge bg-secondary">2</span></a>
-                <button class="btn btn-outline-secondary" disabled>Insts <span class="badge bg-dark">0</span></button>
+                <a href="#instructions" class="btn btn-outline-primary">Insts <span class="badge bg-secondary">2</span></a>
                 <a href="#spaces" class="btn btn-outline-primary">Spaces <span class="badge bg-secondary">1</span></a>
                 <a href="#rewrites" class="btn btn-outline-primary">Rewrites <span class="badge bg-secondary">8</span></a>
             </div>
@@ -325,6 +330,16 @@ bin/metatron</code></pre>
                 </div>
             </div>
                     
+            <div class="mb-3">
+                <h6 class="text-primary mb-2">Instructions</h6>
+                <div class="index-columns">
+                    
+                <a href="#inst-mql" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
+                    <span class="code">mql</span>
+                    <span class="badge bg-success">I</span>
+                </a>
+                </div>
+            </div>
                     
             <div class="mb-3">
                 <h6 class="text-primary mb-2">Spaces</h6>
@@ -410,13 +425,13 @@ bin/metatron</code></pre>
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">collection::T</span>
-                            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">/m/objs{*}::T</span></span>
+                            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">uri::T</span></span>
                         </span>
                         <small class="text-muted code">/m/dcmnt/collection</small>
                     </div>
                     
                     <div class="card-body p-2">
-                        <pre class="mb-0"><code class="language-mtron">/m/objs{*}::T[isa(document{*}::T)]@/m/dcmnt/collection</code></pre>
+                        <pre class="mb-0"><code class="language-mtron">uri::T@/m/dcmnt/collection</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -435,7 +450,9 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="card-body p-2">
-                        <pre class="mb-0"><code class="language-mtron">rec::T[?[_id=&gt;uri::T,uri::T=&gt;#::T]]@/m/dcmnt/document</code></pre>
+                        <pre class="mb-0"><code class="language-mtron">rec::T[?[
+     _id   =&gt;uri::T,
+     uri::T=&gt;#::T]]@/m/dcmnt/document</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -446,6 +463,38 @@ bin/metatron</code></pre>
                 </div>
         </div>
             
+        <div class="container-xxl mb-4" id="instructions">
+            <h3 class="text-primary mb-3">
+                Instructions <span class="badge bg-success">2</span>
+            </h3>
+            
+                <div class="card mb-3" id="inst-mql">
+                    <div class="card-header d-flex justify-content-between align-items-center py-2">
+                        <span>
+                            <span class="code text-primary fw-bold">mql</span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="m_dcmnt_space.html#type-docdb" data-bs-toggle="tooltip" title="domain" class="code text-info">/m/dcmnt/space/docdb</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-rec" data-bs-toggle="tooltip" title="maybe some range" class="code text-success">/m/rec{*}</a></span></span>
+                        </span>
+                        <small class="text-muted code">/m/dcmnt/inst/mql?/m/rec{*}&lt;=/m/dcmnt/space/docdb</small>
+                    </div>
+                    <div class="card-body p-2">
+                        <pre class="mb-1"><code class="language-mtron">mql?rec{*}&lt;=docdb(uri::T,rec::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1"><code class="language-mtron">mql?rec{*}&lt;=collection(rec::T){&lt;j&gt;}</code></pre>
+                    </div>
+                    
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">the provided rec is translated to an bson query document and evaluated against the domain collection</p>
+                    </div>
+                    <div class="card-body py-2">
+                        <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"a document collection" <span class="text-light">=&gt;</span> "the result of the mql query"
+   [0 <span class="text-light">=&gt;</span> "an mql query represented as a rec"]</pre>
+                    </div>
+        <div class="card-body border-top py-2">
+            <small class="text-muted fw-bold">examples:</small>
+            <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*moviedb:movies.mql([title =&gt; &#x27;The Matrix&#x27;])  [-- movies.find({&quot;title&quot;:&quot;The Matrix&quot;}) --]
+</code></pre>
+        </div>
+                </div>
+        </div>
             
         <div class="container-xxl mb-4" id="spaces">
             <h3 class="text-primary mb-3">
@@ -463,7 +512,8 @@ bin/metatron</code></pre>
  pattern      =&gt;uri::T,
  host         =&gt;uri::T,
  {?}serializer=&gt;uri::T,
- route        =&gt;[uri::T=&gt;uri::T],
+ route        =&gt;[
+   uri::T=&gt;uri::T],
  {?}collection=&gt;lst::T,
  {?}schema    =&gt;#::T])][inst?rng=docdb&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/dcmnt/space/docdb</code></pre>
                     </div>
@@ -474,10 +524,10 @@ bin/metatron</code></pre>
                     
                             <div class="card-body border-top py-2">
                                 <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">[{?}collection <span class="text-light">=&gt;</span> "schema discovery on collections (empty discovers all collections)"
-    host <span class="text-light">=&gt;</span> "connection uri (mongodb://host:port/database?options)"
-    {?}serializer <span class="text-light">=&gt;</span> "the serializer for BSON documents"
+    route <span class="text-light">=&gt;</span> "the route for accessing documents"
     pattern <span class="text-light">=&gt;</span> "the pattern for accessing documents"
-    route <span class="text-light">=&gt;</span> "the route for accessing documents"]</code></pre>
+    {?}serializer <span class="text-light">=&gt;</span> "the serializer for BSON documents"
+    host <span class="text-light">=&gt;</span> "connection uri (mongodb://host:port/database?options)"]</code></pre>
                             </div>
                             
                     
@@ -650,7 +700,7 @@ bin/metatron</code></pre>
         <div class="container-xxl py-3 text-center">
             <hr class="border-secondary">
             <small class="text-muted">
-                generated by metatron instset doc generator on build 0-2026-04-10 13:35:00<br>
+                generated by metatron instset doc generator on build 0-2026-04-11 20:49:41<br>
                 © PhaseShift Studio, LLC
             </small>
         </div>

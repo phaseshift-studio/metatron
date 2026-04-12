@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -19,13 +19,14 @@
 package studio.phaseshift.metatron.isa.doc.schema.storage;
 
 import org.bson.*;
-import org.bson.codecs.*;
-import org.bson.codecs.configuration.CodecRegistry;
+import org.bson.codecs.BsonValueCodec;
+import org.bson.codecs.Codec;
+import org.bson.codecs.DecoderContext;
+import org.bson.codecs.EncoderContext;
 import org.bson.io.BasicOutputBuffer;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.isa.mach.io.type.AbstractObjSerializer;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -59,11 +60,14 @@ public class ObjBSONSerializer extends AbstractObjSerializer<BsonValue> {
 
     public static final fURI OBJ_BSON_SERIALIZER_VID = OBJ_SERIALIZER_TID.extend("bson");
 
+
+    public static final ObjBSONSerializer SINGLE = new ObjBSONSerializer();
+
     private static final Codec<BsonValue> BSON_VALUE_CODEC = new BsonValueCodec();
 
     // Optional: Function to build reference paths (set by docdbSpace)
     private Function<ReferenceInfo, fURI> referencePathBuilder = null;
-  //  private ObjFactory objFactory = MObjFactory.single();
+    //  private ObjFactory objFactory = MObjFactory.single();
 
     /**
      * Information about a detected reference
@@ -81,6 +85,10 @@ public class ObjBSONSerializer extends AbstractObjSerializer<BsonValue> {
      */
     public void setReferencePathBuilder(final Function<ReferenceInfo, fURI> builder) {
         this.referencePathBuilder = builder;
+    }
+
+    public static ObjBSONSerializer single() {
+        return SINGLE;
     }
 
     public fURI vid() {
@@ -184,7 +192,7 @@ public class ObjBSONSerializer extends AbstractObjSerializer<BsonValue> {
         } else {
             // Custom binary encoding
             final byte[] b = bson.asBinary().getData();
-            if(b.length > 8 && b[0] != -1) // else npe on what is seemingly a noobj uri ?
+            if (b.length > 8 && b[0] != -1) // else npe on what is seemingly a noobj uri ?
                 return uri(new String(ByteBuffer.wrap(b, 2, b.length).array()));
             return uri(NOOBJ_TID).c(cInt.ZERO()).as();
         }

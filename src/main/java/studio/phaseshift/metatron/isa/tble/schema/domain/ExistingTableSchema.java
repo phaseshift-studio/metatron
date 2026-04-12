@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.isa.tble.schema.storage.TableSchema;
 import studio.phaseshift.metatron.isa.tble.tabledbSpace;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
+import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.sql.*;
@@ -42,6 +43,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.tble.tbleInstSet.TABLE_TID;
 
 /**
  * Schema for mapping existing SQL tables to Metatron objects.
@@ -170,11 +172,11 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
             return null;
         // First segment should be the table name
         final String tableName = segments.getFirst();
-        if (!this.tableSchemas.containsKey(tableName.toLowerCase()))
+        if (!tableName.equals("+") && !this.tableSchemas.containsKey(tableName.toLowerCase()))
             return null;
         final List<String> tablePath = new ArrayList<>(segments);
-        if (segments.size() == 1)
-            tablePath.add("+");
+        //if (segments.size() == 1)
+        //    tablePath.add("+");
         if (segments.size() == 2)
             tablePath.add("+");
         return tablePath;
@@ -601,100 +603,131 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         if (tablePath == null)
             return Collections.emptyIterator();
         final String tableName = tablePath.getFirst();
-        final String rowId = tablePath.get(1);
-        final TableMetadata metadata = tableSchemas.get(tableName.toLowerCase());
-        if (metadata == null)
-            return Collections.emptyIterator();
-        final List<Space.IdObj> results = new ArrayList<>();
-        if (rowId.equals("+") || rowId.equals("#")) {
-            if (tablePath.size() > 2 && !tablePath.get(2).equals("+")) {
-                // Read all rows with specific field - need to include primary keys for buildRowId
-                final String pkColumns = String.join(", ", metadata.primaryKeys);
-                final String fieldName = tablePath.get(2);
-                final String sql = String.format("SELECT %s, %s FROM %s", pkColumns, fieldName, metadata.tableName);
-                try (final Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(sql)) {
-                    while (rs.next()) {
-                        // Build row identifier from primary keys or use row number
-                        final String id = buildRowId(rs, metadata);
-                        fURI rowFuri = f(tableName).extend(id).extend(fieldName);
-                        final Obj obj = readTableRow(rs, metadata, fieldName);
-                        results.add(Space.IdObj.of(rowFuri, obj));
-                    }
-                }
+        if (tablePath.size() == 1) {
+            // direct access to tables (no rows or fields)
+            if (tableName.equals("+")) {
+                return this.tableSchemas.keySet().stream()
+                        .map(s -> {
+                            final fURI tableVID = Space.Helper.routeToSpace(pattern.retractPattern().extend(s), this.space.routes());
+                            return Space.IdObj.of(tableVID, uri(tableVID, TABLE_TID, null).selfVID(tableVID));
+                        })
+                        .iterator();
             } else {
-                // Read all rows
-                final String sql = String.format("SELECT * FROM %s", metadata.tableName);
-                try (final Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(sql)) {
-                    while (rs.next()) {
-                        // Build row identifier from primary keys or use row number
-                        final String id = buildRowId(rs, metadata);
-                        fURI rowFuri = f(tableName).extend(id);
-                        final Obj obj = readTableRow(rs, metadata);
-                        results.add(Space.IdObj.of(rowFuri, obj));
-                    }
-                }
+                final fURI tableVID = Space.Helper.routeToSpace(pattern, this.space.routes());
+                return IteratorUtil.of(Space.IdObj.of(tableVID, uri(tableVID, TABLE_TID, null).selfVID(tableVID)));
             }
         } else {
-            // Read specific row by primary key
-            if (metadata.primaryKeys.isEmpty()) {
-                this.space.logger().warn("table %s has no primary key, cannot read specific row", tableName);
+            final String rowId = tablePath.get(1);
+            final TableMetadata metadata = tableSchemas.get(tableName.toLowerCase());
+            if (metadata == null)
                 return Collections.emptyIterator();
-            }
-            if (tablePath.size() > 2 && !tablePath.get(2).equals("+")) {
-                final String pkColumn = metadata.primaryKeys.getFirst();
-                final String pkColumns = String.join(", ", metadata.primaryKeys);
-                final String fieldName = tablePath.get(2);
-                final String sql = String.format("SELECT %s, %s FROM %s WHERE %s = ?", pkColumns, fieldName, metadata.tableName, pkColumn);
-                try (final PreparedStatement stmt = conn.prepareStatement(sql)) {
-                    // Set the parameter with the correct type based on the primary key column type
-                    final ColumnMetadata pkColMeta = metadata.columns.stream()
-                            .filter(c -> c.name.equals(pkColumn))
-                            .findFirst()
-                            .orElseThrow();
-                    if (pkColMeta.sqlType == Types.INTEGER || pkColMeta.sqlType == Types.BIGINT ||
-                            pkColMeta.sqlType == Types.SMALLINT || pkColMeta.sqlType == Types.TINYINT) {
-                        if (!CommonUtil.isInt(rowId))
-                            return IteratorUtil.of();
-                        stmt.setLong(1, Long.parseLong(rowId));
-                    } else {
-                        stmt.setString(1, rowId);
-                    }
-                    try (final ResultSet rs = stmt.executeQuery()) {
-                        if (rs.next()) {
-                            final fURI rowFuri = f(tableName).extend(rowId).extend(fieldName);
-                            final Obj row = readTableRow(rs, metadata, fieldName);
-                            results.add(Space.IdObj.of(rowFuri, row));
+            final List<Space.IdObj> results = new ArrayList<>();
+            if (rowId.equals("+") || rowId.equals("#")) {
+                if (tablePath.size() > 2 && !tablePath.get(2).equals("+")) {
+                    // Read all rows with specific field - need to include primary keys for buildRowId
+                    final String pkColumns = String.join(", ", metadata.primaryKeys);
+                    final String fieldName = tablePath.get(2);
+                    final String sql = String.format("SELECT %s, %s FROM %s", pkColumns, fieldName, metadata.tableName);
+                    try (final Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(sql)) {
+                        while (rs.next()) {
+                            // Build row identifier from primary keys or use row number
+                            final String id = buildRowId(rs, metadata);
+                            fURI rowFuri = f(tableName).extend(id).extend(fieldName);
+                            final Obj obj = readTableRow(rs, metadata, fieldName);
+                            results.add(Space.IdObj.of(rowFuri, obj));
                         }
+                    } catch (final SQLException e) {
+                        if (e.getErrorCode() == 1054)
+                            return IteratorUtil.of();
+                        throw MTronException.of(e, "SQL failed: %s", sql);
+                    }
+                } else {
+                    // Read all rows
+                    final String sql = String.format("SELECT * FROM %s", metadata.tableName);
+                    try (final Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(sql)) {
+                        while (rs.next()) {
+                            // Build row identifier from primary keys or use row number
+                            final String id = buildRowId(rs, metadata);
+                            fURI rowFuri = f(tableName).extend(id);
+                            final Obj obj = readTableRow(rs, metadata);
+                            results.add(Space.IdObj.of(rowFuri, obj));
+                        }
+                    } catch (final SQLException e) {
+                        if (e.getErrorCode() == 1054)
+                            return IteratorUtil.of();
+                        throw MTronException.of(e, "SQL failed: %s", sql);
                     }
                 }
             } else {
-                final String pkColumn = metadata.primaryKeys.getFirst();
-                final String sql = String.format("SELECT * FROM %s WHERE %s = ?", metadata.tableName, pkColumn);
-                try (final PreparedStatement stmt = conn.prepareStatement(sql)) {
-                    // Set the parameter with the correct type based on the primary key column type
-                    final ColumnMetadata pkColMeta = metadata.columns.stream()
-                            .filter(c -> c.name.equals(pkColumn))
-                            .findFirst()
-                            .orElseThrow();
-                    if (pkColMeta.sqlType == Types.INTEGER || pkColMeta.sqlType == Types.BIGINT ||
-                            pkColMeta.sqlType == Types.SMALLINT || pkColMeta.sqlType == Types.TINYINT) {
-                        if (!CommonUtil.isInt(rowId))
-                            return IteratorUtil.of();
-                        stmt.setLong(1, Long.parseLong(rowId));
-                    } else {
-                        stmt.setString(1, rowId);
+                // Read specific row by primary key
+                if (metadata.primaryKeys.isEmpty()) {
+                    this.space.logger().warn("table %s has no primary key, cannot read specific row", tableName);
+                    return Collections.emptyIterator();
+                }
+                if (tablePath.size() > 2 && !tablePath.get(2).equals("+")) {
+                    final String pkColumn = metadata.primaryKeys.getFirst();
+                    final String pkColumns = String.join(", ", metadata.primaryKeys);
+                    final String fieldName = tablePath.get(2);
+                    final String sql = String.format("SELECT %s, %s FROM %s WHERE %s = ?", pkColumns, fieldName, metadata.tableName, pkColumn);
+                    try (final PreparedStatement stmt = conn.prepareStatement(sql)) {
+                        // Set the parameter with the correct type based on the primary key column type
+                        final ColumnMetadata pkColMeta = metadata.columns.stream()
+                                .filter(c -> c.name.equals(pkColumn))
+                                .findFirst()
+                                .orElseThrow();
+                        if (pkColMeta.sqlType == Types.INTEGER || pkColMeta.sqlType == Types.BIGINT ||
+                                pkColMeta.sqlType == Types.SMALLINT || pkColMeta.sqlType == Types.TINYINT) {
+                            if (!CommonUtil.isInt(rowId))
+                                return IteratorUtil.of();
+                            stmt.setLong(1, Long.parseLong(rowId));
+                        } else {
+                            stmt.setString(1, rowId);
+                        }
+                        try (final ResultSet rs = stmt.executeQuery()) {
+                            if (rs.next()) {
+                                final fURI rowFuri = f(tableName).extend(rowId).extend(fieldName);
+                                final Obj row = readTableRow(rs, metadata, fieldName);
+                                results.add(Space.IdObj.of(rowFuri, row));
+                            }
+                        } catch (final SQLException e) {
+                            if (e.getErrorCode() == 1054)
+                                return IteratorUtil.of();
+                            throw MTronException.of(e, "SQL failed: %s", sql);
+                        }
                     }
-                    try (final ResultSet rs = stmt.executeQuery()) {
-                        if (rs.next()) {
-                            final fURI rowFuri = f(tableName).extend(rowId);
-                            final Obj row = readTableRow(rs, metadata);
-                            results.add(Space.IdObj.of(rowFuri, row));
+                } else {
+                    final String pkColumn = metadata.primaryKeys.getFirst();
+                    final String sql = String.format("SELECT * FROM %s WHERE %s = ?", metadata.tableName, pkColumn);
+                    try (final PreparedStatement stmt = conn.prepareStatement(sql)) {
+                        // Set the parameter with the correct type based on the primary key column type
+                        final ColumnMetadata pkColMeta = metadata.columns.stream()
+                                .filter(c -> c.name.equals(pkColumn))
+                                .findFirst()
+                                .orElseThrow();
+                        if (pkColMeta.sqlType == Types.INTEGER || pkColMeta.sqlType == Types.BIGINT ||
+                                pkColMeta.sqlType == Types.SMALLINT || pkColMeta.sqlType == Types.TINYINT) {
+                            if (!CommonUtil.isInt(rowId))
+                                return IteratorUtil.of();
+                            stmt.setLong(1, Long.parseLong(rowId));
+                        } else {
+                            stmt.setString(1, rowId);
+                        }
+                        try (final ResultSet rs = stmt.executeQuery()) {
+                            if (rs.next()) {
+                                final fURI rowFuri = f(tableName).extend(rowId);
+                                final Obj row = readTableRow(rs, metadata);
+                                results.add(Space.IdObj.of(rowFuri, row));
+                            }
+                        } catch (final SQLException e) {
+                            if (e.getErrorCode() == 1054)
+                                return IteratorUtil.of();
+                            throw MTronException.of(e, "SQL failed: %s", sql);
                         }
                     }
                 }
             }
+            return results.iterator();
         }
-        return results.iterator();
     }
 
     @Override
