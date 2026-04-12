@@ -1,0 +1,59 @@
+[discrete]
+== MQTT Space
+
+https://mqtt.org/[MQTT] is a lightweight messaging protocol commonly used for IoT (Internet of Things) applications. 
+The protocol offers publish-subscribe messaging and a wildcard-based addressing scheme that conveniently maps to the 
+URI address space.
+
+++++
+<!-- 🐖
+*/m/iot/space/mqtt
+--> 
+++++
+
+The MQTT space is a client of the MQTT broker referenced by `host`. This client maintains a router-detached caching space 
+(default is `mem::T`) which maintains synchronization with that subset of the broker identified in the MQTT space's routing table.
+
+[cols="5a,5a",separator=🧱,role="center"]
+|===
+
+🧱
+++++
+<!-- 🐖
+mqtt::[pattern => <esp32:#>,                                /
+       host    => mqtt://localhost:1883,                    /
+       route   => [esp32:=></home/chips>]]@/sys/space/esp32;      [-- <1>
+
+
+*esp32:main_field/sensor/+.-<|[                             /
+  >>temp.?<50  => print('too cold for watering'),           /
+  >>humid.?>30 => print('too humid for watering'),          /
+  _            => print('starting drip system').            /
+                  esp32:main_field/actuator/drip.run(minutes::25)] [-- <2>
+
+*esp32:main_field/actuator/+/active?subq -> |print(_)              [-- <3>
+--> 
+++++
+<1> the `mqtt:T` space maintains a subset of the larger address space of the broker.
+<2> the `mqtt:T` space can be queried like a database due to mqtt persist being enabled by default.
+<3> the `mqtt:T` space addresses can be subscribed to and receive updates via `inst` callbacks.
+
+🧱
+[source,mtron]
+----
+        mqtt broker                          
+       ┌──────────────────────────┐          
+       │ /a       -> [b=>[c=>1]]  │          
+       │ /a/b     -> [c=>1]       │          
+   ┌───► /a/b/c   -> 1            ◄───┐
+   │   └──▲─────▲──────▲──────▲───┘   │      
+   │      │     │      │      │       │      
+   │      │pub  │      │pub   │       │pub   
+   │sub   │     │sub   │      │sub    │      
+   │      │     │      │      │       │        
+┌──▼─┐ ┌──▼─┐ ┌─▼──┐ ┌─▼──┐ ┌─▼──┐ ┌──▼─┐    
+│    │ │    │ │    │ │    │ │    │ │    │
+└────┘ └────┘ └────┘ └────┘ └────┘ └────┘
+└───────────── mqtt clients ────────────┘
+----
+|===

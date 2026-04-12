@@ -1,0 +1,499 @@
+[discrete]
+== The Type
+
+Every `obj` is a triple such that
+
+[stem]
+++++
+\tt{obj} \in \tt{tid} \times \tt{OBJECT} \times \tt{vid},
+++++
+
+where `tid` is a type identifier, `OBJECT` is a data structure outside the direct referential reaches of mtron, and `vid` is a value identifier. The shape `OBJECT` can take is constrained by the structure specified by the `obj` referenced `tid`. In mtron, a natural number, constructable from any `int::T`  can be defined as follows.
+
+
+[source,mtron,role="center"]
+----
+          nat::T[?>0][-<|[?<0 => ⋅-1,_ => _]>>] 
+          │    │ │    │
+          │    │ │    └──────────── constructor
+          │    │ └───────────────── predicate
+          │    └─────────────────── type symbol
+          └──────────────────────── tid
+----
+
+A quick explanation of the type predicate and constructor `code` is as follows:
+
+1. **predicate** [`?>0`]: is (`?`) greater than (`>`) 0.
+2. **constructor** [`-<|[?<0 \=> ⋅-1,_ \=> \_]>>`]: if (`-<|`) less than (`<`) 0, then (`\=>`) multiply (`⋅`) by -1, else do (`\=>`) nothing (`_`).
+Yield the _range_ (`>>`) of the relation constructed (the specifics of `>>` will be discussed later).
+
+Example usage of the defined `nat` type is presented below.
+
+++++
+<!-- 🐖
+nat -> int::T[?>0][-<|[is(lt(0)) => ⋅-1,_ => _]>>]    [-- <1>
+*nat                                                  [-- <2>
+nat::2                                                [-- <3>
+nat::-2                                               [-- <4>
+2.as(nat::T)                                          [-- <5>
+-2.as(nat::T)                                         [-- <6>
+nat::2 ⋅ -1                                           [-- <7>
+-->
+++++
+
+<1> A natural number (`nat`) is a positive `int`.
+The predicate component of the type definition tests an `int` to determine if it's a `nat` and the constructor component will generate a positive `int` given any `int` (i.e. the absolute value).
+<2> the `nat` _tid_ references the respective `nat` type `obj`.
+<2> 2 is an `nat`.
+<3> -2 is not a `nat`, but given the constructor, becomes a `nat`.
+
+While every `type` is an `obj`, not every `obj` is a `type`.
+Those `objs` that are not `types` are _instances_ of some `type`.
+This is the foundation for all other `objs` in [metatron].
+
+[discrete]
+=== mono types
+
+An `obj` that is not composed of other `objs` is a mono type and are exhaustively itemized in the table below.
+
+[cols="5,7",frame="none",separator=🧱]
+|===
+a🧱
+
+[cols="1,2,6",options=header]
+!===
+! type    ! jvm object   ! description
+!`bytes`   ! `ByteBuffer` ! ...
+!`bool`    ! `Boolean`    ! ...
+!`int`     ! `Long`       ! ...
+!`real`    ! `Double`     ! ...
+!`str`     ! `String`     ! ...
+!`uri`     ! `fURI`       ! ...
+!===
+a🧱
+
+++++
+<!-- 🐖
+0xabcd + 0x1234    [-- <1>
+true + false       [-- <2>
+1 + 2              [-- <3>
+1.34 + 2.45        [-- <4>
+"abc" + "def"      [-- <5>
+a/b/c ⋅ d/e/f      [-- <6>
+-->
+++++
+
+|===
+
+The code below demonstrates the typical, expected uses of the mono types.
+
+[discrete]
+==== bytes
+
+The `bytes` type represents binary data as a sequence of bytes.
+
+**Examples:**
+
+++++
+<!-- 🐖
+'Hello'.as(bytes::T)        [-- <1>
+bytes::'48656c6c6f'         [-- <2>
+-->
+++++
+<1> Convert string to bytes
+<2> Create bytes from hexadecimal representation
+
+
+**Type Conversion with `.as()`:**
+
+Byte units can be converted between each other using the `.as()` instruction:
+
+++++
+<!-- 🐖
+kB::1024.as(mB::T)          [-- <1>
+mB::1.as(kB::T)             [-- <2>
+gB::5.as(mB::T)             [-- <3>
+pB::1.as(tB::T)             [-- <4>
+-->
+++++
+<1> Convert 1024 kilobytes to megabytes (result: 1 mB)
+<2> Convert 1 megabyte to kilobytes (result: 1024 kB)
+<3> Convert 5 gigabytes to megabytes (result: 5120 mB)
+<4> Convert 1 petabyte to terabytes (result: 1024 tB)
+
+**Equality Comparison with `.eq()`:**
+
+Byte units of different types can be compared for equality:
+
+++++
+<!-- 🐖
+mB::1024.eq(gB::1)          [-- <1>
+kB::1024.eq(mB::1)          [-- <2>
+gB::2.eq(mB::2048)          [-- <3>
+tB::1.eq(gB::1024)          [-- <4>
+-->
+++++
+<1> Check if 1024 megabytes equals 1 gigabyte (result: true)
+<2> Check if 1024 kilobytes equals 1 megabyte (result: true)
+<3> Check if 2 gigabytes equals 2048 megabytes (result: true)
+<4> Check if 1 terabyte equals 1024 gigabytes (result: true)
+
+**Common Use Cases:**
+
+* **File size calculations**: `file_size.as(mB::T)` to convert to megabytes
+* **Storage capacity**: `disk_capacity.as(gB::T)` to express in gigabytes
+* **Data transfer rates**: Compare bandwidth in different units
+* **Memory allocation**: Express memory sizes in appropriate units
+* **Quota management**: Set and compare storage quotas
+
+**Binary vs Decimal Units:**
+
+Metatron's byte units follow the **binary (base-2) convention** where:
+
+* 1 kB = 1024 bytes (not 1000)
+* 1 mB = 1024 kB = 1,048,576 bytes (not 1,000,000)
+* 1 gB = 1024 mB = 1,073,741,824 bytes (not 1,000,000,000)
+
+This is consistent with how computer systems typically measure memory and storage internally.
+
+[discrete]
+=== poly types
+
+Poly types are **branched structures** where each element or entry represents a separate branch.
+The two primary poly types are:
+
+**lst (List)** - Ordered collection where each element is a branch:
+
+++++
+<!-- 🐖
+[a,b,c]                     [-- <1>
+[1,2,3]                     [-- <2>
+[,]                         [-- <3>
+-->
+++++
+<1> List with three branches: a, b, and c
+<2> List with three integer branches
+<3> Empty list (no branches)
+
+**rec (Record)** - Key-value pairs where each entry is a branch:
+
+++++
+<!-- 🐖
+[a=>1,b=>2,c=>3]            [-- <1>
+[name=>'Alice',age=>30]     [-- <2>
+[=>]                        [-- <3>
+-->
+++++
+<1> Record with three branches: a=>1, b=>2, and c=>3
+<2> Record representing a person
+<3> Empty record (no branches)
+
+**Key Characteristics:**
+
+* Each element/entry is a separate branch
+* `.count()` returns 1 (the poly object itself)
+* `>-.count()` merges branches and counts elements/entries
+* Branches can be processed in parallel
+* Support pattern matching and wildcards
+
+**Branching in Action:**
+
+++++
+<!-- 🐖
+[1,2,3]                     [-- <1>
+[1,2,3].count()             [-- <2>
+[1,2,3]>-.count()           [-- <3>
+[a=>1,b=>2].count()         [-- <4>
+[a=>1,b=>2]>-.count()       [-- <5>
+-->
+++++
+<1> List with 3 branches
+<2> Returns 1 (the list object itself)
+<3> Returns 3 (merges branches, counts elements)
+<4> Returns 1 (the record object itself)
+<5> Returns 2 (merges branches, counts entries)
+
+**Operations on Poly Types:**
+
+++++
+<!-- 🐖
+[1,2,3].reverse()           [-- <1>
+[1,2,3].plus([4,5])         [-- <2>
+[1,2,3].merge()             [-- <3>
+[a=>1,b=>2].dom()           [-- <4>
+[a=>1,b=>2].rng()           [-- <5>
+[a=>1,b=>2,c=>3].select([a=>_,b=>_])  [-- <6>
+-->
+++++
+<1> Reverse list order
+<2> Concatenate lists
+<3> Merge list into a set
+<4> Get domain (keys) of record
+<5> Get range (values) of record
+<6> Select specific keys from record
+
+[discrete]
+==== call types
+
+Call types represent function invocations and method calls in Metatron.
+
+**Method Call Syntax:**
+```mtron
+object.method(args)
+```
+
+**Chained Calls:**
+```mtron
+[1,2,3].reverse().merge()
+```
+
+**Function Composition:**
+Functions can be composed using the ring multiplication operator (`.`):
+```mtron
+f · g               % Compose functions f and g
+```
+
+**Lambda Expressions:**
+```mtron
+(x,y){x + y}        % Lambda function
+```
+
+[discrete]
+==== instructions
+
+An `inst` is an `obj` of the form:
+
+++++
+\begin{align*}
+\texttt{inst} = \left(\texttt{uri} \times \left( \texttt{poly} \times \texttt{code} \right) \times \texttt{uri} \right),
+\end{align*}
+++++
+
+where each component is:
+
+1. `uri`: the `inst` type (e.g. `/m/inst/plus`).
+2. `poly`: the `inst` arguments which can either be a `lst` or a `rec`.
+3. `code`: the `code` that defines the behavior or function of the `inst`.
+4. `uri`: the `inst` location in space.
+
+[discrete]
+=== variables
+
+Variables in Metatron can be scoped at different levels: frame stack, thread cache, local, and distributed.
+
+**Variable Assignment and Dereferencing:**
+
+++++
+<!-- 🐖
+x -> 42                                                   [-- <1>
+*x                                                        [-- <2>
+y -> [a=>1,b=>2,c=>3]                                     [-- <3>
+*y                                                        [-- <4>
+-->
+++++
+<1> Assign 42 to variable x
+<2> Dereference x with `*x`
+<3> Assign record to variable y
+<4> Dereference y
+
+**Variables in Computations:**
+
+++++
+<!-- 🐖
+base -> 10                                                [-- <1>
+result -> *base.plus(5).mult(2)                          [-- <2>
+*result                                                   [-- <3>
+-->
+++++
+<1> Store base value
+<2> Compute and store result
+<3> Retrieve computed result
+
+**Variables with Collections:**
+
+++++
+<!-- 🐖
+nums -> {1,2,3,4,5}                                       [-- <1>
+filtered -> *nums-<[?>3 => _, _ => noobj]>>               [-- <2>
+*filtered                                                 [-- <3>
+-->
+++++
+<1> Store collection
+<2> Filter and store results
+<3> Retrieve filtered collection
+
+
+
+[source,mtron]
+----
+    ........─►.age::T.◄─.......    
+    .            ▲            .    
+    .            │            .    
+    ▼            │            ▼    
+odd::T ....... nat::T ......even::T
+    ▲            ▲            ▲    
+    │            │            │
+    │            │            │    
+    └──────────int::T─────────┘    
+----
+
+
+++++
+<!-- 🐖
+nat  -> int::T[?>0]                 [-- <1>
+age  -> nat::T[?<120]               [-- <2>
+odd  -> int::T[is(mod(2).eq(1))]    [-- <3>
+even -> int::T[is(mod(2).eq(0))]    [-- <4>
+-->
+++++
+
+<1> A `nat` is an `int` greater than 0.
+<2> A `age` is a `nat` (is an `int` greater than 0) less than 120.
+<3> An `odd` is an `int` that is not divisible by 2.
+<4> An `even` is an `int` that is divisible by 2.
+
+[source,mtron]
+----
+   age::T
+     |   \ 
+   nat::T even::T
+     |   /
+   int::T
+----
+
+
+++++
+<!-- 🐖
+age::T[?even::T]
+-->
+++++
+
+For instance, it is possible to define the type `nat` which represents the set of natural numbers -- integers greater than zero. In mtron, this is written:
+
+[stem]
+++++
+\tt{int::T[?>0]}
+++++
+
+The `int::T` (`int` type) is being constrained by the predicate `?>0` (or `is(gt(0))`). This constraint is a refinement of `int` (a well defined subset).
+
+
+++++
+<!-- 🐖
+nat -> int::T[?>0]
+nat::10
+nat::-10
+int::-10.as(nat::T)
+-->
+++++
+
+
+If `a` is an `obj` When a `tid` is specified for an `obj`, the `tid` is resolved to an `obj` denoting the type of `A`.
+
+
+Every mtron `obj` has a type. 
+
+metatron `objs` are typed. Types are organized into instruction sets that encapsulate the structures and processes necessary to effect domain-specific views of the underlying data space. The type system supports refinement types, optional/maybe types, generic/polymorphic types, recursive/self-referential types, dependent types, type cardinality, and more.
+
+[discrete]
+=== mtron core types
+
+The fundamental types are organized into the 5 categories presented in the table below.
+
+[cols="1a,1a,4a",separator=🧱,options=header]
+|===
+🧱kind            🧱 description 🧱 examples
+🧱universal types 🧱             🧱 noobj::T, #::T
+🧱mono types      🧱             🧱 bytes::T, bool::T, int::T, real::T, str::T, uri::T
+🧱poly types      🧱             🧱 rel::T, lst::T, rec::T
+🧱call types      🧱             🧱 inst::T, code::T
+🧱error types     🧱             🧱 fail::T, caught::T
+🧱machine types   🧱             🧱 monad::T, machine::T
+|===
+
+
+A natural number is a positive integer greater than zero. In order to constrain an `int` to this definition, a **refinement type** can be constructed.
+
+++++
+<!-- 🐖
+nat -> int::T[?>0]
+nat::10
+nat::-10
+int::-10.as(nat::T)
+-->
+++++
+
+Type inheritance is possible through type chaining. In the example below, the `age` type has a value id of `age`, but a type id of `nat`. Moreover, `nat` has a value id of `nat` and a type id of `int`. In this way, when `age` is resolved, its associated predicate (`?<120`) and inherited predicates (`?>0`) must hold for the respective value to be considered an `age`.
+
+++++
+<!-- 🐖
+age -> nat::T[?<120]
+age::T
+nat::T
+int::T
+-->
+++++
+
+++++
+<!-- 🐖
+nat:125
+age:125
+nat:125.as(age::T)
+125.as(nat::T).as(age::T)
+-->
+++++
+
+
+++++
+<!-- 🐖
+name   -> str::T[-<''>-count().?<30]
+personx -> rec::T[?[name  => str::T, /
+                    age   => age::T, /
+                    knows => personx{*}::T]]
+marko -> personx::[name=>'marko',age=>29,knows=>!*grant]
+grant -> personx::[name=>'grant',age=>23,knows=>!*marko]
+*marko>>knows>>name
+*marko>>knows>>knows>>name
+*marko>>knows>>knows
+-->
+++++
+
+[discrete]
+=== instruction set architecture types
+
+[cols="1a,1a,4a",separator=🧱,options=header]
+|===
+🧱instruction set 🧱 description 🧱 examples
+🧱mach            🧱             🧱 monad::T, machine::T
+🧱math            🧱             🧱 bB::T, kB::T, mB::T, gB::T, tB::T, pB::T
+🧱web             🧱             🧱 html::T, json::T, xml::T
+🧱iot             🧱             🧱 device::T, entity::T
+🧱llm             🧱             🧱 llm::T, memory::T
+🧱grph            🧱             🧱 elmnt::T, vrtx::T, edge::T
+|===
+
+
+[source,mtron]
+----
+nat    -> int::T[?>0]
+person -> rec::T[?[name        =>str::T,
+                   uri{?}::age =>nat::T,
+                   knows       =>person{*}::T]]
+people  -> person{*}::T 
+----
+
+[source,mtron]
+----
+sumer -> people::{
+ enoch -> person::[name=>'enoch',age=>29],
+ enki  -> person::[name=>'enki',knows=>!*enoch]}
+----
+
+[source,mtron]
+----
+mtron> *enki>>knows>>name
+==>'enoch'
+mtron> *#.as[name      => _,
+             coauthor  => >>knows.where[>>age.?>21]>>name]
+==>[name=>'enki', coauthor=>'enoch']
+----

@@ -34,7 +34,7 @@
     <!-- CSS PACKAGES -->
     <link href="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.css" rel="stylesheet"/>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="lib/animate/animate.min.css" rel="stylesheet">
     <link href="css/bootstrap.min.css" rel="stylesheet">
     <link href="css/termynal.css" rel="stylesheet">
@@ -150,12 +150,11 @@ bin/metatron</code></pre>
                            onclick="location.href='instset/m_llm.html';"><img
                             src="./images/icons/space/llm-icon.svg" class="isa-row icon-color me-2"
                             alt="llm"/>/m/llm</a></li>
-                    <!-- TODO: Add /m/iot docs
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
                            onclick="location.href='instset/m_iot.html';"><img
-                            src="./images/icons/space/graphql-icon.svg" class="isa-row icon-color me-2" alt="iot"/>/m/iot</a>
+                            src="./images/icons/space/graphql-icon.svg" class="isa-row icon-color me-2" 
+                            alt="iot"/>/m/iot</a>
                     </li>
-                    -->
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
                            onclick="location.href='instset/m_math.html';"><img
                             src="./images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
@@ -172,15 +171,15 @@ bin/metatron</code></pre>
             <!----------------------------------------------------------------------------------------------------------
             ----------------------------------- ARTICLES DROPDOWN ------------------------------------------------------
             ----------------------------------------------------------------------------------------------------------->
-            <li class="nav-item dropdown dropstart">
+            <li class="nav-item dropdown">
                 <a id="articles-dropdown" class="nav-link dropdown-toggle" href="#" role="button"
                    data-bs-toggle="dropdown" aria-expanded="false">articles</a>
                 <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="articles-dropdown">
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='./articles/stream-ring-theory.pdf';">stream ring theory</a></li>
+                           onclick="location.href='./articles/stream-ring-theory.pdf';"><i class="bi bi-gem icon-color me-2 isa-row"></i>stream ring theory</a></li>
                     <li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='./articles/parametric-identities-in-ring-theory.html';">parametric identities</a></li>
+                           onclick="location.href='./articles/parametric-identities-in-ring-theory.html';"><i class="bi bi-arrow-repeat icon-color me-2 isa-row"></i>parametric identities</a></li>
                     <li>
                 </ul>
             </li>
@@ -194,12 +193,15 @@ bin/metatron</code></pre>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="guild_dropdown">
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='https://opencollective.com/metatron';">open collective</a></li>
+                           onclick="location.href='https://opencollective.com/metatron';">
+                        <i class="bi bi-steam icon-color me-2 isa-row"></i>open collective</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='https://github.com/phaseshift-studio/metatron';">github</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='index.html';">mailing list</a></li>
+                           onclick="location.href='https://github.com/phaseshift-studio/metatron';">
+                        <i class="bi bi-github icon-color me-2 isa-row"></i>github</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='https://groups.google.com/u/1/g/metatron-phaseshift';">
+                        <i class="bi bi-envelope-at icon-color me-2 isa-row"></i>mailing list</a></li>
                     <!--<li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='index.html';">live coding</a></li>-->
-                    <li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='index.html';">artifacts</a></li>
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='index.html';">artifacts</a></li>-->
                 </ul>
             </li>
             <!--<li class="nav-item dropdown">

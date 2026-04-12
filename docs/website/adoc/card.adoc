@@ -1,0 +1,10 @@
+[subs="attributes"]
+++++
+<div class="collapse position-relative" id="card-{card-id}">
+<button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-{card-id}" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
+<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
+++++
+include::{card-file}[]
+++++
+</div>
+++++

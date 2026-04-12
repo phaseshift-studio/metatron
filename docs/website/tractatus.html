@@ -1317,7 +1317,7 @@ $(addBlockSwitches);
     <!-- CSS PACKAGES -->
     <link href="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.css" rel="stylesheet"/>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="lib/animate/animate.min.css" rel="stylesheet">
     <link href="css/bootstrap.min.css" rel="stylesheet">
     <link href="css/termynal.css" rel="stylesheet">
@@ -1433,12 +1433,11 @@ bin/metatron</code></pre>
                            onclick="location.href='instset/m_llm.html';"><img
                             src="./images/icons/space/llm-icon.svg" class="isa-row icon-color me-2"
                             alt="llm"/>/m/llm</a></li>
-                    <!-- TODO: Add /m/iot docs
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
                            onclick="location.href='instset/m_iot.html';"><img
-                            src="./images/icons/space/graphql-icon.svg" class="isa-row icon-color me-2" alt="iot"/>/m/iot</a>
+                            src="./images/icons/space/graphql-icon.svg" class="isa-row icon-color me-2" 
+                            alt="iot"/>/m/iot</a>
                     </li>
-                    -->
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
                            onclick="location.href='instset/m_math.html';"><img
                             src="./images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
@@ -1455,15 +1454,15 @@ bin/metatron</code></pre>
             <!----------------------------------------------------------------------------------------------------------
             ----------------------------------- ARTICLES DROPDOWN ------------------------------------------------------
             ----------------------------------------------------------------------------------------------------------->
-            <li class="nav-item dropdown dropstart">
+            <li class="nav-item dropdown">
                 <a id="articles-dropdown" class="nav-link dropdown-toggle" href="#" role="button"
                    data-bs-toggle="dropdown" aria-expanded="false">articles</a>
                 <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="articles-dropdown">
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='./articles/stream-ring-theory.pdf';">stream ring theory</a></li>
+                           onclick="location.href='./articles/stream-ring-theory.pdf';"><i class="bi bi-gem icon-color me-2 isa-row"></i>stream ring theory</a></li>
                     <li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='./articles/parametric-identities-in-ring-theory.html';">parametric identities</a></li>
+                           onclick="location.href='./articles/parametric-identities-in-ring-theory.html';"><i class="bi bi-arrow-repeat icon-color me-2 isa-row"></i>parametric identities</a></li>
                     <li>
                 </ul>
             </li>
@@ -1477,12 +1476,15 @@ bin/metatron</code></pre>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="guild_dropdown">
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='https://opencollective.com/metatron';">open collective</a></li>
+                           onclick="location.href='https://opencollective.com/metatron';">
+                        <i class="bi bi-steam icon-color me-2 isa-row"></i>open collective</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='https://github.com/phaseshift-studio/metatron';">github</a></li>
-                    <li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='index.html';">mailing list</a></li>
+                           onclick="location.href='https://github.com/phaseshift-studio/metatron';">
+                        <i class="bi bi-github icon-color me-2 isa-row"></i>github</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='https://groups.google.com/u/1/g/metatron-phaseshift';">
+                        <i class="bi bi-envelope-at icon-color me-2 isa-row"></i>mailing list</a></li>
                     <!--<li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='index.html';">live coding</a></li>-->
-                    <li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='index.html';">artifacts</a></li>
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='index.html';">artifacts</a></li>-->
                 </ul>
             </li>
             <!--<li class="nav-item dropdown">
@@ -1525,45 +1527,43 @@ bin/metatron</code></pre>
                 </div>
             </div>
         </div>
-        <div id="tutorial-carousel" class="carousel slide" data-bs-ride="false" data-bs-interval="false" style="padding-left: 2%; padding-right: 2%;">
+        <div id="tutorial-carousel" class="carousel slide" data-bs-ride="false" data-bs-interval="falses">
             <div class="carousel-inner">
                 <!-- All Slide -->
                 <div class="carousel-item active" data-topic="All">
                     <div class="row row-cols-5 g-3 tutorial-grid">
-                        <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-0" aria-expanded="false" aria-controls="card-0">Algebra</button></div>
-                        <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-1" aria-expanded="false" aria-controls="card-1">Instructions</button></div>
-                        <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-2" aria-expanded="false" aria-controls="card-2">Control Structures</button></div>
-                        <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-3" aria-expanded="false" aria-controls="card-3">Large Language Models</button></div>
-                        <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-4" aria-expanded="false" aria-controls="card-4">Instruction Sets</button></div>
-                        <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-5" aria-expanded="false" aria-controls="card-5">Fail and Catch</button></div>
-                        <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-6" aria-expanded="false" aria-controls="card-6">Types</button></div>
-                        <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-7" aria-expanded="false" aria-controls="card-7" disabled>IoT Integration</button></div>
-                        <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-8" aria-expanded="false" aria-controls="card-8" disabled>MQTT Space</button></div>
-                        <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-9" aria-expanded="false" aria-controls="card-9" disabled>Relational Space</button></div>
-                        <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-10" aria-expanded="false" aria-controls="card-10">Q Processors</button></div>
-                        <div class="col"><button class="w-100 btn btn-outline-primary text-nowrap" type="button" data-bs-toggle="collapse" data-bs-target="#card-11" aria-expanded="false" aria-controls="card-11">Uniform Resource Identifiers</button></div>
-                        <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-12" aria-expanded="false" aria-controls="card-12">File Space</button></div>
-                        <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-13" aria-expanded="false" aria-controls="card-13" disabled>The Router</button></div>
-                        <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-14" aria-expanded="false" aria-controls="card-14">Graph Space</button></div>
-                        <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-15" aria-expanded="false" aria-controls="card-15" disabled>Coefficients</button></div>
-                        <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-16" aria-expanded="false" aria-controls="card-16" disabled>The Router</button></div>
-                        <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-17" aria-expanded="false" aria-controls="card-17" disabled>Parallelization</button></div>
-                        <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-18" aria-expanded="false" aria-controls="card-18" disabled>Serial Space</button></div>
-                        <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-19" aria-expanded="false" aria-controls="card-19" disabled>Web Space</button></div>
-                         <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-20" aria-expanded="false" aria-controls="card-20">Document Space</button></div>
-                         <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-21" aria-expanded="false" aria-controls="card-21">Table Space</button></div>
-                        <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-22" aria-expanded="false" aria-controls="card-22">Boot</button></div>
-
+<div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-0" aria-expanded="false" aria-controls="card-0" >Algebra</button></div>
+<div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-1" aria-expanded="false" aria-controls="card-1" >Instructions</button></div>
+<div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-2" aria-expanded="false" aria-controls="card-2" >Control Structures</button></div>
+<div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-3" aria-expanded="false" aria-controls="card-3" >Large Language Models</button></div>
+<div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-4" aria-expanded="false" aria-controls="card-4" >Instruction Sets</button></div>
+<div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-5" aria-expanded="false" aria-controls="card-5" >Fail and Catch</button></div>
+<div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-6" aria-expanded="false" aria-controls="card-6" >Types</button></div>
+<div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-7" aria-expanded="false" aria-controls="card-7" disabled>IoT Integration</button></div>
+<div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-9" aria-expanded="false" aria-controls="card-9" >Uniform Resource Identifiers</button></div>
+<div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-10" aria-expanded="false" aria-controls="card-10" >Q Processors</button></div>
+<div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-11" aria-expanded="false" aria-controls="card-11" >MQTT Space</button></div>
+<div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-12" aria-expanded="false" aria-controls="card-12" >File Space</button></div>
+<div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-13" aria-expanded="false" aria-controls="card-13" disabled>The Router</button></div>
+<div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-14" aria-expanded="false" aria-controls="card-14" >Graph Space</button></div>
+<div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-15" aria-expanded="false" aria-controls="card-15" disabled>Coefficients</button></div>
+<div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-16" aria-expanded="false" aria-controls="card-16" disabled>The Router</button></div>
+<div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-17" aria-expanded="false" aria-controls="card-17" disabled>Parallelization</button></div>
+<div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-18" aria-expanded="false" aria-controls="card-18" disabled>Serial Space</button></div>
+<div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-19" aria-expanded="false" aria-controls="card-19" >Web Space</button></div>
+<div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-20" aria-expanded="false" aria-controls="card-20" >Document Space</button></div>
+<div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-21" aria-expanded="false" aria-controls="card-21" >Table Space</button></div>
+<div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-22" aria-expanded="false" aria-controls="card-22" >Boot</button></div>
                     </div>
                 </div>
                 <!-- Theory Slide -->
                 <div class="carousel-item" data-topic="Theory">
                     <div class="row row-cols-4 g-3 tutorial-grid">
-                        <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-0" aria-expanded="false" aria-controls="card-0">Algebra</button></div>
-                        <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-6" aria-expanded="false" aria-controls="card-6">Types</button></div>
-                        <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-10" aria-expanded="false" aria-controls="card-10">Q Processors</button></div>
-                        <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-15" aria-expanded="false" aria-controls="card-15" disabled>Coefficients</button></div>
-                        <div class="col"><button class="w-100 btn btn-outline-primary text-nowrap" type="button" data-bs-toggle="collapse" data-bs-target="#card-11" aria-expanded="false" aria-controls="card-11">Uniform Resource Identifiers</button></div>
+<div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-0" aria-expanded="false" aria-controls="card-0" >Algebra</button></div>
+<div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-6" aria-expanded="false" aria-controls="card-6" >Types</button></div>
+<div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-10" aria-expanded="false" aria-controls="card-10" >Q Processors</button></div>
+<div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-15" aria-expanded="false" aria-controls="card-15" disabled>Coefficients</button></div>
+<div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-9" aria-expanded="false" aria-controls="card-9" >Uniform Resource Identifiers</button></div>
                         <div class="col"></div>
                         <div class="col"></div>
                         <div class="col"></div>
@@ -1572,12 +1572,12 @@ bin/metatron</code></pre>
                 <!-- Core Slide -->
                 <div class="carousel-item" data-topic="Core">
                     <div class="row row-cols-4 g-3 tutorial-grid">
-                        <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-1" aria-expanded="false" aria-controls="card-1">Instructions</button></div>
-                        <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-2" aria-expanded="false" aria-controls="card-2">Control Structures</button></div>
-                        <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-5" aria-expanded="false" aria-controls="card-5">Fail and Catch</button></div>
-                        <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-17" aria-expanded="false" aria-controls="card-17" disabled>Parallelization</button></div>
-                        <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-13" aria-expanded="false" aria-controls="card-13" disabled>The Router</button></div>
-                        <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-16" aria-expanded="false" aria-controls="card-16" disabled>The Router</button></div>
+<div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-1" aria-expanded="false" aria-controls="card-1" >Instructions</button></div>
+<div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-2" aria-expanded="false" aria-controls="card-2" >Control Structures</button></div>
+<div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-5" aria-expanded="false" aria-controls="card-5" >Fail and Catch</button></div>
+<div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-17" aria-expanded="false" aria-controls="card-17" disabled>Parallelization</button></div>
+<div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-13" aria-expanded="false" aria-controls="card-13" disabled>The Router</button></div>
+<div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-16" aria-expanded="false" aria-controls="card-16" disabled>The Router</button></div>
                         <div class="col"></div>
                         <div class="col"></div>
                     </div>
@@ -1585,12 +1585,11 @@ bin/metatron</code></pre>
                 <!-- Space Slide -->
                 <div class="carousel-item" data-topic="Space">
                     <div class="row row-cols-4 g-3 tutorial-grid">
-                        <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-14" aria-expanded="false" aria-controls="card-14">Graph Space</button></div>
-                        <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-12" aria-expanded="false" aria-controls="card-12" disabled>File Space</button></div>
-                        <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-18" aria-expanded="false" aria-controls="card-18" disabled>Serial Space</button></div>
-                        <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-19" aria-expanded="false" aria-controls="card-19" disabled>Web Space</button></div>
-                        <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-8" aria-expanded="false" aria-controls="card-8" disabled>MQTT Space</button></div>
-                        <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-9" aria-expanded="false" aria-controls="card-9" disabled>Relational Space</button></div>
+<div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-14" aria-expanded="false" aria-controls="card-14" >Graph Space</button></div>
+<div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-12" aria-expanded="false" aria-controls="card-12" disabled>File Space</button></div>
+<div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-18" aria-expanded="false" aria-controls="card-18" disabled>Serial Space</button></div>
+<div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-19" aria-expanded="false" aria-controls="card-19" >Web Space</button></div>
+<div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-11" aria-expanded="false" aria-controls="card-11" >MQTT Space</button></div>
                         <div class="col"></div>
                         <div class="col"></div>
                     </div>
@@ -1598,9 +1597,9 @@ bin/metatron</code></pre>
                 <!-- InstSet Slide -->
                 <div class="carousel-item" data-topic="InstSet">
                     <div class="row row-cols-4 g-3 tutorial-grid">
-                        <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-4" aria-expanded="false" aria-controls="card-4">Instruction Sets</button></div>
-                        <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-3" aria-expanded="false" aria-controls="card-3">Large Language Models</button></div>
-                        <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-7" aria-expanded="false" aria-controls="card-7" disabled>IoT Integration</button></div>
+<div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-4" aria-expanded="false" aria-controls="card-4" >Instruction Sets</button></div>
+<div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-3" aria-expanded="false" aria-controls="card-3" >Large Language Models</button></div>
+<div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-7" aria-expanded="false" aria-controls="card-7" disabled>IoT Integration</button></div>
                         <div class="col"></div>
                         <div class="col"></div>
                         <div class="col"></div>
@@ -1806,7 +1805,7 @@ mtron&gt; 1.plus(plus(2))    ​3​
 ==&gt;4
 ​
 mtron&gt; 1.map(bool::T)     ​4​
-==&gt;fail::[unable to convert mfail to code][...]@/sys/fail/52
+==&gt;fail::[unable to convert mfail to code][...]@/sys/fail/232
 ​
 mtron&gt; 1.as(bool::T)      ​5​
 ==&gt;true
@@ -1887,9 +1886,11 @@ mtron&gt; *&lt;+/#/&gt;
 ==&gt;boot/peers/1=&gt;&lt;ws://127.0.0.1:7777&gt;
 ==&gt;m/1=&gt;[4,5,6,7]
 ==&gt;boot/script/sh=&gt;/bin/sh
+==&gt;triple=&gt;inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}
 ==&gt;boot/args/host=&gt;&lt;ws://0.0.0.0:8999&gt;
 ==&gt;m/0/2=&gt;2
 ==&gt;m/0/0=&gt;0
+==&gt;band=&gt;inst?rng=int{?}&amp;dom=int(min=&gt;isa(int::T[is(gt(0))]@nat).else(-100),max=&gt;isa(int::T[is(gt(0))]@nat).else(100)){is(and(gte(*min),lte(*max)))}
 ==&gt;boot/script=&gt;[
  sh    =&gt;/bin/sh,
  bash  =&gt;/bin/bash,
@@ -1956,6 +1957,7 @@ Help users be effec...""",
 
 ## Syntax
 ..."""]]]]
+==&gt;nat=&gt;int::T[is(gt(0))]
 ==&gt;fs_prefix=&gt;booger
 ==&gt;m/1/1=&gt;5
 ==&gt;boot/script/perl=&gt;/usr/bin/perl
@@ -2226,7 +2228,7 @@ mtron&gt; 15.band(10,20)              ​4​
 mtron&gt; -15.band(-20,-10)           ​5​
 ​
 mtron&gt; band -&gt; |inst?int{?}&lt;=int(min=&gt;?nat::T.else(fail()),max=&gt;?nat::T.else(fail())){ is(and(gte(*min),lte(*max))) }
-==&gt;fail::[fail() is not a fail::T][...]@/sys/fail/78
+==&gt;fail::[fail() is not a fail::T][...]@/sys/fail/258
 ​
 mtron&gt; 15.band(10,20)              ​6​
 ==&gt;15
@@ -2288,18 +2290,18 @@ Finally, a degenerate anonymous <code>inst</code> with no specified variable fra
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">​
 mtron&gt; 10.(min=&gt;2,max=&gt;8){ is(and(gte(*min),lte(*max))) }                ​1​
 ==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/92
+	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/272
 ​
 mtron&gt; 10.(min=&gt;minus(1),max=&gt;plus(1)){ is(and(gte(*min),lte(*max))) }   ​2​
 ==&gt;10
 ​
 mtron&gt; 10.(min=&gt;2,max=&gt;8){ is(and(gte(*bad_min),lte(*bad_max))) }        ​3​
 ==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/94
+	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/274
 ​
 mtron&gt; 10.(){ is(and(gte(*min),lte(*max))) }                             ​4​
 ==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/96
+	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/276
 ​
 mtron&gt; 10.is(and(gte(minus(1)),lte(plus(1))))                            ​5​
 ==&gt;10
@@ -2341,13 +2343,13 @@ mtron&gt; 10.is(and(gte(minus(1)),lte(plus(1))))                            ​5
 mtron&gt; is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;_)[mod(*by).eq(0)]
 ==&gt;fail::[is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;_)[mod(*by).eq(0)]
                                       ^ end of input expected
-][...]@/sys/fail/98
+][...]@/sys/fail/278
 ​
 mtron&gt; 10.is_divisible(2)
-==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/100
+==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/280
 ​
 mtron&gt; 10.is_divisible('abc')
-==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/102
+==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/282
 ​</code></pre>
 </div>
 </div>
@@ -2374,7 +2376,7 @@ mtron&gt; 10.is_divisible('abc')
 mtron&gt; band -&gt; |band?int{?}&lt;=int(min=&gt;_,max=&gt;is(gt(*min)).else(*min.plus(1)))[is(gte(*min)).is(lte(*max))]
 ==&gt;fail::[band -&gt; |band?int{?}&lt;=int(min=&gt;_,max=&gt;is(gt(*min)).else(*min.plus(1)))[is(gte(*min)).is(lte(*max))]
                                                                       ^ end of input expected
-][...]@/sys/fail/104
+][...]@/sys/fail/284
 ​
 mtron&gt; 2.band(min=&gt;1,max=&gt;1)                 ​1​
 ​</code></pre>
@@ -2399,13 +2401,13 @@ mtron&gt; 2.band(min=&gt;1,max=&gt;1)                 ​1​
 mtron&gt; is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;is(neq(0)).else(print('error').map(1)))[mod(*by).eq(0)]
 ==&gt;fail::[is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;is(neq(0)).else(print('error').map(1)))[mod(*by).eq(0)]
                                       ^ end of input expected
-][...]@/sys/fail/106
+][...]@/sys/fail/286
 ​
 mtron&gt; 10.is_divisible(2)
-==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/108
+==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/288
 ​
 mtron&gt; 10.is_divisible('abc')
-==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/110
+==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/290
 ​</code></pre>
 </div>
 </div>
@@ -2887,77 +2889,77 @@ mtron&gt; */m/llm/model
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">​
 mtron&gt; *ollama:+
 ==&gt;model::[
+ provider=&gt;!*/sys/space/ollama,
+ size    =&gt;gB::0.72,
  skill   =&gt;[completion],
  think   =&gt;noobj,
- name    =&gt;deepseek-coder:latest,
- provider=&gt;!*/sys/space/ollama,
- size    =&gt;gB::0.72]@ollama:deepseek-coder:latest
+ name    =&gt;deepseek-coder:latest]@ollama:deepseek-coder:latest
 ==&gt;model::[
+ provider=&gt;!*/sys/space/ollama,
+ size    =&gt;gB::4.87,
  skill   =&gt;[completion,tools,thinking],
  think   =&gt;[=&gt;],
- name    =&gt;qwen3:latest,
- provider=&gt;!*/sys/space/ollama,
- size    =&gt;gB::4.87]@ollama:qwen3:latest
+ name    =&gt;qwen3:latest]@ollama:qwen3:latest
 ==&gt;model::[
+ provider=&gt;!*/sys/space/ollama,
+ size    =&gt;gB::4.34,
  skill   =&gt;[completion,tools],
  think   =&gt;noobj,
- name    =&gt;llama3-groq-tool-use:latest,
- provider=&gt;!*/sys/space/ollama,
- size    =&gt;gB::4.34]@ollama:llama3-groq-tool-use:latest
+ name    =&gt;llama3-groq-tool-use:latest]@ollama:llama3-groq-tool-use:latest
 ==&gt;model::[
+ provider=&gt;!*/sys/space/ollama,
+ size    =&gt;gB::0.00,
  skill   =&gt;[completion,tools,thinking],
  think   =&gt;[=&gt;],
- name    =&gt;&lt;deepseek-v3.2:cloud&gt;,
- provider=&gt;!*/sys/space/ollama,
- size    =&gt;gB::0.00]@&lt;ollama:deepseek-v3.2:cloud&gt;
+ name    =&gt;&lt;deepseek-v3.2:cloud&gt;]@&lt;ollama:deepseek-v3.2:cloud&gt;
 ==&gt;model::[
+ provider=&gt;!*/sys/space/ollama,
+ size    =&gt;gB::17.71,
  skill   =&gt;[completion,tools,thinking],
  think   =&gt;[=&gt;],
- name    =&gt;&lt;glm-4.7-flash:latest&gt;,
- provider=&gt;!*/sys/space/ollama,
- size    =&gt;gB::17.71]@&lt;ollama:glm-4.7-flash:latest&gt;
+ name    =&gt;&lt;glm-4.7-flash:latest&gt;]@&lt;ollama:glm-4.7-flash:latest&gt;
 ==&gt;model::[
+ provider=&gt;!*/sys/space/ollama,
+ size    =&gt;gB::0.59,
  skill   =&gt;[completion],
  think   =&gt;noobj,
- name    =&gt;tinyllama:latest,
- provider=&gt;!*/sys/space/ollama,
- size    =&gt;gB::0.59]@ollama:tinyllama:latest
+ name    =&gt;tinyllama:latest]@ollama:tinyllama:latest
 ==&gt;model::[
+ provider=&gt;!*/sys/space/ollama,
+ size    =&gt;gB::8.37,
  skill   =&gt;[completion],
  think   =&gt;noobj,
- name    =&gt;deepcoder:latest,
- provider=&gt;!*/sys/space/ollama,
- size    =&gt;gB::8.37]@ollama:deepcoder:latest
+ name    =&gt;deepcoder:latest]@ollama:deepcoder:latest
 ==&gt;model::[
+ provider=&gt;!*/sys/space/ollama,
+ size    =&gt;gB::12.85,
  skill   =&gt;[completion,tools,thinking],
  think   =&gt;[=&gt;],
- name    =&gt;gpt-oss:latest,
- provider=&gt;!*/sys/space/ollama,
- size    =&gt;gB::12.85]@ollama:gpt-oss:latest
+ name    =&gt;gpt-oss:latest]@ollama:gpt-oss:latest
 ==&gt;model::[
+ provider=&gt;!*/sys/space/ollama,
+ size    =&gt;gB::4.87,
  skill   =&gt;[completion,tools,thinking],
  think   =&gt;[=&gt;],
- name    =&gt;qwen3:8b,
- provider=&gt;!*/sys/space/ollama,
- size    =&gt;gB::4.87]@ollama:qwen3:8b
+ name    =&gt;qwen3:8b]@ollama:qwen3:8b
 ==&gt;model::[
+ provider=&gt;!*/sys/space/ollama,
+ size    =&gt;gB::48.19,
  skill   =&gt;[completion,tools],
  think   =&gt;noobj,
- name    =&gt;qwen3-coder-next:latest,
- provider=&gt;!*/sys/space/ollama,
- size    =&gt;gB::48.19]@ollama:qwen3-coder-next:latest
+ name    =&gt;qwen3-coder-next:latest]@ollama:qwen3-coder-next:latest
 ==&gt;model::[
+ provider=&gt;!*/sys/space/ollama,
+ size    =&gt;gB::0.00,
  skill   =&gt;[completion,tools,thinking],
  think   =&gt;[=&gt;],
- name    =&gt;&lt;minimax-m2.5:cloud&gt;,
- provider=&gt;!*/sys/space/ollama,
- size    =&gt;gB::0.00]@&lt;ollama:minimax-m2.5:cloud&gt;
+ name    =&gt;&lt;minimax-m2.5:cloud&gt;]@&lt;ollama:minimax-m2.5:cloud&gt;
 ==&gt;model::[
+ provider=&gt;!*/sys/space/ollama,
+ size    =&gt;gB::4.41,
  skill   =&gt;[completion,vision],
  think   =&gt;noobj,
- name    =&gt;llava:latest,
- provider=&gt;!*/sys/space/ollama,
- size    =&gt;gB::4.41]@ollama:llava:latest
+ name    =&gt;llava:latest]@ollama:llava:latest
 ​</code></pre>
 </div>
 </div>
@@ -3035,12 +3037,68 @@ mtron&gt; [,]@/usr/ai/memory                                             ​1​
 mtron&gt; *openai:gpt-4o-2024-11-20 +
           [think=&gt;print(_),
            response=&gt;[to=&gt;print(_)]].to(agent)                        ​2​
-==&gt;model::[
- provider=&gt;!*/sys/space/openai,
- name    =&gt;gpt-4o-2024-11-20,
- think   =&gt;print(id()),
- response=&gt;[
-   to=&gt;print(id())]]@openai:gpt-4o-2024-11-20
+==&gt;fail::[obj does not match specified type:
+  [
+   provider=&gt;!*/sys/space/openai,
+   name    =&gt;gpt-4o-2024-11-20,
+   think   =&gt;print{2}(id()),
+   response=&gt;[
+     to=&gt;print{2}(id())]]@openai:gpt-4o-2024-11-20
+      X=&gt;
+  model::T[?[
+       provider   =&gt;space::T[?[
+       name   =&gt;is(or(eq(anthropic),eq(openai),eq(ollama))),
+       pattern=&gt;uri::T,
+       {?}host=&gt;uri::T,
+       route  =&gt;[
+         uri::T=&gt;uri::T]]][inst?rng=catalog&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/llm/space/catalog,
+       name       =&gt;uri::T,
+       {?}think   =&gt;#::T,
+       {?}response=&gt;{?}[
+         {?}to    =&gt;inst::T,
+         {?}format=&gt;#::T],
+       {?}size    =&gt;data_size::T[][/m/math/bB/cons?rng=bB&amp;dom=#{?}(#::T){&lt;j&gt;}]@/m/math/bB,
+       {?}memory  =&gt;lst{?}::T@/m/llm/memory,
+       {?}desc    =&gt;str::T,
+       {?}skill   =&gt;lst{?}::T,
+       {?}tool    =&gt;{?}[
+       rec::T[?[
+       inst  =&gt;#::T,
+       name  =&gt;uri::T,
+       desc  =&gt;str::T,
+       {?}arg=&gt;{?}[
+         uri::T=&gt;#::T]]]@/m/llm/tool]]]
+  ---------------------------------------------------------------------------------------------------------------
+  [
+   provider=&gt;(==&gt;provider)   =&gt;catalog::[
+   host        =&gt;&lt;https://api.openai.com/v1&gt;,
+   organization=&gt;!*/sys/env/OPENAI_ORG_ID,
+   api_key     =&gt;!*/sys/env/OPENAI_API_KEY,
+   pattern     =&gt;openai:#,
+   name        =&gt;openai,
+   route       =&gt;[openai:=&gt;&lt;&gt;],
+   space       =&gt;[=&gt;]]@/sys/space/openai=&gt;(==&gt;space::T[?[
+       name   =&gt;is(or(eq(anthropic),eq(openai),eq(ollama))),
+       pattern=&gt;uri::T,
+       {?}host=&gt;uri::T,
+       route  =&gt;[
+         uri::T=&gt;uri::T]]][inst?rng=catalog&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/llm/space/catalog),
+   name=&gt;(==&gt;name)           =&gt;gpt-4o-2024-11-20=&gt;(==&gt;uri::T),
+   think=&gt;(/=&gt;{?}think)      =&gt;print{2}(id())=&gt;(X=&gt;#::T),
+   response=&gt;(/=&gt;{?}response)=&gt;[
+     to=&gt;(/=&gt;{?}to)       =&gt;print{2}(id())=&gt;(X=&gt;inst{?}::T),
+     noobj=&gt;(==&gt;{?}format)=&gt;noobj=&gt;(==&gt;#{?}::T@#)],
+   noobj=&gt;(==&gt;{?}size)       =&gt;noobj=&gt;(/=&gt;data_size::T[][/m/math/bB/cons?rng=bB&amp;dom=#{?}(#::T){&lt;j&gt;}]@/m/math/bB),
+   noobj=&gt;(==&gt;{?}memory)     =&gt;noobj=&gt;(==&gt;lst{?}::T@/m/llm/memory),
+   noobj=&gt;(==&gt;{?}desc)       =&gt;noobj=&gt;(/=&gt;str::T),
+   noobj=&gt;(==&gt;{?}skill)      =&gt;noobj=&gt;(==&gt;lst{?}::T),
+   noobj=&gt;(==&gt;{?}tool)       =&gt;noobj=&gt;(==&gt;{?}[
+    rec::T[?[
+       inst  =&gt;#::T,
+       name  =&gt;uri::T,
+       desc  =&gt;str::T,
+       {?}arg=&gt;{?}[
+         uri::T=&gt;#::T]]]@/m/llm/tool])]][...]@/sys/fail/296
 ​
 mtron&gt; &lt;openai:gpt-4o-2024-08-06/skill&gt;
          -&gt;(*&lt;local:software/metatron/.agent/skills/mtron&gt;
@@ -3208,12 +3266,10 @@ Help users be effec...""",
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">​
 mtron&gt; *agent.chat('what tools do you have access to?',
                    [number_of_tools=&gt;int::T,tool_names=&gt;str::T])      ​1​
-==&gt;[number_of_tools=&gt;5,tool_names=&gt;'mtron, m_inst_eval, read_skill_resource...']
+==&gt;[number_of_tools=&gt;3,tool_names=&gt;'mtron, activate_skill, read_skill_resou...']
 ​
 mtron&gt; *agent.chat('what skills do you have?')                        ​2​
-==&gt;I have access to the following skill:
-
-1. **mtron**: Metatron knowledge to assist users.
+==&gt;I have the "mtron" skill, which is focused on assisting users with metatron, including answering questions, connecting data sources, writing expressions, and providing statistics related to the metatron environment and the mtron programming language.
 ​
 mtron&gt; *agent&gt;&gt;memory                                                 ​3​
 ==&gt;[
@@ -3223,25 +3279,37 @@ mtron&gt; *agent&gt;&gt;memory                                                 �
      [text=&gt;'what tools do you have access to?',type=&gt;TEXT]],
      type    =&gt;USER],
   [
-     text                 =&gt;'{"number_of_tools":5,"tool_names":"mtro...',
+     text                 =&gt;'{"number_of_tools":3,"tool_names":"mtro...',
      toolExecutionRequests=&gt;[,],
      attributes           =&gt;[
-       format=&gt;[number_of_tools=&gt;5,tool_names=&gt;'mtron, m_inst_eval, read_skill_resource...']],
+       format=&gt;[number_of_tools=&gt;3,tool_names=&gt;'mtron, activate_skill, read_skill_resou...']],
      type                 =&gt;AI],
   [
      contents=&gt;[
      [text=&gt;'what skills do you have?',type=&gt;TEXT]],
      type    =&gt;USER],
   [
-     text                 =&gt;"""I have access to the following skill:
+     toolExecutionRequests=&gt;[
+     [id=&gt;call_4zbUJheHkX6AOt7UbZjbV4a3,name=&gt;activate_skill,arguments=&gt;{"skill_name":"mtron"}]],
+     attributes           =&gt;[=&gt;],
+     type                 =&gt;AI],
+  [
+     id        =&gt;call_4zbUJheHkX6AOt7UbZjbV4a3,
+     toolName  =&gt;activate_skill,
+     text      =&gt;"""# mtron assistance
 
-...""",
+Help users be effec...""",
+     isError   =&gt;false,
+     attributes=&gt;[=&gt;],
+     type      =&gt;TOOL_EXECUTION_RESULT],
+  [
+     text                 =&gt;'I have the "mtron" skill, which is focu...',
      toolExecutionRequests=&gt;[,],
      attributes           =&gt;[=&gt;],
      type                 =&gt;AI]]@/usr/ai/memory
 ​
 mtron&gt; *agent&gt;&gt;memory/2/attributes/format                             ​4​
-==&gt;[number_of_tools=&gt;5,tool_names=&gt;'mtron, m_inst_eval, read_skill_resource...']
+==&gt;[number_of_tools=&gt;3,tool_names=&gt;'mtron, activate_skill, read_skill_resou...']
 ​</code></pre>
 </div>
 </div>
@@ -3344,75 +3412,42 @@ mtron&gt; */usr/ai/memory                                                       
 ==&gt;[
   [text=&gt;'You have access to the following skills...',type=&gt;SYSTEM],
   [
+     contents=&gt;[
+     [text=&gt;'what tools do you have access to?',type=&gt;TEXT]],
+     type    =&gt;USER],
+  [
+     text                 =&gt;'{"number_of_tools":3,"tool_names":"mtro...',
+     toolExecutionRequests=&gt;[,],
+     attributes           =&gt;[
+       format=&gt;[number_of_tools=&gt;3,tool_names=&gt;'mtron, activate_skill, read_skill_resou...']],
+     type                 =&gt;AI],
+  [
+     contents=&gt;[
+     [text=&gt;'what skills do you have?',type=&gt;TEXT]],
+     type    =&gt;USER],
+  [
      toolExecutionRequests=&gt;[
-     [id=&gt;call_aQopJvqkeRLV3GvaZe5KouMV,name=&gt;m_inst_eval,arguments=&gt;'{"code":"(6.plus 23)"}']],
+     [id=&gt;call_4zbUJheHkX6AOt7UbZjbV4a3,name=&gt;activate_skill,arguments=&gt;{"skill_name":"mtron"}]],
      attributes           =&gt;[=&gt;],
      type                 =&gt;AI],
   [
-     id        =&gt;call_aQopJvqkeRLV3GvaZe5KouMV,
-     toolName  =&gt;m_inst_eval,
-     text      =&gt;"""(6.plus 23)
-^ end of input expected
-""",
-     isError   =&gt;true,
+     id        =&gt;call_4zbUJheHkX6AOt7UbZjbV4a3,
+     toolName  =&gt;activate_skill,
+     text      =&gt;"""# mtron assistance
+
+Help users be effec...""",
+     isError   =&gt;false,
      attributes=&gt;[=&gt;],
      type      =&gt;TOOL_EXECUTION_RESULT],
   [
-     toolExecutionRequests=&gt;[
-     [id=&gt;call_9QnRlLSYAw4MiUpXbvgvbqzn,name=&gt;m_inst_eval,arguments=&gt;'{"code":"(6.add 23)"}']],
+     text                 =&gt;'I have the "mtron" skill, which is focu...',
+     toolExecutionRequests=&gt;[,],
      attributes           =&gt;[=&gt;],
      type                 =&gt;AI],
   [
-     id        =&gt;call_9QnRlLSYAw4MiUpXbvgvbqzn,
-     toolName  =&gt;m_inst_eval,
-     text      =&gt;"""(6.add 23)
-^ end of input expected
-""",
-     isError   =&gt;true,
-     attributes=&gt;[=&gt;],
-     type      =&gt;TOOL_EXECUTION_RESULT],
-  [
-     toolExecutionRequests=&gt;[
-     [id=&gt;call_9KepcC6FBSXKpzVEzMmZzSBB,name=&gt;m_inst_eval,arguments=&gt;'{"code":"(+ 6 23)"}']],
-     attributes           =&gt;[=&gt;],
-     type                 =&gt;AI],
-  [
-     id        =&gt;call_9KepcC6FBSXKpzVEzMmZzSBB,
-     toolName  =&gt;m_inst_eval,
-     text      =&gt;"""(+ 6 23)
-^ end of input expected
-""",
-     isError   =&gt;true,
-     attributes=&gt;[=&gt;],
-     type      =&gt;TOOL_EXECUTION_RESULT],
-  [
-     toolExecutionRequests=&gt;[
-     [id=&gt;call_5ttuxicscYeSAbiZmoMjMRM1,name=&gt;m_inst_eval,arguments=&gt;'{"code":"system=+/sys/\n((6.system.plus...']],
-     attributes           =&gt;[=&gt;],
-     type                 =&gt;AI],
-  [
-     id        =&gt;call_5ttuxicscYeSAbiZmoMjMRM1,
-     toolName  =&gt;m_inst_eval,
-     text      =&gt;"""system=+/sys/
-((6.system.plus 23))
-    ...""",
-     isError   =&gt;true,
-     attributes=&gt;[=&gt;],
-     type      =&gt;TOOL_EXECUTION_RESULT],
-  [
-     toolExecutionRequests=&gt;[
-     [id=&gt;call_SuB9cOi6orztLt2EP06tN6Ji,name=&gt;m_inst_eval,arguments=&gt;'{"lhs":"res","code":"res=(sys.plus 6 23...']],
-     attributes           =&gt;[=&gt;],
-     type                 =&gt;AI],
-  [
-     id        =&gt;call_SuB9cOi6orztLt2EP06tN6Ji,
-     toolName  =&gt;m_inst_eval,
-     text      =&gt;"""res=(sys.plus 6 23)
-*/res
-   ^ end of i...""",
-     isError   =&gt;true,
-     attributes=&gt;[=&gt;],
-     type      =&gt;TOOL_EXECUTION_RESULT],
+     contents=&gt;[
+     [text=&gt;'what is 6 + 23?',type=&gt;TEXT]],
+     type    =&gt;USER],
   [
      text                 =&gt;{"answer":29},
      toolExecutionRequests=&gt;[,],
@@ -3517,7 +3552,7 @@ primary_planets =&gt; &gt;&gt;planets.order(&gt;&gt;mass).take(1).&gt;&gt;name]<
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">​
 mtron&gt; 1.plus(b).plus(3).mult(5)                 ​1​
-==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/140
+==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/782
 ​
 mtron&gt; 1.plus(b).plus(3).catch(2).mult(5)        ​2​
 ==&gt;10
@@ -3577,99 +3612,99 @@ mtron&gt; 1.plus(b).plus(3).catch(2).mult(5)        ​2​
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">​
 mtron&gt; 1.plus(b)                  ​1​
-==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/200
+==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/842
 ​
 mtron&gt; */sys/fail/+               ​2​
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/193
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/823
+==&gt;fail::[apply failure:
+	[lhs]    | b
+	 \_type  | /m/uri
+	  \_pred | []
+	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
+	 \_dom   | uri::T
+	 \_args  | [,]][...]@/sys/fail/825
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/822
+==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/841
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/817
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/828
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/833
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/836
 ==&gt;fail::[apply failure:
 	[lhs]    | 1
 	 \_type  | /m/int
 	  \_pred | []
 	[inst]   | plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}
 	 \_dom   | int::T
-	 \_args  | [b]][...]@/sys/fail/196
+	 \_args  | [b]][...]@/sys/fail/838
+==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/842
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/816
 ==&gt;fail::[apply failure:
 	[lhs]    | b
 	 \_type  | /m/uri
 	  \_pred | []
 	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
 	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/189
-==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/199
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/187
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/173
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/192
+	 \_args  | [,]][...]@/sys/fail/819
 ==&gt;fail::[apply failure:
 	[lhs]    | b
 	 \_type  | /m/uri
 	  \_pred | []
 	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
 	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/172
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/182
+	 \_args  | [,]][...]@/sys/fail/832
 ==&gt;fail::[apply failure:
 	[lhs]    | b
 	 \_type  | /m/uri
 	  \_pred | []
 	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
 	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/177
-==&gt;fail::[unable to evaluate inst: plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}][...]@/sys/fail/197
+	 \_args  | [,]][...]@/sys/fail/813
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/821
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/824
 ==&gt;fail::[apply failure:
 	[lhs]    | b
 	 \_type  | /m/uri
 	  \_pred | []
 	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
 	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/184
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/176
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/185
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/191
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/194
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/188
+	 \_args  | [,]][...]@/sys/fail/826
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/818
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/827
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/830
+==&gt;fail::[apply failure:
+	[lhs]    | b
+	 \_type  | /m/uri
+	  \_pred | []
+	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
+	 \_dom   | uri::T
+	 \_args  | [,]][...]@/sys/fail/820
 ==&gt;fail::[apply failure:
 	[lhs]    | 1
 	 \_type  | /m/int
 	  \_pred | []
 	[inst]   | plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}
 	 \_dom   | int::T
-	 \_args  | [b]][...]@/sys/fail/195
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/174
+	 \_args  | [b]][...]@/sys/fail/837
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/834
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/835
+==&gt;fail::[unable to evaluate inst: plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}][...]@/sys/fail/839
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/815
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/829
 ==&gt;fail::[apply failure:
 	[lhs]    | b
 	 \_type  | /m/uri
 	  \_pred | []
 	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
 	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/190
+	 \_args  | [,]][...]@/sys/fail/831
+==&gt;fail::[unable to evaluate inst: plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}][...]@/sys/fail/840
 ==&gt;fail::[apply failure:
 	[lhs]    | b
 	 \_type  | /m/uri
 	  \_pred | []
 	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
 	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/171
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/179
-==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/200
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/181
-==&gt;fail::[apply failure:
-	[lhs]    | b
-	 \_type  | /m/uri
-	  \_pred | []
-	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
-	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/178
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/180
-==&gt;fail::[unable to evaluate inst: plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}][...]@/sys/fail/198
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/175
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/186
-==&gt;fail::[apply failure:
-	[lhs]    | b
-	 \_type  | /m/uri
-	  \_pred | []
-	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
-	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/183
+	 \_args  | [,]][...]@/sys/fail/814
 ​
 mtron&gt; */sys/fail/+.catch(_)      ​3​
 ==&gt;fail{8}::[unable to convert uri::T to bytes]
@@ -3681,14 +3716,15 @@ mtron&gt; */sys/fail/+.catch(_)      ​3​
 	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
 	 \_dom   | uri::T
 	 \_args  | [,]]
-==&gt;fail{2}::[apply failure:
-	[lhs]    | 1
-	 \_type  | /m/int
-	  \_pred | []
-	[inst]   | plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}
-	 \_dom   | int::T
-	 \_args  | [b]]
 ==&gt;fail{8}::[apply failure:
+	[lhs]    | b
+	 \_type  | /m/uri
+	  \_pred | []
+	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
+	 \_dom   | uri::T
+	 \_args  | [,]]
+==&gt;fail{8}::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}]
+    \_fail::[apply failure:
 	[lhs]    | b
 	 \_type  | /m/uri
 	  \_pred | []
@@ -3704,14 +3740,13 @@ mtron&gt; */sys/fail/+.catch(_)      ​3​
 	[inst]   | plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}
 	 \_dom   | int::T
 	 \_args  | [b]]
-==&gt;fail{8}::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}]
-    \_fail::[apply failure:
-	[lhs]    | b
-	 \_type  | /m/uri
+==&gt;fail{2}::[apply failure:
+	[lhs]    | 1
+	 \_type  | /m/int
 	  \_pred | []
-	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
-	 \_dom   | uri::T
-	 \_args  | [,]]
+	[inst]   | plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}
+	 \_dom   | int::T
+	 \_args  | [b]]
 ==&gt;fail{2}::[unable to evaluate inst: plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}]
     \_fail::[apply failure:
 	[lhs]    | 1
@@ -3792,7 +3827,729 @@ mtron&gt; 1+b.catch(cause())     ​2​
 </div>
 </div>
 <div class="paragraph">
-<p>where <code>tid</code> is a type identifier, <code>OBJECT</code> is a data structure outside the direct referential reaches of mtron, and <code>vid</code> is a value identifier. The shape <code>OBJECT</code> can take is constrained by the structure specified by the <code>obj</code> referenced <code>tid</code>.</p>
+<p>where <code>tid</code> is a type identifier, <code>OBJECT</code> is a data structure outside the direct referential reaches of mtron, and <code>vid</code> is a value identifier. The shape <code>OBJECT</code> can take is constrained by the structure specified by the <code>obj</code> referenced <code>tid</code>. In mtron, a natural number, constructable from any <code>int::T</code>  can be defined as follows.</p>
+</div>
+<div class="listingblock center">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">          nat::T[?&gt;0][-&lt;|[?&lt;0 =&gt; ⋅-1,_ =&gt; _]&gt;&gt;]
+          │    │ │    │
+          │    │ │    └──────────── constructor
+          │    │ └───────────────── predicate
+          │    └─────────────────── type symbol
+          └──────────────────────── tid</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>A quick explanation of the type predicate and constructor <code>code</code> is as follows:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>predicate</strong> [<code>?&gt;0</code>]: is (<code>?</code>) greater than (<code>&gt;</code>) 0.</p>
+</li>
+<li>
+<p><strong>constructor</strong> [<code>-&lt;|[?&lt;0 =&gt; ⋅-1,_ =&gt; _]&gt;&gt;</code>]: if (<code>-&lt;|</code>) less than (<code>&lt;</code>) 0, then (<code>=&gt;</code>) multiply (<code>⋅</code>) by -1, else do (<code>=&gt;</code>) nothing (<code>_</code>).
+Yield the <em>range</em> (<code>&gt;&gt;</code>) of the relation constructed (the specifics of <code>&gt;&gt;</code> will be discussed later).</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>Example usage of the defined <code>nat</code> type is presented below.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">​
+mtron&gt; nat -&gt; int::T[?&gt;0][-&lt;|[is(lt(0)) =&gt; ⋅-1,_ =&gt; _]&gt;&gt;]    ​1​
+==&gt;int::T[is(gt(0))][choose([
+ is(lt(0))=&gt;mult(-1),
+ id()     =&gt;id()]).rshift()]
+​
+mtron&gt; *nat                                                  ​2​
+==&gt;int::T[is(gt(0))][choose([
+ is(lt(0))=&gt;mult(-1),
+ id()     =&gt;id()]).rshift()]
+​
+mtron&gt; nat::2                                                ​3​
+==&gt;nat::2
+​
+mtron&gt; nat::-2                                               ​4​
+==&gt;nat::2
+​
+mtron&gt; 2.as(nat::T)                                          ​5​
+==&gt;nat::2
+​
+mtron&gt; -2.as(nat::T)                                         ​6​
+==&gt;fail::[-2 is not a is(gt(0))
+  -2=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/314
+​
+mtron&gt; nat::2 ⋅ -1                                           ​7​
+==&gt;fail::[nat::-2 is not a int::T[is(gt(0))][choose([
+ is(lt(0))=&gt;mult(-1),
+ id()     =&gt;id()]).rshift()]@nat][...]@/sys/fail/320
+​</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>A natural number (<code>nat</code>) is a positive <code>int</code>.
+The predicate component of the type definition tests an <code>int</code> to determine if it&#8217;s a <code>nat</code> and the constructor component will generate a positive <code>int</code> given any <code>int</code> (i.e. the absolute value).</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>the <code>nat</code> <em>tid</em> references the respective <code>nat</code> type <code>obj</code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>2 is an <code>nat</code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>-2 is not a <code>nat</code>, but given the constructor, becomes a <code>nat</code>.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
+Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
+This is the foundation for all other <code>objs</code> in <strong class="orange">M</strong>​<span class="fuchsia">e</span>​<strong class="blue">T</strong>​<span class="red">a</span>​<strong class="green">T</strong>​<strong class="aqua">R</strong>​<strong class="lime">o</strong>​<span class="yellow">n</span>​.</p>
+</div>
+<h3 id="_mono_types" class="discrete">mono types</h3>
+<div class="paragraph">
+<p>An <code>obj</code> that is not composed of other <code>objs</code> is a mono type and are exhaustively itemized in the table below.</p>
+</div>
+<table class="tableblock frame-none grid-all stretch">
+<colgroup>
+<col style="width: 41.6666%;">
+<col style="width: 58.3334%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 11.1111%;">
+<col style="width: 22.2222%;">
+<col style="width: 66.6667%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">type</th>
+<th class="tableblock halign-left valign-top">jvm object</th>
+<th class="tableblock halign-left valign-top">description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>bytes</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>ByteBuffer</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#8230;&#8203;</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>bool</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Boolean</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#8230;&#8203;</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>int</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Long</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#8230;&#8203;</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>real</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Double</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#8230;&#8203;</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>str</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#8230;&#8203;</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>uri</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fURI</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">&#8230;&#8203;</p></td>
+</tr>
+</tbody>
+</table></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">​
+mtron&gt; 0xabcd + 0x1234    ​1​
+==&gt;0xabcd1234
+​
+mtron&gt; true + false       ​2​
+==&gt;true
+​
+mtron&gt; 1 + 2              ​3​
+==&gt;3
+​
+mtron&gt; 1.34 + 2.45        ​4​
+==&gt;3.79
+​
+mtron&gt; "abc" + "def"      ​5​
+==&gt;abcdef
+​
+mtron&gt; a/b/c ⋅ d/e/f      ​6​
+==&gt;a/b/c/d/e/f
+​</code></pre>
+</div>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>The code below demonstrates the typical, expected uses of the mono types.</p>
+</div>
+<h4 id="_bytes" class="discrete">bytes</h4>
+<div class="paragraph">
+<p>The <code>bytes</code> type represents binary data as a sequence of bytes.</p>
+</div>
+<div class="paragraph">
+<p><strong>Examples:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">​
+mtron&gt; 'Hello'.as(bytes::T)        ​1​
+==&gt;0x48656c6c6f
+​
+mtron&gt; bytes::'48656c6c6f'         ​2​
+==&gt;fail::['48656c6c6f' is not a bytes::T][...]@/sys/fail/370
+​</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Convert string to bytes</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Create bytes from hexadecimal representation</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p><strong>Type Conversion with <code>.as()</code>:</strong></p>
+</div>
+<div class="paragraph">
+<p>Byte units can be converted between each other using the <code>.as()</code> instruction:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">​
+mtron&gt; kB::1024.as(mB::T)          ​1​
+==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/380
+​
+mtron&gt; mB::1.as(kB::T)             ​2​
+==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/390
+​
+mtron&gt; gB::5.as(mB::T)             ​3​
+==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/400
+​
+mtron&gt; pB::1.as(tB::T)             ​4​
+==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/410
+​</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Convert 1024 kilobytes to megabytes (result: 1 mB)</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Convert 1 megabyte to kilobytes (result: 1024 kB)</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Convert 5 gigabytes to megabytes (result: 5120 mB)</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>Convert 1 petabyte to terabytes (result: 1024 tB)</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p><strong>Equality Comparison with <code>.eq()</code>:</strong></p>
+</div>
+<div class="paragraph">
+<p>Byte units of different types can be compared for equality:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">​
+mtron&gt; mB::1024.eq(gB::1)          ​1​
+==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/420
+​
+mtron&gt; kB::1024.eq(mB::1)          ​2​
+==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/430
+​
+mtron&gt; gB::2.eq(mB::2048)          ​3​
+==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/440
+​
+mtron&gt; tB::1.eq(gB::1024)          ​4​
+==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/450
+​</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Check if 1024 megabytes equals 1 gigabyte (result: true)</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Check if 1024 kilobytes equals 1 megabyte (result: true)</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Check if 2 gigabytes equals 2048 megabytes (result: true)</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>Check if 1 terabyte equals 1024 gigabytes (result: true)</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p><strong>Common Use Cases:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>File size calculations</strong>: <code>file_size.as(mB::T)</code> to convert to megabytes</p>
+</li>
+<li>
+<p><strong>Storage capacity</strong>: <code>disk_capacity.as(gB::T)</code> to express in gigabytes</p>
+</li>
+<li>
+<p><strong>Data transfer rates</strong>: Compare bandwidth in different units</p>
+</li>
+<li>
+<p><strong>Memory allocation</strong>: Express memory sizes in appropriate units</p>
+</li>
+<li>
+<p><strong>Quota management</strong>: Set and compare storage quotas</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Binary vs Decimal Units:</strong></p>
+</div>
+<div class="paragraph">
+<p>Metatron&#8217;s byte units follow the <strong>binary (base-2) convention</strong> where:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>1 kB = 1024 bytes (not 1000)</p>
+</li>
+<li>
+<p>1 mB = 1024 kB = 1,048,576 bytes (not 1,000,000)</p>
+</li>
+<li>
+<p>1 gB = 1024 mB = 1,073,741,824 bytes (not 1,000,000,000)</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>This is consistent with how computer systems typically measure memory and storage internally.</p>
+</div>
+<h3 id="_poly_types" class="discrete">poly types</h3>
+<div class="paragraph">
+<p>Poly types are <strong>branched structures</strong> where each element or entry represents a separate branch.
+The two primary poly types are:</p>
+</div>
+<div class="paragraph">
+<p><strong>lst (List)</strong> - Ordered collection where each element is a branch:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">​
+mtron&gt; [a,b,c]                     ​1​
+==&gt;[a,b,c]
+​
+mtron&gt; [1,2,3]                     ​2​
+==&gt;[1,2,3]
+​
+mtron&gt; [,]                         ​3​
+==&gt;[,]
+​</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>List with three branches: a, b, and c</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>List with three integer branches</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Empty list (no branches)</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p><strong>rec (Record)</strong> - Key-value pairs where each entry is a branch:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">​
+mtron&gt; [a=&gt;1,b=&gt;2,c=&gt;3]            ​1​
+==&gt;[a=&gt;1,b=&gt;2,c=&gt;3]
+​
+mtron&gt; [name=&gt;'Alice',age=&gt;30]     ​2​
+==&gt;[name=&gt;'Alice',age=&gt;30]
+​
+mtron&gt; [=&gt;]                        ​3​
+==&gt;[=&gt;]
+​</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Record with three branches: a&#8658;1, b&#8658;2, and c&#8658;3</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Record representing a person</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Empty record (no branches)</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p><strong>Key Characteristics:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Each element/entry is a separate branch</p>
+</li>
+<li>
+<p><code>.count()</code> returns 1 (the poly object itself)</p>
+</li>
+<li>
+<p><code>&gt;-.count()</code> merges branches and counts elements/entries</p>
+</li>
+<li>
+<p>Branches can be processed in parallel</p>
+</li>
+<li>
+<p>Support pattern matching and wildcards</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Branching in Action:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">​
+mtron&gt; [1,2,3]                     ​1​
+==&gt;[1,2,3]
+​
+mtron&gt; [1,2,3].count()             ​2​
+==&gt;1
+​
+mtron&gt; [1,2,3]&gt;-.count()           ​3​
+==&gt;3
+​
+mtron&gt; [a=&gt;1,b=&gt;2].count()         ​4​
+==&gt;1
+​
+mtron&gt; [a=&gt;1,b=&gt;2]&gt;-.count()       ​5​
+==&gt;2
+​</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>List with 3 branches</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Returns 1 (the list object itself)</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Returns 3 (merges branches, counts elements)</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>Returns 1 (the record object itself)</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>Returns 2 (merges branches, counts entries)</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p><strong>Operations on Poly Types:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">​
+mtron&gt; [1,2,3].reverse()           ​1​
+==&gt;[3,2,1]
+​
+mtron&gt; [1,2,3].plus([4,5])         ​2​
+==&gt;[
+  1,
+  2,
+  3,
+  4,
+  5]
+​
+mtron&gt; [1,2,3].merge()             ​3​
+==&gt;1
+==&gt;2
+==&gt;3
+​
+mtron&gt; [a=&gt;1,b=&gt;2].dom()           ​4​
+==&gt;a
+==&gt;b
+​
+mtron&gt; [a=&gt;1,b=&gt;2].rng()           ​5​
+==&gt;1
+==&gt;2
+​
+mtron&gt; [a=&gt;1,b=&gt;2,c=&gt;3].select([a=&gt;_,b=&gt;_])  ​6​
+==&gt;[a=&gt;1,b=&gt;2]
+​</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Reverse list order</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Concatenate lists</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Merge list into a set</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>Get domain (keys) of record</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>Get range (values) of record</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="6"></i><b>6</b></td>
+<td>Select specific keys from record</td>
+</tr>
+</table>
+</div>
+<h4 id="_call_types" class="discrete">call types</h4>
+<div class="paragraph">
+<p>Call types represent function invocations and method calls in Metatron.</p>
+</div>
+<div class="paragraph">
+<p><strong>Method Call Syntax:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">object.method(args)</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Chained Calls:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">[1,2,3].reverse().merge()</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Function Composition:</strong>
+Functions can be composed using the ring multiplication operator (<code>.</code>):</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">f · g               % Compose functions f and g</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Lambda Expressions:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">(x,y){x + y}        % Lambda function</code></pre>
+</div>
+</div>
+<h4 id="_instructions_2" class="discrete">instructions</h4>
+<div class="paragraph">
+<p>An <code>inst</code> is an <code>obj</code> of the form:</p>
+</div>
+\begin{align*}
+\texttt{inst} = \left(\texttt{uri} \times \left( \texttt{poly} \times \texttt{code} \right) \times \texttt{uri} \right),
+\end{align*}
+<div class="paragraph">
+<p>where each component is:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><code>uri</code>: the <code>inst</code> type (e.g. <code>/m/inst/plus</code>).</p>
+</li>
+<li>
+<p><code>poly</code>: the <code>inst</code> arguments which can either be a <code>lst</code> or a <code>rec</code>.</p>
+</li>
+<li>
+<p><code>code</code>: the <code>code</code> that defines the behavior or function of the <code>inst</code>.</p>
+</li>
+<li>
+<p><code>uri</code>: the <code>inst</code> location in space.</p>
+</li>
+</ol>
+</div>
+<h3 id="_variables" class="discrete">variables</h3>
+<div class="paragraph">
+<p>Variables in Metatron can be scoped at different levels: frame stack, thread cache, local, and distributed.</p>
+</div>
+<div class="paragraph">
+<p><strong>Variable Assignment and Dereferencing:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">​
+mtron&gt; x -&gt; 42                                                   ​1​
+==&gt;42
+​
+mtron&gt; *x                                                        ​2​
+==&gt;[
+ a=&gt;1,
+ b=&gt;[
+   c=&gt;2,
+   d=&gt;[3,4,5]]]
+==&gt;{2}1
+==&gt;{2}2
+==&gt;{2}3
+==&gt;{2}4
+==&gt;42
+​
+mtron&gt; y -&gt; [a=&gt;1,b=&gt;2,c=&gt;3]                                     ​3​
+==&gt;[a=&gt;1,b=&gt;2,c=&gt;3]
+​
+mtron&gt; *y                                                        ​4​
+==&gt;[a=&gt;1,b=&gt;2,c=&gt;3]
+​</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Assign 42 to variable x</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Dereference x with <code>*x</code></td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Assign record to variable y</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>Dereference y</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p><strong>Variables in Computations:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">​
+mtron&gt; base -&gt; 10                                                ​1​
+==&gt;10
+​
+mtron&gt; result -&gt; *base.plus(5).mult(2)                          ​2​
+==&gt;30
+​
+mtron&gt; *result                                                   ​3​
+==&gt;10
+​</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Store base value</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Compute and store result</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Retrieve computed result</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p><strong>Variables with Collections:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">​
+mtron&gt; nums -&gt; {1,2,3,4,5}                                       ​1​
+==&gt;1
+==&gt;2
+==&gt;3
+==&gt;4
+==&gt;5
+​
+mtron&gt; filtered -&gt; *nums-&lt;[?&gt;3 =&gt; _, _ =&gt; noobj]&gt;&gt;               ​2​
+==&gt;fail::[filtered -&gt; *nums-&lt;[?&gt;3 =&gt; _, _ =&gt; noobj]&gt;&gt;               ​2​
+                  ^ end of input expected
+][...]@/sys/fail/452
+​
+mtron&gt; *filtered                                                 ​3​
+​</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Store collection</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Filter and store results</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Retrieve filtered collection</td>
+</tr>
+</table>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -3881,11 +4638,11 @@ mtron&gt; nat::10
 ==&gt;nat::10
 ​
 mtron&gt; nat::-10
-==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/296
+==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/518
 ​
 mtron&gt; int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/302
+  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/524
 ​</code></pre>
 </div>
 </div>
@@ -3985,11 +4742,11 @@ mtron&gt; nat::10
 ==&gt;nat::10
 ​
 mtron&gt; nat::-10
-==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/316
+==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/538
 ​
 mtron&gt; int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/322
+  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/544
 ​</code></pre>
 </div>
 </div>
@@ -4021,11 +4778,11 @@ mtron&gt; age:125
 ​
 mtron&gt; nat:125.as(age::T)
 ==&gt;fail::[rhs does not match inst range:
-	{0}&lt;&gt;=&gt;(X=&gt;int::T[is(gt(0))]@nat)][...]@/sys/fail/336
+	{0}&lt;&gt;=&gt;(X=&gt;int::T[is(gt(0))]@nat)][...]@/sys/fail/558
 ​
 mtron&gt; 125.as(nat::T).as(age::T)
 ==&gt;fail::[nat::125 is not a is(lt(120))
-  nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/342
+  nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/564
 ​</code></pre>
 </div>
 </div>
@@ -4166,150 +4923,8 @@ mtron&gt; *#.as[name      =&gt; _,
 </div>
 </div>
 </div>
-<div class="collapse position-relative" id="card-10">
-<button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-10" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
-<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
-<h2 id="_q_processors" class="discrete">Q Processors</h2>
-<div class="paragraph">
-<p>A q-processor is a space attachment that intercepts reads and writes to the space according to the query component of the read from or written to fURI.</p>
-</div>
-<table class="tableblock frame-all grid-all stretch table-bordered small center">
-<colgroup>
-<col style="width: 12.5%;">
-<col style="width: 25%;">
-<col style="width: 62.5%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-center valign-top">q</th>
-<th class="tableblock halign-center valign-top">key=value</th>
-<th class="tableblock halign-left valign-top">description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>subq</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>subq</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>subscribe to any mutations at the specific space uri</p>
-</div></div></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>docq</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>docq</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>associate documentation with a space furi</p>
-</div></div></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>incrQ</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>incrQ</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>increment a space global counter</p>
-</div></div></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>typeQ</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>T</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>constrain objs at a space furi to be a specific type</p>
-</div></div></td>
-</tr>
-</tbody>
-</table>
-<div class="paragraph">
-<p>The q-processor type is defined as</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">​
-mtron&gt; *q
-==&gt;rec::T[][inst?rng=q&amp;dom=#{?}([
- pattern       =&gt;uri::T,
- pre_write{?}  =&gt;inst::T,
- post_write{?} =&gt;inst::T,
- qless_write{?}=&gt;inst::T,
- pre_read{?}   =&gt;inst::T,
- post_read{?}  =&gt;inst::T]){&lt;j&gt;}]@/m/space/q
-​</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>where a q-processor may implement any of the associated read/write stages.</p>
-</div>
-<table class="tableblock frame-all grid-all stretch table-bordered small center">
-<colgroup>
-<col style="width: 63.6363%;">
-<col style="width: 36.3637%;">
-</colgroup>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="olist arabic">
-<div class="title">read processors</div>
-<ol class="arabic">
-<li>
-<p><strong>pre-read</strong>: prior to reading the space, any <code>?pattern</code> furi will be first processed by pre-read.</p>
-</li>
-<li>
-<p><strong>post-read</strong>: prior to returning an <code>obj</code> from the space, any <code>?pattern</code> furi will be first processed by post-read.</p>
-</li>
-</ol>
-</div>
-<div class="olist arabic">
-<div class="title">write processors</div>
-<ol class="arabic">
-<li>
-<p><strong>pre-write</strong>: prior to writing to the space, any <code>?pattern</code> furi will be first processed by pre-write.</p>
-</li>
-<li>
-<p><strong>post-write</strong>: prior to returning an <code>obj</code> written to the space, any <code>?pattern</code> furi will be first processed by post-write.</p>
-</li>
-<li>
-<p><strong>qless-write</strong>: regardless of a <code>?pattern</code> furi, all writes to the space will be processed by qless-write.</p>
-</li>
-</ol>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">       ┌──────────┐        ┌─────────────┐
-───────► pre-read ┼────────┼──┐          │
-       └──────────┘        │  │          │
-       ┌───────────┐       │  │          │
-◄──────┼ post-read │◄──────┼──┘          │
-       └───────────┘       │             │
-       ┌───────────┐       │             │
-────┬──► pre-write ┼───────┼──┐          │
-    │  └───────────┘       │  │          │
-    │  ┌────────────┐      │  │          │
-◄───┼──┼ post-write ◄──────┼──▲          │
-    │  └────────────┘      │  │          │
-    │  ┌─────────────┐     │  │          │
-    └──► qless-write ┼─────┼──┘   space  │
-       └─────────────┘     └─────────────┘</code></pre>
-</div>
-</div></div></td>
-</tr>
-</tbody>
-</table>
-</div>
-<div class="collapse position-relative" id="card-11">
-<button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-11" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
+<div class="collapse position-relative" id="card-9">
+<button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-9" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
 <button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
 <h2 id="_uniform_resource_identifiers" class="discrete">Uniform Resource Identifiers</h2>
 <div class="listingblock">
@@ -4838,6 +5453,158 @@ Once found, it then traverses within the match to resolve the remaining path seg
 </tr>
 </tbody>
 </table>
+</div>
+<div class="collapse position-relative" id="card-10">
+<button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-10" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
+<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
+<h2 id="_q_processors" class="discrete">Q Processors</h2>
+<div class="paragraph">
+<p>A q-processor is a space attachment that intercepts reads and writes to the space according to the query component of the read from or written to fURI.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch table-bordered small center">
+<colgroup>
+<col style="width: 12.5%;">
+<col style="width: 25%;">
+<col style="width: 62.5%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-center valign-top">q</th>
+<th class="tableblock halign-center valign-top">key=value</th>
+<th class="tableblock halign-left valign-top">description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>subq</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>subq</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>subscribe to any mutations at the specific space uri</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>docq</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>docq</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>associate documentation with a space furi</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>incrQ</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>incrQ</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>increment a space global counter</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>typeQ</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>T</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>constrain objs at a space furi to be a specific type</p>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>The q-processor type is defined as</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">​
+mtron&gt; *q
+==&gt;rec::T[][inst?rng=q&amp;dom=#{?}([
+ pattern       =&gt;uri::T,
+ pre_write{?}  =&gt;inst::T,
+ post_write{?} =&gt;inst::T,
+ qless_write{?}=&gt;inst::T,
+ pre_read{?}   =&gt;inst::T,
+ post_read{?}  =&gt;inst::T]){&lt;j&gt;}]@/m/space/q
+​</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>where a q-processor may implement any of the associated read/write stages.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch table-bordered small center">
+<colgroup>
+<col style="width: 63.6363%;">
+<col style="width: 36.3637%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="olist arabic">
+<div class="title">read processors</div>
+<ol class="arabic">
+<li>
+<p><strong>pre-read</strong>: prior to reading the space, any <code>?pattern</code> furi will be first processed by pre-read.</p>
+</li>
+<li>
+<p><strong>post-read</strong>: prior to returning an <code>obj</code> from the space, any <code>?pattern</code> furi will be first processed by post-read.</p>
+</li>
+</ol>
+</div>
+<div class="olist arabic">
+<div class="title">write processors</div>
+<ol class="arabic">
+<li>
+<p><strong>pre-write</strong>: prior to writing to the space, any <code>?pattern</code> furi will be first processed by pre-write.</p>
+</li>
+<li>
+<p><strong>post-write</strong>: prior to returning an <code>obj</code> written to the space, any <code>?pattern</code> furi will be first processed by post-write.</p>
+</li>
+<li>
+<p><strong>qless-write</strong>: regardless of a <code>?pattern</code> furi, all writes to the space will be processed by qless-write.</p>
+</li>
+</ol>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">       ┌──────────┐        ┌─────────────┐
+───────► pre-read ┼────────┼──┐          │
+       └──────────┘        │  │          │
+       ┌───────────┐       │  │          │
+◄──────┼ post-read │◄──────┼──┘          │
+       └───────────┘       │             │
+       ┌───────────┐       │             │
+────┬──► pre-write ┼───────┼──┐          │
+    │  └───────────┘       │  │          │
+    │  ┌────────────┐      │  │          │
+◄───┼──┼ post-write ◄──────┼──▲          │
+    │  └────────────┘      │  │          │
+    │  ┌─────────────┐     │  │          │
+    └──► qless-write ┼─────┼──┘   space  │
+       └─────────────┘     └─────────────┘</code></pre>
+</div>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="collapse position-relative" id="card-11">
+<button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-11" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
+<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
+<h2 id="_mqtt_space" class="discrete">MQTT Space</h2>
+<div class="paragraph">
+<p><a href="https://mqtt.org/">MQTT</a> is a lightweight messaging protocol commonly used for IoT (Internet of Things) applications.
+The protocol offers publish-subscribe messaging and a wildcard-based addressing scheme that conveniently maps to the
+URI address space.</p>
+</div>
 </div>
 <div class="collapse position-relative" id="card-12">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-12" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
@@ -5531,6 +6298,11 @@ vertexA vertexB   redirect  ┌─┬─┬─┬┼┬─┐   ┌┼┬─┬�
 <p>The space constructor above uses the space route table to route <code>person</code>-vertex and <code>knows</code>-edge traversals to another space, namely <code>h:#</code>. Once specified, any <code>knows</code>-edge created between a <code>person</code>-vertex in <code>g:</code> to a <code>person</code>-vertex in <code>h:</code> is automatically configured with the appropriate <code>!*</code> reference. This ensures a smooth, user agnostic transition between two spaces being leveraged for their particular performance for various subgraphs of the large platonic graph as a whole.</p>
 </div>
 </div>
+<div class="collapse position-relative" id="card-19">
+<button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-19" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
+<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
+<h2 id="_web_space" class="discrete">Web Space</h2>
+</div>
 <div class="collapse position-relative" id="card-20">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-20" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
 <button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
@@ -5920,12 +6692,13 @@ console::[        =&gt; ]@/sys/console;
 </main>
 <footer class="container-fluid bg-secondary fixed-bottom text-light footer wow fadeIn" data-wow-delay="0.1s">
     <div class="d-flex pt-1 mb-0">
-        <a class="btn btn-lg-square btn-dark text-primary m-1" href="mailto:info@phaseshift.studio"><i
+        <a class="btn btn-lg-square btn-dark text-primary m-1 center" href="mailto:info@phaseshift.studio"><i
                 class="fa fa-envelope-open text-primary"></i></a>
+        <div class="text-primary small align-content-center">&copy; 2025- PhaseShift Studio, LLC</div>
     </div>
 </footer>
 <!-- Back to Top -->
-<a href="#" class="btn btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+<a href="#" class="btn btn-primary btn-square back-to-top"><i class="bi bi-caret-up-fill"></i></a>
 
 <script>
     if (!hljs.initHighlighting.called) {
