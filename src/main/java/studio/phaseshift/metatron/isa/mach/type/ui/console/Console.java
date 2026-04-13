@@ -952,15 +952,29 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                         System.exit(0);
                         return true;
                     }, ctrl('q'));
-            /// EXPLAIN BUFFER CODE (IF IS CODE)
+            /// EXPLAIN BUFFER CODE (IF IS CODE) OR DOT-COMPLETION FOR INSTRUCTIONS
             getKeyMap().bind((Widget) () -> {
                 try {
-                    final Obj code = ObjmtronSerializer.parse(this.reader.getBuffer().toString());
-                    if (code.isCode()) {
-                        terminal.writer().write("\n");
-                        final Explain explain = new Explain(code.as());
-                        Utilities.runCursorLessWidget(explain, true);
-                        redrawBuffer();
+                    final String bufferText = this.reader.getBuffer().toString();
+
+                    // Check if buffer ends with '.' for instruction completion
+                    if (bufferText.trim().endsWith(".")) {
+                        final Obj parsed = ObjmtronSerializer.parse(bufferText.trim().substring(0, bufferText.trim().length() - 1));
+                        if (parsed.isCode()) {
+                            terminal.writer().write("\n");
+                            final InstSelector selector = new InstSelector(parsed.resolve(noobj()).as(), bufferText);
+                            if (selector.hasInstructions())
+                                Utilities.runCursorLessWidget(selector, true);
+                        }
+                    } else {
+                        // Original behavior: show explain widget for code
+                        final Obj code = ObjmtronSerializer.parse(bufferText);
+                        if (code.isCode()) {
+                            terminal.writer().write("\n");
+                            final Explain explain = new Explain(code.as());
+                            Utilities.runCursorLessWidget(explain, true);
+                            redrawBuffer();
+                        }
                     }
                 } catch (final Exception e) {
                     // do nothing

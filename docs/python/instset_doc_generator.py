@@ -1241,7 +1241,7 @@ class HTMLDocGenerator:
         return f'''
             <div class="card-body border-top p-0">
                 <ul class="nav nav-pills p-2 bg-dark" id="{group_id}-pills" role="tablist">
-                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">Variations:</span></li>
+                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">polymorph:</span></li>
                     {''.join(pills)}
                 </ul>
                 <div class="tab-content" id="{group_id}-content">

@@ -75,6 +75,7 @@ public class ScoringInstResolver implements InstResolver {
                     // Apply transformations
                     Inst transformed = userInst.hasDom() ? apiInst.dom(userInst.dom()) : apiInst;
                     transformed = userInst.hasRng() ? transformed.rng(userInst.rng()) : transformed;
+                    transformed = userInst.tid().basePath().equals(AS_INST_TID) ? transformed.rng(userInst.arg(0).asType()) : transformed;
                     transformed = lhs.isInst() ? transformed : Inst.Helper.bindGenerics(lhs, transformed, userInst);
                     return new ScoredCandidate(apiInst, transformed, score);
                 })
