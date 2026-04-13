@@ -28,8 +28,6 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.CommonUtil;
 
-import java.util.List;
-
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MONAD_TID;
@@ -85,7 +83,7 @@ public class BasicPCMonad extends AbstractPCMonad implements PCMonad {
         return new BasicPCMonad(lst(CommonUtil.arrayList(obj, inst, noobj(), code)), MACH_BASIC_MONAD_TID, null);
     }
 
-    public static PCMonad monad(final Obj obj) {
+    public static PCMonad pcmonad(final Obj obj) {
         return pcmonad(obj, noobj(), noobj());
     }
 }

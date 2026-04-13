@@ -864,7 +864,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                             "any objs", "the objs appended to the arg objs", Map.of(jnt(0), "the objs to append"), "an append function \\(f(X)\\to X\\)"),
                     docWrap(instC(AS_INST_TID.dom(A).rng(A), lst(T(A)), (lhs, inst) -> lhs.as(inst.arg(0).asType())),
                             "any obj", "the lhs obj as the arg type", Map.of(jnt(0), "the type to cast to"), "a type casting function \\(f(x)\\to x\\)"),
-                    instC(REPEAT_INST_TID.dom(A).rng(A.maybeSome()).q(MONAD, null), lst(T(ALL), T(ALL)), (lhs, inst) -> {
+                  /*  instC(REPEAT_INST_TID.dom(A).rng(A.maybeSome()).q(MONAD, null), lst(T(ALL), T(ALL)), (lhs, inst) -> {
                         try {
                             Obj current = lhs.asMonad().obj();
                             if (current.isNoObj()) return lhs.asMonad().nextInst();
@@ -880,8 +880,8 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                             e.printStackTrace();
                             throw e;
                         }
-                    }),
-                  /*  instC(REPEAT_INST_TID.dom(A).rng(A.maybeSome()).query(MONAD, null), lst(T(ALL), T(ALL)), (lhs, inst) -> {
+                    }),*/
+                    instC(REPEAT_INST_TID.dom(A).rng(A.maybeSome()).addQ(MONAD), lst(T(ALL), T(ALL)), (lhs, inst) -> {
                         Obj current = ((PCMonad) lhs).obj();
                         final Obj repeatedApply = inst.arg(0);
                         final int times = inst.arg(1).apply(current).intValue().intValue();
@@ -892,7 +892,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                                     objs(current.stream().map(repeatedApply::apply));
                         }
                         return current;
-                    }),*/
+                    }),
                     instC(AUTO_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL.maybe())), (lhs, inst) -> inst.arg(0).apply(lhs)),
                     instC(AUTO_FROM_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL.maybe()), T(ALL.maybe())), (lhs, inst) -> !inst.arg(1).isNoObj() ? inst.arg(1) : Router.readFromSpace(inst.arg(0).uriValue()).autoResolve(lhs)),
                     instC(M_ISA_INST_TID.extend("auto_to"), lst(), (lhs, inst) -> (null == lhs.vid() || lhs.isAutoFrom()) ? lhs : auto_from_(lhs.vid()).tryToInst()),

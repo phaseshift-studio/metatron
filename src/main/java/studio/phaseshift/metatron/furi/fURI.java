@@ -259,7 +259,7 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
     fURI extend(final String segment);
 
     default fURI extend(final fURI segments) {
-        return this.extend(segments.toString());
+        return this.extend(null == segments ? null : segments.toString());
     }
 
     fURI head(final int steps);
@@ -279,6 +279,8 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
     fURI pretract(final int steps);
 
     default fURI removePrefix(final fURI prefix) {
+        if (null == prefix)
+            return this;
         final String newPath = this.toString();
         final String pre = prefix.toString();
         //return new fURI(newPath.startsWith(prefix.toString()) ? newPath.substring(prefix.send ? prefix.toString().length() +1 : prefix.toString().length()) : newPath);

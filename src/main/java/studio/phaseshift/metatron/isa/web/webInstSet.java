@@ -59,6 +59,7 @@ public class webInstSet extends AbstractInstSet {
     public static final fURI XML_TID = WEB_ISA_TID.extend("xml");
     public static final fURI HTML_TID = WEB_ISA_TID.extend("html");
     public static final fURI JSON_TID = WEB_ISA_TID.extend("json");
+    public static final fURI JSON_STR_TID = WEB_ISA_TID.extend("json_str");
     public static final fURI CSS_TID = WEB_ISA_TID.extend("css");
 
     public static final Type XML_TYPE = Type.Builder.build()
@@ -68,6 +69,9 @@ public class webInstSet extends AbstractInstSet {
             .tid(XML_TID)
             .vid(HTML_TID)
             .predicate(isa_(rec(uri(HTML), rec(uri(HEAD), REC_TYPE, uri(BODY), REC_TYPE))).tryToInst()).create();
+    public static final Type JSON_STR_TYPE = Type.Builder.build()
+            .tid(STR_TID)
+            .vid(JSON_STR_TID).create();
     public static final Type JSON_TYPE = Type.Builder.build()
             .tid(REC_TID)
             .vid(JSON_TID)
@@ -100,11 +104,13 @@ public class webInstSet extends AbstractInstSet {
                         docWrap(HTML_TYPE, "a rec encoding of an html document"),
                         docWrap(JSON_TYPE, "a rec encoding of a json document"),
                         CSS_TYPE,
+                        JSON_STR_TYPE,
                         HTTP_SPACE_TYPE),
                 uri(INST), lst(
                         instC(AS_INST_TID.dom(STR_TID).rng(XML_TID), lst(T(XML_TID)), (lhs, inst) -> ObjXMLSerializer.parse(lhs.asStr().strValue())),
                         instC(AS_INST_TID.dom(STR_TID).rng(HTML_TID), lst(T(HTML_TID)), (lhs, inst) -> ObjHTMLSerializer.parse(lhs.asStr().strValue())),
                         instC(AS_INST_TID.dom(STR_TID).rng(JSON_TID), lst(T(JSON_TID)), (lhs, inst) -> ObjSimpleJSONSerializer.parse(lhs.asStr().strValue())),
+                        instC(AS_INST_TID.dom(ALL).rng(STR_TID), lst(JSON_STR_TYPE), (lhs, inst) -> str(ObjSimpleJSONSerializer.single().write(lhs).toString())),
                         instC(INST_TID.extend("doc").dom(STR_TID).rng(STR_TID), lst(), (lhs, inst) -> {
                             try {
                                 final String source = lhs.strValue();

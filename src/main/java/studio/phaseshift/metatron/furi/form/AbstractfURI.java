@@ -39,6 +39,8 @@ public abstract class AbstractfURI implements fURI {
 
     @Override
     public List<String> segments() {
+        if (this.isEmpty())
+            return List.of();
         final List<String> path = this.path();
         if (path.isEmpty() || (!path.getFirst().isEmpty() && !path.getLast().isEmpty()))
             return path;
@@ -53,6 +55,8 @@ public abstract class AbstractfURI implements fURI {
 
     @Override
     public int segmentLength() {
+        if (this.isEmpty())
+            return 0;
         final List<String> path = this.path();
         if (path.isEmpty() || (!path.getFirst().isEmpty() && !path.getLast().isEmpty()))
             return path.size();
@@ -108,6 +112,8 @@ public abstract class AbstractfURI implements fURI {
 
     @Override
     public fURI resolve() {
+        if (this.isEmpty())
+            return this;
         final List<String> newSegments = new ArrayList<>();
         for (final String seg : this.path()) {
             if (seg.equals("."))
@@ -369,6 +375,8 @@ public abstract class AbstractfURI implements fURI {
 
     @Override
     public fURI prepend(final String segment) {
+        if (null == segment)
+            return this;
         if (segment.isEmpty() && this.path().getFirst().isEmpty())
             return this;
         final List<String> newPath = new ArrayList<>();
@@ -384,6 +392,8 @@ public abstract class AbstractfURI implements fURI {
 
     @Override
     public fURI extend(final String segment) {
+        if (null == segment)
+            return this;
         if (segment.isEmpty() && !this.path().isEmpty() && this.path().getLast().isEmpty())
             return this.asBranch();
         final List<String> newPath = new ArrayList<>(this.path());
@@ -399,7 +409,9 @@ public abstract class AbstractfURI implements fURI {
     }
 
     @Override
-    public boolean hasPrefix(String prefix) {
+    public boolean hasPrefix(final String prefix) {
+        if (null == prefix)
+            return false;
         final fURI prefixURI = f(prefix);
         if (prefixURI.hasScheme() && (!this.hasScheme() || !this.scheme().equals(prefixURI.scheme())))
             return false;
@@ -464,6 +476,8 @@ public abstract class AbstractfURI implements fURI {
 
     @Override
     public boolean hasPostfix(final String postfix) {
+        if (null == postfix)
+            return false;
         return this.toString().endsWith(postfix);
         /*
         final List<String> postfixSegments = new ArrayList<>();
@@ -485,6 +499,8 @@ public abstract class AbstractfURI implements fURI {
 
     @Override
     public fURI pretract(final String segment) {
+        if (null == segment)
+            return this;
         if (segment.isEmpty() && !this.path().isEmpty() && this.path().getFirst().isEmpty())
             return fURI.of(this.scheme(), this.host(), this.port(), this.path().subList(1, this.path().size()), this.c(), this.poly(), this.qMap(), this.templates());
         if (this.hasPrefix(segment))

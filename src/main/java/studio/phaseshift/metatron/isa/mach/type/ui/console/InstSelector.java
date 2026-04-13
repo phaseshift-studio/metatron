@@ -53,7 +53,7 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
 public class InstSelector extends AbstractWidget<InstSelector> {
 
     private enum Action {
-        QUIT, DOWN_ROW, UP_ROW, SELECT
+        QUIT, DOWN_ROW, UP_ROW, LEFT_COL, RIGHT_COL, SELECT
     }
 
     private final List<Inst> instructions = new ArrayList<>();
@@ -62,7 +62,8 @@ public class InstSelector extends AbstractWidget<InstSelector> {
     private final String originalBufferText;
     private Attributes savedAttributes;
     private boolean running = false;
-    private int selectedRow = 0;
+    private int selectedRow = 0;      // Row in the table (each row has 2 instructions)
+    private int selectedCol = 0;      // 0 = left instruction, 1 = right instruction
     private int totalHeightUsed = 0;
     private Inst selectedInst = null;
 
@@ -86,21 +87,49 @@ public class InstSelector extends AbstractWidget<InstSelector> {
             this.domType = null;
         }
 
-        // Build the table
-        this.table = new Table(List.of("op", "dom", "rng"));
+        // Build the table with 7 columns (2 instructions per row with separator)
+        this.table = new Table(List.of("op", "dom", "rng", "", "op", "dom", "rng"));
         this.table.style()
                 .headerDivider("{{[b]}} ")
                 .border(Border.simple.foreground("{{b}}"))
                 .pointer("{{r}}>")
                 .apply();
 
-        for (final Inst inst : this.instructions) {
-            this.table.addRow(List.of(
-                    inst.tid().name(),
-                    inst.dom().tid().small(),
-                    inst.rng().tid().small()
-            ));
+        // Add instructions in pairs (2 per row)
+        for (int i = 0; i < this.instructions.size(); i += 2) {
+            final Inst left = this.instructions.get(i);
+            if (i + 1 < this.instructions.size()) {
+                final Inst right = this.instructions.get(i + 1);
+                this.table.addRow(List.of(
+                        left.tid().name(),
+                        left.dom().tid().small(),
+                        left.rng().tid().small(),
+                        "",  // separator column
+                        right.tid().name(),
+                        right.dom().tid().small(),
+                        right.rng().tid().small()
+                ));
+            } else {
+                // Odd number of instructions - empty right side
+                this.table.addRow(List.of(
+                        left.tid().name(),
+                        left.dom().tid().small(),
+                        left.rng().tid().small(),
+                        "",  // separator column
+                        "",
+                        "",
+                        ""
+                ));
+            }
         }
+    }
+
+    private int getTableRowCount() {
+        return (instructions.size() + 1) / 2;  // Ceiling division
+    }
+
+    private int getSelectedIndex() {
+        return selectedRow * 2 + selectedCol;
     }
 
     public boolean hasInstructions() {
@@ -166,24 +195,46 @@ public class InstSelector extends AbstractWidget<InstSelector> {
         KeyMap<Action> keyMap = new KeyMap<>();
         keyMap.bind(Action.DOWN_ROW, key(terminal, InfoCmp.Capability.key_down));
         keyMap.bind(Action.UP_ROW, key(terminal, InfoCmp.Capability.key_up));
+        keyMap.bind(Action.LEFT_COL, key(terminal, InfoCmp.Capability.key_left));
+        keyMap.bind(Action.RIGHT_COL, key(terminal, InfoCmp.Capability.key_right));
         keyMap.bind(Action.QUIT, Utilities.esc_key);
         keyMap.bind(Action.SELECT, Utilities.enter_key);
         return keyMap;
     }
 
     private void handleAction(Action action) {
+        final int maxRow = getTableRowCount() - 1;
+
         switch (action) {
             case DOWN_ROW:
-                selectedRow = Math.min(selectedRow + 1, instructions.size() - 1);
+                if (selectedRow < maxRow) {
+                    selectedRow++;
+                    // If we moved to a row where right column is empty, stay on left
+                    if (selectedCol == 1 && getSelectedIndex() >= instructions.size()) {
+                        selectedCol = 0;
+                    }
+                }
                 break;
 
             case UP_ROW:
                 selectedRow = Math.max(selectedRow - 1, 0);
                 break;
 
+            case LEFT_COL:
+                selectedCol = 0;
+                break;
+
+            case RIGHT_COL:
+                // Only move right if there's an instruction there
+                if (selectedRow * 2 + 1 < instructions.size()) {
+                    selectedCol = 1;
+                }
+                break;
+
             case SELECT:
-                if (selectedRow >= 0 && selectedRow < instructions.size()) {
-                    this.selectedInst = instructions.get(selectedRow);
+                final int idx = getSelectedIndex();
+                if (idx >= 0 && idx < instructions.size()) {
+                    this.selectedInst = instructions.get(idx);
                     // Update buffer directly while still in raw mode (no echo)
                     final String instName = selectedInst.tid().name();
                     Console.LOCAL_INSTANCE.getReader().getBuffer().clear();
@@ -227,12 +278,12 @@ public class InstSelector extends AbstractWidget<InstSelector> {
 
             // Data rows start at index 2 (after border + header)
             int dataLineIdx = lineIdx - 2;
-            boolean isDataRow = dataLineIdx >= 0 && dataLineIdx < instructions.size();
+            boolean isDataRow = dataLineIdx >= 0 && dataLineIdx < getTableRowCount();
             boolean isSelectedRow = isDataRow && dataLineIdx == selectedRow;
 
             if (isSelectedRow) {
-                // Show selection pointer
-                output.append(highlightSelectedRow(line));
+                // Show selection pointer on the correct column
+                output.append(highlightSelectedColumn(line, selectedCol));
             } else {
                 output.append(line);
             }
@@ -243,7 +294,7 @@ public class InstSelector extends AbstractWidget<InstSelector> {
 
         // Status line - no newline at end, and DON'T count it in currentLine
         // because the cursor stays on this line (no \n)
-        output.append(Graphitty.string("{{-X-}}{{w}}{{[b]}} esc{{g}}:cancel | {{w}}<^v>{{g}}:nav | {{w}}enter{{g}}:select {{X}}"));
+        output.append(Graphitty.string("{{-X-}}{{w}}{{[b]}} esc{{g}}:cancel | {{w}}<>^v{{g}}:nav | {{w}}enter{{g}}:select {{X}}"));
 
         // Clear any extra lines from previous (larger) display
         while (currentLine < previousHeight) {
@@ -258,15 +309,32 @@ public class InstSelector extends AbstractWidget<InstSelector> {
     }
 
     /**
-     * Replace the first divider with the pointer indicator for the selected row.
+     * Replace the appropriate divider with the pointer indicator based on selected column.
+     * Column 0 = first divider (left instruction)
+     * Column 1 = fifth divider (right instruction, after 3 left columns + separator)
      */
-    private String highlightSelectedRow(String line) {
-        // Find the first divider and replace it with pointer
-        int firstDivider = line.indexOf(divider);
-        if (firstDivider >= 0) {
-            return line.substring(0, firstDivider) +
+    private String highlightSelectedColumn(String line, int col) {
+        // Find the correct divider to replace
+        // For col 0: replace 1st divider (before op1)
+        // For col 1: replace 5th divider (before op2, after 3 left cols + 1 separator)
+        int targetDivider = (col == 0) ? 0 : 4;
+        int dividerCount = 0;
+        int dividerPos = -1;
+
+        for (int i = 0; i < line.length(); i++) {
+            if (line.charAt(i) == divider.charAt(0)) {
+                if (dividerCount == targetDivider) {
+                    dividerPos = i;
+                    break;
+                }
+                dividerCount++;
+            }
+        }
+
+        if (dividerPos >= 0) {
+            return line.substring(0, dividerPos) +
                    Graphitty.string(pointer) +
-                   line.substring(firstDivider + 1);
+                   line.substring(dividerPos + 1);
         }
         return line;
     }

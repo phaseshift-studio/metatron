@@ -54,8 +54,9 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
         peers    => !*boot/peers]@/sys/space/meta2;==]
  http::[host     => <http://localhost:8777>,
         pattern  => http://#,
-        route    => [/     => examples/www,
-                     /docs => target/docs ]]@/sys/space/www;
+        route    => [/          => examples/www,
+                     /docs      => target/docs,
+                     /dashboard => src/main/resources/web/dashboard ]]@/sys/space/www;
   graphdb::[pattern  => /h/#,
         route    => [</h/+/>=><>],
         native   => [factory  => mfactory::[=>],
@@ -84,7 +85,7 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
          route         => [ha:=>homeassistant/]]@/sys/space/mqtt/homeassistant;
     fs_prefix     -> *boot/args/local.as(str::T).plus(':#').as(uri::T);
     fs::[pattern  => local:#,
-          [--route   => [!*fs_prefix=><~/>],--]
+         [--route => [!*fs_prefix=><~/>],--]
           route   => [local:=><~/>],
           script  => !*boot/script]@/sys/space/fs;
  serial::[pattern => <serial:#>,
@@ -94,31 +95,31 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
            name    => <ollama>,
            route   => [ollama:=><>]]@/sys/space/ollama;
  [-- *ollama:+.plus([think=>[to=>print(_)],response=>[to=>print(_)],memory=>[from=>/usr/ai/memory]]);
- catalog::[host    => <https://api.openai.com/v1>,
+ catalog::[host         => <https://api.openai.com/v1>,
            organization => !*</sys/env/OPENAI_ORG_ID>,
-           api_key => !*</sys/env/OPENAI_API_KEY>,
-           pattern => <openai:#>,
-           name    => <openai>,
-           route   => [<openai:>=><>]]@/sys/space/openai;
+           api_key      => !*</sys/env/OPENAI_API_KEY>,
+           pattern      => <openai:#>,
+           name         => <openai>,
+           route        => [<openai:>=><>]]@/sys/space/openai;
  *<local:software/metatron/.agent/skills/mtron-assistance>.as(skill::T).to(/usr/ai/skills/mtron);
- tabledb::[pattern    => netflix:#,
+ tabledb::[pattern => netflix:#,
         host       => <mariadb://localhost:3306/netflix?user=mtron&password=mtron>,
         route      => [<netflix:schema>=>/sys/space/netflix/schema,
                        <netflix:>=><>],
         serializer => !*</m/mach/io/serializer/json/simple>,
         table      => [,],
         driver     => <org.mariadb.jdbc.Driver>]@/sys/space/netflix;
- tabledb::[pattern    => acme:#,
+ tabledb::[pattern => acme:#,
         host       => <mariadb://localhost:3306/classicmodels?user=mtron&password=mtron>,
         route      => [<acme:>=><>],
         serializer => !*</m/mach/io/serializer/string/clean>,
         table      => [,],
         driver     => <org.mariadb.jdbc.Driver>]@/sys/space/acme;
- tabledb::[pattern    => db:#,
+ tabledb::[pattern => db:#,
         host       => <mariadb://localhost:3306/tble_space?user=mtron&password=mtron>,
         route      => [db:=><>],
         driver     => <org.mariadb.jdbc.Driver>]@/sys/space/db;
- docdb::[pattern     => mongo:#,
+ docdb::[pattern   => mongo:#,
        host        => <mongodb://localhost:27017/mflix>,
        serializer  => !*</m/mach/io/serializer/bson>,
        collection  => [,],
@@ -131,21 +132,6 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
                        
 [== load user console ==]
 console::[=>]@/sys/console;
-[==
-[,]@/usr/ai/memory;
-*openai:gpt-4o-2024-11-20.>>=[think   =>print(_),
-                              skill   =>[!*<local:/software/metatron/.agent/skills>],
-                              tool    =>[!*eval],
-                              response=>[to=>print(_)],
-                              memory  =>!*/usr/ai/memory]>>=[_=>^*].to(agent);
-*<openai:gpt-4o-2024-08-06>.>>=[think   =>print(_),
-                                skill   =>[!*(<local:/software/metatron/.agent/skills>)],
-                                tool    =>[!*eval],
-                                response=>[to=>print(_)],
-                                memory  =>!*/usr/ai/memory].to(agent2);
-<openai:gpt-4o-2024-08-06/skill> ->(*agent2>>skill>>0.as(skill::T).>-[,]).to(agent2);
-<openai:gpt-4o-2024-08-06/tool> ->([!*eval]);
-*<openai:gpt-4o-2024-08-06>.to(agent2);==]
 *boot/args.print(_)
 
  

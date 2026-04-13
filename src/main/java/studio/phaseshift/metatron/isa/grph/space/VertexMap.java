@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -34,13 +34,11 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.grph.space.EdgeMap.lazyEdgeToRec;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
-import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
@@ -73,33 +71,31 @@ public class VertexMap extends ElementMap {
     public Obj get(final Object key) {
         final fURI keyF = ((Uri) key).uriValue();
         final boolean hasPattern = keyF.hasPattern();
+        final fURI keyHead = f(keyF.segments(0, null));
         if (!hasPattern) {
-            if (key.equals(grphInstSet.OUT) || key.equals(grphInstSet.IN) || key.equals(grphInstSet.BOTH))
-                return objs(IteratorUtil.stream(this.getBase().edges(Direction.valueOf(((Uri) key).uriValue().toString()))).map(e -> rel(uri(e.label()), auto_from_(uri(this.space.elementVID(e)), lazyEdgeToRec(e, this.space)).tryToInst())));
-            else {
-                try {
-                    Obj obj = instB(grphInstSet.OUT_INST_TID.dom(grphInstSet.VRTX_TID).rng(grphInstSet.VRTX_TID.maybeSome()), lst((Uri) key)).apply(vertexToRec(this.getBase()));
-                    // If instruction resolution failed (returned fail), fall back to direct property access
-                    if (obj.isFail() || obj.stream().anyMatch(Obj::isFail)) {
-                        return super.get(key);
-                    }
-                    return obj.append(super.get(key));
-                } catch (Exception e) {
-                    return super.get(key);
-                }
+            if (keyF.hasPrefix(grphInstSet.OUT.toString()) || keyF.hasPrefix(grphInstSet.IN.toString()) || keyF.hasPrefix(grphInstSet.BOTH.toString())) {
+                Stream<Obj> prefix = IteratorUtil.stream(this.getBase().edges(Direction.valueOf(keyF.segments().getFirst())))
+                        .map(e -> rel(uri(e.label()), auto_from_(uri(this.space.elementVID(e)), lazyEdgeToRec(e, this.space)).tryToInst()));
+                prefix = keyF.segmentLength() == 1 ? prefix : prefix.filter(o -> o.asRel().first().uriValue().test(f(keyF.segments(1, null)))).map(o -> o.asRel().second());
+                return keyF.segmentLength() < 3 ? objs(prefix) : objs(prefix.map(o -> o.asRec().at(keyF.pretract(2))));
+            } else {
+                return super.get(key);
             }
         } else {
-            Obj obj = noobj();
-            if (grphInstSet.OUT_FURI.test(keyF) || grphInstSet.BOTH_FURI.test(keyF))
-                obj = objs(IteratorUtil.stream(this.getBase().edges(Direction.OUT)).map(e -> rel(uri(e.label()), auto_from_(uri(this.space.elementVID(e)), lazyEdgeToRec(e, this.space)).tryToInst())));
-            if (grphInstSet.IN_FURI.test(keyF) || grphInstSet.BOTH_FURI.test(keyF))
-                obj = objs(IteratorUtil.stream(this.getBase().edges(Direction.IN)).map(e -> rel(uri(e.label()), auto_from_(uri(this.space.elementVID(e)), lazyEdgeToRec(e, this.space)).tryToInst())));
-            Obj instResult = instB(grphInstSet.OUT_INST_TID.dom(grphInstSet.VRTX_TID).rng(grphInstSet.VRTX_TID.maybeSome()), lst((Uri) key)).apply(vertexToRec(this.getBase()));
-            // Only append instruction result if it didn't fail
-            if (!instResult.isFail() && instResult.stream().noneMatch(Obj::isFail)) {
-                obj = obj.append(instResult);
+            Stream<Obj> prefixStream = null;
+            if (grphInstSet.OUT_FURI.test(keyHead) || grphInstSet.BOTH_FURI.test(keyHead))
+                prefixStream = IteratorUtil.stream(this.getBase().edges(Direction.OUT)).map(e -> rel(uri(e.label()), auto_from_(uri(this.space.elementVID(e)), lazyEdgeToRec(e, this.space)).tryToInst()));
+            if (grphInstSet.IN_FURI.test(keyHead) || grphInstSet.BOTH_FURI.test(keyHead))
+                prefixStream = Stream.concat(null != prefixStream ? prefixStream : Stream.empty(), IteratorUtil.stream(this.getBase().edges(Direction.IN)).map(e -> rel(uri(e.label()), auto_from_(uri(this.space.elementVID(e)), lazyEdgeToRec(e, this.space)).tryToInst())));
+            if (null != prefixStream && keyF.segmentLength() > 1) {
+                prefixStream = prefixStream
+                        .filter(o -> o.asRel().first().uriValue().test(f(keyF.segments(1, null))));
+                if (keyF.segmentLength() > 2)
+                    prefixStream = prefixStream.map(o -> o.asRec().at(keyF.pretract(2)));
+            } else if (null != prefixStream) {
+                prefixStream = prefixStream.map(o -> o.asRel().second());
             }
-            return obj.append(super.get(key));
+            return null == prefixStream ? super.get(keyF) : objs(prefixStream).append(super.get(keyF));
         }
     }
 

@@ -36,8 +36,8 @@
  import studio.phaseshift.metatron.isa.m.mInstSet;
  import studio.phaseshift.metatron.isa.m.type.*;
  import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
- import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
  import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
+ import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
  import studio.phaseshift.metatron.isa.mach.type.Router;
  import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
  import studio.phaseshift.metatron.util.CommonUtil;
@@ -208,7 +208,7 @@
              if (pattern.equals(ALL)) {
                  throw MTronException.of("cannot read all tp3 space");
              } else {
-                 final fURI routed = Space.Helper.routeFromSpace(pattern, this.routes()).asRelative();
+                 final fURI routed = Space.Helper.routeFromSpace(pattern, this.routes()).asRelative().asNode();
                  LOG.info("reading tp3 vid: %s => %s", pattern, routed);
                  if (routed.hasScheme()) {
                      return new IdObj(routed, Router.global().read(routed)).iterator();
@@ -220,16 +220,24 @@
                  final boolean all = "#".equals(second) || "+".equals(second);
                  ////////////////////////////////////////////////////////////////////
                  if (first.equals("V")) {
-                     if (routed.segmentLength() > 2)
-                         return IteratorUtil.of();
+                     //if (routed.segmentLength() > 2)
+                     //  return IteratorUtil.of();
                      Iterator<Vertex> iterator;
                      if (CommonUtil.isInt(second)) iterator = this.sjvm.vertices(Integer.parseInt(second));
                      else if (all) iterator = this.sjvm.vertices();
                      else iterator = IteratorUtil.of();
-                     return (Iterator) IteratorUtil.stream(iterator).map(v -> IdObj.of(this.elementVID(v), VertexMap.vertexToRec(v, this))).iterator();
+                     return IteratorUtil.stream(iterator).map(v -> IdObj.of(this.elementVID(v), VertexMap.vertexToRec(v, this))).map(idobj -> {
+                         if (routed.pathLength() > 2) {
+                             LOG.info("searching for %s and %s", idobj.furi().extend(routed.pretract(2)), routed.pretract(2));
+                             // CommonUtil.sleepThread(10000);
+                             return IdObj.of(idobj.furi().extend(routed.pretract(2)), idobj.obj().<VertexMap>jvmAs().get(uri(routed.pretract(2))));
+                         } else {
+                             return idobj;
+                         }
+                     }).iterator();
                  } else if (first.equals("E")) {
-                     if (routed.segmentLength() > 2)
-                         return IteratorUtil.of();
+                     //if (routed.segmentLength() > 2)
+                     //  return IteratorUtil.of();
                      Iterator<Edge> iterator;
                      if (CommonUtil.isInt(second)) iterator = this.sjvm.edges(Integer.parseInt(second));
                      else if (all) iterator = this.sjvm.edges();

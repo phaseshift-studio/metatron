@@ -87,8 +87,16 @@ public class httpSpace extends AbstractSpace<HttpServer> {
         APPLICATION_ATOM_XML("application/atom+xml"),
         APPLICATION_XML("application/xml"),
         APPLICATION_MTRON("application/mtron"),
+        APPLICATION_JAVASCRIPT("application/javascript"),
         TEXT_HTML("text/html"),
         TEXT_PLAIN("text/plain"),
+        TEXT_CSS("text/css"),
+        TEXT_JAVASCRIPT("text/javascript"),
+        IMAGE_PNG("image/png"),
+        IMAGE_JPEG("image/jpeg"),
+        IMAGE_GIF("image/gif"),
+        IMAGE_SVG("image/svg+xml"),
+        IMAGE_ICO("image/x-icon"),
         APPLICATION_XHTML_XML("application/xhtml+xml");
         final String value;
 
@@ -98,6 +106,26 @@ public class httpSpace extends AbstractSpace<HttpServer> {
 
         public static ContentType of(final String contentType) {
             return null == contentType ? TEXT_PLAIN : Arrays.stream(ContentType.values()).filter(ct -> (contentType.contains(ct.value))).findAny().orElse(TEXT_PLAIN);
+        }
+
+        /**
+         * Determine content type from file extension when Files.probeContentType() fails
+         */
+        public static ContentType fromExtension(final String filename) {
+            if (filename == null) return TEXT_PLAIN;
+            final String lower = filename.toLowerCase();
+            if (lower.endsWith(".css")) return TEXT_CSS;
+            if (lower.endsWith(".js")) return APPLICATION_JAVASCRIPT;
+            if (lower.endsWith(".html") || lower.endsWith(".htm")) return TEXT_HTML;
+            if (lower.endsWith(".json")) return APPLICATION_JSON;
+            if (lower.endsWith(".xml")) return APPLICATION_XML;
+            if (lower.endsWith(".png")) return IMAGE_PNG;
+            if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return IMAGE_JPEG;
+            if (lower.endsWith(".gif")) return IMAGE_GIF;
+            if (lower.endsWith(".svg")) return IMAGE_SVG;
+            if (lower.endsWith(".ico")) return IMAGE_ICO;
+            if (lower.endsWith(".mtron")) return APPLICATION_MTRON;
+            return TEXT_PLAIN;
         }
 
         public boolean isJson() {
@@ -150,7 +178,13 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                 final HttpContext context = server.createContext(r.first().uriValue().toString(),
                         exchange -> {
                             if (exchange.getRequestMethod().equalsIgnoreCase("GET")) {
-                                final fURI requestURI = r.second().uriValue().extend(f(exchange.getRequestURI().getPath())).qString(exchange.getRequestURI().getQuery());
+                                // Strip the route prefix from the request path to get the relative path
+                                final String routePrefix = r.first().uriValue().toString();
+                                String requestPath = exchange.getRequestURI().getPath();
+                                if (requestPath.startsWith(routePrefix) && !routePrefix.equals("/")) {
+                                    requestPath = requestPath.substring(routePrefix.length());
+                                }
+                                final fURI requestURI = r.second().uriValue().extend(f(requestPath)).qString(exchange.getRequestURI().getQuery());
                                 LOG.info("requesting: %s", requestURI);
                                 final File base = Space.Helper.locateBaseFile(requestURI, INDEX_HTML);
                                 // final Path filePath = null == base ? null : base.toPath(); //Files.isRegularFile(path) ? path : Path.of(path + "/" + INDEX_HTML);
@@ -163,7 +197,18 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                                     LOG.info("remaining steps in request uri: %s", pretractedURI);
                                     if (pretractedURI.segmentLength() == 0) {
                                         // send the full html document
-                                        final ContentType contentType = ContentType.of(requestURI.hasQ("content_type") ? requestURI.qValue("content_type", String.class) : Files.probeContentType(absolutePath));
+                                        // Use query param if specified, otherwise try Files.probeContentType, fallback to extension-based detection
+                                        final ContentType contentType;
+                                        if (requestURI.hasQ("content_type")) {
+                                            contentType = ContentType.of(requestURI.qValue("content_type", String.class));
+                                        } else {
+                                            final String probed = Files.probeContentType(absolutePath);
+                                            final ContentType probedType = ContentType.of(probed);
+                                            // If probeContentType returned null or fell back to TEXT_PLAIN, use extension-based detection
+                                            contentType = (probed == null || probedType == ContentType.TEXT_PLAIN)
+                                                    ? ContentType.fromExtension(absolutePath.toString())
+                                                    : probedType;
+                                        }
                                         LOG.info("sending with content-type: %s", contentType.value);
                                         sendResponse(contentType, absolutePath.toFile(), exchange);
                                     } else {
@@ -188,17 +233,23 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                                 /// ////////////////////////////////////////////////////////////////////////////////////
                             } else if (exchange.getRequestMethod().equalsIgnoreCase("POST")) {
                                 LOG.info("POST request received for %s", exchange.getRequestURI());
+                                // Strip the route prefix from the request path to get the relative path
+                                final String postRoutePrefix = r.first().uriValue().toString();
+                                String postRequestPath = exchange.getRequestURI().getPath();
+                                if (postRequestPath.startsWith(postRoutePrefix) && !postRoutePrefix.equals("/")) {
+                                    postRequestPath = postRequestPath.substring(postRoutePrefix.length());
+                                }
                                 final String post = new BufferedReader(new InputStreamReader(exchange.getRequestBody())).lines().reduce("", (a, b) -> a + b + "\n");
                                 final ContentType contentType = ContentType.of(exchange.getRequestHeaders().containsKey(ContentType.VALUE) ?
                                         exchange.getRequestHeaders().get(ContentType.VALUE).getFirst() :
                                         ContentType.APPLICATION_MTRON.value);
-                                final File file = Space.Helper.locateBaseFile(r.second().uriValue().extend(f(exchange.getRequestURI().getPath())), INDEX_HTML);
+                                final File file = Space.Helper.locateBaseFile(r.second().uriValue().extend(f(postRequestPath)), INDEX_HTML);
                                 if (file == null) {
                                     if (contentType.isMtron()) {
-                                        final fURI writePattern = r.second().uriValue().extend(f(exchange.getRequestURI().getPath()));
+                                        final fURI writePattern = r.second().uriValue().extend(f(postRequestPath));
                                         Router.writeToSpace(writePattern, ObjmtronSerializer.parse(post));
                                     } else {
-                                        File newFile = new File(r.second().uriValue().extend(f(exchange.getRequestURI().getPath())).toString());
+                                        File newFile = new File(r.second().uriValue().extend(f(postRequestPath)).toString());
                                         FileWriter writer = new FileWriter(newFile);
                                         writer.write(post);
                                         writer.close();

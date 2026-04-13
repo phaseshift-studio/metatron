@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.isa.mach.io.space.file;
 
 import studio.phaseshift.metatron.Tokens;
-import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.Space;
@@ -49,6 +48,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -59,6 +59,7 @@ import static studio.phaseshift.metatron.isa.mach.machInstSet.*;
 
 public class fsSpace extends AbstractSpace<FileSystem> {
 
+    private static final Uri NOOBJ_URI = uri(f(""), URI_TID.zero(), null);
     public static final fURI FS_TID = MACH_ISA_TID.extend("space").extend("fs");
     private static final Rec FS_SPACE_CONFIG = rec(
             uri(Tokens.PATTERN), URI_TYPE,
@@ -98,20 +99,24 @@ public class fsSpace extends AbstractSpace<FileSystem> {
 
     public Obj resolveObj(final Uri path) {
         try {
+            if (path.isNoObj())
+                return noobj();
             final File file = Paths.get(path.uriValue().basePath().toString()).toFile();
-            final fsSpace space = Router.global().getSpace(this.redirect(f(file.getPath()), false)).as();
             return uri(this.redirect(f(file.getPath()), false).q("p", PosixFilePermissions.toString(Files.getPosixFilePermissions(file.toPath()))), file.isDirectory() ? DIR_TID : FILE_TID, null);
         } catch (final Exception e) {
-            throw MTronException.of(e);
+            return noobj();
+            // throw MTronException.of(e);
         }
     }
 
 
     public static Uri makeFile(final Path path) {
         try {
+            if (path.toString().isEmpty())
+                return NOOBJ_URI;
             return uri(f(path.toString()).q("p", PosixFilePermissions.toString(Files.getPosixFilePermissions(path))), path.endsWith("/") ? DIR_TID : FILE_TID, null);
         } catch (final NoSuchFileException e) {
-            return uri("").c(cInt.ZERO()).asUri();
+            return NOOBJ_URI;
         } catch (final Exception e) {
             throw MTronException.of(e);
         }
@@ -124,11 +129,20 @@ public class fsSpace extends AbstractSpace<FileSystem> {
                 throw MTronException.of("infinite nested walks on file system not allowed");
             else {
                 if (key.hasPattern()) {
-                    try (final Stream<Path> walk = Files.walk(Path.of(Space.Helper.routeFromSpace(key.retractPattern(), this.routes).toString()), vid.hasPattern() ? Integer.MAX_VALUE : vid.path().size() + 1, FileVisitOption.FOLLOW_LINKS)) {
+                    try (final Stream<Path> walk = Files.walk(Path.of(Space.Helper.routeFromSpace(key.retractPattern(), this.routes).toString()), key.hasPattern("#") ? Integer.MAX_VALUE : key.asNode().path().size() + 1)) {
                         return walk
-                                .filter(p -> Space.Helper.routeToSpace(f(p.toString()), this.routes).test(key))
+                                .filter(p -> {
+                                    try {
+                                        return Space.Helper.routeToSpace(f(p.toString()), this.routes).test(key.asNode());
+                                    } catch (final Exception e) {
+                                        LOG.error(e);
+                                        return false;
+                                    }
+                                })
                                 .map(fsSpace::makeFile)
+                                .filter(Objects::nonNull)
                                 .map(this::resolveObj)
+                                .filter(o -> !o.isNoObj())
                                 .collect(Collectors.toMap(p -> p, p -> p, Obj::append, LinkedHashMap::new))
                                 .entrySet()
                                 .stream()
@@ -157,7 +171,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
                     } /*catch (final NoSuchFileException e) {
                         LOG.warn("no such file: %s", key);
                         return IteratorUtil.of();
-                    } */catch (final Exception e) {
+                    } */ catch (final Exception e) {
                         throw MTronException.of(e);
                     }
                 }

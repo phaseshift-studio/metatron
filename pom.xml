@@ -515,6 +515,25 @@
                             </resources>
                         </configuration>
                     </execution>
+                    <execution>
+                        <!-- Copy metatron.css to dashboard so both use same styles -->
+                        <id>copy-metatron-css-to-dashboard</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.basedir}/src/main/resources/web/dashboard</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.basedir}/docs/website/css</directory>
+                                    <includes>
+                                        <include>metatron.css</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
                     <!-- <execution>
                          <id>copy-resources-post-site</id>
                          <phase>post-site</phase>

@@ -343,8 +343,7 @@ public interface Inst extends Call {
             rhs = clhs; // propagate fail through inst unless it's a catch inst
         }
         final cInt cc = cinst.c();
-        final Obj result = modulateC ? rhs.c(c -> c.mult(lhs.c()).mult(cc)) : rhs.c(c -> c.mult(cc));
-        return result;
+        return modulateC ? rhs.c(c -> c.mult(lhs.c()).mult(cc)) : rhs.c(c -> c.mult(cc));
     }
 
     default boolean isCatch() {

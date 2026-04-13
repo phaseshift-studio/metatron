@@ -52,7 +52,6 @@ color green "=" "::"
 color yellow "\{.{1}\}" "\{[0-9]*,?[0-9]*\}"
 ### fail
 color cyan "\\_[a-z|A-Z]+"
-color red "([a-z]|[0-9]|/)*fail::"
 color red "=X"
 color yellow "\.\.\."
 color green "==>"
@@ -70,12 +69,13 @@ color yellow "<="
 ### uri <>
 color blue "[<][^>]*[>]"
 color green "<" ">"
-color yellow "[${][^}]*[}]"
+color yellow "\$\{[^}]*\}"
 ### str
 color yellow "[\"][^\"]*[\"]"
 color yellow "['][^']*[']"
 color yellow start="\"\"\"" end="\"\"\""
 color gray "<j>"
+color red "([a-z]|[0-9]|/)*fail::"
 ### comments
 color gray start="\[--" end="--]"
 color gray start="\[==" end="==]"

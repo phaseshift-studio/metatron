@@ -45,7 +45,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_ISA_TID;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MACHINE_TID;
-import static studio.phaseshift.metatron.isa.mach.type.monad.BasicPCMonad.monad;
+import static studio.phaseshift.metatron.isa.mach.type.monad.BasicPCMonad.pcmonad;
 import static studio.phaseshift.metatron.isa.mach.type.monad.BasicPCMonad.pcmonad;
 
 ;

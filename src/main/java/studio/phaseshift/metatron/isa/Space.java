@@ -38,6 +38,7 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.QSTRING;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -235,9 +236,10 @@ public interface Space extends Rec, Closeable {
                     unrollPoly(base.furi(), poly, pattern).forEach(kv -> listing.add(UriObj.of(kv.furi().toUri(), kv.obj())));
                 }
             }
+            final Stream<UriObj> prefix= listing.stream().filter(kv -> !kv.obj().isNoObj() && !kv.uri().isNoObj());
             return pattern.isNode() ?
-                    objs(listing.stream().map(UriObj::obj).map(o -> o.autoResolve(o)).toList()) :
-                    objs(listing.stream().map(kv -> rel(kv.uri(), kv.obj())));
+                    objs(prefix.map(UriObj::obj).map(o -> o.autoResolve(o)).toList()) :
+                    objs(prefix.map(kv -> rel(kv.uri(), kv.obj())));
         }
 
         private static Obj writeComplete(final Obj newObj, final Obj currentObj) {

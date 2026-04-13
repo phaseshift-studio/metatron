@@ -41,7 +41,7 @@
     background-color: transparent;
 }
 
-.btn:disabled  {
+.btn:disabled {
     border-color: var(--bs-gray-dark);
     color: var(--bs-gray);
 }
@@ -164,7 +164,7 @@ table {
 }
 
 [data-ty="input"]:before {
-    content: 'metatron>';
+    content: 'mtron>';
 }
 
 [data-termynal]:before {
@@ -629,8 +629,8 @@ body {
 .btn-copy-url {
     filter: invert(0) grayscale(100%) brightness(35%);
     opacity: 0.8;
-  /*  width: 0.15em;
-    height: 0.15em; */
+    /*  width: 0.15em;
+      height: 0.15em; */
     position: relative !important;
     top: -16px !important;
     left: -35px !important;
@@ -830,7 +830,7 @@ body {
 
     .hljs {
         background: #f8f9fa !important;
-        color: #000000 !important;
+        color: #FFF !important;
     }
 
     /* Reset syntax highlighting for a more academic look */
@@ -946,6 +946,7 @@ body {
 
 pre {
     margin-bottom: 0px;
+    color: #fff !important;
 }
 
 .switch {
@@ -993,7 +994,6 @@ details {
     background-color: var(--secondarycolor) !important;
     border-style: solid;
 }
-
 
 
 th {
