@@ -304,21 +304,11 @@ bin/metatron</code></pre>
    q::T[][/m/space/q/subq/cons?rng=subq&dom=#{?}(){<j>}]@/m/space/q/subq,
    rec::T[?[
      target =>uri::T,
-     on_recv=>#::T]]@/m/space/q/subq/sub,
+     on_recv=>#?dom=lst::T]]@/m/space/q/subq/sub,
    q::T[][/m/space/q/typeq/cons?rng=typeq&dom=#{?}(){<j>}]@/m/space/q/typeq,
    q::T[][/m/space/q/docq/cons?rng=docq&dom=#{?}(){<j>}]@/m/space/q/docq,
    q::T[][/m/space/q/incrq/cons?rng=incrq&dom=#{?}(){<j>}]@/m/space/q/incrq,
    q::T[][/m/space/q/constq/cons?rng=constq&dom=#{?}(){<j>}]@/m/space/q/constq],
- const  =>[noobj],
- rewrite=>[
-   /m/inst/rewrite/id_removal?rng=code{?}&dom=code(){<j>},
-   /m/inst/rewrite/map_nest?rng=code{?}&dom=code(){<j>},
-   /m/inst/rewrite/else_after_count?rng=code{?}&dom=code(){<j>},
-   /m/inst/rewrite/plus_zero?rng=code{?}&dom=code(){<j>},
-   /m/inst/rewrite/mult_one?rng=code{?}&dom=code(){<j>},
-   /m/inst/rewrite/split_merge_collapse?rng=code{?}&dom=code(){<j>},
-   /m/inst/rewrite/split_merge_left_factor?rng=code{?}&dom=code(){<j>},
-   /m/inst/rewrite/split_merge_right_factor?rng=code{?}&dom=code(){<j>}],
  inst   =>[
    as?rng=bool&dom=bool(bool::T){<j>},
    as?rng=bytes&dom=bool(bytes::T){<j>},
@@ -503,8 +493,8 @@ bin/metatron</code></pre>
    at?rng=A&dom=A(uri{?}::T){<j>},
    id?rng=A&dom=A(){<j>},
    id?rng=A{*}&dom=A{*}(){<j>},
-   and?rng=bool&dom=A(bool{+}::T){<j>},
-   or?rng=bool&dom=A(bool{+}::T){<j>},
+   and?rng=bool&dom=A(bool{2,}::T){<j>},
+   or?rng=bool&dom=A(bool{2,}::T){<j>},
    apply?rng=#{*}&dom=#(#{*}::T){<j>},
    map?rng=B&dom=A(B::T){<j>},
    map?rng=B{?}&dom=A{?}(B{?}::T){<j>},
@@ -548,7 +538,17 @@ bin/metatron</code></pre>
    swap?rng=A&dom=A(B::T){<j>},
    rshift?rng=B{?}&dom=A(){<j>},
    lshift?rng=B{?}&dom=A(){<j>},
-   start?rng=A{**}&dom=noobj{0}(A{**}::T){<j>}]]@/m</code></pre>
+   start?rng=A{**}&dom=noobj{0}(A{**}::T){<j>}],
+ rewrite=>[
+   /m/inst/rewrite/id_removal?rng=code{?}&dom=code(){<j>},
+   /m/inst/rewrite/map_nest?rng=code{?}&dom=code(){<j>},
+   /m/inst/rewrite/else_after_count?rng=code{?}&dom=code(){<j>},
+   /m/inst/rewrite/plus_zero?rng=code{?}&dom=code(){<j>},
+   /m/inst/rewrite/mult_one?rng=code{?}&dom=code(){<j>},
+   /m/inst/rewrite/split_merge_collapse?rng=code{?}&dom=code(){<j>},
+   /m/inst/rewrite/split_merge_left_factor?rng=code{?}&dom=code(){<j>},
+   /m/inst/rewrite/split_merge_right_factor?rng=code{?}&dom=code(){<j>}],
+ const  =>[noobj]]@/m</code></pre>
                         </div>
                     </div>
                 </div>
@@ -1346,7 +1346,8 @@ abc(a=&gt;?int::T,b=&gt;|(*a +10)){ _.*b }       [-- dependent arg inst    --]
             <small class="text-muted fw-bold">examples:</small>
             <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">[=&gt;]                  [-- empty rec      --]
 [a=&gt;1,b=&gt;2]           [-- 2 uri=&gt;int rec --]
-[a=&gt;[b=&gt;1,c=&gt;[d=&gt;3]]] [-- nested rec     --]</code></pre>
+[a=&gt;[b=&gt;1,c=&gt;[d=&gt;3]]] [-- nested rec     --]
+[a=&gt;[b=&gt;+1,c=&gt;_]]     [-- inst values    --]</code></pre>
         </div>
                 </div>
                 <div class="card mb-3" id="type-rel">
@@ -1448,11 +1449,11 @@ a/b/c/                           [-- relative/branch uri            --]
                         <small class="text-muted code">/m/inst/and?/m/bool&lt;=A</small>
                     </div>
                     <div class="card-body p-2">
-                        <pre class="mb-1"><code class="language-mtron">and?bool&lt;=A(bool{+}::T){&lt;j&gt;}</code></pre>
+                        <pre class="mb-1"><code class="language-mtron">and?bool&lt;=A(bool{2,}::T){&lt;j&gt;}</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">a logical and function \(f(X)\to \tt{true}\) if all \(X\) are true</p>
+                        <p class="mb-0 text-light">logical \(and\) function \(f(X)\to \tt{true}\) if all \(X\) are true</p>
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any objs" <span class="text-light">=&gt;</span> "true if all objs are true"</pre>
@@ -2537,11 +2538,11 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                         <small class="text-muted code">/m/inst/or?/m/bool&lt;=A</small>
                     </div>
                     <div class="card-body p-2">
-                        <pre class="mb-1"><code class="language-mtron">or?bool&lt;=A(bool{+}::T){&lt;j&gt;}</code></pre>
+                        <pre class="mb-1"><code class="language-mtron">or?bool&lt;=A(bool{2,}::T){&lt;j&gt;}</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">a logical or function \(f(X)\to \tt{true}\) if any \(X\) are true</p>
+                        <p class="mb-0 text-light">logical \(or\) function \(f(X)\to \tt{true}\) if any \(X\) are true</p>
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any objs" <span class="text-light">=&gt;</span> "true if any objs are true"</pre>
@@ -3335,7 +3336,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">the reference implementation of a space where objs are stored in memory</p>
+                        <p class="mb-0 text-light">a in-memory space with objs indexed by a topic trie</p>
                     </div>
                     
                     
@@ -3378,7 +3379,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
+                        <p class="mb-0 text-light">a qproc (query processor) is an optional component that can be attached to a space. qprocs provide extended space semantics around their specified  ?-query pattern. being optional, qprocs must be attached to a space before use. the qprocs associated with a space are accessible at ${space}/q.</p>
                     </div>
                     
                     
@@ -3561,7 +3562,7 @@ a-&gt;2+*a                   [-- 4 via sugar&#x27;d writing/reading a --]</code>
         <div class="container-xxl py-3 text-center">
             <hr class="border-secondary">
             <small class="text-muted">
-                generated by metatron instset doc generator on build 0-2026-04-12 13:26:27<br>
+                generated by metatron instset doc generator on build 0-2026-04-12 21:58:08<br>
                 © PhaseShift Studio, LLC
             </small>
         </div>

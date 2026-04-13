@@ -52,7 +52,6 @@ import static studio.phaseshift.metatron.isa.m.type.Real.REAL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Rel.REL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instA;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -287,7 +286,8 @@ public class mInstSet extends AbstractInstSet {
                         docWrap(REC_TYPE, "a poly composed of uniquely keyed rels",
                                 "[=>]                  [-- empty rec      --]",
                                 "[a=>1,b=>2]           [-- 2 uri=>int rec --]",
-                                "[a=>[b=>1,c=>[d=>3]]] [-- nested rec     --]"),
+                                "[a=>[b=>1,c=>[d=>3]]] [-- nested rec     --]",
+                                "[a=>[b=>+1,c=>_]]     [-- inst values    --]"),
                         docWrap(INSTSET_TYPE, "an aggregate of types, insts, consts, rewrites, and sugars structuring a domain of discourse"),
                         docWrap(INST_TYPE, "a call with apply defined by an lhs obj, an poly of args, and an body of code",
                                 "abc(?int::T,?int::T){ *<0> + *<1> }        [-- position args inst    --]",
@@ -305,20 +305,31 @@ public class mInstSet extends AbstractInstSet {
                                 "fail::[doh] + 2             [-- plus(2) skipped over    --]",
                                 "fail::[dah] + 2 + catch(9)  [-- fail flattened to 9       --]"),
                         /// ///////////////////////////////////
-                        docWrap(SPACE_TYPE, "storage systems structured by uris and objs"),
-                        docWrap(MEM_SPACE_TYPE, "the reference implementation of a space where objs are stored in memory"),
+                        docWrap(SPACE_TYPE, "storage systems structured as uri addressed objs"),
+                        docWrap(MEM_SPACE_TYPE, "a in-memory space with objs indexed by a topic trie"),
                         docWrap(STACK_SPACE_TYPE, "the machine's thread local stack exposed as a space",
                                 "2.to(a).plus(from(a))     [-- 4 via writing/reading a         --]",
                                 "a->2+*a                   [-- 4 via sugar'd writing/reading a --]"),
                         META_SPACE_TYPE,
-                        Q_TYPE,
+                        docWrap(Q_TYPE, "qprocs (query processors) are optional space components. " +
+                                "qproc behaviors are driven by a qprocs specified uri ?-query pattern. " +
+                                "not all spaces have the same set of attached qprocs and thus, qprocs must " +
+                                "be attached to a space before use. " +
+                                "a space's qprocs are accessible at *space/vid/q => lst[q]::T."),
                         /// ///////////////////////////////////
-                        SUBQ_TYPE,
+                        docWrap(SUBQ_TYPE, "addr publish-subscribe qproc",
+                                "/usr/ai/+?subq -> |print('ai update: ${_}') [-- /usr/ai subtree watch  --]",
+                                "a?subq         -> |(>>1+1.println(_).to(a)) [-- infinite incr loop     --]",
+                                "*+?subq                                     [-- all subs for addr tree --]"),
                         SUB_TYPE,
-                        TYPEQ_TYPE,
-                        DOCQ_TYPE,
-                        INCRQ_TYPE,
-                        CONSTQ_TYPE),
+                        docWrap(TYPEQ_TYPE, "addr type constraint qproc",
+                                "abc?typeq -> int::T       [-- abc can only reference a single integer --]",
+                                "abc?typeq -> 'not an int' [-- yields a fail::T --]"),
+                        docWrap(DOCQ_TYPE, "addr documentation qproc",
+                                "*docq?docq [-- this documentation --]",
+                                "*int?docq  [-- documentation for int::T --]"),
+                        docWrap(INCRQ_TYPE, "a query that returns an increment"),
+                        docWrap(CONSTQ_TYPE, "a query that returns a constant")),
                 uri(INST), lst(Stream.of(
                         Bool.BoolType.insts().stream(),
                         Bytes.BytesType.insts().stream(),

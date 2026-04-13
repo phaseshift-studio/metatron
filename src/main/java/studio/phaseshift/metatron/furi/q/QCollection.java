@@ -100,11 +100,17 @@ public final class QCollection {
     public static final fURI SUBSCRIPTION_TID = SUBQ_TID.extend("sub");
     public static final Type SUBQ_TYPE = Type.Builder.build().vid(SUBQ_TID).tid(Q_TID).constructor(QCollection::subq).create();
     public static final Type SUB_TYPE =
-            Type.Builder.build()
+            docWrap(Type.Builder.build()
                     .vid(SUBSCRIPTION_TID)
                     .tid(REC_TID)
-                    .isaPredicate(rec(TARGET, URI_TYPE, ON_RECV, T(ALL)))
-                    .create();
+                    .isaPredicate(rec(
+                            TARGET, URI_TYPE, 
+                            ON_RECV, T(ALL.dom(LST_TID))))
+                    .create(), "a subscription specification", "", Map.of(
+                    uri(TARGET), "the address scope of the subscription",
+                    uri(ON_RECV), "a callback when scope of subscription changes"), 
+                    "a subscription for subq qproc",
+                    "abc?subq -> |(?[uri::T,#::T].print(_))  [-- [target,new_obj] to on_recv --]");
 
     private QCollection() {
         // do nothing 
@@ -121,7 +127,7 @@ public final class QCollection {
                 .preWrite((furi, obj) -> {
                     if (obj.isNoObj()) {
                         CONSTQ_FURIS.remove(furi.noQ());
-                    }  else {
+                    } else {
                         CONSTQ_FURIS.add(furi.noQ());
                         return obj;
                     }

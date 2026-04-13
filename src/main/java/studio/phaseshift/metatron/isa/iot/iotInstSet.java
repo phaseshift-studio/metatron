@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -27,9 +27,16 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.iot.haos.space.haosSpace.HAOS_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.iot.space.mqtt.mqttSpace.MQTT_SPACE_TYPE;
+import static studio.phaseshift.metatron.isa.m.mInstSet.INSTSET_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.MTRON_TID;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -55,13 +62,17 @@ public class iotInstSet extends AbstractInstSet {
     }
 
     public iotInstSet() {
-        super(IOT_ISA_TID, IOT_ISA_TID);
+        super(mutableMap(uri(PATTERN), uri(IOT_ISA_TID.extend(HASH_FURI))), INSTSET_TID, IOT_ISA_TID);
+        //this.at(Tokens.Q, this.at(Tokens.Q).asLst().add(QCollection.constQ(), MUTABLE), MUTABLE);
     }
 
-    @Override
-    public Set<Type> types() {
-        return Stream.of(
-                MQTT_SPACE_TYPE,
-                HAOS_SPACE_TYPE).collect(Collectors.toSet());
+    public void setup() {
+        this.jvm().putAll(mutableMap(
+                uri(PATTERN), uri(IOT_ISA_TID.extend(ALL)),
+                uri(TYPE), lst(
+                        MQTT_SPACE_TYPE,
+                        HAOS_SPACE_TYPE)));
+        docWrap(this, "mqtt, esp32, home assistant, and more accessible within the metatron");
+        super.setup();
     }
 }
