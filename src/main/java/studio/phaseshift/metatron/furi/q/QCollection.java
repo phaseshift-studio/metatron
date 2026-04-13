@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.furi.q;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.*;
@@ -50,6 +51,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -86,7 +88,7 @@ public final class QCollection {
                             uri(ARGS).maybe(), T(ALL), // fix: noobj=>noobj slipping trhough the cracks somewhere rec(URI_TYPE,STR_TYPE).maybe(),
                             uri(DESC), STR_TYPE,
                             uri(EXAMPLE).maybe(), LST_TYPE))
-                    .constructor(arg0 -> new Doc(arg0.recValue(), DOCS_TID, null))
+                    .constructor(arg0 -> new Docs(arg0.recValue(), DOCS_TID, null))
                     .inst(AS_INST_TID.dom(DOCS_TID).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> str(lhs.toString()))
                     .create();
 
@@ -101,14 +103,14 @@ public final class QCollection {
     public static final Type SUBQ_TYPE = Type.Builder.build().vid(SUBQ_TID).tid(Q_TID).constructor(QCollection::subq).create();
     public static final Type SUB_TYPE =
             docWrap(Type.Builder.build()
-                    .vid(SUBSCRIPTION_TID)
-                    .tid(REC_TID)
-                    .isaPredicate(rec(
-                            TARGET, URI_TYPE, 
-                            ON_RECV, T(ALL.dom(LST_TID))))
-                    .create(), "a subscription specification", "", Map.of(
-                    uri(TARGET), "the address scope of the subscription",
-                    uri(ON_RECV), "a callback when scope of subscription changes"), 
+                            .vid(SUBSCRIPTION_TID)
+                            .tid(REC_TID)
+                            .isaPredicate(rec(
+                                    TARGET, URI_TYPE,
+                                    ON_RECV, T(ALL.dom(LST_TID))))
+                            .create(), "a subscription specification", "", Map.of(
+                            uri(TARGET), "the address scope of the subscription",
+                            uri(ON_RECV), "a callback when scope of subscription changes"),
                     "a subscription for subq qproc",
                     "abc?subq -> |(?[uri::T,#::T].print(_))  [-- [target,new_obj] to on_recv --]");
 
@@ -171,12 +173,79 @@ public final class QCollection {
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
     protected final static Rec NO_DOCS = rec(Map.of(uri(DESC), str("no documentation available")), DOCS_TID, null);
 
+    protected final static class DocInstSet extends AbstractInstSet {
+        protected final Map<fURI, Set<Rec>> INST_TABLE = Collections.synchronizedMap(new LinkedHashMap<>());
+         protected final Map<fURI, Rec> REWRITE_TABLE = Collections.synchronizedMap(new LinkedHashMap<>());
+        
+        
+        public DocInstSet() {
+            super(true);
+        }
+
+        @Override
+        public Obj write(final fURI vid, final Obj obj) {
+            //if (vid.hasRng()) {
+                final Inst inst = obj.asRec().at(OBJ).as();
+                if (inst.dom().isCode()) {
+                    REWRITE_TABLE.put(inst.tid(), obj.asRec());
+                } else {
+                    Router.global().registerRedirect(f(vid.name()), vid);
+                    INST_TABLE.computeIfAbsent(inst.tid().basePath(), k -> new LinkedHashSet<>()).add(obj.asRec());
+                }
+            return obj;
+        }
+
+        @Override
+        public Obj read(final fURI pattern) {
+            return objs(INST_TABLE.entrySet()
+                    .stream()
+                    .filter(kv -> kv.getKey().test(pattern.basePath().asNode()))
+                    .flatMap(kv -> kv.getValue().stream())
+                    .filter(i -> !pattern.hasDom() || i.asRec().at(OBJ).dom().tid().test(pattern.dom().big()))
+                    .filter(i -> !pattern.hasRng() || i.asRec().at(OBJ).rng().tid().test(pattern.rng().big()))
+                    .map(i -> pattern.isNode() ? i : rel(i.asRec().at(OBJ).tid().toUri(), i)))
+                    .append(objs(TYPE_TABLE.entrySet()
+                            .stream()
+                            .filter(kv -> kv.getKey().test(pattern.asNode()))
+                            .map(kv -> pattern.isNode() ?
+                                    kv.getValue() :
+                                    rel(kv.getKey().toUri(), kv.getValue()))))
+                    .append(objs(REWRITE_TABLE.entrySet()
+                            .stream()
+                            .filter(kv -> kv.getKey().test(pattern.asNode()))
+                            .map(kv -> pattern.isNode() ?
+                                    kv.getValue() :
+                                    rel(kv.getKey().toUri(), kv.getValue()))))
+                    .append(objs(CONST_TABLE.entrySet()
+                            .stream()
+                            .filter(kv -> kv.getKey().test(pattern.asNode()))
+                            .map(kv -> pattern.isNode() ?
+                                    kv.getValue() :
+                                    rel(kv.getKey().toUri(), kv.getValue()))));
+        }
+    }
+
     public static Q docQ() {
-        final memSpace DOC_SPACE = memSpace.of(ALL, null);
+        final memSpace OBJ_DOCS = memSpace.of(ALL, null);
+        final InstSet INST_DOCS = new DocInstSet();
         return Q.Helper.build(DOCQ_TID, DOCQ_PATTERN)
-                .obj(f(OBJ), DOC_SPACE)
-                .preWrite((vid, obj) -> DOC_SPACE.write(obj.isInst() ? obj.tid().basePath() : vid.removeQ(DOCQ), obj.tid().equals(DOCS_TID) ? obj : new Doc(obj.toCleanString())))
-                .preRead((vid) -> DOC_SPACE.read(vid.basePath()).orElse(NO_DOCS.plus(rec(uri(OBJ), Router.global().read(vid.basePath())))))
+                .obj(f(INST), INST_DOCS)
+                .obj(f(OBJ), OBJ_DOCS)
+                .preWrite((vid, obj) -> {
+                    final Rec doc = obj.tid().equals(DOCS_TID) ? obj.asRec() : new Docs(obj.toCleanString());
+                    if (vid.hasRng()) {
+                        INST_DOCS.write(vid.removeQ(DOCQ), doc);
+                    } else {
+                        OBJ_DOCS.write(vid.removeQ(DOCQ), doc);
+                    }
+                    return doc;
+                })
+                .preRead((vid) -> {
+                    final Obj doc = INST_DOCS.read(vid.removeQ(DOCQ));
+                    return doc.isNoObj() ?
+                            OBJ_DOCS.read(vid.removeQ(DOCQ)).orElse(NO_DOCS.plus(rec(uri(OBJ), Router.global().read(vid.removeQ(DOCQ))))) :
+                            doc;
+                })
                 .create();
     }
 
@@ -253,14 +322,16 @@ public final class QCollection {
             obj.logger().warn("unable to generate docs for a vid-less obj: %s", obj);
             return;
         }
-        final Doc doc = Doc.doc(obj, domDesc, rngDesc, argDescription, description, examples);
+        final Docs doc = Docs.doc(obj, domDesc, rngDesc, argDescription, description, examples);
         final Space objSpace = Router.global().getSpace(objID);
         final Optional<Q> docq = objSpace.qs().jvm().stream().filter(q -> q.tid().basePath().equals(DOCQ_TID)).map(Obj::<Q>as).findAny();
         if (docq.isEmpty())
             objSpace.logger().warn("no doc query attachment mounted on %s for %s", objSpace, objID);
-        else
-            docq.get().at(OBJ).<Space>as().write(obj.isInst() ? objID.basePath() : objID, doc);
-
+        else if (obj.isInst()) {
+            docq.get().at(INST).<Space>as().write(objID, doc);
+        } else {
+            docq.get().at(OBJ).<Space>as().write(objID, doc);
+        }
     }
 
     public static Inst docWrap(final Inst inst, final String domDesc, final String rngDesc, final Map<Obj, String> argDescription, final String description, final String... examples) {
@@ -283,24 +354,24 @@ public final class QCollection {
         return instSet;
     }
 
-    public static class Doc extends MRec {
+    public static class Docs extends MRec {
 
         private static final String NONE = "<none>";
 
-        public Doc(final Map<Obj, Obj> value, final fURI tid, final fURI vid) {
+        public Docs(final Map<Obj, Obj> value, final fURI tid, final fURI vid) {
             super(value, tid, vid);
         }
 
-        public Doc(final Rec docRec) {
+        public Docs(final Rec docRec) {
             this(docRec.jvm(), docRec.tid(), docRec.vid());
         }
 
-        public Doc(final String description) {
+        public Docs(final String description) {
             this(Map.of(uri(DESC), str(description)), DOCS_TID, null);
         }
 
-        public static Doc empty(final Obj obj) {
-            return new Doc(Map.of(uri(OBJ), obj), DOCS_TID, null);
+        public static Docs empty(final Obj obj) {
+            return new Docs(Map.of(uri(OBJ), obj), DOCS_TID, null);
         }
 
         public Poly<?, ?> args() {
@@ -315,12 +386,12 @@ public final class QCollection {
             return this.at(EXAMPLE).elements().map(Obj::strValue).toList();
         }
 
-        public static Doc doc(final Rec docRec) {
-            return new Doc(docRec.jvm(), docRec.tid(), docRec.vid());
+        public static Docs doc(final Rec docRec) {
+            return new Docs(docRec.jvm(), docRec.tid(), docRec.vid());
         }
 
-        public static Doc doc(final Obj inst, final String domDesc, final String rngDesc, final Map<Obj, String> argDescription, final String description, final String... examples) {
-            return new Doc(rec(
+        public static Docs doc(final Obj inst, final String domDesc, final String rngDesc, final Map<Obj, String> argDescription, final String description, final String... examples) {
+            return new Docs(rec(
                     uri(OBJ), inst,
                     uri(DOM), null == domDesc ? noobj() : str(domDesc),
                     uri(RNG), null == rngDesc ? noobj() : str(rngDesc),

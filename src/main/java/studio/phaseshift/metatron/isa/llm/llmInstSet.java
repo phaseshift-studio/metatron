@@ -21,7 +21,6 @@ package studio.phaseshift.metatron.isa.llm;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
-import studio.phaseshift.metatron.isa.llm.type.MCPServer;
 import studio.phaseshift.metatron.isa.llm.type.Model;
 import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
@@ -158,11 +157,11 @@ public class llmInstSet extends AbstractInstSet {
                                         uri(SKILL).maybe(), "skill to extend the llm's abilities",
                                         uri(TOOL).maybe(), "tool functions the llm can use to solve problems"), "an mtron interface to a large language model")),
                 uri(INST), lst(
-                        //instC(AS_INST_TID.dom(MCP_SERVER_TID).rng(M_ISA_INST_TID), lst(INST_TYPE), (lhs, inst) -> MCPServer Model.Helper.mtronDocToTool(QCollection.Doc.doc(lhs.asRec()))),
+                        //instC(AS_INST_TID.dom(MCP_SERVER_TID).rng(M_ISA_INST_TID), lst(INST_TYPE), (lhs, inst) -> MCPServer Model.Helper.mtronDocToTool(QCollection.Docs.doc(lhs.asRec()))),
                         instC(AS_INST_TID.dom(M_ISA_INST_TID).rng(LLM_TOOL_TID), lst(LLM_TOOL_TYPE), (lhs, inst) -> Model.Helper.mtronInstToTool(inst.asInst())),
                         docWrap(instC(AS_INST_TID.dom(DOCS_TID).rng(LLM_TOOL_TID),
                                         lst(LLM_TOOL_TYPE),
-                                        (lhs, inst) -> Model.Helper.mtronDocToTool(QCollection.Doc.doc(lhs.asRec()))),
+                                        (lhs, inst) -> Model.Helper.mtronDocToTool(QCollection.Docs.doc(lhs.asRec()))),
                                 "instruction documentation",
                                 "a tool specification",
                                 Map.of(jnt(0), "the tool type"),

@@ -55,7 +55,7 @@ import static dev.langchain4j.internal.Json.fromJson;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.DOCQ;
-import static studio.phaseshift.metatron.furi.q.QCollection.Doc.doc;
+import static studio.phaseshift.metatron.furi.q.QCollection.Docs.doc;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
@@ -352,7 +352,7 @@ public class Model extends MRec {
 
         public static Tuple.Pair<ToolSpecification, ToolExecutor> mtronInstToolSpecification(final Rec tool) {
             final Inst inst = tool.at(INST);
-            final QCollection.Doc doc = doc(Router.global().read(inst.tid().addQ(DOCQ)).as());
+            final QCollection.Docs doc = doc(Router.global().read(inst.tid().addQ(DOCQ)).as());
             JsonObjectSchema.Builder parameters = new JsonObjectSchema.Builder();
             List<String> required = new ArrayList<>();
             parameters.addProperty(LHS, objToSchema(inst.dom(), Type.Helper.polyTypePredicateObj(inst.dom()), doc.at(DOM).orElse(str("<no description>")).strValue()));
@@ -388,14 +388,14 @@ public class Model extends MRec {
             return Tuple.Pair.with(toolSpecBuilder.build(), toolExecutor);
         }
 
-        public static Rec mtronDocToTool(final QCollection.Doc doc) {
+        public static Rec mtronDocToTool(final QCollection.Docs doc) {
             final Inst inst = doc.at(INST);
             return rec(Map.of(uri(INST), inst, uri(NAME), uri(inst.tid()), uri(DESC), str(doc.description()), uri(ARG), doc.args()), LLM_TOOL_TID, null);
         }
 
 
         public static Rec mtronInstToTool(final Inst inst) {
-            final QCollection.Doc doc = Router.readFromSpace(inst.tid().addQ(DOCQ))
+            final QCollection.Docs doc = Router.readFromSpace(inst.tid().addQ(DOCQ))
                     .orSupply(() -> doc(inst,
                             inst.dom().tid().toString(),
                             inst.rng().tid().toString(),
@@ -413,8 +413,8 @@ public class Model extends MRec {
 
 /*
   public static Tools.Tool mtronInstTool(final Inst inst) {
-        final Doc doc = Router.readFromSpace(inst.tid().q("doc", null))
-                .orSupply(() -> Doc.doc(inst,
+        final Docs doc = Router.readFromSpace(inst.tid().q("doc", null))
+                .orSupply(() -> Docs.doc(inst,
                         inst.dom().tid().toString(),
                         inst.rng().tid().toString(),
                         instB(AS_INST_TID, lst(REC_TYPE)).apply(inst.args().orElse(rec0())).asRec().elements().collect(Collectors.toMap(

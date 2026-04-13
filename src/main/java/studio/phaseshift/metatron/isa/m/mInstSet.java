@@ -263,7 +263,8 @@ public class mInstSet extends AbstractInstSet {
                                 "'singled quoted'",
                                 "\"\"\" multi-line triple double quoted \"\"\"",
                                 "''' multi-line triple single quoted '''",
-                                "\"lhs processed by ${_} template parameter\""),
+                                "\"lhs processed by ${_} template parameter\"",
+                                "5.map('result: ${+2}')   [-- result 7 --]"),
                         docWrap(URI_TYPE, "a uniform resource identifier",
                                 "a/b/c                            [-- relative/node uri              --]",
                                 "/a/b/c/                          [-- absolute/branch uri            --]",
@@ -311,11 +312,14 @@ public class mInstSet extends AbstractInstSet {
                                 "2.to(a).plus(from(a))     [-- 4 via writing/reading a         --]",
                                 "a->2+*a                   [-- 4 via sugar'd writing/reading a --]"),
                         META_SPACE_TYPE,
-                        docWrap(Q_TYPE, "qprocs (query processors) are optional space components. " +
-                                "qproc behaviors are driven by a qprocs specified uri ?-query pattern. " +
-                                "not all spaces have the same set of attached qprocs and thus, qprocs must " +
-                                "be attached to a space before use. " +
-                                "a space's qprocs are accessible at *space/vid/q => lst[q]::T."),
+                        docWrap(Q_TYPE, """
+                                qprocs (query processors) are optional space components.
+                                qproc behaviors are driven by a qprocs specified uri ?-query pattern.
+                                not all spaces have the same set of attached qprocs and thus, qprocs must
+                                be attached to a space before use. a space's qprocs are accessible at
+                               
+                                     \\(\\texttt{*space/vid/q => lst[q]::T}\\)
+                                """),
                         /// ///////////////////////////////////
                         docWrap(SUBQ_TYPE, "addr publish-subscribe qproc",
                                 "/usr/ai/+?subq -> |print('ai update: ${_}') [-- /usr/ai subtree watch  --]",

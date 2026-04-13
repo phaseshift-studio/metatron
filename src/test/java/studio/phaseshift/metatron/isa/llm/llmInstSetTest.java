@@ -64,12 +64,12 @@ public class llmInstSetTest extends AbstractInstSetTest {
     
     @ParameterizedTest
     @CsvSource(value = {
-            "*<local:skills>.as(skill::T) | *skill | true",
+            "*<local:skills/mtron>.as(skill::T) | *skill | true",
     }, delimiter = '|')
     public void testAs(final String noNoObjCode, final String expectedType, final boolean shouldMatch) {
         Obj result = mParser.eval(noNoObjCode);
         Obj expected = mParser.eval(expectedType);
-        LOG.debug("result [%s] expected [%s] [should match: %b]", result, expected, shouldMatch);
+        LOG.warn("result [%s] expected [%s] [should match: %b]", result, expected, shouldMatch);
         assertEquals(shouldMatch, result.test(expected));
     }
 }

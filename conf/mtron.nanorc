@@ -59,7 +59,8 @@ color green "==>"
 color yellow "/=>"
 color red "X=>"
 ### auto resolve
-color yellow "!\*" "!" "\^\*" "\{<j>\}"
+color yellow "!\*" "!" "\^\*" 
+### "\{<j>\}"
 color green "\{|\}"
 ###  uri
 color blue "[^-][<][^=]([^>])*[>][^-]^(=>)]"
@@ -74,6 +75,7 @@ color yellow "[${][^}]*[}]"
 color yellow "[\"][^\"]*[\"]"
 color yellow "['][^']*[']"
 color yellow start="\"\"\"" end="\"\"\""
+color gray "<j>"
 ### comments
 color gray start="\[--" end="--]"
 color gray start="\[==" end="==]"

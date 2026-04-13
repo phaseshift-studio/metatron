@@ -86,6 +86,7 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
     public AbstractInstSet(final boolean noDocq) {
         super(new LinkedHashMap<>(), mutableMap(
                 uri(Tokens.PATTERN), uri(ALL)), INSTSET_TID, null);
+        old = false;
     }
 
     public AbstractInstSet(final fURI tid, final fURI vid) {
@@ -133,10 +134,10 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
     @Override
     public void setup() {
         this.jvm().forEach((k, v) -> {
-            if (k.equals(uri(CONSTQ))) {
+            if (k.equals(uri(CONST))) {
                 v.lstValue().stream()
                         //.filter(this::checkPattern)
-                        .filter(c -> checkDepth(c, this.tid.extend(CONSTQ)))
+                        .filter(c -> checkDepth(c, this.tid.extend(CONST)))
                         .forEach(c -> {
                             if (!checkPattern(c))
                                 Router.writeToSpace(c);
@@ -248,7 +249,7 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
                             .map(kv -> pattern.isNode() ?
                                     kv.getValue() :
                                     rel(kv.getKey().toUri(), kv.getValue()))));
-            return Q.Helper.processPostRead(this.qs(), vid, result).orElse(result);
+            return Q.Helper.processPostRead(this.qs(), pattern, result).orElse(result);
         });
     }
 

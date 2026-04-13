@@ -33,8 +33,7 @@ import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import static studio.phaseshift.metatron.Tokens.OBJ;
-import static studio.phaseshift.metatron.Tokens.PATTERN;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
@@ -318,6 +317,8 @@ public interface Q extends Rec {
                         (BiFunction<fURI, Obj, Obj>) this.jvm.get(QLESS_WRITE));
                 if (jvm.containsKey(f(OBJ)))
                     q.jvm().put(uri(OBJ), (Obj) jvm.get(f(OBJ)));
+                if (jvm.containsKey(f(INST)))
+                    q.jvm().put(uri(INST), (Obj) jvm.get(f(INST)));
                 return q;
             }
         }

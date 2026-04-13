@@ -196,8 +196,12 @@ public class MetatronMcpServer extends MRec {
         LOG.debug("registering inst as an mcp tool: %s", toolName);
         // Query for documentation metadata
         final Obj docObj = Router.global().read(inst.tid().q(DOCQ, null));
+        if(!docObj.isRec()) {
+            LOG.warn("doc obj is not a rec: %s", docObj);
+            return;
+        }
         // rebuild the doc object just in case the rec is not a true Java class doc (e.g. rec stored in a database)
-        final QCollection.Doc doc = docObj.isNoObj() ? QCollection.Doc.empty(inst) : new QCollection.Doc(docObj.asRec());
+        final QCollection.Docs doc = docObj.isNoObj() ? QCollection.Docs.empty(inst) : new QCollection.Docs(docObj.asRec());
         // Extract description
         final String description = doc.description()!= null || doc.description().isEmpty()
                 ? doc.description()
@@ -243,7 +247,7 @@ public class MetatronMcpServer extends MRec {
      * Build JSON schema from an Inst's type signature and doc metadata.
      * Follows the OLLM pattern for handling both Lst (positional) and Rec (named) args.
      */
-    private String buildSchemaFromInst(final Inst inst, final QCollection.Doc doc) {
+    private String buildSchemaFromInst(final Inst inst, final QCollection.Docs doc) {
         final Poly<?, ?> args = inst.args().orElse(rec0());
         if (args.isNoObj() || args.isEmpty()) 
             return createDefaultArgsSchema();

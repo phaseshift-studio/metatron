@@ -354,7 +354,7 @@ def main() -> None:
         help="Copy input file to output file without processing (default: False)",
     )
     args = parser.parse_args()
-    print("\n[Doc Runner v0.224-db-a345c3456.3342323]\n\targs: ", args)
+    print("\n[Docs Runner v0.224-db-a345c3456.3342323]\n\targs: ", args)
     input_filepath = Path(args.input)
     output_filepath = Path(args.output) if args.output is not None else input_filepath
     print(f"{input_filepath} => {output_filepath}")

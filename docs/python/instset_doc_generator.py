@@ -35,10 +35,12 @@ import logging
 import re
 import shutil
 import websockets
+import json
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Optional, List
+from collections import defaultdict
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -112,17 +114,16 @@ class MetatronClient:
 
         return [e.strip() for e in result.split("%%%") if e.strip()]
 
-    async def fetch_obj_doc(self, vid: str) -> Optional[DocInfo]:
+    async def fetch_obj_doc(self, vid: str) -> List[DocInfo]:
         """
         Fetch documentation for an object using doc_json() instruction.
 
         Returns JSON format: {"obj":"...", "desc":"...", "dom":"...", "rng":"...", "args":{...}, "example":[...]}
+        or a list of such objects if there are multiple documentation instances.
         Response wrapper: </m/str>::'json' or </m/str>::'''json''' (triple quotes if json has quotes)
 
-        Returns DocInfo with parsed fields, or None if no doc available.
+        Returns a list of DocInfo with parsed fields.
         """
-        import json
-
         try:
             # Build doc query: "*vid?docq"./m/web/inst/doc_json()
             vid_escaped = vid.replace("'", "\\'")
@@ -132,56 +133,68 @@ class MetatronClient:
             result = await self.eval(doc_query)
 
             if not result or result == "noobj" or result.startswith("</m/fail>"):
-                return None
+                return []
 
             # Extract JSON from response: </m/str>::'...' or </m/str>::"""..."""
             json_match = re.search(r'</m/str>::"""(.+)"""', result, re.DOTALL) or re.search(r"</m/str>::'(.+)'", result,
                                                                                             re.DOTALL)
             if not json_match:
-                return None
+                return []
 
             json_str = json_match.group(1)
             if json_str == 'null':
-                return None
+                return []
 
             # Parse JSON
             doc_data = json.loads(json_str)
 
-            # Ensure we got a dict, not a string
-            if not isinstance(doc_data, dict):
-                logger.debug(f"doc_json() returned non-dict for {vid}: {type(doc_data)}")
-                return None
+            # Ensure we got a dict or a list
+            if isinstance(doc_data, dict):
+                doc_entries = [doc_data]
+            elif isinstance(doc_data, list):
+                doc_entries = doc_data
+            else:
+                logger.debug(f"doc_json() returned unexpected type for {vid}: {type(doc_data)}")
+                return []
 
-            # Build DocInfo
-            doc_info = DocInfo(
-                raw=result,
-                desc=doc_data.get('desc', ''),
-                dom=doc_data.get('dom', ''),
-                rng=doc_data.get('rng', ''),
-                obj=doc_data.get('obj', '')
-            )
+            docs = []
+            for entry in doc_entries:
+                if not isinstance(entry, dict):
+                    continue
 
-            # Handle args dict
-            args_data = doc_data.get('args', {})
-            if isinstance(args_data, dict) and args_data:
-                doc_info.args = json.dumps(args_data)
+                # Build DocInfo
+                doc_info = DocInfo(
+                    raw=result,
+                    desc=entry.get('desc', ''),
+                    dom=entry.get('dom', ''),
+                    rng=entry.get('rng', ''),
+                    obj=entry.get('obj', '')
+                )
 
-            # Handle examples list
-            examples_data = doc_data.get('example', [])
-            if isinstance(examples_data, list):
-                doc_info.example = examples_data
-            elif isinstance(examples_data, str):
-                doc_info.example = [examples_data]
+                # Handle args dict
+                args_data = entry.get('args', {})
+                if isinstance(args_data, dict) and args_data:
+                    doc_info.args = json.dumps(args_data)
 
-            return doc_info if doc_info.desc else None
+                # Handle examples list
+                examples_data = entry.get('example', [])
+                if isinstance(examples_data, list):
+                    doc_info.example = examples_data
+                elif isinstance(examples_data, str):
+                    doc_info.example = [examples_data]
+
+                if doc_info.desc:
+                    docs.append(doc_info)
+
+            return docs
 
         except json.JSONDecodeError as e:
             logger.warning(f"JSON parse error for {vid}: {e}")
-            return None
+            return []
 
         except Exception as e:
             logger.error(f"Error fetching doc for {vid}: {e}")
-            return None
+            return []
 
 
 # ============================================================================
@@ -210,7 +223,7 @@ class TypeInfo:
     super_type: str = ""
     super_type_short: str = ""
     super_type_instset: str = ""
-    doc: Optional[DocInfo] = None
+    docs: List[DocInfo] = field(default_factory=list)
 
 
 @dataclass
@@ -224,7 +237,7 @@ class InstInfo:
     range: str = ""
     domain_full: str = ""
     range_full: str = ""
-    doc: Optional[DocInfo] = None
+    docs: List[DocInfo] = field(default_factory=list)
 
 
 @dataclass
@@ -234,7 +247,7 @@ class SpaceInfo:
     name: str
     raw: str = ""
     type_spec: str = ""
-    doc: Optional[DocInfo] = None
+    docs: List[DocInfo] = field(default_factory=list)
 
 
 @dataclass
@@ -244,7 +257,7 @@ class ConstInfo:
     name: str
     definition: str = ""
     raw: str = ""
-    doc: Optional[DocInfo] = None
+    docs: List[DocInfo] = field(default_factory=list)
 
 
 @dataclass
@@ -258,7 +271,7 @@ class RewriteInfo:
     range: str = ""
     domain_full: str = ""
     range_full: str = ""
-    doc: Optional[DocInfo] = None
+    docs: List[DocInfo] = field(default_factory=list)
 
 
 @dataclass
@@ -284,7 +297,6 @@ class InstSetInfo:
 # ============================================================================
 
 async def getJSON(client: MetatronClient, query: str, endpoint: str = "/m/web/inst/doc_json()") -> Optional[str]:
-    import json
     result = await client.eval(query + '.' + endpoint)
     if not result or result == "noobj" or result.startswith("</m/fail>"):
         logger.debug(f"Could not fetch JSON for query: {query}")
@@ -315,7 +327,6 @@ class InstSetDocFetcher:
     async def fetch_instset(self, vid: str) -> InstSetInfo:
         """Fetch complete documentation for an instruction set."""
         logger.info(f"Fetching instruction set: {vid}")
-        import json
         name = vid.split('/')[-1] if '/' in vid else vid
         info = InstSetInfo(vid=vid, name=name)
         info.json = await getJSON(self.client, f"'*{vid}'")
@@ -376,7 +387,7 @@ class InstSetDocFetcher:
                     # Query raw type info to get super type
                     await self._fetch_type_super(type_info)
                     # Fetch documentation
-                    type_info.doc = await self.client.fetch_obj_doc(type_info.vid)
+                    type_info.docs = await self.client.fetch_obj_doc(type_info.vid)
                     types.append(type_info)
                     logger.debug(f"  Found type: {type_info.name} (refines {type_info.super_type})")
         except Exception as e:
@@ -412,7 +423,7 @@ class InstSetDocFetcher:
                     # Get short forms for domain and range using rewrite()
                     await self._fetch_inst_short_forms(inst_info)
                     # Fetch documentation
-                    inst_info.doc = await self.client.fetch_obj_doc(inst_info.vid)
+                    inst_info.docs = await self.client.fetch_obj_doc(inst_info.vid)
                     insts.append(inst_info)
                     logger.debug(f"  Found instruction: {inst_info.name} ({inst_info.domain}=>{inst_info.range})")
         except Exception as e:
@@ -446,7 +457,7 @@ class InstSetDocFetcher:
                     # Fetch type specification for the space
                     await self._fetch_space_type(space_info)
                     # Fetch documentation
-                    space_info.doc = await self.client.fetch_obj_doc(space_vid)
+                    space_info.docs = await self.client.fetch_obj_doc(space_vid)
                     spaces.append(space_info)
                     logger.debug(f"  Found space: {space_vid}")
         except Exception as e:
@@ -490,7 +501,7 @@ class InstSetDocFetcher:
                         await self._fetch_rewrite_short_forms(rewrite_info)
                         # Fetch documentation using ORIGINAL vid (before conversion to shorthand)
                         original_vid = entry[:arrow_pos].strip()
-                        rewrite_info.doc = await self.client.fetch_obj_doc(original_vid)
+                        rewrite_info.docs = await self.client.fetch_obj_doc(original_vid)
                         rewrites.append(rewrite_info)
                         logger.debug(f"  Found rewrite: {name} ({rewrite_info.domain}=>{rewrite_info.range})")
         except Exception as e:
@@ -526,7 +537,7 @@ class InstSetDocFetcher:
                             continue
                         const_info = ConstInfo(vid=const_vid, name=name, definition=definition, raw=entry)
                         # Fetch documentation
-                        const_info.doc = await self.client.fetch_obj_doc(const_vid)
+                        const_info.docs = await self.client.fetch_obj_doc(const_vid)
                         consts.append(const_info)
                         logger.debug(f"  Found const: {name}")
         except Exception as e:
@@ -850,7 +861,7 @@ class HTMLDocGenerator:
 
         return header + content + footer
 
-    def _generate_standalone(self) -> str:
+    def _generate_standalone(self, build_number: int = 0) -> str:
         """Generate standalone HTML (original behavior)."""
         # Use website's existing CSS and highlight.js (relative paths from instset/ subdirectory)
         css_links = f'''
@@ -1100,28 +1111,12 @@ class HTMLDocGenerator:
                 else:
                     refines_html = f'<span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">{html.escape(display_name)}</span></span>'
         
-            # Generate description from doc if available
-            desc_html = ""
-            if t.doc and t.doc.desc:
-                desc_html = f'''
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">{html.escape(t.doc.desc)}</p>
-                    </div>'''
-
-            args_html = self._format_args_map(t.doc.args) if t.doc and t.doc.args else ""
-            if len(args_html) > 0:
-                args_html = f"""
-                            <div class="card-body border-top py-2">
-                                <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">{args_html}</code></pre>
-                            </div>
-                            """
-
-            # Generate examples
-            examples_html = self._format_examples(t.doc)
-            # logger.info(examples_html)
+            # Generate full documentation
+            doc_group_id = f"type-{html.escape(t.name)}"
+            doc_html = self._format_multi_documentation(t.docs, doc_group_id)
             
             items.append(f"""
-                <div class="card mb-3" id="type-{html.escape(t.name)}">
+                <div class="card mb-3" id="{doc_group_id}">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-primary fw-bold">{html.escape(t.name)}::T</span>
@@ -1130,9 +1125,7 @@ class HTMLDocGenerator:
                         <small class="text-muted code">{html.escape(t.vid)}</small>
                     </div>
                     {definition}
-                    {desc_html}
-                    {args_html}
-                    {examples_html}
+                    {doc_html}
                 </div>""")
 
         return f"""
@@ -1149,7 +1142,6 @@ class HTMLDocGenerator:
 
         items = []
         # Group instructions by name to handle multiple signatures
-        from collections import defaultdict
         inst_groups = defaultdict(list)
         for inst in self.instset.insts:
             inst_groups[inst.name].append(inst)
@@ -1159,27 +1151,47 @@ class HTMLDocGenerator:
 
             # Generate signature blocks for each variant
             signatures = []
+
+            # Map each variant to its unique documentation index
+            variant_doc_map = {}
+            unique_docs = []
+            doc_raws = {}  # raw_doc -> index
+
             for inst in insts:
+                for doc in inst.docs:
+                    if doc.raw not in doc_raws:
+                        doc_raws[doc.raw] = len(unique_docs)
+                        unique_docs.append(doc)
+                    variant_doc_map[inst.signature] = doc_raws[doc.raw]
+
+            doc_group_id = f"inst-{html.escape(name)}"
+
+            for idx, inst in enumerate(insts):
+                doc_idx = variant_doc_map.get(inst.signature, 0)
+                tab_id = f"{doc_group_id}-doc-{doc_idx}"
+
                 signatures.append(
-                    f'<pre class="mb-1"><code class="language-mtron">{html.escape(inst.signature)}</code></pre>')
+                    f'<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" '
+                    f'onclick="document.getElementById(\'{tab_id}-tab\').click(); document.getElementById(\'{tab_id}\').scrollIntoView({{behavior: \'smooth\', block: \'center\'}});">'
+                    f'<code class="language-mtron">{html.escape(inst.signature)}</code></pre>')
 
             all_sigs = '\n'.join(signatures)
 
-            # Use first inst for the header - show domain => range with subscripts
-            first_inst = insts[0]
-            type_sig_html = self._format_inst_type_signature(first_inst)
+            # Use first doc/inst for the initial header
+            initial_sig = self._format_inst_type_signature(insts[0])
+            initial_vid = html.escape(insts[0].vid)
 
-            # Generate full documentation using new inst-specific formatter
-            doc_html = self._format_inst_documentation(first_inst.doc)
+            # Generate full documentation
+            doc_html = self._format_multi_documentation(unique_docs, doc_group_id)
 
             items.append(f"""
-                <div class="card mb-3" id="inst-{html.escape(name)}">
-                    <div class="card-header d-flex justify-content-between align-items-center py-2">
+                <div class="card mb-3" id="{doc_group_id}">
+                    <div class="card-header d-flex justify-content-between align-items-center py-2 text-light border-bottom border-secondary">
                         <span>
                             <span class="code text-primary fw-bold">{html.escape(name)}</span>
-                            {type_sig_html}
+                            {initial_sig}
                         </span>
-                        <small class="text-muted code">{html.escape(first_inst.vid)}</small>
+                        <small class="text-muted code">{initial_vid}</small>
                     </div>
                     <div class="card-body p-2">
                         {all_sigs}
@@ -1195,26 +1207,72 @@ class HTMLDocGenerator:
             {''.join(items)}
         </div>"""
 
-    def _format_inst_type_signature(self, inst: InstInfo) -> str:
-        """Format instruction type signature as name_{domain} => _{range} with subscripts and clickable links."""
-        if not inst.domain and not inst.range:
+    def _format_multi_documentation(self, docs: List[DocInfo], group_id: str) -> str:
+        """Format multiple documentation variations with a toggle UI."""
+        if not docs:
+            return ""
+
+        if len(docs) == 1:
+            return self._format_inst_documentation(docs[0])
+
+        # Multiple variations - generate pills and tab content
+        pills = []
+        contents = []
+
+        for i, doc in enumerate(docs):
+            active_class = "active" if i == 0 else ""
+            show_class = "show active" if i == 0 else ""
+            tab_id = f"{group_id}-doc-{i}"
+
+            pills.append(f'''
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link py-1 px-2 {active_class} text-start h-100" id="{tab_id}-tab" data-bs-toggle="pill" 
+                        data-bs-target="#{tab_id}" type="button" role="tab" aria-controls="{tab_id}" 
+                        aria-selected="{"true" if i == 0 else "false"}" style="font-size: 0.75rem; max-width: 60px;">
+                        <i class="fas fa-info-circle me-1"></i> {i+1}
+                    </button>
+                </li>''')
+
+            contents.append(f'''
+                <div class="tab-pane fade {show_class}" id="{tab_id}" role="tabpanel" aria-labelledby="{tab_id}-tab">
+                    {self._format_inst_documentation(doc)}
+                </div>''')
+
+        return f'''
+            <div class="card-body border-top p-0">
+                <ul class="nav nav-pills p-2 bg-dark" id="{group_id}-pills" role="tablist">
+                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">Variations:</span></li>
+                    {''.join(pills)}
+                </ul>
+                <div class="tab-content" id="{group_id}-content">
+                    {''.join(contents)}
+                </div>
+            </div>'''
+
+    def _format_type_signature(self, domain: str, range_type: str, domain_full: str = "", range_full: str = "") -> str:
+        """Format a type signature (domain => range) with subscripts and clickable links."""
+        if not domain and not range_type:
             return ""
 
         parts = []
-        if inst.domain:
+        if domain:
             # Make domain clickable - link to type section
-            domain_html = self._make_type_link(inst.domain, inst.domain_full, "text-info", "domain")
+            domain_html = self._make_type_link(domain, domain_full or domain, "text-info", "domain")
             parts.append(f'<span class="instset-doc-small-code">{domain_html}</span>')
 
-        if inst.domain or inst.range:
+        if domain or range_type:
             parts.append('<span class="text-muted mx-1">=&gt;</span>')
 
-        if inst.range:
+        if range_type:
             # Make range clickable - link to type section
-            range_html = self._make_type_link(inst.range, inst.range_full, "text-success", "range")
+            range_html = self._make_type_link(range_type, range_full or range_type, "text-success", "range")
             parts.append(f'<span class="instset-doc-small-code">{range_html}</span>')
 
         return f'<span class="ms-1">{"".join(parts)}</span>'
+
+    def _format_inst_type_signature(self, inst: InstInfo) -> str:
+        """Format instruction type signature as name_{domain} => _{range} with subscripts and clickable links."""
+        return self._format_type_signature(inst.domain, inst.range, inst.domain_full, inst.range_full)
 
     def _make_type_link(self, type_short: str, type_full: str, css_class: str, tooltip: str = "") -> str:
         """Create a clickable link to a type definition."""
@@ -1299,8 +1357,6 @@ class HTMLDocGenerator:
 
     def _format_args_map(self, args_str: str) -> str:
         """Parse JSON args dict and format as multi-line display. Returns empty string if no args."""
-        import json
-
         if not args_str:
             return ""
 
@@ -1345,32 +1401,26 @@ class HTMLDocGenerator:
                         <pre class="mb-0"><code class="language-mtron">{html.escape(rewrite.signature)}</code></pre>
                     </div>'''
 
-            # Format domain/range with subscripts and clickable links (same as instructions)
-            type_sig_html = self._format_rewrite_type_signature(rewrite)
+            # Generate full documentation
+            doc_group_id = f"rewrite-{html.escape(rewrite.name)}"
 
-            # Generate description from doc if available
-            desc_html = ""
-            if rewrite.doc and rewrite.doc.desc:
-                desc_html = f'''
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">{html.escape(rewrite.doc.desc)}</p>
-                    </div>'''
+            # Use first doc/rewrite for the initial header
+            initial_sig = self._format_rewrite_type_signature(rewrite)
+            initial_vid = html.escape(rewrite.vid)
 
-            # Generate examples
-            examples_html = self._format_examples(rewrite.doc)
+            doc_html = self._format_multi_documentation(rewrite.docs, doc_group_id)
 
             items.append(f"""
-                <div class="card mb-3" id="rewrite-{html.escape(rewrite.name)}">
+                <div class="card mb-3" id="{doc_group_id}">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span>
                             <span class="code text-warning fw-bold">{html.escape(rewrite.name)}</span>
-                            {type_sig_html}
+                            {initial_sig}
                         </span>
-                        <small class="text-muted code">{html.escape(rewrite.vid)}</small>
+                        <small class="text-muted code">{initial_vid}</small>
                     </div>
                     {signature_html}
-                    {desc_html}
-                    {examples_html}
+                    {doc_html}
                 </div>""")
 
         return f"""
@@ -1383,24 +1433,7 @@ class HTMLDocGenerator:
 
     def _format_rewrite_type_signature(self, rewrite: RewriteInfo) -> str:
         """Format rewrite type signature as name_{domain} => _{range} with subscripts and clickable links."""
-        if not rewrite.domain and not rewrite.range:
-            return ""
-
-        parts = []
-        if rewrite.domain:
-            # Make domain clickable - link to type section
-            domain_html = self._make_type_link(rewrite.domain, rewrite.domain_full, "text-info", "domain")
-            parts.append(f'<span class="instset-doc-small-code">{domain_html}</span>')
-
-        if rewrite.domain or rewrite.range:
-            parts.append('<span class="text-muted mx-1">=&gt;</span>')
-
-        if rewrite.range:
-            # Make range clickable - link to type section
-            range_html = self._make_type_link(rewrite.range, rewrite.range_full, "text-success", "range")
-            parts.append(f'<span class="instset-doc-small-code">{range_html}</span>')
-
-        return f'<span class="ms-1">{"".join(parts)}</span>'
+        return self._format_type_signature(rewrite.domain, rewrite.range, rewrite.domain_full, rewrite.range_full)
 
     def _generate_spaces_section(self) -> str:
         if not self.instset.spaces:
@@ -1416,35 +1449,18 @@ class HTMLDocGenerator:
                         <pre class="mb-0"><code class="language-mtron">{html.escape(space.type_spec)}</code></pre>
                     </div>'''
 
-            # Generate description from doc if available
-            desc_html = ""
-            if space.doc and space.doc.desc:
-                desc_html = f'''
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">{html.escape(space.doc.desc)}</p>
-                    </div>'''
-
-            args_html = self._format_args_map(space.doc.args) if space.doc and space.doc.args else ""
-            if len(args_html) > 0:
-                args_html = f"""
-                            <div class="card-body border-top py-2">
-                                <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">{args_html}</code></pre>
-                            </div>
-                            """
-
-            # Generate examples
-            examples_html = self._format_examples(space.doc)
+            # Generate full documentation
+            doc_group_id = f"space-{html.escape(space.name)}"
+            doc_html = self._format_multi_documentation(space.docs, doc_group_id)
 
             items.append(f"""
-                <div class="card mb-3" id="space-{html.escape(space.name)}">
+                <div class="card mb-3" id="{doc_group_id}">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <a href="{self._make_filename(space.vid)}" class="code text-primary fw-bold text-decoration-none">{html.escape(space.name)}</a>
                         <small class="text-muted code">{html.escape(space.vid)}</small>
                     </div>
                     {type_spec_html if type_spec_html else ''}
-                    {desc_html}
-                    {args_html}
-                    {examples_html}
+                    {doc_html}
                 </div>""")
 
         return f"""
@@ -1468,26 +1484,18 @@ class HTMLDocGenerator:
                         <pre class="mb-0"><code class="language-mtron">{html.escape(const.definition)}</code></pre>
                     </div>'''
 
-            # Generate description from doc if available
-            desc_html = ""
-            if const.doc and const.doc.desc:
-                desc_html = f'''
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">{html.escape(const.doc.desc)}</p>
-                    </div>'''
-
-            # Generate examples
-            examples_html = self._format_examples(const.doc)
+            # Generate full documentation
+            doc_group_id = f"const-{html.escape(const.name)}"
+            doc_html = self._format_multi_documentation(const.docs, doc_group_id)
 
             items.append(f"""
-                <div class="card mb-3" id="const-{html.escape(const.name)}">
+                <div class="card mb-3" id="{doc_group_id}">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
                         <span class="code text-secondary fw-bold">{html.escape(const.name)}</span>
                         <small class="text-muted code">{html.escape(const.vid)}</small>
                     </div>
                     {definition_html}
-                    {desc_html}
-                    {examples_html}
+                    {doc_html}
                 </div>""")
 
         return f"""

@@ -63,7 +63,7 @@ public class DocQTest extends AbstractMetatronTest {
     @Test
     public void testDocStructure() {
         final Inst inst = Router.readFromSpace(AND_INST_TID).asInst();
-        final QCollection.Doc doc = new QCollection.Doc(Router.readFromSpace(AND_INST_TID.addQ(DOCQ)).asRec());
+        final Docs doc = new Docs(Router.readFromSpace(AND_INST_TID.addQ(DOCQ)).asRec());
         assertTrue(doc.test(DOCQ_TYPE));
         assertTrue("and() documentation has latex formatting in its description", doc.description().contains("\\("));
         assertEquals(doc.at(DESC).strValue(), doc.description());
@@ -74,7 +74,7 @@ public class DocQTest extends AbstractMetatronTest {
     public void testNoDocumentation() {
         final fURI dummyURI = f("/m/inst/NoTAInsT");
         final Inst inst = Router.readFromSpace(dummyURI).asInst();
-        final QCollection.Doc doc = new QCollection.Doc(Router.readFromSpace(dummyURI.addQ(DOCQ)).asRec());
+        final Docs doc = new Docs(Router.readFromSpace(dummyURI.addQ(DOCQ)).asRec());
         assertTrue(doc.test(DOCQ_TYPE));
         assertEquals(NO_DOCS.at(DESC).strValue(), doc.description());
         assertTrue(inst.isNoObj());
@@ -84,18 +84,18 @@ public class DocQTest extends AbstractMetatronTest {
     public void testWritingDocumentation() {
         final fURI newURI = f("/m/some_obj");
         Router.global().write(newURI, str("some obj"));
-        QCollection.Doc doc = new QCollection.Doc(Router.readFromSpace(newURI.addQ(DOCQ)).asRec());
+        Docs doc = new Docs(Router.readFromSpace(newURI.addQ(DOCQ)).asRec());
         assertEquals(NO_DOCS.at(DESC).strValue(), doc.description());
         /// //
         Router.global().write(newURI.addQ(DOCQ), str("some obj"));
-        doc = new QCollection.Doc(Router.readFromSpace(newURI.addQ(DOCQ)).asRec());
+        doc = new Docs(Router.readFromSpace(newURI.addQ(DOCQ)).asRec());
         assertTrue(doc.test(DOCQ_TYPE));
         assertEquals("some obj", doc.description());
         assertEquals("some obj", doc.at(DESC).strValue());
         /// //
         final fURI newURI2 = f("/m/some_obj_2");
         docWrap(str("some obj 2",STR_TID,newURI2), "a test str", "aa", "bb");
-        doc = new QCollection.Doc(Router.readFromSpace(newURI2.addQ(DOCQ)).asRec());
+        doc = new Docs(Router.readFromSpace(newURI2.addQ(DOCQ)).asRec());
         assertTrue(doc.test(DOCQ_TYPE));
         assertEquals("a test str", doc.description());
         assertTrue(doc.examples().contains("aa"));
@@ -116,10 +116,10 @@ public class DocQTest extends AbstractMetatronTest {
                 rec(uri("a"), uri("b"), uri("c"), jnt(23)))) {
             final Obj writeResult = Router.global().write(baseURI.extend("test" + obj.tid().name()), obj);
             assertEquals(obj, writeResult);
-            final Obj docWriteResult = Router.global().write(baseURI.extend("test" + obj.tid().name()).q("docq", null), QCollection.Doc.doc(obj, null, null, null, "a obj that is a " + obj.tid().name()));
+            final Obj docWriteResult = Router.global().write(baseURI.extend("test" + obj.tid().name()).q("docq", null), Docs.doc(obj, null, null, null, "a obj that is a " + obj.tid().name()));
             LOG.debug("\n write result: %s \n write doc result: %s", writeResult, docWriteResult);
             assertEquals(DOCS_TID, docWriteResult.tid());
-            assertEquals("a obj that is a " + obj.tid().name(), new QCollection.Doc(docWriteResult.asRec()).description());
+            assertEquals("a obj that is a " + obj.tid().name(), new Docs(docWriteResult.asRec()).description());
             final Obj readResult = Router.global().read(baseURI.extend("test" + obj.tid().name()));
             assertEquals(writeResult, readResult);
             assertEquals(obj, readResult);
@@ -127,7 +127,7 @@ public class DocQTest extends AbstractMetatronTest {
             LOG.debug("\n read result: %s \n read doc result: %s", readResult, docReadResult);
             assertEquals(DOCS_TID, docReadResult.tid());
             assertEquals(docWriteResult, docReadResult);
-            assertEquals("a obj that is a " + obj.tid().name(), new QCollection.Doc(docReadResult.asRec()).description());
+            assertEquals("a obj that is a " + obj.tid().name(), new Docs(docReadResult.asRec()).description());
         }
     }
 
@@ -136,7 +136,7 @@ public class DocQTest extends AbstractMetatronTest {
             Obj doc = instSet.read(inst.tid().noQ().one().q("docq"));
             // LOG.info("HERE %s:", doc.type());
             if (doc.c().equals(cInt.ONE())) {
-                LOG.warn("%s has no associated documentation %s", inst, doc.<QCollection.Doc>as().at(DESC));
+                LOG.warn("%s has no associated documentation %s", inst, doc.<Docs>as().at(DESC));
             }
         }
     }
