@@ -1,0 +1,404 @@
+<!--
+  ~ Metatron: A Distributed Computing Language and Virtual Machine
+  ~  Copyright (C) 2025- PhaseShift Studio, LLC
+  ~  
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~  
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>metatron instruction sets</title>
+    <!-- METADATA -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="keywords" content="metatron database kv graph document programming">
+    <meta name="description" content="Next Generation Data Technologies">
+    <meta name="theme-color" content="#ffffff">
+    <!-- FAVICON -->
+    <link rel="apple-touch-icon" sizes="114x114" href="../images/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../images/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../images/favicon-16x16.png">
+    <link rel="mask-icon" href="../images/safari-pinned-tab.svg" color="#5bbad5">
+    <!-- CSS PACKAGES -->
+    <link href="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.css" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="../lib/animate/animate.min.css" rel="stylesheet">
+    <link href="../css/bootstrap.min.css" rel="stylesheet">
+    <link href="../css/termynal.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/styles/night-owl.min.css" rel="stylesheet">
+    <!-- JAVASCRIPT PACKAGES -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" type="text/javascript"></script>
+    <script src="../highlight/highlight.min.js" type="text/javascript"></script>
+    <script src="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js" type="text/javascript"></script>
+    <script src="../highlight/languages/mtron.min.js" type="text/javascript"></script>
+    <script src="../highlight/languages/json.min.js" type="text/javascript"></script>
+    <script src="../highlight/languages/bash.min.js" type="text/javascript"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
+    <script async src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js" type="text/javascript"></script>
+    <script src="../lib/wow/wow.min.js" type="text/javascript"></script>
+    <script src="../lib/easing/easing.min.js" type="text/javascript"></script>
+    <script src="../lib/waypoints/waypoints.min.js" type="text/javascript"></script>
+    <script src="../lib/termynal/termynal.js" type="text/javascript"></script>
+    <!-- <script src="data/console.txt"></script>-->
+    <!-- CUSTOM CSS/JAVASCRIPT -->
+    <link href="../css/metatron.css" rel="stylesheet">
+    <script src="../js/metatron.js" type="text/javascript"></script>
+    <link rel="stylesheet" href="../css/instset_doc.css">
+</head>
+<body class="d-flex flex-column min-vh-100">
+<!------------------------------------------------------->
+<!-- LOADING WIDGET -->
+<div id="spinner"
+     class="show bg-dark position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
+    <div class="spinner-grow text-primary" style="width: 3rem; height: 3rem;" role="status">
+        <span class="sr-only">Loading...</span>
+    </div>
+</div>
+<!-- NAVIGATION BAR -->
+<nav class="navbar navbar-expand-lg bg-secondary navbar-dark sticky-top py-lg-0 px-lg-5 wow fadeIn"
+     data-wow-delay="0.1s">
+    <a href="../index.html" class="navbar-brand ms-4 ms-lg-0">
+        <h2 class="mb-0 text-primary logo-text">
+            <i class="bi bi-soundwave me-3"></i>
+            PhaseShift Studio
+        </h2>
+    </a>
+    <div class="collapse navbar-collapse" id="navbarCollapse">
+        <div class="navbar-nav ms-auto p-4 p-lg-0">
+            <!----------------------------------------------------------------------------------------------------------
+            ------------------------------------------ DOWNLOAD DROPDOWN -----------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="download_dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">
+                    download
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="download_dropdown">
+                    <li>
+                        <div class="terminal-box">
+                            <pre><code>docker pull docker.phaseshift.studio/metatron:0.1-SNAPSHOT</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="terminal-box">
+                            <span class="badge bg-danger">only linux tested</span>
+                            <pre><code>git clone https://github.com/phaseshift-studio/metatron.git
+mvn clean install -DskipTests=true
+bin/metatron</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="terminal-box">
+                            <span class="badge bg-danger">only linux tested</span>
+                            <pre><code>curl -L https://github.com/phaseshift-studio/metatron.git</code></pre>
+                        </div>
+                    </li>
+                </ul>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            -------------------------------- INSTRUCTION SET ARCHITECTURES DROPDOWN ------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="isa_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    instruction sets
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="isa_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='m.html';"><img
+                            src="../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
+                            alt="mtron"/>/m</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='m_mach.html';"><img
+                            src="../images/icons/space/mach-icon.svg" class="isa-row icon-color me-2" alt="mach"/>/m/mach</a>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='m_tble.html';"><img
+                            src="../images/icons/space/tble-icon.svg" class="isa-row icon-color me-2" alt="tble"/>/m/tble</a>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='m_dcmnt.html';"><img
+                            src="../images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2" alt="dcmnt"/>/m/dcmnt</a>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='m_grph.html';"><img
+                            src="../images/icons/space/grph-icon.svg" class="isa-row icon-color me-2" alt="grph"/>/m/grph</a>
+                    </li>
+                    <!-- TODO: Add /m/vec docs
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='m_vec.html';"><img
+                            src="../images/icons/space/olap-icon.svg" class="isa-row icon-color me-2"
+                            alt="vec"/>/m/vec</a></li>
+                    -->
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='m_web.html';"><img
+                            src="../images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
+                            alt="web"/>/m/web</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='m_llm.html';"><img
+                            src="../images/icons/space/llm-icon.svg" class="isa-row icon-color me-2"
+                            alt="llm"/>/m/llm</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='m_iot.html';"><img
+                            src="../images/icons/space/graphql-icon.svg" class="isa-row icon-color me-2" 
+                            alt="iot"/>/m/iot</a>
+                    </li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='m_math.html';"><img
+                            src="../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
+                            alt="math"/>/m/math</a>
+                    </li>
+                </ul>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+             ----------------------------------- TRACTATUS LINK --------------------------------------------------------
+             ---------------------------------------------------------------------------------------------------------->
+            <li class="nav-item">
+                <a class="nav-link" href="#" onclick="location.href='../tractatus.html';">the tractatus</a>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            ----------------------------------- ARTICLES DROPDOWN ------------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="articles-dropdown" class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">articles</a>
+                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="articles-dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../articles/stream-ring-theory.pdf';"><i class="bi bi-gem icon-color me-2 isa-row"></i>stream ring theory</a></li>
+                    <li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='../articles/parametric-identities-in-ring-theory.html';"><i class="bi bi-arrow-repeat icon-color me-2 isa-row"></i>parametric identities</a></li>
+                    <li>
+                </ul>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            ----------------------------------- GUILD DROPDOWN ---------------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item dropdown">
+                <a id="guild_dropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    software guild
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="guild_dropdown">
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='https://opencollective.com/metatron';">
+                        <i class="bi bi-steam icon-color me-2 isa-row"></i>open collective</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#"
+                           onclick="location.href='https://github.com/phaseshift-studio/metatron';">
+                        <i class="bi bi-github icon-color me-2 isa-row"></i>github</a></li>
+                    <li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='https://groups.google.com/u/1/g/metatron-phaseshift';">
+                        <i class="bi bi-envelope-at icon-color me-2 isa-row"></i>mailing list</a></li>
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='../index.html';">live coding</a></li>-->
+                    <!--<li><a class="code dropdown-item d-flex align-items-center" href="#" onclick="location.href='../index.html';">artifacts</a></li>-->
+                </ul>
+            </li>
+            <!--<li class="nav-item dropdown">
+                <a id="services_dropdown" class="nav-link dropdown-toggle" href="#"  role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Services
+                </a>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="products_dropdown">
+                    <li><a class="dropdown-item" href="#" onclick="slideShowPage(2);">Consulting</a></li>
+                </ul>
+            </li>-->
+        </div>
+    </div>
+    <div>
+        <div class="d-flex pt-1 m-n1">
+            <a class="btn btn-lg-square btn-dark text-primary m-1" href="mailto:info@phaseshift.studio">
+                <i class="fa fa-envelope-open text-primary"></i>
+            </a>
+        </div>
+    </div>
+</nav>
+<main class="container my-4 flex-grow-1">
+        <div class="container-xxl py-4">
+            <div class="text-center mb-5">
+                <h1 class="text-primary glow-text">metatron</h1>
+                <p class="subtitle text-light">instruction set documentation</p>
+            </div>
+
+            <div class="row g-3">
+                
+                <div class="col-md-6 col-lg-4">
+                    <a href="m.html" class="text-decoration-none">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title code text-primary">/m</h5>
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <span class="badge bg-primary">13 types</span>
+                                    <span class="badge bg-success">244 instructions</span>
+                                    <span class="badge bg-info text-dark">4 spaces</span>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <a href="m_dcmnt.html" class="text-decoration-none">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title code text-primary">/m/dcmnt</h5>
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <span class="badge bg-primary">2 types</span>
+                                    <span class="badge bg-success">2 instructions</span>
+                                    <span class="badge bg-info text-dark">1 spaces</span>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <a href="m_grph.html" class="text-decoration-none">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title code text-primary">/m/grph</h5>
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <span class="badge bg-primary">3 types</span>
+                                    <span class="badge bg-success">13 instructions</span>
+                                    <span class="badge bg-info text-dark">1 spaces</span>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <a href="m_iot.html" class="text-decoration-none">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title code text-primary">/m/iot</h5>
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <span class="badge bg-primary">0 types</span>
+                                    <span class="badge bg-success">0 instructions</span>
+                                    <span class="badge bg-info text-dark">1 spaces</span>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <a href="m_llm.html" class="text-decoration-none">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title code text-primary">/m/llm</h5>
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <span class="badge bg-primary">7 types</span>
+                                    <span class="badge bg-success">1 instructions</span>
+                                    <span class="badge bg-info text-dark">1 spaces</span>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <a href="m_mach.html" class="text-decoration-none">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title code text-primary">/m/mach</h5>
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <span class="badge bg-primary">9 types</span>
+                                    <span class="badge bg-success">10 instructions</span>
+                                    <span class="badge bg-info text-dark">2 spaces</span>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <a href="m_math.html" class="text-decoration-none">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title code text-primary">/m/math</h5>
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <span class="badge bg-primary">7 types</span>
+                                    <span class="badge bg-success">14 instructions</span>
+                                    <span class="badge bg-info text-dark">1 spaces</span>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <a href="m_tble.html" class="text-decoration-none">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title code text-primary">/m/tble</h5>
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <span class="badge bg-primary">3 types</span>
+                                    <span class="badge bg-success">1 instructions</span>
+                                    <span class="badge bg-info text-dark">1 spaces</span>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <a href="m_web.html" class="text-decoration-none">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title code text-primary">/m/web</h5>
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <span class="badge bg-primary">4 types</span>
+                                    <span class="badge bg-success">2 instructions</span>
+                                    <span class="badge bg-info text-dark">1 spaces</span>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <div class="py-3 text-center mt-5">
+                <hr class="border-secondary">
+                <small class="text-muted">
+                    metatron instset doc generator on build 0-2026-04-13 01:58:41<br>
+                    © PhaseShift Studio, LLC
+                </small>
+            </div>
+        </div></main>
+<footer class="container-fluid bg-secondary fixed-bottom text-light footer wow fadeIn" data-wow-delay="0.1s">
+    <div class="d-flex pt-1 mb-0">
+        <a class="btn btn-lg-square btn-dark text-primary m-1 center" href="mailto:info@phaseshift.studio"><i
+                class="fa fa-envelope-open text-primary"></i></a>
+        <div class="text-primary small align-content-center">&copy; 2025- PhaseShift Studio, LLC</div>
+    </div>
+</footer>
+<!-- Back to Top -->
+<a href="#" class="btn btn-primary btn-square back-to-top"><i class="bi bi-caret-up-fill"></i></a>
+
+<script>
+    if (!hljs.initHighlighting.called) {
+        hljs.initHighlighting.called = true
+        ;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) {
+            hljs.highlightBlock(el)
+        })
+    }
+    document.querySelectorAll('.btn[data-bs-toggle="collapse"]').forEach(button => {
+        button.addEventListener('click', () => {
+            button.classList.toggle("active")
+        });
+    });
+    document.querySelectorAll('code').forEach(block => {
+        hljs.highlightBlock(block);
+    });
+</script>
+</body>
+</html>
+
+<!-- RECOMMENDED TO STAY OUTSIDE HTML TAG -->
+<!------------ FEATURES MODAL -------------->
+<div id="modalPanel" class="modal fade" tabindex="-1"/>
+<!------------------------------------------>
+<!------------------------------------------>
