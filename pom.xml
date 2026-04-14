@@ -57,13 +57,13 @@
         <!-- DEPENDENCY VERSIONS -->
         <java-websocket.version>1.6.0</java-websocket.version>
         <mariadb.version>3.5.8</mariadb.version>
-        <mongodb.version>5.6.4</mongodb.version>
-        <langchain4j.version>1.12.2</langchain4j.version>
+        <mongodb.version>5.6.5</mongodb.version>
+        <langchain4j.version>1.13.0</langchain4j.version>
         <jlama.version>0.8.4</jlama.version>
-        <langchain4j.beta.version>1.12.2-beta22</langchain4j.beta.version>
+        <langchain4j.beta.version>1.13.0-beta23</langchain4j.beta.version>
         <langgraph4j.version>1.8.11</langgraph4j.version>
         <junit.version>6.0.3</junit.version>
-        <tinkerpop.version>3.8.0</tinkerpop.version>
+        <tinkerpop.version>3.8.1</tinkerpop.version>
         <jlama.version>0.8.4</jlama.version>
         <gson.version>2.13.2</gson.version>
         <petitparser.version>2.4.0</petitparser.version>
@@ -83,9 +83,9 @@
         <dockerfile-maven.version>1.4.13</dockerfile-maven.version>
         <commonmark.version>0.28.0</commonmark.version>
         <jserialcomm.version>2.11.4</jserialcomm.version>
-        <rhino.version>1.7.15</rhino.version>
-        <rhino.j2r223.version>1.7.7.1</rhino.j2r223.version>
-        <sqlite.version>3.51.3.0</sqlite.version>
+        <rhino.version>1.9.1</rhino.version>
+        <rhino.j2r223.version>1.7.14</rhino.j2r223.version>
+        <sqlite.version>3.53.0.0</sqlite.version>
         <mcp-annotated-java-sdk.version>0.13.0</mcp-annotated-java-sdk.version>
         <mcp.version>1.1.1</mcp.version>
         <!-- LOGBACK PROPERTIES -->
@@ -758,7 +758,7 @@
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>buildnumber-maven-plugin</artifactId>
-                    <version>1.4</version>
+                    <version>3.3.0</version>
                     <executions>
                         <execution>
                             <phase>validate</phase>
