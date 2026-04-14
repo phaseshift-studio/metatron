@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 MCP Server Stress Test
-Tests the Metatron MCP server with various queries to check for:
+Tests the metatron MCP server with various queries to check for:
 - Correct results
 - Server stability
 - Error handling
@@ -257,7 +257,7 @@ class MCPTester:
 
         except Exception as e:
             print(f"\n❌ Failed to connect to server: {e}")
-            print(f"Make sure the Metatron server is running on {self.uri}")
+            print(f"Make sure the metatron server is running on {self.uri}")
 
     def print_summary(self):
         """Print test summary statistics"""

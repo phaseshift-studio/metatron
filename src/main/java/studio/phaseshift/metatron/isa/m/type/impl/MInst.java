@@ -73,6 +73,10 @@ public class MInst extends MObj implements Inst {
     public static Inst instC(final fURI tid, final Poly args, final String code) {
         return new MInst(Triplet.with(args, Inst.f.of(code), NoObj.noobj()), tid,null);
     }
+    
+    public static Inst instLambda(final BiFunction<Obj, Inst, Obj> f) {
+        return new MInst(Triplet.with(lst(List.of()), Inst.f.of(f), NoObj.noobj()), M_ISA_INST_TID.extend("lambda"),null);
+    }
 
     @Override
     public int hashCode() {

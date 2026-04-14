@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.web.type;
 
+import studio.phaseshift.metatron.isa.doc.schema.storage.ObjBSONSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
@@ -31,6 +32,7 @@ import java.util.List;
  */
 public class Content {
     public enum ContentType {
+        APPLICATION_BSON("application/bson"),
         APPLICATION_JSON("application/json"),
         APPLICATION_LD_JSON("application/ld+json"),
         MEDIA("media/"),
@@ -114,6 +116,7 @@ public class Content {
             if(this.equals(APPLICATION_MTRON)) return new ObjmtronSerializer();
             if(this.equals(APPLICATION_JSON)) return ObjSimpleJSONSerializer.single();
             if(this.equals(TEXT_HTML)) return ObjHTMLSerializer.single();
+            if(this.equals(APPLICATION_BSON)) return new ObjBSONSerializer();
             return new ObjSimpleJSONSerializer();
         }
     }

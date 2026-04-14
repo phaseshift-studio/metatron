@@ -58,6 +58,28 @@ public class fURITest extends AbstractMetatronTest {
 
     @ParameterizedTest
     @CsvSource(value = {
+            "a       | b     | true",
+            "aa      | b     | true",
+            "aaa     | aa    | true",
+            "aaa     | bb    | true",
+            "aa      | bbb   | true",
+            "a/b     | b/c/d | true",
+            "a       | a/a   | true",
+            "a/b/c   | b/c/d | true",
+            "a/b/c/d | a/b/c | true",
+            "a/b/c   | a/b   | true"
+    }, delimiter = '|', nullValues = "null")
+    public void testComparable(final String furiA, final String furiB, final boolean lessThan) {
+        final fURI fa = f(furiA);
+        final fURI fb = f(furiB);
+        LOG.debug("testing %s compared to %s is %s", fa, fb, lessThan);
+        assertEquals(fa.compareTo(fb) < 0, lessThan);
+        assertEquals(fb.compareTo(fa) > 0, !lessThan);
+
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
             "/g/S/+                      | 1   | /g/S",
             "/g/S/+/                     | 1   | /g/S/",
             "/g/S/+                      | 2   | /g",

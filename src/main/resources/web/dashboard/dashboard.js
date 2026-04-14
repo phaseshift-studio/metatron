@@ -107,14 +107,16 @@ class MetatronDashboard {
         try {
             const saved = localStorage.getItem('mtron-dashboard-panels');
             if (saved) return new Set(JSON.parse(saved));
-        } catch (e) { /* ignore */ }
+        } catch (e) { /* ignore */
+        }
         return new Set(Object.entries(this.panelRegistry).filter(([_, p]) => p.defaultOpen).map(([id]) => id));
     }
 
     savePanelState() {
         try {
             localStorage.setItem('mtron-dashboard-panels', JSON.stringify([...this.openPanels]));
-        } catch (e) { /* ignore */ }
+        } catch (e) { /* ignore */
+        }
     }
 
     loadPanelOrder() {
@@ -125,7 +127,8 @@ class MetatronDashboard {
                 // Filter to only include panels that exist in registry
                 return order.filter(id => this.panelRegistry[id]);
             }
-        } catch (e) { /* ignore */ }
+        } catch (e) { /* ignore */
+        }
         // Default order: all panels in registry order
         return Object.keys(this.panelRegistry);
     }
@@ -133,7 +136,8 @@ class MetatronDashboard {
     savePanelOrder() {
         try {
             localStorage.setItem('mtron-dashboard-panel-order', JSON.stringify(this.panelOrder));
-        } catch (e) { /* ignore */ }
+        } catch (e) { /* ignore */
+        }
     }
 
     loadLayoutTree() {
@@ -142,7 +146,8 @@ class MetatronDashboard {
             if (saved) {
                 return JSON.parse(saved);
             }
-        } catch (e) { /* ignore */ }
+        } catch (e) { /* ignore */
+        }
         // Default layout: horizontal split with default panels
         return this.createDefaultLayout();
     }
@@ -150,7 +155,8 @@ class MetatronDashboard {
     saveLayoutTree() {
         try {
             localStorage.setItem('mtron-dashboard-layout-tree', JSON.stringify(this.layoutTree));
-        } catch (e) { /* ignore */ }
+        } catch (e) { /* ignore */
+        }
     }
 
     createDefaultLayout() {
@@ -159,15 +165,15 @@ class MetatronDashboard {
             type: 'split',
             direction: 'horizontal',
             children: [
-                { type: 'panel', panelId: 'spaces', size: 20 },
-                { type: 'panel', panelId: 'tree', size: 20 },
+                {type: 'panel', panelId: 'spaces', size: 20},
+                {type: 'panel', panelId: 'tree', size: 20},
                 {
                     type: 'split',
                     direction: 'vertical',
                     size: 60,
                     children: [
-                        { type: 'panel', panelId: 'console', size: 30 },
-                        { type: 'panel', panelId: 'inspector', size: 70 }
+                        {type: 'panel', panelId: 'console', size: 30},
+                        {type: 'panel', panelId: 'inspector', size: 70}
                     ]
                 }
             ]
@@ -185,7 +191,8 @@ class MetatronDashboard {
     savePanelLockState() {
         try {
             localStorage.setItem('mtron-dashboard-locked', this.panelsLocked ? 'true' : 'false');
-        } catch (e) { /* ignore */ }
+        } catch (e) { /* ignore */
+        }
     }
 
     // ==================== Panel System ====================
@@ -296,15 +303,15 @@ class MetatronDashboard {
                     type: 'split',
                     direction: 'horizontal',
                     children: [
-                        { type: 'panel', panelId: 'spaces', size: 20 },
-                        { type: 'panel', panelId: 'tree', size: 20 },
+                        {type: 'panel', panelId: 'spaces', size: 20},
+                        {type: 'panel', panelId: 'tree', size: 20},
                         {
                             type: 'split',
                             direction: 'vertical',
                             size: 60,
                             children: [
-                                { type: 'panel', panelId: 'console', size: 30 },
-                                { type: 'panel', panelId: 'inspector', size: 70 }
+                                {type: 'panel', panelId: 'console', size: 30},
+                                {type: 'panel', panelId: 'inspector', size: 70}
                             ]
                         }
                     ]
@@ -317,14 +324,14 @@ class MetatronDashboard {
                     type: 'split',
                     direction: 'horizontal',
                     children: [
-                        { type: 'panel', panelId: 'tree', size: 20 },
+                        {type: 'panel', panelId: 'tree', size: 20},
                         {
                             type: 'split',
                             direction: 'vertical',
                             size: 80,
                             children: [
-                                { type: 'panel', panelId: 'inspector', size: 70 },
-                                { type: 'panel', panelId: 'console', size: 30 }
+                                {type: 'panel', panelId: 'inspector', size: 70},
+                                {type: 'panel', panelId: 'console', size: 30}
                             ]
                         }
                     ]
@@ -342,8 +349,8 @@ class MetatronDashboard {
                             direction: 'vertical',
                             size: 50,
                             children: [
-                                { type: 'panel', panelId: 'spaces', size: 50 },
-                                { type: 'panel', panelId: 'tree', size: 50 }
+                                {type: 'panel', panelId: 'spaces', size: 50},
+                                {type: 'panel', panelId: 'tree', size: 50}
                             ]
                         },
                         {
@@ -351,8 +358,8 @@ class MetatronDashboard {
                             direction: 'vertical',
                             size: 50,
                             children: [
-                                { type: 'panel', panelId: 'inspector', size: 50 },
-                                { type: 'panel', panelId: 'console', size: 50 }
+                                {type: 'panel', panelId: 'inspector', size: 50},
+                                {type: 'panel', panelId: 'console', size: 50}
                             ]
                         }
                     ]
@@ -365,15 +372,15 @@ class MetatronDashboard {
                     type: 'split',
                     direction: 'horizontal',
                     children: [
-                        { type: 'panel', panelId: 'spaces', size: 25 },
-                        { type: 'panel', panelId: 'tree', size: 40 },
+                        {type: 'panel', panelId: 'spaces', size: 25},
+                        {type: 'panel', panelId: 'tree', size: 40},
                         {
                             type: 'split',
                             direction: 'vertical',
                             size: 35,
                             children: [
-                                { type: 'panel', panelId: 'inspector', size: 50 },
-                                { type: 'panel', panelId: 'console', size: 50 }
+                                {type: 'panel', panelId: 'inspector', size: 50},
+                                {type: 'panel', panelId: 'console', size: 50}
                             ]
                         }
                     ]
@@ -386,9 +393,9 @@ class MetatronDashboard {
                     type: 'split',
                     direction: 'horizontal',
                     children: [
-                        { type: 'panel', panelId: 'spaces', size: 33 },
-                        { type: 'panel', panelId: 'tree', size: 33 },
-                        { type: 'panel', panelId: 'inspector', size: 34 }
+                        {type: 'panel', panelId: 'spaces', size: 33},
+                        {type: 'panel', panelId: 'tree', size: 33},
+                        {type: 'panel', panelId: 'inspector', size: 34}
                     ]
                 }
             },
@@ -399,8 +406,8 @@ class MetatronDashboard {
                     type: 'split',
                     direction: 'horizontal',
                     children: [
-                        { type: 'panel', panelId: 'spaces', size: 20 },
-                        { type: 'panel', panelId: 'tree', size: 80 }
+                        {type: 'panel', panelId: 'spaces', size: 20},
+                        {type: 'panel', panelId: 'tree', size: 80}
                     ]
                 }
             }
@@ -675,13 +682,13 @@ class MetatronDashboard {
         }
     }
 
-    findAndReplaceEmptyPanel(node, panelId, foundEmpty = { found: false }) {
+    findAndReplaceEmptyPanel(node, panelId, foundEmpty = {found: false}) {
         if (!node) return null;
 
         if (node.type === 'panel' && !node.panelId && !foundEmpty.found) {
             // Replace this empty panel
             foundEmpty.found = true;
-            return { type: 'panel', panelId: panelId, size: node.size || 100 };
+            return {type: 'panel', panelId: panelId, size: node.size || 100};
         } else if (node.type === 'split') {
             // Recursively search children
             for (let i = 0; i < node.children.length; i++) {
@@ -764,8 +771,8 @@ class MetatronDashboard {
                 type: 'split',
                 direction: direction,
                 children: [
-                    { type: 'panel', panelId: panelId, size: 50 },
-                    { type: 'panel', panelId: null, size: 50 }
+                    {type: 'panel', panelId: panelId, size: 50},
+                    {type: 'panel', panelId: null, size: 50}
                 ]
             };
             return newSplit;
@@ -797,7 +804,7 @@ class MetatronDashboard {
 
         if (node.type === 'panel' && node.panelId === panelId) {
             // Remove this panel - replace with empty
-            return { type: 'panel', panelId: null, size: node.size || 100 };
+            return {type: 'panel', panelId: null, size: node.size || 100};
         } else if (node.type === 'split') {
             // Recursively search children
             for (let i = 0; i < node.children.length; i++) {
@@ -807,7 +814,7 @@ class MetatronDashboard {
                     // Simplify: if all children are empty, collapse the split
                     const allEmpty = node.children.every(c => c.type === 'panel' && !c.panelId);
                     if (allEmpty) {
-                        return { type: 'panel', panelId: null, size: 100 };
+                        return {type: 'panel', panelId: null, size: 100};
                     }
                     return node;
                 }
@@ -938,7 +945,16 @@ class MetatronDashboard {
     doResizeGrid(e) {
         if (!this.resizeState) return;
 
-        const { leftChild, rightChild, containerSize, startPos, startLeftSize, startRightSize, isHorizontal, splitContainer } = this.resizeState;
+        const {
+            leftChild,
+            rightChild,
+            containerSize,
+            startPos,
+            startLeftSize,
+            startRightSize,
+            isHorizontal,
+            splitContainer
+        } = this.resizeState;
         const currentPos = isHorizontal ? e.clientX : e.clientY;
         const delta = currentPos - startPos;
         const minSize = 100;
@@ -1042,7 +1058,6 @@ class MetatronDashboard {
             console.error('failed to save panel widths:', e);
         }
     }
-
 
 
     // ==================== Panel Renderers ====================
@@ -1152,15 +1167,14 @@ class MetatronDashboard {
                     <div class="mb-3">
                         <label class="form-label small text-muted">agent uri</label>
                         <div class="input-group input-group-sm">
-                            <span class="input-group-text bg-dark border-secondary text-muted">/usr/ai/agent/</span>
-                            <input type="text" id="agentUri" class="form-control bg-dark border-secondary text-light" placeholder="my-agent">
+                            <input type="text" id="agentUri" class="form-control bg-dark border-secondary text-light" placeholder="agent">
                         </div>
                     </div>
                     <div class="row mb-3">
                         <div class="col-5">
                             <label class="form-label small text-muted">provider</label>
                             <select id="agentProvider" class="form-select form-select-sm bg-dark border-secondary text-light">
-                                <option value="">select provider...</option>
+                                <option value="">select provider</option>
                             </select>
                         </div>
                         <div class="col-7">
@@ -1331,20 +1345,20 @@ class MetatronDashboard {
             <div class="agent-tool-item d-flex align-items-center mb-1">
                 <code class="small flex-grow-1 text-warning">${this.escapeHtml(tool)}</code>
                 ${i === 0
-                    ? '<span class="badge bg-secondary ms-2">default</span>'
-                    : `<button class="btn btn-link btn-sm p-0 text-danger ms-2" onclick="dashboard.removeAgentTool(${i})"><i class="bi bi-x-circle"></i></button>`
-                }
+            ? '<span class="badge bg-secondary ms-2">default</span>'
+            : `<button class="btn btn-link btn-sm p-0 text-danger ms-2" onclick="dashboard.removeAgentTool(${i})"><i class="bi bi-x-circle"></i></button>`
+        }
             </div>
         `).join('');
     }
 
     previewAgentCode() {
         const preview = document.getElementById('agentCodePreview');
-        if (preview) preview.textContent = this.generateAgentCode();
+        if (preview) preview.textContent = this.generateAgentCode()[1];
     }
 
     generateAgentCode() {
-        const uri = document.getElementById('agentUri')?.value?.trim() || 'my-agent';
+        const agentVID = document.getElementById('agentUri')?.value?.trim() || 'agent';
         const provider = document.getElementById('agentProvider')?.value || 'openai';
         const model = document.getElementById('agentModel')?.value || 'gpt-4o';
         const desc = document.getElementById('agentDesc')?.value?.trim();
@@ -1354,41 +1368,25 @@ class MetatronDashboard {
         const compress = document.getElementById('agentCompress')?.checked;
         const initMemory = document.getElementById('agentInitMemory')?.checked;
 
-        const fullUri = `/usr/ai/agent/${uri}`;
-        const modelRef = `${provider}:${model}`;
+        return [agentVID,`
+    *<${provider}:${model}>.at(<${agentVID}>).-<[
+       ${initMemory && memory ? `[,]@<${memory}>,` : ';'}
+       >>=[
+         think    =>${think},
+         ${desc ? `desc     =>"${desc}",` : ''}
+         ${this.agentTools.length > 0 ? `tool     =>[${this.agentTools.join(',')}],` : ''}
+         ${this.agentSkills.length > 0 ? `skill    =>[${this.agentSkills.map(s => `!*<${s}>.as(skill::T)`).join(',')}],` : ''}
+         ${memory ? `memory   =>!*<${memory}>,` : ''}
+         response =>[to=>${responseTo}]
+        ]
+    ]>>1${compress ? '.>>=[_=>^*]' : ''}
+        `];
 
-        let code = '';
-        if (initMemory && memory) code += `[,]@${memory};\n`;
 
-        let config = [`think    =>${think}`];
-        if (this.agentSkills.length > 0) {
-            config.push(`skill    =>[${this.agentSkills.map(s => `!*(<${s}>)`).join(',')}]`);
-        }
-        if (this.agentTools.length > 0) {
-            config.push(`tool     =>[${this.agentTools.join(',')}]`);
-        }
-        config.push(`response =>[to=>${responseTo}]`);
-        if (memory) config.push(`memory   =>!*<${memory}>`);
-        if (desc) config.push(`desc     =>'${desc}'`);
-
-        const configStr = config.join(',\n                                ');
-        const compressOp = compress ? '>>=[_=>^*]' : '';
-
-        code += `*<${modelRef}>.>>=[${configStr}]${compressOp}.to(${fullUri});`;
-
-        if (this.agentSkills.length > 0) {
-            code += `\n<${modelRef}/skill> ->(*<${fullUri}>.>>skill>>0.as(skill::T).>-[,]).to(${fullUri});`;
-        }
-        if (this.agentTools.length > 0) {
-            code += `\n<${modelRef}/tool> ->([${this.agentTools.join(',')}]);`;
-        }
-        code += `\n*<${modelRef}>.to(${fullUri});`;
-
-        return code;
     }
 
     copyAgentCode() {
-        navigator.clipboard.writeText(this.generateAgentCode()).then(() => {
+        navigator.clipboard.writeText(this.generateAgentCode()[1]).then(() => {
             const btn = document.querySelector('[onclick="dashboard.copyAgentCode()"]');
             if (btn) {
                 const orig = btn.innerHTML;
@@ -1400,27 +1398,14 @@ class MetatronDashboard {
 
     createAgent() {
         if (!this.connected) {
-            alert('Not connected to metatron');
+            alert('not connected to metatron');
             return;
         }
-
-        const lines = this.generateAgentCode().split('\n').filter(l => l.trim());
-        const executeNext = (i) => {
-            if (i >= lines.length) {
-                const uri = document.getElementById('agentUri')?.value?.trim() || 'my-agent';
-                alert(`agent created at /usr/ai/agent/${uri}`);
-                if (this.openPanels.has('tree')) this.loadDefaultTree();
-                return;
-            }
-            this.sendQuery(lines[i], (response, error) => {
-                if (error) {
-                    alert('Error: ' + error);
-                    return;
-                }
-                executeNext(i + 1);
-            });
-        };
-        executeNext(0);
+        let agentCode = this.generateAgentCode();
+        this.sendQuery(agentCode[1], (response, error) => {
+            if (error) alert('error: ' + error);
+        });
+        this.focusObject(`*<${agentCode[0]}>`);
     }
 
     loadAgentProviders() {
@@ -1529,7 +1514,9 @@ class MetatronDashboard {
 
     initEventListeners() {
         this.connectBtn.addEventListener('click', () => this.toggleConnection());
-        this.wsEndpoint.addEventListener('keypress', e => { if (e.key === 'Enter') this.toggleConnection(); });
+        this.wsEndpoint.addEventListener('keypress', e => {
+            if (e.key === 'Enter') this.toggleConnection();
+        });
         this.panelLockBtn?.addEventListener('click', () => this.togglePanelLock());
         this.initPanelEventListeners();
     }
@@ -1537,7 +1524,9 @@ class MetatronDashboard {
     initPanelEventListeners() {
         this.refreshSpacesBtn?.addEventListener('click', () => this.loadSpaces());
         this.browsePathBtn?.addEventListener('click', () => this.browsePath());
-        this.treePathInput?.addEventListener('keypress', e => { if (e.key === 'Enter') this.browsePath(); });
+        this.treePathInput?.addEventListener('keypress', e => {
+            if (e.key === 'Enter') this.browsePath();
+        });
 
         this.executeBtn?.addEventListener('click', () => this.executeCode());
         this.clearOutputBtn?.addEventListener('click', () => this.clearOutput());
@@ -2133,7 +2122,7 @@ class MetatronDashboard {
             return;
         }
 
-        this.sendQuery(`'${code}'./m/web/inst/doc()`, (response, error) => {
+        this.sendQuery(`\"\"\"${code}\"\"\"./m/web/inst/doc()`, (response, error) => {
             this.appendOutput(code, this.stripMtronResponse(response), error);
         });
     }
@@ -2160,7 +2149,8 @@ class MetatronDashboard {
         if (typeof hljs !== 'undefined' && hljs.getLanguage('mtron')) {
             try {
                 return `<pre class="hljs m-0">${hljs.highlight(code, {language: 'mtron'}).value}</pre>`;
-            } catch (e) { /* fallback */ }
+            } catch (e) { /* fallback */
+            }
         }
         return `<pre class="m-0">${this.escapeHtml(code)}</pre>`;
     }

@@ -155,6 +155,7 @@ public interface Space extends Rec, Closeable {
 
         public static fURI routeToSpace(final fURI vid, Map<Uri, Uri> routes) {
             return routes.entrySet().stream()
+                    //.sorted(Map.Entry.comparingByKey(Comparator.reverseOrder()))
                     .filter(e -> vid.toString().contains(e.getValue().uriValue().toString()))
                     .map(e -> e.getKey().autoResolve(noobj()).uriValue().extend(vid.toString().replaceFirst(e.getValue().autoResolve(noobj()).uriValue().toString(), "")))
                     .findFirst()
@@ -163,6 +164,7 @@ public interface Space extends Rec, Closeable {
 
         public static fURI routeFromSpace(final fURI vid, Map<Uri, Uri> routes) {
             return routes.entrySet().stream()
+                    //.sorted(Map.Entry.comparingByKey(Comparator.reverseOrder()))
                     .filter(e -> vid.toString().contains(e.getKey().autoResolve(noobj()).uriValue().toString()))
                     .map(e -> e.getValue().autoResolve(noobj()).uriValue().extend(vid.toString().replaceFirst(e.getKey().autoResolve(noobj()).uriValue().toString(), "")))
                     .findFirst()

@@ -23,11 +23,14 @@ import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static studio.phaseshift.metatron.isa.m.mInstSet.CODE_TID;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst0;
 
 public class MCode extends MObj implements Code {
 
@@ -80,5 +83,9 @@ public class MCode extends MObj implements Code {
             return call.as();
         else
             return new MCode(call.insts(), CODE_TID, null);
+    }
+
+    public static Code code(final String mtron) {
+        return ObjmtronSerializer.parse(mtron);
     }
 }

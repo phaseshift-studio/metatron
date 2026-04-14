@@ -185,7 +185,7 @@ public class Model extends MRec {
                     this.skills().get()
                             .elements()
                             .filter(s -> !s.isUri())
-                            .map(s -> mSkill.of(s.asRec()).toSkill())
+                            .map(s -> mSkill.of(s.apply().asRec()).toSkill())
                             .toList()).build();
             service.toolProvider(skills.toolProvider());
             service.systemMessage("You have access to the following skills:\n" + skills.formatAvailableSkills()

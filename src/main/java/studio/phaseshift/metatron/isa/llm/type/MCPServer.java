@@ -90,6 +90,7 @@ public class MCPServer extends MRec {
         this.client = DefaultMcpClient.builder()
                 .clientName(METATRON)
                 .clientVersion(METATRON_VERSION)
+                .protocolVersion("2024-11-05")
                 //.roots(List.of(new McpRoot("metatron", "http://localhost:8999")))
                 .logHandler(message -> as().logger().debug("mcp log: %s", message))
                 .transport(createTransport(

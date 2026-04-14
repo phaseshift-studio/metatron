@@ -48,7 +48,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
-public interface Uri extends Mono, Ring.O<Uri> {
+public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
 
     Type URI_TYPE = Type.Builder.build().tid(URI_TID).vid(URI_TID).create();
 
@@ -57,6 +57,11 @@ public interface Uri extends Mono, Ring.O<Uri> {
 
     @Override
     fURI jvm();
+
+    @Override
+    default int compareTo(final Uri other) {
+        return this.uriValue().compareTo(other.uriValue());
+    }
 
     default Obj at(final Obj key) {
         final fURI k = key.uriValue();

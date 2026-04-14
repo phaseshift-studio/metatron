@@ -175,9 +175,9 @@ public final class QCollection {
 
     protected final static class DocInstSet extends AbstractInstSet {
         protected final Map<fURI, Set<Rec>> INST_TABLE = Collections.synchronizedMap(new LinkedHashMap<>());
-         protected final Map<fURI, Rec> REWRITE_TABLE = Collections.synchronizedMap(new LinkedHashMap<>());
-        
-        
+        protected final Map<fURI, Rec> REWRITE_TABLE = Collections.synchronizedMap(new LinkedHashMap<>());
+
+
         public DocInstSet() {
             super(true);
         }
@@ -185,13 +185,13 @@ public final class QCollection {
         @Override
         public Obj write(final fURI vid, final Obj obj) {
             //if (vid.hasRng()) {
-                final Inst inst = obj.asRec().at(OBJ).as();
-                if (inst.dom().isCode()) {
-                    REWRITE_TABLE.put(inst.tid(), obj.asRec());
-                } else {
-                    Router.global().registerRedirect(f(vid.name()), vid);
-                    INST_TABLE.computeIfAbsent(inst.tid().basePath(), k -> new LinkedHashSet<>()).add(obj.asRec());
-                }
+            final Inst inst = obj.asRec().at(OBJ).as();
+            if (inst.dom().isCode()) {
+                REWRITE_TABLE.put(inst.tid(), obj.asRec());
+            } else {
+                Router.global().registerRedirect(f(vid.name()), vid);
+                INST_TABLE.computeIfAbsent(inst.tid().basePath(), k -> new LinkedHashSet<>()).add(obj.asRec());
+            }
             return obj;
         }
 
@@ -306,7 +306,7 @@ public final class QCollection {
                                 subscriptions.logger().debug("spawning core thread for subscription recv: %s", s);
                                 new CoreThread(Map.of(
                                         uri(START), lst(List.of(vid.basePath().toUri(), obj)),
-                                        uri(CODE), code(s.asRec().at(ON_RECV).as()).as()), MACH_CORE_THREAD_TID, null).run();
+                                        uri(CODE), code(s.asRec().at(ON_RECV).asCall()).as()), MACH_CORE_THREAD_TID, null).run();
                             });
                     return noobj();
                 }).create();
