@@ -10,32 +10,114 @@ main {
     max-width: 100% !important;
 }
 
-/* Panel Container */
+/* Panel Container - Grid Layout */
 #panelContainer {
-    display: flex !important;
-    flex-direction: row;
-    gap: 0 !important;
+    width: 100%;
+    min-height: calc(100vh - 140px);
+    overflow: auto;
+    box-sizing: border-box;
+}
+
+/* Split containers */
+.split-container {
+    width: 100%;
+    min-height: 100%;
+    display: flex;
+    gap: 0;
+    flex-shrink: 0;
+    box-sizing: border-box;
+}
+
+.split-child {
+    position: relative;
+    overflow: hidden;
+    min-width: 100px;
+    min-height: 100px;
+    max-height: 100%; /* Prevent growing beyond allocated size */
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    flex-shrink: 0;
+}
+
+/* Ensure nested split containers fill their parent */
+.split-child > .split-container {
+    flex: 1 1 auto;
+}
+
+.split-child > .panel-wrapper {
+    flex: 1 1 auto;
     height: 100%;
 }
 
-#panelContainer > [data-panel] {
-    flex-shrink: 0;
-    flex-grow: 0;
-    min-width: 200px;
+.split-child > .empty-panel {
+    flex: 1 1 auto;
+    height: 100%;
+}
+
+/* Panel wrappers */
+.panel-wrapper {
+    width: 100%;
+    height: 100%;
+    max-height: 100%;
+    padding: 0.25rem;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
     overflow: hidden;
-    position: relative;
 }
 
-#panelContainer > [data-panel].last-panel {
-    flex-grow: 1;
+.panel-wrapper > .card {
+    height: 100%;
+    max-height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    margin: 0;
+    box-sizing: border-box;
 }
 
-#panelContainer > [data-panel].dragging {
+.panel-wrapper > .card > .card-body {
+    flex: 1 1 auto;
+    overflow: auto;
+    min-height: 0;
+    max-height: 100%;
+}
+
+/* Ensure all panel content areas are scrollable */
+#inspectorContainer,
+#outputContainer,
+#treeContainer,
+#spacesContainer {
+    overflow: auto;
+    max-height: 100%;
+}
+
+.panel-wrapper.dragging {
     opacity: 0.5;
 }
 
-#panelContainer > [data-panel].drag-over {
-    border-left: 3px solid var(--mred);
+.panel-wrapper.drag-over {
+    border: 2px solid var(--mred);
+}
+
+/* Empty panels */
+.empty-panel {
+    width: 100%;
+    height: 100%;
+    background-color: var(--maincolor);
+    border: 2px dashed var(--mdarkgray);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-sizing: border-box;
+}
+
+.empty-panel:hover {
+    background-color: rgba(122, 37, 24, 0.1);
+    border-color: var(--mred);
 }
 
 .panel-drag-handle {
@@ -53,36 +135,9 @@ main {
     color: var(--primary);
 }
 
-/* Stacked panel container */
-[data-panel="stacked"] {
-    height: calc(100vh - 140px);
-    min-height: calc(100vh - 140px);
-    max-height: calc(100vh - 140px);
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-}
 
-[data-panel="stacked"] > [data-vpanel] {
-    overflow: hidden;
-    min-height: 100px;
-}
 
-[data-panel="stacked"] > [data-vpanel] > .card {
-    height: 100% !important;
-    max-height: 100% !important;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
-
-[data-panel="stacked"] > [data-vpanel] > .card > .card-body {
-    flex: 1;
-    overflow: auto;
-    min-height: 0;
-}
-
-/* Resize Handles */
+/* Resize Handles - Horizontal */
 .resize-handle {
     width: 8px;
     cursor: col-resize;
@@ -90,6 +145,7 @@ main {
     position: relative;
     flex-shrink: 0;
     transition: background 0.2s;
+    z-index: 10;
 }
 
 .resize-handle:hover {
@@ -120,21 +176,22 @@ main {
     background: var(--mred);
 }
 
-/* Vertical Resize Handles */
+/* Resize Handles - Vertical */
 .resize-handle-v {
     height: 8px;
     min-height: 8px;
+    width: 100%;
     cursor: row-resize;
     background: rgba(255, 92, 65, 0.1);
     position: relative;
     flex-shrink: 0;
     flex-grow: 0;
     transition: background 0.2s;
-    z-index: 10;
+    z-index: 100;
 }
 
 .resize-handle-v:hover {
-    background: rgba(255, 92, 65, 0.2);
+    background: rgba(255, 92, 65, 0.3);
 }
 
 .resize-handle-v::after {
@@ -144,21 +201,23 @@ main {
     left: 50%;
     transform: translate(-50%, -50%);
     height: 2px;
-    width: 40px;
-    background: rgba(255, 92, 65, 0.3);
+    width: 60px;
+    background: rgba(255, 92, 65, 0.5);
     border-radius: 2px;
 }
 
 .resize-handle-v:hover::after {
-    background: rgba(255, 92, 65, 0.6);
+    background: rgba(255, 92, 65, 0.8);
+    width: 80px;
 }
 
 .resize-handle-v.dragging {
-    background: rgba(255, 92, 65, 0.3);
+    background: rgba(255, 92, 65, 0.4);
 }
 
 .resize-handle-v.dragging::after {
     background: var(--mred);
+    width: 100px;
 }
 
 body {
@@ -450,12 +509,16 @@ body {
     font-size: 0.85rem;
     /*background-color: #0a0a0a;*/
     min-height: 60px;
+    max-height: 100%;
+    overflow: auto;
     border-radius: 3px;
 }
 
 .inspector-output pre.hljs {
     margin: 0;
     min-height: 60px;
+    max-height: none;
+    overflow: visible;
 }
 
 pre {
@@ -592,4 +655,16 @@ pre {
     background-color: var(--mdarkgray);
     color: var(--white);
     border-radius: 3px;
+}
+
+/* Layout Templates Modal */
+.layout-template-card {
+    transition: all 0.2s;
+}
+
+.layout-template-card:hover {
+    background-color: rgba(122, 37, 24, 0.3) !important;
+    border-color: var(--mred) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }

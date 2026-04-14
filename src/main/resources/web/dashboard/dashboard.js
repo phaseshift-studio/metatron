@@ -13,7 +13,6 @@ class MetatronDashboard {
         this.agentSkills = [];
         this.agentTools = ['!*eval'];
         this.panelWidths = new Map();
-        this.panelHeights = new Map(); // For vertical stacked panels
         this.resizeState = null;
         this.resizeListenersAdded = false;
         this.backgroundQueryQueue = [];
@@ -87,7 +86,12 @@ class MetatronDashboard {
         };
 
         this.openPanels = this.loadPanelState();
+        this.panelOrder = this.loadPanelOrder();
         this.panelsLocked = this.loadPanelLockState();
+
+        // Grid layout system - tree structure for arbitrary splits
+        this.layoutTree = this.loadLayoutTree();
+        this.nextLayoutId = 1;
 
         this.initNavElements();
         this.updatePanelLockButton();
@@ -111,6 +115,63 @@ class MetatronDashboard {
         try {
             localStorage.setItem('mtron-dashboard-panels', JSON.stringify([...this.openPanels]));
         } catch (e) { /* ignore */ }
+    }
+
+    loadPanelOrder() {
+        try {
+            const saved = localStorage.getItem('mtron-dashboard-panel-order');
+            if (saved) {
+                const order = JSON.parse(saved);
+                // Filter to only include panels that exist in registry
+                return order.filter(id => this.panelRegistry[id]);
+            }
+        } catch (e) { /* ignore */ }
+        // Default order: all panels in registry order
+        return Object.keys(this.panelRegistry);
+    }
+
+    savePanelOrder() {
+        try {
+            localStorage.setItem('mtron-dashboard-panel-order', JSON.stringify(this.panelOrder));
+        } catch (e) { /* ignore */ }
+    }
+
+    loadLayoutTree() {
+        try {
+            const saved = localStorage.getItem('mtron-dashboard-layout-tree');
+            if (saved) {
+                return JSON.parse(saved);
+            }
+        } catch (e) { /* ignore */ }
+        // Default layout: horizontal split with default panels
+        return this.createDefaultLayout();
+    }
+
+    saveLayoutTree() {
+        try {
+            localStorage.setItem('mtron-dashboard-layout-tree', JSON.stringify(this.layoutTree));
+        } catch (e) { /* ignore */ }
+    }
+
+    createDefaultLayout() {
+        // Default layout: spaces | tree | (console / inspector stacked)
+        return {
+            type: 'split',
+            direction: 'horizontal',
+            children: [
+                { type: 'panel', panelId: 'spaces', size: 20 },
+                { type: 'panel', panelId: 'tree', size: 20 },
+                {
+                    type: 'split',
+                    direction: 'vertical',
+                    size: 60,
+                    children: [
+                        { type: 'panel', panelId: 'console', size: 30 },
+                        { type: 'panel', panelId: 'inspector', size: 70 }
+                    ]
+                }
+            ]
+        };
     }
 
     loadPanelLockState() {
@@ -151,11 +212,11 @@ class MetatronDashboard {
         if (this.panelsLocked) {
             btn.innerHTML = '<i class="bi bi-lock-fill"></i>';
             btn.className = 'btn btn-sm btn-warning me-2';
-            btn.title = 'Panels locked - click to unlock';
+            btn.title = 'panels locked - click to unlock';
         } else {
             btn.innerHTML = '<i class="bi bi-unlock"></i>';
             btn.className = 'btn btn-sm btn-outline-secondary me-2';
-            btn.title = 'Lock panels (prevent accidental close)';
+            btn.title = 'lock panels (prevent accidental close)';
         }
     }
 
@@ -196,6 +257,10 @@ class MetatronDashboard {
             this.openPanels.delete(panelId);
         } else {
             this.openPanels.add(panelId);
+            // Add to order if not present
+            if (!this.panelOrder.includes(panelId)) {
+                this.panelOrder.push(panelId);
+            }
         }
         this.refreshPanelUI();
 
@@ -213,6 +278,8 @@ class MetatronDashboard {
 
     resetPanels() {
         this.openPanels = new Set(Object.entries(this.panelRegistry).filter(([_, p]) => p.defaultOpen).map(([id]) => id));
+        this.layoutTree = this.createDefaultLayout();
+        this.saveLayoutTree();
         this.refreshPanelUI();
         if (this.connected) {
             this.loadSpaces();
@@ -220,69 +287,538 @@ class MetatronDashboard {
         }
     }
 
+    showLayoutTemplates() {
+        const templates = {
+            'default': {
+                name: 'Default Layout',
+                description: 'Spaces | Tree | Console/Inspector stacked',
+                layout: {
+                    type: 'split',
+                    direction: 'horizontal',
+                    children: [
+                        { type: 'panel', panelId: 'spaces', size: 20 },
+                        { type: 'panel', panelId: 'tree', size: 20 },
+                        {
+                            type: 'split',
+                            direction: 'vertical',
+                            size: 60,
+                            children: [
+                                { type: 'panel', panelId: 'console', size: 30 },
+                                { type: 'panel', panelId: 'inspector', size: 70 }
+                            ]
+                        }
+                    ]
+                }
+            },
+            'ide': {
+                name: 'IDE Layout',
+                description: 'Sidebar + main area + bottom console',
+                layout: {
+                    type: 'split',
+                    direction: 'horizontal',
+                    children: [
+                        { type: 'panel', panelId: 'tree', size: 20 },
+                        {
+                            type: 'split',
+                            direction: 'vertical',
+                            size: 80,
+                            children: [
+                                { type: 'panel', panelId: 'inspector', size: 70 },
+                                { type: 'panel', panelId: 'console', size: 30 }
+                            ]
+                        }
+                    ]
+                }
+            },
+            'grid2x2': {
+                name: '2x2 Grid',
+                description: 'Four panels in a 2x2 grid',
+                layout: {
+                    type: 'split',
+                    direction: 'horizontal',
+                    children: [
+                        {
+                            type: 'split',
+                            direction: 'vertical',
+                            size: 50,
+                            children: [
+                                { type: 'panel', panelId: 'spaces', size: 50 },
+                                { type: 'panel', panelId: 'tree', size: 50 }
+                            ]
+                        },
+                        {
+                            type: 'split',
+                            direction: 'vertical',
+                            size: 50,
+                            children: [
+                                { type: 'panel', panelId: 'inspector', size: 50 },
+                                { type: 'panel', panelId: 'console', size: 50 }
+                            ]
+                        }
+                    ]
+                }
+            },
+            'dashboard': {
+                name: 'Dashboard (3 Columns)',
+                description: 'Three columns, right column split',
+                layout: {
+                    type: 'split',
+                    direction: 'horizontal',
+                    children: [
+                        { type: 'panel', panelId: 'spaces', size: 25 },
+                        { type: 'panel', panelId: 'tree', size: 40 },
+                        {
+                            type: 'split',
+                            direction: 'vertical',
+                            size: 35,
+                            children: [
+                                { type: 'panel', panelId: 'inspector', size: 50 },
+                                { type: 'panel', panelId: 'console', size: 50 }
+                            ]
+                        }
+                    ]
+                }
+            },
+            'triple': {
+                name: 'Triple Column',
+                description: 'Three equal columns',
+                layout: {
+                    type: 'split',
+                    direction: 'horizontal',
+                    children: [
+                        { type: 'panel', panelId: 'spaces', size: 33 },
+                        { type: 'panel', panelId: 'tree', size: 33 },
+                        { type: 'panel', panelId: 'inspector', size: 34 }
+                    ]
+                }
+            },
+            'sidebar': {
+                name: 'Sidebar + Main',
+                description: 'Narrow sidebar with wide main area',
+                layout: {
+                    type: 'split',
+                    direction: 'horizontal',
+                    children: [
+                        { type: 'panel', panelId: 'spaces', size: 20 },
+                        { type: 'panel', panelId: 'tree', size: 80 }
+                    ]
+                }
+            }
+        };
+
+        // Create modal
+        const modal = document.createElement('div');
+        modal.className = 'modal fade';
+        modal.id = 'layoutTemplatesModal';
+        modal.innerHTML = `
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content bg-dark text-light">
+                    <div class="modal-header border-secondary">
+                        <h5 class="modal-title"><i class="bi bi-grid-3x3-gap me-2"></i>Layout Templates</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            ${Object.entries(templates).map(([id, template]) => `
+                                <div class="col-md-6">
+                                    <div class="card bg-secondary border-secondary h-100 layout-template-card" data-template-id="${id}" style="cursor: pointer;">
+                                        <div class="card-body">
+                                            <h6 class="card-title text-primary">${template.name}</h6>
+                                            <p class="card-text small text-muted">${template.description}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    <div class="modal-footer border-secondary">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        // Add click handlers
+        modal.querySelectorAll('.layout-template-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const templateId = card.dataset.templateId;
+                this.applyLayoutTemplate(templates[templateId].layout);
+                bootstrap.Modal.getInstance(modal).hide();
+            });
+        });
+
+        // Show modal
+        const bsModal = new bootstrap.Modal(modal);
+        bsModal.show();
+
+        // Clean up on hide
+        modal.addEventListener('hidden.bs.modal', () => {
+            modal.remove();
+        });
+    }
+
+    applyLayoutTemplate(layout) {
+        this.layoutTree = layout;
+        this.saveLayoutTree();
+        this.refreshPanelUI();
+    }
+
     renderPanels() {
         const container = document.getElementById('panelContainer');
         if (!container) return;
 
-        const openList = [...this.openPanels];
-        const hasInspector = openList.includes('inspector');
-        const hasConsole = openList.includes('console');
-        const stackedPanels = hasInspector && hasConsole;
-
-        // Build list of panels to render
-        const panelsToRender = [];
-        for (const panelId of openList) {
-            if (stackedPanels && (panelId === 'inspector' || panelId === 'console')) continue;
-            if (this.panelRegistry[panelId]) panelsToRender.push(panelId);
-        }
-        if (stackedPanels) panelsToRender.push('stacked');
-        else if (hasInspector && !hasConsole) panelsToRender.push('inspector');
-        else if (hasConsole && !hasInspector) panelsToRender.push('console');
-
-        // Calculate default widths if not saved
-        this.loadPanelWidths();
-        this.loadPanelHeights();
-        const totalPanels = panelsToRender.length;
-        const defaultWidth = totalPanels > 0 ? (100 / totalPanels) : 100;
-
-        let html = '';
-        panelsToRender.forEach((panelId, index) => {
-            const isLast = index === panelsToRender.length - 1;
-            const width = this.panelWidths.get(panelId) || defaultWidth;
-            // Last panel uses min-width and flex-grow to fill remaining space
-            const widthStyle = isLast ? `min-width: ${Math.max(200, width * 3)}px;` : `width: ${width}%;`;
-            const lastClass = isLast ? ' last-panel' : '';
-
-            if (panelId === 'stacked') {
-                // Inspector gets a percentage, console fills the rest with flex
-                const inspectorPct = this.panelHeights.get('inspector') || 40;
-                html += `<div class="p-1${lastClass}" style="${widthStyle}" data-panel="stacked">
-                    <div style="flex: 0 0 ${inspectorPct}%;" data-vpanel="inspector">
-                        ${this.panelRegistry.inspector.render()}
-                    </div>
-                    <div class="resize-handle-v" data-top-panel="inspector" data-bottom-panel="console"></div>
-                    <div style="flex: 1 1 auto;" data-vpanel="console">
-                        ${this.panelRegistry.console.render()}
-                    </div>
-                </div>`;
-            } else {
-                const panel = this.panelRegistry[panelId];
-                html += `<div class="p-1${lastClass}" style="${widthStyle}" data-panel="${panelId}">${panel.render()}</div>`;
-            }
-
-            // Add resize handle between panels (not after the last one)
-            if (!isLast) {
-                html += `<div class="resize-handle" data-left-panel="${panelId}" data-right-panel="${panelsToRender[index + 1]}"></div>`;
-            }
-        });
-
+        const html = this.renderLayoutNode(this.layoutTree);
         container.innerHTML = html;
         this.initResizeHandlers();
         this.initPanelDragDrop();
+        this.initSplitButtons();
+    }
+
+    renderLayoutNode(node, depth = 0) {
+        if (!node) return '';
+
+        if (node.type === 'panel') {
+            return this.renderPanelNode(node);
+        } else if (node.type === 'split') {
+            return this.renderSplitNode(node, depth);
+        }
+        return '';
+    }
+
+    renderPanelNode(node) {
+        const panelId = node.panelId;
+        if (!panelId || !this.panelRegistry[panelId]) {
+            const closeBtn = this.panelsLocked ? '' : `
+                <button class="btn btn-sm btn-link text-muted empty-panel-close" style="position: absolute; top: 10px; right: 10px;" title="remove empty slot">
+                    <i class="bi bi-x-lg"></i>
+                </button>`;
+            return `<div class="empty-panel" data-panel-node="${JSON.stringify(node).replace(/"/g, '&quot;')}">
+                ${closeBtn}
+                <div class="text-muted text-center py-5">
+                    <i class="bi bi-plus-circle fs-1"></i>
+                    <p class="mt-2">Click to add panel</p>
+                </div>
+            </div>`;
+        }
+
+        const panel = this.panelRegistry[panelId];
+        return `<div class="panel-wrapper" data-panel="${panelId}" data-panel-node="${JSON.stringify(node).replace(/"/g, '&quot;')}">
+            ${panel.render()}
+        </div>`;
+    }
+
+    renderSplitNode(node, depth) {
+        const direction = node.direction || 'horizontal';
+        const isHorizontal = direction === 'horizontal';
+        const flexDirection = isHorizontal ? 'row' : 'column';
+
+        let html = `<div class="split-container" data-direction="${direction}" style="display: flex; flex-direction: ${flexDirection}; width: 100%; height: 100%;">`;
+
+        // Calculate total size accounting for resize handles
+        const numHandles = node.children.length - 1;
+        const handleSize = isHorizontal ? 8 : 8; // 8px per handle
+        const totalHandleSize = numHandles * handleSize;
+
+        node.children.forEach((child, index) => {
+            const size = child.size || (100 / node.children.length);
+            // Subtract handle size from available space for both directions
+            const adjustedSize = `calc(${size}% - ${totalHandleSize / node.children.length}px)`;
+            const sizeStyle = isHorizontal ? `width: ${adjustedSize}` : `height: ${adjustedSize}`;
+
+            html += `<div class="split-child" style="${sizeStyle}; flex-shrink: 0; position: relative;">`;
+            html += this.renderLayoutNode(child, depth + 1);
+            html += `</div>`;
+
+            // Add resize handle between children (not after last)
+            if (index < node.children.length - 1) {
+                const handleClass = isHorizontal ? 'resize-handle' : 'resize-handle-v';
+                html += `<div class="${handleClass}" data-split-index="${index}" data-direction="${direction}"></div>`;
+            }
+        });
+
+        html += `</div>`;
+        return html;
+    }
+
+    initSplitButtons() {
+        // Split horizontally
+        document.querySelectorAll('.split-h-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const panelWrapper = btn.closest('[data-panel]');
+                if (panelWrapper) {
+                    const panelId = panelWrapper.dataset.panel;
+                    this.splitPanel(panelId, 'horizontal');
+                }
+            });
+        });
+
+        // Split vertically
+        document.querySelectorAll('.split-v-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const panelWrapper = btn.closest('[data-panel]');
+                if (panelWrapper) {
+                    const panelId = panelWrapper.dataset.panel;
+                    this.splitPanel(panelId, 'vertical');
+                }
+            });
+        });
+
+        // Close panel
+        document.querySelectorAll('.panel-close-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const panelWrapper = btn.closest('[data-panel]');
+                if (panelWrapper) {
+                    const panelId = panelWrapper.dataset.panel;
+                    this.removePanelFromLayout(panelId);
+                }
+            });
+        });
+
+        // Click empty panel to add
+        document.querySelectorAll('.empty-panel').forEach(emptyPanel => {
+            emptyPanel.addEventListener('click', (e) => {
+                // Don't trigger if clicking the close button
+                if (!e.target.closest('.empty-panel-close')) {
+                    this.showPanelSelector(emptyPanel);
+                }
+            });
+        });
+
+        // Close empty panel
+        document.querySelectorAll('.empty-panel-close').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.removeEmptyPanel();
+            });
+        });
+    }
+
+    showPanelSelector(emptyPanelElement) {
+        // Create a dropdown menu similar to the panel menu
+        const rect = emptyPanelElement.getBoundingClientRect();
+
+        // Create dropdown
+        const dropdown = document.createElement('div');
+        dropdown.className = 'dropdown-menu dropdown-menu-dark show';
+        dropdown.style.position = 'fixed';
+        dropdown.style.left = `${rect.left + rect.width / 2 - 150}px`;
+        dropdown.style.top = `${rect.top + rect.height / 2 - 100}px`;
+        dropdown.style.width = '300px';
+        dropdown.style.maxHeight = '400px';
+        dropdown.style.overflowY = 'auto';
+        dropdown.style.zIndex = '9999';
+
+        // Group panels by category
+        const categories = {};
+        for (const [id, panel] of Object.entries(this.panelRegistry)) {
+            const cat = panel.category || 'other';
+            if (!categories[cat]) categories[cat] = [];
+            categories[cat].push({id, ...panel});
+        }
+
+        let html = '<li><h6 class="dropdown-header">Select Panel to Add</h6></li>';
+        for (const [category, panels] of Object.entries(categories)) {
+            html += `<li><h6 class="dropdown-header">${category}</h6></li>`;
+            for (const panel of panels) {
+                html += `
+                    <li>
+                        <a class="dropdown-item d-flex align-items-center" href="#" data-panel-id="${panel.id}">
+                            <i class="bi ${panel.icon} me-2"></i>
+                            <span class="flex-grow-1">${panel.title}</span>
+                        </a>
+                    </li>`;
+            }
+        }
+        html += `<li><hr class="dropdown-divider"></li>`;
+        html += `<li><a class="dropdown-item text-muted small" href="#" data-cancel="true"><i class="bi bi-x-circle me-2"></i>Cancel</a></li>`;
+
+        dropdown.innerHTML = html;
+        document.body.appendChild(dropdown);
+
+        // Handle clicks
+        dropdown.addEventListener('click', (e) => {
+            e.preventDefault();
+            const link = e.target.closest('a');
+            if (link) {
+                if (link.dataset.cancel) {
+                    dropdown.remove();
+                } else if (link.dataset.panelId) {
+                    const panelId = link.dataset.panelId;
+                    this.addPanelToEmpty(emptyPanelElement, panelId);
+                    dropdown.remove();
+                }
+            }
+        });
+
+        // Close on outside click
+        const closeHandler = (e) => {
+            if (!dropdown.contains(e.target)) {
+                dropdown.remove();
+                document.removeEventListener('click', closeHandler);
+            }
+        };
+        setTimeout(() => document.addEventListener('click', closeHandler), 100);
+    }
+
+    addPanelToEmpty(emptyPanelElement, panelId) {
+        // Find the empty panel in the layout tree and replace it
+        const result = this.findAndReplaceEmptyPanel(this.layoutTree, panelId);
+        if (result) {
+            this.layoutTree = result;
+            this.saveLayoutTree();
+            this.refreshPanelUI();
+        }
+    }
+
+    findAndReplaceEmptyPanel(node, panelId, foundEmpty = { found: false }) {
+        if (!node) return null;
+
+        if (node.type === 'panel' && !node.panelId && !foundEmpty.found) {
+            // Replace this empty panel
+            foundEmpty.found = true;
+            return { type: 'panel', panelId: panelId, size: node.size || 100 };
+        } else if (node.type === 'split') {
+            // Recursively search children
+            for (let i = 0; i < node.children.length; i++) {
+                const result = this.findAndReplaceEmptyPanel(node.children[i], panelId, foundEmpty);
+                if (result) {
+                    node.children[i] = result;
+                    if (foundEmpty.found) return node;
+                }
+            }
+        }
+
+        return node;
+    }
+
+    removeEmptyPanel() {
+        // Remove the first empty panel and collapse the split if needed
+        const result = this.findAndCollapseEmptyPanel(this.layoutTree);
+        if (result) {
+            this.layoutTree = result;
+            this.saveLayoutTree();
+            this.refreshPanelUI();
+        }
+    }
+
+    findAndCollapseEmptyPanel(node, parent = null, childIndex = -1) {
+        if (!node) return null;
+
+        if (node.type === 'split') {
+            // Check if any child is empty
+            for (let i = 0; i < node.children.length; i++) {
+                if (node.children[i].type === 'panel' && !node.children[i].panelId) {
+                    // Found empty panel - remove it from children
+                    node.children.splice(i, 1);
+
+                    // If only one child left, collapse the split
+                    if (node.children.length === 1) {
+                        const remainingChild = node.children[0];
+                        remainingChild.size = node.size || 100;
+                        return remainingChild;
+                    }
+
+                    // Redistribute sizes
+                    const totalSize = 100;
+                    const sizePerChild = totalSize / node.children.length;
+                    node.children.forEach(child => {
+                        child.size = sizePerChild;
+                    });
+
+                    return node;
+                }
+
+                // Recursively check children
+                const result = this.findAndCollapseEmptyPanel(node.children[i], node, i);
+                if (result !== node.children[i]) {
+                    node.children[i] = result;
+                    return node;
+                }
+            }
+        }
+
+        return node;
+    }
+
+    splitPanel(panelId, direction) {
+        // Find the panel node in the layout tree and split it
+        const result = this.findAndSplitPanel(this.layoutTree, panelId, direction);
+        if (result) {
+            this.layoutTree = result;
+            this.saveLayoutTree();
+            this.refreshPanelUI();
+        }
+    }
+
+    findAndSplitPanel(node, panelId, direction, parent = null, childIndex = -1) {
+        if (!node) return null;
+
+        if (node.type === 'panel' && node.panelId === panelId) {
+            // Split this panel
+            const newSplit = {
+                type: 'split',
+                direction: direction,
+                children: [
+                    { type: 'panel', panelId: panelId, size: 50 },
+                    { type: 'panel', panelId: null, size: 50 }
+                ]
+            };
+            return newSplit;
+        } else if (node.type === 'split') {
+            // Recursively search children
+            for (let i = 0; i < node.children.length; i++) {
+                const result = this.findAndSplitPanel(node.children[i], panelId, direction, node, i);
+                if (result) {
+                    node.children[i] = result;
+                    return node;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    removePanelFromLayout(panelId) {
+        const result = this.findAndRemovePanel(this.layoutTree, panelId);
+        if (result) {
+            this.layoutTree = result;
+            this.saveLayoutTree();
+            this.refreshPanelUI();
+        }
+    }
+
+    findAndRemovePanel(node, panelId, parent = null, childIndex = -1) {
+        if (!node) return null;
+
+        if (node.type === 'panel' && node.panelId === panelId) {
+            // Remove this panel - replace with empty
+            return { type: 'panel', panelId: null, size: node.size || 100 };
+        } else if (node.type === 'split') {
+            // Recursively search children
+            for (let i = 0; i < node.children.length; i++) {
+                const result = this.findAndRemovePanel(node.children[i], panelId, node, i);
+                if (result) {
+                    node.children[i] = result;
+                    // Simplify: if all children are empty, collapse the split
+                    const allEmpty = node.children.every(c => c.type === 'panel' && !c.panelId);
+                    if (allEmpty) {
+                        return { type: 'panel', panelId: null, size: 100 };
+                    }
+                    return node;
+                }
+            }
+        }
+
+        return null;
     }
 
     initPanelDragDrop() {
-        const panels = document.querySelectorAll('#panelContainer > [data-panel]');
+        const panels = document.querySelectorAll('[data-panel]');
 
         panels.forEach(panel => {
             const dragHandle = panel.querySelector('.panel-drag-handle');
@@ -331,206 +867,159 @@ class MetatronDashboard {
     }
 
     swapPanels(panelId1, panelId2) {
-        // Convert Set to Array to manipulate order
-        const panelOrder = [...this.openPanels];
-        const idx1 = panelOrder.indexOf(panelId1);
-        const idx2 = panelOrder.indexOf(panelId2);
+        const idx1 = this.panelOrder.indexOf(panelId1);
+        const idx2 = this.panelOrder.indexOf(panelId2);
 
         if (idx1 === -1 || idx2 === -1) return;
 
-        // Swap positions
-        [panelOrder[idx1], panelOrder[idx2]] = [panelOrder[idx2], panelOrder[idx1]];
+        // Swap positions in panelOrder
+        [this.panelOrder[idx1], this.panelOrder[idx2]] = [this.panelOrder[idx2], this.panelOrder[idx1]];
 
-        // Update openPanels Set with new order
-        this.openPanels = new Set(panelOrder);
+        // Save the new order
+        this.savePanelOrder();
 
         // Re-render panels
-        this.refreshPanelUI();
+        this.renderPanels();
+        this.initElements();
+        this.initPanelEventListeners();
     }
 
     initResizeHandlers() {
-        // Horizontal resize handles (between panels)
-        const handles = document.querySelectorAll('.resize-handle');
+        // Horizontal and vertical resize handles
+        const handles = document.querySelectorAll('.resize-handle, .resize-handle-v');
         handles.forEach(handle => {
-            handle.addEventListener('mousedown', (e) => this.startResize(e, handle));
-        });
-
-        // Vertical resize handles (between stacked panels)
-        const vHandles = document.querySelectorAll('.resize-handle-v');
-        vHandles.forEach(handle => {
-            handle.addEventListener('mousedown', (e) => this.startResizeV(e, handle));
+            handle.addEventListener('mousedown', (e) => this.startResizeGrid(e, handle));
         });
 
         // Global mouse events for resize (add only once)
         if (!this.resizeListenersAdded) {
-            document.addEventListener('mousemove', (e) => this.doResize(e));
-            document.addEventListener('mouseup', () => this.stopResize());
+            document.addEventListener('mousemove', (e) => this.doResizeGrid(e));
+            document.addEventListener('mouseup', () => this.stopResizeGrid());
             this.resizeListenersAdded = true;
         }
     }
 
-    startResize(e, handle) {
+    startResizeGrid(e, handle) {
         e.preventDefault();
-        const leftPanelId = handle.dataset.leftPanel;
-        const rightPanelId = handle.dataset.rightPanel;
-        const leftPanel = document.querySelector(`[data-panel="${leftPanelId}"]`);
-        const rightPanel = document.querySelector(`[data-panel="${rightPanelId}"]`);
-        const container = document.getElementById('panelContainer');
 
-        if (!leftPanel || !rightPanel || !container) return;
+        const splitContainer = handle.parentElement;
+        const direction = handle.dataset.direction;
+        const splitIndex = parseInt(handle.dataset.splitIndex);
 
-        // Check if right panel is the last panel (has flex-grow)
-        const allPanels = container.querySelectorAll('[data-panel]');
-        const isRightLast = allPanels[allPanels.length - 1] === rightPanel;
+        if (!splitContainer || direction === undefined || isNaN(splitIndex)) return;
+
+        const children = Array.from(splitContainer.querySelectorAll(':scope > .split-child'));
+        const leftChild = children[splitIndex];
+        const rightChild = children[splitIndex + 1];
+
+        if (!leftChild || !rightChild) return;
+
+        const isHorizontal = direction === 'horizontal';
 
         handle.classList.add('dragging');
-        document.body.style.cursor = 'col-resize';
+        document.body.style.cursor = isHorizontal ? 'col-resize' : 'row-resize';
         document.body.style.userSelect = 'none';
 
         this.resizeState = {
-            type: 'horizontal',
             handle,
-            leftPanelId,
-            rightPanelId,
-            leftPanel,
-            rightPanel,
-            containerWidth: container.offsetWidth,
-            startX: e.clientX,
-            startLeftWidth: leftPanel.offsetWidth,
-            startRightWidth: rightPanel.offsetWidth,
-            isRightLast
+            splitContainer,
+            direction,
+            splitIndex,
+            leftChild,
+            rightChild,
+            isHorizontal,
+            containerSize: isHorizontal ? splitContainer.offsetWidth : splitContainer.offsetHeight,
+            startPos: isHorizontal ? e.clientX : e.clientY,
+            startLeftSize: isHorizontal ? leftChild.offsetWidth : leftChild.offsetHeight,
+            startRightSize: isHorizontal ? rightChild.offsetWidth : rightChild.offsetHeight
         };
     }
 
-    startResizeV(e, handle) {
-        e.preventDefault();
-        const topPanelId = handle.dataset.topPanel;
-        const bottomPanelId = handle.dataset.bottomPanel;
-        const topPanel = document.querySelector(`[data-vpanel="${topPanelId}"]`);
-        const bottomPanel = document.querySelector(`[data-vpanel="${bottomPanelId}"]`);
-        const container = handle.parentElement;
-
-        if (!topPanel || !bottomPanel || !container) return;
-
-        handle.classList.add('dragging');
-        document.body.style.cursor = 'row-resize';
-        document.body.style.userSelect = 'none';
-
-        this.resizeState = {
-            type: 'vertical',
-            handle,
-            topPanelId,
-            bottomPanelId,
-            topPanel,
-            bottomPanel,
-            containerHeight: container.offsetHeight,
-            startY: e.clientY,
-            startTopHeight: topPanel.offsetHeight,
-            startBottomHeight: bottomPanel.offsetHeight
-        };
-    }
-
-    doResize(e) {
+    doResizeGrid(e) {
         if (!this.resizeState) return;
 
-        if (this.resizeState.type === 'horizontal') {
-            this.doResizeH(e);
-        } else if (this.resizeState.type === 'vertical') {
-            this.doResizeV(e);
+        const { leftChild, rightChild, containerSize, startPos, startLeftSize, startRightSize, isHorizontal, splitContainer } = this.resizeState;
+        const currentPos = isHorizontal ? e.clientX : e.clientY;
+        const delta = currentPos - startPos;
+        const minSize = 100;
+
+        let newLeftSize = startLeftSize + delta;
+        let newRightSize = startRightSize - delta;
+
+        // Enforce minimum sizes
+        if (newLeftSize < minSize) {
+            newLeftSize = minSize;
+            newRightSize = startLeftSize + startRightSize - minSize;
         }
-    }
-
-    doResizeH(e) {
-        const { leftPanel, rightPanel, containerWidth, startX, startLeftWidth, startRightWidth, leftPanelId, rightPanelId, isRightLast } = this.resizeState;
-        const delta = e.clientX - startX;
-        const minWidth = 200;
-
-        let newLeftWidth = startLeftWidth + delta;
-        let newRightWidth = startRightWidth - delta;
-
-        // Enforce minimum widths
-        if (newLeftWidth < minWidth) {
-            newLeftWidth = minWidth;
-            newRightWidth = startLeftWidth + startRightWidth - minWidth;
+        if (newRightSize < minSize) {
+            newRightSize = minSize;
+            newLeftSize = startLeftSize + startRightSize - minSize;
         }
-        if (newRightWidth < minWidth) {
-            newRightWidth = minWidth;
-            newLeftWidth = startLeftWidth + startRightWidth - minWidth;
+
+        // For vertical splits, allow container to grow
+        if (!isHorizontal) {
+            const newTotalHeight = newLeftSize + newRightSize + 8; // +8 for handle
+            splitContainer.style.minHeight = `${newTotalHeight}px`;
         }
 
         // Convert to percentages
-        const leftPercent = (newLeftWidth / containerWidth) * 100;
-        const rightPercent = (newRightWidth / containerWidth) * 100;
+        const leftPercent = (newLeftSize / containerSize) * 100;
+        const rightPercent = (newRightSize / containerSize) * 100;
 
-        // Left panel always uses percentage width
-        leftPanel.style.width = `${leftPercent}%`;
-
-        // Right panel: if it's the last panel, use min-width (flex-grow fills the rest)
-        // Otherwise use percentage
-        if (isRightLast) {
-            rightPanel.style.minWidth = `${Math.max(minWidth, newRightWidth)}px`;
+        // Apply sizes
+        if (isHorizontal) {
+            leftChild.style.width = `${leftPercent}%`;
+            rightChild.style.width = `${rightPercent}%`;
         } else {
-            rightPanel.style.width = `${rightPercent}%`;
-        }
-
-        // Update saved widths
-        this.panelWidths.set(leftPanelId, leftPercent);
-        if (!isRightLast) {
-            this.panelWidths.set(rightPanelId, rightPercent);
+            leftChild.style.height = `${leftPercent}%`;
+            rightChild.style.height = `${rightPercent}%`;
         }
     }
 
-    doResizeV(e) {
-        const { topPanel, bottomPanel, containerHeight, startY, startTopHeight, startBottomHeight, topPanelId } = this.resizeState;
-        const delta = e.clientY - startY;
-        const minHeight = 100;
-        const handleHeight = 8;
-        const availableHeight = containerHeight - handleHeight;
-
-        let newTopHeight = startTopHeight + delta;
-        let newBottomHeight = startBottomHeight - delta;
-
-        // Enforce minimum heights for both panels
-        if (newTopHeight < minHeight) {
-            newTopHeight = minHeight;
-            newBottomHeight = availableHeight - minHeight;
-        }
-        if (newBottomHeight < minHeight) {
-            newBottomHeight = minHeight;
-            newTopHeight = availableHeight - minHeight;
-        }
-
-        // Ensure heights sum to available height
-        const totalHeight = newTopHeight + newBottomHeight;
-        if (totalHeight !== availableHeight) {
-            const ratio = availableHeight / totalHeight;
-            newTopHeight *= ratio;
-            newBottomHeight *= ratio;
-        }
-
-        // Convert to percentage of available height
-        const topPercent = (newTopHeight / availableHeight) * 100;
-
-        // Set top panel flex-basis, bottom auto-fills
-        topPanel.style.flex = `0 0 ${topPercent}%`;
-
-        // Save only the top panel percentage (bottom auto-fills)
-        this.panelHeights.set(topPanelId, topPercent);
-    }
-
-    stopResize() {
+    stopResizeGrid() {
         if (!this.resizeState) return;
 
         this.resizeState.handle.classList.remove('dragging');
         document.body.style.cursor = '';
         document.body.style.userSelect = '';
 
-        if (this.resizeState.type === 'horizontal') {
-            this.savePanelWidths();
-        } else if (this.resizeState.type === 'vertical') {
-            this.savePanelHeights();
-        }
+        // Update the layout tree with new sizes
+        this.updateLayoutTreeSizes();
+        this.saveLayoutTree();
+
         this.resizeState = null;
+    }
+
+    updateLayoutTreeSizes() {
+        // Walk the DOM and update the layout tree with current sizes
+        const container = document.getElementById('panelContainer');
+        if (!container) return;
+
+        this.syncLayoutTreeFromDOM(this.layoutTree, container);
+    }
+
+    syncLayoutTreeFromDOM(node, element) {
+        if (!node || !element) return;
+
+        if (node.type === 'split') {
+            const splitContainer = element.querySelector('.split-container');
+            if (!splitContainer) return;
+
+            const children = Array.from(splitContainer.querySelectorAll(':scope > .split-child'));
+            const isHorizontal = node.direction === 'horizontal';
+
+            children.forEach((child, index) => {
+                if (node.children[index]) {
+                    const size = isHorizontal
+                        ? (child.offsetWidth / splitContainer.offsetWidth) * 100
+                        : (child.offsetHeight / splitContainer.offsetHeight) * 100;
+                    node.children[index].size = size;
+
+                    // Recursively sync children
+                    this.syncLayoutTreeFromDOM(node.children[index], child);
+                }
+            });
+        }
     }
 
     loadPanelWidths() {
@@ -554,40 +1043,27 @@ class MetatronDashboard {
         }
     }
 
-    loadPanelHeights() {
-        try {
-            const saved = localStorage.getItem('mtron_panel_heights');
-            if (saved) {
-                const heights = JSON.parse(saved);
-                this.panelHeights = new Map(Object.entries(heights));
-            }
-        } catch (e) {
-            console.error('failed to load panel heights:', e);
-        }
-    }
 
-    savePanelHeights() {
-        try {
-            const heights = Object.fromEntries(this.panelHeights);
-            localStorage.setItem('mtron_panel_heights', JSON.stringify(heights));
-        } catch (e) {
-            console.error('failed to save panel heights:', e);
-        }
-    }
 
     // ==================== Panel Renderers ====================
 
     renderPanelHeader(panel, extraControls = '') {
+        const splitControls = this.panelsLocked ? '' : `
+            <div class="btn-group me-2" role="group">
+                <button class="btn btn-sm btn-link text-muted px-2 py-1 split-h-btn" title="split horizontally (side-by-side)"><i class="bi bi-layout-split"></i></button>
+                <button class="btn btn-sm btn-link text-muted px-2 py-1 split-v-btn" title="split vertically (top-bottom)"><i class="bi bi-layout-three-columns"></i></button>
+            </div>
+        `;
         const closeBtn = this.panelsLocked
             ? `<span class="btn btn-sm btn-link text-secondary p-0 ms-2 opacity-25" title="panels locked"><i class="bi bi-lock"></i></span>`
-            : `<button class="btn btn-sm btn-link text-muted p-0 ms-2" onclick="dashboard.closePanel('${panel.id}')" title="close panel"><i class="bi bi-x-lg"></i></button>`;
+            : `<button class="btn btn-sm btn-link text-muted p-0 ms-2 panel-close-btn" title="close panel"><i class="bi bi-x-lg"></i></button>`;
         return `
             <div class="card-header d-flex justify-content-between align-items-center">
                 <span class="d-flex align-items-center">
                     <span class="panel-drag-handle me-2" title="drag to reorder"><i class="bi bi-grip-vertical"></i></span>
                     <i class="bi ${panel.icon} me-2"></i>${panel.title}
                 </span>
-                <div class="d-flex align-items-center">${extraControls}${closeBtn}</div>
+                <div class="d-flex align-items-center">${extraControls}${splitControls}${closeBtn}</div>
             </div>`;
     }
 
@@ -600,7 +1076,7 @@ class MetatronDashboard {
                 `)}
                 <div class="card-body p-0 overflow-auto" style="max-height: calc(100vh - 180px);">
                     <div id="spacesContainer" class="list-group list-group-flush">
-                        <div class="text-center text-muted py-4">
+                        <div class="text-center text-muted small py-4">
                             <i class="bi bi-wifi-off fs-1"></i>
                             <p class="mt-2">connect to view spaces</p>
                         </div>
@@ -621,7 +1097,7 @@ class MetatronDashboard {
                 `)}
                 <div class="card-body p-2 overflow-auto" style="max-height: calc(100vh - 180px);">
                     <div id="treeContainer" class="tree-view">
-                        <div class="text-center text-muted py-4">
+                        <div class="text-center text-muted small py-4">
                             <i class="bi bi-diagram-3 fs-1"></i>
                             <p class="mt-2">select a space to browse</p>
                         </div>
@@ -633,9 +1109,9 @@ class MetatronDashboard {
     renderInspectorPanel() {
         const panel = this.panelRegistry.inspector;
         return `
-            <div class="card" style="flex: 0 0 auto; max-height: 40vh;">
+            <div class="card h-100 d-flex flex-column">
                 ${this.renderPanelHeader(panel, `<span id="inspectorUri" class="text-muted small me-2" style="font-family: monospace;"></span>`)}
-                <div class="card-body p-2 overflow-auto">
+                <div class="card-body p-2 overflow-auto flex-grow-1">
                     <div id="inspectorContainer" class="inspector-output">
                         <div class="text-muted small text-center py-3">
                             <i class="bi bi-crosshair fs-3 d-block mb-2"></i>
@@ -649,7 +1125,7 @@ class MetatronDashboard {
     renderConsolePanel() {
         const panel = this.panelRegistry.console;
         return `
-            <div class="card flex-grow-1 d-flex flex-column">
+            <div class="card h-100 d-flex flex-column">
                 ${this.renderPanelHeader(panel, `
                     <button id="clearOutputBtn" class="btn btn-sm btn-outline-secondary me-1" title="clear output"><i class="bi bi-trash"></i></button>
                     <button id="executeBtn" class="btn btn-sm btn-primary" title="execute (ctrl+enter)"><i class="bi bi-play-fill me-1" style="color:white;"></i>Run</button>
@@ -658,9 +1134,9 @@ class MetatronDashboard {
                     <div class="p-2 border-bottom border-secondary">
                         <textarea id="codeInput" class="form-control code-input" rows="3" placeholder="enter mtron code here... (ctrl+enter to execute)">1-&lt;[_,_]</textarea>
                     </div>
-                    <div class="flex-grow-1 overflow-auto p-2" style="max-height: calc(100vh - 450px);">
+                    <div class="flex-grow-1 overflow-auto p-2" style="min-height: 100px;">
                         <div id="outputContainer" class="output-container">
-                            <div class="text-muted small"><i class="bi bi-info-circle me-1"></i>output will appear here...</div>
+                            <div class="text-muted small"><i class="bi bi-info-circle me-1"></i>output will appear here</div>
                         </div>
                     </div>
                 </div>
@@ -690,7 +1166,7 @@ class MetatronDashboard {
                         <div class="col-7">
                             <label class="form-label small text-muted">model</label>
                             <select id="agentModel" class="form-select form-select-sm bg-dark border-secondary text-light">
-                                <option value="">select model...</option>
+                                <option value="">select model</option>
                             </select>
                         </div>
                     </div>
@@ -800,7 +1276,7 @@ class MetatronDashboard {
     // ==================== LLM Agent Designer ====================
 
     addAgentSkill() {
-        const path = prompt('Enter skill path (e.g., local:/path/to/skill.md):');
+        const path = prompt('enter skill path (e.g., local:/path/to/skill.md):');
         if (path?.trim()) {
             this.agentSkills.push(path.trim());
             this.updateAgentSkillsDisplay();
@@ -892,7 +1368,7 @@ class MetatronDashboard {
             config.push(`tool     =>[${this.agentTools.join(',')}]`);
         }
         config.push(`response =>[to=>${responseTo}]`);
-        if (memory) config.push(`memory   =>!*${memory}`);
+        if (memory) config.push(`memory   =>!*<${memory}>`);
         if (desc) config.push(`desc     =>'${desc}'`);
 
         const configStr = config.join(',\n                                ');
@@ -901,7 +1377,7 @@ class MetatronDashboard {
         code += `*<${modelRef}>.>>=[${configStr}]${compressOp}.to(${fullUri});`;
 
         if (this.agentSkills.length > 0) {
-            code += `\n<${modelRef}/skill> ->(*${fullUri}>>skill>>0.as(skill::T).>-[,]).to(${fullUri});`;
+            code += `\n<${modelRef}/skill> ->(*<${fullUri}>.>>skill>>0.as(skill::T).>-[,]).to(${fullUri});`;
         }
         if (this.agentTools.length > 0) {
             code += `\n<${modelRef}/tool> ->([${this.agentTools.join(',')}]);`;
@@ -932,7 +1408,7 @@ class MetatronDashboard {
         const executeNext = (i) => {
             if (i >= lines.length) {
                 const uri = document.getElementById('agentUri')?.value?.trim() || 'my-agent';
-                alert(`Agent created at /usr/ai/agent/${uri}`);
+                alert(`agent created at /usr/ai/agent/${uri}`);
                 if (this.openPanels.has('tree')) this.loadDefaultTree();
                 return;
             }
@@ -986,7 +1462,7 @@ class MetatronDashboard {
 
         select.innerHTML = '<option value="">loading...</option>';
 
-        this.sendQuery(`"*${provider}:+/"./m/web/inst/doc_json()`, (response, error) => {
+        this.sendQuery(`"*<${provider}:+/>"./m/web/inst/doc_json()`, (response, error) => {
             if (error) {
                 select.innerHTML = '<option value="">error loading</option>';
                 return;
@@ -1030,6 +1506,11 @@ class MetatronDashboard {
         this.connectionStatus = document.getElementById('connectionStatus');
         this.statsDisplay = document.getElementById('statsDisplay');
         this.panelLockBtn = document.getElementById('panelLockBtn');
+
+        const layoutBtn = document.getElementById('layoutTemplatesBtn');
+        if (layoutBtn) {
+            layoutBtn.addEventListener('click', () => this.showLayoutTemplates());
+        }
     }
 
     initElements() {
@@ -1086,7 +1567,7 @@ class MetatronDashboard {
 
     // ==================== UI Helpers ====================
 
-    showLoading(container, message = 'Loading...') {
+    showLoading(container, message = 'loading...') {
         if (container) container.innerHTML = `<div class="text-center py-3"><div class="spinner-border spinner-sm text-primary" role="status"></div><span class="ms-2">${message}</span></div>`;
     }
 
@@ -1132,10 +1613,10 @@ class MetatronDashboard {
             };
 
             this.socket.onerror = (error) => {
-                console.error('WebSocket error:', error);
+                console.error('websocket error:', error);
             };
         } catch (error) {
-            console.error('Connection failed:', error);
+            console.error('connection failed:', error);
         }
     }
 
@@ -1245,7 +1726,7 @@ class MetatronDashboard {
     renderSpaces(response) {
         const spaces = this.parseSpacesResponse(response);
         if (spaces.length === 0) {
-            this.spacesContainer.innerHTML = '<div class="text-center text-muted py-3"><i class="bi bi-inbox"></i> No spaces found</div>';
+            this.spacesContainer.innerHTML = '<div class="text-center text-muted py-3"><i class="bi bi-inbox"></i> no spaces found</div>';
             return;
         }
 
@@ -1315,7 +1796,7 @@ class MetatronDashboard {
             this.browseSpaceRoot();
             if (this.selectedSpace.uri) this.focusObject(this.selectedSpace.uri);
         } catch (e) {
-            console.error('Failed to parse space data:', e);
+            console.error('failed to parse space data:', e);
         }
     }
 
@@ -1357,7 +1838,7 @@ class MetatronDashboard {
                 <span class="tree-node-icon folder" onclick="dashboard.toggleTreeNode('${uri}', this.parentElement)">
                     <i class="bi bi-folder2"></i>
                 </span>
-                <span class="tree-node-label" onclick="dashboard.queryUri('${uri}')" title="${uri}">
+                <span class="tree-node-label" onclick="dashboard.focusObject('*<${uri}>')" title="${uri}">
                     ${label} <span class="tree-desc text-muted small" data-uri="${uri}"></span>
                 </span>
                 <span class="doc-indicator" data-doc-uri="${uri}" style="display:none; cursor:pointer;" title="click to view documentation" onclick="event.stopPropagation(); dashboard.loadDocumentation('${uri}')">
@@ -1373,7 +1854,7 @@ class MetatronDashboard {
 
     loadRootDescriptions(uris) {
         uris.forEach(uri => {
-            this.sendBackgroundQuery(`"*${uri}?docq.>>desc"./m/web/inst/doc_json()`, (response, error) => {
+            this.sendBackgroundQuery(`"*<${uri}?docq>.>>desc"./m/web/inst/doc_json()`, (response, error) => {
                 if (error) return;
                 const desc = this.stripMtronResponse(response).replace(/^"|"$/g, '');
                 const descEl = document.querySelector(`.tree-desc[data-uri="${uri}"]`);
@@ -1389,7 +1870,7 @@ class MetatronDashboard {
 
     loadDocIndicators(uris) {
         uris.forEach(uri => {
-            this.sendBackgroundQuery(`"*${uri}?docq.>>desc"./m/web/inst/doc_json()`, (response, error) => {
+            this.sendBackgroundQuery(`"*<${uri}?docq>.>>desc"./m/web/inst/doc_json()`, (response, error) => {
                 if (error) return;
                 const desc = this.stripMtronResponse(response).replace(/^"|"$/g, '');
                 if (desc && desc !== 'no documentation available' && desc !== 'null') {
@@ -1405,7 +1886,7 @@ class MetatronDashboard {
         this.showLoading(container, 'loading...');
 
         const basePath = path.replace(/\/+$/, '').replace(/#$/, '');
-        const innerQuery = basePath.endsWith(':') ? `*${basePath}+/` : `*${basePath}/+/`;
+        const innerQuery = basePath.endsWith(':') ? `*<${basePath}+/>` : `*<${basePath}/+/>`;
 
         this.sendQuery(`'${innerQuery}'./m/web/inst/doc_json()`, (response, error) => {
             if (error) {
@@ -1441,7 +1922,7 @@ class MetatronDashboard {
                     <span class="tree-node-icon" data-node-id="${nodeId}" onclick="dashboard.toggleTreeNode('${escapedUri}', this.parentElement)">
                         <i class="bi bi-folder2"></i>
                     </span>
-                    <span class="tree-node-label" onclick="dashboard.queryUri('${escapedUri}')" title="${this.escapeHtml(child.uri)}">
+                    <span class="tree-node-label" onclick="dashboard.focusObject('*<${escapedUri}>')" title="${this.escapeHtml(child.uri)}">
                         ${this.escapeHtml(child.name)}
                     </span>
                     <span class="doc-indicator" data-doc-uri="${this.escapeHtml(child.uri)}" style="display:none; cursor:pointer;" title="click to view documentation" onclick="event.stopPropagation(); dashboard.loadDocumentation('${escapedUri}')">
@@ -1476,7 +1957,7 @@ class MetatronDashboard {
             const iconSpan = document.querySelector(`[data-node-id="${nodeId}"] i`);
             if (!iconSpan) return;
 
-            this.sendBackgroundQuery(`"*${uri}.type().vid()"./m/web/inst/doc_json()`, (response, error) => {
+            this.sendBackgroundQuery(`"*<${uri}>.type().vid()"./m/web/inst/doc_json()`, (response, error) => {
                 if (error) return;
                 const typeVid = this.stripMtronResponse(response).replace(/^"|"$/g, '');
                 const icon = this.getTypeIcon(typeVid);
@@ -1616,9 +2097,9 @@ class MetatronDashboard {
     focusObject(uri) {
         if (!this.connected || !this.inspectorContainer) return;
         if (this.inspectorUri) this.inspectorUri.textContent = uri;
-        this.showLoading(this.inspectorContainer, 'Loading...');
+        this.showLoading(this.inspectorContainer, 'loading...');
 
-        this.sendQuery(`"*${uri}"./m/web/inst/doc()`, (response, error) => {
+        this.sendQuery(`"${uri}"./m/web/inst/doc()`, (response, error) => {
             if (error) {
                 this.showContainerError(this.inspectorContainer, error);
                 return;
@@ -1630,9 +2111,9 @@ class MetatronDashboard {
     loadDocumentation(uri) {
         if (!this.connected || !this.inspectorContainer) return;
         if (this.inspectorUri) this.inspectorUri.innerHTML = `<i class="bi bi-book me-1"></i>${this.escapeHtml(uri)}?docq`;
-        this.showLoading(this.inspectorContainer, 'Loading documentation...');
+        this.showLoading(this.inspectorContainer, 'loading documentation...');
 
-        this.sendQuery(`"*${uri}?docq"./m/web/inst/doc()`, (response, error) => {
+        this.sendQuery(`"*<${uri}?docq>.>>desc"./m/web/inst/doc_json()`, (response, error) => {
             if (error) {
                 this.showContainerError(this.inspectorContainer, error);
                 return;
@@ -1686,7 +2167,7 @@ class MetatronDashboard {
 
     clearOutput() {
         if (this.outputContainer) {
-            this.outputContainer.innerHTML = '<div class="text-muted small"><i class="bi bi-info-circle me-1"></i>Output cleared</div>';
+            this.outputContainer.innerHTML = '<div class="text-muted small"><i class="bi bi-info-circle me-1"></i>output cleared</div>';
         }
     }
 

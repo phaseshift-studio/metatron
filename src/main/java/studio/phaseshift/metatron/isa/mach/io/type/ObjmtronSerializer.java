@@ -67,8 +67,8 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
     public static <OBJ extends Obj> OBJ parse(final String code) {
         return mParser.parse(code);
     }
-    
-    
+
+
     @Override
     public ByteBuffer outputBytes(final Obj obj) {
         return ByteBuffer.wrap(this.write(obj).getBytes(StandardCharsets.UTF_8));
@@ -315,10 +315,16 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
         if (rec.isEmpty()) {
             sb.append("[=>]");
         } else {
-            boolean nested = rec.jvm().size() > 4 || rec.jvm().values().stream().anyMatch(o -> o.isPoly() || o.isObjCall() || isComplexType(o) || null != o.vid());
+            boolean nested = null != rec.vid() ||
+                    rec.jvm().size() > 4 ||
+                    rec.jvm().values().stream().anyMatch(o ->
+                            null != o.vid() ||
+                                    o.isPoly() ||
+                                    o.isObjCall() ||
+                                    isComplexType(o));
             /*rec.jvm().values().stream().filter(o -> !o.isPoly()).map(this::write).map(String::length).reduce(0, Integer::sum) > (75 - depth);*/
             final int maxKeyLength = nested ? rec.jvm().keySet().stream().map(this::write).map(String::length).reduce(0, Integer::max) : 0;
-            final boolean isBaseType = rec.type().isBaseType();
+            //final boolean isBaseType = rec.type().isBaseType();
             final AtomicBoolean first = new AtomicBoolean(false);
             sb.append("[").append(nested ? "\n" : "");
             rec.jvm().forEach((k, v) -> {
@@ -336,7 +342,7 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
                         .append(keyString)
                         .append(" ".repeat(nested && leftJustify ? childPadding : 0)).append("=>");
                 if (v == rec)
-                    throw MTronException.of("prevented infinite recursion on nested rec: key %s",k);
+                    throw MTronException.of("prevented infinite recursion on nested rec: key %s", k);
                 this.processNestedPoly(sb, depth, leftJustify ? 0 : childPadding, nested, v);
             });
             this.cleanEnding(sb);

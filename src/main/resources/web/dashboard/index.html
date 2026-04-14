@@ -49,8 +49,12 @@
     </a>
     <div class="ms-auto d-flex align-items-center">
         <!-- Panel Lock Toggle -->
-        <button id="panelLockBtn" class="btn btn-sm btn-outline-secondary me-2" type="button" title="Lock panels (prevent accidental close)">
+        <button id="panelLockBtn" class="btn btn-sm btn-outline-secondary me-2" type="button" title="lock panels (prevent accidental close)">
             <i class="bi bi-unlock"></i>
+        </button>
+        <!-- Layout Templates -->
+        <button id="layoutTemplatesBtn" class="btn btn-sm btn-outline-secondary me-2" type="button" title="Layout templates">
+            <i class="bi bi-grid-3x3-gap me-1"></i>layouts
         </button>
         <!-- Panel Menu -->
         <div class="dropdown me-3">
@@ -78,8 +82,8 @@
 </nav>
 
 <!-- MAIN CONTENT -->
-<main class="container-fluid flex-grow-1 p-3">
-    <div class="row g-3 h-100" id="panelContainer">
+<main class="container-fluid flex-grow-1 p-0">
+    <div class="h-100" id="panelContainer">
         <!-- Panels are rendered dynamically by dashboard.js -->
     </div>
 </main>
