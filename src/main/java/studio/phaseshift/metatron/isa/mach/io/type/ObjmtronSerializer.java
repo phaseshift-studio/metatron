@@ -315,12 +315,14 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
         if (rec.isEmpty()) {
             sb.append("[=>]");
         } else {
-            boolean nested = null != rec.vid() ||
-                    rec.jvm().size() > 4 ||
+            boolean nested = rec.jvm().size() > 4 ||
                     rec.jvm().values().stream().anyMatch(o ->
                             null != o.vid() ||
                                     o.isPoly() ||
                                     o.isObjCall() ||
+                                    (o.isStr() && o.strValue().length() > 15) ||
+                                    (o.isUri() && o.uriValue().toString().length() > 15) ||
+                                    (o.isBytes() && o.bytesValue().capacity() > 15) ||
                                     isComplexType(o));
             /*rec.jvm().values().stream().filter(o -> !o.isPoly()).map(this::write).map(String::length).reduce(0, Integer::sum) > (75 - depth);*/
             final int maxKeyLength = nested ? rec.jvm().keySet().stream().map(this::write).map(String::length).reduce(0, Integer::max) : 0;

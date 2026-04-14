@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -23,17 +23,14 @@ import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.nio.ByteBuffer;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.Types;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -42,7 +39,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.tble.tbleInstSet.LST_ROW_TID;
 import static studio.phaseshift.metatron.isa.tble.tbleInstSet.REC_ROW_TID;
 
@@ -260,12 +256,12 @@ public class ObjSQLSerializer extends AbstractObjSerializer<ResultSet> {
      * @return an Objs containing all rows as Lst objects
      * @throws SQLException if reading fails
      */
-    public static Objs readAllAsLstObjs(final ResultSet rs) throws SQLException {
+    public static Obj readAllAsLstObjs(final ResultSet rs) throws SQLException {
         Obj result = objs0();
         for (final Lst row : readAllAsLst(rs)) {
             result = result.append(row);
         }
-        return result.asObjs();
+        return result;
     }
 
     /**
@@ -305,12 +301,12 @@ public class ObjSQLSerializer extends AbstractObjSerializer<ResultSet> {
      * @return an Objs containing up to 'limit' rows as Rec objects
      * @throws SQLException if reading fails
      */
-    public static Objs readLimitedAsRecObjs(final ResultSet rs, final int limit) throws SQLException {
+    public static Obj readLimitedAsRecObjs(final ResultSet rs, final int limit) throws SQLException {
         Obj result = objs0();
         for (final Rec row : readLimitedAsRec(rs, limit)) {
             result = result.append(row);
         }
-        return result.asObjs();
+        return result;
     }
 
     /**
@@ -348,12 +344,12 @@ public class ObjSQLSerializer extends AbstractObjSerializer<ResultSet> {
      * @return an Objs containing up to 'limit' rows as Lst objects
      * @throws SQLException if reading fails
      */
-    public static Objs readLimitedAsLstObjs(final ResultSet rs, final int limit) throws SQLException {
+    public static Obj readLimitedAsLstObjs(final ResultSet rs, final int limit) throws SQLException {
         Obj result = objs0();
         for (final Lst row : readLimitedAsLst(rs, limit)) {
             result = result.append(row);
         }
-        return result.asObjs();
+        return result;
     }
 
     /**

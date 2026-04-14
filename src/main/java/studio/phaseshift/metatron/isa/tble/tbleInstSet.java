@@ -210,7 +210,9 @@ public class tbleInstSet extends AbstractInstSet {
                                     } catch (SQLException e) {
                                         if (e.getErrorCode() == 1054)
                                             return noobj();
-                                        throw MTronException.of(e);
+                                        throw MTronException.of(e, "%s", sql);
+                                    } catch(final Exception e) {
+                                        throw MTronException.of(e, "%s", sql);
                                     }
                                 }
                         ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages native SELECT ... LIMIT to take first n rows from a table"),
@@ -245,7 +247,7 @@ public class tbleInstSet extends AbstractInstSet {
                                     } catch (SQLException e) {
                                         if (e.getErrorCode() == 1054)
                                             return noobj();
-                                        throw MTronException.of(e, "SQL failed: %s", sql);
+                                        throw MTronException.of(e, "%s", sql);
                                     }
                                 }
                         ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages native SELECT ... WHERE to filter rows in a table"),
@@ -264,7 +266,7 @@ public class tbleInstSet extends AbstractInstSet {
                                     } catch (SQLException e) {
                                         if (e.getErrorCode() == 1054)
                                             return 0L;
-                                        throw MTronException.of(e, "SQL failed: %s", sql);
+                                        throw MTronException.of(e, "%s", sql);
                                     }
                                 }
                         ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages native SELECT COUNT(*) ... WHERE to count filtered rows"),
@@ -305,7 +307,7 @@ public class tbleInstSet extends AbstractInstSet {
                                     } catch (final SQLException e) {
                                         if (e.getErrorCode() == 1054)
                                             return noobj();
-                                        throw MTronException.of(e, "SQL failed: %s", sql);
+                                        throw MTronException.of(e, "%s", sql);
                                     }
                                 }
                         ), "*table/+>>{name,age}", "sql_select(table, [name,age])", Map.of(), "leverages native SELECT col1, col2 FROM table for projections")

@@ -23,12 +23,21 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.util.MTronException;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
  * Common rewrite patterns that work across multiple database types.
@@ -229,16 +238,16 @@ public final class CommonRewrites {
         LimitRewriteBuilder(final Class<S> spaceType, final LimitOperation<S> limitOperation) {
             super(spaceType);
             this.limitOperation = limitOperation;
-            this.rewriteName = "mql_limit";
+            this.rewriteName = "from_take";
             // Set a dummy optimization since we override createRewriteFunction
             this.optimization = (space, furi, coeff) -> null;
         }
 
         @Override
-        protected java.util.function.Function<java.util.Map<Inst, Inst>, java.util.List<Inst>> createRewriteFunction() {
+        protected Function<Map<Inst, Inst>, List<Inst>> createRewriteFunction() {
             return map -> {
                 // Extract fURI from the FROM instruction (first matched)
-                final java.util.List<Inst> matchedInsts = new java.util.ArrayList<>(map.values());
+                final List<Inst> matchedInsts = new ArrayList<>(map.values());
                 final Inst fromInst = matchedInsts.get(0);
                 final Inst takeInst = matchedInsts.get(1);
 
@@ -257,18 +266,12 @@ public final class CommonRewrites {
                             expandedfURI, limitValue, space);
 
                     // Create the optimized instruction
-                    return java.util.List.of(
-                            studio.phaseshift.metatron.isa.m.type.impl.MInst.instC(
-                                    this.rewriteTid.dom(fURI.Singleton.ALL.zero()).rng(this.resultTid),
-                                    studio.phaseshift.metatron.isa.m.type.impl.MLst.lst(
-                                            studio.phaseshift.metatron.isa.m.type.impl.MUri.uri(expandedfURI),
-                                            jnt(limitValue)),
+                    return List.of(instC(this.rewriteTid.dom(ALL.zero()).rng(this.resultTid), lst(uri(expandedfURI), jnt(limitValue)),
                                     (lhs, inst) -> {
                                         try {
                                             return this.limitOperation.execute(typedSpace, expandedfURI, limitValue);
                                         } catch (final Exception e) {
-                                            throw studio.phaseshift.metatron.util.MTronException.of(e,
-                                                    "failed to execute native limit operation");
+                                            throw MTronException.of(e);
                                         }
                                     }
                             )
@@ -302,7 +305,7 @@ public final class CommonRewrites {
                 .tid(rewriteTID)
                 .rng(INT_TID.maybe().some())
                 .match(FROM_INST_TID, PROD_INST_TID)
-                .optimize("mql_prod", (space, furi, coeff) -> {
+                .optimize("from_prod", (space, furi, coeff) -> {
                     final Number prod = prodFunction.apply(space, furi);
                     return (prod instanceof Double || prod instanceof Float)
                             ? real(prod.doubleValue())
@@ -339,13 +342,13 @@ public final class CommonRewrites {
                     // patterns operate across collections/tables and require different rewriting
                     return !ref.isUri() || !ref.uriValue().retract(1).hasPattern();
                 })
-                .optimize("mql_has", (space, furi, coeff) -> {
+                .optimize("from_has", (space, furi, coeff) -> {
                     final boolean exists = hasFunction.apply(space, furi);
                     return studio.phaseshift.metatron.isa.m.type.impl.MBool.bool(exists);
                 })
                 .build();
     }
-    
+
     /**
      * Functional interface for select/projection operations.
      *
@@ -405,7 +408,7 @@ public final class CommonRewrites {
         SelectRewriteBuilder(final Class<S> spaceType, final SelectOperation<S> selectOperation) {
             super(spaceType);
             this.selectOperation = selectOperation;
-            this.rewriteName = "mql_select";
+            this.rewriteName = "from_select";
             this.optimization = (space, furi, coeff) -> null;
         }
 
@@ -446,11 +449,11 @@ public final class CommonRewrites {
                         .toList();
 
                 return java.util.List.of(
-                        studio.phaseshift.metatron.isa.m.type.impl.MInst.instC(
-                                this.rewriteTid.dom(fURI.Singleton.ALL.zero()).rng(this.resultTid),
-                                studio.phaseshift.metatron.isa.m.type.impl.MLst.lst(
-                                        studio.phaseshift.metatron.isa.m.type.impl.MUri.uri(expandedfURI),
-                                        studio.phaseshift.metatron.isa.m.type.impl.MLst.lst(colObjs)),
+                        instC(
+                                this.rewriteTid.dom(ALL.zero()).rng(this.resultTid),
+                                lst(
+                                        uri(expandedfURI),
+                                        lst(colObjs)),
                                 (lhs, inst) -> {
                                     try {
                                         return this.selectOperation.execute(typedSpace, expandedfURI, columns);
@@ -522,9 +525,9 @@ public final class CommonRewrites {
         /**
          * Execute the native where/filter operation.
          *
-         * @param space     The database space
-         * @param furi      The resolved fURI for the table/collection
-         * @param sqlWhere  The SQL WHERE clause (e.g., "column > 5")
+         * @param space    The database space
+         * @param furi     The resolved fURI for the table/collection
+         * @param sqlWhere The SQL WHERE clause (e.g., "column > 5")
          * @return The filtered results (typically an Objs of rows)
          * @throws Exception if the operation fails
          */
@@ -577,7 +580,7 @@ public final class CommonRewrites {
         WhereRewriteBuilder(final Class<S> spaceType, final WhereOperation<S> whereOperation) {
             super(spaceType);
             this.whereOperation = whereOperation;
-            this.rewriteName = "mql_where";
+            this.rewriteName = "from_where";
             this.optimization = (space, furi, coeff) -> null;
         }
 
@@ -612,10 +615,10 @@ public final class CommonRewrites {
                         expandedfURI, sqlWhere, space);
 
                 return java.util.List.of(
-                        studio.phaseshift.metatron.isa.m.type.impl.MInst.instC(
-                                this.rewriteTid.dom(fURI.Singleton.ALL.zero()).rng(this.resultTid),
-                                studio.phaseshift.metatron.isa.m.type.impl.MLst.lst(
-                                        studio.phaseshift.metatron.isa.m.type.impl.MUri.uri(expandedfURI),
+                        instC(
+                                this.rewriteTid.dom(ALL.zero()).rng(this.resultTid),
+                                lst(
+                                        uri(expandedfURI),
                                         studio.phaseshift.metatron.isa.m.type.impl.MStr.str(sqlWhere)),
                                 (lhs, inst) -> {
                                     try {
@@ -773,11 +776,11 @@ public final class CommonRewrites {
      *   → sql_where_count      (this rewrite)
      * </pre>
      *
-     * @param spaceType           The database space type
-     * @param whereRewriteTID     The TID of the sql_where instruction to match
-     * @param rewriteTID          The TID for this rewrite's output instruction
-     * @param whereCountFunction  Function that executes the native count with where
-     * @param <S>                 The space type
+     * @param spaceType          The database space type
+     * @param whereRewriteTID    The TID of the sql_where instruction to match
+     * @param rewriteTID         The TID for this rewrite's output instruction
+     * @param whereCountFunction Function that executes the native count with where
+     * @param <S>                The space type
      * @return The rewrite instruction
      */
     public static <S extends Space> Inst whereCountRewrite(
@@ -806,7 +809,7 @@ public final class CommonRewrites {
             super(spaceType);
             this.whereRewriteTID = whereRewriteTID;
             this.whereCountOperation = whereCountOperation;
-            this.rewriteName = "mql_where_count";
+            this.rewriteName = "from_where_count";
             this.optimization = (space, furi, coeff) -> null;
         }
 
@@ -838,10 +841,10 @@ public final class CommonRewrites {
                         furi, sqlWhere, space);
 
                 return java.util.List.of(
-                        studio.phaseshift.metatron.isa.m.type.impl.MInst.instC(
-                                this.rewriteTid.dom(fURI.Singleton.ALL.zero()).rng(this.resultTid),
-                                studio.phaseshift.metatron.isa.m.type.impl.MLst.lst(
-                                        studio.phaseshift.metatron.isa.m.type.impl.MUri.uri(furi),
+                        instC(
+                                this.rewriteTid.dom(ALL.zero()).rng(this.resultTid),
+                                lst(
+                                        uri(furi),
                                         studio.phaseshift.metatron.isa.m.type.impl.MStr.str(sqlWhere)),
                                 (lhs, inst) -> {
                                     try {
