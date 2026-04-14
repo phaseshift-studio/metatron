@@ -255,15 +255,6 @@ bin/metatron</code></pre>
        obj      =>mem::[pattern=><#>],
        inst     =>instset::[pattern=><#>]]],
  space  =>[sub=>{!*/m/mach,!*/m/math,!*/m/web,!*/m/iot,!*/m/grph,!*/m/llm,!*/m/tble,!*/m/dcmnt}],
- rewrite=>[
-   /m/inst/rewrite/id_removal?rng=code{?}&dom=code(){<j>},
-   /m/inst/rewrite/map_nest?rng=code{?}&dom=code(){<j>},
-   /m/inst/rewrite/else_after_count?rng=code{?}&dom=code(){<j>},
-   /m/inst/rewrite/plus_zero?rng=code{?}&dom=code(){<j>},
-   /m/inst/rewrite/mult_one?rng=code{?}&dom=code(){<j>},
-   /m/inst/rewrite/split_merge_collapse?rng=code{?}&dom=code(){<j>},
-   /m/inst/rewrite/split_merge_left_factor?rng=code{?}&dom=code(){<j>},
-   /m/inst/rewrite/split_merge_right_factor?rng=code{?}&dom=code(){<j>}],
  const  =>[noobj],
  type   =>[
    bool::T,
@@ -549,7 +540,16 @@ bin/metatron</code></pre>
    swap?rng=A&dom=A(B::T){<j>},
    rshift?rng=B{?}&dom=A(){<j>},
    lshift?rng=B{?}&dom=A(){<j>},
-   start?rng=A{**}&dom=noobj{0}(A{**}::T){<j>}]]@/m</code></pre>
+   start?rng=A{**}&dom=noobj{0}(A{**}::T){<j>}],
+ rewrite=>[
+   /m/inst/rewrite/id_removal?rng=code{?}&dom=code(){<j>},
+   /m/inst/rewrite/map_nest?rng=code{?}&dom=code(){<j>},
+   /m/inst/rewrite/else_after_count?rng=code{?}&dom=code(){<j>},
+   /m/inst/rewrite/plus_zero?rng=code{?}&dom=code(){<j>},
+   /m/inst/rewrite/mult_one?rng=code{?}&dom=code(){<j>},
+   /m/inst/rewrite/split_merge_collapse?rng=code{?}&dom=code(){<j>},
+   /m/inst/rewrite/split_merge_left_factor?rng=code{?}&dom=code(){<j>},
+   /m/inst/rewrite/split_merge_right_factor?rng=code{?}&dom=code(){<j>}]]@/m</code></pre>
                         </div>
                     </div>
                 </div>
@@ -560,7 +560,7 @@ bin/metatron</code></pre>
             <div class="d-flex justify-content-center gap-2 flex-wrap">
                 <button class="btn btn-outline-secondary" disabled>Consts <span class="badge bg-dark">0</span></button>
                 <a href="#types" class="btn btn-outline-primary">Types <span class="badge bg-secondary">13</span></a>
-                <a href="#instructions" class="btn btn-outline-primary">Insts <span class="badge bg-secondary">244</span></a>
+                <a href="#instructions" class="btn btn-outline-primary">Insts <span class="badge bg-secondary">245</span></a>
                 <a href="#spaces" class="btn btn-outline-primary">Spaces <span class="badge bg-secondary">4</span></a>
                 <a href="#rewrites" class="btn btn-outline-primary">Rewrites <span class="badge bg-secondary">8</span></a>
             </div>
@@ -1413,7 +1413,7 @@ a/b/c/                           [-- relative/branch uri            --]
             
         <div class="container-xxl mb-4" id="instructions">
             <h3 class="text-primary mb-3">
-                Instructions <span class="badge bg-success">244</span>
+                Instructions <span class="badge bg-success">245</span>
             </h3>
             
                 <div class="card mb-3" id="inst-and">
@@ -1502,25 +1502,26 @@ a/b/c/                           [-- relative/branch uri            --]
 <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-as-doc-36-tab').click(); document.getElementById('inst-as-doc-36').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">as?xml&lt;=str(xml::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-as-doc-38-tab').click(); document.getElementById('inst-as-doc-38').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">as?html&lt;=str(html::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-as-doc-39-tab').click(); document.getElementById('inst-as-doc-39').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">as?json&lt;=str(json::T){&lt;j&gt;}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-as-doc-40-tab').click(); document.getElementById('inst-as-doc-40').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">as?tool&lt;=inst(rec::T[?[
+<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-as-doc-40-tab').click(); document.getElementById('inst-as-doc-40').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">as?str&lt;=#(str::T@/m/web/json_str){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-as-doc-41-tab').click(); document.getElementById('inst-as-doc-41').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">as?tool&lt;=inst(rec::T[?[
      inst  =&gt;#::T,
      name  =&gt;uri::T,
      desc  =&gt;str::T,
      {?}arg=&gt;{?}[
        uri::T=&gt;#::T]]]@/m/llm/tool){&lt;j&gt;}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-as-doc-41-tab').click(); document.getElementById('inst-as-doc-41').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">as?tool&lt;=/m/space/q/docq/docs(rec::T[?[
+<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-as-doc-42-tab').click(); document.getElementById('inst-as-doc-42').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">as?tool&lt;=/m/space/q/docq/docs(rec::T[?[
      inst  =&gt;#::T,
      name  =&gt;uri::T,
      desc  =&gt;str::T,
      {?}arg=&gt;{?}[
        uri::T=&gt;#::T]]]@/m/llm/tool){&lt;j&gt;}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-as-doc-40-tab').click(); document.getElementById('inst-as-doc-40').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">as?tool&lt;=inst(rec::T[?[
+<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-as-doc-41-tab').click(); document.getElementById('inst-as-doc-41').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">as?tool&lt;=inst(rec::T[?[
      inst  =&gt;#::T,
      name  =&gt;uri::T,
      desc  =&gt;str::T,
      {?}arg=&gt;{?}[
        uri::T=&gt;#::T]]]@/m/llm/tool){&lt;j&gt;}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-as-doc-42-tab').click(); document.getElementById('inst-as-doc-42').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">as?skill&lt;=dir(rec::T[?[
+<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-as-doc-43-tab').click(); document.getElementById('inst-as-doc-43').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">as?skill&lt;=dir(rec::T[?[
      name      =&gt;uri::T,
      desc      =&gt;str::T,
      {?}content=&gt;str::T,
@@ -1531,319 +1532,326 @@ a/b/c/                           [-- relative/branch uri            --]
 <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-as-doc-36-tab').click(); document.getElementById('inst-as-doc-36').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">as?rrow&lt;=lrow(rec::T[?[
      uri::T=&gt;#::T]]@/m/tble/rrow){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-as-doc-36-tab').click(); document.getElementById('inst-as-doc-36').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">as?lrow&lt;=rrow(lst::T@/m/tble/lrow){&lt;j&gt;}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-as-doc-43-tab').click(); document.getElementById('inst-as-doc-43').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">as?lst&lt;=document(lst::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-as-doc-44-tab').click(); document.getElementById('inst-as-doc-44').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">as?lst&lt;=document(lst::T){&lt;j&gt;}</code></pre>
                     </div>
                     
             <div class="card-body border-top p-0">
                 <ul class="nav nav-pills p-2 bg-dark" id="inst-as-pills" role="tablist">
-                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">Variations:</span></li>
+                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">polymorph:</span></li>
                     
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2 active text-start h-100" id="inst-as-doc-0-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-as-doc-0" type="button" role="tab" aria-controls="inst-as-doc-0" 
-                        aria-selected="true" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="true" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 1
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-as-doc-1-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-as-doc-1" type="button" role="tab" aria-controls="inst-as-doc-1" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 2
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-as-doc-2-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-as-doc-2" type="button" role="tab" aria-controls="inst-as-doc-2" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 3
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-as-doc-3-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-as-doc-3" type="button" role="tab" aria-controls="inst-as-doc-3" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 4
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-as-doc-4-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-as-doc-4" type="button" role="tab" aria-controls="inst-as-doc-4" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 5
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-as-doc-5-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-as-doc-5" type="button" role="tab" aria-controls="inst-as-doc-5" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 6
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-as-doc-6-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-as-doc-6" type="button" role="tab" aria-controls="inst-as-doc-6" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 7
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-as-doc-7-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-as-doc-7" type="button" role="tab" aria-controls="inst-as-doc-7" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 8
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-as-doc-8-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-as-doc-8" type="button" role="tab" aria-controls="inst-as-doc-8" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 9
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-as-doc-9-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-as-doc-9" type="button" role="tab" aria-controls="inst-as-doc-9" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 10
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-as-doc-10-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-as-doc-10" type="button" role="tab" aria-controls="inst-as-doc-10" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 11
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-as-doc-11-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-as-doc-11" type="button" role="tab" aria-controls="inst-as-doc-11" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 12
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-as-doc-12-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-as-doc-12" type="button" role="tab" aria-controls="inst-as-doc-12" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 13
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-as-doc-13-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-as-doc-13" type="button" role="tab" aria-controls="inst-as-doc-13" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 14
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-as-doc-14-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-as-doc-14" type="button" role="tab" aria-controls="inst-as-doc-14" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 15
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-as-doc-15-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-as-doc-15" type="button" role="tab" aria-controls="inst-as-doc-15" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 16
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-as-doc-16-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-as-doc-16" type="button" role="tab" aria-controls="inst-as-doc-16" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 17
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-as-doc-17-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-as-doc-17" type="button" role="tab" aria-controls="inst-as-doc-17" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 18
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-as-doc-18-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-as-doc-18" type="button" role="tab" aria-controls="inst-as-doc-18" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 19
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-as-doc-19-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-as-doc-19" type="button" role="tab" aria-controls="inst-as-doc-19" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 20
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-as-doc-20-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-as-doc-20" type="button" role="tab" aria-controls="inst-as-doc-20" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 21
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-as-doc-21-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-as-doc-21" type="button" role="tab" aria-controls="inst-as-doc-21" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 22
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-as-doc-22-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-as-doc-22" type="button" role="tab" aria-controls="inst-as-doc-22" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 23
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-as-doc-23-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-as-doc-23" type="button" role="tab" aria-controls="inst-as-doc-23" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 24
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-as-doc-24-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-as-doc-24" type="button" role="tab" aria-controls="inst-as-doc-24" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 25
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-as-doc-25-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-as-doc-25" type="button" role="tab" aria-controls="inst-as-doc-25" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 26
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-as-doc-26-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-as-doc-26" type="button" role="tab" aria-controls="inst-as-doc-26" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 27
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-as-doc-27-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-as-doc-27" type="button" role="tab" aria-controls="inst-as-doc-27" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 28
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-as-doc-28-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-as-doc-28" type="button" role="tab" aria-controls="inst-as-doc-28" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 29
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-as-doc-29-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-as-doc-29" type="button" role="tab" aria-controls="inst-as-doc-29" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 30
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-as-doc-30-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-as-doc-30" type="button" role="tab" aria-controls="inst-as-doc-30" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 31
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-as-doc-31-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-as-doc-31" type="button" role="tab" aria-controls="inst-as-doc-31" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 32
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-as-doc-32-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-as-doc-32" type="button" role="tab" aria-controls="inst-as-doc-32" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 33
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-as-doc-33-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-as-doc-33" type="button" role="tab" aria-controls="inst-as-doc-33" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 34
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-as-doc-34-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-as-doc-34" type="button" role="tab" aria-controls="inst-as-doc-34" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 35
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-as-doc-35-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-as-doc-35" type="button" role="tab" aria-controls="inst-as-doc-35" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 36
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-as-doc-36-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-as-doc-36" type="button" role="tab" aria-controls="inst-as-doc-36" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 37
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-as-doc-37-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-as-doc-37" type="button" role="tab" aria-controls="inst-as-doc-37" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 38
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-as-doc-38-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-as-doc-38" type="button" role="tab" aria-controls="inst-as-doc-38" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 39
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-as-doc-39-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-as-doc-39" type="button" role="tab" aria-controls="inst-as-doc-39" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 40
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-as-doc-40-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-as-doc-40" type="button" role="tab" aria-controls="inst-as-doc-40" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 41
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-as-doc-41-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-as-doc-41" type="button" role="tab" aria-controls="inst-as-doc-41" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 42
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-as-doc-42-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-as-doc-42" type="button" role="tab" aria-controls="inst-as-doc-42" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 43
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-as-doc-43-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-as-doc-43" type="button" role="tab" aria-controls="inst-as-doc-43" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 44
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link py-1 px-2  text-start h-100" id="inst-as-doc-44-tab" data-bs-toggle="pill" 
+                        data-bs-target="#inst-as-doc-44" type="button" role="tab" aria-controls="inst-as-doc-44" 
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
+                        <i class="fas fa-info-circle me-1"></i> 45
                     </button>
                 </li>
                 </ul>
@@ -2100,6 +2108,12 @@ a/b/c/                           [-- relative/branch uri            --]
                 <div class="tab-pane fade " id="inst-as-doc-40" role="tabpanel" aria-labelledby="inst-as-doc-40-tab">
                     
                     <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
+                </div>
+                <div class="tab-pane fade " id="inst-as-doc-41" role="tabpanel" aria-labelledby="inst-as-doc-41-tab">
+                    
+                    <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">maps an instruction to a tool specification for llm use</p>
                     </div>
                     <div class="card-body py-2">
@@ -2111,7 +2125,7 @@ a/b/c/                           [-- relative/branch uri            --]
             <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*eval.as(tool::T)</code></pre>
         </div>
                 </div>
-                <div class="tab-pane fade " id="inst-as-doc-41" role="tabpanel" aria-labelledby="inst-as-doc-41-tab">
+                <div class="tab-pane fade " id="inst-as-doc-42" role="tabpanel" aria-labelledby="inst-as-doc-42-tab">
                     
                     <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">maps an instruction doc to a tool specification for llm use</p>
@@ -2125,7 +2139,7 @@ a/b/c/                           [-- relative/branch uri            --]
             <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*eval?docq.as(tool::T)</code></pre>
         </div>
                 </div>
-                <div class="tab-pane fade " id="inst-as-doc-42" role="tabpanel" aria-labelledby="inst-as-doc-42-tab">
+                <div class="tab-pane fade " id="inst-as-doc-43" role="tabpanel" aria-labelledby="inst-as-doc-43-tab">
                     
                     <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">maps a directory to an llm skill where the dir follows the standard SKILL.md structure</p>
@@ -2139,7 +2153,7 @@ a/b/c/                           [-- relative/branch uri            --]
             <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;local:.agent/skills&gt;.as(skill::T)</code></pre>
         </div>
                 </div>
-                <div class="tab-pane fade " id="inst-as-doc-43" role="tabpanel" aria-labelledby="inst-as-doc-43-tab">
+                <div class="tab-pane fade " id="inst-as-doc-44" role="tabpanel" aria-labelledby="inst-as-doc-44-tab">
                     
                     <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">no documentation available</p>
@@ -2245,26 +2259,26 @@ a/b/c/                           [-- relative/branch uri            --]
                     
             <div class="card-body border-top p-0">
                 <ul class="nav nav-pills p-2 bg-dark" id="inst-barrier-pills" role="tablist">
-                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">Variations:</span></li>
+                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">polymorph:</span></li>
                     
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2 active text-start h-100" id="inst-barrier-doc-0-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-barrier-doc-0" type="button" role="tab" aria-controls="inst-barrier-doc-0" 
-                        aria-selected="true" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="true" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 1
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-barrier-doc-1-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-barrier-doc-1" type="button" role="tab" aria-controls="inst-barrier-doc-1" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 2
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-barrier-doc-2-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-barrier-doc-2" type="button" role="tab" aria-controls="inst-barrier-doc-2" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 3
                     </button>
                 </li>
@@ -2370,19 +2384,19 @@ a/b/c/                           [-- relative/branch uri            --]
                     
             <div class="card-body border-top p-0">
                 <ul class="nav nav-pills p-2 bg-dark" id="inst-cc-pills" role="tablist">
-                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">Variations:</span></li>
+                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">polymorph:</span></li>
                     
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2 active text-start h-100" id="inst-cc-doc-0-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-cc-doc-0" type="button" role="tab" aria-controls="inst-cc-doc-0" 
-                        aria-selected="true" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="true" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 1
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-cc-doc-1-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-cc-doc-1" type="button" role="tab" aria-controls="inst-cc-doc-1" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 2
                     </button>
                 </li>
@@ -2500,19 +2514,19 @@ a/b/c/                           [-- relative/branch uri            --]
                     
             <div class="card-body border-top p-0">
                 <ul class="nav nav-pills p-2 bg-dark" id="inst-dom-pills" role="tablist">
-                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">Variations:</span></li>
+                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">polymorph:</span></li>
                     
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2 active text-start h-100" id="inst-dom-doc-0-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-dom-doc-0" type="button" role="tab" aria-controls="inst-dom-doc-0" 
-                        aria-selected="true" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="true" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 1
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-dom-doc-1-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-dom-doc-1" type="button" role="tab" aria-controls="inst-dom-doc-1" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 2
                     </button>
                 </li>
@@ -2736,26 +2750,26 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     
             <div class="card-body border-top p-0">
                 <ul class="nav nav-pills p-2 bg-dark" id="inst-gt-pills" role="tablist">
-                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">Variations:</span></li>
+                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">polymorph:</span></li>
                     
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2 active text-start h-100" id="inst-gt-doc-0-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-gt-doc-0" type="button" role="tab" aria-controls="inst-gt-doc-0" 
-                        aria-selected="true" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="true" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 1
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-gt-doc-1-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-gt-doc-1" type="button" role="tab" aria-controls="inst-gt-doc-1" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 2
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-gt-doc-2-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-gt-doc-2" type="button" role="tab" aria-controls="inst-gt-doc-2" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 3
                     </button>
                 </li>
@@ -2803,26 +2817,26 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     
             <div class="card-body border-top p-0">
                 <ul class="nav nav-pills p-2 bg-dark" id="inst-gte-pills" role="tablist">
-                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">Variations:</span></li>
+                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">polymorph:</span></li>
                     
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2 active text-start h-100" id="inst-gte-doc-0-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-gte-doc-0" type="button" role="tab" aria-controls="inst-gte-doc-0" 
-                        aria-selected="true" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="true" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 1
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-gte-doc-1-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-gte-doc-1" type="button" role="tab" aria-controls="inst-gte-doc-1" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 2
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-gte-doc-2-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-gte-doc-2" type="button" role="tab" aria-controls="inst-gte-doc-2" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 3
                     </button>
                 </li>
@@ -2873,33 +2887,33 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     
             <div class="card-body border-top p-0">
                 <ul class="nav nav-pills p-2 bg-dark" id="inst-has-pills" role="tablist">
-                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">Variations:</span></li>
+                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">polymorph:</span></li>
                     
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2 active text-start h-100" id="inst-has-doc-0-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-has-doc-0" type="button" role="tab" aria-controls="inst-has-doc-0" 
-                        aria-selected="true" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="true" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 1
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-has-doc-1-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-has-doc-1" type="button" role="tab" aria-controls="inst-has-doc-1" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 2
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-has-doc-2-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-has-doc-2" type="button" role="tab" aria-controls="inst-has-doc-2" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 3
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-has-doc-3-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-has-doc-3" type="button" role="tab" aria-controls="inst-has-doc-3" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 4
                     </button>
                 </li>
@@ -2956,19 +2970,19 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     
             <div class="card-body border-top p-0">
                 <ul class="nav nav-pills p-2 bg-dark" id="inst-host-pills" role="tablist">
-                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">Variations:</span></li>
+                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">polymorph:</span></li>
                     
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2 active text-start h-100" id="inst-host-doc-0-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-host-doc-0" type="button" role="tab" aria-controls="inst-host-doc-0" 
-                        aria-selected="true" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="true" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 1
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-host-doc-1-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-host-doc-1" type="button" role="tab" aria-controls="inst-host-doc-1" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 2
                     </button>
                 </li>
@@ -3005,19 +3019,19 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     
             <div class="card-body border-top p-0">
                 <ul class="nav nav-pills p-2 bg-dark" id="inst-id-pills" role="tablist">
-                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">Variations:</span></li>
+                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">polymorph:</span></li>
                     
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2 active text-start h-100" id="inst-id-doc-0-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-id-doc-0" type="button" role="tab" aria-controls="inst-id-doc-0" 
-                        aria-selected="true" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="true" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 1
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-id-doc-1-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-id-doc-1" type="button" role="tab" aria-controls="inst-id-doc-1" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 2
                     </button>
                 </li>
@@ -3148,19 +3162,19 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     
             <div class="card-body border-top p-0">
                 <ul class="nav nav-pills p-2 bg-dark" id="inst-lshift-pills" role="tablist">
-                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">Variations:</span></li>
+                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">polymorph:</span></li>
                     
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2 active text-start h-100" id="inst-lshift-doc-0-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-lshift-doc-0" type="button" role="tab" aria-controls="inst-lshift-doc-0" 
-                        aria-selected="true" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="true" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 1
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-lshift-doc-1-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-lshift-doc-1" type="button" role="tab" aria-controls="inst-lshift-doc-1" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 2
                     </button>
                 </li>
@@ -3198,26 +3212,26 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     
             <div class="card-body border-top p-0">
                 <ul class="nav nav-pills p-2 bg-dark" id="inst-lt-pills" role="tablist">
-                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">Variations:</span></li>
+                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">polymorph:</span></li>
                     
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2 active text-start h-100" id="inst-lt-doc-0-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-lt-doc-0" type="button" role="tab" aria-controls="inst-lt-doc-0" 
-                        aria-selected="true" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="true" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 1
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-lt-doc-1-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-lt-doc-1" type="button" role="tab" aria-controls="inst-lt-doc-1" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 2
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-lt-doc-2-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-lt-doc-2" type="button" role="tab" aria-controls="inst-lt-doc-2" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 3
                     </button>
                 </li>
@@ -3265,26 +3279,26 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     
             <div class="card-body border-top p-0">
                 <ul class="nav nav-pills p-2 bg-dark" id="inst-lte-pills" role="tablist">
-                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">Variations:</span></li>
+                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">polymorph:</span></li>
                     
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2 active text-start h-100" id="inst-lte-doc-0-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-lte-doc-0" type="button" role="tab" aria-controls="inst-lte-doc-0" 
-                        aria-selected="true" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="true" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 1
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-lte-doc-1-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-lte-doc-1" type="button" role="tab" aria-controls="inst-lte-doc-1" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 2
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-lte-doc-2-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-lte-doc-2" type="button" role="tab" aria-controls="inst-lte-doc-2" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 3
                     </button>
                 </li>
@@ -3331,19 +3345,19 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     
             <div class="card-body border-top p-0">
                 <ul class="nav nav-pills p-2 bg-dark" id="inst-map-pills" role="tablist">
-                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">Variations:</span></li>
+                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">polymorph:</span></li>
                     
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2 active text-start h-100" id="inst-map-doc-0-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-map-doc-0" type="button" role="tab" aria-controls="inst-map-doc-0" 
-                        aria-selected="true" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="true" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 1
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-map-doc-1-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-map-doc-1" type="button" role="tab" aria-controls="inst-map-doc-1" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 2
                     </button>
                 </li>
@@ -3443,61 +3457,61 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     
             <div class="card-body border-top p-0">
                 <ul class="nav nav-pills p-2 bg-dark" id="inst-merge-pills" role="tablist">
-                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">Variations:</span></li>
+                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">polymorph:</span></li>
                     
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2 active text-start h-100" id="inst-merge-doc-0-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-merge-doc-0" type="button" role="tab" aria-controls="inst-merge-doc-0" 
-                        aria-selected="true" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="true" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 1
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-merge-doc-1-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-merge-doc-1" type="button" role="tab" aria-controls="inst-merge-doc-1" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 2
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-merge-doc-2-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-merge-doc-2" type="button" role="tab" aria-controls="inst-merge-doc-2" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 3
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-merge-doc-3-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-merge-doc-3" type="button" role="tab" aria-controls="inst-merge-doc-3" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 4
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-merge-doc-4-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-merge-doc-4" type="button" role="tab" aria-controls="inst-merge-doc-4" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 5
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-merge-doc-5-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-merge-doc-5" type="button" role="tab" aria-controls="inst-merge-doc-5" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 6
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-merge-doc-6-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-merge-doc-6" type="button" role="tab" aria-controls="inst-merge-doc-6" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 7
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-merge-doc-7-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-merge-doc-7" type="button" role="tab" aria-controls="inst-merge-doc-7" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 8
                     </button>
                 </li>
@@ -3574,19 +3588,19 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     
             <div class="card-body border-top p-0">
                 <ul class="nav nav-pills p-2 bg-dark" id="inst-minus-pills" role="tablist">
-                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">Variations:</span></li>
+                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">polymorph:</span></li>
                     
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2 active text-start h-100" id="inst-minus-doc-0-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-minus-doc-0" type="button" role="tab" aria-controls="inst-minus-doc-0" 
-                        aria-selected="true" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="true" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 1
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-minus-doc-1-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-minus-doc-1" type="button" role="tab" aria-controls="inst-minus-doc-1" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 2
                     </button>
                 </li>
@@ -3663,47 +3677,47 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     
             <div class="card-body border-top p-0">
                 <ul class="nav nav-pills p-2 bg-dark" id="inst-mult-pills" role="tablist">
-                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">Variations:</span></li>
+                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">polymorph:</span></li>
                     
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2 active text-start h-100" id="inst-mult-doc-0-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-mult-doc-0" type="button" role="tab" aria-controls="inst-mult-doc-0" 
-                        aria-selected="true" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="true" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 1
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-mult-doc-1-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-mult-doc-1" type="button" role="tab" aria-controls="inst-mult-doc-1" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 2
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-mult-doc-2-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-mult-doc-2" type="button" role="tab" aria-controls="inst-mult-doc-2" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 3
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-mult-doc-3-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-mult-doc-3" type="button" role="tab" aria-controls="inst-mult-doc-3" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 4
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-mult-doc-4-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-mult-doc-4" type="button" role="tab" aria-controls="inst-mult-doc-4" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 5
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-mult-doc-5-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-mult-doc-5" type="button" role="tab" aria-controls="inst-mult-doc-5" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 6
                     </button>
                 </li>
@@ -3769,26 +3783,26 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     
             <div class="card-body border-top p-0">
                 <ul class="nav nav-pills p-2 bg-dark" id="inst-neg-pills" role="tablist">
-                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">Variations:</span></li>
+                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">polymorph:</span></li>
                     
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2 active text-start h-100" id="inst-neg-doc-0-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-neg-doc-0" type="button" role="tab" aria-controls="inst-neg-doc-0" 
-                        aria-selected="true" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="true" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 1
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-neg-doc-1-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-neg-doc-1" type="button" role="tab" aria-controls="inst-neg-doc-1" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 2
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-neg-doc-2-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-neg-doc-2" type="button" role="tab" aria-controls="inst-neg-doc-2" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 3
                     </button>
                 </li>
@@ -3851,19 +3865,19 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     
             <div class="card-body border-top p-0">
                 <ul class="nav nav-pills p-2 bg-dark" id="inst-not-pills" role="tablist">
-                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">Variations:</span></li>
+                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">polymorph:</span></li>
                     
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2 active text-start h-100" id="inst-not-doc-0-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-not-doc-0" type="button" role="tab" aria-controls="inst-not-doc-0" 
-                        aria-selected="true" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="true" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 1
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-not-doc-1-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-not-doc-1" type="button" role="tab" aria-controls="inst-not-doc-1" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 2
                     </button>
                 </li>
@@ -3901,26 +3915,26 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     
             <div class="card-body border-top p-0">
                 <ul class="nav nav-pills p-2 bg-dark" id="inst-one-pills" role="tablist">
-                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">Variations:</span></li>
+                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">polymorph:</span></li>
                     
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2 active text-start h-100" id="inst-one-doc-0-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-one-doc-0" type="button" role="tab" aria-controls="inst-one-doc-0" 
-                        aria-selected="true" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="true" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 1
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-one-doc-1-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-one-doc-1" type="button" role="tab" aria-controls="inst-one-doc-1" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 2
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-one-doc-2-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-one-doc-2" type="button" role="tab" aria-controls="inst-one-doc-2" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 3
                     </button>
                 </li>
@@ -3983,26 +3997,26 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     
             <div class="card-body border-top p-0">
                 <ul class="nav nav-pills p-2 bg-dark" id="inst-order-pills" role="tablist">
-                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">Variations:</span></li>
+                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">polymorph:</span></li>
                     
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2 active text-start h-100" id="inst-order-doc-0-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-order-doc-0" type="button" role="tab" aria-controls="inst-order-doc-0" 
-                        aria-selected="true" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="true" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 1
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-order-doc-1-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-order-doc-1" type="button" role="tab" aria-controls="inst-order-doc-1" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 2
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-order-doc-2-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-order-doc-2" type="button" role="tab" aria-controls="inst-order-doc-2" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 3
                     </button>
                 </li>
@@ -4088,68 +4102,68 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     
             <div class="card-body border-top p-0">
                 <ul class="nav nav-pills p-2 bg-dark" id="inst-plus-pills" role="tablist">
-                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">Variations:</span></li>
+                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">polymorph:</span></li>
                     
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2 active text-start h-100" id="inst-plus-doc-0-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-plus-doc-0" type="button" role="tab" aria-controls="inst-plus-doc-0" 
-                        aria-selected="true" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="true" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 1
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-plus-doc-1-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-plus-doc-1" type="button" role="tab" aria-controls="inst-plus-doc-1" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 2
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-plus-doc-2-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-plus-doc-2" type="button" role="tab" aria-controls="inst-plus-doc-2" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 3
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-plus-doc-3-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-plus-doc-3" type="button" role="tab" aria-controls="inst-plus-doc-3" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 4
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-plus-doc-4-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-plus-doc-4" type="button" role="tab" aria-controls="inst-plus-doc-4" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 5
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-plus-doc-5-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-plus-doc-5" type="button" role="tab" aria-controls="inst-plus-doc-5" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 6
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-plus-doc-6-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-plus-doc-6" type="button" role="tab" aria-controls="inst-plus-doc-6" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 7
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-plus-doc-7-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-plus-doc-7" type="button" role="tab" aria-controls="inst-plus-doc-7" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 8
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-plus-doc-8-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-plus-doc-8" type="button" role="tab" aria-controls="inst-plus-doc-8" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 9
                     </button>
                 </li>
@@ -4232,19 +4246,19 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     
             <div class="card-body border-top p-0">
                 <ul class="nav nav-pills p-2 bg-dark" id="inst-port-pills" role="tablist">
-                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">Variations:</span></li>
+                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">polymorph:</span></li>
                     
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2 active text-start h-100" id="inst-port-doc-0-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-port-doc-0" type="button" role="tab" aria-controls="inst-port-doc-0" 
-                        aria-selected="true" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="true" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 1
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-port-doc-1-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-port-doc-1" type="button" role="tab" aria-controls="inst-port-doc-1" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 2
                     </button>
                 </li>
@@ -4283,33 +4297,33 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     
             <div class="card-body border-top p-0">
                 <ul class="nav nav-pills p-2 bg-dark" id="inst-pow-pills" role="tablist">
-                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">Variations:</span></li>
+                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">polymorph:</span></li>
                     
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2 active text-start h-100" id="inst-pow-doc-0-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-pow-doc-0" type="button" role="tab" aria-controls="inst-pow-doc-0" 
-                        aria-selected="true" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="true" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 1
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-pow-doc-1-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-pow-doc-1" type="button" role="tab" aria-controls="inst-pow-doc-1" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 2
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-pow-doc-2-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-pow-doc-2" type="button" role="tab" aria-controls="inst-pow-doc-2" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 3
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-pow-doc-3-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-pow-doc-3" type="button" role="tab" aria-controls="inst-pow-doc-3" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 4
                     </button>
                 </li>
@@ -4399,26 +4413,26 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     
             <div class="card-body border-top p-0">
                 <ul class="nav nav-pills p-2 bg-dark" id="inst-prod-pills" role="tablist">
-                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">Variations:</span></li>
+                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">polymorph:</span></li>
                     
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2 active text-start h-100" id="inst-prod-doc-0-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-prod-doc-0" type="button" role="tab" aria-controls="inst-prod-doc-0" 
-                        aria-selected="true" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="true" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 1
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-prod-doc-1-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-prod-doc-1" type="button" role="tab" aria-controls="inst-prod-doc-1" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 2
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-prod-doc-2-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-prod-doc-2" type="button" role="tab" aria-controls="inst-prod-doc-2" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 3
                     </button>
                 </li>
@@ -4462,19 +4476,19 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     
             <div class="card-body border-top p-0">
                 <ul class="nav nav-pills p-2 bg-dark" id="inst-q-pills" role="tablist">
-                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">Variations:</span></li>
+                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">polymorph:</span></li>
                     
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2 active text-start h-100" id="inst-q-doc-0-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-q-doc-0" type="button" role="tab" aria-controls="inst-q-doc-0" 
-                        aria-selected="true" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="true" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 1
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-q-doc-1-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-q-doc-1" type="button" role="tab" aria-controls="inst-q-doc-1" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 2
                     </button>
                 </li>
@@ -4583,19 +4597,19 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     
             <div class="card-body border-top p-0">
                 <ul class="nav nav-pills p-2 bg-dark" id="inst-reify-pills" role="tablist">
-                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">Variations:</span></li>
+                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">polymorph:</span></li>
                     
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2 active text-start h-100" id="inst-reify-doc-0-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-reify-doc-0" type="button" role="tab" aria-controls="inst-reify-doc-0" 
-                        aria-selected="true" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="true" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 1
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-reify-doc-1-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-reify-doc-1" type="button" role="tab" aria-controls="inst-reify-doc-1" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 2
                     </button>
                 </li>
@@ -4650,33 +4664,33 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     
             <div class="card-body border-top p-0">
                 <ul class="nav nav-pills p-2 bg-dark" id="inst-reverse-pills" role="tablist">
-                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">Variations:</span></li>
+                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">polymorph:</span></li>
                     
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2 active text-start h-100" id="inst-reverse-doc-0-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-reverse-doc-0" type="button" role="tab" aria-controls="inst-reverse-doc-0" 
-                        aria-selected="true" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="true" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 1
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-reverse-doc-1-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-reverse-doc-1" type="button" role="tab" aria-controls="inst-reverse-doc-1" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 2
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-reverse-doc-2-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-reverse-doc-2" type="button" role="tab" aria-controls="inst-reverse-doc-2" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 3
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-reverse-doc-3-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-reverse-doc-3" type="button" role="tab" aria-controls="inst-reverse-doc-3" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 4
                     </button>
                 </li>
@@ -4725,19 +4739,19 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     
             <div class="card-body border-top p-0">
                 <ul class="nav nav-pills p-2 bg-dark" id="inst-rng-pills" role="tablist">
-                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">Variations:</span></li>
+                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">polymorph:</span></li>
                     
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2 active text-start h-100" id="inst-rng-doc-0-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-rng-doc-0" type="button" role="tab" aria-controls="inst-rng-doc-0" 
-                        aria-selected="true" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="true" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 1
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-rng-doc-1-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-rng-doc-1" type="button" role="tab" aria-controls="inst-rng-doc-1" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 2
                     </button>
                 </li>
@@ -4779,47 +4793,47 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     
             <div class="card-body border-top p-0">
                 <ul class="nav nav-pills p-2 bg-dark" id="inst-rshift-pills" role="tablist">
-                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">Variations:</span></li>
+                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">polymorph:</span></li>
                     
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2 active text-start h-100" id="inst-rshift-doc-0-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-rshift-doc-0" type="button" role="tab" aria-controls="inst-rshift-doc-0" 
-                        aria-selected="true" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="true" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 1
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-rshift-doc-1-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-rshift-doc-1" type="button" role="tab" aria-controls="inst-rshift-doc-1" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 2
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-rshift-doc-2-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-rshift-doc-2" type="button" role="tab" aria-controls="inst-rshift-doc-2" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 3
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-rshift-doc-3-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-rshift-doc-3" type="button" role="tab" aria-controls="inst-rshift-doc-3" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 4
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-rshift-doc-4-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-rshift-doc-4" type="button" role="tab" aria-controls="inst-rshift-doc-4" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 5
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-rshift-doc-5-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-rshift-doc-5" type="button" role="tab" aria-controls="inst-rshift-doc-5" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 6
                     </button>
                 </li>
@@ -4880,19 +4894,19 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     
             <div class="card-body border-top p-0">
                 <ul class="nav nav-pills p-2 bg-dark" id="inst-scheme-pills" role="tablist">
-                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">Variations:</span></li>
+                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">polymorph:</span></li>
                     
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2 active text-start h-100" id="inst-scheme-doc-0-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-scheme-doc-0" type="button" role="tab" aria-controls="inst-scheme-doc-0" 
-                        aria-selected="true" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="true" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 1
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-scheme-doc-1-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-scheme-doc-1" type="button" role="tab" aria-controls="inst-scheme-doc-1" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 2
                     </button>
                 </li>
@@ -4933,40 +4947,40 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     
             <div class="card-body border-top p-0">
                 <ul class="nav nav-pills p-2 bg-dark" id="inst-select-pills" role="tablist">
-                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">Variations:</span></li>
+                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">polymorph:</span></li>
                     
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2 active text-start h-100" id="inst-select-doc-0-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-select-doc-0" type="button" role="tab" aria-controls="inst-select-doc-0" 
-                        aria-selected="true" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="true" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 1
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-select-doc-1-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-select-doc-1" type="button" role="tab" aria-controls="inst-select-doc-1" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 2
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-select-doc-2-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-select-doc-2" type="button" role="tab" aria-controls="inst-select-doc-2" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 3
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-select-doc-3-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-select-doc-3" type="button" role="tab" aria-controls="inst-select-doc-3" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 4
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-select-doc-4-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-select-doc-4" type="button" role="tab" aria-controls="inst-select-doc-4" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 5
                     </button>
                 </li>
@@ -5092,26 +5106,26 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     
             <div class="card-body border-top p-0">
                 <ul class="nav nav-pills p-2 bg-dark" id="inst-split-pills" role="tablist">
-                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">Variations:</span></li>
+                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">polymorph:</span></li>
                     
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2 active text-start h-100" id="inst-split-doc-0-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-split-doc-0" type="button" role="tab" aria-controls="inst-split-doc-0" 
-                        aria-selected="true" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="true" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 1
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-split-doc-1-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-split-doc-1" type="button" role="tab" aria-controls="inst-split-doc-1" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 2
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-split-doc-2-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-split-doc-2" type="button" role="tab" aria-controls="inst-split-doc-2" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 3
                     </button>
                 </li>
@@ -5182,47 +5196,47 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     
             <div class="card-body border-top p-0">
                 <ul class="nav nav-pills p-2 bg-dark" id="inst-sum-pills" role="tablist">
-                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">Variations:</span></li>
+                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">polymorph:</span></li>
                     
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2 active text-start h-100" id="inst-sum-doc-0-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-sum-doc-0" type="button" role="tab" aria-controls="inst-sum-doc-0" 
-                        aria-selected="true" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="true" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 1
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-sum-doc-1-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-sum-doc-1" type="button" role="tab" aria-controls="inst-sum-doc-1" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 2
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-sum-doc-2-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-sum-doc-2" type="button" role="tab" aria-controls="inst-sum-doc-2" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 3
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-sum-doc-3-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-sum-doc-3" type="button" role="tab" aria-controls="inst-sum-doc-3" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 4
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-sum-doc-4-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-sum-doc-4" type="button" role="tab" aria-controls="inst-sum-doc-4" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 5
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-sum-doc-5-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-sum-doc-5" type="button" role="tab" aria-controls="inst-sum-doc-5" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 6
                     </button>
                 </li>
@@ -5374,19 +5388,19 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     
             <div class="card-body border-top p-0">
                 <ul class="nav nav-pills p-2 bg-dark" id="inst-type-pills" role="tablist">
-                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">Variations:</span></li>
+                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">polymorph:</span></li>
                     
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2 active text-start h-100" id="inst-type-doc-0-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-type-doc-0" type="button" role="tab" aria-controls="inst-type-doc-0" 
-                        aria-selected="true" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="true" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 1
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-type-doc-1-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-type-doc-1" type="button" role="tab" aria-controls="inst-type-doc-1" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 2
                     </button>
                 </li>
@@ -5440,19 +5454,19 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     
             <div class="card-body border-top p-0">
                 <ul class="nav nav-pills p-2 bg-dark" id="inst-update-pills" role="tablist">
-                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">Variations:</span></li>
+                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">polymorph:</span></li>
                     
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2 active text-start h-100" id="inst-update-doc-0-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-update-doc-0" type="button" role="tab" aria-controls="inst-update-doc-0" 
-                        aria-selected="true" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="true" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 1
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-update-doc-1-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-update-doc-1" type="button" role="tab" aria-controls="inst-update-doc-1" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 2
                     </button>
                 </li>
@@ -5505,19 +5519,19 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     
             <div class="card-body border-top p-0">
                 <ul class="nav nav-pills p-2 bg-dark" id="inst-vid-pills" role="tablist">
-                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">Variations:</span></li>
+                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">polymorph:</span></li>
                     
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2 active text-start h-100" id="inst-vid-doc-0-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-vid-doc-0" type="button" role="tab" aria-controls="inst-vid-doc-0" 
-                        aria-selected="true" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="true" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 1
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-vid-doc-1-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-vid-doc-1" type="button" role="tab" aria-controls="inst-vid-doc-1" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 2
                     </button>
                 </li>
@@ -5565,19 +5579,19 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     
             <div class="card-body border-top p-0">
                 <ul class="nav nav-pills p-2 bg-dark" id="inst-where-pills" role="tablist">
-                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">Variations:</span></li>
+                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">polymorph:</span></li>
                     
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2 active text-start h-100" id="inst-where-doc-0-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-where-doc-0" type="button" role="tab" aria-controls="inst-where-doc-0" 
-                        aria-selected="true" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="true" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 1
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-where-doc-1-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-where-doc-1" type="button" role="tab" aria-controls="inst-where-doc-1" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 2
                     </button>
                 </li>
@@ -5620,33 +5634,33 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     
             <div class="card-body border-top p-0">
                 <ul class="nav nav-pills p-2 bg-dark" id="inst-within-pills" role="tablist">
-                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">Variations:</span></li>
+                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">polymorph:</span></li>
                     
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2 active text-start h-100" id="inst-within-doc-0-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-within-doc-0" type="button" role="tab" aria-controls="inst-within-doc-0" 
-                        aria-selected="true" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="true" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 1
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-within-doc-1-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-within-doc-1" type="button" role="tab" aria-controls="inst-within-doc-1" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 2
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-within-doc-2-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-within-doc-2" type="button" role="tab" aria-controls="inst-within-doc-2" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 3
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-within-doc-3-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-within-doc-3" type="button" role="tab" aria-controls="inst-within-doc-3" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 4
                     </button>
                 </li>
@@ -5700,54 +5714,54 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     
             <div class="card-body border-top p-0">
                 <ul class="nav nav-pills p-2 bg-dark" id="inst-zero-pills" role="tablist">
-                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">Variations:</span></li>
+                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">polymorph:</span></li>
                     
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2 active text-start h-100" id="inst-zero-doc-0-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-zero-doc-0" type="button" role="tab" aria-controls="inst-zero-doc-0" 
-                        aria-selected="true" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="true" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 1
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-zero-doc-1-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-zero-doc-1" type="button" role="tab" aria-controls="inst-zero-doc-1" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 2
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-zero-doc-2-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-zero-doc-2" type="button" role="tab" aria-controls="inst-zero-doc-2" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 3
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-zero-doc-3-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-zero-doc-3" type="button" role="tab" aria-controls="inst-zero-doc-3" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 4
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-zero-doc-4-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-zero-doc-4" type="button" role="tab" aria-controls="inst-zero-doc-4" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 5
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-zero-doc-5-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-zero-doc-5" type="button" role="tab" aria-controls="inst-zero-doc-5" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 6
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link py-1 px-2  text-start h-100" id="inst-zero-doc-6-tab" data-bs-toggle="pill" 
                         data-bs-target="#inst-zero-doc-6" type="button" role="tab" aria-controls="inst-zero-doc-6" 
-                        aria-selected="false" style="font-size: 0.75rem; min-width: 60px;">
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
                         <i class="fas fa-info-circle me-1"></i> 7
                     </button>
                 </li>
@@ -6035,7 +6049,7 @@ a-&gt;2+*a                   [-- 4 via sugar&#x27;d writing/reading a --]</code>
         <div class="container-xxl py-3 text-center">
             <hr class="border-secondary">
             <small class="text-muted">
-                generated by metatron instset doc generator on build 0-2026-04-13 01:58:22<br>
+                generated by metatron instset doc generator on build 0-2026-04-14 02:58:07<br>
                 © PhaseShift Studio, LLC
             </small>
         </div>

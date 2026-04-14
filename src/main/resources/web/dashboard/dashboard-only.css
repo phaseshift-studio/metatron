@@ -10,6 +10,157 @@ main {
     max-width: 100% !important;
 }
 
+/* Panel Container */
+#panelContainer {
+    display: flex !important;
+    flex-direction: row;
+    gap: 0 !important;
+    height: 100%;
+}
+
+#panelContainer > [data-panel] {
+    flex-shrink: 0;
+    flex-grow: 0;
+    min-width: 200px;
+    overflow: hidden;
+    position: relative;
+}
+
+#panelContainer > [data-panel].last-panel {
+    flex-grow: 1;
+}
+
+#panelContainer > [data-panel].dragging {
+    opacity: 0.5;
+}
+
+#panelContainer > [data-panel].drag-over {
+    border-left: 3px solid var(--mred);
+}
+
+.panel-drag-handle {
+    cursor: move;
+    padding: 4px;
+    color: var(--muted);
+    opacity: 0.4;
+    transition: opacity 0.2s;
+    display: inline-flex;
+    align-items: center;
+}
+
+.panel-drag-handle:hover {
+    opacity: 1;
+    color: var(--primary);
+}
+
+/* Stacked panel container */
+[data-panel="stacked"] {
+    height: calc(100vh - 140px);
+    min-height: calc(100vh - 140px);
+    max-height: calc(100vh - 140px);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+[data-panel="stacked"] > [data-vpanel] {
+    overflow: hidden;
+    min-height: 100px;
+}
+
+[data-panel="stacked"] > [data-vpanel] > .card {
+    height: 100% !important;
+    max-height: 100% !important;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+[data-panel="stacked"] > [data-vpanel] > .card > .card-body {
+    flex: 1;
+    overflow: auto;
+    min-height: 0;
+}
+
+/* Resize Handles */
+.resize-handle {
+    width: 8px;
+    cursor: col-resize;
+    background: transparent;
+    position: relative;
+    flex-shrink: 0;
+    transition: background 0.2s;
+}
+
+.resize-handle:hover {
+    background: rgba(255, 92, 65, 0.2);
+}
+
+.resize-handle::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 2px;
+    height: 40px;
+    background: rgba(255, 92, 65, 0.3);
+    border-radius: 2px;
+}
+
+.resize-handle:hover::after {
+    background: rgba(255, 92, 65, 0.6);
+}
+
+.resize-handle.dragging {
+    background: rgba(255, 92, 65, 0.3);
+}
+
+.resize-handle.dragging::after {
+    background: var(--mred);
+}
+
+/* Vertical Resize Handles */
+.resize-handle-v {
+    height: 8px;
+    min-height: 8px;
+    cursor: row-resize;
+    background: rgba(255, 92, 65, 0.1);
+    position: relative;
+    flex-shrink: 0;
+    flex-grow: 0;
+    transition: background 0.2s;
+    z-index: 10;
+}
+
+.resize-handle-v:hover {
+    background: rgba(255, 92, 65, 0.2);
+}
+
+.resize-handle-v::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    height: 2px;
+    width: 40px;
+    background: rgba(255, 92, 65, 0.3);
+    border-radius: 2px;
+}
+
+.resize-handle-v:hover::after {
+    background: rgba(255, 92, 65, 0.6);
+}
+
+.resize-handle-v.dragging {
+    background: rgba(255, 92, 65, 0.3);
+}
+
+.resize-handle-v.dragging::after {
+    background: var(--mred);
+}
+
 body {
     margin: 0;
     padding: 0;

@@ -28,12 +28,10 @@ import dev.langchain4j.service.tool.ToolExecutor;
 import dev.langchain4j.skills.Skills;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.llm.LLMFactory;
 import studio.phaseshift.metatron.isa.llm.space.SpaceChatMemoryStore;
 import studio.phaseshift.metatron.isa.llm.space.SpaceContentRetriever;
 import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
@@ -46,18 +44,15 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static dev.langchain4j.internal.Json.fromJson;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.DOCQ;
-import static studio.phaseshift.metatron.furi.q.QCollection.Docs.doc;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
-import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.MCP_SERVER_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.MODEL_TID;
+import static studio.phaseshift.metatron.isa.llm.type.Tool.LLM_TOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
@@ -66,11 +61,9 @@ import static studio.phaseshift.metatron.isa.m.type.Real.REAL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Rel.REL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst0;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -111,7 +104,7 @@ public class Model extends MRec {
                 ObjSimpleJSONSerializer.single().inputBytes(ByteBuffer.wrap(response.strValue().getBytes(StandardCharsets.UTF_8))) :
                 response;
         if (hasFormat && !this.fetchMemory().orElse(lst0()).isEmpty())
-           this.fetchMemory().asLst().lstValue().getLast().asRec().recValue().put(uri("attributes"), rec(uri(FORMAT), result));
+            this.fetchMemory().asLst().lstValue().getLast().asRec().recValue().put(uri("attributes"), rec(uri(FORMAT), result));
         this.asRec().at(f(RESPONSE).extend(TO)).apply(result);
         return result;
     }
@@ -211,13 +204,13 @@ public class Model extends MRec {
                             service.toolProvider(McpToolProvider.builder().mcpClients(((MCPServer) t).client()).build()).executeToolsConcurrently(BootLoader.getExecutor());
                         } else if (t.isObjInst()) {
                             if (!Router.global().read(t.tid().addQ(DOCQ)).isNoObj()) {
-                                final Tuple.Pair<ToolSpecification, ToolExecutor> pair = Model.Helper.mtronInstToolSpecification(Model.Helper.mtronInstToTool(t.asInst()));
+                                final Tuple.Pair<ToolSpecification, ToolExecutor> pair = Tool.mtronInstToolSpecification(Tool.mtronInstToTool(t.asInst()));
                                 tools.put(pair.get0(), pair.get1());
                             } else {
                                 t.logger().warn("ignoring inst as it has no associated ?docq: %s", t);
                             }
                         } else if (t.test(LLM_TOOL_TYPE)) {
-                            final Tuple.Pair<ToolSpecification, ToolExecutor> pair = Model.Helper.mtronInstToolSpecification(t.asRec());
+                            final Tuple.Pair<ToolSpecification, ToolExecutor> pair = Tool.mtronInstToolSpecification(t.asRec());
                             tools.put(pair.get0(), pair.get1());
                         }
                     });
@@ -349,66 +342,10 @@ public class Model extends MRec {
             schema.required(required);
             return schema.build();
         }
-
-        public static Tuple.Pair<ToolSpecification, ToolExecutor> mtronInstToolSpecification(final Rec tool) {
-            final Inst inst = tool.at(INST);
-            final QCollection.Docs doc = doc(Router.global().read(inst.tid().addQ(DOCQ)).as());
-            JsonObjectSchema.Builder parameters = new JsonObjectSchema.Builder();
-            List<String> required = new ArrayList<>();
-            parameters.addProperty(LHS, objToSchema(inst.dom(), Type.Helper.polyTypePredicateObj(inst.dom()), doc.at(DOM).orElse(str("<no description>")).strValue()));
-            if (!inst.tid().dom().c().isZeroable())
-                required.add(LHS);
-            final boolean recArgs = doc.args().isRec();
-            final AtomicInteger counter = new AtomicInteger(0);
-            doc.args().elements().forEach(e -> {
-                final Rel kv = recArgs ? e.asRel() : rel(uri(ARG + counter.getAndIncrement()), e);
-                parameters.addProperty(
-                        kv.first().toString(),
-                        objToSchema(kv.second().type(), Type.Helper.polyTypePredicateObj(kv.second().type()), kv.second().orElse(str("<no description>")).strValue()));
-                if (!kv.second().c().isZeroable())
-                    required.add(kv.first().toString());
-            });
-            parameters.required(required);
-            ToolSpecification.Builder toolSpecBuilder = ToolSpecification.builder()
-                    .name(inst.tid().basePath().toString().replaceAll("^/+", "").replace("/", "_"))
-                    .description(doc.description())
-                    .parameters(parameters.build());
-
-            ToolExecutor toolExecutor = (toolExecutionRequest, memoryId) -> {
-                Map<String, Object> arguments = fromJson(toolExecutionRequest.arguments(), Map.class);
-                final Poly<?, ?> args = inst.args().isNoObj() ? lst() : (inst.args().isLst() ?
-                        lst(arguments.entrySet().stream().filter(e -> !e.getKey().equals(LHS)).map(e -> MObjFactory.single().toObjFromString(e.getValue().toString())).collect(Collectors.toList())) :
-                        rec(arguments.entrySet().stream().filter(e -> !e.getKey().equals(LHS)).collect(Collectors.toMap(e -> uri(e.getKey()), e -> MObjFactory.single().toObjFromString(e.getValue().toString())))));
-                final Object result = inst
-                        .args(args)
-                        .apply(arguments.containsKey(LHS) ? MObjFactory.single().toObjFromString(arguments.get(LHS).toString()) : noobj());
-                inst.logger().info("evaluating mtron_inst tool: %s => %s => %s", arguments.get(LHS), inst, result);
-                return result.toString();
-            };
-            return Tuple.Pair.with(toolSpecBuilder.build(), toolExecutor);
-        }
-
-        public static Rec mtronDocToTool(final QCollection.Docs doc) {
-            final Inst inst = doc.at(INST);
-            return rec(Map.of(uri(INST), inst, uri(NAME), uri(inst.tid()), uri(DESC), str(doc.description()), uri(ARG), doc.args()), LLM_TOOL_TID, null);
-        }
-
-
-        public static Rec mtronInstToTool(final Inst inst) {
-            final QCollection.Docs doc = Router.readFromSpace(inst.tid().addQ(DOCQ))
-                    .orSupply(() -> doc(inst,
-                            inst.dom().tid().toString(),
-                            inst.rng().tid().toString(),
-                            instB(AS_INST_TID, lst(REC_TYPE)).apply(inst.args().orElse(rec0())).asRec().elements().collect(Collectors.toMap(
-                                    Rel::first,
-                                    e -> e.second().tid().toString()
-                            )),
-                            "<no description>"));
-            inst.logger().info("building ai compliant tool from mtron inst: %s => %s", inst.tid(), doc);
-            return rec(Map.of(uri(INST), inst, uri(NAME), uri(inst.tid()), uri(DESC), str(doc.description()), uri(ARG), doc.args()), LLM_TOOL_TID, null);
-        }
     }
 }
+
+ 
     
 
 /*

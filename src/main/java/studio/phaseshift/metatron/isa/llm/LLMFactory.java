@@ -18,12 +18,14 @@
 
 package studio.phaseshift.metatron.isa.llm;
 
+import dev.langchain4j.model.ModelProvider;
 import dev.langchain4j.model.anthropic.AnthropicModelCatalog;
 import dev.langchain4j.model.anthropic.AnthropicStreamingChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.request.ResponseFormat;
 import dev.langchain4j.model.chat.request.ResponseFormatType;
 import dev.langchain4j.model.chat.request.json.JsonSchema;
+import dev.langchain4j.model.localai.LocalAiStreamingChatModel;
 import dev.langchain4j.model.ollama.OllamaModels;
 import dev.langchain4j.model.ollama.OllamaStreamingChatModel;
 import dev.langchain4j.model.openai.OpenAiModelCatalog;
@@ -134,6 +136,13 @@ public final class LLMFactory {
         final String name = model.at(NAME).uriValue().toString();
         final Rec responseFormat = model.responseFormat().orElse(rec0().zero());
         return switch (provider.toString().toLowerCase()) {
+            case LOCALAI -> LocalAiStreamingChatModel.builder()
+                    .baseUrl(host)
+                    .modelName(name)
+                    .logRequests(true)
+                    .logResponses(true)
+                    .build();
+
             case OLLAMA -> OllamaStreamingChatModel.builder()
                     .baseUrl(host)
                     .modelName(name)

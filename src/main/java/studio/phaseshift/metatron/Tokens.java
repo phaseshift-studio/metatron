@@ -39,6 +39,7 @@ public final class Tokens {
     public static final fURI PLUS_FURI = f("+");
     public static final fURI STACK_PATTERN = f("+/#");
     public static final String OPENAI = "openai";
+    public static final String LOCALAI = "localai";
     public static final String ANTHROPIC = "anthropic";
     public static final String OLLAMA = "ollama";
     public static final String RESULT = "result";
@@ -95,6 +96,7 @@ public final class Tokens {
     public static final String STOPPED = "stopped";
     public static final String PAUSED = "paused";
     public static final String BARRIER = "barrier";
+    public static final String REASON = "reason";
     public static final String SUPER = "super";
     public static final String ROUTE = "route";
     public static final String PEERS = "peers";
@@ -106,6 +108,7 @@ public final class Tokens {
     public static final String REWRITE = "rewrite";
     public static final String SUGAR = "sugar";
     public static final String QSTRING = "q";
+    public static final String ICON = "icon";
     public static final String T = "T";
     public static final String C = "c";
     public static final String MQL = "mql";
@@ -130,6 +133,10 @@ public final class Tokens {
     public static final String OBJ = "obj";
     public static final String JDBC = "jdbc:";
     public static final String STATUS = "status";
+    public static final String ON_OPEN = "on_open";
+    public static final String ON_ERROR = "on_error";
+    public static final String ON_MESSAGE = "on_message";
+    public static final String ON_CLOSE = "on_close";
     public static final String HOST = "host";
     public static final String HEADERS = "headers";
     public static final String TRANSPORT = "transport";

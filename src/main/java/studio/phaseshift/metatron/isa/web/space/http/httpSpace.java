@@ -40,6 +40,7 @@ import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.web.parser.ObjHTMLSerializer;
 import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
+import studio.phaseshift.metatron.isa.web.type.Content;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -77,87 +78,6 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
  */
 
 public class httpSpace extends AbstractSpace<HttpServer> {
-
-    public enum ContentType {
-        APPLICATION_JSON("application/json"),
-        APPLICATION_LD_JSON("application/ld+json"),
-        MEDIA("media/"),
-        MEDIA_MPEG("media/mpeg"),
-        APPLICATION_OCTET_STREAM("application/octet-stream"),
-        APPLICATION_ATOM_XML("application/atom+xml"),
-        APPLICATION_XML("application/xml"),
-        APPLICATION_MTRON("application/mtron"),
-        APPLICATION_JAVASCRIPT("application/javascript"),
-        TEXT_HTML("text/html"),
-        TEXT_PLAIN("text/plain"),
-        TEXT_CSS("text/css"),
-        TEXT_JAVASCRIPT("text/javascript"),
-        IMAGE_PNG("image/png"),
-        IMAGE_JPEG("image/jpeg"),
-        IMAGE_GIF("image/gif"),
-        IMAGE_SVG("image/svg+xml"),
-        IMAGE_ICO("image/x-icon"),
-        APPLICATION_XHTML_XML("application/xhtml+xml");
-        final String value;
-
-        ContentType(final String value) {
-            this.value = value;
-        }
-
-        public static ContentType of(final String contentType) {
-            return null == contentType ? TEXT_PLAIN : Arrays.stream(ContentType.values()).filter(ct -> (contentType.contains(ct.value))).findAny().orElse(TEXT_PLAIN);
-        }
-
-        /**
-         * Determine content type from file extension when Files.probeContentType() fails
-         */
-        public static ContentType fromExtension(final String filename) {
-            if (filename == null) return TEXT_PLAIN;
-            final String lower = filename.toLowerCase();
-            if (lower.endsWith(".css")) return TEXT_CSS;
-            if (lower.endsWith(".js")) return APPLICATION_JAVASCRIPT;
-            if (lower.endsWith(".html") || lower.endsWith(".htm")) return TEXT_HTML;
-            if (lower.endsWith(".json")) return APPLICATION_JSON;
-            if (lower.endsWith(".xml")) return APPLICATION_XML;
-            if (lower.endsWith(".png")) return IMAGE_PNG;
-            if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return IMAGE_JPEG;
-            if (lower.endsWith(".gif")) return IMAGE_GIF;
-            if (lower.endsWith(".svg")) return IMAGE_SVG;
-            if (lower.endsWith(".ico")) return IMAGE_ICO;
-            if (lower.endsWith(".mtron")) return APPLICATION_MTRON;
-            return TEXT_PLAIN;
-        }
-
-        public boolean isJson() {
-            return this.equals(APPLICATION_JSON) || this.equals(APPLICATION_LD_JSON);
-        }
-
-        public boolean isHtml() {
-            return this.equals(TEXT_HTML);
-        }
-
-        public boolean isMtron() {
-            return this.equals(APPLICATION_MTRON);
-        }
-
-        public boolean isXml() {
-            return this.equals(APPLICATION_ATOM_XML) || this.equals(APPLICATION_XHTML_XML) || this.equals(APPLICATION_XML);
-        }
-
-        public boolean isAudio() {
-            return List.of(MEDIA, MEDIA_MPEG).contains(this);
-        }
-
-        public boolean isBinary() {
-            return this.equals(APPLICATION_OCTET_STREAM);
-        }
-
-        public boolean isPlain() {
-            return this.equals(TEXT_PLAIN);
-        }
-
-        public static final String VALUE = "Content-Type";
-    }
 
     public static final String INDEX_HTML = "index.html";
     public static final fURI HTTP_SPACE_TID = WEB_ISA_TID.extend("space/http");
@@ -198,22 +118,22 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                                     if (pretractedURI.segmentLength() == 0) {
                                         // send the full html document
                                         // Use query param if specified, otherwise try Files.probeContentType, fallback to extension-based detection
-                                        final ContentType contentType;
+                                        final Content.ContentType contentType;
                                         if (requestURI.hasQ("content_type")) {
-                                            contentType = ContentType.of(requestURI.qValue("content_type", String.class));
+                                            contentType = Content.ContentType.of(requestURI.qValue("content_type", String.class));
                                         } else {
                                             final String probed = Files.probeContentType(absolutePath);
-                                            final ContentType probedType = ContentType.of(probed);
+                                            final Content.ContentType probedType = Content.ContentType.of(probed);
                                             // If probeContentType returned null or fell back to TEXT_PLAIN, use extension-based detection
-                                            contentType = (probed == null || probedType == ContentType.TEXT_PLAIN)
-                                                    ? ContentType.fromExtension(absolutePath.toString())
+                                            contentType = (probed == null || probedType == Content.ContentType.TEXT_PLAIN)
+                                                    ? Content.ContentType.fromExtension(absolutePath.toString())
                                                     : probedType;
                                         }
                                         LOG.info("sending with content-type: %s", contentType.value);
                                         sendResponse(contentType, absolutePath.toFile(), exchange);
                                     } else {
                                         // send a subset of larger html document
-                                        final ContentType contentType = ContentType.of(requestURI.hasQ("content_type") ? requestURI.qValue("content_type", String.class) : ContentType.APPLICATION_MTRON.value);
+                                        final Content.ContentType contentType = Content.ContentType.of(requestURI.hasQ("content_type") ? requestURI.qValue("content_type", String.class) : Content.ContentType.APPLICATION_MTRON.value);
                                         LOG.info("sending with content-type: %s", contentType.value);
                                         sendResponse(contentType, ByteBuffer.wrap(
                                                 new ObjByteBufferSerializer().write(HTML_SERIALIZER.read(
@@ -221,7 +141,7 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                                     }
                                 } else {
                                     String response = "<html><body><h1>404 Not Found</h1></body></html>";
-                                    exchange.getResponseHeaders().set(ContentType.VALUE, ContentType.TEXT_HTML.value);
+                                    exchange.getResponseHeaders().set(Content.ContentType.VALUE, Content.ContentType.TEXT_HTML.value);
                                     exchange.sendResponseHeaders(404, response.length());
                                     try (final OutputStream os = exchange.getResponseBody()) {
                                         os.write(response.getBytes());
@@ -240,9 +160,9 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                                     postRequestPath = postRequestPath.substring(postRoutePrefix.length());
                                 }
                                 final String post = new BufferedReader(new InputStreamReader(exchange.getRequestBody())).lines().reduce("", (a, b) -> a + b + "\n");
-                                final ContentType contentType = ContentType.of(exchange.getRequestHeaders().containsKey(ContentType.VALUE) ?
-                                        exchange.getRequestHeaders().get(ContentType.VALUE).getFirst() :
-                                        ContentType.APPLICATION_MTRON.value);
+                                final Content.ContentType contentType = Content.ContentType.of(exchange.getRequestHeaders().containsKey(Content.ContentType.VALUE) ?
+                                        exchange.getRequestHeaders().get(Content.ContentType.VALUE).getFirst() :
+                                        Content.ContentType.APPLICATION_MTRON.value);
                                 final File file = Space.Helper.locateBaseFile(r.second().uriValue().extend(f(postRequestPath)), INDEX_HTML);
                                 if (file == null) {
                                     if (contentType.isMtron()) {
@@ -254,7 +174,7 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                                         writer.write(post);
                                         writer.close();
                                         String response = "<html><body><h1>404 Not Found</h1></body></html>";
-                                        sendResponse(ContentType.TEXT_HTML, ByteBuffer.wrap(response.getBytes(StandardCharsets.UTF_8)), exchange);
+                                        sendResponse(Content.ContentType.TEXT_HTML, ByteBuffer.wrap(response.getBytes(StandardCharsets.UTF_8)), exchange);
                                     }
                                 } else {
                                     try {
@@ -277,8 +197,8 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                                         LOG.info("existing obj: %s", existingObj);
                                         // final Path newPath = Paths.get(file.toPath().toString() + "-temp.html");
                                         Files.writeString(file.toPath(), HTML_SERIALIZER.writeRec(existingObj).toString());
-                                        exchange.getResponseHeaders().set(ContentType.VALUE, ContentType.TEXT_HTML.value);
-                                        sendResponse(ContentType.TEXT_PLAIN, ByteBuffer.wrap(
+                                        exchange.getResponseHeaders().set(Content.ContentType.VALUE, Content.ContentType.TEXT_HTML.value);
+                                        sendResponse(Content.ContentType.TEXT_PLAIN, ByteBuffer.wrap(
                                                 new ObjByteBufferSerializer().write(HTML_SERIALIZER.read(
                                                         Jsoup.parse(file.toPath())).asRec().at(reference)).array()), exchange);
 
@@ -301,14 +221,14 @@ public class httpSpace extends AbstractSpace<HttpServer> {
         }
     }
     
-    private void sendResponse(final ContentType contentType, final File file, final HttpExchange exchange) throws
+    private void sendResponse(final Content.ContentType contentType, final File file, final HttpExchange exchange) throws
             IOException {
         sendResponse(contentType, ByteBuffer.wrap(Files.readAllBytes(file.toPath())), exchange);
     }
 
-    private void sendResponse(final ContentType contentType, final ByteBuffer bytes, final HttpExchange exchange) throws
+    private void sendResponse(final Content.ContentType contentType, final ByteBuffer bytes, final HttpExchange exchange) throws
             IOException {
-        exchange.getResponseHeaders().set(ContentType.VALUE, contentType.value);
+        exchange.getResponseHeaders().set(Content.ContentType.VALUE, contentType.value);
         exchange.sendResponseHeaders(200, bytes.remaining());
         try (final InputStream is = new ByteBufferInputStream(bytes);
              final OutputStream os = exchange.getResponseBody()) {
@@ -362,7 +282,7 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                         steps++;
                         runningPattern = runningPattern.asRelativeNode().retract(1);
                     } else {
-                        final ContentType contentType = ContentType.of(response.contentType());
+                        final Content.ContentType contentType = Content.ContentType.of(response.contentType());
                         LOG.debug("content-type: %s => %s", response.contentType(), contentType);
                         final Obj docObj = contentType.isMtron() ?
                                 ObjmtronSerializer.parse(response.body()) :
@@ -394,19 +314,19 @@ public class httpSpace extends AbstractSpace<HttpServer> {
             try (final AutoCloseable client = (AutoCloseable) HttpClient.newHttpClient()) { // a true jvm bug!
                 final JsonElement json = JSON_TRANSLATOR.write(obj);
                 final HttpRequest request = HttpRequest.newBuilder()
-                        .header(ContentType.VALUE, ContentType.APPLICATION_JSON.value)
+                        .header(Content.ContentType.VALUE, Content.ContentType.APPLICATION_JSON.value)
                         .uri(URI.create(pattern.toString()))
                         .POST(HttpRequest.BodyPublishers.ofString(json.toString()))
                         .build();
                 final HttpResponse<byte[]> response = ((HttpClient) client).send(request, HttpResponse.BodyHandlers.ofByteArray());
-                LOG.debug("%s", response.headers().firstValue(ContentType.VALUE));
-                final Optional<String> contentType = response.headers().firstValue(ContentType.VALUE);
+                LOG.debug("%s", response.headers().firstValue(Content.ContentType.VALUE));
+                final Optional<String> contentType = response.headers().firstValue(Content.ContentType.VALUE);
                 if (contentType.isPresent()) {
-                    if (contentType.get().equals(ContentType.APPLICATION_JSON.value))
+                    if (contentType.get().equals(Content.ContentType.APPLICATION_JSON.value))
                         return JSON_TRANSLATOR.parse(new String(response.body()));
-                    else if (contentType.get().equals(ContentType.TEXT_HTML.value))
+                    else if (contentType.get().equals(Content.ContentType.TEXT_HTML.value))
                         return HTML_SERIALIZER.read(Jsoup.parse(new String(response.body())));
-                    else if (contentType.get().equals(ContentType.APPLICATION_MTRON.value))
+                    else if (contentType.get().equals(Content.ContentType.APPLICATION_MTRON.value))
                         return ObjmtronSerializer.parse(new String(response.body()));
                 }
                 return jnt(response.statusCode());

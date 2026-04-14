@@ -375,43 +375,37 @@ function refreshTermynal(id) {
     termynals[id] = t;
 }
 
-function modalPanel(title, subtitle, icon, htmlBody) {
+function modalPanel(title, icon, htmlBody) {
     $(document).ready(function () {
-        $("#modalPanel").replaceWith(`
-            <div class="modal-header">
-                <div class="bg-dark d-flex flex-shrink-0 align-items-center justify-content-center" style="width: 50px; height: 50px;">
+        $("#modalPanel").html(`
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content bg-secondary text-light">
+            <div class="modal-header border-bottom border-primary">
+                <div class="bg-dark d-flex flex-shrink-0 align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
                     <img src="${icon}" alt="${title}" width="32" height="32" class="icon-color">
                 </div>
-                <div class="d-flex justify-content-left align-items-left">
-                    <h4 class="modal-title">${title}: ${subtitle}</h4>
-                </div>
-        
+                <h4 class="modal-title text-uppercase">${title}</h4>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="spinner-border text-primary" role="status">
-  <span class="visually-hidden">generating documentation about ${title}</span>
-</div>
-            <!-- <div id="modalContent"></div> -->
+            <div class="modal-body">
+                ${htmlBody}
+            </div>
         </div>
     </div>
-</div>
 `);
-      
         $("#modalPanel").modal("show");
     });
-    return $('#modalContent').load(htmlBody + " #content");
 }
 
-function modalText(title) {
-    switch (title) {
-        case 'mtron': {
-            modalPanel('mtron', 'monads controlled by monoids', 'images/icons/metatron-icon.svg', "website-back.index.html");
-            break;
-        }
-    }
-}
+function featurePanel(id) {
+    const $el = $('#' + id);
+    const title = $el.attr('data-title');
+    const icon = $el.attr('data-icon');
+    const backImage = $el.attr('data-back-image');
+    const frontHTML = $el.find('.feature-front').html();
+    const modalHTML = $el.find('.feature-modal').html();
 
-function featurePanel(id, title, icon, frontHTML, backImage) {
-    $('#' + id).replaceWith(`
+    $el.replaceWith(`
 <div class="col-lg-4 col-md-6 wow fadeInUp flip-box" data-wow-delay="0.1s">
    <div class="flip-box-inner">
       <div class="flip-box-front">
@@ -430,20 +424,33 @@ function featurePanel(id, title, icon, frontHTML, backImage) {
       <div class="flip-box-back">
         <div class="d-flex justify-content-center align-items-center overflow-hidden bg-secondary h-100">
             <div class="row">
-                <a onclick="modalText('${title}')" href="javascript:void(0);">
+                <a class="feature-modal-trigger" href="javascript:void(0);">
                     <img src="${backImage}" alt="${title}" class="icon-color" width="100%" height="100%"/>
                 </a>
             </div>
             <div class="row">
                 <div class="col position-absolute bottom-0 end-0 d-flex justify-content-center">
-                    <a onclick="modalText('${title}')" href="javascript:void(0);">learn more</a>
+                    <a class="feature-modal-trigger" href="javascript:void(0);">learn more</a>
                 </div>
             </div>
         </div>
+        <div class="feature-modal-content" style="display:none;">
+            ${modalHTML}
+        </div>
+        <div class="feature-icon-src" style="display:none;">${icon}</div>
+        <div class="feature-title-src" style="display:none;">${title}</div>
       </div>
    </div>
 </div>
 `);
 }
+
+$(document).on('click', '.feature-modal-trigger', function() {
+    const $flipBox = $(this).closest('.flip-box');
+    const title = $flipBox.find('.feature-title-src').text();
+    const icon = $flipBox.find('.feature-icon-src').text();
+    const content = $flipBox.find('.feature-modal-content').html();
+    modalPanel(title, icon, content);
+});
 
 

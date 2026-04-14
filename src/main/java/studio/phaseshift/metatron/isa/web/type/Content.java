@@ -1,0 +1,120 @@
+/*
+ * metatron: a distributed virtual machine and language
+ *  Copyright (C) 2025- PhaseShift Studio, LLC
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package studio.phaseshift.metatron.isa.web.type;
+
+import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.web.parser.ObjHTMLSerializer;
+
+import java.util.Arrays;
+import java.util.List;
+
+/*
+ * @author Marko A. Rodriguez (http://markorodriguez.com)
+ */
+public class Content {
+    public enum ContentType {
+        APPLICATION_JSON("application/json"),
+        APPLICATION_LD_JSON("application/ld+json"),
+        MEDIA("media/"),
+        MEDIA_MPEG("media/mpeg"),
+        APPLICATION_OCTET_STREAM("application/octet-stream"),
+        APPLICATION_ATOM_XML("application/atom+xml"),
+        APPLICATION_XML("application/xml"),
+        APPLICATION_MTRON("application/mtron"),
+        APPLICATION_JAVASCRIPT("application/javascript"),
+        TEXT_HTML("text/html"),
+        TEXT_PLAIN("text/plain"),
+        TEXT_CSS("text/css"),
+        TEXT_JAVASCRIPT("text/javascript"),
+        IMAGE_PNG("image/png"),
+        IMAGE_JPEG("image/jpeg"),
+        IMAGE_GIF("image/gif"),
+        IMAGE_SVG("image/svg+xml"),
+        IMAGE_ICO("image/x-icon"),
+        APPLICATION_XHTML_XML("application/xhtml+xml");
+        public final String value;
+
+        ContentType(final String value) {
+            this.value = value;
+        }
+
+        public static ContentType of(final String contentType) {
+            return null == contentType ? TEXT_PLAIN : Arrays.stream(ContentType.values()).filter(ct -> (contentType.contains(ct.value))).findAny().orElse(TEXT_PLAIN);
+        }
+
+        /**
+         * Determine content type from file extension when Files.probeContentType() fails
+         */
+        public static ContentType fromExtension(final String filename) {
+            if (filename == null) return TEXT_PLAIN;
+            final String lower = filename.toLowerCase();
+            if (lower.endsWith(".css")) return TEXT_CSS;
+            if (lower.endsWith(".js")) return APPLICATION_JAVASCRIPT;
+            if (lower.endsWith(".html") || lower.endsWith(".htm")) return TEXT_HTML;
+            if (lower.endsWith(".json")) return APPLICATION_JSON;
+            if (lower.endsWith(".xml")) return APPLICATION_XML;
+            if (lower.endsWith(".png")) return IMAGE_PNG;
+            if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return IMAGE_JPEG;
+            if (lower.endsWith(".gif")) return IMAGE_GIF;
+            if (lower.endsWith(".svg")) return IMAGE_SVG;
+            if (lower.endsWith(".ico")) return IMAGE_ICO;
+            if (lower.endsWith(".mtron")) return APPLICATION_MTRON;
+            return TEXT_PLAIN;
+        }
+
+        public boolean isJson() {
+            return this.equals(APPLICATION_JSON) || this.equals(APPLICATION_LD_JSON);
+        }
+
+        public boolean isHtml() {
+            return this.equals(TEXT_HTML);
+        }
+
+        public boolean isMtron() {
+            return this.equals(APPLICATION_MTRON);
+        }
+
+        public boolean isXml() {
+            return this.equals(APPLICATION_ATOM_XML) || this.equals(APPLICATION_XHTML_XML) || this.equals(APPLICATION_XML);
+        }
+
+        public boolean isAudio() {
+            return List.of(MEDIA, MEDIA_MPEG).contains(this);
+        }
+
+        public boolean isBinary() {
+            return this.equals(APPLICATION_OCTET_STREAM);
+        }
+
+        public boolean isPlain() {
+            return this.equals(TEXT_PLAIN);
+        }
+
+        public static final String VALUE = "Content-Type";
+        
+        public ObjSerializer<?> serializer() {
+            if(this.equals(APPLICATION_MTRON)) return new ObjmtronSerializer();
+            if(this.equals(APPLICATION_JSON)) return ObjSimpleJSONSerializer.single();
+            if(this.equals(TEXT_HTML)) return ObjHTMLSerializer.single();
+            return new ObjSimpleJSONSerializer();
+        }
+    }
+}

@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.isa.llm;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
-import studio.phaseshift.metatron.isa.llm.type.Model;
+import studio.phaseshift.metatron.isa.llm.type.Tool;
 import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Type;
@@ -35,6 +35,7 @@ import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.llm.space.modelCatalogSpace.LLM_CATALOG_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.llm.type.MCPServer.MCP_SERVER_TYPE;
 import static studio.phaseshift.metatron.isa.llm.type.Model.model;
+import static studio.phaseshift.metatron.isa.llm.type.Tool.LLM_TOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.BYTE_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Inst.INST_TYPE;
@@ -72,7 +73,6 @@ public class llmInstSet extends AbstractInstSet {
 
     public static Type LLM_AI_MEMORY_TYPE;
     public static Type LLM_USER_MEMORY_TYPE;
-    public static Type LLM_TOOL_TYPE;
     public static Type LLM_SKILL_TYPE;
     public static Type LLM_MEMORY_TYPE;
 
@@ -89,18 +89,7 @@ public class llmInstSet extends AbstractInstSet {
                 uri(TYPE), lst(
                         LLM_CATALOG_SPACE_TYPE,
                         MCP_SERVER_TYPE,
-                        docWrap(LLM_TOOL_TYPE = Type.Builder.build().tid(REC_TID).vid(LLM_TOOL_TID).isaPredicate(rec(
-                                        uri(INST), T(ALL),
-                                        uri(NAME), URI_TYPE,
-                                        uri(DESC), STR_TYPE,
-                                        uri(ARG).maybe(), rec(URI_TYPE, T(ALL)).maybe())).create(),
-                                "a tool specification", "",
-                                Map.of(
-                                        uri(NAME), "tool name",
-                                        uri(DESC), "tool description",
-                                        uri(ARG).maybe(), "tool arguments"),
-                                "a tool function for the llm to use",
-                                "*eval.as(tool::T)   [-- see as?tool<=inst() --]"),
+                        LLM_TOOL_TYPE,
                         docWrap(LLM_MEMORY_TYPE = Type.Builder.build()
                                 .tid(LST_TID)
                                 .vid(LLM_MEMORY_TID)
@@ -158,16 +147,16 @@ public class llmInstSet extends AbstractInstSet {
                                         uri(TOOL).maybe(), "tool functions the llm can use to solve problems"), "an mtron interface to a large language model")),
                 uri(INST), lst(
                         //instC(AS_INST_TID.dom(MCP_SERVER_TID).rng(M_ISA_INST_TID), lst(INST_TYPE), (lhs, inst) -> MCPServer Model.Helper.mtronDocToTool(QCollection.Docs.doc(lhs.asRec()))),
-                        instC(AS_INST_TID.dom(M_ISA_INST_TID).rng(LLM_TOOL_TID), lst(LLM_TOOL_TYPE), (lhs, inst) -> Model.Helper.mtronInstToTool(inst.asInst())),
+                        instC(AS_INST_TID.dom(M_ISA_INST_TID).rng(LLM_TOOL_TID), lst(LLM_TOOL_TYPE), (lhs, inst) -> Tool.mtronInstToTool(inst.asInst())),
                         docWrap(instC(AS_INST_TID.dom(DOCS_TID).rng(LLM_TOOL_TID),
                                         lst(LLM_TOOL_TYPE),
-                                        (lhs, inst) -> Model.Helper.mtronDocToTool(QCollection.Docs.doc(lhs.asRec()))),
+                                        (lhs, inst) -> Tool.mtronDocToTool(QCollection.Docs.doc(lhs.asRec()))),
                                 "instruction documentation",
                                 "a tool specification",
                                 Map.of(jnt(0), "the tool type"),
                                 "maps an instruction doc to a tool specification for llm use",
                                 "*eval?docq.as(tool::T)"),
-                        docWrap(instC(AS_INST_TID.dom(M_ISA_INST_TID).rng(LLM_TOOL_TID), lst(LLM_TOOL_TYPE), (lhs, inst) -> Model.Helper.mtronInstToTool(inst.asInst())),
+                        docWrap(instC(AS_INST_TID.dom(M_ISA_INST_TID).rng(LLM_TOOL_TID), lst(LLM_TOOL_TYPE), (lhs, inst) -> Tool.mtronInstToTool(inst.asInst())),
                                 "an instruction",
                                 "a tool specification",
                                 Map.of(jnt(0), "the tool type"),

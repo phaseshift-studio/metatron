@@ -22,8 +22,8 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.web.parser.ObjHTMLSerializer;
 import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.isa.web.parser.ObjXMLSerializer;
@@ -46,6 +46,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.space.http.httpSpace.HTTP_SPACE_TYPE;
+import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_ENDPOINT_TYPE;
+import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_SPACE_TYPE;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
@@ -105,7 +107,9 @@ public class webInstSet extends AbstractInstSet {
                         docWrap(JSON_TYPE, "a rec encoding of a json document"),
                         CSS_TYPE,
                         JSON_STR_TYPE,
-                        HTTP_SPACE_TYPE),
+                        HTTP_SPACE_TYPE,
+                        WS_SPACE_TYPE,
+                        WS_ENDPOINT_TYPE),
                 uri(INST), lst(
                         instC(AS_INST_TID.dom(STR_TID).rng(XML_TID), lst(T(XML_TID)), (lhs, inst) -> ObjXMLSerializer.parse(lhs.asStr().strValue())),
                         instC(AS_INST_TID.dom(STR_TID).rng(HTML_TID), lst(T(HTML_TID)), (lhs, inst) -> ObjHTMLSerializer.parse(lhs.asStr().strValue())),

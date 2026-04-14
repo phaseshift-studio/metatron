@@ -12,6 +12,13 @@ class MetatronDashboard {
         this.treeState = new Map();
         this.agentSkills = [];
         this.agentTools = ['!*eval'];
+        this.panelWidths = new Map();
+        this.panelHeights = new Map(); // For vertical stacked panels
+        this.resizeState = null;
+        this.resizeListenersAdded = false;
+        this.backgroundQueryQueue = [];
+        this.backgroundQueryTimer = null;
+        this.backgroundQueryDelay = 100; // ms between background queries
 
         this.panelRegistry = {
             spaces: {
@@ -134,9 +141,7 @@ class MetatronDashboard {
         this.panelsLocked = !this.panelsLocked;
         this.savePanelLockState();
         this.updatePanelLockButton();
-        this.renderPanels();
-        this.initElements();
-        this.initPanelEventListeners();
+        this.refreshPanelUI();
     }
 
     updatePanelLockButton() {
@@ -224,43 +229,364 @@ class MetatronDashboard {
         const hasConsole = openList.includes('console');
         const stackedPanels = hasInspector && hasConsole;
 
-        let html = '';
-
+        // Build list of panels to render
+        const panelsToRender = [];
         for (const panelId of openList) {
             if (stackedPanels && (panelId === 'inspector' || panelId === 'console')) continue;
-            const panel = this.panelRegistry[panelId];
-            if (panel) {
-                html += `<div class="${panel.colClass}" data-panel="${panelId}">${panel.render()}</div>`;
-            }
+            if (this.panelRegistry[panelId]) panelsToRender.push(panelId);
         }
+        if (stackedPanels) panelsToRender.push('stacked');
+        else if (hasInspector && !hasConsole) panelsToRender.push('inspector');
+        else if (hasConsole && !hasInspector) panelsToRender.push('console');
 
-        if (stackedPanels) {
-            html += `
-                <div class="col-lg-5 d-flex flex-column" style="gap: 8px;" data-panel="stacked">
-                    ${this.panelRegistry.inspector.render()}
-                    ${this.panelRegistry.console.render()}
+        // Calculate default widths if not saved
+        this.loadPanelWidths();
+        this.loadPanelHeights();
+        const totalPanels = panelsToRender.length;
+        const defaultWidth = totalPanels > 0 ? (100 / totalPanels) : 100;
+
+        let html = '';
+        panelsToRender.forEach((panelId, index) => {
+            const isLast = index === panelsToRender.length - 1;
+            const width = this.panelWidths.get(panelId) || defaultWidth;
+            // Last panel uses min-width and flex-grow to fill remaining space
+            const widthStyle = isLast ? `min-width: ${Math.max(200, width * 3)}px;` : `width: ${width}%;`;
+            const lastClass = isLast ? ' last-panel' : '';
+
+            if (panelId === 'stacked') {
+                // Inspector gets a percentage, console fills the rest with flex
+                const inspectorPct = this.panelHeights.get('inspector') || 40;
+                html += `<div class="p-1${lastClass}" style="${widthStyle}" data-panel="stacked">
+                    <div style="flex: 0 0 ${inspectorPct}%;" data-vpanel="inspector">
+                        ${this.panelRegistry.inspector.render()}
+                    </div>
+                    <div class="resize-handle-v" data-top-panel="inspector" data-bottom-panel="console"></div>
+                    <div style="flex: 1 1 auto;" data-vpanel="console">
+                        ${this.panelRegistry.console.render()}
+                    </div>
                 </div>`;
-        } else {
-            if (hasInspector && !hasConsole) {
-                html += `<div class="${this.panelRegistry.inspector.colClass}" data-panel="inspector">${this.panelRegistry.inspector.render()}</div>`;
+            } else {
+                const panel = this.panelRegistry[panelId];
+                html += `<div class="p-1${lastClass}" style="${widthStyle}" data-panel="${panelId}">${panel.render()}</div>`;
             }
-            if (hasConsole && !hasInspector) {
-                html += `<div class="${this.panelRegistry.console.colClass}" data-panel="console">${this.panelRegistry.console.render()}</div>`;
+
+            // Add resize handle between panels (not after the last one)
+            if (!isLast) {
+                html += `<div class="resize-handle" data-left-panel="${panelId}" data-right-panel="${panelsToRender[index + 1]}"></div>`;
             }
-        }
+        });
 
         container.innerHTML = html;
+        this.initResizeHandlers();
+        this.initPanelDragDrop();
+    }
+
+    initPanelDragDrop() {
+        const panels = document.querySelectorAll('#panelContainer > [data-panel]');
+
+        panels.forEach(panel => {
+            const dragHandle = panel.querySelector('.panel-drag-handle');
+            if (!dragHandle) return;
+
+            // Make the handle itself draggable
+            dragHandle.setAttribute('draggable', 'true');
+
+            dragHandle.addEventListener('dragstart', (e) => {
+                e.stopPropagation();
+                panel.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', panel.dataset.panel);
+            });
+
+            dragHandle.addEventListener('dragend', (e) => {
+                panel.classList.remove('dragging');
+                document.querySelectorAll('[data-panel]').forEach(p => p.classList.remove('drag-over'));
+            });
+
+            panel.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                const dragging = document.querySelector('.dragging');
+                if (dragging && dragging !== panel) {
+                    panel.classList.add('drag-over');
+                }
+            });
+
+            panel.addEventListener('dragleave', (e) => {
+                panel.classList.remove('drag-over');
+            });
+
+            panel.addEventListener('drop', (e) => {
+                e.preventDefault();
+                panel.classList.remove('drag-over');
+
+                const draggedPanelId = e.dataTransfer.getData('text/plain');
+                const targetPanelId = panel.dataset.panel;
+
+                if (draggedPanelId !== targetPanelId) {
+                    this.swapPanels(draggedPanelId, targetPanelId);
+                }
+            });
+        });
+    }
+
+    swapPanels(panelId1, panelId2) {
+        // Convert Set to Array to manipulate order
+        const panelOrder = [...this.openPanels];
+        const idx1 = panelOrder.indexOf(panelId1);
+        const idx2 = panelOrder.indexOf(panelId2);
+
+        if (idx1 === -1 || idx2 === -1) return;
+
+        // Swap positions
+        [panelOrder[idx1], panelOrder[idx2]] = [panelOrder[idx2], panelOrder[idx1]];
+
+        // Update openPanels Set with new order
+        this.openPanels = new Set(panelOrder);
+
+        // Re-render panels
+        this.refreshPanelUI();
+    }
+
+    initResizeHandlers() {
+        // Horizontal resize handles (between panels)
+        const handles = document.querySelectorAll('.resize-handle');
+        handles.forEach(handle => {
+            handle.addEventListener('mousedown', (e) => this.startResize(e, handle));
+        });
+
+        // Vertical resize handles (between stacked panels)
+        const vHandles = document.querySelectorAll('.resize-handle-v');
+        vHandles.forEach(handle => {
+            handle.addEventListener('mousedown', (e) => this.startResizeV(e, handle));
+        });
+
+        // Global mouse events for resize (add only once)
+        if (!this.resizeListenersAdded) {
+            document.addEventListener('mousemove', (e) => this.doResize(e));
+            document.addEventListener('mouseup', () => this.stopResize());
+            this.resizeListenersAdded = true;
+        }
+    }
+
+    startResize(e, handle) {
+        e.preventDefault();
+        const leftPanelId = handle.dataset.leftPanel;
+        const rightPanelId = handle.dataset.rightPanel;
+        const leftPanel = document.querySelector(`[data-panel="${leftPanelId}"]`);
+        const rightPanel = document.querySelector(`[data-panel="${rightPanelId}"]`);
+        const container = document.getElementById('panelContainer');
+
+        if (!leftPanel || !rightPanel || !container) return;
+
+        // Check if right panel is the last panel (has flex-grow)
+        const allPanels = container.querySelectorAll('[data-panel]');
+        const isRightLast = allPanels[allPanels.length - 1] === rightPanel;
+
+        handle.classList.add('dragging');
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+
+        this.resizeState = {
+            type: 'horizontal',
+            handle,
+            leftPanelId,
+            rightPanelId,
+            leftPanel,
+            rightPanel,
+            containerWidth: container.offsetWidth,
+            startX: e.clientX,
+            startLeftWidth: leftPanel.offsetWidth,
+            startRightWidth: rightPanel.offsetWidth,
+            isRightLast
+        };
+    }
+
+    startResizeV(e, handle) {
+        e.preventDefault();
+        const topPanelId = handle.dataset.topPanel;
+        const bottomPanelId = handle.dataset.bottomPanel;
+        const topPanel = document.querySelector(`[data-vpanel="${topPanelId}"]`);
+        const bottomPanel = document.querySelector(`[data-vpanel="${bottomPanelId}"]`);
+        const container = handle.parentElement;
+
+        if (!topPanel || !bottomPanel || !container) return;
+
+        handle.classList.add('dragging');
+        document.body.style.cursor = 'row-resize';
+        document.body.style.userSelect = 'none';
+
+        this.resizeState = {
+            type: 'vertical',
+            handle,
+            topPanelId,
+            bottomPanelId,
+            topPanel,
+            bottomPanel,
+            containerHeight: container.offsetHeight,
+            startY: e.clientY,
+            startTopHeight: topPanel.offsetHeight,
+            startBottomHeight: bottomPanel.offsetHeight
+        };
+    }
+
+    doResize(e) {
+        if (!this.resizeState) return;
+
+        if (this.resizeState.type === 'horizontal') {
+            this.doResizeH(e);
+        } else if (this.resizeState.type === 'vertical') {
+            this.doResizeV(e);
+        }
+    }
+
+    doResizeH(e) {
+        const { leftPanel, rightPanel, containerWidth, startX, startLeftWidth, startRightWidth, leftPanelId, rightPanelId, isRightLast } = this.resizeState;
+        const delta = e.clientX - startX;
+        const minWidth = 200;
+
+        let newLeftWidth = startLeftWidth + delta;
+        let newRightWidth = startRightWidth - delta;
+
+        // Enforce minimum widths
+        if (newLeftWidth < minWidth) {
+            newLeftWidth = minWidth;
+            newRightWidth = startLeftWidth + startRightWidth - minWidth;
+        }
+        if (newRightWidth < minWidth) {
+            newRightWidth = minWidth;
+            newLeftWidth = startLeftWidth + startRightWidth - minWidth;
+        }
+
+        // Convert to percentages
+        const leftPercent = (newLeftWidth / containerWidth) * 100;
+        const rightPercent = (newRightWidth / containerWidth) * 100;
+
+        // Left panel always uses percentage width
+        leftPanel.style.width = `${leftPercent}%`;
+
+        // Right panel: if it's the last panel, use min-width (flex-grow fills the rest)
+        // Otherwise use percentage
+        if (isRightLast) {
+            rightPanel.style.minWidth = `${Math.max(minWidth, newRightWidth)}px`;
+        } else {
+            rightPanel.style.width = `${rightPercent}%`;
+        }
+
+        // Update saved widths
+        this.panelWidths.set(leftPanelId, leftPercent);
+        if (!isRightLast) {
+            this.panelWidths.set(rightPanelId, rightPercent);
+        }
+    }
+
+    doResizeV(e) {
+        const { topPanel, bottomPanel, containerHeight, startY, startTopHeight, startBottomHeight, topPanelId } = this.resizeState;
+        const delta = e.clientY - startY;
+        const minHeight = 100;
+        const handleHeight = 8;
+        const availableHeight = containerHeight - handleHeight;
+
+        let newTopHeight = startTopHeight + delta;
+        let newBottomHeight = startBottomHeight - delta;
+
+        // Enforce minimum heights for both panels
+        if (newTopHeight < minHeight) {
+            newTopHeight = minHeight;
+            newBottomHeight = availableHeight - minHeight;
+        }
+        if (newBottomHeight < minHeight) {
+            newBottomHeight = minHeight;
+            newTopHeight = availableHeight - minHeight;
+        }
+
+        // Ensure heights sum to available height
+        const totalHeight = newTopHeight + newBottomHeight;
+        if (totalHeight !== availableHeight) {
+            const ratio = availableHeight / totalHeight;
+            newTopHeight *= ratio;
+            newBottomHeight *= ratio;
+        }
+
+        // Convert to percentage of available height
+        const topPercent = (newTopHeight / availableHeight) * 100;
+
+        // Set top panel flex-basis, bottom auto-fills
+        topPanel.style.flex = `0 0 ${topPercent}%`;
+
+        // Save only the top panel percentage (bottom auto-fills)
+        this.panelHeights.set(topPanelId, topPercent);
+    }
+
+    stopResize() {
+        if (!this.resizeState) return;
+
+        this.resizeState.handle.classList.remove('dragging');
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+
+        if (this.resizeState.type === 'horizontal') {
+            this.savePanelWidths();
+        } else if (this.resizeState.type === 'vertical') {
+            this.savePanelHeights();
+        }
+        this.resizeState = null;
+    }
+
+    loadPanelWidths() {
+        try {
+            const saved = localStorage.getItem('mtron_panel_widths');
+            if (saved) {
+                const widths = JSON.parse(saved);
+                this.panelWidths = new Map(Object.entries(widths));
+            }
+        } catch (e) {
+            console.error('failed to load panel widths:', e);
+        }
+    }
+
+    savePanelWidths() {
+        try {
+            const widths = Object.fromEntries(this.panelWidths);
+            localStorage.setItem('mtron_panel_widths', JSON.stringify(widths));
+        } catch (e) {
+            console.error('failed to save panel widths:', e);
+        }
+    }
+
+    loadPanelHeights() {
+        try {
+            const saved = localStorage.getItem('mtron_panel_heights');
+            if (saved) {
+                const heights = JSON.parse(saved);
+                this.panelHeights = new Map(Object.entries(heights));
+            }
+        } catch (e) {
+            console.error('failed to load panel heights:', e);
+        }
+    }
+
+    savePanelHeights() {
+        try {
+            const heights = Object.fromEntries(this.panelHeights);
+            localStorage.setItem('mtron_panel_heights', JSON.stringify(heights));
+        } catch (e) {
+            console.error('failed to save panel heights:', e);
+        }
     }
 
     // ==================== Panel Renderers ====================
 
     renderPanelHeader(panel, extraControls = '') {
         const closeBtn = this.panelsLocked
-            ? `<span class="btn btn-sm btn-link text-secondary p-0 ms-2 opacity-25" title="Panels locked"><i class="bi bi-lock"></i></span>`
-            : `<button class="btn btn-sm btn-link text-muted p-0 ms-2" onclick="dashboard.closePanel('${panel.id}')" title="Close panel"><i class="bi bi-x-lg"></i></button>`;
+            ? `<span class="btn btn-sm btn-link text-secondary p-0 ms-2 opacity-25" title="panels locked"><i class="bi bi-lock"></i></span>`
+            : `<button class="btn btn-sm btn-link text-muted p-0 ms-2" onclick="dashboard.closePanel('${panel.id}')" title="close panel"><i class="bi bi-x-lg"></i></button>`;
         return `
             <div class="card-header d-flex justify-content-between align-items-center">
-                <span><i class="bi ${panel.icon} me-2"></i>${panel.title}</span>
+                <span class="d-flex align-items-center">
+                    <span class="panel-drag-handle me-2" title="drag to reorder"><i class="bi bi-grip-vertical"></i></span>
+                    <i class="bi ${panel.icon} me-2"></i>${panel.title}
+                </span>
                 <div class="d-flex align-items-center">${extraControls}${closeBtn}</div>
             </div>`;
     }
@@ -270,7 +596,7 @@ class MetatronDashboard {
         return `
             <div class="card h-100">
                 ${this.renderPanelHeader(panel, `
-                    <button id="refreshSpacesBtn" class="btn btn-sm btn-outline-primary" title="Refresh"><i class="bi bi-arrow-clockwise"></i></button>
+                    <button id="refreshSpacesBtn" class="btn btn-sm btn-outline-primary" title="refresh"><i class="bi bi-arrow-clockwise"></i></button>
                 `)}
                 <div class="card-body p-0 overflow-auto" style="max-height: calc(100vh - 180px);">
                     <div id="spacesContainer" class="list-group list-group-flush">
@@ -290,7 +616,7 @@ class MetatronDashboard {
                 ${this.renderPanelHeader(panel, `
                     <div class="input-group input-group-sm" style="width: 180px;">
                         <input type="text" id="treePathInput" class="form-control form-control-sm bg-dark border-secondary text-light" placeholder="uri path..." value="">
-                        <button id="browsePathBtn" class="btn btn-sm btn-outline-primary" title="Browse"><i class="bi bi-folder2-open"></i></button>
+                        <button id="browsePathBtn" class="btn btn-sm btn-outline-primary" title="browse"><i class="bi bi-folder2-open"></i></button>
                     </div>
                 `)}
                 <div class="card-body p-2 overflow-auto" style="max-height: calc(100vh - 180px);">
@@ -325,8 +651,8 @@ class MetatronDashboard {
         return `
             <div class="card flex-grow-1 d-flex flex-column">
                 ${this.renderPanelHeader(panel, `
-                    <button id="clearOutputBtn" class="btn btn-sm btn-outline-secondary me-1" title="Clear Output"><i class="bi bi-trash"></i></button>
-                    <button id="executeBtn" class="btn btn-sm btn-primary" title="Execute (Ctrl+Enter)"><i class="bi bi-play-fill me-1" style="color:white;"></i>Run</button>
+                    <button id="clearOutputBtn" class="btn btn-sm btn-outline-secondary me-1" title="clear output"><i class="bi bi-trash"></i></button>
+                    <button id="executeBtn" class="btn btn-sm btn-primary" title="execute (ctrl+enter)"><i class="bi bi-play-fill me-1" style="color:white;"></i>Run</button>
                 `)}
                 <div class="card-body p-0 d-flex flex-column flex-grow-1">
                     <div class="p-2 border-bottom border-secondary">
@@ -345,7 +671,7 @@ class MetatronDashboard {
         const panel = this.panelRegistry.llmAgent;
         return `
             <div class="card h-100 d-flex flex-column">
-                ${this.renderPanelHeader(panel, `<button id="loadModelsBtn" class="btn btn-sm btn-outline-primary" title="Refresh providers"><i class="bi bi-arrow-clockwise"></i></button>`)}
+                ${this.renderPanelHeader(panel, `<button id="loadModelsBtn" class="btn btn-sm btn-outline-primary" title="refresh providers"><i class="bi bi-arrow-clockwise"></i></button>`)}
                 <div class="card-body overflow-auto" style="max-height: calc(100vh - 180px);">
                     <div class="mb-3">
                         <label class="form-label small text-muted">agent uri</label>
@@ -459,7 +785,7 @@ class MetatronDashboard {
         const panel = this.panelRegistry.metrics;
         return `
             <div class="card h-100">
-                ${this.renderPanelHeader(panel, `<button id="refreshMetricsBtn" class="btn btn-sm btn-outline-primary" title="Refresh"><i class="bi bi-arrow-clockwise"></i></button>`)}
+                ${this.renderPanelHeader(panel, `<button id="refreshMetricsBtn" class="btn btn-sm btn-outline-primary" title="refresh"><i class="bi bi-arrow-clockwise"></i></button>`)}
                 <div class="card-body p-2">
                     <div id="metricsContainer" class="small">
                         <div class="text-muted text-center py-3">
@@ -849,8 +1175,45 @@ class MetatronDashboard {
             if (callback) callback(null, 'not connected');
             return;
         }
+        // User actions cancel pending background queries
+        this.cancelBackgroundQueries();
         this.callbackQueue.push({callback, code, timestamp: Date.now()});
         this.socket.send(new TextEncoder().encode(code));
+    }
+
+    // Background queries run with lower priority and can be cancelled
+    sendBackgroundQuery(code, callback) {
+        if (!this.connected || !this.socket) return;
+        this.backgroundQueryQueue.push({code, callback});
+        this.scheduleBackgroundQuery();
+    }
+
+    scheduleBackgroundQuery() {
+        if (this.backgroundQueryTimer) return; // Already scheduled
+        if (this.backgroundQueryQueue.length === 0) return;
+
+        this.backgroundQueryTimer = setTimeout(() => {
+            this.backgroundQueryTimer = null;
+            if (!this.connected || this.backgroundQueryQueue.length === 0) return;
+
+            const {code, callback} = this.backgroundQueryQueue.shift();
+            this.callbackQueue.push({callback, code, timestamp: Date.now(), background: true});
+            this.socket.send(new TextEncoder().encode(code));
+
+            // Schedule next background query
+            if (this.backgroundQueryQueue.length > 0) {
+                this.scheduleBackgroundQuery();
+            }
+        }, this.backgroundQueryDelay);
+    }
+
+    cancelBackgroundQueries() {
+        // Clear pending background queries
+        this.backgroundQueryQueue = [];
+        if (this.backgroundQueryTimer) {
+            clearTimeout(this.backgroundQueryTimer);
+            this.backgroundQueryTimer = null;
+        }
     }
 
     handleMessage(event) {
@@ -897,12 +1260,22 @@ class MetatronDashboard {
                     <div class="d-flex align-items-center">
                         <i class="bi ${icon} space-icon"></i>
                         <div class="flex-grow-1">
-                            <div class="space-name">${this.escapeHtml(name)}</div>
+                            <div class="space-name">
+                                ${this.escapeHtml(name)}
+                                <span class="doc-indicator" data-doc-uri="${this.escapeHtml(space.uri)}" style="display:none; cursor:pointer;" title="click to view documentation" onclick="event.stopPropagation(); dashboard.loadDocumentation('${space.uri.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}')">
+                                    <i class="bi bi-circle-fill text-info" style="font-size: 6px; vertical-align: middle; margin-left: 4px;"></i>
+                                </span>
+                            </div>
                             <div class="space-pattern">${this.escapeHtml(pattern)}</div>
                         </div>
                     </div>
                 </div>`;
         }).join('');
+
+        // Load doc indicators for spaces after a delay
+        setTimeout(() => {
+            this.loadDocIndicators(spaces.map(s => s.uri));
+        }, 200);
 
         this.updateStats(`Loaded ${spaces.length} spaces`);
     }
@@ -973,23 +1346,58 @@ class MetatronDashboard {
         this.treeState.clear();
 
         const roots = [
-            {uri: '/m', label: 'm', desc: 'types & instructions'},
-            {uri: '/sys', label: 'sys', desc: 'system'},
-            {uri: '/usr', label: 'usr', desc: 'user space'},
-            {uri: '/shared', label: 'shared', desc: 'shared space'}
+            {uri: '/m', label: 'm'},
+            {uri: '/sys', label: 'sys'},
+            {uri: '/usr', label: 'usr'},
+            {uri: '/shared', label: 'shared'}
         ];
 
-        this.treeContainer.innerHTML = roots.map(({uri, label, desc}) => `
+        this.treeContainer.innerHTML = roots.map(({uri, label}) => `
             <div class="tree-node" data-uri="${uri}" data-depth="0">
                 <span class="tree-node-icon folder" onclick="dashboard.toggleTreeNode('${uri}', this.parentElement)">
                     <i class="bi bi-folder2"></i>
                 </span>
                 <span class="tree-node-label" onclick="dashboard.queryUri('${uri}')" title="${uri}">
-                    ${label} <span class="text-muted small">(${desc})</span>
+                    ${label} <span class="tree-desc text-muted small" data-uri="${uri}"></span>
+                </span>
+                <span class="doc-indicator" data-doc-uri="${uri}" style="display:none; cursor:pointer;" title="click to view documentation" onclick="event.stopPropagation(); dashboard.loadDocumentation('${uri}')">
+                    <i class="bi bi-circle-fill text-info" style="font-size: 6px; vertical-align: middle; margin-left: 4px;"></i>
                 </span>
             </div>
             <div class="tree-children" id="tree-${this.hashCode(uri)}" style="display: none;"></div>
         `).join('');
+
+        // Load descriptions first, then doc indicators after a delay
+        this.loadRootDescriptions(roots.map(r => r.uri));
+    }
+
+    loadRootDescriptions(uris) {
+        uris.forEach(uri => {
+            this.sendBackgroundQuery(`"*${uri}?docq.>>desc"./m/web/inst/doc_json()`, (response, error) => {
+                if (error) return;
+                const desc = this.stripMtronResponse(response).replace(/^"|"$/g, '');
+                const descEl = document.querySelector(`.tree-desc[data-uri="${uri}"]`);
+                const docIndicator = document.querySelector(`.doc-indicator[data-doc-uri="${uri}"]`);
+
+                if (desc && desc !== 'no documentation available' && desc !== 'null') {
+                    if (descEl) descEl.textContent = `(${desc})`;
+                    if (docIndicator) docIndicator.style.display = 'inline';
+                }
+            });
+        });
+    }
+
+    loadDocIndicators(uris) {
+        uris.forEach(uri => {
+            this.sendBackgroundQuery(`"*${uri}?docq.>>desc"./m/web/inst/doc_json()`, (response, error) => {
+                if (error) return;
+                const desc = this.stripMtronResponse(response).replace(/^"|"$/g, '');
+                if (desc && desc !== 'no documentation available' && desc !== 'null') {
+                    const indicator = document.querySelector(`.doc-indicator[data-doc-uri="${CSS.escape(uri)}"]`);
+                    if (indicator) indicator.style.display = 'inline';
+                }
+            });
+        });
     }
 
     loadTreeNode(path, container, depth) {
@@ -1036,31 +1444,39 @@ class MetatronDashboard {
                     <span class="tree-node-label" onclick="dashboard.queryUri('${escapedUri}')" title="${this.escapeHtml(child.uri)}">
                         ${this.escapeHtml(child.name)}
                     </span>
+                    <span class="doc-indicator" data-doc-uri="${this.escapeHtml(child.uri)}" style="display:none; cursor:pointer;" title="click to view documentation" onclick="event.stopPropagation(); dashboard.loadDocumentation('${escapedUri}')">
+                        <i class="bi bi-circle-fill text-info" style="font-size: 6px; vertical-align: middle; margin-left: 4px;"></i>
+                    </span>
                     ${valueHtml}
                 </div>
                 <div class="tree-children" id="tree-${nodeId}" style="display: ${isExpanded ? 'block' : 'none'};"></div>`;
         }).join('');
+
+        // Load type icons first (higher priority)
+        this.loadNodeTypeIcons(children.map(c => c.uri));
+
+        // Load doc indicators after a short delay (lower priority)
+        setTimeout(() => {
+            this.loadDocIndicators(children.map(c => c.uri));
+        }, 200);
 
         // Load expanded nodes
         children.filter(c => this.treeState.get(c.uri)).forEach(child => {
             const childContainer = document.getElementById(`tree-${this.hashCode(child.uri)}`);
             if (childContainer) this.loadTreeNode(child.uri, childContainer, depth + 1);
         });
-
-        // Load type icons asynchronously
-        this.loadNodeTypeIcons(children.map(c => c.uri));
     }
 
     loadNodeTypeIcons(uris) {
         if (!this.connected || uris.length === 0) return;
 
-        // Query types for all URIs (batch queries to avoid flooding)
+        // Query types for all URIs using background queries (interruptible)
         uris.forEach(uri => {
             const nodeId = this.hashCode(uri);
             const iconSpan = document.querySelector(`[data-node-id="${nodeId}"] i`);
             if (!iconSpan) return;
 
-            this.sendQuery(`"*${uri}.type().vid()"./m/web/inst/doc_json()`, (response, error) => {
+            this.sendBackgroundQuery(`"*${uri}.type().vid()"./m/web/inst/doc_json()`, (response, error) => {
                 if (error) return;
                 const typeVid = this.stripMtronResponse(response).replace(/^"|"$/g, '');
                 const icon = this.getTypeIcon(typeVid);
@@ -1203,6 +1619,20 @@ class MetatronDashboard {
         this.showLoading(this.inspectorContainer, 'Loading...');
 
         this.sendQuery(`"*${uri}"./m/web/inst/doc()`, (response, error) => {
+            if (error) {
+                this.showContainerError(this.inspectorContainer, error);
+                return;
+            }
+            this.inspectorContainer.innerHTML = this.highlightMtron(this.stripMtronResponse(response));
+        });
+    }
+
+    loadDocumentation(uri) {
+        if (!this.connected || !this.inspectorContainer) return;
+        if (this.inspectorUri) this.inspectorUri.innerHTML = `<i class="bi bi-book me-1"></i>${this.escapeHtml(uri)}?docq`;
+        this.showLoading(this.inspectorContainer, 'Loading documentation...');
+
+        this.sendQuery(`"*${uri}?docq"./m/web/inst/doc()`, (response, error) => {
             if (error) {
                 this.showContainerError(this.inspectorContainer, error);
                 return;

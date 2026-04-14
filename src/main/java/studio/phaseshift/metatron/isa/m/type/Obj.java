@@ -75,7 +75,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer.OBJ_SERIAL_TID;
-import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MONAD_TID;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MONAD_TYPE;
 import static studio.phaseshift.metatron.util.CommonUtil.indent;
 import static studio.phaseshift.metatron.util.CommonUtil.nullOrElse;
@@ -671,6 +670,12 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
             return this.uriValue().toString();
         else
             return this.toString();
+    }
+
+    default String toShortString() {
+        if (this.isType())
+            return this.vid().small().name() + "::T";
+        return this.toString();
     }
 
     Obj clone();

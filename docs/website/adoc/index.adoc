@@ -89,148 +89,159 @@ include::header.html[]
     </div>
     <div class="row g-5">
         <!-- MTRON -->
-        <div id="mtron_feature">
-            <script type="text/javascript">
-                featurePanel(
-                    "mtron_feature",
-                    "mtron",
-                    "images/icons/mtron-icon.svg",
-                    "<b class=\"metatron-name\">mtron</b> is a functional, type-safe, data flow language capable of expressing complex data " +
-                    "transformations within a multi-model data environment",
-                    "images/modal/mtron-modal.svg");
-            </script>
+        <div id="mtron_feature" data-title="mtron" data-icon="images/icons/mtron-icon.svg" data-back-image="images/modal/mtron-modal.svg">
+            <div class="feature-front">
+                <b class="metatron-name">mtron</b> is a functional, type-safe, data flow language capable of expressing complex data transformations within a multi-model data environment
+            </div>
+            <div class="feature-modal">
+                <p><b class="metatron-name">mtron</b> (pronounced /metatron/) is the primary query and transformation language for the metatron virtual machine. It provides a robust, type-safe environment for processing data across heterogeneous spaces.</p>
+                <img src="images/modal/mtron-modal.svg" class="img-fluid mb-3 icon-color" style="max-height: 300px; display: block; margin: auto;"/>
+                <p>Key benefits include:</p>
+                <ul>
+                    <li>Functional composition of operations.</li>
+                    <li>Strong structural typing.</li>
+                    <li>Seamless integration with fURIs.</li>
+                </ul>
+            </div>
+            <script type="text/javascript">featurePanel("mtron_feature");</script>
         </div>
         <!-- URI -->
-        <div id="uri_feature">
-            <script type="text/javascript">
-                featurePanel(
-                    "uri_feature",
-                    "fURI",
-                    "images/icons/link-icon.svg",
-                    "metatron <b class=\"metatron-name\">objs</b> exist in a single, unified uri address space where process can seamless traverse across a variegated data space",
-                    "images/modal/furi-modal.svg");
-            </script>
+        <div id="uri_feature" data-title="fURI" data-icon="images/icons/link-icon.svg" data-back-image="images/modal/furi-modal.svg">
+            <div class="feature-front">
+                metatron <b class="metatron-name">objs</b> exist in a single, unified uri address space where process can seamless traverse across a variegated data space
+            </div>
+            <div class="feature-modal">
+                <p>The <b class="metatron-name">fURI</b> (functional URI) is the cornerstone of Metatron's addressing system. It allows every piece of data, regardless of its underlying storage, to be addressed via a consistent URI.</p>
+                <img src="images/modal/furi-modal.svg" class="img-fluid mb-3 icon-color" style="max-height: 300px; display: block; margin: auto;"/>
+                <p>Features of fURIs:</p>
+                <ul>
+                    <li>Universal namespace across databases, file systems, and APIs.</li>
+                    <li>Support for complex path traversals.</li>
+                    <li>Integrated security and access control.</li>
+                </ul>
+            </div>
+            <script type="text/javascript">featurePanel("uri_feature");</script>
         </div>
-        <!-- URI -->
-        <div id="ring_feature">
-            <script type="text/javascript">
-                featurePanel(
-                    "ring_feature",
-                    "ring",
-                    "images/icons/ring-icon.svg",
-                    "the typical functional programming monad/monoid is extended with a <b class=\"metatron-name\">\"ringad\"/ringoid</b> processor, where <b class=\"metatron-name\">*</b> is function composition and <b class=\"metatron-name\">+</b> is function branching",
-                    "images/modal/ring-modal.svg");
-            </script>
+        <!-- RING -->
+        <div id="ring_feature" data-title="ring" data-icon="images/icons/ring-icon.svg" data-back-image="images/modal/ring-modal.svg">
+            <div class="feature-front">
+                the typical functional programming monad/monoid is extended with a <b class="metatron-name">"ringad\"/ringoid</b> processor, where <b class="metatron-name">*</b> is function composition and <b class="metatron-name">+</b> is function branching
+            </div>
+            <div class="feature-modal">
+                <p>The <b class="metatron-name">Ring</b> architecture extends classical category theory concepts for practical data processing. By introducing addition as branching, Metatron can express complex parallel workflows naturally.</p>
+                <img src="images/modal/ring-modal.svg" class="img-fluid mb-3 icon-color" style="max-height: 300px; display: block; margin: auto;"/>
+            </div>
+            <script type="text/javascript">featurePanel("ring_feature");</script>
         </div>
         <!-- EMBED -->
-        <div id="embed_feature">
-            <script type="text/javascript">
-                featurePanel(
-                    "embed_feature",
-                    "Embed",
-                    "images/icons/storage-icon.svg",
-                    "inter- and intra-space <b class=\"metatron-name\">embedded</b> data structures can account for the respective time and space tradeoffs of the underlying storage systems",
-                    "images/modal/embed-modal.svg");
-            </script>
+        <div id="embed_feature" data-title="Embed" data-icon="images/icons/storage-icon.svg" data-back-image="images/modal/embed-modal.svg">
+            <div class="feature-front">
+                inter- and intra-space <b class="metatron-name">embedded</b> data structures can account for the respective time and space tradeoffs of the underlying storage systems
+            </div>
+            <div class="feature-modal">
+                <p><b class="metatron-name">Embedding</b> allows for optimized data locality. Metatron understands how to nest data within various storage backends to minimize latency and maximize throughput.</p>
+                <img src="images/modal/embed-modal.svg" class="img-fluid mb-3 icon-color" style="max-height: 300px; display: block; margin: auto;"/>
+            </div>
+            <script type="text/javascript">featurePanel("embed_feature");</script>
         </div>
         <!-- SCHEMA -->
-        <div id="schema_features">
-            <script type="text/javascript">
-                featurePanel(
-                    "schema_features",
-                    "Schema",
-                    "images/icons/schema-icon.svg",
-                    "obj structures are constrained using a <b class=\"metatron-name\">a structural type system</b> that can express inherited, refined, dependent, and recursive types",
-                    "images/schema-diagram.svg");
-            </script>
+        <div id="schema_features" data-title="Schema" data-icon="images/icons/schema-icon.svg" data-back-image="images/schema-diagram.svg">
+            <div class="feature-front">
+                obj structures are constrained using a <b class="metatron-name">a structural type system</b> that can express inherited, refined, dependent, and recursive types
+            </div>
+            <div class="feature-modal">
+                <p>The Metatron <b class="metatron-name">Schema</b> provides a powerful structural type system. It ensures data integrity across diverse sources while maintaining the flexibility needed for modern applications.</p>
+                <img src="images/schema-diagram.svg" class="img-fluid mb-3" style="max-height: 400px; display: block; margin: auto;"/>
+            </div>
+            <script type="text/javascript">featurePanel("schema_features");</script>
         </div>
         <!-- SPACE -->
-        <div id="space_features">
-            <script type="text/javascript">
-                featurePanel(
-                    "space_features",
-                    "Space",
-                    "images/icons/cluster-icon.svg",
-                    "data sources are logically abstracted as <b class=\"metatron-name\">spaces</b>, where each datum has a uri address enabling the stitching together of database, file system, event, and peripheral data",
-                    "images/modal/space-modal.svg");
-            </script>
+        <div id="space_features" data-title="Space" data-icon="images/icons/cluster-icon.svg" data-back-image="images/modal/space-modal.svg">
+            <div class="feature-front">
+                data sources are logically abstracted as <b class="metatron-name">spaces</b>, where each datum has a uri address enabling the stitching together of database, file system, event, and peripheral data
+            </div>
+            <div class="feature-modal">
+                <p><b class="metatron-name">Spaces</b> are the logical units of storage in Metatron. Whether it's a PostgreSQL instance, a Neo4j graph, or a directory of CSV files, Metatron treats them all as addressable spaces.</p>
+                <img src="images/modal/space-modal.svg" class="img-fluid mb-3 icon-color" style="max-height: 300px; display: block; margin: auto;"/>
+            </div>
+            <script type="text/javascript">featurePanel("space_features");</script>
         </div>
         <!-- MONAD -->
-        <div id="monad_features">
-            <script type="text/javascript">
-                featurePanel(
-                    "monad_features",
-                    "PCMonad",
-                    "images/icons/cluster-icon.svg",
-                    "processes are realized as the propagation of atomic <b class=\"metatron-name\">monads</b>  through instruction graphs which guide them over the underlying data spaces",
-                    "images/modal/monad-modal.svg");
-            </script>
+        <div id="monad_features" data-title="PCMonad" data-icon="images/icons/cluster-icon.svg" data-back-image="images/modal/monad-modal.svg">
+            <div class="feature-front">
+                processes are realized as the propagation of atomic <b class="metatron-name">monads</b>  through instruction graphs which guide them over the underlying data spaces
+            </div>
+            <div class="feature-modal">
+                <p><b class="metatron-name">PCMonads</b> (Process Control Monads) represent the state and path of a computation. They flow through instruction graphs, enabling highly distributed and resilient processing.</p>
+                <img src="images/modal/monad-modal.svg" class="img-fluid mb-3 icon-color" style="max-height: 300px; display: block; margin: auto;"/>
+            </div>
+            <script type="text/javascript">featurePanel("monad_features");</script>
         </div>
         <!-- OLTP -->
-        <div id="oltp_features">
-            <script type="text/javascript">
-                featurePanel(
-                    "oltp_features",
-                    "OLTP",
-                    "images/icons/mach-icon.svg",
-                    "a <b class=\"metatron-name\">monad iterator</b> machine supports speedy traversals over localized regions of space",
-                    "images/modal/oltp-modal.svg");
-            </script>
+        <div id="oltp_features" data-title="OLTP" data-icon="images/icons/mach-icon.svg" data-back-image="images/modal/oltp-modal.svg">
+            <div class="feature-front">
+                a <b class="metatron-name">monad iterator</b> machine supports speedy traversals over localized regions of space
+            </div>
+            <div class="feature-modal">
+                <p><b class="metatron-name">OLTP</b> in Metatron is optimized for low-latency, localized operations. The monad iterator machine ensures that simple lookups and small-scale traversals are extremely fast.</p>
+                <img src="images/modal/oltp-modal.svg" class="img-fluid mb-3 icon-color" style="max-height: 300px; display: block; margin: auto;"/>
+            </div>
+            <script type="text/javascript">featurePanel("oltp_features");</script>
         </div>
         <!-- OLRP -->
-        <div id="olrp_features">
-            <script type="text/javascript">
-                featurePanel(
-                    "olrp_features",
-                    "OLRP",
-                    "images/icons/olrp-icon.svg",
-                    "a <b class=\"metatron-name\">monad swarm</b> machine supports asynchronous, parallel, distributed traversals over large regions of space",
-                    "images/modal/olrp-modal.svg");
-            </script>
+        <div id="olrp_features" data-title="OLRP" data-icon="images/icons/olrp-icon.svg" data-back-image="images/modal/olrp-modal.svg">
+            <div class="feature-front">
+                a <b class="metatron-name">monad swarm</b> machine supports asynchronous, parallel, distributed traversals over large regions of space
+            </div>
+            <div class="feature-modal">
+                <p><b class="metatron-name">OLRP</b> (Online Real-time Processing) uses a swarm approach to scale. Hundreds or thousands of monads can traverse vast data spaces in parallel to answer complex queries.</p>
+                <img src="images/modal/olrp-modal.svg" class="img-fluid mb-3 icon-color" style="max-height: 300px; display: block; margin: auto;"/>
+            </div>
+            <script type="text/javascript">featurePanel("olrp_features");</script>
         </div>
         <!-- OLAP -->
-        <div id="olap_features">
-            <script type="text/javascript">
-                featurePanel(
-                    "olap_features",
-                    "OLAP",
-                    "images/icons/olap-icon.svg",
-                    "a <b class=\"metatron-name\">monad vector</b> machine supports stateful bulk synchronous processing of massive regions of space",
-                    "images/modal/olap-modal.svg");
-            </script>
+        <div id="olap_features" data-title="OLAP" data-icon="images/icons/olap-icon.svg" data-back-image="images/modal/olap-modal.svg">
+            <div class="feature-front">
+                a <b class="metatron-name">monad vector</b> machine supports stateful bulk synchronous processing of massive regions of space
+            </div>
+            <div class="feature-modal">
+                <p><b class="metatron-name">OLAP</b> operations are handled by a vector machine, designed for massive data sets where bulk processing and stateful aggregations are required.</p>
+                <img src="images/modal/olap-modal.svg" class="img-fluid mb-3 icon-color" style="max-height: 300px; display: block; margin: auto;"/>
+            </div>
+            <script type="text/javascript">featurePanel("olap_features");</script>
         </div>
         <!-- WEB -->
-        <div id="web_features">
-            <script type="text/javascript">
-                featurePanel(
-                    "web_features",
-                    "Web",
-                    "images/icons/web-icon.svg",
-                    "a space-aware <b class=\"metatron-name\">web server/router</b> supports the selective access, referencing, and manipulation of html, xml, and json documents",
-                    "images/enoch-character.png")
-            </script>
+        <div id="web_features" data-title="Web" data-icon="images/icons/web-icon.svg" data-back-image="images/enoch-character.png">
+            <div class="feature-front">
+                a space-aware <b class="metatron-name">web server/router</b> supports the selective access, referencing, and manipulation of html, xml, and json documents
+            </div>
+            <div class="feature-modal">
+                <p>The Metatron <b class="metatron-name">Web</b> server is space-aware, meaning it can directly map URI requests to data space traversals. It serves as a bridge between the Metatron VM and standard web clients.</p>
+                <img src="images/enoch-character.png" class="img-fluid mb-3" style="max-height: 300px; display: block; margin: auto;"/>
+            </div>
+            <script type="text/javascript">featurePanel("web_features");</script>
         </div>
         <!-- IOT COMPATIBLE -->
-        <div id="iot_features">
-            <script type="text/javascript">
-                featurePanel(
-                    "iot_features",
-                    "IoT",
-                    "images/icons/graphql-icon.svg",
-                    "a <b class=\"metatron-name\">micropython implementation</b> provides space-aware iot processors that can naturally provide and access data within the larger data space",
-                    "images/enoch-character.png")
-            </script>
+        <div id="iot_features" data-title="IoT" data-icon="images/icons/graphql-icon.svg" data-back-image="images/enoch-character.png">
+            <div class="feature-front">
+                a <b class="metatron-name">micropython implementation</b> provides space-aware iot processors that can naturally provide and access data within the larger data space
+            </div>
+            <div class="feature-modal">
+                <p>Metatron's <b class="metatron-name">IoT</b> support brings the power of the virtual machine to edge devices. Using MicroPython, even small microprocessors can participate in the global data space.</p>
+                <img src="images/enoch-character.png" class="img-fluid mb-3" style="max-height: 300px; display: block; margin: auto;"/>
+            </div>
+            <script type="text/javascript">featurePanel("iot_features");</script>
         </div>
         <!-- LLM COMPATIBLE -->
-        <div id="llm_features">
-            <script type="text/javascript">
-                featurePanel(
-                    "llm_features",
-                    "LLM",
-                    "images/icons/llm-icon.svg",
-                    "<b class=\"metatron-name\">large language models</b> are objs in space whose internals are accessible through uri dereferencing.",
-                    "images/modal/llm-modal.svg")
-            </script>
+        <div id="llm_features" data-title="LLM" data-icon="images/icons/llm-icon.svg" data-back-image="images/modal/llm-modal.svg">
+            <div class="feature-front">
+                <b class="metatron-name">large language models</b> are objs in space whose internals are accessible through uri dereferencing.
+            </div>
+            <div class="feature-modal">
+                <p><b class="metatron-name">LLMs</b> are integrated as first-class objects in Metatron. Their weights, attention heads, and outputs are all addressable via URIs, enabling deep integration with symbolic logic.</p>
+                <img src="images/modal/llm-modal.svg" class="img-fluid mb-3 icon-color" style="max-height: 300px; display: block; margin: auto;"/>
+            </div>
+            <script type="text/javascript">featurePanel("llm_features");</script>
         </div>
     </div>
 </div>

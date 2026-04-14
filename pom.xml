@@ -59,6 +59,8 @@
         <mariadb.version>3.5.8</mariadb.version>
         <mongodb.version>5.6.4</mongodb.version>
         <langchain4j.version>1.12.2</langchain4j.version>
+        <jlama.version>0.8.4</jlama.version>
+        <langchain4j.beta.version>1.12.2-beta22</langchain4j.beta.version>
         <langgraph4j.version>1.8.11</langgraph4j.version>
         <junit.version>6.0.3</junit.version>
         <tinkerpop.version>3.8.0</tinkerpop.version>
@@ -145,20 +147,25 @@
         <dependency>
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j-mcp</artifactId>
-            <version>1.12.2-beta22</version>
+            <version>${langchain4j.beta.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j-skills</artifactId>
-            <version>1.12.2-beta22</version>
+            <version>${langchain4j.beta.version}</version>
         </dependency>
         <dependency>
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j-agentic</artifactId>
-            <version>1.12.2-beta22</version>
+            <version>${langchain4j.beta.version}</version>
         </dependency>
         <!-- ANTHROPIC, OPENAI, OLLAMA -->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-local-ai</artifactId>
+            <version>${langchain4j.beta.version}</version>
+        </dependency>
         <dependency>
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j-anthropic</artifactId>
