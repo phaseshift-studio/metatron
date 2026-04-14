@@ -215,29 +215,7 @@ body {
 }
 
 .tree-children {
-    margin-left: 20px;
-    padding-left: 12px;
-    border-left: 1px dashed var(--light);
-    position: relative;
-}
-
-.tree-children > .tree-node::before {
-    content: '├─';
-    position: absolute;
-    left: -24px;
-    top: 0;
-    color: var(--light);
-    font-family: monospace;
-}
-
-.tree-children > .tree-node:last-child::before {
-    content: '└─';
-}
-
-.tree-children > .tree-children {
-    border-left: none;
-    margin-left: 0;
-    padding-left: 0;
+    /* Connectors are added via JavaScript, not CSS pseudo-elements */
 }
 
 .tree-loading {
@@ -252,14 +230,18 @@ body {
 .code-input {
     font-family: 'Courier New', Consolas, Monaco, monospace;
     font-size: 0.9rem;
-    background-color: #000;
+    background-color: #072919;
     color: #0f0;
     border: 1px solid var(--mdarkgray);
     resize: vertical;
 }
 
+.g-3 {
+    --bs-gutter-x: 0.5rem;
+}
+
 .code-input:focus {
-    background-color: #000;
+    background-color: #072919;
     color: #0f0;
     border-color: var(--primary);
     box-shadow: 0 0 0 0.2rem rgba(163, 0, 0, 0.25);
@@ -268,7 +250,7 @@ body {
 .output-container {
     font-family: 'Courier New', Consolas, Monaco, monospace;
     font-size: 0.85rem;
-    background-color: #000;
+    /*background-color: #000;*/
     min-height: 100px;
     padding: 0.5rem;
     border-radius: 3px;
@@ -290,7 +272,7 @@ body {
 }
 
 .output-input::before {
-    content: 'metatron> ';
+    content: 'mtron> ';
     color: var(--light);
 }
 
@@ -315,7 +297,7 @@ body {
 .inspector-output {
     font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
     font-size: 0.85rem;
-    background-color: #0a0a0a;
+    /*background-color: #0a0a0a;*/
     min-height: 60px;
     border-radius: 3px;
 }
@@ -325,7 +307,60 @@ body {
     min-height: 60px;
 }
 
-/* ==================== Misc Dashboard Styles ==================== */
+pre {
+    background-color: transparent !important;
+}
+
+/* ==================== Panel System ====================*/
+
+.panel-close-btn {
+    opacity: 0.5;
+    transition: opacity 0.2s;
+}
+
+.panel-close-btn:hover {
+    opacity: 1;
+}
+
+.card-header .btn-link {
+    opacity: 0.4;
+    transition: opacity 0.2s;
+}
+
+.card-header:hover .btn-link {
+    opacity: 0.7;
+}
+
+.card-header .btn-link:hover {
+    opacity: 1 !important;
+}
+
+/* Panel menu dropdown */
+.dropdown-menu-dark {
+    background-color: var(--secondarycolor);
+    border: 1px solid var(--mred);
+}
+
+.dropdown-menu-dark .dropdown-item {
+    color: var(--white);
+}
+
+.dropdown-menu-dark .dropdown-item:hover {
+    background-color: rgba(122, 37, 24, 0.3);
+}
+
+.dropdown-menu-dark .dropdown-header {
+    color: var(--primary);
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    letter-spacing: 0.05em;
+}
+
+.dropdown-menu-dark .dropdown-divider {
+    border-color: var(--mdarkgray);
+}
+
+/* ==================== Misc Dashboard Styles ====================*/
 
 .footer {
     background-color: var(--dark);
