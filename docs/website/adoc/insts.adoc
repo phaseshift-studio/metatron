@@ -376,7 +376,7 @@ is_divisible -> |is_divisble?bool<=int(by?int=>is(neq(0)).else(print('error').ma
 === dom/rng coefficients
 
 Every `inst` has a `dom` and `rng` encoded in their key/value query parameters. The dom/rng query parameter values are
-any fURI minus query parameters (ie. recursive `?`s are not allowed). What is possible, is the specification of 
+any fURI minus query parameters (ie. recursive `?`s are not allowed). What is possible is the specification of 
 a type structure, a coefficient, and polymorphic generics.
 
 [source,mtron,role="center-code"]
@@ -423,6 +423,6 @@ triple -> |inst?lst[int,int,int]<=int{3}(){>-[,]}
 
 [NOTE]
 --
-The `triple` instruction code is composed of a single instruction: `>-[,]`. This syntactic sugar resolves `merge([,])`. The instruction signature of `merge` is  `A\<=\#{*}(A::T)`. This states that `merge` is a **barrier instruction** that maps the entire lhs stream of objs (`#{+*+}`) to a single `A`, where `A` is a generic bound to `lst` given the resolution of the argument `A::T`. Thus, this instance of `merge` yields a single `lst` whose elements are the instructions three (`int{3}`) incoming lhs objs.  
+The `triple` instruction code is composed of a single instruction: `>-[,]`. This syntactic sugar resolves `merge([,])`. The instruction signature of `merge` is  `A\<=\#{*}(A::T)`. This states that `merge` is a **barrier instruction** that maps the entire lhs stream of objs (`#{+*+}`) to a single `A`, where `A` is a generic bound to `lst` given the resolution of the argument `A::T`. Thus, this instance of `merge` yields a single `lst` whose elements are the three (`int{3}`) incoming lhs objs.  
 --
 

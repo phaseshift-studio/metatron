@@ -445,6 +445,10 @@ function featurePanel(id) {
 `);
 }
 
+$(document).on('click', '.zoomable', function() {
+    $(this).toggleClass('zoomed');
+});
+
 $(document).on('click', '.feature-modal-trigger', function() {
     const $flipBox = $(this).closest('.flip-box');
     const title = $flipBox.find('.feature-title-src').text();

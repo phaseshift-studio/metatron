@@ -402,7 +402,7 @@
                             <executable>python</executable>
                             <arguments>
                                 <argument>docs/python/docs-code-parser.py</argument>
-                                <argument>-c ${skipRunner}</argument>
+                               <!-- <argument>-c ${skipRunner}</argument> -->
                                 <argument>--verbose</argument>
                                 <argument>-o</argument>
                                 <argument>${project.build.directory}/temp</argument>

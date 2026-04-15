@@ -64,7 +64,7 @@ public class Tool extends MRec {
                     uri(INST), T(ALL),
                     uri(NAME), URI_TYPE,
                     uri(DESC), STR_TYPE,
-                    uri(ARG).maybe(), rec(URI_TYPE, T(ALL)).maybe())).create(),
+                    uri(ARG).maybe(), T(ALL) /*rec(URI_TYPE, T(ALL)).maybe())*/)).create(),
             "a tool specification", "",
             Map.of(
                     uri(NAME), "tool name",
