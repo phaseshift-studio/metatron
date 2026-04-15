@@ -8,10 +8,10 @@ code structures, and query structures. These 3 types are the linchpin of metatro
 [discrete]
 === Data Structures
 
-The obvious application of a `poly` is as a data structure. A `poly` is a container able to bundle multiple objs
+The obvious application of a `poly` is as a data structure. A `poly` is a https://en.wikipedia.org/wiki/Collection_(abstract_data_type)[collection] able to bundle multiple objs
 together. Via the colocation of two objs within the confines of a `poly`, two objs are bound. The only other way
-to bind two objs together is via explict uri referencing which serves as a form of lazy referencing that can lead to 
-dangling pointers. With `poly`, there can be no "dangling pointers" -- either two objs are colocated in the `poly` or not.
+to bind two objs together is via explicit uri referencing, which serves as a form of https://en.wikipedia.org/wiki/Lazy_evaluation[lazy referencing] that can lead to
+https://en.wikipedia.org/wiki/Dangling_pointer[dangling pointers]. With `poly`, there can be no "dangling pointers" -- either two objs are colocated in the `poly` or not.
 
 ++++
 <!-- 🐖 
@@ -29,7 +29,7 @@ a=>b=>c       [-- <1>
 [.card]
 --
 [discrete,.center]
-==== rel vs. to/from
+==== rel/>> vs. to/from
 Consider the following expressions:
 
 ++++
@@ -49,15 +49,25 @@ a->b->c.*a       [-- <3>
 a->b->c.**a      [-- <4>
 -->
 ++++
-<1> `>>` maps a `rel` to it's `rng`. 
-<2> Two `>>` yields the tail `c`.
-<3> `*` maps a `uri` to an obj. 
-<4> Two `**` yields the end of the referential chain, `c`.
+<1> `>>?#\<=rel` maps a `rel` to it's `rng`. 
+<2> Two `>>` yields the tail of the relational chain, `c`.
+<3> `*?#\<=uri` maps a `uri` to an obj. 
+<4> Two `**` yields the tail of the referential chain, `c`.
 
 The third expression constructs and traverses its data structure on the stack.
 The fourth expression constructs and traverses its data structure in space. 
 It just so happens that the space the fourth expression is operating in is the stack.
+This is due to the fact that the stack's pattern is `<+/#>`, and therefore, it matches `a`, `b`, `c`.
 
+++++
+<!-- 🐖 
+a->(b->c)       [-- <1>
+*a
+**a
+-->
+++++
+<1> `a` references the instruction `b->c`.
+<2> `*a` resolves to the instruction `b->c` which, as an auto (`!`), immediately applies `a` to `b` yielding `c`.
 --
 
 
