@@ -209,7 +209,7 @@ public abstract class ElementMap extends AbstractMap<Uri, Obj> {
             return obj instanceof VertexMap || obj.vid() != null;
         }
 
-        public static mtronKeyValue mtronKV(Property<?> property) {
+        public static mtronKeyValue mtronKV(final Property<?> property) {
             return new mtronKeyValue(property.key(), property.value());
         }
 

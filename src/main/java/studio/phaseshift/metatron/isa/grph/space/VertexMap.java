@@ -32,13 +32,16 @@ import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.IteratorUtil;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Map;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.grph.grphInstSet.REDIRECT_STRING;
 import static studio.phaseshift.metatron.isa.grph.space.EdgeMap.lazyEdgeToRec;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
@@ -155,7 +158,15 @@ public class VertexMap extends ElementMap {
 
 
     public static Vertex recToVertex(final Rec rec) {
-        return rec.<VertexMap>jvmAs().getBase();
+        Map recJVM = rec.jvm();
+        if (recJVM instanceof VertexMap)
+            return ((VertexMap) recJVM).getBase();
+        else if(recJVM.containsKey(REDIRECT_STRING))
+            return new RefVertex(SERIALIZER.read(recJVM.get(REDIRECT_STRING).toString()).apply(rec));
+        else {
+            return new RefVertex(rec);
+        }
+          //  throw MTronException.of("unknown vertex type: %s", recJVM.getClass().getSimpleName());
     }
 
 

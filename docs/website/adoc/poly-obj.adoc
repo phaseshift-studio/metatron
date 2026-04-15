@@ -8,10 +8,9 @@ code structures, and query structures. These 3 types are the linchpin of metatro
 [discrete]
 === Data Structures
 
-The obvious application of a `poly` is as a data structure. A `poly` is a https://en.wikipedia.org/wiki/Collection_(abstract_data_type)[collection] able to bundle multiple objs
-together. Via the colocation of two objs within the confines of a `poly`, two objs are bound. The only other way
-to bind two objs together is via explicit uri referencing, which serves as a form of https://en.wikipedia.org/wiki/Lazy_evaluation[lazy referencing] that can lead to
-https://en.wikipedia.org/wiki/Dangling_pointer[dangling pointers]. With `poly`, there can be no "dangling pointers" -- either two objs are colocated in the `poly` or not.
+The obvious application of a `poly` is as the scaffolding for a data structure. A `poly` is a https://en.wikipedia.org/wiki/Collection_(abstract_data_type)[collection] able to bundle multiple objs
+together. Via the colocation of two objs within the confines of a `poly`, two objs are bound. This primordial glue is fundamental to the structuring of data into a data structure. Another way to bind two objs together is via explicit uri referencing. This method is a form of https://en.wikipedia.org/wiki/Lazy_evaluation[lazy binding] in that "colocation" is computed through dereferencing, and as such,
+https://en.wikipedia.org/wiki/Dangling_pointer[dangling pointers] are possible. With `poly`, there can be no "dangling pointers" -- either two objs are colocated in the `poly` or not.
 
 ++++
 <!-- 🐖 
@@ -61,7 +60,7 @@ This is due to the fact that the stack's pattern is `<+/#>`, and therefore, it m
 
 ++++
 <!-- 🐖 
-a->(b->c)       [-- <1>
+[== a->(b->c) ==]      [-- <1>
 *a
 **a
 -->

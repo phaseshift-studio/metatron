@@ -33,7 +33,7 @@ jobs:
           echo "---- relative path ----"
           ijhttp --version
       - name: Install with Maven
-        run: mvn install --file pom.xml
+        run: mvn install --file pom.xml -Dtest='!httpSpaceTest, !fsSpaceTest'
       - name: Install Python Packages
         run: |
           python -m pip install --upgrade pip

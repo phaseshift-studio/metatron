@@ -48,6 +48,11 @@ public class MRealVec extends MVec<Double> {
     }
 
     @Override
+    public <O extends Obj> Stream<O> valueElements() {
+        return this.elements();
+    }
+
+    @Override
     public <O extends Obj> O at(Obj key) {
         return null;
     }

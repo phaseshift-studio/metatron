@@ -80,6 +80,11 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
     }
 
     @Override
+    default <OBJ extends Obj> Stream<OBJ> valueElements() {
+        return this.elements().map(r -> (OBJ) r.second());
+    }
+
+    @Override
     default Rec jvm(final Object jvm) {
         return this.clone(jvm, this.tid(), this.vid());
     }

@@ -75,6 +75,8 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
     }
 
     <O extends Obj> Stream<O> elements();
+    
+    <O extends Obj> Stream<O> valueElements();
 
     /// ////////////////////////////////////////////////////////////////////////////////////
 

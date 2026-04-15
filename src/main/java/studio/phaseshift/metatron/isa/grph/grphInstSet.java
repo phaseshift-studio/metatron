@@ -22,6 +22,7 @@ import org.apache.tinkerpop.gremlin.jsr223.DefaultGremlinScriptEngineManager;
 import org.apache.tinkerpop.gremlin.jsr223.GremlinLangScriptEngineFactory;
 import org.apache.tinkerpop.gremlin.jsr223.GremlinScriptEngine;
 import org.apache.tinkerpop.gremlin.structure.*;
+import org.apache.tinkerpop.gremlin.structure.util.ElementHelper;
 import studio.phaseshift.metatron.algebra.rewrite.Rewriter;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
@@ -32,9 +33,11 @@ import studio.phaseshift.metatron.isa.grph.space.grphSpace;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.util.IteratorUtil;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
@@ -49,6 +52,7 @@ import static studio.phaseshift.metatron.isa.grph.space.grphSpace.SERIALIZER;
 import static studio.phaseshift.metatron.isa.grph.space.schema.modernSchema.MODERN_SCHEMA_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
@@ -64,7 +68,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 @JREService(vid = "/m/grph")
-public class  grphInstSet extends AbstractInstSet {
+public class grphInstSet extends AbstractInstSet {
 
     public static final fURI GRPH_ISA_TID = M_ISA_TID.extend("grph");
     public static final fURI EDGE_TID = GRPH_ISA_TID.extend("edge");
@@ -117,15 +121,26 @@ public class  grphInstSet extends AbstractInstSet {
 
     public static BiFunction<Obj, Inst, Obj> V_V_FUNCTION(final Direction direction) {
         return (lhs, inst) -> {
-            final Rec lhsRec = lhs.asRec();
             final String[] labels = inst.arg(0).isNoObj() ? EMPTY_STRING_ARRAY : inst.arg(0).stream().map(Obj::uriValue).map(fURI::toString).toArray(String[]::new);
-            return objs(IteratorUtil.map(VertexMap.recToVertex(lhs.asRec()).vertices(direction, labels), v -> {
-                final Property<?> redirect = v.property(REDIRECT_STRING);
-                return redirect.isPresent() ? (Obj) mtronKV(redirect).value() : VertexMap.vertexToRec(v, lhsRec);
-            }));
+            if (lhs.jvm() instanceof VertexMap) {
+                final Rec lhsRec = lhs.asRec();
+                return objs(IteratorUtil.map(VertexMap.recToVertex(lhs.asRec()).vertices(direction, labels), v -> {
+                    final Property<?> redirect = v.property(REDIRECT_STRING);
+                    return redirect.isPresent() ? (Obj) mtronKV(redirect).value() : VertexMap.vertexToRec(v, lhsRec); // REF VERTEX?
+                }));
+            } else if (direction.equals(Direction.OUT) || direction.equals(Direction.BOTH)) {
+                return objs(lhs.asRec().jvm().entrySet().stream()
+                        .filter(e -> e.getKey().isUri())
+                        .filter(e -> ElementHelper.keyExists(e.getKey().uriValue().toString(), labels))
+                        .filter(e -> Obj.Helper.isAutoFrom(e.getValue()))
+                        .map(e -> e.getValue().autoResolve(lhs.asRec())));
+            } else {
+                return noobj();
+            }
         };
     }
 
+    
     /*BiFunction<Poly<?, ?>, Object, Poly<?, ?>> VERTEX_POLY_MUTABLE = (vertexPoly, vertexPolyJVM) -> {
         vertexPoly.<ElementMap>jvmAs().putAll((Map<Uri, Obj>) vertexPolyJVM);
         //Obj.Helper.objCheck(vertexPoly, vertexPolyJVM, vertexPoly.tid(), vertexPoly.vid());
@@ -177,7 +192,8 @@ public class  grphInstSet extends AbstractInstSet {
                         }), "execute a gremlin traversal", "the gremlin expression", Map.of(), "executes the gremlin expression on the graph space"),
                         docWrap(instC(LABEL_INST_TID.dom(ELMT_TID).rng(URI_TID), lst(), (lhs, inst) -> lhs.asRec().at(LABEL).orElse(uri(lhs.tid()))),
                                 "an element", "the element label", Map.of(), "returns the lhs element label (the tid)"),
-                        docWrap(instC(VALUES_INST_TID.dom(ELMT_TID).rng(ALL.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> lhs.asRec().at(inst.arg(0).isNoObj() ? uri("+") : inst.arg(0).asUri())),
+                        docWrap(instC(VALUES_INST_TID.dom(ELMT_TID).rng(ALL.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) ->
+                                        inst.arg(0).isNoObj() ? lhs.asRec().at(uri("+")) : objs(inst.args().valueElements().map(key -> lhs.asRec().at(key)))),
                                 "an element", "the element values", Map.of(jnt(0), "zero or more element property labels"), "returns the lhs element arg-labeled values"),
                         docWrap(instC(INV_INST_TID.dom(EDGE_TID).rng(VRTX_TID), lst(), (lhs, inst) -> lhs.asRec().at(IN)),
                                 "an edge", "the incoming vertex", Map.of(), "returns the lhs edge head vertex"),
@@ -205,15 +221,21 @@ public class  grphInstSet extends AbstractInstSet {
                             final Vertex outVertex = ((VertexMap) lhs.jvm()).getBase();
                             final fURI edgeLabel = inst.arg(0).uriValue().big();
                             final Graph graph = outVertex.graph();
-                            return objs(inst.arg(1).stream().map(e -> {
+                            return objs(inst.arg(1).stream().map(otherV -> {
+                                final Object otherVJVM = otherV.jvm();
                                 final Vertex inVertex;
                                 final Edge edge;
-                                if (e.isUri()) {
-                                    inVertex = graph.addVertex(
-                                            org.apache.tinkerpop.gremlin.structure.T.label, e.tid().equals(URI_TID) ? VRTX_TID.toString() : e.tid().toString(),
-                                            REDIRECT_STRING, SERIALIZER.write(auto_from_(e.asUri()).tryToInst()));
+                                if (otherVJVM instanceof VertexMap) {
+                                    inVertex = ((VertexMap) otherVJVM).getBase();
                                 } else {
-                                    inVertex = e.asRec().<VertexMap>jvmAs().getBase();
+                                    final Optional<fURI> pointer = Obj.Helper.getPointer(otherV);
+                                    if (pointer.isPresent()) {
+                                        inVertex = graph.addVertex(
+                                                org.apache.tinkerpop.gremlin.structure.T.label, otherV.apply(noobj()).tid().toString(),
+                                                REDIRECT_STRING, SERIALIZER.write(auto_from_(pointer.get())));
+                                    } else {
+                                        throw MTronException.of("invalid edge vertex: %s", otherV);
+                                    }
                                 }
                                 edge = outVertex.addEdge(edgeLabel.toString(), inVertex);
                                 if (inst.arg(2).isRec()) {

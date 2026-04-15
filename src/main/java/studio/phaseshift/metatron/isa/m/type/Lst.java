@@ -62,6 +62,11 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
         final AtomicInteger i = new AtomicInteger(0);
         return this.jvm().stream().map(e -> rel(jnt(i.getAndIncrement()), e).c(c -> this.c()).as());
     }
+    
+    @Override
+    default <OBJ extends Obj> Stream<OBJ> valueElements() {
+        return this.elements();
+    }
 
     @Override
     Lst clone(final Object jvm, final fURI tid, final fURI vid);

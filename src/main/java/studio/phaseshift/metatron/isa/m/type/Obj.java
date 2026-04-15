@@ -707,6 +707,23 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
             return obj.tid().basePath().equals(AUTO_FROM_INST_TID);
         }
 
+        public static boolean isFrom(final Obj obj) {
+            return obj.tid().path().equals(FROM_INST_TID.path()); // potentially much faster than basePath().equals()
+        }
+
+        public static fURI autoFromVID(final Obj autoFrom) {
+            return autoFrom.asInst().arg(0).uriValue();
+        }
+        
+        public static Optional<fURI> getPointer(final Obj obj) {
+            if(isAutoFrom(obj))
+                return Optional.of(autoFromVID(obj));
+            else if(isFrom(obj))
+                return Optional.of(obj.asInst().arg(0).uriValue());
+            else
+                return Optional.empty();
+        }
+        
         public static int objHashCode(final Obj obj) {
             return Objects.hash((Object) obj.jvm()); /*obj.isNoObj() ? noobj().hashCode() : obj.isInst() ? obj.tid().hashCode() : Objects.hash(obj.jvm(), obj.tid().one());*/
         }

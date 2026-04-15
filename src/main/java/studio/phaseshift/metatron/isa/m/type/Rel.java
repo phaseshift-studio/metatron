@@ -146,6 +146,11 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>>, MultMonoid.O<Rel>,
         return Stream.of(this.jvm().get0().c(c -> c.mult(this.c())).as(), this.jvm().get1().c(c -> c.mult(this.c())).as());
     }
 
+    @Override
+    default <OBJ extends Obj> Stream<OBJ> valueElements() {
+        return (Stream<OBJ>) this.second().stream();
+    }
+
 
     /*default Type dom() {
         return this.value().getValue0().dom();

@@ -206,9 +206,9 @@ The two data sources have a very particular understanding of how data should be 
 *g:V/1
 *acme:customers/357
 *g:V/1.addE(consulted,acme:customers/357)
-*g:V/1>>consulted
-*g:V/1>>consulted>>salesRepEmployeeNumber
-*g:V/1>>consulted>>salesRepEmployeeNumber>>reportsTo
+*g:V/1.out(consulted)
+*g:V/1.out(consulted)>>salesRepEmployeeNumber
+*g:V/1.out(consulted)>>salesRepEmployeeNumber>>reportsTo
 -->
 ++++
 🧱        
