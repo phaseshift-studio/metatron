@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
+import studio.phaseshift.metatron.isa.m.space.stackSpace;
 import studio.phaseshift.metatron.isa.m.type.Feature;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -196,6 +197,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
             final InstSet mach = new machInstSet();
             Router.global().addSpace(mach);  // explicit registration after full construction
             Router.writeToSpace(mach);
+            sysSpace.write("/sys/space/stack", Router.stack());
             mach.setup();
             /// WRITE THE BOOT ARGS TO THE ROUTER STACK
             Router.writeToSpace(f("boot/args"), args);
