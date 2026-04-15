@@ -45,6 +45,7 @@
         <maven.compiler.target>21</maven.compiler.target>
         <maven.compiler.release>21</maven.compiler.release>
         <java.version>21</java.version>
+        <!-- SKIP BUILD PROCESSES -->
         <skipTests>false</skipTests>
         <skipDocker>true</skipDocker>
         <skipRunner>false</skipRunner>
@@ -397,11 +398,11 @@
                             <goal>exec</goal>
                         </goals>
                         <configuration>
-                            <skip>${skipRunner}</skip>
+                           <!-- <skip>${skipRunner}</skip>-->
                             <executable>python</executable>
                             <arguments>
                                 <argument>docs/python/docs-code-parser.py</argument>
-                                <!--<argument>-c ${skipRunner}</argument>-->
+                                <argument>-c ${skipRunner}</argument>
                                 <argument>--verbose</argument>
                                 <argument>-o</argument>
                                 <argument>${project.build.directory}/temp</argument>

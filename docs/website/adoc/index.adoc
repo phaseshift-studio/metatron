@@ -78,7 +78,6 @@ include::header.html[]
             <div class="col-lg-4 wow fadeIn" data-wow-delay="0.5s">
                 <img src="images/metatron-character.png" width="100%"/>
             </div>
-
         </div>
     </div>
 </div>
@@ -91,16 +90,16 @@ include::header.html[]
         <!-- MTRON -->
         <div id="mtron_feature" data-title="mtron" data-icon="images/icons/mtron-icon.svg" data-back-image="images/modal/mtron-modal.svg">
             <div class="feature-front">
-                <b class="metatron-name">mtron</b> is a functional, type-safe, data flow language capable of expressing complex data transformations within a multi-model data environment
+                <b class="metatron-name">mtron</b> is a functional, type-safe, data flow language capable of expressing complex data transformations within a multi-model data environment.
             </div>
             <div class="feature-modal">
-                <p><b class="metatron-name">mtron</b> (pronounced /metatron/) is the primary query and transformation language for the metatron virtual machine. It provides a robust, type-safe environment for processing data across heterogeneous spaces.</p>
-                <img src="images/modal/mtron-modal.svg" class="img-fluid mb-3 icon-color" style="max-height: 300px; display: block; margin: auto;"/>
-                <p>Key benefits include:</p>
+                <p><b class="metatron-name">mtron</b> (pronounced /ɛm.trɒn/) is the primary query and transformation language for the metatron virtual machine. It provides a type-safe environment for processing data across heterogeneous spaces.</p>
+                <img src="images/modal/mtron-modal.svg" class="img-fluid mb-3 icon-color" style="width: 500px; display: block; margin: auto;"/>
+                <p>highlights include:</p>
                 <ul>
-                    <li>Functional composition of operations.</li>
-                    <li>Strong structural typing.</li>
-                    <li>Seamless integration with fURIs.</li>
+                    <li>every expression is an element of an algebraic ring, where function composition and function parallelization being * and +, respectively.</li>
+                    <li>structural typing allows, e.g., a graph vertex to act as a row in a relational database and vice versa.</li>
+                    <li>uris and code are first class objects</li>
                 </ul>
             </div>
             <script type="text/javascript">featurePanel("mtron_feature");</script>
@@ -108,19 +107,34 @@ include::header.html[]
         <!-- URI -->
         <div id="uri_feature" data-title="fURI" data-icon="images/icons/link-icon.svg" data-back-image="images/modal/furi-modal.svg">
             <div class="feature-front">
-                metatron <b class="metatron-name">objs</b> exist in a single, unified uri address space where process can seamless traverse across a variegated data space
+                metatron <b class="metatron-name">objs</b> exist in a single, unified uri address space where processes can seamlessly traverse across different data sources.
             </div>
             <div class="feature-modal">
-                <p>The <b class="metatron-name">fURI</b> (functional URI) is the cornerstone of Metatron's addressing system. It allows every piece of data, regardless of its underlying storage, to be addressed via a consistent URI.</p>
-                <img src="images/modal/furi-modal.svg" class="img-fluid mb-3 icon-color" style="max-height: 300px; display: block; margin: auto;"/>
-                <p>Features of fURIs:</p>
+                <p>The <b class="metatron-name">furi</b> (<i>functional URI</i>) is the cornerstone of metatron's memory model. 
+                    Every piece of data, regardless of its underlying storage, is addressed via a consistent URI scheme.
+                    The primary ramification is that a line of text in a .txt file on a hard drive can reference some tag in an HTML page on the web.
+                </p>
+                <img src="images/modal/furi-modal.svg" class="img-fluid mb-3 icon-color" style="width: 500px; display: block; margin: auto;"/>
+                <p>highlights include:</p>
                 <ul>
-                    <li>Universal namespace across databases, file systems, and APIs.</li>
-                    <li>Support for complex path traversals.</li>
-                    <li>Integrated security and access control.</li>
+                    <li>universal namespace across databases, file systems, APIs, microcontrollers, in-memory data structures, etc.</li>
+                    <li>the subsequent link structure supports complex traversals across a wide range of data sources -- all within the same mtron expression.</li>
+                    <li>query processors enrich space semantics with useful features such as constants, uri typing, pubsub notifications, and more.</li>
                 </ul>
             </div>
             <script type="text/javascript">featurePanel("uri_feature");</script>
+        </div>
+        <!-- SPACE -->
+        <div id="space_features" data-title="space" data-icon="images/icons/space-icon.svg" data-back-image="images/modal/space-modal.svg">
+            <div class="feature-front">
+                data sources are logically abstracted as <b class="metatron-name">spaces</b>, where each datum has a uri address enabling the stitching together of database, file system, event, and peripheral data
+            </div>
+            <div class="feature-modal">
+                <p>A <b class="metatron-name">space</b> is a storage and/or processing system that maintains some subset of the of the uri address space. Spaces include, but are not limited to, relational databases, graph databases, key/value stores, document stores,
+                file systems, large language model catalogs -- from the small (a microprocessor's onboard memory), to the large (the world wide web).</p>
+                <img src="images/modal/space-modal.svg" class="img-fluid mb-3 icon-color" style="max-height: 300px; display: block; margin: auto;"/>
+            </div>
+            <script type="text/javascript">featurePanel("space_features");</script>
         </div>
         <!-- RING -->
         <div id="ring_feature" data-title="ring" data-icon="images/icons/ring-icon.svg" data-back-image="images/modal/ring-modal.svg">
@@ -128,10 +142,21 @@ include::header.html[]
                 the typical functional programming monad/monoid is extended with a <b class="metatron-name">"ringad\"/ringoid</b> processor, where <b class="metatron-name">*</b> is function composition and <b class="metatron-name">+</b> is function branching
             </div>
             <div class="feature-modal">
-                <p>The <b class="metatron-name">Ring</b> architecture extends classical category theory concepts for practical data processing. By introducing addition as branching, Metatron can express complex parallel workflows naturally.</p>
-                <img src="images/modal/ring-modal.svg" class="img-fluid mb-3 icon-color" style="max-height: 300px; display: block; margin: auto;"/>
+                <p>A <b class="metatron-name">stream ring</b> provides an algebraic foundation enabling compilation rewrites for optimization, schema alignment, and execution semantics.</p>
+                <img src="images/modal/ring-modal.svg" class="img-fluid mb-3 icon-color" style="width: 500px; display: block; margin: auto;"/>
             </div>
             <script type="text/javascript">featurePanel("ring_feature");</script>
+        </div>
+        <!-- MONAD -->
+        <div id="monad_features" data-title="PCMonad" data-icon="images/icons/cluster-icon.svg" data-back-image="images/modal/monad-modal.svg">
+            <div class="feature-front">
+                processes are realized as the propagation of atomic <b class="metatron-name">monads</b>  through instruction graphs which guide them over the underlying data spaces
+            </div>
+            <div class="feature-modal">
+                <p><b class="metatron-name">PCMonads</b> (Process Control Monads) represent the state and path of a computation. They flow through instruction graphs, enabling highly distributed and resilient processing.</p>
+                <img src="images/modal/monad-modal.svg" class="img-fluid mb-3 icon-color" style="max-height: 300px; display: block; margin: auto;"/>
+            </div>
+            <script type="text/javascript">featurePanel("monad_features");</script>
         </div>
         <!-- EMBED -->
         <div id="embed_feature" data-title="Embed" data-icon="images/icons/storage-icon.svg" data-back-image="images/modal/embed-modal.svg">
@@ -154,28 +179,6 @@ include::header.html[]
                 <img src="images/schema-diagram.svg" class="img-fluid mb-3" style="max-height: 400px; display: block; margin: auto;"/>
             </div>
             <script type="text/javascript">featurePanel("schema_features");</script>
-        </div>
-        <!-- SPACE -->
-        <div id="space_features" data-title="Space" data-icon="images/icons/cluster-icon.svg" data-back-image="images/modal/space-modal.svg">
-            <div class="feature-front">
-                data sources are logically abstracted as <b class="metatron-name">spaces</b>, where each datum has a uri address enabling the stitching together of database, file system, event, and peripheral data
-            </div>
-            <div class="feature-modal">
-                <p><b class="metatron-name">Spaces</b> are the logical units of storage in Metatron. Whether it's a PostgreSQL instance, a Neo4j graph, or a directory of CSV files, Metatron treats them all as addressable spaces.</p>
-                <img src="images/modal/space-modal.svg" class="img-fluid mb-3 icon-color" style="max-height: 300px; display: block; margin: auto;"/>
-            </div>
-            <script type="text/javascript">featurePanel("space_features");</script>
-        </div>
-        <!-- MONAD -->
-        <div id="monad_features" data-title="PCMonad" data-icon="images/icons/cluster-icon.svg" data-back-image="images/modal/monad-modal.svg">
-            <div class="feature-front">
-                processes are realized as the propagation of atomic <b class="metatron-name">monads</b>  through instruction graphs which guide them over the underlying data spaces
-            </div>
-            <div class="feature-modal">
-                <p><b class="metatron-name">PCMonads</b> (Process Control Monads) represent the state and path of a computation. They flow through instruction graphs, enabling highly distributed and resilient processing.</p>
-                <img src="images/modal/monad-modal.svg" class="img-fluid mb-3 icon-color" style="max-height: 300px; display: block; margin: auto;"/>
-            </div>
-            <script type="text/javascript">featurePanel("monad_features");</script>
         </div>
         <!-- OLTP -->
         <div id="oltp_features" data-title="OLTP" data-icon="images/icons/mach-icon.svg" data-back-image="images/modal/oltp-modal.svg">
@@ -244,6 +247,7 @@ include::header.html[]
             <script type="text/javascript">featurePanel("llm_features");</script>
         </div>
     </div>
+    <div style="height: 100px;"></div>
 </div>
 ++++
 

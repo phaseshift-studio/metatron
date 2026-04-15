@@ -231,6 +231,21 @@ table {
     transform: rotateY(180deg);
 }
 
+#mtron_feature .flip-box-front img {
+    width: 44px;
+    height: 44px;
+}
+
+#mtron_feature .flip-box-back img,
+#uri_feature .flip-box-back img,
+#ring_feature .flip-box-back img {
+    transform: scale(1.3);
+}
+
+#ring_feature .flip-box-back img {
+    margin-top: -30px;
+}
+
 /* TERMNYNAL TABS */
 
 .tabrow {

@@ -406,7 +406,7 @@ function featurePanel(id) {
     const modalHTML = $el.find('.feature-modal').html();
 
     $el.replaceWith(`
-<div class="col-lg-4 col-md-6 wow fadeInUp flip-box" data-wow-delay="0.1s">
+<div id="${id}" class="col-lg-4 col-md-6 wow fadeInUp flip-box" data-wow-delay="0.1s">
    <div class="flip-box-inner">
       <div class="flip-box-front">
          <div class="service-item position-relative overflow-hidden bg-secondary d-flex h-100 p-1 ps-1">

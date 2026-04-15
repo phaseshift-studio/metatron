@@ -479,8 +479,8 @@ bin/metatron</code></pre>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"a mcp server specification" <span class="text-light">=&gt;</span> "creates a connection to an existing mcp server"
    [{?}tool <span class="text-light">=&gt;</span> "the tools/functions available for use on the mcp server"
-    {?}status <span class="text-light">=&gt;</span> "the current status of the mcp server"
-    host <span class="text-light">=&gt;</span> "the mcp server endpoint"]</pre>
+    host <span class="text-light">=&gt;</span> "the mcp server endpoint"
+    {?}status <span class="text-light">=&gt;</span> "the current status of the mcp server"]</pre>
                     </div>
         <div class="card-body border-top py-2">
             <small class="text-muted fw-bold">examples:</small>
@@ -545,13 +545,13 @@ mcp::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron                 
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"a large language model" <span class="text-light">=&gt;</span> "the model construction"
-   [name <span class="text-light">=&gt;</span> "the model name from the host catalog"
-    {?}host <span class="text-light">=&gt;</span> "the llm inferencing provider endpoint"
-    {?}size <span class="text-light">=&gt;</span> "the size of the model in bytes"
-    {?}skill <span class="text-light">=&gt;</span> "skill to extend the llm&#x27;s abilities"
-    {?}memory <span class="text-light">=&gt;</span> "llm&#x27;s memory of previous interactions"
+   [{?}tool <span class="text-light">=&gt;</span> "tool functions the llm can use to solve problems"
     {?}think <span class="text-light">=&gt;</span> "whether the llm should think before responding"
-    {?}tool <span class="text-light">=&gt;</span> "tool functions the llm can use to solve problems"]</pre>
+    {?}memory <span class="text-light">=&gt;</span> "llm&#x27;s memory of previous interactions"
+    {?}skill <span class="text-light">=&gt;</span> "skill to extend the llm&#x27;s abilities"
+    {?}size <span class="text-light">=&gt;</span> "the size of the model in bytes"
+    {?}host <span class="text-light">=&gt;</span> "the llm inferencing provider endpoint"
+    name <span class="text-light">=&gt;</span> "the model name from the host catalog"]</pre>
                     </div>
                 </div>
                 <div class="card mb-3" id="type-skill">
@@ -580,9 +580,9 @@ mcp::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron                 
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"a skill.md specification" <span class="text-light">=&gt;</span> "?"
    [desc <span class="text-light">=&gt;</span> "skill description"
-    {?}content <span class="text-light">=&gt;</span> "skill.md document content"
+    {?}entry <span class="text-light">=&gt;</span> "skill assets, references, and scripts"
     name <span class="text-light">=&gt;</span> "skill name"
-    {?}entry <span class="text-light">=&gt;</span> "skill assets, references, and scripts"]</pre>
+    {?}content <span class="text-light">=&gt;</span> "skill.md document content"]</pre>
                     </div>
         <div class="card-body border-top py-2">
             <small class="text-muted fw-bold">examples:</small>
@@ -613,8 +613,8 @@ mcp::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron                 
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"a tool specification" <span class="text-light">=&gt;</span> "?"
    [name <span class="text-light">=&gt;</span> "tool name"
-    {?}arg <span class="text-light">=&gt;</span> "tool arguments"
-    desc <span class="text-light">=&gt;</span> "tool description"]</pre>
+    desc <span class="text-light">=&gt;</span> "tool description"
+    {?}arg <span class="text-light">=&gt;</span> "tool arguments"]</pre>
                     </div>
         <div class="card-body border-top py-2">
             <small class="text-muted fw-bold">examples:</small>
@@ -665,8 +665,8 @@ mcp::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron                 
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"a model to chat with" <span class="text-light">=&gt;</span> "the models chat response"
-   [1 <span class="text-light">=&gt;</span> "an optional response format"
-    0 <span class="text-light">=&gt;</span> "the message to send the model"]</pre>
+   [0 <span class="text-light">=&gt;</span> "the message to send the model"
+    1 <span class="text-light">=&gt;</span> "an optional response format"]</pre>
                     </div>
         <div class="card-body border-top py-2">
             <small class="text-muted fw-bold">examples:</small>
@@ -700,10 +700,10 @@ mcp::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron                 
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"llm model catalog specification" <span class="text-light">=&gt;</span> "creates a model catalog"
-   [pattern <span class="text-light">=&gt;</span> "catalog address space"
-    {?}host <span class="text-light">=&gt;</span> "the llm inferencing provider endpoint"
-    route <span class="text-light">=&gt;</span> "internal space routes"
-    name <span class="text-light">=&gt;</span> "the provider name (anthropic, openai, or ollama)"]</pre>
+   [{?}host <span class="text-light">=&gt;</span> "the llm inferencing provider endpoint"
+    pattern <span class="text-light">=&gt;</span> "catalog address space"
+    name <span class="text-light">=&gt;</span> "the provider name (anthropic, openai, or ollama)"
+    route <span class="text-light">=&gt;</span> "internal space routes"]</pre>
                     </div>
                 </div>
         </div>
@@ -712,7 +712,7 @@ mcp::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron                 
         <div class="container-xxl py-3 text-center">
             <hr class="border-secondary">
             <small class="text-muted">
-                generated by metatron instset doc generator on build 0-2026-04-14 02:58:21<br>
+                generated by metatron instset doc generator on build 0-2026-04-14 20:41:56<br>
                 © PhaseShift Studio, LLC
             </small>
         </div>
