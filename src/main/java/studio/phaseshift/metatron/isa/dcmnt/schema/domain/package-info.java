@@ -48,7 +48,7 @@
  * recursion in circular reference structures.
  * </p>
  *
- * @see studio.phaseshift.metatron.isa.doc.schema.storage Storage schema package
+ * @see studio.phaseshift.metatron.isa.dcmnt.schema.storage Storage schema package
  * @see studio.phaseshift.metatron.isa.tble.schema.domain SQL domain schema reference
  */
-package studio.phaseshift.metatron.isa.doc.schema.domain;
+package studio.phaseshift.metatron.isa.dcmnt.schema.domain;

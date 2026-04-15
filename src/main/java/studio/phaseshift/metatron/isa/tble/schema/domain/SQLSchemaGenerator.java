@@ -173,7 +173,7 @@ public class SQLSchemaGenerator {
     /**
      * Generate a complete schema object including tables and references.
      * <p>
-     * Returns a rec with unified structure (aligned with docdbSpace schema):
+     * Returns a rec with unified structure (aligned with dcmntSpace schema):
      * <ul>
      *   <li>pattern: base pattern for table types</li>
      *   <li>name: database name</li>

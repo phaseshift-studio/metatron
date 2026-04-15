@@ -8,14 +8,11 @@
 
 An instruction set is defined as a **record** (`rec`) of the form:
 
-[source,mtron]
-----
-instset -> rec::T[?[type  => T{*}::T,                        [-- type definitions                   --]
-inst  => inst{*}::T,                     [-- instruction definitions            --]
-const => #::T,                           [-- constant definitions:              --]
-sugar => rec::T[?[str::T=>uri::T]]]]     [-- syntactic sugar: token to inst tid --]
-----
-
+++++
+<!-- 🐖
+*instset
+-->
+++++
 
 [stem]
 ++++
@@ -23,21 +20,3 @@ sugar => rec::T[?[str::T=>uri::T]]]]     [-- syntactic sugar: token to inst tid 
 \texttt{inst} \in (\underbrace{\texttt{obj}}_{\text{the lhs object}} \times \underbrace{\texttt{inst}}_{\text{the instruction}}) \rightarrow \underbrace{\texttt{obj}}_{\text{the rhs object}}
 \end{align*}
 ++++
-
-that is used to write programs that form an a
-
-for composing data flow instructions.
-The language draws inspiration from the referential constructs of C, the data selection and push-down predicates of SQL, the structural typing of TypeScript, the tersenes of form and underlying navigation perspective realized in Gremlin, the self-reflective URI addressable scheme of NenoFhat and RDF/OWL, and the record-oriented foundation of JavaScript.
-
-[source,mtron]
-----
-*milky_way>>bodies.?star::T.where(>>planets.count().?>(0)).-<[
-name            => >>name,
-stats           => -<[kilos => >>mass.as(kg::T),
-area  => _(s=>?star::T){ *pi.mult(*s.>>radius.pow(2.0)).as(km::T) }],
-primary_planets => >>planets.order(>>mass).take(1).>>name]
-----
-
-Instructions, like the data it operates on, exist within the URI address space so that meta-programming concepts such as reflection, memoization, and serialization of the computational state can be naturally expressed and leveraged.
-
-An instruction set packages types, constants, instructions, and syntax sugars and can be imported and used to effect domain-specific views the underlying data.

@@ -25,7 +25,7 @@ import studio.phaseshift.metatron.isa.mach.io.type.ObjSQLSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.tble.schema.storage.TableSchema;
-import studio.phaseshift.metatron.isa.tble.tabledbSpace;
+import studio.phaseshift.metatron.isa.tble.tbleSpace;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -66,7 +66,7 @@ import static studio.phaseshift.metatron.isa.tble.tbleInstSet.TABLE_TID;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema {
-    private final tabledbSpace space;
+    private final tbleSpace space;
     private final Map<String, TableMetadata> tableSchemas = new LinkedHashMap<>();
     private final String excludeTableName;
 
@@ -95,7 +95,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
      *
      * @param excludeTableName name of table to exclude from discovery (e.g., the key-value store table)
      */
-    public ExistingTableSchema(final tabledbSpace space, final String excludeTableName) {
+    public ExistingTableSchema(final tbleSpace space, final String excludeTableName) {
         this.excludeTableName = excludeTableName;
         this.space = space;
     }

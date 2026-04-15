@@ -38,13 +38,13 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 public class CommonRewritesTestContractExample {
 
     /**
-     * Example for SQL/tabledbSpace implementation.
+     * Example for SQL/tbleSpace implementation.
      *
      * <p>Minimal implementation - just specify the base URI and add test method wrappers!
      * The dataset is created automatically using Metatron syntax.
      *
      * <pre>{@code
-     * public class tabledbSpaceTest extends AbstractSpaceTest implements CommonRewritesTestContract {
+     * public class tbleSpaceTest extends AbstractSpaceTest implements CommonRewritesTestContract {
      *
      *     @Override
      *     public fURI getRewriteTestDatasetBaseUri() {
@@ -59,7 +59,7 @@ public class CommonRewritesTestContractExample {
      *     }
      *
      *     static Stream<Arguments> provideCountRewriteTestCases() {
-     *         return new tabledbSpaceTest().generateCountRewriteTestCases();
+     *         return new tbleSpaceTest().generateCountRewriteTestCases();
      *     }
      *
      *     // Repeat for sum, mean, etc. (or copy-paste the pattern)
@@ -85,7 +85,7 @@ public class CommonRewritesTestContractExample {
      * /tble/rewrite_test/10 -> [id:10, value:10, name:'item10', weight:15.0]
      * </pre>
      *
-     * <p>The tabledbSpace write() method automatically converts these to SQL INSERTs.
+     * <p>The tbleSpace write() method automatically converts these to SQL INSERTs.
      */
     public static class SQLExample {
         private static final String DB_PATH = "target/test-db.db";
@@ -104,12 +104,12 @@ public class CommonRewritesTestContractExample {
     }
 
     /**
-     * Example for MongoDB/docdbSpace implementation.
+     * Example for MongoDB/dcmntSpace implementation.
      *
      * <p>Same pattern as SQL - just specify the base URI and add test wrappers!
      *
      * <pre>{@code
-     * public class docdbSpaceTest extends AbstractSpaceTest implements CommonRewritesTestContract {
+     * public class dcmntSpaceTest extends AbstractSpaceTest implements CommonRewritesTestContract {
      *
      *     @Override
      *     public fURI getRewriteTestDatasetBaseUri() {
@@ -123,7 +123,7 @@ public class CommonRewritesTestContractExample {
      *     }
      *
      *     static Stream<Arguments> provideCountRewriteTestCases() {
-     *         return new docdbSpaceTest().generateCountRewriteTestCases();
+     *         return new dcmntSpaceTest().generateCountRewriteTestCases();
      *     }
      *
      *     // Repeat for sum, mean tests...
@@ -140,7 +140,7 @@ public class CommonRewritesTestContractExample {
      * mongo:rewrite_test/10 -> [id:10, value:10, name:'item10', weight:15.0]
      * </pre>
      *
-     * <p>The docdbSpace write() method automatically converts these to MongoDB Documents.
+     * <p>The dcmntSpace write() method automatically converts these to MongoDB Documents.
      */
     public static class MongoDBExample {
         public fURI getTestDataUriPrefix() {

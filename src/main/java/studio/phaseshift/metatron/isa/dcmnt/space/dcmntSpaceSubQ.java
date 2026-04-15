@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.doc.space;
+package studio.phaseshift.metatron.isa.dcmnt.space;
 
 import com.mongodb.client.ChangeStreamIterable;
 import com.mongodb.client.MongoCollection;
@@ -48,11 +48,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static studio.phaseshift.metatron.Tokens.SUBQ;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.doc.dcmntInstSet.DOCDB_SPACE_TID;
+import static studio.phaseshift.metatron.isa.dcmnt.dcmntInstSet.DCMNT_SPACE_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 
 /**
- * DocdbSubQ - Subscription query for MongoDB/DocumentDB change streams
+ * dcmntSpaceSubQ - Subscription query for MongoDB/DocumentDB change streams
  *
  * <p>Provides real-time document change notifications using MongoDB's Change Streams feature.
  * Users can subscribe to document changes via:
@@ -79,9 +79,9 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class DocdbSubQ extends BaseQ {
+public class dcmntSpaceSubQ extends BaseQ {
 
-    protected final docdbSpace space;
+    protected final dcmntSpace space;
     protected final Q subq = QCollection.subq();
 
     // Track active change stream watchers: fURI pattern -> (cursor, running flag, future)
@@ -101,8 +101,8 @@ public class DocdbSubQ extends BaseQ {
         }
     }
 
-    public DocdbSubQ(final docdbSpace space) {
-        super(new HashMap<>(), DOCDB_SPACE_TID.extend("subq"), null);
+    public dcmntSpaceSubQ(final dcmntSpace space) {
+        super(new HashMap<>(), DCMNT_SPACE_TID.extend("subq"), null);
         this.space = space;
         this.onWrite = new OnWrite();
         this.onRead = this.subq.onRead().get();

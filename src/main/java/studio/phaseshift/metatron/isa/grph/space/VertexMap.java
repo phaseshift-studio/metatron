@@ -52,8 +52,8 @@ public class VertexMap extends ElementMap {
     protected static final GraphittyLogger LOG = Graphitty.log(VertexMap.class);
 
 
-    public VertexMap(final Vertex base, final graphSpace graphSpace) {
-        super(base, graphSpace);
+    public VertexMap(final Vertex base, final grphSpace grphSpace) {
+        super(base, grphSpace);
     }
 
     @Override
@@ -140,16 +140,16 @@ public class VertexMap extends ElementMap {
     }
 
     public static Rec vertexToRec(final Vertex vertex) {
-        return new VertexMap(vertex, graphSpace.from(vertex)).selfRec();
-        //   return VertexMap.vertexToRec(vertex, graphSpace.from(vertex));
+        return new VertexMap(vertex, grphSpace.from(vertex)).selfRec();
+        //   return VertexMap.vertexToRec(vertex, grphSpace.from(vertex));
     }
 
-    public static Rec vertexToRec(final Vertex vertex, final graphSpace space) {
+    public static Rec vertexToRec(final Vertex vertex, final grphSpace space) {
         return new VertexMap(vertex, space).selfRec();
-        //   return VertexMap.vertexToRec(vertex, graphSpace.from(vertex));
+        //   return VertexMap.vertexToRec(vertex, grphSpace.from(vertex));
     }
 
-    public static Inst lazyVertexToRec(final Vertex base, final graphSpace lhs) {
+    public static Inst lazyVertexToRec(final Vertex base, final grphSpace lhs) {
         return new LazyAutoElmnt(new VertexMap(base, lhs));
     }
 

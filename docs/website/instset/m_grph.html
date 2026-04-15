@@ -252,7 +252,7 @@ bin/metatron</code></pre>
        pre_read =>inst?rng=#{*}&dom=#{?}(uri::T){<j>},
        pre_write=>inst?rng=#{*}&dom=#{?}(uri::T,#::T){<j>},
        pattern  =>docq,
-       obj      =>mem::[pattern=><#>],
+       obj      =>memspace::[pattern=><#>],
        inst     =>instset::[pattern=><#>]]],
  space  =>[
    super=>!*/m,
@@ -268,11 +268,11 @@ bin/metatron</code></pre>
    elmt::T[?[
      IN =>vrtx::T,
      OUT=>vrtx::T]]@/m/grph/edge,
-   space::T[][inst?rng=graphdb&dom=#{?}(isa([
- {?}graph=>uri::T]).else(failure('malformed tp3 config'))){<j>}]@/m/grph/space/graphdb,
+   space::T[][inst?rng=grphspace&dom=#{?}(isa([
+ {?}graph=>uri::T]).else(failure('malformed tp3 config'))){<j>}]@/m/grph/space/grphspace,
    modern::T],
  inst   =>[
-   gremlin?rng=#{*}&dom=graphdb(str::T){<j>},
+   gremlin?rng=#{*}&dom=grphspace(str::T){<j>},
    label?rng=uri&dom=elmt(){<j>},
    values?rng=#{*}&dom=elmt(uri{*}::T){<j>},
    inV?rng=vrtx&dom=edge(){<j>},
@@ -474,8 +474,8 @@ bin/metatron</code></pre>
                 <h6 class="text-primary mb-2">Spaces</h6>
                 <div class="index-columns">
                     
-                <a href="#space-graphdb" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
-                    <span class="code">graphdb</span>
+                <a href="#space-grphspace" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
+                    <span class="code">grphspace</span>
                     <span class="badge bg-info">S</span>
                 </a>
                 </div>
@@ -654,12 +654,12 @@ bin/metatron</code></pre>
                     <div class="card-header d-flex justify-content-between align-items-center py-2 text-light border-bottom border-secondary">
                         <span>
                             <span class="code text-primary fw-bold">gremlin</span>
-                            <span class="ms-1"><span class="instset-doc-small-code"><a href="m_grph_space.html#type-graphdb" data-bs-toggle="tooltip" title="domain" class="code text-info">/m/grph/space/graphdb</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#{*}.html#type-#" data-bs-toggle="tooltip" title="maybe some range" class="code text-success">#{*}</a></span></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="m_grph_space.html#type-grphspace" data-bs-toggle="tooltip" title="domain" class="code text-info">/m/grph/space/grphspace</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#{*}.html#type-#" data-bs-toggle="tooltip" title="maybe some range" class="code text-success">#{*}</a></span></span>
                         </span>
-                        <small class="text-muted code">/m/grph/inst/gremlin?#{*}&lt;=/m/grph/space/graphdb</small>
+                        <small class="text-muted code">/m/grph/inst/gremlin?#{*}&lt;=/m/grph/space/grphspace</small>
                     </div>
                     <div class="card-body p-2">
-                        <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-gremlin-doc-0-tab').click(); document.getElementById('inst-gremlin-doc-0').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">gremlin?#{*}&lt;=graphdb(str::T){&lt;j&gt;}</code></pre>
+                        <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-gremlin-doc-0-tab').click(); document.getElementById('inst-gremlin-doc-0').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">gremlin?#{*}&lt;=grphspace(str::T){&lt;j&gt;}</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -826,15 +826,15 @@ bin/metatron</code></pre>
                 Spaces <span class="badge bg-info">1</span>
             </h3>
             
-                <div class="card mb-3" id="space-graphdb">
+                <div class="card mb-3" id="space-grphspace">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <a href="m_grph_space_graphdb.html" class="code text-primary fw-bold text-decoration-none">graphdb</a>
-                        <small class="text-muted code">/m/grph/space/graphdb</small>
+                        <a href="m_grph_space_grphspace.html" class="code text-primary fw-bold text-decoration-none">grphspace</a>
+                        <small class="text-muted code">/m/grph/space/grphspace</small>
                     </div>
                     
                     <div class="mt-2">
-                        <pre class="mb-0"><code class="language-mtron">space::T[][inst?rng=graphdb&amp;dom=#{?}(isa([
- {?}graph=&gt;uri::T]).else(failure(&#x27;malformed tp3 config&#x27;))){&lt;j&gt;}]@/m/grph/space/graphdb</code></pre>
+                        <pre class="mb-0"><code class="language-mtron">space::T[][inst?rng=grphspace&amp;dom=#{?}(isa([
+ {?}graph=&gt;uri::T]).else(failure(&#x27;malformed tp3 config&#x27;))){&lt;j&gt;}]@/m/grph/space/grphspace</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -887,7 +887,7 @@ bin/metatron</code></pre>
         <div class="container-xxl py-3 text-center">
             <hr class="border-secondary">
             <small class="text-muted">
-                generated by metatron instset doc generator on build 0-2026-04-15 00:15:55<br>
+                generated by metatron instset doc generator on build 0-2026-04-15 02:32:12<br>
                 © PhaseShift Studio, LLC
             </small>
         </div>

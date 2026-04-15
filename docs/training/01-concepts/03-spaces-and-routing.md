@@ -26,10 +26,10 @@ tbleSpace sqlSpace = tbleSpace.of(
 );
 ```
 
-### graphSpace - Graph Databases
+### grphSpace - Graph Databases
 Connects to TinkerPop3 graph databases:
 ```java
-graphSpace graphSpace = graphSpace.of(
+grphSpace grphSpace = grphSpace.of(
     rec(
         uri(PATTERN), uri("graph:#"),
         uri(HOST), uri("localhost:8182"),
@@ -65,10 +65,10 @@ Obj user = Router.readFromSpace(f("db:users/1"));
 
 // Router's process:
 // 1. Receive URI: "db:users/1"
-// 2. Find Space with pattern "db:#" → tabledbSpace
+// 2. Find Space with pattern "db:#" → tbleSpace
 // 3. Apply route mapping: "db:" → ""
 //    Result: "users/1"
-// 4. Call: tabledbSpace.directReader().apply(f("users/1"))
+// 4. Call: tbleSpace.directReader().apply(f("users/1"))
 // 5. Return: User object
 ```
 
@@ -242,7 +242,7 @@ tbleSpace sqlSpace = tbleSpace.of(
 );
 
 // Graph database
-graphSpace graphSpace = graphSpace.of(
+grphSpace grphSpace = grphSpace.of(
     rec(uri(PATTERN), uri("graph:#"), ...),
     f("/sys/space/graph/main")
 );

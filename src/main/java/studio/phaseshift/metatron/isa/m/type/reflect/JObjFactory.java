@@ -22,12 +22,10 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
-import studio.phaseshift.metatron.isa.mach.io.space.file.fsSpace;
-import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace;
 
 import java.lang.reflect.Field;
 import java.nio.file.Path;
-import java.util.Map;
 import java.util.function.BiFunction;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;

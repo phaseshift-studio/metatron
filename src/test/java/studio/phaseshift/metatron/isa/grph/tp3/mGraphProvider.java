@@ -25,7 +25,7 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.io.IoRegistry;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.grph.space.graphSpace;
+import studio.phaseshift.metatron.isa.grph.space.grphSpace;
 import studio.phaseshift.metatron.isa.grph.grphInstSet;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
@@ -74,10 +74,10 @@ public class mGraphProvider extends AbstractGraphProvider {
         //    if (graph != null) {
         //      //    ((mGraph) graph).getBaseGraph().clear();
         //  } else {
-        graphSpace.of(rec(PATTERN, uri("/test/#")), f("/sys/space/graph"));
+        grphSpace.of(rec(PATTERN, uri("/test/#")), f("/sys/space/graph"));
         //final Obj g = Router.global().read(f(configuration.getProperty(SPACE).toString()));
         //  if (!g.isNoObj())
-        //    ((graphSpace) g).close();
+        //    ((grphSpace) g).close();
         //    }
     }
 

@@ -59,7 +59,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 public class memSpace extends AbstractSpace<TopicTrie> {
 
-    public static final fURI MEM_SPACE_TID = M_ISA_TID.extend("space/mem");
+    public static final fURI MEM_SPACE_TID = M_ISA_TID.extend("space").extend("memspace");
 
     protected static final Rec MEM_SPACE_CONFIG = SPACE_CONFIG.plus(rec(uri(PERSIST).maybe().asUri(), FILE_TYPE));
 

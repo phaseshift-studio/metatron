@@ -2,7 +2,7 @@
 
 ## Overview
 
-The `graphSpace` implementation uses Apache TinkerPop's standard `GraphFactory` mechanism, making it compatible with **any TinkerPop3-compliant graph database**. This includes 20+ graph databases from in-memory solutions to distributed, cloud-hosted systems.
+The `grphSpace` implementation uses Apache TinkerPop's standard `GraphFactory` mechanism, making it compatible with **any TinkerPop3-compliant graph database**. This includes 20+ graph databases from in-memory solutions to distributed, cloud-hosted systems.
 
 ## Configuration Format
 
@@ -334,8 +334,8 @@ These only work with TinkerGraph. Other graph databases will ignore the dataset 
 After configuring your graph, test the connection:
 
 ```java
-// Create graphSpace instance
-graphSpace space = graphSpace.of(yourConfig, f("/sys/space/test"));
+// Create grphSpace instance
+grphSpace space = grphSpace.of(yourConfig, f("/sys/space/test"));
 
 // Test basic operations
 Obj vertices = space.read(f("/g/V/+"));

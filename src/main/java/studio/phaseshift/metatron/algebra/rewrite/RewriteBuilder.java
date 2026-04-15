@@ -53,7 +53,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * <h2>Example Usage</h2>
  * <pre>{@code
  * // Optimize from().count() to use native COUNT(*)
- * Inst countRewrite = RewriteBuilder.forDatabase(tabledbSpace.class)
+ * Inst countRewrite = RewriteBuilder.forDatabase(tbleSpace.class)
  *     .tid(TBLE_ISA_REWRITE_TID.extend("mql_count"))
  *     .match(FROM_INST_TID, COUNT_INST_TID)
  *     .optimize("sql_count", (space, furi, coeff) -> {

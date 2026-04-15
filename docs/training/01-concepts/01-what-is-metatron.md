@@ -57,7 +57,7 @@ Data is addressed using URIs (Uniform Resource Identifiers):
 ### 2. Spaces Abstract Storage
 A **Space** is an adapter that connects Metatron to a specific data system:
 - `tbleSpace` - SQL databases (SQLite, PostgreSQL, MySQL)
-- `graphSpace` - TinkerPop3 graph databases
+- `grphSpace` - TinkerPop3 graph databases
 - `fileSpace` - Filesystems
 - Custom spaces for any data system
 
@@ -66,7 +66,7 @@ The **Router** maps URIs to Spaces and handles path translation:
 ```java
 // Router sees: db:users/1
 // Translates to: users/1 (strips "db:" prefix)
-// Routes to: tabledbSpace
+// Routes to: tbleSpace
 // Returns: User object
 ```
 

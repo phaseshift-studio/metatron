@@ -51,7 +51,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * <pre>{@code
  * // In tbleInstSet:
  * CommonRewrites.countRewrite(
- *     tabledbSpace.class,
+ *     tbleSpace.class,
  *     TBLE_ISA_REWRITE_TID.extend("mql_count"),
  *     (space, furi) -> {
  *         String table = furi.segments().getFirst();
@@ -64,7 +64,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *
  * // In dcmntInstSet:
  * CommonRewrites.countRewrite(
- *     docdbSpace.class,
+ *     dcmntSpace.class,
  *     DOC_ISA_REWRITE_TID.extend("mql_count"),
  *     (space, furi) -> space.database.getCollection(furi.segments().getFirst()).countDocuments()
  * )
@@ -84,7 +84,7 @@ public final class CommonRewrites {
      * <p>Optimizes {@code from(furi).count()} to use native database COUNT operations
      * instead of loading all records and counting in memory.
      *
-     * @param spaceType     The database space type (e.g., tabledbSpace.class, docdbSpace.class)
+     * @param spaceType     The database space type (e.g., tbleSpace.class, dcmntSpace.class)
      * @param rewriteTid    The type ID for this specific rewrite
      * @param countFunction Function that executes the native count operation
      * @param <S>           The space type
@@ -197,7 +197,7 @@ public final class CommonRewrites {
      * <p>Example usage:
      * <pre>{@code
      * CommonRewrites.limitRewrite(
-     *     tabledbSpace.class,
+     *     tbleSpace.class,
      *     TBLE_ISA_REWRITE_TID.extend("mql_limit"),
      *     (space, furi, limit) -> {
      *         String table = furi.segments().getFirst();

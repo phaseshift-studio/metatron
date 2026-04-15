@@ -28,7 +28,7 @@ import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.grph.io.ObjTP3Serializer;
 import studio.phaseshift.metatron.isa.grph.space.EdgeMap;
 import studio.phaseshift.metatron.isa.grph.space.VertexMap;
-import studio.phaseshift.metatron.isa.grph.space.graphSpace;
+import studio.phaseshift.metatron.isa.grph.space.grphSpace;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.util.IteratorUtil;
@@ -44,8 +44,8 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.JREService;
 import static studio.phaseshift.metatron.isa.grph.space.ElementMap.Helper.mtronKV;
-import static studio.phaseshift.metatron.isa.grph.space.graphSpace.*;
-import static studio.phaseshift.metatron.isa.grph.space.graphSpace.SERIALIZER;
+import static studio.phaseshift.metatron.isa.grph.space.grphSpace.*;
+import static studio.phaseshift.metatron.isa.grph.space.grphSpace.SERIALIZER;
 import static studio.phaseshift.metatron.isa.grph.space.schema.modernSchema.MODERN_SCHEMA_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
@@ -158,17 +158,17 @@ public class  grphInstSet extends AbstractInstSet {
                                 .vid(EDGE_TID)
                                 .isaPredicate(rec(IN, T(VRTX_TID), OUT, T(VRTX_TID)))
                                 .create(), "an directed key/value attributed binary edge"),
-                        docWrap(GRAPHDB_SPACE_TYPE, "a space for graph traversal"),
+                        docWrap(GRPH_SPACE_TYPE, "a space for graph traversal"),
                         docWrap(MODERN_SCHEMA_TYPE, "a schema for the modern graph dataset")
                 ),
                 uri(INST), lst(
-                        docWrap(instC(GREMLIN_INST_TID.dom(GRAPHDB_SPACE_TID).rng(ALL.maybeSome()), lst(STR_TYPE), (lhs, inst) -> {
+                        docWrap(instC(GREMLIN_INST_TID.dom(GRPH_SPACE_TID).rng(ALL.maybeSome()), lst(STR_TYPE), (lhs, inst) -> {
                             try {
                                 final GremlinLangScriptEngineFactory factory = new GremlinLangScriptEngineFactory();
                                 //factory.setCustomizerManager(new CachedGremlinScriptEngineManager());
                                 factory.setCustomizerManager(new DefaultGremlinScriptEngineManager());
                                 final GremlinScriptEngine engine = factory.getScriptEngine();
-                                engine.put("g", ((graphSpace) lhs).sjvm().traversal());
+                                engine.put("g", ((grphSpace) lhs).sjvm().traversal());
                                 final Object object = engine.eval(inst.arg(0).strValue());
                                 return MObjFactory.of().toObj(object);
                             } catch (Exception e) {
@@ -187,7 +187,7 @@ public class  grphInstSet extends AbstractInstSet {
                                 "an edge", "both vertices", Map.of(), "returns the lhs edge's head and tail vertices"),
                     /*    docWrap(instC(GRPH_INST_TID.extend("graph").dom(ALL.maybe()).rng(GRAPH_SPACE_TID),
                                         lst(GRAPH_CONFIG),
-                                        (lhs, inst) -> graphSpace.of(inst.arg(0).asRec(), lhs.vid())),
+                                        (lhs, inst) -> grphSpace.of(inst.arg(0).asRec(), lhs.vid())),
                                 "a graph space", "the graph space", Map.of(jnt(0), "the graph configuration"), "a space for graph traversal"),*/
                         docWrap(instC(OUT_INST_TID.dom(VRTX_TID).rng(VRTX_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_V_FUNCTION(Direction.OUT)),
                                 "a vertex", "out adjacent vertices", Map.of(jnt(0), "zero or more edge labels"), "returns the lhs vertex arg-adjacent outgoing vertices"),

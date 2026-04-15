@@ -55,7 +55,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.tble.tbleInstSet.*;
 
 /**
- * tabledbSpace - A dual-mode SQL database connector for Metatron with pluggable schema support
+ * tbleSpace - A dual-mode SQL database connector for Metatron with pluggable schema support
  *
  * <p>Provides two modes of operation:
  * <ol>
@@ -78,7 +78,7 @@ import static studio.phaseshift.metatron.isa.tble.tbleInstSet.*;
  *
  * <h2>Configuration</h2>
  * <pre>{@code
- * tabledbSpace space = tabledbSpace.of(
+ * tbleSpace space = tbleSpace.of(
  *     rec(
  *         uri(PATTERN), uri("/tble/#"),
  *         uri(HOST), uri("postgresql://localhost:5432/mydb"),  // Note: no "jdbc:" prefix
@@ -90,7 +90,7 @@ import static studio.phaseshift.metatron.isa.tble.tbleInstSet.*;
  * }</pre>
  *
  * <h2>Table Mapping Mode</h2>
- * <p>When table mapping is enabled (default), tabledbSpace automatically discovers existing SQL tables
+ * <p>When table mapping is enabled (default), tbleSpace automatically discovers existing SQL tables
  * and makes them accessible via fURIs:
  *
  * <pre>{@code
@@ -115,7 +115,7 @@ import static studio.phaseshift.metatron.isa.tble.tbleInstSet.*;
  * The Space.Helper.resolveWrite() method automatically handles poly unrolling for nested writes.
  *
  * <h2>Key-Value Store Mode</h2>
- * <p>For paths that don't match existing tables, tabledbSpace uses its key-value store:
+ * <p>For paths that don't match existing tables, tbleSpace uses its key-value store:
  *
  * <pre>{@code
  * // Store arbitrary objects
@@ -127,23 +127,23 @@ import static studio.phaseshift.metatron.isa.tble.tbleInstSet.*;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class tabledbSpace extends AbstractSpace<Connection> {
+public class tbleSpace extends AbstractSpace<Connection> {
 
     public static fURI SQL_INST_TID =TBLE_ISA_INST_TID.extend(SQL);
-    public static fURI TABLEDB_SPACE_TID = TBLE_ISA_TID.extend(SPACE).extend("tabledb");
-    public static final Type TABLE_SPACE_TYPE =
+    public static fURI TBLE_SPACE_TID = TBLE_ISA_TID.extend(SPACE).extend("tblespace");
+    public static final Type TBLE_SPACE_TYPE =
             Type.Builder.build()
                     .tid(SPACE_TID)
-                    .vid(TABLEDB_SPACE_TID)
+                    .vid(TBLE_SPACE_TID)
                     .isaPredicate(rec(
                             uri(PATTERN), URI_TYPE,
                             uri(HOST), URI_TYPE,
                             uri(DRIVER), URI_TYPE,
                             uri(ROUTE), rec(URI_TYPE, URI_TYPE),
                             uri(TABLE).maybe(), LST_TYPE))
-                    .constructor(instC(TBLE_ISA_INST_TID.extend("tabledb_cons").dom(ALL.maybe()).rng(TABLEDB_SPACE_TID),
+                    .constructor(instC(TBLE_ISA_INST_TID.extend("tblespace/cons").dom(ALL.maybe()).rng(TBLE_SPACE_TID),
                             lst(REC_TYPE),
-                            (lhs, inst) -> tabledbSpace.of(inst.arg(0).asRec().jvm(), inst.arg(0).vid())))
+                            (lhs, inst) -> tbleSpace.of(inst.arg(0).asRec().jvm(), inst.arg(0).vid())))
                     .create();
 
     protected ObjSerializer<?> serializer;
@@ -151,17 +151,17 @@ public class tabledbSpace extends AbstractSpace<Connection> {
     protected ExistingTableSchema existingTableSchema;
     protected SQLSchemaGenerator schemaGenerator;
 
-    public static tabledbSpace of(final Map<Obj, Obj> config, final fURI vid) {
+    public static tbleSpace of(final Map<Obj, Obj> config, final fURI vid) {
         MTronException.wrap(() -> Class.forName(config.get(uri(DRIVER)).uriValue().toString()));
         try {
             final Connection conn = DriverManager.getConnection(JDBC + config.get(uri(HOST)).uriValue().toString());
-            return new tabledbSpace(conn, config, TABLEDB_SPACE_TID, vid);
+            return new tbleSpace(conn, config, TBLE_SPACE_TID, vid);
         } catch (final SQLException ex) {
             throw MTronException.of(ex);
         }
     }
 
-    protected tabledbSpace(final Connection sjvm, final Map<Obj, Obj> config, final fURI tid, final fURI vid) {
+    protected tbleSpace(final Connection sjvm, final Map<Obj, Obj> config, final fURI tid, final fURI vid) {
         super(sjvm, config, tid, vid);
         LOG.info("connected {{b}}%s{{X}}", config.get(uri(HOST)));
         // Initialize schema - auto-detect based on database type

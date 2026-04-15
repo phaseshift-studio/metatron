@@ -80,7 +80,7 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
 public class httpSpace extends AbstractSpace<HttpServer> {
 
     public static final String INDEX_HTML = "index.html";
-    public static final fURI HTTP_SPACE_TID = WEB_ISA_TID.extend("space/http");
+    public static final fURI HTTP_SPACE_TID = WEB_ISA_TID.extend("space/httpspace");
     public static final Rec CONFIG = rec(uri(Tokens.PATTERN), T(URI_TID), uri(HOST), T(URI_TID), uri(ROUTE), T(REC_TID));
     public static final Type HTTP_SPACE_TYPE = Type.Builder.build()
             .tid(SPACE_TID)

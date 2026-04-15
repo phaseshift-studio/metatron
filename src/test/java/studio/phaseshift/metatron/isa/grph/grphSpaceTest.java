@@ -25,7 +25,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
-import studio.phaseshift.metatron.isa.grph.space.graphSpace;
+import studio.phaseshift.metatron.isa.grph.space.grphSpace;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -45,19 +45,19 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
- * Test suite for graphSpace demonstrating support for any TinkerPop3-compliant graph database.
+ * Test suite for grphSpace demonstrating support for any TinkerPop3-compliant graph database.
  * <p>
  * The tests use TinkerGraph with the "modern" dataset, but the same configuration pattern
  * works with any TP3-enabled graph (JanusGraph, Neo4j, Neptune, etc.).
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class graphSpaceTest extends AbstractSpaceTest {
+public class grphSpaceTest extends AbstractSpaceTest {
 
-    public graphSpaceTest() {
+    public grphSpaceTest() {
         super(() -> {
             // Example: TinkerGraph with modern dataset (legacy format - still supported)
-            return graphSpace.of(rec(
+            return grphSpace.of(rec(
                             PATTERN, uri("/g/#"),
                             ROUTE, rec(
                                     uri("/g/V"), uri("V"),
@@ -72,7 +72,7 @@ public class graphSpaceTest extends AbstractSpaceTest {
                     f("/sys/space/test"));
 
             /* Alternative: New-style configuration (explicitly using GraphFactory)
-            return graphSpace.of(rec(
+            return grphSpace.of(rec(
                     PATTERN, uri("/g/#"),
                     ROUTE, rec(
                             uri("/g/V"), uri("V"),
@@ -205,7 +205,7 @@ public class graphSpaceTest extends AbstractSpaceTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, select, expected);
     }
 
-    // Disable all abstract tests - graphSpace is for graph traversals, not general CRUD
+    // Disable all abstract tests - grphSpace is for graph traversals, not general CRUD
     @Override
     @Disabled
     public void testMonoReadWrite(String writeExpression, String readExpression, String expectedExpression) {

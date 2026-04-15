@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.mach.io.space.file;
+package studio.phaseshift.metatron.isa.mach.io.space.fs;
 
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
@@ -60,16 +60,16 @@ import static studio.phaseshift.metatron.isa.mach.machInstSet.*;
 public class fsSpace extends AbstractSpace<FileSystem> {
 
     private static final Uri NOOBJ_URI = uri(f(""), URI_TID.zero(), null);
-    public static final fURI FS_TID = MACH_ISA_TID.extend("space").extend("fs");
+    public static final fURI FS_SPACE_TID = MACH_ISA_TID.extend("space").extend("fsspace");
     private static final Rec FS_SPACE_CONFIG = rec(
             uri(Tokens.PATTERN), URI_TYPE,
             uri(Tokens.ROUTE), rec(URI_TYPE, URI_TYPE),
             uri(Tokens.SCRIPT).maybe(), rec(URI_TYPE, URI_TYPE));
     public static final Type FS_SPACE_TYPE = Type.Builder.build()
             .tid(SPACE_TID)
-            .vid(FS_TID)
+            .vid(FS_SPACE_TID)
             .constructor(
-                    instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(FS_TID),
+                    instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(FS_SPACE_TID),
                             lst(isa_(FS_SPACE_CONFIG).tryToInst()),
                             (lhs, inst) -> fsSpace.of(FileSystems.getDefault(), inst.arg(0).asRec(), inst.arg(0).vid()))).create();
 
@@ -78,7 +78,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
     }
 
     private fsSpace(final FileSystem sjvm, final Map<Obj, Obj> jvm, final fURI vid) {
-        super(sjvm, jvm, FS_TID, vid);
+        super(sjvm, jvm, FS_SPACE_TID, vid);
         final String prefix = this.routes.keySet().stream().map(objs -> objs.autoResolve(this).uriValue().toString().replace("~", System.getProperty(USER_HOME))).iterator().next();
         final String prepend = this.routes.values().stream().map(objs -> objs.autoResolve(this).uriValue().toString().replace("~", System.getProperty(USER_HOME))).iterator().next();
         this.routes.put(uri(prefix), uri(prepend));

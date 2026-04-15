@@ -27,7 +27,7 @@ import org.apache.tinkerpop.gremlin.structure.io.gryo.GryoMapper;
 import org.apache.tinkerpop.gremlin.structure.util.ElementHelper;
 import org.apache.tinkerpop.gremlin.structure.util.wrapped.WrappedGraph;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.grph.space.graphSpace;
+import studio.phaseshift.metatron.isa.grph.space.grphSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
@@ -65,9 +65,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.WhereTest",
         method = "g_VX1X_repeatXbothEXcreatedX_whereXwithoutXeXX_aggregateXeX_otherVX_emit_path",
         reason = "avoiding grateful dead tests for now")
-public class mGraph implements Graph, WrappedGraph<graphSpace> {
+public class mGraph implements Graph, WrappedGraph<grphSpace> {
 
-    protected final graphSpace space;
+    protected final grphSpace space;
     protected final mVariables variables;
     protected long counter;
     protected final fURI baseURI;
@@ -95,9 +95,9 @@ public class mGraph implements Graph, WrappedGraph<graphSpace> {
         final fURI pattern = f(configuration.getProperty(PATTERN).toString());
         final Obj s = Router.global().read(spacevid);
         if (s.isNoObj()) {
-            this.space = graphSpace.of(rec(configurationToMap(configuration)).plus(rec(uri(PATTERN), uri(pattern))), spacevid);
-        } else if (s instanceof graphSpace) {
-            this.space = (graphSpace) s;
+            this.space = grphSpace.of(rec(configurationToMap(configuration)).plus(rec(uri(PATTERN), uri(pattern))), spacevid);
+        } else if (s instanceof grphSpace) {
+            this.space = (grphSpace) s;
         } else {
             throw MTronException.of("obj is not a grph space: %s", s);
         }
@@ -193,7 +193,7 @@ public class mGraph implements Graph, WrappedGraph<graphSpace> {
     }
 
     @Override
-    public graphSpace getBaseGraph() {
+    public grphSpace getBaseGraph() {
         return this.space;
     }
 

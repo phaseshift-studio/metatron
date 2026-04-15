@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.doc.schema.storage;
+package studio.phaseshift.metatron.isa.dcmnt.schema.storage;
 
 import org.bson.*;
 import org.bson.codecs.BsonValueCodec;
@@ -65,7 +65,7 @@ public class ObjBSONSerializer extends AbstractObjSerializer<BsonValue> {
 
     private static final Codec<BsonValue> BSON_VALUE_CODEC = new BsonValueCodec();
 
-    // Optional: Function to build reference paths (set by docdbSpace)
+    // Optional: Function to build reference paths (set by dcmntSpace)
     private Function<ReferenceInfo, fURI> referencePathBuilder = null;
     //  private ObjFactory objFactory = MObjFactory.single();
 

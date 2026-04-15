@@ -66,7 +66,7 @@
  /*
   * @author Marko A. Rodriguez (http://markorodriguez.com)
   */
- public class graphSpace extends AbstractSpace<Graph> {
+ public class grphSpace extends AbstractSpace<Graph> {
 
      public static final String GRAPH_CONFIGURATION_KEY = "mtron.grph.vid";
      public static final ObjSerializer<String> SERIALIZER = new ObjmtronSerializer();
@@ -74,25 +74,25 @@
 
      protected static ObjFactory FACTORY = null;
      private static final fURI V_SOME = f("V/+");
-     public static final fURI GRAPHDB_SPACE_TID = grphInstSet.GRPH_ISA_TID.extend(SPACE).extend("graphdb");
-     public static final Type GRAPHDB_SPACE_TYPE = Type.Builder.build()
+     public static final fURI GRPH_SPACE_TID = grphInstSet.GRPH_ISA_TID.extend(SPACE).extend("grphspace");
+     public static final Type GRPH_SPACE_TYPE = Type.Builder.build()
              .tid(SPACE_TID)
-             .vid(GRAPHDB_SPACE_TID)
+             .vid(GRPH_SPACE_TID)
              .constructor(
-                     instC(mInstSet.M_ISA_INST_TID.dom(ALL.maybe()).rng(GRAPHDB_SPACE_TID),
+                     instC(mInstSet.M_ISA_INST_TID.dom(ALL.maybe()).rng(GRPH_SPACE_TID),
                              lst(isa_(GRAPH_CONFIG).else_(failure_(str("malformed tp3 config"))).tryToInst()),
                              (lhs, inst) -> {
                                  if (inst.arg(0).isFail())
                                      throw inst.arg(0).asFail().asException();
-                                 return graphSpace.of(inst.arg(0).asRec(), inst.arg(0).vid());
+                                 return grphSpace.of(inst.arg(0).asRec(), inst.arg(0).vid());
                              })).create();
 
-     public static graphSpace of(final Rec config, final fURI vid) {
+     public static grphSpace of(final Rec config, final fURI vid) {
          Router.global().logger().debug("tp3 space config: %s", config);
          final Configuration graphConfig = toApacheConfiguration(config);
          final Graph graph = GraphFactory.open(graphConfig);
          loadDatasetIfSpecified(graph, config); // only loads if supported and specified
-         return new graphSpace(graph, config.jvm(), vid);
+         return new grphSpace(graph, config.jvm(), vid);
      }
 
      /**
@@ -139,7 +139,7 @@
          if (graph instanceof TinkerGraph) {
              final TinkerGraph tinkerGraph = (TinkerGraph) graph;
              final String datasetName = dataset.uriValue().toString();
-             Graphitty.log(graphSpace.class).info("loading dataset %s into TinkerGraph", datasetName);
+             Graphitty.log(grphSpace.class).info("loading dataset %s into TinkerGraph", datasetName);
              switch (datasetName) {
                  case "modern" -> {
                      TinkerFactory.generateModern(tinkerGraph);
@@ -154,14 +154,14 @@
                  default -> throw MTronException.of("unknown TinkerGraph dataset: %s", datasetName);
              }
          } else {
-             Graphitty.log(graphSpace.class).warn(
+             Graphitty.log(grphSpace.class).warn(
                      "dataset loading requested but graph type %s does not support TinkerFactory datasets",
                      graph.getClass().getSimpleName());
          }
      }
 
-     public static graphSpace from(final Element element) {
-         return (graphSpace) Router.readFromSpace(f(element.graph().configuration().get(String.class, graphSpace.GRAPH_CONFIGURATION_KEY)));
+     public static grphSpace from(final Element element) {
+         return (grphSpace) Router.readFromSpace(f(element.graph().configuration().get(String.class, grphSpace.GRAPH_CONFIGURATION_KEY)));
      }
 
      protected fURI elementVID(final Element element) {
@@ -175,8 +175,8 @@
          return this.at(ROUTE).asRec().elements().filter(e -> e.first().uriValue().toString().endsWith("S")).findFirst().get().second().uriValue().extend(label);
      }
 
-     protected graphSpace(final Graph graph, final Map<Obj, Obj> config, final fURI vid) {
-         super(graph, config, GRAPHDB_SPACE_TID, vid);
+     protected grphSpace(final Graph graph, final Map<Obj, Obj> config, final fURI vid) {
+         super(graph, config, GRPH_SPACE_TID, vid);
          LOG.debug("tp3 space: %s", this);
          graph.configuration().setProperty(GRAPH_CONFIGURATION_KEY, vid.toString());
          if (null == FACTORY) {

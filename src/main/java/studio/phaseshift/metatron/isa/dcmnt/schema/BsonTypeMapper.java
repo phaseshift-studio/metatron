@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.doc.schema;
+package studio.phaseshift.metatron.isa.dcmnt.schema;
 
 import org.bson.BsonType;
 import studio.phaseshift.metatron.isa.m.type.Type;

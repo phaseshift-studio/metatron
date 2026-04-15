@@ -36,8 +36,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
  * Contract interface for testing common rewrite optimizations across database implementations.
  *
  * <p>This interface provides parameterized test data that validates rewrite optimizations work
- * correctly across different database backends (SQL, MongoDB, etc.). Both tabledbSpace and
- * docdbSpace implement this contract to ensure consistent optimization behavior.
+ * correctly across different database backends (SQL, MongoDB, etc.). Both tbleSpace and
+ * dcmntSpace implement this contract to ensure consistent optimization behavior.
  *
  * <h2>Test Dataset</h2>
  * <p>Tests expect 10 rows with the following schema:

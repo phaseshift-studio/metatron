@@ -47,7 +47,7 @@ public class EdgeMap extends ElementMap {
 
     protected static final GraphittyLogger LOG = Graphitty.log(EdgeMap.class);
 
-    public EdgeMap(final Edge base, final graphSpace space) {
+    public EdgeMap(final Edge base, final grphSpace space) {
         super(base, space);
     }
 
@@ -105,14 +105,14 @@ public class EdgeMap extends ElementMap {
     }
 
     public static Rec edgeToRec(final Edge edge) {
-        return edgeToRec(edge, graphSpace.from(edge));
+        return edgeToRec(edge, grphSpace.from(edge));
     }
 
     public static Rec edgeToRec(final Edge edge, final Rec lhs) {
         return rec().self(new EdgeMap(edge, lhs.<ElementMap>jvmAs().space), f(edge.label()).c(lhs.c()), lhs.<ElementMap>jvmAs().space.elementVID(edge)).parent(lhs);
     }
 
-    public static Rec edgeToRec(final Edge edge, final graphSpace lhs) {
+    public static Rec edgeToRec(final Edge edge, final grphSpace lhs) {
         return new EdgeMap(edge, lhs).selfRec();
     }
 
@@ -120,7 +120,7 @@ public class EdgeMap extends ElementMap {
         return rec.<EdgeMap>jvmAs().getBase();
     }
 
-    public static Inst lazyEdgeToRec(final Edge base, final graphSpace lhs) {
+    public static Inst lazyEdgeToRec(final Edge base, final grphSpace lhs) {
         return new LazyAutoElmnt(new EdgeMap(base, lhs));
     }
 

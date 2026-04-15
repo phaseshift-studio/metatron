@@ -115,7 +115,7 @@ Obj userName = Router.readFromSpace(f("db:users/1/name"));
 ### Step 2: Router
 ```java
 // Router receives: "db:users/1/name"
-// 1. Find Space with pattern "db:#" → tabledbSpace
+// 1. Find Space with pattern "db:#" → tbleSpace
 // 2. Apply route mapping: "db:" → ""
 //    Result: "users/1/name"
 // 3. Delegate to Space.Helper for poly unrolling

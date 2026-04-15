@@ -16,13 +16,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.doc.schema.domain;
+package studio.phaseshift.metatron.isa.dcmnt.schema.domain;
 
 import com.mongodb.client.MongoDatabase;
 import org.bson.BsonType;
 import org.bson.BsonValue;
 import org.bson.Document;
-import studio.phaseshift.metatron.isa.doc.space.docdbSpace;
+import studio.phaseshift.metatron.isa.dcmnt.space.dcmntSpace;
 
 import studio.phaseshift.metatron.furi.fURI;
 
@@ -39,7 +39,7 @@ import java.util.*;
  */
 public class ExistingCollectionSchema {
 
-    private final docdbSpace space;
+    private final dcmntSpace space;
     private final Map<String, CollectionMetadata> collectionSchemas = new LinkedHashMap<>();
     private final int sampleSize;
 
@@ -72,12 +72,12 @@ public class ExistingCollectionSchema {
         OBJECT_ID_FIELD     // Field ending in "Id" containing an ObjectId
     }
 
-    public ExistingCollectionSchema(final docdbSpace space, final int sampleSize) {
+    public ExistingCollectionSchema(final dcmntSpace space, final int sampleSize) {
         this.space = space;
         this.sampleSize = sampleSize;
     }
 
-    public ExistingCollectionSchema(final docdbSpace space) {
+    public ExistingCollectionSchema(final dcmntSpace space) {
         this(space, 100);
     }
 

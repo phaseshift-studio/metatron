@@ -1,0 +1,71 @@
+[discrete]
+== Poly Objs
+
+There are 3 **poly** types in metatron: `rec` (record), `lst` (list), and `rel` (relation).
+These are the most versatile types, finding usage as data structures, control structures,
+code structures, and query structures. These 3 types are the linchpin of metatron.
+
+[discrete]
+=== Data Structures
+
+The obvious application of a `poly` is as a data structure. A `poly` is a container able to bundle multiple objs
+together. Via the colocation of two objs within the confines of a `poly`, two objs are bound. The only other way
+to bind two objs together is via explict uri referencing which serves as a form of lazy referencing that can lead to 
+dangling pointers. With `poly`, there can be no "dangling pointers" -- either two objs are colocated in the `poly` or not.
+
+++++
+<!-- 🐖 
+a=>b=>c       [-- <1>
+[a=>{b,c}, /
+ b=>{a,c}, /
+ c=>{a,b}]    [-- <2>
+[a,b,c]       [-- <3>
+-->
+++++
+<1> a `rel` combines two objs, but due to associative nature of the `\=>` operator, a `rel` can bind an obj to another `rel`.
+<2> a `rec` can be understood as a "bag of `rels`", but this conceptualization looses its hold when considering control and query.
+<3> a `lst` combines objs via positional association.
+
+[.card]
+--
+[discrete,.center]
+==== rel vs. to/from
+Consider the following expressions:
+
+++++
+<!-- 🐖 
+a=>b=>c       [-- <1>
+a->b->c       [-- <2>
+-->
+++++
+<1> a `rel` associates `a` to `b\=>c` and another `rel` associates `b` to `c`.
+<2> `to?uri\<=uri` associates `a` to `b` and another `to?uri\<=uri` associates `b` to `c`.
+
+++++
+<!-- 🐖 
+a=>b=>c.>>       [-- <1>
+a=>b=>c.>>.>>    [-- <2>
+a->b->c.*a       [-- <3>
+a->b->c.**a      [-- <4>
+-->
+++++
+<1> `>>` maps a `rel` to it's `rng`. 
+<2> Two `>>` yields the tail `c`.
+<3> `*` maps a `uri` to an obj. 
+<4> Two `**` yields the end of the referential chain, `c`.
+
+The third expression constructs and traverses its data structure on the stack.
+The fourth expression constructs and traverses its data structure in space. 
+It just so happens that the space the fourth expression is operating in is the stack.
+
+--
+
+
+[discrete]
+=== Control Structures
+
+[discrete]
+=== Code Structures
+
+[discrete]
+=== Query Structures

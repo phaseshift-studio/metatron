@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.doc.space;
+package studio.phaseshift.metatron.isa.dcmnt.space;
 
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
@@ -28,9 +28,9 @@ import org.bson.types.ObjectId;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.Space;
-import studio.phaseshift.metatron.isa.doc.schema.BsonTypeMapper;
-import studio.phaseshift.metatron.isa.doc.schema.domain.ExistingCollectionSchema;
-import studio.phaseshift.metatron.isa.doc.schema.storage.ObjBSONSerializer;
+import studio.phaseshift.metatron.isa.dcmnt.schema.BsonTypeMapper;
+import studio.phaseshift.metatron.isa.dcmnt.schema.domain.ExistingCollectionSchema;
+import studio.phaseshift.metatron.isa.dcmnt.schema.storage.ObjBSONSerializer;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
@@ -46,7 +46,7 @@ import java.util.stream.Stream;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.doc.dcmntInstSet.*;
+import static studio.phaseshift.metatron.isa.dcmnt.dcmntInstSet.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -58,7 +58,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
- * docdbSpace - A document database connector for Metatron supporting MongoDB-compatible databases
+ * dcmntSpace - A document database connector for Metatron supporting MongoDB-compatible databases
  *
  * <p>Provides access to MongoDB-compatible document databases through Metatron's unified type system.
  * Compatible with:
@@ -82,7 +82,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * <h2>Configuration</h2>
  * <pre>{@code
  * // MongoDB with schema discovery enabled
- * docdbSpace space = docdbSpace.of(
+ * dcmntSpace space = dcmntSpace.of(
  *     rec(
  *         uri(PATTERN), uri("mongo:#"),
  *         uri(HOST), uri("mongodb://localhost:27017/mydb"),
@@ -93,7 +93,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * );
  *
  * // DocumentDB without schema discovery (faster startup)
- * docdbSpace space = docdbSpace.of(
+ * dcmntSpace space = dcmntSpace.of(
  *     rec(
  *         uri(PATTERN), uri("doc:#"),
  *         uri(HOST), uri("mongodb://localhost:27017/mydb"),
@@ -137,7 +137,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class docdbSpace extends AbstractSpace<MongoClient> {
+public class dcmntSpace extends AbstractSpace<MongoClient> {
     private static final String NATIVE_CONNACK = "native/connack";
     public static final String ID_FIELD = "_id";
 
@@ -145,14 +145,14 @@ public class docdbSpace extends AbstractSpace<MongoClient> {
     protected String databaseName;
     protected ObjBSONSerializer serializer;
     protected ExistingCollectionSchema existingCollectionSchema;
-    protected DocdbSubQ docdbSubQ;
+    protected dcmntSpaceSubQ dcmntSpaceSubQ;
 
-    public static docdbSpace of(final Map<Obj, Obj> config, final fURI vid) {
+    public static dcmntSpace of(final Map<Obj, Obj> config, final fURI vid) {
         final MongoClient client = MongoClients.create(config.get(uri(HOST)).uriValue().toString());
-        return new docdbSpace(client, config, DOCDB_SPACE_TID, vid);
+        return new dcmntSpace(client, config, DCMNT_SPACE_TID, vid);
     }
 
-    protected docdbSpace(final MongoClient sjvm, final Map<Obj, Obj> config, final fURI tid, final fURI vid) {
+    protected dcmntSpace(final MongoClient sjvm, final Map<Obj, Obj> config, final fURI tid, final fURI vid) {
         super(sjvm, config, tid, vid);
         // Extract database name from connection string
         // Format: mongodb://host:port/database or mongodb://host:port/database?options
@@ -172,8 +172,8 @@ public class docdbSpace extends AbstractSpace<MongoClient> {
         LOG.info("using document database {{b}}%s{{X}}", this.databaseName);
 
         // Initialize subscription query for change streams
-        this.docdbSubQ = new DocdbSubQ(this);
-        this.at(uri(QSTRING), this.at(uri(QSTRING)).orElse(lst()).plus(lst(List.of(this.docdbSubQ))), MUTABLE);
+        this.dcmntSpaceSubQ = new dcmntSpaceSubQ(this);
+        this.at(uri(QSTRING), this.at(uri(QSTRING)).orElse(lst()).plus(lst(List.of(this.dcmntSpaceSubQ))), MUTABLE);
         LOG.debug("initialized {{g}}change stream subscription{{X}} support");
 
         // Initialize collection schema discovery (optional - enabled if COLLECTION is in config)
@@ -346,8 +346,8 @@ public class docdbSpace extends AbstractSpace<MongoClient> {
     @Override
     public void close() {
         // Close all change stream watchers first
-        if (this.docdbSubQ != null) {
-            this.docdbSubQ.closeAll();
+        if (this.dcmntSpaceSubQ != null) {
+            this.dcmntSpaceSubQ.closeAll();
         }
         if (this.sjvm() != null) {
             this.sjvm().close();
@@ -370,7 +370,7 @@ public class docdbSpace extends AbstractSpace<MongoClient> {
     /**
      * Generate a schema object from the discovered collection metadata.
      * <p>
-     * Returns a rec with unified structure (aligned with tabledbSpace schema):
+     * Returns a rec with unified structure (aligned with tbleSpace schema):
      * <ul>
      *   <li>pattern: base pattern for schema access</li>
      *   <li>name: database name</li>

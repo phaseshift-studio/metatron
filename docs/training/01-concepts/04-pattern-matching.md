@@ -129,7 +129,7 @@ When a Space receives a pattern, it needs to:
 // Pattern: db:users/+
 // After routing: users/+
 
-// tabledbSpace parses this as:
+// tbleSpace parses this as:
 // - Table: "users"
 // - Row: "+" (wildcard - all rows)
 // - Field: none (return full rows)
@@ -149,7 +149,7 @@ SELECT * FROM users
 // Pattern: db:users/+/name
 // After routing: users/+/name
 
-// tabledbSpace parses this as:
+// tbleSpace parses this as:
 // - Table: "users"
 // - Row: "+" (wildcard - all rows)
 // - Field: "name" (specific field)

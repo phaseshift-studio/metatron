@@ -27,7 +27,7 @@ import studio.phaseshift.metatron.isa.AbstractSpaceTest;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.io.space.file.fsSpace;
+import studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace;
 
 import java.nio.file.FileSystems;
 

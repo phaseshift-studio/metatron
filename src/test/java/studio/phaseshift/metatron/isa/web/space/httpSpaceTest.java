@@ -66,7 +66,7 @@ public class httpSpaceTest extends AbstractSpaceTest {
                 uri(HOST), uri(BASE_URL),
                 uri(PATTERN), uri("http://#"),
                 uri(ROUTE), rec(uri("/"), uri("src/test/resources/web"))), f("/sys/space/web")));
-        InstSet.loadInstSetProvider(WEB_ISA_TID.extend("#"));
+        InstSet.importInstSet(WEB_ISA_TID);
     }
 
     @Override

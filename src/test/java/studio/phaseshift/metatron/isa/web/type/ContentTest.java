@@ -20,10 +20,9 @@ package studio.phaseshift.metatron.isa.web.type;
 
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.doc.schema.storage.ObjBSONSerializer;
+import studio.phaseshift.metatron.isa.dcmnt.schema.storage.ObjBSONSerializer;
 import studio.phaseshift.metatron.isa.web.parser.ObjHTMLSerializer;
 
 import static org.junit.jupiter.api.Assertions.*;

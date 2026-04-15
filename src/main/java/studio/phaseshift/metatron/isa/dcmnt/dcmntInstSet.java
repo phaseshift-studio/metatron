@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.doc;
+package studio.phaseshift.metatron.isa.dcmnt;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
@@ -25,7 +25,7 @@ import org.bson.conversions.Bson;
 import studio.phaseshift.metatron.algebra.rewrite.CommonRewrites;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
-import studio.phaseshift.metatron.isa.doc.space.docdbSpace;
+import studio.phaseshift.metatron.isa.dcmnt.space.dcmntSpace;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -79,7 +79,7 @@ public class dcmntInstSet extends AbstractInstSet {
     public static final fURI DOCUMENT_TID = DCMNT_ISA_TID.extend("document");
     public static final fURI COLLECTION_TID = DCMNT_ISA_TID.extend(COLLECTION);
     public static final fURI ID_FIELD = f("_id");
-    public static fURI DOCDB_SPACE_TID = DCMNT_ISA_TID.extend(SPACE).extend("docdb");
+    public static fURI DCMNT_SPACE_TID = DCMNT_ISA_TID.extend(SPACE).extend("dcmntspace");
 
 
     public static final Type DOCUMENT_TYPE = Type.Builder.build()
@@ -110,7 +110,7 @@ public class dcmntInstSet extends AbstractInstSet {
                         COLLECTION_TYPE,
                         docWrap(Type.Builder.build()
                                         .tid(SPACE_TID)
-                                        .vid(DOCDB_SPACE_TID)
+                                        .vid(DCMNT_SPACE_TID)
                                         .isaPredicate(rec(
                                                 uri(PATTERN), URI_TYPE,
                                                 uri(HOST), URI_TYPE,
@@ -119,9 +119,9 @@ public class dcmntInstSet extends AbstractInstSet {
                                                 uri(COLLECTION).maybe(), LST_TYPE,
                                                 uri(SCHEMA).maybe(), T(ALL)
                                         ))
-                                        .constructor(instC(mInstSet.M_ISA_INST_TID.dom(ALL.maybe()).rng(DOCDB_SPACE_TID),
+                                        .constructor(instC(mInstSet.M_ISA_INST_TID.dom(ALL.maybe()).rng(DCMNT_SPACE_TID),
                                                 lst(REC_TYPE),
-                                                (lhs, inst) -> docdbSpace.of(inst.arg(0).asRec().jvm(), inst.arg(0).vid()))).create().asType(),
+                                                (lhs, inst) -> dcmntSpace.of(inst.arg(0).asRec().jvm(), inst.arg(0).vid()))).create().asType(),
                                 "a rec describing a document database connection",
                                 "a rec with fields for configuring a document database connection",
                                 Map.of(
@@ -133,11 +133,11 @@ public class dcmntInstSet extends AbstractInstSet {
                                 ),
                                 "an interface to document-oriented databases",
                                 """
-                                docdb::[pattern     => moviedb:#,
-                                       host        => <mongodb://localhost:27017/movies>,
-                                       serializer  => !*</m/mach/io/serializer/bson>,
-                                       collection  => [,],
-                                       route       => [moviedb:=>/moviedb/]]@/usr/entertainment/moviedb;
+                                dcmntspace::[pattern     => moviedb:#,
+                                             host        => <mongodb://localhost:27017/movies>,
+                                             serializer  => !*</m/mach/io/serializer/bson>,
+                                             collection  => [,],
+                                             route       => [moviedb:=>/moviedb/]]@/usr/entertainment/moviedb;
                                 """,
                                 """
                                 *moviedb:schema
@@ -145,8 +145,8 @@ public class dcmntInstSet extends AbstractInstSet {
                                 """)),
                 uri(INST), lst(
                         instC(AS_INST_TID.dom(DOCUMENT_TID).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> lst(lhs.asRec().elements().map(Rel::second).toList())),
-                        instC(MQL_INST_TID.dom(DOCDB_SPACE_TID).rng(REC_TID.maybeSome()), lst(URI_TYPE, REC_TYPE), (lhs, inst) -> lhs.<docdbSpace>as().mql(inst.arg(0).uriValue().toString(), inst.arg(1).as())),
-                        docWrap(instC(MQL_INST_TID.dom(COLLECTION_TID).rng(REC_TID.maybeSome()), lst(REC_TYPE), (lhs, inst) -> Router.global().<docdbSpace>getSpace(lhs.uriValue()).mql(lhs.uriValue().name(), inst.arg(0).as())),
+                        instC(MQL_INST_TID.dom(DCMNT_SPACE_TID).rng(REC_TID.maybeSome()), lst(URI_TYPE, REC_TYPE), (lhs, inst) -> lhs.<dcmntSpace>as().mql(inst.arg(0).uriValue().toString(), inst.arg(1).as())),
+                        docWrap(instC(MQL_INST_TID.dom(COLLECTION_TID).rng(REC_TID.maybeSome()), lst(REC_TYPE), (lhs, inst) -> Router.global().<dcmntSpace>getSpace(lhs.uriValue()).mql(lhs.uriValue().name(), inst.arg(0).as())),
                                 "a document collection",
                                 "the result of the mql query",
                                 Map.of(jnt(0), "an mql query represented as a rec"),
@@ -157,7 +157,7 @@ public class dcmntInstSet extends AbstractInstSet {
                 uri(REWRITE), lst(
                         // Optimize: *collection.count() → MongoDB countDocuments()
                         CommonRewrites.countRewrite(
-                                docdbSpace.class,
+                                dcmntSpace.class,
                                 DCMNT_ISA_REWRITE_TID.extend("mql_count"),
                                 (space, furi) -> {
                                     final String collectionName = furi.segments().getFirst();
@@ -168,7 +168,7 @@ public class dcmntInstSet extends AbstractInstSet {
 
                         // Optimize: *collection.sum() → MongoDB aggregation $sum
                         CommonRewrites.sumRewrite(
-                                docdbSpace.class,
+                                dcmntSpace.class,
                                 DCMNT_ISA_REWRITE_TID.extend("mql_sum"),
                                 (space, furi) -> {
                                     final String collectionName = furi.segments().getFirst();
@@ -187,7 +187,7 @@ public class dcmntInstSet extends AbstractInstSet {
 
                         // Optimize: *collection.mean() → MongoDB aggregation $avg
                         CommonRewrites.meanRewrite(
-                                docdbSpace.class,
+                                dcmntSpace.class,
                                 DCMNT_ISA_REWRITE_TID.extend("mql_mean"),
                                 (space, furi) -> {
                                     final String collectionName = furi.segments().getFirst();
@@ -206,7 +206,7 @@ public class dcmntInstSet extends AbstractInstSet {
 
                         // Optimize: *collection.take(n) → MongoDB find().limit(n)
                         CommonRewrites.limitRewrite(
-                                docdbSpace.class,
+                                dcmntSpace.class,
                                 DCMNT_ISA_REWRITE_TID.extend("mql_limit"),
                                 (space, furi, limit) -> {
                                     final String collectionName = furi.segments().getFirst();
@@ -218,7 +218,7 @@ public class dcmntInstSet extends AbstractInstSet {
 
                         // Optimize: *collection.has() → MongoDB countDocuments() > 0
                         CommonRewrites.hasRewrite(
-                                docdbSpace.class,
+                                dcmntSpace.class,
                                 DCMNT_ISA_REWRITE_TID.extend("mql_has"),
                                 (space, furi) -> {
                                     final String collectionName = furi.segments().getFirst();
@@ -230,7 +230,7 @@ public class dcmntInstSet extends AbstractInstSet {
 
                         // Optimize: *collection.where([field=>value]) → MongoDB find(filter)
                         CommonRewrites.whereRewrite(
-                                docdbSpace.class,
+                                dcmntSpace.class,
                                 DCMNT_ISA_REWRITE_TID.extend("mql_where"),
                                 (space, furi, predicateStr) -> {
                                     final String collectionName = furi.segments().getFirst();
@@ -246,7 +246,7 @@ public class dcmntInstSet extends AbstractInstSet {
 
                         // Optimize: mql_where.count() → MongoDB countDocuments(filter)
                         CommonRewrites.whereCountRewrite(
-                                docdbSpace.class,
+                                dcmntSpace.class,
                                 DCMNT_ISA_REWRITE_TID.extend("mql_where"),
                                 DCMNT_ISA_REWRITE_TID.extend("mql_where_count"),
                                 (space, furi, predicateStr) -> {
@@ -262,7 +262,7 @@ public class dcmntInstSet extends AbstractInstSet {
 
                         // Optimize: from(collection/+).>>{field1,field2} → MongoDB projection
                         CommonRewrites.selectRewrite(
-                                docdbSpace.class,
+                                dcmntSpace.class,
                                 DCMNT_ISA_REWRITE_TID.extend("mql_select"),
                                 (space, furi, columns) -> {
                                     final String collectionName = furi.segments().getFirst();
@@ -308,7 +308,7 @@ public class dcmntInstSet extends AbstractInstSet {
      */
     private static Obj readDocumentsAsObjs(final MongoCollection<Document> collection,
                                            final fURI baseUri,
-                                           final docdbSpace space,
+                                           final dcmntSpace space,
                                            final int limit) {
         return objs(IteratorUtil.stream(collection.find().limit(limit).iterator()).map(doc -> {
             final Object docId = doc.get("_id");
@@ -325,7 +325,7 @@ public class dcmntInstSet extends AbstractInstSet {
      */
     private static Obj readFilteredDocumentsAsObjs(final MongoCollection<Document> collection,
                                                    final fURI baseUri,
-                                                   final docdbSpace space,
+                                                   final dcmntSpace space,
                                                    final Bson filter) {
         return objs(IteratorUtil.stream(collection.find(filter).iterator()).map(doc -> {
             final Object docId = doc.get("_id");

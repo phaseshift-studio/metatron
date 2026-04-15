@@ -26,7 +26,7 @@ import java.sql.SQLException;
 import java.util.Iterator;
 
 /**
- * Interface for pluggable database schemas used by tabledbSpace.
+ * Interface for pluggable database schemas used by tbleSpace.
  * Implementations define how fURIs and objects are stored and queried.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)

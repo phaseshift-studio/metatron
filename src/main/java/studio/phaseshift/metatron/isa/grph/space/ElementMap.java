@@ -42,7 +42,7 @@ import java.util.stream.Collectors;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.LABEL;
-import static studio.phaseshift.metatron.isa.grph.space.graphSpace.FACTORY;
+import static studio.phaseshift.metatron.isa.grph.space.grphSpace.FACTORY;
 import static studio.phaseshift.metatron.isa.m.mInstSet.AUTO_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -59,9 +59,9 @@ public abstract class ElementMap extends AbstractMap<Uri, Obj> {
 
     protected static final ObjSerializer<String> SERIALIZER = new ObjmtronSerializer();
     protected Element base;
-    transient public final graphSpace space;
+    transient public final grphSpace space;
 
-    public ElementMap(final Element base, final graphSpace space) {
+    public ElementMap(final Element base, final grphSpace space) {
         this.base = base;
         this.space = space;
     }

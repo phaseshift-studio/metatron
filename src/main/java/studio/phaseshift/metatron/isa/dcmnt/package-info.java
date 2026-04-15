@@ -26,7 +26,7 @@
  * <h2>Architecture</h2>
  * <pre>
  * /isa/doc/
- * ├── docdbSpace.java                          // Main space implementation
+ * ├── dcmntSpace.java                          // Main space implementation
  * ├── schema/
  * │   ├── storage/
  * │   │   └── DocumentSchema.java            // How mtron stores data in MongoDB
@@ -46,7 +46,7 @@
  * <h2>Usage Example</h2>
  * <pre>
  * // Create a document space
- * docdbSpace space = docdbSpace.of(
+ * dcmntSpace space = dcmntSpace.of(
  *     rec(
  *         uri(PATTERN), uri("mongo:#"),
  *         uri(HOST), uri("mongodb://localhost:27017/mydb"),
@@ -82,7 +82,7 @@
  * ]
  * </pre>
  *
- * @see studio.phaseshift.metatron.isa.tble.tabledbSpace SQL database space
- * @see studio.phaseshift.metatron.isa.grph.space.graphSpace Graph database space
+ * @see studio.phaseshift.metatron.isa.tble.tbleSpace SQL database space
+ * @see studio.phaseshift.metatron.isa.grph.space.grphSpace Graph database space
  */
-package studio.phaseshift.metatron.isa.doc;
+package studio.phaseshift.metatron.isa.dcmnt;

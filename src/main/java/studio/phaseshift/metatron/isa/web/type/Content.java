@@ -18,7 +18,7 @@
 
 package studio.phaseshift.metatron.isa.web.type;
 
-import studio.phaseshift.metatron.isa.doc.schema.storage.ObjBSONSerializer;
+import studio.phaseshift.metatron.isa.dcmnt.schema.storage.ObjBSONSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;

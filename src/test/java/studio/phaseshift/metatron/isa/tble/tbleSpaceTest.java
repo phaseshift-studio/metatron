@@ -23,12 +23,9 @@
  import org.junit.jupiter.params.provider.Arguments;
  import org.junit.jupiter.params.provider.CsvSource;
  import org.junit.jupiter.params.provider.MethodSource;
- import studio.phaseshift.metatron.AbstractMetatronTest;
- import studio.phaseshift.metatron.TestData;
  import studio.phaseshift.metatron.algebra.rewrite.CommonRewritesTestContract;
  import studio.phaseshift.metatron.furi.fURI;
  import studio.phaseshift.metatron.isa.AbstractSpaceTest;
- import studio.phaseshift.metatron.isa.m.parser.mParser;
  import studio.phaseshift.metatron.isa.m.type.InstSet;
  import studio.phaseshift.metatron.isa.m.type.Obj;
  import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -46,11 +43,9 @@
  import static org.junit.jupiter.api.Assertions.*;
  import static studio.phaseshift.metatron.Tokens.*;
  import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
- import static studio.phaseshift.metatron.isa.grph.grphInstSet.GRPH_ISA_TID;
  import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
  import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
  import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
- import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst0;
  import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
  import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
  import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -58,23 +53,23 @@
  import static studio.phaseshift.metatron.isa.tble.tbleInstSet.TBLE_ISA_TID;
 
  /**
-  * Test suite for tabledbSpace with MQTT-indexed schema.
+  * Test suite for tbleSpace with MQTT-indexed schema.
   *
   * @author Marko A. Rodriguez (http://markorodriguez.com)
   */
  @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
- public class tabledbSpaceTest extends AbstractSpaceTest implements CommonRewritesTestContract { //, SubQTest {
+ public class tbleSpaceTest extends AbstractSpaceTest implements CommonRewritesTestContract { //, SubQTest {
 
      private static final String DB_PATH = "target/test-tabledb-space.db";
      private static final fURI SPACE_VID = f("/sys/space/tabledb/test");
 
-     public tabledbSpaceTest() {
-         // Use scheme-based baseURI like docdbSpaceTest does (mongo:test_collection/rewrite_test)
+     public tbleSpaceTest() {
+         // Use scheme-based baseURI like dcmntSpaceTest does (mongo:test_collection/rewrite_test)
          // This ensures the parent memSpace has a specific pattern (tble:kv/#)
-         // which is MORE SPECIFIC than the tabledbSpace pattern (tble:#)
-         // so that tble:users routes to tabledbSpace, not the parent memSpace
+         // which is MORE SPECIFIC than the tbleSpace pattern (tble:#)
+         // so that tble:users routes to tbleSpace, not the parent memSpace
          super(f("tble:kv/test"), () -> {
-             return tabledbSpace.of(
+             return tbleSpace.of(
                      rec(
                              uri(PATTERN), uri("tble:#"),
                              uri(HOST), uri("sqlite:" + DB_PATH),
@@ -199,7 +194,7 @@
          }
 
          // Create a new space instance to pick up the new table
-         final tabledbSpace testSpace = tabledbSpace.of(
+         final tbleSpace testSpace = tbleSpace.of(
                  rec(
                          uri(PATTERN), uri("db:#"),
                          uri(HOST), uri("sqlite:" + DB_PATH),
@@ -303,7 +298,7 @@
 
          // Create space instance with table mapping enabled - will be picked up by Router
          // Route maps db: to empty string so db:users/1 becomes users/1
-         final tabledbSpace testSpace = tabledbSpace.of(
+         final tbleSpace testSpace = tbleSpace.of(
                  rec(
                          uri(PATTERN), uri("db:#"),
                          uri(HOST), uri("sqlite:" + DB_PATH),
@@ -423,7 +418,7 @@
          // Setup database with test data
          setupTestDatabase();
 
-         final tabledbSpace testSpace = createTestSpace();
+         final tbleSpace testSpace = createTestSpace();
          try {
              // Read the entire row
              final Obj row = Router.readFromSpace(f(tableRowUri));
@@ -475,7 +470,7 @@
      public void testWriteIndividualFields(String table, String rowId, String field, Obj newValue, Obj expectedValue) throws Exception {
          setupTestDatabase();
 
-         final tabledbSpace testSpace = createTestSpace();
+         final tbleSpace testSpace = createTestSpace();
          try {
              // Write the new value
              final String writeUri = String.format("db:%s/%s/%s", table, rowId, field);
@@ -534,7 +529,7 @@
      public void testReadEntireRow(String uri, String fieldName, String expectedFieldValue) throws Exception {
          setupTestDatabase();
 
-         final tabledbSpace testSpace = createTestSpace();
+         final tbleSpace testSpace = createTestSpace();
          try {
              final Obj row = Router.readFromSpace(f(uri));
              assertTrue(row.isRec(), "Should return a record");
@@ -560,7 +555,7 @@
                                       String verifyField, Obj expectedValue) throws Exception {
          setupTestDatabase();
 
-         final tabledbSpace testSpace = createTestSpace();
+         final tbleSpace testSpace = createTestSpace();
          try {
              // Update the row with a record
              final String writeUri = String.format("db:%s/%s", table, rowId);
@@ -629,7 +624,7 @@
                                       String verifyField, Obj expectedValue, String readRowId) throws Exception {
          setupTestDatabase();
 
-         final tabledbSpace testSpace = createTestSpace();
+         final tbleSpace testSpace = createTestSpace();
          try {
              // Update the row with a list (positional values)
              final String writeUri = String.format("db:%s/%s", table, rowId);
@@ -726,7 +721,7 @@
      public void testInsertNewRows(String table, String rowId, Rec rowData, String verifyField, Obj expectedValue) throws Exception {
          setupTestDatabase();
 
-         final tabledbSpace testSpace = createTestSpace();
+         final tbleSpace testSpace = createTestSpace();
          try {
              // Insert new row
              final String writeUri = String.format("db:%s/%s", table, rowId);
@@ -804,7 +799,7 @@
      public void testTypeConversions(String description, String table, String rowId, String field, Obj writeValue, Obj expectedReadValue) throws Exception {
          setupTestDatabase();
 
-         final tabledbSpace testSpace = createTestSpace();
+         final tbleSpace testSpace = createTestSpace();
          try {
              // Write value
              final String writeUri = String.format("db:%s/%s/%s", table, rowId, field);
@@ -846,7 +841,7 @@
          );
      }
 
-     // Add this test to tabledbSpaceTest.java before the "Helper Methods" section
+     // Add this test to tbleSpaceTest.java before the "Helper Methods" section
 
      /**
       * Test that TypedKeyValueSchema preserves types correctly (isomorphic mapping).
@@ -855,7 +850,7 @@
      @ParameterizedTest(name = "[{index}] Type preservation: {0}")
      @MethodSource("provideTypedStorageTestCases")
      public void testTypedStoragePreservation(String description, String uri, Obj writeValue, Obj expectedValue) throws Exception {
-         final tabledbSpace testSpace = tabledbSpace.of(
+         final tbleSpace testSpace = tbleSpace.of(
                  rec(
                          uri(PATTERN), uri("/tble/#"),
                          uri(HOST), uri("sqlite:target/test-typed-storage.db"),
@@ -935,7 +930,7 @@
          }
 
          // Create space with table mapping
-         final tabledbSpace testSpace = tabledbSpace.of(
+         final tbleSpace testSpace = tbleSpace.of(
                  rec(
                          uri(PATTERN), uri("db:#"),
                          uri(HOST), uri("sqlite:" + DB_PATH),
@@ -998,7 +993,7 @@
          }
 
          // Create space with table mapping
-         final tabledbSpace testSpace = tabledbSpace.of(
+         final tbleSpace testSpace = tbleSpace.of(
                  rec(
                          uri(PATTERN), uri("db:#"),
                          uri(HOST), uri("sqlite:" + DB_PATH),
@@ -1135,7 +1130,7 @@
 
          // Create space with table mapping
          // Route maps db: to empty string so db:users/1 becomes users/1
-         final tabledbSpace testSpace = tabledbSpace.of(
+         final tbleSpace testSpace = tbleSpace.of(
                  rec(
                          uri(PATTERN), uri("db:#"),
                          uri(HOST), uri("sqlite:" + DB_PATH),
@@ -1205,7 +1200,7 @@
      public void testDatabaseStringCornerCases(String description, String table, String rowId,
                                                String field, String value) throws Exception {
          setupTestDatabase();
-         final tabledbSpace testSpace = createTestSpace();
+         final tbleSpace testSpace = createTestSpace();
          try {
              final String writeUri = String.format("db:%s/%s/%s", table, rowId, field);
              Router.writeToSpace(f(writeUri), str(value));
@@ -1244,7 +1239,7 @@
      public void testDatabaseIntegerBoundaries(String description, String table, String rowId,
                                                String field, int value) throws Exception {
          setupTestDatabase();
-         final tabledbSpace testSpace = createTestSpace();
+         final tbleSpace testSpace = createTestSpace();
          try {
              final String writeUri = String.format("db:%s/%s/%s", table, rowId, field);
              Router.writeToSpace(f(writeUri), jnt(value));
@@ -1283,7 +1278,7 @@
      public void testDatabaseRealBoundaries(String description, String table, String rowId,
                                             String field, double value) throws Exception {
          setupTestDatabase();
-         final tabledbSpace testSpace = createTestSpace();
+         final tbleSpace testSpace = createTestSpace();
          try {
              final String writeUri = String.format("db:%s/%s/%s", table, rowId, field);
              Router.writeToSpace(f(writeUri), real(value));
@@ -1315,7 +1310,7 @@
      public void testBooleanEdgeCases(String description, String table, String rowId,
                                       String field, boolean value) throws Exception {
          setupTestDatabase();
-         final tabledbSpace testSpace = createTestSpace();
+         final tbleSpace testSpace = createTestSpace();
          try {
              final String writeUri = String.format("db:%s/%s/%s", table, rowId, field);
              Router.writeToSpace(f(writeUri), bool(value));
@@ -1346,7 +1341,7 @@
      }, delimiter = '|')
      public void testDatabaseNonExistentAccess(String description, String uri) throws Exception {
          setupTestDatabase();
-         final tabledbSpace testSpace = createTestSpace();
+         final tbleSpace testSpace = createTestSpace();
          try {
              final Obj result = Router.readFromSpace(f(uri));
              assertTrue(result.isNoObj(), description + " should return noobj");
@@ -1368,7 +1363,7 @@
      })
      public void testDatabaseSequentialUpdates(int iterations) throws Exception {
          setupTestDatabase();
-         final tabledbSpace testSpace = createTestSpace();
+         final tbleSpace testSpace = createTestSpace();
          try {
              for (int i = 0; i < iterations; i++) {
                  Router.writeToSpace(f("db:users/1/age"), jnt(30 + i));
@@ -1390,7 +1385,7 @@
      @Test
      public void testDeletedRowReturnsNoObj() throws Exception {
          setupTestDatabase();
-         final tabledbSpace testSpace = createTestSpace();
+         final tbleSpace testSpace = createTestSpace();
          try {
              Obj row = Router.readFromSpace(f("db:users/1"));
              assertFalse(row.isNoObj(), "Row should exist initially");
@@ -1415,7 +1410,7 @@
      @Test
      public void testConcurrentFieldUpdates() throws Exception {
          setupTestDatabase();
-         final tabledbSpace testSpace = createTestSpace();
+         final tbleSpace testSpace = createTestSpace();
          try {
              Router.writeToSpace(f("db:users/1/name"), str("Updated Name"));
              Router.writeToSpace(f("db:users/1/age"), jnt(99));
@@ -1497,8 +1492,8 @@
          }
      }
 
-     private tabledbSpace createTestSpace() {
-         return tabledbSpace.of(
+     private tbleSpace createTestSpace() {
+         return tbleSpace.of(
                  rec(
                          uri(PATTERN), uri("db:#"),
                          uri(HOST), uri("sqlite:" + DB_PATH),
@@ -1533,7 +1528,7 @@
              stmt.executeUpdate("CREATE TABLE IF NOT EXISTS test_products (id INTEGER PRIMARY KEY, title TEXT)");
          }
 
-         final tabledbSpace space = tabledbSpace.of(
+         final tbleSpace space = tbleSpace.of(
                  rec(
                          uri(PATTERN), uri("schema:#"),
                          uri(HOST), uri("sqlite:" + DB_PATH),
@@ -1608,7 +1603,7 @@
          }
 
          // Create space with table mapping enabled
-         final tabledbSpace space = tabledbSpace.of(
+         final tbleSpace space = tbleSpace.of(
                  rec(
                          uri(PATTERN), uri("fk:#"),
                          uri(HOST), uri("sqlite:" + DB_PATH),
@@ -1724,7 +1719,7 @@
          }
 
          // Create space with table mapping enabled
-         final tabledbSpace space = tabledbSpace.of(
+         final tbleSpace space = tbleSpace.of(
                  rec(
                          uri(PATTERN), uri("multi:#"),
                          uri(HOST), uri("sqlite:" + DB_PATH),
@@ -1820,7 +1815,7 @@
          }
 
          // Create space with table mapping
-         final tabledbSpace space = tabledbSpace.of(
+         final tbleSpace space = tbleSpace.of(
                  rec(
                          uri(PATTERN), uri("helper:#"),
                          uri(HOST), uri("sqlite:" + DB_PATH),
@@ -1893,7 +1888,7 @@
          }
 
          // Create space with table mapping
-         final tabledbSpace space = tabledbSpace.of(
+         final tbleSpace space = tbleSpace.of(
                  rec(
                          uri(PATTERN), uri("nofk:#"),
                          uri(HOST), uri("sqlite:" + DB_PATH),
@@ -1964,7 +1959,7 @@
 
          // Create space with table mapping
          // Route maps lazy: to empty string so lazy:emp_hierarchy/4 becomes emp_hierarchy/4
-         final tabledbSpace space = tabledbSpace.of(
+         final tbleSpace space = tbleSpace.of(
                  rec(
                          uri(PATTERN), uri("lazy:#"),
                          uri(HOST), uri("sqlite:" + DB_PATH),
@@ -2064,7 +2059,7 @@
      * Provides all rewrite test cases from the contract.
      */
     static Stream<Arguments> provideAllRewriteTestCases() {
-        return new tabledbSpaceTest().generateAllRewriteTestCases();
+        return new tbleSpaceTest().generateAllRewriteTestCases();
     }
 
     // Plan verification tests disabled - mParser.parse().rewrite() doesn't trigger space-specific rewrites
@@ -2077,6 +2072,6 @@
     // }
     //
     // static Stream<Arguments> providePlanVerificationTestCases() {
-    //     return new tabledbSpaceTest().generatePlanVerificationTestCases();
+    //     return new tbleSpaceTest().generatePlanVerificationTestCases();
     // }
  }
