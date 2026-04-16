@@ -473,7 +473,7 @@ public class TypeTest extends AbstractMetatronTest {
             "nat     % .                                        % 2.as(plus(6).as(nat::T))                         % true",
             "nat     % .                                        % 2.as(plus(-6).as(nat::T))                        % false",
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            "nat     % int::T[?>0][-<|[is(lt(0)) => _⋅-1,_ => _]>>]   % nat::23                                          % true",
+            "nat     % int::T[?>0][-<|[is(lt(0)) => _ * -1,_ => _]>>]   % nat::23                                          % true",
             "nat     % .                                        % nat::-23                                         % true",
             "nat     % .                                        % nat::'a big number'                              % false",
             "nat     % .                                        % nat::2 + 6                                       % true",

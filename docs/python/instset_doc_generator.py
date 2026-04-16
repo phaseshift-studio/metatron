@@ -239,6 +239,15 @@ class InstInfo:
     range_full: str = ""
     docs: List[DocInfo] = field(default_factory=list)
 
+@dataclass
+class QInfo:
+    """Information about a q proc."""
+    vid: str
+    name: str
+    raw: str = ""
+    type_spec: str = ""
+    docs: List[DocInfo] = field(default_factory=list)
+
 
 @dataclass
 class SpaceInfo:
@@ -463,6 +472,28 @@ class InstSetDocFetcher:
         except Exception as e:
             logger.warning(f"Could not fetch spaces for {vid}: {e}")
         return spaces
+
+    async def _fetch_q(self, vid: str) -> List[QInfo]:
+        """Fetch all q processors defined by this instruction set."""
+        qs = []
+        try:
+            entries = await self.client.eval_doc(f"*{vid}/space/q/+/")
+            for entry in entries:
+                # Entry format: /path/to/space=>...
+                if "=>" in entry:
+                    q_vid = entry.split("=>")[0].strip()
+                else:
+                    q_vid = entry.strip()
+                if q_vid:
+                    name = q_vid.split('/')[-1]
+                    q_info = QInfo(vid=q_vid, name=name, raw=entry)
+                    # Fetch documentation
+                    q_info.docs = await self.client.fetch_obj_doc(q_vid)
+                    qs.append(q_info)
+                    logger.debug(f"  Found q: {q_vid}")
+        except Exception as e:
+            logger.warning(f"Could not fetch qs for {vid}: {e}")
+        return qs
 
     async def _fetch_space_type(self, space_info: SpaceInfo):
         """Fetch type specification for a space."""

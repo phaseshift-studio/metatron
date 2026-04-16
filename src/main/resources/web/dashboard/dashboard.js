@@ -1089,7 +1089,7 @@ class MetatronDashboard {
                 ${this.renderPanelHeader(panel, `
                     <button id="refreshSpacesBtn" class="btn btn-sm btn-outline-primary" title="refresh"><i class="bi bi-arrow-clockwise"></i></button>
                 `)}
-                <div class="card-body p-0 overflow-auto" style="max-height: calc(100vh - 180px);">
+                <div class="card-body p-0 overflow-auto">
                     <div id="spacesContainer" class="list-group list-group-flush">
                         <div class="text-center text-muted small py-4">
                             <i class="bi bi-wifi-off fs-1"></i>
@@ -1110,7 +1110,7 @@ class MetatronDashboard {
                         <button id="browsePathBtn" class="btn btn-sm btn-outline-primary" title="browse"><i class="bi bi-folder2-open"></i></button>
                     </div>
                 `)}
-                <div class="card-body p-2 overflow-auto" style="max-height: calc(100vh - 180px);">
+                <div class="card-body p-2 overflow-auto">
                     <div id="treeContainer" class="tree-view">
                         <div class="text-center text-muted small py-4">
                             <i class="bi bi-diagram-3 fs-1"></i>
@@ -1163,7 +1163,7 @@ class MetatronDashboard {
         return `
             <div class="card h-100 d-flex flex-column">
                 ${this.renderPanelHeader(panel, `<button id="loadModelsBtn" class="btn btn-sm btn-outline-primary" title="refresh providers"><i class="bi bi-arrow-clockwise"></i></button>`)}
-                <div class="card-body overflow-auto" style="max-height: calc(100vh - 180px);">
+                <div class="card-body overflow-auto">
                     <div class="mb-3">
                         <label class="form-label small text-muted">agent uri</label>
                         <div class="input-group input-group-sm">

@@ -132,7 +132,7 @@ Enables multi-path tree/graph traversal with dead path tracking.
 **Examples**:
 ```mtron
 a => b => c                    // Functor (morphism to morphism)
-a=>b=>c ⋅ ((b=>c)=>d) = a=>d  // Functor composition
+a=>b=>c * ((b=>c)=>d) = a=>d  // Functor composition
 ```
 
 **Implications**:

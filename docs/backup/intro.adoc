@@ -446,8 +446,8 @@ a🧱
 int               [-- <1>
 int + int         [-- <2>
 int + int{-1}     [-- <3>
-int ⋅ int         [-- <4> 
-int{2} ⋅ int{3}   [-- <5>
+int * int         [-- <4> 
+int{2} * int{3}   [-- <5>
 noobj
 'mtron'
 -->
@@ -515,7 +515,7 @@ To practically ground these concepts, a https://en.wikipedia.org/wiki/Natural_nu
 
 [source,mtron,role="center"]
 ----
-          nat::T[?>0][-<|[?<0 => ⋅-1,_ => _]>>] 
+          nat::T[?>0][-<|[?<0 => * -1,_ => _]>>] 
           │    │ │    │
           │    │ │    └──────────── constructor
           │    │ └───────────────── predicate
@@ -526,14 +526,14 @@ To practically ground these concepts, a https://en.wikipedia.org/wiki/Natural_nu
 A quick explanation of the type predicate and constructor `code` is as follows:
 
 1. **predicate** [`?>0`]: is (`?`) greater than (`>`) 0.
-2. **constructor** [`-<|[?<0 \=> ⋅-1,_ \=> \_]>>`]: if (`-<|`) less than (`<`) 0, then (`\=>`) multiply (`⋅`) by -1, else do (`\=>`) nothing (`_`).
+2. **constructor** [`-<|[?<0 \=> * -1,_ \=> \_]>>`]: if (`-<|`) less than (`<`) 0, then (`\=>`) multiply (`⋅`) by -1, else do (`\=>`) nothing (`_`).
 Yield the _range_ (`>>`) of the relation constructed (the specifics of `>>` will be discussed later).
 
 Example usage of the defined `nat` type is presented below.
 
 ++++
 <!-- 🐖
-nat -> int::T[?>0][-<|[is(lt(0)) => ⋅-1,_ => _]>>]    [-- <1>
+nat -> int::T[?>0][-<|[is(lt(0)) => * -1,_ => _]>>]    [-- <1>
 *nat                                                  [-- <2>
 nat::2                                                [-- <3>
 nat::-2                                               [-- <4>

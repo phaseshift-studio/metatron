@@ -65,9 +65,10 @@ public interface Inst extends Call {
      * Value: The fully resolved instruction (safe to reuse since literal args don't depend on lhs)
      * Call args (inst, code, type) are NOT cached because they depend on the lhs value.
      */
-    Map<String, Inst> RESOLUTION_CACHE = new ConcurrentHashMap<>();
+    // Map<String, Inst> RESOLUTION_CACHE = new ConcurrentHashMap<>();
+    // ThreadLocal<Boolean> REWRITE_MODE = ThreadLocal.withInitial(() -> false);
 
-    Uri ARGS_URI = uri(ARGS_FURI);
+    // Uri ARGS_URI = uri(ARGS_FURI);
     Type INST_TYPE = Type.Builder.build().tid(M_ISA_INST_TID).vid(M_ISA_INST_TID).create();
 
     enum Form {
@@ -209,23 +210,37 @@ public interface Inst extends Call {
             return this;
         final GraphittyLogger LOG = Graphitty.log(lhs);
 
-        // Resolution cache: only cache when ALL arguments are literals (non-call objects)
-        // Call args (inst, code, type) depend on lhs and can't be cached
-        // Literal args (int, real, str, bool, etc.) always resolve to the same value
-        // TODO: Need to recursively check for calls inside polys (rec/lst)
-        //       e.g., [a=>plus(2)] has plus(2) nested inside the rec
-        /*final boolean allArgsLiteral = this.args().stream().noneMatch(Obj::isObjCall);
-        final boolean canUseCache = allArgsLiteral
+        // Resolution cache: DISABLED
+        //
+        // Attempted to enable cache only after rewrites complete, but still causes hangs.
+        // The issue is complex - rewrites call apply() which triggers resolution, and even
+        // with the REWRITE_MODE flag, there are circular dependencies or infinite loops.
+        //
+        // The parser optimization (500ms -> 3ms) is the main performance win.
+        // Execution time (308ms) is acceptable for an interpreted language with rewrites.
+        //
+        // To re-enable, would need deeper investigation of the rewrite->apply->resolve cycle.
+        /*
+        final boolean inRewriteMode = REWRITE_MODE.get();
+        final boolean allArgsLiteral = this.args().stream().noneMatch(Obj::isObjCall);
+        final fURI basePath = this.tid().basePath();
+        final boolean isDynamicInst = basePath.equals(FROM_INST_TID)
+                || basePath.equals(AUTO_FROM_INST_TID)
+                || basePath.toString().contains("rewrite")
+                || basePath.equals(AS_INST_TID);
+        final boolean canUseCache = !inRewriteMode
+                && allArgsLiteral
                 && !lhs.tid().isGeneric() && !this.tid().isGeneric()
-                && !this.tid().basePath().equals(AS_INST_TID)
-                && !this.hasDom() && !this.hasRng(); // dom/rng are context-specific
+                && !isDynamicInst
+                && !this.hasDom() && !this.hasRng();
         final String cacheKey = canUseCache ? lhs.tid() + "|" + this.tid().basePath() + "|" + this.args() : null;
         if (cacheKey != null) {
             final Inst cached = RESOLUTION_CACHE.get(cacheKey);
             if (cached != null) {
-                return cached.c(this.c()); // apply coefficient from this invocation
+                return cached.c(this.c());
             }
-        }*/
+        }
+        */
 
         try {
             Obj fetched = Router.global().read(this.tid().basePath());
@@ -241,7 +256,7 @@ public interface Inst extends Call {
             final Inst resolved = InstResolver.get().resolve(lhs, this, fetched.stream());
             if (null != resolved) {
                 LOG.trace("%s => %s is %s resolved", lhs, resolved, CommonUtil.lambda(() -> resolved.isResolved(false) ? "" : "not"));
-                // Cache the resolved instruction if args are all literals
+                // Cache disabled - see comment above
                 /*if (cacheKey != null) {
                     RESOLUTION_CACHE.putIfAbsent(cacheKey, resolved);
                 }*/

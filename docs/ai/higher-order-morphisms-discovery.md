@@ -8,7 +8,7 @@ User demonstrated that nested relations in Metatron naturally represent functors
 a=>b=>c
 ==> a=>(b=>c)
 
-a=>b=>c ⋅ ((b=>c)=>d)
+a=>b=>c * ((b=>c)=>d)
 ==> a=>d
 ```
 
@@ -26,7 +26,7 @@ This is `a => (b=>c)`, which is a **morphism from `a` to a morphism `(b=>c)`**. 
 ### 2. **Composition of Higher-Order Morphisms**
 
 ```mtron
-a=>b=>c ⋅ ((b=>c)=>d)
+a=>b=>c * ((b=>c)=>d)
 ==> a=>d
 ```
 

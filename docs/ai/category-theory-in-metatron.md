@@ -11,7 +11,7 @@ Metatron's relation system naturally expresses categorical structures. This docu
 A **category** consists of:
 - **Objects**: Any Metatron objects (`a`, `b`, `c`, etc.)
 - **Morphisms**: Relations between objects (`a=>b`)
-- **Composition**: Relation multiplication (`×` or `⋅`)
+- **Composition**: Relation multiplication (`×`)
 - **Identity**: `(id()=>id())`
 
 **Representation in Metatron:**

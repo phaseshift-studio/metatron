@@ -86,13 +86,23 @@ public class mParser {
     private static final SettableParser obj_rel_back_parser2 = SettableParser.undefined();
     private static final SettableParser and_or_parser = SettableParser.undefined();
     // private static final SettableParser branch_parser = SettableParser.undefined();
-    private static final LinkedHashSet<Parser> PARSERS = new LinkedHashSet<>(List.of(seq(of('*').trim(), digit().plus().flatten()).map(t -> from_(uri(pick(t, 1).toString()))))); // sugar for *0 vs. *<0>
+    // Space-aware operator parsing:
+    // Sugars defined with spaces (e.g., " * ") require those spaces in the source code.
+    // Sugars without spaces (e.g., "*") are space-insensitive (use .trim()).
+    // This allows: *x → from(x) and x * y → x.mult(y) to coexist.
+    private static final LinkedHashSet<Parser> PARSERS = new LinkedHashSet<>();
+    private static Parser cachedSugarParser = null;
+    private static Parser cachedMainParser = null;
 
     private static final String REDUCED_FURI_CHARS = "~/%$!#_-@+:*";
     private static final String FULL_FURI_CHARS = REDUCED_FURI_CHARS + ". ";
 
     static {
         new mInstSet().sugars().forEach(mParser::addSugar);
+        // Cache the sugar parser after all sugars are loaded
+        cachedSugarParser = PARSERS.isEmpty() ? null : choice(PARSERS.toArray(new Parser[0]));
+
+        // Initialize all parsers first
         furi_parser.set(seq(word().or(seq(of("::").not(),
                         anyOf(REDUCED_FURI_CHARS))).plus().flatten(),
                 opt(m_furi_poly_type(), null),
@@ -181,11 +191,67 @@ public class mParser {
             return (op.equals("||") ? or_(lhs,rhs) : and_(lhs,rhs)).tryToInst();
         }));
 
+        // Cache the main parser to avoid rebuilding it on every parse() call
+        cachedMainParser = seq(choice(m_call_prefix(START_INST_TID), m_obj(false)), opt(m_comment(), null))
+                .map(t -> pick(t, 0))
+                .end();
     }
 
     public static LinkedHashSet<Parser> addSugar(final Tuple.Triplet<Tuple.Pair<String, String>, List<fURI>, Integer> triplet) {
-        PARSERS.add(generate_sugar_parser(triplet.get1(), of(triplet.get0().get0()), triplet.get2(), null == triplet.get0().get1() ? null : of(triplet.get0().get1())));
+        final String startToken = triplet.get0().get0();
+        final String endToken = triplet.get0().get1();
+
+        // Check if the sugar definition has spaces (space-aware)
+        final boolean startHasLeadingSpace = startToken.startsWith(" ");
+        final boolean startHasTrailingSpace = startToken.endsWith(" ");
+        final String trimmedStart = startToken.trim();
+
+        // If spaces are present in the definition, create a space-aware parser
+        if (startHasLeadingSpace || startHasTrailingSpace) {
+            PARSERS.add(generate_space_aware_sugar_parser(
+                triplet.get1(),
+                trimmedStart,
+                startHasLeadingSpace,
+                startHasTrailingSpace,
+                triplet.get2(),
+                endToken
+            ));
+        } else {
+            // Standard space-insensitive sugar (uses .trim())
+            PARSERS.add(generate_sugar_parser(
+                triplet.get1(),
+                of(startToken),
+                triplet.get2(),
+                null == endToken ? null : of(endToken)
+            ));
+        }
         return PARSERS;
+    }
+
+    private static Parser generate_space_aware_sugar_parser(
+            final List<fURI> instChain,
+            final String token,
+            final boolean requireLeadingSpace,
+            final boolean requireTrailingSpace,
+            final int argCount,
+            final String endToken) {
+
+        // Build the token parser with space requirements
+        Parser tokenParser = of(token);
+        if (requireLeadingSpace) {
+            tokenParser = seq(CharacterParser.whitespace().plus(), tokenParser).map(t -> pick(t, 1));
+        }
+        if (requireTrailingSpace) {
+            tokenParser = seq(tokenParser, CharacterParser.whitespace().plus()).map(t -> pick(t, 0));
+        }
+
+        // Generate the sugar parser with the space-aware token
+        return generate_sugar_parser(
+            instChain,
+            tokenParser,
+            argCount,
+            null == endToken ? null : of(endToken)
+        );
     }
 
     public static Parser m_inst_b() {
@@ -289,13 +355,29 @@ public class mParser {
     }
 
     public static <O extends Obj> O parse(final String code) {
-        if (code.trim().isEmpty())
+        final String trimmed = code.trim();
+        if (trimmed.isEmpty())
             return (O) noobj();
-        final Result result = seq(choice(m_call_prefix(START_INST_TID), m_obj(false)), opt(m_comment(), null)).map(t -> pick(t, 0)).end().parse(code.trim());
+        // Use cached parser instead of rebuilding on every call
+        long start = System.nanoTime();
+        final Result result = cachedMainParser.parse(trimmed);
+        long parseTime = System.nanoTime() - start;
+
         if (result.isFailure()) {
             LOG.except(result.getBuffer() + "\n" + " ".repeat(result.getPosition()) + "^ " + result.getMessage() + "\n");
         }
-        return result.get();
+
+        start = System.nanoTime();
+        O obj = result.get();
+        long getTime = System.nanoTime() - start;
+
+        // Log timing for expressions (disable in production)
+        if (parseTime > 1_000_000) { // > 1ms
+            LOG.debug("Parse timing for '%s': parse=%dms, get=%dms",
+                trimmed, parseTime / 1_000_000, getTime / 1_000_000);
+        }
+
+        return obj;
     }
 
     public static Parser m_comment() {
@@ -529,7 +611,8 @@ public class mParser {
     }
 
     public static Parser m_inst() {
-        return choice(PARSERS.toArray(new Parser[PARSERS.size()])).or(inst_parser);
+        // Use cached sugar parser to avoid creating new array on every call
+        return cachedSugarParser == null ? inst_parser : cachedSugarParser.or(inst_parser);
     }
 
     /// //////////////////////////////////////////////////////////////////////////////////////////

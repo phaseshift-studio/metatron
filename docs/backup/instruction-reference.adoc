@@ -201,7 +201,7 @@ Integer arithmetic and operations:
 |`5+3` → `8`
 
 |`mult(int)`
-|`⋅`
+|`*`
 |Multiplication
 |`5⋅3` → `15`
 
