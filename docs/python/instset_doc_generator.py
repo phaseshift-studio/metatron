@@ -161,16 +161,20 @@ class MetatronClient:
             for entry in doc_entries:
                 if not isinstance(entry, dict):
                     continue
-
+                doc_query = f'"*<{vid}&docq>>>args"' if '?' in vid else f'"*<{vid}?docq>>>args"'
+                logger.debug(doc_query)
                 # Build DocInfo
                 doc_info = DocInfo(
                     raw=result,
                     desc=entry.get('desc', ''),
                     dom=entry.get('dom', ''),
                     rng=entry.get('rng', ''),
-                    obj=entry.get('obj', '')
+                    obj=entry.get('obj', ''),
+                    raw_args=await getNative(self,doc_query)
                 )
 
+                logger.debug(doc_info.raw_args)
+            
                 # Handle args dict
                 args_data = entry.get('args', {})
                 if isinstance(args_data, dict) and args_data:
@@ -211,6 +215,7 @@ class DocInfo:
     desc: str = ""
     example: List[str] = field(default_factory=list)
     raw: str = ""
+    raw_args: str = ""
 
 
 @dataclass
@@ -323,7 +328,7 @@ async def getNative(client: MetatronClient, query: str, endpoint: str = "/m/web/
         return None
     match = re.search(r"</m/str>::'(.+)'", result, re.DOTALL)
     if match:
-        return match.group(1)
+        return None if match.group(1) == "noobj" else match.group(1)
     return None
 
 
@@ -1369,7 +1374,7 @@ class HTMLDocGenerator:
                 signature_parts.append(f'"{dom_text}" <span class="text-light">=&gt;</span> "{rng_text}"')
 
             if doc.args:
-                args_html = self._format_args_map(doc.args)
+                args_html = '<pre><code class="language-mtron hljs">' + html.escape(doc.raw_args) + '</code></pre>'
                 if args_html:
                     signature_parts.append(f'\n   {args_html}')
 

@@ -18,10 +18,14 @@ file://domain.local:22/usr/data/abc{*}?sub
 
 metatron was designed to support the creation and manipulation of _abstract data types_ in a manner that affords the user a concise, fluid means of maneuvering through a heterogeneous set of data structures, where each is embedded within and across any number of spaces, while being respectfully agnostic to each space's espoused perspective on the data maintained therein: e.g., key/value, document, relational, vector, graph, file system, and the various nooks and crannies between.
 
-metatron's URI addressing scheme makes it possible to _embed_ arbitrary data types into a metatron-specific construct called "space". A space is where URI/obj pairs are written to and read from. Coupling occurs when a URI references an  obj.
+metatron's URI addressing scheme makes it possible to encode arbitrary data types into a metatron-specific construct called "space". A space is where URI/obj pairs are written to and read from. Coupling occurs when a URI references an obj.
 
 [source,mtron]
 ----
+1.to(a) [-- write 1 to a  --]
+from(a) [-- read 1 from a --]
+
+[== sugar form ==]
 a -> 1  [-- write 1 to a --]
 *a      [-- read 1 from a --]
 ----
@@ -50,21 +54,37 @@ a -> 1  [-- write 1 to a --]
 
 |===
 
-This means that any mono obj (`bool`, `int`, etc.), any poly obj such as a `rec` composed of nested key/value obj pairs or a `lst` composed of an ordered sequence of objs, and any stream of objs can all be referenced by a single uri.
+Any obj can be referenced by a URI. From simple **mono** objs such as `bool`, `int`, etc. to complex nested **poly** objs such as `rec`, `lst`, etc. Poly objs provide another layer of addressing in that once a poly obj has a URI reference, the internal objs that make up the poly inherit that reference and extend it with any internal references necessary to find the objs within the poly.
+
+[source,mtron]
+----
+a/b/c -> [x,[y=>[z=>2]]]
+         ▲▲ ▲   ▲   ▲  
+         ││ │   │   └────── a/b/c/y/z
+         ││ │   └────────── a/b/c/1/y
+         ││ └────────────── a/b/c/1
+         │└──────────────── a/b/c/0
+         └───────────────── a/b/c
+----
+
+
 ++++
 <!-- 🐖
-abc -> 12                          [-- <1>
-/usr/a -> [1,2.0,'text']           [-- <2>
-/usr/b/c/d -> [e=>[f=>g, h=>i]]    [-- <3>
-x -> {1,2,3,4}                     [-- <4>
+a/b/c -> [x,[y=>[z=>2]]]
+*a/b/c
+*a/b/c/0
+*a/b/c/1
+*a/b/c/1/y
+*a/b/c/1/y/z
 -->
 ++++
-<1> the uri `abc` references the mono `int` 12.
-<2> the uri `/usr/a` references a poly `lst`.
-<3> the uri `/usr/b/c/d` references a nested poly `rec`.
-<4> the uri `x` references an `obj` stream.
+<1> the uri `a/b/c` references a `lst` poly.
+<2> the uri `a/b/c/0` references an internal `uri` mono.
+<3> the uri `a/b/c/1` references an internal `rec` poly.
+<4> the uri `a/b/c/1/y` references another internal `rec` poly.
+<5> the uri `a/b/c/1/y/z` references an doubly internal `int` mono.
 
-This bag of binary relations is metatron's global, distributed memory system.
+In summary, metatron's global, distributed memory system can be understood as a bag of binary relations mapping URIs to objs.
 
 [.center]
 [stem]

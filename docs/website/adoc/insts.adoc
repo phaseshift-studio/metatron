@@ -42,7 +42,7 @@ aid the compiler instruction selection, enable code path compression, facilitate
 [discrete]
 === obj propagation mechanics
 
-Every instruction maps a **left hand side** `obj` (`lhs`) to a **right hand side** `obj` (rhs). Many-to-one, one to many, and many-to-many mappings are possible as an `obj` is an element in the power set of all `objs`. Thus, `{1,2,3}` is an `obj` with type `int{3}`. Programmatically, what is passed between instructions is a single stream `obj` which guarantees that there is always an rhs `obj` for every lhs `obj` regardless of failure or emptiness. As a side note, discussed at length elsewhere, the mtron ring is the set of `objs` and is closed under latexmath:[\cdot] (apply) and latexmath:[+] (split/merge), both of which are total functions.
+Every instruction maps a **left hand side** `obj` (lhs) to a **right hand side** `obj` (rhs). Many-to-one, one to many, and many-to-many mappings are possible as an `obj` is an element in the power set of all `objs`. Thus, `{1,2,3}` is an `obj` with type `int{3}`. Programmatically, what is passed between instructions is a single stream `obj` which guarantees that there is always an rhs `obj` for every lhs `obj` regardless of failure or emptiness. As a side note, discussed at length elsewhere, the mtron ring is the set of `objs` and is closed under latexmath:[\cdot] (apply) and latexmath:[+] (split/merge), both of which are total functions.
 
 \begin{align*}
 \text{obj} \in \mathcal{P}(\text{obj})
@@ -66,7 +66,7 @@ It is important to understand the mechanics of instruction evaluation. Every ins
 <4> `1` is applied to the type `bool::T` to yield `noobj` as types serve as stream predicates.
 <5> `1` is applied to `bool::T` to yield `noobj` but then is operated within the code of `as()` to emit `bool::true`.
 
-The key point is that *call* objs (`inst`, `code`, `noobj`, and `type`) have a domain and range that are contextual due to dynamic resolution. Said another way, `calls` are types that become instances at time of application. Constant `objs` (non-call objs) also have a domain and range. For instance, the verbose representation of `int::1` is `int?int\<=#{?}::1`. 
+The key point is that *call* objs (`inst`, `code`, `noobj`, and `type`) have a domain and range that are contextual due to dynamic resolution. Said another way, `calls` are types that become instances at time of application. Constant `objs` (non-call objs) also have a domain and range. For instance, the verbose representation of `int::1` is `int?int\<=#{?}(){1}`. 
 This states that every lhs `obj` or `noobj` (`+#+{+?+}`) that is applied to `1`, yields a single rhs `int`; namely `1`. In this way, constants are functions (calls), though not interesting because they always return the same value regardless of input.
 
 The diagram below demonstrates how a lhs `obj` percolates through an `inst` to where ultimately, at the end of the last `inst` of code the resultant rhs `obj` is emitted.

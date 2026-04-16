@@ -143,7 +143,7 @@ class ProcessingState:
         color = self.colors[index]
         self.colors.remove(color)
         sep = "#" if bool(random.randint(0, 1)) else "*"
-        return "[" + color + "]" + sep + to_color + sep + "​"
+        return "[" + color + "]" + sep + to_color + sep #+ "​"
 
     def random_metatron(self):
         self.colors = ["red", "blue", "lime", "yellow", "fuchsia", "aqua", "green", "orange"]
@@ -204,6 +204,7 @@ class ProcessingState:
         c = re.sub('code=>\'.*?\',', "", c)
         # fix source code callouts
         c = re.sub('\\[-- <(?P<a>[0-9]+)>', r'​\g<a>​', c)
+        # c = re.sub('\\[-- <(?P<a>[0-9]+)>', r'\g<a>', c)
         return c
 
     def _process_output_start(self, line: str) -> None:
@@ -268,7 +269,7 @@ class ProcessingState:
                 result.append(
                     f"mtron> {'\n       '.join(line.split("%"))}")  # the spaces are to shift right due to mtron> 
                 result.append(f"{self.mtron.exec(line.replace("%", "").strip())}")
-                result.append("​")
+                # result.append("​")
             else:
                 self.mtron.exec(line.replace("%", "").replace("[HIDDEN]", "").strip())
         self.output.extend(result[1:]) # first line is always a blank (for some reason)
@@ -349,8 +350,7 @@ def main() -> None:
     parser.add_argument(
         "-c",
         "--copy_only",
-        type=bool,
-        default=False,
+        action="store_true",
         help="Copy input file to output file without processing (default: False)",
     )
     args = parser.parse_args()

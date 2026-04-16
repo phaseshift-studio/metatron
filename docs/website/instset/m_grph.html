@@ -261,15 +261,12 @@ bin/metatron</code></pre>
  type   =>[
    rec::T@/m/grph/elmt,
    elmt::T[?[
-     {?}IN =>[
-       uri::T=>edge{*}::T],
-     {?}OUT=>[
-       uri::T=>edge{*}::T]]]@/m/grph/vrtx,
+     {?}IN =>[uri::T=>edge{*}::T],
+     {?}OUT=>[uri::T=>edge{*}::T]]]@/m/grph/vrtx,
    elmt::T[?[
      IN =>vrtx::T,
      OUT=>vrtx::T]]@/m/grph/edge,
-   space::T[][inst?rng=grphspace&dom=#{?}(isa([
- {?}graph=>uri::T]).else(failure('malformed tp3 config'))){<j>}]@/m/grph/space/grphspace,
+   space::T[][inst?rng=grphspace&dom=#{?}(isa([{?}graph=>uri::T]).else(failure('malformed tp3 config'))){<j>}]@/m/grph/space/grphspace,
    modern::T],
  inst   =>[
    gremlin?rng=#{*}&dom=grphspace(str::T){<j>},
@@ -558,10 +555,8 @@ bin/metatron</code></pre>
                     
                     <div class="card-body p-2">
                         <pre class="mb-0"><code class="language-mtron">elmt::T[?[
-     {?}IN =&gt;[
-       uri::T=&gt;edge{*}::T],
-     {?}OUT=&gt;[
-       uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx</code></pre>
+     {?}IN =&gt;[uri::T=&gt;edge{*}::T],
+     {?}OUT=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -608,7 +603,7 @@ bin/metatron</code></pre>
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"a vertex" <span class="text-light">=&gt;</span> "both adjacent vertices"
-   [0 <span class="text-light">=&gt;</span> "zero or more edge labels"]</pre>
+   <pre><code class="language-mtron hljs">[0=&gt;&#x27;zero or more edge labels&#x27;]</code></pre></pre>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-bothE">
@@ -628,7 +623,7 @@ bin/metatron</code></pre>
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"a vertex" <span class="text-light">=&gt;</span> "both adjacent edges"
-   [0 <span class="text-light">=&gt;</span> "zero or more edge labels"]</pre>
+   <pre><code class="language-mtron hljs">[0=&gt;&#x27;zero or more edge labels&#x27;]</code></pre></pre>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-bothV">
@@ -686,7 +681,7 @@ bin/metatron</code></pre>
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"a vertex" <span class="text-light">=&gt;</span> "in adjacent vertices"
-   [0 <span class="text-light">=&gt;</span> "zero or more edge labels"]</pre>
+   <pre><code class="language-mtron hljs">[0=&gt;&#x27;zero or more edge labels&#x27;]</code></pre></pre>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-inE">
@@ -706,7 +701,7 @@ bin/metatron</code></pre>
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"a vertex" <span class="text-light">=&gt;</span> "in adjacent edges"
-   [0 <span class="text-light">=&gt;</span> "zero or more edge labels"]</pre>
+   <pre><code class="language-mtron hljs">[0=&gt;&#x27;zero or more edge labels&#x27;]</code></pre></pre>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-inV">
@@ -761,7 +756,7 @@ bin/metatron</code></pre>
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"a vertex" <span class="text-light">=&gt;</span> "out adjacent vertices"
-   [0 <span class="text-light">=&gt;</span> "zero or more edge labels"]</pre>
+   <pre><code class="language-mtron hljs">[0=&gt;&#x27;zero or more edge labels&#x27;]</code></pre></pre>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-outE">
@@ -781,7 +776,7 @@ bin/metatron</code></pre>
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"a vertex" <span class="text-light">=&gt;</span> "out adjacent edges"
-   [0 <span class="text-light">=&gt;</span> "zero or more edge labels"]</pre>
+   <pre><code class="language-mtron hljs">[0=&gt;&#x27;zero or more edge labels&#x27;]</code></pre></pre>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-outV">
@@ -833,8 +828,7 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="mt-2">
-                        <pre class="mb-0"><code class="language-mtron">space::T[][inst?rng=grphspace&amp;dom=#{?}(isa([
- {?}graph=&gt;uri::T]).else(failure(&#x27;malformed tp3 config&#x27;))){&lt;j&gt;}]@/m/grph/space/grphspace</code></pre>
+                        <pre class="mb-0"><code class="language-mtron">space::T[][inst?rng=grphspace&amp;dom=#{?}(isa([{?}graph=&gt;uri::T]).else(failure(&#x27;malformed tp3 config&#x27;))){&lt;j&gt;}]@/m/grph/space/grphspace</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -887,7 +881,7 @@ bin/metatron</code></pre>
         <div class="container-xxl py-3 text-center">
             <hr class="border-secondary">
             <small class="text-muted">
-                generated by metatron instset doc generator on build 0-2026-04-16 11:48:01<br>
+                generated by metatron instset doc generator on build 0-2026-04-16 13:05:23<br>
                 © PhaseShift Studio, LLC
             </small>
         </div>
