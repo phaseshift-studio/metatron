@@ -203,14 +203,49 @@ The two data sources have a very particular understanding of how data should be 
 🧱
 ++++
 <!-- 🐖
-*g:V/1
-*acme:customers/357
-*g:V/1.addE(consulted,acme:customers/357)
-*g:V/1.out(consulted)
-*g:V/1.out(consulted)>>salesRepEmployeeNumber
-*g:V/1.out(consulted)>>salesRepEmployeeNumber>>reportsTo
+*g:V/1                                                             [-- <1>
+*acme:customers/357                                                [-- <2>
+*g:V/1.addE(consulted,|*acme:customers/357)                        [-- <3>
+*g:V/1.out(consulted)                                              [-- <4>
+*g:V/1.out(consulted).matches(vrtx::T)                             [-- <5>
 -->
 ++++
+<1> vertex `v[1]` in a graph database.
+<2> row `357` in a relational database.
+<3> an edge is created in the graph linking vertex `v[1]` and row `357`.
+<4> the edge is traverseable like any other edge.
+<5> a `rrow::T` _is a_ `vrtx::T` according to metatron's structural type system.
+
+The new `consulted`-edge has a standard vertex on its tail, but a "reference vertex"
+on its head. On this reference vertex is an auto-from instruction (`!*`), that when
+accessed, immediately resolves the monad's data pointer to the respective relational database row.
+
+Some more expressions are provided below that extend what has been constructed in the previous example thus far.
+These expressions highlight the nested structural pattern matching and data manipulation capabilities of mtron.
+
+++++
+<!-- 🐖
+*g:V/1.out(consulted).-<[                                  /
+  name    =>"${>>contactFirstName} ${>>contactLastName}",  /
+  address =>==[city=>_,country=>_]]
+*g:V/1.out(consulted)                                  /
+      .out(salesRepEmployeeNumber)                     /
+      .out(reportsTo)-<[                               /
+        name=>"${>>firstName} ${>>lastName}",          /
+        job=>-<[title=>>>jobTitle,email=>>>email]]            
+-->
+++++
+
+The examples highlight important concepts necessary to understand 
+ in order to be effective at traversing and manipulating complex, 
+nested structures existing across heterogeneous data sources.
+
+* `-<` (**copy apply**): copy the input `obj` across all slots of the arg `poly`.
+* `==` (**match apply**): split the input `poly` to match the slots of the arg `poly`.
+* `>>` (**project select**): select a particular component of the input `poly`.
+* `${}` (**template select**): process the input `obj` and output a `str` representation of the output `obj`.
+
+
 🧱        
 [source,mtron]
 ----
@@ -226,6 +261,30 @@ The two data sources have a very particular understanding of how data should be 
 │        └──┘   │            │├─────────────┤│
 │               │            │└─────────────┘│
 └───────────────┘            └───────────────┘
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

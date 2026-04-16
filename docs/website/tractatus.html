@@ -2894,77 +2894,77 @@ mtron&gt; */m/llm/model
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">​
 mtron&gt; *ollama:+
 ==&gt;model::[
+ size    =&gt;gB::0.72,
  provider=&gt;!*/sys/space/ollama,
  name    =&gt;deepseek-coder:latest,
  think   =&gt;noobj,
- skill   =&gt;[completion],
- size    =&gt;gB::0.72]@ollama:deepseek-coder:latest
+ skill   =&gt;[completion]]@ollama:deepseek-coder:latest
 ==&gt;model::[
+ size    =&gt;gB::4.87,
  provider=&gt;!*/sys/space/ollama,
  name    =&gt;qwen3:latest,
  think   =&gt;[=&gt;],
- skill   =&gt;[completion,tools,thinking],
- size    =&gt;gB::4.87]@ollama:qwen3:latest
+ skill   =&gt;[completion,tools,thinking]]@ollama:qwen3:latest
 ==&gt;model::[
+ size    =&gt;gB::4.34,
  provider=&gt;!*/sys/space/ollama,
  name    =&gt;llama3-groq-tool-use:latest,
  think   =&gt;noobj,
- skill   =&gt;[completion,tools],
- size    =&gt;gB::4.34]@ollama:llama3-groq-tool-use:latest
+ skill   =&gt;[completion,tools]]@ollama:llama3-groq-tool-use:latest
 ==&gt;model::[
+ size    =&gt;gB::0.00,
  provider=&gt;!*/sys/space/ollama,
  name    =&gt;&lt;deepseek-v3.2:cloud&gt;,
  think   =&gt;[=&gt;],
- skill   =&gt;[completion,tools,thinking],
- size    =&gt;gB::0.00]@&lt;ollama:deepseek-v3.2:cloud&gt;
+ skill   =&gt;[completion,tools,thinking]]@&lt;ollama:deepseek-v3.2:cloud&gt;
 ==&gt;model::[
+ size    =&gt;gB::17.71,
  provider=&gt;!*/sys/space/ollama,
  name    =&gt;&lt;glm-4.7-flash:latest&gt;,
  think   =&gt;[=&gt;],
- skill   =&gt;[completion,tools,thinking],
- size    =&gt;gB::17.71]@&lt;ollama:glm-4.7-flash:latest&gt;
+ skill   =&gt;[completion,tools,thinking]]@&lt;ollama:glm-4.7-flash:latest&gt;
 ==&gt;model::[
+ size    =&gt;gB::0.59,
  provider=&gt;!*/sys/space/ollama,
  name    =&gt;tinyllama:latest,
  think   =&gt;noobj,
- skill   =&gt;[completion],
- size    =&gt;gB::0.59]@ollama:tinyllama:latest
+ skill   =&gt;[completion]]@ollama:tinyllama:latest
 ==&gt;model::[
+ size    =&gt;gB::8.37,
  provider=&gt;!*/sys/space/ollama,
  name    =&gt;deepcoder:latest,
  think   =&gt;noobj,
- skill   =&gt;[completion],
- size    =&gt;gB::8.37]@ollama:deepcoder:latest
+ skill   =&gt;[completion]]@ollama:deepcoder:latest
 ==&gt;model::[
+ size    =&gt;gB::12.85,
  provider=&gt;!*/sys/space/ollama,
  name    =&gt;gpt-oss:latest,
  think   =&gt;[=&gt;],
- skill   =&gt;[completion,tools,thinking],
- size    =&gt;gB::12.85]@ollama:gpt-oss:latest
+ skill   =&gt;[completion,tools,thinking]]@ollama:gpt-oss:latest
 ==&gt;model::[
+ size    =&gt;gB::4.87,
  provider=&gt;!*/sys/space/ollama,
  name    =&gt;qwen3:8b,
  think   =&gt;[=&gt;],
- skill   =&gt;[completion,tools,thinking],
- size    =&gt;gB::4.87]@ollama:qwen3:8b
+ skill   =&gt;[completion,tools,thinking]]@ollama:qwen3:8b
 ==&gt;model::[
+ size    =&gt;gB::48.19,
  provider=&gt;!*/sys/space/ollama,
  name    =&gt;qwen3-coder-next:latest,
  think   =&gt;noobj,
- skill   =&gt;[completion,tools],
- size    =&gt;gB::48.19]@ollama:qwen3-coder-next:latest
+ skill   =&gt;[completion,tools]]@ollama:qwen3-coder-next:latest
 ==&gt;model::[
+ size    =&gt;gB::0.00,
  provider=&gt;!*/sys/space/ollama,
  name    =&gt;&lt;minimax-m2.5:cloud&gt;,
  think   =&gt;[=&gt;],
- skill   =&gt;[completion,tools,thinking],
- size    =&gt;gB::0.00]@&lt;ollama:minimax-m2.5:cloud&gt;
+ skill   =&gt;[completion,tools,thinking]]@&lt;ollama:minimax-m2.5:cloud&gt;
 ==&gt;model::[
+ size    =&gt;gB::4.41,
  provider=&gt;!*/sys/space/ollama,
  name    =&gt;llava:latest,
  think   =&gt;noobj,
- skill   =&gt;[completion,vision],
- size    =&gt;gB::4.41]@ollama:llava:latest
+ skill   =&gt;[completion,vision]]@ollama:llava:latest
 ​</code></pre>
 </div>
 </div>
@@ -3043,8 +3043,8 @@ mtron&gt; *openai:gpt-4o-2024-11-20 +
           [think=&gt;print(_),
            response=&gt;[to=&gt;print(_)]].to(agent)                        ​2​
 ==&gt;model::[
- provider=&gt;!*/sys/space/openai,
  name    =&gt;gpt-4o-2024-11-20,
+ provider=&gt;!*/sys/space/openai,
  think   =&gt;print(id()),
  response=&gt;[
    to=&gt;print(id())]]@openai:gpt-4o-2024-11-20
@@ -3092,8 +3092,8 @@ mtron&gt; &lt;openai:gpt-4o-2024-08-06/memory&gt; -&gt;(|!*/usr/ai/memory)      
 ​
 mtron&gt; *&lt;openai:gpt-4o-2024-08-06&gt;                                    ​6​
 ==&gt;model::[
- provider=&gt;!*/sys/space/openai,
  name    =&gt;gpt-4o-2024-08-06,
+ provider=&gt;!*/sys/space/openai,
  skill   =&gt;[
    skill::[
        name   =&gt;mtron,
@@ -3130,8 +3130,8 @@ Help users be effec...""",
 ​
 mtron&gt; *&lt;openai:gpt-4o-2024-08-06&gt;.&gt;&gt;=[_=&gt;^*]                         ​7​
 ==&gt;model::[
- provider=&gt;!*/sys/space/openai,
  name    =&gt;gpt-4o-2024-08-06,
+ provider=&gt;!*/sys/space/openai,
  skill   =&gt;[
    skill::[
        name   =&gt;mtron,
@@ -3168,8 +3168,8 @@ Help users be effec...""",
 ​
 mtron&gt; agent -&gt; *&lt;openai:gpt-4o-2024-08-06&gt;                           ​8​
 ==&gt;model::[
- provider=&gt;!*/sys/space/openai,
  name    =&gt;gpt-4o-2024-08-06,
+ provider=&gt;!*/sys/space/openai,
  skill   =&gt;[
    skill::[
        name   =&gt;mtron,
@@ -3249,10 +3249,14 @@ mtron&gt; *agent.chat('what tools do you have access to?',
                    [number_of_tools=&gt;int::T,tool_names=&gt;str::T])      ​1​
 ==&gt;[
  number_of_tools=&gt;3,
- tool_names     =&gt;'mtron, activate_skill, read_skill_resou...']
+ tool_names     =&gt;"""1. mtron
+2. activate_skill
+3. read_skil..."""]
 ​
 mtron&gt; *agent.chat('what skills do you have?')                        ​2​
-==&gt;I have access to the "mtron" skill, which helps users be effective with metatron by answering questions, connecting data sources, writing expressions, and providing statistics. If you need assistance with anything related to the metatron environment or mtron language, feel free to ask!
+==&gt;I have access to the following skill:
+
+1. **Metatron (mtron)**: A skill that provides metatron knowledge to assist users.
 ​
 mtron&gt; *agent&gt;&gt;memory                                                 ​3​
 ==&gt;[
@@ -3266,12 +3270,14 @@ mtron&gt; *agent&gt;&gt;memory                                                 �
            type=&gt;TEXT]],
      type    =&gt;USER],
   [
-     text                 =&gt;'{"number_of_tools":3,"tool_names":"mtro...',
+     text                 =&gt;'{"number_of_tools":3,"tool_names":"1. m...',
      toolExecutionRequests=&gt;[,],
      attributes           =&gt;[
        format=&gt;[
          number_of_tools=&gt;3,
-         tool_names     =&gt;'mtron, activate_skill, read_skill_resou...']],
+         tool_names     =&gt;"""1. mtron
+2. activate_skill
+3. read_skil..."""]],
      type                 =&gt;AI],
   [
      contents=&gt;[
@@ -3280,27 +3286,9 @@ mtron&gt; *agent&gt;&gt;memory                                                 �
            type=&gt;TEXT]],
      type    =&gt;USER],
   [
-     toolExecutionRequests=&gt;[
-     [
-           id       =&gt;call_ejIiwcojfY6qrtjCJ3Ef4eX8,
-           name     =&gt;activate_skill,
-           arguments=&gt;{"skill_name":"mtron"}]],
-     attributes           =&gt;[=&gt;],
-     type                 =&gt;AI],
-  [
-     id        =&gt;call_ejIiwcojfY6qrtjCJ3Ef4eX8,
-     toolName  =&gt;activate_skill,
-     contents  =&gt;[
-     [
-           text=&gt;"""# mtron assistance
+     text                 =&gt;"""I have access to the following skill:
 
-Help users be effec...""",
-           type=&gt;TEXT]],
-     isError   =&gt;false,
-     attributes=&gt;[activated_skill=&gt;mtron],
-     type      =&gt;TOOL_EXECUTION_RESULT],
-  [
-     text                 =&gt;'I have access to the "mtron" skill, whi...',
+...""",
      toolExecutionRequests=&gt;[,],
      attributes           =&gt;[=&gt;],
      type                 =&gt;AI]]@/usr/ai/memory
@@ -3308,7 +3296,9 @@ Help users be effec...""",
 mtron&gt; *agent&gt;&gt;memory/2/attributes/format                             ​4​
 ==&gt;[
  number_of_tools=&gt;3,
- tool_names     =&gt;'mtron, activate_skill, read_skill_resou...']
+ tool_names     =&gt;"""1. mtron
+2. activate_skill
+3. read_skil..."""]
 ​</code></pre>
 </div>
 </div>
@@ -3371,8 +3361,8 @@ the agent.</p>
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">​
 mtron&gt; *agent                                                                          ​1​
 ==&gt;model::[
- provider=&gt;!*/sys/space/openai,
  name    =&gt;gpt-4o-2024-08-06,
+ provider=&gt;!*/sys/space/openai,
  skill   =&gt;[
    skill::[
        name   =&gt;mtron,
@@ -3427,12 +3417,14 @@ mtron&gt; */usr/ai/memory                                                       
            type=&gt;TEXT]],
      type    =&gt;USER],
   [
-     text                 =&gt;'{"number_of_tools":3,"tool_names":"mtro...',
+     text                 =&gt;'{"number_of_tools":3,"tool_names":"1. m...',
      toolExecutionRequests=&gt;[,],
      attributes           =&gt;[
        format=&gt;[
          number_of_tools=&gt;3,
-         tool_names     =&gt;'mtron, activate_skill, read_skill_resou...']],
+         tool_names     =&gt;"""1. mtron
+2. activate_skill
+3. read_skil..."""]],
      type                 =&gt;AI],
   [
      contents=&gt;[
@@ -3441,27 +3433,9 @@ mtron&gt; */usr/ai/memory                                                       
            type=&gt;TEXT]],
      type    =&gt;USER],
   [
-     toolExecutionRequests=&gt;[
-     [
-           id       =&gt;call_ejIiwcojfY6qrtjCJ3Ef4eX8,
-           name     =&gt;activate_skill,
-           arguments=&gt;{"skill_name":"mtron"}]],
-     attributes           =&gt;[=&gt;],
-     type                 =&gt;AI],
-  [
-     id        =&gt;call_ejIiwcojfY6qrtjCJ3Ef4eX8,
-     toolName  =&gt;activate_skill,
-     contents  =&gt;[
-     [
-           text=&gt;"""# mtron assistance
+     text                 =&gt;"""I have access to the following skill:
 
-Help users be effec...""",
-           type=&gt;TEXT]],
-     isError   =&gt;false,
-     attributes=&gt;[activated_skill=&gt;mtron],
-     type      =&gt;TOOL_EXECUTION_RESULT],
-  [
-     text                 =&gt;'I have access to the "mtron" skill, whi...',
+...""",
      toolExecutionRequests=&gt;[,],
      attributes           =&gt;[=&gt;],
      type                 =&gt;AI],
@@ -3558,7 +3532,7 @@ mtron&gt; *instset
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">​
 mtron&gt; 1.plus(b).plus(3).mult(5)                 ​1​
-==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/432
+==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/480
 ​
 mtron&gt; 1.plus(b).plus(3).catch(2).mult(5)        ​2​
 ==&gt;10
@@ -3618,101 +3592,109 @@ mtron&gt; 1.plus(b).plus(3).catch(2).mult(5)        ​2​
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">​
 mtron&gt; 1.plus(b)                  ​1​
-==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/492
+==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/540
 ​
 mtron&gt; */sys/fail/+               ​2​
-==&gt;fail::[unable to evaluate inst: plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}][...]@/sys/fail/489
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/520
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/526
+==&gt;fail::[unable to evaluate inst: plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}][...]@/sys/fail/538
 ==&gt;fail::[apply failure:
 	[lhs]    | b
 	 \_type  | /m/uri
 	  \_pred | []
 	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
 	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/464
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/468
+	 \_args  | [,]][...]@/sys/fail/523
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/515
 ==&gt;fail::[apply failure:
 	[lhs]    | b
 	 \_type  | /m/uri
 	  \_pred | []
 	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
 	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/470
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/471
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/480
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/478
+	 \_args  | [,]][...]@/sys/fail/529
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/533
 ==&gt;fail::[apply failure:
 	[lhs]    | b
 	 \_type  | /m/uri
 	  \_pred | []
 	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
 	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/475
-==&gt;fail::[apply failure:
-	[lhs]    | b
-	 \_type  | /m/uri
-	  \_pred | []
-	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
-	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/482
-==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/492
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/474
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/483
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/466
+	 \_args  | [,]][...]@/sys/fail/511
 ==&gt;fail::[apply failure:
 	[lhs]    | 1
 	 \_type  | /m/int
 	  \_pred | []
 	[inst]   | plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}
 	 \_dom   | int::T
-	 \_args  | [b]][...]@/sys/fail/488
+	 \_args  | [b]][...]@/sys/fail/536
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/514
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/531
 ==&gt;fail::[apply failure:
 	[lhs]    | b
 	 \_type  | /m/uri
 	  \_pred | []
 	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
 	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/463
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/486
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/467
+	 \_args  | [,]][...]@/sys/fail/530
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/528
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/522
 ==&gt;fail::[apply failure:
 	[lhs]    | b
 	 \_type  | /m/uri
 	  \_pred | []
 	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
 	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/469
-==&gt;fail::[unable to evaluate inst: plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}][...]@/sys/fail/490
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/472
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/479
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/477
+	 \_args  | [,]][...]@/sys/fail/517
 ==&gt;fail::[apply failure:
 	[lhs]    | b
 	 \_type  | /m/uri
 	  \_pred | []
 	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
 	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/481
-==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/491
+	 \_args  | [,]][...]@/sys/fail/524
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/519
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/525
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/516
+==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/540
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/534
+==&gt;fail::[unable to evaluate inst: plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}][...]@/sys/fail/537
 ==&gt;fail::[apply failure:
 	[lhs]    | b
 	 \_type  | /m/uri
 	  \_pred | []
 	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
 	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/476
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/473
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/485
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/484
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/465
+	 \_args  | [,]][...]@/sys/fail/512
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/532
 ==&gt;fail::[apply failure:
 	[lhs]    | 1
 	 \_type  | /m/int
 	  \_pred | []
 	[inst]   | plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}
 	 \_dom   | int::T
-	 \_args  | [b]][...]@/sys/fail/487
+	 \_args  | [b]][...]@/sys/fail/535
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/513
+==&gt;fail::[apply failure:
+	[lhs]    | b
+	 \_type  | /m/uri
+	  \_pred | []
+	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
+	 \_dom   | uri::T
+	 \_args  | [,]][...]@/sys/fail/518
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/521
+==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/539
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/527
 ​
 mtron&gt; */sys/fail/+.catch(_)      ​3​
+==&gt;fail{8}::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}]
+    \_fail::[apply failure:
+	[lhs]    | b
+	 \_type  | /m/uri
+	  \_pred | []
+	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
+	 \_dom   | uri::T
+	 \_args  | [,]]
 ==&gt;fail{2}::[unable to evaluate inst: plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}]
     \_fail::[apply failure:
 	[lhs]    | 1
@@ -3737,24 +3719,16 @@ mtron&gt; */sys/fail/+.catch(_)      ​3​
 	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
 	 \_dom   | uri::T
 	 \_args  | [,]]
-==&gt;fail{8}::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}]
-    \_fail::[apply failure:
-	[lhs]    | b
-	 \_type  | /m/uri
-	  \_pred | []
-	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
-	 \_dom   | uri::T
-	 \_args  | [,]]
-==&gt;fail{2}::[1 [int::T] unable to convert uri::T]
-    \_fail::[unable to evaluate inst: plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}]
-    \_fail::[apply failure:
+==&gt;fail{2}::[apply failure:
 	[lhs]    | 1
 	 \_type  | /m/int
 	  \_pred | []
 	[inst]   | plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}
 	 \_dom   | int::T
 	 \_args  | [b]]
-==&gt;fail{2}::[apply failure:
+==&gt;fail{2}::[1 [int::T] unable to convert uri::T]
+    \_fail::[unable to evaluate inst: plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}]
+    \_fail::[apply failure:
 	[lhs]    | 1
 	 \_type  | /m/int
 	  \_pred | []
@@ -3919,7 +3893,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in <strong class="yellow">M</strong>​<span class="red">E</span>​<strong class="orange">t</strong>​<span class="fuchsia">a</span>​<strong class="lime">t</strong>​<strong class="aqua">r</strong>​<strong class="blue">O</strong>​<span class="green">N</span>​.</p>
+This is the foundation for all other <code>objs</code> in <span class="green">M</span>​<strong class="blue">e</strong>​<span class="fuchsia">t</span>​<strong class="yellow">A</strong>​<strong class="orange">T</strong>​<span class="lime">R</span>​<strong class="aqua">o</strong>​<span class="red">n</span>​.</p>
 </div>
 <h3 id="_mono_types" class="discrete">mono types</h3>
 <div class="paragraph">
@@ -6324,7 +6298,7 @@ mtron&gt; *g:V/+.?==[address=&gt;[_ =&gt; [state=&gt;NM]]].&gt;&gt;address/+/cit
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">​
-mtron&gt; *g:V/1
+mtron&gt; *g:V/1                                                             ​1​
 ==&gt;person::[
  :address         =&gt;[
    home=&gt;[city=&gt;'santa fe',state=&gt;NM],
@@ -6334,7 +6308,7 @@ mtron&gt; *g:V/1
  name             =&gt;'marko',
  address/home/city=&gt;'santa fe']@g:V/1
 ​
-mtron&gt; *acme:customers/357
+mtron&gt; *acme:customers/357                                                ​2​
 ==&gt;[
  customerNumber        =&gt;357,
  customerName          =&gt;'GiftsForHim.com',
@@ -6347,10 +6321,10 @@ mtron&gt; *acme:customers/357
  salesRepEmployeeNumber=&gt;!*acme:employees/1612,
  creditLimit           =&gt;77700.00]
 ​
-mtron&gt; *g:V/1.addE(consulted,acme:customers/357)
+mtron&gt; *g:V/1.addE(consulted,|*acme:customers/357)                        ​3​
 ==&gt;consulted::[=&gt;]@g:E/31
 ​
-mtron&gt; *g:V/1.out(consulted)
+mtron&gt; *g:V/1.out(consulted)                                              ​4​
 ==&gt;[
  customerNumber        =&gt;357,
  customerName          =&gt;'GiftsForHim.com',
@@ -6363,29 +6337,87 @@ mtron&gt; *g:V/1.out(consulted)
  salesRepEmployeeNumber=&gt;!*acme:employees/1612,
  creditLimit           =&gt;77700.00]
 ​
-mtron&gt; *g:V/1.out(consulted)&gt;&gt;salesRepEmployeeNumber
-==&gt;[
- employeeNumber=&gt;1612,
- lastName      =&gt;'Marsh',
- firstName     =&gt;'Peter',
- extension     =&gt;'x102',
- email         =&gt;'pmarsh@classicmodelcars.com',
- officeCode    =&gt;!*acme:offices/6,
- reportsTo     =&gt;!*acme:employees/1088,
- jobTitle      =&gt;'Sales Rep']
-​
-mtron&gt; *g:V/1.out(consulted)&gt;&gt;salesRepEmployeeNumber&gt;&gt;reportsTo
-==&gt;[
- employeeNumber=&gt;1088,
- lastName      =&gt;'Patterson',
- firstName     =&gt;'William',
- extension     =&gt;'x4871',
- email         =&gt;'wpatterson@classicmodelcars.com',
- officeCode    =&gt;!*acme:offices/6,
- reportsTo     =&gt;!*acme:employees/1056,
- jobTitle      =&gt;'Sales Manager (APAC)']
+mtron&gt; *g:V/1.out(consulted).matches(vrtx::T)                             ​5​
+==&gt;true
 ​</code></pre>
 </div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>vertex <code>v[1]</code> in a graph database.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>row <code>357</code> in a relational database.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>an edge is created in the graph linking vertex <code>v[1]</code> and row <code>357</code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>the edge is traverseable like any other edge.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>a <code>rrow::T</code> <em>is a</em> <code>vrtx::T</code> according to metatron&#8217;s structural type system.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The new <code>consulted</code>-edge has a standard vertex on its tail, but a "reference vertex"
+on its head. On this reference vertex is an auto-from instruction (<code>!*</code>), that when
+accessed, immediately resolves the monad&#8217;s data pointer to the respective relational database row.</p>
+</div>
+<div class="paragraph">
+<p>Some more expressions are provided below that extend what has been constructed in the previous example thus far.
+These expressions highlight the nested structural pattern matching and data manipulation capabilities of mtron.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">​
+mtron&gt; *g:V/1.out(consulted).-&lt;[
+         name    =&gt;"${&gt;&gt;contactFirstName} ${&gt;&gt;contactLastName}",
+         address =&gt;==[city=&gt;_,country=&gt;_]]
+==&gt;[
+ name   =&gt;'noobj noobj',
+ address=&gt;[city=&gt;'Auckland',country=&gt;'New Zealand']]
+​
+mtron&gt; *g:V/1.out(consulted)
+             .out(salesRepEmployeeNumber)
+             .out(reportsTo)-&lt;[
+               name=&gt;"${&gt;&gt;firstName} ${&gt;&gt;lastName}",
+               job=&gt;-&lt;[title=&gt;&gt;&gt;jobTitle,email=&gt;&gt;&gt;email]]
+==&gt;[
+ name=&gt;'noobj noobj',
+ job =&gt;[
+   title=&gt;'Sales Manager (APAC)',
+   email=&gt;'wpatterson@classicmodelcars.com']]
+​</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The examples highlight important concepts necessary to understand
+ in order to be effective at traversing and manipulating complex,
+nested structures existing across heterogeneous data sources.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>-&lt;</code> (<strong>copy apply</strong>): copy the input <code>obj</code> across all slots of the arg <code>poly</code>.</p>
+</li>
+<li>
+<p><code>==</code> (<strong>match apply</strong>): split the input <code>poly</code> to match the slots of the arg <code>poly</code>.</p>
+</li>
+<li>
+<p><code>&gt;&gt;</code> (<strong>project select</strong>): select a particular component of the input <code>poly</code>.</p>
+</li>
+<li>
+<p><code>${}</code> (<strong>template select</strong>): process the input <code>obj</code> and output a <code>str</code> representation of the output <code>obj</code>.</p>
+</li>
+</ul>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
@@ -6401,6 +6433,11 @@ mtron&gt; *g:V/1.out(consulted)&gt;&gt;salesRepEmployeeNumber&gt;&gt;reportsTo
 │        └──┘   │            │├─────────────┤│
 │               │            │└─────────────┘│
 └───────────────┘            └───────────────┘
+
+
+
+
+
 
 
 

@@ -86,7 +86,8 @@ public interface Str extends Mono, PlusMonoid.O<Str> {
         while (matcher.find()) {
             final String exprStr = matcher.group(1);
             try {
-                final String strVal = ObjmtronSerializer.parse(exprStr).apply(lhs).toString();
+                final Obj templateResult = ObjmtronSerializer.parse(exprStr).apply(lhs);
+                final String strVal = templateResult.isStr() ? templateResult.strValue() : templateResult.toString();
                 matcher.appendReplacement(result, Matcher.quoteReplacement(strVal));
             } catch (Exception e) {
                throw MTronException.of("failed to expand template ${%s}: %s", exprStr, e.getMessage());
