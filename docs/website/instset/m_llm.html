@@ -258,7 +258,7 @@ bin/metatron</code></pre>
    super=>!*/m],
  type   =>[
    space::T[?[
-     name   =>is(or(eq(anthropic),eq(openai),eq(ollama))),
+     name   =>is(or(eq(anthropic),eq(openai),eq(ollama),eq(localai))),
      pattern=>uri::T,
      {?}host=>uri::T,
      route  =>[
@@ -293,7 +293,7 @@ bin/metatron</code></pre>
            content=>str::T]]]]@/m/llm/skill,
    rec::T[?[
      provider   =>space::T[?[
-     name   =>is(or(eq(anthropic),eq(openai),eq(ollama))),
+     name   =>is(or(eq(anthropic),eq(openai),eq(ollama),eq(localai))),
      pattern=>uri::T,
      {?}host=>uri::T,
      route  =>[
@@ -473,9 +473,9 @@ bin/metatron</code></pre>
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"a mcp server specification" <span class="text-light">=&gt;</span> "creates a connection to an existing mcp server"
-   [{?}status <span class="text-light">=&gt;</span> "the current status of the mcp server"
+   [{?}tool <span class="text-light">=&gt;</span> "the tools/functions available for use on the mcp server"
     host <span class="text-light">=&gt;</span> "the mcp server endpoint"
-    {?}tool <span class="text-light">=&gt;</span> "the tools/functions available for use on the mcp server"]</pre>
+    {?}status <span class="text-light">=&gt;</span> "the current status of the mcp server"]</pre>
                     </div>
         <div class="card-body border-top py-2">
             <small class="text-muted fw-bold">examples:</small>
@@ -512,7 +512,7 @@ mcp::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron                 
                     <div class="card-body p-2">
                         <pre class="mb-0"><code class="language-mtron">rec::T[?[
      provider   =&gt;space::T[?[
-     name   =&gt;is(or(eq(anthropic),eq(openai),eq(ollama))),
+     name   =&gt;is(or(eq(anthropic),eq(openai),eq(ollama),eq(localai))),
      pattern=&gt;uri::T,
      {?}host=&gt;uri::T,
      route  =&gt;[
@@ -539,13 +539,13 @@ mcp::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron                 
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"a large language model" <span class="text-light">=&gt;</span> "the model construction"
-   [{?}skill <span class="text-light">=&gt;</span> "skill to extend the llm&#x27;s abilities"
+   [{?}think <span class="text-light">=&gt;</span> "whether the llm should think before responding"
     {?}memory <span class="text-light">=&gt;</span> "llm&#x27;s memory of previous interactions"
-    {?}think <span class="text-light">=&gt;</span> "whether the llm should think before responding"
-    {?}tool <span class="text-light">=&gt;</span> "tool functions the llm can use to solve problems"
-    name <span class="text-light">=&gt;</span> "the model name from the host catalog"
+    {?}skill <span class="text-light">=&gt;</span> "skill to extend the llm&#x27;s abilities"
+    {?}size <span class="text-light">=&gt;</span> "the size of the model in bytes"
     {?}host <span class="text-light">=&gt;</span> "the llm inferencing provider endpoint"
-    {?}size <span class="text-light">=&gt;</span> "the size of the model in bytes"]</pre>
+    name <span class="text-light">=&gt;</span> "the model name from the host catalog"
+    {?}tool <span class="text-light">=&gt;</span> "tool functions the llm can use to solve problems"]</pre>
                     </div>
                 </div>
                 <div class="card mb-3" id="type-skill">
@@ -574,9 +574,9 @@ mcp::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron                 
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"a skill.md specification" <span class="text-light">=&gt;</span> "?"
    [{?}entry <span class="text-light">=&gt;</span> "skill assets, references, and scripts"
-    desc <span class="text-light">=&gt;</span> "skill description"
+    name <span class="text-light">=&gt;</span> "skill name"
     {?}content <span class="text-light">=&gt;</span> "skill.md document content"
-    name <span class="text-light">=&gt;</span> "skill name"]</pre>
+    desc <span class="text-light">=&gt;</span> "skill description"]</pre>
                     </div>
         <div class="card-body border-top py-2">
             <small class="text-muted fw-bold">examples:</small>
@@ -605,9 +605,9 @@ mcp::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron                 
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"a tool specification" <span class="text-light">=&gt;</span> "?"
-   [{?}arg <span class="text-light">=&gt;</span> "tool arguments"
+   [name <span class="text-light">=&gt;</span> "tool name"
     desc <span class="text-light">=&gt;</span> "tool description"
-    name <span class="text-light">=&gt;</span> "tool name"]</pre>
+    {?}arg <span class="text-light">=&gt;</span> "tool arguments"]</pre>
                     </div>
         <div class="card-body border-top py-2">
             <small class="text-muted fw-bold">examples:</small>
@@ -658,8 +658,8 @@ mcp::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron                 
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"a model to chat with" <span class="text-light">=&gt;</span> "the models chat response"
-   [0 <span class="text-light">=&gt;</span> "the message to send the model"
-    1 <span class="text-light">=&gt;</span> "an optional response format"]</pre>
+   [1 <span class="text-light">=&gt;</span> "an optional response format"
+    0 <span class="text-light">=&gt;</span> "the message to send the model"]</pre>
                     </div>
         <div class="card-body border-top py-2">
             <small class="text-muted fw-bold">examples:</small>
@@ -681,7 +681,7 @@ mcp::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron                 
                     
                     <div class="mt-2">
                         <pre class="mb-0"><code class="language-mtron">space::T[isa([
- name   =&gt;is(or(eq(anthropic),eq(openai),eq(ollama))),
+ name   =&gt;is(or(eq(anthropic),eq(openai),eq(ollama),eq(localai))),
  pattern=&gt;uri::T,
  {?}host=&gt;uri::T,
  route  =&gt;[
@@ -693,10 +693,10 @@ mcp::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron                 
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"llm model catalog specification" <span class="text-light">=&gt;</span> "creates a model catalog"
-   [pattern <span class="text-light">=&gt;</span> "catalog address space"
-    {?}host <span class="text-light">=&gt;</span> "the llm inferencing provider endpoint"
+   [name <span class="text-light">=&gt;</span> "the provider name (anthropic, openai, ollama, or localai)"
     route <span class="text-light">=&gt;</span> "internal space routes"
-    name <span class="text-light">=&gt;</span> "the provider name (anthropic, openai, or ollama)"]</pre>
+    {?}host <span class="text-light">=&gt;</span> "the llm inferencing provider endpoint"
+    pattern <span class="text-light">=&gt;</span> "catalog address space"]</pre>
                     </div>
                 </div>
         </div>
@@ -705,7 +705,7 @@ mcp::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron                 
         <div class="container-xxl py-3 text-center">
             <hr class="border-secondary">
             <small class="text-muted">
-                generated by metatron instset doc generator on build 0-2026-04-15 18:04:51<br>
+                generated by metatron instset doc generator on build 0-2026-04-15 23:42:52<br>
                 © PhaseShift Studio, LLC
             </small>
         </div>

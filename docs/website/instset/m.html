@@ -255,6 +255,71 @@ bin/metatron</code></pre>
        obj      =>memspace::[pattern=><#>],
        inst     =>instset::[pattern=><#>]]],
  space  =>[sub=>{!*/m/mach,!*/m/math,!*/m/web,!*/m/iot,!*/m/grph,!*/m/llm,!*/m/tble,!*/m/dcmnt}],
+ type   =>[
+   bool::T,
+   int::T,
+   real::T,
+   bytes::T,
+   str::T,
+   uri::T,
+   rel::T,
+   lst::T,
+   rec::T,
+   rec::T[?[
+     {?}constq =>[#::T],
+     {?}type   =>[T::T],
+     {?}inst   =>[inst::T],
+     {?}rewrite=>[inst::T],
+     {?}sugar  =>[lst::T]]]@/m/instset,
+   inst::T,
+   code::T,
+   fail::T,
+   rec::T[?[
+     pattern=>uri::T,
+     {?}q   =>[
+       uri::T=>rec::T[][inst?rng=q&dom=#{?}([
+ pattern       =>uri::T,
+ pre_write{?}  =>inst::T,
+ post_write{?} =>inst::T,
+ qless_write{?}=>inst::T,
+ pre_read{?}   =>inst::T,
+ post_read{?}  =>inst::T]){<j>}]@/m/space/q]]]@/m/space,
+   space::T[][inst?rng=memspace&dom=#{?}(isa([
+ pattern   =>uri::T,
+ {?}persist=>uri::T[][inst?rng=file&dom=#{?}(uri::T){<j>}]@/m/mach/file])){<j>}]@/m/space/memspace,
+   space::T[][inst?rng=stack&dom=#{?}(isa([
+ pattern=>uri::T])){<j>}]@/m/space/stack,
+   space::T[][inst?rng=meta&dom=#{?}(isa([
+ pattern=>uri::T,
+ host   =>uri::T,
+ route  =>[
+   uri::T=>uri::T],
+ peers  =>[uri{*}::T]])){<j>}]@/m/space/meta,
+   rec::T[][inst?rng=q&dom=#{?}([
+ pattern       =>uri::T,
+ pre_write{?}  =>inst::T,
+ post_write{?} =>inst::T,
+ qless_write{?}=>inst::T,
+ pre_read{?}   =>inst::T,
+ post_read{?}  =>inst::T]){<j>}]@/m/space/q,
+   q::T[][/m/space/q/subq/cons?rng=subq&dom=#{?}(){<j>}]@/m/space/q/subq,
+   rec::T[?[
+     target =>uri::T,
+     on_recv=>#?dom=lst::T]]@/m/space/q/subq/sub,
+   q::T[][/m/space/q/typeq/cons?rng=typeq&dom=#{?}(){<j>}]@/m/space/q/typeq,
+   q::T[][/m/space/q/docq/cons?rng=docq&dom=#{?}(){<j>}]@/m/space/q/docq,
+   q::T[][/m/space/q/incrq/cons?rng=incrq&dom=#{?}(){<j>}]@/m/space/q/incrq,
+   q::T[][/m/space/q/constq/cons?rng=constq&dom=#{?}(){<j>}]@/m/space/q/constq],
+ const  =>[noobj],
+ rewrite=>[
+   /m/inst/rewrite/id_removal?rng=code{?}&dom=code(){<j>},
+   /m/inst/rewrite/map_nest?rng=code{?}&dom=code(){<j>},
+   /m/inst/rewrite/else_after_count?rng=code{?}&dom=code(){<j>},
+   /m/inst/rewrite/plus_zero?rng=code{?}&dom=code(){<j>},
+   /m/inst/rewrite/mult_one?rng=code{?}&dom=code(){<j>},
+   /m/inst/rewrite/split_merge_collapse?rng=code{?}&dom=code(){<j>},
+   /m/inst/rewrite/split_merge_left_factor?rng=code{?}&dom=code(){<j>},
+   /m/inst/rewrite/split_merge_right_factor?rng=code{?}&dom=code(){<j>}],
  inst   =>[
    as?rng=bool&dom=bool(bool::T){<j>},
    as?rng=bytes&dom=bool(bytes::T){<j>},
@@ -484,72 +549,7 @@ bin/metatron</code></pre>
    swap?rng=A&dom=A(B::T){<j>},
    rshift?rng=B{?}&dom=A(){<j>},
    lshift?rng=B{?}&dom=A(){<j>},
-   start?rng=A{**}&dom=noobj{0}(A{**}::T){<j>}],
- rewrite=>[
-   /m/inst/rewrite/id_removal?rng=code{?}&dom=code(){<j>},
-   /m/inst/rewrite/map_nest?rng=code{?}&dom=code(){<j>},
-   /m/inst/rewrite/else_after_count?rng=code{?}&dom=code(){<j>},
-   /m/inst/rewrite/plus_zero?rng=code{?}&dom=code(){<j>},
-   /m/inst/rewrite/mult_one?rng=code{?}&dom=code(){<j>},
-   /m/inst/rewrite/split_merge_collapse?rng=code{?}&dom=code(){<j>},
-   /m/inst/rewrite/split_merge_left_factor?rng=code{?}&dom=code(){<j>},
-   /m/inst/rewrite/split_merge_right_factor?rng=code{?}&dom=code(){<j>}],
- const  =>[noobj],
- type   =>[
-   bool::T,
-   int::T,
-   real::T,
-   bytes::T,
-   str::T,
-   uri::T,
-   rel::T,
-   lst::T,
-   rec::T,
-   rec::T[?[
-     {?}constq =>[#::T],
-     {?}type   =>[T::T],
-     {?}inst   =>[inst::T],
-     {?}rewrite=>[inst::T],
-     {?}sugar  =>[lst::T]]]@/m/instset,
-   inst::T,
-   code::T,
-   fail::T,
-   rec::T[?[
-     pattern=>uri::T,
-     {?}q   =>[
-       uri::T=>rec::T[][inst?rng=q&dom=#{?}([
- pattern       =>uri::T,
- pre_write{?}  =>inst::T,
- post_write{?} =>inst::T,
- qless_write{?}=>inst::T,
- pre_read{?}   =>inst::T,
- post_read{?}  =>inst::T]){<j>}]@/m/space/q]]]@/m/space,
-   space::T[][inst?rng=memspace&dom=#{?}(isa([
- pattern   =>uri::T,
- {?}persist=>uri::T[][inst?rng=file&dom=#{?}(uri::T){<j>}]@/m/mach/file])){<j>}]@/m/space/memspace,
-   space::T[][inst?rng=stack&dom=#{?}(isa([
- pattern=>uri::T])){<j>}]@/m/space/stack,
-   space::T[][inst?rng=meta&dom=#{?}(isa([
- pattern=>uri::T,
- host   =>uri::T,
- route  =>[
-   uri::T=>uri::T],
- peers  =>[uri{*}::T]])){<j>}]@/m/space/meta,
-   rec::T[][inst?rng=q&dom=#{?}([
- pattern       =>uri::T,
- pre_write{?}  =>inst::T,
- post_write{?} =>inst::T,
- qless_write{?}=>inst::T,
- pre_read{?}   =>inst::T,
- post_read{?}  =>inst::T]){<j>}]@/m/space/q,
-   q::T[][/m/space/q/subq/cons?rng=subq&dom=#{?}(){<j>}]@/m/space/q/subq,
-   rec::T[?[
-     target =>uri::T,
-     on_recv=>#?dom=lst::T]]@/m/space/q/subq/sub,
-   q::T[][/m/space/q/typeq/cons?rng=typeq&dom=#{?}(){<j>}]@/m/space/q/typeq,
-   q::T[][/m/space/q/docq/cons?rng=docq&dom=#{?}(){<j>}]@/m/space/q/docq,
-   q::T[][/m/space/q/incrq/cons?rng=incrq&dom=#{?}(){<j>}]@/m/space/q/incrq,
-   q::T[][/m/space/q/constq/cons?rng=constq&dom=#{?}(){<j>}]@/m/space/q/constq]]@/m</code></pre>
+   start?rng=A{**}&dom=noobj{0}(A{**}::T){<j>}]]@/m</code></pre>
                         </div>
                     </div>
                 </div>
@@ -6046,7 +6046,7 @@ a-&gt;2+*a                   [-- 4 via sugar&#x27;d writing/reading a --]</code>
         <div class="container-xxl py-3 text-center">
             <hr class="border-secondary">
             <small class="text-muted">
-                generated by metatron instset doc generator on build 0-2026-04-15 18:04:36<br>
+                generated by metatron instset doc generator on build 0-2026-04-15 23:42:36<br>
                 © PhaseShift Studio, LLC
             </small>
         </div>

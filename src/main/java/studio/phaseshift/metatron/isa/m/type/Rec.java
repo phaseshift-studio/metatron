@@ -36,6 +36,7 @@ import static studio.phaseshift.metatron.Tokens.C;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.ObjFactory.LOG;
 import static studio.phaseshift.metatron.isa.m.type.Poly.Helper.selectRecRecursion;
 import static studio.phaseshift.metatron.isa.m.type.Rel.REL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
@@ -233,10 +234,9 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
                 return jvm;
             try {
                 jvm.remove(noobj());
-                jvm.values().removeIf(Objects::isNull);
-                jvm.values().removeIf(Obj::isNoObj);
+                jvm.entrySet().stream().filter(e -> e.getValue() == null || e.getValue().isNoObj()).map(Map.Entry::getKey).toList().forEach(jvm::remove);
             } catch (final UnsupportedOperationException e) {
-                // do nothing
+               LOG.error(e);
             }
             return jvm;
         }

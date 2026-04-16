@@ -33,22 +33,24 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyObjLogger;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.lang.reflect.Field;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_ISA_TID;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 public class LogObj extends MRec {
 
     public static final fURI LOG_TID = MACH_ISA_TID.extend("log");
 
     public LogObj(final Obj log) {
-        super(log.recValue(), LOG_TID,null);
+        super(new LinkedHashMap<>(log.recValue()), LOG_TID,null);
     }
 
     protected LogObj(final Rec levels, final fURI vid) {
-        super(Map.of(uri(Tokens.LEVEL), levels), LOG_TID, vid);
+        super(mutableMap(uri(Tokens.LEVEL), levels), LOG_TID, vid);
     }
 
     public static LogObj from(final Rec log) {

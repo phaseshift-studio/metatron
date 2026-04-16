@@ -63,6 +63,18 @@ main {
     max-width: 1600px;
 }
 
+table .paragraph {
+    margin-left: 0.5rem;
+}
+
+.colist table {
+    margin-left: 0.5rem;
+}
+
+table .ulist {
+   line-height: 0.9rem;
+}
+
 .card {
     padding: 0.5rem;
     margin: 2rem;
@@ -2866,7 +2878,7 @@ mtron&gt; {1,2,3,4,5}-&lt;[?&gt;2 =&gt; as(str::T) + ' greater than 2',
 mtron&gt; */m/llm/model
 ==&gt;rec::T[?[
      provider   =&gt;space::T[?[
-     name   =&gt;is(or(eq(anthropic),eq(openai),eq(ollama))),
+     name   =&gt;is(or(eq(anthropic),eq(openai),eq(ollama),eq(localai))),
      pattern=&gt;uri::T,
      {?}host=&gt;uri::T,
      route  =&gt;[
@@ -2894,77 +2906,87 @@ mtron&gt; */m/llm/model
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">​
 mtron&gt; *ollama:+
 ==&gt;model::[
- size    =&gt;gB::0.72,
- provider=&gt;!*/sys/space/ollama,
- name    =&gt;deepseek-coder:latest,
- think   =&gt;noobj,
- skill   =&gt;[completion]]@ollama:deepseek-coder:latest
-==&gt;model::[
- size    =&gt;gB::4.87,
  provider=&gt;!*/sys/space/ollama,
  name    =&gt;qwen3:latest,
+ license =&gt;'                                 Apache...',
  think   =&gt;[=&gt;],
- skill   =&gt;[completion,tools,thinking]]@ollama:qwen3:latest
+ skill   =&gt;[completion,tools,thinking],
+ size    =&gt;gB::4.87]@ollama:qwen3:latest
 ==&gt;model::[
- size    =&gt;gB::4.34,
+ provider=&gt;!*/sys/space/ollama,
+ name    =&gt;qwen3:8b,
+ license =&gt;'                                 Apache...',
+ think   =&gt;[=&gt;],
+ skill   =&gt;[completion,tools,thinking],
+ size    =&gt;gB::4.87]@ollama:qwen3:8b
+==&gt;model::[
+ provider=&gt;!*/sys/space/ollama,
+ name    =&gt;&lt;glm-4.7-flash:latest&gt;,
+ license =&gt;"""MIT License
+
+Copyright (c) [year] [full...""",
+ think   =&gt;[=&gt;],
+ skill   =&gt;[completion,tools,thinking],
+ size    =&gt;gB::17.71]@&lt;ollama:glm-4.7-flash:latest&gt;
+==&gt;model::[
  provider=&gt;!*/sys/space/ollama,
  name    =&gt;llama3-groq-tool-use:latest,
- think   =&gt;noobj,
- skill   =&gt;[completion,tools]]@ollama:llama3-groq-tool-use:latest
+ license =&gt;'META LLAMA 3 COMMUNITY LICENSE AGREEMEN...',
+ skill   =&gt;[completion,tools],
+ size    =&gt;gB::4.34]@ollama:llama3-groq-tool-use:latest
 ==&gt;model::[
- size    =&gt;gB::0.00,
  provider=&gt;!*/sys/space/ollama,
  name    =&gt;&lt;deepseek-v3.2:cloud&gt;,
  think   =&gt;[=&gt;],
- skill   =&gt;[completion,tools,thinking]]@&lt;ollama:deepseek-v3.2:cloud&gt;
+ skill   =&gt;[completion,tools,thinking],
+ size    =&gt;gB::0.00]@&lt;ollama:deepseek-v3.2:cloud&gt;
 ==&gt;model::[
- size    =&gt;gB::17.71,
- provider=&gt;!*/sys/space/ollama,
- name    =&gt;&lt;glm-4.7-flash:latest&gt;,
- think   =&gt;[=&gt;],
- skill   =&gt;[completion,tools,thinking]]@&lt;ollama:glm-4.7-flash:latest&gt;
-==&gt;model::[
- size    =&gt;gB::0.59,
  provider=&gt;!*/sys/space/ollama,
  name    =&gt;tinyllama:latest,
- think   =&gt;noobj,
- skill   =&gt;[completion]]@ollama:tinyllama:latest
+ skill   =&gt;[completion],
+ size    =&gt;gB::0.59]@ollama:tinyllama:latest
 ==&gt;model::[
- size    =&gt;gB::8.37,
  provider=&gt;!*/sys/space/ollama,
- name    =&gt;deepcoder:latest,
- think   =&gt;noobj,
- skill   =&gt;[completion]]@ollama:deepcoder:latest
+ name    =&gt;llava:latest,
+ license =&gt;'                                 Apache...',
+ skill   =&gt;[completion,vision],
+ size    =&gt;gB::4.41]@ollama:llava:latest
 ==&gt;model::[
- size    =&gt;gB::12.85,
- provider=&gt;!*/sys/space/ollama,
- name    =&gt;gpt-oss:latest,
- think   =&gt;[=&gt;],
- skill   =&gt;[completion,tools,thinking]]@ollama:gpt-oss:latest
-==&gt;model::[
- size    =&gt;gB::4.87,
- provider=&gt;!*/sys/space/ollama,
- name    =&gt;qwen3:8b,
- think   =&gt;[=&gt;],
- skill   =&gt;[completion,tools,thinking]]@ollama:qwen3:8b
-==&gt;model::[
- size    =&gt;gB::48.19,
  provider=&gt;!*/sys/space/ollama,
  name    =&gt;qwen3-coder-next:latest,
- think   =&gt;noobj,
- skill   =&gt;[completion,tools]]@ollama:qwen3-coder-next:latest
+ license =&gt;'                                Apache ...',
+ skill   =&gt;[completion,tools],
+ size    =&gt;gB::48.19]@ollama:qwen3-coder-next:latest
 ==&gt;model::[
- size    =&gt;gB::0.00,
+ provider=&gt;!*/sys/space/ollama,
+ name    =&gt;deepseek-coder:latest,
+ license =&gt;"""DEEPSEEK LICENSE AGREEMENT
+
+Version 1.0...""",
+ skill   =&gt;[completion],
+ size    =&gt;gB::0.72]@ollama:deepseek-coder:latest
+==&gt;model::[
  provider=&gt;!*/sys/space/ollama,
  name    =&gt;&lt;minimax-m2.5:cloud&gt;,
  think   =&gt;[=&gt;],
- skill   =&gt;[completion,tools,thinking]]@&lt;ollama:minimax-m2.5:cloud&gt;
+ skill   =&gt;[completion,tools,thinking],
+ size    =&gt;gB::0.00]@&lt;ollama:minimax-m2.5:cloud&gt;
 ==&gt;model::[
- size    =&gt;gB::4.41,
  provider=&gt;!*/sys/space/ollama,
- name    =&gt;llava:latest,
- think   =&gt;noobj,
- skill   =&gt;[completion,vision]]@ollama:llava:latest
+ name    =&gt;gpt-oss:latest,
+ license =&gt;"""
+                                 Apach...""",
+ think   =&gt;[=&gt;],
+ skill   =&gt;[completion,tools,thinking],
+ size    =&gt;gB::12.85]@ollama:gpt-oss:latest
+==&gt;model::[
+ provider=&gt;!*/sys/space/ollama,
+ name    =&gt;deepcoder:latest,
+ license =&gt;"""MIT License
+
+Copyright (c) 2025 Agentic...""",
+ skill   =&gt;[completion],
+ size    =&gt;gB::8.37]@ollama:deepcoder:latest
 ​</code></pre>
 </div>
 </div>
@@ -3248,15 +3270,13 @@ Help users be effec...""",
 mtron&gt; *agent.chat('what tools do you have access to?',
                    [number_of_tools=&gt;int::T,tool_names=&gt;str::T])      ​1​
 ==&gt;[
- number_of_tools=&gt;3,
- tool_names     =&gt;"""1. mtron
-2. activate_skill
-3. read_skil..."""]
+ number_of_tools=&gt;4,
+ tool_names     =&gt;'mtron, activate_skill, read_skill_resou...']
 ​
 mtron&gt; *agent.chat('what skills do you have?')                        ​2​
 ==&gt;I have access to the following skill:
 
-1. **Metatron (mtron)**: A skill that provides metatron knowledge to assist users.
+1. **mtron**: This skill refers to Metatron knowledge to assist users.
 ​
 mtron&gt; *agent&gt;&gt;memory                                                 ​3​
 ==&gt;[
@@ -3270,14 +3290,12 @@ mtron&gt; *agent&gt;&gt;memory                                                 �
            type=&gt;TEXT]],
      type    =&gt;USER],
   [
-     text                 =&gt;'{"number_of_tools":3,"tool_names":"1. m...',
+     text                 =&gt;'{"number_of_tools":4,"tool_names":"mtro...',
      toolExecutionRequests=&gt;[,],
      attributes           =&gt;[
        format=&gt;[
-         number_of_tools=&gt;3,
-         tool_names     =&gt;"""1. mtron
-2. activate_skill
-3. read_skil..."""]],
+         number_of_tools=&gt;4,
+         tool_names     =&gt;'mtron, activate_skill, read_skill_resou...']],
      type                 =&gt;AI],
   [
      contents=&gt;[
@@ -3295,10 +3313,8 @@ mtron&gt; *agent&gt;&gt;memory                                                 �
 ​
 mtron&gt; *agent&gt;&gt;memory/2/attributes/format                             ​4​
 ==&gt;[
- number_of_tools=&gt;3,
- tool_names     =&gt;"""1. mtron
-2. activate_skill
-3. read_skil..."""]
+ number_of_tools=&gt;4,
+ tool_names     =&gt;'mtron, activate_skill, read_skill_resou...']
 ​</code></pre>
 </div>
 </div>
@@ -3417,14 +3433,12 @@ mtron&gt; */usr/ai/memory                                                       
            type=&gt;TEXT]],
      type    =&gt;USER],
   [
-     text                 =&gt;'{"number_of_tools":3,"tool_names":"1. m...',
+     text                 =&gt;'{"number_of_tools":4,"tool_names":"mtro...',
      toolExecutionRequests=&gt;[,],
      attributes           =&gt;[
        format=&gt;[
-         number_of_tools=&gt;3,
-         tool_names     =&gt;"""1. mtron
-2. activate_skill
-3. read_skil..."""]],
+         number_of_tools=&gt;4,
+         tool_names     =&gt;'mtron, activate_skill, read_skill_resou...']],
      type                 =&gt;AI],
   [
      contents=&gt;[
@@ -3532,7 +3546,7 @@ mtron&gt; *instset
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">​
 mtron&gt; 1.plus(b).plus(3).mult(5)                 ​1​
-==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/480
+==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/486
 ​
 mtron&gt; 1.plus(b).plus(3).catch(2).mult(5)        ​2​
 ==&gt;10
@@ -3592,12 +3606,11 @@ mtron&gt; 1.plus(b).plus(3).catch(2).mult(5)        ​2​
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">​
 mtron&gt; 1.plus(b)                  ​1​
-==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/540
+==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/546
 ​
 mtron&gt; */sys/fail/+               ​2​
 ==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/520
 ==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/526
-==&gt;fail::[unable to evaluate inst: plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}][...]@/sys/fail/538
 ==&gt;fail::[apply failure:
 	[lhs]    | b
 	 \_type  | /m/uri
@@ -3605,7 +3618,6 @@ mtron&gt; */sys/fail/+               ​2​
 	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
 	 \_dom   | uri::T
 	 \_args  | [,]][...]@/sys/fail/523
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/515
 ==&gt;fail::[apply failure:
 	[lhs]    | b
 	 \_type  | /m/uri
@@ -3614,22 +3626,17 @@ mtron&gt; */sys/fail/+               ​2​
 	 \_dom   | uri::T
 	 \_args  | [,]][...]@/sys/fail/529
 ==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/533
-==&gt;fail::[apply failure:
-	[lhs]    | b
-	 \_type  | /m/uri
-	  \_pred | []
-	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
-	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/511
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/537
 ==&gt;fail::[apply failure:
 	[lhs]    | 1
 	 \_type  | /m/int
 	  \_pred | []
 	[inst]   | plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}
 	 \_dom   | int::T
-	 \_args  | [b]][...]@/sys/fail/536
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/514
+	 \_args  | [b]][...]@/sys/fail/541
+==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/546
 ==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/531
+==&gt;fail::[unable to evaluate inst: plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}][...]@/sys/fail/543
 ==&gt;fail::[apply failure:
 	[lhs]    | b
 	 \_type  | /m/uri
@@ -3652,20 +3659,19 @@ mtron&gt; */sys/fail/+               ​2​
 	  \_pred | []
 	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
 	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/524
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/519
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/525
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/516
-==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/540
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/534
-==&gt;fail::[unable to evaluate inst: plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}][...]@/sys/fail/537
+	 \_args  | [,]][...]@/sys/fail/536
 ==&gt;fail::[apply failure:
 	[lhs]    | b
 	 \_type  | /m/uri
 	  \_pred | []
 	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
 	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/512
+	 \_args  | [,]][...]@/sys/fail/524
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/519
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/525
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/534
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/539
+==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/545
 ==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/532
 ==&gt;fail::[apply failure:
 	[lhs]    | 1
@@ -3673,8 +3679,7 @@ mtron&gt; */sys/fail/+               ​2​
 	  \_pred | []
 	[inst]   | plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}
 	 \_dom   | int::T
-	 \_args  | [b]][...]@/sys/fail/535
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/513
+	 \_args  | [b]][...]@/sys/fail/542
 ==&gt;fail::[apply failure:
 	[lhs]    | b
 	 \_type  | /m/uri
@@ -3683,8 +3688,17 @@ mtron&gt; */sys/fail/+               ​2​
 	 \_dom   | uri::T
 	 \_args  | [,]][...]@/sys/fail/518
 ==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/521
-==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/539
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/538
+==&gt;fail::[unable to evaluate inst: plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}][...]@/sys/fail/544
 ==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/527
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/540
+==&gt;fail::[apply failure:
+	[lhs]    | b
+	 \_type  | /m/uri
+	  \_pred | []
+	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
+	 \_dom   | uri::T
+	 \_args  | [,]][...]@/sys/fail/535
 ​
 mtron&gt; */sys/fail/+.catch(_)      ​3​
 ==&gt;fail{8}::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}]
@@ -3695,14 +3709,6 @@ mtron&gt; */sys/fail/+.catch(_)      ​3​
 	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
 	 \_dom   | uri::T
 	 \_args  | [,]]
-==&gt;fail{2}::[unable to evaluate inst: plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}]
-    \_fail::[apply failure:
-	[lhs]    | 1
-	 \_type  | /m/int
-	  \_pred | []
-	[inst]   | plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}
-	 \_dom   | int::T
-	 \_args  | [b]]
 ==&gt;fail{8}::[apply failure:
 	[lhs]    | b
 	 \_type  | /m/uri
@@ -3728,6 +3734,14 @@ mtron&gt; */sys/fail/+.catch(_)      ​3​
 	 \_args  | [b]]
 ==&gt;fail{2}::[1 [int::T] unable to convert uri::T]
     \_fail::[unable to evaluate inst: plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}]
+    \_fail::[apply failure:
+	[lhs]    | 1
+	 \_type  | /m/int
+	  \_pred | []
+	[inst]   | plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}
+	 \_dom   | int::T
+	 \_args  | [b]]
+==&gt;fail{2}::[unable to evaluate inst: plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}]
     \_fail::[apply failure:
 	[lhs]    | 1
 	 \_type  | /m/int
@@ -3860,12 +3874,12 @@ mtron&gt; 2.as(nat::T)                                          ​5​
 ​
 mtron&gt; -2.as(nat::T)                                         ​6​
 ==&gt;fail::[-2 is not a is(gt(0))
-  -2=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/116
+  -2=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/122
 ​
 mtron&gt; nat::2 ⋅ -1                                           ​7​
 ==&gt;fail::[nat::-2 is not a int::T[is(gt(0))][choose([
  is(lt(0))=&gt;mult(-1),
- id()     =&gt;id()]).rshift()]@nat][...]@/sys/fail/122
+ id()     =&gt;id()]).rshift()]@nat][...]@/sys/fail/128
 ​</code></pre>
 </div>
 </div>
@@ -3893,7 +3907,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in <span class="green">M</span>​<strong class="blue">e</strong>​<span class="fuchsia">t</span>​<strong class="yellow">A</strong>​<strong class="orange">T</strong>​<span class="lime">R</span>​<strong class="aqua">o</strong>​<span class="red">n</span>​.</p>
+This is the foundation for all other <code>objs</code> in <span class="yellow">M</span>​<span class="blue">E</span>​<strong class="lime">t</strong>​<strong class="fuchsia">A</strong>​<strong class="orange">t</strong>​<strong class="aqua">r</strong>​<strong class="red">o</strong>​<strong class="green">N</strong>​.</p>
 </div>
 <h3 id="_mono_types" class="discrete">mono types</h3>
 <div class="paragraph">
@@ -3995,7 +4009,7 @@ mtron&gt; 'Hello'.as(bytes::T)        ​1​
 ==&gt;0x48656c6c6f
 ​
 mtron&gt; bytes::'48656c6c6f'         ​2​
-==&gt;fail::['48656c6c6f' is not a bytes::T][...]@/sys/fail/172
+==&gt;fail::['48656c6c6f' is not a bytes::T][...]@/sys/fail/178
 ​</code></pre>
 </div>
 </div>
@@ -4021,16 +4035,16 @@ mtron&gt; bytes::'48656c6c6f'         ​2​
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">​
 mtron&gt; kB::1024.as(mB::T)          ​1​
-==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/182
+==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/188
 ​
 mtron&gt; mB::1.as(kB::T)             ​2​
-==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/192
+==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/198
 ​
 mtron&gt; gB::5.as(mB::T)             ​3​
-==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/202
+==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/208
 ​
 mtron&gt; pB::1.as(tB::T)             ​4​
-==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/212
+==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/218
 ​</code></pre>
 </div>
 </div>
@@ -4064,16 +4078,16 @@ mtron&gt; pB::1.as(tB::T)             ​4​
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">​
 mtron&gt; mB::1024.eq(gB::1)          ​1​
-==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/222
+==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/228
 ​
 mtron&gt; kB::1024.eq(mB::1)          ​2​
-==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/232
+==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/238
 ​
 mtron&gt; gB::2.eq(mB::2048)          ​3​
-==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/242
+==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/248
 ​
 mtron&gt; tB::1.eq(gB::1024)          ​4​
-==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/252
+==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/258
 ​</code></pre>
 </div>
 </div>
@@ -4509,7 +4523,7 @@ mtron&gt; nums -&gt; {1,2,3,4,5}                                       ​1​
 mtron&gt; filtered -&gt; *nums-&lt;[?&gt;3 =&gt; _, _ =&gt; noobj]&gt;&gt;               ​2​
 ==&gt;fail::[filtered -&gt; *nums-&lt;[?&gt;3 =&gt; _, _ =&gt; noobj]&gt;&gt;               ​2​
                   ^ end of input expected
-][...]@/sys/fail/254
+][...]@/sys/fail/260
 ​
 mtron&gt; *filtered                                                 ​3​
 ​</code></pre>
@@ -4618,11 +4632,11 @@ mtron&gt; nat::10
 ==&gt;nat::10
 ​
 mtron&gt; nat::-10
-==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/320
+==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/326
 ​
 mtron&gt; int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/326
+  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/332
 ​</code></pre>
 </div>
 </div>
@@ -4722,11 +4736,11 @@ mtron&gt; nat::10
 ==&gt;nat::10
 ​
 mtron&gt; nat::-10
-==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/340
+==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/346
 ​
 mtron&gt; int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/346
+  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/352
 ​</code></pre>
 </div>
 </div>
@@ -4758,11 +4772,11 @@ mtron&gt; age:125
 ​
 mtron&gt; nat:125.as(age::T)
 ==&gt;fail::[rhs does not match inst range:
-	{0}&lt;&gt;=&gt;(X=&gt;int::T[is(gt(0))]@nat)][...]@/sys/fail/360
+	{0}&lt;&gt;=&gt;(X=&gt;int::T[is(gt(0))]@nat)][...]@/sys/fail/366
 ​
 mtron&gt; 125.as(nat::T).as(age::T)
 ==&gt;fail::[nat::125 is not a is(lt(120))
-  nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/366
+  nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/372
 ​</code></pre>
 </div>
 </div>
@@ -6445,6 +6459,25 @@ nested structures existing across heterogeneous data sources.</p>
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                                    foreign key
                             tableA ┌───────┐ tableB
 vertexA vertexB   redirect  ┌─┬─┬─┬┼┬─┐   ┌┼┬─┬─┬─┐
@@ -6510,8 +6543,225 @@ vertexA vertexB   redirect  ┌─┬─┬─┬┼┬─┐   ┌┼┬─┬�
 <div class="collapse position-relative" id="card-19">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-19" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
 <button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
+<h2 id="_http_space" class="discrete">HTTP Space</h2>
+<h3 id="_accessing_rest_apis" class="discrete">Accessing REST APIs</h3>
 <div class="paragraph">
-<p>Unresolved directive in card.adoc - include::web-space.adoc[]</p>
+<p>When a REST endpoint has an address that matches the pattern of an <code>httpspace</code>, it&#8217;s possible to use the respective REST resources within metatron. More importantly, it&#8217;s possible to enrich REST resources with instructions defined by respective metatron types. This is possible because <code>httpspace</code> transforms data "in the wild" (e.g. <code>application/json</code>) into an isomorphic <code>obj</code> which can then be typed and processed accordingly.</p>
+</div>
+<div class="paragraph">
+<p>A <a href="https://localai.io/">LocalAI</a> service will serve to demonstrate the naturalness of using foreign resources in metatron. LocalAI exposes an <a href="https://www.openapis.org/">OpenAPI</a>-compliant endpoint at <code><a href="http://localhost:8088/v1" class="bare">http://localhost:8088/v1</a></code> (specific to the author&#8217;s local deployment of LocalAI).</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">​
+mtron&gt; *&lt;http://localhost:8088/v1&gt;                        ​1​
+​
+mtron&gt; *&lt;http://localhost:8088/v1/models&gt;                 ​2​
+==&gt;[
+ object=&gt;list,
+ data  =&gt;[
+   [id=&gt;qwen3:latest,object=&gt;model],
+   [id=&gt;gpt-oss__latest,object=&gt;model]]]
+​
+mtron&gt; *&lt;http://localhost:8088/v1/models/data/0/id&gt;       ​3​
+==&gt;qwen3:latest
+​
+mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
+         *&lt;http://localhost:8088/v1/models/data/0/id&gt;}&gt;   ​4​
+==&gt;[
+ parameters         =&gt;[
+   model         =&gt;qwen3__latest,
+   top_p         =&gt;0.95,
+   top_k         =&gt;20,
+   min_p         =&gt;0,
+   temperature   =&gt;0.60,
+   max_tokens    =&gt;0,
+   repeat_penalty=&gt;1,
+   tfz           =&gt;1,
+   typical_p     =&gt;1,
+   seed          =&gt;-1,
+   logprobs      =&gt;false],
+ name               =&gt;qwen3:latest,
+ f16                =&gt;false,
+ threads            =&gt;8,
+ debug              =&gt;false,
+ embeddings         =&gt;false,
+ backend            =&gt;llama-cpp,
+ template           =&gt;[use_tokenizer_template=&gt;true],
+ known_usecases     =&gt;[FLAG_CHAT],
+ pipeline           =&gt;[=&gt;],
+ function           =&gt;[
+   grammar                        =&gt;[disable=&gt;true],
+   automatic_tool_parsing_fallback=&gt;true],
+ reasoning          =&gt;[disable_reasoning_tag_prefill=&gt;true,disable=&gt;false],
+ mirostat_eta       =&gt;0.10,
+ mirostat_tau       =&gt;5,
+ mirostat           =&gt;0,
+ gpu_layers         =&gt;99999999,
+ mmap               =&gt;true,
+ mmlock             =&gt;false,
+ low_vram           =&gt;false,
+ reranking          =&gt;false,
+ context_size       =&gt;40960,
+ limit_mm_per_prompt=&gt;[=&gt;],
+ diffusers          =&gt;[=&gt;],
+ grpc               =&gt;[=&gt;],
+ tts                =&gt;[=&gt;],
+ description        =&gt;'Imported from ollama://qwen3:latest',
+ options            =&gt;[use_jinja:true],
+ mcp                =&gt;[=&gt;],
+ agent              =&gt;[=&gt;]]
+​
+mtron&gt;
+​</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>The REST endpoint is there as there is no connection <code>fail::T</code>. At the root, no data is returned.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>The <code>/models</code> resource contains a list of all LLM models available for use.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Traversing the data within the resource is simply a function of extending the URI accordingly.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>Using URI template parameters to fetch more information about the model.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>It&#8217;s possible to transform the REST resource into a form that meets the structural requirements of an mtron <code>type</code>. In doing so, the resource then acquires the behaviors defined in the type&#8217;s respective <code>instset</code>. For this example, that <code>instset</code> is <code>/m/llm</code>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">​
+mtron&gt; */m/llm/model                      ​1​
+==&gt;rec::T[?[
+     provider   =&gt;space::T[?[
+     name   =&gt;is(or(eq(anthropic),eq(openai),eq(ollama),eq(localai))),
+     pattern=&gt;uri::T,
+     {?}host=&gt;uri::T,
+     route  =&gt;[
+       uri::T=&gt;uri::T]]][inst?rng=catalog&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/llm/space/catalog,
+     name       =&gt;uri::T,
+     {?}think   =&gt;#::T,
+     {?}response=&gt;{?}[
+       {?}to    =&gt;inst::T,
+       {?}format=&gt;#::T],
+     {?}size    =&gt;data_size::T[][/m/math/bB/cons?rng=bB&amp;dom=#{?}(#::T){&lt;j&gt;}]@/m/math/bB,
+     {?}memory  =&gt;lst{?}::T@/m/llm/memory,
+     {?}desc    =&gt;str::T,
+     {?}skill   =&gt;lst{?}::T,
+     {?}tool    =&gt;{?}[
+     rec::T[?[
+     inst  =&gt;#::T,
+     name  =&gt;uri::T,
+     desc  =&gt;str::T,
+     {?}arg=&gt;#::T]]@/m/llm/tool]]]@/m/llm/model
+​
+mtron&gt; */m/llm/inst/+?dom=model           ​2​
+​</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>The <code>model::T</code> type in <code>/m/llm</code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>The <code>/m/llm</code> instructions with a domain of <code>model::T</code>  (an object oriented perspective&#8201;&#8212;&#8201;<code>obj.f()</code>).</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>When the REST resource is manipulated to fit the structural specification of <code>model::T</code>, then  <code><a href="http://localhost:8088/v1/models/data/0" class="bare">http://localhost:8088/v1/models/data/0</a></code> can be the source of chat?#&lt;=model`.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">​
+mtron&gt; *&lt;http://localhost:8088/v1/models/data/0&gt;&gt;-.
+         -&lt;[name=&gt;&gt;&gt;id.as(uri::T),
+            type=&gt;&gt;&gt;object.as(uri::T),
+            provider=&gt;|!*/sys/space/localai].as(model::T)
+         .chat('are you there?')                       ​1​
+==&gt;Yes, I'm here! How can I assist you today? 😊
+==&gt;fail::[[
+ type    =&gt;model,
+ provider=&gt;!*/sys/space/localai] is not a isa([
+ provider   =&gt;space::T[?[
+     name   =&gt;is(or(eq(anthropic),eq(openai),eq(ollama),eq(localai))),
+     pattern=&gt;uri::T,
+     {?}host=&gt;uri::T,
+     route  =&gt;[
+       uri::T=&gt;uri::T]]][inst?rng=catalog&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/llm/space/catalog,
+ name       =&gt;uri::T,
+ {?}think   =&gt;#::T,
+ {?}response=&gt;{?}[
+   {?}to    =&gt;inst::T,
+   {?}format=&gt;#::T],
+ {?}size    =&gt;data_size::T[][/m/math/bB/cons?rng=bB&amp;dom=#{?}(#::T){&lt;j&gt;}]@/m/math/bB,
+ {?}memory  =&gt;lst{?}::T@/m/llm/memory,
+ {?}desc    =&gt;str::T,
+ {?}skill   =&gt;lst{?}::T,
+ {?}tool    =&gt;{?}[
+   rec::T[?[
+     inst  =&gt;#::T,
+     name  =&gt;uri::T,
+     desc  =&gt;str::T,
+     {?}arg=&gt;#::T]]@/m/llm/tool]])
+  [
+   provider=&gt;(/=&gt;provider)=&gt;catalog::[
+   host   =&gt;http://localhost:8088/v1,
+   pattern=&gt;localai:#,
+   name   =&gt;localai,
+   route  =&gt;[localai:=&gt;&lt;&gt;],
+   space  =&gt;[=&gt;],
+   q      =&gt;[
+     subq::[
+         pre_read   =&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T){&lt;j&gt;},
+         pre_write  =&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,#::T){&lt;j&gt;},
+         qless_write=&gt;inst?rng=#{*}&amp;dom=#{?}(uri::T,#::T){&lt;j&gt;},
+         pattern    =&gt;subq,
+         obj        =&gt;[,]]]]@/sys/space/localai=&gt;(X=&gt;space::T[?[
+       name   =&gt;is(or(eq(anthropic),eq(openai),eq(ollama),eq(localai))),
+       pattern=&gt;uri::T,
+       {?}host=&gt;uri::T,
+       route  =&gt;[
+         uri::T=&gt;uri::T]]][inst?rng=catalog&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/llm/space/catalog),
+   noobj=&gt;(X=&gt;name)       =&gt;noobj=&gt;(X=&gt;uri::T),
+   noobj=&gt;(==&gt;{?}think)   =&gt;noobj=&gt;(/=&gt;#::T),
+   noobj=&gt;(==&gt;{?}response)=&gt;noobj=&gt;(==&gt;{?}[
+   {?}to    =&gt;inst::T,
+   {?}format=&gt;#::T]),
+   noobj=&gt;(==&gt;{?}size)    =&gt;noobj=&gt;(/=&gt;data_size::T[][/m/math/bB/cons?rng=bB&amp;dom=#{?}(#::T){&lt;j&gt;}]@/m/math/bB),
+   noobj=&gt;(==&gt;{?}memory)  =&gt;noobj=&gt;(==&gt;lst{?}::T@/m/llm/memory),
+   noobj=&gt;(==&gt;{?}desc)    =&gt;noobj=&gt;(/=&gt;str::T),
+   noobj=&gt;(==&gt;{?}skill)   =&gt;noobj=&gt;(==&gt;lst{?}::T),
+   noobj=&gt;(==&gt;{?}tool)    =&gt;noobj=&gt;(==&gt;{?}[
+    rec::T[?[
+       inst  =&gt;#::T,
+       name  =&gt;uri::T,
+       desc  =&gt;str::T,
+       {?}arg=&gt;#::T]]@/m/llm/tool])]][...]@/sys/fail/104
+​</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>The OpenAPI resource is morphed into a <code>model::T</code> and then the <code>chat</code> <code>inst</code> is applied.</td>
+</tr>
+</table>
 </div>
 </div>
 <div class="collapse position-relative" id="card-20">

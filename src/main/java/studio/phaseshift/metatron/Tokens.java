@@ -43,6 +43,7 @@ public final class Tokens {
     public static final String ANTHROPIC = "anthropic";
     public static final String OLLAMA = "ollama";
     public static final String RESULT = "result";
+    public static final String DATA = "data";
     public static final String TO = "to";
     public static final String JSONRPC = "jsonrpc";
     public static final String REQUIRED = "required";
@@ -69,6 +70,7 @@ public final class Tokens {
     public static final String SKILL = "skill";
     public static final String LLM = "llm";
     public static final String MCP = "mcp";
+    public static final String LICENSE = "license";
     public static final String THINK = "think";
     public static final String THOUGHT = "thought";
     public static final String MEMORY = "memory";

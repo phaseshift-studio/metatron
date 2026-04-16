@@ -1368,7 +1368,7 @@ class MetatronDashboard {
         const compress = document.getElementById('agentCompress')?.checked;
         const initMemory = document.getElementById('agentInitMemory')?.checked;
 
-        return [agentVID,`
+        return [agentVID, `
     *<${provider}:${model}>.at(<${agentVID}>).-<[
        ${initMemory && memory ? `[,]@<${memory}>,` : ';'}
        >>=[
@@ -1844,12 +1844,12 @@ class MetatronDashboard {
     loadRootDescriptions(uris) {
         uris.forEach(uri => {
             this.sendBackgroundQuery(`"*<${uri}?docq>.>>desc"./m/web/inst/doc_json()`, (response, error) => {
-                if (error) return;
+                if (error || response.includes("fail::")) return;
                 const desc = this.stripMtronResponse(response).replace(/^"|"$/g, '');
                 const descEl = document.querySelector(`.tree-desc[data-uri="${uri}"]`);
                 const docIndicator = document.querySelector(`.doc-indicator[data-doc-uri="${uri}"]`);
 
-                if (desc && desc !== 'no documentation available' && desc !== 'null') {
+                if (desc && desc !== 'no documentation available' && desc !== 'noobj') {
                     if (descEl) descEl.textContent = `(${desc})`;
                     if (docIndicator) docIndicator.style.display = 'inline';
                 }
@@ -1859,10 +1859,10 @@ class MetatronDashboard {
 
     loadDocIndicators(uris) {
         uris.forEach(uri => {
-            this.sendBackgroundQuery(`"*<${uri}?docq>.>>desc"./m/web/inst/doc_json()`, (response, error) => {
+            this.sendBackgroundQuery(`"*<${uri}?docq>.catch([desc=>'no documentation available'])>>desc)"./m/web/inst/doc_json()`, (response, error) => {
                 if (error) return;
                 const desc = this.stripMtronResponse(response).replace(/^"|"$/g, '');
-                if (desc && desc !== 'no documentation available' && desc !== 'null') {
+                if (desc && !desc.includes('no documentation available') && desc !== 'noobj') {
                     const indicator = document.querySelector(`.doc-indicator[data-doc-uri="${CSS.escape(uri)}"]`);
                     if (indicator) indicator.style.display = 'inline';
                 }
@@ -1889,7 +1889,7 @@ class MetatronDashboard {
     renderTreeNodes(parentPath, response, container, depth) {
         const nodes = this.parseTreeResponse(response);
         if (nodes.length === 0) {
-            container.innerHTML = `<div class="text-muted small px-2">No children found</div>`;
+            container.innerHTML = `<div class="text-muted small px-2" style="margin-left:1rem;">no extensions found</div>`;
             return;
         }
 

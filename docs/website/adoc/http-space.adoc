@@ -1,2 +1,51 @@
 [discrete]
 == HTTP Space
+
+[discrete]
+=== Accessing REST APIs
+
+When a REST endpoint has an address that matches the pattern of an `httpspace`, it's possible to use the respective REST resources within metatron. More importantly, it's possible to enrich REST resources with instructions defined by respective metatron types. This is possible because `httpspace` transforms data "in the wild" (e.g. `application/json`) into an isomorphic `obj` which can then be typed and processed accordingly.
+
+A https://localai.io/[LocalAI] service will serve to demonstrate the naturalness of using foreign resources in metatron. LocalAI exposes an https://www.openapis.org/[OpenAPI]-compliant endpoint at `http://localhost:8088/v1` (specific to the author's local deployment of LocalAI).
+
+++++
+<!-- 🐖 
+*<http://localhost:8088/v1>                        [-- <1>
+*<http://localhost:8088/v1/models>                 [-- <2>
+*<http://localhost:8088/v1/models/data/0/id>       [-- <3>
+*<http://localhost:8088/api/models/config-json/${  /
+  *<http://localhost:8088/v1/models/data/0/id>}>   [-- <4>
+
+-->
+++++
+<1> The REST endpoint is there as there is no connection `fail::T`. At the root, no data is returned.
+<2> The `/models` resource contains a list of all LLM models available for use.
+<3> Traversing the data within the resource is simply a function of extending the URI accordingly.
+<4> Using URI template parameters to fetch more information about the model.
+
+It's possible to transform the REST resource into a form that meets the structural requirements of an mtron `type`. In doing so, the resource then acquires the behaviors defined in the type's respective `instset`. For this example, that `instset` is `/m/llm`.
+
+++++
+<!-- 🐖
+*/m/llm/model                      [-- <1>
+*/m/llm/inst/+?dom=model           [-- <2>
+-->
+++++
+<1> The `model::T` type in `/m/llm`.
+<2> The `/m/llm` instructions with a domain of `model::T`  (an object oriented perspective -- `obj.f()`).
+
+When the REST resource is manipulated to fit the structural specification of `model::T`, then  `http://localhost:8088/v1/models/data/0` can be the source of chat?#\<=model`.
+
+
+++++
+<!-- 🐖
+*<http://localhost:8088/v1/models/data/0>>-.           /
+  -<[name=>>>id.as(uri::T),                            /
+     type=>>>object.as(uri::T),                        /
+     provider=>|!*/sys/space/localai].as(model::T)     /
+  .chat('are you there?')                       [-- <1>
+-->
+++++
+<1> The OpenAPI resource is morphed into a `model::T` and then the `chat` `inst` is applied.
+
+

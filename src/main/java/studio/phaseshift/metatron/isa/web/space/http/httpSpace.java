@@ -105,16 +105,16 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                                     requestPath = requestPath.substring(routePrefix.length());
                                 }
                                 final fURI requestURI = r.second().uriValue().extend(f(requestPath)).qString(exchange.getRequestURI().getQuery());
-                                LOG.info("requesting: %s", requestURI);
+                                LOG.debug("requesting: %s", requestURI);
                                 final File base = Space.Helper.locateBaseFile(requestURI, INDEX_HTML);
                                 // final Path filePath = null == base ? null : base.toPath(); //Files.isRegularFile(path) ? path : Path.of(path + "/" + INDEX_HTML);
                                 if (null != base) {
                                     final Path absolutePath = base.toPath().toAbsolutePath();
                                     final Path relativePath = base.toPath();
-                                    LOG.info("resolving context to request=>relative=>absolute path: %s => %s => %s", uri(exchange.getRequestURI().toString()), uri(relativePath.toString()), uri(absolutePath.toString()));
+                                    LOG.debug("resolving context to request=>relative=>absolute path: %s => %s => %s", uri(exchange.getRequestURI().toString()), uri(relativePath.toString()), uri(absolutePath.toString()));
                                     // fURI toRemove = f(filePath.toString());
                                     final fURI pretractedURI = f(requestURI.toString().replace(INDEX_HTML,"").replace(relativePath.toString().replace(INDEX_HTML, ""), "")).asRelative(); //.removeSubpath(f(base.toPath().toString())).asRelative();
-                                    LOG.info("remaining steps in request uri: %s", pretractedURI);
+                                    LOG.debug("remaining steps in request uri: %s", pretractedURI);
                                     if (pretractedURI.segmentLength() == 0) {
                                         // send the full html document
                                         // Use query param if specified, otherwise try Files.probeContentType, fallback to extension-based detection
@@ -129,12 +129,12 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                                                     ? Content.ContentType.fromExtension(absolutePath.toString())
                                                     : probedType;
                                         }
-                                        LOG.info("sending with content-type: %s", contentType.value);
+                                        LOG.debug("sending with content-type: %s", contentType.value);
                                         sendResponse(contentType, absolutePath.toFile(), exchange);
                                     } else {
                                         // send a subset of larger html document
                                         final Content.ContentType contentType = Content.ContentType.of(requestURI.hasQ("content_type") ? requestURI.qValue("content_type", String.class) : Content.ContentType.APPLICATION_MTRON.value);
-                                        LOG.info("sending with content-type: %s", contentType.value);
+                                        LOG.debug("sending with content-type: %s", contentType.value);
                                         sendResponse(contentType, ByteBuffer.wrap(
                                                 new ObjByteBufferSerializer().write(HTML_SERIALIZER.read(
                                                         Jsoup.parse(absolutePath)).asRec().at(pretractedURI)).array()), exchange);
@@ -152,7 +152,7 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                                 /// ////////////////////////////////////////////////////////////////////////////////////
                                 /// ////////////////////////////////////////////////////////////////////////////////////
                             } else if (exchange.getRequestMethod().equalsIgnoreCase("POST")) {
-                                LOG.info("POST request received for %s", exchange.getRequestURI());
+                                LOG.debug("POST request received for %s", exchange.getRequestURI());
                                 // Strip the route prefix from the request path to get the relative path
                                 final String postRoutePrefix = r.first().uriValue().toString();
                                 String postRequestPath = exchange.getRequestURI().getPath();
@@ -192,9 +192,9 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                                         else
                                             throw MTronException.of("unsupported content-type: %s", contentType);
                                         final fURI reference = f(exchange.getRequestURI().getPath()).removePrefix(f(file.toPath().toString()));
-                                        LOG.info("remaining: %s", reference);
+                                        LOG.debug("remaining: %s", reference);
                                         existingObj.at(reference, extendingObj, MUTABLE);
-                                        LOG.info("existing obj: %s", existingObj);
+                                        LOG.debug("existing obj: %s", existingObj);
                                         // final Path newPath = Paths.get(file.toPath().toString() + "-temp.html");
                                         Files.writeString(file.toPath(), HTML_SERIALIZER.writeRec(existingObj).toString());
                                         exchange.getResponseHeaders().set(Content.ContentType.VALUE, Content.ContentType.TEXT_HTML.value);
@@ -280,7 +280,7 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                         if (runningPattern.segmentLength() == 0)
                             return IteratorUtil.of();
                         steps++;
-                        runningPattern = runningPattern.asRelativeNode().retract(1);
+                        runningPattern = runningPattern.asRelativeNode().retract(1).asAbsolute();
                     } else {
                         final Content.ContentType contentType = Content.ContentType.of(response.contentType());
                         LOG.debug("content-type: %s => %s", response.contentType(), contentType);

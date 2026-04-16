@@ -49,7 +49,11 @@ public class modelCatalogSpace<CATALOG> extends memSpace {
                     .tid(SPACE_TID)
                     .vid(LLM_CATALOG_SPACE_TID)
                     .isaPredicate(rec(
-                            uri(NAME), is_(or_(eq_(uri(ANTHROPIC)), eq_(uri(OPENAI)), eq_(uri(OLLAMA)))),
+                            uri(NAME), is_(or_(
+                                    eq_(uri(ANTHROPIC)),
+                                    eq_(uri(OPENAI)),
+                                    eq_(uri(OLLAMA)),
+                                    eq_(uri(LOCALAI)))),
                             uri(PATTERN), URI_TYPE,
                             uri(HOST).maybe(), URI_TYPE,
                             uri(ROUTE), rec(URI_TYPE, URI_TYPE)))
@@ -57,39 +61,17 @@ public class modelCatalogSpace<CATALOG> extends memSpace {
             "llm model catalog specification",
             "creates a model catalog",
             Map.of(
-                    uri(NAME), "the provider name (anthropic, openai, or ollama)",
+                    uri(NAME), "the provider name (anthropic, openai, ollama, or localai)",
                     uri(PATTERN), "catalog address space",
                     uri(HOST).maybe(), "the llm inferencing provider endpoint",
                     uri(ROUTE), "internal space routes"),
             "a space for accessing llm models");
 
-    private final CATALOG models;
-
-    public static <CATALOG> modelCatalogSpace<CATALOG> of(final CATALOG models, final Map<Obj, Obj> config, final fURI vid) {
-        return new modelCatalogSpace<>(models, config, vid);
+    public static <CATALOG> modelCatalogSpace<CATALOG> of(final Map<Obj, Obj> config, final fURI vid) {
+        return new modelCatalogSpace<>(config, vid);
     }
 
-    public modelCatalogSpace(final CATALOG models, final Map<Obj, Obj> config, final fURI vid) {
+    public modelCatalogSpace(final Map<Obj, Obj> config, final fURI vid) {
         super(config, LLM_SPACE_TID, vid);
-        this.models = models;
-        this.refreshModels();
-    }
-
-    protected void refreshModels() {
-        /*
-        final OllamaModels models = this.sjvm;
-        models.availableModels().content().stream()
-                .map(m -> Tuple.Pair.with(m, models.modelCard(m.getName()).content()))
-                .map(m -> rec(
-                        Map.of(uri(PROVIDER), auto_from_(this.vid.extend("ollama")).tryToInst(),
-                                uri(HOST), this.at(Tokens.HOST),
-                                uri(NAME), uri(m.get0().getName()),
-                                uri(THINK), bool(m.get1().getCapabilities().contains(THINKING)),
-                                uri(SKILL), lst(m.get1().getCapabilities().stream().map(MUri::uri)),
-                                uri(SIZE), real(Long.valueOf(m.get0().getSize()).doubleValue(), MATH_BYTE_TID, null).as(GBYTE_TYPE)), OLLAMA_OLLM_TID, null)).forEach(m -> {
-                    this.write(this.pattern.retract(1).extend(m.at(NAME).uriValue()), m);
-                });
-              
-         */
     }
 }

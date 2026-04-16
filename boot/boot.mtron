@@ -106,6 +106,10 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
            pattern      => <openai:#>,
            name         => <openai>,
            route        => [<openai:>=><>]]@/sys/space/openai;
+  catalog::[host         => <http://localhost:8088/v1>,
+            pattern      => <localai:#>,
+            name         => <localai>,
+            route        => [<localai:>=><>]]@/sys/space/localai;
  *<local:software/metatron/.agent/skills/mtron-assistance>.as(skill::T).to(/usr/ai/skills/mtron);
  tblespace::[pattern => netflix:#,
         host       => <mariadb://localhost:3306/netflix?user=mtron&password=mtron>,
