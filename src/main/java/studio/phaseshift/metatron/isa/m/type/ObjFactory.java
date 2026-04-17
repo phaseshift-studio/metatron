@@ -38,7 +38,7 @@ import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MONAD_TID;
 
 public interface ObjFactory extends Rec {
 
-    final GraphittyLogger LOG = Graphitty.log(ObjFactory.class);
+    GraphittyLogger LOG = Graphitty.log(ObjFactory.class);
 
     <OBJ extends Obj> OBJ toObj(final Object value, final fURI tid, final fURI vid);
 

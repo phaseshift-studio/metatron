@@ -26,7 +26,7 @@ import dev.langchain4j.service.UserMessage;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public interface Agent {
+public interface mAgent {
     
     TokenStream chat(final @UserMessage ChatRequest userMessage);
 

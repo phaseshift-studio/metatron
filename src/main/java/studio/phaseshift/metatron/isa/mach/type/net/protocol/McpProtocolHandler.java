@@ -36,10 +36,10 @@ import static studio.phaseshift.metatron.isa.mach.type.net.MServer.MSERVER_TID;
 import static studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty.sillyPrint;
 
 /**
- * MCP (Model Context Protocol) protocol handler.
+ * MCP (mModel Context Protocol) protocol handler.
  * Handles JSON-RPC 2.0 messages conforming to the MCP specification.
  * <p>
- * This handler enables AI assistants to interact with Metatron through
+ * This handler enables AI assistants to interact with metatron through
  * a standardized protocol, providing tools for code evaluation, system
  * introspection, and instruction discovery.
  *

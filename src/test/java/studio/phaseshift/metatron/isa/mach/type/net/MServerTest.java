@@ -47,7 +47,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 /**
  * Comprehensive test suite for MServer covering both protocol entry points:
  * 1. Native metatron protocol using ObjByteBufferSerializer
- * 2. MCP (Model Context Protocol) using JSON-RPC
+ * 2. MCP (mModel Context Protocol) using JSON-RPC
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */

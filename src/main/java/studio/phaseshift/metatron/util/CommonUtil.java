@@ -25,7 +25,7 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
 
-import java.io.Closeable;
+import java.io.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -44,6 +44,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
+
 public final class CommonUtil {
 
     private static final Pattern INT_PATTERN = Pattern.compile("-?\\d+");
@@ -218,6 +219,24 @@ public final class CommonUtil {
             start_pos = start_pos + replacement.length();
         }
         return ss;
+    }
+
+    public static StringBuilder readResource(final String resourcePath) {
+        final InputStream inputStream = CommonUtil.class.getClassLoader().getResourceAsStream(resourcePath);
+        final StringBuilder sb = new StringBuilder();
+        if (inputStream != null) {
+            try (final BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    sb.append(line).append("\n");
+                }
+            } catch (final IOException e) {
+                throw MTronException.of(e);
+            }
+        } else {
+            throw MTronException.of("resource file not found: %s", resourcePath);
+        }
+        return sb;
     }
 
     public static class RecCollector implements Collector<Rel, Map<Obj, Obj>, Rec> {

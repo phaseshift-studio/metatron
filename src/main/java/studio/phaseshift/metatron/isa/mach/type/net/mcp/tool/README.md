@@ -106,7 +106,7 @@ Marks a method as the tool's handler. The method must return `McpSchema.CallTool
 ```java
 @McpHandler
 public McpSchema.CallToolResult execute() {
-    // Tool logic
+    // mTool logic
     return McpSchema.CallToolResult.builder()
         .content(List.of(new McpSchema.TextContent(result)))
         .isError(false)

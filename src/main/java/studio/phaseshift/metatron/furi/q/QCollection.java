@@ -58,6 +58,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_CORE_THREAD_TID;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -108,7 +109,7 @@ public final class QCollection {
                             .isaPredicate(rec(
                                     TARGET, URI_TYPE,
                                     ON_RECV, T(ALL.dom(LST_TID))))
-                            .create(), "a subscription specification", "", Map.of(
+                            .create(), "a subscription specification", "", mutableMap(
                             uri(TARGET), "the address scope of the subscription",
                             uri(ON_RECV), "a callback when scope of subscription changes"),
                     "a subscription for subq qproc",
@@ -171,7 +172,7 @@ public final class QCollection {
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-    protected final static Rec NO_DOCS = rec(Map.of(uri(DESC), str("no documentation available")), DOCS_TID, null);
+    protected final static Rec NO_DOCS = rec(mutableMap(uri(DESC), str("no documentation available")), DOCS_TID, null);
 
     protected final static class DocInstSet extends AbstractInstSet {
         protected final Map<fURI, Set<Rec>> INST_TABLE = Collections.synchronizedMap(new LinkedHashMap<>());
@@ -292,7 +293,7 @@ public final class QCollection {
                         subscriptions.lstValue().add(subscription);
                         subscription.logger().info("subscribing to %s", vid.basePath());
                     } else {
-                        subscription = rec(Map.of(uri(TARGET), uri(vid.basePath()), uri(ON_RECV), obj), SUBSCRIPTION_TID, null);
+                        subscription = rec(mutableMap(uri(TARGET), uri(vid.basePath()), uri(ON_RECV), obj), SUBSCRIPTION_TID, null);
                         subscriptions.lstValue().add(subscription);
                         subscription.logger().info("subscribing to %s", vid.basePath());
                     }
@@ -304,7 +305,7 @@ public final class QCollection {
                     subscriptions.elements().filter(e -> vid.basePath().test(e.asRec().at(TARGET).uriValue()))
                             .forEach(s -> {
                                 subscriptions.logger().debug("spawning core thread for subscription recv: %s", s);
-                                new CoreThread(Map.of(
+                                new CoreThread(mutableMap(
                                         uri(START), lst(List.of(vid.basePath().toUri(), obj)),
                                         uri(CODE), code(s.asRec().at(ON_RECV).asCall()).as()), MACH_CORE_THREAD_TID, null).run();
                             });
@@ -367,11 +368,11 @@ public final class QCollection {
         }
 
         public Docs(final String description) {
-            this(Map.of(uri(DESC), str(description)), DOCS_TID, null);
+            this(mutableMap(uri(DESC), str(description)), DOCS_TID, null);
         }
 
         public static Docs empty(final Obj obj) {
-            return new Docs(Map.of(uri(OBJ), obj), DOCS_TID, null);
+            return new Docs(mutableMap(uri(OBJ), obj), DOCS_TID, null);
         }
 
         public Poly<?, ?> args() {

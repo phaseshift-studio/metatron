@@ -162,7 +162,7 @@ public class AgentProtocolHandler implements MServerProtocolHandler {
 private void initializeProtocolHandlers() {
     // ... existing handlers
 
-    // Agent protocol
+    // mAgent protocol
     MServerProtocolHandler agentHandler = new AgentProtocolHandler(LOG);
     protocolHandlers.add(agentHandler);
 }

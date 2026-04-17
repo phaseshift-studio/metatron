@@ -113,6 +113,7 @@ public class webInstSet extends AbstractInstSet {
                 uri(INST), lst(
                         instC(AS_INST_TID.dom(STR_TID).rng(XML_TID), lst(T(XML_TID)), (lhs, inst) -> ObjXMLSerializer.parse(lhs.asStr().strValue())),
                         instC(AS_INST_TID.dom(STR_TID).rng(HTML_TID), lst(T(HTML_TID)), (lhs, inst) -> ObjHTMLSerializer.parse(lhs.asStr().strValue())),
+                        instC(AS_INST_TID.dom(HTML_TID).rng(STR_TID), lst(T(STR_TID)), (lhs, inst) -> str(ObjHTMLSerializer.single().write(lhs).html())),
                         instC(AS_INST_TID.dom(STR_TID).rng(JSON_TID), lst(T(JSON_TID)), (lhs, inst) -> ObjSimpleJSONSerializer.parse(lhs.asStr().strValue())),
                         instC(AS_INST_TID.dom(ALL).rng(STR_TID), lst(JSON_STR_TYPE), (lhs, inst) -> str(ObjSimpleJSONSerializer.single().write(lhs).toString())),
                         instC(INST_TID.extend("doc").dom(STR_TID).rng(STR_TID), lst(), (lhs, inst) -> {

@@ -20,7 +20,6 @@ package studio.phaseshift.metatron.isa.llm.type;
 
 import dev.langchain4j.mcp.client.DefaultMcpClient;
 import dev.langchain4j.mcp.client.McpClient;
-import dev.langchain4j.mcp.client.McpRoot;
 import dev.langchain4j.mcp.client.transport.McpTransport;
 import dev.langchain4j.mcp.client.transport.http.StreamableHttpMcpTransport;
 import dev.langchain4j.mcp.client.transport.websocket.WebSocketMcpTransport;
@@ -29,24 +28,26 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static org.slf4j.event.Level.WARN;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_TOOL_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.MCP_SERVER_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.Bool.*;
-import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -58,20 +59,22 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class MCPServer extends MRec {
+public class mMCPServer extends MRec {
+
+    protected static final GraphittyLogger LOG = Graphitty.log(mMCPServer.class);
 
     public static final Type MCP_SERVER_TYPE = docWrap(Type.Builder.build().tid(REC_TID).vid(MCP_SERVER_TID)
-            .isaPredicate(rec(
-                    uri(HOST), URI_TYPE,
-                    uri(TOOL).maybe(), rec(URI_TYPE, T(LLM_TOOL_TID)).maybe(),
-                    uri(STATUS).maybe(), isa_(BOOL_TYPE).else_(BOOL_FALSE)))
-            .constructor(instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(MCP_SERVER_TID), lst(T(REC_TID)),
-                    (x, inst) -> new MCPServer(inst.arg(0).asRec().jvm(), MCP_SERVER_TID, inst.arg(0).vid())))
-            .create(),"a mcp server specification","creates a connection to an existing mcp server",
+                    .isaPredicate(rec(
+                            uri(HOST), URI_TYPE,
+                            uri(TOOL).maybe(), rec(URI_TYPE, T(LLM_TOOL_TID)).maybe(),
+                            uri(STATUS).maybe(), isa_(BOOL_TYPE).else_(BOOL_FALSE)))
+                    .constructor(instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(MCP_SERVER_TID), lst(T(REC_TID)),
+                            (x, inst) -> new mMCPServer(inst.arg(0).asRec().jvm(), MCP_SERVER_TID, inst.arg(0).vid())))
+                    .create(), "a mcp server specification", "creates a connection to an existing mcp server",
             Map.of(
                     uri(HOST), "the mcp server endpoint",
                     uri(TOOL).maybe(), "the tools/functions available for use on the mcp server",
-                    uri(STATUS).maybe(), "the current status of the mcp server"), 
+                    uri(STATUS).maybe(), "the current status of the mcp server"),
             "a server implementing the model content protocol used by llms for the acquisition of tools and access to extenal software systems",
             "mcp::[host => <http://127.0.0.1:29170/index-mcp/streamable-http>]@/usr/ai/mcp/intellij [-- connection populates tool and status      --]",
             "mcp::[host => <ws://localhost:8999>]@/usr/ai/mcp/mtron                                 [-- mtron router server exposes an mcp server --]");
@@ -85,7 +88,7 @@ public class MCPServer extends MRec {
 
     protected final McpClient client;
 
-    public MCPServer(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
+    public mMCPServer(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
         this.client = DefaultMcpClient.builder()
                 .clientName(METATRON)
@@ -130,7 +133,7 @@ public class MCPServer extends MRec {
     }
 
     @Override
-    public MCPServer clone() {
+    public mMCPServer clone() {
         return this;
     }
 
@@ -142,8 +145,9 @@ public class MCPServer extends MRec {
         if (null != transport) {
             if (f(STREAMABLE_HTTP).equals(transport.uriValue())) {
                 return StreamableHttpMcpTransport.builder()
-                        //  .logRequests(true)
-                        //  .logResponses(true)
+                        .logRequests(true)
+                        .logResponses(true)
+                        .logger(LOG.logger(WARN))
                         .customHeaders(headers.keySet().stream().collect(Collectors.toMap(k -> k.uriValue().toString(), v -> v.uriValue().toString())))
                         .url(host.uriValue().toString())
                         .build();
@@ -151,14 +155,16 @@ public class MCPServer extends MRec {
         } else {
             if (host.uriValue().scheme().equals(WS) || host.uriValue().scheme().equals(WSS))
                 return WebSocketMcpTransport.builder()
-                        //  .logRequests(true)
-                        //  .logResponses(true)
+                        .logRequests(true)
+                        .logResponses(true)
+                        .logger(LOG.logger(WARN))
                         .url(host.uriValue().toString())
                         .build();
             if (host.uriValue().scheme().equals(HTTP) || host.uriValue().scheme().equals(HTTPS)) {
                 return StreamableHttpMcpTransport.builder()
-                        //  .logRequests(true)
-                        //  .logResponses(true)
+                        .logRequests(true)
+                        .logResponses(true)
+                        .logger(LOG.logger(WARN))
                         .url(host.uriValue().toString())
                         .build();
             } else

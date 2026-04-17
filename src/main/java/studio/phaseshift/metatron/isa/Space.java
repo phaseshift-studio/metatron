@@ -254,10 +254,10 @@ public interface Space extends Rec, Closeable {
         }
 
         public static Obj resolveWrite(final GraphittyLogger LOG, final Space space, final fURI vid, Obj obj, final BiFunction<fURI, Obj, Obj> directWriter, final Function<fURI, Iterator<IdObj>> directReader) {
-            if (Obj.Helper.isAuto(obj)) {
-                LOG.info("evaluating auto %s and yielding result to: %s", obj, vid);
-                obj = obj.apply();
-            }
+           // if (Obj.Helper.isAuto(obj)) {
+             //   LOG.info("evaluating auto %s and yielding result to: %s", obj, vid);
+           //     obj = obj.apply();
+          //  }
 
             final Iterator<IdObj> current = directReader.apply(vid);
             if (current.hasNext() && vid.isNode()) {
@@ -269,7 +269,9 @@ public interface Space extends Rec, Closeable {
                     if (vid.isNode() || !obj.isPoly()) {
                         return directWriter.apply(vid, obj);
                     } else if (obj.isRec()) { // branch
-                        obj.recValue().forEach((key, value) -> Helper.resolveWrite(LOG, space, vid.extend(key.uriValue()), value, directWriter, directReader));
+                        obj.recValue().forEach((key, value) -> {
+                            Helper.resolveWrite(LOG, space, vid.extend(key.uriValue()), value, directWriter, directReader);
+                        });
                     } else if (obj.isLst()) {
                         for (int i = 0; i < obj.lstValue().size(); i++) { // branch
                             Helper.resolveWrite(LOG, space, vid.extend(String.valueOf(i)), obj.lstValue().get(i), directWriter, directReader);

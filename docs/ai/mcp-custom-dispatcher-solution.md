@@ -217,7 +217,7 @@ toolDispatcher.registerTool(
         .inputSchema(McpJsonDefaults.getMapper(), createMyToolSchemaJson())
         .build(),
     args -> {
-        // Tool implementation
+        // mTool implementation
         String param = args.get("param_name").toString();
 
         // Do work...

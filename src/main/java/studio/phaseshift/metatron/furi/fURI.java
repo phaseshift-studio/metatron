@@ -620,7 +620,7 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
         }
 
         static Map<String, String> parseQuery(final String query) {
-            return query == null ? Map.of() : Arrays.stream(query.split("&")).map(s -> s.split("=")).collect(Collectors.toMap(a -> a[0], a -> a.length > 1 ? a[1] : ""));
+            return query == null ? Map.of() : Arrays.stream(query.split("&")).map(s -> s.split("=")).collect(Collectors.toMap(a -> a[0], a -> a.length > 1 ? a[1] : "", (v1, v2) -> v1 + ";" + v2));
         }
 
         /**

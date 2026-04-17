@@ -93,14 +93,11 @@ include::header.html[]
                 <b class="metatron-name">mtron</b> is a functional, type-safe, data flow language capable of expressing complex data transformations within a multi-model data environment.
             </div>
             <div class="feature-modal">
-                <p><b class="metatron-name">mtron</b> (pronounced /ɛm.trɒn/) is the primary query and transformation language for the metatron virtual machine. It provides a type-safe environment for processing data across heterogeneous spaces.</p>
+                <p><b class="metatron-name">mtron</b> (pronounced /ɛm.trɒn/) is the primary query and transformation language for the metatron virtual machine. It provides a type-safe environment for processing data across a diverse set of spaces.</p>
                 <img src="images/modal/mtron-modal.svg" class="img-fluid mb-3 icon-color" style="width: 500px; display: block; margin: auto;"/>
-                <p>highlights include:</p>
-                <ul>
-                    <li>every expression is an element of an algebraic ring, where function composition and function parallelization being * and +, respectively.</li>
-                    <li>structural typing allows, e.g., a graph vertex to act as a row in a relational database and vice versa.</li>
-                    <li>uris and code are first class objects</li>
-                </ul>
+                 <p>
+                In mtron, URIs and instructions are both first class citizens. The URI's structure is capitalized on throughout the language where, for example, query parameters encode instruction domain and range types. This leads to URIs referencing code composed of URIs which provides a unique level of software reflection without abandoning a functional structure.
+                 </p>
             </div>
             <script type="text/javascript">featurePanel("mtron_feature");</script>
         </div>
@@ -110,15 +107,9 @@ include::header.html[]
                 metatron <b class="metatron-name">objs</b> exist in a single, unified uri address space where processes can seamlessly traverse across different data sources.
             </div>
             <div class="feature-modal">
-                <p>The <b class="metatron-name">fURI</b> (<i>functional</i> URI) is the cornerstone of metatron's memory model. Every piece of data, regardless of its underlying storage, is addressed via a consistent URI scheme. The primary ramification is that any iota of data can refer to any other iota of data regardless of its physical location and underlying storage system and format. For instance, a line of text in a <code>.txt</code> file on a hard drive can reference some specific tag in an html page on the web. Atop the space-based uri graph, there exists a uri-aware machine capable of processing that data in a storage-agnostic manner.
+                <p>The <b class="metatron-name">fURI</b> (<i>functional</i> URI) is the cornerstone of metatron's memory model. Every piece of data, regardless of its underlying storage, is addressed via a consistent URI scheme. The primary ramification is that any bit of data can refer to any other bit of data regardless of its physical location and underlying storage system and format. For instance, a line of text in a <code>.txt</code> file on a hard drive can reference some specific tag in an HTML page on the web. Atop the space-based URI graph, there exists a URI-aware machine capable of processing that data in a storage-agnostic manner.
                 </p>
                 <img src="images/modal/furi-modal.svg" class="img-fluid mb-3 icon-color" style="width: 500px; display: block; margin: auto;"/>
-                <p>highlights include:</p>
-                <ul>
-                    <li>universal namespace across databases, file systems, APIs, microcontrollers, in-memory data structures, etc.</li>
-                    <li>the subsequent link structure supports complex traversals across a wide range of data sources -- all within the same mtron expression.</li>
-                    <li>query processors enrich space semantics with useful features such as constants, uri typing, pubsub notifications, and more.</li>
-                </ul>
             </div>
             <script type="text/javascript">featurePanel("uri_feature");</script>
         </div>
@@ -128,7 +119,7 @@ include::header.html[]
                 data sources are logically abstracted as <b class="metatron-name">spaces</b>, where each datum has a uri address enabling the stitching together of database, file system, event, and peripheral data
             </div>
             <div class="feature-modal">
-                <p>A <b class="metatron-name">space</b> is a storage and/or processing system that maintains some subset of the of the uri address space. Spaces include, but are not limited to, relational databases, graph databases, key/value stores, document stores,
+                <p>A <b class="metatron-name">space</b> is a storage and/or processing system that is responsible for maintaining some subset of the full URI address space. Spaces include but are not limited to, relational databases, graph databases, key/value stores, document stores,
                 file systems, large language model catalogs, and more. Spaces can range from the small (a microprocessor's on-board memory), to the large (the world wide web).</p>
                 <img src="images/modal/space-modal.svg" class="img-fluid mb-3 icon-color" style="max-height: 300px; display: block; margin: auto;"/>
             </div>
@@ -151,7 +142,7 @@ include::header.html[]
                 processes are realized as the propagation of atomic <b class="metatron-name">monads</b>  through instruction graphs which guide them over the underlying data spaces
             </div>
             <div class="feature-modal">
-                <p><b class="metatron-name">Monads</b> (Process Control Monads) represent the state and path of a computation. They flow through instruction graphs, enabling highly distributed and resilient processing.</p>
+                <p><b class="metatron-name">Monads</b> represent the state and path of a computation. They flow through instruction graphs, yielding functional processing</p>
                 <img src="images/modal/monad-modal.svg" class="img-fluid mb-3 icon-color" style="max-height: 300px; display: block; margin: auto;"/>
             </div>
             <script type="text/javascript">featurePanel("monad_feature");</script>
@@ -173,7 +164,7 @@ include::header.html[]
                 obj structures are constrained using a <b class="metatron-name">a structural type system</b> that can express inherited, refined, dependent, and recursive types
             </div>
             <div class="feature-modal">
-                <p>The Metatron <b class="metatron-name">Schema</b> provides a powerful structural type system. It ensures data integrity across diverse sources while maintaining the flexibility needed for modern applications.</p>
+                <p>The metatron type system is a structural type system that promotes the creation of custom <b class="metatron-name">schemas</b> that define data structures and the instructions associated with them. Morphing between types allows data to inherit instructions from other schemas. Together, data integrity is maintained across diverse sources while still allowing flexibility in a hybrid schema/schema-less data environment.</p>
                 <img src="images/schema-diagram.svg" class="img-fluid mb-3" style="max-height: 400px; display: block; margin: auto;"/>
             </div>
             <script type="text/javascript">featurePanel("schema_feature");</script>
@@ -217,7 +208,7 @@ include::header.html[]
                 a multi-protocol <b class="metatron-name">web-oriented instset</b> allows metatron to expose space resources to external clients as well as realize the external web as a metatron space in and of itself.
             </div>
             <div class="feature-modal">
-                <p><b class="metatron-name">http space</b> translates the <code>GET/PUT</code> semantics of <code>http</code> to the read/write semantics of a metatron space -- enabling the selective access, referencing, and manipulation of html, xml, and json documents. Similarly, <b class="metatron-name">web socket space</b> offers session-based interactions with metatron via the MCP server protocol, a simple string-based mtron evaluation protocol, or a custom protocol if needed.</p>
+                <p><b class="metatron-name">HTTP space</b> translates the <code>GET/PUT</code> semantics of <code>http://</code> to the read/write semantics of a metatron space -- enabling the selective access, referencing, and manipulation of HTML, XML, and JSON documents. Similarly, <b class="metatron-name">web socket space</b> offers session-based interactions with metatron via a simple string-based mtron evaluation protocol, or an MCP server, or a custom protocol if needed.</p>
                 <table>
                 <tr>
                 <td>

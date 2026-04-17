@@ -34,15 +34,14 @@ import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.web.space.http.httpSpace;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
+import static studio.phaseshift.metatron.isa.web.webInstSet.*;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -90,7 +89,7 @@ public class httpSpaceTest extends AbstractSpaceTest {
     public void testResourceAccess(final String path, final String expected) {
         String url = BASE_URL + path;
         var result = Router.readFromSpace(url);
-        assertEquals(ObjmtronSerializer.parse(expected), result, "Unexpected resource content for: " + url);
+        assertEquals(ObjmtronSerializer.parse(expected), result, "unexpected resource content for: " + url);
     }
 
     @ParameterizedTest
@@ -118,7 +117,7 @@ public class httpSpaceTest extends AbstractSpaceTest {
     public void testJsonResourceFields(String path, String expected) {
         String url = BASE_URL + path;
         var result = Router.readFromSpace(url);
-        assertEquals(ObjmtronSerializer.parse(expected), result, "Unexpected value for: " + url);
+        assertEquals(ObjmtronSerializer.parse(expected), result, "unexpected value for: " + url);
     }
     
     @Test
@@ -132,7 +131,11 @@ public class httpSpaceTest extends AbstractSpaceTest {
     public void testServerSideRecursion() {
         assertNotEquals(noobj(), Router.readFromSpace(BASE_URL + "/#/"));
         assertNotEquals(noobj(), Router.readFromSpace(BASE_URL + "/index.html"));
+        assertEquals(HTML_TID, Router.readFromSpace(BASE_URL + "/index.html").tid());
+        assertEquals(HTML_TID, Router.readFromSpace(BASE_URL).tid());
+        assertTrue(Router.readFromSpace(BASE_URL).test(HTML_TYPE));
         assertEquals(str("a1.b1.c1.text"), Router.readFromSpace(BASE_URL + "/index.html/html/body/a/b/c/text"));
+        assertNotEquals(HTML_TID, Router.readFromSpace(BASE_URL + "/index.html/html/body/a/b/c/text").tid());
         assertEquals(str("a1.b1.c1.text").c(cInt.of(2)), Router.readFromSpace(BASE_URL + "/index.html/html/body/a/+/+/text"));
         assertEquals(str("a2.b2.c2.text"), Router.readFromSpace(BASE_URL + "/index.html/html/body/div/div/div/text"));
         assertEquals(str("a2.b2.c2.text").c(cInt.of(2)), Router.readFromSpace(BASE_URL + "/index.html/html/body/div/+/+/text"));

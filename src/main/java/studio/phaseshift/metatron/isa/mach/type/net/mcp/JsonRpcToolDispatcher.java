@@ -50,7 +50,7 @@ public class JsonRpcToolDispatcher {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper().configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
 
     /**
-     * Tool handler function that takes arguments and returns a CallToolResult.
+     * mTool handler function that takes arguments and returns a CallToolResult.
      */
     @FunctionalInterface
     public interface ToolHandler {

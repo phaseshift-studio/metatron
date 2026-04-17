@@ -714,16 +714,16 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         public static fURI autoFromVID(final Obj autoFrom) {
             return autoFrom.asInst().arg(0).uriValue();
         }
-        
+
         public static Optional<fURI> getPointer(final Obj obj) {
-            if(isAutoFrom(obj))
+            if (isAutoFrom(obj))
                 return Optional.of(autoFromVID(obj));
-            else if(isFrom(obj))
+            else if (isFrom(obj))
                 return Optional.of(obj.asInst().arg(0).uriValue());
             else
                 return Optional.empty();
         }
-        
+
         public static int objHashCode(final Obj obj) {
             return Objects.hash((Object) obj.jvm()); /*obj.isNoObj() ? noobj().hashCode() : obj.isInst() ? obj.tid().hashCode() : Objects.hash(obj.jvm(), obj.tid().one());*/
         }
@@ -931,9 +931,9 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                             "an rhs obj", "an lhs obj", Map.of(), "the obj identity function \\(f(x)\\to x\\)"),
                     docWrap(instC(ID_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(), (lhs, inst) -> lhs),
                             "the rhs obj", "the lhs obj", Map.of(), "a objs barrier identity function \\(f(X)\\to X\\)"),
-                    docWrap(instC(AND_INST_TID.dom(A).rng(BOOL_TID), lst(T(BOOL_TID).c(cInt.of(2, null))), (lhs, inst) -> bool(inst.args().elements().map(Obj::asBool).allMatch(Obj::boolValue))),
+                    docWrap(instC(AND_INST_TID.dom(A).rng(BOOL_TID), lst(BOOL_TYPE, BOOL_TYPE, BOOL_TYPE.maybe(), BOOL_TYPE.maybe(), BOOL_TYPE.maybe()), (lhs, inst) -> bool(inst.args().elements().map(Obj::asBool).allMatch(Obj::boolValue))),
                             "any objs", "true if all objs are true", Map.of(), "logical \\(\\texttt{and}\\) function \\(f(X)\\to \\tt{true}\\) if all \\(X\\) are true"),
-                    docWrap(instC(OR_INST_TID.dom(A).rng(BOOL_TID), lst(T(BOOL_TID).c(cInt.of(2, null))), (lhs, inst) -> bool(inst.args().elements().map(Obj::asBool).anyMatch(Obj::boolValue))),
+                    docWrap(instC(OR_INST_TID.dom(A).rng(BOOL_TID), lst(BOOL_TYPE, BOOL_TYPE, BOOL_TYPE.maybe(), BOOL_TYPE.maybe(), BOOL_TYPE.maybe()), (lhs, inst) -> bool(inst.args().elements().map(Obj::asBool).anyMatch(Obj::boolValue))),
                             "any objs", "true if any objs are true", Map.of(), "logical \\(\\texttt{or}\\) function \\(f(X)\\to \\tt{true}\\) if any \\(X\\) are true"),
                     instC(APPLY_INST_TID.dom(ALL).rng(ALL_STAR), lst(T(ALL_STAR)), (lhs, inst) -> Router.global().read(lhs.uriValue().basePath().extend("apply")).apply(inst.args())),
                     instC(MAP_INST_TID.dom(A).rng(B), lst(T(B)), (lhs, inst) -> inst.arg(0)),
@@ -969,7 +969,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                     docWrap(instC(TO_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(URI_TID)), (lhs, inst) -> Router.writeToSpace(inst.arg(0).uriValue(), lhs)),
                             "any obj", "writes the lhs obj to the arg uri", Map.of(jnt(0), "the uri to write to"), "associates the lhs obj to the arg uri"),
                     // instC(FROM_INST_TID.dom(ALL.maybe()).rng(ALL_STAR), lst(), (lhs, inst) -> Router.stack().peekAll()),
-                    docWrap(instC(FROM_INST_TID.dom(ALL.maybe()).rng(ALL_STAR), lst(T(URI_TID)), (lhs, inst) -> Router.readFromSpace(inst.arg(0).isInt() ? f(""+inst.arg(0).intValue()) : inst.arg(0).uriValue())), // TODO: only resolves when explicit mono args (not code args)
+                    docWrap(instC(FROM_INST_TID.dom(ALL.maybe()).rng(ALL_STAR), lst(T(URI_TID)), (lhs, inst) -> Router.readFromSpace(inst.arg(0).isInt() ? f("" + inst.arg(0).intValue()) : inst.arg(0).uriValue())), // TODO: only resolves when explicit mono args (not code args)
                             "any obj", "the obj referred to by the arg uri", Map.of(jnt(0), "the uri to dereference"), "dereferences a uri to an obj (sugar'd *)",
                             "*abc        [-- obj at abc                            --]",
                             "abc.*_      [-- obj at abc via dynamic arg generation --]",

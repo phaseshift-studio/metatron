@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.mach.type.ui.graphitty;
 
+import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.LayoutBase;
 import org.slf4j.Logger;
@@ -141,6 +142,17 @@ public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
         return MTronException.of("dummy");
     }
 
+    public Logger logger(final Level level) {
+        LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
+        final Logger log = (null == this.source)
+                ? lc.getLogger(GraphittyLogger.class)
+                : (this.source instanceof Logger)
+                ? (Logger) this.source
+                : lc.getLogger(this.source.getClass());
+        final ch.qos.logback.classic.Logger current = (ch.qos.logback.classic.Logger)  log;
+        current.setLevel(ch.qos.logback.classic.Level.valueOf(level.name()));
+        return log;
+    }
 
     public Logger logger() {
         if (null == this.source)

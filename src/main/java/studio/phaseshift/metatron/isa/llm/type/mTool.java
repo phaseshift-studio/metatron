@@ -42,7 +42,7 @@ import static studio.phaseshift.metatron.furi.q.QCollection.DOCQ;
 import static studio.phaseshift.metatron.furi.q.QCollection.Docs.doc;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_TOOL_TID;
-import static studio.phaseshift.metatron.isa.llm.type.Model.Helper.objToSchema;
+import static studio.phaseshift.metatron.isa.llm.type.mModel.Helper.objToSchema;
 import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -54,11 +54,12 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class Tool extends MRec {
+public class mTool extends MRec {
 
     public static final Type LLM_TOOL_TYPE = docWrap(Type.Builder.build().tid(REC_TID).vid(LLM_TOOL_TID).isaPredicate(rec(
                     uri(INST), T(ALL),
@@ -73,12 +74,12 @@ public class Tool extends MRec {
             "a tool function for the llm to use",
             "*eval.as(tool::T)   [-- see as?tool<=inst() --]");
 
-    public Tool(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
+    public mTool(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
     }
 
-    public static Tool tool(final Rec tool) {
-        return new Tool(tool.jvm(), LLM_TOOL_TID, tool.vid());
+    public static mTool tool(final Rec tool) {
+        return new mTool(tool.jvm(), LLM_TOOL_TID, tool.vid());
     }
 
     public static Tuple.Pair<ToolSpecification, ToolExecutor> mtronInstToolSpecification(final Rec tool) {
@@ -121,7 +122,7 @@ public class Tool extends MRec {
 
     public static Rec mtronDocToTool(final QCollection.Docs doc) {
         final Inst inst = doc.at(INST);
-        return rec(Map.of(uri(INST), inst, uri(NAME), uri(inst.tid()), uri(DESC), str(doc.description()), uri(ARG), doc.args()), LLM_TOOL_TID, null);
+        return rec(mutableMap(uri(INST), inst, uri(NAME), uri(inst.tid()), uri(DESC), str(doc.description()), uri(ARG), doc.args()), LLM_TOOL_TID, null);
     }
 
 
@@ -136,6 +137,6 @@ public class Tool extends MRec {
                         )),
                         "<no description>"));
         inst.logger().info("building ai compliant tool from mtron inst: %s => %s", inst.tid(), doc);
-        return rec(Map.of(uri(INST), inst, uri(NAME), uri(inst.tid()), uri(DESC), str(doc.description()), uri(ARG), doc.args()), LLM_TOOL_TID, null);
+        return rec(mutableMap(uri(INST), inst, uri(NAME), uri(inst.tid()), uri(DESC), str(doc.description()), uri(ARG), doc.args()), LLM_TOOL_TID, null);
     }
 }

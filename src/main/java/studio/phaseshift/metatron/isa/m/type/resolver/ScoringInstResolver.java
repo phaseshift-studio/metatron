@@ -62,12 +62,13 @@ public class ScoringInstResolver implements InstResolver {
     @Override
     public Inst resolve(final Obj lhs, final Inst userInst, final Stream<Obj> candidates) {
         final GraphittyLogger LOG = Graphitty.log(lhs);
-
+        if(userInst.isNoObj())
+            return null;
         return candidates
                 .filter(Obj::isObjInst)
                 .map(Obj::asInst)
                 // Basic compatibility filters (same as FirstFindInstResolver)
-                .filter(i -> (i.args().isEmpty() && userInst.arg(0).isNoObj()) || i.args().isRec() || i.args().count() >= userInst.args().count())
+                .filter(i -> (i.args().isEmpty() && userInst.args().isEmpty()) || i.args().isRec() || i.args().count() >= userInst.args().count())
                 .filter(i -> !lhs.isInst() || (i.dom().baseType().equals(M_ISA_INST_TID)))
                 // Score BEFORE transformation (capture original specificity)
                 .map(apiInst -> {

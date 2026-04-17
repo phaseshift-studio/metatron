@@ -42,6 +42,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 public interface Q extends Rec {
 
@@ -95,7 +96,7 @@ public interface Q extends Rec {
 
         @Override
         default Map<Obj, Obj> jvm() {
-            return Map.of();
+            return mutableMap();
         }
 
         @Override
@@ -140,7 +141,7 @@ public interface Q extends Rec {
 
         @Override
         default Map<Obj, Obj> jvm() {
-            return Map.of();
+            return mutableMap();
         }
 
         @Override

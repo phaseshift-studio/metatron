@@ -19,13 +19,25 @@
 package studio.phaseshift.metatron.isa.web.type;
 
 import studio.phaseshift.metatron.isa.dcmnt.schema.storage.ObjBSONSerializer;
+import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.web.parser.ObjHTMLSerializer;
+import studio.phaseshift.metatron.util.MTronException;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
+
+import static studio.phaseshift.metatron.isa.m.type.Bytes.BYTES_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.ObjFactory.LOG;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.isa.web.webInstSet.HTML_TYPE;
+import static studio.phaseshift.metatron.isa.web.webInstSet.JSON_TYPE;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -60,6 +72,15 @@ public class Content {
 
         public static ContentType of(final String contentType) {
             return null == contentType ? TEXT_PLAIN : Arrays.stream(ContentType.values()).filter(ct -> (contentType.contains(ct.value))).findAny().orElse(TEXT_PLAIN);
+        }
+
+        public static ContentType fromProbe(final File file) {
+            try {
+                return Files.probeContentType(file.toPath()) == null ? TEXT_PLAIN : of(Files.probeContentType(file.toPath()));
+            } catch (IOException e) {
+                LOG.error(e);
+                return TEXT_PLAIN;
+            }
         }
 
         /**
@@ -111,13 +132,27 @@ public class Content {
         }
 
         public static final String VALUE = "Content-Type";
-        
+
         public ObjSerializer<?> serializer() {
-            if(this.equals(APPLICATION_MTRON)) return new ObjmtronSerializer();
-            if(this.equals(APPLICATION_JSON)) return ObjSimpleJSONSerializer.single();
-            if(this.equals(TEXT_HTML)) return ObjHTMLSerializer.single();
-            if(this.equals(APPLICATION_BSON)) return new ObjBSONSerializer();
-            return new ObjSimpleJSONSerializer();
+            if (this.isMtron()) return new ObjmtronSerializer();
+            if (this.isJson()) return ObjSimpleJSONSerializer.single();
+            if (this.isHtml()) return ObjHTMLSerializer.single();
+            if (this.equals(APPLICATION_BSON)) return new ObjBSONSerializer();
+            throw MTronException.of("no known serializer for %s", this.value);
+        }
+
+        public Obj toObj(final String data) {
+            return this.toObj(data.getBytes());
+        }
+
+        public Obj toObj(final byte[] data) {
+            final Obj obj = this.isPlain() ? 
+                    str(new String(data)) :
+                    serializer().inputBytes(ByteBuffer.wrap(data));
+            if(this.isHtml()) return obj.as(HTML_TYPE);
+            //if(this.isJson()) return obj.as(JSON_TYPE); // TODO: need test cases
+            //if(this.isBinary()) return obj.as(BYTES_TYPE);
+            return obj;
         }
     }
 }

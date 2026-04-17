@@ -60,13 +60,15 @@ public class ObjHTMLSerializer extends AbstractObjSerializer<Document> {
     private Rec readElement(final Element element) {
         //Graphitty.log(this).warn(element);
         final AtomicReference<Rec> recX = new AtomicReference<>(rec());
-        element.attributes().forEach(a -> recX.getAndUpdate(r -> r.at(uri(a.getKey()), str(a.getValue()))));
+        element.attributes().forEach(a -> recX.getAndUpdate(r -> r.at(uri(a.getKey()),
+                a.getKey().equalsIgnoreCase("src") || a.getKey().equalsIgnoreCase("href") ?
+                        uri(a.getValue()) :
+                        str(a.getValue()))));
         element.children().forEach(e -> recX.getAndUpdate(r -> r.at(uri(e.nodeName()), readElement(e))));
-        if (element.hasText() && !element.text().isBlank())
-            recX.getAndUpdate(r -> r.at(uri(TEXT), str(element.text())));
-        final String data = element.data();
-        if (!data.isBlank())
-            recX.getAndUpdate(r -> r.at(uri(DATA), str(data)));
+        if (!element.ownText().isBlank())
+            recX.getAndUpdate(r -> r.at(uri(TEXT), str(element.ownText())));
+        if (!element.data().isBlank())
+            recX.getAndUpdate(r -> r.at(uri(DATA), str(element.data())));
         return recX.get();
     }
 
@@ -80,7 +82,10 @@ public class ObjHTMLSerializer extends AbstractObjSerializer<Document> {
                 .filter(e -> !e.first().uriValue().equals(FTEXT) && !e.first().uriValue().equals(FDATA))
                 .forEach(e -> {
                     if (!e.second().isRec()) {
-                        final String attrValue = e.second().isStr() ? e.second().strValue() : e.second().toString();
+                        final String attrValue = e.second().isStr() ? e.second().strValue() :
+                                (e.second().isUri() ?
+                                        e.second().uriValue().toString() :
+                                        e.second().toString());
                         element.attr(e.first().uriValue().toString(), attrValue);
                     } else {
                         final Element newElement = new Element(e.first().uriValue().toString());

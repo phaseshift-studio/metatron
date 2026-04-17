@@ -42,6 +42,7 @@ import java.util.*;
 
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_ISA_TID;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 public class MClient extends WebSocketClient implements MConnection {
 
@@ -208,7 +209,7 @@ public class MClient extends WebSocketClient implements MConnection {
 
     @Override
     public Map<Obj, Obj> jvm() {
-        return Map.of();
+        return mutableMap();
     }
 
     @Override

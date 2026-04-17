@@ -677,7 +677,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                     Graphitty.out(terminal.output(), "{{XX}}");
                     this.status.refresh();
                 } else if (line.equals(":help")) {
-                    Graphitty.out(terminal.output(), new Panel("{{c}}help menu{{X}}", new Table(
+                    Graphitty.out(terminal.output(), new Panel("{{c}}metatron console help{{X}}", new Table(
                             List.of("name", "short", "description"))
                             .addRow(List.of("explain", "<tab>", "a tabular view of the current code"))
                             .addRow(List.of("header", ":header", "print random metatron header"))
@@ -689,7 +689,10 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                             .addRow(List.of("next pane", "ctrl+w", "cycle to next pane"))
                             .addRow(List.of("prev pane", "alt+w", "cycle to previous pane"))
                             .addRow(List.of("shrink pane", "alt+<", "make active pane smaller"))
-                            .addRow(List.of("grow pane", "alt+>", "make active pane larger")).style().headerDivider("{{[b]&w}}|").margin(0, 0, 0, 0).apply().format()).style().margin(0, 0, 0, 0).border(Border.simple.foreground("{{b}}")).apply().format());
+                            .addRow(List.of("grow pane", "alt+>", "make active pane larger"))
+                            .addRow(List.of("{{[g]&w}}editing", "{{[g]&w}}", "{{[g]&w}}"))
+                            .addRow(List.of("erase back to char", "alt+k <char>", "erase buffer back to first occurrence of char"))
+                            .style().headerDivider("{{[b]&w}}|").margin(0, 0, 0, 0).apply().format()).style().margin(0, 0, 0, 0).border(Border.simple.foreground("{{b}}")).apply().format());
                 } else if (line.startsWith(":log")) {
                     LogObj.setSLF4J(line.substring(4));
                 } else if (line.startsWith(":check")) {
@@ -981,6 +984,49 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                 }
                 return true;
             }, key(Console.terminal, InfoCmp.Capability.tab));
+            /// ERASE BUFFER BACK TO FIRST OCCURRENCE OF CHARACTER (Alt+K then <char>)
+            // Bind all printable characters with Alt+K prefix
+            for (char c = 32; c <= 126; c++) {
+                final char targetChar = c;
+                // Alt+K followed by character: ESC + 'k' + character
+                final String altKSequence = "\033k" + c;
+                getKeyMap().bind((Widget) () -> {
+                    eraseBackToChar(targetChar);
+                    return true;
+                }, altKSequence);
+            }
+        }
+
+        /**
+         * Erase the buffer back to (and including) the first occurrence of the target character.
+         * Searches from the current cursor position backwards.
+         */
+        private void eraseBackToChar(char targetChar) {
+            final Buffer buffer = reader.getBuffer();
+            final String currentText = buffer.toString();
+            final int cursorPos = buffer.cursor();
+
+            if (cursorPos == 0) {
+                return; // Nothing to erase
+            }
+
+            // Search backwards from cursor position for the target character
+            int targetPos = -1;
+            for (int i = cursorPos - 1; i >= 0; i--) {
+                if (currentText.charAt(i) == targetChar) {
+                    targetPos = i;
+                    break;
+                }
+            }
+
+            if (targetPos == -1) {
+                // Character not found, do nothing
+                return;
+            }
+
+            // Delete from targetPos to cursor position
+            buffer.cursor(targetPos);
+            buffer.delete(cursorPos - targetPos);
         }
     }
 }

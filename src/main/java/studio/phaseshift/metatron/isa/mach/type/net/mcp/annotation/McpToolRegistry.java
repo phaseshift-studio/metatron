@@ -109,7 +109,7 @@ public class McpToolRegistry {
      * Register a tool class annotated with @McpTool.
      *
      * @param toolClass The class annotated with @McpTool
-     * @return Tuple of Tool definition and handler
+     * @return Tuple of mTool definition and handler
      */
     public static Tuple.Pair<McpSchema.Tool, JsonRpcToolDispatcher.ToolHandler> register(final Class<?> toolClass) {
         final McpTool toolAnnotation = toolClass.getAnnotation(McpTool.class);

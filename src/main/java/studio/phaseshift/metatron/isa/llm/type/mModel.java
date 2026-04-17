@@ -52,7 +52,8 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.DOCQ;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.MCP_SERVER_TID;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.MODEL_TID;
-import static studio.phaseshift.metatron.isa.llm.type.Tool.LLM_TOOL_TYPE;
+import static studio.phaseshift.metatron.isa.llm.type.mMCPServer.LOG;
+import static studio.phaseshift.metatron.isa.llm.type.mTool.LLM_TOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
@@ -71,16 +72,16 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 
-public class Model extends MRec {
+public class mModel extends MRec {
     public record Provider(String name, fURI host, String apiKey) {
     }
 
-    public Model(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
+    public mModel(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
     }
 
-    public static Model model(final Rec model) {
-        return new Model(model.jvm(), MODEL_TID, model.vid());
+    public static mModel model(final Rec model) {
+        return new mModel(model.jvm(), MODEL_TID, model.vid());
     }
 
     public String model() {
@@ -154,8 +155,8 @@ public class Model extends MRec {
         return Optional.<Obj>ofNullable(this.at("rag").orElse(null)).map(o -> o.autoResolve(this)).map(Obj::asRec);
     }
 
-    public AiServices<Agent> agent() {
-        final AiServices<Agent> service = AiServices.builder(Agent.class);
+    public AiServices<mAgent> agent() {
+        final AiServices<mAgent> service = AiServices.builder(mAgent.class);
         //////////////////////////////////////////
         /////////////// MEMORY ///////////////////
         //////////////////////////////////////////
@@ -201,16 +202,16 @@ public class Model extends MRec {
                     .flatMap(e -> e.isObjs() ? e.elements() : Stream.of(e))
                     .forEach(t -> {
                         if (t.tid().equals(MCP_SERVER_TID)) {
-                            service.toolProvider(McpToolProvider.builder().mcpClients(((MCPServer) t).client()).build()).executeToolsConcurrently(BootLoader.getExecutor());
+                            service.toolProvider(McpToolProvider.builder().mcpClients(((mMCPServer) t).client()).build()).executeToolsConcurrently(BootLoader.getExecutor());
                         } else if (t.isObjInst()) {
                             if (!Router.global().read(t.tid().addQ(DOCQ)).isNoObj()) {
-                                final Tuple.Pair<ToolSpecification, ToolExecutor> pair = Tool.mtronInstToolSpecification(Tool.mtronInstToTool(t.asInst()));
+                                final Tuple.Pair<ToolSpecification, ToolExecutor> pair = mTool.mtronInstToolSpecification(mTool.mtronInstToTool(t.asInst()));
                                 tools.put(pair.get0(), pair.get1());
                             } else {
                                 t.logger().warn("ignoring inst as it has no associated ?docq: %s", t);
                             }
                         } else if (t.test(LLM_TOOL_TYPE)) {
-                            final Tuple.Pair<ToolSpecification, ToolExecutor> pair = Tool.mtronInstToolSpecification(t.asRec());
+                            final Tuple.Pair<ToolSpecification, ToolExecutor> pair = mTool.mtronInstToolSpecification(t.asRec());
                             tools.put(pair.get0(), pair.get1());
                         }
                     });
@@ -239,7 +240,7 @@ public class Model extends MRec {
         this.agent()
     }*/
 
-    public Model chat(final String message, final Inst onResponse) {
+    public mModel chat(final String message, final Inst onResponse) {
         BootLoader.getExecutor().submit(() -> {
             onResponse.apply(this.chat(message));
         });
@@ -255,7 +256,18 @@ public class Model extends MRec {
         final AtomicBoolean isTooling = new AtomicBoolean(false);
         final AtomicReference<MTronException> isError = new AtomicReference<>();
         try {
-            final Agent agent = this.agent().streamingChatModel(LLMFactory.createChatInteraction(this, this.model())).build();
+            final mAgent agent = this.agent().systemMessageTransformer((current, context) -> {
+                if (!this.at(NOTE).isNoObj()) {
+                    final fURI notesURI = this.at(NOTE).uriValue();
+                    final StringBuilder sb = CommonUtil.readResource("llm/ext/NOTE.md");
+                    LOG.info("adding notes to system message: %s", notesURI);
+                    final String NOTES_DOT_MD = sb.toString().replace("%s", notesURI.toString());
+                    if (Router.readFromSpace(notesURI).isNoObj())
+                        Router.writeToSpace(notesURI, rec());
+                    return current + "\n\n" + NOTES_DOT_MD;
+                } else
+                    return current;
+            }).streamingChatModel(LLMFactory.createChatInteraction(this, this.model())).build();
             agent.chat(message)
                     .onToolExecuted(tool -> {
                         this.logger().info("tool executed: %s(%s) => %s", tool.request().name(), tool.request().arguments(), tool.result());
@@ -349,7 +361,7 @@ public class Model extends MRec {
     
 
 /*
-  public static Tools.Tool mtronInstTool(final Inst inst) {
+  public static Tools.mTool mtronInstTool(final Inst inst) {
         final Docs doc = Router.readFromSpace(inst.tid().q("doc", null))
                 .orSupply(() -> Docs.doc(inst,
                         inst.dom().tid().toString(),
@@ -379,7 +391,7 @@ public class Model extends MRec {
                 )));
         instProperties.values().forEach(p -> required.add(p.isRequired() ? "true" : "false"));
 
-        return Tools.Tool.builder()
+        return Tools.mTool.builder()
                 .toolSpec(Tools.ToolSpec.builder()
                         .name(inst.tid().name())
                         .description(doc.description())
@@ -399,8 +411,8 @@ public class Model extends MRec {
                 .build();
     }
 
-    public static Tools.Tool mtronEvalToolSpecification() {
-        return Tools.Tool.builder()
+    public static Tools.mTool mtronEvalToolSpecification() {
+        return Tools.mTool.builder()
                 .toolSpec(Tools.ToolSpec.builder()
                         .name("mtron_eval")
                         .description("evaluate mtron source code and get back an obj result")

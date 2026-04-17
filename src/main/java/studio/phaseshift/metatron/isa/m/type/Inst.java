@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.isa.m.type;
 
 import studio.phaseshift.metatron.TypeCheck;
-import studio.phaseshift.metatron.furi.C;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.resolver.InstResolver;
@@ -33,7 +32,6 @@ import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -47,7 +45,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
-import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
 public interface Inst extends Call {
@@ -208,6 +205,8 @@ public interface Inst extends Call {
     default Inst resolve(final Obj lhs) {
         if (this.hasf())
             return this;
+        if (this.isNoObj())
+            return noobj();
         final GraphittyLogger LOG = Graphitty.log(lhs);
 
         // Resolution cache: DISABLED
@@ -261,6 +260,8 @@ public interface Inst extends Call {
                     RESOLUTION_CACHE.putIfAbsent(cacheKey, resolved);
                 }*/
                 return resolved;
+            } else {
+                LOG.debug("UNABLE TO RESOLVE: %s", this);
             }
         } catch (final Exception e) {
             this.logger().error(e);
@@ -269,8 +270,8 @@ public interface Inst extends Call {
         // if they all have the same domain coefficient as the lhs obj, 
         // then that can be hard coded into the compilation
         Obj resolved2 = Router.readFromSpace(this.tid());
-        final List<C> uniqueDomains = (List) resolved2.stream().map(v -> v.tid().dom().c()).distinct().toList();
-        final Inst domainInst = (uniqueDomains.size() == 1 && uniqueDomains.get(0).equals(lhs.tid().c())) ? this.dom(lhs.type()) : this;
+        final List<cInt> uniqueDomains = resolved2.stream().map(v -> v.tid().dom().c()).distinct().toList();
+        final Inst domainInst = (uniqueDomains.size() == 1 && uniqueDomains.getFirst().equals(lhs.tid().c())) ? this.dom(lhs.type()) : this;
         this.logger().trace("performing runtime resolution of %s => %s", lhs, domainInst);
         resolved2 = domainInst.hasDomOrRng() ? resolved2.tid(domainInst.tid()) : resolved2;
         if (resolved2.isNoObj()) {

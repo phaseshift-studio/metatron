@@ -54,6 +54,11 @@ public final class NoObj implements Obj, Inst {
     }
 
     @Override
+    public Inst resolve(final Obj lhs) {
+        return this;
+    }
+
+    @Override
     public Triplet jvm() {
         return null;
     }

@@ -110,7 +110,7 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
             pattern      => <localai:#>,
             name         => <localai>,
             route        => [<localai:>=><>]]@/sys/space/localai;
- *<local:software/metatron/.agent/skills/mtron-assistance>.as(skill::T).to(/usr/ai/skills/mtron);
+ *<local:software/metatron/.agent/skills/mtron>.as(skill::T).to(/usr/ai/skills/mtron);
  tblespace::[pattern => netflix:#,
         host       => <mariadb://localhost:3306/netflix?user=mtron&password=mtron>,
         route      => [<netflix:schema>=>/sys/space/netflix/schema,
@@ -133,7 +133,7 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
        serializer  => !*</m/mach/io/serializer/bson>,
        collection  => [,],
        route       => [mongo:=><>]]@/sys/space/mongo;
- mcp::[host      => <ws://localhost:8999>]@/usr/ai/mcp/mtron;
+ mcp::[host      => <ws://localhost:8999/m/llm/mcp>]@/usr/ai/mcp/mtron;
  mcp::[host      => <http://127.0.0.1:29170/index-mcp/streamable-http>]@/usr/ai/mcp/intellij;
  [==mcp::[host      => <http://192.168.88.231:3721/mcp>,
              transport => <streamable-http>,
@@ -141,7 +141,7 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
                        
 [== load user console ==]
 console::[=>]@/usr/ui/console;
-*boot/args.print(_)
+*boot/args.print(_,'\n')
 
  
 

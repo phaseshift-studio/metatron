@@ -1322,7 +1322,7 @@ class MetatronDashboard {
     }
 
     addAgentTool() {
-        const tool = prompt('Enter tool reference (e.g., !*my_inst or !*/path/to/inst):');
+        const tool = prompt('enter tool reference (e.g., !*my_inst or !*/path/to/inst):');
         if (tool?.trim()) {
             this.agentTools.push(tool.trim());
             this.updateAgentToolsDisplay();
@@ -2122,7 +2122,12 @@ class MetatronDashboard {
             return;
         }
 
+        // Show waiting indicator
+        this.showExecutionWaiting(code);
+
         this.sendQuery(`\"\"\"${code}\"\"\"./m/web/inst/doc()`, (response, error) => {
+            // Remove waiting indicator and show result
+            this.hideExecutionWaiting();
             this.appendOutput(code, this.stripMtronResponse(response), error);
         });
     }
@@ -2158,6 +2163,45 @@ class MetatronDashboard {
     clearOutput() {
         if (this.outputContainer) {
             this.outputContainer.innerHTML = '<div class="text-muted small"><i class="bi bi-info-circle me-1"></i>output cleared</div>';
+        }
+    }
+
+    showExecutionWaiting(code) {
+        if (!this.outputContainer) return;
+
+        const timestamp = new Date().toLocaleTimeString();
+        const placeholder = this.outputContainer.querySelector('.text-muted');
+        if (placeholder) this.outputContainer.innerHTML = '';
+
+        this.outputContainer.insertAdjacentHTML('afterbegin', `
+            <div class="output-entry output-waiting" id="executionWaiting">
+                <div class="output-timestamp">${timestamp}</div>
+                <div class="output-input">${this.escapeHtml(code)}</div>
+                <div class="output-result">
+                    <span class="text-muted">
+                        <i class="bi bi-hourglass-split me-1"></i>
+                        <span class="waiting-dots">waiting for response</span>
+                    </span>
+                </div>
+            </div>`);
+
+        // Disable execute button while waiting
+        if (this.executeBtn) {
+            this.executeBtn.disabled = true;
+            this.executeBtn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Running...';
+        }
+    }
+
+    hideExecutionWaiting() {
+        const waitingElement = document.getElementById('executionWaiting');
+        if (waitingElement) {
+            waitingElement.remove();
+        }
+
+        // Re-enable execute button
+        if (this.executeBtn) {
+            this.executeBtn.disabled = false;
+            this.executeBtn.innerHTML = '<i class="bi bi-play-fill me-1" style="color:white;"></i>Run';
         }
     }
 

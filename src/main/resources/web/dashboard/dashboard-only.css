@@ -447,6 +447,39 @@ body {
     resize: vertical;
 }
 
+/* Waiting for response animation */
+.output-waiting {
+    opacity: 0.8;
+    margin-bottom: 0.25rem !important;
+    padding-bottom: 0.25rem !important;
+}
+
+.output-waiting .output-result {
+    margin-top: 0;
+    padding-top: 0;
+    font-size: 0.8rem;
+}
+
+.waiting-dots::after {
+    content: '';
+    animation: waitingDots 1.5s infinite;
+}
+
+@keyframes waitingDots {
+    0%, 20% {
+        content: '';
+    }
+    40% {
+        content: '.';
+    }
+    60% {
+        content: '..';
+    }
+    80%, 100% {
+        content: '...';
+    }
+}
+
 .g-3 {
     --bs-gutter-x: 0.5rem;
 }

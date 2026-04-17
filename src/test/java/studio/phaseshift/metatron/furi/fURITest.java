@@ -611,6 +611,15 @@ public class fURITest extends AbstractMetatronTest {
         assertEquals(expectedfURI, resultfURI);
     }
 
+    @ParameterizedTest
+    @CsvSource(value = {
+            "/test.com?a=1&a=2|a=1;2",
+            "/test.com?a=1&a=2&a=56&b=2|a=1;2;56&b=2"},
+            delimiter = '|', nullValues = "null")
+    public void testQueryParse(final String furi, final String expectedQuery) {
+        assertEquals(expectedQuery, f(furi).qString());
+    }
+
 
     @ParameterizedTest
     @CsvSource(value = {

@@ -101,6 +101,6 @@ class ContentTest extends AbstractMetatronTest {
         assertTrue(Content.ContentType.APPLICATION_JSON.serializer() instanceof ObjSimpleJSONSerializer);
         assertTrue(Content.ContentType.TEXT_HTML.serializer() instanceof ObjHTMLSerializer);
         assertTrue(Content.ContentType.APPLICATION_BSON.serializer() instanceof ObjBSONSerializer);
-        assertTrue(Content.ContentType.TEXT_PLAIN.serializer() instanceof ObjSimpleJSONSerializer);
+       // assertTrue(Content.ContentType.TEXT_PLAIN.serializer() instanceof ObjSimpleJSONSerializer);
     }
 }

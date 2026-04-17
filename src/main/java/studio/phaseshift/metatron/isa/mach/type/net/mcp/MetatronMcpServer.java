@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.mach.type.net.mcp;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import io.modelcontextprotocol.json.McpJsonDefaults;
 import io.modelcontextprotocol.server.McpAsyncServer;
@@ -33,6 +34,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.net.mcp.annotation.McpToolRegistry;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -56,7 +58,7 @@ import static studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty.si
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
- * metatron MCP Server - Exposes metatron functionality via Model Context Protocol.
+ * metatron MCP Server - Exposes metatron functionality via mModel Context Protocol.
  * <p>
  * This server allows AI assistants to interact with metatron by:
  * - Evaluating metatron code
@@ -356,8 +358,10 @@ public class MetatronMcpServer extends MRec {
             // Convert Obj to string using its toString() method
             // This works for all Obj types including fail::T
             final String resultString = obj.toString();
+            final JsonElement jsonResult = ObjSimpleJSONSerializer.single().write(obj);
             return McpSchema.CallToolResult.builder()
                     .content(List.of(new McpSchema.TextContent(resultString)))
+                    .structuredContent(jsonResult)
                     .isError(false)
                     .build();
         } catch (final Exception e) {

@@ -2,6 +2,25 @@
 == HTTP Space
 
 [discrete]
+=== HTML Type
+
+The type `html::T < rec::T` (a refinement of `rec::T`) represents an https://en.wikipedia.org/wiki/HTML[HTML] document.
+
+++++
+<!-- 🐖
+html::T                                           [-- <1>
+*<http://phaseshift.studio/>                      [-- <2>
+*<http://phaseshift.studio/html/head/title>       [-- <3>
+*<http://phaseshift.studio>.as(str::T)            [-- <4>
+-->
+++++
+<1> The structural definition of `html::T`.
+<2> Retrieve the `index.html` of the website. Content-type yields `text/html` which for metatron maps to `html::T`.
+<3> The `title` element of the `index.html` of the website.
+<4> The `index.html` of the website as a `str::T` (`string => rec => string`).
+
+
+[discrete]
 === Accessing REST APIs
 
 When a https://en.wikipedia.org/wiki/REST[REST] endpoint has a URL address that matches an `httpspace` pattern, the REST resources can be used in metatron. This is possible because `httpspace` transforms data "in the wild" (e.g. `application/json`) into an isomorphic `obj`. If the newly mapped `obj` is typed, then it inherits the instructions for that type as defined by the `instset` of the type. As such, REST resources can be enriched/typed to serve as active computational objs in metatron.

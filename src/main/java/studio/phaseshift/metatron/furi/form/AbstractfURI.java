@@ -647,7 +647,7 @@ public abstract class AbstractfURI implements fURI {
 
     @Override
     public boolean isBranch() {
-        return this.path().isEmpty() || this.path().getLast().isEmpty();
+        return !this.path().isEmpty() && this.path().getLast().isEmpty();
     }
 
     @Override

@@ -1881,7 +1881,7 @@ mtron&gt; 1.plus(_)          ​2​
 mtron&gt; 1.plus(plus(2))    ​3​
 ==&gt;4
 mtron&gt; 1.map(bool::T)     ​4​
-==&gt;fail::[unable to convert mfail to code][...]@/sys/fail/40
+==&gt;fail::[unable to convert mfail to code][...]@/sys/fail/130
 mtron&gt; 1.as(bool::T)      ​5​
 ==&gt;true</code></pre>
 </div>
@@ -2039,7 +2039,7 @@ Given the filtering behavior of the instruction, the signature of <code>band</co
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; band -&gt; |inst?int{?}&lt;=int(_,_){ is(and(gte(*0),lte(*1))) }
 ==&gt;inst?rng=int{?}&amp;dom=int(id(),id()){is(and(gte(*0),lte(*1)))}
 mtron&gt; 3.band(2,8)                                ​1​
-==&gt;3
+==&gt;fail::[unable to convert mfail to bool][...]@/sys/fail/144
 mtron&gt; 10.band(2,8)                               ​2​</code></pre>
 </div>
 </div>
@@ -2086,11 +2086,11 @@ arguments are resolved from the stack via their furi name.</p>
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; band -&gt; |inst?int{?}&lt;=int(min=&gt;_,max=&gt;_){ is(and(gte(*min),lte(*max))) }
 ==&gt;inst?rng=int{?}&amp;dom=int(min=&gt;id(),max=&gt;id()){is(and(gte(*min),lte(*max)))}
 mtron&gt; 3.band(min=&gt;2,max=&gt;4)                 ​1​
-==&gt;3
+==&gt;fail::[unable to convert mfail to bool][...]@/sys/fail/158
 mtron&gt; 3.band(2,8)                           ​2​
-==&gt;3
+==&gt;fail::[unable to convert mfail to bool][...]@/sys/fail/172
 mtron&gt; 3.band(max=&gt;8,min=&gt;2)                 ​3​
-==&gt;3
+==&gt;fail::[unable to convert mfail to bool][...]@/sys/fail/186
 mtron&gt; 'abc'.band(2,8)                       ​4​</code></pre>
 </div>
 </div>
@@ -2148,11 +2148,11 @@ If the incoming <code>obj</code> to <code>else</code> is <code>noobj</code>, the
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; band -&gt; |inst?int{?}&lt;=int(min=&gt;else(2),max=&gt;else(8)){ is(and(gte(*min),lte(*max))) }
 ==&gt;inst?rng=int{?}&amp;dom=int(min=&gt;else(2),max=&gt;else(8)){is(and(gte(*min),lte(*max)))}
 mtron&gt; 1.band(min=&gt;1)                        ​1​
-==&gt;1
+==&gt;fail::[unable to convert mfail to bool][...]@/sys/fail/200
 mtron&gt; 10.band()                             ​2​
 mtron&gt; {2,3,4,5}.band(min=&gt;3,max=&gt;4)         ​3​
-==&gt;3
-==&gt;4</code></pre>
+==&gt;fail::[unable to convert mfail to bool][...]@/sys/fail/214
+==&gt;fail::[unable to convert mfail to bool][...]@/sys/fail/228</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -2205,24 +2205,24 @@ can be any arbitrary <code>obj</code> (thus, <code>code</code>). Type arguments 
 mtron&gt; band -&gt; |inst?int{?}&lt;=int(min=&gt;?nat::T,max=&gt;?nat::T){ is(and(gte(*min),lte(*max))) }
 ==&gt;inst?rng=int{?}&amp;dom=int(min=&gt;isa(int::T[is(gt(0))]@nat),max=&gt;isa(int::T[is(gt(0))]@nat)){is(and(gte(*min),lte(*max)))}
 mtron&gt; 15.band(10,20)              ​2​
-==&gt;15
+==&gt;fail::[unable to convert mfail to bool][...]@/sys/fail/254
 mtron&gt; -15.band(-20,-10)           ​3​
 mtron&gt; band -&gt; |inst?int{?}&lt;=int(min=&gt;as(nat::T),max=&gt;as(nat::T)){ is(and(gte(*min),lte(*max))) }
 ==&gt;inst?rng=int{?}&amp;dom=int(min=&gt;as(int::T[is(gt(0))]@nat),max=&gt;as(int::T[is(gt(0))]@nat)){is(and(gte(*min),lte(*max)))}
 mtron&gt; 15.band(10,20)              ​4​
-==&gt;15
+==&gt;fail::[unable to convert mfail to bool][...]@/sys/fail/268
 mtron&gt; -15.band(-20,-10)           ​5​
 mtron&gt; band -&gt; |inst?int{?}&lt;=int(min=&gt;?nat::T.else(fail()),max=&gt;?nat::T.else(fail())){ is(and(gte(*min),lte(*max))) }
-==&gt;fail::[fail() is not a fail::T][...]@/sys/fail/66
+==&gt;fail::[fail() is not a fail::T][...]@/sys/fail/282
 mtron&gt; 15.band(10,20)              ​6​
-==&gt;15
+==&gt;fail::[unable to convert mfail to bool][...]@/sys/fail/296
 mtron&gt; -15.band(-20,-10)           ​7​
 mtron&gt; band -&gt; |inst?int{?}&lt;=int(min=&gt;?nat::T.else(-100),max=&gt;?nat::T.else(100)){ is(and(gte(*min),lte(*max))) }
 ==&gt;inst?rng=int{?}&amp;dom=int(min=&gt;isa(int::T[is(gt(0))]@nat).else(-100),max=&gt;isa(int::T[is(gt(0))]@nat).else(100)){is(and(gte(*min),lte(*max)))}
 mtron&gt; 15.band(10,20)              ​8​
-==&gt;15
+==&gt;fail::[unable to convert mfail to bool][...]@/sys/fail/322
 mtron&gt; -15.band(-20,-10)           ​9​
-==&gt;-15</code></pre>
+==&gt;fail::[unable to convert mfail to bool][...]@/sys/fail/336</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -2268,17 +2268,17 @@ Finally, a degenerate anonymous <code>inst</code> with no specified variable fra
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; 10.(min=&gt;2,max=&gt;8){ is(and(gte(*min),lte(*max))) }                ​1​
 ==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/80
+	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/338
 mtron&gt; 10.(min=&gt;minus(1),max=&gt;plus(1)){ is(and(gte(*min),lte(*max))) }   ​2​
-==&gt;10
+==&gt;fail::[unable to convert mfail to bool][...]@/sys/fail/352
 mtron&gt; 10.(min=&gt;2,max=&gt;8){ is(and(gte(*bad_min),lte(*bad_max))) }        ​3​
 ==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/82
+	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/354
 mtron&gt; 10.(){ is(and(gte(*min),lte(*max))) }                             ​4​
 ==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/84
+	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/356
 mtron&gt; 10.is(and(gte(minus(1)),lte(plus(1))))                            ​5​
-==&gt;10</code></pre>
+==&gt;fail::[unable to convert mfail to bool][...]@/sys/fail/370</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -2315,11 +2315,11 @@ mtron&gt; 10.is(and(gte(minus(1)),lte(plus(1))))                            ​5
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;_)[mod(*by).eq(0)]
 ==&gt;fail::[is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;_)[mod(*by).eq(0)]
                                       ^ end of input expected
-][...]@/sys/fail/86
+][...]@/sys/fail/372
 mtron&gt; 10.is_divisible(2)
-==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/88
+==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/374
 mtron&gt; 10.is_divisible('abc')
-==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/90</code></pre>
+==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/376</code></pre>
 </div>
 </div>
 </div>
@@ -2344,7 +2344,7 @@ mtron&gt; 10.is_divisible('abc')
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; band -&gt; |band?int{?}&lt;=int(min=&gt;_,max=&gt;is(gt(*min)).else(*min.plus(1)))[is(gte(*min)).is(lte(*max))]
 ==&gt;fail::[band -&gt; |band?int{?}&lt;=int(min=&gt;_,max=&gt;is(gt(*min)).else(*min.plus(1)))[is(gte(*min)).is(lte(*max))]
                                                                       ^ end of input expected
-][...]@/sys/fail/92
+][...]@/sys/fail/378
 mtron&gt; 2.band(min=&gt;1,max=&gt;1)                 ​1​</code></pre>
 </div>
 </div>
@@ -2366,11 +2366,11 @@ mtron&gt; 2.band(min=&gt;1,max=&gt;1)                 ​1​</code></pre>
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;is(neq(0)).else(print('error').map(1)))[mod(*by).eq(0)]
 ==&gt;fail::[is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;is(neq(0)).else(print('error').map(1)))[mod(*by).eq(0)]
                                       ^ end of input expected
-][...]@/sys/fail/94
+][...]@/sys/fail/380
 mtron&gt; 10.is_divisible(2)
-==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/96
+==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/382
 mtron&gt; 10.is_divisible('abc')
-==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/98</code></pre>
+==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/384</code></pre>
 </div>
 </div>
 </div>
@@ -2664,7 +2664,8 @@ mtron&gt; {1,2}-&lt;[?&gt;=2,?&gt;3]                ​2​
 ==&gt;[noobj,noobj]
 ==&gt;[2,noobj]
 mtron&gt; {1,2}-&lt;[?&gt;=2,?&gt;3]&gt;-              ​3​
-==&gt;2</code></pre>
+==&gt;fail::[rhs does not match inst range:
+	{[noobj,noobj],[2,noobj]}=&gt;(X=&gt;int{*}::T)][...]@/sys/fail/122</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -2804,14 +2805,20 @@ ultimately dependent on the incoming lhs <code>obj</code>, where</p>
        {?}format=&gt;#::T],
      {?}size    =&gt;data_size::T[][/m/math/bB/cons?rng=bB&amp;dom=#{?}(#::T){&lt;j&gt;}]@/m/math/bB,
      {?}memory  =&gt;lst{?}::T@/m/llm/memory,
+     {?}note    =&gt;uri::T,
      {?}desc    =&gt;str::T,
      {?}skill   =&gt;lst{?}::T,
-     {?}tool    =&gt;{?}[
-     rec::T[?[
+     {?}tool    =&gt;[
+     split([
+  isa(rec::T[?[
      inst  =&gt;#::T,
      name  =&gt;uri::T,
      desc  =&gt;str::T,
-     {?}arg=&gt;#::T]]@/m/llm/tool]]]@/m/llm/model</code></pre>
+     {?}arg=&gt;#::T]]@/m/llm/tool),
+  isa(rec::T[?[
+     host     =&gt;uri::T,
+     {?}tool  =&gt;{?}[uri::T=&gt;tool::T],
+     {?}status=&gt;isa(bool::T).else(false)]][inst?rng=mcp&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/llm/mcp)])]]]@/m/llm/model</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -3048,7 +3055,7 @@ Help users be effec...""",
 ..."""]]]],
  tool    =&gt;[
    !*eval],
- memory  =&gt;[,]@/usr/ai/memory]@openai:gpt-4o-2024-08-06
+ memory  =&gt;!*/usr/ai/memory]@openai:gpt-4o-2024-08-06
 mtron&gt; *&lt;openai:gpt-4o-2024-08-06&gt;.&gt;&gt;=[_=&gt;^*]                         ​7​
 ==&gt;model::[
  name    =&gt;gpt-4o-2024-08-06,
@@ -3166,12 +3173,10 @@ Help users be effec...""",
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *agent.chat('what tools do you have access to?',
                    [number_of_tools=&gt;int::T,tool_names=&gt;str::T])      ​1​
 ==&gt;[
- number_of_tools=&gt;4,
- tool_names     =&gt;'activate_skill, functions.m_inst_eval, ...']
+ number_of_tools=&gt;3,
+ tool_names     =&gt;'mtron, activate_skill, read_skill_resou...']
 mtron&gt; *agent.chat('what skills do you have?')                        ​2​
-==&gt;I have access to the following skill:
-
-1. **mtron**: This is a metatron knowledge skill designed to assist users.
+==&gt;I have access to the "mtron" skill, which helps users be effective with Metatron by answering questions, connecting data sources, writing expressions, and providing statistics. If you have any specific requests related to these areas, feel free to ask!
 mtron&gt; *agent&gt;&gt;memory                                                 ​3​
 ==&gt;[
   [
@@ -3184,11 +3189,11 @@ mtron&gt; *agent&gt;&gt;memory                                                 �
            type=&gt;TEXT]],
      type    =&gt;USER],
   [
-     text                 =&gt;'{"number_of_tools":4,"tool_names":"acti...',
+     text                 =&gt;'{"number_of_tools":3,"tool_names":"mtro...',
      toolExecutionRequests=&gt;[,],
      attributes           =&gt;[format=&gt;[
-         number_of_tools=&gt;4,
-         tool_names     =&gt;'activate_skill, functions.m_inst_eval, ...']],
+         number_of_tools=&gt;3,
+         tool_names     =&gt;'mtron, activate_skill, read_skill_resou...']],
      type                 =&gt;AI],
   [
      contents=&gt;[
@@ -3197,16 +3202,34 @@ mtron&gt; *agent&gt;&gt;memory                                                 �
            type=&gt;TEXT]],
      type    =&gt;USER],
   [
-     text                 =&gt;"""I have access to the following skill:
+     toolExecutionRequests=&gt;[
+     [
+           id       =&gt;call_Fdf1sIgreLEIFnHBsiVGm6sL,
+           name     =&gt;activate_skill,
+           arguments=&gt;{"skill_name":"mtron"}]],
+     attributes           =&gt;[=&gt;],
+     type                 =&gt;AI],
+  [
+     id        =&gt;call_Fdf1sIgreLEIFnHBsiVGm6sL,
+     toolName  =&gt;activate_skill,
+     contents  =&gt;[
+     [
+           text=&gt;"""# mtron assistance
 
-...""",
+Help users be effec...""",
+           type=&gt;TEXT]],
+     isError   =&gt;false,
+     attributes=&gt;[activated_skill=&gt;mtron],
+     type      =&gt;TOOL_EXECUTION_RESULT],
+  [
+     text                 =&gt;'I have access to the "mtron" skill, whi...',
      toolExecutionRequests=&gt;[,],
      attributes           =&gt;[=&gt;],
      type                 =&gt;AI]]@/usr/ai/memory
 mtron&gt; *agent&gt;&gt;memory/2/attributes/format                             ​4​
 ==&gt;[
- number_of_tools=&gt;4,
- tool_names     =&gt;'activate_skill, functions.m_inst_eval, ...']</code></pre>
+ number_of_tools=&gt;3,
+ tool_names     =&gt;'mtron, activate_skill, read_skill_resou...']</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3321,11 +3344,11 @@ mtron&gt; */usr/ai/memory                                                       
            type=&gt;TEXT]],
      type    =&gt;USER],
   [
-     text                 =&gt;'{"number_of_tools":4,"tool_names":"acti...',
+     text                 =&gt;'{"number_of_tools":3,"tool_names":"mtro...',
      toolExecutionRequests=&gt;[,],
      attributes           =&gt;[format=&gt;[
-         number_of_tools=&gt;4,
-         tool_names     =&gt;'activate_skill, functions.m_inst_eval, ...']],
+         number_of_tools=&gt;3,
+         tool_names     =&gt;'mtron, activate_skill, read_skill_resou...']],
      type                 =&gt;AI],
   [
      contents=&gt;[
@@ -3334,9 +3357,27 @@ mtron&gt; */usr/ai/memory                                                       
            type=&gt;TEXT]],
      type    =&gt;USER],
   [
-     text                 =&gt;"""I have access to the following skill:
+     toolExecutionRequests=&gt;[
+     [
+           id       =&gt;call_Fdf1sIgreLEIFnHBsiVGm6sL,
+           name     =&gt;activate_skill,
+           arguments=&gt;{"skill_name":"mtron"}]],
+     attributes           =&gt;[=&gt;],
+     type                 =&gt;AI],
+  [
+     id        =&gt;call_Fdf1sIgreLEIFnHBsiVGm6sL,
+     toolName  =&gt;activate_skill,
+     contents  =&gt;[
+     [
+           text=&gt;"""# mtron assistance
 
-...""",
+Help users be effec...""",
+           type=&gt;TEXT]],
+     isError   =&gt;false,
+     attributes=&gt;[activated_skill=&gt;mtron],
+     type      =&gt;TOOL_EXECUTION_RESULT],
+  [
+     text                 =&gt;'I have access to the "mtron" skill, whi...',
      toolExecutionRequests=&gt;[,],
      attributes           =&gt;[=&gt;],
      type                 =&gt;AI],
@@ -3344,24 +3385,6 @@ mtron&gt; */usr/ai/memory                                                       
      contents=&gt;[
      [text=&gt;'what is 6 + 23?',type=&gt;TEXT]],
      type    =&gt;USER],
-  [
-     toolExecutionRequests=&gt;[
-     [
-           id       =&gt;call_40T7jhYhtruHQgAtx8GpNbJw,
-           name     =&gt;m_inst_eval,
-           arguments=&gt;'{"code":"6 + 23"}']],
-     attributes           =&gt;[=&gt;],
-     type                 =&gt;AI],
-  [
-     id        =&gt;call_40T7jhYhtruHQgAtx8GpNbJw,
-     toolName  =&gt;m_inst_eval,
-     contents  =&gt;[
-     [
-           text=&gt;'fail::[29 [int::T] unable to convert st...',
-           type=&gt;TEXT]],
-     isError   =&gt;false,
-     attributes=&gt;[=&gt;],
-     type      =&gt;TOOL_EXECUTION_RESULT],
   [
      text                 =&gt;{"answer":29},
      toolExecutionRequests=&gt;[,],
@@ -3445,7 +3468,7 @@ mtron&gt; */usr/ai/memory                                                       
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; 1.plus(b).plus(3).mult(5)                 ​1​
-==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/492
+==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/772
 mtron&gt; 1.plus(b).plus(3).catch(2).mult(5)        ​2​
 ==&gt;10</code></pre>
 </div>
@@ -3502,100 +3525,101 @@ mtron&gt; 1.plus(b).plus(3).catch(2).mult(5)        ​2​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; 1.plus(b)                  ​1​
-==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/552
+==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/832
 mtron&gt; */sys/fail/+               ​2​
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/526
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/543
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/825
 ==&gt;fail::[apply failure:
 	[lhs]    | 1
 	 \_type  | /m/int
 	  \_pred | []
 	[inst]   | plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}
 	 \_dom   | int::T
-	 \_args  | [b]][...]@/sys/fail/547
+	 \_args  | [b]][...]@/sys/fail/828
+==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/831
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/819
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/805
 ==&gt;fail::[apply failure:
 	[lhs]    | b
 	 \_type  | /m/uri
 	  \_pred | []
 	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
 	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/523
+	 \_args  | [,]][...]@/sys/fail/821
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/824
 ==&gt;fail::[apply failure:
 	[lhs]    | b
 	 \_type  | /m/uri
 	  \_pred | []
 	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
 	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/529
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/533
+	 \_args  | [,]][...]@/sys/fail/804
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/813
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/812
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/807
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/818
 ==&gt;fail::[apply failure:
 	[lhs]    | b
 	 \_type  | /m/uri
 	  \_pred | []
 	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
 	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/542
-==&gt;fail::[unable to evaluate inst: plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}][...]@/sys/fail/550
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/537
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/531
-==&gt;fail::[apply failure:
-	[lhs]    | b
-	 \_type  | /m/uri
-	  \_pred | []
-	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
-	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/530
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/528
-==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/551
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/545
-==&gt;fail::[apply failure:
-	[lhs]    | b
-	 \_type  | /m/uri
-	  \_pred | []
-	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
-	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/536
-==&gt;fail::[apply failure:
-	[lhs]    | b
-	 \_type  | /m/uri
-	  \_pred | []
-	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
-	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/524
-==&gt;fail::[unable to evaluate inst: plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}][...]@/sys/fail/549
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/544
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/525
+	 \_args  | [,]][...]@/sys/fail/815
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/820
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/823
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/826
 ==&gt;fail::[apply failure:
 	[lhs]    | 1
 	 \_type  | /m/int
 	  \_pred | []
 	[inst]   | plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}
 	 \_dom   | int::T
-	 \_args  | [b]][...]@/sys/fail/548
+	 \_args  | [b]][...]@/sys/fail/827
+==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/832
+==&gt;fail::[unable to evaluate inst: plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}][...]@/sys/fail/830
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/806
 ==&gt;fail::[apply failure:
 	[lhs]    | b
 	 \_type  | /m/uri
 	  \_pred | []
 	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
 	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/541
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/534
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/539
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/532
-==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/552
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/538
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/546
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/527
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/540
+	 \_args  | [,]][...]@/sys/fail/822
 ==&gt;fail::[apply failure:
 	[lhs]    | b
 	 \_type  | /m/uri
 	  \_pred | []
 	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
 	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/535
+	 \_args  | [,]][...]@/sys/fail/803
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/811
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/814
+==&gt;fail::[apply failure:
+	[lhs]    | b
+	 \_type  | /m/uri
+	  \_pred | []
+	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
+	 \_dom   | uri::T
+	 \_args  | [,]][...]@/sys/fail/809
+==&gt;fail::[unable to evaluate inst: plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}][...]@/sys/fail/829
+==&gt;fail::[apply failure:
+	[lhs]    | b
+	 \_type  | /m/uri
+	  \_pred | []
+	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
+	 \_dom   | uri::T
+	 \_args  | [,]][...]@/sys/fail/816
+==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/808
+==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/817
+==&gt;fail::[apply failure:
+	[lhs]    | b
+	 \_type  | /m/uri
+	  \_pred | []
+	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
+	 \_dom   | uri::T
+	 \_args  | [,]][...]@/sys/fail/810
 mtron&gt; */sys/fail/+.catch(_)      ​3​
-==&gt;fail{8}::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}]
+==&gt;fail{8}::[unable to convert uri::T to bytes]
+    \_fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}]
     \_fail::[apply failure:
 	[lhs]    | b
 	 \_type  | /m/uri
@@ -3610,23 +3634,8 @@ mtron&gt; */sys/fail/+.catch(_)      ​3​
 	[inst]   | plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}
 	 \_dom   | int::T
 	 \_args  | [b]]
-==&gt;fail{8}::[apply failure:
-	[lhs]    | b
-	 \_type  | /m/uri
-	  \_pred | []
-	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
-	 \_dom   | uri::T
-	 \_args  | [,]]
-==&gt;fail{8}::[unable to convert uri::T to bytes]
-    \_fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}]
-    \_fail::[apply failure:
-	[lhs]    | b
-	 \_type  | /m/uri
-	  \_pred | []
-	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
-	 \_dom   | uri::T
-	 \_args  | [,]]
-==&gt;fail{2}::[unable to evaluate inst: plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}]
+==&gt;fail{2}::[1 [int::T] unable to convert uri::T]
+    \_fail::[unable to evaluate inst: plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}]
     \_fail::[apply failure:
 	[lhs]    | 1
 	 \_type  | /m/int
@@ -3634,8 +3643,22 @@ mtron&gt; */sys/fail/+.catch(_)      ​3​
 	[inst]   | plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}
 	 \_dom   | int::T
 	 \_args  | [b]]
-==&gt;fail{2}::[1 [int::T] unable to convert uri::T]
-    \_fail::[unable to evaluate inst: plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}]
+==&gt;fail{8}::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}]
+    \_fail::[apply failure:
+	[lhs]    | b
+	 \_type  | /m/uri
+	  \_pred | []
+	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
+	 \_dom   | uri::T
+	 \_args  | [,]]
+==&gt;fail{8}::[apply failure:
+	[lhs]    | b
+	 \_type  | /m/uri
+	  \_pred | []
+	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
+	 \_dom   | uri::T
+	 \_args  | [,]]
+==&gt;fail{2}::[unable to evaluate inst: plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}]
     \_fail::[apply failure:
 	[lhs]    | 1
 	 \_type  | /m/int
@@ -3757,11 +3780,11 @@ mtron&gt; 2.as(nat::T)                                          ​5​
 ==&gt;nat::2
 mtron&gt; -2.as(nat::T)                                         ​6​
 ==&gt;fail::[-2 is not a is(gt(0))
-  -2=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/128
+  -2=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/408
 mtron&gt; nat::2 * -1                                           ​7​
 ==&gt;fail::[nat::-2 is not a int::T[is(gt(0))][choose([
  is(lt(0))=&gt;mult(-1),
- id()     =&gt;id()]).rshift()]@nat][...]@/sys/fail/134</code></pre>
+ id()     =&gt;id()]).rshift()]@nat][...]@/sys/fail/414</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3788,7 +3811,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in <span class="blue">M</span>[orange]<mark>E</mark>[yellow]<mark>T</mark><strong class="lime">a</strong>[aqua]<strong>T</strong><span class="red">R</span><strong class="fuchsia">O</strong>[green]<strong>N</strong>.</p>
+This is the foundation for all other <code>objs</code> in <span class="blue">M</span>[fuchsia]<mark>E</mark>[orange]<mark>T</mark>[yellow]<mark>A</mark>[aqua]<mark>t</mark><strong class="red">R</strong>[lime]<strong>o</strong>[green]<strong>N</strong>.</p>
 </div>
 <h3 id="_mono_types" class="discrete">mono types</h3>
 <div class="paragraph">
@@ -3881,7 +3904,7 @@ mtron&gt; a/b/c * d/e/f      ​6​
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; 'Hello'.as(bytes::T)        ​1​
 ==&gt;0x48656c6c6f
 mtron&gt; bytes::'48656c6c6f'         ​2​
-==&gt;fail::['48656c6c6f' is not a bytes::T][...]@/sys/fail/184</code></pre>
+==&gt;fail::['48656c6c6f' is not a bytes::T][...]@/sys/fail/464</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3905,13 +3928,13 @@ mtron&gt; bytes::'48656c6c6f'         ​2​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; kB::1024.as(mB::T)          ​1​
-==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/194
+==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/474
 mtron&gt; mB::1.as(kB::T)             ​2​
-==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/204
+==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/484
 mtron&gt; gB::5.as(mB::T)             ​3​
-==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/214
+==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/494
 mtron&gt; pB::1.as(tB::T)             ​4​
-==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/224</code></pre>
+==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/504</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3943,13 +3966,13 @@ mtron&gt; pB::1.as(tB::T)             ​4​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; mB::1024.eq(gB::1)          ​1​
-==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/234
+==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/514
 mtron&gt; kB::1024.eq(mB::1)          ​2​
-==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/244
+==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/524
 mtron&gt; gB::2.eq(mB::2048)          ​3​
-==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/254
+==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/534
 mtron&gt; tB::1.eq(gB::1024)          ​4​
-==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/264</code></pre>
+==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/544</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -4273,15 +4296,6 @@ Functions can be composed using the ring multiplication operator (<code>.</code>
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; x -&gt; 42                                                   ​1​
 ==&gt;42
 mtron&gt; *x                                                        ​2​
-==&gt;[
- a=&gt;1,
- b=&gt;[
-   c=&gt;2,
-   d=&gt;[3,4,5]]]
-==&gt;1
-==&gt;2
-==&gt;3
-==&gt;4
 ==&gt;42
 mtron&gt; y -&gt; [a=&gt;1,b=&gt;2,c=&gt;3]                                     ​3​
 ==&gt;[a=&gt;1,b=&gt;2,c=&gt;3]
@@ -4352,7 +4366,7 @@ mtron&gt; *result                                                   ​3​
 mtron&gt; filtered -&gt; *nums-&lt;[?&gt;3 =&gt; _, _ =&gt; noobj]&gt;&gt;               ​2​
 ==&gt;fail::[filtered -&gt; *nums-&lt;[?&gt;3 =&gt; _, _ =&gt; noobj]&gt;&gt;               ​2​
                   ^ end of input expected
-][...]@/sys/fail/266
+][...]@/sys/fail/546
 mtron&gt; *filtered                                                 ​3​</code></pre>
 </div>
 </div>
@@ -4449,10 +4463,10 @@ mtron&gt; even -&gt; int::T[is(mod(2).eq(0))]    ​4​
 mtron&gt; nat::10
 ==&gt;nat::10
 mtron&gt; nat::-10
-==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/332
+==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/612
 mtron&gt; int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/338</code></pre>
+  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/618</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -4548,10 +4562,10 @@ mtron&gt; int::-10.as(nat::T)
 mtron&gt; nat::10
 ==&gt;nat::10
 mtron&gt; nat::-10
-==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/352
+==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/632
 mtron&gt; int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/358</code></pre>
+  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/638</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -4574,10 +4588,10 @@ mtron&gt; age:125
 ==&gt;age:125
 mtron&gt; nat:125.as(age::T)
 ==&gt;fail::[rhs does not match inst range:
-	{0}&lt;&gt;=&gt;(X=&gt;int::T[is(gt(0))]@nat)][...]@/sys/fail/372
+	{0}&lt;&gt;=&gt;(X=&gt;int::T[is(gt(0))]@nat)][...]@/sys/fail/652
 mtron&gt; 125.as(nat::T).as(age::T)
 ==&gt;fail::[nat::125 is not a is(lt(120))
-  nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/378</code></pre>
+  nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/658</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -4781,9 +4795,8 @@ mtron&gt; a-&gt;b-&gt;c       ​2​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; a=&gt;b=&gt;c.&gt;&gt;       ​1​
-==&gt;b=&gt;c
 mtron&gt; a=&gt;b=&gt;c.&gt;&gt;.&gt;&gt;    ​2​
-==&gt;c
+==&gt;fail::[unable to evaluate inst: rshift?dom=rel(noobj)][...]@/sys/fail/120
 mtron&gt; a-&gt;b-&gt;c.*a       ​3​
 ==&gt;b
 mtron&gt; a-&gt;b-&gt;c.**a      ​4​
@@ -4869,11 +4882,15 @@ mtron&gt; **a
 <p>metatron was designed to support the creation and manipulation of <em>abstract data types</em> in a manner that affords the user a concise, fluid means of maneuvering through a heterogeneous set of data structures, where each is embedded within and across any number of spaces, while being respectfully agnostic to each space&#8217;s espoused perspective on the data maintained therein: e.g., key/value, document, relational, vector, graph, file system, and the various nooks and crannies between.</p>
 </div>
 <div class="paragraph">
-<p>metatron&#8217;s URI addressing scheme makes it possible to <em>embed</em> arbitrary data types into a metatron-specific construct called "space". A space is where URI/obj pairs are written to and read from. Coupling occurs when a URI references an  obj.</p>
+<p>metatron&#8217;s URI addressing scheme makes it possible to encode arbitrary data types into a metatron-specific construct called "space". A space is where URI/obj pairs are written to and read from. Coupling occurs when a URI references an obj.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">a -&gt; 1  [-- write 1 to a --]
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">1.to(a) [-- write 1 to a  --]
+from(a) [-- read 1 from a --]
+
+[== sugar form ==]
+a -&gt; 1  [-- write 1 to a --]
 *a      [-- read 1 from a --]</code></pre>
 </div>
 </div></div></td>
@@ -4902,45 +4919,65 @@ mtron&gt; **a
 </tbody>
 </table>
 <div class="paragraph">
-<p>This means that any mono obj (<code>bool</code>, <code>int</code>, etc.), any poly obj such as a <code>rec</code> composed of nested key/value obj pairs or a <code>lst</code> composed of an ordered sequence of objs, and any stream of objs can all be referenced by a single uri.</p>
+<p>Any obj can be referenced by a URI. From simple <strong>mono</strong> objs such as <code>bool</code>, <code>int</code>, etc. to complex nested <strong>poly</strong> objs such as <code>rec</code>, <code>lst</code>, etc. Poly objs provide another layer of addressing in that once a poly obj has a URI reference, the internal objs that make up the poly inherit that reference and extend it with any internal references necessary to find the objs within the poly.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; abc -&gt; 12                          ​1​
-==&gt;12
-mtron&gt; /usr/a -&gt; [1,2.0,'text']           ​2​
-==&gt;[1,2.00,'text']
-mtron&gt; /usr/b/c/d -&gt; [e=&gt;[f=&gt;g, h=&gt;i]]    ​3​
-==&gt;[e=&gt;[f=&gt;g,h=&gt;i]]
-mtron&gt; x -&gt; {1,2,3,4}                     ​4​
-==&gt;1
-==&gt;2
-==&gt;3
-==&gt;4</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">a/b/c -&gt; [x,[y=&gt;[z=&gt;2]]]
+         ▲▲ ▲   ▲   ▲
+         ││ │   │   └────── a/b/c/y/z
+         ││ │   └────────── a/b/c/1/y
+         ││ └────────────── a/b/c/1
+         │└──────────────── a/b/c/0
+         └───────────────── a/b/c</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; a/b/c -&gt; [x,[y=&gt;[z=&gt;2]]]
+==&gt;[
+  x,
+  [y=&gt;[z=&gt;2]]]
+mtron&gt; *a/b/c
+==&gt;[
+  x,
+  [y=&gt;[z=&gt;2]]]
+mtron&gt; *a/b/c/0
+==&gt;x
+mtron&gt; *a/b/c/1
+==&gt;[y=&gt;[z=&gt;2]]
+mtron&gt; *a/b/c/1/y
+==&gt;[z=&gt;2]
+mtron&gt; *a/b/c/1/y/z
+==&gt;2</code></pre>
 </div>
 </div>
 <div class="colist arabic">
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>the uri <code>abc</code> references the mono <code>int</code> 12.</td>
+<td>the uri <code>a/b/c</code> references a <code>lst</code> poly.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>the uri <code>/usr/a</code> references a poly <code>lst</code>.</td>
+<td>the uri <code>a/b/c/0</code> references an internal <code>uri</code> mono.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="3"></i><b>3</b></td>
-<td>the uri <code>/usr/b/c/d</code> references a nested poly <code>rec</code>.</td>
+<td>the uri <code>a/b/c/1</code> references an internal <code>rec</code> poly.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="4"></i><b>4</b></td>
-<td>the uri <code>x</code> references an <code>obj</code> stream.</td>
+<td>the uri <code>a/b/c/1/y</code> references another internal <code>rec</code> poly.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>the uri <code>a/b/c/1/y/z</code> references an doubly internal <code>int</code> mono.</td>
 </tr>
 </table>
 </div>
 <div class="paragraph">
-<p>This bag of binary relations is metatron&#8217;s global, distributed memory system.</p>
+<p>In summary, metatron&#8217;s global, distributed memory system can be understood as a bag of binary relations mapping URIs to objs.</p>
 </div>
 <div class="stemblock center">
 <div class="content">
@@ -6235,6 +6272,65 @@ vertexA vertexB   redirect  ┌─┬─┬─┬┼┬─┐   ┌┼┬─┬�
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-19" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
 <button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
 <h2 id="_http_space" class="discrete">HTTP Space</h2>
+<h3 id="_html_type" class="discrete">HTML Type</h3>
+<div class="paragraph">
+<p>The type <code>html::T &lt; rec::T</code> (a refinement of <code>rec::T</code>) represents an <a href="https://en.wikipedia.org/wiki/HTML">HTML</a> document.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; html::T                                           ​1​
+mtron&gt; *&lt;http://phaseshift.studio/&gt;                      ​2​
+==&gt;html::[html=&gt;[
+   head=&gt;[
+     link =&gt;[
+       href=&gt;&lt;css/metatron.css&gt;,
+       rel =&gt;'stylesheet'],
+     title=&gt;[text=&gt;'PhaseShift Studio']],
+   body=&gt;[
+     p  =&gt;[=&gt;],
+     h1 =&gt;[
+       style=&gt;'padding-left:125px;color:var(--primary)',
+       text =&gt;'PhaseShift Studio'],
+     img=&gt;[
+       style=&gt;'padding-left:100px',
+       src  =&gt;&lt;http://metatron.phaseshift.studio/images/metatron-character.png&gt;,
+       width=&gt;'500px']]]]
+mtron&gt; *&lt;http://phaseshift.studio/html/head/title&gt;       ​3​
+==&gt;[text=&gt;'PhaseShift Studio']
+mtron&gt; *&lt;http://phaseshift.studio&gt;.as(str::T)            ​4​
+==&gt;&lt;html&gt;
+ &lt;head&gt;
+  &lt;link href="css/metatron.css" rel="stylesheet"&gt;
+  &lt;title&gt;PhaseShift Studio&lt;/title&gt;
+ &lt;/head&gt;
+ &lt;body&gt;
+  &lt;p&gt;&lt;/p&gt;
+  &lt;h1 style="padding-left:125px;color:var(--primary)"&gt;PhaseShift Studio&lt;/h1&gt;
+  &lt;img style="padding-left:100px" src="http://metatron.phaseshift.studio/images/metatron-character.png" width="500px"&gt;
+ &lt;/body&gt;
+&lt;/html&gt;</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>The structural definition of <code>html::T</code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Retrieve the <code>index.html</code> of the website. Content-type yields <code>text/html</code> which for metatron maps to <code>html::T</code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>The <code>title</code> element of the <code>index.html</code> of the website.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>The <code>index.html</code> of the website as a <code>str::T</code> (<code>string &#8658; rec &#8658; string</code>).</td>
+</tr>
+</table>
+</div>
 <h3 id="_accessing_rest_apis" class="discrete">Accessing REST APIs</h3>
 <div class="paragraph">
 <p>When a <a href="https://en.wikipedia.org/wiki/REST">REST</a> endpoint has a URL address that matches an <code>httpspace</code> pattern, the REST resources can be used in metatron. This is possible because <code>httpspace</code> transforms data "in the wild" (e.g. <code>application/json</code>) into an isomorphic <code>obj</code>. If the newly mapped <code>obj</code> is typed, then it inherits the instructions for that type as defined by the <code>instset</code> of the type. As such, REST resources can be enriched/typed to serve as active computational objs in metatron.</p>
@@ -6339,16 +6435,22 @@ mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
        {?}format=&gt;#::T],
      {?}size    =&gt;data_size::T[][/m/math/bB/cons?rng=bB&amp;dom=#{?}(#::T){&lt;j&gt;}]@/m/math/bB,
      {?}memory  =&gt;lst{?}::T@/m/llm/memory,
+     {?}note    =&gt;uri::T,
      {?}desc    =&gt;str::T,
      {?}skill   =&gt;lst{?}::T,
-     {?}tool    =&gt;{?}[
-     rec::T[?[
+     {?}tool    =&gt;[
+     split([
+  isa(rec::T[?[
      inst  =&gt;#::T,
      name  =&gt;uri::T,
      desc  =&gt;str::T,
-     {?}arg=&gt;#::T]]@/m/llm/tool]]]@/m/llm/model
+     {?}arg=&gt;#::T]]@/m/llm/tool),
+  isa(rec::T[?[
+     host     =&gt;uri::T,
+     {?}tool  =&gt;{?}[uri::T=&gt;tool::T],
+     {?}status=&gt;isa(bool::T).else(false)]][inst?rng=mcp&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/llm/mcp)])]]]@/m/llm/model
 mtron&gt; */m/llm/inst/+?dom=model
-==&gt;chat?rng=#{?}&amp;dom=model(str::T,#{?}::T){&lt;j&gt;}</code></pre>
+==&gt;chat?rng=A{?}&amp;dom=model(str::T,A::T){&lt;j&gt;}</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -6373,7 +6475,7 @@ mtron&gt; */m/llm/inst/+?dom=model
             type=&gt;&gt;&gt;object.as(uri::T),
             provider=&gt;|!*/sys/space/localai].as(model::T)
          .chat('are you there?')                       ​1​
-==&gt;Yes, I'm here! 😊 How can I assist you today?
+==&gt;Hello! I'm here. How can I assist you today? 😊
 ==&gt;fail::[[
  type    =&gt;model,
  provider=&gt;!*/sys/space/localai] is not a isa([
@@ -6389,14 +6491,20 @@ mtron&gt; */m/llm/inst/+?dom=model
    {?}format=&gt;#::T],
  {?}size    =&gt;data_size::T[][/m/math/bB/cons?rng=bB&amp;dom=#{?}(#::T){&lt;j&gt;}]@/m/math/bB,
  {?}memory  =&gt;lst{?}::T@/m/llm/memory,
+ {?}note    =&gt;uri::T,
  {?}desc    =&gt;str::T,
  {?}skill   =&gt;lst{?}::T,
- {?}tool    =&gt;{?}[
-   rec::T[?[
+ {?}tool    =&gt;[
+   split([
+  isa(rec::T[?[
      inst  =&gt;#::T,
      name  =&gt;uri::T,
      desc  =&gt;str::T,
-     {?}arg=&gt;#::T]]@/m/llm/tool]])
+     {?}arg=&gt;#::T]]@/m/llm/tool),
+  isa(rec::T[?[
+     host     =&gt;uri::T,
+     {?}tool  =&gt;{?}[uri::T=&gt;tool::T],
+     {?}status=&gt;isa(bool::T).else(false)]][inst?rng=mcp&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/llm/mcp)])]])
   [
    provider=&gt;(/=&gt;provider)=&gt;catalog::[
    host   =&gt;http://localhost:8088/v1,
@@ -6422,14 +6530,20 @@ mtron&gt; */m/llm/inst/+?dom=model
    {?}format=&gt;#::T]),
    noobj=&gt;(==&gt;{?}size)    =&gt;noobj=&gt;(/=&gt;data_size::T[][/m/math/bB/cons?rng=bB&amp;dom=#{?}(#::T){&lt;j&gt;}]@/m/math/bB),
    noobj=&gt;(==&gt;{?}memory)  =&gt;noobj=&gt;(==&gt;lst{?}::T@/m/llm/memory),
+   noobj=&gt;(==&gt;{?}note)    =&gt;noobj=&gt;(/=&gt;uri::T),
    noobj=&gt;(==&gt;{?}desc)    =&gt;noobj=&gt;(/=&gt;str::T),
    noobj=&gt;(==&gt;{?}skill)   =&gt;noobj=&gt;(==&gt;lst{?}::T),
-   noobj=&gt;(==&gt;{?}tool)    =&gt;noobj=&gt;(==&gt;{?}[
-    rec::T[?[
+   noobj=&gt;(==&gt;{?}tool)    =&gt;noobj=&gt;(/=&gt;[
+    split([
+    isa(rec::T[?[
        inst  =&gt;#::T,
        name  =&gt;uri::T,
        desc  =&gt;str::T,
-       {?}arg=&gt;#::T]]@/m/llm/tool])]][...]@/sys/fail/104</code></pre>
+       {?}arg=&gt;#::T]]@/m/llm/tool),
+    isa(rec::T[?[
+       host     =&gt;uri::T,
+       {?}tool  =&gt;{?}[uri::T=&gt;tool::T],
+       {?}status=&gt;isa(bool::T).else(false)]][inst?rng=mcp&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/llm/mcp)])])]][...]@/sys/fail/390</code></pre>
 </div>
 </div>
 <div class="colist arabic">

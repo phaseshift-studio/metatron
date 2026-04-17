@@ -74,6 +74,7 @@ public final class Tokens {
     public static final String THINK = "think";
     public static final String THOUGHT = "thought";
     public static final String MEMORY = "memory";
+    public static final String NOTE = "note";
     public static final String HISTORY = "history";
     public static final String TOOL = "tool";
     public static final String RESPONSE = "response";
@@ -175,6 +176,7 @@ public final class Tokens {
     public static final String MODEL = "model";
     public static final String DOC = "doc";
     public static final String LHS = "lhs";
+    public static final String AGENT = "agent";
     public static final String GGUF_KEY = "gguf";
     public static final String QUANT = "quant";
     public static final String FAMILY = "family";

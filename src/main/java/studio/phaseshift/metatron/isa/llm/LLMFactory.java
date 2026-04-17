@@ -29,12 +29,13 @@ import dev.langchain4j.model.ollama.OllamaModels;
 import dev.langchain4j.model.ollama.OllamaStreamingChatModel;
 import dev.langchain4j.model.openai.OpenAiModelCatalog;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
+import org.slf4j.event.Level;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.llm.space.LocalAiModelCatalog;
 import studio.phaseshift.metatron.isa.llm.space.modelCatalogSpace;
-import studio.phaseshift.metatron.isa.llm.type.Model;
+import studio.phaseshift.metatron.isa.llm.type.mModel;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -47,7 +48,6 @@ import studio.phaseshift.metatron.util.Tuple;
 
 import java.time.Duration;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Optional;
 
 import static studio.phaseshift.metatron.Tokens.*;
@@ -103,7 +103,7 @@ public final class LLMFactory {
                             final fURI vid = catalogSpace.pattern().retractPattern().extend(m.get0().getName());
                             rec(mutableMap(uri(PROVIDER), auto_from_(spaceRec.vid()).tryToInst(),
                                             uri(NAME), uri(m.get0().getName()),
-                                            uri(LICENSE),Optional.ofNullable(m.get1().getLicense()).map(MStr::str).map(o -> (Obj)o).orElse(noobj()),
+                                            uri(LICENSE), Optional.ofNullable(m.get1().getLicense()).map(MStr::str).map(o -> (Obj) o).orElse(noobj()),
                                             uri(THINK), m.get1().getCapabilities().contains(THINKING) ? rec0() : noobj(),
                                             uri(SKILL), lst(m.get1().getCapabilities().stream().map(MUri::uri)),
                                             uri(SIZE), real(Long.valueOf(m.get0().getSize()).doubleValue(), MATH_BYTE_TID, null).as(GBYTE_TYPE)),
@@ -143,13 +143,13 @@ public final class LLMFactory {
                 new ResponseFormat.Builder()
                         .jsonSchema(new JsonSchema.Builder()
                                 .name(RESPONSE)
-                                .rootElement(Model.Helper.objToSchema(REC_TYPE, responseFormat, RESPONSE))
+                                .rootElement(mModel.Helper.objToSchema(REC_TYPE, responseFormat, RESPONSE))
                                 .build())
                         .type(ResponseFormatType.JSON).build() :
                 null;
     }
 
-    public static StreamingChatModel createChatInteraction(final Model model, String modelName) {
+    public static StreamingChatModel createChatInteraction(final mModel model, String modelName) {
         final fURI provider = model.at(f(PROVIDER)).asRec().at(NAME).uriValue();
         final String host = model.at(f(PROVIDER)).asRec().at(HOST).uriValue().toString();
         final boolean thinking = model.has(THINK);
@@ -169,6 +169,9 @@ public final class LLMFactory {
                     .modelName(name)
                     .think(thinking)
                     .returnThinking(thinking)
+                    .logRequests(true)
+                    .logResponses(true)
+                    .logger(Graphitty.log(OllamaStreamingChatModel.class).logger(Level.WARN))
                     .responseFormat(createResponseFormat(responseFormat))
                     .build();
             case OPENAI -> {
@@ -185,7 +188,7 @@ public final class LLMFactory {
                         .logRequests(true)
                         .logResponses(true)
                         .timeout(Duration.ofSeconds(60))
-                        .logger(Graphitty.log(OpenAiStreamingChatModel.class).logger())
+                        .logger(Graphitty.log(OpenAiStreamingChatModel.class).logger(Level.WARN))
                         .responseFormat(createResponseFormat(responseFormat))
                         .build();
             }
@@ -195,7 +198,7 @@ public final class LLMFactory {
                     .returnThinking(thinking)
                     .logRequests(true)
                     .logResponses(true)
-                    .logger(Graphitty.log(AnthropicStreamingChatModel.class).logger())
+                    .logger(Graphitty.log(AnthropicStreamingChatModel.class).logger(Level.WARN))
                     .responseFormat(createResponseFormat(responseFormat))
                     .build();
 

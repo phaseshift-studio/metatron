@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -54,7 +54,9 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -68,7 +70,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
-import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
@@ -113,7 +114,7 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                                     final Path relativePath = base.toPath();
                                     LOG.debug("resolving context to request=>relative=>absolute path: %s => %s => %s", uri(exchange.getRequestURI().toString()), uri(relativePath.toString()), uri(absolutePath.toString()));
                                     // fURI toRemove = f(filePath.toString());
-                                    final fURI pretractedURI = f(requestURI.toString().replace(INDEX_HTML,"").replace(relativePath.toString().replace(INDEX_HTML, ""), "")).asRelative(); //.removeSubpath(f(base.toPath().toString())).asRelative();
+                                    final fURI pretractedURI = f(requestURI.toString().replace(INDEX_HTML, "").replace(relativePath.toString().replace(INDEX_HTML, ""), "")).asRelative(); //.removeSubpath(f(base.toPath().toString())).asRelative();
                                     LOG.debug("remaining steps in request uri: %s", pretractedURI);
                                     if (pretractedURI.segmentLength() == 0) {
                                         // send the full html document
@@ -180,17 +181,7 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                                     try {
                                         String fileContent = Files.readString(file.toPath());
                                         final Rec existingObj = HTML_SERIALIZER.readRec(Jsoup.parse(fileContent));
-                                        final Obj extendingObj;
-                                        if (contentType.isMtron())
-                                            extendingObj = ObjmtronSerializer.parse(post);
-                                        else if (contentType.isJson())
-                                            extendingObj = JSON_TRANSLATOR.parse(post);
-                                        else if (contentType.isHtml() || contentType.isXml())
-                                            extendingObj = HTML_SERIALIZER.read(Jsoup.parse(fileContent));
-                                        else if (contentType.isPlain())
-                                            extendingObj = str(post);
-                                        else
-                                            throw MTronException.of("unsupported content-type: %s", contentType);
+                                        final Obj extendingObj = contentType.toObj(post.getBytes());
                                         final fURI reference = f(exchange.getRequestURI().getPath()).removePrefix(f(file.toPath().toString()));
                                         LOG.debug("remaining: %s", reference);
                                         existingObj.at(reference, extendingObj, MUTABLE);
@@ -220,7 +211,7 @@ public class httpSpace extends AbstractSpace<HttpServer> {
             LOG.warn("%s server not started", this);
         }
     }
-    
+
     private void sendResponse(final Content.ContentType contentType, final File file, final HttpExchange exchange) throws
             IOException {
         sendResponse(contentType, ByteBuffer.wrap(Files.readAllBytes(file.toPath())), exchange);
@@ -284,18 +275,10 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                     } else {
                         final Content.ContentType contentType = Content.ContentType.of(response.contentType());
                         LOG.debug("content-type: %s => %s", response.contentType(), contentType);
-                        final Obj docObj = contentType.isMtron() ?
-                                ObjmtronSerializer.parse(response.body()) :
-                                (contentType.isHtml() ?
-                                        HTML_SERIALIZER.read(response.parse()) :
-                                        (contentType.isJson() ?
-                                                JSON_TRANSLATOR.parse(response.body()) :
-                                                (contentType.isXml() ?
-                                                        HTML_SERIALIZER.read(response.parse()) :
-                                                        str(response.body()))));
+                        final Obj docObj = contentType.toObj(response.body());
                         final Uri key = uri(pattern.scheme(null).host(null).tail(steps).asRelative());
                         LOG.debug("page found -- searching for %s in %s", key, runningPattern);
-                        final Obj subDocObj = key.uriValue().toString().isEmpty() ? docObj : docObj.asRec().at(key);
+                        final Obj subDocObj = key.uriValue().toString().trim().isEmpty() ? docObj : docObj.asRec().at(key);
                         return subDocObj.isNoObj() ? IteratorUtil.of() : IteratorUtil.of(IdObj.of(pattern, subDocObj));
                     }
                 }
@@ -322,12 +305,7 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                 LOG.debug("%s", response.headers().firstValue(Content.ContentType.VALUE));
                 final Optional<String> contentType = response.headers().firstValue(Content.ContentType.VALUE);
                 if (contentType.isPresent()) {
-                    if (contentType.get().equals(Content.ContentType.APPLICATION_JSON.value))
-                        return JSON_TRANSLATOR.parse(new String(response.body()));
-                    else if (contentType.get().equals(Content.ContentType.TEXT_HTML.value))
-                        return HTML_SERIALIZER.read(Jsoup.parse(new String(response.body())));
-                    else if (contentType.get().equals(Content.ContentType.APPLICATION_MTRON.value))
-                        return ObjmtronSerializer.parse(new String(response.body()));
+                    return Content.ContentType.of(contentType.get()).toObj(response.body());
                 }
                 return jnt(response.statusCode());
             } catch (final Exception e) {
