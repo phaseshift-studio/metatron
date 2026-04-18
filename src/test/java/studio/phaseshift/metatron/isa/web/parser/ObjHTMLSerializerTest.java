@@ -44,7 +44,7 @@ public class ObjHTMLSerializerTest extends AbstractSerializerTest<Document> {
     public ObjHTMLSerializerTest() {
         super(new ObjHTMLSerializer());
     }
-    
+
     @Override
     public void testSerializeDeserializeObj(final String objString) {
         // do nothing
@@ -53,7 +53,8 @@ public class ObjHTMLSerializerTest extends AbstractSerializerTest<Document> {
 
     /**
      * Helper method to find a child element by tag name in the hybrid structure.
-     * For singular elements (head, body, title), they are direct keys.
+     * For singular elements (head, body), they are direct keys and return recs.
+     * Title is a direct key under head but returns a string.
      * For other elements, they are in the children list with a tag field.
      */
     private Obj findChildByTag(Obj parent, String tagName) {
@@ -104,7 +105,6 @@ public class ObjHTMLSerializerTest extends AbstractSerializerTest<Document> {
     public void testHTMLWithAttributes() {
         final String html = "<html><body><div id=\"test\" class=\"container\">Content</div></body></html>";
         final Obj rec = ObjHTMLSerializer.parse(html);
-
         assertTrue(rec.isRec());
         final Obj htmlObj = rec.asRec().at(uri(HTML));
         final Obj body = findChildByTag(htmlObj, BODY);
@@ -320,23 +320,22 @@ public class ObjHTMLSerializerTest extends AbstractSerializerTest<Document> {
 
         final Obj body = findChildByTag(htmlObj, BODY);
         assertFalse(body.isNoObj());
+
+        final Obj title = findChildByTag(head.asRec(), TITLE);
+        assertNotNull(title);
+        assertEquals(str("Test Page"), title);
     }
 
     @Test
     public void testRoundTripHTMLString() {
         final String originalHtml = "<html><head><title>Test</title></head><body><h1>Hello</h1><p>This is <strong>bold</strong> text.</p></body></html>";
-
         // Parse HTML string to Rec
         final Obj htmlRec = ObjHTMLSerializer.parse(originalHtml);
-        System.out.println("HTML Rec: " + htmlRec);
-
+        assertEquals(str("Test"), htmlRec.asRec().at(uri("html/head/title")));
         // Convert back to Document
         final Document doc = serializer.write(htmlRec);
-        System.out.println("Document: " + doc);
-
         // Get HTML string
         final String regeneratedHtml = doc.outerHtml();
-        System.out.println("Regenerated HTML: " + regeneratedHtml);
 
         // Parse both to compare structure (not exact string match due to formatting)
         final Obj originalRec = ObjHTMLSerializer.parse(originalHtml);

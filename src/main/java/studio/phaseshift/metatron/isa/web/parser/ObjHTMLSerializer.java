@@ -25,7 +25,6 @@ import org.jsoup.nodes.Element;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.mach.io.type.AbstractObjSerializer;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -37,13 +36,11 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.OBJ_SERIALIZER_TID;
-import static studio.phaseshift.metatron.isa.web.webInstSet.HTML_TYPE;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -69,8 +66,6 @@ public class ObjHTMLSerializer extends AbstractObjSerializer<Document> {
             return readHeadElement(element);
         } else if (tagName.equals(BODY)) {
             return readBodyElement(element);
-        } else if (tagName.equals(TITLE)) {
-            return readTitleElement(element);
         }
 
         // For all other elements, use tag + children model
@@ -133,21 +128,13 @@ public class ObjHTMLSerializer extends AbstractObjSerializer<Document> {
         Rec rec = rec();
         final List<Obj> children = new ArrayList<>();
 
-        // Find title element
-        Rec titleRec = null;
-
         for (Element child : headElement.children()) {
             if (child.nodeName().equals(TITLE)) {
-                titleRec = readTitleElement(child);
+                rec = rec.at(uri(TITLE), str(child.text()));
             } else {
                 // All other head children (meta, link, style, script, etc.)
                 children.add(readElement(child));
             }
-        }
-
-        // Add title as direct key if present
-        if (titleRec != null) {
-            rec = rec.at(uri(TITLE), titleRec);
         }
 
         // Add other children as list
@@ -185,15 +172,7 @@ public class ObjHTMLSerializer extends AbstractObjSerializer<Document> {
         return rec;
     }
 
-    private Rec readTitleElement(final Element titleElement) {
-        final Rec rec = rec();
 
-        if (!titleElement.text().isBlank()) {
-            rec.at(uri(TEXT), str(titleElement.text()));
-        }
-
-        return rec;
-    }
 
     private Element writeElement(final Rec rec, final Element element) {
         rec.at(uri(DATA)).ifPresent(data -> {
@@ -218,9 +197,9 @@ public class ObjHTMLSerializer extends AbstractObjSerializer<Document> {
         // Process attributes (skip special keys: text, data, tag, children)
         rec.elements()
                 .filter(e -> !e.first().uriValue().toString().equals(TEXT) &&
-                             !e.first().uriValue().toString().equals(DATA) &&
-                             !e.first().uriValue().toString().equals(TAG) &&
-                             !e.first().uriValue().toString().equals(CHILDREN))
+                        !e.first().uriValue().toString().equals(DATA) &&
+                        !e.first().uriValue().toString().equals(TAG) &&
+                        !e.first().uriValue().toString().equals(CHILDREN))
                 .forEach(e -> {
                     if (!e.second().isRec() && !e.second().isLst()) {
                         final String attrValue = e.second().isStr() ? e.second().strValue() :
@@ -251,7 +230,7 @@ public class ObjHTMLSerializer extends AbstractObjSerializer<Document> {
         // Process attributes (skip head, body)
         htmlRec.elements()
                 .filter(e -> !e.first().uriValue().toString().equals(HEAD) &&
-                             !e.first().uriValue().toString().equals(BODY))
+                        !e.first().uriValue().toString().equals(BODY))
                 .forEach(e -> {
                     if (!e.second().isRec() && !e.second().isLst()) {
                         final String attrValue = e.second().isStr() ? e.second().strValue() :
@@ -270,7 +249,7 @@ public class ObjHTMLSerializer extends AbstractObjSerializer<Document> {
         final Obj titleObj = headRec.at(uri(TITLE));
         if (!titleObj.isNoObj() && titleObj.isRec()) {
             final Element titleElement = headElement.appendElement(TITLE);
-            writeTitleElement(titleObj.asRec(), titleElement);
+            titleElement.text(titleObj.strValue());
         }
 
         // Write other children (meta, link, style, script, etc.)
@@ -289,7 +268,7 @@ public class ObjHTMLSerializer extends AbstractObjSerializer<Document> {
         // Process attributes (skip title, children)
         headRec.elements()
                 .filter(e -> !e.first().uriValue().toString().equals(TITLE) &&
-                             !e.first().uriValue().toString().equals(CHILDREN))
+                        !e.first().uriValue().toString().equals(CHILDREN))
                 .forEach(e -> {
                     if (!e.second().isRec() && !e.second().isLst()) {
                         final String attrValue = e.second().isStr() ? e.second().strValue() :
@@ -323,7 +302,7 @@ public class ObjHTMLSerializer extends AbstractObjSerializer<Document> {
         // Process attributes (skip text, children)
         bodyRec.elements()
                 .filter(e -> !e.first().uriValue().toString().equals(TEXT) &&
-                             !e.first().uriValue().toString().equals(CHILDREN))
+                        !e.first().uriValue().toString().equals(CHILDREN))
                 .forEach(e -> {
                     if (!e.second().isRec() && !e.second().isLst()) {
                         final String attrValue = e.second().isStr() ? e.second().strValue() :
@@ -337,10 +316,7 @@ public class ObjHTMLSerializer extends AbstractObjSerializer<Document> {
         return bodyElement;
     }
 
-    private Element writeTitleElement(final Rec titleRec, final Element titleElement) {
-        titleRec.at(uri(TEXT)).ifPresent(text -> titleElement.text(text.strValue()));
-        return titleElement;
-    }
+
 
 
     @Override

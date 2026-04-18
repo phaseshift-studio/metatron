@@ -70,12 +70,12 @@ public class Profile extends AbstractWidget<Profile> {
         if (args.isLst()) {
             argsString = args.lstValue().stream().map(o -> o.isCall() ?
                     o.asCall().insts().stream().map(i -> i.tid().name()).reduce((a, b) -> a + "." + b).orElse("") :
-                    o.toString()).collect(Collectors.joining(","));
+                    o.toShortString()).collect(Collectors.joining(","));
         } else {
             argsString = args.recValue().entrySet().stream().map(kv ->
                     kv.getKey().uriValue().toString() + "=>" + (kv.getValue().isCall() ?
                             kv.getValue().asCall().insts().stream().map(i -> i.tid().name()).reduce((a, b) -> a + "." + b).orElse("") :
-                            kv.getValue().toString())).collect(Collectors.joining(","));
+                            kv.getValue().toShortString())).collect(Collectors.joining(","));
         }
         return argsString.length() > CLIP_LENGTH ? (argsString.substring(0, CLIP_LENGTH - 1) + "...") : argsString;
     }

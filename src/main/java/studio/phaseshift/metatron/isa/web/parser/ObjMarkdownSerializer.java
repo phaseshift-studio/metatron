@@ -86,7 +86,7 @@ public class ObjMarkdownSerializer extends AbstractObjSerializer<Node> {
     }
 
     private void writeNode(final studio.phaseshift.metatron.isa.m.type.Rec rec, final StringBuilder markdown) {
-        final String type = rec.at(TYPE).orElse(str("unknown")).strValue();
+        final String type = rec.at(TYPE).orElse(uri("unknown")).uriValue().toString();
 
         switch (type) {
             case DOC -> writeChildren(rec, markdown);
@@ -129,7 +129,7 @@ public class ObjMarkdownSerializer extends AbstractObjSerializer<Node> {
                 if (!childrenObj.isNoObj() && childrenObj.isLst()) {
                     childrenObj.asLst().elements().forEach(child -> {
                         if (child.isRec()) {
-                            final String childType = child.asRec().at(TYPE).orElse(str("unknown")).strValue();
+                            final String childType = child.asRec().at(TYPE).orElse(uri("unknown")).uriValue().toString();
                             if (P.equals(childType)) {
                                 // For paragraphs inside list items, write children without the paragraph wrapper
                                 writeChildren(child.asRec(), markdown);
@@ -285,7 +285,7 @@ public class ObjMarkdownSerializer extends AbstractObjSerializer<Node> {
                 if (!itemChildren.isNoObj() && itemChildren.isLst()) {
                     itemChildren.asLst().elements().forEach(itemChild -> {
                         if (itemChild.isRec()) {
-                            final String childType = itemChild.asRec().at(TYPE).orElse(str("unknown")).strValue();
+                            final String childType = itemChild.asRec().at(TYPE).orElse(uri("unknown")).uriValue().toString();
                             if (P.equals(childType)) {
                                 // For paragraphs inside list items, write children without the paragraph wrapper
                                 writeChildren(itemChild.asRec(), markdown);
@@ -317,55 +317,55 @@ public class ObjMarkdownSerializer extends AbstractObjSerializer<Node> {
 
         // Headings
         if (node instanceof Heading heading) {
-            recRef.getAndUpdate(r -> r.asRec().at(TYPE, str(HEAD)));
+            recRef.getAndUpdate(r -> r.asRec().at(TYPE, uri(HEAD)));
             recRef.getAndUpdate(r -> r.asRec().at(LEVEL, jnt(heading.getLevel())));
             if (!heading.getText().isBlank())
                 recRef.getAndUpdate(r -> r.asRec().at(TEXT, str(heading.getText().toString())));
         }
         // Paragraphs
         else if (node instanceof Paragraph paragraph) {
-            recRef.getAndUpdate(r -> r.asRec().at(TYPE, str(P)));
+            recRef.getAndUpdate(r -> r.asRec().at(TYPE, uri(P)));
             if (!paragraph.getContentChars().isBlank())
                 recRef.getAndUpdate(r -> r.asRec().at(TEXT, str(paragraph.getContentChars().toString())));
         }
         // Code blocks
         else if (node instanceof FencedCodeBlock codeBlock) {
-            recRef.getAndUpdate(r -> r.asRec().at(TYPE, str(CODE)));
+            recRef.getAndUpdate(r -> r.asRec().at(TYPE, uri(CODE)));
             if (!codeBlock.getInfo().isBlank())
                 recRef.getAndUpdate(r -> r.asRec().at(LANG, str(codeBlock.getInfo().toString())));
             if (!codeBlock.getContentChars().isBlank())
                 recRef.getAndUpdate(r -> r.asRec().at(CODE, str(codeBlock.getContentChars().toString())));
         }
         else if (node instanceof IndentedCodeBlock codeBlock) {
-            recRef.getAndUpdate(r -> r.asRec().at(TYPE, str(CODE)));
+            recRef.getAndUpdate(r -> r.asRec().at(TYPE, uri(CODE)));
             if (!codeBlock.getContentChars().isBlank())
                 recRef.getAndUpdate(r -> r.asRec().at(CODE, str(codeBlock.getContentChars().toString())));
         }
         // Lists
         else if (node instanceof BulletList) {
-            recRef.getAndUpdate(r -> r.asRec().at(TYPE, str(B_LIST)));
+            recRef.getAndUpdate(r -> r.asRec().at(TYPE, uri(B_LIST)));
         }
         else if (node instanceof OrderedList orderedList) {
-            recRef.getAndUpdate(r -> r.asRec().at(TYPE, str(O_LIST)));
+            recRef.getAndUpdate(r -> r.asRec().at(TYPE, uri(O_LIST)));
             recRef.getAndUpdate(r -> r.asRec().at(START, jnt(orderedList.getStartNumber())));
         }
         else if (node instanceof BulletListItem) {
-            recRef.getAndUpdate(r -> r.asRec().at(TYPE, str(ENTRY)));
+            recRef.getAndUpdate(r -> r.asRec().at(TYPE, uri(ENTRY)));
         }
         else if (node instanceof OrderedListItem) {
-            recRef.getAndUpdate(r -> r.asRec().at(TYPE, str(ENTRY)));
+            recRef.getAndUpdate(r -> r.asRec().at(TYPE, uri(ENTRY)));
         }
         // Block quotes
         else if (node instanceof BlockQuote) {
-            recRef.getAndUpdate(r -> r.asRec().at(TYPE, str(QUOTE)));
+            recRef.getAndUpdate(r -> r.asRec().at(TYPE, uri(QUOTE)));
         }
         // Horizontal rule
         else if (node instanceof ThematicBreak) {
-            recRef.getAndUpdate(r -> r.asRec().at(TYPE, str("horizontal_rule")));
+            recRef.getAndUpdate(r -> r.asRec().at(TYPE, uri("horizontal_rule")));
         }
         // Links
         else if (node instanceof Link link) {
-            recRef.getAndUpdate(r -> r.asRec().at(TYPE, str(EDGE)));
+            recRef.getAndUpdate(r -> r.asRec().at(TYPE, uri(EDGE)));
             if (!link.getUrl().isBlank())
                 recRef.getAndUpdate(r -> r.asRec().at(URI, uri(link.getUrl().toString())));
             if (!link.getTitle().isBlank())
@@ -374,7 +374,7 @@ public class ObjMarkdownSerializer extends AbstractObjSerializer<Node> {
                 recRef.getAndUpdate(r -> r.asRec().at(TEXT, str(link.getText().toString())));
         }
         else if (node instanceof AutoLink autoLink) {
-            recRef.getAndUpdate(r -> r.asRec().at(TYPE, str("autolink")));
+            recRef.getAndUpdate(r -> r.asRec().at(TYPE, uri("autolink")));
             if (!autoLink.getUrl().isBlank())
                 recRef.getAndUpdate(r -> r.asRec().at(URI, uri(autoLink.getUrl().toString())));
             if (!autoLink.getText().isBlank())
@@ -382,7 +382,7 @@ public class ObjMarkdownSerializer extends AbstractObjSerializer<Node> {
         }
         // Images
         else if (node instanceof Image image) {
-            recRef.getAndUpdate(r -> r.asRec().at(TYPE, str("image")));
+            recRef.getAndUpdate(r -> r.asRec().at(TYPE, uri("image")));
             if (!image.getUrl().isBlank())
                 recRef.getAndUpdate(r -> r.asRec().at(URI, uri(image.getUrl().toString())));
             if (!image.getTitle().isBlank())
@@ -392,49 +392,49 @@ public class ObjMarkdownSerializer extends AbstractObjSerializer<Node> {
         }
         // Emphasis and strong
         else if (node instanceof Emphasis) {
-            recRef.getAndUpdate(r -> r.asRec().at(TYPE, str("emphasis")));
+            recRef.getAndUpdate(r -> r.asRec().at(TYPE, uri("emphasis")));
             if (!node.getChars().isBlank())
                 recRef.getAndUpdate(r -> r.asRec().at(TEXT, str(node.getChars().toString())));
         }
         else if (node instanceof StrongEmphasis) {
-            recRef.getAndUpdate(r -> r.asRec().at(TYPE, str("strong")));
+            recRef.getAndUpdate(r -> r.asRec().at(TYPE, uri("strong")));
             if (!node.getChars().isBlank())
                 recRef.getAndUpdate(r -> r.asRec().at(TEXT, str(node.getChars().toString())));
         }
         // Inline code
         else if (node instanceof Code code) {
-            recRef.getAndUpdate(r -> r.asRec().at(TYPE, str("inline_code")));
+            recRef.getAndUpdate(r -> r.asRec().at(TYPE, uri("inline_code")));
             if (!code.getText().isBlank())
                 recRef.getAndUpdate(r -> r.asRec().at(CODE, str(code.getText().toString())));
         }
         // Text
         else if (node instanceof Text text) {
-            recRef.getAndUpdate(r -> r.asRec().at(TYPE, str("text")));
+            recRef.getAndUpdate(r -> r.asRec().at(TYPE, uri("text")));
             if (!text.getChars().isBlank())
                 recRef.getAndUpdate(r -> r.asRec().at(CONTENT, str(text.getChars().toString())));
         }
         // Soft line break
         else if (node instanceof SoftLineBreak) {
-            recRef.getAndUpdate(r -> r.asRec().at(TYPE, str("soft_break")));
+            recRef.getAndUpdate(r -> r.asRec().at(TYPE, uri("soft_break")));
         }
         // Hard line break
         else if (node instanceof HardLineBreak) {
-            recRef.getAndUpdate(r -> r.asRec().at(TYPE, str("hard_break")));
+            recRef.getAndUpdate(r -> r.asRec().at(TYPE, uri("hard_break")));
         }
         // HTML blocks and inline HTML
         else if (node instanceof HtmlBlock htmlBlock) {
-            recRef.getAndUpdate(r -> r.asRec().at(TYPE, str("html_block")));
+            recRef.getAndUpdate(r -> r.asRec().at(TYPE, uri("html_block")));
             if (!htmlBlock.getContentChars().isBlank())
                 recRef.getAndUpdate(r -> r.asRec().at(HTML, str(htmlBlock.getContentChars().toString())));
         }
         else if (node instanceof HtmlInline htmlInline) {
-            recRef.getAndUpdate(r -> r.asRec().at(TYPE, str("html_inline")));
+            recRef.getAndUpdate(r -> r.asRec().at(TYPE, uri("html_inline")));
             if (!htmlInline.getChars().isBlank())
                 recRef.getAndUpdate(r -> r.asRec().at(HTML, str(htmlInline.getChars().toString())));
         }
         // Reference (for links and images)
         else if (node instanceof Reference reference) {
-            recRef.getAndUpdate(r -> r.asRec().at(TYPE, str("reference")));
+            recRef.getAndUpdate(r -> r.asRec().at(TYPE, uri("reference")));
             if (!reference.getReference().isBlank())
                 recRef.getAndUpdate(r -> r.asRec().at(LABEL, str(reference.getReference().toString())));
             if (!reference.getUrl().isBlank())
@@ -444,11 +444,11 @@ public class ObjMarkdownSerializer extends AbstractObjSerializer<Node> {
         }
         // Document (root)
         else if (node.getClass().getSimpleName().equals("Document")) {
-            recRef.getAndUpdate(r -> r.asRec().at(TYPE, str(DOC)));
+            recRef.getAndUpdate(r -> r.asRec().at(TYPE, uri(DOC)));
         }
         // Fallback for unknown node types
         else {
-            recRef.getAndUpdate(r -> r.asRec().at(TYPE, str("unknown")));
+            recRef.getAndUpdate(r -> r.asRec().at(TYPE, uri("unknown")));
             recRef.getAndUpdate(r -> r.asRec().at(uri("class"), str(node.getClass().getSimpleName())));
             if (!node.getChars().isBlank())
                 recRef.getAndUpdate(r -> r.asRec().at(CONTENT, str(node.getChars().toString())));

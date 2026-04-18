@@ -59,11 +59,13 @@ public class agentInstSet extends AbstractInstSet {
                 uri(PATTERN), uri(AGENT_ISA_TID.extend(ALL)),
                 //  uri(CONST), lst(MTRON_EVAL_TOOL)),
                 uri(INST), lst(
-                        docWrap(instC(AGENT_NOTE_INST_TID.dom(ALL.maybe()).rng(ALL), lst(URI_TYPE, T(ALL)),
-                                        (lhs, inst) -> Router.global().write(inst.arg(0).uriValue(), inst.arg(1))),
-                                "dom is ignored", "the written note", Map.of(jnt(0), "the note"), 
-                                CommonUtil.readResource(agentInstSet.class, "NOTE.md", "%s", "/usr/ai/note").toString(), 
-                                "*<local:.agent>.note('note')")
+                        docWrap(instC(AGENT_NOTE_INST_TID.dom(ALL.maybe()).rng(ALL), lst(URI_TYPE, T(ALL.maybe())),
+                                        (lhs, inst) -> inst.arg(1).isNoObj() ?
+                                                Router.global().read(inst.arg(0).uriValue()) :
+                                                Router.global().write(inst.arg(0).uriValue(), inst.arg(1))),
+                                "dom is ignored", "the written note", Map.of(jnt(0), "the entry key", jnt(1), "the note"),
+                                CommonUtil.readResource(agentInstSet.class, "NOTE.md", "%s", "/usr/ai/note"),
+                                "note(</usr/ai/note/an_entry>, 'this is a note')")
                 )));
         docWrap(this, "an agent-oriented instruction set to aid them in the manipulation and analysis of their environment");
         super.setup();

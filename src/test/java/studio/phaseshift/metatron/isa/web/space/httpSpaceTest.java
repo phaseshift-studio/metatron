@@ -122,6 +122,7 @@ public class httpSpaceTest extends AbstractSpaceTest {
     @Test
     public void testIndexHTMLRedirect() {
         assertNotEquals(noobj(), Router.readFromSpace(BASE_URL + "/index.html"));
+        assertTrue(Router.readFromSpace(BASE_URL + "/index.html").test(HTML_TYPE));
         assertNotEquals(noobj(), Router.readFromSpace(BASE_URL + "/"));
         assertNotEquals(noobj(), Router.readFromSpace(BASE_URL));
     }
@@ -130,6 +131,7 @@ public class httpSpaceTest extends AbstractSpaceTest {
     public void testServerSideRecursion() {
         assertNotEquals(noobj(), Router.readFromSpace(BASE_URL + "/#/"));
         assertNotEquals(noobj(), Router.readFromSpace(BASE_URL + "/index.html"));
+        assertTrue(Router.readFromSpace(BASE_URL + "/index.html").test(HTML_TYPE));
         assertEquals(HTML_TID, Router.readFromSpace(BASE_URL + "/index.html").tid());
         assertEquals(HTML_TID, Router.readFromSpace(BASE_URL).tid());
         assertTrue(Router.readFromSpace(BASE_URL).test(HTML_TYPE));

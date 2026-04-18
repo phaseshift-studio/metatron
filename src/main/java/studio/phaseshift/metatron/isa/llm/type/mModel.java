@@ -257,7 +257,7 @@ public class mModel extends MRec {
         final AtomicBoolean isTooling = new AtomicBoolean(false);
         final AtomicReference<MTronException> isError = new AtomicReference<>();
         try {
-            final mAgent agent = this.agent().systemMessageTransformer((current, context) -> {
+            final mAgent agent = this.agent()/*.systemMessageTransformer((current, context) -> {
                 if (!this.at(NOTE).isNoObj()) {
                     final fURI notesURI = this.at(NOTE).uriValue();
                     final StringBuilder sb = CommonUtil.readResource(agentInstSet.class, "NOTE.md");
@@ -268,7 +268,7 @@ public class mModel extends MRec {
                     return current + "\n\n" + NOTES_DOT_MD;
                 } else
                     return current;
-            }).streamingChatModel(LLMFactory.createChatInteraction(this, this.model())).build();
+            })*/.streamingChatModel(LLMFactory.createChatInteraction(this, this.model())).build();
             agent.chat(message)
                     .onToolExecuted(tool -> {
                         this.logger().info("tool executed: %s(%s) => %s", tool.request().name(), tool.request().arguments(), tool.result());

@@ -137,7 +137,6 @@ public class llmInstSet extends AbstractInstSet {
                                                 uri(RESPONSE).maybe(), rec(uri(TO).maybe().asUri(), INST_TYPE, uri(FORMAT).maybe(), T(ALL)).maybe(),
                                                 uri(SIZE).maybe().asUri(), BYTE_TYPE,
                                                 uri(MEMORY).maybe(), LLM_MEMORY_TYPE.maybe(),
-                                                uri(NOTE).maybe(), URI_TYPE,
                                                 uri(DESC).maybe(), STR_TYPE,
                                                 uri(SKILL).maybe(), LST_TYPE.maybe(),//lst(LLM_SKILL_TYPE).maybe(),
                                                 uri(TOOL).maybe(), lst(split_(lst(isa_(LLM_TOOL_TYPE).tryToInst(), isa_(MCP_SERVER_TYPE).tryToInst())).tryToInst()))).create(),
@@ -147,7 +146,6 @@ public class llmInstSet extends AbstractInstSet {
                                         uri(THINK).maybe(), "whether the llm should think before responding",
                                         uri(SIZE).maybe(), "the size of the model in bytes",
                                         uri(MEMORY).maybe(), "llm's memory of previous interactions",
-                                        uri(NOTE).maybe(), "uri to llm's workspace or notes concerning it's interactions",
                                         uri(SKILL).maybe(), "skill to extend the llm's abilities",
                                         uri(TOOL).maybe(), "tool functions the llm can use to solve problems"), "an mtron interface to a large language model")),
                 uri(INST), lst(

@@ -249,48 +249,34 @@ bin/metatron</code></pre>
  pattern=>/m/web/#,
  q      =>[
    docq::[
-       pre_read =>inst?rng=#{*}&dom=#{?}(uri::T){<j>},
-       pre_write=>inst?rng=#{*}&dom=#{?}(uri::T,#::T){<j>},
+       pre_read =>inst?#{*}<=#{?}(uri::T){},
+       pre_write=>inst?#{*}<=#{?}(uri::T,#::T){},
        pattern  =>docq,
        obj      =>memspace::[pattern=><#>],
        inst     =>instset::[pattern=><#>]]],
  space  =>[super=>!*/m],
- constq =>[serializer::/m/mach/io/serializer@/m/mach/io/serializer/xml,serializer::/m/mach/io/serializer@/m/mach/io/serializer/html,serializer::/m/mach/io/serializer@/m/mach/io/serializer/json],
+ constq =>[studio.phaseshift.metatron.isa.web.parser.ObjXMLSerializer@5679dd0b,studio.phaseshift.metatron.isa.web.parser.ObjHTMLSerializer@742ba127,studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer@4453f3bf,studio.phaseshift.metatron.isa.web.parser.ObjMarkdownSerializer@6da01d77],
  type   =>[
-   rec::T@/m/web/xml,
-   xml::T[?[html=>[
-       head=>rec::T,
-       body=>rec::T]]]@/m/web/html,
-   rec::T[?[uri::T=>is(or(eq(noobj{0}::T),eq(bool::T),eq(int::T),eq(str::T),eq(uri::T),eq(lst::T),eq(rec::T)))]][/m/web/inst?rng=json&dom=#{?}(str::T){<j>}]@/m/web/json,
-   rec::T@/m/web/css,
-   str::T@/m/web/json_str,
-   space::T[][inst?rng=httpspace&dom=#{?}(rec::T[isa([
- pattern=>uri::T,
- host   =>uri::T,
- route  =>rec::T])]){<j>}]@/m/web/space/httpspace,
-   space::T[?[
-     host   =>uri::T,
-     pattern=>uri::T,
-     route  =>rec::T]][inst?rng=ws&dom=#{?}(rec::T[isa([
- pattern=>uri::T,
- host   =>uri::T,
- route  =>rec::T])]){<j>}]@/m/web/space/ws,
-   rec::T[?[
-     ws           =>uri::T,
-     pattern      =>uri::T,
-     {?}client    =>[uri::T],
-     {?}on_open   =>#::T,
-     {?}on_error  =>#::T,
-     {?}on_message=>#::T,
-     {?}on_close  =>#::T]][inst?rng=ws_endpoint&dom=#{?}(rec::T){<j>}]@/m/web/space/ws_endpoint],
+   xml::T,
+   html::T,
+   json::T,
+   css::T,
+   json_str::T,
+   httpspace::T,
+   markdown::T,
+   ws::T,
+   ws_endpoint::T],
  inst   =>[
-   as?rng=xml&dom=str(xml::T){<j>},
-   as?rng=html&dom=str(html::T){<j>},
-   as?rng=str&dom=html(str::T){<j>},
-   as?rng=json&dom=str(json::T){<j>},
-   as?rng=str&dom=#(str::T@/m/web/json_str){<j>},
-   doc?rng=str&dom=str(){<j>},
-   doc_json?rng=str&dom=str(){<j>}]]@/m/web</code></pre>
+   as?xml<=str(xml::T){},
+   as?html<=str(html::T){},
+   as?markdown<=str(markdown::T){},
+   as?str<=html(str::T){},
+   as?str<=markdown(str::T){},
+   as?html<=markdown(html::T){},
+   as?json<=str(json::T){},
+   as?str<=#(json_str::T){},
+   doc?str<=str(){},
+   doc_json?str<=str(){}]]@/m/web</code></pre>
                         </div>
                     </div>
                 </div>
@@ -300,7 +286,7 @@ bin/metatron</code></pre>
         <div class="container-xxl mb-4">
             <div class="d-flex justify-content-center gap-2 flex-wrap">
                 <button class="btn btn-outline-secondary" disabled>Consts <span class="badge bg-dark">0</span></button>
-                <a href="#types" class="btn btn-outline-primary">Types <span class="badge bg-secondary">5</span></a>
+                <a href="#types" class="btn btn-outline-primary">Types <span class="badge bg-secondary">6</span></a>
                 <a href="#instructions" class="btn btn-outline-primary">Insts <span class="badge bg-secondary">2</span></a>
                 <a href="#spaces" class="btn btn-outline-primary">Spaces <span class="badge bg-secondary">3</span></a>
                 <button class="btn btn-outline-secondary" disabled>Rewrites <span class="badge bg-dark">0</span></button>
@@ -334,6 +320,10 @@ bin/metatron</code></pre>
                 </a>
                 <a href="#type-json_str" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">json_str</span>
+                    <span class="badge bg-primary">T</span>
+                </a>
+                <a href="#type-markdown" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
+                    <span class="code">markdown</span>
                     <span class="badge bg-primary">T</span>
                 </a>
                 <a href="#type-xml" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
@@ -384,7 +374,7 @@ bin/metatron</code></pre>
             
         <div class="container-xxl mb-4" id="types">
             <h3 class="text-primary mb-3">
-                Types <span class="badge bg-primary">5</span>
+                Types <span class="badge bg-primary">6</span>
             </h3>
             
                 <div class="card mb-3" id="type-css">
@@ -458,6 +448,23 @@ bin/metatron</code></pre>
                     
                     <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">no documentation available</p>
+                    </div>
+                </div>
+                <div class="card mb-3" id="type-markdown">
+                    <div class="card-header d-flex justify-content-between align-items-center py-2">
+                        <span>
+                            <span class="code text-primary fw-bold">markdown::T</span>
+                            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">rec::T</span></span>
+                        </span>
+                        <small class="text-muted code">/m/web/markdown</small>
+                    </div>
+                    
+                    <div class="card-body p-2">
+                        <pre class="mb-0"><code class="language-mtron">rec::T@/m/web/markdown</code></pre>
+                    </div>
+                    
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">a rec encoding of a markdown document</p>
                     </div>
                 </div>
                 <div class="card mb-3" id="type-xml">
@@ -587,7 +594,7 @@ bin/metatron</code></pre>
         <div class="container-xxl py-3 text-center">
             <hr class="border-secondary">
             <small class="text-muted">
-                generated by metatron instset doc generator on build 0-2026-04-17 12:22:23<br>
+                generated by metatron instset doc generator on build 0-2026-04-17 23:36:26<br>
                 © PhaseShift Studio, LLC
             </small>
         </div>

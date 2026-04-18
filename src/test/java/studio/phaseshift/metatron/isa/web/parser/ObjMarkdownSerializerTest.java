@@ -55,13 +55,13 @@ public class ObjMarkdownSerializerTest extends AbstractSerializerTest<Node> {
         final Obj rec = ObjMarkdownSerializer.parse(markdown);
 
         assertTrue(rec.isRec());
-        assertEquals(str(DOC), rec.asRec().at(uri(TYPE)));
+        assertEquals(uri(DOC), rec.asRec().at(uri(TYPE)));
 
         final Obj children = rec.asRec().at(uri(CHILDREN));
         assertTrue(children.isLst());
         final Obj child = children.asLst().at(0);
         assertFalse(child.isNoObj());
-        assertEquals(str(HEAD), child.asRec().at(uri(TYPE)));
+        assertEquals(uri(HEAD), child.asRec().at(uri(TYPE)));
         assertEquals(jnt(1), child.asRec().at(uri("level")));
         assertEquals(str("Hello World"), child.asRec().at(uri(TEXT)));
     }
@@ -74,7 +74,7 @@ public class ObjMarkdownSerializerTest extends AbstractSerializerTest<Node> {
         assertTrue(rec.isRec());
         final Obj children = rec.asRec().at(uri(CHILDREN));
         final Obj child = children.asLst().at(0);
-        assertEquals(str(P), child.asRec().at(uri(TYPE)));
+        assertEquals(uri(P), child.asRec().at(uri(TYPE)));
     }
 
     @Test
@@ -84,7 +84,7 @@ public class ObjMarkdownSerializerTest extends AbstractSerializerTest<Node> {
 
         final Obj children = rec.asRec().at(uri(CHILDREN));
         final Obj child = children.asLst().at(0);
-        assertEquals(str(CODE), child.asRec().at(uri(TYPE)));
+        assertEquals(uri(CODE), child.asRec().at(uri(TYPE)));
         assertEquals(str("java"), child.asRec().at(uri(LANG)));
         assertTrue(child.asRec().at(uri(CODE)).strValue().contains("public static void main"));
     }
@@ -96,12 +96,12 @@ public class ObjMarkdownSerializerTest extends AbstractSerializerTest<Node> {
 
         final Obj children = rec.asRec().at(uri(CHILDREN));
         final Obj child = children.asLst().at(0);
-        assertEquals(str(B_LIST), child.asRec().at(uri(TYPE)));
+        assertEquals(uri(B_LIST), child.asRec().at(uri(TYPE)));
 
         // Check first list item
         final Obj listChildren = child.asRec().at(uri(CHILDREN));
         final Obj item1 = listChildren.asLst().at(0);
-        assertEquals(str(ENTRY), item1.asRec().at(uri(TYPE)));
+        assertEquals(uri(ENTRY), item1.asRec().at(uri(TYPE)));
     }
 
     @Test
@@ -111,7 +111,7 @@ public class ObjMarkdownSerializerTest extends AbstractSerializerTest<Node> {
 
         final Obj children = rec.asRec().at(uri(CHILDREN));
         final Obj child = children.asLst().at(0);
-        assertEquals(str(O_LIST), child.asRec().at(uri(TYPE)));
+        assertEquals(uri(O_LIST), child.asRec().at(uri(TYPE)));
         assertEquals(jnt(1), child.asRec().at(uri("start")));
     }
 
@@ -124,7 +124,7 @@ public class ObjMarkdownSerializerTest extends AbstractSerializerTest<Node> {
         final Obj paragraph = children.asLst().at(0);
         final Obj paragraphChildren = paragraph.asRec().at(uri(CHILDREN));
         final Obj link = paragraphChildren.asLst().at(0);
-        assertEquals(str(EDGE), link.asRec().at(uri(TYPE)));
+        assertEquals(uri(EDGE), link.asRec().at(uri(TYPE)));
         assertEquals(str("Google"), link.asRec().at(uri(TEXT)));
         assertTrue(link.asRec().at(uri(URI)).isUri() || link.asRec().at(uri(URI)).strValue().equals("https://google.com"));
     }
@@ -138,7 +138,7 @@ public class ObjMarkdownSerializerTest extends AbstractSerializerTest<Node> {
         final Obj paragraph = children.asLst().at(0);
         final Obj paragraphChildren = paragraph.asRec().at(uri(CHILDREN));
         final Obj image = paragraphChildren.asLst().at(0);
-        assertEquals(str("image"), image.asRec().at(uri(TYPE)));
+        assertEquals(uri("image"), image.asRec().at(uri(TYPE)));
         assertEquals(str("Alt text"), image.asRec().at(uri("alt")));
     }
 
@@ -151,7 +151,7 @@ public class ObjMarkdownSerializerTest extends AbstractSerializerTest<Node> {
         final Obj paragraph = children.asLst().at(0);
         final Obj paragraphChildren = paragraph.asRec().at(uri(CHILDREN));
         final Obj emphasis = paragraphChildren.asLst().at(1);
-        assertEquals(str("emphasis"), emphasis.asRec().at(uri(TYPE)));
+        assertEquals(uri("emphasis"), emphasis.asRec().at(uri(TYPE)));
     }
 
     @Test
@@ -163,7 +163,7 @@ public class ObjMarkdownSerializerTest extends AbstractSerializerTest<Node> {
         final Obj paragraph = children.asLst().at(0);
         final Obj paragraphChildren = paragraph.asRec().at(uri(CHILDREN));
         final Obj strong = paragraphChildren.asLst().at(1);
-        assertEquals(str("strong"), strong.asRec().at(uri(TYPE)));
+        assertEquals(uri("strong"), strong.asRec().at(uri(TYPE)));
     }
 
     @Test
@@ -175,7 +175,7 @@ public class ObjMarkdownSerializerTest extends AbstractSerializerTest<Node> {
         final Obj paragraph = children.asLst().at(0);
         final Obj paragraphChildren = paragraph.asRec().at(uri(CHILDREN));
         final Obj code = paragraphChildren.asLst().at(1);
-        assertEquals(str("inline_code"), code.asRec().at(uri(TYPE)));
+        assertEquals(uri("inline_code"), code.asRec().at(uri(TYPE)));
         assertEquals(str("System.out.println()"), code.asRec().at(uri("code")));
     }
 
@@ -186,7 +186,7 @@ public class ObjMarkdownSerializerTest extends AbstractSerializerTest<Node> {
 
         final Obj children = rec.asRec().at(uri(CHILDREN));
         final Obj child = children.asLst().at(0);
-        assertEquals(str(QUOTE), child.asRec().at(uri(TYPE)));
+        assertEquals(uri(QUOTE), child.asRec().at(uri(TYPE)));
     }
 
     @Test
@@ -196,7 +196,7 @@ public class ObjMarkdownSerializerTest extends AbstractSerializerTest<Node> {
 
         final Obj children = rec.asRec().at(uri(CHILDREN));
         final Obj child = children.asLst().at(0);
-        assertEquals(str("horizontal_rule"), child.asRec().at(uri(TYPE)));
+        assertEquals(uri("horizontal_rule"), child.asRec().at(uri(TYPE)));
     }
 
     @ParameterizedTest
@@ -212,7 +212,7 @@ public class ObjMarkdownSerializerTest extends AbstractSerializerTest<Node> {
         final Obj rec = ObjMarkdownSerializer.parse(markdown);
         final Obj children = rec.asRec().at(uri(CHILDREN));
         final Obj child = children.asLst().at(0);
-        assertEquals(str(expectedType), child.asRec().at(uri(TYPE)));
+        assertEquals(uri(expectedType), child.asRec().at(uri(TYPE)));
         assertEquals(jnt(expectedLevel), child.asRec().at(uri("level")));
     }
 
@@ -238,7 +238,7 @@ public class ObjMarkdownSerializerTest extends AbstractSerializerTest<Node> {
 
         final Obj rec = ObjMarkdownSerializer.parse(markdown);
         assertTrue(rec.isRec());
-        assertEquals(str(DOC), rec.asRec().at(uri(TYPE)));
+        assertEquals(uri(DOC), rec.asRec().at(uri(TYPE)));
 
         // Verify we have multiple children
         final Obj children = rec.asRec().at(uri(CHILDREN));
@@ -256,7 +256,7 @@ public class ObjMarkdownSerializerTest extends AbstractSerializerTest<Node> {
 
         // Parse again to verify structure is preserved
         final Obj rec2 = serializer.read(node);
-        assertEquals(str(DOC), rec2.asRec().at(uri(TYPE)));
+        assertEquals(uri(DOC), rec2.asRec().at(uri(TYPE)));
     }
 
     @Test
@@ -266,10 +266,10 @@ public class ObjMarkdownSerializerTest extends AbstractSerializerTest<Node> {
         final Node node = serializer.write(rec);
         final Obj rec2 = serializer.read(node);
 
-        assertEquals(str(DOC), rec2.asRec().at(uri(TYPE)));
+        assertEquals(uri(DOC), rec2.asRec().at(uri(TYPE)));
         final Obj children = rec2.asRec().at(uri(CHILDREN));
         final Obj heading = children.asLst().at(0);
-        assertEquals(str(HEAD), heading.asRec().at(uri(TYPE)));
+        assertEquals(uri(HEAD), heading.asRec().at(uri(TYPE)));
         assertEquals(jnt(1), heading.asRec().at(uri("level")));
     }
 
@@ -282,7 +282,7 @@ public class ObjMarkdownSerializerTest extends AbstractSerializerTest<Node> {
 
         final Obj children = rec2.asRec().at(uri(CHILDREN));
         final Obj codeBlock = children.asLst().at(0);
-        assertEquals(str(CODE), codeBlock.asRec().at(uri(TYPE)));
+        assertEquals(uri(CODE), codeBlock.asRec().at(uri(TYPE)));
         assertEquals(str("java"), codeBlock.asRec().at(uri(LANG)));
     }
 
@@ -295,7 +295,7 @@ public class ObjMarkdownSerializerTest extends AbstractSerializerTest<Node> {
 
         final Obj children = rec2.asRec().at(uri(CHILDREN));
         final Obj list = children.asLst().at(0);
-        assertEquals(str(B_LIST), list.asRec().at(uri(TYPE)));
+        assertEquals(uri(B_LIST), list.asRec().at(uri(TYPE)));
     }
 
     @Test
@@ -307,7 +307,7 @@ public class ObjMarkdownSerializerTest extends AbstractSerializerTest<Node> {
 
         final Obj children = rec2.asRec().at(uri(CHILDREN));
         final Obj list = children.asLst().at(0);
-        assertEquals(str(O_LIST), list.asRec().at(uri(TYPE)));
+        assertEquals(uri(O_LIST), list.asRec().at(uri(TYPE)));
     }
 
     @Test
@@ -321,7 +321,7 @@ public class ObjMarkdownSerializerTest extends AbstractSerializerTest<Node> {
         final Obj paragraph = children.asLst().at(0);
         final Obj paragraphChildren = paragraph.asRec().at(uri(CHILDREN));
         final Obj link = paragraphChildren.asLst().at(0);
-        assertEquals(str(EDGE), link.asRec().at(uri(TYPE)));
+        assertEquals(uri(EDGE), link.asRec().at(uri(TYPE)));
     }
 
     @Test
@@ -329,7 +329,7 @@ public class ObjMarkdownSerializerTest extends AbstractSerializerTest<Node> {
         final String markdown = "";
         final Obj rec = ObjMarkdownSerializer.parse(markdown);
         assertTrue(rec.isRec());
-        assertEquals(str(DOC), rec.asRec().at(uri(TYPE)));
+        assertEquals(uri(DOC), rec.asRec().at(uri(TYPE)));
     }
 
     @Test
@@ -354,7 +354,7 @@ public class ObjMarkdownSerializerTest extends AbstractSerializerTest<Node> {
         final Obj rec = ObjMarkdownSerializer.parse(markdown);
         final Obj children = rec.asRec().at(uri(CHILDREN));
         final Obj list = children.asLst().at(0);
-        assertEquals(str(B_LIST), list.asRec().at(uri(TYPE)));
+        assertEquals(uri(B_LIST), list.asRec().at(uri(TYPE)));
     }
 
     @Test

@@ -688,6 +688,7 @@ body {
 .custom-docs {
     padding: 20px;
     background: var(--secondarycolor);
+    border: 1px solid var(--mred);
 }
 
 .custom-docs .collapse {

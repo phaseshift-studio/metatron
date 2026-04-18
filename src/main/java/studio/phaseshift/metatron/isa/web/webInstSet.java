@@ -72,7 +72,7 @@ public class webInstSet extends AbstractInstSet {
     public static final Type HTML_TYPE = Type.Builder.build()
             .tid(XML_TID)
             .vid(HTML_TID)
-            .predicate(isa_(rec(uri(HTML), rec(uri(HEAD), REC_TYPE, uri(BODY), REC_TYPE))).tryToInst()).create();
+            .predicate(isa_(rec(uri(HTML), rec(uri(HEAD), rec(uri(TITLE).maybe().asUri(), STR_TYPE), uri(BODY), REC_TYPE))).tryToInst()).create();
     public static final Type JSON_STR_TYPE = Type.Builder.build()
             .tid(STR_TID)
             .vid(JSON_STR_TID).create();

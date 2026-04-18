@@ -55,7 +55,7 @@ public abstract class AbstractObjSerializer<T> implements ObjSerializer<T> {
         Obj.Helper.logLockedObj(this);
         return this;
     }
-
+    
     @Override
     public fURI tid() {
         return OBJ_SERIALIZER_TID;
