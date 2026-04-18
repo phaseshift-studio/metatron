@@ -1642,7 +1642,7 @@ bin/metatron</code></pre>
         <!-- MTRON -->
         <div id="mtron_feature" data-title="mtron" data-icon="images/icons/mtron-icon.svg" data-back-image="images/modal/mtron-modal.svg">
             <div class="feature-front">
-                <b class="metatron-name">mtron</b> is a functional, type-safe, data flow language capable of expressing complex data transformations within a multi-model data environment.
+                <b class="metatron-name">mtron</b> is a functional, type-safe, data flow language capable of expressing complex data transformations within a multi-model data environment
             </div>
             <div class="feature-modal">
                 <p><b class="metatron-name">mtron</b> (pronounced /ɛm.trɒn/) is the primary query and transformation language for the metatron virtual machine. It provides a type-safe environment for processing data across a diverse set of spaces.</p>
@@ -1656,7 +1656,7 @@ bin/metatron</code></pre>
         <!-- URI -->
         <div id="uri_feature" data-title="fURI" data-icon="images/icons/link-icon.svg" data-back-image="images/modal/furi-modal.svg">
             <div class="feature-front">
-                metatron <b class="metatron-name">objs</b> exist in a single, unified uri address space where processes can seamlessly traverse across different data sources.
+                metatron <b class="metatron-name">objs</b> exist in a single, unified uri address space where processes can seamlessly traverse across different data sources
             </div>
             <div class="feature-modal">
                 <p>The <b class="metatron-name">fURI</b> (<i>functional</i> URI) is the cornerstone of metatron's memory model. Every piece of data, regardless of its underlying storage, is addressed via a consistent URI scheme. The primary ramification is that any bit of data can refer to any other bit of data regardless of its physical location and underlying storage system and format. For instance, a line of text in a <code>.txt</code> file on a hard drive can reference some specific tag in an HTML page on the web. Atop the space-based URI graph, there exists a URI-aware machine capable of processing that data in a storage-agnostic manner.
@@ -1683,7 +1683,7 @@ bin/metatron</code></pre>
                 the typical functional programming monad/monoid is extended with a <b class="metatron-name">"ringad"/ringoid</b> processor, where <b class="metatron-name">*</b> is function composition and <b class="metatron-name">+</b> is function branching
             </div>
             <div class="feature-modal">
-                <p>A <b class="metatron-name">stream ring</b> provides an algebraic foundation enabling compilation rewrites for optimization, schema alignment, and execution semantics.</p>
+                <p><b class="metatron-name">Ring theory</b> describes the underlying algebra of metatron. The virtual machine's instructions can be serially composed (<pre>*</pre>) and parallelly branched (<pre>+</pre>) to form program structures that are subject to the axioms and theorems of <a href="https://metatron.phaseshift.studio/articles/stream-ring-theory.pdf">stream ring theory</a> (a Turing Complete stream computing algebra). Ring theorems realize execution optimization strategies (bulking coefficients), program compiler rewrites (ring equalities), and evaluation semantics (parallel, reducing, and serial execution stages).</p>
                 <img src="images/modal/ring-modal.svg" class="img-fluid mb-3 icon-color" style="width: 500px; display: block; margin: auto;"/>
             </div>
             <script type="text/javascript">featurePanel("ring_feature");</script>
@@ -1691,10 +1691,10 @@ bin/metatron</code></pre>
         <!-- MONAD -->
         <div id="monad_feature" data-title="monad" data-icon="images/icons/cluster-icon.svg" data-back-image="images/modal/monad-modal.svg">
             <div class="feature-front">
-                processes are realized as the propagation of atomic <b class="metatron-name">monads</b>  through instruction graphs which guide them over the underlying data spaces
+                Processes are realized as the propagation of atomic <b class="metatron-name">monads</b> maintaining a pointer to their current location in the instruction graph (program counter) and their current location in the data graph (reference in space)
             </div>
             <div class="feature-modal">
-                <p><b class="metatron-name">Monads</b> represent the state and path of a computation. They flow through instruction graphs, yielding functional processing</p>
+                <p><b class="metatron-name">Monads</b> provide a logical abstraction that cleanly separates the evaluation of a program from the program itself, allowing swarms of monads to operate in parallel over the same instruction/data graphs, where their collective synchronization need only occur when certain "barrier instructions" are reached. The theory of monads is applicable across many areas of applied computing, such as execution stacks, exception handling, I/O management, reflection, program traces, and state history, to name but a few.</p>
                 <img src="images/modal/monad-modal.svg" class="img-fluid mb-3 icon-color" style="max-height: 300px; display: block; margin: auto;"/>
             </div>
             <script type="text/javascript">featurePanel("monad_feature");</script>
@@ -1710,16 +1710,16 @@ bin/metatron</code></pre>
             </div>
             <script type="text/javascript">featurePanel("embed_feature");</script>
         </div>
-        <!-- SCHEMA -->
-        <div id="schema_feature" data-title="schema" data-icon="images/icons/schema-icon.svg" data-back-image="images/schema-diagram.svg">
+        <!-- TYPE -->
+        <div id="type_feature" data-title="type" data-icon="images/icons/type-icon.svg" data-back-image="images/type-diagram.svg">
             <div class="feature-front">
-                obj structures are constrained using a <b class="metatron-name">a structural type system</b> that can express inherited, refined, dependent, and recursive types
+                obj structures are constrained using a <b class="metatron-name">structural type system</b> that can express inherited, refined, dependent, and recursive types
             </div>
             <div class="feature-modal">
-                <p>The metatron type system is a structural type system that promotes the creation of custom <b class="metatron-name">schemas</b> that define data structures and the instructions associated with them. Morphing between types allows data to inherit instructions from other schemas. Together, data integrity is maintained across diverse sources while still allowing flexibility in a hybrid schema/schema-less data environment.</p>
-                <img src="images/schema-diagram.svg" class="img-fluid mb-3" style="max-height: 400px; display: block; margin: auto;"/>
+                <p>The <b class="metatron-name">structural type system</b> of metatron ensures that the label ascribed to obj's form (its nominal type) is but a secondary concern relative to the obj's relational structural within the larger data space as a whole. If an obj meets all the specified constraints of a defined type, then it is of that type and can be processed by instructions and composed within larger types requiring said type. From this vantage point, many homomorphic transformations can be realized that render the distinctions between a row in a relational database, a tag in an HTML document, a vertex in graph, and a value in a key/value store to be simply differences of name, not function.</p>
+                <img src="images/type-diagram.svg" class="img-fluid mb-3 icon-color" style="max-height: 400px; display: block; margin: auto;"/>
             </div>
-            <script type="text/javascript">featurePanel("schema_feature");</script>
+            <script type="text/javascript">featurePanel("type_feature");</script>
         </div>
         <!-- OLTP -->
         <div id="oltp_feature" data-title="oltp" data-icon="images/icons/oltp-icon.svg" data-back-image="images/modal/oltp-modal.svg">
@@ -1738,7 +1738,7 @@ bin/metatron</code></pre>
                 a <b class="metatron-name">monad swarm</b> machine supports asynchronous, parallel, distributed traversals over large regions of space
             </div>
             <div class="feature-modal">
-                <p><b class="metatron-name">OLRP</b> (Online Real-time Processing) uses a swarm approach to scale. Hundreds or thousands of monads can traverse vast data spaces in parallel to answer complex queries.</p>
+                <p><b class="metatron-name">OLRP</b> (Online Real-time Processing) realizes computing as a swarm of asynchronous, distributed monads traversing a data graph whose paths through that graph are guided by an instruction graph. Hundreds of thousands of monads can traverse vast swathes of the data landscape, across different physical machines, all in pursuit of a solution to a problem that has been formally captured within the structure of an obj called code.</p>
                 <img src="images/modal/olrp-modal.svg" class="img-fluid mb-3 icon-color" style="max-height: 300px; display: block; margin: auto;"/>
             </div>
             <script type="text/javascript">featurePanel("olrp_feature");</script>
@@ -1749,7 +1749,7 @@ bin/metatron</code></pre>
                 a <b class="metatron-name">monad vector</b> machine supports stateful bulk synchronous processing of massive regions of space
             </div>
             <div class="feature-modal">
-                <p><b class="metatron-name">OLAP</b> operations are handled by a vector machine, designed for massive data sets where bulk processing and stateful aggregations are required.</p>
+                <p><b class="metatron-name">OLAP</b> operations are handled by a machine that realizes computing as a series of parallelly executing stages, demarcated by serializing stateful barriers. Together, the pulse of expanding and contracting processes become the heartbeat of the computation.</p>
                 <img src="images/modal/olap-modal.svg" class="img-fluid mb-3 icon-color" style="max-height: 300px; display: block; margin: auto;"/>
             </div>
             <script type="text/javascript">featurePanel("olap_feature");</script>

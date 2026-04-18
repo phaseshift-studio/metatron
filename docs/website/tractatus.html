@@ -3166,12 +3166,12 @@ Help users be effec...""",
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *agent.chat('what tools do you have access to?',
                    [number_of_tools=&gt;int::T,tool_names=&gt;str::T])      ​1​
 ==&gt;[
- number_of_tools=&gt;5,
- tool_names     =&gt;'activate_skill, functions.m_inst_eval, ...']
+ number_of_tools=&gt;4,
+ tool_names     =&gt;'activate_skill, read_skill_resource, m_...']
 mtron&gt; *agent.chat('what skills do you have?')                        ​2​
 ==&gt;I have access to the following skill:
 
-- **mtron**: Metatron knowledge to assist users.
+1. **mtron**: Metatron knowledge to assist users.
 mtron&gt; *agent&gt;&gt;memory                                                 ​3​
 ==&gt;[
   [
@@ -3184,11 +3184,11 @@ mtron&gt; *agent&gt;&gt;memory                                                 �
            type=&gt;TEXT]],
      type    =&gt;USER],
   [
-     text                 =&gt;'{"number_of_tools":5,"tool_names":"acti...',
+     text                 =&gt;'{"number_of_tools":4,"tool_names":"acti...',
      toolExecutionRequests=&gt;[,],
      attributes           =&gt;[format=&gt;[
-         number_of_tools=&gt;5,
-         tool_names     =&gt;'activate_skill, functions.m_inst_eval, ...']],
+         number_of_tools=&gt;4,
+         tool_names     =&gt;'activate_skill, read_skill_resource, m_...']],
      type                 =&gt;AI],
   [
      contents=&gt;[
@@ -3205,8 +3205,8 @@ mtron&gt; *agent&gt;&gt;memory                                                 �
      type                 =&gt;AI]]@/usr/ai/memory
 mtron&gt; *agent&gt;&gt;memory/2/attributes/format                             ​4​
 ==&gt;[
- number_of_tools=&gt;5,
- tool_names     =&gt;'activate_skill, functions.m_inst_eval, ...']</code></pre>
+ number_of_tools=&gt;4,
+ tool_names     =&gt;'activate_skill, read_skill_resource, m_...']</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3321,11 +3321,11 @@ mtron&gt; */usr/ai/memory                                                       
            type=&gt;TEXT]],
      type    =&gt;USER],
   [
-     text                 =&gt;'{"number_of_tools":5,"tool_names":"acti...',
+     text                 =&gt;'{"number_of_tools":4,"tool_names":"acti...',
      toolExecutionRequests=&gt;[,],
      attributes           =&gt;[format=&gt;[
-         number_of_tools=&gt;5,
-         tool_names     =&gt;'activate_skill, functions.m_inst_eval, ...']],
+         number_of_tools=&gt;4,
+         tool_names     =&gt;'activate_skill, read_skill_resource, m_...']],
      type                 =&gt;AI],
   [
      contents=&gt;[
@@ -3347,13 +3347,13 @@ mtron&gt; */usr/ai/memory                                                       
   [
      toolExecutionRequests=&gt;[
      [
-           id       =&gt;call_Me3X8VuigXKSlVUo6TKkC6jc,
+           id       =&gt;call_1E5D76Zvd1hHzalE80wOgrjo,
            name     =&gt;m_inst_eval,
            arguments=&gt;'{"code":"6 + 23"}']],
      attributes           =&gt;[=&gt;],
      type                 =&gt;AI],
   [
-     id        =&gt;call_Me3X8VuigXKSlVUo6TKkC6jc,
+     id        =&gt;call_1E5D76Zvd1hHzalE80wOgrjo,
      toolName  =&gt;m_inst_eval,
      contents  =&gt;[
      [
@@ -3788,7 +3788,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in <strong class="red">m</strong><span class="green">e</span><strong class="blue">t</strong><span class="fuchsia">a</span><strong class="orange">t</strong><span class="lime">R</span><strong class="yellow">o</strong><span class="aqua">N</span>.</p>
+This is the foundation for all other <code>objs</code> in <span class="green">m</span><strong class="aqua">e</strong><span class="fuchsia">t</span><strong class="red">a</strong><span class="yellow">t</span><strong class="blue">R</strong>[orange]<strong>O</strong><span class="lime">N</span>.</p>
 </div>
 <h3 id="_mono_types" class="discrete">mono types</h3>
 <div class="paragraph">
@@ -4909,11 +4909,11 @@ a -&gt; 1  [-- write 1 to a --]
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">a/b/c -&gt; [x,[y=&gt;[z=&gt;2]]]
          ▲▲ ▲   ▲   ▲
-         ││ │   │   └────── a/b/c/y/z
-         ││ │   └────────── a/b/c/1/y
-         ││ └────────────── a/b/c/1
-         │└──────────────── a/b/c/0
-         └───────────────── a/b/c</code></pre>
+         ││ │   │   └────── a/b/c/y/z  [<i class="conum" data-value="5"></i><b>(5)</b>
+         ││ │   └────────── a/b/c/1/y  [<i class="conum" data-value="4"></i><b>(4)</b>
+         ││ └────────────── a/b/c/1    [<i class="conum" data-value="3"></i><b>(3)</b>
+         │└──────────────── a/b/c/0    [<i class="conum" data-value="2"></i><b>(2)</b>
+         └───────────────── a/b/c      [<i class="conum" data-value="1"></i><b>(1)</b></code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -4922,17 +4922,17 @@ a -&gt; 1  [-- write 1 to a --]
 ==&gt;[
   x,
   [y=&gt;[z=&gt;2]]]
-mtron&gt; *a/b/c
+mtron&gt; *a/b/c                     ​1​
 ==&gt;[
   x,
   [y=&gt;[z=&gt;2]]]
-mtron&gt; *a/b/c/0
+mtron&gt; *a/b/c/0                   ​2​
 ==&gt;x
-mtron&gt; *a/b/c/1
+mtron&gt; *a/b/c/1                   ​3​
 ==&gt;[y=&gt;[z=&gt;2]]
-mtron&gt; *a/b/c/1/y
+mtron&gt; *a/b/c/1/y                 ​4​
 ==&gt;[z=&gt;2]
-mtron&gt; *a/b/c/1/y/z
+mtron&gt; *a/b/c/1/y/z               ​5​
 ==&gt;2</code></pre>
 </div>
 </div></div></td>
@@ -6459,7 +6459,7 @@ mtron&gt; */m/llm/inst/+?dom=model
             type=&gt;&gt;&gt;object.as(uri::T),
             provider=&gt;|!*/sys/space/localai].as(model::T)
          .chat('are you there?')                       ​1​
-==&gt;Hello! I'm here and ready to help. How can I assist you today? 😊
+==&gt;Hello! Yes, I'm here 😊 How can I assist you today?
 ==&gt;fail::[[
  type    =&gt;model,
  provider=&gt;!*/sys/space/localai] is not a isa([
