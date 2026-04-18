@@ -29,6 +29,7 @@ import dev.langchain4j.skills.Skills;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.llm.LLMFactory;
+import studio.phaseshift.metatron.isa.llm.agent.agentInstSet;
 import studio.phaseshift.metatron.isa.llm.space.SpaceChatMemoryStore;
 import studio.phaseshift.metatron.isa.llm.space.SpaceContentRetriever;
 import studio.phaseshift.metatron.isa.m.type.*;
@@ -259,7 +260,7 @@ public class mModel extends MRec {
             final mAgent agent = this.agent().systemMessageTransformer((current, context) -> {
                 if (!this.at(NOTE).isNoObj()) {
                     final fURI notesURI = this.at(NOTE).uriValue();
-                    final StringBuilder sb = CommonUtil.readResource("llm/ext/NOTE.md");
+                    final StringBuilder sb = CommonUtil.readResource(agentInstSet.class, "NOTE.md");
                     LOG.info("adding notes to system message: %s", notesURI);
                     final String NOTES_DOT_MD = sb.toString().replace("%s", notesURI.toString());
                     if (Router.readFromSpace(notesURI).isNoObj())

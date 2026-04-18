@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.web.parser.ObjHTMLSerializer;
 import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
+import studio.phaseshift.metatron.isa.web.parser.ObjMarkdownSerializer;
 import studio.phaseshift.metatron.isa.web.parser.ObjXMLSerializer;
 
 import static studio.phaseshift.metatron.Tokens.*;
@@ -63,6 +64,7 @@ public class webInstSet extends AbstractInstSet {
     public static final fURI JSON_TID = WEB_ISA_TID.extend("json");
     public static final fURI JSON_STR_TID = WEB_ISA_TID.extend("json_str");
     public static final fURI CSS_TID = WEB_ISA_TID.extend("css");
+    public static final fURI MARKDOWN_TID = WEB_ISA_TID.extend("markdown");
 
     public static final Type XML_TYPE = Type.Builder.build()
             .tid(REC_TID)
@@ -77,20 +79,20 @@ public class webInstSet extends AbstractInstSet {
     public static final Type JSON_TYPE = Type.Builder.build()
             .tid(REC_TID)
             .vid(JSON_TID)
-            .predicate(isa_(
-                    rec(URI_TYPE, is_(or_(
-                            eq_(NOOBJ_TYPE),
-                            eq_(BOOL_TYPE),
-                            eq_(INT_TYPE),
-                            eq_(STR_TYPE),
-                            eq_(URI_TYPE),
-                            eq_(LST_TYPE),
-                            eq_(REC_TYPE))))).tryToInst())
+            .predicate(isa_(rec(URI_TYPE, is_(or_(
+                    eq_(NOOBJ_TYPE),
+                    eq_(BOOL_TYPE),
+                    eq_(INT_TYPE),
+                    eq_(STR_TYPE),
+                    eq_(URI_TYPE),
+                    eq_(LST_TYPE),
+                    eq_(REC_TYPE))))).tryToInst())
             .constructor(instC(INST_TID.dom(ALL.maybe()).rng(JSON_TID), lst(T(STR_TID)),
                     (lhs, inst) -> ObjSimpleJSONSerializer.parse(lhs.asStr().strValue()))).create();
     public static final Type CSS_TYPE = Type.Builder.build()
             .tid(REC_TID)
             .vid(CSS_TID).create();
+    public static final Type MARKDOWN_TYPE = Type.Builder.build().tid(REC_TID).vid(MARKDOWN_TID).create();
 
     public webInstSet() {
         super(mutableMap(uri(PATTERN), uri(WEB_ISA_TID.extend(ALL))), INSTSET_TID, WEB_ISA_TID);
@@ -100,7 +102,7 @@ public class webInstSet extends AbstractInstSet {
     public void setup() {
         this.jvm().putAll(mutableMap(
                 uri(PATTERN), uri(WEB_ISA_TID.extend(ALL)),
-                uri(CONSTQ), lst(ObjXMLSerializer.single(), ObjHTMLSerializer.single(), ObjJSONSerializer.single()),
+                uri(CONSTQ), lst(ObjXMLSerializer.single(), ObjHTMLSerializer.single(), ObjJSONSerializer.single(), ObjMarkdownSerializer.single()),
                 uri(TYPE), lst(
                         XML_TYPE,
                         docWrap(HTML_TYPE, "a rec encoding of an html document"),
@@ -108,13 +110,17 @@ public class webInstSet extends AbstractInstSet {
                         CSS_TYPE,
                         JSON_STR_TYPE,
                         HTTP_SPACE_TYPE,
+                        docWrap(MARKDOWN_TYPE, "a rec encoding of a markdown document"),
                         WS_SPACE_TYPE,
                         WS_ENDPOINT_TYPE),
                 uri(INST), lst(
                         instC(AS_INST_TID.dom(STR_TID).rng(XML_TID), lst(T(XML_TID)), (lhs, inst) -> ObjXMLSerializer.parse(lhs.asStr().strValue())),
-                        instC(AS_INST_TID.dom(STR_TID).rng(HTML_TID), lst(T(HTML_TID)), (lhs, inst) -> ObjHTMLSerializer.parse(lhs.asStr().strValue())),
-                        instC(AS_INST_TID.dom(HTML_TID).rng(STR_TID), lst(T(STR_TID)), (lhs, inst) -> str(ObjHTMLSerializer.single().write(lhs).html())),
-                        instC(AS_INST_TID.dom(STR_TID).rng(JSON_TID), lst(T(JSON_TID)), (lhs, inst) -> ObjSimpleJSONSerializer.parse(lhs.asStr().strValue())),
+                        instC(AS_INST_TID.dom(STR_TID).rng(HTML_TID), lst(HTML_TYPE), (lhs, inst) -> ObjHTMLSerializer.parse(lhs.asStr().strValue())),
+                        instC(AS_INST_TID.dom(STR_TID).rng(MARKDOWN_TID), lst(MARKDOWN_TYPE), (lhs, inst) -> ObjMarkdownSerializer.parse(lhs.asStr().strValue())),
+                        instC(AS_INST_TID.dom(HTML_TID).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> str(ObjHTMLSerializer.single().write(lhs).outerHtml())),
+                        instC(AS_INST_TID.dom(MARKDOWN_TID).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> str(ObjMarkdownSerializer.single().write(lhs).toString())),
+                        instC(AS_INST_TID.dom(MARKDOWN_TID).rng(HTML_TID), lst(HTML_TYPE), (lhs, inst) -> ObjMarkdownSerializer.single().toHTML(ObjMarkdownSerializer.single().write(lhs))),
+                        instC(AS_INST_TID.dom(STR_TID).rng(JSON_TID), lst(JSON_TYPE), (lhs, inst) -> ObjSimpleJSONSerializer.parse(lhs.asStr().strValue())),
                         instC(AS_INST_TID.dom(ALL).rng(STR_TID), lst(JSON_STR_TYPE), (lhs, inst) -> str(ObjSimpleJSONSerializer.single().write(lhs).toString())),
                         instC(INST_TID.extend("doc").dom(STR_TID).rng(STR_TID), lst(), (lhs, inst) -> {
                             try {

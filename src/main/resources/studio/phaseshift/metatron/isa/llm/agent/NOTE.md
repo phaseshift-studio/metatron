@@ -35,4 +35,4 @@ from(<%s/an_entry/b/d/0>)
 ```
 - reading the entry will return the entire `rec`
 - selective access of datum within the `rec` is possible by extending the entry key uri accordingly.
-  - in the second example above, the result is the first element of the `d` nested `rec` (value `1`).~~~~ 
+  - in the second example above, the result is the first element of the `d` nested `rec` (value `1`).

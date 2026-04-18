@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.isa.web.space;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -76,12 +75,12 @@ public class httpSpaceTest extends AbstractSpaceTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-           // "/|notnoobj",
-           // "/index.html|notnoobj",
-            "/index.html/html/body/a/b/c/text|\"a1.b1.c1.text\"",
-            "/index.html/html/body/div/div/div/text|\"a2.b2.c2.text\"",
-            "/html/body/a/b/c/text|\"a1.b1.c1.text\"",
-            "/html/body/div/div/div/text|\"a2.b2.c2.text\"",
+            // "/|notnoobj",
+            // "/index.html|notnoobj",
+            "/index.html/html/body/children/0/children/0/children/0/text|\"a1.b1.c1.text\"",
+            "/index.html/html/body/children/1/children/0/children/0/text|\"a2.b2.c2.text\"",
+            "/html/body/children/0/children/0/children/0/text|\"a1.b1.c1.text\"",
+            "/html/body/children/1/children/0/children/0/text|\"a2.b2.c2.text\"",
             "/test.json/hello|world",
             "/test.txt|\"This is a plain text file for httpSpaceTest.\"",
             "/missing.html|noobj"
@@ -119,7 +118,7 @@ public class httpSpaceTest extends AbstractSpaceTest {
         var result = Router.readFromSpace(url);
         assertEquals(ObjmtronSerializer.parse(expected), result, "unexpected value for: " + url);
     }
-    
+
     @Test
     public void testIndexHTMLRedirect() {
         assertNotEquals(noobj(), Router.readFromSpace(BASE_URL + "/index.html"));
@@ -134,15 +133,15 @@ public class httpSpaceTest extends AbstractSpaceTest {
         assertEquals(HTML_TID, Router.readFromSpace(BASE_URL + "/index.html").tid());
         assertEquals(HTML_TID, Router.readFromSpace(BASE_URL).tid());
         assertTrue(Router.readFromSpace(BASE_URL).test(HTML_TYPE));
-        assertEquals(str("a1.b1.c1.text"), Router.readFromSpace(BASE_URL + "/index.html/html/body/a/b/c/text"));
-        assertNotEquals(HTML_TID, Router.readFromSpace(BASE_URL + "/index.html/html/body/a/b/c/text").tid());
-        assertEquals(str("a1.b1.c1.text").c(cInt.of(2)), Router.readFromSpace(BASE_URL + "/index.html/html/body/a/+/+/text"));
-        assertEquals(str("a2.b2.c2.text"), Router.readFromSpace(BASE_URL + "/index.html/html/body/div/div/div/text"));
-        assertEquals(str("a2.b2.c2.text").c(cInt.of(2)), Router.readFromSpace(BASE_URL + "/index.html/html/body/div/+/+/text"));
-        assertEquals(str("a1.b1.c1.text"), Router.readFromSpace(BASE_URL + "/html/body/a/b/c/text"));
-        assertEquals(str("a1.b1.c1.text").c(cInt.of(2)), Router.readFromSpace(BASE_URL + "/html/body/a/+/+/text"));
-        assertEquals(str("a2.b2.c2.text"), Router.readFromSpace(BASE_URL + "/html/body/div/div/div/text"));
-        assertEquals(str("a2.b2.c2.text").c(cInt.of(2)), Router.readFromSpace(BASE_URL + "/html/body/div/+/+/text"));
+        assertEquals(str("a1.b1.c1.text"), Router.readFromSpace(BASE_URL + "/index.html/html/body/children/0/children/0/children/0/text"));
+        assertNotEquals(HTML_TID, Router.readFromSpace(BASE_URL + "/index.html/html/body/children/0/children/0/children/0/text").tid());
+        assertEquals(str("a1.b1.c1.text"), Router.readFromSpace(BASE_URL + "/index.html/html/body/children/0/children/+/children/+/text"));
+        assertEquals(str("a2.b2.c2.text"), Router.readFromSpace(BASE_URL + "/index.html/html/body/children/1/children/0/children/0/text"));
+        assertEquals(str("a2.b2.c2.text"), Router.readFromSpace(BASE_URL + "/index.html/html/body/children/1/children/+/children/+/text"));
+        assertEquals(str("a1.b1.c1.text"), Router.readFromSpace(BASE_URL + "/html/body/children/0/children/0/children/0/text"));
+        assertEquals(str("a1.b1.c1.text"), Router.readFromSpace(BASE_URL + "/html/body/children/0/children/+/children/+/text"));
+        assertEquals(str("a2.b2.c2.text"), Router.readFromSpace(BASE_URL + "/html/body/children/1/children/0/children/0/text"));
+        assertEquals(str("a2.b2.c2.text"), Router.readFromSpace(BASE_URL + "/html/body/children/1/children/+/children/+/text"));
     }
 
 }

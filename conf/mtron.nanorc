@@ -44,9 +44,10 @@ color magenta "::T"
 ### noobj 
 color magenta "noobj"
 # q keys
-color cyan "([a-z]|-|_)+=(?!>)"
-color blue "=([a-z]|[0-9]|\.|_|-|/)+"
-icolor blue "([a-z]|[0-9]|/)+::"
+icolor cyan "(|#|\+|[a-z]|-|_|\{.\})+(=|<=)(?!>)"
+icolor blue "=([a-z]|[0-9]|\.|_|-|/|#|\+)+"
+icolor cyan "(<=)([a-z]|[0-9]|\.|_|-|/|#|\+)+"
+icolor blue "([a-z]|[0-9]|/|#|\+)+::"
 color green "=" "::"
 # c coefficients
 color yellow "\{.{1}\}" "\{[0-9]*,?[0-9]*\}"
@@ -61,20 +62,20 @@ color red "X=>"
 color yellow "!\*" "!" "\^\*" 
 ### "\{<j>\}"
 color green "\{|\}"
+color green "\{\}"
 ###  uri
 color blue "[^-][<][^=]([^>])*[>][^-]^(=>)]"
-icolor blue "[a-z0-9_/-]+::"
+icolor blue "[,a-z0-9_/-]+::"
 color green "::" 
-color yellow "<="
 ### uri <>
 color blue "[<][^>]*[>]"
 color green "<" ">"
-color yellow "\$\{[^}]*\}"
+color yellow "\$\{[^}]*\}" "<="
 ### str
 color yellow "[\"][^\"]*[\"]"
 color yellow "['][^']*[']"
 color yellow start="\"\"\"" end="\"\"\""
-color gray "<j>"
+color gray "<[^>]>"
 color red "([a-z]|[0-9]|/)*fail::"
 ### comments
 color gray start="\[--" end="--]"

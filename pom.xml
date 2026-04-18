@@ -56,6 +56,7 @@
         <metatron.host>ws://127.0.0.1:8999</metatron.host>
         <main.class>studio.phaseshift.metatron.BootLoader</main.class>
         <!-- DEPENDENCY VERSIONS -->
+        <flexmark.version>0.64.8</flexmark.version>
         <java-websocket.version>1.6.0</java-websocket.version>
         <mariadb.version>3.5.8</mariadb.version>
         <mongodb.version>5.6.5</mongodb.version>
@@ -119,6 +120,17 @@
         </dependencies>
     </dependencyManagement>
     <dependencies>
+        <!-- MARKDOWN -->
+        <dependency>
+            <groupId>com.vladsch.flexmark</groupId>
+            <artifactId>flexmark-all</artifactId>
+            <version>${flexmark.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.vladsch.flexmark</groupId>
+            <artifactId>flexmark-html2md-converter</artifactId>
+            <version>${flexmark.version}</version>
+        </dependency>
         <!-- DATA FLOW -->
         <dependency>
             <groupId>com.oath.cyclops</groupId>

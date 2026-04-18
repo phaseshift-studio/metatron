@@ -303,7 +303,9 @@ public class fURITest extends AbstractMetatronTest {
     @CsvSource(value = {
             "http://fhatos.org/a     | false | false",
             "http://fhatos.org:80/a/ | false | true",
-            "http://fhatos.org/      | false | true",
+            "http://fhatos.org/      | false | false",
+            "http://fhatos.org       | false | false",
+            "http://fhatos.org/a/    | false | true",
             "http://fhatos.org/a/b   | false | false",
             "+/a/b/c/                | true  | true",
             "http://#/a/b/c          | false | false",

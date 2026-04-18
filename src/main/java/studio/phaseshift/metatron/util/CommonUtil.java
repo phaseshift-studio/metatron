@@ -221,8 +221,15 @@ public final class CommonUtil {
         return ss;
     }
 
-    public static StringBuilder readResource(final String resourcePath) {
-        final InputStream inputStream = CommonUtil.class.getClassLoader().getResourceAsStream(resourcePath);
+    public static String readResource(final Class<?> rootClass, final String resourcePath, String... replacements) {
+        String s = readResource(rootClass, resourcePath).toString();
+        for (int i = 0; i < replacements.length; i += 2)
+            s = s.replace(replacements[i], replacements[i + 1]);
+        return s;
+    }
+
+    public static StringBuilder readResource(final Class<?> rootClass, final String resourcePath) {
+        final InputStream inputStream = rootClass.getResourceAsStream(resourcePath);
         final StringBuilder sb = new StringBuilder();
         if (inputStream != null) {
             try (final BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {

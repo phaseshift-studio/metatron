@@ -79,4 +79,9 @@ public class MRel extends MObj implements Rel {
             return this.first().test(rhs.asRel().first()) && this.second().test(rhs.asRel().second());
         return super.test(rhs);
     }
+    
+    @Override
+    public String toShortString() {
+        return this.first().toShortString() + "=>" + this.second().toShortString();
+    }
 }

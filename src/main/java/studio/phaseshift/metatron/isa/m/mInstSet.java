@@ -205,7 +205,7 @@ public class mInstSet extends AbstractInstSet {
             .vid(SPACE_TID)
             .isaPredicate(rec(
                     uri(PATTERN), URI_TYPE,
-                    uri(QSTRING).maybe(), rec(URI_TYPE, Q_TYPE),
+                    uri(QSTRING).maybe(), lst(Q_TYPE),
                     uri(SCHEMA).maybe(), REC_TYPE)).create();
 
    /* public static final Type MONO_TYPE = Type.Builder.build()

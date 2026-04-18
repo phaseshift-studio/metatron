@@ -369,7 +369,7 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
                 sb.append(writeFail(fail(obj.asFail().message().getMessage().split("\n")[0])));
             }
         } else {
-            sb.append(write(obj));
+            sb.append(obj.toShortString());
         }
         return sb;
     }
@@ -379,8 +379,6 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
             this.generateRec(sb, v.as(), depth + 1, padding);
         } else if (v.isLst()) {
             this.generateLst(sb, v.as(), depth + 1);
-        } else if (v.isType() && isComplexType(v)) {
-            sb.append(this.write(v.asType()));
         } else {
             this.writeClip(sb, v);
         }
