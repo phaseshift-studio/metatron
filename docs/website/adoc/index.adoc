@@ -43,7 +43,7 @@ include::header.html[]
 <div class="container-xxl py-5">
     <div class="container">
         <div class="row g-4">
-            <div class="col-lg-8 wow fadeIn" data-wow-delay="0.5s">
+            <div class="col-lg-8 wow fadeIn" data-wow-delay="0.1s">
                 <h1 class="text-uppercase mb-4 neon-text">metatron&trade;</h1>
                 <p class="text-primary subtitle">Interconnect Heterogeneous Data Sources and
                     Processes</p>
@@ -75,7 +75,7 @@ include::header.html[]
                     <img src="images/external/docker.svg" width="50%" alt="docker"/>
                 </div>-->
             </div>
-            <div class="col-lg-4 wow fadeIn" data-wow-delay="0.5s">
+            <div class="col-lg-4 wow fadeIn" data-wow-delay="0.1s">
                 <img src="images/metatron-character.png" width="100%"/>
             </div>
         </div>

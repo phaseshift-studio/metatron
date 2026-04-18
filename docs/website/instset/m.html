@@ -255,7 +255,6 @@ bin/metatron</code></pre>
        obj      =>memspace::[pattern=><#>],
        inst     =>instset::[pattern=><#>]]],
  space  =>[sub=>{!*/m/mach,!*/m/math,!*/m/web,!*/m/iot,!*/m/grph,!*/m/llm,!*/m/tble,!*/m/dcmnt}],
- const  =>[noobj],
  type   =>[
    bool::T,
    int::T,
@@ -281,6 +280,16 @@ bin/metatron</code></pre>
    docq::T,
    incrq::T,
    constq::T],
+ const  =>[noobj],
+ rewrite=>[
+   /m/inst/rewrite/id_removal?code{?}<=code(){},
+   /m/inst/rewrite/map_nest?code{?}<=code(){},
+   /m/inst/rewrite/else_after_count?code{?}<=code(){},
+   /m/inst/rewrite/plus_zero?code{?}<=code(){},
+   /m/inst/rewrite/mult_one?code{?}<=code(){},
+   /m/inst/rewrite/split_merge_collapse?code{?}<=code(){},
+   /m/inst/rewrite/split_merge_left_factor?code{?}<=code(){},
+   /m/inst/rewrite/split_merge_right_factor?code{?}<=code(){}],
  inst   =>[
    as?bool<=bool(bool::T){},
    as?bytes<=bool(bytes::T){},
@@ -510,16 +519,7 @@ bin/metatron</code></pre>
    swap?A<=A(B::T){},
    rshift?B{?}<=A(){},
    lshift?B{?}<=A(){},
-   start?A{**}<=noobj{0}(A::T){}],
- rewrite=>[
-   /m/inst/rewrite/id_removal?code{?}<=code(){},
-   /m/inst/rewrite/map_nest?code{?}<=code(){},
-   /m/inst/rewrite/else_after_count?code{?}<=code(){},
-   /m/inst/rewrite/plus_zero?code{?}<=code(){},
-   /m/inst/rewrite/mult_one?code{?}<=code(){},
-   /m/inst/rewrite/split_merge_collapse?code{?}<=code(){},
-   /m/inst/rewrite/split_merge_left_factor?code{?}<=code(){},
-   /m/inst/rewrite/split_merge_right_factor?code{?}<=code(){}]]@/m</code></pre>
+   start?A{**}<=noobj{0}(A::T){}]]@/m</code></pre>
                         </div>
                     </div>
                 </div>
@@ -1471,13 +1471,13 @@ a/b/c/                           [-- relative/branch uri            --]
 <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-as-doc-37-tab').click(); document.getElementById('inst-as-doc-37').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">as?bytes&lt;=file(bytes::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-as-doc-36-tab').click(); document.getElementById('inst-as-doc-36').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">as?xml&lt;=str(xml::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-as-doc-38-tab').click(); document.getElementById('inst-as-doc-38').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">as?html&lt;=str(xml::T[?[html=&gt;[
-       head=&gt;rec::T,
+       head=&gt;[{?}title=&gt;str::T],
        body=&gt;rec::T]]]@/m/web/html){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-as-doc-36-tab').click(); document.getElementById('inst-as-doc-36').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">as?markdown&lt;=str(rec::T@/m/web/markdown){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-as-doc-39-tab').click(); document.getElementById('inst-as-doc-39').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">as?str&lt;=html(str::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-as-doc-36-tab').click(); document.getElementById('inst-as-doc-36').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">as?str&lt;=markdown(str::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-as-doc-36-tab').click(); document.getElementById('inst-as-doc-36').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">as?html&lt;=markdown(xml::T[?[html=&gt;[
-       head=&gt;rec::T,
+       head=&gt;[{?}title=&gt;str::T],
        body=&gt;rec::T]]]@/m/web/html){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-as-doc-40-tab').click(); document.getElementById('inst-as-doc-40').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">as?json&lt;=str(rec::T[?[uri::T=&gt;is(or(eq(noobj{0}::T),eq(bool::T),eq(int::T),eq(str::T),eq(uri::T),eq(lst::T),eq(rec::T)))]][/m/web/inst?json&lt;=#{?}(str::T){&lt;j&gt;}]@/m/web/json){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-as-doc-41-tab').click(); document.getElementById('inst-as-doc-41').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">as?str&lt;=#(str::T@/m/web/json_str){&lt;j&gt;}</code></pre>
@@ -6029,7 +6029,7 @@ a-&gt;2+*a                   [-- 4 via sugar&#x27;d writing/reading a --]</code>
         <div class="container-xxl py-3 text-center">
             <hr class="border-secondary">
             <small class="text-muted">
-                generated by metatron instset doc generator on build 0-2026-04-17 23:35:49<br>
+                generated by metatron instset doc generator on build 0-2026-04-18 02:07:13<br>
                 © PhaseShift Studio, LLC
             </small>
         </div>

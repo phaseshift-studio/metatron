@@ -701,6 +701,7 @@ body {
 .custom-docs {
     padding: 20px;
     background: var(--secondarycolor);
+    border: 1px solid var(--mred);
 }
 
 .custom-docs .collapse {
@@ -1239,20 +1240,24 @@ strong {
 .page-sweep {
     position: fixed;
     top: 0;
-    left: -100%;
+    left: 0;
     width: 100%;
     height: 100%;
     background: #000000;
     z-index: 9999;
-    transition: left 0.5s ease-in-out;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.4s ease-in-out, visibility 0.4s;
 }
 
 .page-sweep.active {
-    left: 0;
+    opacity: 1;
+    visibility: visible;
 }
 
 .page-sweep.exit {
-    left: 100%;
+    opacity: 0;
+    visibility: hidden;
 }
 
 /*** Back to Top ***/
@@ -2801,7 +2806,6 @@ ultimately dependent on the incoming lhs <code>obj</code>, where</p>
        {?}format=&gt;#::T],
      {?}size    =&gt;bB::T,
      {?}memory  =&gt;memory::T,
-     {?}note    =&gt;uri::T,
      {?}desc    =&gt;str::T,
      {?}skill   =&gt;lst::T,
      {?}tool    =&gt;[
@@ -3162,12 +3166,12 @@ Help users be effec...""",
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *agent.chat('what tools do you have access to?',
                    [number_of_tools=&gt;int::T,tool_names=&gt;str::T])      ​1​
 ==&gt;[
- number_of_tools=&gt;4,
- tool_names     =&gt;'activate_skill, m_inst_eval, read_skill...']
+ number_of_tools=&gt;5,
+ tool_names     =&gt;'activate_skill, functions.m_inst_eval, ...']
 mtron&gt; *agent.chat('what skills do you have?')                        ​2​
 ==&gt;I have access to the following skill:
 
-1. **Mtron**: Provides metatron knowledge to assist users.
+- **mtron**: Metatron knowledge to assist users.
 mtron&gt; *agent&gt;&gt;memory                                                 ​3​
 ==&gt;[
   [
@@ -3180,11 +3184,11 @@ mtron&gt; *agent&gt;&gt;memory                                                 �
            type=&gt;TEXT]],
      type    =&gt;USER],
   [
-     text                 =&gt;'{"number_of_tools":4,"tool_names":"acti...',
+     text                 =&gt;'{"number_of_tools":5,"tool_names":"acti...',
      toolExecutionRequests=&gt;[,],
      attributes           =&gt;[format=&gt;[
-         number_of_tools=&gt;4,
-         tool_names     =&gt;'activate_skill, m_inst_eval, read_skill...']],
+         number_of_tools=&gt;5,
+         tool_names     =&gt;'activate_skill, functions.m_inst_eval, ...']],
      type                 =&gt;AI],
   [
      contents=&gt;[
@@ -3201,8 +3205,8 @@ mtron&gt; *agent&gt;&gt;memory                                                 �
      type                 =&gt;AI]]@/usr/ai/memory
 mtron&gt; *agent&gt;&gt;memory/2/attributes/format                             ​4​
 ==&gt;[
- number_of_tools=&gt;4,
- tool_names     =&gt;'activate_skill, m_inst_eval, read_skill...']</code></pre>
+ number_of_tools=&gt;5,
+ tool_names     =&gt;'activate_skill, functions.m_inst_eval, ...']</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3317,11 +3321,11 @@ mtron&gt; */usr/ai/memory                                                       
            type=&gt;TEXT]],
      type    =&gt;USER],
   [
-     text                 =&gt;'{"number_of_tools":4,"tool_names":"acti...',
+     text                 =&gt;'{"number_of_tools":5,"tool_names":"acti...',
      toolExecutionRequests=&gt;[,],
      attributes           =&gt;[format=&gt;[
-         number_of_tools=&gt;4,
-         tool_names     =&gt;'activate_skill, m_inst_eval, read_skill...']],
+         number_of_tools=&gt;5,
+         tool_names     =&gt;'activate_skill, functions.m_inst_eval, ...']],
      type                 =&gt;AI],
   [
      contents=&gt;[
@@ -3343,13 +3347,13 @@ mtron&gt; */usr/ai/memory                                                       
   [
      toolExecutionRequests=&gt;[
      [
-           id       =&gt;call_OtWouJyOrnxG7h1MYyxKJdSJ,
+           id       =&gt;call_Me3X8VuigXKSlVUo6TKkC6jc,
            name     =&gt;m_inst_eval,
            arguments=&gt;'{"code":"6 + 23"}']],
      attributes           =&gt;[=&gt;],
      type                 =&gt;AI],
   [
-     id        =&gt;call_OtWouJyOrnxG7h1MYyxKJdSJ,
+     id        =&gt;call_Me3X8VuigXKSlVUo6TKkC6jc,
      toolName  =&gt;m_inst_eval,
      contents  =&gt;[
      [
@@ -3784,7 +3788,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in <strong class="red">M</strong><span class="aqua">E</span>[fuchsia]<mark>t</mark><strong class="lime">a</strong><span class="orange">t</span><strong class="blue">r</strong><span class="green">o</span>[yellow]<mark>n</mark>.</p>
+This is the foundation for all other <code>objs</code> in <strong class="red">m</strong><span class="green">e</span><strong class="blue">t</strong><span class="fuchsia">a</span><strong class="orange">t</strong><span class="lime">R</span><strong class="yellow">o</strong><span class="aqua">N</span>.</p>
 </div>
 <h3 id="_mono_types" class="discrete">mono types</h3>
 <div class="paragraph">
@@ -4561,7 +4565,7 @@ mtron&gt; age:125
 ==&gt;age:125
 mtron&gt; nat:125.as(age::T)
 ==&gt;fail::[rhs does not match inst range:
-	{0}&lt;&gt;=&gt;(X=&gt;int::T[is(gt(0))]@nat)][...]@/sys/fail/752
+	{0}&lt;&gt;=&gt;(X=&gt;nat::T[is(lt(120))]@age)][...]@/sys/fail/752
 mtron&gt; 125.as(nat::T).as(age::T)
 ==&gt;fail::[nat::125 is not a is(lt(120))
   nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/758</code></pre>
@@ -4894,7 +4898,14 @@ a -&gt; 1  [-- write 1 to a --]
 <div class="paragraph">
 <p>Any obj can be referenced by a URI. From simple <strong>mono</strong> objs such as <code>bool</code>, <code>int</code>, etc. to complex nested <strong>poly</strong> objs such as <code>rec</code>, <code>lst</code>, etc. Poly objs provide another layer of addressing in that once a poly obj has a URI reference, the internal objs that make up the poly inherit that reference and extend it with any internal references necessary to find the objs within the poly.</p>
 </div>
-<div class="listingblock">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 41.6666%;">
+<col style="width: 58.3334%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">a/b/c -&gt; [x,[y=&gt;[z=&gt;2]]]
          ▲▲ ▲   ▲   ▲
@@ -4924,8 +4935,8 @@ mtron&gt; *a/b/c/1/y
 mtron&gt; *a/b/c/1/y/z
 ==&gt;2</code></pre>
 </div>
-</div>
-<div class="colist arabic">
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="colist arabic">
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
@@ -4948,7 +4959,10 @@ mtron&gt; *a/b/c/1/y/z
 <td>the uri <code>a/b/c/1/y/z</code> references an doubly internal <code>int</code> mono.</td>
 </tr>
 </table>
-</div>
+</div></div></td>
+</tr>
+</tbody>
+</table>
 <div class="paragraph">
 <p>In summary, metatron&#8217;s global, distributed memory system can be understood as a bag of binary relations mapping URIs to objs.</p>
 </div>
@@ -6256,7 +6270,7 @@ vertexA vertexB   redirect  ┌─┬─┬─┬┼┬─┐   ┌┼┬─┬�
 mtron&gt; *&lt;http://phaseshift.studio/&gt;                      ​2​
 ==&gt;html::[html=&gt;[
    head=&gt;[
-     title   =&gt;[=&gt;],
+     title   =&gt;'PhaseShift Studio',
      children=&gt;[
      [
            tag =&gt;link,
@@ -6278,11 +6292,10 @@ mtron&gt; *&lt;http://phaseshift.studio/&gt;                      ​2​
            src  =&gt;&lt;http://metatron.phaseshift.studio/images/metatron-character.png&gt;,
            width=&gt;'500px']]]]]
 mtron&gt; *&lt;http://phaseshift.studio/html/head/title&gt;       ​3​
-==&gt;[=&gt;]
+==&gt;PhaseShift Studio
 mtron&gt; *&lt;http://phaseshift.studio&gt;.as(str::T)            ​4​
 ==&gt;&lt;html&gt;
  &lt;head&gt;
-  &lt;title&gt;&lt;/title&gt;
   &lt;link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet"&gt;
   &lt;link href="css/metatron.css" rel="stylesheet"&gt;
  &lt;/head&gt;
@@ -6414,7 +6427,6 @@ mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
        {?}format=&gt;#::T],
      {?}size    =&gt;bB::T,
      {?}memory  =&gt;memory::T,
-     {?}note    =&gt;uri::T,
      {?}desc    =&gt;str::T,
      {?}skill   =&gt;lst::T,
      {?}tool    =&gt;[
@@ -6447,7 +6459,7 @@ mtron&gt; */m/llm/inst/+?dom=model
             type=&gt;&gt;&gt;object.as(uri::T),
             provider=&gt;|!*/sys/space/localai].as(model::T)
          .chat('are you there?')                       ​1​
-==&gt;Yes, I'm here! 😊 How can I assist you today?
+==&gt;Hello! I'm here and ready to help. How can I assist you today? 😊
 ==&gt;fail::[[
  type    =&gt;model,
  provider=&gt;!*/sys/space/localai] is not a isa([
@@ -6459,7 +6471,6 @@ mtron&gt; */m/llm/inst/+?dom=model
    {?}format=&gt;#::T],
  {?}size    =&gt;bB::T,
  {?}memory  =&gt;memory::T,
- {?}note    =&gt;uri::T,
  {?}desc    =&gt;str::T,
  {?}skill   =&gt;lst::T,
  {?}tool    =&gt;[
@@ -6487,7 +6498,6 @@ mtron&gt; */m/llm/inst/+?dom=model
    {?}format=&gt;#::T],
    noobj=&gt;(==&gt;{?}size)    =&gt;noobj=&gt;/=&gt;bB::T,
    noobj=&gt;(==&gt;{?}memory)  =&gt;noobj=&gt;==&gt;memory::T,
-   noobj=&gt;(==&gt;{?}note)    =&gt;noobj=&gt;/=&gt;uri::T,
    noobj=&gt;(==&gt;{?}desc)    =&gt;noobj=&gt;/=&gt;str::T,
    noobj=&gt;(==&gt;{?}skill)   =&gt;noobj=&gt;==&gt;lst::T,
    noobj=&gt;(==&gt;{?}tool)    =&gt;noobj=&gt;/=&gt;[

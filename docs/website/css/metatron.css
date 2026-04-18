@@ -1227,20 +1227,24 @@ strong {
 .page-sweep {
     position: fixed;
     top: 0;
-    left: -100%;
+    left: 0;
     width: 100%;
     height: 100%;
     background: #000000;
     z-index: 9999;
-    transition: left 0.5s ease-in-out;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.4s ease-in-out, visibility 0.4s;
 }
 
 .page-sweep.active {
-    left: 0;
+    opacity: 1;
+    visibility: visible;
 }
 
 .page-sweep.exit {
-    left: 100%;
+    opacity: 0;
+    visibility: hidden;
 }
 
 /*** Back to Top ***/

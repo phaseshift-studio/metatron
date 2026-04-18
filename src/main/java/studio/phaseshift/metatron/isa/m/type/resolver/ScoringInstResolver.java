@@ -72,8 +72,8 @@ public class ScoringInstResolver implements InstResolver {
                 .filter(i -> (i.args().isEmpty() && userInst.args().isEmpty()) || i.args().isRec() || i.args().count() >= userInst.args().count())
                 .filter(i -> !lhs.isInst() || (i.dom().baseType().equals(M_ISA_INST_TID)))
                 // Score BEFORE transformation (capture original specificity)
-                .filter(apiInst -> !userInst.hasDom() || userInst.dom().test(apiInst.dom()))
-                .filter(apiInst -> !userInst.hasRng() || userInst.rng().test(apiInst.rng()))
+                //.filter(apiInst -> !userInst.hasDom() || userInst.dom().test(apiInst.dom()))
+                //.filter(apiInst -> !userInst.hasRng() || userInst.rng().test(apiInst.rng()))
                 .map(apiInst -> {
                     final int score = scoreSpecificity(lhs, userInst, apiInst);
                     // Apply transformations
@@ -82,14 +82,9 @@ public class ScoringInstResolver implements InstResolver {
                     transformed = userInst.tid().basePath().equals(AS_INST_TID) ? transformed.rng(userInst.arg(0).asType()) : transformed;
                     transformed = lhs.isInst() ? transformed : Inst.Helper.bindGenerics(lhs, transformed, userInst);
                     int scoreBoost = 0;
-                    /*if (userInst.arg(0).vidOrTid().basePath().equals(apiInst.arg(0).vidOrTid().basePath())) {
-                        scoreBoost = scoreBoost + 3000;
-                        if (!userInst.arg(0).type().isBaseType())
-                            scoreBoost = scoreBoost + 1000;
-                    }*/
                     return new ScoredCandidate(apiInst, transformed, score + scoreBoost);
                 })
-               // .peek(i ->  LOG.info("transformed inst: %s score %s", i.transformed, i.score))
+                // .peek(i ->  LOG.info("transformed inst: %s score %s", i.transformed, i.score))
                 .filter(sc -> sc.transformed != null)
                 .filter(sc -> lhs.isInst() || lhs.test(sc.transformed.dom()))
                 // Resolve args
@@ -106,10 +101,10 @@ public class ScoringInstResolver implements InstResolver {
                     result = result.c(userInst.c());
                     return new ScoredCandidate(sc.original, result, sc.score);
                 })
-                // Select the highest scoring candidate
+                // Select highest scoring candidate
                 .max(Comparator.comparingInt(ScoredCandidate::score))
                 .map(sc -> {
-                 /*   LOG.debug("resolved %s with score %d (dom=%s, rng=%s)",
+                    /*LOG.info("resolved %s with score %d (dom=%s, rng=%s)",
                             sc.transformed.tid().basePath(), sc.score,
                             sc.original.dom().tid(), sc.original.rng().tid());*/
                     return sc.transformed;
@@ -128,15 +123,15 @@ public class ScoringInstResolver implements InstResolver {
      */
     private int scoreSpecificity(final Obj lhs, final Inst userInst, final Inst apiInst) {
         int score = 0;
-        final fURI apiDomID = apiInst.dom().vidOrTid();
-        final fURI apiRngID = apiInst.rng().vidOrTid();
-        final fURI lhsID = lhs.isType() ? lhs.vidOrTid() : lhs.tid();
+        final fURI apiDomTid = apiInst.dom().tid();
+        final fURI apiRngTid = apiInst.rng().tid();
+        final fURI lhsTid = lhs.tid();
 
         // Domain specificity (most important - 1000 points)
-        if (!apiDomID.isGeneric()) {
+        if (!apiDomTid.isGeneric()) {
             score += 1000;
             // Bonus for exact domain match (500 points)
-            if (lhsID.basePath().equals(apiDomID.basePath())) {
+            if (lhsTid.basePath().equals(apiDomTid.basePath())) {
                 score += 500;
             }
         }
@@ -158,10 +153,10 @@ public class ScoringInstResolver implements InstResolver {
             // When user passes a Type argument to as(), heavily favor instructions whose range matches that type
             // e.g., as(skill::T) should strongly prefer as?skill<=dir over as?file<=uri
             // IMPORTANT: Only apply this to actual 'as' instructions, not constructors or other instructions
-            if (apiInst.tid().basePath().equals(AS_INST_TID) && userFirstArg != null && userFirstArg.isType() && !apiRngID.isGeneric()) {
+            if (apiInst.tid().basePath().equals(AS_INST_TID) && userFirstArg != null && userFirstArg.isType() && !apiRngTid.isGeneric()) {
                 // Extract the actual type being requested (the Type's tid, not the Type object's own tid)
                 final fURI requestedTypeTid = userFirstArg.asType().tid();
-                if (!requestedTypeTid.isGeneric() && apiRngID.basePath().equals(requestedTypeTid.basePath())) {
+                if (!requestedTypeTid.isGeneric() && apiRngTid.basePath().equals(requestedTypeTid.basePath())) {
                     // Huge bonus: the API's output type matches what the user asked for
                     score += 2000;
                 }
@@ -169,7 +164,7 @@ public class ScoringInstResolver implements InstResolver {
         }
 
         // Range specificity (100 points - less important than dom/args)
-        if (!apiRngID.isGeneric()) {
+        if (!apiRngTid.isGeneric()) {
             score += 100;
         }
 

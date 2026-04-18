@@ -298,7 +298,7 @@ function slideShowPage(id) {
 function triggerSweep(url) {
     const sweep = $('<div class="page-sweep"></div>').appendTo('body');
     setTimeout(() => sweep.addClass('active'), 5);
-    setTimeout(() => window.location.href = url, 250);
+    setTimeout(() => window.location.href = url, 400);
 }
 
 $(document).ready(function () {
@@ -306,7 +306,7 @@ $(document).ready(function () {
     const sweep = $('<div class="page-sweep active"></div>').appendTo('body');
     setTimeout(() => {
         sweep.addClass('exit');
-        setTimeout(() => sweep.remove(), 250);
+        setTimeout(() => sweep.remove(), 400);
     }, 100);
 
     $('a').on('click', function(e) {

@@ -205,8 +205,6 @@ public interface Inst extends Call {
     default Inst resolve(final Obj lhs) {
         if (this.hasf())
             return this;
-        if (this.isNoObj())
-            return noobj();
         final GraphittyLogger LOG = Graphitty.log(lhs);
 
         // Resolution cache: DISABLED

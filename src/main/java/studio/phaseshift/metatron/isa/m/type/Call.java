@@ -102,7 +102,7 @@ public interface Call extends Obj, Ring<Call> {
     Call resolve(final Obj start);
 
     default <C extends Call> C dom(final Type domain) {
-        return (C) this.tid(this.tid().dom(domain.vidOrTid()));
+        return (C) this.tid(this.tid().dom(domain.tid()));
     }
 
     default <C extends Call> C rng(final Type range) {
