@@ -77,6 +77,8 @@ color yellow "['][^']*[']"
 color yellow start="\"\"\"" end="\"\"\""
 color gray "<[^>]>"
 color red "([a-z]|[0-9]|/)*fail::"
+color magenta "=>" ">-" "-<" "==" "_/" "\\_"
+color green "\(" "\)" "\[" "\]" ","
 ### comments
 color gray start="\[--" end="--]"
 color gray start="\[==" end="==]"

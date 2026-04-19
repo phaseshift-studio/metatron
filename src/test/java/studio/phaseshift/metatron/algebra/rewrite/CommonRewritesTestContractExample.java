@@ -44,7 +44,7 @@ public class CommonRewritesTestContractExample {
      * The dataset is created automatically using Metatron syntax.
      *
      * <pre>{@code
-     * public class tbleSpaceTest extends AbstractSpaceTest implements CommonRewritesTestContract {
+     * public class SqliteTbleSpaceTest extends AbstractSpaceTest implements CommonRewritesTestContract {
      *
      *     @Override
      *     public fURI getRewriteTestDatasetBaseUri() {
@@ -59,7 +59,7 @@ public class CommonRewritesTestContractExample {
      *     }
      *
      *     static Stream<Arguments> provideCountRewriteTestCases() {
-     *         return new tbleSpaceTest().generateCountRewriteTestCases();
+     *         return new SqliteTbleSpaceTest().generateCountRewriteTestCases();
      *     }
      *
      *     // Repeat for sum, mean, etc. (or copy-paste the pattern)

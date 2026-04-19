@@ -47,6 +47,7 @@ import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.OBJ_MTRON_STRING_
 public class ObjmtronSerializer extends AbstractObjSerializer<String> {
     private static final String NOOBJ_STRING = "noobj";
     protected boolean leftJustify;
+    public static String REAL_FORMAT = "%.4f";
 
     public ObjmtronSerializer() {
         this.leftJustify = true;
@@ -134,7 +135,7 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
 
     @Override
     public String writeReal(final Real real) {
-        return handleIds(real, String.format("%.2f", real.jvm()));
+        return handleIds(real, String.format(REAL_FORMAT, real.jvm()));
     }
 
     private static String wrapUri(final fURI furi) {

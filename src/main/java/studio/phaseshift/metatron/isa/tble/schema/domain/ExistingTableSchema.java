@@ -419,7 +419,19 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
 
         try (final PreparedStatement stmt = conn.prepareStatement(sql)) {
             writeParameter(stmt, 1, value, column.sqlType);
-            stmt.setString(2, rowId);
+
+            // Set WHERE clause parameter with proper type based on primary key column type
+            final ColumnMetadata pkColMeta = metadata.columns.stream()
+                    .filter(c -> c.name.equals(pkColumn))
+                    .findFirst()
+                    .orElseThrow();
+            if (pkColMeta.sqlType == Types.INTEGER || pkColMeta.sqlType == Types.BIGINT ||
+                    pkColMeta.sqlType == Types.SMALLINT || pkColMeta.sqlType == Types.TINYINT) {
+                stmt.setLong(2, Long.parseLong(rowId));
+            } else {
+                stmt.setString(2, rowId);
+            }
+
             final int updated = stmt.executeUpdate();
             this.space.logger().debug("updated field %s.%s for row %s: %s rows affected",
                     metadata.tableName, fieldName, rowId, updated);
@@ -512,7 +524,18 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                 final Tuple.Pair<Obj, ColumnMetadata> pair = values.get(i);
                 writeParameter(stmt, i + 1, pair.get0(), pair.get1().sqlType);
             }
-            stmt.setString(values.size() + 1, rowId);
+
+            // Set WHERE clause parameter with proper type based on primary key column type
+            final ColumnMetadata pkColMeta = metadata.columns.stream()
+                    .filter(c -> c.name.equals(pkColumn))
+                    .findFirst()
+                    .orElseThrow();
+            if (pkColMeta.sqlType == Types.INTEGER || pkColMeta.sqlType == Types.BIGINT ||
+                    pkColMeta.sqlType == Types.SMALLINT || pkColMeta.sqlType == Types.TINYINT) {
+                stmt.setLong(values.size() + 1, Long.parseLong(rowId));
+            } else {
+                stmt.setString(values.size() + 1, rowId);
+            }
 
             final int updated = stmt.executeUpdate();
             this.space.logger().debug("updated row in %s with id %s: %s rows affected",

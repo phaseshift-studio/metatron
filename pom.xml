@@ -57,6 +57,7 @@
         <main.class>studio.phaseshift.metatron.BootLoader</main.class>
         <!-- DEPENDENCY VERSIONS -->
         <flexmark.version>0.64.8</flexmark.version>
+        <testcontainers.version>2.0.4</testcontainers.version>
         <java-websocket.version>1.6.0</java-websocket.version>
         <mariadb.version>3.5.8</mariadb.version>
         <mongodb.version>5.6.5</mongodb.version>
@@ -102,6 +103,13 @@
                 <type>pom</type>
             </dependency>
             <!-- TESTING -->
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>testcontainers-bom</artifactId>
+                <version>${testcontainers.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
             <dependency>
                 <groupId>org.junit</groupId>
                 <artifactId>junit-bom</artifactId>
@@ -334,6 +342,41 @@
             <version>${tinkerpop.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers-mysql</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers-postgresql</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers-mariadb</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- Apache Commons dependencies for TestContainers
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-compress</artifactId>
+            <version>1.26.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.12.0</version>
+            <scope>test</scope>
+        </dependency> -->
+        <!-- PostgreSQL JDBC Driver -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.7.1</version>
+            <scope>test</scope>
+        </dependency>
         <!-- in-memory mongodb for testing (BSD-3-Clause license) -->
         <dependency>
             <groupId>de.bwaldvogel</groupId>
@@ -410,11 +453,11 @@
                             <goal>exec</goal>
                         </goals>
                         <configuration>
-                           <!-- <skip>${skipRunner}</skip>-->
+                            <!-- <skip>${skipRunner}</skip>-->
                             <executable>python</executable>
                             <arguments>
                                 <argument>docs/python/docs-code-parser.py</argument>
-                               <!-- <argument>-c ${skipRunner}</argument> -->
+                                <!-- <argument>-c ${skipRunner}</argument> -->
                                 <argument>--verbose</argument>
                                 <argument>-o</argument>
                                 <argument>${project.build.directory}/temp</argument>

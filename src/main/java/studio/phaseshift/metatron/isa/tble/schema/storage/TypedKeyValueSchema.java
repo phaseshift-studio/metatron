@@ -101,26 +101,55 @@ public class TypedKeyValueSchema implements TableSchema {
             return delete(conn, furi);
         }
 
+        // Detect database type for appropriate upsert syntax
+        final String dbProductName = conn.getMetaData().getDatabaseProductName().toLowerCase();
+        final boolean isPostgreSQL = dbProductName.contains("postgresql");
+
         // Determine the type and appropriate column
         final String type;
         final String sql;
 
         if (obj.isBool()) {
             type = "bool";
-            sql = "REPLACE INTO " + TABLE_NAME + " (furi, type, bool_val) VALUES (?, ?, ?);";
+            if (isPostgreSQL) {
+                sql = "INSERT INTO " + TABLE_NAME + " (furi, type, bool_val) VALUES (?, ?, ?) " +
+                      "ON CONFLICT (furi) DO UPDATE SET type = EXCLUDED.type, bool_val = EXCLUDED.bool_val;";
+            } else {
+                sql = "REPLACE INTO " + TABLE_NAME + " (furi, type, bool_val) VALUES (?, ?, ?);";
+            }
         } else if (obj.isInt()) {
             type = "int";
-            sql = "REPLACE INTO " + TABLE_NAME + " (furi, type, int_val) VALUES (?, ?, ?);";
+            if (isPostgreSQL) {
+                sql = "INSERT INTO " + TABLE_NAME + " (furi, type, int_val) VALUES (?, ?, ?) " +
+                      "ON CONFLICT (furi) DO UPDATE SET type = EXCLUDED.type, int_val = EXCLUDED.int_val;";
+            } else {
+                sql = "REPLACE INTO " + TABLE_NAME + " (furi, type, int_val) VALUES (?, ?, ?);";
+            }
         } else if (obj.isReal()) {
             type = "real";
-            sql = "REPLACE INTO " + TABLE_NAME + " (furi, type, real_val) VALUES (?, ?, ?);";
+            if (isPostgreSQL) {
+                sql = "INSERT INTO " + TABLE_NAME + " (furi, type, real_val) VALUES (?, ?, ?) " +
+                      "ON CONFLICT (furi) DO UPDATE SET type = EXCLUDED.type, real_val = EXCLUDED.real_val;";
+            } else {
+                sql = "REPLACE INTO " + TABLE_NAME + " (furi, type, real_val) VALUES (?, ?, ?);";
+            }
         } else if (obj.isStr()) {
             type = "str";
-            sql = "REPLACE INTO " + TABLE_NAME + " (furi, type, str_val) VALUES (?, ?, ?);";
+            if (isPostgreSQL) {
+                sql = "INSERT INTO " + TABLE_NAME + " (furi, type, str_val) VALUES (?, ?, ?) " +
+                      "ON CONFLICT (furi) DO UPDATE SET type = EXCLUDED.type, str_val = EXCLUDED.str_val;";
+            } else {
+                sql = "REPLACE INTO " + TABLE_NAME + " (furi, type, str_val) VALUES (?, ?, ?);";
+            }
         } else {
             // Complex types: Inst, Code, Rec, Lst, Poly, etc.
             type = "complex";
-            sql = "REPLACE INTO " + TABLE_NAME + " (furi, type, complex_val) VALUES (?, ?, ?);";
+            if (isPostgreSQL) {
+                sql = "INSERT INTO " + TABLE_NAME + " (furi, type, complex_val) VALUES (?, ?, ?) " +
+                      "ON CONFLICT (furi) DO UPDATE SET type = EXCLUDED.type, complex_val = EXCLUDED.complex_val;";
+            } else {
+                sql = "REPLACE INTO " + TABLE_NAME + " (furi, type, complex_val) VALUES (?, ?, ?);";
+            }
         }
 
         try (final PreparedStatement stmt = conn.prepareStatement(sql)) {

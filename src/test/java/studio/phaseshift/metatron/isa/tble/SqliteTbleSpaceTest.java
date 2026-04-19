@@ -58,12 +58,12 @@
   * @author Marko A. Rodriguez (http://markorodriguez.com)
   */
  @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
- public class tbleSpaceTest extends AbstractSpaceTest implements CommonRewritesTestContract { //, SubQTest {
+ public class SqliteTbleSpaceTest extends AbstractSpaceTest implements CommonRewritesTestContract { //, SubQTest {
 
      private static final String DB_PATH = "target/test-tabledb-space.db";
      private static final fURI SPACE_VID = f("/sys/space/tabledb/test");
 
-     public tbleSpaceTest() {
+     public SqliteTbleSpaceTest() {
          // Use scheme-based baseURI like dcmntSpaceTest does (mongo:test_collection/rewrite_test)
          // This ensures the parent memSpace has a specific pattern (tble:kv/#)
          // which is MORE SPECIFIC than the tbleSpace pattern (tble:#)
@@ -841,7 +841,7 @@
          );
      }
 
-     // Add this test to tbleSpaceTest.java before the "Helper Methods" section
+     // Add this test to SqliteTbleSpaceTest.java before the "Helper Methods" section
 
      /**
       * Test that TypedKeyValueSchema preserves types correctly (isomorphic mapping).
@@ -2059,7 +2059,7 @@
      * Provides all rewrite test cases from the contract.
      */
     static Stream<Arguments> provideAllRewriteTestCases() {
-        return new tbleSpaceTest().generateAllRewriteTestCases();
+        return new SqliteTbleSpaceTest().generateAllRewriteTestCases();
     }
 
     // Plan verification tests disabled - mParser.parse().rewrite() doesn't trigger space-specific rewrites
@@ -2072,6 +2072,6 @@
     // }
     //
     // static Stream<Arguments> providePlanVerificationTestCases() {
-    //     return new tbleSpaceTest().generatePlanVerificationTestCases();
+    //     return new SqliteTbleSpaceTest().generatePlanVerificationTestCases();
     // }
  }

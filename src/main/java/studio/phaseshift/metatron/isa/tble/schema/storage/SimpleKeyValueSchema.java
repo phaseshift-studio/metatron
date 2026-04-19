@@ -66,9 +66,18 @@ public class SimpleKeyValueSchema implements TableSchema {
             return delete(conn, furi);
         }
 
-        // Use REPLACE which works on SQLite, MariaDB, MySQL
-        // REPLACE = DELETE + INSERT (atomic operation)
-        final String sql = "REPLACE INTO " + TABLE_NAME + " (furi, obj) VALUES (?, ?);";
+        // Detect database type and use appropriate upsert syntax
+        final String dbProductName = conn.getMetaData().getDatabaseProductName().toLowerCase();
+        final String sql;
+
+        if (dbProductName.contains("postgresql")) {
+            // PostgreSQL: INSERT ... ON CONFLICT ... DO UPDATE
+            sql = "INSERT INTO " + TABLE_NAME + " (furi, obj) VALUES (?, ?) " +
+                  "ON CONFLICT (furi) DO UPDATE SET obj = EXCLUDED.obj;";
+        } else {
+            // SQLite, MySQL, MariaDB: REPLACE INTO
+            sql = "REPLACE INTO " + TABLE_NAME + " (furi, obj) VALUES (?, ?);";
+        }
 
         try (final PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, furi.toString());
