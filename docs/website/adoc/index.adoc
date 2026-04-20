@@ -147,7 +147,31 @@ include::header.html[]
             </div>
             <script type="text/javascript">featurePanel("monad_feature");</script>
         </div>
-        <!-- EMBED -->
+        <!-- INSTSET -->
+        <div id="instset_feature" data-title="instset" data-icon="images/icons/instset-icon.svg" data-back-image="images/modal/instset-modal.svg">
+            <div class="feature-front">
+                metatron <b class="metatron-name">instruction sets</b> (or instset) are packages that encode a domain of discourse within a set of types, instructions, constants, rewrites, and sugars.
+            </div>
+            <div class="feature-modal">
+                <p><b class="metatron-name">instsets</b> are spaces that can be read from and written to. As a space, they support query processors, with the docq query processor being of particular importance in that it associates documentation with any obj. Documentation objs enable the automatic generation of human-readable HTML documentation as well as agent-readable tool and skill specifications.</p>
+            <table>
+                <tr>
+                <td>
+                <pre><code>
+rec::T[?[
+     {?}constq =>[#::T],
+     {?}type   =>[T::T],
+     {?}inst   =>[inst::T],
+     {?}rewrite=>[inst::T],
+     {?}sugar  =>[lst[str,str]::T]]]@/m/instset
+                </code></pre>
+                </td><td>
+                <img src="images/modal/instset-modal.svg" class="img-fluid mb-3 icon-color" style="height: 165px; display: block; margin: auto;"/>
+                </td></tr></table>
+            </div>
+            <script type="text/javascript">featurePanel("instset_feature");</script>
+        </div>
+       <!-- EMBED -->
         <div id="embed_feature" data-title="embed" data-icon="images/icons/storage-icon.svg" data-back-image="images/modal/embed-modal.svg">
             <div class="feature-front">
                 inter- and intra-space <b class="metatron-name">embedded</b> data structures can account for the respective time and space tradeoffs of the underlying storage systems
@@ -161,7 +185,7 @@ include::header.html[]
         <!-- TYPE -->
         <div id="type_feature" data-title="type" data-icon="images/icons/type-icon.svg" data-back-image="images/type-diagram.svg">
             <div class="feature-front">
-                obj structures are constrained using a <b class="metatron-name">structural type system</b> that can express inherited, refined, dependent, and recursive types
+                obj structures are constrained using a <b class="metatron-name">structural type system</b> that can express inherited, refined, dependent, and recursive types with constructs to express cardinalities, optionals, generics, predicates, and more.
             </div>
             <div class="feature-modal">
                 <p>The <b class="metatron-name">structural type system</b> of metatron ensures that the label ascribed to obj's form (its nominal type) is but a secondary concern relative to the obj's relational structural within the larger data space as a whole. If an obj meets all the specified constraints of a defined type, then it is of that type and can be processed by instructions and composed within larger types requiring said type. From this vantage point, many homomorphic transformations can be realized that render the distinctions between a row in a relational database, a tag in an HTML document, a vertex in graph, and a value in a key/value store to be simply differences of name, not function.</p>
@@ -175,7 +199,7 @@ include::header.html[]
                 a <b class="metatron-name">monad iterator</b> machine supports speedy traversals over localized regions of space
             </div>
             <div class="feature-modal">
-                <p><b class="metatron-name">OLTP</b> in metatron is optimized for low-latency, localized operations. The monad iterator machine ensures that simple lookups and small-scale traversals remain fast.</p>
+                <p><b class="metatron-name">OLTP</b> (online transactional processing) provides a straightforward means for accessing a small region of space with a machine that iterates a stream of monads through code from the first instruction to the last.</p>
                 <img src="images/modal/oltp-modal.svg" class="img-fluid mb-3 icon-color" style="max-height: 300px; display: block; margin: auto;"/>
             </div>
             <script type="text/javascript">featurePanel("oltp_feature");</script>

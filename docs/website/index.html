@@ -1699,7 +1699,31 @@ bin/metatron</code></pre>
             </div>
             <script type="text/javascript">featurePanel("monad_feature");</script>
         </div>
-        <!-- EMBED -->
+        <!-- INSTSET -->
+        <div id="instset_feature" data-title="instset" data-icon="images/icons/instset-icon.svg" data-back-image="images/modal/instset-modal.svg">
+            <div class="feature-front">
+                metatron <b class="metatron-name">instruction sets</b> (or instset) are packages that encode a domain of discourse within a set of types, instructions, constants, rewrites, and sugars.
+            </div>
+            <div class="feature-modal">
+                <p><b class="metatron-name">instsets</b> are spaces that can be read from and written to. As a space, they support query processors and of particular importance is the docq query processor that is used to associate documentation with any obj. Documentation objs are used to generate human readable HTML documentation as well as agent-readable tool and skill specifications.</p>
+            <table>
+                <tr>
+                <td>
+                <pre><code>
+rec::T[?[
+     {?}constq =>[#::T],
+     {?}type   =>{?}[T::T],
+     {?}inst   =>{?}[inst::T],
+     {?}rewrite=>{?}[inst::T],
+     {?}sugar  =>{?}[lst::T]]]@/m/instset
+                </code></pre>
+                </td><td>
+                <img src="images/modal/instset-modal.svg" class="img-fluid mb-3 icon-color" style="height: 165px; display: block; margin: auto;"/>
+                </td></tr></table>
+            </div>
+            <script type="text/javascript">featurePanel("instset_feature");</script>
+        </div>
+       <!-- EMBED -->
         <div id="embed_feature" data-title="embed" data-icon="images/icons/storage-icon.svg" data-back-image="images/modal/embed-modal.svg">
             <div class="feature-front">
                 inter- and intra-space <b class="metatron-name">embedded</b> data structures can account for the respective time and space tradeoffs of the underlying storage systems
@@ -1727,7 +1751,7 @@ bin/metatron</code></pre>
                 a <b class="metatron-name">monad iterator</b> machine supports speedy traversals over localized regions of space
             </div>
             <div class="feature-modal">
-                <p><b class="metatron-name">OLTP</b> in Metatron is optimized for low-latency, localized operations. The monad iterator machine ensures that simple lookups and small-scale traversals are extremely fast.</p>
+                <p><b class="metatron-name">OLTP</b> in metatron is optimized for low-latency, localized operations. The monad iterator machine ensures that simple lookups and small-scale traversals remain fast.</p>
                 <img src="images/modal/oltp-modal.svg" class="img-fluid mb-3 icon-color" style="max-height: 300px; display: block; margin: auto;"/>
             </div>
             <script type="text/javascript">featurePanel("oltp_feature");</script>
@@ -1749,7 +1773,7 @@ bin/metatron</code></pre>
                 a <b class="metatron-name">monad vector</b> machine supports stateful bulk synchronous processing of massive regions of space
             </div>
             <div class="feature-modal">
-                <p><b class="metatron-name">OLAP</b> operations are handled by a machine that realizes computing as a series of parallelly executing stages, demarcated by serializing stateful barriers. Together, the pulse of expanding and contracting processes become the heartbeat of the computation.</p>
+                <p><b class="metatron-name">OLAP</b> operations are handled by a machine that frames computing as a bulk synchronous process where a series of parallelly executing stages are demarcated by serializing stateful barriers. Together, the pulse of expanding and contracting processes forms the heartbeat of the computation.</p>
                 <img src="images/modal/olap-modal.svg" class="img-fluid mb-3 icon-color" style="max-height: 300px; display: block; margin: auto;"/>
             </div>
             <script type="text/javascript">featurePanel("olap_feature");</script>
