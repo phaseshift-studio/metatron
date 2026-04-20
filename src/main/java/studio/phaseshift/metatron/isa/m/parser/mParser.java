@@ -49,14 +49,15 @@ import java.util.stream.Stream;
 
 import static org.petitparser.parser.primitive.CharacterParser.any;
 import static org.petitparser.parser.primitive.CharacterParser.anyOf;
-import static org.petitparser.parser.primitive.CharacterParser.noneOf;
 import static org.petitparser.parser.primitive.CharacterParser.digit;
+import static org.petitparser.parser.primitive.CharacterParser.noneOf;
 import static org.petitparser.parser.primitive.CharacterParser.of;
 import static org.petitparser.parser.primitive.CharacterParser.word;
 import static org.petitparser.parser.primitive.StringParser.of;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.and_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.or_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
@@ -68,7 +69,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
-import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.splitOnNonQuotedSequence;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
@@ -184,11 +184,11 @@ public class mParser {
 
         rec_parser.set(seq(m_type_prefix(REC_TID), of('[').trim(), rec_internal(obj_rel_back_parser, m_call_prefix(MAP_INST_TID)), of(']').trim(), m_vid_postfix()).trim().map(t -> rec((Map<Obj, Obj>) pick(t, 2), pick(t, 0), pick(t, 4))));
         inst_parser.set(choice(m_inst_b(), m_inst_c()));
-        and_or_parser.set(seq(m_obj(), choice(of("||").trim(),of("&&").trim()), m_obj()).map(t -> {
+        and_or_parser.set(seq(m_obj(), choice(of("||").trim(), of("&&").trim()), m_obj()).map(t -> {
             final Obj lhs = pick(t, 0);
             final Obj rhs = pick(t, 2);
             final String op = pick(t, 1).toString();
-            return (op.equals("||") ? or_(lhs,rhs) : and_(lhs,rhs)).tryToInst();
+            return (op.equals("||") ? or_(lhs, rhs) : and_(lhs, rhs)).tryToInst();
         }));
 
         // Cache the main parser to avoid rebuilding it on every parse() call
@@ -209,20 +209,20 @@ public class mParser {
         // If spaces are present in the definition, create a space-aware parser
         if (startHasLeadingSpace || startHasTrailingSpace) {
             PARSERS.add(generate_space_aware_sugar_parser(
-                triplet.get1(),
-                trimmedStart,
-                startHasLeadingSpace,
-                startHasTrailingSpace,
-                triplet.get2(),
-                endToken
+                    triplet.get1(),
+                    trimmedStart,
+                    startHasLeadingSpace,
+                    startHasTrailingSpace,
+                    triplet.get2(),
+                    endToken
             ));
         } else {
             // Standard space-insensitive sugar (uses .trim())
             PARSERS.add(generate_sugar_parser(
-                triplet.get1(),
-                of(startToken),
-                triplet.get2(),
-                null == endToken ? null : of(endToken)
+                    triplet.get1(),
+                    of(startToken),
+                    triplet.get2(),
+                    null == endToken ? null : of(endToken)
             ));
         }
         return PARSERS;
@@ -247,10 +247,10 @@ public class mParser {
 
         // Generate the sugar parser with the space-aware token
         return generate_sugar_parser(
-            instChain,
-            tokenParser,
-            argCount,
-            null == endToken ? null : of(endToken)
+                instChain,
+                tokenParser,
+                argCount,
+                null == endToken ? null : of(endToken)
         );
     }
 
@@ -333,7 +333,7 @@ public class mParser {
                                 //.map(l -> (((List) l).get(0) instanceof Obj) ? l : ((List) l).subList(1, ((List) l).size() - 1))
                                 .collect(Collectors.toMap(kv -> pick(kv, 0), kv -> pick(kv, 2), Obj::append, LinkedHashMap::new)));
     }
-    
+
     public static <O extends Obj> O eval(final File source) {
         try {
             return eval(new String(Files.readAllBytes(source.toPath())));
@@ -343,7 +343,7 @@ public class mParser {
     }
 
     public static <O extends Obj> O eval(final String code) {
-        return (O) objs(splitOnNonQuotedSequence(code, ';', false).stream()
+        final Obj obj = objs(splitOnNonQuotedSequence(code.replaceAll("\\[==.*?==\\]", ""), ';', false).stream()
                 .filter(s -> !s.trim().isEmpty())
                 .map(s -> Arrays.stream(s.split("\n"))
                         .map(String::trim)
@@ -352,10 +352,11 @@ public class mParser {
                 .map(s -> mParser.parse(s).apply())
                 .filter(o -> !o.isNoObj())
                 .map(Obj::as));
+        return (O) obj;
     }
 
     public static <O extends Obj> O parse(final String code) {
-        final String trimmed = code.trim();
+        final String trimmed = code.trim().replaceAll("\\[==.*?==\\]", "");
         if (trimmed.isEmpty())
             return (O) noobj();
         // Use cached parser instead of rebuilding on every call
@@ -374,7 +375,7 @@ public class mParser {
         // Log timing for expressions (disable in production)
         if (parseTime > 1_000_000) { // > 1ms
             LOG.debug("Parse timing for '%s': parse=%dms, get=%dms",
-                trimmed, parseTime / 1_000_000, getTime / 1_000_000);
+                    trimmed, parseTime / 1_000_000, getTime / 1_000_000);
         }
 
         return obj;
@@ -560,7 +561,7 @@ public class mParser {
     }
 
     public static Parser m_real() {
-        return seq(m_type_prefix(REAL_TID), seq(opt(of('-'), '+'), choice(of('0'), digit().plus()), of('.'), digit().plus(), opt(seq(of("E"),opt(of("-"),""),digit().plus()),""))
+        return seq(m_type_prefix(REAL_TID), seq(opt(of('-'), '+'), choice(of('0'), digit().plus()), of('.'), digit().plus(), opt(seq(of("E"), opt(of("-"), ""), digit().plus()), ""))
                 .flatten().trim(), m_vid_postfix())
                 .map(t -> new MReal(Double.parseDouble(pick(t, 1).toString()), pick(t, 0), pick(t, 2)));
     }

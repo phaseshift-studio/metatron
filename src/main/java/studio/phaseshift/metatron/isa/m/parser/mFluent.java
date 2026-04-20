@@ -37,6 +37,7 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Code {
 
@@ -332,6 +333,12 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
     public F auto_from_(final Obj obj, final Obj defaultObj) {
         return this.addInst(instB(mInstSet.AUTO_FROM_INST_TID, lst(obj, defaultObj)));
     }
+
+    public F auto_at_(final Obj obj, final Obj defaultObj) {
+        return this.addInst(instB(mInstSet.AUTO_AT_INST_TID, lst(obj, defaultObj)));
+    }
+
+
 
     public F type_(final Obj obj) {
         return this.addInst(instB(mInstSet.TYPE_INST_TID, lst(obj)));
@@ -717,6 +724,14 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
             return new mFluent<F>().auto_(instC(M_ISA_INST_TID, lst(), (x, y) -> function.get()));
         }
 
+        public static <F extends mFluent<F>> F auto_at_(final Obj obj, final Obj defaultObj) {
+            return new mFluent<F>().auto_at_(obj, defaultObj);
+        }
+
+        public static <F extends mFluent<F>> F auto_at_(final fURI furi) {
+            return auto_at_(uri(furi), noobj());
+        }
+
         public static <F extends mFluent<F>> F auto_from_(final Uri uri, final Obj defaultObj) {
             return new mFluent<F>().auto_from_(uri, defaultObj);
         }
@@ -764,7 +779,7 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
         public static <F extends mFluent<F>> F within_(final Obj obj) {
             return new mFluent<F>().within_(obj);
         }
-
+        
 /*       public static <F extends mFluent<F>> F lift_(final Obj obj) {
             return new mFluent<F>().lift_(obj);
         }*/
@@ -811,10 +826,6 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
 
         public static <F extends mFluent<F>> F vid_() {
             return new mFluent<F>().vid_();
-        }
-
-        public static Inst auto(final fURI pointer) {
-            return auto_from_(pointer.toUri()).tryToInst().as();
         }
     }
 }

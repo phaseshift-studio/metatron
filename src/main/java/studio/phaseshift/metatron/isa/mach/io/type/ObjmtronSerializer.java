@@ -196,6 +196,8 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
     public String writeInst(final Inst inst) {
         if (inst.tid().basePath().equals(AUTO_FROM_INST_TID))
             return "!*" + this.write(inst.arg(0));
+        if (inst.tid().basePath().equals(AUTO_AT_INST_TID) && inst.arg(1).isNoObj())
+            return "!@" + this.write(inst.arg(0));
         if (inst.tid().basePath().equals(AUTO_INST_TID))
             return "!" + this.write(inst.arg(0));
         if (inst.tid().basePath().equals(FROM_INST_TID))
@@ -270,14 +272,27 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
         return sb.append("@").append(wrapUri(obj.vid()));
     }
 
+    private boolean isNested(final Poly<?, ?> poly) {
+        if (!poly.isLst() && !poly.isRec())
+            return false;
+        final long count = poly.count();
+        return count != 1 && (count > 4 ||
+                (poly.isLst() ? poly.lstValue().stream() : poly.recValue().values().stream()).anyMatch(o ->
+                        null != o.vid() ||
+                                o.isPoly() ||
+                                o.isObjCall() ||
+                                (o.isStr() && o.strValue().length() > 15) ||
+                                (o.isUri() && o.uriValue().toString().length() > 15) ||
+                                (o.isBytes() && o.bytesValue().capacity() > 15) ||
+                                isComplexType(o)));
+    }
+
     private StringBuilder generateLst(final StringBuilder sb, final Lst lst, final int depth) {
         handleTID(sb, lst, true);
         if (lst.isEmpty()) {
             sb.append("[,]");
         } else {
-            boolean nested = lst.elements().anyMatch(e -> e.isPoly() || e.isObjCall() || isComplexType(e)) || lst.jvm().size() > 4;
-            /* lst.jvm().stream().map(this::write).map(String::length).reduce(0, Integer::sum) > (50 - depth);*/
-            final boolean isBaseType = lst.type().isBaseType();
+            boolean nested = isNested(lst);
             sb.append("[").append(nested ? "\n" : "");
             lst.jvm().forEach(v -> {
                 if (nested)
@@ -334,18 +349,8 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
         if (rec.isEmpty()) {
             sb.append("[=>]");
         } else {
-            boolean nested = rec.jvm().size() != 1 && (rec.jvm().size() > 4 ||
-                    rec.jvm().values().stream().anyMatch(o ->
-                            null != o.vid() ||
-                                    o.isPoly() ||
-                                    o.isObjCall() ||
-                                    (o.isStr() && o.strValue().length() > 15) ||
-                                    (o.isUri() && o.uriValue().toString().length() > 15) ||
-                                    (o.isBytes() && o.bytesValue().capacity() > 15) ||
-                                    isComplexType(o)));
-            /*rec.jvm().values().stream().filter(o -> !o.isPoly()).map(this::write).map(String::length).reduce(0, Integer::sum) > (75 - depth);*/
+            boolean nested = isNested(rec);
             final int maxKeyLength = nested ? rec.jvm().keySet().stream().map(this::write).map(String::length).reduce(0, Integer::max) : 0;
-            //final boolean isBaseType = rec.type().isBaseType();
             final AtomicBoolean first = new AtomicBoolean(false);
             sb.append("[").append(nested ? "\n" : "");
             rec.jvm().forEach((k, v) -> {

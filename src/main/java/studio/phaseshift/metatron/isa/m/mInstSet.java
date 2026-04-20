@@ -131,6 +131,7 @@ public class mInstSet extends AbstractInstSet {
     public static final fURI WITHIN_INST_TID = M_ISA_INST_TID.extend("within");
     public static final fURI AUTO_INST_TID = M_ISA_INST_TID.extend("auto");
     public static final fURI AUTO_FROM_INST_TID = M_ISA_INST_TID.extend("auto_from");
+    public static final fURI AUTO_AT_INST_TID = M_ISA_INST_TID.extend("auto_at");
     public static final fURI BLOCK_INST_TID = M_ISA_INST_TID.extend("block");
     public static final fURI RNG_INST_TID = M_ISA_INST_TID.extend("rng");
     public static final fURI DOM_INST_TID = M_ISA_INST_TID.extend("dom");
@@ -640,6 +641,7 @@ public class mInstSet extends AbstractInstSet {
                 Tuple.Triplet.with(Tuple.Pair.with("?<", null), List.of(IS_INST_TID, LT_INST_TID), 1),
                 Tuple.Triplet.with(Tuple.Pair.with("?!=", null), List.of(IS_INST_TID, NEQ_INST_TID), 1),
                 Tuple.Triplet.with(Tuple.Pair.with("?", null), List.of(ISA_INST_TID), 1),
+                Tuple.Triplet.with(Tuple.Pair.with("!@", null), List.of(AUTO_AT_INST_TID), 1),
                 Tuple.Triplet.with(Tuple.Pair.with("@", null), List.of(AT_INST_TID), 1),
                 Tuple.Triplet.with(Tuple.Pair.with("|", null), List.of(BLOCK_INST_TID), 1),
                 Tuple.Triplet.with(Tuple.Pair.with("_/", "\\_"), List.of(WITHIN_INST_TID), 1),

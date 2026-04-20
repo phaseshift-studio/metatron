@@ -172,7 +172,14 @@ public final class QCollection {
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-    protected final static Rec NO_DOCS = rec(mutableMap(uri(DESC), str("no documentation available")), DOCS_TID, null);
+    private static final String NO_DOCS_STRING = "no documentation available";
+    public final static Rec NO_DOCS = rec(mutableMap(uri(DESC), str(NO_DOCS_STRING)), DOCS_TID, null);
+
+    public static boolean isNoDocs(final Obj obj) {
+        if (obj.isNoObj() || !obj.isRec() || !obj.asRec().has(DESC))
+            return true;
+        return obj.asRec().at(DESC).equals(str(NO_DOCS_STRING));
+    }
 
     protected final static class DocInstSet extends AbstractInstSet {
         protected final Map<fURI, Set<Rec>> INST_TABLE = Collections.synchronizedMap(new LinkedHashMap<>());

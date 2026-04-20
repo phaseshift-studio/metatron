@@ -115,12 +115,15 @@ public class fsSpace extends AbstractSpace<FileSystem> {
         try {
             if (file.exists() && file.isFile()) {
                 Content.ContentType contentType = Content.ContentType.fromProbe(file);
-                FileInputStream fs = new FileInputStream(file);
+                final FileInputStream fs = new FileInputStream(file);
                 byte[] fileBytes = fs.readAllBytes();
                 fs.close();
-                return !file.getName().contains(".") ? 
-                        ObjmtronSerializer.single().inputBytes(ByteBuffer.wrap(fileBytes)) : 
-                        contentType.toObj(fileBytes);//.selfVID(Space.Helper.routeToSpace(f(file.getPath()), this.routes).qLess());
+                final String source = new String(fileBytes, StandardCharsets.UTF_8);
+                final fURI vid = source.startsWith("[-- @<") ? f(source.substring(6, source.indexOf("> --]\n")).trim()) : null;
+                LOG.debug("fileToObj: %s => %s", file.getPath(), vid);
+                return !file.getName().contains(".") ?
+                        ObjmtronSerializer.single().inputBytes(ByteBuffer.wrap(fileBytes)).selfVID(vid) :
+                        contentType.toObj(fileBytes).selfVID(vid);
             } else {
                 if (file.isDirectory()) {
                     return dirToObj(file);
@@ -135,7 +138,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
     public Obj objToFile(final Obj obj, final File file) {
         try {
             //if (!file.isFile())
-             //   throw MTronException.of("not a file: %s", file);
+            //   throw MTronException.of("not a file: %s", file);
             final ObjmtronSerializer serializer = new ObjmtronSerializer(Integer.MAX_VALUE);
             LOG.info("writing %s to %s", obj, file.getPath());
             if (!file.exists()) {
@@ -143,12 +146,9 @@ public class fsSpace extends AbstractSpace<FileSystem> {
                 file.createNewFile();
             }
             try (final FileOutputStream writer = new FileOutputStream(file, pattern.hasQ("append"))) {
-                /*if (obj.isBytes())
-                    writer.write(obj.vid(null).bytesValue().array());*/
-                 //if (obj.isStr())
-                   // writer.write(obj.vid(null).strValue().getBytes(StandardCharsets.UTF_8));
-              //  else
-                    writer.write(serializer.outputBytes(obj.vid(null)).array());
+                final String vid = obj.vid() == null ? null : "[-- @<" + obj.vid().toString() + "> --]\n";
+                if (null != vid) writer.write(vid.getBytes(StandardCharsets.UTF_8));
+                writer.write(serializer.outputBytes(obj.selfVID(null)).array());
                 writer.flush();
             }
             return obj;
@@ -167,7 +167,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
         return (key) -> {
             final fURI keyQless = key.qLess();
             if (key.equals(ALL))
-                throw MTronException.of("infinite nested walks on file system not allowed");
+                throw MTronException.of("infinite recursive walks on file system currently prohibited");
             else {
                 if (key.hasPattern()) {
                     try (final Stream<Path> walk = Files.walk(Path.of(Space.Helper.routeFromSpace(keyQless.retractPattern(), this.routes).toString()), keyQless.hasPattern("#") ? Integer.MAX_VALUE : keyQless.asNode().path().size() + 1)) {
@@ -200,6 +200,8 @@ public class fsSpace extends AbstractSpace<FileSystem> {
                     try {
                         final Path vidPath = Path.of(Space.Helper.routeFromSpace(keyQless.name().equals("apply") ? keyQless.retract(1) : keyQless, this.routes).toString());
                         final File file = vidPath.toFile();
+                        if (!file.exists())
+                            return IteratorUtil.of();
                         if (file.isDirectory()) {
                             return IteratorUtil.of(IdObj.of(key, dirToObj(file)));
                         } else {

@@ -453,7 +453,8 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     }
 
     default Obj autoResolve(final Obj obj) {
-        return this.isInst() && (this.tid().basePath().equals(AUTO_FROM_INST_TID) || this.tid().basePath().equals(AUTO_INST_TID)) ?
+        final fURI base = this.tid().basePath();
+        return this.isInst() && (base.equals(AUTO_FROM_INST_TID) || base.equals(AUTO_AT_INST_TID) || base.equals(AUTO_INST_TID)) ?
                 this.apply(obj) :
                 this;
     }
@@ -487,7 +488,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     }
 
     default boolean isAutoFrom() {
-        return Obj.Helper.isAutoFrom(this);
+        return Obj.Helper.isAutoPointer(this);
     }
 
     default Obj as(final Type type) {
@@ -700,25 +701,27 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         private static final ObjSerializer<String> SERIALIZER = new ObjmtronSerializer();
 
         public static boolean isAuto(final Obj obj) {
-            return obj.isObjCall() && obj.isAuto();
+            return obj.isObjCall() && obj.tid().basePath().toString().startsWith("auto");
         }
 
-        public static boolean isAutoFrom(final Obj obj) {
-            return obj.tid().basePath().equals(AUTO_FROM_INST_TID);
+        public static boolean isAutoPointer(final Obj obj) {
+            return obj.tid().basePath().equals(AUTO_FROM_INST_TID) ||
+                    obj.tid().basePath().equals(AUTO_AT_INST_TID);
         }
 
-        public static boolean isFrom(final Obj obj) {
-            return obj.tid().path().equals(FROM_INST_TID.path()); // potentially much faster than basePath().equals()
+        public static boolean isPointer(final Obj obj) {
+            return obj.tid().path().equals(FROM_INST_TID.path()) ||
+                    obj.tid().path().equals(AT_INST_TID.path()); // potentially much faster than basePath().equals()
         }
 
-        public static fURI autoFromVID(final Obj autoFrom) {
-            return autoFrom.asInst().arg(0).uriValue();
+        public static fURI autoPointerVID(final Obj autoPointerInst) {
+            return autoPointerInst.asInst().arg(0).uriValue();
         }
 
         public static Optional<fURI> getPointer(final Obj obj) {
-            if (isAutoFrom(obj))
-                return Optional.of(autoFromVID(obj));
-            else if (isFrom(obj))
+            if (isAutoPointer(obj))
+                return Optional.of(autoPointerVID(obj));
+            else if (isPointer(obj))
                 return Optional.of(obj.asInst().arg(0).uriValue());
             else
                 return Optional.empty();
@@ -919,6 +922,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                     }),
                     instC(AUTO_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL.maybe())), (lhs, inst) -> inst.arg(0).apply(lhs)),
                     instC(AUTO_FROM_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL.maybe()), T(ALL.maybe())), (lhs, inst) -> !inst.arg(1).isNoObj() ? inst.arg(1) : Router.readFromSpace(inst.arg(0).uriValue()).autoResolve(lhs)),
+                    instC(AUTO_AT_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL.maybe()), T(ALL.maybe())), (lhs, inst) -> !inst.arg(1).isNoObj() ? inst.arg(1) : Router.readFromSpace(inst.arg(0).uriValue()).orSupply(() -> inst.arg(1).vid(inst.arg(0).uriValue())).autoResolve(lhs).selfVID(inst.arg(0).uriValue())),
                     instC(M_ISA_INST_TID.extend("auto_to"), lst(), (lhs, inst) -> (null == lhs.vid() || lhs.isAutoFrom()) ? lhs : auto_from_(lhs.vid()).tryToInst()),
                     docWrap(instC(CATCH_INST_TID.dom(A).rng(A.maybeSome()), lst(T(A.maybeSome())), (lhs, inst) -> lhs.isFail() && !lhs.isCaughtFail() ? inst.arg(0).apply(lhs.asFail().caught()).c(c -> c.mult(lhs.c())) : lhs),
                             "any obj", "uncaught fails go to arg, others mapped by identity", Map.of(jnt(0), "the obj triggered on an uncaught fail"), "a catch function f(x)->x"),
@@ -928,7 +932,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                             "the rhs obj", "the lhs obj", Map.of(jnt(0), "concatenated args followed by newline written to stdout"), "a side-effect function \\(f(x)\\nearrow x\\)"),
                     docWrap(instC(PRINT_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL_STAR)), (lhs, inst) -> objs(inst.args().elements().peek(o -> inst.logger().none("%s", o.isStr() ? o.strValue() : o.toString())).filter(x -> false).findAny().orElse(lhs))),
                             "the rhs obj", "the lhs obj", Map.of(jnt(0), "concatenated args followed by newline written to stdout"), "a side-effect function \\(f(x)\\nearrow x\\)"),
-                    instC(AT_INST_TID.dom(A).rng(A), lst(T(URI_TID.maybe())), (lhs, inst) -> inst.arg(0).isNoObj() ? lhs.vid(null) : (lhs.isNoObj() ? Router.readFromSpace(inst.arg(0).uriValue()).vid(inst.arg(0).uriValue()) : lhs.vid(inst.arg(0).uriValue()))),
+                    instC(AT_INST_TID.dom(A).rng(A), lst(T(URI_TID.maybe()), T(ALL.maybe())), (lhs, inst) -> inst.arg(0).isNoObj() ? lhs.vid(null) : (lhs.isNoObj() ? Router.readFromSpace(inst.arg(0).uriValue()).orElse(inst.arg(1)).vid(inst.arg(0).uriValue()) : lhs.vid(inst.arg(0).uriValue()))),
                     docWrap(instC(ID_INST_TID.dom(A).rng(A), lst(), (lhs, inst) -> lhs),
                             "an rhs obj", "an lhs obj", Map.of(), "the obj identity function \\(f(x)\\to x\\)"),
                     docWrap(instC(ID_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(), (lhs, inst) -> lhs),
@@ -940,7 +944,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                     instC(APPLY_INST_TID.dom(ALL).rng(ALL_STAR), lst(T(ALL_STAR)), (lhs, inst) -> Router.global().read(lhs.uriValue().basePath().extend("apply")).apply(inst.args())),
                     // TODO: get rid of one of the maps
                     instC(MAP_INST_TID.dom(A).rng(B), lst(T(B)), (lhs, inst) -> inst.arg(0)),
-                    docWrap(instC(MAP_INST_TID.dom(A.maybe()).rng(B.maybe()), lst(T(B.maybe())), (lhs, inst) -> inst.arg(0)),"maybe some obj","the lhs obj applied to the arg obj",Map.of(jnt(0),"any obj"),"applies the lhs obj to the arg obj to yield the rhs obj"),
+                    docWrap(instC(MAP_INST_TID.dom(A.maybe()).rng(B.maybe()), lst(T(B.maybe())), (lhs, inst) -> inst.arg(0)), "maybe some obj", "the lhs obj applied to the arg obj", Map.of(jnt(0), "any obj"), "applies the lhs obj to the arg obj to yield the rhs obj"),
                     instC(FILTER_INST_TID.dom(A).rng(A.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> inst.arg(0).isNoObj() ? noobj() : lhs),
                     instC(SIDE_INST_TID.dom(A).rng(A), lst(T(ALL)), (lhs, inst) -> Optional.of(inst.arg(0).apply(lhs)).map(x -> (Obj) null).orElse(lhs)),
                     docWrap(instC(TID_INST_TID.dom(ALL).rng(URI_TID), lst(), (lhs, inst) -> lhs.tid().toUri()),

@@ -33,11 +33,9 @@ import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
 
-import static studio.phaseshift.metatron.isa.m.type.Bytes.BYTES_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.ObjFactory.LOG;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.web.webInstSet.HTML_TYPE;
-import static studio.phaseshift.metatron.isa.web.webInstSet.JSON_TYPE;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -77,8 +75,10 @@ public class Content {
 
         public static ContentType fromProbe(final File file) {
             try {
-                return Files.probeContentType(file.toPath()) == null ? TEXT_PLAIN : of(Files.probeContentType(file.toPath()));
-            } catch (IOException e) {
+                if (file.getName().contains("."))
+                    return fromExtension(file.getName());
+                return of(Files.probeContentType(file.toPath()));
+            } catch (final IOException e) {
                 LOG.error(e);
                 return TEXT_PLAIN;
             }
@@ -90,6 +90,7 @@ public class Content {
         public static ContentType fromExtension(final String filename) {
             if (filename == null) return TEXT_PLAIN;
             final String lower = filename.toLowerCase();
+            if (lower.endsWith(".mtron")) return APPLICATION_MTRON;
             if (lower.endsWith(".css")) return TEXT_CSS;
             if (lower.endsWith(".js")) return APPLICATION_JAVASCRIPT;
             if (lower.endsWith(".html") || lower.endsWith(".htm")) return TEXT_HTML;
@@ -100,7 +101,6 @@ public class Content {
             if (lower.endsWith(".gif")) return IMAGE_GIF;
             if (lower.endsWith(".svg")) return IMAGE_SVG;
             if (lower.endsWith(".ico")) return IMAGE_ICO;
-            if (lower.endsWith(".mtron")) return APPLICATION_MTRON;
             return TEXT_PLAIN;
         }
 
@@ -147,10 +147,10 @@ public class Content {
         }
 
         public Obj toObj(final byte[] data) {
-            final Obj obj = this.isPlain() ? 
+            final Obj obj = this.isPlain() ?
                     str(new String(data)) :
                     serializer().inputBytes(ByteBuffer.wrap(data));
-            if(this.isHtml()) return obj.as(HTML_TYPE);
+            if (this.isHtml()) return obj.as(HTML_TYPE);
             //if(this.isJson()) return obj.as(JSON_TYPE); // TODO: need test cases
             //if(this.isBinary()) return obj.as(BYTES_TYPE);
             return obj;

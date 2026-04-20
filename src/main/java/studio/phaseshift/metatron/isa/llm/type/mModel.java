@@ -28,8 +28,8 @@ import dev.langchain4j.service.tool.ToolExecutor;
 import dev.langchain4j.skills.Skills;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.llm.LLMFactory;
-import studio.phaseshift.metatron.isa.llm.agent.agentInstSet;
 import studio.phaseshift.metatron.isa.llm.space.SpaceChatMemoryStore;
 import studio.phaseshift.metatron.isa.llm.space.SpaceContentRetriever;
 import studio.phaseshift.metatron.isa.m.type.*;
@@ -53,7 +53,6 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.DOCQ;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.MCP_SERVER_TID;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.MODEL_TID;
-import static studio.phaseshift.metatron.isa.llm.type.mMCPServer.LOG;
 import static studio.phaseshift.metatron.isa.llm.type.mTool.LLM_TOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
@@ -62,6 +61,7 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Real.REAL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Rel.REL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Str.str0;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -205,11 +205,11 @@ public class mModel extends MRec {
                         if (t.tid().equals(MCP_SERVER_TID)) {
                             service.toolProvider(McpToolProvider.builder().mcpClients(((mMCPServer) t).client()).build()).executeToolsConcurrently(BootLoader.getExecutor());
                         } else if (t.isObjInst()) {
-                            if (!Router.global().read(t.tid().addQ(DOCQ)).isNoObj()) {
+                            if (QCollection.isNoDocs(Router.readFromSpace(t.tid().addQ(DOCQ))))
+                                t.logger().warn("ignoring inst as it has no associated ?docq: %s", t);
+                            else {
                                 final Tuple.Pair<ToolSpecification, ToolExecutor> pair = mTool.mtronInstToolSpecification(mTool.mtronInstToTool(t.asInst()));
                                 tools.put(pair.get0(), pair.get1());
-                            } else {
-                                t.logger().warn("ignoring inst as it has no associated ?docq: %s", t);
                             }
                         } else if (t.test(LLM_TOOL_TYPE)) {
                             final Tuple.Pair<ToolSpecification, ToolExecutor> pair = mTool.mtronInstToolSpecification(t.asRec());
@@ -257,18 +257,9 @@ public class mModel extends MRec {
         final AtomicBoolean isTooling = new AtomicBoolean(false);
         final AtomicReference<MTronException> isError = new AtomicReference<>();
         try {
-            final mAgent agent = this.agent()/*.systemMessageTransformer((current, context) -> {
-                if (!this.at(NOTE).isNoObj()) {
-                    final fURI notesURI = this.at(NOTE).uriValue();
-                    final StringBuilder sb = CommonUtil.readResource(agentInstSet.class, "NOTE.md");
-                    LOG.info("adding notes to system message: %s", notesURI);
-                    final String NOTES_DOT_MD = sb.toString().replace("%s", notesURI.toString());
-                    if (Router.readFromSpace(notesURI).isNoObj())
-                        Router.writeToSpace(notesURI, rec());
-                    return current + "\n\n" + NOTES_DOT_MD;
-                } else
-                    return current;
-            })*/.streamingChatModel(LLMFactory.createChatInteraction(this, this.model())).build();
+            final mAgent agent = this.agent()
+                    .systemMessageTransformer((current, content) -> this.at(DESC).orElse(str0()).strValue() + "\n\n" + current)
+                    .streamingChatModel(LLMFactory.createChatInteraction(this, this.model())).build();
             agent.chat(message)
                     .onToolExecuted(tool -> {
                         this.logger().info("tool executed: %s(%s) => %s", tool.request().name(), tool.request().arguments(), tool.result());

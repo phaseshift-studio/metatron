@@ -132,7 +132,7 @@ public class grphInstSet extends AbstractInstSet {
                 return objs(lhs.asRec().jvm().entrySet().stream()
                         .filter(e -> e.getKey().isUri())
                         .filter(e -> ElementHelper.keyExists(e.getKey().uriValue().toString(), labels))
-                        .filter(e -> Obj.Helper.isAutoFrom(e.getValue()))
+                        .filter(e -> Obj.Helper.isAutoPointer(e.getValue()))
                         .map(e -> e.getValue().autoResolve(lhs.asRec())));
             } else {
                 return noobj();

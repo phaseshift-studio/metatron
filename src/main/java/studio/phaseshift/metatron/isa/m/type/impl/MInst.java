@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.BiFunction;
 
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
@@ -87,18 +88,21 @@ public class MInst extends MObj implements Inst {
     public String toShortString() {
         if (this.tid().basePath().equals(AUTO_FROM_INST_TID))
             return "!*" + this.arg(0).toShortString();
+        if (this.tid().basePath().equals(AUTO_AT_INST_TID) && this.arg(1).isNoObj())
+            return "!@" + this.arg(0).toShortString();
         if (this.tid().basePath().equals(AUTO_INST_TID))
             return "!" + this.arg(0).toShortString();
         if (this.tid().basePath().equals(FROM_INST_TID))
             return "*" + this.arg(0).toShortString();
-        if(this.tid().basePath().equals(ISA_INST_TID))
+        if (this.tid().basePath().equals(ISA_INST_TID))
             return "?" + this.arg(0).toShortString();
         final String internal = this.args().elements()
                 .map(Obj::toShortString)
                 .reduce("", (a, b) -> a + b + ",");
-        return this.tid().qLess().small() + 
-                "?" + this.tid().rng().small() + "<=" + this.tid.dom().small() + 
-                "(" + (internal.isEmpty() ? "" : internal.substring(0, internal.length() - 1)) + "){}";
+        return this.tid().qLess().small() +
+                ((!this.tid().rng().equals(ALL) && !this.tid().dom().equals(ALL)) ? "?" + this.tid().rng().small() + "<=" + this.tid.dom().small() : "") +
+                "(" + (internal.isEmpty() ? "" : internal.substring(0, internal.length() - 1)) + ")" +
+                ((null == this.f() || this.f().isLambda()) ? "" : "{" + this.f() + "}");
     }
 
 
