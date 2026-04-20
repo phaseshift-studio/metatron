@@ -69,6 +69,11 @@ public interface Fail extends Obj, PlusMonoid<Fail> {
 
     Fail caught();
 
+    @Override
+    default boolean isFail() {
+        return true;
+    }
+    
     default MTronException asException() {
         return MTronException.of(this.message());
     }

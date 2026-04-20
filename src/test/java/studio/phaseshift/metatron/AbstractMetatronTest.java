@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -85,16 +85,22 @@ public abstract class AbstractMetatronTest {
         final Obj b = mParser.eval(expected);
         final Obj actual = b.apply(a);
         LOG.debug("testing %s => %s [expected:%s]", a, b, actual);
-        if(!expected.trim().equals("<ERROR>")) {
-            assertTrue(a.stream().noneMatch(Obj::isFail));
-            assertTrue(actual.stream().noneMatch(Obj::isFail));
+        if (!expected.trim().equals("<ERROR>")) {
+            boolean noFails = a.stream().noneMatch(Obj::isFail);
+            if (!noFails)
+                a.stream().map(f -> f.asFail().caught()).forEach(LOG::error);
+            assertTrue(noFails, "should not have failed");
+            assertTrue(actual.stream().noneMatch(Obj::isFail), "should not have failed");
             assertEquals(b, actual);
-        }  else {
-            assertTrue(actual.stream().allMatch(Obj::isFail));
+        } else {
+            final boolean fails = actual.stream().anyMatch(Obj::isFail);
+            if (!fails)
+                a.elements().forEach(LOG::error);
+            assertTrue(fails, "should have failed");
         }
-     
+
     }
-    
+
     public static void checkEquality(final GraphittyLogger LOG, final Obj a, final Obj b, final boolean equals) {
         LOG.debug("testing %s == %s [expected:%s]", a, b, equals);
         if (equals)
@@ -125,9 +131,9 @@ public abstract class AbstractMetatronTest {
 
     public static void checkCodeRewrite(final GraphittyLogger LOG, final String code, final String expected, final String expectedResult, boolean checkTIDs) {
         final Code firstStage = ObjmtronSerializer.parse(code);
-        final Call secondStage =  ObjmtronSerializer.parse(expected);
+        final Call secondStage = ObjmtronSerializer.parse(expected);
         final Call compilation = firstStage.rewrite().tryToInst();
-        final Obj result =  ObjmtronSerializer.parse(expectedResult);
+        final Obj result = ObjmtronSerializer.parse(expectedResult);
         if (checkTIDs) {
             assertFalse(secondStage.insts().isEmpty());
             assertEquals(secondStage.insts().size(), compilation.insts().size());

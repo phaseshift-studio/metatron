@@ -304,6 +304,12 @@ table {
     margin-left: -20px;
 }
 
+#instset_feature .flip-box-back img {
+    transform: scale(1.55);
+    margin-top: -10px;
+    margin-left: -20px;
+}
+
 .zoomable {
     cursor: zoom-in;
     transition: transform 0.3s ease;
@@ -1705,31 +1711,47 @@ bin/metatron</code></pre>
                 metatron <b class="metatron-name">instruction sets</b> (or instset) are packages that encode a domain of discourse within a set of types, instructions, constants, rewrites, and sugars.
             </div>
             <div class="feature-modal">
-                <p><b class="metatron-name">instsets</b> are spaces that can be read from and written to. As a space, they support query processors and of particular importance is the docq query processor that is used to associate documentation with any obj. Documentation objs are used to generate human readable HTML documentation as well as agent-readable tool and skill specifications.</p>
+                <p><b class="metatron-name">instsets</b> are spaces that can be read from and written to. As a space, they support query processors, with the docq query processor being of particular importance in that it associates documentation with any obj. Documentation objs enable the automatic generation of human-readable HTML documentation as well as agent-readable tool and skill specifications.</p>
             <table>
                 <tr>
+                  <th style="text-align: center;">*instset</th>
+                  <th style="text-align: center;">*instset?docq</th>
+                    </tr>
                 <td>
                 <pre><code>
 rec::T[?[
-     {?}constq =>[#::T],
-     {?}type   =>{?}[T::T],
-     {?}inst   =>{?}[inst::T],
-     {?}rewrite=>{?}[inst::T],
-     {?}sugar  =>{?}[lst::T]]]@/m/instset
+ {?}constq =>[#::T],
+ {?}type   =>[T::T],
+ {?}inst   =>[inst::T],
+ {?}rewrite=>[inst::T],
+ {?}sugar  =>[lst::T]]]@instset
                 </code></pre>
                 </td><td>
-                <img src="images/modal/instset-modal.svg" class="img-fluid mb-3 icon-color" style="height: 165px; display: block; margin: auto;"/>
-                </td></tr></table>
+<pre><code>
+docs::[
+ obj    =>instset::T,
+ args   =>[
+  {?}type   =>"types used to structure of the instset'...",
+  {?}rewrite=>'code<=code instructions that capture th...',
+  {?}inst   =>'instructions associated with the types ...',
+  {?}sugar  =>'custom instruction syntax sugars given ...',
+  {?}constq =>'constants used across the instset'],
+ desc   =>'an aggregate of consts, types, insts, r...',
+ example=>[,]]
+</code></pre>
+                </td>
+</tr>
+</table>
             </div>
             <script type="text/javascript">featurePanel("instset_feature");</script>
         </div>
        <!-- EMBED -->
         <div id="embed_feature" data-title="embed" data-icon="images/icons/storage-icon.svg" data-back-image="images/modal/embed-modal.svg">
             <div class="feature-front">
-                inter- and intra-space <b class="metatron-name">embedded</b> data structures can account for the respective time and space tradeoffs of the underlying storage systems
+                A data structure can have an inter- or intra-space <b class="metatron-name">embedding</b> suc that each subset of its form can take advantage of the respective time-space tradeoffs of the underlying spaces.
             </div>
             <div class="feature-modal">
-                <p><b class="metatron-name">Embedding</b> allows for optimized data locality. Metatron understands how to nest data within various storage backends to minimize latency and maximize throughput.</p>
+                <p>A data structure such as a vertex in a graph can have many incoming and outgoing edges with different edge labels and properties. Such diversity entails not all edges will require the same read/write performance characteristics. In metatron, it's possible to <b class="metatron-name">embed</b> one edge set in a space optimized for fast retrievals (e.g. an in-memory space) and another subset in a space optimized for static, long-term storage (e.g. a disk-backed space). Other considerations may include the indices associated with a space and whether certain properties of an edge can be indexed for non-linear access.</p>
                 <img src="images/modal/embed-modal.svg" class="img-fluid mb-3 icon-color" style="max-height: 300px; display: block; margin: auto;"/>
             </div>
             <script type="text/javascript">featurePanel("embed_feature");</script>
@@ -1737,7 +1759,7 @@ rec::T[?[
         <!-- TYPE -->
         <div id="type_feature" data-title="type" data-icon="images/icons/type-icon.svg" data-back-image="images/type-diagram.svg">
             <div class="feature-front">
-                obj structures are constrained using a <b class="metatron-name">structural type system</b> that can express inherited, refined, dependent, and recursive types
+                obj structures are constrained using a <b class="metatron-name">structural type system</b> that can express inherited, refined, dependent, and recursive types with constructs to express cardinalities, optionals, generics, predicates, and more.
             </div>
             <div class="feature-modal">
                 <p>The <b class="metatron-name">structural type system</b> of metatron ensures that the label ascribed to obj's form (its nominal type) is but a secondary concern relative to the obj's relational structural within the larger data space as a whole. If an obj meets all the specified constraints of a defined type, then it is of that type and can be processed by instructions and composed within larger types requiring said type. From this vantage point, many homomorphic transformations can be realized that render the distinctions between a row in a relational database, a tag in an HTML document, a vertex in graph, and a value in a key/value store to be simply differences of name, not function.</p>
@@ -1751,7 +1773,7 @@ rec::T[?[
                 a <b class="metatron-name">monad iterator</b> machine supports speedy traversals over localized regions of space
             </div>
             <div class="feature-modal">
-                <p><b class="metatron-name">OLTP</b> in metatron is optimized for low-latency, localized operations. The monad iterator machine ensures that simple lookups and small-scale traversals remain fast.</p>
+                <p><b class="metatron-name">OLTP</b> (online transactional processing) provides a straightforward means for accessing a small region of space with a machine that iterates a stream of monads through code from the first instruction to the last.</p>
                 <img src="images/modal/oltp-modal.svg" class="img-fluid mb-3 icon-color" style="max-height: 300px; display: block; margin: auto;"/>
             </div>
             <script type="text/javascript">featurePanel("oltp_feature");</script>
@@ -1821,11 +1843,11 @@ rec::T[?[
         <!-- LLM COMPATIBLE -->
         <div id="llm_feature" data-title="llm" data-icon="images/icons/llm-icon.svg" data-back-image="images/modal/llm-modal.svg">
             <div class="feature-front">
-                <b class="metatron-name">large language models</b> and their enriching extensions are all objs in the metatron, where self-reflection, introspection, and
+                <b class="metatron-name">large language models</b> and their enriching extensions are objs, where self-reflection, introspection, knowledge access, and
                     simulation are natural consequences of metatron's unified address space.
             </div>
             <div class="feature-modal">
-                <p><b class="metatron-name">LLMs</b> are encoded within, operate within, and are knowledgeable about the metatron. LLM memory can be persisted or transient (as supported by the space its encoded in)</p>
+                <p><b class="metatron-name">LLMs</b> are encoded within, operate within, and are knowledgeable about metatron spaces. LLM memory can be persisted or transient. LLM tools can be any mtron instruction, where MCP servers are represented as instructions. LLM skills can be files, web links, or composed of multiple objs across different spaces as long as the result is a markdown obj. Finally, LLM querying is an instruction that can be evaluated by humans and agents alike and/or composed into larger instruction graphs known as workflows.</p>
                 <img src="images/modal/llm-modal.svg" class="img-fluid mb-3 icon-color" style="max-height: 300px; display: block; margin: auto;"/>
             </div>
             <script type="text/javascript">featurePanel("llm_feature");</script>

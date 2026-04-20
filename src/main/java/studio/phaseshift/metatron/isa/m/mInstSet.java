@@ -290,7 +290,13 @@ public class mInstSet extends AbstractInstSet {
                                 "[a=>1,b=>2]           [-- 2 uri=>int rec --]",
                                 "[a=>[b=>1,c=>[d=>3]]] [-- nested rec     --]",
                                 "[a=>[b=>+1,c=>_]]     [-- inst values    --]"),
-                        docWrap(INSTSET_TYPE, "an aggregate of types, insts, consts, rewrites, and sugars structuring a domain of discourse"),
+                        docWrap(INSTSET_TYPE, "", "", Map.of(
+                                        uri(CONSTQ).maybe(), "constants used across the instset",
+                                        uri(TYPE).maybe(), "types used to structure of the instset's objs",
+                                        uri(INST).maybe(), "instructions associated with the types of the instset",
+                                        uri(REWRITE).maybe(), "code<=code instructions that capture the algebraic rules of the instset",
+                                        uri(SUGAR).maybe(), "custom instruction syntax sugars given to the parser"),
+                                "an aggregate of consts, types, insts, rewrites, and sugars structuring a domain of discourse"),
                         docWrap(INST_TYPE, "a call with apply defined by an lhs obj, an poly of args, and an body of code",
                                 "abc(?int::T,?int::T){ *<0> + *<1> }        [-- position args inst    --]",
                                 "abc(a=>?int::T,b=>?int::T){ *a + *b }      [-- named args inst       --]",
@@ -314,13 +320,13 @@ public class mInstSet extends AbstractInstSet {
                                 "a->2+*a                   [-- 4 via sugar'd writing/reading a --]"),
                         META_SPACE_TYPE,
                         docWrap(Q_TYPE, """
-                                qprocs (query processors) are optional space components.
-                                qproc behaviors are driven by a qprocs specified uri ?-query pattern.
-                                not all spaces have the same set of attached qprocs and thus, qprocs must
-                                be attached to a space before use. a space's qprocs are accessible at
-                               
-                                     \\(\\texttt{*space/vid/q => lst[q]::T}\\)
-                                """),
+                                        qprocs (query processors) are optional space components.
+                                        qproc behaviors are driven by a qprocs specified uri ?-query pattern.
+                                        not all spaces have the same set of attached qprocs and thus, qprocs must
+                                        be attached to a space before use. a space's qprocs are accessible at
+                                        
+                                             \\(\\texttt{*space/vid/q => lst[q]::T}\\)
+                                        """),
                         /// ///////////////////////////////////
                         docWrap(SUBQ_TYPE, "addr publish-subscribe qproc",
                                 "/usr/ai/+?subq -> |print('ai update: ${_}') [-- /usr/ai subtree watch  --]",

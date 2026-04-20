@@ -60,7 +60,7 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
     @Override
     default Stream<Rel> indexedStream() {
         final AtomicInteger i = new AtomicInteger(0);
-        return this.jvm().stream().map(e -> rel(jnt(i.getAndIncrement()), e).c(c -> this.c()).as());
+        return this.jvm().stream().map(e -> rel(jnt(i.getAndIncrement()), e).c(c -> e.c().mult(this.c())).as());
     }
     
     @Override

@@ -297,7 +297,7 @@ public interface Inst extends Call {
         //    this.self(Triplet.with(cinst.args(), cinst.f(), cinst.seed()), cinst.tid(), cinst.vid());
         if (cinst.isNoObj())
             return fail(MTronException.of("unable to locate inst-f of %s", this, clhs));
-        if ((null == lhs || lhs.isNoObj()) && !cinst.dom().c().isZeroable())
+        if (lhs.isNoObj() && !cinst.dom().c().isZeroable())
             return noobj();
         // return fail(MTronException.of("lhs range does not match inst domain: %s => %s [%s]", clhs.rng(), cinst.dom(), cinst));
 
@@ -350,7 +350,7 @@ public interface Inst extends Call {
                 if (e.getCause() != null)
                     rhs = fail(e.getCause(), (Fail) rhs);
             }
-            if (TypeCheck.inst_rng.enabled() && !rhs.isType() && !rhs.isFail() && !lhs.isCaughtFail() && !rhs.test(cinst.rng()))
+            if (TypeCheck.inst_rng.enabled() && !rhs.isType() && !rhs.isFail() && !clhs.isCaughtFail() && !rhs.test(cinst.rng()))
                 //rhs = fail(MTronException.of("inst resolution failure: %s", cinst, fail(MTronException.of("rhs does not match inst range:\n\t%s", Poly.Helper.diffObjRecursion(rhs, cinst.rng())))));
                 rhs = fail(MTronException.of("rhs does not match inst range:\n\t%s", Poly.Helper.diffObjRecursion(rhs, cinst.rng())));
         } else {
@@ -419,7 +419,12 @@ public interface Inst extends Call {
             // do nothing
         }
 
-        public static <O extends Obj> Optional<O> alignLHSType(final Obj lhs, final O rhs) {
+        public static boolean filterOnDomainAllowUnique(final Obj lhs, final Inst apiInst) {
+            return lhs.test(apiInst.dom()) || (apiInst.dom().c().isOne() && lhs.c().gt(cInt.ONE()) && lhs.c(cInt.ONE()).test(apiInst.dom()));
+        }
+ 
+
+       public static <O extends Obj> Optional<O> alignLHSType(final Obj lhs, final O rhs) {
             if (!lhs.c().within(rhs.c()))
                 return Optional.empty();
             if (lhs.type().equals(rhs.type()))

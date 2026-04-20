@@ -291,6 +291,12 @@ table {
     margin-left: -20px;
 }
 
+#instset_feature .flip-box-back img {
+    transform: scale(1.55);
+    margin-top: -10px;
+    margin-left: -20px;
+}
+
 .zoomable {
     cursor: zoom-in;
     transition: transform 0.3s ease;

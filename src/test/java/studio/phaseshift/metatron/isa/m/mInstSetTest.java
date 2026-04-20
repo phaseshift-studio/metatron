@@ -35,7 +35,6 @@ import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.NoObj;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
@@ -51,7 +50,7 @@ public class mInstSetTest extends AbstractInstSetTest {
 
 
     public mInstSetTest() {
-        super(()->null);
+        super(() -> null);
     }
 
     @Override
@@ -848,7 +847,7 @@ public class mInstSetTest extends AbstractInstSetTest {
     public void testAs(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
- 
+
     @ParameterizedTest
     @TestData(value = {
             "a -> [x=>!(*(b))]",
@@ -924,6 +923,27 @@ public class mInstSetTest extends AbstractInstSetTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
+    @ParameterizedTest
+    @TestData(value = {
+            "|inst?int{?}<=int(min=>_,max=>_){ is(and(gte(*min),lte(*max))) }@band",
+            "inst?int{?}<=int(_,_){ is(and(gte(*0),lte(*1))) }@band"})
+    @CsvSource(value = {
+            "1.and(gt(2),lt(5))                           % false",
+            "{1,2,3,4,5}.and(gt(2))                       % {false,true,true,true,false}",
+            "{1,2,3,4,5}.and(gt(2),lt(5))                 % {false,false,true,true,false}",
+            "{1,2,3,4,5}.and(gt(2),eq(3),lt(5))           % {false,false,true,false,false}",
+            "1.is(and(gt(2),lt(5)))                       % noobj",
+            "3.is(true)                                   % 3",
+            "3.is(gt(2))                                  % 3",
+            "{1,2,3,4,5,5}.is(gt(2))                      % {3,4,5,5}",
+            "3.is(and(gt(2),lt(5)))                       % 3",
+            "{1,2,3,4,5}.is(and(gt(2),lt(5)))             % {3,4}",
+            "{1,2,3,4,5}.is(and(gt(2),eq(3),lt(5)))       % 3",
+    }, delimiter = '%')
+    public void testAndOr(final String code, final String expected) throws Exception {
+        AbstractMetatronTest.checkCodeEvaluate(LOG, code, expected);
+    }
+    
     @ParameterizedTest
     @CsvSource(value = {
             // map_nest_rewrite tests

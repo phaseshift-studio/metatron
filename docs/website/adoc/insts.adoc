@@ -12,14 +12,14 @@ mtron programs are composed using computational primitives called **instructions
 [source,mtron]
 ----
  tid{c}?rng<=dom(args){ code }@vid                                                  
-  │  │   │      │ │  │  │    │   │                                                   
-  │  │   └──┬───┘ └─┬┘  └─┬──┘   │                                                   
-  │  │      │       │     │      └────⮞ location: instance location (addr)                
-  │  │      │       │     └───────────⮞ code: instruction body is a tree of instructions (impl)        
-  │  │      │       └─────────────────⮞ arguments: dynamic parameterizations (args)    
-  │  │      └─────────────────────────⮞ domain/range: the incoming (lhs) and outgoing (rhs) obj types                
-  │  └────────────────────────────────⮞ coefficient: the magnitude of the instruction upon the rhs              
-  └───────────────────────────────────⮞ the type id of the instruction (opcode)
+  │  │  │      │ │  │  │    │   │                                                   
+  │  │  └───┬──┘ └─┬┘  └─┬──┘   │                                                   
+  │  │      │      │     │      └────⮞ value id: the opcode of the instruction (name)                
+  │  │      │      │     └───────────⮞ code: instruction body is a tree of instructions (impl)        
+  │  │      │      └─────────────────⮞ arguments: dynamic parameterizations (args)    
+  │  │      └────────────────────────⮞ domain/range: the incoming (lhs) and outgoing (rhs) obj types                
+  │  └───────────────────────────────⮞ coefficient: the magnitude of the instruction upon the rhs              
+  └──────────────────────────────────⮞ type id: the parent of the instruction (inst inheritance)
 ----
 
 [.card]
@@ -52,22 +52,26 @@ It is important to understand the mechanics of instruction evaluation. Every ins
 
 ++++
 <!-- 🐖 
-1.plus(2)          [-- <1>
-1.plus(_)          [-- <2>
-1.plus(plus(2))    [-- <3>
-1.map(bool::T)     [-- <4>
-1.as(bool::T)      [-- <5>
+1.plus(2)                  [-- <1>
+1.plus(id())               [-- <2>
+1.plus(plus(2))            [-- <3>
+1.map(matches(bool::T))    [-- <4>
+1.map(isa(bool::T))        [-- <5>
+1.as(bool::T)              [-- <6>
+1.isa(as(bool::T))         [-- <7>
 -->
 ++++
 
-<1> `1` is applied to `2` and then `1` is added to `2` to yield `3`. (expected)
+<1> `1` is applied to `2` and then `1` is added to `2` to yield `3`.
 <2> `1` is applied to the identity function to yield `1` and then `1` is added to `1` to yield `2`.
 <3> `1` is applied to the instruction `plus(2)` to yield `3` and then `1` is added to `3` to yield `4`.
-<4> `1` is applied to the type `bool::T` to yield `noobj` as types serve as stream predicates.
-<5> `1` is applied to `bool::T` to yield `noobj` but then is operated within the code of `as()` to emit `bool::true`.
+<4> `1` is applied to the instruction `matches(bool::T)` to yield and then emit `bool::false`.
+<5> `1` is applied to the instruction `isa(bool::T)` to yield and then emit `noobj` (i.e. nothing).
+<6> `1` is applied to the instruction `as()` to emit `bool::true` (`0` would emit `bool::false`).
+<7> `1` is applied to the instruction `as(bool::T)` to yield `true` and then is applied to `isa` to allow `1` to pass unfiltered (i.e. not nothing).
 
-The key point is that *call* objs (`inst`, `code`, `noobj`, and `type`) have a domain and range that are contextual due to dynamic resolution. Said another way, `calls` are types that become instances at time of application. Constant `objs` (non-call objs) also have a domain and range. For instance, the verbose representation of `int::1` is `int?int\<=#{?}(){1}`. 
-This states that every lhs `obj` or `noobj` (`+#+{+?+}`) that is applied to `1`, yields a single rhs `int`; namely `1`. In this way, constants are functions (calls), though not interesting because they always return the same value regardless of input.
+The key point is that *call* objs (`inst`, `code`, and `noobj`) have a domain and range that are context dependent as each incoming `obj` creates a chain reaction of internal calls to ultimately yield the arg `objs` that instruction will operate with. Said another way, `calls` are types that become instances at time of application. Constant `objs` (non-call objs) also have a domain and range. For instance, the verbose representation of `int::1` is `int?int\<=#{?}(){1}`. 
+This states that every lhs `obj` or `noobj` (`+#+{+?+}`) that is applied to `1`, yields a single rhs `int`; namely `1`. In this way, constants are functions (calls) even though they return the same value regardless of input.
 
 The diagram below demonstrates how a lhs `obj` percolates through an `inst` to where ultimately, at the end of the last `inst` of code the resultant rhs `obj` is emitted.
 
@@ -81,12 +85,10 @@ lhs => inst(arg1,...,argN){ inst1...instN } => rhs
  └────────────────────────────┘   └──┘
 ----
 
-
-
 [discrete]
 === stacks and frames
 
-Every logical thread has a `/m/space/stack` patterned `<+/#>`. The current stack of the mtron code processing this documentation is available in the collapsed accordian below. The state of this stack is the result of all the processing thus far up to this point in the documentation. Local variables from other parts of the documentation will be noticed. Furthermore, note the `boot/` branch. This stores the data provided by the user and derived by the bootloader at startup.
+Every logical thread has a `/m/space/stack` patterned `<+/#>`. This pattern captures the breadth of common variable names found in most programming languages (`a`,`x`,`a_var`,`b3`,etc.) as well as hiearchical variables like `a/b/c`, etc. In short, the stack is always responsible for schemaless relative uris. To ground the discussion in a more concrete realization, the current stack of the mtron code processing this documentation is shown in the collapsed accordian below. The state of this stack is the result of all the processing thus far up to this point in the documentation. Declared variables from other parts of the documentation will be noticed as they were written at the root of the stack and thus, are _global variables_. Furthermore, note the `boot/` branch. This stores the data provided by the user and/or derived by the bootloader at startup.
 
 .the objs of the doc processors stack
 [%collapsible]
@@ -103,18 +105,18 @@ Every logical thread has a `/m/space/stack` patterned `<+/#>`. The current stack
 [source,mtron,role="center-code"]
 ----
                                                   
- lhs    inst(arg1,...,argN){ inst1...instN }     rhs           
-  │         │            │  │             │       ▲             
-  │push     └─────┬──────┘  └─────────────┘    pop│            
-┌─┼───────────────┼──────┐     inst body          │     
-│ │           inst│frame │                       ┌─┐         
-│ ▼               │      ├──────────────────────►│X│         
-│ stack           ▼      │                       └─┘         
-└────────────────────────┘                                     
+ lhs ──⮞ inst(arg1,...,argN){ inst1...instN } ──⮞ rhs           
+  │           │            │  │             │                    
+  │   push    └─────┬──────┘  └─────────────┘                
+┌─┼─────────────────┼──────┐     inst body        ┌─┐      
+│ │             inst│frame │                      │ │         
+│ ▼                 │      ├─────────────────────►│X│         
+│      stack        ▼      │          pop         │ │       
+└──────────────────────────┘                      └─┘              
 ----
 
 
-When an instruction is called, the associated https://en.wikipedia.org/wiki/Parameter_(computer_programming)[arguments] have the lhs `obj` applied and the result of the application is pushed onto the stack -- accessible through reference for entirety of the 
+When an instruction is called, the associated https://en.wikipedia.org/wiki/Parameter_(computer_programming)[arguments] have the lhs `obj` applied and the result of the application is pushed onto the stack -- accessible through reference for the entirety of the 
 `inst` code block. From this architecture, the following `inst` forms are made available for use.
 
 
@@ -131,11 +133,12 @@ When an instruction is called, the associated https://en.wikipedia.org/wiki/Para
 --
 
 The arguments are captured as a `lst` and are accessed via their position. Realize that `<1>` is `uri::1`, not `int::1`.
-`*<0>` references the first argument of the args `lst`, `+*+<1>` the second argument, so on and so forth. Note that for single digit numbers, the uri `< >` wrapper isn't required and the position references can be written as `*0`, `*1`, etc.
+`*<0>` references the first argument of the args `lst`, `+*+<1>` the second argument, and so forth. 
+Note that for single digit numbers, a syntax sugar exists where the uri `< >` wrapper isn't required and the position references can be written as `*0`, `*1`, etc.
 
 In the example below, the user defined instruction `band` filters out lhs `objs` not within the provided range (min/max).
 Given the filtering behavior of the instruction, the signature of `band` is `int{?}\<=int`. That is, it accepts a single
-`int` and return either `noobj` or the `int`.
+`int` and returns either `noobj` (`{0}`) or the `int` (`{1}`). Hence, a range of `int{?}`.
 
 [source,mtron,role="center-code"]
 ----
@@ -148,12 +151,14 @@ Given the filtering behavior of the instruction, the signature of `band` is `int
 
 ++++
 <!-- 🐖 
-band -> |inst?int{?}<=int(_,_){ is(and(gte(*0),lte(*1))) }
-3.band(2,8)                                [-- <1>
-10.band(2,8)                               [-- <2>
+|inst?int{?}<=int(_,_){ is(and(gte(*0),lte(*1))) }@band  [-- <1>
+*band                                                    [-- <2>
+3.band(2,8)                                              [-- <3>
+10.band(2,8)                                             [-- <4>
 -->
 ++++
-
+<1> The `|` is the `block` instruction and is necessary so the `inst` isn't evaluated but instead yielded as an `inst`.
+<1> dereference the uri `band` to yield the `inst` definition.
 <1> `3` is within the band `[2,8]` and thus, `3` is the result, satisfying the `inst` range `int{?}`.
 <2> `10` is not within the band `[2,8]` and thus, the result is `noobj` which satisfies the `inst` range `int{?}`.
 =====
@@ -183,14 +188,13 @@ arguments are resolved from the stack via their furi name.
 
 ++++
 <!-- 🐖 
-band -> |inst?int{?}<=int(min=>_,max=>_){ is(and(gte(*min),lte(*max))) }
+|inst?int{?}<=int(min=>_,max=>_){ is(and(gte(*min),lte(*max))) }@band
 3.band(min=>2,max=>4)                 [-- <1>
 3.band(2,8)                           [-- <2>
 3.band(max=>8,min=>2)                 [-- <3>
 'abc'.band(2,8)                       [-- <4>
 -->
 ++++
-
 <1> The argument's name is it's reference on the stack.
 <2> If the argument name isn't provided, then it's position in the argument list determines its name.
 <3> When arguments are named, they can be written in any order.
@@ -225,7 +229,7 @@ If the incoming `obj` to `else` is `noobj`, then `else` returns it's argument, o
 
 ++++
 <!-- 🐖 
-band -> |inst?int{?}<=int(min=>else(2),max=>else(8)){ is(and(gte(*min),lte(*max))) }
+|inst?int{?}<=int(min=>else(2),max=>else(8)){ is(and(gte(*min),lte(*max))) }@band
 1.band(min=>1)                        [-- <1>
 10.band()                             [-- <2>
 {2,3,4,5}.band(min=>3,max=>4)         [-- <3>
@@ -263,8 +267,8 @@ can be any arbitrary `obj` (thus, `code`). Type arguments are the means by which
 
 ++++
 <!-- 🐖 
-nat  -> int::T[?>0]          [-- <1>
-band -> |inst?int{?}<=int(min=>?nat::T,max=>?nat::T){ is(and(gte(*min),lte(*max))) }
+nat  -> int::T[?>0]         [-- <1>
+|inst?int{?}<=int(min=>?nat::T,max=>?nat::T){ is(and(gte(*min),lte(*max))) }@band
 15.band(10,20)              [-- <2>
 -15.band(-20,-10)           [-- <3>
 band -> |inst?int{?}<=int(min=>as(nat::T),max=>as(nat::T)){ is(and(gte(*min),lte(*max))) }

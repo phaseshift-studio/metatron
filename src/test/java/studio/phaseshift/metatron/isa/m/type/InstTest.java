@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -21,10 +21,12 @@ package studio.phaseshift.metatron.isa.m.type;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.AbstractObjTest;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.impl.MInst;
-import studio.phaseshift.metatron.isa.AbstractObjTest;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.List;
@@ -49,11 +51,11 @@ public class InstTest extends AbstractObjTest {
             // furi | tid | dom | range
             "/m/plus?dom=/m/int&rng=/m/int                      | /m/plus        | /m/int         | /m/int     | 34",
             "/m/mult/a?dom=+&rng=+                              | /m/mult/a      | +              | +          | x::a",
-       //     "/m/mult/z?dom=real{0,1}&rng=lst[int{5}]{2,3}       | /m/mult/z      | /m/real{?}     | /m/lst{2,3}| lst{2}::[2,3,4,56,3]",
+            //     "/m/mult/z?dom=real{0,1}&rng=lst[int{5}]{2,3}       | /m/mult/z      | /m/real{?}     | /m/lst{2,3}| lst{2}::[2,3,4,56,3]",
             "/m/mult/y?dom=real{*}&rng=uri{*}                   | /m/mult/y      | /m/real{*}     | /m/uri{*}  | {ab,bc,de}"},
             delimiter = '|')
     public void testDomRng(final String f, final String op, final String dom, final String rng, final String test) {
-        final fURI furi =f(f);
+        final fURI furi = f(f);
         final Inst inst = MInst.instA(furi);
         final Obj testObj = mParser.m_obj().parse(test).get();
         assertEquals(op, inst.tid().pathString());
@@ -133,7 +135,114 @@ public class InstTest extends AbstractObjTest {
             LOG.trace("\n\ntesting %s == %s", item.get1(), item.get0());
             assertEquals(item.get0(), item.get1().apply());
         }
+    }
 
+    @ParameterizedTest
+    @TestData(value = {"|inst?int{?}<=int(_,_){ is(and(gte(*0),lte(*1))) }@band"})
+    @CsvSource(value = {
+            "3.band(2,8)                                  % 3",
+            "10.band(2,8)                                 % noobj",
+            "5.band(-10,10)                               % 5",
+            "10.band(2)                                   % noobj",
+            "\"abc\".band?int{?}<=int(2,8)                % <ERROR>",
+            "\"abc\".band(2,8)                            % <ERROR>"
+    }, delimiter = '%')
+    public void testPositionalArgs(final String code, final String expected) throws Exception {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
 
+    @ParameterizedTest
+    @TestData(value = {"|inst?int{?}<=int(int::T,str::T){ is(and(gte(*0),lte(*1.as(int::T)))) }@band"})
+    @CsvSource(value = {
+            "3.band(2,\"8\")                                    % 3",
+            "10.band(2,\"8\")                                   % noobj",
+            "{1,2,3,4,3,5,6}.band(3,\"8\")                      % {3,4,3,5,6}",
+            "10.band(2)                                         % noobj",
+            "\"abc\".band?int{?}<=int(2,8)                      % <ERROR>",
+            "\"abc\".band?int{?}<=str(2,8)                      % <ERROR>",
+            "\"abc\".band(2,8)                                  % <ERROR>"
+    }, delimiter = '%')
+    public void testTypedPositionalArgs(final String code, final String expected) throws Exception {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @TestData(value = {"|inst?int{?}<=int(min=>_,max=>_){ is(and(gte(*min),lte(*max))) }@band"})
+    @CsvSource(value = {
+            "3.band(min=>2,max=>4)                        % 3",
+            "3.band(max=>8,min=>2)                        % 3",
+            "1.band(max=>8,min=>2)                        % noobj",
+            "{2,3,8,10}.band(min=>3,max=>8)               % {3,8}",
+            "1.band(min=>2,max=>4)                        % noobj",
+    }, delimiter = '%')
+    public void testNamedArgs(final String code, final String expected) throws Exception {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @TestData(value = {
+            "nat -> int::T[?>0]",
+            "|inst?int{?}<=int(min=>?nat::T,max=>?nat::T){ is(and(gte(*min),lte(*max))) }@band"})
+    @CsvSource(value = {
+            "15.band(10,20)                                     % 15",
+            "{1,12,15,21,22}.band(10,20)                        % {12,15}",
+            "5.band(-10,10)                                     % noobj",
+            "-5.band(_,_)                                       % -5",
+            // "{1,2,3,4,3,5,6}.band(2,\"8\")                      % {3,4,3,5,6}",
+            "10.band(2)                                         % noobj",
+    }, delimiter = '%')
+    public void testTypedNamedArgs(final String code, final String expected) throws Exception {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @TestData(value = {
+            "/m/nat -> int::T[?>0]",
+            "|inst?int{?}<=int(min=>as(/m/nat::T),max=>as(/m/nat::T)){ is(and(gte(*min),lte(*max))) }@band"})
+    @CsvSource(value = {
+            "15.band(10,20)                                     % 15",
+            "{1,12,15,21,22}.band(10,20)                        % {12,15}",
+            "5.band(-10,10)                                     % <ERROR>",
+            "-5.band(_,_)                                       % <ERROR>",
+           // "{1,2,3,4,3,5,6}.band(2,\"8\")                      % <ERROR>",
+            "10.band(2)                                         % <ERROR>"
+    }, delimiter = '%')
+    public void testConversionTypedNamedArgs(final String code, final String expected) throws Exception {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @TestData(value = {
+            "/m/nat -> int::T[?>0]",
+            "|inst?int{?}<=int(min=>as(/m/nat::T),max=>?/m/nat::T){ is(and(gte(*min),lte(*max))) }@band"})
+    @CsvSource(value = {
+            "15.band(10,20)                                     % 15",
+            "5.band(-10,10)                                     % <ERROR>",
+            "-5.band(_,_)                                       % <ERROR>",
+            "\"abc\".band?int{?}<=int(2,8)                      % <ERROR>"
+    }, delimiter = '%')
+    public void testTypedNamedFailArgs(final String code, final String expected) throws Exception {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @TestData(value = {"|inst?int{?}<=int(min=>else(3),max=>else(8)){ is(and(gte(*min),lte(*max))) }@band"})
+    @CsvSource(value = {
+            "1.band()                                              % noobj",
+            "2.band()                                              % noobj",
+            "3.band()                                              % 3",
+            "5.band()                                              % 5",
+            "{2,3,4,5,6,7,8,9}.band(min=>3,max=>7)                 % {3,4,5,6,7}",
+            "{2,3,4,5,6,7,8,9}.band(min=>noobj{0},max=>noobj{0})   % {3,4,5,6,7,8}",
+            "{2,3,4,5,6,7,8,9}.band(min=>_,max=>_)                  % {2,3,4,5,6,7,8,9}",
+            "1.band(min=>1)                                        % 1",
+            "3.band(max=>4)                                        % 3",
+            "3.band()                                              % 3",
+            "5.band(max=>4)                                        % noobj",
+            "{2,3,4,5,6,7,8,9}.band(max=>4)                        % {3,4}",
+            "1.band(max=>3)                                        % noobj"
+    }, delimiter = '%')
+    public void testDefaultArgs(final String code, final String expected) throws Exception {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 }

@@ -153,31 +153,47 @@ include::header.html[]
                 metatron <b class="metatron-name">instruction sets</b> (or instset) are packages that encode a domain of discourse within a set of types, instructions, constants, rewrites, and sugars.
             </div>
             <div class="feature-modal">
-                <p><b class="metatron-name">instsets</b> are spaces that can be read from and written to. As a space, they support query processors, with the docq query processor being of particular importance in that it associates documentation with any obj. Documentation objs enable the automatic generation of human-readable HTML documentation as well as agent-readable tool and skill specifications.</p>
+                <p><b class="metatron-name">instsets</b> are spaces that can be read from and written to. As a space, they support query processors, with the docq query processor being of particular importance in that it associates documentation with any obj. These objs enable the automatic generation of human-readable HTML documentation as well as agent-readable tool and skill specifications.</p>
             <table>
                 <tr>
+                  <th style="text-align: center;">*instset</th>
+                  <th style="text-align: center;">*instset?docq</th>
+                </tr>
                 <td>
                 <pre><code>
 rec::T[?[
-     {?}constq =>[#::T],
-     {?}type   =>[T::T],
-     {?}inst   =>[inst::T],
-     {?}rewrite=>[inst::T],
-     {?}sugar  =>[lst[str,str]::T]]]@/m/instset
+ {?}constq =>[#::T],
+ {?}type   =>[T::T],
+ {?}inst   =>[inst::T],
+ {?}rewrite=>[inst::T],
+ {?}sugar  =>[lst::T]]]@instset
                 </code></pre>
                 </td><td>
-                <img src="images/modal/instset-modal.svg" class="img-fluid mb-3 icon-color" style="height: 165px; display: block; margin: auto;"/>
-                </td></tr></table>
+<pre><code>                                                                                                                                                   
+docs::[
+ obj    =>instset::T,
+ args   =>[
+  {?}type   =>"types used to structure of the instset'...",
+  {?}rewrite=>'code<=code instructions that capture th...',
+  {?}inst   =>'instructions associated with the types ...',
+  {?}sugar  =>'custom instruction syntax sugars given ...',
+  {?}constq =>'constants used across the instset'],
+ desc   =>'an aggregate of consts, types, insts, r...',
+ example=>[,]]
+</code></pre>
+                </td>
+</tr>
+</table>
             </div>
             <script type="text/javascript">featurePanel("instset_feature");</script>
         </div>
        <!-- EMBED -->
         <div id="embed_feature" data-title="embed" data-icon="images/icons/storage-icon.svg" data-back-image="images/modal/embed-modal.svg">
             <div class="feature-front">
-                inter- and intra-space <b class="metatron-name">embedded</b> data structures can account for the respective time and space tradeoffs of the underlying storage systems
+                A data structure can have an inter- or intra-space <b class="metatron-name">embedding</b> suc that each subset of its form can take advantage of the respective time-space tradeoffs of the underlying spaces.
             </div>
             <div class="feature-modal">
-                <p><b class="metatron-name">Embedding</b> allows for optimized data locality. Metatron understands how to nest data within various storage backends to minimize latency and maximize throughput.</p>
+                <p>A data structure such as a vertex in a graph can have many incoming and outgoing edges with different edge labels and properties. Such diversity entails not all edges will require the same read/write performance characteristics. In metatron, it's possible to <b class="metatron-name">embed</b> one edge set in a space optimized for fast retrievals (e.g. an in-memory space) and another subset in a space optimized for static, long-term storage (e.g. a disk-backed space). Other considerations may include the indices associated with a space and whether certain properties of an edge can be indexed for non-linear access.</p>
                 <img src="images/modal/embed-modal.svg" class="img-fluid mb-3 icon-color" style="max-height: 300px; display: block; margin: auto;"/>
             </div>
             <script type="text/javascript">featurePanel("embed_feature");</script>
@@ -269,11 +285,11 @@ rec::T[?[
         <!-- LLM COMPATIBLE -->
         <div id="llm_feature" data-title="llm" data-icon="images/icons/llm-icon.svg" data-back-image="images/modal/llm-modal.svg">
             <div class="feature-front">
-                <b class="metatron-name">large language models</b> and their enriching extensions are all objs in the metatron, where self-reflection, introspection, and
+                <b class="metatron-name">large language models</b> and their enriching extensions are objs, where self-reflection, introspection, knowledge access, and
                     simulation are natural consequences of metatron's unified address space.
             </div>
             <div class="feature-modal">
-                <p><b class="metatron-name">LLMs</b> are encoded within, operate within, and are knowledgeable about the metatron. LLM memory can be persisted or transient (as supported by the space its encoded in)</p>
+                <p><b class="metatron-name">LLMs</b> are encoded within, operate within, and are knowledgeable about metatron spaces. LLM memory can be persisted or transient. LLM tools can be any mtron instruction, where MCP servers are represented as instructions. LLM skills can be files, web links, or composed of multiple objs across different spaces as long as the result is a markdown obj. Finally, LLM querying is an instruction that can be evaluated by humans and agents alike and/or composed into larger instruction graphs known as workflows.</p>
                 <img src="images/modal/llm-modal.svg" class="img-fluid mb-3 icon-color" style="max-height: 300px; display: block; margin: auto;"/>
             </div>
             <script type="text/javascript">featurePanel("llm_feature");</script>

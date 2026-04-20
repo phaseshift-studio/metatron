@@ -45,6 +45,9 @@ public class MFail extends MObj implements Fail {
         return Router.writeToSpace(fail.vid(pattern)).as();
     }
 
+    public boolean isFail() {
+        return true;
+    }
 
     public static Fail fail(final String message, final Object... args) {
         return fail(MTronException.of(message, args), null);

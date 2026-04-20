@@ -86,7 +86,8 @@ public class ScoringInstResolver implements InstResolver {
                 })
                 // .peek(i ->  LOG.info("transformed inst: %s score %s", i.transformed, i.score))
                 .filter(sc -> sc.transformed != null)
-                .filter(sc -> lhs.isInst() || lhs.test(sc.transformed.dom()))
+               .filter(sc -> lhs.isInst() || Inst.Helper.filterOnDomainAllowUnique(lhs,sc.transformed)) // lhs.test(sc.transformed.dom()))
+          //      .map(sc -> Inst.Helper.filterOnDomainAllowUnique(lhs,sc.transformed) ? new ScoredCandidate(sc.original, sc.transformed.c(lhs.c()), sc.score) : sc)
                 // Resolve args
                 .map(sc -> {
                     final Poly<?, ?> resolvedArgs = Inst.Helper.resolveArgs(userInst, sc.transformed, lhs);
