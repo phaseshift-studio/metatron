@@ -25,10 +25,10 @@ import java.util.List;
 import java.util.Set;
 
 public enum TypeCheck {
-    TYPE_CONS,
-    OBJ_WRITE,
-    INST_RNG,
-    INST_DOM;
+    type_cons,
+    obj_write,
+    inst_rng,
+    inst_dom;
 
     private static final Set<TypeCheck> TYPE_CHECKS = new LinkedHashSet<>(List.of(values()));
 

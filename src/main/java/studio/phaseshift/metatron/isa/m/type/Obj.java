@@ -759,7 +759,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         }
 
         public static void objCheckAndSave(final Obj obj) {
-            if (TypeCheck.OBJ_WRITE.enabled()) {
+            if (TypeCheck.obj_write.enabled()) {
                 if (Router.loaded() && !obj.isInstSet() && !obj.isNoObj() && !obj.isType() && !obj.test(obj.type())) {
                     if (obj.isPoly()) {
                         final String matchDiffString = Poly.Helper.diffTypeRecursion(obj, obj.type()).toString();
@@ -802,7 +802,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                                                   final fURI vid) {
             if (null != tid) {
                 final fURI bigTID = tid.big();
-                if (TypeCheck.TYPE_CONS.enabled() && !BASE_TYPES.contains(bigTID.basePath()) && Router.loaded()) {
+                if (TypeCheck.type_cons.enabled() && !BASE_TYPES.contains(bigTID.basePath()) && Router.loaded()) {
                     Obj type = Router.readFromSpace(bigTID);
                     if (!type.isNoObj() && type.isType() && type.asType().hasConstructor()) {
                         final Obj protoObj = MObjFactory.of().toObj(jvm, null, vid, clazz);
@@ -938,8 +938,9 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                     docWrap(instC(OR_INST_TID.dom(A).rng(BOOL_TID), lst(BOOL_TYPE, BOOL_TYPE, BOOL_TYPE.maybe(), BOOL_TYPE.maybe(), BOOL_TYPE.maybe()), (lhs, inst) -> bool(inst.args().elements().map(Obj::asBool).anyMatch(Obj::boolValue))),
                             "any objs", "true if any objs are true", Map.of(), "logical \\(\\texttt{or}\\) function \\(f(X)\\to \\tt{true}\\) if any \\(X\\) are true"),
                     instC(APPLY_INST_TID.dom(ALL).rng(ALL_STAR), lst(T(ALL_STAR)), (lhs, inst) -> Router.global().read(lhs.uriValue().basePath().extend("apply")).apply(inst.args())),
+                    // TODO: get rid of one of the maps
                     instC(MAP_INST_TID.dom(A).rng(B), lst(T(B)), (lhs, inst) -> inst.arg(0)),
-                    instC(MAP_INST_TID.dom(A.maybe()).rng(B.maybe()), lst(T(B.maybe())), (lhs, inst) -> inst.arg(0)),
+                    docWrap(instC(MAP_INST_TID.dom(A.maybe()).rng(B.maybe()), lst(T(B.maybe())), (lhs, inst) -> inst.arg(0)),"maybe some obj","the lhs obj applied to the arg obj",Map.of(jnt(0),"any obj"),"applies the lhs obj to the arg obj to yield the rhs obj"),
                     instC(FILTER_INST_TID.dom(A).rng(A.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> inst.arg(0).isNoObj() ? noobj() : lhs),
                     instC(SIDE_INST_TID.dom(A).rng(A), lst(T(ALL)), (lhs, inst) -> Optional.of(inst.arg(0).apply(lhs)).map(x -> (Obj) null).orElse(lhs)),
                     docWrap(instC(TID_INST_TID.dom(ALL).rng(URI_TID), lst(), (lhs, inst) -> lhs.tid().toUri()),

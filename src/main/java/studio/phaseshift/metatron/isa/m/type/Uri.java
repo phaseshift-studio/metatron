@@ -355,6 +355,7 @@ public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
                                 }
                             }))),
                     //  instC(LSHIFT_INST_TID.dom(URI_TID).rng(URI_TID), lst(isa_(T(INT_TID)).else_(jnt(1))), (lhs, inst) -> lhs.jvm(lhs.uriValue().pretract(inst.arg(0).intValue().intValue()))),
+                    instC(MINUS_INST_TID.dom(URI_TID).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(lhs.uriValue().toString().replace(inst.arg(0).uriValue().toString(), ""))),
                     instC(PLUS_INST_TID.dom(URI_TID).rng(URI_TID.maybe()), lst(T(URI_TID.maybe())), (lhs, inst) -> lhs.jvm(lhs.uriValue().plus(inst.arg(0).uriValue()))),
                     instC(MULT_INST_TID.dom(URI_TID).rng(URI_TID.maybe()), lst(T(URI_TID.maybe())), (lhs, inst) -> lhs.jvm(lhs.uriValue().mult(inst.arg(0).uriValue()))),
                     instC(SUM_INST_TID.dom(URI_TID.maybeSome()).rng(URI_TID), lst(), (lhs, inst) -> inst.seed().jvm(lhs.stream().reduce(inst.seed(), (a, b) -> ((Uri) a).plus((Uri) b)).uriValue()), uri(NOOBJ)),
@@ -363,9 +364,10 @@ public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
                     instC(URI_HOST_TID.dom(URI_TID).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(lhs.uriValue().host())),*/
                     instC(PATH_TID.dom(URI_TID).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(lhs.uriValue().pathString())),
                     /*   instC(URI_PORT_TID.dom(URI_TID).rng(INT_TID), lst(T(URI_TID)), (lhs, inst) -> jnt(lhs.uriValue().port())),*/
-                    instC(Q_INST_TID.dom(URI_TID).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(lhs.uriValue().qValue(inst.arg(0).uriValue().toString(), fURI.class))),
+                   // instC(Q_INST_TID.dom(URI_TID).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(lhs.uriValue().qValue(inst.arg(0).uriValue().toString(), fURI.class))),
                     instC(Q_INST_TID.dom(URI_TID).rng(URI_TID), lst(REC_TYPE), (lhs, inst) -> uri(lhs.uriValue().q((Map<String, String>) inst.arg(0).asRec().elements().collect(Collectors.toMap(kv -> kv.first().uriValue().toString(), kv -> "" + kv.second().jvm(), (a, b) -> b, LinkedHashMap::new))))),
-                    instC(Q_INST_TID.dom(URI_TID).rng(REC_TID), lst(), (lhs, inst) -> rec(lhs.uriValue().qMap().entrySet().stream().map(kv -> rel(uri(kv.getKey()), uri(kv.getValue()))))),
+                    instC(LSHIFT_INST_TID.dom(URI_TID).rng(URI_TID), lst(REC_TYPE), (lhs, inst) -> uri(lhs.uriValue().q((Map<String, String>) inst.arg(0).asRec().elements().collect(Collectors.toMap(kv -> kv.first().uriValue().toString(), kv -> "" + kv.second().jvm(), (a, b) -> b, LinkedHashMap::new))))),
+                    // instC(Q_INST_TID.dom(URI_TID).rng(REC_TID), lst(), (lhs, inst) -> rec(lhs.uriValue().qMap().entrySet().stream().map(kv -> rel(uri(kv.getKey()), uri(kv.getValue()))))),
                     // TODO  instC(Q_INST_TID.dom(URI_TID).rng(URI_TID), lst(T(REC_TID)), (lhs, inst) -> lhs.jvm(lhs.uriValue().qMap(inst.arg(0).recValue().entrySet().stream().collect(Collectors.toMap(kv -> kv.getKey().uriValue().toString(), kv -> kv.getValue().uriValue().toString(), (a, b) -> b, LinkedHashMap::new))))),
                     instC(URI_C_TID.dom(URI_TID).rng(LST_TID), lst(T(URI_TID)), (lhs, inst) -> lst(jnt((Long) lhs.uriValue().c().min()), jnt((Long) lhs.uriValue().c().max()))),
                     instC(POW_INST_TID.dom(URI_TID).rng(URI_TID), lst(T(INT_TID)), (lhs, inst) -> {

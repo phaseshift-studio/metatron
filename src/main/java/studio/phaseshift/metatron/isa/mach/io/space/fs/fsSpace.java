@@ -26,11 +26,12 @@ import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjs;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
-import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
+import studio.phaseshift.metatron.isa.web.type.Content;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.*;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.nio.file.FileSystem;
@@ -97,56 +98,99 @@ public class fsSpace extends AbstractSpace<FileSystem> {
         }
     }
 
-    public Obj resolveObj(final Uri path) {
-        try {
-            if (path.isNoObj())
-                return noobj();
-            final File file = Paths.get(path.uriValue().basePath().toString()).toFile();
-            return uri(this.redirect(f(file.getPath()), false).q("p", PosixFilePermissions.toString(Files.getPosixFilePermissions(file.toPath()))), file.isDirectory() ? DIR_TID : FILE_TID, null);
-        } catch (final Exception e) {
-            return noobj();
-            // throw MTronException.of(e);
-        }
-    }
-
-
     public static Uri makeFile(final Path path) {
         try {
             if (path.toString().isEmpty())
                 return NOOBJ_URI;
-            return uri(f(path.toString()).q("p", PosixFilePermissions.toString(Files.getPosixFilePermissions(path))), path.endsWith("/") ? DIR_TID : FILE_TID, null);
-        } catch (final NoSuchFileException e) {
+            return uri(f(path.toString()));//.q("p", PosixFilePermissions.toString(Files.getPosixFilePermissions(path))), path.endsWith("/") ? DIR_TID : FILE_TID, null);
+        } /*catch (final NoSuchFileException e) {
             return NOOBJ_URI;
+        } */ catch (final Exception e) {
+            throw MTronException.of(e);
+        }
+    }
+
+    /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    public Obj fileToObj(final File file) {
+        try {
+            if (file.exists() && file.isFile()) {
+                Content.ContentType contentType = Content.ContentType.fromProbe(file);
+                FileInputStream fs = new FileInputStream(file);
+                byte[] fileBytes = fs.readAllBytes();
+                fs.close();
+                return !file.getName().contains(".") ? 
+                        ObjmtronSerializer.single().inputBytes(ByteBuffer.wrap(fileBytes)) : 
+                        contentType.toObj(fileBytes);//.selfVID(Space.Helper.routeToSpace(f(file.getPath()), this.routes).qLess());
+            } else {
+                if (file.isDirectory()) {
+                    return dirToObj(file);
+                }
+            }
+            return noobj();
         } catch (final Exception e) {
             throw MTronException.of(e);
         }
     }
 
+    public Obj objToFile(final Obj obj, final File file) {
+        try {
+            //if (!file.isFile())
+             //   throw MTronException.of("not a file: %s", file);
+            final ObjmtronSerializer serializer = new ObjmtronSerializer(Integer.MAX_VALUE);
+            LOG.info("writing %s to %s", obj, file.getPath());
+            if (!file.exists()) {
+                new File(f(file.getAbsolutePath()).retract(1).toString()).mkdirs();
+                file.createNewFile();
+            }
+            try (final FileOutputStream writer = new FileOutputStream(file, pattern.hasQ("append"))) {
+                /*if (obj.isBytes())
+                    writer.write(obj.vid(null).bytesValue().array());*/
+                 //if (obj.isStr())
+                   // writer.write(obj.vid(null).strValue().getBytes(StandardCharsets.UTF_8));
+              //  else
+                    writer.write(serializer.outputBytes(obj.vid(null)).array());
+                writer.flush();
+            }
+            return obj;
+        } catch (final Exception e) {
+            throw MTronException.of(e, file.toPath().toString());
+        }
+    }
+
+    public Obj dirToObj(final File file) {
+        return uri(Space.Helper.routeToSpace(f(file.getPath()), this.routes), DIR_TID, null);
+    }
+
+
     @Override
     public Function<fURI, Iterator<IdObj>> directReader() {
         return (key) -> {
+            final fURI keyQless = key.qLess();
             if (key.equals(ALL))
                 throw MTronException.of("infinite nested walks on file system not allowed");
             else {
                 if (key.hasPattern()) {
-                    try (final Stream<Path> walk = Files.walk(Path.of(Space.Helper.routeFromSpace(key.retractPattern(), this.routes).toString()), key.hasPattern("#") ? Integer.MAX_VALUE : key.asNode().path().size() + 1)) {
+                    try (final Stream<Path> walk = Files.walk(Path.of(Space.Helper.routeFromSpace(keyQless.retractPattern(), this.routes).toString()), keyQless.hasPattern("#") ? Integer.MAX_VALUE : keyQless.asNode().path().size() + 1)) {
                         return walk
                                 .filter(p -> {
                                     try {
-                                        return Space.Helper.routeToSpace(f(p.toString()), this.routes).test(key.asNode());
+                                        return Space.Helper.routeToSpace(f(p.toString()), this.routes).test(keyQless.asNode());
                                     } catch (final Exception e) {
                                         LOG.error(e);
                                         return false;
                                     }
                                 })
-                                .map(fsSpace::makeFile)
-                                .filter(Objects::nonNull)
-                                .map(this::resolveObj)
-                                .filter(o -> !o.isNoObj())
-                                .collect(Collectors.toMap(p -> p, p -> p, Obj::append, LinkedHashMap::new))
+                                .collect(Collectors.toMap(p -> Space.Helper.routeFromSpace(f(p.toString()), this.routes), p -> {
+                                    final File file = p.toFile();
+                                    if (file.isDirectory())
+                                        return dirToObj(file);
+                                    else {
+                                        return fileToObj(file);
+                                    }
+                                }, Obj::append, LinkedHashMap::new))
                                 .entrySet()
                                 .stream()
-                                .map(kv -> IdObj.of(kv.getKey().uriValue(), kv.getValue()))
+                                .map(kv -> IdObj.of(kv.getKey(), kv.getValue()))
                                 .iterator();
                     } catch (IOException e) {
                         throw MTronException.of(e);
@@ -154,24 +198,22 @@ public class fsSpace extends AbstractSpace<FileSystem> {
 
                 } else {
                     try {
-                        final Path vidPath = Path.of(Space.Helper.routeFromSpace(key.name().equals("apply") ? key.retract(1) : key, this.routes).toString());
-                        if (Files.isDirectory(vidPath)) {
-                            return Stream.of(fsSpace.makeFile(vidPath)).map(p -> IdObj.of(p.uriValue(), resolveObj(p))).iterator();
+                        final Path vidPath = Path.of(Space.Helper.routeFromSpace(keyQless.name().equals("apply") ? keyQless.retract(1) : keyQless, this.routes).toString());
+                        final File file = vidPath.toFile();
+                        if (file.isDirectory()) {
+                            return IteratorUtil.of(IdObj.of(key, dirToObj(file)));
                         } else {
-                            return IteratorUtil.of(IdObj.of(Space.Helper.routeToSpace(f(vidPath.toString()), this.routes), key.name().equals("apply") ?
-                                    instC(key.retract(1).dom(ALL.maybe()).rng(ALL_STAR), lst(T(ALL_STAR)), (lhs, inst) -> {
+                            return IteratorUtil.of(IdObj.of(key, keyQless.name().equals("apply") ?
+                                    instC(keyQless.retract(1).dom(ALL.maybe()).rng(ALL_STAR), lst(T(ALL_STAR)), (lhs, inst) -> {
                                         LOG.debug("applying: %s => %s", lhs, inst);
                                         final Uri toExec = makeFile(vidPath);
-                                        if (!vidPath.toFile().canExecute())
+                                        if (!file.canExecute())
                                             throw MTronException.of("file permissions prevent execution of %s", toExec);
                                         return this.internalApply(toExec, inst.args());
                                     }) :
-                                    this.resolveObj(makeFile(vidPath))));
+                                    this.fileToObj(file)));
                         }
-                    } /*catch (final NoSuchFileException e) {
-                        LOG.warn("no such file: %s", key);
-                        return IteratorUtil.of();
-                    } */ catch (final Exception e) {
+                    } catch (final Exception e) {
                         throw MTronException.of(e);
                     }
                 }
@@ -253,29 +295,24 @@ public class fsSpace extends AbstractSpace<FileSystem> {
             if (pattern.hasPattern()) {
                 this.directReader().apply(pattern).forEachRemaining(kv -> this.write(kv.furi(), kv.obj()));
             } else {
+
                 try {
                     if (obj.isNoObj()) {
-                        throw MTronException.of("deleting files currently not supported", pattern);
-                        //   Files.delete(Path.of(pattern.toString()));
+                        Files.delete(Paths.get(Space.Helper.routeFromSpace(pattern.basePath(), this.routes).toString()));
                     } else {
                         final Path path = Paths.get(Space.Helper.routeFromSpace(pattern.basePath(), this.routes).toString());
                         final File file = path.toFile();
-                        LOG.info("writing %s to %s", obj, path);
-                        file.createNewFile();
-                        final FileOutputStream writer = new FileOutputStream(file, true);
-                        if (obj.isBytes())
-                            writer.write(obj.bytesValue().array());
-                        else if (obj.isStr())
-                            writer.write(obj.strValue().getBytes(StandardCharsets.UTF_8));
-                        else
-                            writer.write(Highlighter.unformat(obj.toString()).getBytes(StandardCharsets.UTF_8));
-                        writer.flush();
-                        writer.close();
-                        if (pattern.hasQ("p")) {
-                            final Set<PosixFilePermission> currentP = PosixFilePermissions.fromString(Files.getPosixFilePermissions(path).toString());
-                            final Set<PosixFilePermission> newP = PosixFilePermissions.fromString(pattern.qValue("p", String.class));
-                            if (!currentP.equals(newP))
-                                Files.setPosixFilePermissions(file.toPath(), newP);
+                        if (file.isDirectory()) {
+                            if (!file.exists())
+                                file.mkdirs();
+                        } else {
+                            this.objToFile(obj, file);
+                            if (pattern.hasQ("p")) {
+                                final Set<PosixFilePermission> currentP = PosixFilePermissions.fromString(Files.getPosixFilePermissions(path).toString());
+                                final Set<PosixFilePermission> newP = PosixFilePermissions.fromString(pattern.qValue("p", String.class));
+                                if (!currentP.equals(newP))
+                                    Files.setPosixFilePermissions(file.toPath(), newP);
+                            }
                         }
                     }
                 } catch (final Exception e) {

@@ -51,7 +51,7 @@ import java.util.stream.Stream;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.furi.q.QCollection.*;
+import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -132,7 +132,7 @@ public class machInstSet extends AbstractInstSet {
     public static final Type DIR_TYPE = Type.Builder.build()
             .tid(URI_TID)
             .vid(DIR_TID)
-           // .predicate((uri, x) -> uri.uriValue().isBranch() ? uri : noobj())
+            //.predicate((uri, x) -> fsSpace.resolveFile(uri.as()).isDirectory() ? uri : noobj())
             .constructor(instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(DIR_TID.maybe()),
                     lst(T(URI_TID)),
                     (lhs, inst) -> inst.arg(0).uriValue().isBranch() ? makeFile(Path.of(inst.arg(0).uriValue().basePath().toString())) : noobj())).create();

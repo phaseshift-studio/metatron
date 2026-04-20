@@ -47,7 +47,15 @@ import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.OBJ_MTRON_STRING_
 public class ObjmtronSerializer extends AbstractObjSerializer<String> {
     private static final String NOOBJ_STRING = "noobj";
     protected boolean leftJustify;
+    public static final int CLIP_LENGTH = 40;
+    protected int clip = CLIP_LENGTH;
     public static String REAL_FORMAT = "%.4f";
+
+    private static final ObjmtronSerializer INSTANCE = new ObjmtronSerializer();
+
+    public static ObjmtronSerializer single() {
+        return INSTANCE;
+    }
 
     public ObjmtronSerializer() {
         this.leftJustify = true;
@@ -55,6 +63,11 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
 
     public ObjmtronSerializer(final boolean leftJustify) {
         this.leftJustify = leftJustify;
+    }
+
+    public ObjmtronSerializer(final int clipLength) {
+        this();
+        this.clip = clipLength;
     }
 
     public fURI vid() {
@@ -90,7 +103,7 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
     @Override
     public String writeBytes(final Bytes bytes) {
         final StringBuilder sb = new StringBuilder();
-        if (bytes.bytesValue().capacity() > CLIP_LENGTH) {
+        if (bytes.bytesValue().capacity() > this.clip) {
             this.writeClip(sb, bytes);
         } else {
             sb.append("0x").append(HexFormat.of().formatHex(bytes.<Bytes>as().jvm().array()));
@@ -146,6 +159,7 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
                         furi.hasTemplates() ||
                         CommonUtil.isInt(uriString.substring(0, 1)) ||
                         uriString.contains(" ") ||
+                        startChar == 'T' ||
                         startChar == '+' ||
                         startChar == '#' ||
                         uriString.contains(".");
@@ -227,7 +241,11 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
         try {
             return mParser.eval(data);
         } catch (final Exception e) {
-            return fail(e);
+            try {
+                return mParser.parse(data);
+            } catch (final Exception e2) {
+                return fail(e2);
+            }
         }
     }
 
@@ -354,13 +372,12 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
         return handleVID(sb, rec);
     }
 
-    public static final int CLIP_LENGTH = 40;
 
     private StringBuilder writeClip(final StringBuilder sb, final Obj obj) {
-        if (obj.isStr() && obj.strValue().length() > CLIP_LENGTH) {
-            sb.append(write(str(obj.strValue().substring(0, CLIP_LENGTH - 1) + "...")));
-        } else if (obj.isBytes() && obj.bytesValue().capacity() > CLIP_LENGTH) {
-            byte[] bb = Arrays.copyOf(obj.bytesValue().array(), CLIP_LENGTH - 1);
+        if (obj.isStr() && obj.strValue().length() > this.clip) {
+            sb.append(write(str(obj.strValue().substring(0, this.clip - 1) + "...")));
+        } else if (obj.isBytes() && obj.bytesValue().capacity() > this.clip) {
+            byte[] bb = Arrays.copyOf(obj.bytesValue().array(), this.clip - 1);
             sb.append(write(bytes(ByteBuffer.wrap(bb))));
             sb.append("...");
         } else if (obj.isFail()) {

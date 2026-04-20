@@ -36,6 +36,7 @@ import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.impl.MInst;
 import studio.phaseshift.metatron.isa.m.type.reflect.JRec;
 import studio.phaseshift.metatron.isa.m.type.reflect.ObjFieldReflection;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
@@ -66,8 +67,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.start_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instA;
@@ -95,6 +95,12 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     public static Path HISTORY_FILE = Paths.get(".metatron.history");
     @ObjFieldReflection(tid = "/m/inst")
     public Inst history = instA(f("dummy"));
+    @ObjFieldReflection(tid = "/m/uri")
+    public Uri input = uri("");
+    @ObjFieldReflection(tid = "/m/str")
+    public String prefix = "";
+    @ObjFieldReflection(tid = "/m/str")
+    public String postfix = "";
     private final GraphittyLogger LOG = Graphitty.log(this);
     public static String HEADER_SEPARATOR = "####################";
     private static Terminal terminal;
@@ -166,7 +172,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                     }
                 }
             }).encoding(StandardCharsets.UTF_8).system(true).build();
-            this.outputHeader();
+            this.outputHeader("");
             final Supplier<Path> currentDir = () -> Paths.get("");
             final Builtins builtins = new Builtins(currentDir, Console.configurations, null);
             SystemRegistry systemRegistry = new SystemRegistryImpl(parser, terminal, currentDir, Console.configurations);
@@ -191,6 +197,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
             this.history = auto_(instC(f("history").dom(ALL).rng(REC_TID.maybeSome()), lst(T(ALL)),
                     (lhs, inst) -> objs(IteratorUtil.stream(this.reader.getHistory().reverseIterator())
                             .map(s -> rec(uri(TIME), str(s.time().toString()), uri(ENTRY), str(s.line())))))).tryToInst().as();
+            this.input = null == this.vid() ? uri("") : uri(this.vid().extend("in"));
         } catch (final Exception e) {
             throw MTronException.of(e);
         }
@@ -226,7 +233,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
         if (this.splitMode && this.activePane != null) {
             return this.activePane.prompt();
         }
-        return Graphitty.string(this.currentLanguage.prompt);
+        return Graphitty.string(this.currentLanguage.prompt + this.prefix);
     }
 
     /**
@@ -602,12 +609,16 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
             return;
         }
         /// /////////////////////////////////////////////////////
-        CommonUtil.splitOnNonQuotedSequence(line, ';', false).forEach(l -> {
+        CommonUtil.splitOnNonQuotedSequence(this.prefix + line + this.postfix, ';', false).forEach(l -> {
             try {
                 final Obj parseResult = ObjmtronSerializer.parse(l);
+                final Level startLevel = this.status.getState();
                 if (null != parseResult && !parseResult.isNoObj()) {
-                    final Machine mach = SwarmMachine.of(parseResult.isCall() ? parseResult.as() : start_(parseResult)).onHalt(this::printResult);
-
+                    final Obj resolvedResult = parseResult.isCall() ? Call.Helper.resolveInspection(parseResult.asCall(), unresolved -> {
+                        this.status.setState(Level.WARN);
+                        LOG.warn("unable to fully resolve code. execution will require dynamic inst resolution for:\n\t%s", unresolved);
+                    }) : parseResult;
+                    final Machine mach = SwarmMachine.of(resolvedResult.isCall() ? resolvedResult.as() : start_(resolvedResult)).onHalt(this::printResult);
                     // Track machine in both places for interruption
                     this.machine = mach;
                     if (this.activePane != null) {
@@ -616,6 +627,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
 
                     final Obj computeResult = mach.apply();
                     computeResult.stream().forEach(this::printResult);
+                    this.status.setState(startLevel);
                 }
             } catch (final Exception e) {
                 this.printResult(fail(e));
@@ -669,8 +681,14 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                 // Position cursor at active pane before reading input
                 this.prepareForInput();
                 final String line = this.reader.readLine(this.prompt()).trim();
-                if (line.equals(":header"))
-                    this.outputHeader();
+                if (line.equals(":connect")) {
+                    Router.writeToSpace("abc", block_(MInst.instLambda((lhs, inst) -> {
+                        LOG.info("HERE %s", lhs);
+                        reader.getBuffer().write(lhs.asLst().at(1).strValue());
+                        return lhs;
+                    })));
+                } else if (line.equals(":header"))
+                    this.outputHeader(line.substring(6).trim());
                 else if (line.equals(":quit"))
                     break;
                 else if (line.equals(":clear")) {
@@ -679,43 +697,46 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                 } else if (line.equals(":help")) {
                     Graphitty.out(terminal.output(), new Panel("{{c}}metatron console help{{X}}", new Table(
                             List.of("name", "short", "description"))
+                            /// ///////////////////////////////////////////////////////////////////////////////////////
+                            .addRow(List.of("{{[g]&w}}mtron", "{{[g]&w}}", "{{[g]&w}}"))
                             .addRow(List.of("explain", "<tab>", "a tabular view of the current code"))
-                            .addRow(List.of("header", ":header", "print random metatron header"))
+                            .addRow(List.of("type check", ":check [-| ][ |type_cons|obj_write|inst_rng|inst_dom]", "show or enable/disable stage type checking"))
+                            .addRow(List.of("cycle type check", "<ctrl>+t", "cycle stage type check activations"))
+                            /// ///////////////////////////////////////////////////////////////////////////////////////
+                            .addRow(List.of("{{[g]&w}}console", "{{[g]&w}}", "{{[g]&w}}"))
+                            .addRow(List.of("quit", ":quit | <ctrl>+q", "exit the console"))
+                            .addRow(List.of("clear", ":clear", "clear the console"))
+                            .addRow(List.of("header", ":header [ |<name>]", "print random or named metatron header"))
+                            .addRow(List.of("log", ":log [ |trace|debug|info|warn|error]", "show or set log level"))
+                            .addRow(List.of("prefix", ":prefix \"<text>\"", "prefix input with text"))
+                            .addRow(List.of("postfix", ":postfix \"<text>\"", "postfix input with text"))
+                            .addRow(List.of("back erase", "<alt>+k <char>", "erase buffer back to first occurrence of char"))
+                            /// ///////////////////////////////////////////////////////////////////////////////////////
                             .addRow(List.of("{{[g]&w}}panes", "{{[g]&w}}", "{{[g]&w}}"))
-                            .addRow(List.of("split", ":split [v|h]", "split pane vertical/horizontal"))
-                            .addRow(List.of("focus", ":focus [id]", "focus pane by id"))
+                            .addRow(List.of("split horizontal", ":split v | <ctrl>+<up>", "split current pane horizontally"))
+                            .addRow(List.of("split vertical", ":split h | <ctrl>+<right>", "split current pane vertically"))
+                            .addRow(List.of("focus", ":focus <id>", "focus pane by id"))
                             .addRow(List.of("panes", ":panes", "list all panes"))
                             .addRow(List.of("close", ":close", "close active pane"))
-                            .addRow(List.of("next pane", "ctrl+w", "cycle to next pane"))
-                            .addRow(List.of("prev pane", "alt+w", "cycle to previous pane"))
-                            .addRow(List.of("shrink pane", "alt+<", "make active pane smaller"))
-                            .addRow(List.of("grow pane", "alt+>", "make active pane larger"))
-                            .addRow(List.of("{{[g]&w}}editing", "{{[g]&w}}", "{{[g]&w}}"))
-                            .addRow(List.of("erase back to char", "alt+k <char>", "erase buffer back to first occurrence of char"))
+                            .addRow(List.of("next pane", "<ctrl>+w", "cycle to next pane"))
+                            .addRow(List.of("prev pane", "<alt>+w", "cycle to previous pane"))
+                            .addRow(List.of("shrink pane", "<alt>+<", "make active pane smaller"))
+                            .addRow(List.of("grow pane", "<alt>+>", "make active pane larger"))
                             .style().headerDivider("{{[b]&w}}|").margin(0, 0, 0, 0).apply().format()).style().margin(0, 0, 0, 0).border(Border.simple.foreground("{{b}}")).apply().format());
                 } else if (line.startsWith(":log")) {
+                    if (line.substring(4).trim().isEmpty())
+                        LOG.none("log level: %s\n", LogObj.setSLF4J(""));
                     LogObj.setSLF4J(line.substring(4));
                 } else if (line.startsWith(":check")) {
                     Arrays.stream(line.substring(6).trim().split(" ")).forEach(s -> {
                         if (!s.trim().isEmpty()) {
                             if (s.startsWith("-"))
-                                TypeCheck.disable(TypeCheck.valueOf(s.substring(1).toUpperCase()));
+                                TypeCheck.disable(TypeCheck.valueOf(s.substring(1).toLowerCase()));
                             else
-                                TypeCheck.enable(TypeCheck.valueOf(s.toUpperCase()));
+                                TypeCheck.enable(TypeCheck.valueOf(s.toLowerCase()));
                         }
                     });
-                    LOG.info("type checking %s", TypeCheck.getEnabled());
-                } else if (line.startsWith(":card")) {
-                    final List<studio.phaseshift.metatron.isa.mach.type.ui.Widget<?>> widgets = new ArrayList<>();
-                    Router.global().spaces().elements().map(Rel::second).forEach(s ->
-                            widgets.add(new Card(s.vidOrTid().name() + ": " + s.tid().name(), s.asRec().at("native", noobj(), IMMUTABLE).toString())
-                                    .style()
-                                    .border(Border.simple.foreground("{{b}}"))
-                                    .background("{{[g]}}")
-                                    .foreground("{{y}}")
-                                    .margin(1, 1)
-                                    .apply()));
-                    new Grid(widgets, 3).run();
+                    LOG.info("type check stages {{%s}}%s{{X}}", TypeCheck.colorLevel(), TypeCheck.getEnabled());
                 } else if (line.startsWith(":top")) {
                     TTop.ttop(terminal, new PrintStream(terminal.output()), System.err, new String[0]);
                 } else if (line.startsWith(":less")) {
@@ -738,6 +759,18 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                     } catch (IllegalArgumentException e) {
                         LOG.error("unknown language: {{r}}%s{{X}}. Available: mtron, gremlin, sql", langName);
                     }
+                } else if (line.startsWith(":prefix")) {
+                    this.prefix = line.substring(7).trim();
+                    if (this.prefix.startsWith("\""))
+                        this.prefix = this.prefix.substring(1);
+                    if (this.prefix.endsWith("\""))
+                        this.prefix = this.prefix.substring(0, this.prefix.length() - 1);
+                } else if (line.startsWith(":postfix")) {
+                    this.postfix = line.substring(8).trim();
+                    if (this.postfix.startsWith("\""))
+                        this.postfix = this.postfix.substring(1);
+                    if (this.postfix.endsWith("\""))
+                        this.postfix = this.postfix.substring(0, this.postfix.length() - 1);
                 }
                 // ========== Split Pane Commands ==========
                 else if (line.startsWith(":split")) {
@@ -826,7 +859,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
         System.exit(0);
     }
 
-    protected void outputHeader() {
+    protected void outputHeader(final String name) {
         try {
             final Map<String, String> headers = new HashMap<>();
             StringBuilder current = new StringBuilder();
@@ -846,11 +879,12 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
             }
             if (!current.isEmpty())
                 headers.put(headerTitle, current.toString());
-            final String randomHeaderTitle = new ArrayList<>(headers.keySet()).get(new Random().nextInt(headers.size()));
-            final String randomHeader = headers.get(randomHeaderTitle);
-            if (null == randomHeader)
-                throw new IllegalArgumentException("<unknown header: " + randomHeaderTitle + ">");
-            terminal.writer().print(Graphitty.string(randomHeader));
+            final String fetchHeaderTitle = null == name || name.isBlank() ?
+                    new ArrayList<>(headers.keySet()).get(new Random().nextInt(headers.size())) : name;
+            final String fetchHeader = headers.get(fetchHeaderTitle);
+            if (null == fetchHeader)
+                throw new IllegalArgumentException("<unknown header: " + fetchHeaderTitle + ">");
+            terminal.writer().print(Graphitty.string(fetchHeader));
             terminal.writer().flush();
         } catch (final Exception e) {
             terminal.writer().println("...a fundamental boot exception has occurred.");
@@ -959,7 +993,6 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
             getKeyMap().bind((Widget) () -> {
                 try {
                     final String bufferText = this.reader.getBuffer().toString();
-
                     // Check if buffer ends with '.' for instruction completion
                     if (bufferText.trim().endsWith(".")) {
                         final Obj parsed = ObjmtronSerializer.parse(bufferText.trim().substring(0, bufferText.trim().length() - 1));

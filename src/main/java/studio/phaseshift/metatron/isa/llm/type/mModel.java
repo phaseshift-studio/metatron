@@ -112,7 +112,7 @@ public class mModel extends MRec {
     }
 
     public Obj fetchMemory() {
-        return this.at(MEMORY).orElse(lst0());
+        return Router.global().read(this.at(MEMORY).orElse(lst0()).at(jnt(0)).uriValue());
     }
 
     public Obj processMemory(final ChatMessage message) {
@@ -132,8 +132,8 @@ public class mModel extends MRec {
         return Optional.ofNullable(this.at(RESPONSE + "/" + FORMAT).orElse(null));
     }
 
-    public Obj memory() {
-        return this.at(MEMORY);
+    public Rec memory() {
+        return this.at(MEMORY).asRec();
     }
 
     public Optional<Rec> lastResponse() {
@@ -161,15 +161,15 @@ public class mModel extends MRec {
         //////////////////////////////////////////
         /////////////// MEMORY ///////////////////
         //////////////////////////////////////////
-        if (!this.fetchMemory().isNoObj()) {
-            final fURI memoryVID = this.fetchMemory().vid();
+        if (!this.memory().isNoObj()) {
+            final fURI memoryVID = this.memory().at("mem").vid();
             if (memoryVID == null)
-                this.logger().warn("llm memory has no vid (ignoring): %s", this.fetchMemory());
+                this.logger().warn("llm memory has no vid (ignoring): %s", this.memory());
             else {
                 service.chatMemory(MessageWindowChatMemory.builder()
                         //.maxMessages(Router.readFromSpace(this.fetchMemory().uriValue().extend(MAX)).orElse(jnt(15)).intValue().intValue())
-                        .maxMessages(15)
-                        .id(this.fetchMemory().vid())
+                        .maxMessages(this.memory().asRec().at("max").intValue().intValue())
+                        .id(memoryVID)
                         .chatMemoryStore(SpaceChatMemoryStore.single())
                         .build());
             }

@@ -157,7 +157,7 @@ public interface Space extends Rec, Closeable {
             return routes.entrySet().stream()
                     //.sorted(Map.Entry.comparingByKey(Comparator.reverseOrder()))
                     .filter(e -> vid.toString().contains(e.getValue().uriValue().toString()))
-                    .map(e -> e.getKey().autoResolve(noobj()).uriValue().extend(vid.toString().replaceFirst(e.getValue().autoResolve(noobj()).uriValue().toString(), "")))
+                    .map(e -> e.getKey().autoResolve(noobj()).uriValue().extend(vid.toString().replaceFirst(e.getValue().autoResolve(noobj()).uriValue().toString(), "")).q(vid.qMap()))
                     .findFirst()
                     .orElse(vid);
         }
@@ -166,7 +166,7 @@ public interface Space extends Rec, Closeable {
             return routes.entrySet().stream()
                     //.sorted(Map.Entry.comparingByKey(Comparator.reverseOrder()))
                     .filter(e -> vid.toString().contains(e.getKey().autoResolve(noobj()).uriValue().toString()))
-                    .map(e -> e.getValue().autoResolve(noobj()).uriValue().extend(vid.toString().replaceFirst(e.getKey().autoResolve(noobj()).uriValue().toString(), "")))
+                    .map(e -> e.getValue().autoResolve(noobj()).uriValue().extend(vid.toString().replaceFirst(e.getKey().autoResolve(noobj()).uriValue().toString(), "")).q(vid.qMap()))
                     .findFirst()
                     .orElse(vid);
         }

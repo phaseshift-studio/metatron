@@ -284,9 +284,14 @@ public final class QCollection {
                 })
                 .preWrite((vid, obj) -> {
                     final Obj subscription;
+                    final fURI subID = vid.qValue(SUB, fURI.class);
                     if (obj.isNoObj()) {
                         subscription = noobj();
-                        subscriptions.lstValue().removeIf(e -> vid.basePath().test(e.asRec().at(TARGET).uriValue()));
+                        subscriptions.lstValue().removeIf(e -> {
+                            if (subID != null)
+                                return e.asRec().at(ID).isUri();
+                            return vid.basePath().test(e.asRec().at(TARGET).uriValue());
+                        });
                         subscription.logger().info("unsubscribing from %s", vid.basePath());
                     } else if (obj.tid().basePath().equals(SUBSCRIPTION_TID)) {
                         subscription = obj;

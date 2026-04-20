@@ -1,5 +1,0 @@
-[-- metatron example boot --];
-print('\nnothing is defined in this boot.\n');
-
-
-

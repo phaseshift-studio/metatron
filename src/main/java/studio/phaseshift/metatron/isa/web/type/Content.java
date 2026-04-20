@@ -58,6 +58,7 @@ public class Content {
         TEXT_PLAIN("text/plain"),
         TEXT_CSS("text/css"),
         TEXT_JAVASCRIPT("text/javascript"),
+        TEXT_X_SHELLSCRIPT("text/x-shellscript"),
         IMAGE_PNG("image/png"),
         IMAGE_JPEG("image/jpeg"),
         IMAGE_GIF("image/gif"),

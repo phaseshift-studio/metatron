@@ -303,7 +303,7 @@ public interface Inst extends Call {
 
         Obj rhs;
         boolean modulateC = false;
-        if (TypeCheck.INST_DOM.enabled() && !lhs.isFail() && !lhs.isCaughtFail() && !clhs.test(cinst.dom()) && clhs.unique()) {
+        if (TypeCheck.inst_dom.enabled() && !lhs.isFail() && !lhs.isCaughtFail() && !clhs.test(cinst.dom()) && clhs.unique()) {
             // if (clhs.uniqueC().isOne() && !clhs.c().isOne()) { // && cinst.dom().c().within(cInt.SOME())) {
             clhs = clhs.c(cInt::one);
             cinst = this.resolve(clhs);
@@ -350,7 +350,7 @@ public interface Inst extends Call {
                 if (e.getCause() != null)
                     rhs = fail(e.getCause(), (Fail) rhs);
             }
-            if (TypeCheck.INST_RNG.enabled() && !rhs.isType() && !rhs.isFail() && !lhs.isCaughtFail() && !rhs.test(cinst.rng()))
+            if (TypeCheck.inst_rng.enabled() && !rhs.isType() && !rhs.isFail() && !lhs.isCaughtFail() && !rhs.test(cinst.rng()))
                 //rhs = fail(MTronException.of("inst resolution failure: %s", cinst, fail(MTronException.of("rhs does not match inst range:\n\t%s", Poly.Helper.diffObjRecursion(rhs, cinst.rng())))));
                 rhs = fail(MTronException.of("rhs does not match inst range:\n\t%s", Poly.Helper.diffObjRecursion(rhs, cinst.rng())));
         } else {

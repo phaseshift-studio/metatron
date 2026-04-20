@@ -159,6 +159,10 @@ public class StatusLine implements Runnable {
         this.state = state;
     }
 
+    public Level getState() {
+        return this.state;
+    }
+
     private static String bytesFormat(final long bytes) {
         if (bytes < 1024)
             return bytes + "B";

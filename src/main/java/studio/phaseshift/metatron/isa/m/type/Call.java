@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.isa.m.type.impl.MInst;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
@@ -91,8 +92,8 @@ public interface Call extends Obj, Ring<Call> {
     default List<Inst> insts() {
         if (this.isCode()) {
             return new ArrayList<>(this.codeValue());
-        } else if(this.isInst()) {
-            return List.of((Inst)this.clone());
+        } else if (this.isInst()) {
+            return List.of((Inst) this.clone());
         } else {
             return List.of();
         }
@@ -162,5 +163,23 @@ public interface Call extends Obj, Ring<Call> {
     @Override
     default Call zero() {
         return noobj();
+    }
+
+    public static class Helper {
+        private Helper() {
+            // do nothing
+        }
+
+        public static List<Inst> getUnresolvedInsts(final Call call) {
+            return call.insts().stream().filter(i -> !i.isResolved(true)).toList();
+        }
+
+        public static Call resolveInspection(final Call call, final Consumer<List<Inst>> consumer) {
+            final Call resolvedCall = call.resolve(noobj());
+            final List<Inst> unresolved = Helper.getUnresolvedInsts(resolvedCall);
+            if (!unresolved.isEmpty())
+                consumer.accept(unresolved);
+            return resolvedCall;
+        }
     }
 }

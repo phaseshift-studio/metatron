@@ -142,6 +142,7 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
 [== load user console ==]
 console::[=>]@/usr/ui/console;
 *boot/args.print(_,'\n')
-
+[==*<local:.mtron/agent/#>.*(_).filter(tid().is(eq(/m/mach/file))).as(bytes::T).as(str::T).source(_);==]
+print('{{y}}mounting {{b}}boot/usr/# {{y}}to {{b}}/usr/# {{g}}(count:{{y}}${*x}{{g}}){{X}}\n');
  
 

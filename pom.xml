@@ -656,7 +656,6 @@
                 </executions>
                 <configuration>
                     <skip>${skipDocker}</skip>
-                    <skip>${skipDocker}</skip>
                     <repository>${project.artifactId}</repository>
                     <tag>${project.version}</tag>
                     <contextDirectory>${project.basedir}</contextDirectory>

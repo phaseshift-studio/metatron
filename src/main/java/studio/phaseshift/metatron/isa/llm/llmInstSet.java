@@ -94,8 +94,9 @@ public class llmInstSet extends AbstractInstSet {
                         MCP_SERVER_TYPE,
                         LLM_TOOL_TYPE,
                         docWrap(LLM_MEMORY_TYPE = Type.Builder.build()
-                                .tid(LST_TID)
+                                .tid(REC_TID)
                                 .vid(LLM_MEMORY_TID)
+                                .isaPredicate(rec(uri("mem"), LST_TYPE, uri(MAX).maybe(), isa_(INT_TYPE).else_(jnt(15))))
                                 .create(), "llm memory structure as a lst of past interactions"),
                         LLM_USER_MEMORY_TYPE = Type.Builder.build()
                                 .tid(REC_TID)
@@ -113,7 +114,9 @@ public class llmInstSet extends AbstractInstSet {
                                         uri("attributes").maybe(), REC_TYPE,
                                         uri(TYPE), uri(AI)))
                                 .create(),
-                        docWrap(LLM_SKILL_TYPE = Type.Builder.build().tid(REC_TID).vid(LLM_SKILL_TID)
+                        docWrap(LLM_SKILL_TYPE = Type.Builder.build()
+                                        .tid(REC_TID)
+                                        .vid(LLM_SKILL_TID)
                                         .isaPredicate(rec(
                                                 uri(NAME), URI_TYPE,
                                                 uri(DESC), STR_TYPE,

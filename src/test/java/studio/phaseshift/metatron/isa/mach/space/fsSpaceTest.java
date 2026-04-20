@@ -31,6 +31,7 @@ import studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace;
 
 import java.nio.file.FileSystems;
 
+import static junit.framework.TestCase.assertTrue;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
@@ -44,7 +45,7 @@ import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_ISA_TID;
 public class fsSpaceTest extends AbstractSpaceTest {
 
     public fsSpaceTest() {
-        super(() -> {
+        super(f("/tmp"), () -> {
             mParser.eval("boot/script ->\n" +
                     "  [sh     => /bin/sh,\n" +
                     "   bash   => /bin/bash,\n" +
@@ -68,85 +69,41 @@ public class fsSpaceTest extends AbstractSpaceTest {
     @CsvSource(value = {
             "*<test:#>.count().?>3             % 14",
             "*boot/script/sh                   % /bin/sh",
-            "*<test:+>                         % {dir::<test:db?p=rwxrwxr-x>,dir::<test:file?p=rwxrwxr-x>,dir::<test:llm?p=rwxrwxr-x>}",
-            "*<test:file/test-py.py>           % file::<test:file/test-py.py?p=rwxrwxr-x>",
-            "*<test:file/test-sh.sh>           % file::<test:file/test-sh.sh?p=rwxrwxr-x>",
-            "*<test:file/test-bash.bash>       % file::<test:file/test-bash.bash?p=rwxrwxr-x>",
-           // "<test:file/test-sh.sh>()          % \"metatron 0.1-SNAPSHOT\"",
+            "*<test:+>                         % {dir::<test:db>,dir::<test:file>,dir::<test:llm>}",
     }, delimiter = '%')
-    public void testShell(final String code, final String expected) {
+    public void testFileSystem(final String code, final String expected) {
         LOG.warn("loaded: %s", this.space);
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
-    // Disable all abstract tests - fsSpace is for file system operations, not general CRUD
-    @Override
-    @Disabled
-    public void testStringCornerCases(String description, String value) {
+    @ParameterizedTest
+    @CsvSource(value = {
+            "*<test:file/test-py.py>           % #! /usr/venv/bin/python3",
+            "*<test:file/test-sh.sh>           % #! /usr/bin/env sh",
+            "*<test:file/test-bash.bash>       % #! /usr/bin/env bash",
+    }, delimiter = '%')
+    public void testFileTypes(final String code, final String expected) {
+        final Obj shell = mParser.eval(code);
+        LOG.info("loaded shell: %s", shell);
+        assertTrue(shell.isStr());
+        assertTrue(shell.strValue().startsWith(expected));
     }
 
-    @Override
     @Disabled
-    public void testIntegerBoundaries(String description, long value) {
+    @ParameterizedTest
+    @CsvSource(value = {
+            "<test:file/test-bash.bash>(1)     % /usr/bin/env bash",
+    }, delimiter = '%')
+    public void testShellEvaluation(final String code, final String expected) {
+        final Obj shell = mParser.eval(code);
+        LOG.info("loaded shell: %s", shell);
+        assertTrue(shell.isStr());
+        assertTrue(shell.strValue().startsWith(expected));
     }
 
-    @Override
     @Disabled
-    public void testRealBoundaries(String description, double value) {
-    }
-
     @Override
-    @Disabled
-    public void testBooleanValues(String description, boolean value) {
-    }
-
-    @Override
-    @Disabled
-    public void testNonExistentAccess(String key) {
-    }
-
-    @Override
-    @Disabled
-    public void testSequentialUpdates(int iterations) {
-    }
-
-    @Override
-    @Disabled
-    public void testBasicCRUD(String description, String key, String valueStr) {
-    }
-
-    @Override
-    @Disabled
-    public void testTypePreservation(String description, Obj value) {
-    }
-
-    @Override
-    @Disabled
-    public void testNestedRecords(int depth) {
-    }
-
-    @Override
-    @Disabled
-    public void testListHandling(String description, studio.phaseshift.metatron.isa.m.type.Lst listValue, int expectedCount) {
-    }
-
-    @Override
-    @Disabled
-    public void testTypeChanges(String description, Obj initialValue, Obj updatedValue) {
-    }
-
-    @Override
-    @Disabled
     public void testMultiFieldUpdates(int fieldCount) {
-    }
-
-    @Override
-    @Disabled
-    public void testSpecialStringValues(String description, String value) {
-    }
-
-    @Override
-    @Disabled
-    public void testEmptyRecords(int testNumber) {
+        // DO NOTHING
     }
 }
