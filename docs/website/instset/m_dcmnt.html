@@ -257,14 +257,12 @@ bin/metatron</code></pre>
    super=>!*/m,
    sub  =>!*/m/dcmnt/space/schema/mflix],
  constq =>[
-   studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer@666bf179,
+   studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer@1f56f648,
    _id@/m/dcmnt/_id],
  type   =>[
-   document::T,
    collection::T,
    dcmntspace::T],
  inst   =>[
-   as?lst<=document(lst::T),
    mql?rec{*}<=dcmntspace(uri::T,rec::T),
    mql?rec{*}<=collection(rec::T)],
  rewrite=>[
@@ -285,7 +283,7 @@ bin/metatron</code></pre>
         <div class="container-xxl mb-4">
             <div class="d-flex justify-content-center gap-2 flex-wrap">
                 <a href="#consts" class="btn btn-outline-primary">Consts <span class="badge bg-secondary">1</span></a>
-                <a href="#types" class="btn btn-outline-primary">Types <span class="badge bg-secondary">2</span></a>
+                <a href="#types" class="btn btn-outline-primary">Types <span class="badge bg-secondary">1</span></a>
                 <a href="#instructions" class="btn btn-outline-primary">Insts <span class="badge bg-secondary">2</span></a>
                 <a href="#spaces" class="btn btn-outline-primary">Spaces <span class="badge bg-secondary">1</span></a>
                 <a href="#rewrites" class="btn btn-outline-primary">Rewrites <span class="badge bg-secondary">8</span></a>
@@ -416,10 +414,6 @@ bin/metatron</code></pre>
                     <span class="code">collection</span>
                     <span class="badge bg-primary">T</span>
                 </a>
-                <a href="#type-document" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
-                    <span class="code">document</span>
-                    <span class="badge bg-primary">T</span>
-                </a>
                 </div>
             </div>
                     
@@ -510,7 +504,7 @@ bin/metatron</code></pre>
             
         <div class="container-xxl mb-4" id="types">
             <h3 class="text-primary mb-3">
-                Types <span class="badge bg-primary">2</span>
+                Types <span class="badge bg-primary">1</span>
             </h3>
             
                 <div class="card mb-3" id="type-collection">
@@ -528,25 +522,6 @@ bin/metatron</code></pre>
                     
                     <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">no documentation available</p>
-                    </div>
-                </div>
-                <div class="card mb-3" id="type-document">
-                    <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span>
-                            <span class="code text-primary fw-bold">document::T</span>
-                            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">rec::T</span></span>
-                        </span>
-                        <small class="text-muted code">/m/dcmnt/document</small>
-                    </div>
-                    
-                    <div class="card-body p-2">
-                        <pre class="mb-0"><code class="language-mtron">rec::T[?[
-     _id   =&gt;uri::T,
-     uri::T=&gt;#::T]]@/m/dcmnt/document</code></pre>
-                    </div>
-                    
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">a document (record) from a collection</p>
                     </div>
                 </div>
         </div>
@@ -630,27 +605,27 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">an interface to document-oriented databases</p>
+                        <p class="mb-0 text-light">an interface to document-oriented databases (MongoDB wire protocol)</p>
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"a rec describing a document database connection" <span class="text-light">=&gt;</span> "a rec with fields for configuring a document database connection"
    <pre><code class="language-mtron hljs">[
+ {?}root      =&gt;&#x27;the root type constraint — writes at do...&#x27;,
  route        =&gt;&#x27;the route for accessing documents&#x27;,
- {?}collection=&gt;&#x27;schema discovery on collections (empty ...&#x27;,
- host         =&gt;&#x27;connection uri (mongodb://host:port/dat...&#x27;,
  {?}serializer=&gt;&#x27;the serializer for BSON documents&#x27;,
- pattern      =&gt;&#x27;the pattern for accessing documents&#x27;]</code></pre></pre>
+ pattern      =&gt;&#x27;the pattern for accessing documents&#x27;,
+ host         =&gt;&#x27;connection uri (mongodb://host:port/dat...&#x27;,
+ {?}schema    =&gt;&#x27;an instset of collection types auto-dis...&#x27;]</code></pre></pre>
                     </div>
         <div class="card-body border-top py-2">
             <small class="text-muted fw-bold">examples:</small>
-            <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">dcmntspace::[pattern     =&gt; moviedb:#,
-             host        =&gt; &lt;mongodb://localhost:27017/movies&gt;,
-             serializer  =&gt; !*&lt;/m/mach/io/serializer/bson&gt;,
-             collection  =&gt; [,],
-             route       =&gt; [moviedb:=&gt;/moviedb/]]@/usr/entertainment/moviedb;
+            <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">dcmntspace::[pattern =&gt; moviedb:#,
+             host    =&gt; &lt;mongodb://localhost:27017/movies&gt;,
+             root    =&gt; rec::T,
+             route   =&gt; [moviedb:=&gt;/moviedb/]]@/usr/entertainment/moviedb;
 
 *moviedb:schema
-*moviedb:
+*moviedb:movie/
 </code></pre>
         </div>
                 </div>
@@ -802,7 +777,7 @@ bin/metatron</code></pre>
         <div class="container-xxl py-3 text-center">
             <hr class="border-secondary">
             <small class="text-muted">
-                generated by metatron instset doc generator on build 0-2026-04-21 14:45:34<br>
+                generated by metatron instset doc generator on build 0-2026-04-21 15:13:12<br>
                 © PhaseShift Studio, LLC
             </small>
         </div>
