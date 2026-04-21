@@ -1,2 +1,84 @@
 [discrete]
 == Tble Space
+
+A relational (SQL) database stores structured data in named **tables**, where each table is a collection of typed
+rows. In metatron, a relational database is a **tblespace** backed by any JDBC-compliant driver (SQLite, PostgreSQL,
+MariaDB, etc.). Each table maps to a `rec::T` refinement whose fields correspond to columns; the `schema` instset
+is auto-generated at connection time from the live database metadata.
+
+++++
+<!-- 🐖
+*tblespace
+-->
+++++
+
+[cols="6a,6a",separator=🧱,role="table-bordered center"]
+|===
+🧱 creating a `tblespace` requires a JDBC `host` URI, a `driver`, and a `route`. the `schema` instset is
+auto-discovered from the live database; the `pattern` determines which URIs route to this space.
+
+🧱
+++++
+<!-- 🐖
+*tblespace
+-->
+++++
+|===
+
+++++
+<!-- 🐖
+tblespace::[pattern => db:#,               /
+            host    => <jdbc:sqlite::memory:>,/
+            driver  => <org.sqlite.JDBC>,    /
+            route   => [db:=><>]]@/sys/space/db                    [-- <1>
+db:person/1 -> [name=>'alice', age=>30]                            [-- <2>
+db:person/2 -> [name=>'bob',   age=>25]                            [-- <3>
+*db:person/                                                        [-- <4>
+*db:person/+?subq[name=>_]                                         [-- <5>
+-->
+++++
+<1> a `tblespace` mounted at `db:#`. SQLite in-memory database for demonstration.
+<2> writing a row to the `person` table (created on first write).
+<3> writing a second row.
+<4> listing all rows in the `person` table.
+<5> querying the `person` table — all rows with any `name` value.
+
+[discrete]
+=== Schema Discovery
+
+On connection, `tblespace` introspects the live database and generates a `schema` instset. Each discovered table
+becomes a `rec::T` refinement type with fields matching the table's columns and types.
+
+++++
+<!-- 🐖
+*sys/space/db/schema
+*sys/space/db/schema/type/+
+-->
+++++
+
+[.card]
+--
+[discrete,.center]
+==== KV store vs. table store
+
+`tblespace` is a **hybrid** space. URIs that match a discovered table (`db:person/1`) route to the SQL table
+read/write path. URIs that don't match any table (`db:kv/mykey`) fall through to a general-purpose key/value store
+backed by the same database. The KV store has no `root` type constraint — any `obj` can be stored there.
+--
+
+[discrete]
+=== SQL Rewrites
+
+Common metatron expressions are rewritten to native SQL before execution, pushing work to the database engine
+rather than the metatron VM:
+
+++++
+<!-- 🐖
+*db:person/+?subq[age=>?<30]                        [-- <1>
+*db:person/+?subq[name=>?[count()=>_]]              [-- <2>
+*db:person/+?subq[age=>_].>>[name=>_]               [-- <3>
+-->
+++++
+<1> all people under 30 — rewritten to `SELECT * FROM person WHERE age < 30`.
+<2> count of distinct names — rewritten to `SELECT COUNT(name) FROM person`.
+<3> project to name only — rewritten to `SELECT name FROM person`.

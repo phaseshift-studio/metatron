@@ -253,9 +253,11 @@ bin/metatron</code></pre>
        pattern  =>docq,
        obj      =>memspace::[pattern=><#>],
        inst     =>instset::[pattern=><#>]]],
- space  =>[super=>!*/m],
+ space  =>[
+   super=>!*/m,
+   sub  =>!*/m/dcmnt/space/schema/mflix],
  constq =>[
-   studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer@4c5d414f,
+   studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer@666bf179,
    _id@/m/dcmnt/_id],
  type   =>[
    document::T,
@@ -290,6 +292,103 @@ bin/metatron</code></pre>
             </div>
         </div>
             
+        <div class="container-xxl mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0 text-primary">Hierarchy</h5>
+                </div>
+                <div class="card-body d-flex flex-wrap gap-2">
+                    
+                <a href="!.html" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-down"></i> !
+                </a>
+                <a href="*.html" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-down"></i> *
+                </a>
+                <a href=".html" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-down"></i> /
+                </a>
+                <a href="m.html" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-down"></i> m
+                </a>
+                <a href=".html" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-down"></i> /
+                </a>
+                <a href="d.html" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-down"></i> d
+                </a>
+                <a href="c.html" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-down"></i> c
+                </a>
+                <a href="m.html" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-down"></i> m
+                </a>
+                <a href="n.html" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-down"></i> n
+                </a>
+                <a href="t.html" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-down"></i> t
+                </a>
+                <a href=".html" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-down"></i> /
+                </a>
+                <a href="s.html" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-down"></i> s
+                </a>
+                <a href="p.html" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-down"></i> p
+                </a>
+                <a href="a.html" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-down"></i> a
+                </a>
+                <a href="c.html" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-down"></i> c
+                </a>
+                <a href="e.html" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-down"></i> e
+                </a>
+                <a href=".html" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-down"></i> /
+                </a>
+                <a href="s.html" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-down"></i> s
+                </a>
+                <a href="c.html" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-down"></i> c
+                </a>
+                <a href="h.html" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-down"></i> h
+                </a>
+                <a href="e.html" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-down"></i> e
+                </a>
+                <a href="m.html" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-down"></i> m
+                </a>
+                <a href="a.html" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-down"></i> a
+                </a>
+                <a href=".html" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-down"></i> /
+                </a>
+                <a href="m.html" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-down"></i> m
+                </a>
+                <a href="f.html" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-down"></i> f
+                </a>
+                <a href="l.html" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-down"></i> l
+                </a>
+                <a href="i.html" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-down"></i> i
+                </a>
+                <a href="x.html" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-down"></i> x
+                </a>
+                </div>
+            </div>
+        </div>
             
         <div class="container-xxl mb-4">
             <div class="card">
@@ -526,7 +625,8 @@ bin/metatron</code></pre>
  {?}serializer=&gt;uri::T,
  route        =&gt;[uri::T=&gt;uri::T],
  {?}collection=&gt;lst::T,
- {?}schema    =&gt;#::T])][inst?rng=dcmntspace&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/dcmnt/space/dcmntspace</code></pre>
+ {?}root      =&gt;type::T,
+ {?}schema    =&gt;instset::T])][inst?rng=dcmntspace&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/dcmnt/space/dcmntspace</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -535,11 +635,11 @@ bin/metatron</code></pre>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"a rec describing a document database connection" <span class="text-light">=&gt;</span> "a rec with fields for configuring a document database connection"
    <pre><code class="language-mtron hljs">[
- host         =&gt;&#x27;connection uri (mongodb://host:port/dat...&#x27;,
- {?}collection=&gt;&#x27;schema discovery on collections (empty ...&#x27;,
  route        =&gt;&#x27;the route for accessing documents&#x27;,
- pattern      =&gt;&#x27;the pattern for accessing documents&#x27;,
- {?}serializer=&gt;&#x27;the serializer for BSON documents&#x27;]</code></pre></pre>
+ {?}collection=&gt;&#x27;schema discovery on collections (empty ...&#x27;,
+ host         =&gt;&#x27;connection uri (mongodb://host:port/dat...&#x27;,
+ {?}serializer=&gt;&#x27;the serializer for BSON documents&#x27;,
+ pattern      =&gt;&#x27;the pattern for accessing documents&#x27;]</code></pre></pre>
                     </div>
         <div class="card-body border-top py-2">
             <small class="text-muted fw-bold">examples:</small>
@@ -702,7 +802,7 @@ bin/metatron</code></pre>
         <div class="container-xxl py-3 text-center">
             <hr class="border-secondary">
             <small class="text-muted">
-                generated by metatron instset doc generator on build 0-2026-04-20 15:02:16<br>
+                generated by metatron instset doc generator on build 0-2026-04-21 14:45:34<br>
                 © PhaseShift Studio, LLC
             </small>
         </div>

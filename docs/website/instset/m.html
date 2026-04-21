@@ -254,6 +254,32 @@ bin/metatron</code></pre>
        obj      =>memspace::[pattern=><#>],
        inst     =>instset::[pattern=><#>]]],
  space  =>[sub=>{!*/m/mach,!*/m/math,!*/m/web,!*/m/iot,!*/m/grph,!*/m/llm,!*/m/tble,!*/m/dcmnt}],
+ const  =>[noobj],
+ type   =>[
+   bool::T,
+   int::T,
+   real::T,
+   bytes::T,
+   str::T,
+   uri::T,
+   rel::T,
+   lst::T,
+   rec::T,
+   instset::T,
+   inst::T,
+   code::T,
+   fail::T,
+   space::T,
+   memspace::T,
+   stack::T,
+   meta::T,
+   q::T,
+   subq::T,
+   sub::T,
+   typeq::T,
+   docq::T,
+   incrq::T,
+   constq::T],
  inst   =>[
    as?bool<=bool(bool::T),
    as?bytes<=bool(bytes::T),
@@ -325,7 +351,7 @@ bin/metatron</code></pre>
    lt?bool<=str(str::T),
    lte?bool<=str(str::T),
    plus?str<=str(str::T),
-   sum?str<=str{*}(str::T),
+   sum?str<=str{*}(str{?}::T),
    ucase?str<=str(),
    lcase?str<=str(),
    within?B<=str(B::T),
@@ -338,10 +364,10 @@ bin/metatron</code></pre>
    has?uri{?}<=uri(uri::T),
    split?lst<=uri(uri::T),
    merge?uri<=uri{*}(uri::T),
-   rshift?#{*}<=uri(#::T),
+   rshift?#{*}<=uri(#{*}::T),
    minus?uri<=uri(uri::T),
-   plus?uri{?}<=uri(uri::T),
-   mult?uri{?}<=uri(uri::T),
+   plus?uri{?}<=uri(uri{?}::T),
+   mult?uri{?}<=uri(uri{?}::T),
    sum?uri<=uri{*}(),
    prod?uri<=uri{*}(),
    path?uri<=uri(uri::T),
@@ -369,8 +395,8 @@ bin/metatron</code></pre>
    rshift?#{*}<=rel(#::T),
    get?A{?}<=rel(#::T),
    select?rel{?}<=rel(rel::T),
-   plus?rel{*}<=rel(rel::T),
-   mult?rel{*}<=rel(rel::T),
+   plus?rel{*}<=rel(rel{*}::T),
+   mult?rel{*}<=rel(rel{*}::T),
    neg?rel<=rel(),
    one?rel<=rel(),
    zero?rel<=rel(),
@@ -380,14 +406,14 @@ bin/metatron</code></pre>
    reverse?lst<=lst(),
    plus?lst<=lst(lst::T),
    mult?lst<=lst(lst::T),
-   rshift?#{*}<=lst(#::T),
+   rshift?A{*}<=lst(#{*}::T),
    zero?lst<=lst(),
    split(lst::T),
-   merge?#{*}<=lst(),
-   merge?#{*}<=lst(uri::T),
-   merge?#{*}<=lst(str::T),
+   merge?A{*}<=lst(),
+   merge?A{*}<=lst(uri::T),
+   merge?A{*}<=lst(str::T),
    has?lst{?}<=lst(#::T),
-   within?lst<=lst(#::T),
+   within?lst<=lst(#{*}::T),
    sum?lst<=lst{*}(),
    select?lst{?}<=lst(lst::T),
    update?lst<=lst(lst::T),
@@ -402,15 +428,15 @@ bin/metatron</code></pre>
    merge?rel{*}<=rec(),
    dom?#{*}<=rec(),
    rng?#{*}<=rec(),
-   rshift?#{*}<=rec(#::T),
-   plus?rec<=rec(rec::T),
+   rshift?#{*}<=rec(#{*}::T),
+   plus?rec<=rec(rec{??}::T),
    mplus?rec<=rec(rec::T),
    select?rec{?}<=rec(rec::T),
    select?#{?}<=rec(uri::T),
-   select?rec{?}<=rec(uri::T),
+   select?rec{?}<=rec(uri{2,}::T),
    update?rec{?}<=rec(rec::T),
    update?rec{?}<=rec(rel::T),
-   within?rec<=rec(#::T),
+   within?rec<=rec(#{*}::T),
    sum?rec<=rec{*}(),
    as?lst<=code(lst::T),
    cause?fail{?}<=fail(),
@@ -421,97 +447,71 @@ bin/metatron</code></pre>
    order?A{*}<=A{*}(#::T),
    as?noobj{0}<=A(),
    as?B<=A(#::T),
-   import?space{*}<=#{?}(uri::T,uri::T),
+   import?space{*}<=#{?}(uri::T,uri{?}::T),
    dedup?A{*}<=A{*}(),
    barrier?lst<=#{*}(lst::T),
    barrier?rec<=rel{*}(rec::T),
    barrier?A{*}<=A{*}(),
-   barrier?A{*}<=A{*}(A::T),
+   barrier?A{*}<=A{*}(A{*}::T),
    as?A<=A(A::T),
    repeat?A{*}<=A(#::T,#::T),
-   !#::T,
-   !*#::T,
-   auto_at?#{*}<=#{?}(#::T,#::T),
+   !#{?}::T,
+   !*#{?}::T,
+   auto_at?#{*}<=#{?}(#{?}::T,#{?}::T),
    auto_to(),
-   catch?A{*}<=A(A::T),
+   catch?A{*}<=A(A{*}::T),
    end?noobj{0}<=#{*}(),
-   println?#{*}<=#{?}(#::T),
-   print?#{*}<=#{?}(#::T),
-   at?A<=A(uri::T,#::T),
+   println?#{*}<=#{?}(#{*}::T),
+   print?#{*}<=#{?}(#{*}::T),
+   at?A<=A(uri{?}::T,#{?}::T),
    id?A<=A(),
    id?A{*}<=A{*}(),
-   and?bool<=A(bool::T,bool::T,bool::T,bool::T,bool::T),
-   or?bool<=A(bool::T,bool::T,bool::T,bool::T,bool::T),
-   apply(#::T),
+   and?bool<=A(bool::T,bool::T,bool{?}::T,bool{?}::T,bool{?}::T),
+   or?bool<=A(bool::T,bool::T,bool{?}::T,bool{?}::T,bool{?}::T),
+   apply(#{*}::T),
    map?B<=A(B::T),
-   map?B{?}<=A{?}(B::T),
-   filter?A{?}<=A(#::T),
+   map?B{?}<=A{?}(B{?}::T),
+   filter?A{?}<=A(#{?}::T),
    side?A<=A(#::T),
    tid(),
    vid?A<=A(uri::T),
    vid(),
-   else(#::T),
+   else(#{?}::T),
    is?A{?}<=A{?}(isa(bool::T).else(false)),
    ?#::T,
-   matches?bool<=#{?}(#::T),
+   matches?bool<=#{?}(#{?}::T),
    block?B<=A{?}(B::T),
-   split(#::T),
+   split(#{+}::T),
    choose(rec::T),
    merge?lst<=A{*}(lst::T),
-   merge?#{*}<=A{*}(#::T),
-   merge?A{*}<=A{*}(A::T),
+   merge?#{*}<=A{*}(#{*}::T),
+   merge?A{*}<=A{*}(A{*}::T),
    not(bool::T),
-   eq(#::T),
-   neq(#::T),
-   to?#{?}<=#{?}(uri::T),
+   eq?bool<=A(A::T),
+   neq?bool<=A(A::T),
+   to?A{?}<=A{?}(uri::T),
    *uri::T,
-   ref(#::T),
+   ref(#{*}::T),
    thread?A<=A(#::T),
-   source(str::T),
+   source?B{*}<=A(str::T),
    type?/m/type<=/m/type(),
    type?/m/type<=A(),
    cc?int<=A{*}(),
    cc?A{*}<=A{*}(int::T),
-   failure?fail<=#{*}(#::T),
+   failure?fail<=#{*}(#{?}::T),
    parent(),
-   count?int<=#{*}(),
+   count?int<=A{*}(),
    skip?A{*}<=A{*}(int::T),
    take?A{*}<=A{*}(int::T),
-   reify?rec<=#{?}(),
+   reify?rec<=A(),
    reduce(#::T),
    where(#::T),
    group?rec<=#{*}(rec::T),
    eval?#{*}<=#{?}(code=>str::T),
    swap?A<=A(B::T),
-   rshift?B{?}<=A(),
-   lshift?B{?}<=A(),
-   start?A{**}<=noobj{0}(A::T)],
- type   =>[
-   bool::T,
-   int::T,
-   real::T,
-   bytes::T,
-   str::T,
-   uri::T,
-   rel::T,
-   lst::T,
-   rec::T,
-   instset::T,
-   inst::T,
-   code::T,
-   fail::T,
-   space::T,
-   memspace::T,
-   stack::T,
-   meta::T,
-   q::T,
-   subq::T,
-   sub::T,
-   typeq::T,
-   docq::T,
-   incrq::T,
-   constq::T],
- const  =>[noobj],
+   rshift?B{*}<=A(),
+   lshift?B{*}<=A(),
+   start?A{**}<=noobj{0}(A{**}::T)],
  rewrite=>[
    /m/inst/rewrite/id_removal?code{?}<=code(),
    /m/inst/rewrite/map_nest?code{?}<=code(),
@@ -1200,8 +1200,8 @@ abc(a=&gt;?int::T,b=&gt;|(*a +10)){ _.*b }       [-- dependent arg inst    --]
                     
                     <div class="card-body p-2">
                         <pre class="mb-0"><code class="language-mtron">rec::T[?[
-     {?}constq =&gt;[#::T],
-     {?}type   =&gt;{?}[T::T],
+     {?}constq =&gt;[#{?}::T],
+     {?}type   =&gt;{?}[#{*}::T],
      {?}inst   =&gt;{?}[inst::T],
      {?}rewrite=&gt;{?}[inst::T],
      {?}sugar  =&gt;{?}[lst::T]]]@/m/instset</code></pre>
@@ -1213,11 +1213,11 @@ abc(a=&gt;?int::T,b=&gt;|(*a +10)){ _.*b }       [-- dependent arg inst    --]
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">
    <pre><code class="language-mtron hljs">[
- {?}inst   =&gt;&#x27;instructions associated with the types ...&#x27;,
- {?}sugar  =&gt;&#x27;custom instruction syntax sugars given ...&#x27;,
  {?}constq =&gt;&#x27;constants used across the instset&#x27;,
- {?}type   =&gt;&quot;types used to structure of the instset&#x27;...&quot;,
- {?}rewrite=&gt;&#x27;code&lt;=code instructions that capture th...&#x27;]</code></pre></pre>
+ {?}sugar  =&gt;&#x27;custom instruction syntax sugars given ...&#x27;,
+ {?}inst   =&gt;&#x27;instructions associated with the types ...&#x27;,
+ {?}rewrite=&gt;&#x27;code&lt;=code instructions that capture th...&#x27;,
+ {?}type   =&gt;&quot;types used to structure of the instset&#x27;...&quot;]</code></pre></pre>
                     </div>
                 </div>
                 <div class="card mb-3" id="type-int">
@@ -2460,12 +2460,12 @@ a/b/c/                           [-- relative/branch uri            --]
                     <div class="card-header d-flex justify-content-between align-items-center py-2 text-light border-bottom border-secondary">
                         <span>
                             <span class="code text-primary fw-bold">count</span>
-                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#{*}.html#type-#" data-bs-toggle="tooltip" title="maybe some domain" class="code text-info">#{*}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-int" data-bs-toggle="tooltip" title="range" class="code text-success">/m/int</a></span></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#" data-bs-toggle="tooltip" title="maybe some generic domain" class="code text-info">A{*}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-int" data-bs-toggle="tooltip" title="range" class="code text-success">/m/int</a></span></span>
                         </span>
-                        <small class="text-muted code">/m/inst/count?/m/int&lt;=#{*}</small>
+                        <small class="text-muted code">/m/inst/count?/m/int&lt;=A{*}</small>
                     </div>
                     <div class="card-body p-2">
-                        <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-count-doc-0-tab').click(); document.getElementById('inst-count-doc-0').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">count?int&lt;=#{*}(){&lt;j&gt;}</code></pre>
+                        <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-count-doc-0-tab').click(); document.getElementById('inst-count-doc-0').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">count?int&lt;=A{*}(){&lt;j&gt;}</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -2602,12 +2602,12 @@ a/b/c/                           [-- relative/branch uri            --]
                     <div class="card-header d-flex justify-content-between align-items-center py-2 text-light border-bottom border-secondary">
                         <span>
                             <span class="code text-primary fw-bold">eq</span>
-                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#.html#type-#" data-bs-toggle="tooltip" title="domain" class="code text-info">#</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-bool" data-bs-toggle="tooltip" title="range" class="code text-success">/m/bool</a></span></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#" data-bs-toggle="tooltip" title="generic domain" class="code text-info">A</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-bool" data-bs-toggle="tooltip" title="range" class="code text-success">/m/bool</a></span></span>
                         </span>
-                        <small class="text-muted code">/m/inst/eq?/m/bool&lt;=#</small>
+                        <small class="text-muted code">/m/inst/eq?/m/bool&lt;=A</small>
                     </div>
                     <div class="card-body p-2">
-                        <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-eq-doc-0-tab').click(); document.getElementById('inst-eq-doc-0').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">eq?bool&lt;=#(#::T){&lt;j&gt;}</code></pre>
+                        <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-eq-doc-0-tab').click(); document.getElementById('inst-eq-doc-0').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">eq?bool&lt;=A(A::T){&lt;j&gt;}</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -2690,9 +2690,9 @@ a/b/c/                           [-- relative/branch uri            --]
                     <div class="card-header d-flex justify-content-between align-items-center py-2 text-light border-bottom border-secondary">
                         <span>
                             <span class="code text-primary fw-bold">from</span>
-                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#{?}.html#type-#" data-bs-toggle="tooltip" title="maybe domain" class="code text-info">#{?}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#{*}.html#type-#" data-bs-toggle="tooltip" title="maybe some range" class="code text-success">#{*}</a></span></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#" data-bs-toggle="tooltip" title="maybe generic domain" class="code text-info">A{?}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#" data-bs-toggle="tooltip" title="maybe some generic range" class="code text-success">B{*}</a></span></span>
                         </span>
-                        <small class="text-muted code">/m/inst/from?#{*}&lt;=#{?}</small>
+                        <small class="text-muted code">/m/inst/from?B{*}&lt;=A{?}</small>
                     </div>
                     <div class="card-body p-2">
                         <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-from-doc-0-tab').click(); document.getElementById('inst-from-doc-0').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">*uri::T</code></pre>
@@ -3169,7 +3169,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     <div class="card-body p-2">
                         <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-lshift-doc-0-tab').click(); document.getElementById('inst-lshift-doc-0').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">lshift?uri&lt;=uri(rec::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-lshift-doc-1-tab').click(); document.getElementById('inst-lshift-doc-1').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">lshift?#{*}&lt;=rel(){&lt;j&gt;}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-lshift-doc-2-tab').click(); document.getElementById('inst-lshift-doc-2').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">lshift?B{?}&lt;=A(){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-lshift-doc-2-tab').click(); document.getElementById('inst-lshift-doc-2').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">lshift?B{*}&lt;=A(){&lt;j&gt;}</code></pre>
                     </div>
                     
             <div class="card-body border-top p-0">
@@ -3475,9 +3475,9 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                         <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-merge-doc-0-tab').click(); document.getElementById('inst-merge-doc-0').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">merge?str&lt;=str{*}(str::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-merge-doc-1-tab').click(); document.getElementById('inst-merge-doc-1').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">merge?uri&lt;=uri{*}(uri::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-merge-doc-2-tab').click(); document.getElementById('inst-merge-doc-2').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">merge?rec&lt;=rel{*}(rec::T){&lt;j&gt;}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-merge-doc-3-tab').click(); document.getElementById('inst-merge-doc-3').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">merge?#{*}&lt;=lst(){&lt;j&gt;}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-merge-doc-3-tab').click(); document.getElementById('inst-merge-doc-3').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">merge?#{*}&lt;=lst(uri::T){&lt;j&gt;}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-merge-doc-3-tab').click(); document.getElementById('inst-merge-doc-3').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">merge?#{*}&lt;=lst(str::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-merge-doc-3-tab').click(); document.getElementById('inst-merge-doc-3').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">merge?A{*}&lt;=lst(){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-merge-doc-3-tab').click(); document.getElementById('inst-merge-doc-3').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">merge?A{*}&lt;=lst(uri::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-merge-doc-3-tab').click(); document.getElementById('inst-merge-doc-3').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">merge?A{*}&lt;=lst(str::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-merge-doc-4-tab').click(); document.getElementById('inst-merge-doc-4').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">merge?rel{*}&lt;=rec(){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-merge-doc-5-tab').click(); document.getElementById('inst-merge-doc-5').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">merge?lst&lt;=A{*}(lst::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-merge-doc-6-tab').click(); document.getElementById('inst-merge-doc-6').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">merge?#{*}&lt;=A{*}(#{*}::T){&lt;j&gt;}</code></pre>
@@ -3877,12 +3877,12 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     <div class="card-header d-flex justify-content-between align-items-center py-2 text-light border-bottom border-secondary">
                         <span>
                             <span class="code text-primary fw-bold">neq</span>
-                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#.html#type-#" data-bs-toggle="tooltip" title="domain" class="code text-info">#</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-bool" data-bs-toggle="tooltip" title="range" class="code text-success">/m/bool</a></span></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#" data-bs-toggle="tooltip" title="generic domain" class="code text-info">A</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-bool" data-bs-toggle="tooltip" title="range" class="code text-success">/m/bool</a></span></span>
                         </span>
-                        <small class="text-muted code">/m/inst/neq?/m/bool&lt;=#</small>
+                        <small class="text-muted code">/m/inst/neq?/m/bool&lt;=A</small>
                     </div>
                     <div class="card-body p-2">
-                        <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-neq-doc-0-tab').click(); document.getElementById('inst-neq-doc-0').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">neq?bool&lt;=#(#::T){&lt;j&gt;}</code></pre>
+                        <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-neq-doc-0-tab').click(); document.getElementById('inst-neq-doc-0').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">neq?bool&lt;=A(A::T){&lt;j&gt;}</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -4601,7 +4601,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     <div class="card-body p-2">
                         <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-reify-doc-0-tab').click(); document.getElementById('inst-reify-doc-0').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">reify?rec&lt;=fail(){&lt;j&gt;}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-reify-doc-1-tab').click(); document.getElementById('inst-reify-doc-1').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">reify?rec&lt;=#{?}(){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-reify-doc-1-tab').click(); document.getElementById('inst-reify-doc-1').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">reify?rec&lt;=A(){&lt;j&gt;}</code></pre>
                     </div>
                     
             <div class="card-body border-top p-0">
@@ -4794,9 +4794,9 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                         <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-rshift-doc-0-tab').click(); document.getElementById('inst-rshift-doc-0').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">rshift?#{*}&lt;=uri(#{*}::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-rshift-doc-1-tab').click(); document.getElementById('inst-rshift-doc-1').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">rshift?#{*}&lt;=rel(){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-rshift-doc-1-tab').click(); document.getElementById('inst-rshift-doc-1').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">rshift?#{*}&lt;=rel(#::T){&lt;j&gt;}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-rshift-doc-2-tab').click(); document.getElementById('inst-rshift-doc-2').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">rshift?#{*}&lt;=lst(#{*}::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-rshift-doc-2-tab').click(); document.getElementById('inst-rshift-doc-2').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">rshift?A{*}&lt;=lst(#{*}::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-rshift-doc-3-tab').click(); document.getElementById('inst-rshift-doc-3').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">rshift?#{*}&lt;=rec(#{*}::T){&lt;j&gt;}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-rshift-doc-4-tab').click(); document.getElementById('inst-rshift-doc-4').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">rshift?B{?}&lt;=A(){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-rshift-doc-4-tab').click(); document.getElementById('inst-rshift-doc-4').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">rshift?B{*}&lt;=A(){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-rshift-doc-5-tab').click(); document.getElementById('inst-rshift-doc-5').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">rshift?file{*}&lt;=file(isa(uri::T).else(&lt;#&gt;)){&lt;j&gt;}</code></pre>
                     </div>
                     
@@ -5085,12 +5085,12 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     <div class="card-header d-flex justify-content-between align-items-center py-2 text-light border-bottom border-secondary">
                         <span>
                             <span class="code text-primary fw-bold">source</span>
-                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#.html#type-#" data-bs-toggle="tooltip" title="domain" class="code text-info">#</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#{*}.html#type-#" data-bs-toggle="tooltip" title="maybe some range" class="code text-success">#{*}</a></span></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#" data-bs-toggle="tooltip" title="generic domain" class="code text-info">A</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#" data-bs-toggle="tooltip" title="maybe some generic range" class="code text-success">B{*}</a></span></span>
                         </span>
-                        <small class="text-muted code">/m/inst/source?#{*}&lt;=#</small>
+                        <small class="text-muted code">/m/inst/source?B{*}&lt;=A</small>
                     </div>
                     <div class="card-body p-2">
-                        <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-source-doc-0-tab').click(); document.getElementById('inst-source-doc-0').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">source?#{*}&lt;=#(str::T){&lt;j&gt;}</code></pre>
+                        <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-source-doc-0-tab').click(); document.getElementById('inst-source-doc-0').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">source?B{*}&lt;=A(str::T){&lt;j&gt;}</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -5380,12 +5380,12 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     <div class="card-header d-flex justify-content-between align-items-center py-2 text-light border-bottom border-secondary">
                         <span>
                             <span class="code text-primary fw-bold">to</span>
-                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#{?}.html#type-#" data-bs-toggle="tooltip" title="maybe domain" class="code text-info">#{?}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#{?}.html#type-#" data-bs-toggle="tooltip" title="maybe range" class="code text-success">#{?}</a></span></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#" data-bs-toggle="tooltip" title="maybe generic domain" class="code text-info">A{?}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#" data-bs-toggle="tooltip" title="maybe generic range" class="code text-success">A{?}</a></span></span>
                         </span>
-                        <small class="text-muted code">/m/inst/to?#{?}&lt;=#{?}</small>
+                        <small class="text-muted code">/m/inst/to?A{?}&lt;=A{?}</small>
                     </div>
                     <div class="card-body p-2">
-                        <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-to-doc-0-tab').click(); document.getElementById('inst-to-doc-0').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">to?#{?}&lt;=#{?}(uri::T){&lt;j&gt;}</code></pre>
+                        <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-to-doc-0-tab').click(); document.getElementById('inst-to-doc-0').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">to?A{?}&lt;=A{?}(uri::T){&lt;j&gt;}</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -5870,7 +5870,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
  pattern=&gt;uri::T,
  host   =&gt;uri::T,
  route  =&gt;[uri::T=&gt;uri::T],
- peers  =&gt;[uri::T]])){&lt;j&gt;}]@/m/space/meta</code></pre>
+ peers  =&gt;[uri{*}::T]])){&lt;j&gt;}]@/m/space/meta</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -6070,7 +6070,7 @@ a-&gt;2+*a                   [-- 4 via sugar&#x27;d writing/reading a --]</code>
         <div class="container-xxl py-3 text-center">
             <hr class="border-secondary">
             <small class="text-muted">
-                generated by metatron instset doc generator on build 0-2026-04-20 15:01:19<br>
+                generated by metatron instset doc generator on build 0-2026-04-21 14:44:30<br>
                 © PhaseShift Studio, LLC
             </small>
         </div>

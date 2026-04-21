@@ -1,0 +1,111 @@
+[discrete]
+== Space
+
+A **space** is a typed read/write storage system. Spaces maintain the `uri\<\=>obj` links that make up metatron's
+distributed memory model. Every space is itself an `obj` — readable, writable, and navigable like any other address
+in the system.
+
+[cols="1a,5a",separator=🧱,options=header,role="table-bordered small center"]
+|===
+🧱kind 🧱 description
+
+🧱 `space`
+🧱
+++++
+<!-- 🐖
+*space
+-->
+++++
+
+🧱 `memspace`
+🧱 an in-memory associative array. non-persistent, O(1) read/write, used extensively in testing and as the backing
+store for the system namespace (`/sys/`).
+
+++++
+<!-- 🐖
+*memspace
+-->
+++++
+
+🧱 `fsspace`
+🧱 the local file system. the hierarchical `uri` address maps naturally to the file/folder tree.
+
+++++
+<!-- 🐖
+*fsspace
+-->
+++++
+
+🧱 `dcmntspace`
+🧱 a document database (MongoDB). each collection maps to a `rec::T` refinement type; the `root` field declares
+the per-collection type contract and the `schema` field holds the full type vocabulary as an `instset`.
+
+++++
+<!-- 🐖
+*dcmntspace
+-->
+++++
+
+🧱 `tblespace`
+🧱 a relational (SQL) database. each table is a `rec::T` refinement with columns as fields; the `schema` instset
+contains one type per table.
+
+++++
+<!-- 🐖
+*tblespace
+-->
+++++
+
+🧱 `grphspace`
+🧱 a property graph database (Apache TinkerPop / JanusGraph). vertices and edges are `rec::T` objs with typed
+properties; graph traversal instructions (`out`, `in`, `outE`, `inE`, etc.) extend the base instruction set.
+
+++++
+<!-- 🐖
+*grphspace
+-->
+++++
+
+🧱 `httpspace`
+🧱 an HTTP endpoint. resources identified by URL map to `obj` through content-type negotiation
+(`application/json` → `rec::T`, `text/html` → `html::T`, etc.).
+
+++++
+<!-- 🐖
+*httpspace
+-->
+++++
+
+🧱 `mqttspace`
+🧱 an MQTT broker subscription. the wildcard-based MQTT topic hierarchy maps to the metatron URI address space.
+writes publish; reads query the local cache.
+
+++++
+<!-- 🐖
+*mqttspace
+-->
+++++
+
+|===
+
+[discrete]
+=== Types for Managing Impedance Mismatch
+
+Every `space::T` is an `obj`, subject to metatron's https://en.wikipedia.org/wiki/Structural_type_system[structural
+type system]. Two fields shape the contract of any space:
+
+- **`root`** — a `type::T` constraining what can be written at document/row/vertex root depth. writes that fail the
+  root type check are rejected before reaching the underlying storage system.
+- **`schema`** — an `instset::T` holding the full vocabulary of types for this space. auto-discovered on connection
+  for database spaces; defined explicitly for in-memory or file-based spaces.
+
+[.card]
+--
+[discrete,.center]
+==== space routing
+
+Spaces are registered in the router under the pattern declared in the space's `pattern` field. When metatron
+evaluates `*mongo:users/123`, the router matches `mongo:#` to the registered `dcmntspace` and delegates the read.
+The `/sys/space/` namespace (backed by `memspace`) holds the live space objects — `*sys/space/+` lists all mounted
+spaces.
+--
