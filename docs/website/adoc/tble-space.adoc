@@ -1,22 +1,14 @@
 [discrete]
 == Tble Space
 
-A relational (SQL) database stores structured data in named **tables**, where each table is a collection of typed
-rows. In metatron, a relational database is a **tblespace** backed by any JDBC-compliant driver (SQLite, PostgreSQL,
-MariaDB, etc.). Each table maps to a `rec::T` refinement whose fields correspond to columns; the `schema` instset
-is auto-generated at connection time from the live database metadata.
+A https://en.wikipedia.org/wiki/Relational_database#RDBMS[relational database] (https://en.wikipedia.org/wiki/SQL[SQL]) stores structured data in named **tables**, where each table is a collection of typed
+rows. In metatron, a relational database is a **tblespace** backed by any https://en.wikipedia.org/wiki/Java_Database_Connectivity[JDBC]-compliant driver. Each table maps to a `rec::T` https://en.wikipedia.org/wiki/Refinement_type[refinement] whose `rel::T` elements correspond to columns. The `instset` schema is auto-generated at connection time from live database metadata. As of the time of this writing, metatron has been tested against and is deployed with https://sqlite.org/[SQLite], https://www.postgresql.org/[PostgreSQL],
+https://mariadb.org/[MariaDB], and https://www.mysql.com/[MySQL]. 
 
-++++
-<!-- 🐖
-*tblespace
--->
-++++
-
-[cols="6a,6a",separator=🧱,role="table-bordered center"]
+[cols="4a,6a",separator=🧱,role="table-bordered center"]
 |===
-🧱 creating a `tblespace` requires a JDBC `host` URI, a `driver`, and a `route`. the `schema` instset is
-auto-discovered from the live database; the `pattern` determines which URIs route to this space.
-
+🧱 
+creating a `tblespace` requires a JDBC `host` URI, a `driver`, and a `route`. the `instset` schema is auto-discovered from the live database; the `pattern` determines which subset of the URI address space that this space is responsible for.
 🧱
 ++++
 <!-- 🐖
@@ -34,7 +26,7 @@ tblespace::[pattern => db:#,               /
 db:person/1 -> [name=>'alice', age=>30]                            [-- <2>
 db:person/2 -> [name=>'bob',   age=>25]                            [-- <3>
 *db:person/                                                        [-- <4>
-*db:person/+?subq[name=>_]                                         [-- <5>
+*db:person/+/name                                                  [-- <5>
 -->
 ++++
 <1> a `tblespace` mounted at `db:#`. SQLite in-memory database for demonstration.
@@ -44,10 +36,9 @@ db:person/2 -> [name=>'bob',   age=>25]                            [-- <3>
 <5> querying the `person` table — all rows with any `name` value.
 
 [discrete]
-=== Schema Discovery
+=== schema discovery
 
-On connection, `tblespace` introspects the live database and generates a `schema` instset. Each discovered table
-becomes a `rec::T` refinement type with fields matching the table's columns and types.
+On connection, `tblespace` introspects the live database and generates an `instset` schema. Each discovered table is some refinement on `rec{*}::T` (zero or more rows) with `rel` keys matching a table column name and values matching a table column type.
 
 ++++
 <!-- 🐖
@@ -59,26 +50,50 @@ becomes a `rec::T` refinement type with fields matching the table's columns and 
 [.card]
 --
 [discrete,.center]
-==== KV store vs. table store
+==== a relational key/value store
 
-`tblespace` is a **hybrid** space. URIs that match a discovered table (`db:person/1`) route to the SQL table
-read/write path. URIs that don't match any table (`db:kv/mykey`) fall through to a general-purpose key/value store
-backed by the same database. The KV store has no `root` type constraint — any `obj` can be stored there.
---
-
-[discrete]
-=== SQL Rewrites
-
-Common metatron expressions are rewritten to native SQL before execution, pushing work to the database engine
-rather than the metatron VM:
+`tblespace` is a **hybrid** space. URIs that match a discovered table (`db:person/1`) route to the SQL table via a respective read/write path. URIs that don't match a table (`db:kv/mykey`) fall through to a general-purpose https://en.wikipedia.org/wiki/Key%E2%80%93value_database[key/value store] backed by the same database. The key/value store has no `root` type constraint — any `obj` can be stored there. In this way, it is analogous to `memspace`.
 
 ++++
 <!-- 🐖
-*db:person/+?subq[age=>?<30]                        [-- <1>
-*db:person/+?subq[name=>?[count()=>_]]              [-- <2>
-*db:person/+?subq[age=>_].>>[name=>_]               [-- <3>
+db:kv/nest -> [a=>[b=>[c=>2,d=>*!db:kv/nest]]]
+*db:kv/nest
+*db:kv/nest/a/b/+
+*db:kv/nest/a/b/d
+-->
+++++
+--
+
+[discrete]
+=== /m/tble rewrites
+
+Regardless of the language, when expressing a query over data, the fundamental primitives of the expression ultimately boil down to a collection of `aggregate`, `filter`, `project`, `update`, etc. type operations. Universals ensure that what can be expressed in mtron can also be expressed in SQL. Since relational databases are optimized for processing SQL, it's best to capitalize on this fact and call SQL within mtron expression whenever possible. This is the `/m/tble` https://en.wikipedia.org/wiki/Rewriting[rewrite] instructions. All rewrites are instructions of the form:
+
+\[
+\texttt{rewrite?code{?}<=code()}.
+\]
+
+
+++++
+<!-- 🐖
+*db:person/+.?==[age=>?<30]                        [-- <1>
+*db:person/+/name.count()                          [-- <2>
+*db:person/+.>>[name=>_]                           [-- <3>
 -->
 ++++
 <1> all people under 30 — rewritten to `SELECT * FROM person WHERE age < 30`.
 <2> count of distinct names — rewritten to `SELECT COUNT(name) FROM person`.
 <3> project to name only — rewritten to `SELECT name FROM person`.
+
+Finally, like other spaces, the native query engine of the respective backend can be accessed via a space-specific `inst`.
+
+++++
+<!-- 🐖
+*/sys/space/db.sql("SELECT name FROM person WHERE age < 30")            [-- <1>
+*/sys/space/db.sql("SELECT name FROM person WHERE age < 30")>>age.sum() [-- <2>
+-->
+++++
+<1> `sql?rec{*}\<=tblespace(str::T)` yields `recs`.
+<2> these `recs` can be further processed by mtron.
+
+The example above demonstrates how one can move between languages within the same expression.
