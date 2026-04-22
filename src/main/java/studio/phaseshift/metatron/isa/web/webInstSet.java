@@ -47,7 +47,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.space.http.httpSpace.HTTP_SPACE_TYPE;
-import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_ENDPOINT_TYPE;
+import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_SERVER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_SPACE_TYPE;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -117,7 +117,7 @@ a space for reading and writing web-related resources. for http://# patterns and
                                 "*<http://localhost:8777/head/title>    [-- server-side extraction of str::T title --]"),
                         docWrap(MARKDOWN_TYPE, "a rec encoding of a markdown document"),
                         WS_SPACE_TYPE,
-                        WS_ENDPOINT_TYPE),
+                        WS_SERVER_TYPE),
                 uri(INST), lst(
                         instC(AS_INST_TID.dom(STR_TID).rng(XML_TID), lst(T(XML_TID)), (lhs, inst) -> ObjXMLSerializer.parse(lhs.asStr().strValue())),
                         instC(AS_INST_TID.dom(STR_TID).rng(HTML_TID), lst(HTML_TYPE), (lhs, inst) -> ObjHTMLSerializer.parse(lhs.asStr().strValue())),

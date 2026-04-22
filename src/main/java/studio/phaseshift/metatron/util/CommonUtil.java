@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -266,6 +267,41 @@ public final class CommonUtil {
                     throw MTronException.of(e);
                 }
             });
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
+    }
+
+    public static final String HEADER_SEPARATOR = "####################";
+    public static final String HEADER_FILE = "./conf/ansi_headers.txt";
+    
+    public static String getHeader(final String headerFile, final String headerName, final boolean applyGraphitty) {
+        try {
+            final Map<String, String> headers = new HashMap<>();
+            StringBuilder current = new StringBuilder();
+            final BufferedReader input = new BufferedReader(new InputStreamReader(new FileInputStream(headerFile)));
+            String headerTitle = null;
+            while (input.ready()) {
+                final String line = input.readLine().stripTrailing();
+                if (line.startsWith(HEADER_SEPARATOR) && line.endsWith(HEADER_SEPARATOR)) {
+                    if (null != headerTitle && !current.isEmpty()) {
+                        headers.put(headerTitle, current.toString());
+                    }
+                    current = new StringBuilder();
+                    headerTitle = line.replace(HEADER_SEPARATOR, "").trim();
+                } else {
+                    current.append(line).append("\n");
+                }
+            }
+            input.close();
+            if (!current.isEmpty())
+                headers.put(headerTitle, current.toString());
+            final String fetchHeaderTitle = null == headerName || headerName.isBlank() ?
+                    new ArrayList<>(headers.keySet()).get(new Random().nextInt(headers.size())) : headerName;
+            final String fetchHeader = headers.get(fetchHeaderTitle);
+            if (null == fetchHeader)
+                throw MTronException.of("<unknown header: " + fetchHeaderTitle + ">");
+            return applyGraphitty ? Graphitty.string(fetchHeader) : fetchHeader.toString();
         } catch (final Exception e) {
             throw MTronException.of(e);
         }

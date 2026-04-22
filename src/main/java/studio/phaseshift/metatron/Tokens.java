@@ -66,7 +66,6 @@ public final class Tokens {
     public static final String QUERY = "query";
     public static final String DOM = "dom";
     public static final String RNG = "rng";
-    public static final String LOOP = "loop";
     public static final String SIZE = "size";
     public static final String SKILL = "skill";
     public static final String LLM = "llm";
@@ -165,6 +164,7 @@ public final class Tokens {
     public static final String INST = "inst";
     public static final String SQL = "sql";
     public static final String STORE = "store";
+    public static final String LOOP = "loop";
     public static final String GRAPH = "graph";
     public static final String PREFIX = "prefix";
     public static final String USER_HOME = "user.home";

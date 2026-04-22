@@ -62,6 +62,9 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
         route    => [/          => examples/www,
                      /docs      => target/docs,
                      /dashboard => src/main/resources/web/dashboard ]]@/sys/space/www;
+   wsspace::[host     => <ws://localhost:8555>,
+          pattern  => ws://#,
+          route    => [=>]]@/sys/space/ws;
   grphspace::[pattern  => /h/#,
         route    => [</h/+/>=><>],
         native   => [factory  => mfactory::[=>],
@@ -72,7 +75,7 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
                      <g:S>=>/m/grph/schema/modern],
         native   => [factory  => mfactory::[=>],
                      load     => modern]]@/sys/space/modern;
-  mqttspace::[pattern => <mqtt:#>,
+ [== mqttspace::[pattern => <mqtt:#>,
          host    => !*boot/args/mqtt/broker,
          route   => [mqtt:=><>]]@/sys/space/mqtt;
   miot::[pattern    => <mtron:#>,
@@ -98,7 +101,7 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
  catalog::[host    => <http://localhost:11434>,
            pattern => <ollama:#>,
            name    => <ollama>,
-           route   => [ollama:=><>]]@/sys/space/ollama;
+           route   => [ollama:=><>]]@/sys/space/ollama; ==]
  [-- *ollama:+.plus([think=>[to=>print(_)],response=>[to=>print(_)],memory=>[from=>/usr/ai/memory]]);
  catalog::[host         => <https://api.openai.com/v1>,
            organization => !*</sys/env/OPENAI_ORG_ID>,

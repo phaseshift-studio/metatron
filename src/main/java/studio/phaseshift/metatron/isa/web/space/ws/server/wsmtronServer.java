@@ -16,44 +16,56 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.web.space.ws;
+package studio.phaseshift.metatron.isa.web.space.ws.server;
 
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.web.space.ws.WSServerRec;
 import studio.phaseshift.metatron.isa.web.type.Content;
 
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
-import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
+import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_SERVER_TID;
+import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_SPACE_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class mtronEndpoint extends wsSpace.wsEndPoint {
+public class wsmtronServer extends WSServerRec {
 
-    public static final fURI MTRON_ENDPOINT_TID = WEB_ISA_TID.extend("space/mtron_endpoint");
+    public static final fURI WS_MTRON_SERVER_TID = WS_SPACE_TID.extend("wsmtron");
     protected final GraphittyLogger LOG = Graphitty.log(this);
-    private final Content.ContentType inContentType;
-    private final Content.ContentType outContentType;
 
-    public mtronEndpoint(final fURI vid) {
-        super(mutableMap(), MTRON_ENDPOINT_TID, vid);
-        this.inContentType = Content.ContentType.of(vid.qValue("in_content", String.class));
-        this.outContentType = Content.ContentType.of(vid.qValue("out_content", String.class));
+    public static final Type WS_MTRON_SERVER_TYPE = Type.Builder.build()
+            .tid(WS_SERVER_TID)
+            .vid(WS_MTRON_SERVER_TID)
+            .isaPredicate(rec(uri(IN), URI_TYPE, uri(OUT), URI_TYPE))
+            .constructor(instC(M_ISA_INST_TID.extend(CTOR).dom(ALL.maybe()).rng(WS_MTRON_SERVER_TID),
+                    lst(T(REC_TID)), (lhs, inst) -> new wsmtronServer(new LinkedHashMap<>(inst.arg(0).asRec().jvm()), inst.arg(0).vid()))).create();
+
+
+    public wsmtronServer(final Map<Obj, Obj> jvm, final fURI vid) {
+        super(jvm, WS_MTRON_SERVER_TID, vid);
+        LOG.info("wsmtron serializers: [in=>%s,out=>%s]", this.inContentType.name(), this.outContentType.name());
     }
 
     @Override
@@ -85,7 +97,7 @@ public class mtronEndpoint extends wsSpace.wsEndPoint {
 
     @Override
     public void onError(final WebSocket conn, final Exception e) {
-       try {
+        try {
             conn.send(fail(e).toString());
         } catch (final Exception ex) {
             LOG.error("error sending error message: %s", e, ex);

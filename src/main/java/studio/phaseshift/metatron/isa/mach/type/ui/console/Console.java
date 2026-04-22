@@ -79,6 +79,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_ISA_TID;
+import static studio.phaseshift.metatron.util.CommonUtil.HEADER_FILE;
 
 public class Console extends JRec<Console> implements Closeable, Runnable {
 
@@ -90,7 +91,6 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     // @ObjFieldReflection(tid = FILE_TID_STRING)
     public static final String MTRON_NANORC = "mtron.nanorc";
     //@ObjFieldReflection(tid = FILE_TID_STRING)
-    public static String HEADER_FILE = "./conf/ansi_headers.txt";
     //@ObjFieldReflection(tid = FILE_TID_STRING)
     public static Path HISTORY_FILE = Paths.get(".metatron.history");
     @ObjFieldReflection(tid = "/m/inst")
@@ -102,7 +102,6 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     @ObjFieldReflection(tid = "/m/str")
     public String postfix = "";
     private final GraphittyLogger LOG = Graphitty.log(this);
-    public static String HEADER_SEPARATOR = "####################";
     private static Terminal terminal;
     private final LineReader reader;
     private final StatusLine status;
@@ -861,30 +860,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
 
     protected void outputHeader(final String name) {
         try {
-            final Map<String, String> headers = new HashMap<>();
-            StringBuilder current = new StringBuilder();
-            final BufferedReader input = new BufferedReader(new InputStreamReader(new FileInputStream(HEADER_FILE)));
-            String headerTitle = null;
-            while (input.ready()) {
-                final String line = input.readLine().stripTrailing();
-                if (line.startsWith(HEADER_SEPARATOR) && line.endsWith(HEADER_SEPARATOR)) {
-                    if (null != headerTitle && !current.isEmpty()) {
-                        headers.put(headerTitle, current.toString());
-                    }
-                    current = new StringBuilder();
-                    headerTitle = line.replace(HEADER_SEPARATOR, "").trim();
-                } else {
-                    current.append(line).append("\n");
-                }
-            }
-            if (!current.isEmpty())
-                headers.put(headerTitle, current.toString());
-            final String fetchHeaderTitle = null == name || name.isBlank() ?
-                    new ArrayList<>(headers.keySet()).get(new Random().nextInt(headers.size())) : name;
-            final String fetchHeader = headers.get(fetchHeaderTitle);
-            if (null == fetchHeader)
-                throw new IllegalArgumentException("<unknown header: " + fetchHeaderTitle + ">");
-            terminal.writer().print(Graphitty.string(fetchHeader));
+            terminal.writer().print(CommonUtil.getHeader(HEADER_FILE, name, true));
             terminal.writer().flush();
         } catch (final Exception e) {
             terminal.writer().println("...a fundamental boot exception has occurred.");
