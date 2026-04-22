@@ -246,40 +246,40 @@ bin/metatron</code></pre>
                     <div id="flush-collapseOne" class="accordion-collapse collapse" aria-labelledby="flush-headingOne" data-bs-parent="#accordianInstSet">
                         <div class="accordion-body">
                                <pre><code>instset::[
- pattern=>/m/math/#,
+ pattern=> /m/math/#,
  q      =>[docq::[
-       pre_read =>inst?#{*}<=#{?}(uri::T),
-       pre_write=>inst?#{*}<=#{?}(uri::T,#::T),
-       pattern  =>docq,
-       obj      =>memspace::[pattern=><#>],
-       inst     =>instset::[pattern=><#>]]],
- space  =>[super=>!*/m],
+       pre_read =>    inst?#{*}<=#{?}(uri::T),
+       pre_write=>    inst?#{*}<=#{?}(uri::T,#::T),
+       pattern  =>    docq,
+       obj      =>memspace::[pattern=>     <#>],
+       inst     =>instset::[pattern=>     <#>]]],
+ space  =>[super=>  !*/m],
  type   =>[
-   data_size::T,
-   bB::T,
-   kB::T,
-   mB::T,
-   gB::T,
-   tB::T,
-   pB::T],
+      data_size::T,
+      bB::T,
+      kB::T,
+      mB::T,
+      gB::T,
+      tB::T,
+      pB::T],
  inst   =>[
-   cos?real<=#{?}(as(real::T)),
-   sin?real<=#{?}(real::T),
-   tan?real<=#{?}(real::T),
-   sqrt?real<=#{?}(real::T),
-   pow?real<=#{?}(real::T),
-   atan?real<=#{?}(real::T),
-   atan2?real<=#{?}(real{2}::T),
-   log?real<=#{?}(real::T),
-   log10?real<=#{?}(real::T),
-   exp?real<=#{?}(real::T),
-   abs?real<=#{?}(real::T),
-   ceil?real<=#{?}(real::T),
-   floor?real<=#{?}(real::T),
-   round?int<=#{?}(real::T)],
+      cos?real<=#{?}(as(real::T)),
+      sin?real<=#{?}(real::T),
+      tan?real<=#{?}(real::T),
+      sqrt?real<=#{?}(real::T),
+      pow?real<=#{?}(real::T),
+      atan?real<=#{?}(real::T),
+      atan2?real<=#{?}(real{2}::T),
+      log?real<=#{?}(real::T),
+      log10?real<=#{?}(real::T),
+      exp?real<=#{?}(real::T),
+      abs?real<=#{?}(real::T),
+      ceil?real<=#{?}(real::T),
+      floor?real<=#{?}(real::T),
+      round?int<=#{?}(real::T)],
  const  =>[
-   2.7183@/m/math/e?constq,
-   3.1416@/m/math/pi?constq]]@/m/math</code></pre>
+      2.7183@/m/math/e?constq,
+      3.1416@/m/math/pi?constq]]@/m/math</code></pre>
                         </div>
                     </div>
                 </div>
@@ -485,7 +485,8 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="card-body p-2">
-                        <pre class="mb-0"><code class="language-mtron">data_size::T[][/m/math/bB/cons?bB&lt;=#{?}(#::T){&lt;j&gt;}]@/m/math/bB</code></pre>
+                        <pre class="mb-0"><code class="language-mtron">data_size::T[][
+   /m/math/bB/cons?bB&lt;=#{?}(#::T)]@/m/math/bB</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -522,7 +523,8 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="card-body p-2">
-                        <pre class="mb-0"><code class="language-mtron">data_size::T[][/m/math/gB/cons?gB&lt;=#{?}(#::T){&lt;j&gt;}]@/m/math/gB</code></pre>
+                        <pre class="mb-0"><code class="language-mtron">data_size::T[][
+   /m/math/gB/cons?gB&lt;=#{?}(#::T)]@/m/math/gB</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -542,7 +544,8 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="card-body p-2">
-                        <pre class="mb-0"><code class="language-mtron">data_size::T[][/m/math/kB/cons?kB&lt;=#{?}(#::T){&lt;j&gt;}]@/m/math/kB</code></pre>
+                        <pre class="mb-0"><code class="language-mtron">data_size::T[][
+   /m/math/kB/cons?kB&lt;=#{?}(#::T)]@/m/math/kB</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -562,7 +565,8 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="card-body p-2">
-                        <pre class="mb-0"><code class="language-mtron">data_size::T[][/m/math/mB/cons?mB&lt;=#{?}(#::T){&lt;j&gt;}]@/m/math/mB</code></pre>
+                        <pre class="mb-0"><code class="language-mtron">data_size::T[][
+   /m/math/mB/cons?mB&lt;=#{?}(#::T)]@/m/math/mB</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -582,7 +586,8 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="card-body p-2">
-                        <pre class="mb-0"><code class="language-mtron">data_size::T[][/m/math/pB/cons?pB&lt;=#{?}(#::T){&lt;j&gt;}]@/m/math/pB</code></pre>
+                        <pre class="mb-0"><code class="language-mtron">data_size::T[][
+   /m/math/pB/cons?pB&lt;=#{?}(#::T)]@/m/math/pB</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -602,7 +607,8 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="card-body p-2">
-                        <pre class="mb-0"><code class="language-mtron">data_size::T[][/m/math/tB/cons?tB&lt;=#{?}(#::T){&lt;j&gt;}]@/m/math/tB</code></pre>
+                        <pre class="mb-0"><code class="language-mtron">data_size::T[][
+   /m/math/tB/cons?tB&lt;=#{?}(#::T)]@/m/math/tB</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -864,7 +870,7 @@ bin/metatron</code></pre>
         <div class="container-xxl py-3 text-center">
             <hr class="border-secondary">
             <small class="text-muted">
-                generated by metatron instset doc generator on build 0-2026-04-21 17:20:30<br>
+                generated by metatron instset doc generator on build 0-2026-04-21 18:49:15<br>
                 © PhaseShift Studio, LLC
             </small>
         </div>

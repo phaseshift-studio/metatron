@@ -260,7 +260,7 @@ public class machInstSet extends AbstractInstSet {
                         }), "an str to page", "noobj terminal", Map.of(jnt(0), "number of lines per page"), "an f(x)->0 terminal page through the lines of an str"),
                         /// /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                         instC(RSHIFT_INST_TID.dom(FILE_TID).rng(FILE_TID.maybeSome()), lst(isa_(URI_TYPE).else_(uri("#"))), (lhs, inst) -> {
-                            final File file = fsSpace.resolveFile(lhs);
+                            final File file = fsSpace.staticObjToFile(lhs);
                             if (file.isDirectory()) {
                                 if (f(file.getName()).test(inst.arg(0).orElse(uri("#")).uriValue())) { // TODO: need to recurse on name if it has path segments
                                     if (null == file.listFiles()) return noobj();
@@ -279,7 +279,7 @@ public class machInstSet extends AbstractInstSet {
                         instC(AS_INST_TID.dom(URI_TID).rng(FILE_TID), lst(T(FILE_TID)), (lhs, inst) -> makeFile(Path.of(lhs.uriValue().toString())).vid(lhs.vid())),
                         instC(AS_INST_TID.dom(FILE_TID).rng(BYTES_TID), lst(T(BYTES_TID)), (lhs, inst) -> {
                             try {
-                                final File file = fsSpace.resolveFile(lhs);
+                                final File file = fsSpace.staticObjToFile(lhs);
                                 LOG.debug("translating file to bytes: %s", file);
                                 final byte[] data;
                                 try (final FileInputStream fis = new FileInputStream(file)) {

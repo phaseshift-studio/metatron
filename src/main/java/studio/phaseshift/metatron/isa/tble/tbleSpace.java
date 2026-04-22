@@ -21,12 +21,14 @@ package studio.phaseshift.metatron.isa.tble;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.Space;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.isa.tble.schema.domain.ExistingTableSchema;
 import studio.phaseshift.metatron.isa.tble.schema.domain.SQLSchemaGenerator;
+import studio.phaseshift.metatron.isa.tble.schema.domain.SQLSchemaInstSet;
 import studio.phaseshift.metatron.isa.tble.schema.storage.TableSchema;
 import studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema;
 import studio.phaseshift.metatron.isa.tble.schema.storage.fURIAwareIndexedSchema;
@@ -40,8 +42,12 @@ import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+import studio.phaseshift.metatron.isa.mach.type.Router;
+
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TID;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
@@ -140,8 +146,10 @@ public class tbleSpace extends AbstractSpace<Connection> {
                             uri(HOST), URI_TYPE,
                             uri(DRIVER), URI_TYPE,
                             uri(ROUTE), rec(URI_TYPE, URI_TYPE),
-                            uri(TABLE).maybe(), LST_TYPE))
-                    .constructor(instC(TBLE_ISA_INST_TID.extend("tblespace/cons").dom(ALL.maybe()).rng(TBLE_SPACE_TID),
+                            uri(TABLE).maybe(), LST_TYPE,
+                            uri(ROOT).maybe(), REC_TYPE,
+                            uri(SCHEMA).maybe(), InstSet.INSTSET_TYPE))
+                    .constructor(instC(M_ISA_INST_TID.extend(CTOR).dom(ALL.maybe()).rng(TBLE_SPACE_TID),
                             lst(REC_TYPE),
                             (lhs, inst) -> tbleSpace.of(inst.arg(0).asRec().jvm(), inst.arg(0).vid())))
                     .create();
@@ -194,17 +202,31 @@ public class tbleSpace extends AbstractSpace<Connection> {
                         this.existingTableSchema.getTableNames().size(), this.sjvm().getCatalog());
                 this.at(uri(TABLE), lst(this.existingTableSchema.getTableMetadata().stream().map(t -> (Obj) uri(t.tableName())).toList()), MUTABLE);
 
-                // Initialize SQL schema generator and store in configuration (not data namespace)
+                // Initialize SQL schema generator
                 final String dbName = sjvm.getCatalog() != null ? sjvm.getCatalog() : "db";
-                final fURI schemaPath = this.pattern.retractPattern().extend("schema").extend(dbName);
+                // Schema VID MUST be in /m/ namespace — backed by system memSpace, not tbleSpace.
+                // A VID in the tbleSpace's own pattern (e.g., db:schema/...) would cause
+                // Router.addSpace() to route reads/writes back into this space → recursion.
+                final fURI schemaVid = f("/m/tble/space/schema/").extend(dbName);
 
                 this.schemaGenerator = new SQLSchemaGenerator(
                         this.existingTableSchema.getTableMetadata(),
-                        schemaPath
+                        schemaVid
                 );
 
-                // Store schema in configuration so it doesn't interfere with pattern queries on data
-                this.at(uri(SCHEMA), this.schemaGenerator.generateSchema(), MUTABLE);
+                // Build a proper SQLSchemaInstSet and register it as a space in the /m/ namespace.
+                // Type VIDs are under schemaVid/type/{table} — safely within checkPattern() scope.
+                // Follow grphSpace pattern: addSpace → setup() → store object directly (not !* pointer).
+                final SQLSchemaInstSet schemaInstset = this.schemaGenerator.generateSchemaInstset(schemaVid);
+                Router.global().addSpace(schemaInstset);
+                schemaInstset.setup();
+
+                // Store the schema instset object directly (same as grphSpace stores modernSchema).
+                // NOTE: root is NOT set at the tbleSpace level because tbleSpace is a hybrid:
+                //   - KV store paths accept any type (no constraint needed)
+                //   - Table mapping paths are constrained by the individual table Types in the schema
+                // Setting root=REC_TYPE here would break all KV store writes (lists, primitives, etc.)
+                this.at(uri(SCHEMA), schemaInstset, MUTABLE);
 
                 LOG.info("initialized {{g}}SQL schema{{X}} in config with %s table types",
                         this.existingTableSchema.getTableNames().size());

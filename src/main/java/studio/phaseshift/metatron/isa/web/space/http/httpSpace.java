@@ -181,7 +181,7 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                                     try {
                                         String fileContent = Files.readString(file.toPath());
                                         final Rec existingObj = HTML_SERIALIZER.readRec(Jsoup.parse(fileContent));
-                                        final Obj extendingObj = contentType.toObj(post.getBytes());
+                                        final Obj extendingObj = contentType.fromBytes(post.getBytes());
                                         final fURI reference = f(exchange.getRequestURI().getPath()).removePrefix(f(file.toPath().toString()));
                                         LOG.debug("remaining: %s", reference);
                                         existingObj.at(reference, extendingObj, MUTABLE);
@@ -275,7 +275,7 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                     } else {
                         final Content.ContentType contentType = Content.ContentType.of(response.contentType());
                         LOG.debug("content-type: %s => %s", response.contentType(), contentType);
-                        final Obj docObj = contentType.toObj(response.body());
+                        final Obj docObj = contentType.fromBytes(response.body());
                         final Uri key = uri(pattern.scheme(null).host(null).tail(steps).asRelative());
                         LOG.debug("page found -- searching for %s in %s", key, runningPattern);
                         final Obj subDocObj = key.uriValue().toString().trim().isEmpty() ? docObj : docObj.asRec().at(key);
@@ -305,7 +305,7 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                 LOG.debug("%s", response.headers().firstValue(Content.ContentType.VALUE));
                 final Optional<String> contentType = response.headers().firstValue(Content.ContentType.VALUE);
                 if (contentType.isPresent()) {
-                    return Content.ContentType.of(contentType.get()).toObj(response.body());
+                    return Content.ContentType.of(contentType.get()).fromBytes(response.body());
                 }
                 return jnt(response.statusCode());
             } catch (final Exception e) {

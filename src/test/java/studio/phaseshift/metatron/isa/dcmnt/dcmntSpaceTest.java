@@ -149,6 +149,19 @@ public class dcmntSpaceTest extends AbstractSpaceTest implements CommonRewritesT
     public void testSpecialStringValues(String description, String value) {
     }
 
+    /**
+     * dcmntSpace enforces that only Recs (documents) can be written at the collection/docId root.
+     * When the space rejects a non-Rec write (List, Int, Str, etc.) at the document root,
+     * skip the inherited test case rather than fail it — the rejection IS the correct behavior.
+     */
+    @Override
+    protected boolean expectWriteRejection(final Obj writeFailObj) {
+        // Any root type constraint rejection from this space is expected and should cause the test to be skipped
+        if (!writeFailObj.isFail()) return false;
+        final String msg = writeFailObj.asFail().message().getMessage();
+        return msg != null && msg.contains("requires") && msg.contains("at document root");
+    }
+
     @BeforeAll
     public static void setupAll() {
         AbstractMetatronTest.begin();
@@ -531,7 +544,7 @@ public class dcmntSpaceTest extends AbstractSpaceTest implements CommonRewritesT
             assertFalse(readBack.isNoObj(), "Large document should exist");
 
             final Rec readBackRec = readBack.asRec();
-            assertEquals(51, readBackRec.jvm().size(), "Should have 51 fields"); // 51 cause of _id
+            assertEquals(50, readBackRec.jvm().size(), "Should have 50 fields");
 
             // Verify a few fields
             assertEquals(str("value0"), readBackRec.at(uri("field0")), "Field0 should match");
@@ -872,9 +885,9 @@ public class dcmntSpaceTest extends AbstractSpaceTest implements CommonRewritesT
             assertFalse(readBack.isNoObj(), "Empty record should exist");
             assertTrue(readBack.isRec(), "Should be a record");
 
-            // Should only have _id field
+            // _id is stripped from returned records (encoded in URI path); empty rec has 0 fields
             final Rec readBackRec = readBack.asRec();
-            assertEquals(1, readBackRec.jvm().size(), "Should only have _id field");
+            assertEquals(0, readBackRec.jvm().size(), "Empty record should have no fields");
         } finally {
             space.close();
         }

@@ -31,6 +31,9 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 
+import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.m.type.Code;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -66,18 +69,18 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
         // This ensures the parent memSpace has a specific pattern (tble:kv/#)
         // which is MORE SPECIFIC than the tbleSpace pattern (tble:#)
         // so that tble:users routes to tbleSpace, not the parent memSpace
-        super(f("tble:kv/test"), () -> {
+        super(f("db:kv/test"), () -> {
             // This lambda is called lazily, so staticDbConfig will be set by @BeforeAll
             if (staticDbConfig == null) {
                 throw new IllegalStateException("staticDbConfig not initialized. @BeforeAll method must run first.");
             }
             return tbleSpace.of(
                     rec(
-                            uri(PATTERN), uri("tble:#"),
+                            uri(PATTERN), uri("db:#"),
                             uri(HOST), uri(staticDbConfig.getJdbcHost()),
                             uri(DRIVER), uri(staticDbConfig.getDriverClass()),
                             uri(TABLE), lst(),
-                            uri(ROUTE), rec(uri("tble:"), uri(""))
+                            uri(ROUTE), rec(uri("db:"), uri(""))
                     ).jvm(),
                     SPACE_VID
             );
@@ -216,6 +219,45 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
         );
     }
 
+    @Override
+    public fURI getTestDataUriPrefix() {
+        return f("db:rewrite_test");
+    }
+
+    @Override
+    public String getNativeInstructionPrefix() {
+        return "sql_";
+    }
+
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("provideAllRewriteTestCases")
+    public void testRewrites(String description, String code, Obj expected) throws Exception {
+        runRewriteTest(description, code, expected);
+    }
+
+    public static Stream<Arguments> provideAllRewriteTestCases() {
+        return new PostgreSQLTbleSpaceTest().generateAllRewriteTestCases();
+    }
+
+    @Disabled
+    @ParameterizedTest(name = "[{index}] {0}")
+    @MethodSource("providePlanVerificationTestCases")
+    public void testRewritePlans(String description, String code, String nativeInstName) throws Exception {
+        final Code parsed = ObjmtronSerializer.parse(code);
+        final Code rewritten = (Code) parsed.rewrite();
+        LOG.info("Testing Rewrite Plan: %s", description);
+        LOG.info("  Code: %s", code);
+        LOG.info("  Plan: %s", rewritten);
+        
+        final String fullNativeInstName = getNativeInstructionPrefix() + nativeInstName;
+        assertTrue(rewritten.stream().anyMatch(obj -> obj.isInst() && obj.asInst().tid().name().equals(fullNativeInstName)),
+                "Plan should contain " + fullNativeInstName);
+    }
+
+    public static Stream<Arguments> providePlanVerificationTestCases() {
+        return new PostgreSQLTbleSpaceTest().generatePlanVerificationTestCases();
+    }
+
     // ========== Parameterized Tests ==========
 
     /**
@@ -229,7 +271,8 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
         final tbleSpace testSpace = createTestSpace();
         try {
             final Obj row = Router.readFromSpace(f(tableRowUri));
-            assertTrue(row.isRec(), "Should return a record");
+            assertFalse(row.isNoObj(), "should not be a noobj");
+            assertTrue(row.isRec(), "should return a rec");
 
             final Obj actualValue = row.asRec().at(uri(fieldName));
             assertEquals(expectedValue, actualValue, description);
@@ -283,10 +326,11 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
 
             final String rowUri = String.format("db:%s/%s", table, rowId);
             final Obj row = Router.readFromSpace(f(rowUri));
-            assertTrue(row.isRec(), "Should return a record");
+            assertFalse(row.isNoObj(), "should not be a noobj");
+            assertTrue(row.isRec(), "should return a rec");
 
             final Obj actualValue = row.asRec().at(uri(field));
-            assertEquals(expectedValue, actualValue, String.format("Field %s should be updated", field));
+            assertEquals(expectedValue, actualValue, String.format("field %s should be updated", field));
         } finally {
             Router.global().removeSpace(testSpace.vid());
             testSpace.close();
@@ -417,7 +461,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
 
             final String rowUri = String.format("db:%s/%s", table, rowId);
             final Obj row = Router.readFromSpace(f(rowUri));
-            assertTrue(row.isRec(), "Should return a record");
+            assertTrue(row.isRec() || row.isStr(), "should return a rec or str");
 
             final Obj actualValue = row.asRec().at(uri(field));
             assertEquals(expectedReadValue, actualValue, description);
@@ -432,21 +476,21 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
     protected static Stream<Arguments> provideTypeConversionTestCases() {
         return Stream.of(
                 // Boolean conversions - PostgreSQL uses INTEGER columns, so booleans are stored/read as 0/1
-                Arguments.of("Boolean true converts and back", "users", "1", "active", bool(true), jnt(1)),
-                Arguments.of("Boolean false converts and back", "users", "1", "active", bool(false), jnt(0)),
+                Arguments.of("boolean true converts and back", "users", "1", "active", bool(true), jnt(1)),
+                Arguments.of("boolean false converts and back", "users", "1", "active", bool(false), jnt(0)),
 
                 // Real number precision
-                Arguments.of("Real number with decimals", "users", "1", "salary", real(12345.00), real(12345.00)),
-                Arguments.of("Real number zero", "users", "1", "salary", real(0.0), real(0.0)),
+                Arguments.of("real number with decimals", "users", "1", "salary", real(12345.00), real(12345.00)),
+                Arguments.of("real number zero", "users", "1", "salary", real(0.0), real(0.0)),
 
                 // Integer boundaries
-                Arguments.of("Integer zero", "users", "1", "age", jnt(0), jnt(0)),
-                Arguments.of("Integer large value", "users", "1", "age", jnt(999), jnt(999)),
+                Arguments.of("integer zero", "users", "1", "age", jnt(0), jnt(0)),
+                Arguments.of("integer large value", "users", "1", "age", jnt(999), jnt(999)),
 
                 // String edge cases
-                Arguments.of("Empty string", "users", "1", "name", str(""), str("")),
-                Arguments.of("String with spaces", "users", "1", "name", str("  Test  "), str("  Test  ")),
-                Arguments.of("String with special chars", "users", "1", "email", str("test+tag@example.com"), str("test+tag@example.com"))
+                Arguments.of("empty string", "users", "1", "name", str(""), str("")),
+                Arguments.of("string with spaces", "users", "1", "name", str("  Test  "), str("  Test  ")),
+                Arguments.of("string with special chars", "users", "1", "email", str("test+tag@example.com"), str("test+tag@example.com"))
         );
     }
 

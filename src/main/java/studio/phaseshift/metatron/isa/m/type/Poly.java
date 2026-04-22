@@ -259,7 +259,7 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
             lhs.jvm().entrySet().forEach(kv -> result.compute(kv.getKey().c(cInt::one), (a, b) -> {
                 if (null == b) {
                     if (kv.getValue().isPoly()) {
-                        return updatePolyRecursion(kv.getValue().as(), lhs.as(), operation);
+                        return updatePolyRecursion(kv.getValue().as(), kv.getValue().as(), operation);
                     }
                     if (kv.getValue().isNoObj()) {
                         return noobj();

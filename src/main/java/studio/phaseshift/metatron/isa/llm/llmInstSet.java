@@ -50,7 +50,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace.resolveFile;
+import static studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace.staticObjToFile;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.DIR_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -67,7 +67,7 @@ public class llmInstSet extends AbstractInstSet {
     public static final fURI LLM_MEMORY_TID = LLM_ISA_TID.extend(MEMORY);
     public static final fURI MCP_SERVER_TID = LLM_ISA_TID.extend(MCP);
     public static final fURI LLM_SKILL_TID = LLM_ISA_TID.extend(SKILL);
-    public static final fURI AI_MEMORY_TID = LLM_ISA_TID.extend("ai");
+    public static final fURI AI_MEMORY_TID = LLM_ISA_TID.extend(AI);
     public static final fURI USER_MEMORY_TID = LLM_ISA_TID.extend(USER);
     //public static final fURI MCP_TOOL_TID = LLM_ISA_TID.extend("mcp");
     // public static Obj MTRON_EVAL_TOOL = mModel.Helper.mtronInstToolSpecification(ObjType.insts().stream().filter(i -> i.tid().equals(EVAL_INST_TID)).findFirst().orElse(null));    
@@ -166,7 +166,7 @@ public class llmInstSet extends AbstractInstSet {
                                 Map.of(jnt(0), "the tool type"),
                                 "maps an instruction to a tool specification for llm use",
                                 "*eval.as(tool::T)"),
-                        docWrap(instC(AS_INST_TID.dom(DIR_TID).rng(LLM_SKILL_TID), lst(LLM_SKILL_TYPE), (lhs, inst) -> mSkill.of(resolveFile(lhs))),
+                        docWrap(instC(AS_INST_TID.dom(DIR_TID).rng(LLM_SKILL_TID), lst(LLM_SKILL_TYPE), (lhs, inst) -> mSkill.of(staticObjToFile(lhs))),
                                 "a dir containing the llm SKILL.md file",
                                 "a mtron encoding of the specified skill",
                                 Map.of(jnt(0), "the skill type"),

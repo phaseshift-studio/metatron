@@ -183,7 +183,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
     }
 
     /**
-     * Read a row from a SQL table and convert it to a Metatron record
+     * Read a row from a SQL table and convert it to a rec
      */
     private Obj readTableRow(final ResultSet rs, final TableMetadata metadata, final String... rowNames) throws SQLException {
         final Map<Obj, Obj> labeledValues = new LinkedHashMap<>();

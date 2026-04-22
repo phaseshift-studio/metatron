@@ -55,7 +55,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 public class CollectionSchemaInstSet extends AbstractInstSet {
 
     /**
-     * Create a schema instset for a MongoDB database.
+     * Create a schema instset for a MongoDB-compliant database.
      *
      * @param schemaVid VID must be in the {@code /m/} namespace so writes route to
      *                  memSpace rather than back into the dcmntSpace

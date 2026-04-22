@@ -138,6 +138,7 @@ public final class Tokens {
     public static final String LOGG = "log";
     public static final String DRIVER = "driver";
     public static final String TABLE = "table";
+    public static final String CTOR = "ctor";
     public static final String COLLECTION = "collection";
     public static final String REFERENCE = "reference";
     public static final String VALUE = "value";
@@ -212,6 +213,7 @@ public final class Tokens {
     public static final String EDGE = "edge";
     public static final String CONFIG = "config";
     public static final String STATE = "state";
+    public static final String ROOT = "root";
 
 
 }

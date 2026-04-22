@@ -130,7 +130,7 @@ public final class CommonRewrites {
 
         return RewriteBuilder.forDatabase(spaceType)
                 .tid(rewriteTID)
-                .rng(INT_TID.maybe().some())
+                .rng(A)
                 .match(FROM_INST_TID, SUM_INST_TID)
                 .optimize("mql_sum", (space, furi, coeff) -> {
                     final Number sum = sumFunction.apply(space, furi);

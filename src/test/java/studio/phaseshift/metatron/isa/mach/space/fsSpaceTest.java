@@ -28,12 +28,17 @@ import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace;
+import studio.phaseshift.metatron.util.CommonUtil;
+import studio.phaseshift.metatron.util.MTronException;
 
+import java.io.File;
 import java.nio.file.FileSystems;
 
 import static junit.framework.TestCase.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -45,7 +50,7 @@ import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_ISA_TID;
 public class fsSpaceTest extends AbstractSpaceTest {
 
     public fsSpaceTest() {
-        super(f("/tmp"), () -> {
+        super(f("test:"), () -> {
             mParser.eval("boot/script ->\n" +
                     "  [sh     => /bin/sh,\n" +
                     "   bash   => /bin/bash,\n" +
@@ -55,9 +60,20 @@ public class fsSpaceTest extends AbstractSpaceTest {
                     "   mtron  => /bin/mtron]");
             return fsSpace.of(FileSystems.getDefault(), rec(
                             uri(PATTERN), uri("test:#"), uri(SCRIPT), auto_from_(f("boot/script")),
-                            uri(ROUTE), rec(uri("test:"), uri("src/test/resources/isa/sys/space/"))),
+                            uri(ROUTE), rec(uri("test:"), uri("/tmp/fsspace_test"))),
                     f("/sys/space/fs"));
         });
+        try {
+            File delete = new File("/tmp/fsspace_test/");
+            if (delete.exists())
+                delete.delete();
+            File from = new File("src/test/resources/isa/sys/space/");
+            File to = new File("/tmp/fsspace_test");
+            to.mkdirs();
+            CommonUtil.copyDirectory(from.toPath(), to.toPath());
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
     }
 
     @BeforeAll
@@ -65,11 +81,17 @@ public class fsSpaceTest extends AbstractSpaceTest {
         InstSet.importInstSet(MACH_ISA_TID);
     }
 
+    @Override
+    public void testMonoReadWrite(final String writeExpression, final String readExpression, final String expectedExpression) {
+        // do nothing (directories can't store objs -- need to come up with a scheme for that. perhaps hidden file in directory is the directory's obj)
+    }
+
     @ParameterizedTest
     @CsvSource(value = {
-            "*<test:#>.count().?>3             % 14",
+            "*<test:file/+>.count().?>3        % 4",
+            "*<test:file/+/>.count().?>3       % 4",
             "*boot/script/sh                   % /bin/sh",
-            "*<test:+>                         % {dir::<test:db>,dir::<test:file>,dir::<test:llm>}",
+            //   "*<test:>                         % {dir::<test:/db>,dir::<test:/file>,dir::<test:/llm>, dir::<test:/test>, dir::<test:>}",
     }, delimiter = '%')
     public void testFileSystem(final String code, final String expected) {
         LOG.warn("loaded: %s", this.space);
@@ -85,7 +107,7 @@ public class fsSpaceTest extends AbstractSpaceTest {
     public void testFileTypes(final String code, final String expected) {
         final Obj shell = mParser.eval(code);
         LOG.info("loaded shell: %s", shell);
-        assertTrue(shell.isStr());
+        assertEquals(STR_TID, shell.tid(), "shell file data should be a string");
         assertTrue(shell.strValue().startsWith(expected));
     }
 

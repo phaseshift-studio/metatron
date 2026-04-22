@@ -246,34 +246,34 @@ bin/metatron</code></pre>
                     <div id="flush-collapseOne" class="accordion-collapse collapse" aria-labelledby="flush-headingOne" data-bs-parent="#accordianInstSet">
                         <div class="accordion-body">
                                <pre><code>instset::[
- pattern=>/m/dcmnt/#,
+ pattern=> /m/dcmnt/#,
  q      =>[docq::[
-       pre_read =>inst?#{*}<=#{?}(uri::T),
-       pre_write=>inst?#{*}<=#{?}(uri::T,#::T),
-       pattern  =>docq,
-       obj      =>memspace::[pattern=><#>],
-       inst     =>instset::[pattern=><#>]]],
+       pre_read =>    inst?#{*}<=#{?}(uri::T),
+       pre_write=>    inst?#{*}<=#{?}(uri::T,#::T),
+       pattern  =>    docq,
+       obj      =>memspace::[pattern=>     <#>],
+       inst     =>instset::[pattern=>     <#>]]],
  space  =>[
-   super=>!*/m,
-   sub  =>{!*/m/dcmnt/space/schema/mflix,!*/m/dcmnt/space/schema/farm}],
+   super=>  !*/m,
+   sub  =>  {!*/m/dcmnt/space/schema/mflix,!*/m/dcmnt/space/schema/farm}],
  constq =>[
-   studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer@47a53906,
-   _id@/m/dcmnt/_id],
+      studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer@64ce5ab3,
+      _id@/m/dcmnt/_id],
  type   =>[
-   collection::T,
-   dcmntspace::T],
+      collection::T,
+      dcmntspace::T],
  inst   =>[
-   mql?rec{*}<=dcmntspace(uri::T,rec::T),
-   mql?rec{*}<=collection(rec::T)],
+      mql?rec{*}<=dcmntspace(uri::T,rec::T),
+      mql?rec{*}<=collection(rec::T)],
  rewrite=>[
-   /m/dcmnt/inst/rewrite/mql_count?code{?}<=code(),
-   /m/dcmnt/inst/rewrite/mql_sum?code{?}<=code(),
-   /m/dcmnt/inst/rewrite/mql_mean?code{?}<=code(),
-   /m/dcmnt/inst/rewrite/mql_limit?code{?}<=code(),
-   /m/dcmnt/inst/rewrite/mql_has?code{?}<=code(),
-   /m/dcmnt/inst/rewrite/mql_where?code{?}<=code(),
-   /m/dcmnt/inst/rewrite/mql_where_count?code{?}<=code(),
-   /m/dcmnt/inst/rewrite/mql_select?code{?}<=code()]]@/m/dcmnt</code></pre>
+      /m/dcmnt/inst/rewrite/mql_count?code{?}<=code(),
+      /m/dcmnt/inst/rewrite/mql_sum?code{?}<=code(),
+      /m/dcmnt/inst/rewrite/mql_mean?code{?}<=code(),
+      /m/dcmnt/inst/rewrite/mql_limit?code{?}<=code(),
+      /m/dcmnt/inst/rewrite/mql_has?code{?}<=code(),
+      /m/dcmnt/inst/rewrite/mql_where?code{?}<=code(),
+      /m/dcmnt/inst/rewrite/mql_where_count?code{?}<=code(),
+      /m/dcmnt/inst/rewrite/mql_select?code{?}<=code()]]@/m/dcmnt</code></pre>
                         </div>
                     </div>
                 </div>
@@ -514,12 +514,12 @@ bin/metatron</code></pre>
                     
                     <div class="mt-2">
                         <pre class="mb-0"><code class="language-mtron">space::T[isa([
- pattern      =&gt;uri::T,
- host         =&gt;uri::T,
- {?}serializer=&gt;uri::T,
- route        =&gt;[uri::T=&gt;uri::T],
- {?}root      =&gt;type::T,
- {?}schema    =&gt;instset::T])][inst?rng=dcmntspace&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/dcmnt/space/dcmntspace</code></pre>
+ pattern      =&gt; uri::T,
+ host         =&gt; uri::T,
+ {?}serializer=&gt; uri::T,
+ route        =&gt;[uri::T=&gt;  uri::T],
+ {?}root      =&gt; type::T,
+ {?}schema    =&gt; instset::T])][inst?rng=dcmntspace&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/dcmnt/space/dcmntspace</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -528,12 +528,12 @@ bin/metatron</code></pre>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"a rec describing a document database connection" <span class="text-light">=&gt;</span> "a rec with fields for configuring a document database connection"
    <pre><code class="language-mtron hljs">[
- {?}schema    =&gt;&#x27;an instset of collection types auto-dis...&#x27;,
- host         =&gt;&#x27;connection uri (mongodb://host:port/dat...&#x27;,
- pattern      =&gt;&#x27;the pattern for accessing documents&#x27;,
- {?}serializer=&gt;&#x27;the serializer for BSON documents&#x27;,
- route        =&gt;&#x27;the route for accessing documents&#x27;,
- {?}root      =&gt;&#x27;the root type constraint — writes at do...&#x27;]</code></pre></pre>
+ route        =&gt; &#x27;the route for accessing documents&#x27;,
+ {?}root      =&gt; &#x27;the root type constraint — writes at do...&#x27;,
+ {?}schema    =&gt; &#x27;an instset of collection types auto-dis...&#x27;,
+ host         =&gt; &#x27;connection uri (mongodb://host:port/dat...&#x27;,
+ pattern      =&gt; &#x27;the pattern for accessing documents&#x27;,
+ {?}serializer=&gt; &#x27;the serializer for BSON documents&#x27;]</code></pre></pre>
                     </div>
         <div class="card-body border-top py-2">
             <small class="text-muted fw-bold">examples:</small>
@@ -695,7 +695,7 @@ bin/metatron</code></pre>
         <div class="container-xxl py-3 text-center">
             <hr class="border-secondary">
             <small class="text-muted">
-                generated by metatron instset doc generator on build 0-2026-04-21 17:21:03<br>
+                generated by metatron instset doc generator on build 0-2026-04-21 18:49:50<br>
                 © PhaseShift Studio, LLC
             </small>
         </div>

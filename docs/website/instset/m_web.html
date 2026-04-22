@@ -246,40 +246,40 @@ bin/metatron</code></pre>
                     <div id="flush-collapseOne" class="accordion-collapse collapse" aria-labelledby="flush-headingOne" data-bs-parent="#accordianInstSet">
                         <div class="accordion-body">
                                <pre><code>instset::[
- pattern=>/m/web/#,
+ pattern=> /m/web/#,
  q      =>[docq::[
-       pre_read =>inst?#{*}<=#{?}(uri::T),
-       pre_write=>inst?#{*}<=#{?}(uri::T,#::T),
-       pattern  =>docq,
-       obj      =>memspace::[pattern=><#>],
-       inst     =>instset::[pattern=><#>]]],
- space  =>[super=>!*/m],
+       pre_read =>    inst?#{*}<=#{?}(uri::T),
+       pre_write=>    inst?#{*}<=#{?}(uri::T,#::T),
+       pattern  =>    docq,
+       obj      =>memspace::[pattern=>     <#>],
+       inst     =>instset::[pattern=>     <#>]]],
+ space  =>[super=>  !*/m],
  constq =>[
-   studio.phaseshift.metatron.isa.web.parser.ObjXMLSerializer@43e607a4,
-   studio.phaseshift.metatron.isa.web.parser.ObjHTMLSerializer@72c34047,
-   studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer@305c41a,
-   studio.phaseshift.metatron.isa.web.parser.ObjMarkdownSerializer@43896408],
+      studio.phaseshift.metatron.isa.web.parser.ObjXMLSerializer@30d4d543,
+      studio.phaseshift.metatron.isa.web.parser.ObjHTMLSerializer@15077fc0,
+      studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer@499277f3,
+      studio.phaseshift.metatron.isa.web.parser.ObjMarkdownSerializer@2121d02f],
  type   =>[
-   xml::T,
-   html::T,
-   json::T,
-   css::T,
-   json_str::T,
-   httpspace::T,
-   markdown::T,
-   ws::T,
-   ws_endpoint::T],
+      xml::T,
+      html::T,
+      json::T,
+      css::T,
+      json_str::T,
+      httpspace::T,
+      markdown::T,
+      ws::T,
+      ws_endpoint::T],
  inst   =>[
-   as?xml<=str(xml::T),
-   as?html<=str(html::T),
-   as?markdown<=str(markdown::T),
-   as?str<=html(str::T),
-   as?str<=markdown(str::T),
-   as?html<=markdown(html::T),
-   as?json<=str(json::T),
-   as(json_str::T),
-   doc?str<=str(),
-   doc_json?str<=str()]]@/m/web</code></pre>
+      as?xml<=str(xml::T),
+      as?html<=str(html::T),
+      as?markdown<=str(markdown::T),
+      as?str<=html(str::T),
+      as?str<=markdown(str::T),
+      as?html<=markdown(html::T),
+      as?json<=str(json::T),
+      as(json_str::T),
+      doc?str<=str(),
+      doc_json?str<=str()]]@/m/web</code></pre>
                         </div>
                     </div>
                 </div>
@@ -411,8 +411,8 @@ bin/metatron</code></pre>
                     
                     <div class="card-body p-2">
                         <pre class="mb-0"><code class="language-mtron">xml::T[?[html=&gt;[
-       head=&gt;[{?}title=&gt;str::T],
-       body=&gt;rec::T]]]@/m/web/html</code></pre>
+       head=&gt;[{?}title=&gt;     str::T],
+       body=&gt;    rec::T]]]@/m/web/html</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -429,7 +429,8 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="card-body p-2">
-                        <pre class="mb-0"><code class="language-mtron">rec::T[?[uri::T=&gt;is(or(eq(noobj{0}::T),eq(bool::T),eq(int::T),eq(str::T),eq(uri::T),eq(lst::T),eq(rec::T)))]][/m/web/inst?json&lt;=#{?}(str::T){&lt;j&gt;}]@/m/web/json</code></pre>
+                        <pre class="mb-0"><code class="language-mtron">rec::T[?[uri::T=&gt;   is(or(eq(noobj{0}::T),eq(bool::T),eq(int::T),eq(str::T),eq(uri::T),eq(lst::T),eq(rec::T)))]][
+   /m/web/inst?json&lt;=#{?}(str::T)]@/m/web/json</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -541,9 +542,9 @@ bin/metatron</code></pre>
                     
                     <div class="mt-2">
                         <pre class="mb-0"><code class="language-mtron">space::T[][inst?rng=httpspace&amp;dom=#{?}(rec::T[isa([
- pattern=&gt;uri::T,
- host   =&gt;uri::T,
- route  =&gt;rec::T])]){&lt;j&gt;}]@/m/web/space/httpspace</code></pre>
+ pattern=&gt; uri::T,
+ host   =&gt; uri::T,
+ route  =&gt; rec::T])]){&lt;j&gt;}]@/m/web/space/httpspace</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -565,12 +566,12 @@ bin/metatron</code></pre>
                     
                     <div class="mt-2">
                         <pre class="mb-0"><code class="language-mtron">space::T[isa([
- host   =&gt;uri::T,
- pattern=&gt;uri::T,
- route  =&gt;rec::T])][inst?rng=ws&amp;dom=#{?}(rec::T[isa([
- pattern=&gt;uri::T,
- host   =&gt;uri::T,
- route  =&gt;rec::T])]){&lt;j&gt;}]@/m/web/space/ws</code></pre>
+ host   =&gt; uri::T,
+ pattern=&gt; uri::T,
+ route  =&gt; rec::T])][inst?rng=ws&amp;dom=#{?}(rec::T[isa([
+ pattern=&gt; uri::T,
+ host   =&gt; uri::T,
+ route  =&gt; rec::T])]){&lt;j&gt;}]@/m/web/space/ws</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -585,13 +586,13 @@ bin/metatron</code></pre>
                     
                     <div class="mt-2">
                         <pre class="mb-0"><code class="language-mtron">rec::T[isa([
- ws           =&gt;uri::T,
- pattern      =&gt;uri::T,
- {?}client    =&gt;[uri::T],
- {?}on_open   =&gt;#::T,
- {?}on_error  =&gt;#::T,
- {?}on_message=&gt;#::T,
- {?}on_close  =&gt;#::T])][inst?rng=ws_endpoint&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/web/space/ws_endpoint</code></pre>
+ ws           =&gt; uri::T,
+ pattern      =&gt; uri::T,
+ {?}client    =&gt;[   uri::T],
+ {?}on_open   =&gt; #::T,
+ {?}on_error  =&gt; #::T,
+ {?}on_message=&gt; #::T,
+ {?}on_close  =&gt; #::T])][inst?rng=ws_endpoint&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/web/space/ws_endpoint</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -604,7 +605,7 @@ bin/metatron</code></pre>
         <div class="container-xxl py-3 text-center">
             <hr class="border-secondary">
             <small class="text-muted">
-                generated by metatron instset doc generator on build 0-2026-04-21 17:20:37<br>
+                generated by metatron instset doc generator on build 0-2026-04-21 18:49:23<br>
                 © PhaseShift Studio, LLC
             </small>
         </div>

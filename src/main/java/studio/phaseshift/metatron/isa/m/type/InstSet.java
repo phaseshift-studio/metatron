@@ -47,7 +47,7 @@ public interface InstSet extends Space {
     Type INSTSET_TYPE = Type.Builder.build().tid(REC_TID).vid(INSTSET_TID)
             .isaPredicate(rec(
                     uri(CONSTQ).maybe().asUri(), lst(T(ALL.maybe())),
-                    uri(TYPE).maybe(), lst(TYPE_TYPE).maybe(),
+                    uri(TYPE).maybe(), lst(T(ALL_STAR)).maybe(),
                     uri(INST).maybe(), lst(INST_TYPE).maybe(),
                     uri(REWRITE).maybe(), lst(INST_TYPE).maybe(),
                     uri(SUGAR).maybe(), lst(LST_TYPE).maybe())).create();

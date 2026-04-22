@@ -331,7 +331,11 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
         if (type.hasConstructor()) {
             if (!type.hasPredicate())
                 typeString.append("[]");
-            typeString.append("[").append(type.constructor()).append("]");
+            typeString.append("[\n");
+            final StringBuilder temp = new StringBuilder();
+            processNestedPoly(typeString, depth + 1, depth + 1, true, type.constructor());
+            typeString.delete(typeString.length() - 2, typeString.length()); // remove ,\n
+            typeString.append("]");
         }
         if (type.vid() != null && !type.tid().equals(type.vid()))
             typeString.append("@").append(type.vid());
@@ -403,6 +407,8 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
         } else if (v.isLst()) {
             this.generateLst(sb, v.as(), depth + 1);
         } else {
+            sb.append(" ".repeat(padding));
+            sb.append(" ".repeat(depth + 1));
             this.writeClip(sb, v);
         }
         sb.append(",");

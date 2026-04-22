@@ -57,14 +57,17 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.*;
         "testMonoReadWrite"  // Include this CRUD test even though CRUD tag is skipped
 })
 public class httpSpaceTest extends AbstractSpaceTest {
-    private static final String BASE_URL = "http://localhost:8666";
+    private static final String BASE_URL = "http://localhost:8777";
 
     public httpSpaceTest() {
-        super(f("/sys/space/web"), () -> httpSpace.of(rec(
-                uri(HOST), uri(BASE_URL),
-                uri(PATTERN), uri("http://#"),
-                uri(ROUTE), rec(uri("/"), uri("src/test/resources/web"))), f("/sys/space/web")));
-        InstSet.importInstSet(WEB_ISA_TID);
+        super(f(BASE_URL), () -> {
+            InstSet.importInstSet(WEB_ISA_TID);
+            return httpSpace.of(rec(
+                    uri(HOST), uri(BASE_URL),
+                    uri(PATTERN), uri("http://#"),
+                    uri(ROUTE), rec(uri("/"), uri("src/test/resources/web"))), f("/sys/space/web"));
+        });
+        
     }
 
     @Override

@@ -127,11 +127,14 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
  tblespace::[pattern => db:#,
         host       => <mariadb://localhost:3306/tble_space?user=mtron&password=mtron>,
         route      => [db:=><>],
+        root        => rec::T,
+        schema      => instset::[type=>[rec::T]],
         driver     => <org.mariadb.jdbc.Driver>]@/sys/space/db;
  dcmntspace::[pattern   => mongo:#,
        host        => <mongodb://localhost:27017/mflix>,
        serializer  => !*</m/mach/io/serializer/bson>,
-       collection  => [,],
+       root        => rec::T,
+       schema      => instset::[type=>[rec::T]],
        route       => [mongo:=><>]]@/sys/space/mongo;
  mcp::[host      => <ws://localhost:8999/m/llm/mcp>]@/usr/ai/mcp/mtron;
  mcp::[host      => <http://127.0.0.1:29170/index-mcp/streamable-http>]@/usr/ai/mcp/intellij;

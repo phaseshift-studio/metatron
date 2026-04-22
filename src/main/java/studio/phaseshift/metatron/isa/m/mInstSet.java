@@ -55,6 +55,7 @@ import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instA;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 @InstSet.JREService(vid = "/m")
@@ -207,7 +208,9 @@ public class mInstSet extends AbstractInstSet {
             .isaPredicate(rec(
                     uri(PATTERN), URI_TYPE,
                     uri(QSTRING).maybe(), lst(Q_TYPE),
-                    uri(SCHEMA).maybe(), REC_TYPE)).create();
+                    uri(ROOT).maybe(), T(TYPE_TID),     // nominal-only: avoids structural recursion in Type
+                    uri(SCHEMA).maybe(), T(INSTSET_TID) // nominal-only: avoids structural recursion in InstSet
+            )).create();
 
    /* public static final Type MONO_TYPE = Type.Builder.build()
             .tid(MONO_TID)

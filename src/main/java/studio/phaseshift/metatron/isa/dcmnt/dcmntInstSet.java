@@ -29,7 +29,6 @@ import studio.phaseshift.metatron.isa.dcmnt.space.dcmntSpace;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
@@ -45,7 +44,6 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -76,19 +74,10 @@ public class dcmntInstSet extends AbstractInstSet {
     public static final fURI DCMNT_ISA_INST_TID = DCMNT_ISA_TID.extend(INST);
     public static final fURI DCMNT_ISA_REWRITE_TID = DCMNT_ISA_INST_TID.extend(REWRITE);
     public static final fURI MQL_INST_TID = DCMNT_ISA_INST_TID.extend(MQL);
-    public static final fURI DOCUMENT_TID = DCMNT_ISA_TID.extend("document");
     public static final fURI COLLECTION_TID = DCMNT_ISA_TID.extend(COLLECTION);
     public static final fURI ID_FIELD = f("_id");
     public static fURI DCMNT_SPACE_TID = DCMNT_ISA_TID.extend(SPACE).extend("dcmntspace");
 
-
-    public static final Type DOCUMENT_TYPE = Type.Builder.build()
-            .tid(REC_TID)
-            .vid(DOCUMENT_TID)
-            .isaPredicate(rec(
-                    uri(ID_FIELD), URI_TYPE,
-                    URI_TYPE, T(ALL)))
-            .create();
 
     public static final Type COLLECTION_TYPE = Type.Builder.build()
             .tid(URI_TID)
@@ -106,7 +95,6 @@ public class dcmntInstSet extends AbstractInstSet {
                 uri(PATTERN), uri(DCMNT_ISA_TID.extend(ALL)),
                 uri(CONSTQ), lst(ObjSimpleJSONSerializer.single(), uri(ID_FIELD, URI_TID, DCMNT_ISA_TID.extend(ID_FIELD))),
                 uri(TYPE), lst(
-                        docWrap(DOCUMENT_TYPE, "a document (record) from a collection"),
                         COLLECTION_TYPE,
                         docWrap(Type.Builder.build()
                                         .tid(SPACE_TID)
@@ -116,8 +104,8 @@ public class dcmntInstSet extends AbstractInstSet {
                                                 uri(HOST), URI_TYPE,
                                                 uri(SERIALIZER).maybe(), URI_TYPE,
                                                 uri(ROUTE), rec(URI_TYPE, URI_TYPE),
-                                                uri(COLLECTION).maybe(), LST_TYPE,
-                                                uri(SCHEMA).maybe(), T(ALL)
+                                                uri(ROOT).maybe(), T(TYPE_TID),
+                                                uri(SCHEMA).maybe(), T(INSTSET_TID)
                                         ))
                                         .constructor(instC(mInstSet.M_ISA_INST_TID.dom(ALL.maybe()).rng(DCMNT_SPACE_TID),
                                                 lst(REC_TYPE),
@@ -129,22 +117,21 @@ public class dcmntInstSet extends AbstractInstSet {
                                         uri(HOST), "connection uri (mongodb://host:port/database?options)",
                                         uri(SERIALIZER).maybe(), "the serializer for BSON documents",
                                         uri(ROUTE), "the route for accessing documents",
-                                        uri(COLLECTION).maybe(), "schema discovery on collections (empty discovers all collections)"
+                                        uri(ROOT).maybe(), "the root type constraint — writes at document root must satisfy this type; defaults to rec::T",
+                                        uri(SCHEMA).maybe(), "an instset of collection types auto-discovered from the live database"
                                 ),
-                                "an interface to document-oriented databases",
+                                "an interface to document-oriented databases (MongoDB wire protocol)",
                                 """
-                                dcmntspace::[pattern     => moviedb:#,
-                                             host        => <mongodb://localhost:27017/movies>,
-                                             serializer  => !*</m/mach/io/serializer/bson>,
-                                             collection  => [,],
-                                             route       => [moviedb:=>/moviedb/]]@/usr/entertainment/moviedb;
+                                dcmntspace::[pattern => moviedb:#,
+                                             host    => <mongodb://localhost:27017/movies>,
+                                             root    => rec::T,
+                                             route   => [moviedb:=>/moviedb/]]@/usr/entertainment/moviedb;
                                 """,
                                 """
                                 *moviedb:schema
-                                *moviedb:
+                                *moviedb:movie/
                                 """)),
                 uri(INST), lst(
-                        instC(AS_INST_TID.dom(DOCUMENT_TID).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> lst(lhs.asRec().elements().map(Rel::second).toList())),
                         instC(MQL_INST_TID.dom(DCMNT_SPACE_TID).rng(REC_TID.maybeSome()), lst(URI_TYPE, REC_TYPE), (lhs, inst) -> lhs.<dcmntSpace>as().mql(inst.arg(0).uriValue().toString(), inst.arg(1).as())),
                         docWrap(instC(MQL_INST_TID.dom(COLLECTION_TID).rng(REC_TID.maybeSome()), lst(REC_TYPE), (lhs, inst) -> Router.global().<dcmntSpace>getSpace(lhs.uriValue()).mql(lhs.uriValue().name(), inst.arg(0).as())),
                                 "a document collection",
@@ -284,18 +271,7 @@ public class dcmntInstSet extends AbstractInstSet {
                         )
                 )));
         docWrap(this,
-                """
-                collections of nested documents accessible via the metatron
-                <br>
-                Supports:
-                <ol>
-                    <li> MongoDB (Community or Enterprise)
-                    <li> DocumentDB (MIT licensed, PostgreSQL-based, open source)
-                    <li> Amazon DocumentDB (MongoDB-compatible)
-                    <li> Azure Cosmos DB for MongoDB
-                    <li> Any database implementing the MongoDB wire protocol
-                </ol>
-                """,
+                "nested documents, typed collections, and schema-enforced writes — all within the metatron",
                 "mongodb:people/6/address>>=[street=>Elm Street,city=>Gotham,zipcode=>90210]");
         super.setup();
 

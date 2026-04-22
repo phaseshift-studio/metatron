@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.tble.schema.domain;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
+import java.util.ArrayList;
 
 import java.sql.Types;
 import java.util.*;
@@ -168,6 +169,47 @@ public class SQLSchemaGenerator {
      */
     public fURI getSchemaBasePath() {
         return schemaBasePath;
+    }
+
+    /**
+     * Generate a {@link SQLSchemaInstSet} for the discovered tables.
+     *
+     * <p>The instset VID is {@code schemaVid} (must be in the {@code /m/} namespace so it is
+     * backed by memSpace). Each table Type's VID is placed under
+     * {@code schemaVid/type/{tableName}} so that {@code checkPattern()} in
+     * {@link studio.phaseshift.metatron.isa.AbstractInstSet} stores them locally in
+     * {@code TYPE_TABLE} rather than routing them elsewhere.
+     *
+     * <p>Register the returned instset via {@code Router.global().addSpace(instset)} —
+     * safe because its VID is in {@code /m/}, not in the tbleSpace's data namespace.
+     *
+     * @param schemaVid VID for the schema instset, e.g. {@code f("/m/tble/space/schema/mydb")}
+     * @return a fully-populated {@link SQLSchemaInstSet}
+     */
+    public SQLSchemaInstSet generateSchemaInstset(final fURI schemaVid) {
+        final fURI typeBase = schemaVid.extend("type");
+        final List<Type> types = new ArrayList<>();
+        for (final ExistingTableSchema.TableMetadata table : tableMetadata) {
+            final fURI typeVid = typeBase.extend(table.tableName().toLowerCase());
+            types.add(generateTableTypeAt(table, typeVid));
+        }
+        return new SQLSchemaInstSet(schemaVid, types);
+    }
+
+    /**
+     * Generate a table Type with a specific VID (for use within a schema instset).
+     * The VID must fall under the instset's pattern so it is stored locally.
+     */
+    private Type generateTableTypeAt(final ExistingTableSchema.TableMetadata table, final fURI typeVid) {
+        final LinkedHashMap<Obj, Obj> fields = new LinkedHashMap<>();
+        for (final ExistingTableSchema.ColumnMetadata column : table.columns()) {
+            fields.put(uri(column.name()), sqlTypeToMtronType(column));
+        }
+        return Type.Builder.build()
+                .tid(REC_ROW_TID)
+                .vid(typeVid)
+                .isaPredicate(studio.phaseshift.metatron.isa.m.type.impl.MRec.rec(fields))
+                .create();
     }
 
     /**

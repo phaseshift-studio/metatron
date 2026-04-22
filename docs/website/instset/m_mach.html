@@ -246,54 +246,54 @@ bin/metatron</code></pre>
                     <div id="flush-collapseOne" class="accordion-collapse collapse" aria-labelledby="flush-headingOne" data-bs-parent="#accordianInstSet">
                         <div class="accordion-body">
                                <pre><code>instset::[
- pattern=>/m/mach/#,
+ pattern=> /m/mach/#,
  q      =>[docq::[
-       pre_read =>inst?#{*}<=#{?}(uri::T),
-       pre_write=>inst?#{*}<=#{?}(uri::T,#::T),
-       pattern  =>docq,
-       obj      =>memspace::[pattern=><#>],
-       inst     =>instset::[pattern=><#>]]],
+       pre_read =>    inst?#{*}<=#{?}(uri::T),
+       pre_write=>    inst?#{*}<=#{?}(uri::T,#::T),
+       pattern  =>    docq,
+       obj      =>memspace::[pattern=>     <#>],
+       inst     =>instset::[pattern=>     <#>]]],
  space  =>[
-   super=>!*/m,
-   sub  =>!*/m/mach/io],
+   super=>  !*/m,
+   sub  =>  !*/m/mach/io],
  type   =>[
-   router::T,
-   space::T,
-   console::T,
-   fsspace::T,
-   serial::T,
-   file::T,
-   dir::T,
-   image::T,
-   factory::T,
-   mfactory::T,
-   server::T,
-   protocol::T,
-   native::T,
-   mcp_ws::T,
-   server::T,
-   core::T,
-   monad::T,
-   machine::T,
-   swarm::T],
+      router::T,
+      space::T,
+      console::T,
+      fsspace::T,
+      serial::T,
+      file::T,
+      dir::T,
+      image::T,
+      factory::T,
+      mfactory::T,
+      server::T,
+      protocol::T,
+      native::T,
+      mcp_ws::T,
+      server::T,
+      core::T,
+      monad::T,
+      machine::T,
+      swarm::T],
  inst   =>[
-   lift(#{?}::T),
-   rewrite?rec<=#{?}(uri::T),
-   close?noobj<=router(),
-   nano?#{?}<=#{?}(),
-   less?noobj{0}<=str(isa(int::T).else(10)),
-   rshift?file{*}<=file(isa(uri::T).else(<#>)),
-   as?file<=uri(file::T),
-   as?image<=bytes(image::T,else(1.0000)),
-   as?file<=uri(file::T),
-   as?bytes<=file(bytes::T),
-   zero?A<=A(),
-   one?A<=A(),
-   which(uri::T),
-   inject(int::T,#::T),
-   run?core<=core(),
-   stop?core<=core(),
-   pause?core<=core()]]@/m/mach</code></pre>
+      lift(#{?}::T),
+      rewrite?rec<=#{?}(uri::T),
+      close?noobj<=router(),
+      nano?#{?}<=#{?}(),
+      less?noobj{0}<=str(isa(int::T).else(10)),
+      rshift?file{*}<=file(isa(uri::T).else(<#>)),
+      as?file<=uri(file::T),
+      as?image<=bytes(image::T,else(1.0000)),
+      as?file<=uri(file::T),
+      as?bytes<=file(bytes::T),
+      zero?A<=A(),
+      one?A<=A(),
+      which(uri::T),
+      inject(int::T,#::T),
+      run?core<=core(),
+      stop?core<=core(),
+      pause?core<=core()]]@/m/mach</code></pre>
                         </div>
                     </div>
                 </div>
@@ -444,7 +444,8 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="card-body p-2">
-                        <pre class="mb-0"><code class="language-mtron">rec::T[?[=&gt;]][inst?console&lt;=#{?}(rec::T){&lt;j&gt;}]@/m/mach/console</code></pre>
+                        <pre class="mb-0"><code class="language-mtron">rec::T[?[=&gt;]][
+   inst?console&lt;=#{?}(rec::T)]@/m/mach/console</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -461,7 +462,8 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="card-body p-2">
-                        <pre class="mb-0"><code class="language-mtron">uri::T[][inst?dir{?}&lt;=#{?}(uri::T){&lt;j&gt;}]@/m/mach/dir</code></pre>
+                        <pre class="mb-0"><code class="language-mtron">uri::T[][
+   inst?dir{?}&lt;=#{?}(uri::T)]@/m/mach/dir</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -495,7 +497,8 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="card-body p-2">
-                        <pre class="mb-0"><code class="language-mtron">uri::T[][inst?file&lt;=#{?}(uri::T){&lt;j&gt;}]@/m/mach/file</code></pre>
+                        <pre class="mb-0"><code class="language-mtron">uri::T[][
+   inst?file&lt;=#{?}(uri::T)]@/m/mach/file</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -513,9 +516,9 @@ bin/metatron</code></pre>
                     
                     <div class="card-body p-2">
                         <pre class="mb-0"><code class="language-mtron">rec::T[?[
-     halted =&gt;#{*}::T,
-     running=&gt;monad{*}::T,
-     barrier=&gt;lst::T]]@/m/mach/machine</code></pre>
+     halted =&gt;   #{*}::T,
+     running=&gt;   monad{*}::T,
+     barrier=&gt;   lst::T]]@/m/mach/machine</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -535,7 +538,8 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="card-body p-2">
-                        <pre class="mb-0"><code class="language-mtron">factory::T[][/m/mach/mfactory/cons?mfactory&lt;=#{?}(){&lt;j&gt;}]@/m/mach/mfactory</code></pre>
+                        <pre class="mb-0"><code class="language-mtron">factory::T[][
+   /m/mach/mfactory/cons?mfactory&lt;=#{?}()]@/m/mach/mfactory</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -649,7 +653,7 @@ bin/metatron</code></pre>
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"an str to page" <span class="text-light">=&gt;</span> "noobj terminal"
-   <pre><code class="language-mtron hljs">[0=&gt;&#x27;number of lines per page&#x27;]</code></pre></pre>
+   <pre><code class="language-mtron hljs">[0=&gt; &#x27;number of lines per page&#x27;]</code></pre></pre>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-lift">
@@ -779,9 +783,9 @@ bin/metatron</code></pre>
                     
                     <div class="mt-2">
                         <pre class="mb-0"><code class="language-mtron">space::T[isa([
- pattern  =&gt;uri::T,
- route    =&gt;[uri::T=&gt;uri::T],
- {?}script=&gt;[uri::T=&gt;uri::T]])][inst?rng=fsspace&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/mach/space/fsspace</code></pre>
+ pattern  =&gt; uri::T,
+ route    =&gt;[uri::T=&gt;  uri::T],
+ {?}script=&gt;[uri::T=&gt;  uri::T]])][inst?rng=fsspace&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/mach/space/fsspace</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -796,8 +800,8 @@ bin/metatron</code></pre>
                     
                     <div class="mt-2">
                         <pre class="mb-0"><code class="language-mtron">space::T[][inst?rng=serial&amp;dom=#{?}(isa([
- pattern=&gt;uri::T,
- route  =&gt;rec::T])){&lt;j&gt;}]@/m/mach/space/serial</code></pre>
+ pattern=&gt; uri::T,
+ route  =&gt; rec::T])){&lt;j&gt;}]@/m/mach/space/serial</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -810,7 +814,7 @@ bin/metatron</code></pre>
         <div class="container-xxl py-3 text-center">
             <hr class="border-secondary">
             <small class="text-muted">
-                generated by metatron instset doc generator on build 0-2026-04-21 17:20:15<br>
+                generated by metatron instset doc generator on build 0-2026-04-21 18:49:00<br>
                 © PhaseShift Studio, LLC
             </small>
         </div>

@@ -26,6 +26,9 @@ import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -37,6 +40,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -244,6 +248,27 @@ public final class CommonUtil {
             throw MTronException.of("resource file not found: %s", resourcePath);
         }
         return sb;
+    }
+
+    public static void copyDirectory(final Path from, final Path to) {
+        try (final Stream<Path> fileWalk = Files.walk(from)) {
+            fileWalk.forEach(sourcePath -> {
+                try {
+                    // Resolve the relative path in the destination
+                    Path targetPath = to.resolve(from.relativize(sourcePath));
+                    // Create parent directories if they don't exist
+                    if (Files.isDirectory(sourcePath)) {
+                        Files.createDirectories(targetPath);
+                    } else {
+                        Files.copy(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
+                    }
+                } catch (final IOException e) {
+                    throw MTronException.of(e);
+                }
+            });
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
     }
 
     public static class RecCollector implements Collector<Rel, Map<Obj, Obj>, Rec> {

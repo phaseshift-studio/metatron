@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -83,6 +84,20 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
     @Override
     public Obj write(final fURI vid, final Obj obj) {
         // LOG.warn("writing %s => %s", vid, Space.Helper.routeFromSpace(vid, this.routes()));
+        // Root type enforcement: if this space declares a root type constraint and the write
+        // targets a document root (1 or 2 non-branch path segments), reject non-conforming values.
+        //   1-segment: e.g. mongo:ddd -> [...] (auto-generated document ID)
+        //   2-segment: e.g. mongo:col/docId -> [...] (explicit document write)
+        // Deletes (noobj) are always permitted. Sub-field writes (3+ segments) bypass this check.
+        if (!obj.isNoObj()) {
+            final Obj rootConstraint = this.at(uri(ROOT)).orElse(null);
+            if (rootConstraint != null && !rootConstraint.isNoObj()
+                    && !vid.isBranch()
+                    && vid.segments().size() >= 1 && vid.segments().size() <= 2
+                    && !obj.test(rootConstraint.as())) {
+                return fail("space %s requires %s at document root; got %s", this.vid(), rootConstraint, obj.type());
+            }
+        }
         return Q.Helper.processPreWrite(this.qs(), vid, obj)
                 .orElseGet(() -> Q.Helper.processQlessWrite(this.qs(), vid, obj).orElseGet(() -> {
                     Space.Helper.resolveWrite(LOG, this, vid, obj, this.directWriter(), this.directReader());
@@ -102,8 +117,8 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
 
 
     @Override
-    public fURI redirect(final fURI furi, final boolean big) {
-        return big ? Space.Helper.routeFromSpace(furi, this.routes()) : Space.Helper.routeToSpace(furi, this.routes());
+    public fURI redirect(final fURI furi, final boolean external) {
+        return external ? Space.Helper.routeFromSpace(furi, this.routes()) : Space.Helper.routeToSpace(furi, this.routes());
     }
 
     @Override

@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.web.parser.ObjHTMLSerializer;
+import studio.phaseshift.metatron.isa.web.parser.ObjMarkdownSerializer;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.File;
@@ -35,7 +36,7 @@ import java.util.List;
 
 import static studio.phaseshift.metatron.isa.m.type.ObjFactory.LOG;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
-import static studio.phaseshift.metatron.isa.web.webInstSet.HTML_TYPE;
+import static studio.phaseshift.metatron.isa.web.webInstSet.*;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -55,6 +56,7 @@ public class Content {
         TEXT_HTML("text/html"),
         TEXT_PLAIN("text/plain"),
         TEXT_CSS("text/css"),
+        TEXT_MARKDOWN("text/markdown"),
         TEXT_JAVASCRIPT("text/javascript"),
         TEXT_X_SHELLSCRIPT("text/x-shellscript"),
         IMAGE_PNG("image/png"),
@@ -77,11 +79,20 @@ public class Content {
             try {
                 if (file.getName().contains("."))
                     return fromExtension(file.getName());
-                return of(Files.probeContentType(file.toPath()));
+                final ContentType contentType = of(Files.probeContentType(file.toPath()));
+                LOG.debug("probed content type: %s", contentType);
+                return contentType == TEXT_PLAIN ? ContentType.APPLICATION_MTRON : contentType;
             } catch (final IOException e) {
                 LOG.error(e);
                 return TEXT_PLAIN;
             }
+        }
+
+        public static ContentType fromType(final Obj obj) {
+            if (obj.type().vid().basePath().equals(HTML_TID)) return TEXT_HTML;
+            if (obj.type().vid().basePath().equals(MARKDOWN_TID)) return TEXT_MARKDOWN;
+            if (obj.type().vid().basePath().equals(JSON_TID)) return APPLICATION_JSON;
+            return APPLICATION_MTRON;
         }
 
         /**
@@ -112,6 +123,10 @@ public class Content {
             return this.equals(TEXT_HTML);
         }
 
+        public boolean isMarkdown() {
+            return this.equals(TEXT_MARKDOWN);
+        }
+
         public boolean isMtron() {
             return this.equals(APPLICATION_MTRON);
         }
@@ -132,21 +147,30 @@ public class Content {
             return this.equals(TEXT_PLAIN);
         }
 
+        public boolean isBSON() {
+            return this.equals(APPLICATION_BSON);
+        }
+
         public static final String VALUE = "Content-Type";
 
         public ObjSerializer<?> serializer() {
-            if (this.isMtron()) return new ObjmtronSerializer();
+            if (this.isMtron()) return ObjmtronSerializer.single();
             if (this.isJson()) return ObjSimpleJSONSerializer.single();
             if (this.isHtml()) return ObjHTMLSerializer.single();
-            if (this.equals(APPLICATION_BSON)) return new ObjBSONSerializer();
+            if (this.isMarkdown()) return ObjMarkdownSerializer.single();
+            if (this.isBSON()) return ObjBSONSerializer.single();
             throw MTronException.of("no known serializer for %s", this.value);
         }
-
-        public Obj toObj(final String data) {
-            return this.toObj(data.getBytes());
+        
+        public boolean hasSerializer() {
+            return this.isMtron() || this.isJson() || this.isHtml() || this.isMarkdown() || this.isBSON();
         }
 
-        public Obj toObj(final byte[] data) {
+        public Obj fromBytes(final String data) {
+            return this.fromBytes(data.getBytes());
+        }
+
+        public Obj fromBytes(final byte[] data) {
             final Obj obj = this.isPlain() ?
                     str(new String(data)) :
                     serializer().inputBytes(ByteBuffer.wrap(data));
@@ -154,6 +178,12 @@ public class Content {
             //if(this.isJson()) return obj.as(JSON_TYPE); // TODO: need test cases
             //if(this.isBinary()) return obj.as(BYTES_TYPE);
             return obj;
+        }
+
+        public byte[] toBytes(final Obj obj) {
+            return this.isPlain() ?
+                    obj.toString().getBytes() :
+                    serializer().outputBytes(obj).array();
         }
     }
 }

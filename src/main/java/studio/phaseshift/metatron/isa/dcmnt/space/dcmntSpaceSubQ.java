@@ -263,7 +263,7 @@ public class dcmntSpaceSubQ extends BaseQ {
             // For insert, update, replace - get the full document
             final Document fullDoc = change.getFullDocument();
             if (fullDoc != null) {
-                obj = space.serializer.readRec(fullDoc.toBsonDocument()).selfVID(docVID);
+                obj = space.getSerializer().readRec(fullDoc.toBsonDocument()).selfVID(docVID);
             } else {
                 // Fallback if full document not available
                 LOG.debug("full document not available for change event on %s", docVID);

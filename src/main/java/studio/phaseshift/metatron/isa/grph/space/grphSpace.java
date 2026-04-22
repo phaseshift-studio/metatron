@@ -78,6 +78,9 @@
      public static final Type GRPH_SPACE_TYPE = Type.Builder.build()
              .tid(SPACE_TID)
              .vid(GRPH_SPACE_TID)
+             .isaPredicate(rec(
+                     (Obj) uri(ROOT).maybe(), Rec.REC_TYPE,
+                     (Obj) uri(SCHEMA).maybe(), InstSet.INSTSET_TYPE))
              .constructor(
                      instC(mInstSet.M_ISA_INST_TID.dom(ALL.maybe()).rng(GRPH_SPACE_TID),
                              lst(isa_(GRAPH_CONFIG).else_(failure_(str("malformed tp3 config"))).tryToInst()),

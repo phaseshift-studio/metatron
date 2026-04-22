@@ -32,9 +32,12 @@ import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -59,6 +62,14 @@ public class ObjBSONSerializer extends AbstractObjSerializer<BsonValue> {
     public static final Byte FAIL_MAGIC_NUMBER = (byte) 0x02;
 
     public static final fURI OBJ_BSON_SERIALIZER_VID = OBJ_SERIALIZER_TID.extend("bson");
+
+    /**
+     * Hidden BSON field that stores the nominal TID of a document for round-trip fidelity.
+     * Only written when the TID differs from the base {@code rec::T} (i.e., the document
+     * carries a named type like {@code chicken::T} or {@code users::T}).
+     * Stripped on read and applied via {@link Rec#selfTID(fURI)}.
+     */
+    public static final String MTRON_TID_FIELD = "__mtron_tid";
 
 
     public static final ObjBSONSerializer SINGLE = new ObjBSONSerializer();
@@ -154,7 +165,7 @@ public class ObjBSONSerializer extends AbstractObjSerializer<BsonValue> {
     @Override
     public Bytes readBytes(final BsonValue bson) {
         final byte[] b = bson.asBinary().getData();
-        return bytes(ByteBuffer.wrap(b, 2, b.length));
+        return bytes(ByteBuffer.wrap(b, 1, b.length - 1));
     }
 
     @Override
@@ -190,18 +201,18 @@ public class ObjBSONSerializer extends AbstractObjSerializer<BsonValue> {
             // MongoDB ObjectId -> convert to hex string URI
             return uri(bson.asObjectId().getValue().toHexString());
         } else {
-            // Custom binary encoding
+            // Custom binary encoding: [URI_MAGIC_NUMBER (1 byte), ...uri string bytes...]
             final byte[] b = bson.asBinary().getData();
-            if (b.length > 8 && b[0] != -1) // else npe on what is seemingly a noobj uri ?
-                return uri(new String(ByteBuffer.wrap(b, 2, b.length).array()));
-            return uri(NOOBJ_TID).c(cInt.ZERO()).as();
+            if (b.length < 1 || b[0] != URI_MAGIC_NUMBER)
+                return uri(NOOBJ_TID).c(cInt.ZERO()).as();
+            return uri(new String(b, 1, b.length - 1));
         }
     }
 
     @Override
     public Fail readFail(final BsonValue bson) {
         final byte[] b = bson.asBinary().getData();
-        return fail(new String(ByteBuffer.wrap(b, 2, b.length).array()));
+        return fail(new String(b, 1, b.length - 1));
     }
 
     @Override
@@ -213,46 +224,58 @@ public class ObjBSONSerializer extends AbstractObjSerializer<BsonValue> {
     public Rec readRec(final BsonValue bson) {
         final BsonDocument doc = bson.asDocument();
 
-        // Regular document - check each field for potential references
-        return doc.entrySet().stream().map(kv -> {
-            final String key = kv.getKey();
-            final BsonValue value = kv.getValue();
+        // Extract and strip the hidden TID field before building the Rec
+        final String storedTid = doc.containsKey(MTRON_TID_FIELD)
+                ? doc.getString(MTRON_TID_FIELD).getValue()
+                : null;
 
-            // Check if this field value is a DBRef pattern: { $ref: "collection", $id: ObjectId(...) }
-            if (this.referencePathBuilder != null &&
-                    value.isDocument() &&
-                    value.asDocument().containsKey("$ref") &&
-                    value.asDocument().containsKey("$id")) {
+        // Build the Rec from all fields except the hidden TID field
+        final Rec result = doc.entrySet().stream()
+                .filter(kv -> !kv.getKey().equals(MTRON_TID_FIELD))
+                .map(kv -> {
+                    final String key = kv.getKey();
+                    final BsonValue value = kv.getValue();
 
-                final BsonDocument refDoc = value.asDocument();
-                final String collection = refDoc.getString("$ref").getValue();
-                final BsonValue idValue = refDoc.get("$id");
-                final String id = idValue.isObjectId()
-                        ? idValue.asObjectId().getValue().toHexString()
-                        : idValue.toString();
+                    // Check if this field value is a DBRef pattern: { $ref: "collection", $id: ObjectId(...) }
+                    if (this.referencePathBuilder != null &&
+                            value.isDocument() &&
+                            value.asDocument().containsKey("$ref") &&
+                            value.asDocument().containsKey("$id")) {
 
-                final fURI referencedPath = this.referencePathBuilder.apply(new ReferenceInfo(collection, id));
-                return rel(uri(key), auto_from_(referencedPath).tryToInst());
-            }
+                        final BsonDocument refDoc = value.asDocument();
+                        final String collection = refDoc.getString("$ref").getValue();
+                        final BsonValue idValue = refDoc.get("$id");
+                        final String id = idValue.isObjectId()
+                                ? idValue.asObjectId().getValue().toHexString()
+                                : idValue.toString();
 
-            // Check if this field is a potential reference (ends with "Id" and is an ObjectId)
-            if (this.referencePathBuilder != null &&
-                    key.endsWith("Id") &&
-                    !key.equals("_id") &&
-                    value.isObjectId()) {
+                        final fURI referencedPath = this.referencePathBuilder.apply(new ReferenceInfo(collection, id));
+                        return rel(uri(key), auto_from_(referencedPath).tryToInst());
+                    }
 
-                // Extract the collection name from the field name (e.g., "userId" -> "users")
-                final String fieldName = key.substring(0, key.length() - 2); // Remove "Id"
-                final String collectionName = fieldName + "s"; // Simple pluralization
-                final String id = value.asObjectId().getValue().toHexString();
+                    // Check if this field is a potential reference (ends with "Id" and is an ObjectId)
+                    if (this.referencePathBuilder != null &&
+                            key.endsWith("Id") &&
+                            !key.equals("_id") &&
+                            value.isObjectId()) {
 
-                final fURI referencedPath = this.referencePathBuilder.apply(new ReferenceInfo(collectionName, id));
-                return rel(uri(key), auto_from_(referencedPath).tryToInst());
-            }
+                        final String fieldName = key.substring(0, key.length() - 2); // Remove "Id"
+                        final String collectionName = fieldName + "s"; // Simple pluralization
+                        final String id = value.asObjectId().getValue().toHexString();
 
-            // Regular field
-            return rel(uri(key), this.read(value));
-        }).collect(new CommonUtil.RecCollector());
+                        final fURI referencedPath = this.referencePathBuilder.apply(new ReferenceInfo(collectionName, id));
+                        return rel(uri(key), auto_from_(referencedPath).tryToInst());
+                    }
+
+                    // Regular field
+                    return rel(uri(key), this.read(value));
+                }).collect(new CommonUtil.RecCollector());
+
+        // Restore nominal TID (e.g. chicken::T) without triggering type checking
+        if (storedTid != null)
+            result.selfTID(f(storedTid));
+
+        return result;
     }
 
 
@@ -303,6 +326,13 @@ public class ObjBSONSerializer extends AbstractObjSerializer<BsonValue> {
 
     @Override
     public BsonDocument writeRec(final Rec rec) {
-        return new BsonDocument(rec.jvm().entrySet().stream().map(kv -> new BsonElement(kv.getKey().jvm().toString(), this.write(kv.getValue()))).toList());
+        final List<BsonElement> elements = new ArrayList<>();
+        // Preserve nominal TID for round-trip fidelity — skip for base types (rec::T, etc.)
+        if (!rec.type().isBaseType())
+            elements.add(new BsonElement(MTRON_TID_FIELD, new BsonString(rec.tid().toString())));
+        rec.jvm().entrySet().stream()
+                .map(kv -> new BsonElement(kv.getKey().jvm().toString(), this.write(kv.getValue())))
+                .forEach(elements::add);
+        return new BsonDocument(elements);
     }
 }

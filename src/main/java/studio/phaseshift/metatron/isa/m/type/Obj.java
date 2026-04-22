@@ -49,7 +49,8 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.Bool.*;
 import static studio.phaseshift.metatron.isa.m.type.Bytes.BYTES_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Code.CODE_TYPE;
@@ -674,7 +675,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
 
     default String toShortString() {
         if (this.isType())
-            return this.vid().small().name() + "::T";
+            return this.vid().small().name() + (this.tid().isOne() ? "" : ("{" + this.tid().c().toString() + "}")) + "::T";
         return this.toString();
     }
 
@@ -968,14 +969,14 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                     instC(MERGE_INST_TID.dom(A.maybeSome()).rng(ALL_STAR), lst(T(ALL_STAR)), (lhs, inst) -> objs(Stream.concat(inst.args().elements(), lhs.elements()))),
                     instC(MERGE_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(A.maybeSome())), (lhs, inst) -> objs(Stream.concat(lhs.stream(), inst.arg(0).stream()))),
                     instC(NOT_INST_TID.dom(ALL).rng(BOOL_TID), lst(T(BOOL_TID)), (lhs, inst) -> bool(!inst.arg(0).boolValue())),
-                    docWrap(instC(EQ_INST_TID.dom(ALL).rng(BOOL_TID), lst(T(ALL)), (lhs, inst) -> Inst.Helper.alignLHSType(lhs, inst.arg(0)).map(l -> Objects.equals(l, inst.arg(0))).map(MBool::bool).orElse(BOOL_FALSE)),
+                    docWrap(instC(EQ_INST_TID.dom(A).rng(BOOL_TID), lst(T(A)), (lhs, inst) -> Inst.Helper.alignLHSType(lhs, inst.arg(0)).map(l -> Objects.equals(l, inst.arg(0))).map(MBool::bool).orElse(BOOL_FALSE)),
                             "any objs", "true if lhs equals rhs", Map.of(jnt(0), "the rhs obj"), "an equality function \\[ f(\\tt{lhs}) = \\left\\{ \\begin{aligned} \\tt{true} & \\quad \\text{if } \\tt{lhs} == \\tt{arg}_0 \\\\ \\tt{false} & \\quad \\text{otherwise.} \\end{aligned} \\right. \\]"),
-                    docWrap(instC(NEQ_INST_TID.dom(ALL).rng(BOOL_TID), lst(T(ALL)), (lhs, inst) -> Inst.Helper.alignLHSType(lhs, inst.arg(0)).map(l -> !Objects.equals(l, inst.arg(0))).map(MBool::bool).orElse(BOOL_TRUE)),
+                    docWrap(instC(NEQ_INST_TID.dom(A).rng(BOOL_TID), lst(T(A)), (lhs, inst) -> Inst.Helper.alignLHSType(lhs, inst.arg(0)).map(l -> !Objects.equals(l, inst.arg(0))).map(MBool::bool).orElse(BOOL_TRUE)),
                             "any objs", "true if lhs does not equal rhs", Map.of(jnt(0), "the rhs obj"), "an inequality function \\[ f(\\tt{lhs}) = \\left\\{ \\begin{aligned} \\tt{true} & \\quad \\text{if } \\tt{lhs} \\neq \tt{arg}_0 \\\\ \\tt{false} & \\quad \\text{otherwise.} \\end{aligned} \\right. \\]"),
-                    docWrap(instC(TO_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(URI_TID)), (lhs, inst) -> Router.writeToSpace(inst.arg(0).uriValue(), lhs)),
+                    docWrap(instC(TO_INST_TID.dom(A.maybe()).rng(A.maybe()), lst(T(URI_TID)), (lhs, inst) -> Router.writeToSpace(inst.arg(0).uriValue(), lhs)),
                             "any obj", "writes the lhs obj to the arg uri", Map.of(jnt(0), "the uri to write to"), "associates the lhs obj to the arg uri"),
                     // instC(FROM_INST_TID.dom(ALL.maybe()).rng(ALL_STAR), lst(), (lhs, inst) -> Router.stack().peekAll()),
-                    docWrap(instC(FROM_INST_TID.dom(ALL.maybe()).rng(ALL_STAR), lst(T(URI_TID)), (lhs, inst) -> Router.readFromSpace(inst.arg(0).isInt() ? f("" + inst.arg(0).intValue()) : inst.arg(0).uriValue())), // TODO: only resolves when explicit mono args (not code args)
+                    docWrap(instC(FROM_INST_TID.dom(A.maybe()).rng(B.maybeSome()), lst(T(URI_TID)), (lhs, inst) -> Router.readFromSpace(inst.arg(0).isInt() ? f("" + inst.arg(0).intValue()) : inst.arg(0).uriValue())), // TODO: only resolves when explicit mono args (not code args)
                             "any obj", "the obj referred to by the arg uri", Map.of(jnt(0), "the uri to dereference"), "dereferences a uri to an obj (sugar'd *)",
                             "*abc        [-- obj at abc                            --]",
                             "abc.*_      [-- obj at abc via dynamic arg generation --]",
@@ -987,7 +988,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                         MTronException.wrap(() -> new Thread(() -> inst.arg(0).apply(lhs)).start());
                         return lhs;
                     }),
-                    instC(SOURCE_INST_TID.dom(ALL).rng(ALL.maybeSome()), lst(T(STR_TID)), (lhs, inst) -> mParser.eval(inst.arg(0).strValue())),
+                    instC(SOURCE_INST_TID.dom(A).rng(B.maybeSome()), lst(T(STR_TID)), (lhs, inst) -> mParser.eval(inst.arg(0).strValue())),
                     instC(TYPE_INST_TID.dom(TYPE_TID).rng(TYPE_TID), lst(), (lhs, inst) -> lhs.type()),
                     instC(TYPE_INST_TID.dom(A).rng(TYPE_TID), lst(), (lhs, inst) -> lhs.type()),
                     docWrap(instC(CC_INST_TID.dom(A.maybeSome()).rng(INT_TID), lst(), (lhs, inst) -> jnt(lhs.c().max())),
@@ -996,13 +997,13 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                             "any obj", "the lhs obj with new coefficient", Map.of(jnt(0), "a coefficient for lhs obj"), "sets the coefficient of the lhs obj via f(lhs,c)->lhs^c"),
                     instC(FAILURE_INST_TID.dom(ALL.maybeSome()).rng(FAIL_TID), lst(T(ALL.maybe())), (lhs, inst) -> fail(MTronException.of("%s", inst.arg(0).toString()))),
                     instC(PARENT_INST_TID.dom(ALL).rng(ALL.maybe()), lst(), (lhs, inst) -> lhs.parent()),
-                    docWrap(instC(COUNT_INST_TID.dom(ALL.maybeSome()).rng(INT_TID), lst(), (lhs, inst) -> inst.seed().jvm(lhs.stream().reduce(inst.seed(), (a, b) -> jnt(a.intValue() + b.c().max())).intValue()/* * inst.c().max()*/), jnt(0)),
+                    docWrap(instC(COUNT_INST_TID.dom(A.maybeSome()).rng(INT_TID), lst(), (lhs, inst) -> inst.seed().jvm(lhs.stream().reduce(inst.seed(), (a, b) -> jnt(a.intValue() + b.c().max())).intValue()/* * inst.c().max()*/), jnt(0)),
                             "any objs", "the count of objs", Map.of(), "counts the number of objs"),
                     docWrap(instC(SKIP_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(INT_TID)), (lhs, inst) -> lhs.take(cInt.of(inst.arg(0).intValue())).get1()), // retrieve
                             "any objs", "the objs after skipping", Map.of(jnt(0), "the number of objs to skip"), "skips the first n objs"),
                     docWrap(instC(TAKE_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(INT_TID)), (lhs, inst) -> lhs.take(cInt.of(inst.arg(0).intValue())).get0()), // remaining
                             "any objs", "the objs before skipping", Map.of(jnt(0), "the number of objs to take"), "takes the first n objs"),
-                    instC(REIFY_INST_TID.dom(ALL.maybe()).rng(REC_TID), lst(), (lhs, inst) -> rec(
+                    instC(REIFY_INST_TID.dom(A).rng(REC_TID), lst(), (lhs, inst) -> rec(
                             "type", rec(
                                     "tid", rec(
                                             "scheme", nullOrElse(lhs.tid().scheme(), NoObj::noobj, MUri::uri),
@@ -1050,8 +1051,8 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                     docWrap(instC(EVAL_INST_TID.dom(ALL.maybe()).rng(ALL_STAR), rec(uri(Tokens.CODE), STR_TYPE), (lhs, inst) -> mParser.eval(inst.arg("code").strValue())),
                             "can be any obj as long as the arg generated is a str", "the result of evaluating the source str arg", Map.of(uri(Tokens.CODE), "the mtron source code to evaluate"), "evaluates mtron source code"),
                     instC(SWAP_TID.dom(A).rng(A), lst(T(B)), (lhs, inst) -> lhs.apply(inst.arg(0))),
-                    instC(RSHIFT_INST_TID.dom(A).rng(B.maybe()), lst(), (lhs, inst) -> lhs.isPoly() ? lhs.<Poly<?, ?>>as().at(uri("+")) : noobj()),
-                    instC(LSHIFT_INST_TID.dom(A).rng(B.maybe()), lst(), (lhs, inst) -> lhs.parent())));
+                    instC(RSHIFT_INST_TID.dom(A).rng(B.maybeSome()), lst(), (lhs, inst) -> lhs.isPoly() ? lhs.<Poly<?, ?>>as().at(uri("+")) : noobj()),
+                    instC(LSHIFT_INST_TID.dom(A).rng(B.maybeSome()), lst(), (lhs, inst) -> lhs.parent())));
         }
     }
 

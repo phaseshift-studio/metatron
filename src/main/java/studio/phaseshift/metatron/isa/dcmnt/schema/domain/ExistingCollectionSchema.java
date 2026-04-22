@@ -22,11 +22,18 @@ import com.mongodb.client.MongoDatabase;
 import org.bson.BsonType;
 import org.bson.BsonValue;
 import org.bson.Document;
+import studio.phaseshift.metatron.isa.dcmnt.schema.BsonTypeMapper;
 import studio.phaseshift.metatron.isa.dcmnt.space.dcmntSpace;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Type;
 
 import studio.phaseshift.metatron.furi.fURI;
 
 import java.util.*;
+
+import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
  * Schema for discovering existing MongoDB collections and their document structures.
@@ -225,6 +232,69 @@ public class ExistingCollectionSchema {
         return collectionPath;
     }
     
+    /**
+     * Generate a {@link CollectionSchemaInstSet} for all discovered collections.
+     *
+     * <p>The instset VID is {@code schemaVid} (must be in the {@code /m/} namespace so it is
+     * backed by memSpace and never routes back into the dcmntSpace's data pattern).
+     * Each collection Type's VID is placed under {@code schemaVid/type/{collectionName}}.
+     *
+     * <p>Fields sampled from fewer than 100% of documents receive a {@code .maybe()} key
+     * in the isaPredicate, reflecting MongoDB's schema-less nature. Only top-level fields
+     * (no dot-notation nesting) are included in the type predicate; sub-document navigation
+     * is handled at runtime by the dcmntSpace directReader.
+     *
+     * <p>Register the returned instset via {@code Router.global().addSpace(instset)} then
+     * call {@code instset.setup()} — safe because its VID is in {@code /m/}, not in the
+     * dcmntSpace's data namespace.
+     *
+     * @param schemaVid VID for the schema instset, e.g. {@code f("/m/dcmnt/space/schema/mydb")}
+     * @return a fully-populated {@link CollectionSchemaInstSet}
+     */
+    public CollectionSchemaInstSet generateSchemaInstset(final fURI schemaVid) {
+        final fURI typeBase = schemaVid.extend("type");
+        final List<Type> types = new ArrayList<>();
+
+        for (final CollectionMetadata collection : this.collectionSchemas.values()) {
+            final fURI typeVid = typeBase.extend(collection.collectionName().toLowerCase());
+            types.add(generateCollectionType(collection, typeVid));
+        }
+
+        return new CollectionSchemaInstSet(schemaVid, types);
+    }
+
+    /**
+     * Generate a mtron Type for a single collection.
+     * Only top-level fields (no dot) are included in the isaPredicate.
+     * Fields with probability < 1.0 are marked optional via {@code .maybe()}.
+     */
+    private Type generateCollectionType(final CollectionMetadata collection, final fURI typeVid) {
+        final LinkedHashMap<Obj, Obj> fields = new LinkedHashMap<>();
+
+        for (final FieldMetadata field : collection.fields()) {
+            // Skip sub-document paths (dot-notation) — only top-level fields in isaPredicate
+            if (field.path().contains(".")) continue;
+            // Skip internal _id — already encoded in the URI path, not part of the user-visible Rec
+            if (field.path().equals("_id")) continue;
+
+            final Obj fieldKey;
+            if (field.probability() < 1.0) {
+                // Optional field — appears in fewer than 100% of sampled documents
+                fieldKey = uri(field.path()).maybe();
+            } else {
+                fieldKey = uri(field.path());
+            }
+
+            fields.put(fieldKey, BsonTypeMapper.toMtronType(field.bsonType()));
+        }
+
+        return Type.Builder.build()
+                .tid(REC_TID)
+                .vid(typeVid)
+                .isaPredicate(rec(fields))
+                .create();
+    }
+
     public boolean isCollectionPath(final fURI furi) {
         return parseCollectionPath(furi.asNode()) != null;
     }

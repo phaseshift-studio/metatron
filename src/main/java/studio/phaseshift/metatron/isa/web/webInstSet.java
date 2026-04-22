@@ -109,7 +109,12 @@ public class webInstSet extends AbstractInstSet {
                         docWrap(JSON_TYPE, "a rec encoding of a json document"),
                         CSS_TYPE,
                         JSON_STR_TYPE,
-                        HTTP_SPACE_TYPE,
+                        docWrap(HTTP_SPACE_TYPE,"""
+a space for reading and writing web-related resources. for http://# patterns and remote routes, uri resolution will fetch remote web resources and httpspace will handle nested addresses client-side. for local routes, uri resolution will fetch from local web server backing httpspace. httpspace webserver is furi aware and will perform server-side extraction of nested addresses.
+                        """,
+                                "*<http://phaseshift.studio>            [-- yields a html::T < rec::T --]",
+                                "*<http://phaseshift.studio/head/title> [-- client-side extraction of str::T title --]",
+                                "*<http://localhost:8777/head/title>    [-- server-side extraction of str::T title --]"),
                         docWrap(MARKDOWN_TYPE, "a rec encoding of a markdown document"),
                         WS_SPACE_TYPE,
                         WS_ENDPOINT_TYPE),
@@ -125,7 +130,7 @@ public class webInstSet extends AbstractInstSet {
                         instC(INST_TID.extend("doc").dom(STR_TID).rng(STR_TID), lst(), (lhs, inst) -> {
                             try {
                                 final String source = lhs.strValue();
-                                final Obj result = ObjmtronSerializer.parse(source).apply();
+                                final Obj result = new ObjmtronSerializer(55).parse(source).apply();
                                 final String resultString = result.isObjs() ?
                                         result.stream()
                                                 .map(Obj::toCleanString)
@@ -142,7 +147,7 @@ public class webInstSet extends AbstractInstSet {
                         instC(INST_TID.extend("doc_json").dom(STR_TID).rng(STR_TID), lst(), (lhs, inst) -> {
                             try {
                                 final String source = lhs.strValue();
-                                final Obj result = ObjmtronSerializer.parse(source).apply();
+                                final Obj result = new ObjmtronSerializer(55).parse(source).apply();
                                 return str(ObjSimpleJSONSerializer.single().write(result).toString());
                             } catch (final Exception e) {
                                 return str(fail(e).toString());

@@ -146,11 +146,11 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
 
 
     @Override
-    public fURI redirect(final fURI furi, final boolean big) {
+    public fURI redirect(final fURI furi, final boolean external) {
         if (!furi.hasPoly() && furi.isGeneric())
             return furi;
         fURI temp;
-        if (big) {
+        if (external) {
             final Set<fURI> set = this.smallToBigRoutes.getOrDefaultRaw(furi.basePath(), Set.of(furi));
             if (set.isEmpty()) {
                 temp = this.getSpace(furi).redirect(furi, true);
@@ -167,10 +167,10 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
         } else {
             temp = this.bigToSmallRoutes.getOrDefaultRaw(furi.basePath(), furi);
         }
-        temp = furi.hasPoly() ? temp.poly(furi.poly().stream().map(x -> this.redirect(f(x), big)).map(fURI::toString).toList()) : temp;
+        temp = furi.hasPoly() ? temp.poly(furi.poly().stream().map(x -> this.redirect(f(x), external)).map(fURI::toString).toList()) : temp;
         temp = temp.c(furi.c()).q(furi.qMap());
-        temp = furi.hasDom() ? temp.dom(this.redirect(furi.dom(), big)) : temp;
-        temp = furi.hasRng() ? temp.rng(this.redirect(furi.rng(), big)) : temp;
+        temp = furi.hasDom() ? temp.dom(this.redirect(furi.dom(), external)) : temp;
+        temp = furi.hasRng() ? temp.rng(this.redirect(furi.rng(), external)) : temp;
         return temp.resolve();
     }
 

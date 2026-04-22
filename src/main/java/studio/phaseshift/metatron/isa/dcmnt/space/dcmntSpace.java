@@ -23,38 +23,36 @@ import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.ReplaceOptions;
-import org.bson.Document;
+import org.bson.*;
 import org.bson.types.ObjectId;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.Space;
-import studio.phaseshift.metatron.isa.dcmnt.schema.BsonTypeMapper;
+import studio.phaseshift.metatron.isa.dcmnt.schema.domain.CollectionSchemaInstSet;
 import studio.phaseshift.metatron.isa.dcmnt.schema.domain.ExistingCollectionSchema;
 import studio.phaseshift.metatron.isa.dcmnt.schema.storage.ObjBSONSerializer;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.dcmnt.dcmntInstSet.*;
+import static studio.phaseshift.metatron.isa.dcmnt.dcmntInstSet.COLLECTION_TID;
+import static studio.phaseshift.metatron.isa.dcmnt.dcmntInstSet.DCMNT_SPACE_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
-import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
-import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
@@ -81,27 +79,16 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *
  * <h2>Configuration</h2>
  * <pre>{@code
- * // MongoDB with schema discovery enabled
  * dcmntSpace space = dcmntSpace.of(
  *     rec(
  *         uri(PATTERN), uri("mongo:#"),
  *         uri(HOST), uri("mongodb://localhost:27017/mydb"),
- *         uri(ROUTE), rec(uri("mongo:"), uri("/mongo/")),
- *         uri(COLLECTION), lst()  // Include COLLECTION to enable schema discovery
+ *         uri(ROUTE), rec(uri("mongo:"), uri("/mongo/"))
  *     ).jvm(),
  *     f("/sys/space/mongo")
  * );
- *
- * // DocumentDB without schema discovery (faster startup)
- * dcmntSpace space = dcmntSpace.of(
- *     rec(
- *         uri(PATTERN), uri("doc:#"),
- *         uri(HOST), uri("mongodb://localhost:27017/mydb"),
- *         uri(ROUTE), rec(uri("doc:"), uri("/doc/"))
- *         // Omit COLLECTION to disable schema discovery
- *     ).jvm(),
- *     f("/sys/space/doc")
- * );
+ * // After construction, space.at(ROOT) is a structured rec::T[?[{?}users=>users::T, ...]]
+ * // and space.at(SCHEMA) is a CollectionSchemaInstSet auto-discovered from the live database.
  * }</pre>
  *
  * <h2>Document Access</h2>
@@ -140,10 +127,14 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 public class dcmntSpace extends AbstractSpace<MongoClient> {
     private static final String NATIVE_CONNACK = "native/connack";
     public static final String ID_FIELD = "_id";
+    /**
+     * Internal field used to wrap non-Rec values (Lst, primitives) in a BSON document
+     */
+    public static final String MTRON_VALUE_FIELD = "__mtron_v";
 
     protected MongoDatabase database;
     protected String databaseName;
-    protected ObjBSONSerializer serializer;
+    protected Supplier<ObjBSONSerializer> serializer;
     protected ExistingCollectionSchema existingCollectionSchema;
     protected dcmntSpaceSubQ dcmntSpaceSubQ;
 
@@ -159,16 +150,33 @@ public class dcmntSpace extends AbstractSpace<MongoClient> {
         final fURI connectionfURI = config.get(uri(HOST)).uriValue();
         this.databaseName = connectionfURI.segments(0, null);
         this.database = this.sjvm().getDatabase(this.databaseName);
-        this.serializer = this.at(uri(SERIALIZER)).orElse(new ObjBSONSerializer());
-        // Configure serializer with reference path builder for lazy resolution
-        this.serializer.setReferencePathBuilder(refInfo ->
-                this.pattern.retractPattern()
-                        .extend(refInfo.collection())
-                        .extend(refInfo.id())
-        );
+        // Lazily resolve and configure the serializer on first use.
+        // Uses a memoizing Supplier so the reference path builder is set once after the space
+        // is fully constructed (when Router is ready to resolve !* auto-from instructions).
+        // Each dcmntSpace needs its own serializer instance (can't mutate the shared SINGLE).
+        this.serializer = new Supplier<>() {
+            private ObjBSONSerializer instance;
+            @Override public ObjBSONSerializer get() {
+                if (instance == null) {
+                    instance = dcmntSpace.this.jvm().containsKey(uri(SERIALIZER))
+                            ? dcmntSpace.this.at(uri(SERIALIZER)).<ObjBSONSerializer>as()
+                            : new ObjBSONSerializer();
+                    instance.setReferencePathBuilder(refInfo ->
+                            dcmntSpace.this.pattern.retractPattern()
+                                    .extend(refInfo.collection())
+                                    .extend(refInfo.id()));
+                }
+                return instance;
+            }
+        };
         final Rec conn = MObjFactory.of().toObj(this.sjvm()).asRec();
         LOG.debug("{{g}}connected{{X}} %s", conn);
         this.at(uri(NATIVE_CONNACK), conn, MUTABLE);
+        // Ensure root type constraint is set if not already provided in config.
+        // Open world assumption: rec::T is the floor — undeclared collections are allowed.
+        // Uses jvm().putIfAbsent() (raw map access) to avoid triggering !* auto instructions
+        // that at() would cause; preserves any user-provided root in the config.
+        this.jvm().putIfAbsent(uri(ROOT), Rec.REC_TYPE);
         LOG.info("using document database {{b}}%s{{X}}", this.databaseName);
 
         // Initialize subscription query for change streams
@@ -176,29 +184,37 @@ public class dcmntSpace extends AbstractSpace<MongoClient> {
         this.at(uri(QSTRING), this.at(uri(QSTRING)).orElse(lst()).plus(lst(List.of(this.dcmntSpaceSubQ))), MUTABLE);
         LOG.debug("initialized {{g}}change stream subscription{{X}} support");
 
-        // Initialize collection schema discovery (optional - enabled if COLLECTION is in config)
-        final boolean enableSchemaDiscovery = config.getOrDefault(uri(COLLECTION), null) != null;
+        // Schema discovery always runs at startup — root and schema are always populated.
+        this.existingCollectionSchema = new ExistingCollectionSchema(this);
+        this.existingCollectionSchema.initialize(this.database);
 
-        if (enableSchemaDiscovery) {
-            this.existingCollectionSchema = new ExistingCollectionSchema(this);
-            this.existingCollectionSchema.initialize(this.database);
+        // Build a CollectionSchemaInstSet in /m/ namespace (never routes back into dcmntSpace).
+        // Type VIDs are under schemaVid/type/{collection} — within checkPattern() scope.
+        // Follow grphSpace pattern: addSpace → setup() → store object directly.
+        final fURI schemaVid = f("/m/dcmnt/space/schema/").extend(this.databaseName);
+        final CollectionSchemaInstSet schemaInstset =
+                this.existingCollectionSchema.generateSchemaInstset(schemaVid);
+        Router.global().addSpace(schemaInstset);
+        schemaInstset.setup();
+        this.at(uri(SCHEMA), schemaInstset, MUTABLE);
 
-            // Store collection metadata in space config
-            this.at(uri(COLLECTION), lst(this.existingCollectionSchema.getCollectionNames().stream()
-                    .map(c -> (Obj) uri(c)).toList()), MUTABLE);
-
-            // Store schema in configuration so it doesn't interfere with pattern queries on data
-            this.at(uri(SCHEMA), auto_(instC(DCMNT_ISA_INST_TID.dom(ALL.maybe()).rng(REC_TID), lst(), (lhs, inst) -> generateSchema())).tryToInst(), MUTABLE);
-            this.generateSchema();
-            LOG.info("initialized {{g}}collection schema{{X}} in config for %d collections",
-                    this.existingCollectionSchema.getCollectionNames().size());
-        } else {
-            this.existingCollectionSchema = null;
-            // Log available collections without schema discovery
-            final List<String> collections = IteratorUtil.list(this.database.listCollectionNames().iterator());
-            LOG.info("schema discovery {{y}}disabled{{X}} - discovered {{y}}%d{{X}} collections: %s",
-                    collections.size(), collections);
+        // Build a structured root type encoding the per-collection type map.
+        // Each collection type is a rec::T refinement (space-agnostic, not tied to MongoDB).
+        // Keys are {?}collectionName (optional = open world; unknown collections pass through).
+        // Collection names come from the last segment of each type's VID (schemaVid/type/NAME).
+        final LinkedHashMap<Obj, Obj> rootPredicate = new LinkedHashMap<>();
+        for (final Type collectionType : schemaInstset.types()) {
+            final String colName = collectionType.vid().segments().getLast();
+            rootPredicate.put(uri(colName).maybe(), collectionType);
         }
+        final Type rootType = Type.Builder.build()
+                .tid(REC_TID)
+                .isaPredicate(rec(rootPredicate))
+                .create();
+        this.jvm().put(uri(ROOT), rootType);
+
+        LOG.info("initialized {{g}}collection schema{{X}} for %d collections",
+                this.existingCollectionSchema.getCollectionNames().size());
     }
 
     public MongoDatabase getDatabase() {
@@ -206,7 +222,7 @@ public class dcmntSpace extends AbstractSpace<MongoClient> {
     }
 
     public ObjBSONSerializer getSerializer() {
-        return this.serializer;
+        return this.serializer.get();
     }
 
     @Override
@@ -252,18 +268,28 @@ public class dcmntSpace extends AbstractSpace<MongoClient> {
                         LOG.trace("deleting document %s from collection %s", documentID, collectionName);
                         collection.deleteOne(Filters.eq(ID_FIELD, parseObjectId(documentID)));
                     } else if (fieldPath == null || fieldPath.isEmpty()) {
-                        // Write entire document
-                        final Document doc = new Document(this.serializer.writeRec(obj.asRec()).asDocument());
-                        doc.put(ID_FIELD, parseObjectId(documentID));
-                        LOG.trace("upserting document %s in collection %s", documentID, collectionName);
-                        collection.replaceOne(Filters.eq(ID_FIELD, parseObjectId(documentID)), doc, new ReplaceOptions().upsert(true));
+                        if (obj.isRec()) {
+                            // Write entire document as BSON document fields
+                            final Document doc = new Document(this.getSerializer().writeRec(obj.asRec()).asDocument());
+                            doc.put(ID_FIELD, parseObjectId(documentID));
+                            LOG.trace("upserting document %s in collection %s", documentID, collectionName);
+                            collection.replaceOne(Filters.eq(ID_FIELD, parseObjectId(documentID)), doc, new ReplaceOptions().upsert(true));
+                        } else {
+                            // For non-Rec types (Lst, primitives), wrap in special __mtron_v field
+                            final BsonDocument bsonDoc = new BsonDocument();
+                            bsonDoc.put(ID_FIELD, toBsonId(documentID));
+                            bsonDoc.put(MTRON_VALUE_FIELD, this.getSerializer().write(obj));
+                            LOG.trace("upserting wrapped non-rec value for %s in collection %s", documentID, collectionName);
+                            this.database.getCollection(collection.getNamespace().getCollectionName(), BsonDocument.class)
+                                    .replaceOne(Filters.eq(ID_FIELD, parseObjectId(documentID)), bsonDoc, new ReplaceOptions().upsert(true));
+                        }
                     } else {
                         // Write to a specific field within a document
                         final String fieldPathStr = String.join(".", fieldPath);
                         LOG.trace("updating field %s in document %s", fieldPathStr, documentID);
                         collection.updateOne(
                                 Filters.eq(ID_FIELD, parseObjectId(documentID)),
-                                new Document("$set", new Document(fieldPathStr, this.serializer.write(obj)))
+                                new Document("$set", new Document(fieldPathStr, this.getSerializer().write(obj)))
                         );
                     }
                     return Stream.of(obj);
@@ -277,6 +303,48 @@ public class dcmntSpace extends AbstractSpace<MongoClient> {
     public Function<fURI, Iterator<IdObj>> directReader() {
         return (pattern) -> {
             final fURI alignedPattern = Space.Helper.routeFromSpace(pattern, this.routes());
+            final List<String> alignedSegments = alignedPattern.segments();
+
+            // For 3+ segment paths the first two segments identify the document
+            // (collection + docId) and the remainder is a sub-pattern within the
+            // document.  Mirror memSpace.directReader by doing inline poly-parent
+            // discovery: fetch the document and expand it with unrollPoly using the
+            // NODE form of the pattern (trailing slash stripped) so that test() works.
+            if (alignedSegments.size() > 2) {
+                final String collectionName = alignedSegments.get(0);
+                final String documentID = alignedSegments.get(1);
+                // Only handle specific collection + document; wildcard collection/doc
+                // patterns (e.g. +/+/field) are not yet supported here.
+                if (!collectionName.equals("+") && !collectionName.equals("#") &&
+                        !documentID.equals("+") && !documentID.equals("#")) {
+                    final Document doc = this.database.getCollection(collectionName)
+                            .find(Filters.eq(ID_FIELD, parseObjectId(documentID))).first();
+                    if (doc != null) {
+                        final fURI docVID = f(this.pattern.retractPattern()
+                                .extend(collectionName).extend(documentID).toString());
+                        final Obj docObj = processDocument(doc);
+                        // Always use the node form so that test() can compare node to
+                        // node; branch patterns (trailing slash) cause test() to fail.
+                        final fURI nodePattern = pattern.asNode();
+                        final List<IdObj> results = new ArrayList<>();
+                        // Include the document itself if its URI matches the pattern
+                        // (e.g. '#' recursive wildcard matches the containing node too).
+                        if (docVID.test(nodePattern))
+                            results.add(IdObj.of(docVID, docObj));
+                        // Expand children if the document is a poly (Rec or Lst).
+                        if (docObj.isPoly())
+                            results.addAll(Space.Helper.unrollPoly(docVID, docObj.as(), nodePattern));
+                        return results.iterator();
+                    }
+                }
+                return IteratorUtil.of();
+            }
+
+            // For 2-segment BRANCH paths (trailing slash with no sub-pattern) return
+            // empty so that Space.Helper.resolveRead can re-call directReader with
+            // pattern.extend(WILD_ONE) and trigger the > 2 expansion above.
+            if (alignedPattern.isBranch())
+                return IteratorUtil.of();
 
             // Determine collection name - either from schema or first segment
             final String collectionName;
@@ -288,9 +356,8 @@ public class dcmntSpace extends AbstractSpace<MongoClient> {
                 documentID = this.existingCollectionSchema.getDocumentId(alignedPattern);
             } else {
                 // Fall back to segment parsing (for wildcard or non-schema mode)
-                final List<String> segments = alignedPattern.segments();
-                collectionName = segments.isEmpty() ? null : segments.getFirst();
-                documentID = segments.size() > 1 ? segments.get(1) : null;
+                collectionName = alignedSegments.isEmpty() ? null : alignedSegments.getFirst();
+                documentID = alignedSegments.size() > 1 ? alignedSegments.get(1) : null;
             }
 
             LOG.debug("searching [collection: %s][document: %s]", collectionName, documentID);
@@ -319,9 +386,13 @@ public class dcmntSpace extends AbstractSpace<MongoClient> {
                     LOG.debug("reading all documents from collection %s", collName);
                     IteratorUtil.stream(collection.find()).forEach(doc -> {
                         final Object doc_id = doc.get(ID_FIELD);
+                        if (doc_id == null) {
+                            LOG.warn("skipping document with null _id in collection %s", collName);
+                            return;
+                        }
                         final String idStr = doc_id instanceof ObjectId ? ((ObjectId) doc_id).toHexString() : doc_id.toString();
                         final fURI docVID = f(this.pattern.retractPattern().extend(collName).extend(idStr).toString());
-                        final IdObj idObj = IdObj.of(this.serializer.read(doc.toBsonDocument()).selfVID(docVID));
+                        final IdObj idObj = IdObj.of(docVID, processDocument(doc));
                         allResults.add(idObj);
                         // Add poly unrolling for pattern queries
                         if (pattern.hasPattern() && idObj.obj().isPoly()) {
@@ -332,10 +403,9 @@ public class dcmntSpace extends AbstractSpace<MongoClient> {
                     // Specific document ID
                     LOG.debug("reading document %s from collection %s", documentID, collName);
                     final Document doc = collection.find(Filters.eq(ID_FIELD, parseObjectId(documentID))).first();
-
                     if (doc != null) {
                         final fURI docVID = f(this.pattern.retractPattern().extend(collName).extend(documentID).toString());
-                        allResults.add(IdObj.of(docVID, this.serializer.readRec(doc.toBsonDocument()).selfVID(docVID)));
+                        allResults.add(IdObj.of(docVID, processDocument(doc)));
                     }
                 }
             });
@@ -368,163 +438,6 @@ public class dcmntSpace extends AbstractSpace<MongoClient> {
     }
 
     /**
-     * Generate a schema object from the discovered collection metadata.
-     * <p>
-     * Returns a rec with unified structure (aligned with tbleSpace schema):
-     * <ul>
-     *   <li>pattern: base pattern for schema access</li>
-     *   <li>name: database name</li>
-     *   <li>tables: list of table/collection definitions with name, uri, schema, probability</li>
-     *   <li>references: list of detected references</li>
-     * </ul>
-     */
-    private Obj generateSchema() {
-        this.existingCollectionSchema.initialize(this.database);
-
-        // Build schema pattern (e.g., mongo:schema/mflix/#)
-        final fURI schemaPattern = this.pattern.retractPattern()
-                .extend(SCHEMA)
-                .extend(this.databaseName)
-                .extend("#");
-
-        // Generate table/collection entries with unified structure
-        final List<Obj> tables = this.existingCollectionSchema.getCollectionMetadata().stream()
-                .map(collection -> {
-                    final fURI collectionUri = this.pattern.retractPattern()
-                            .extend(SCHEMA)
-                            .extend(this.databaseName)
-                            .extend(collection.collectionName());
-
-                    return (Obj) rec(
-                            uri(NAME), str(collection.collectionName()),
-                            uri(URI), uri(collectionUri),
-                            uri(SCHEMA), buildNestedTypeRec(collection.fields()),
-                            uri(PROBABILITY), buildNestedProbabilityRec(collection.fields()));
-                })
-                .toList();
-
-        // Generate references with unified field names (aligned with tabledb foreign_keys)
-        final List<Obj> references = this.existingCollectionSchema.getCollectionMetadata().stream()
-                .flatMap(collection -> collection.references().stream())
-                .map(ref -> (Obj) rec(
-                        uri(FROM_TABLE), str(ref.fromCollection()),
-                        uri(FROM_COLUMN), str(ref.fromField()),
-                        uri(TO_TABLE), str(ref.toCollection()),
-                        uri(TO_COLUMN), str("_id"),  // MongoDB references typically point to _id
-                        uri(TYPE), str(ref.type().name())))
-                .toList();
-
-        return rec(
-                uri(PATTERN), uri(schemaPattern),
-                uri(NAME), str(this.databaseName),
-                uri(TABLES), lst(tables),
-                uri(REFERENCES), lst(references));
-    }
-
-    /**
-     * Build a nested rec structure for types from flat field paths.
-     * e.g., "location.address.city" → [location => [address => [city => str::T]]]
-     */
-    private Obj buildNestedTypeRec(final List<ExistingCollectionSchema.FieldMetadata> fields) {
-        final Map<String, Object> tree = new LinkedHashMap<>();
-
-        for (final ExistingCollectionSchema.FieldMetadata field : fields) {
-            final String[] parts = field.path().split("\\.");
-            insertIntoTree(tree, parts, 0, BsonTypeMapper.toMtronType(field.bsonType()));
-        }
-
-        return treeToTypeRec(tree);
-    }
-
-    /**
-     * Build a nested rec structure for probabilities from flat field paths.
-     * e.g., "location.address.city" with prob 0.95 → [location => [address => [city => <0.95>]]]
-     */
-    private Obj buildNestedProbabilityRec(final List<ExistingCollectionSchema.FieldMetadata> fields) {
-        final Map<String, Object> tree = new LinkedHashMap<>();
-
-        for (final ExistingCollectionSchema.FieldMetadata field : fields) {
-            final String[] parts = field.path().split("\\.");
-            insertIntoTree(tree, parts, 0, field.probability());
-        }
-
-        return treeToProbabilityRec(tree);
-    }
-
-    /**
-     * Insert a value into a nested tree structure at the given path.
-     */
-    @SuppressWarnings("unchecked")
-    private void insertIntoTree(final Map<String, Object> tree, final String[] parts,
-                                final int index, final Object value) {
-        if (index >= parts.length) return;
-
-        final String key = parts[index];
-
-        if (index == parts.length - 1) {
-            // Leaf node - store the value
-            tree.put(key, value);
-        } else {
-            // Intermediate node - get or create nested map
-            final Object existing = tree.get(key);
-            final Map<String, Object> nested;
-            if (existing instanceof Map) {
-                nested = (Map<String, Object>) existing;
-            } else {
-                nested = new LinkedHashMap<>();
-                tree.put(key, nested);
-            }
-            insertIntoTree(nested, parts, index + 1, value);
-        }
-    }
-
-    /**
-     * Convert a tree structure to a nested rec with Type values.
-     */
-    @SuppressWarnings("unchecked")
-    private Obj treeToTypeRec(final Map<String, Object> tree) {
-        final Map<Obj, Obj> recMap = new LinkedHashMap<>();
-
-        for (final Map.Entry<String, Object> entry : tree.entrySet()) {
-            final Obj key = uri(entry.getKey());
-            final Object value = entry.getValue();
-
-            if (value instanceof Map) {
-                // Nested structure
-                recMap.put(key, treeToTypeRec((Map<String, Object>) value));
-            } else if (value instanceof Type type) {
-                // Leaf type value - Type implements Obj
-                recMap.put(key, type);
-            }
-        }
-
-        return rec(recMap);
-    }
-
-    /**
-     * Convert a tree structure to a nested rec with probability (real) values.
-     */
-    @SuppressWarnings("unchecked")
-    private Obj treeToProbabilityRec(final Map<String, Object> tree) {
-        final Map<Obj, Obj> recMap = new LinkedHashMap<>();
-
-        for (final Map.Entry<String, Object> entry : tree.entrySet()) {
-            final Obj key = uri(entry.getKey());
-            final Object value = entry.getValue();
-
-            if (value instanceof Map) {
-                // Nested structure
-                recMap.put(key, treeToProbabilityRec((Map<String, Object>) value));
-            } else if (value instanceof Double) {
-                // Leaf probability value
-                recMap.put(key, real((Double) value));
-            }
-        }
-
-        return rec(recMap);
-    }
-
-    /**
      * Strip the space's route prefix from a fURI to get the relative path.
      * For example, if route maps mongo: to /mongo/ and fURI is /mongo/users/1, returns /users/1
      */
@@ -542,6 +455,36 @@ public class dcmntSpace extends AbstractSpace<MongoClient> {
         // Fallback to using the pattern if no routes or route is empty
         final fURI patternBase = this.pattern().asNode();
         return furi.removePrefix(patternBase);
+    }
+
+    /**
+     * Process a raw MongoDB document into a Metatron Obj.
+     * <p>
+     * Strips the {@code _id} field (already encoded in the URI path) then delegates to
+     * {@link ObjBSONSerializer#readRec} which transparently handles the hidden
+     * {@code __mtron_tid} field — restoring the nominal TID (e.g. {@code chicken::T})
+     * that was written alongside the document fields for round-trip fidelity.
+     */
+    private Obj processDocument(final Document doc) {
+        final BsonDocument bsonDoc = doc.toBsonDocument();
+        if (bsonDoc.containsKey(MTRON_VALUE_FIELD)) {
+            // Non-Rec value was wrapped in a special field — unwrap and return directly
+            // (VID is tracked via IdObj.furi(); do NOT attach it to the value itself)
+            return this.getSerializer().read(bsonDoc.get(MTRON_VALUE_FIELD));
+        } else {
+            // Regular document record — strip _id (already encoded in the URI)
+            bsonDoc.remove(ID_FIELD);
+            return this.getSerializer().readRec(bsonDoc);
+        }
+    }
+
+    /**
+     * Convert a document-ID string to the appropriate BsonValue for use in BsonDocument writes.
+     */
+    private BsonValue toBsonId(final String id) {
+        if (id != null && id.matches("[0-9a-fA-F]{24}"))
+            return new BsonObjectId(new ObjectId(id));
+        return new BsonString(id != null ? id : "");
     }
 
     /**

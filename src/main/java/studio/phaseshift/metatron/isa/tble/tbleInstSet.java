@@ -174,30 +174,40 @@ public class tbleInstSet extends AbstractInstSet {
                                 TBLE_ISA_REWRITE_TID.extend("sql_sum"),
                                 (space, furi) -> {
                                     final String tableName = furi.segments().getFirst();
+                                    final String columnName = furi.segments().get(2);
+                                    final String query = "SELECT SUM(" + columnName + ") FROM " + tableName;
+                                    LOG.debug("sql_sum query %s", query);
                                     try (final Statement stmt = space.sjvm().createStatement();
-                                         final ResultSet rs = stmt.executeQuery("SELECT SUM(1) FROM " + tableName)) {
-                                        return rs.next() ? rs.getLong(1) : 0L;
+                                         final ResultSet rs = stmt.executeQuery(query)) {
+                                        return rs.next() ?
+                                                (rs.getMetaData().getColumnType(1) == JDBCType.DOUBLE.getVendorTypeNumber() ?
+                                                        rs.getDouble(1) :
+                                                        rs.getLong(1)) :
+                                                0L;
                                     } catch (SQLException e) {
                                         if (e.getErrorCode() == 1054)
                                             return 0L;
                                         throw MTronException.of(e);
                                     }
                                 }
-                        ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages native SELECT SUM(*) to sum entries in a table column"),
+                        ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages native SELECT SUM(column) to sum entries in a table column"),
                         // Optimize: *table.mean() → SELECT AVG(*)
                         docWrap(CommonRewrites.meanRewrite(
                                 tbleSpace.class,
                                 TBLE_ISA_REWRITE_TID.extend("sql_mean"),
                                 (space, furi) -> {
                                     final String tableName = furi.segments().getFirst();
+                                    final String columnName = furi.segments().get(2);
+                                    final String query = "SELECT AVG(" + columnName + ") FROM " + tableName;
+                                    LOG.debug("sql_mean %s", query);
                                     try (final Statement stmt = space.sjvm().createStatement();
-                                         final ResultSet rs = stmt.executeQuery("SELECT AVG(1.0) FROM " + tableName)) {
+                                         final ResultSet rs = stmt.executeQuery(query)) {
                                         return rs.next() ? rs.getDouble(1) : 0.0;
                                     } catch (SQLException e) {
                                         throw MTronException.of(e);
                                     }
                                 }
-                        ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages native SELECT AVG(*) to average entries in a table column"),
+                        ), "pre-rewrite code", "post-rewrite code", Map.of(), "leverages native SELECT AVG(column) to average entries in a table column"),
                         docWrap(CommonRewrites.limitRewrite(
                                 tbleSpace.class,
                                 TBLE_ISA_REWRITE_TID.extend("sql_limit"),
@@ -211,7 +221,7 @@ public class tbleInstSet extends AbstractInstSet {
                                         if (e.getErrorCode() == 1054)
                                             return noobj();
                                         throw MTronException.of(e, "%s", sql);
-                                    } catch(final Exception e) {
+                                    } catch (final Exception e) {
                                         throw MTronException.of(e, "%s", sql);
                                     }
                                 }
@@ -314,7 +324,7 @@ public class tbleInstSet extends AbstractInstSet {
 
                 )));
         docWrap(this,
-                "the columns, rows, and entries of the table join the metatron",
+                "relational tables, typed rows, and SQL rewrites within the metatron",
                 "*acme:customer.where[person=>[name=>_=>age=>?>29]]");
         super.setup();
     }
