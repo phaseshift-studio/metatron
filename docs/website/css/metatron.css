@@ -524,6 +524,14 @@ h1 {
     /* #0fa neat green color */
 }
 
+.btn-dark:has(.bi-terminal) {
+    font-size: 1.75rem;
+    background-color: transparent;
+    border: none;
+    position: relative;
+    top: -3px;
+}
+
 
 /*** Navbar ***/
 

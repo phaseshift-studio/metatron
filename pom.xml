@@ -579,19 +579,19 @@
                         </configuration>
                     </execution>
                     <execution>
-                        <!-- Copy metatron.css to dashboard so both use same styles -->
-                        <id>copy-metatron-css-to-dashboard</id>
+                        <!-- copy metatron web console to website -->
+                        <id>copy-mweb-console-to-website</id>
                         <phase>generate-resources</phase>
                         <goals>
                             <goal>copy-resources</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>${project.basedir}/src/main/resources/web/dashboard</outputDirectory>
+                            <outputDirectory>${project.basedir}/docs/website/console</outputDirectory>
                             <resources>
                                 <resource>
-                                    <directory>${project.basedir}/docs/website/css</directory>
+                                    <directory>${project.basedir}/src/main/resources/web/console</directory>
                                     <includes>
-                                        <include>metatron.css</include>
+                                        <include>**.*</include>
                                     </includes>
                                 </resource>
                             </resources>

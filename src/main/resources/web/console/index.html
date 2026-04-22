@@ -1,0 +1,103 @@
+<!--
+  ~ Metatron: A Distributed Computing Language and Virtual Machine
+  ~  Copyright (C) 2025- PhaseShift Studio, LLC
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>metatron web console</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="metatron web console for real-time monitoring and control">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+    <!-- CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Base metatron styles (shared with website) + mweb-console-only specific styles -->
+    <link href="../css/metatron.css" rel="stylesheet">
+    <link href="./mweb-console-only.css" rel="stylesheet">
+    <!-- JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="../highlight/languages/mtron.min.js"></script>
+</head>
+<body class="d-flex flex-column min-vh-100" spellcheck="false">
+
+<!-- NAVIGATION BAR -->
+<nav class="navbar navbar-expand-lg bg-secondary sticky-top py-2 px-4">
+    <a href="#" class="navbar-brand">
+        <h4 class="mb-0 text-primary logo-text">
+            <i class="bi bi-soundwave me-2"></i>
+            metatron web console
+        </h4>
+    </a>
+    <div class="ms-auto d-flex align-items-center">
+        <!-- Panel Lock Toggle -->
+        <button id="panelLockBtn" class="btn btn-sm btn-outline-secondary me-2" type="button" title="lock panels (prevent accidental close)">
+            <i class="bi bi-unlock"></i>
+        </button>
+        <!-- Layout Templates -->
+        <button id="layoutTemplatesBtn" class="btn btn-sm btn-outline-secondary me-2" type="button" title="Layout templates">
+            <i class="bi bi-grid-3x3-gap me-1"></i>layouts
+        </button>
+        <!-- Panel Menu -->
+        <div class="dropdown me-3">
+            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="panelMenuBtn" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-layout-three-columns me-1"></i>panels
+            </button>
+            <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end" id="panelMenu" aria-labelledby="panelMenuBtn">
+                <!-- Populated dynamically -->
+            </ul>
+        </div>
+        <span id="connectionStatus" class="badge bg-danger me-3">
+            <i class="bi bi-wifi-off me-1"></i>disconnected
+        </span>
+        <div class="input-group input-group-sm" style="width: 280px;">
+            <span class="input-group-text bg-dark border-secondary text-light">
+                <i class="bi bi-hdd-network"></i>
+            </span>
+            <input type="text" id="wsEndpoint" class="form-control bg-dark border-secondary text-light"
+                   value="ws://localhost:8999" placeholder="WebSocket URL">
+            <button id="connectBtn" class="btn btn-primary" type="button">
+                <i class="bi bi-plug"></i>
+            </button>
+        </div>
+    </div>
+</nav>
+
+<!-- MAIN CONTENT -->
+<main class="container-fluid flex-grow-1 p-0" style="overflow: hidden;">
+    <div class="h-100" id="panelContainer">
+        <!-- panels are rendered dynamically by mweb-console.js -->
+    </div>
+</main>
+
+<!-- FOOTER -->
+<footer class="footer py-2 bg-dark text-center">
+    <div class="text-muted small">
+        <span id="statsDisplay">
+            <i class="bi bi-reception-4 me-1"></i>Ready
+        </span>
+    </div>
+</footer>
+
+<!-- dashboard javascript -->
+<script src="mweb-console.js"></script>
+</body>
+</html>

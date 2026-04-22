@@ -105,7 +105,7 @@ class MetatronDashboard {
 
     loadPanelState() {
         try {
-            const saved = localStorage.getItem('mtron-dashboard-panels');
+            const saved = localStorage.getItem('mtron-mwebConsole-panels');
             if (saved) return new Set(JSON.parse(saved));
         } catch (e) { /* ignore */
         }
@@ -114,14 +114,14 @@ class MetatronDashboard {
 
     savePanelState() {
         try {
-            localStorage.setItem('mtron-dashboard-panels', JSON.stringify([...this.openPanels]));
+            localStorage.setItem('mtron-mwebConsole-panels', JSON.stringify([...this.openPanels]));
         } catch (e) { /* ignore */
         }
     }
 
     loadPanelOrder() {
         try {
-            const saved = localStorage.getItem('mtron-dashboard-panel-order');
+            const saved = localStorage.getItem('mtron-mwebConsole-panel-order');
             if (saved) {
                 const order = JSON.parse(saved);
                 // Filter to only include panels that exist in registry
@@ -135,14 +135,14 @@ class MetatronDashboard {
 
     savePanelOrder() {
         try {
-            localStorage.setItem('mtron-dashboard-panel-order', JSON.stringify(this.panelOrder));
+            localStorage.setItem('mtron-mwebConsole-panel-order', JSON.stringify(this.panelOrder));
         } catch (e) { /* ignore */
         }
     }
 
     loadLayoutTree() {
         try {
-            const saved = localStorage.getItem('mtron-dashboard-layout-tree');
+            const saved = localStorage.getItem('mtron-mwebConsole-layout-tree');
             if (saved) {
                 return JSON.parse(saved);
             }
@@ -154,7 +154,7 @@ class MetatronDashboard {
 
     saveLayoutTree() {
         try {
-            localStorage.setItem('mtron-dashboard-layout-tree', JSON.stringify(this.layoutTree));
+            localStorage.setItem('mtron-mwebConsole-layout-tree', JSON.stringify(this.layoutTree));
         } catch (e) { /* ignore */
         }
     }
@@ -182,7 +182,7 @@ class MetatronDashboard {
 
     loadPanelLockState() {
         try {
-            return localStorage.getItem('mtron-dashboard-locked') === 'true';
+            return localStorage.getItem('mtron-mwebConsole-locked') === 'true';
         } catch (e) {
             return false;
         }
@@ -190,7 +190,7 @@ class MetatronDashboard {
 
     savePanelLockState() {
         try {
-            localStorage.setItem('mtron-dashboard-locked', this.panelsLocked ? 'true' : 'false');
+            localStorage.setItem('mtron-mwebConsole-locked', this.panelsLocked ? 'true' : 'false');
         } catch (e) { /* ignore */
         }
     }
@@ -245,7 +245,7 @@ class MetatronDashboard {
                 const isOpen = this.openPanels.has(panel.id);
                 html += `
                     <li>
-                        <a class="dropdown-item d-flex align-items-center" href="#" onclick="dashboard.togglePanel('${panel.id}'); return false;">
+                        <a class="dropdown-item d-flex align-items-center" href="#" onclick="mwebConsole.togglePanel('${panel.id}'); return false;">
                             <i class="bi ${panel.icon} me-2"></i>
                             <span class="flex-grow-1">${panel.title}</span>
                             <i class="bi ${isOpen ? 'bi-check-square text-success' : 'bi-square'} ms-2"></i>
@@ -254,7 +254,7 @@ class MetatronDashboard {
             }
         }
         html += `<li><hr class="dropdown-divider"></li>`;
-        html += `<li><a class="dropdown-item text-muted small" href="#" onclick="dashboard.resetPanels(); return false;"><i class="bi bi-arrow-counterclockwise me-2"></i>reset to defaults</a></li>`;
+        html += `<li><a class="dropdown-item text-muted small" href="#" onclick="mwebConsole.resetPanels(); return false;"><i class="bi bi-arrow-counterclockwise me-2"></i>reset to defaults</a></li>`;
 
         menu.innerHTML = html;
     }
@@ -1195,7 +1195,7 @@ class MetatronDashboard {
                     <div class="mb-3">
                         <label class="form-label small text-muted d-flex justify-content-between">
                             <span>skills <span class="text-muted">(skill.md files)</span></span>
-                            <button class="btn btn-link btn-sm p-0 text-primary" onclick="dashboard.addAgentSkill()"><i class="bi bi-plus-circle"></i> add</button>
+                            <button class="btn btn-link btn-sm p-0 text-primary" onclick="mwebConsole.addAgentSkill()"><i class="bi bi-plus-circle"></i> add</button>
                         </label>
                         <div id="agentSkills" class="border border-secondary rounded p-2">
                             <div class="text-muted small text-center py-1">no skills added</div>
@@ -1204,7 +1204,7 @@ class MetatronDashboard {
                     <div class="mb-3">
                         <label class="form-label small text-muted d-flex justify-content-between">
                             <span>tools <span class="text-muted">(inst wrappers)</span></span>
-                            <button class="btn btn-link btn-sm p-0 text-primary" onclick="dashboard.addAgentTool()"><i class="bi bi-plus-circle"></i> add</button>
+                            <button class="btn btn-link btn-sm p-0 text-primary" onclick="mwebConsole.addAgentTool()"><i class="bi bi-plus-circle"></i> add</button>
                         </label>
                         <div id="agentTools" class="border border-secondary rounded p-2">
                             <div class="agent-tool-item d-flex align-items-center mb-1">
@@ -1238,13 +1238,13 @@ class MetatronDashboard {
                     <div class="mb-3">
                         <label class="form-label small text-muted d-flex justify-content-between">
                             <span>generated mtron</span>
-                            <button class="btn btn-link btn-sm p-0 text-muted" onclick="dashboard.copyAgentCode()"><i class="bi bi-clipboard"></i> copy</button>
+                            <button class="btn btn-link btn-sm p-0 text-muted" onclick="mwebConsole.copyAgentCode()"><i class="bi bi-clipboard"></i> copy</button>
                         </label>
                         <pre id="agentCodePreview" class="bg-black text-success p-2 rounded small font-monospace mb-0" style="max-height: 120px; overflow: auto; font-size: 0.75rem;"></pre>
                     </div>
                     <div class="d-flex gap-2">
-                        <button id="previewAgentBtn" class="btn btn-sm btn-outline-secondary flex-grow-1" onclick="dashboard.previewAgentCode()"><i class="bi bi-code me-1"></i>preview</button>
-                        <button id="createAgentBtn" class="btn btn-sm btn-primary flex-grow-1" onclick="dashboard.createAgent()"><i class="bi bi-robot me-1"></i>create agent</button>
+                        <button id="previewAgentBtn" class="btn btn-sm btn-outline-secondary flex-grow-1" onclick="mwebConsole.previewAgentCode()"><i class="bi bi-code me-1"></i>preview</button>
+                        <button id="createAgentBtn" class="btn btn-sm btn-primary flex-grow-1" onclick="mwebConsole.createAgent()"><i class="bi bi-robot me-1"></i>create agent</button>
                     </div>
                 </div>
             </div>`;
@@ -1316,7 +1316,7 @@ class MetatronDashboard {
         container.innerHTML = this.agentSkills.map((skill, i) => `
             <div class="agent-skill-item d-flex align-items-center mb-1">
                 <code class="small flex-grow-1 text-info">${this.escapeHtml(skill)}</code>
-                <button class="btn btn-link btn-sm p-0 text-danger ms-2" onclick="dashboard.removeAgentSkill(${i})"><i class="bi bi-x-circle"></i></button>
+                <button class="btn btn-link btn-sm p-0 text-danger ms-2" onclick="mwebConsole.removeAgentSkill(${i})"><i class="bi bi-x-circle"></i></button>
             </div>
         `).join('');
     }
@@ -1346,7 +1346,7 @@ class MetatronDashboard {
                 <code class="small flex-grow-1 text-warning">${this.escapeHtml(tool)}</code>
                 ${i === 0
             ? '<span class="badge bg-secondary ms-2">default</span>'
-            : `<button class="btn btn-link btn-sm p-0 text-danger ms-2" onclick="dashboard.removeAgentTool(${i})"><i class="bi bi-x-circle"></i></button>`
+            : `<button class="btn btn-link btn-sm p-0 text-danger ms-2" onclick="mwebConsole.removeAgentTool(${i})"><i class="bi bi-x-circle"></i></button>`
         }
             </div>
         `).join('');
@@ -1387,7 +1387,7 @@ class MetatronDashboard {
 
     copyAgentCode() {
         navigator.clipboard.writeText(this.generateAgentCode()[1]).then(() => {
-            const btn = document.querySelector('[onclick="dashboard.copyAgentCode()"]');
+            const btn = document.querySelector('[onclick="mwebConsole.copyAgentCode()"]');
             if (btn) {
                 const orig = btn.innerHTML;
                 btn.innerHTML = '<i class="bi bi-check"></i> copied!';
@@ -1726,13 +1726,13 @@ class MetatronDashboard {
             const dataAttr = JSON.stringify(space).replace(/'/g, "&#39;");
 
             return `
-                <div class="list-group-item" data-space='${dataAttr}' onclick="dashboard.selectSpace(this)">
+                <div class="list-group-item" data-space='${dataAttr}' onclick="mwebConsole.selectSpace(this)">
                     <div class="d-flex align-items-center">
                         <i class="bi ${icon} space-icon"></i>
                         <div class="flex-grow-1">
                             <div class="space-name">
                                 ${this.escapeHtml(name)}
-                                <span class="doc-indicator" data-doc-uri="${this.escapeHtml(space.uri)}" style="display:none; cursor:pointer;" title="click to view documentation" onclick="event.stopPropagation(); dashboard.loadDocumentation('${space.uri.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}')">
+                                <span class="doc-indicator" data-doc-uri="${this.escapeHtml(space.uri)}" style="display:none; cursor:pointer;" title="click to view documentation" onclick="event.stopPropagation(); mwebConsole.loadDocumentation('${space.uri.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}')">
                                     <i class="bi bi-circle-fill text-info" style="font-size: 6px; vertical-align: middle; margin-left: 4px;"></i>
                                 </span>
                             </div>
@@ -1824,13 +1824,13 @@ class MetatronDashboard {
 
         this.treeContainer.innerHTML = roots.map(({uri, label}) => `
             <div class="tree-node" data-uri="${uri}" data-depth="0">
-                <span class="tree-node-icon folder" onclick="dashboard.toggleTreeNode('${uri}', this.parentElement)">
+                <span class="tree-node-icon folder" onclick="mwebConsole.toggleTreeNode('${uri}', this.parentElement)">
                     <i class="bi bi-folder2"></i>
                 </span>
-                <span class="tree-node-label" onclick="dashboard.focusObject('*<${uri}>')" title="${uri}">
+                <span class="tree-node-label" onclick="mwebConsole.focusObject('*<${uri}>')" title="${uri}">
                     ${label} <span class="tree-desc text-muted small" data-uri="${uri}"></span>
                 </span>
-                <span class="doc-indicator" data-doc-uri="${uri}" style="display:none; cursor:pointer;" title="click to view documentation" onclick="event.stopPropagation(); dashboard.loadDocumentation('${uri}')">
+                <span class="doc-indicator" data-doc-uri="${uri}" style="display:none; cursor:pointer;" title="click to view documentation" onclick="event.stopPropagation(); mwebConsole.loadDocumentation('${uri}')">
                     <i class="bi bi-circle-fill text-info" style="font-size: 6px; vertical-align: middle; margin-left: 4px;"></i>
                 </span>
             </div>
@@ -1908,13 +1908,13 @@ class MetatronDashboard {
             return `
                 <div class="tree-node" data-uri="${this.escapeHtml(child.uri)}" data-depth="${depth}" style="margin-left: ${depth * 20}px;">
                     <span class="tree-connector" style="color: #6C7293; font-family: monospace; margin-right: 4px;">${connector}</span>
-                    <span class="tree-node-icon" data-node-id="${nodeId}" onclick="dashboard.toggleTreeNode('${escapedUri}', this.parentElement)">
+                    <span class="tree-node-icon" data-node-id="${nodeId}" onclick="mwebConsole.toggleTreeNode('${escapedUri}', this.parentElement)">
                         <i class="bi bi-folder2"></i>
                     </span>
-                    <span class="tree-node-label" onclick="dashboard.focusObject('*<${escapedUri}>')" title="${this.escapeHtml(child.uri)}">
+                    <span class="tree-node-label" onclick="mwebConsole.focusObject('*<${escapedUri}>')" title="${this.escapeHtml(child.uri)}">
                         ${this.escapeHtml(child.name)}
                     </span>
-                    <span class="doc-indicator" data-doc-uri="${this.escapeHtml(child.uri)}" style="display:none; cursor:pointer;" title="click to view documentation" onclick="event.stopPropagation(); dashboard.loadDocumentation('${escapedUri}')">
+                    <span class="doc-indicator" data-doc-uri="${this.escapeHtml(child.uri)}" style="display:none; cursor:pointer;" title="click to view documentation" onclick="event.stopPropagation(); mwebConsole.loadDocumentation('${escapedUri}')">
                         <i class="bi bi-circle-fill text-info" style="font-size: 6px; vertical-align: middle; margin-left: 4px;"></i>
                     </span>
                     ${valueHtml}
@@ -2231,7 +2231,7 @@ class MetatronDashboard {
 }
 
 // Initialize
-let dashboard;
+let mwebConsole;
 document.addEventListener('DOMContentLoaded', () => {
-    dashboard = new MetatronDashboard();
+    mwebConsole = new MetatronDashboard();
 });

@@ -1,0 +1,704 @@
+/*
+ * Metatron Dashboard - Dashboard-specific styles only
+ * Base styles come from metatron.css
+ */
+
+/* ==================== Dashboard Layout ==================== */
+
+/* Override metatron.css main container width limit */
+main {
+    max-width: 100% !important;
+}
+
+/* Panel Container - Grid Layout */
+#panelContainer {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+/* Split containers */
+.split-container {
+    width: 100%;
+    min-height: 100%;
+    display: flex;
+    gap: 0;
+    flex-shrink: 0;
+    box-sizing: border-box;
+}
+
+.split-child {
+    position: relative;
+    overflow: hidden;
+    min-width: 100px;
+    min-height: 100px;
+    max-height: 100%; /* Prevent growing beyond allocated size */
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    flex-shrink: 0;
+}
+
+/* Ensure nested split containers fill their parent */
+.split-child > .split-container {
+    flex: 1 1 auto;
+}
+
+.split-child > .panel-wrapper {
+    flex: 1 1 auto;
+    height: 100%;
+}
+
+.split-child > .empty-panel {
+    flex: 1 1 auto;
+    height: 100%;
+}
+
+/* Panel wrappers */
+.panel-wrapper {
+    width: 100%;
+    height: 100%;
+    max-height: 100%;
+    padding: 0.25rem;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.panel-wrapper > .card {
+    height: 100%;
+    max-height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+.panel-wrapper > .card > .card-body {
+    flex: 1 1 auto;
+    overflow: auto;
+    min-height: 0;
+    max-height: 100%;
+}
+
+/* Ensure all panel content areas are scrollable */
+#inspectorContainer,
+#outputContainer,
+#treeContainer,
+#spacesContainer {
+    overflow: auto;
+    height: 100%;
+}
+
+.panel-wrapper.dragging {
+    opacity: 0.5;
+}
+
+.panel-wrapper.drag-over {
+    border: 2px solid var(--mred);
+}
+
+/* Empty panels */
+.empty-panel {
+    width: 100%;
+    height: 100%;
+    background-color: var(--maincolor);
+    border: 2px dashed var(--mdarkgray);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-sizing: border-box;
+}
+
+.empty-panel:hover {
+    background-color: rgba(122, 37, 24, 0.1);
+    border-color: var(--mred);
+}
+
+.panel-drag-handle {
+    cursor: move;
+    padding: 4px;
+    color: var(--muted);
+    opacity: 0.4;
+    transition: opacity 0.2s;
+    display: inline-flex;
+    align-items: center;
+}
+
+.panel-drag-handle:hover {
+    opacity: 1;
+    color: var(--primary);
+}
+
+
+
+/* Resize Handles - Horizontal */
+.resize-handle {
+    width: 8px;
+    cursor: col-resize;
+    background: transparent;
+    position: relative;
+    flex-shrink: 0;
+    transition: background 0.2s;
+    z-index: 10;
+}
+
+.resize-handle:hover {
+    background: rgba(255, 92, 65, 0.2);
+}
+
+.resize-handle::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 2px;
+    height: 40px;
+    background: rgba(255, 92, 65, 0.3);
+    border-radius: 2px;
+}
+
+.resize-handle:hover::after {
+    background: rgba(255, 92, 65, 0.6);
+}
+
+.resize-handle.dragging {
+    background: rgba(255, 92, 65, 0.3);
+}
+
+.resize-handle.dragging::after {
+    background: var(--mred);
+}
+
+/* Resize Handles - Vertical */
+.resize-handle-v {
+    height: 8px;
+    min-height: 8px;
+    width: 100%;
+    cursor: row-resize;
+    background: rgba(255, 92, 65, 0.1);
+    position: relative;
+    flex-shrink: 0;
+    flex-grow: 0;
+    transition: background 0.2s;
+    z-index: 100;
+}
+
+.resize-handle-v:hover {
+    background: rgba(255, 92, 65, 0.3);
+}
+
+.resize-handle-v::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    height: 2px;
+    width: 60px;
+    background: rgba(255, 92, 65, 0.5);
+    border-radius: 2px;
+}
+
+.resize-handle-v:hover::after {
+    background: rgba(255, 92, 65, 0.8);
+    width: 80px;
+}
+
+.resize-handle-v.dragging {
+    background: rgba(255, 92, 65, 0.4);
+}
+
+.resize-handle-v.dragging::after {
+    background: var(--mred);
+    width: 100px;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    overflow: hidden;
+    background-color: var(--dark);
+    color: var(--white);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 0.9rem;
+}
+
+/* Navbar */
+.navbar {
+    background-color: var(--dark) !important;
+    border-bottom: 2px solid var(--mred);
+}
+
+.logo-text {
+    -webkit-text-stroke: 0.5px gray;
+}
+
+.text-primary {
+    color: var(--primary) !important;
+}
+
+/* Cards - Override metatron.css to remove large margins */
+.card {
+    background-color: var(--secondarycolor);
+    border: 1px solid var(--mred);
+    border-radius: 4px;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.card-header {
+    background-color: rgba(122, 37, 24, 0.3);
+    border-bottom: 1px solid var(--mred);
+    color: var(--primary);
+    font-weight: 500;
+    padding: 0.5rem 0.75rem;
+}
+
+.card-header .bi {
+    color: var(--primary);
+}
+
+/*.card-body {
+    background-color: var(--maincolor);
+}*/
+
+/* Buttons */
+.btn-primary {
+    background-color: var(--primary);
+    border-color: var(--primary);
+}
+
+.btn-primary:hover {
+    background-color: var(--mred);
+    border-color: var(--mred);
+}
+
+.btn-outline-primary {
+    color: var(--primary);
+    border-color: var(--primary);
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--primary);
+    border-color: var(--primary);
+    color: white;
+}
+
+.btn-outline-secondary {
+    color: var(--light);
+    border-color: var(--light);
+}
+
+.btn-outline-secondary:hover {
+    background-color: var(--light);
+    color: var(--dark);
+}
+
+/* Form controls */
+.form-control {
+    background-color: var(--dark);
+    border-color: var(--mdarkgray);
+    color: var(--white);
+}
+
+.form-control:focus {
+    background-color: var(--dark);
+    border-color: var(--primary);
+    color: var(--white);
+    box-shadow: 0 0 0 0.2rem rgba(163, 0, 0, 0.25);
+}
+
+.form-control::placeholder {
+    color: var(--light);
+}
+
+.input-group-text {
+    background-color: var(--mdarkgray);
+    border-color: var(--mdarkgray);
+    color: var(--white);
+}
+
+/* ==================== Spaces List ==================== */
+
+.list-group-item {
+    background-color: var(--maincolor);
+    border-color: var(--mdarkgray);
+    color: var(--white);
+    cursor: pointer;
+    padding: 0.5rem 0.75rem;
+    transition: background-color 0.2s;
+}
+
+.list-group-item:hover {
+    background-color: rgba(122, 37, 24, 0.2);
+}
+
+.list-group-item.active {
+    background-color: var(--mred);
+    border-color: var(--mred);
+}
+
+.space-pattern {
+    font-family: 'Courier New', monospace;
+    color: var(--myellow);
+    font-size: 0.85rem;
+}
+
+.space-name {
+    font-weight: 500;
+    color: var(--maqua);
+}
+
+.space-icon {
+    color: var(--primary);
+    margin-right: 0.5rem;
+}
+
+/* ==================== Tree View ==================== */
+
+.tree-view {
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+}
+
+.tree-node {
+    padding: 0.2rem 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    border-radius: 3px;
+    transition: background-color 0.15s;
+    position: relative;
+}
+
+.tree-node:hover {
+    background-color: rgba(122, 37, 24, 0.2);
+}
+
+.tree-node.selected {
+    background-color: rgba(122, 37, 24, 0.4);
+}
+
+.tree-node-icon {
+    width: 20px;
+    text-align: center;
+    color: var(--myellow);
+    margin-right: 0.25rem;
+    flex-shrink: 0;
+}
+
+.tree-node-icon.folder {
+    color: var(--maqua);
+}
+
+.tree-node-icon.file {
+    color: var(--mlightgray);
+}
+
+.tree-node-label {
+    color: var(--white);
+    flex-grow: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tree-value {
+    color: var(--maqua);
+    font-size: 0.85em;
+    margin-left: 8px;
+    opacity: 0.85;
+    font-family: 'Consolas', 'Monaco', monospace;
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.tree-children {
+    /* Connectors are added via JavaScript, not CSS pseudo-elements */
+}
+
+.tree-loading {
+    color: var(--light);
+    font-style: italic;
+    padding: 0.25rem 0.5rem;
+    margin-left: 0.5rem;
+}
+
+/* ==================== Code Input & Console ==================== */
+
+.code-input {
+    font-family: 'Courier New', Consolas, Monaco, monospace;
+    font-size: 0.9rem;
+    background-color: #072919;
+    color: #0f0;
+    border: 1px solid var(--mdarkgray);
+    resize: vertical;
+}
+
+/* Waiting for response animation */
+.output-waiting {
+    opacity: 0.8;
+    margin-bottom: 0.25rem !important;
+    padding-bottom: 0.25rem !important;
+}
+
+.output-waiting .output-result {
+    margin-top: 0;
+    padding-top: 0;
+    font-size: 0.8rem;
+}
+
+.waiting-dots::after {
+    content: '';
+    animation: waitingDots 1.5s infinite;
+}
+
+@keyframes waitingDots {
+    0%, 20% {
+        content: '';
+    }
+    40% {
+        content: '.';
+    }
+    60% {
+        content: '..';
+    }
+    80%, 100% {
+        content: '...';
+    }
+}
+
+.g-3 {
+    --bs-gutter-x: 0.5rem;
+}
+
+.code-input:focus {
+    background-color: #072919;
+    color: #0f0;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 0.2rem rgba(163, 0, 0, 0.25);
+}
+
+.output-container {
+    font-family: 'Courier New', Consolas, Monaco, monospace;
+    font-size: 0.85rem;
+    /*background-color: #000;*/
+    min-height: 100px;
+    padding: 0.5rem;
+    border-radius: 3px;
+}
+
+.output-entry {
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px dashed var(--mdarkgray);
+}
+
+.output-entry:last-child {
+    border-bottom: none;
+}
+
+.output-input {
+    color: var(--maqua);
+    margin-bottom: 0.25rem;
+}
+
+.output-input::before {
+    content: 'mtron> ';
+    color: var(--light);
+}
+
+.output-result {
+    color: #0f0;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+.output-error {
+    color: #ff4444;
+}
+
+.output-timestamp {
+    color: var(--light);
+    font-size: 0.75rem;
+    float: right;
+}
+
+/* ==================== Object Inspector ==================== */
+
+.inspector-output {
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 0.85rem;
+    /*background-color: #0a0a0a;*/
+    min-height: 60px;
+    height: 100%;
+    overflow: auto;
+    border-radius: 3px;
+}
+
+.inspector-output pre.hljs {
+    margin: 0;
+    min-height: 60px;
+    max-height: none;
+    overflow: visible;
+}
+
+pre {
+    background-color: transparent !important;
+}
+
+/* ==================== Panel System ====================*/
+
+.panel-close-btn {
+    opacity: 0.5;
+    transition: opacity 0.2s;
+}
+
+.panel-close-btn:hover {
+    opacity: 1;
+}
+
+.card-header .btn-link {
+    opacity: 0.4;
+    transition: opacity 0.2s;
+}
+
+.card-header:hover .btn-link {
+    opacity: 0.7;
+}
+
+.card-header .btn-link:hover {
+    opacity: 1 !important;
+}
+
+/* Panel menu dropdown */
+.dropdown-menu-dark {
+    background-color: var(--secondarycolor);
+    border: 1px solid var(--mred);
+}
+
+.dropdown-menu-dark .dropdown-item {
+    color: var(--white);
+}
+
+.dropdown-menu-dark .dropdown-item:hover {
+    background-color: rgba(122, 37, 24, 0.3);
+}
+
+.dropdown-menu-dark .dropdown-header {
+    color: var(--primary);
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    letter-spacing: 0.05em;
+}
+
+.dropdown-menu-dark .dropdown-divider {
+    border-color: var(--mdarkgray);
+}
+
+/* ==================== Misc Dashboard Styles ====================*/
+
+.footer {
+    background-color: var(--dark);
+    border-top: 1px solid var(--mdarkgray);
+}
+
+#connectionStatus {
+    font-size: 0.8rem;
+}
+
+#connectionStatus.connected {
+    background-color: var(--mgreen) !important;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--maincolor);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--mdarkgray);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--light);
+}
+
+.badge {
+    font-weight: 500;
+}
+
+.text-muted {
+    color: var(--light) !important;
+}
+
+.border-secondary {
+    border-color: var(--mdarkgray) !important;
+}
+
+/* JSON display */
+.json-display {
+    background-color: #1a1a2e;
+    padding: 0.5rem;
+    border-radius: 3px;
+    overflow-x: auto;
+}
+
+.json-key { color: var(--maqua); }
+.json-string { color: var(--mgreen); }
+.json-number { color: var(--myellow); }
+.json-boolean { color: var(--mmagenta); }
+
+.spinner-sm {
+    width: 1rem;
+    height: 1rem;
+    border-width: 0.15em;
+}
+
+.tooltip-inner {
+    background-color: var(--secondarycolor);
+    border: 1px solid var(--mred);
+}
+
+.tooltip.bs-tooltip-top .tooltip-arrow::before {
+    border-top-color: var(--mred);
+}
+
+.tree-node-badge {
+    font-size: 0.7rem;
+    padding: 0.15rem 0.4rem;
+    margin-left: 0.5rem;
+    background-color: var(--mdarkgray);
+    color: var(--white);
+    border-radius: 3px;
+}
+
+/* Layout Templates Modal */
+.layout-template-card {
+    transition: all 0.2s;
+}
+
+.layout-template-card:hover {
+    background-color: rgba(122, 37, 24, 0.3) !important;
+    border-color: var(--mred) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
