@@ -52,9 +52,14 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
     public static String REAL_FORMAT = "%.4f";
 
     private static final ObjmtronSerializer INSTANCE = new ObjmtronSerializer();
+    private static final ObjmtronSerializer NO_CLIP_INSTANCE = new ObjmtronSerializer(Integer.MAX_VALUE);
 
     public static ObjmtronSerializer single() {
         return INSTANCE;
+    }
+
+    public static ObjmtronSerializer singleNoClip() {
+        return NO_CLIP_INSTANCE;
     }
 
     public ObjmtronSerializer() {
@@ -69,7 +74,7 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
         this();
         this.clip = clipLength;
     }
-
+    
     public fURI vid() {
         return OBJ_MTRON_STRING_SERIALIZER_VID;
     }
@@ -194,19 +199,36 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
 
     @Override
     public String writeInst(final Inst inst) {
-        if (inst.tid().basePath().equals(AUTO_FROM_INST_TID))
-            return "!*" + this.write(inst.arg(0));
-        if (inst.tid().basePath().equals(AUTO_AT_INST_TID) && inst.arg(1).isNoObj())
-            return "!@" + this.write(inst.arg(0));
-        if (inst.tid().basePath().equals(AUTO_INST_TID))
-            return "!" + this.write(inst.arg(0));
-        if (inst.tid().basePath().equals(FROM_INST_TID))
-            return "*" + this.write(inst.arg(0));
-        final String internal = inst.args().elements()
-                .map(this::write)
-                .reduce(",", (a, b) -> a + b + ",");
-        return handleIds(inst, "(" +
-                (inst.args().isEmpty() ? "" : internal.substring(1, internal.length() - 1)) + ")" + (inst.f() == null ? "" : "{" + inst.f() + "}"));
+        return this.generateInst(new StringBuilder(), inst, 0, 0, false).toString();
+    }
+
+    public StringBuilder generateInst(final StringBuilder sb, final Inst inst, final int depth, final int padding, boolean nested) {
+        if (inst.tid().basePath().equals(AUTO_FROM_INST_TID)) {
+            sb.append("!*");
+            this.processNestedPoly(sb, depth + 1, padding, nested, inst.arg(0));
+        } else if (inst.tid().basePath().equals(AUTO_AT_INST_TID) && inst.arg(1).isNoObj()) {
+            sb.append("!@");
+            this.processNestedPoly(sb, depth + 1, padding, nested, inst.arg(0));
+
+        } else if (inst.tid().basePath().equals(AUTO_INST_TID)) {
+            sb.append("!");
+            this.processNestedPoly(sb, depth + 1, padding, nested, inst.arg(0));
+
+        } else if (inst.tid().basePath().equals(FROM_INST_TID)) {
+            sb.append("*");
+            this.processNestedPoly(sb, depth + 1, padding, nested, inst.arg(0));
+        } else {
+            final String internal = inst.args().elements()
+                    .map(o -> {
+                        final StringBuilder temp = new StringBuilder();
+                        processNestedPoly(temp, depth + 1, padding, nested, o);
+                        return cleanEnding(temp).toString();
+                    })
+                    .reduce(",", (a, b) -> a + b + ",");
+            sb.append(handleIds(inst, "(" +
+                    (inst.args().isEmpty() ? "" : internal.substring(1, internal.length() - 1)) + ")" + (inst.f() == null ? "" : "{" + inst.f() + "}")));
+        }
+        return cleanEnding(sb);
     }
 
     @Override
@@ -332,7 +354,7 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
             if (!type.hasPredicate())
                 typeString.append("[]");
             typeString.append("[\n");
-            final StringBuilder temp = new StringBuilder();
+            // final StringBuilder temp = new StringBuilder();
             processNestedPoly(typeString, depth + 1, depth + 1, true, type.constructor());
             typeString.delete(typeString.length() - 2, typeString.length()); // remove ,\n
             typeString.append("]");
@@ -407,8 +429,9 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
         } else if (v.isLst()) {
             this.generateLst(sb, v.as(), depth + 1);
         } else {
+            if (nested)
+                sb.append(" ".repeat(depth + 1));
             sb.append(" ".repeat(padding));
-            sb.append(" ".repeat(depth + 1));
             this.writeClip(sb, v);
         }
         sb.append(",");

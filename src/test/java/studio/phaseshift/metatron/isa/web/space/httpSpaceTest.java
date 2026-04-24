@@ -54,7 +54,7 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.*;
         TestTag.LIST,        // Skip all list handling tests
         TestTag.SPECIAL      // Skip all special value tests
 }, include = {
-        "testMonoReadWrite"  // Include this CRUD test even though CRUD tag is skipped
+     //   "testMonoReadWrite"  // Include this CRUD test even though CRUD tag is skipped
 })
 public class httpSpaceTest extends AbstractSpaceTest {
     private static final String BASE_URL = "http://localhost:8777";

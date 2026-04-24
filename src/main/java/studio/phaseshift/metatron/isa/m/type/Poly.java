@@ -48,22 +48,6 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
     BiFunction<Poly<?, ?>, Object, Poly<?, ?>> MUTABLE = (poly, jvm) -> {
         Obj.Helper.objCheckAndSave(poly, jvm, poly.tid(), poly.vid());
         return poly;
-        /*
-          if (poly.isRec()) {
-            final Map<Obj, Obj> updatedMap = ((Map<Obj, Obj>) jvm);
-            final Map<Obj, Obj> originalMap = poly.asRec().jvm();
-            originalMap.entrySet().stream().toList().forEach(e -> {
-                if (updatedMap.containsKey(e.getKey()))
-                    originalMap.put(e.getKey(), updatedMap.get(e.getKey()));
-                else
-                    originalMap.remove(e.getKey());
-            });
-            originalMap.putAll(updatedMap);
-            Obj.Helper.objCheckAndSave(poly, poly.jvm(), poly.tid(), poly.vid(), true);
-        } else
-            Obj.Helper.objCheckAndSave(poly, jvm, poly.tid(), poly.vid());
-        return poly;
-         */
     };
 
     BiFunction<Poly<?, ?>, Object, Poly<?, ?>> IMMUTABLE = (poly, jvm) -> poly.clone(jvm, poly.tid(), poly.vid());

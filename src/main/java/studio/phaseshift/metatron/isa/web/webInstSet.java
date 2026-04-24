@@ -24,10 +24,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.web.parser.ObjHTMLSerializer;
-import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
-import studio.phaseshift.metatron.isa.web.parser.ObjMarkdownSerializer;
-import studio.phaseshift.metatron.isa.web.parser.ObjXMLSerializer;
+import studio.phaseshift.metatron.isa.web.parser.*;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
@@ -47,6 +44,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.space.http.httpSpace.HTTP_SPACE_TYPE;
+import static studio.phaseshift.metatron.isa.web.space.ws.server.wsmtronServer.WS_MTRON_SERVER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_SERVER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_SPACE_TYPE;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -102,22 +100,31 @@ public class webInstSet extends AbstractInstSet {
     public void setup() {
         this.jvm().putAll(mutableMap(
                 uri(PATTERN), uri(WEB_ISA_TID.extend(ALL)),
-                uri(CONSTQ), lst(ObjXMLSerializer.single(), ObjHTMLSerializer.single(), ObjJSONSerializer.single(), ObjMarkdownSerializer.single()),
+                uri(CONSTQ), lst(
+                        ObjXMLSerializer.single(),
+                        ObjHTMLSerializer.single(),
+                        ObjJSONSerializer.single(),
+                        ObjMarkdownSerializer.single(),
+                        ObjPlainTextSerializer.single()),
                 uri(TYPE), lst(
                         XML_TYPE,
                         docWrap(HTML_TYPE, "a rec encoding of an html document"),
                         docWrap(JSON_TYPE, "a rec encoding of a json document"),
                         CSS_TYPE,
+                       // docWrap(MARKDOWN_TYPE, "a rec encoding of a markdown document"),
                         JSON_STR_TYPE,
-                        docWrap(HTTP_SPACE_TYPE,"""
-a space for reading and writing web-related resources. for http://# patterns and remote routes, uri resolution will fetch remote web resources and httpspace will handle nested addresses client-side. for local routes, uri resolution will fetch from local web server backing httpspace. httpspace webserver is furi aware and will perform server-side extraction of nested addresses.
-                        """,
+                        docWrap(HTTP_SPACE_TYPE, """
+                                                 a space for reading and writing web-related resources. for http://# patterns and remote routes, uri resolution will fetch remote web resources and httpspace will handle nested addresses client-side. for local routes, uri resolution will fetch from local web server backing httpspace. httpspace webserver is furi aware and will perform server-side extraction of nested addresses.
+                                                 """,
                                 "*<http://phaseshift.studio>            [-- yields a html::T < rec::T --]",
                                 "*<http://phaseshift.studio/head/title> [-- client-side extraction of str::T title --]",
                                 "*<http://localhost:8777/head/title>    [-- server-side extraction of str::T title --]"),
-                        docWrap(MARKDOWN_TYPE, "a rec encoding of a markdown document"),
-                        WS_SPACE_TYPE,
-                        WS_SERVER_TYPE),
+                        docWrap(WS_SPACE_TYPE, "a space for exposing and managing web socket servers.",
+                                "*<ws://localhost:8999>               [-- yields a ws::T < rec::T --]",
+                                "*<ws://phaseshift.studio/head/title> [-- client-side extraction of str::T title --]",
+                                "*<ws://localhost:8777/head/title>    [-- server-side extraction of str::T title --]"),
+                        docWrap(WS_SERVER_TYPE, "an websocket server written in mtron through respective insts"),
+                        docWrap(WS_MTRON_SERVER_TYPE, "a simple websocket server accepting mtron expressions and return mtron results")),
                 uri(INST), lst(
                         instC(AS_INST_TID.dom(STR_TID).rng(XML_TID), lst(T(XML_TID)), (lhs, inst) -> ObjXMLSerializer.parse(lhs.asStr().strValue())),
                         instC(AS_INST_TID.dom(STR_TID).rng(HTML_TID), lst(HTML_TYPE), (lhs, inst) -> ObjHTMLSerializer.parse(lhs.asStr().strValue())),

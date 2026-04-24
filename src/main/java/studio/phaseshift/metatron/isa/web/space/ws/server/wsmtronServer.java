@@ -18,17 +18,13 @@
 
 package studio.phaseshift.metatron.isa.web.space.ws.server;
 
-import org.java_websocket.WebSocket;
-import org.java_websocket.handshake.ClientHandshake;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.web.space.ws.WSServerRec;
-import studio.phaseshift.metatron.isa.web.type.Content;
 
-import java.nio.ByteBuffer;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -40,8 +36,8 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_SERVER_TID;
@@ -65,47 +61,27 @@ public class wsmtronServer extends WSServerRec {
 
     public wsmtronServer(final Map<Obj, Obj> jvm, final fURI vid) {
         super(jvm, WS_MTRON_SERVER_TID, vid);
-        LOG.info("wsmtron serializers: [in=>%s,out=>%s]", this.inContentType.name(), this.outContentType.name());
-    }
-
-    @Override
-    public void onOpen(final WebSocket conn, final ClientHandshake handshake) {
-        LOG.info("opening mtron endpoint w/ %s", conn.getRemoteSocketAddress());
-        super.onOpen(conn, handshake);
-    }
-
-
-    @Override
-    public void onClose(final WebSocket conn, final int code, final String reason, final boolean remote) {
-        LOG.info("closing mtron endpoint w/ %s (%d, %s)", conn.getRemoteSocketAddress(), code, reason);
-        super.onClose(conn, code, reason, remote);
-    }
-
-
-    @Override
-    public void onMessage(final WebSocket conn, final String message) {
-        try {
-            final Obj obj = this.inContentType.serializer().inputBytes(ByteBuffer.wrap(message.getBytes()));
-            final Obj result = obj.apply(noobj());
-            conn.send(this.outContentType.serializer().outputBytes(result));
-        } catch (final Exception e) {
-            LOG.error("error processing message: %s", message, e);
-            conn.send(fail(e).toString());
-        }
-    }
-
-
-    @Override
-    public void onError(final WebSocket conn, final Exception e) {
-        try {
-            conn.send(fail(e).toString());
-        } catch (final Exception ex) {
-            LOG.error("error sending error message: %s", e, ex);
-        }
-    }
-
-
-    public void onStart() {
+        this.at(ON_OPEN, instLambda((lhs, inst) -> {
+            LOG.info("wsmtron serializers: [in=>%s,out=>%s]", this.inContentType.name(), this.outContentType.name());
+            return noobj();
+        }), MUTABLE);
+        this.at(ON_CLOSE, instLambda((lhs, inst) -> {
+            LOG.info("wsmtron serializers: [in=>%s,out=>%s]", this.inContentType.name(), this.outContentType.name());
+            return noobj();
+        }), MUTABLE);
+        this.at(ON_MESSAGE, instLambda((lhs, inst) -> {
+            try {
+                return lhs.apply(noobj());
+            } catch (final Exception e) {
+                LOG.error("error processing message: %s", lhs, e);
+                this.send(fail(e));
+                return fail(e);
+            }
+        }), MUTABLE);
+        this.at(ON_CLOSE, instLambda((lhs, inst) -> {
+            LOG.info("closing mtron endpoint w/ %s", this.socket.getRemoteSocketAddress());
+            return noobj();
+        }), MUTABLE);
 
     }
 }

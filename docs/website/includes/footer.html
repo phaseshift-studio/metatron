@@ -10,6 +10,10 @@
 <a href="#" class="btn btn-primary btn-square back-to-top"><i class="bi bi-caret-up-fill"></i></a>
 
 <script>
+    hljs.configure({
+        defaultLanguage: 'mtron', // Set your preferred default language
+        ignoreUnescapedHTML: true
+    });
     if (!hljs.initHighlighting.called) {
         hljs.initHighlighting.called = true
         ;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) {

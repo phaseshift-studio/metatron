@@ -66,6 +66,16 @@ import static studio.phaseshift.metatron.isa.tble.tbleInstSet.TABLE_TID;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema {
+
+    /**
+     * Internal metadata table that tracks which columns are metatron FK pointers
+     * (i.e. were written as {@code auto_from} insts). Using a dedicated table
+     * instead of SQL {@code REFERENCES} constraints keeps the approach portable
+     * across SQLite, PostgreSQL, MySQL and MariaDB without imposing FK ordering
+     * requirements or database-specific DDL variations.
+     */
+    static final String MTRON_META_TABLE = "_mtron_meta";
+
     private final tbleSpace space;
     private final Map<String, TableMetadata> tableSchemas = new LinkedHashMap<>();
     private final String excludeTableName;
@@ -106,6 +116,24 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
     }
 
     /**
+     * Creates {@value #MTRON_META_TABLE} if it does not exist yet.
+     * This table records which columns in auto-created tables are metatron FK
+     * pointers so they can be reconstructed as {@code auto_from} insts on read.
+     */
+    private void ensureMetaTable(final Connection conn) throws SQLException {
+        try (final Statement stmt = conn.createStatement()) {
+            stmt.executeUpdate(
+                    "CREATE TABLE IF NOT EXISTS " + MTRON_META_TABLE + " (" +
+                    "  table_name  TEXT NOT NULL, " +
+                    "  column_name TEXT NOT NULL, " +
+                    "  ref_table   TEXT NOT NULL, " +
+                    "  PRIMARY KEY (table_name, column_name)" +
+                    ")"
+            );
+        }
+    }
+
+    /**
      * Discover all tables in the database and their schemas
      */
     private void discoverTableSchemas(final Connection conn) throws SQLException {
@@ -116,8 +144,8 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         try (final ResultSet tables = metaData.getTables(catalog, null, "%", new String[]{"TABLE"})) {
             while (tables.next()) {
                 final String tableName = tables.getString("TABLE_NAME");
-                // Skip the key-value store table
-                if (tableName.equals(this.excludeTableName)) {
+                // Skip internal tables
+                if (tableName.equals(this.excludeTableName) || tableName.equals(MTRON_META_TABLE)) {
                     continue;
                 }
                 // Get columns for this table
@@ -158,6 +186,36 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
             }
         }
         this.space.logger().info("discovered {{b}}%s{{X}} tables: %s", tableSchemas.size(), tableSchemas.keySet());
+        // Augment all discovered tables with any metatron-tracked FK pointer columns
+        loadMetaForeignKeys(conn);
+    }
+
+    /**
+     * Reads {@value #MTRON_META_TABLE} and injects synthetic {@link ForeignKeyMetadata}
+     * entries for columns that were written as {@code auto_from} insts.
+     * This supplements (never replaces) FK entries already discovered via JDBC metadata.
+     * Silently no-ops if {@value #MTRON_META_TABLE} does not exist (pre-existing databases
+     * that have never had a metatron-managed auto_from write).
+     */
+    private void loadMetaForeignKeys(final Connection conn) {
+        try (final Statement stmt = conn.createStatement();
+             final ResultSet rs = stmt.executeQuery(
+                     "SELECT table_name, column_name, ref_table FROM " + MTRON_META_TABLE)) {
+            while (rs.next()) {
+                final String tbl = rs.getString("table_name");
+                final String col = rs.getString("column_name");
+                final String ref = rs.getString("ref_table");
+                final TableMetadata meta = this.tableSchemas.get(tbl.toLowerCase());
+                if (meta == null) continue;
+                final boolean alreadyMapped = meta.foreignKeys().stream()
+                        .anyMatch(fk -> fk.fromColumn().equalsIgnoreCase(col));
+                if (!alreadyMapped)
+                    meta.foreignKeys().add(new ForeignKeyMetadata(tbl, col, ref, "id", null));
+            }
+        } catch (final SQLException ignored) {
+            // _mtron_meta does not exist yet — this database has never had a metatron
+            // auto_from write, so there is nothing to load.
+        }
     }
 
     /**
@@ -188,6 +246,9 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
     private Obj readTableRow(final ResultSet rs, final TableMetadata metadata, final String... rowNames) throws SQLException {
         final Map<Obj, Obj> labeledValues = new LinkedHashMap<>();
         for (final ColumnMetadata col : metadata.columns) {
+            // Primary keys are encoded in the VID (e.g. lite:person/1) — strip them from
+            // the body on full-row reads, mirroring how dcmntSpace strips _id.
+            if (rowNames.length == 0 && metadata.primaryKeys.contains(col.name)) continue;
             if (rowNames.length == 0 || Arrays.asList(rowNames).contains(col.name)) {
                 final Obj value = readColumnWithMetadata(rs, col);
                 labeledValues.put(uri(col.name), value);
@@ -767,6 +828,162 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
     @Override
     public String version() {
         return "1.0-existing";
+    }
+
+    /**
+     * Discover and register a single table by name from the database metadata.
+     * Used to register a table after it has been created dynamically.
+     *
+     * @param conn      the database connection
+     * @param tableName the name of the table to register
+     * @throws SQLException if metadata retrieval fails
+     */
+    public void registerTable(final Connection conn, final String tableName) throws SQLException {
+        final DatabaseMetaData metaData = conn.getMetaData();
+        final String catalog = conn.getCatalog();
+
+        final List<ColumnMetadata> columns = new ArrayList<>();
+        try (final ResultSet cols = metaData.getColumns(catalog, null, tableName, "%")) {
+            while (cols.next()) {
+                columns.add(new ColumnMetadata(
+                        cols.getString("COLUMN_NAME"),
+                        cols.getInt("DATA_TYPE"),
+                        cols.getString("TYPE_NAME")
+                ));
+            }
+        }
+
+        final List<String> primaryKeys = new ArrayList<>();
+        try (final ResultSet pks = metaData.getPrimaryKeys(catalog, null, tableName)) {
+            while (pks.next()) {
+                primaryKeys.add(pks.getString("COLUMN_NAME"));
+            }
+        }
+
+        final List<ForeignKeyMetadata> foreignKeys = new ArrayList<>();
+        try (final ResultSet fks = metaData.getImportedKeys(catalog, null, tableName)) {
+            while (fks.next()) {
+                foreignKeys.add(new ForeignKeyMetadata(
+                        tableName, fks.getString("FKCOLUMN_NAME"),
+                        fks.getString("PKTABLE_NAME"), fks.getString("PKCOLUMN_NAME"),
+                        fks.getString("FK_NAME")
+                ));
+            }
+        }
+
+        // Supplement JDBC FK metadata with metatron-tracked FK pointer columns
+        try (final PreparedStatement ps = conn.prepareStatement(
+                "SELECT column_name, ref_table FROM " + MTRON_META_TABLE + " WHERE table_name = ?")) {
+            ps.setString(1, tableName);
+            try (final ResultSet metaRs = ps.executeQuery()) {
+                while (metaRs.next()) {
+                    final String col = metaRs.getString("column_name");
+                    final String ref = metaRs.getString("ref_table");
+                    final boolean alreadyMapped = foreignKeys.stream()
+                            .anyMatch(fk -> fk.fromColumn().equalsIgnoreCase(col));
+                    if (!alreadyMapped)
+                        foreignKeys.add(new ForeignKeyMetadata(tableName, col, ref, "id", null));
+                }
+            }
+        } catch (final SQLException ignored) {
+            // _mtron_meta may not exist yet on first boot; harmless
+        }
+
+        this.tableSchemas.put(tableName.toLowerCase(),
+                new TableMetadata(catalog, tableName, columns, primaryKeys, foreignKeys));
+        this.space.logger().info("registered table {{b}}%s{{X}} with %s columns and primary keys %s",
+                tableName, columns.size(), primaryKeys);
+    }
+
+    /**
+     * Create a SQL table from a Metatron record's field structure, then register it.
+     * Column SQL types are inferred from the Metatron type of each field's value.
+     * If the record contains no field named "id", an {@code id INTEGER PRIMARY KEY} column
+     * is prepended automatically so the table always has a usable primary key.
+     *
+     * @param conn      the database connection
+     * @param tableName the name of the table to create
+     * @param rec       the record whose fields define the table schema
+     * @throws SQLException if table creation or registration fails
+     */
+    public void createTableFromRecord(final Connection conn, final String tableName,
+                                      final studio.phaseshift.metatron.isa.m.type.Rec rec) throws SQLException {
+        final StringBuilder ddl = new StringBuilder("CREATE TABLE IF NOT EXISTS ")
+                .append(tableName).append(" (");
+
+        final boolean hasIdField = rec.recValue().keySet().stream()
+                .anyMatch(k -> k.isUri() && "id".equalsIgnoreCase(k.asUri().uriValue().name()));
+
+        boolean first = true;
+        if (!hasIdField) {
+            ddl.append("id INTEGER PRIMARY KEY");
+            first = false;
+        }
+
+        // Collect auto_from columns so we can record them in _mtron_meta after table creation.
+        // We use plain INTEGER (no REFERENCES) to avoid FK DDL ordering constraints across
+        // SQLite, PostgreSQL, MySQL, and MariaDB.
+        final Map<String, String> autoFromColumns = new LinkedHashMap<>();
+
+        for (final Map.Entry<Obj, Obj> entry : rec.recValue().entrySet()) {
+            if (!entry.getKey().isUri()) continue;
+            final String colName = entry.getKey().asUri().uriValue().name();
+            if (colName == null || colName.isEmpty()) continue;
+            if (!first) ddl.append(", ");
+            first = false;
+
+            final Obj val = entry.getValue();
+            if (val.isAutoFrom()) {
+                // FK pointer: store raw PK as INTEGER; track in _mtron_meta for round-trip
+                // segments() on e.g. 'lite:person/1' yields ["person","1"]; first = table name
+                final String refTable = val.asInst().arg(0).uriValue().segments().getFirst();
+                autoFromColumns.put(colName, refTable);
+                ddl.append(colName).append(" INTEGER");
+            } else {
+                final String sqlType;
+                if (val.isBool()) sqlType = "BOOLEAN";
+                else if (val.isInt()) sqlType = "INTEGER";
+                else if (val.isReal()) sqlType = "REAL";
+                else sqlType = "TEXT";
+                ddl.append(colName).append(" ").append(sqlType);
+                if ("id".equalsIgnoreCase(colName)) {
+                    ddl.append(" PRIMARY KEY");
+                }
+            }
+        }
+        ddl.append(")");
+
+        this.space.logger().info("creating table {{b}}%s{{X}}: %s", tableName, ddl);
+        try (final Statement stmt = conn.createStatement()) {
+            stmt.executeUpdate(ddl.toString());
+        }
+
+        // Record auto_from columns in _mtron_meta so they are reconstructed on read.
+        // _mtron_meta is created lazily here — only when a user-declared table is first
+        // written with auto_from values. Pure FK-discovery opens (existing databases with
+        // no mtron writes) never reach this point, so their schema is left untouched.
+        if (!autoFromColumns.isEmpty()) {
+            ensureMetaTable(conn);
+        }
+        // DELETE + INSERT is portable across all four supported databases.
+        for (final Map.Entry<String, String> af : autoFromColumns.entrySet()) {
+            try (final PreparedStatement del = conn.prepareStatement(
+                    "DELETE FROM " + MTRON_META_TABLE + " WHERE table_name = ? AND column_name = ?")) {
+                del.setString(1, tableName);
+                del.setString(2, af.getKey());
+                del.executeUpdate();
+            }
+            try (final PreparedStatement ins = conn.prepareStatement(
+                    "INSERT INTO " + MTRON_META_TABLE + " (table_name, column_name, ref_table) VALUES (?, ?, ?)")) {
+                ins.setString(1, tableName);
+                ins.setString(2, af.getKey());
+                ins.setString(3, af.getValue());
+                ins.executeUpdate();
+            }
+        }
+
+        // Discover and register the newly created table's metadata via JDBC
+        registerTable(conn, tableName);
     }
 
     /**

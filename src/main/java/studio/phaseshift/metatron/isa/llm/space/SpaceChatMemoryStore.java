@@ -35,8 +35,10 @@ import java.util.stream.Collectors;
 import static dev.langchain4j.data.message.ChatMessageDeserializer.messageFromJson;
 import static dev.langchain4j.data.message.ChatMessageSerializer.messagesToJson;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_MEMORY_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -55,7 +57,7 @@ public class SpaceChatMemoryStore implements ChatMemoryStore {
     }
 
     public List<ChatMessage> getMessages(final Object memoryId) {
-        final Lst messages = Router.readFromSpace((fURI) memoryId).orSupply(() -> lst(new ArrayList<>(), LLM_MEMORY_TID, (fURI) memoryId));
+        final Lst messages = Router.readFromSpace((fURI) memoryId).orSupply(() -> lst(new ArrayList<>(), LST_TID, (fURI) memoryId));
         final List<ChatMessage> llmMessages = messages.isEmpty() ?
                 new ArrayList<>() :
                 messages.elements().map(e -> messageFromJson(ObjSimpleJSONSerializer.single().write(e).toString())).collect(Collectors.toCollection(ArrayList::new));

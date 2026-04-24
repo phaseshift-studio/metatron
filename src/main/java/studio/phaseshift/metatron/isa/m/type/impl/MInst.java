@@ -76,7 +76,11 @@ public class MInst extends MObj implements Inst {
     }
 
     public static Inst instLambda(final BiFunction<Obj, Inst, Obj> f) {
-        return new MInst(Triplet.with(lst(List.of()), Inst.f.of(f), NoObj.noobj()), M_ISA_INST_TID.extend("lambda"), null);
+        return instLambda(ALL, ALL_STAR, f);
+    }
+
+    public static Inst instLambda(final fURI dom, final fURI rng, final BiFunction<Obj, Inst, Obj> f) {
+        return new MInst(Triplet.with(lst(List.of()), Inst.f.of(f), NoObj.noobj()), M_ISA_INST_TID.extend("lambda").dom(dom).rng(rng), null);
     }
 
     @Override

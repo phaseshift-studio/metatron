@@ -23,13 +23,13 @@ import org.java_websocket.handshake.ClientHandshake;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.web.type.Content;
+import studio.phaseshift.metatron.util.Tuple;
 
+import java.nio.ByteBuffer;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -39,10 +39,10 @@ public class WSServerRec extends MRec implements WSServer {
 
     protected final Content.ContentType inContentType;
     protected final Content.ContentType outContentType;
+    protected WebSocket socket = null;
 
     public WSServerRec(final Map<Obj, Obj> map, final fURI vid) {
         this(map, wsSpace.WS_SERVER_TID, vid);
-
     }
 
     public WSServerRec(final Map<Obj, Obj> map, final fURI tid, final fURI vid) {
@@ -52,22 +52,32 @@ public class WSServerRec extends MRec implements WSServer {
     }
 
 
+    public Tuple.Pair<Content.ContentType, Content.ContentType> getIOSerializers() {
+        return Tuple.Pair.with(this.inContentType, this.outContentType);
+    }
+
     public void onOpen(final WebSocket conn, final ClientHandshake handshake) {
-        this.at(uri(ON_OPEN), noobj()).apply(str(handshake.getResourceDescriptor()));
+        this.at(uri(ON_OPEN)).apply(str(handshake.getResourceDescriptor()));
     }
 
 
     public void onClose(final WebSocket conn, final int code, final String reason, final boolean remote) {
-        this.at(uri(ON_CLOSE), noobj()).apply(rec(uri(CODE), jnt(code), uri(REASON), str(reason)));
+        this.at(uri(ON_CLOSE)).apply(rec(uri(CODE), jnt(code), uri(REASON), str(reason)));
     }
 
 
     public void onMessage(final WebSocket conn, final String message) {
-        this.at(uri(ON_MESSAGE), noobj()).apply(ObjmtronSerializer.parse(message));
+        final Obj result = this.at(uri(ON_MESSAGE)).apply(this.inContentType.serializer().inputBytes(ByteBuffer.wrap(message.getBytes())));
+        this.send(result);
     }
 
 
     public void onError(final WebSocket conn, final Exception ex) {
-        this.at(uri(ON_ERROR), noobj()).apply(fail(ex));
+        this.at(uri(ON_ERROR)).apply(fail(ex));
+    }
+
+    @Override
+    public WebSocket getWebSocket() {
+        return this.socket;
     }
 }

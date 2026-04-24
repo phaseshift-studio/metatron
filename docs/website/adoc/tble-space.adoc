@@ -19,14 +19,16 @@ creating a `tblespace` requires a JDBC `host` URI, a `driver`, and a `route`. th
 
 ++++
 <!-- 🐖
-tblespace::[pattern => lite:#,                   /
-            host    => <sqlite:target/test.db>,  /
-            driver  => <org.sqlite.JDBC>,        /
+tblespace::[pattern => lite:#,                             /
+            host    => <sqlite:target/test?cache=shared>,  /
+            driver  => <org.sqlite.JDBC>,                  /
+            table   => [person],                           /
             route   => [lite:=><>]]@/sys/space/lite   [-- <1>
-lite:person/1 -> [name=>'alice', age=>30]             [-- <2>
-lite:person/2 -> [name=>'bob',   age=>25]             [-- <3>
+lite:person/1 -> [name=>'marko', age=>29]             [-- <2>
+lite:person/2 -> [name=>'grant', age=>25]             [-- <3>
 *lite:person/                                         [-- <4>
 *lite:person/+/name                                   [-- <5>
+*lite:person/+/id                                     [-- <6>                  
 -->
 ++++
 <1> a `tblespace` mounted at `/sys/space/lite` and responsible for objs in `lite:#`.
@@ -34,6 +36,7 @@ lite:person/2 -> [name=>'bob',   age=>25]             [-- <3>
 <3> writing a second row.
 <4> listing all rows in the `person` table.
 <5> querying the `person` table — all rows with any `name` value.
+<6> primary keys are encoded in the vid and omitted from the row body — but still addressable as an explicit path segment.
 
 [discrete]
 === schema discovery
@@ -52,7 +55,16 @@ On connection, `tblespace` introspects the live database and generates an `insts
 [discrete,.center]
 ==== a relational key/value store
 
-`tblespace` is a **hybrid** space. URIs that match a discovered table (`db:person/1`) route to the SQL table via a respective read/write path. URIs that don't match a table (`db:kv/mykey`) fall through to a general-purpose https://en.wikipedia.org/wiki/Key%E2%80%93value_database[key/value store] backed by the same database. The key/value store has no `root` type constraint — any `obj` can be stored there. In this way, it is analogous to `memspace`.
+`tblespace` is a **hybrid** space. URIs that match a discovered table (`db:person/1`) route to the SQL table via a respective read/write path. URIs that don't match a table (`db:kv/mykey`) fall through to a general-purpose https://en.wikipedia.org/wiki/Key%E2%80%93value_database[key/value store] backed by the same database. The key/value store has no `root` type constraint — any `obj` can be stored there.
+
+++++
+<!-- 🐖
+lite:kv/single -> 651.02
+*lite:kv/single
+-->
+++++
+
+When the `obj` is a nested `rec`, the relational key/value store becomes a document store.
 
 ++++
 <!-- 🐖
@@ -65,35 +77,98 @@ lite:kv/nest -> [a=>[b=>[c=>2,d=>!*lite:kv/nest]]]
 --
 
 [discrete]
-=== /m/tble rewrites
+=== mtron-to-sql rewrites
 
-Regardless of the language, when expressing a query over data, the fundamental primitives of the expression ultimately boil down to a collection of `aggregate`, `filter`, `project`, `update`, etc. type operations. Universals ensure that what can be expressed in mtron can also be expressed in SQL. Since relational databases are optimized for processing SQL, it's best to capitalize on this fact and call SQL within mtron expression whenever possible. This is the `/m/tble` https://en.wikipedia.org/wiki/Rewriting[rewrite] instructions. All rewrites are instructions of the form:
+Regardless of the language, when querying data, the fundamental primitives of the expression ultimately boil down to a collection of  `aggregate`, `filter`, `project`, `update`, etc. operations. Universals ensure that what can be expressed in mtron can also be expressed in SQL and vice versa (almost). Since relational databases are optimized for processing SQL, it's best to leverage the backend's SQL-query engine within the mtron expression. The https://en.wikipedia.org/wiki/Rewriting[rewrite] `insts` of  `/m/tble` do just that. In general, all rewrites are instructions of the form:
 
 \[
-\texttt{rewrite?code{?}<=code()}.
+\texttt{rewrite?code{?}<=code(arg_1,arg_2,\ldots,arg_n)}.
 \]
 
+[source,mtron]
+----
+        ┌───────────────────insts────────────────────────┐rewrites
+        ┌───────┐ ┌──────┐ ┌───────┐ ┌───────┐ ┌───────┐ │sql_where                            
+code    └───────┘ └──────┘ └───────┘ └───────┘ └───────┘ │           
+        ┌────────────────┐ ┌───────┐ ┌───────┐ ┌───────┐ │sql_where_count                            
+code''  └────────────────┘ └───────┘ └───────┘ └───────┘ │           
+        ┌────────────────┐ ┌───────┐ ┌─────────────────┐ │sql_select                      
+code''' └────────────────┘ └───────┘ └─────────────────┘ ▼
+----
 
 ++++
 <!-- 🐖
-*lite:person/+.?==[age=>?<30]                      [-- <1>
-*lite:person/+/name.count()                        [-- <2>
-*lite:person/+.==[name=>_]                         [-- <3>
+*lite:person/+.?==[age=>?<30]      [-- <1>
+*lite:person/+/name.count()        [-- <2>
+*lite:person/+.==[name=>_]         [-- <3>
 -->
 ++++
 <1> all people under 30 — rewritten to `SELECT * FROM person WHERE age < 30`.
 <2> count of distinct names — rewritten to `SELECT COUNT(name) FROM person`.
 <3> project to name only — rewritten to `SELECT name FROM person`.
 
-Finally, like other spaces, the native query engine of the respective backend can be accessed via a space-specific `inst`.
+Finally, like other database-backed spaces, the backend's native query engine is accessible via a space-specific `inst`.
 
 ++++
 <!-- 🐖
-*/sys/space/lite.sql("SELECT name FROM person WHERE age < 30")            [-- <1>
-*/sys/space/lite.sql("SELECT name FROM person WHERE age < 30")>>age.sum() [-- <2>
+*/sys/space/lite.sql("SELECT name,age FROM person WHERE age < 30")            [-- <1>
+*/sys/space/lite.sql("SELECT name,age FROM person WHERE age < 30")>>age.sum() [-- <2>
 -->
 ++++
-<1> `sql?rec{*}\<=tblespace(str::T)` yields `recs`.
+<1> `sql?rec{*}\<=tblespace(str::T)` yields zero or more `rec` objs.
 <2> these `recs` can be further processed by mtron.
 
-The example above demonstrates how one can move between languages within the same expression.
+The example above demonstrates how one can move between languages within the same expression as the universal encoding
+is that of objs in a unified URI address space.
+
+[discrete]
+=== auto_from and foreign keys
+
+In a relational database, rows can be linked in one of two ways:
+
+. **procedural** (`where`): a runtime process returns implicit relationships.
+. **structural** (`foreign key`): a lookup returns explicit relationships. 
+
+A foreign key in a table cell denotes a reference to a cell in another table. The foreign key
+states an explicit relationship between two rows. This is analogous to a graph database's edges making direct,
+explicit relationships between vertices ("rows"). A `where` clause comparing columns across two
+tables computes adhoc relationships between rows. This is analogous to a graph database's traversals
+computing new semantic relationships through adhoc walks.
+
+Two new tables extend the running example to show both patterns. `score` holds a plain-string `player` column
+whose values happen to match `person.name` — the link is purely algorithmic, enforced only at query time.
+`award` holds a `!*` pointer directly in a `recipient` cell — the link is structural and immediately navigable.
+
+++++
+<!-- 🐖
+*/sys/space/lite>>=[table=>[person,score]]                                                              [-- <1>
+lite:score/1 -> [player=>'marko', points=>42]                                                           [-- <2>
+lite:score/2 -> [player=>'grant', points=>99]                                                           [-- <3>
+*lite:score/+.?==[player=>'marko']                                                                      [-- <4>
+*/sys/space/lite.sql("SELECT p.name,p.age,s.points FROM person p JOIN score s ON p.name=s.player")      [-- <5>
+-->
+++++
+<1> patch the live `table` config to tell the space about the new `score` table — on first write the table is created from the record's field types.
+<2> `score.player` is a plain `str` — no FK declaration; the correspondence to `person.name` is purely by shared value.
+<3> second score row.
+<4> find all scores for `'marko'` — `?==` rewrites to `SELECT * FROM score WHERE player = 'marko'`; the join is computed on demand.
+<5> the `p.name = s.player` join expressed in native SQL; both paths return the same result, the first stays in mtron.
+
+An `auto_from` (`!*`) pointer embedded in a row cell is metatron's structural foreign key.
+Unlike a matching column value, the pointer encodes the full address of the linked row directly in the data.
+`auto_from` is **lazy** — the cell stores the unresolved pointer until a path traversal forces it.
+
+++++
+<!-- 🐖
+*/sys/space/lite>>=[table=>[person,score,award]]                                                        [-- <6>
+lite:award/1 -> [trophy=>'gold',   recipient=>!*lite:person/1]                                          [-- <7>
+lite:award/2 -> [trophy=>'silver', recipient=>!*lite:person/2]                                          [-- <8>
+*lite:award/+                                                                                           [-- <9>
+*lite:award/1/recipient                                                                                 [-- <10>
+-->
+++++
+<6> extend the `table` list to include `award` — each new table is declared before its first write.
+<7> `recipient` stores a `!*lite:person/1` pointer — the FK is part of the row value, not a schema constraint.
+<8> second award row linking to `lite:person/2`.
+<9> reading all awards — each `recipient` cell renders as an unresolved `!*lite:person/N` pointer.
+<10> traversing the FK: the path segment `recipient` forces `auto_from` to read `lite:person/1` and return the full person row.

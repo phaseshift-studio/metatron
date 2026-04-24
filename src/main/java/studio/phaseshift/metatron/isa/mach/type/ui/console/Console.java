@@ -615,7 +615,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                 if (null != parseResult && !parseResult.isNoObj()) {
                     final Obj resolvedResult = parseResult.isCall() ? Call.Helper.resolveInspection(parseResult.asCall(), unresolved -> {
                         this.status.setState(Level.WARN);
-                        LOG.warn("unable to fully resolve code. execution will require dynamic inst resolution for:\n\t%s", unresolved);
+                        LOG.warn("unable to fully resolve code. execution will require dynamic inst resolution for:\n\t%s", unresolved.stream().map(i->i.tid()).toList());
                     }) : parseResult;
                     final Machine mach = SwarmMachine.of(resolvedResult.isCall() ? resolvedResult.as() : start_(resolvedResult)).onHalt(this::printResult);
                     // Track machine in both places for interruption

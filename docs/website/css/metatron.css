@@ -274,6 +274,11 @@ table {
     margin-top: -20px;
     margin-left: -15px;
 }
+#iot_feature .flip-box-back img {
+    transform: scale(1.50);
+    margin-top: -20px;
+    margin-left: -15px;
+}
 #mtron_feature .flip-box-back img,
 #uri_feature .flip-box-back img {
     transform: scale(2);

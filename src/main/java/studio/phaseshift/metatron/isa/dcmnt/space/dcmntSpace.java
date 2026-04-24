@@ -257,11 +257,11 @@ public class dcmntSpace extends AbstractSpace<MongoClient> {
                     return noobj();
                 Stream<String> collectionStream;
                 if (collectionName.equals("#") || collectionName.equals("+")) {
-                    collectionStream = IteratorUtil.stream(this.database.listCollectionNames().iterator());
+                    collectionStream = IteratorUtil.stream(this.getDatabase().listCollectionNames().iterator());
                 } else {
                     collectionStream = Stream.of(collectionName);
                 }
-                return collectionStream.map(c -> this.database.getCollection(c)).flatMap(collection -> {
+                return collectionStream.map(c -> this.getDatabase().getCollection(c)).flatMap(collection -> {
                     LOG.debug("WRITING: %s %s", collectionName, documentID);
                     if (obj.isNoObj()) {
                         // Delete document
@@ -280,7 +280,7 @@ public class dcmntSpace extends AbstractSpace<MongoClient> {
                             bsonDoc.put(ID_FIELD, toBsonId(documentID));
                             bsonDoc.put(MTRON_VALUE_FIELD, this.getSerializer().write(obj));
                             LOG.trace("upserting wrapped non-rec value for %s in collection %s", documentID, collectionName);
-                            this.database.getCollection(collection.getNamespace().getCollectionName(), BsonDocument.class)
+                            this.getDatabase().getCollection(collection.getNamespace().getCollectionName(), BsonDocument.class)
                                     .replaceOne(Filters.eq(ID_FIELD, parseObjectId(documentID)), bsonDoc, new ReplaceOptions().upsert(true));
                         }
                     } else {
@@ -317,7 +317,7 @@ public class dcmntSpace extends AbstractSpace<MongoClient> {
                 // patterns (e.g. +/+/field) are not yet supported here.
                 if (!collectionName.equals("+") && !collectionName.equals("#") &&
                         !documentID.equals("+") && !documentID.equals("#")) {
-                    final Document doc = this.database.getCollection(collectionName)
+                    final Document doc = this.getDatabase().getCollection(collectionName)
                             .find(Filters.eq(ID_FIELD, parseObjectId(documentID))).first();
                     if (doc != null) {
                         final fURI docVID = f(this.pattern.retractPattern()
@@ -365,7 +365,7 @@ public class dcmntSpace extends AbstractSpace<MongoClient> {
                 return IteratorUtil.of();
             Stream<String> collectionStream;
             if (collectionName.equals("#") || collectionName.equals("+")) {
-                collectionStream = IteratorUtil.stream(this.database.listCollectionNames().iterator());
+                collectionStream = IteratorUtil.stream(this.getDatabase().listCollectionNames().iterator());
             } else {
                 collectionStream = Stream.of(collectionName);
             }
@@ -378,7 +378,7 @@ public class dcmntSpace extends AbstractSpace<MongoClient> {
             }
 
             final List<IdObj> allResults = new ArrayList<>();
-            collectionStream.map(c -> this.database.getCollection(c)).forEach(collection -> {
+            collectionStream.map(c -> this.getDatabase().getCollection(c)).forEach(collection -> {
                 final String collName = collection.getNamespace().getCollectionName();
                 LOG.debug("READING: %s %s", collName, documentID);
                 if (documentID.equals("+") || documentID.equals("#")) {
@@ -428,7 +428,7 @@ public class dcmntSpace extends AbstractSpace<MongoClient> {
     public Obj mql(final String collection, final Rec query) {
         try {
             return objs(IteratorUtil
-                    .stream(this.sjvm().getDatabase(this.databaseName)
+                    .stream(this.getDatabase()
                             .getCollection(collection)
                             .find(ObjBSONSerializer.single().writeRec(query)))
                     .map(doc -> ObjBSONSerializer.single().read(doc.toBsonDocument())));

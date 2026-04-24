@@ -45,7 +45,7 @@
     <script src="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js" type="text/javascript"></script>
     <script src="../highlight/languages/mtron.min.js" type="text/javascript"></script>
     <script src="../highlight/languages/json.min.js" type="text/javascript"></script>
-    <script src="../highlight/languages/bash.min.js" type="text/javascript"></script>
+   <!-- <script src="../highlight/languages/bash.min.js" type="text/javascript"></script>-->
     <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
     <script async src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js" type="text/javascript"></script>
     <script src="../lib/wow/wow.min.js" type="text/javascript"></script>
@@ -251,9 +251,9 @@ bin/metatron</code></pre>
        pre_read =>    inst?#{*}<=#{?}(uri::T),
        pre_write=>    inst?#{*}<=#{?}(uri::T,#::T),
        pattern  =>    docq,
-       obj      =>memspace::[pattern=>     <#>],
-       inst     =>instset::[pattern=>     <#>]]],
- space  =>[super=>  !*/m],
+       obj      =>memspace::[pattern=><#>],
+       inst     =>instset::[pattern=><#>]]],
+ space  =>[super=>!*/m],
  type   =>[
       catalog::T,
       mcp::T,
@@ -267,7 +267,8 @@ bin/metatron</code></pre>
       as?tool<=/m/space/q/docq/docs(tool::T),
       as?tool<=inst(tool::T),
       as?skill<=dir(skill::T),
-      chat?A{?}<=model(str::T,A::T)]]@/m/llm</code></pre>
+      chat?A{?}<=model(str::T),
+      chat?rec<=model(str::T,rec::T)]]@/m/llm</code></pre>
                         </div>
                     </div>
                 </div>
@@ -278,7 +279,7 @@ bin/metatron</code></pre>
             <div class="d-flex justify-content-center gap-2 flex-wrap">
                 <button class="btn btn-outline-secondary" disabled>Consts <span class="badge bg-dark">0</span></button>
                 <a href="#types" class="btn btn-outline-primary">Types <span class="badge bg-secondary">7</span></a>
-                <a href="#instructions" class="btn btn-outline-primary">Insts <span class="badge bg-secondary">1</span></a>
+                <a href="#instructions" class="btn btn-outline-primary">Insts <span class="badge bg-secondary">2</span></a>
                 <a href="#spaces" class="btn btn-outline-primary">Spaces <span class="badge bg-secondary">1</span></a>
                 <button class="btn btn-outline-secondary" disabled>Rewrites <span class="badge bg-dark">0</span></button>
             </div>
@@ -393,7 +394,7 @@ bin/metatron</code></pre>
                     <div class="card-body p-2">
                         <pre class="mb-0"><code class="language-mtron">rec::T[?[
      host     =&gt;   uri::T,
-     {?}tool  =&gt;{?}[uri::T=&gt;    tool::T],
+     {?}tool  =&gt;{?}[uri::T=&gt;tool::T],
      {?}status=&gt;   isa(bool::T).else(false)]][
    inst?mcp&lt;=#{?}(rec::T)]@/m/llm/mcp</code></pre>
                     </div>
@@ -404,9 +405,9 @@ bin/metatron</code></pre>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"a mcp server specification" <span class="text-light">=&gt;</span> "creates a connection to an existing mcp server"
    <pre><code class="language-mtron hljs">[
+ {?}tool  =&gt; &#x27;the tools/functions available for use o...&#x27;,
  host     =&gt; &#x27;the mcp server endpoint&#x27;,
- {?}status=&gt; &#x27;the current status of the mcp server&#x27;,
- {?}tool  =&gt; &#x27;the tools/functions available for use o...&#x27;]</code></pre></pre>
+ {?}status=&gt; &#x27;the current status of the mcp server&#x27;]</code></pre></pre>
                     </div>
         <div class="card-body border-top py-2">
             <small class="text-muted fw-bold">examples:</small>
@@ -454,7 +455,7 @@ mcp::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron                 
      {?}memory  =&gt;   memory{?}::T,
      {?}desc    =&gt;   str::T,
      {?}skill   =&gt;   lst{?}::T,
-     {?}tool    =&gt;[     split([
+     {?}tool    =&gt;[split([
     ?tool::T,
     ?mcp::T])]]]@/m/llm/model</code></pre>
                     </div>
@@ -465,13 +466,13 @@ mcp::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron                 
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"a large language model" <span class="text-light">=&gt;</span> "the model construction"
    <pre><code class="language-mtron hljs">[
- {?}tool  =&gt; &#x27;tool functions the llm can use to solve...&#x27;,
- {?}think =&gt; &#x27;whether the llm should think before res...&#x27;,
- {?}memory=&gt; &quot;llm&#x27;s memory of previous interactions&quot;,
  {?}skill =&gt; &quot;skill to extend the llm&#x27;s abilities&quot;,
  {?}size  =&gt; &#x27;the size of the model in bytes&#x27;,
  {?}host  =&gt; &#x27;the llm inferencing provider endpoint&#x27;,
- name     =&gt; &#x27;the model name from the host catalog&#x27;]</code></pre></pre>
+ name     =&gt; &#x27;the model name from the host catalog&#x27;,
+ {?}tool  =&gt; &#x27;tool functions the llm can use to solve...&#x27;,
+ {?}think =&gt; &#x27;whether the llm should think before res...&#x27;,
+ {?}memory=&gt; &quot;llm&#x27;s memory of previous interactions&quot;]</code></pre></pre>
                     </div>
                 </div>
                 <div class="card mb-3" id="type-skill">
@@ -499,10 +500,10 @@ mcp::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron                 
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"a skill.md specification" <span class="text-light">=&gt;</span> "?"
    <pre><code class="language-mtron hljs">[
- {?}entry  =&gt; &#x27;skill assets, references, and scripts&#x27;,
  name      =&gt; &#x27;skill name&#x27;,
  {?}content=&gt; &#x27;skill.md document content&#x27;,
- desc      =&gt; &#x27;skill description&#x27;]</code></pre></pre>
+ desc      =&gt; &#x27;skill description&#x27;,
+ {?}entry  =&gt; &#x27;skill assets, references, and scripts&#x27;]</code></pre></pre>
                     </div>
         <div class="card-body border-top py-2">
             <small class="text-muted fw-bold">examples:</small>
@@ -532,9 +533,9 @@ mcp::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron                 
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"a tool specification" <span class="text-light">=&gt;</span> "?"
    <pre><code class="language-mtron hljs">[
+ name  =&gt; &#x27;tool name&#x27;,
  desc  =&gt; &#x27;tool description&#x27;,
- {?}arg=&gt; &#x27;tool arguments&#x27;,
- name  =&gt; &#x27;tool name&#x27;]</code></pre></pre>
+ {?}arg=&gt; &#x27;tool arguments&#x27;]</code></pre></pre>
                     </div>
         <div class="card-body border-top py-2">
             <small class="text-muted fw-bold">examples:</small>
@@ -552,7 +553,7 @@ mcp::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron                 
                     
                     <div class="card-body p-2">
                         <pre class="mb-0"><code class="language-mtron">rec::T[?[
-     contents=&gt;[text=&gt;    str::T],
+     contents=&gt;[text=&gt;str::T],
      type    =&gt;   user]]@/m/llm/user</code></pre>
                     </div>
                     
@@ -564,7 +565,7 @@ mcp::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron                 
             
         <div class="container-xxl mb-4" id="instructions">
             <h3 class="text-primary mb-3">
-                Instructions <span class="badge bg-success">1</span>
+                Instructions <span class="badge bg-success">2</span>
             </h3>
             
                 <div class="card mb-3" id="inst-chat">
@@ -576,8 +577,38 @@ mcp::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron                 
                         <small class="text-muted code">/m/llm/inst/chat?A{?}&lt;=/m/llm/model</small>
                     </div>
                     <div class="card-body p-2">
-                        <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-chat-doc-0-tab').click(); document.getElementById('inst-chat-doc-0').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">chat?A{?}&lt;=model(str::T,A::T){&lt;j&gt;}</code></pre>
+                        <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-chat-doc-0-tab').click(); document.getElementById('inst-chat-doc-0').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">chat?A{?}&lt;=model(str::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-chat-doc-1-tab').click(); document.getElementById('inst-chat-doc-1').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">chat?rec&lt;=model(str::T,rec::T){&lt;j&gt;}</code></pre>
                     </div>
+                    
+            <div class="card-body border-top p-0">
+                <ul class="nav nav-pills p-2 bg-dark" id="inst-chat-pills" role="tablist">
+                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">polymorph:</span></li>
+                    
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link py-1 px-2 active text-start h-100" id="inst-chat-doc-0-tab" data-bs-toggle="pill" 
+                        data-bs-target="#inst-chat-doc-0" type="button" role="tab" aria-controls="inst-chat-doc-0" 
+                        aria-selected="true" style="font-size: 0.75rem; max-width: 60px;">
+                        <i class="fas fa-info-circle me-1"></i> 1
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link py-1 px-2  text-start h-100" id="inst-chat-doc-1-tab" data-bs-toggle="pill" 
+                        data-bs-target="#inst-chat-doc-1" type="button" role="tab" aria-controls="inst-chat-doc-1" 
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
+                        <i class="fas fa-info-circle me-1"></i> 2
+                    </button>
+                </li>
+                </ul>
+                <div class="tab-content" id="inst-chat-content">
+                    
+                <div class="tab-pane fade show active" id="inst-chat-doc-0" role="tabpanel" aria-labelledby="inst-chat-doc-0-tab">
+                    
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
+                </div>
+                <div class="tab-pane fade " id="inst-chat-doc-1" role="tabpanel" aria-labelledby="inst-chat-doc-1-tab">
                     
                     <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">communicate with am llm enriched by tools, skills, etc. and receive response in particular format</p>
@@ -585,13 +616,16 @@ mcp::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron                 
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"a model to chat with" <span class="text-light">=&gt;</span> "the models chat response"
    <pre><code class="language-mtron hljs">[
- 0=&gt; &#x27;the message to send the model&#x27;,
- 1=&gt; &#x27;the desired response format&#x27;]</code></pre></pre>
+ 1=&gt; &#x27;the desired response format&#x27;,
+ 0=&gt; &#x27;the message to send the model&#x27;]</code></pre></pre>
                     </div>
         <div class="card-body border-top py-2">
             <small class="text-muted fw-bold">examples:</small>
             <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;ollama:qwen3:latest&gt;+[response=&gt;[to=&gt;print(_)],think=&gt;to(/ai/thoughts?incrq)].chat(&#x27;what is 4+2?&#x27;,[answer=&gt;int::T])</code></pre>
         </div>
+                </div>
+                </div>
+            </div>
                 </div>
         </div>
             
@@ -608,10 +642,10 @@ mcp::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron                 
                     
                     <div class="mt-2">
                         <pre class="mb-0"><code class="language-mtron">space::T[isa([
- name   =&gt; is(or(eq(anthropic),eq(openai),eq(ollama),eq(localai))),
- pattern=&gt; uri::T,
- {?}host=&gt; uri::T,
- route  =&gt;[uri::T=&gt;  uri::T]])][inst?rng=catalog&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/llm/space/catalog</code></pre>
+     name   =&gt;   is(or(eq(anthropic),eq(openai),eq(ollama),eq(localai))),
+     pattern=&gt;   uri::T,
+     {?}host=&gt;   uri::T,
+     route  =&gt;[uri::T=&gt;uri::T]])][inst?rng=catalog&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/llm/space/catalog</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -620,10 +654,10 @@ mcp::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron                 
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"llm model catalog specification" <span class="text-light">=&gt;</span> "creates a model catalog"
    <pre><code class="language-mtron hljs">[
- pattern=&gt; &#x27;catalog address space&#x27;,
  name   =&gt; &#x27;the provider name (anthropic, openai, o...&#x27;,
  route  =&gt; &#x27;internal space routes&#x27;,
- {?}host=&gt; &#x27;the llm inferencing provider endpoint&#x27;]</code></pre></pre>
+ {?}host=&gt; &#x27;the llm inferencing provider endpoint&#x27;,
+ pattern=&gt; &#x27;catalog address space&#x27;]</code></pre></pre>
                     </div>
                 </div>
         </div>
@@ -632,7 +666,7 @@ mcp::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron                 
         <div class="container-xxl py-3 text-center">
             <hr class="border-secondary">
             <small class="text-muted">
-                generated by metatron instset doc generator on build 0-2026-04-21 22:20:02<br>
+                generated by metatron instset doc generator on build 0-2026-04-23 18:43:14<br>
                 © PhaseShift Studio, LLC
             </small>
         </div>
@@ -648,6 +682,10 @@ mcp::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron                 
 <a href="#" class="btn btn-primary btn-square back-to-top"><i class="bi bi-caret-up-fill"></i></a>
 
 <script>
+    hljs.configure({
+        defaultLanguage: 'mtron', // Set your preferred default language
+        ignoreUnescapedHTML: true
+    });
     if (!hljs.initHighlighting.called) {
         hljs.initHighlighting.called = true
         ;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) {

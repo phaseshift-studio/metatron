@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.isa.llm.type;
 
 import dev.langchain4j.agent.tool.ToolSpecification;
-import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.mcp.McpToolProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.request.json.*;
@@ -57,7 +56,6 @@ import static studio.phaseshift.metatron.isa.llm.type.mTool.LLM_TOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Real.REAL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Rel.REL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
@@ -65,7 +63,6 @@ import static studio.phaseshift.metatron.isa.m.type.Str.str0;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -100,24 +97,17 @@ public class mModel extends MRec {
         return this.at(THINK).apply(thought);
     }
 
-    public Obj processResponse(final Str response) {
-        boolean hasFormat = this.has(RESPONSE + "/" + FORMAT);
-        final Obj result = hasFormat ?
+    public Obj processResponse(final Str response, final boolean responseFormatted) {
+        final Obj result = responseFormatted ?
                 ObjSimpleJSONSerializer.single().inputBytes(ByteBuffer.wrap(response.strValue().getBytes(StandardCharsets.UTF_8))) :
                 response;
-        if (hasFormat && !this.fetchMemory().orElse(lst0()).isEmpty())
-            this.fetchMemory().asLst().lstValue().getLast().asRec().recValue().put(uri("attributes"), rec(uri(FORMAT), result));
+        final Obj memObj = this.memory().at("mem");
+        if (responseFormatted && memObj.isLst() && !memObj.asLst().isEmpty() && memObj.asLst().lstValue().getLast().isRec()) {
+            memObj.asLst().lstValue().getLast().asRec().recValue().put(uri("attributes"), rec(uri(FORMAT), result));
+            memObj.save();
+        }
         this.asRec().at(f(RESPONSE).extend(TO)).apply(result);
         return result;
-    }
-
-    public Obj fetchMemory() {
-        return Router.global().read(this.at(MEMORY).orElse(lst0()).at(jnt(0)).uriValue());
-    }
-
-    public Obj processMemory(final ChatMessage message) {
-        return noobj();
-        // return this.at(MEMORY).orElse(rec0()).at(TO).apply(message);
     }
 
     public Optional<Lst> tools() {
@@ -133,7 +123,7 @@ public class mModel extends MRec {
     }
 
     public Rec memory() {
-        return this.at(MEMORY).asRec();
+        return this.at(MEMORY).orElse(noobjRec());
     }
 
     public Optional<Rec> lastResponse() {
@@ -174,7 +164,6 @@ public class mModel extends MRec {
                         .build());
             }
         }
-
         //////////////////////////////////////////
         ///////////////  RESPONSE  ///////////////
         //////////////////////////////////////////
@@ -249,6 +238,10 @@ public class mModel extends MRec {
     }
 
     public Obj chat(final String message) {
+        return this.chat(message, noobjRec());
+    }
+
+    public Obj chat(final String message, final Rec responseFormat) {
         final StringBuilder response = new StringBuilder();
         Router.global().stats().ioStats().incrBytesSent(message.getBytes().length);
         final AtomicBoolean isThinking = new AtomicBoolean(false);
@@ -259,38 +252,47 @@ public class mModel extends MRec {
         try {
             final mAgent agent = this.agent()
                     .systemMessageTransformer((current, content) -> this.at(DESC).orElse(str0()).strValue() + "\n\n" + current)
-                    .streamingChatModel(LLMFactory.createChatInteraction(this, this.model())).build();
+                    .streamingChatModel(LLMFactory.createChatInteraction(this, this.model(), responseFormat)).build();
+            AtomicReference<String> STAGE = new AtomicReference<>("START");
             agent.chat(message)
                     .onToolExecuted(tool -> {
+                        STAGE.set("TOOLING");
                         this.logger().info("tool executed: %s(%s) => %s", tool.request().name(), tool.request().arguments(), tool.result());
                         isTooling.set(false);
                     })
                     .onCompleteResponse(c -> {
+                        STAGE.set("COMPLETE");
                         isComplete.set(true);
                         isResponding.set(false);
                         Router.global().stats().ioStats().incrBytesRecv(c.aiMessage().text().getBytes().length);
-                        this.processResponse(str(c.aiMessage().text()));
+                        this.processResponse(str(c.aiMessage().text()), !responseFormat.isNoObj() && !responseFormat.isEmpty());
                         this.logger().none("\n");
                     })
                     .onPartialToolCall(partialToolCall -> {
                         if (!isTooling.getAndSet(true)) {
+                            STAGE.set("TOOLING (" + partialToolCall.name() + ")");
                             this.logger().none(Graphitty.sillyPrint("tooling:\n", true, true));
                             this.logger().none("\t{{y}}partial{{X}}: {{b}}%s{{g}}({{b}}%s{{g}}){{X}}\n", partialToolCall.name(), partialToolCall.partialArguments());
                         }
                     })
                     .onPartialResponse(s -> {
+                        STAGE.set("RESPONDING");
                         if (!isResponding.getAndSet(true))
                             this.logger().none(Graphitty.sillyPrint("responding", true, true));
                         Router.global().stats().ioStats().incrBytesRecv(s.getBytes().length);
                         response.append(s);
                     })
                     .onPartialThinking(t -> {
+                        STAGE.set("THINKING");
                         if (this.has(THINK) && !isThinking.getAndSet(true))
                             this.logger().none(Graphitty.sillyPrint("thinking...\n", true, true));
                         this.processThought(str(t.text()));
                         Router.global().stats().ioStats().incrBytesRecv(t.text().getBytes().length);
                     })
-                    .onError(e -> isError.set(MTronException.of(e))).start();
+                    .onError(e -> {
+                        isError.set(MTronException.of("error during %s: %s", STAGE.get(), e));
+                        isComplete.set(true);
+                    }).start();
             while (!isComplete.get()) {
                 CommonUtil.sleepThread(250);
                 if (isResponding.get())
@@ -299,10 +301,10 @@ public class mModel extends MRec {
             if (null != isError.get())
                 throw isError.get();
         } catch (final Exception e) {
-            e.printStackTrace();
+            //e.printStackTrace();
             throw MTronException.of(e);
         }
-        return this.processResponse(str(response.toString()));
+        return this.processResponse(str(response.toString()), !responseFormat.isNoObj() && !responseFormat.isEmpty());
     }
 
     public static class Helper {
@@ -331,6 +333,9 @@ public class mModel extends MRec {
         public static JsonArraySchema lstToSchema(final Lst l, final String description) {
             final JsonArraySchema.Builder schema = JsonArraySchema.builder();
             l.elements().forEach(e -> schema.items(objToSchema(e.type(), null, description)));
+            // OpenAI structured outputs require a defined items schema; fall back to string for untyped lists
+            if (l.isEmpty())
+                schema.items(new JsonStringSchema.Builder().description(description).build());
             return schema.description(description).build();
         }
 

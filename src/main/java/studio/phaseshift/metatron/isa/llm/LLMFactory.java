@@ -62,8 +62,7 @@ import static studio.phaseshift.metatron.isa.m.type.Rec.REC_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Str.str0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -103,7 +102,7 @@ public final class LLMFactory {
                             final fURI vid = catalogSpace.pattern().retractPattern().extend(m.get0().getName());
                             rec(mutableMap(uri(PROVIDER), auto_from_(spaceRec.vid()).tryToInst(),
                                             uri(NAME), uri(m.get0().getName()),
-                                            uri(LICENSE), Optional.ofNullable(m.get1().getLicense()).map(MStr::str).map(o -> (Obj) o).orElse(noobj()),
+                                            //uri(LICENSE), Optional.ofNullable(m.get1().getLicense()).map(MStr::str).map(o -> (Obj) o).orElse(noobj()),
                                             uri(THINK), m.get1().getCapabilities().contains(THINKING) ? rec0() : noobj(),
                                             uri(SKILL), lst(m.get1().getCapabilities().stream().map(MUri::uri)),
                                             uri(SIZE), real(Long.valueOf(m.get0().getSize()).doubleValue(), MATH_BYTE_TID, null).as(GBYTE_TYPE)),
@@ -138,6 +137,28 @@ public final class LLMFactory {
         };
     }
 
+    /**
+     * OpenAI Structured Outputs (json_schema) is only supported on gpt-4o and newer models.
+     */
+    private static boolean openAiSupportsStructuredOutputs(final String modelName) {
+        return modelName.contains("gpt-4o") ||
+                modelName.startsWith("o1") ||
+                modelName.startsWith("o3") ||
+                modelName.startsWith("o4") ||
+                modelName.startsWith("gpt-4.1") ||
+                modelName.startsWith("gpt-4.5");
+    }
+
+    /**
+     * json_object response format is supported by gpt-4-turbo, gpt-3.5-turbo-1106+, and anything
+     * that supports Structured Outputs. Base gpt-4 (0314, 0613) supports neither.
+     */
+    private static boolean openAiSupportsJsonObject(final String modelName) {
+        return modelName.contains("turbo") ||
+                modelName.contains("gpt-3.5") ||
+                openAiSupportsStructuredOutputs(modelName);
+    }
+
     private static ResponseFormat createResponseFormat(final Poly<?, ?> responseFormat) {
         return !responseFormat.isNoObj() && !responseFormat.isEmpty() ?
                 new ResponseFormat.Builder()
@@ -149,14 +170,24 @@ public final class LLMFactory {
                 null;
     }
 
-    public static StreamingChatModel createChatInteraction(final mModel model, String modelName) {
+    /**
+     * For models that only support json_object (no schema enforcement).
+     */
+    private static ResponseFormat createJsonObjectResponseFormat(final Poly<?, ?> responseFormat) {
+        return !responseFormat.isNoObj() && !responseFormat.isEmpty() ?
+                ResponseFormat.builder().type(ResponseFormatType.JSON).build() :
+                null;
+    }
+
+    public static StreamingChatModel createChatInteraction(final mModel model, String modelName, final Rec responseFormat) {
         final fURI provider = model.at(f(PROVIDER)).asRec().at(NAME).uriValue();
         final String host = model.at(f(PROVIDER)).asRec().at(HOST).uriValue().toString();
         final boolean thinking = model.has(THINK);
         final Str api_key = model.at(f(PROVIDER)).asRec().at(API_KEY).orElse(str0());
         final Str organization = model.at(f(PROVIDER)).asRec().at(ORG).orElse(str0());
         final String name = model.at(NAME).uriValue().toString();
-        final Rec responseFormat = model.responseFormat().orElse(rec0().zero());
+        final Rec responseFormat2 = responseFormat.isNoObj() ? model.responseFormat().orElse(noobjRec()) : responseFormat;
+        final boolean hasResponseFormat = !responseFormat2.isNoObj() && !responseFormat2.isEmpty();
         return switch (provider.toString().toLowerCase()) {
             case LOCALAI -> LocalAiStreamingChatModel.builder()
                     .baseUrl(host)
@@ -172,13 +203,22 @@ public final class LLMFactory {
                     .logRequests(true)
                     .logResponses(true)
                     .logger(Graphitty.log(OllamaStreamingChatModel.class).logger(Level.WARN))
-                    .responseFormat(createResponseFormat(responseFormat))
+                    .responseFormat(createResponseFormat(responseFormat2))
                     .build();
             case OPENAI -> {
                 // Don't pass empty organizationId - it causes hangs in some LangChain4j versions
                 final String orgId = organization.strValue().isBlank() ? null : organization.strValue();
                 // Only use custom baseUrl if different from default
                 final String baseUrl = (host != null && !host.isBlank() && !host.equals("https://api.openai.com/v1")) ? host : null;
+                // Fail early if a response format was requested but the model can't honor it
+                if (hasResponseFormat && !openAiSupportsJsonObject(modelName))
+                    throw MTronException.of("response format not supported by %s — use gpt-4-turbo, gpt-4o, or newer", modelName);
+                // Pick the best response_format the model actually supports:
+                //   gpt-4o+ / o-series  → json_schema (Structured Outputs)
+                //   gpt-4-turbo / gpt-3.5-turbo → json_object
+                final ResponseFormat openAiFormat = openAiSupportsStructuredOutputs(modelName) ?
+                        createResponseFormat(responseFormat) :
+                        createJsonObjectResponseFormat(responseFormat);
                 yield OpenAiStreamingChatModel.builder()
                         .apiKey(api_key.strValue())
                         .baseUrl(baseUrl)
@@ -188,8 +228,8 @@ public final class LLMFactory {
                         .logRequests(true)
                         .logResponses(true)
                         .timeout(Duration.ofSeconds(60))
-                        .logger(Graphitty.log(OpenAiStreamingChatModel.class).logger(Level.WARN))
-                        .responseFormat(createResponseFormat(responseFormat))
+                        //.logger(Graphitty.log(OpenAiStreamingChatModel.class).logger(Level.WARN))
+                        .responseFormat(openAiFormat)
                         .build();
             }
             case ANTHROPIC -> AnthropicStreamingChatModel.builder()

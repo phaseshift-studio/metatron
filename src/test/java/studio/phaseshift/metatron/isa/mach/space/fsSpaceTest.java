@@ -59,10 +59,16 @@ public class fsSpaceTest extends AbstractSpaceTest {
                     "   perl   => /usr/bin/perl,\n" +
                     "   mtron  => /bin/mtron]");
             return fsSpace.of(FileSystems.getDefault(), rec(
-                            uri(PATTERN), uri("test:#"), uri(SCRIPT), auto_from_(f("boot/script")),
+                            uri(PATTERN), uri("test:#"), 
+                            uri(SCRIPT), auto_from_(f("boot/script")),
                             uri(ROUTE), rec(uri("test:"), uri("/tmp/fsspace_test"))),
                     f("/sys/space/fs"));
         });
+    }
+
+    @BeforeAll
+    public static void setupInstSet() {
+        InstSet.importInstSet(MACH_ISA_TID);
         try {
             File delete = new File("/tmp/fsspace_test/");
             if (delete.exists())
@@ -76,11 +82,6 @@ public class fsSpaceTest extends AbstractSpaceTest {
         }
     }
 
-    @BeforeAll
-    public static void setupInstSet() {
-        InstSet.importInstSet(MACH_ISA_TID);
-    }
-
     @Override
     public void testMonoReadWrite(final String writeExpression, final String readExpression, final String expectedExpression) {
         // do nothing (directories can't store objs -- need to come up with a scheme for that. perhaps hidden file in directory is the directory's obj)
@@ -91,7 +92,8 @@ public class fsSpaceTest extends AbstractSpaceTest {
             "*<test:file/+>.count().?>3        % 4",
             "*<test:file/+/>.count().?>3       % 4",
             "*boot/script/sh                   % /bin/sh",
-            //   "*<test:>                         % {dir::<test:/db>,dir::<test:/file>,dir::<test:/llm>, dir::<test:/test>, dir::<test:>}",
+            //"*<test:>                         % dir::<test:/>",
+            //"*<test:/+>                         % {dir::<test:/db>,dir::<test:/file>,dir::<test:/llm>, dir::<test:/test>, dir::<test:>}",
     }, delimiter = '%')
     public void testFileSystem(final String code, final String expected) {
         LOG.warn("loaded: %s", this.space);
@@ -106,7 +108,7 @@ public class fsSpaceTest extends AbstractSpaceTest {
     }, delimiter = '%')
     public void testFileTypes(final String code, final String expected) {
         final Obj shell = mParser.eval(code);
-        LOG.info("loaded shell: %s", shell);
+        LOG.warn("loaded shell: %s", shell);
         assertEquals(STR_TID, shell.tid(), "shell file data should be a string");
         assertTrue(shell.strValue().startsWith(expected));
     }
@@ -118,7 +120,7 @@ public class fsSpaceTest extends AbstractSpaceTest {
     }, delimiter = '%')
     public void testShellEvaluation(final String code, final String expected) {
         final Obj shell = mParser.eval(code);
-        LOG.info("loaded shell: %s", shell);
+        LOG.warn("loaded shell: %s", shell);
         assertTrue(shell.isStr());
         assertTrue(shell.strValue().startsWith(expected));
     }

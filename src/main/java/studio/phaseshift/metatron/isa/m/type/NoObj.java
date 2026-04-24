@@ -25,8 +25,7 @@ import studio.phaseshift.metatron.util.IteratorUtil;
 import java.util.*;
 
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
-import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.InstSet.A;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -55,7 +54,8 @@ public final class NoObj implements Obj, Inst {
 
     @Override
     public Inst resolve(final Obj lhs) {
-        return this;
+return this;
+        //        return instC(M_ISA_INST_TID.extend("self").dom(lhs.tid()).rng(lhs.tid()), lst(), (lhs2, inst) -> lhs2);
     }
 
     @Override

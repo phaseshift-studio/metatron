@@ -179,9 +179,12 @@ public class llmInstSet extends AbstractInstSet {
                                 Map.of(jnt(0), "the message to send the model"), // args
                                 "communicate with an llm that may be enriched with a tool, skill, etc.", // desc
                                 "*<ollama:qwen3:latest>+[response=>[to=>print(_)],think=>to(/ai/thoughts?incrq)].chat('what is a database?')"),*/
-                        docWrap(instC(LLM_INST_TID.extend("chat").dom(MODEL_TID).rng(A.maybe()),
-                                        lst(STR_TYPE, T(A)),
-                                        (lhs, inst) -> model(lhs.vid(null).asRec().plus(rec(uri(RESPONSE), rec(uri(FORMAT), inst.arg(1))))).chat(inst.arg(0).strValue())),
+                        instC(LLM_INST_TID.extend("chat").dom(MODEL_TID).rng(A.maybe()),
+                                        lst(STR_TYPE),
+                                        (lhs, inst) -> model(lhs.vid(null).asRec()).chat(inst.arg(0).strValue())),
+                        docWrap(instC(LLM_INST_TID.extend("chat").dom(MODEL_TID).rng(REC_TID),
+                                        lst(STR_TYPE, REC_TYPE),
+                                        (lhs, inst) -> model(lhs.vid(null).asRec()).chat(inst.arg(0).strValue(),inst.arg(1).asRec())),
                                 "a model to chat with",  // dom
                                 "the models chat response", // rng
                                 Map.of(jnt(0), "the message to send the model", jnt(1), "the desired response format"), // args

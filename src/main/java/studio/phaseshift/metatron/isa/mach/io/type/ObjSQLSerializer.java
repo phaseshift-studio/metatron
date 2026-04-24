@@ -392,6 +392,21 @@ public class ObjSQLSerializer extends AbstractObjSerializer<ResultSet> {
             return;
         }
 
+        // FK pointer — store only the raw PK value (last URI segment) so the column
+        // holds a plain integer/string the database can enforce as a real FK.
+        // The auto_from inst is reconstructed on read by readColumnWithMetadata()
+        // via getForeignKeyForColumn() when the REFERENCES constraint is present.
+        if (value.isAutoFrom()) {
+            final String pkStr = value.asInst().arg(0).uriValue().name();
+            if (sqlType == Types.INTEGER || sqlType == Types.BIGINT ||
+                    sqlType == Types.SMALLINT || sqlType == Types.TINYINT) {
+                stmt.setLong(paramIndex, Long.parseLong(pkStr));
+            } else {
+                stmt.setString(paramIndex, pkStr);
+            }
+            return;
+        }
+
         switch (sqlType) {
             case Types.BOOLEAN, Types.BIT -> {
                 if (value.isBool()) {

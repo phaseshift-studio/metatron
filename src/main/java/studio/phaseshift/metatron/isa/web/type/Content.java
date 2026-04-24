@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.web.parser.ObjHTMLSerializer;
 import studio.phaseshift.metatron.isa.web.parser.ObjMarkdownSerializer;
+import studio.phaseshift.metatron.isa.web.parser.ObjPlainTextSerializer;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.File;
@@ -33,9 +34,9 @@ import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import static studio.phaseshift.metatron.isa.m.type.ObjFactory.LOG;
-import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.web.webInstSet.*;
 
 /*
@@ -104,6 +105,7 @@ public class Content {
             if (lower.endsWith(".mtron")) return APPLICATION_MTRON;
             if (lower.endsWith(".css")) return TEXT_CSS;
             if (lower.endsWith(".js")) return APPLICATION_JAVASCRIPT;
+            if (lower.endsWith(".md")) return TEXT_MARKDOWN;
             if (lower.endsWith(".html") || lower.endsWith(".htm")) return TEXT_HTML;
             if (lower.endsWith(".json")) return APPLICATION_JSON;
             if (lower.endsWith(".xml")) return APPLICATION_XML;
@@ -112,6 +114,9 @@ public class Content {
             if (lower.endsWith(".gif")) return IMAGE_GIF;
             if (lower.endsWith(".svg")) return IMAGE_SVG;
             if (lower.endsWith(".ico")) return IMAGE_ICO;
+            if (lower.endsWith(".sh")) return TEXT_X_SHELLSCRIPT;
+            if (lower.endsWith(".bash")) return TEXT_X_SHELLSCRIPT;
+            if (lower.endsWith(".py")) return TEXT_X_SHELLSCRIPT;
             return TEXT_PLAIN;
         }
 
@@ -151,19 +156,25 @@ public class Content {
             return this.equals(APPLICATION_BSON);
         }
 
+        public boolean isShell() {
+            return this.equals(TEXT_X_SHELLSCRIPT);
+        }
+
         public static final String VALUE = "Content-Type";
 
         public ObjSerializer<?> serializer() {
-            if (this.isMtron()) return ObjmtronSerializer.single();
+            if (this.isMtron()) return ObjmtronSerializer.singleNoClip();
             if (this.isJson()) return ObjSimpleJSONSerializer.single();
             if (this.isHtml()) return ObjHTMLSerializer.single();
             if (this.isMarkdown()) return ObjMarkdownSerializer.single();
             if (this.isBSON()) return ObjBSONSerializer.single();
-            throw MTronException.of("no known serializer for %s", this.value);
+            if (this.isShell()) return ObjPlainTextSerializer.single();
+            if (this.isPlain()) return ObjPlainTextSerializer.single();
+            return null;
         }
-        
+
         public boolean hasSerializer() {
-            return this.isMtron() || this.isJson() || this.isHtml() || this.isMarkdown() || this.isBSON();
+            return this.serializer() != null;
         }
 
         public Obj fromBytes(final String data) {
@@ -171,9 +182,9 @@ public class Content {
         }
 
         public Obj fromBytes(final byte[] data) {
-            final Obj obj = this.isPlain() ?
-                    str(new String(data)) :
-                    serializer().inputBytes(ByteBuffer.wrap(data));
+            final Obj obj = Optional.ofNullable(this.serializer())
+                    .map(s -> s.inputBytes(ByteBuffer.wrap(data)))
+                    .orElseThrow(() -> MTronException.of("no serializer for %s", this.value));
             if (this.isHtml()) return obj.as(HTML_TYPE);
             //if(this.isJson()) return obj.as(JSON_TYPE); // TODO: need test cases
             //if(this.isBinary()) return obj.as(BYTES_TYPE);
@@ -181,9 +192,10 @@ public class Content {
         }
 
         public byte[] toBytes(final Obj obj) {
-            return this.isPlain() ?
-                    obj.toString().getBytes() :
-                    serializer().outputBytes(obj).array();
+            return Optional.ofNullable(this.serializer())
+                    .map(s -> s.outputBytes(obj).array())
+                    .orElseThrow(() -> MTronException.of("no serializer for %s", this.value));
+
         }
     }
 }

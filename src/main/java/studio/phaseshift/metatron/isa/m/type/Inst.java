@@ -544,7 +544,7 @@ public interface Inst extends Call {
             final GraphittyLogger LOG = Graphitty.log(lhs);
             final Map<fURI, fURI> generics = new HashMap<>();
             Inst apiInstTemp = apiInst;
-            if (apiInstTemp.dom().tid().one().isGeneric() && lhs.type().c().within(apiInstTemp.dom().c())) {
+            if (apiInstTemp.dom().tid().one().isGeneric() && !lhs.isNoObj() && lhs.type().c().within(apiInstTemp.dom().c())) {
                 generics.put(apiInstTemp.dom().tid().one(), lhs.type().tid().one());
                 apiInstTemp = apiInstTemp.dom(lhs.type().c(apiInstTemp.dom().c()).as());
             }

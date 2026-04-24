@@ -104,8 +104,8 @@ farm:animals/1 -> chicken::[name=>'trill',age=>7]                             [-
 [discrete]
 === Typing Documents
 
-BSON (MongoDB's binary JSON format) has no concept of a type--for example, https://en.wikipedia.org/wiki/Document-oriented_databasea `chicken::[name\=>'trill', age\=>7]`
-stored to MongoDB would ordinarily come back as a plain `rec::[name\=>'trill', age\=>7]`, losing the `chicken::T`
+BSON (MongoDB's binary JSON format) has no concept of a type--for example, `chicken::[name\=>'trill', age\=>7]`
+stored in MongoDB would ordinarily come back as a plain `rec::[name\=>'trill', age\=>7]`, losing the `chicken::T`
 identity. metatron preserves type information transparently on the way in and restores it on the way out.
 
 ++++

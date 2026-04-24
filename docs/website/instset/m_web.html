@@ -45,7 +45,7 @@
     <script src="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js" type="text/javascript"></script>
     <script src="../highlight/languages/mtron.min.js" type="text/javascript"></script>
     <script src="../highlight/languages/json.min.js" type="text/javascript"></script>
-    <script src="../highlight/languages/bash.min.js" type="text/javascript"></script>
+   <!-- <script src="../highlight/languages/bash.min.js" type="text/javascript"></script>-->
     <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
     <script async src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js" type="text/javascript"></script>
     <script src="../lib/wow/wow.min.js" type="text/javascript"></script>
@@ -251,14 +251,15 @@ bin/metatron</code></pre>
        pre_read =>    inst?#{*}<=#{?}(uri::T),
        pre_write=>    inst?#{*}<=#{?}(uri::T,#::T),
        pattern  =>    docq,
-       obj      =>memspace::[pattern=>     <#>],
-       inst     =>instset::[pattern=>     <#>]]],
- space  =>[super=>  !*/m],
+       obj      =>memspace::[pattern=><#>],
+       inst     =>instset::[pattern=><#>]]],
+ space  =>[super=>!*/m],
  constq =>[
-      studio.phaseshift.metatron.isa.web.parser.ObjXMLSerializer@71feeb4e,
-      studio.phaseshift.metatron.isa.web.parser.ObjHTMLSerializer@39255de5,
-      studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer@39a8af04,
-      studio.phaseshift.metatron.isa.web.parser.ObjMarkdownSerializer@3092f5ba],
+      !*/m/mach/io/serializer/xml,
+      !*/m/mach/io/serializer/html,
+      !*/m/mach/io/serializer/json,
+      !*/m/mach/io/serializer/markdown,
+      !*/m/mach/io/serializer/plain/text],
  type   =>[
       xml::T,
       html::T,
@@ -266,16 +267,16 @@ bin/metatron</code></pre>
       css::T,
       json_str::T,
       httpspace::T,
-      markdown::T,
-      ws::T,
-      ws_endpoint::T],
+      wsspace::T,
+      wsserver::T,
+      wsmtron::T],
  inst   =>[
       as?xml<=str(xml::T),
       as?html<=str(html::T),
-      as?markdown<=str(markdown::T),
+      as?/m/web/markdown<=str(markdown::T),
       as?str<=html(str::T),
-      as?str<=markdown(str::T),
-      as?html<=markdown(html::T),
+      as?str<=/m/web/markdown(str::T),
+      as?html<=/m/web/markdown(html::T),
       as?json<=str(json::T),
       as(json_str::T),
       doc?str<=str(),
@@ -289,9 +290,9 @@ bin/metatron</code></pre>
         <div class="container-xxl mb-4">
             <div class="d-flex justify-content-center gap-2 flex-wrap">
                 <button class="btn btn-outline-secondary" disabled>Consts <span class="badge bg-dark">0</span></button>
-                <a href="#types" class="btn btn-outline-primary">Types <span class="badge bg-secondary">6</span></a>
+                <a href="#types" class="btn btn-outline-primary">Types <span class="badge bg-secondary">5</span></a>
                 <a href="#instructions" class="btn btn-outline-primary">Insts <span class="badge bg-secondary">2</span></a>
-                <a href="#spaces" class="btn btn-outline-primary">Spaces <span class="badge bg-secondary">3</span></a>
+                <a href="#spaces" class="btn btn-outline-primary">Spaces <span class="badge bg-secondary">2</span></a>
                 <button class="btn btn-outline-secondary" disabled>Rewrites <span class="badge bg-dark">0</span></button>
             </div>
         </div>
@@ -325,10 +326,6 @@ bin/metatron</code></pre>
                     <span class="code">json_str</span>
                     <span class="badge bg-primary">T</span>
                 </a>
-                <a href="#type-markdown" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
-                    <span class="code">markdown</span>
-                    <span class="badge bg-primary">T</span>
-                </a>
                 <a href="#type-xml" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
                     <span class="code">xml</span>
                     <span class="badge bg-primary">T</span>
@@ -359,12 +356,8 @@ bin/metatron</code></pre>
                     <span class="code">httpspace</span>
                     <span class="badge bg-info">S</span>
                 </a>
-                <a href="#space-ws" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
-                    <span class="code">ws</span>
-                    <span class="badge bg-info">S</span>
-                </a>
-                <a href="#space-ws_endpoint" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
-                    <span class="code">ws_endpoint</span>
+                <a href="#space-wsspace" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center bg-dark text-light border-secondary py-1 px-2 small">
+                    <span class="code">wsspace</span>
                     <span class="badge bg-info">S</span>
                 </a>
                 </div>
@@ -377,7 +370,7 @@ bin/metatron</code></pre>
             
         <div class="container-xxl mb-4" id="types">
             <h3 class="text-primary mb-3">
-                Types <span class="badge bg-primary">6</span>
+                Types <span class="badge bg-primary">5</span>
             </h3>
             
                 <div class="card mb-3" id="type-css">
@@ -411,7 +404,7 @@ bin/metatron</code></pre>
                     
                     <div class="card-body p-2">
                         <pre class="mb-0"><code class="language-mtron">xml::T[?[html=&gt;[
-       head=&gt;[{?}title=&gt;     str::T],
+       head=&gt;[{?}title=&gt;str::T],
        body=&gt;    rec::T]]]@/m/web/html</code></pre>
                     </div>
                     
@@ -429,7 +422,7 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="card-body p-2">
-                        <pre class="mb-0"><code class="language-mtron">rec::T[?[uri::T=&gt;   is(or(eq(noobj{0}::T),eq(bool::T),eq(int::T),eq(str::T),eq(uri::T),eq(lst::T),eq(rec::T)))]][
+                        <pre class="mb-0"><code class="language-mtron">rec::T[?[uri::T=&gt;is(or(eq(noobj{0}::T),eq(bool::T),eq(int::T),eq(str::T),eq(uri::T),eq(lst::T),eq(rec::T)))]][
    /m/web/inst?json&lt;=#{?}(str::T)]@/m/web/json</code></pre>
                     </div>
                     
@@ -452,23 +445,6 @@ bin/metatron</code></pre>
                     
                     <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">no documentation available</p>
-                    </div>
-                </div>
-                <div class="card mb-3" id="type-markdown">
-                    <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span>
-                            <span class="code text-primary fw-bold">markdown::T</span>
-                            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">rec::T</span></span>
-                        </span>
-                        <small class="text-muted code">/m/web/markdown</small>
-                    </div>
-                    
-                    <div class="card-body p-2">
-                        <pre class="mb-0"><code class="language-mtron">rec::T@/m/web/markdown</code></pre>
-                    </div>
-                    
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">a rec encoding of a markdown document</p>
                     </div>
                 </div>
                 <div class="card mb-3" id="type-xml">
@@ -531,7 +507,7 @@ bin/metatron</code></pre>
             
         <div class="container-xxl mb-4" id="spaces">
             <h3 class="text-primary mb-3">
-                Spaces <span class="badge bg-info">3</span>
+                Spaces <span class="badge bg-info">2</span>
             </h3>
             
                 <div class="card mb-3" id="space-httpspace">
@@ -541,10 +517,7 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="mt-2">
-                        <pre class="mb-0"><code class="language-mtron">space::T[][inst?rng=httpspace&amp;dom=#{?}(rec::T[isa([
- pattern=&gt; uri::T,
- host   =&gt; uri::T,
- route  =&gt; rec::T])]){&lt;j&gt;}]@/m/web/space/httpspace</code></pre>
+                        <pre class="mb-0"><code class="language-mtron">space::T[][inst?rng=httpspace&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/web/space/httpspace</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -558,46 +531,28 @@ bin/metatron</code></pre>
 *&lt;http://localhost:8777/head/title&gt;    [-- server-side extraction of str::T title --]</code></pre>
         </div>
                 </div>
-                <div class="card mb-3" id="space-ws">
+                <div class="card mb-3" id="space-wsspace">
                     <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <a href="m_web_space_ws.html" class="code text-primary fw-bold text-decoration-none">ws</a>
-                        <small class="text-muted code">/m/web/space/ws</small>
+                        <a href="m_web_space_wsspace.html" class="code text-primary fw-bold text-decoration-none">wsspace</a>
+                        <small class="text-muted code">/m/web/space/wsspace</small>
                     </div>
                     
                     <div class="mt-2">
                         <pre class="mb-0"><code class="language-mtron">space::T[isa([
- host   =&gt; uri::T,
- pattern=&gt; uri::T,
- route  =&gt; rec::T])][inst?rng=ws&amp;dom=#{?}(rec::T[isa([
- pattern=&gt; uri::T,
- host   =&gt; uri::T,
- route  =&gt; rec::T])]){&lt;j&gt;}]@/m/web/space/ws</code></pre>
+     host   =&gt;   uri::T,
+     pattern=&gt;   uri::T,
+     route  =&gt;   rec::T])][inst?rng=wsspace&amp;dom=wsspace(rec::T){&lt;j&gt;}]@/m/web/space/wsspace</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
+                        <p class="mb-0 text-light">a space for exposing and managing web socket servers.</p>
                     </div>
-                </div>
-                <div class="card mb-3" id="space-ws_endpoint">
-                    <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <a href="m_web_space_ws_endpoint.html" class="code text-primary fw-bold text-decoration-none">ws_endpoint</a>
-                        <small class="text-muted code">/m/web/space/ws_endpoint</small>
-                    </div>
-                    
-                    <div class="mt-2">
-                        <pre class="mb-0"><code class="language-mtron">rec::T[isa([
- ws           =&gt; uri::T,
- pattern      =&gt; uri::T,
- {?}client    =&gt;[   uri::T],
- {?}on_open   =&gt; #::T,
- {?}on_error  =&gt; #::T,
- {?}on_message=&gt; #::T,
- {?}on_close  =&gt; #::T])][inst?rng=ws_endpoint&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/web/space/ws_endpoint</code></pre>
-                    </div>
-                    
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
+        <div class="card-body border-top py-2">
+            <small class="text-muted fw-bold">examples:</small>
+            <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;ws://localhost:8999&gt;               [-- yields a ws::T &lt; rec::T --]
+*&lt;ws://phaseshift.studio/head/title&gt; [-- client-side extraction of str::T title --]
+*&lt;ws://localhost:8777/head/title&gt;    [-- server-side extraction of str::T title --]</code></pre>
+        </div>
                 </div>
         </div>
             
@@ -605,7 +560,7 @@ bin/metatron</code></pre>
         <div class="container-xxl py-3 text-center">
             <hr class="border-secondary">
             <small class="text-muted">
-                generated by metatron instset doc generator on build 0-2026-04-21 22:19:52<br>
+                generated by metatron instset doc generator on build 0-2026-04-23 18:43:06<br>
                 © PhaseShift Studio, LLC
             </small>
         </div>
@@ -621,6 +576,10 @@ bin/metatron</code></pre>
 <a href="#" class="btn btn-primary btn-square back-to-top"><i class="bi bi-caret-up-fill"></i></a>
 
 <script>
+    hljs.configure({
+        defaultLanguage: 'mtron', // Set your preferred default language
+        ignoreUnescapedHTML: true
+    });
     if (!hljs.initHighlighting.called) {
         hljs.initHighlighting.called = true
         ;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) {

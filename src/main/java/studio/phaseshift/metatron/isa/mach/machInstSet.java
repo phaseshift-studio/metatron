@@ -259,7 +259,7 @@ public class machInstSet extends AbstractInstSet {
                             return noobj();
                         }), "an str to page", "noobj terminal", Map.of(jnt(0), "number of lines per page"), "an f(x)->0 terminal page through the lines of an str"),
                         /// /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                        instC(RSHIFT_INST_TID.dom(FILE_TID).rng(FILE_TID.maybeSome()), lst(isa_(URI_TYPE).else_(uri("#"))), (lhs, inst) -> {
+                        /*instC(RSHIFT_INST_TID.dom(FILE_TID).rng(FILE_TID.maybeSome()), lst(isa_(URI_TYPE).else_(uri("#"))), (lhs, inst) -> {
                             final File file = fsSpace.staticObjToFile(lhs);
                             if (file.isDirectory()) {
                                 if (f(file.getName()).test(inst.arg(0).orElse(uri("#")).uriValue())) { // TODO: need to recurse on name if it has path segments
@@ -272,7 +272,7 @@ public class machInstSet extends AbstractInstSet {
                                 }
                             }
                             return noobj();
-                        }),
+                        }),*/
                         instC(AS_INST_TID.dom(URI_TID).rng(FILE_TID), lst(T(FILE_TID)), (lhs, inst) -> makeFile(Path.of(lhs.uriValue().toString()))),
                         instC(AS_INST_TID.dom(BYTES_TID).rng(IMAGE_TID), lst(T(IMAGE_TID), else_(real(1.0d))),
                                 (lhs, inst) -> str(ImageUtil.convertToAscii(lhs.bytesValue(), inst.arg(1).realValue())).tid(IMAGE_TID)),

@@ -49,6 +49,12 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
        
  memspace::[pattern   => /shared/#,
        persist   => </tmp/shared.mtron>]@/sys/space/shared;
+ fs_prefix     -> *boot/args/local.as(str::T).plus(':#').as(uri::T);
+ fsspace::[pattern  => local:#,
+           [--route => [!*fs_prefix=><~/>],--]
+            route   => [local:=><~/>],
+            script  => !*boot/script]@/sys/space/fs;
+       
  [==meta::[pattern  => </a/cluster/#>,
         host     => <ws://localhost:6666>,
         route    => [</a/cluster>=></shared>],
@@ -91,17 +97,12 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
          serializer    => !*</m/mach/io/serializer/json/simple>,
          command_topic => inst?uri<=rec(){ to(a).map(z2m:).mult(*a>>friendly_name).mult(set/state) },
          route         => [ha:=>homeassistant/]]@/sys/space/mqtt/homeassistant;
-    fs_prefix     -> *boot/args/local.as(str::T).plus(':#').as(uri::T);
-    fsspace::[pattern  => local:#,
-         [--route => [!*fs_prefix=><~/>],--]
-          route   => [local:=><~/>],
-          script  => !*boot/script]@/sys/space/fs;
  serial::[pattern => <serial:#>,
-          route   => [serial:=><>]]@/sys/space/serial;
+          route   => [serial:=><>]]@/sys/space/serial; ==]
  catalog::[host    => <http://localhost:11434>,
            pattern => <ollama:#>,
            name    => <ollama>,
-           route   => [ollama:=><>]]@/sys/space/ollama; ==]
+           route   => [ollama:=><>]]@/sys/space/ollama;
  [-- *ollama:+.plus([think=>[to=>print(_)],response=>[to=>print(_)],memory=>[from=>/usr/ai/memory]]);
  catalog::[host         => <https://api.openai.com/v1>,
            organization => !*</sys/env/OPENAI_ORG_ID>,

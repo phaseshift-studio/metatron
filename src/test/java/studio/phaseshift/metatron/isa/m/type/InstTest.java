@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractObjTest;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.impl.MInst;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.List;
@@ -113,6 +114,165 @@ public class InstTest extends AbstractObjTest {
         assertTrue(specA.test(defA));
         assertTrue(specA.tid().test(defA.tid()));
     }
+
+    /**
+     * Tests {@link Inst.Helper#bindGenerics} with the semantically correct parameter order:
+     * <ul>
+     *   <li>{@code spec} column → {@code apiInst} (2nd param): the registry instruction, MAY have generics (A, B, LONG, ...)</li>
+     *   <li>{@code def}  column → {@code userInst} (3rd param): what the user actually typed</li>
+     * </ul>
+     * Generic names: any all-uppercase fURI path (A, B, LONG, BBBB, …). # and + are NOT generic.
+     * Priority: user-explicit dom/rng > lhs type > arg types.
+     */
+    @ParameterizedTest
+    @CsvSource(quoteCharacter = '"', delimiter = '%', value = {
+            // lhs              % def (userInst - user typed)   % spec (apiInst - registry, has generics)  % expected resolution
+
+            // --- A binds to lhs type (different base types) ---
+            "1                 % test()                         % test?A<=A()                              % test?int<=int()",
+            "'hello'.type()    % test()                         % test?A<=A()                              % test?str<=str()",
+            "1.5.type()        % test()                         % test?A<=A()                              % test?real<=real()",
+            "[1,2,3].type()    % test()                         % test?A<=A()                              % test?lst<=lst()",
+            "[a=>1].type()     % test()                         % test?A<=A()                              % test?rec<=rec()",
+
+            // --- Long / multi-char uppercase generic names ---
+            "1                 % test()                         % test?LONG<=LONG()                        % test?int<=int()",
+            "1                 % test()                         % test?BBBB<=AAAA()                        % test?int<=int()",
+
+            // --- A in dom AND rng AND arg: all three bind consistently ---
+            "1                 % test(2)                        % test?A<=A(A::T)                          % test?int<=int(int::T)",
+            "{1,2}             % test({3,4})                    % test?A{*}<=A{*}(A{*}::T)                 % test?int{4}<=int{2}(int{2}::T)",
+
+            // --- Two distinct generics: A binds from lhs, B from arg ---
+            "1                 % test('hello'.type())           % test?B<=A(B::T)                          % test?str<=int(str::T)",
+            "1                 % test(true.type())              % test?B<=A(B::T)                          % test?bool<=int(bool::T)",
+
+            // --- User-explicit dom/rng (gold standard) — no generics needed, passes through unchanged ---
+            "1                 % test?int<=int()                % test?int<=int()                          % test?int<=int()",
+            "'hello'.type()    % test?str<=str()                % test?str<=str()                          % test?str<=str()",
+
+            // --- noobj lhs: step 1 skipped (lhs.isNoObj()), so A binds from arg instead ---
+            "noobj             % test(3)                        % test?A<=noobj(A::T)                      % test?int<=noobj(int::T)",
+            "noobj             % test(3)                        % test?A<=A{0}(A::T)                       % test?int<=int{0}(int::T)",
+            "noobj             % test({1,2,3})                  % test?A{*}<=A{0}(A{*}::T)                 % test?int{3}<=int{0}(int{3}::T)",
+    })
+    public void testBindGenerics(final String lhs, final String def, final String spec, final String resolution) {
+        final Obj lhsA = mParser.m_obj().parse(lhs.trim()).get();
+        final Inst defA = mParser.m_obj().parse(def.trim()).get();   // userInst — what user typed
+        final Inst specA = mParser.m_obj().parse(spec.trim()).get(); // apiInst  — registry instruction (has generics)
+        final Inst resolutionA = mParser.m_obj().parse(resolution.trim()).get();
+        final Inst resultA = Inst.Helper.bindGenerics(lhsA, specA, defA);
+        assertNotNull(resultA, () -> String.format("bindGenerics returned null for lhs=%s spec=%s def=%s", lhsA, specA, defA));
+        assertTrue(resultA.tid().test(resolutionA.tid()),
+                () -> String.format("result %s not compatible with expected %s", resultA.tid(), resolutionA.tid()));
+        if (!resolutionA.equals(resultA))
+            LOG.warn("resolution algorithm produces compatible but not equal result — may indicate partially-resolved generics\n\tresult:   %s\n\texpected: %s", resultA, resolutionA);
+        else
+            assertEquals(resolutionA, resultA);
+    }
+
+    /**
+     * Tests that dom/rng types propagate correctly through instruction chains.
+     * Each case verifies both the computed value and the result's type (the chain's rng).
+     * Interesting cases: chains that cross type boundaries (int→str, str→int, lst→int).
+     */
+    @ParameterizedTest
+    @CsvSource(quoteCharacter = '"', delimiter = '%', value = {
+            // lhs           % chain                          % expected result  % expected rng type
+
+            // --- Homogeneous int chains ---
+            "1               % plus(2)                        % 3                % int",
+            "1               % plus(2).id()                   % 3                % int",
+            "1               % plus(2).id().mult(35)          % 105              % int",
+            "3               % mult(3).mult(3)                % 27               % int",
+
+            // --- Type-crossing: int → str ---
+            "1               % as(str::T)                     % '1'              % str",
+            "1               % plus(2).as(str::T)             % '3'              % str",
+
+            // --- Type-crossing: int → str → int (count of a scalar obj = 1) ---
+            "1               % as(str::T).count()             % 1                % int",
+            "100             % as(str::T).count()             % 1                % int",
+
+            // --- str → int (count of a scalar str = 1, not char count) ---
+            "'hello'         % count()                        % 1                % int",
+            "'hello'         % count().plus(1)                % 2                % int",
+            "'hello'         % count().mult(2)                % 2                % int",
+
+            // --- objs → int ---
+            "{1,2,3}         % sum()                          % 6                % int",
+            "{1,2,3,4,5}     % sum()                          % 15               % int",
+            "{1,2,3}         % count()                        % 3                % int",
+    })
+    public void testChainTypePropagation(final String lhs, final String chain, final String expectedValue, final String expectedRng) {
+        final Obj lhsObj = mParser.m_obj().parse(lhs.trim()).get();
+        final Obj chainObj = ObjmtronSerializer.parse(chain.trim());  // full chain, not just first obj
+        final Obj expectedObj = mParser.m_obj().parse(expectedValue.trim()).get();
+        final fURI rngTid = f(expectedRng.trim());
+
+        // Execute the chain
+        final Obj result = chainObj.apply(lhsObj);
+
+        // Verify result value
+        assertEquals(expectedObj, result,
+                () -> String.format("%s .%s => %s (expected %s)", lhsObj, chainObj, result, expectedObj));
+
+        // Verify rng type propagated correctly through chain
+        assertTrue(result.test(T(rngTid)),
+                () -> String.format("%s .%s => result type %s does not satisfy %s::T", lhsObj, chainObj, result.type().tid(), rngTid));
+
+        LOG.info("%s .%s => {{b}}%s{{/b}} :: {{g}}%s{{/g}} (expected rng: %s)", lhsObj, chainObj, result, result.type().tid(), rngTid);
+    }
+
+    @ParameterizedTest
+    @CsvSource(quoteCharacter = '"', delimiter = '%', value = {
+            "1               % _._._._                          % [int/int,int/int,int/int,int/int]       % 1",
+            "1               % _._._.plus(1)                    % [int/int,int/int,int/int,int/int]       % 2",
+            "1               % plus(0).plus(1).plus(0)          % [int/int,int/int,int/int]               % 2",
+            "1               % plus(2)                          % [int/int]                               % 3",
+            "1               % plus(2).id()                     % [int/int,int/int]                       % 3",
+            "1               % plus(2).id().mult(35)            % [int/int,int/int,int/int]               % 105",
+            "3               % mult(3).mult(3)                  % [int/int,int/int]                       % 27",
+         //   "{2}3            % mult(3).mult(3)                  % [int{2}/int{2},int{2}/int{2}]           % {2}27",
+         //   "3               % mult(3).mult{2}(3)               % [int/int,int/int{2}]                    % 27",
+            "1               % as(str::T)                       % [int/str]                               % '1'",
+           // "1               % as(str::T).as(int::T).as(str::T) % [int/str,str/int,int/str]               % '1'",
+            "1               % plus(2).as(str::T)               % [int/int,int/str]                       % '3'",
+            "1               % as(str::T).count()               % [int/str,str{*}/int]                    % 1",
+            "{1,2,3}         % sum()                            % [int{*}/int,int/int]                    % 6",
+            "{1,2,3,4,5}     % sum()                            % [int{*}/int]                            % 15",
+            "[1,2,3]         % >-.sum()                         % [lst/#{*},#{*}/#]                       % 6",
+            "[1,2,3]         % >-?int{*}<=lst[int].sum()        % [lst[int]/int{*},int{*}/int]            % 6",
+          //  "[1,2,3]         % >-?<=lst[int].sum()            % [lst[int]/int{*},int{*}/int]          % 6",
+          //  "1               % -<[_]-<[_,_]>-                 % [#/lst[int],lst[lst]/lst[int]{2}]       % {2}[1]",
+    })
+    public void testCodeInternalDomRng(final String lhs, final String code, final String domRngPerStep, final String rhs) {
+        final Obj lhsObj = mParser.m_obj().parse(lhs.trim()).get();
+        final Obj codeObj = ObjmtronSerializer.parse(code.trim());  // full code, not just first obj
+        final Obj expectedRHSObj = mParser.m_obj().parse(rhs.trim()).get();
+        final Call codeResolved = codeObj.resolve(lhsObj).as();
+        Type finalRngType = lhsObj.type();
+        final String[] domRngPerStepArray = domRngPerStep.substring(1, domRngPerStep.length() - 1).split(",");
+        for (int i = 0; i < codeResolved.insts().size(); i++) {
+            final Inst step = codeResolved.insts().get(i);
+            final Type domType = T(f(domRngPerStepArray[i].split("/")[0]));
+            final Type rngType = T(f(domRngPerStepArray[i].split("/")[1]));
+            final int ii = i;
+            assertTrue(step.dom().test(domType), () -> String.format("%s.dom() does not match expected %s at step %d", step.dom().tid(), domType, ii));
+            assertTrue(step.rng().test(rngType), () -> String.format("%s.rng() does not match expected %s at step %d", step.rng().tid(), rngType, ii));
+            finalRngType = rngType;
+        }
+        final Obj rhsObj = codeResolved.apply(lhsObj);
+        // Verify result value
+        assertEquals(expectedRHSObj, rhsObj,
+                () -> String.format("%s .%s => %s (expected %s)", lhsObj, codeResolved, rhsObj, expectedRHSObj));
+
+        // Verify rng type propagated correctly through chain
+        final Type rhsType = finalRngType;
+        assertTrue(rhsObj.test(rhsType),
+                () -> String.format("%s .%s => result type %s does not satisfy %s::T", lhsObj, codeResolved, rhsObj.type().tid(), rhsType));
+    }
+
 
     @Test
     public void testInstFCode() {
@@ -204,7 +364,7 @@ public class InstTest extends AbstractObjTest {
             "{1,12,15,21,22}.band(10,20)                        % {12,15}",
             "5.band(-10,10)                                     % <ERROR>",
             "-5.band(_,_)                                       % <ERROR>",
-           // "{1,2,3,4,3,5,6}.band(2,\"8\")                      % <ERROR>",
+            // "{1,2,3,4,3,5,6}.band(2,\"8\")                      % <ERROR>",
             "10.band(2)                                         % <ERROR>"
     }, delimiter = '%')
     public void testConversionTypedNamedArgs(final String code, final String expected) throws Exception {

@@ -62,7 +62,7 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
         final AtomicInteger i = new AtomicInteger(0);
         return this.jvm().stream().map(e -> rel(jnt(i.getAndIncrement()), e).c(c -> this.c()).as());
     }
-    
+
     @Override
     default <OBJ extends Obj> Stream<OBJ> valueElements() {
         return this.elements();
@@ -231,7 +231,7 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
                     instC(REVERSE_INST_TID.dom(LST_TID).rng(LST_TID), lst(), (lhs, inst) -> lhs.jvm(lhs.asLst().jvm().reversed())),
                     instC(PLUS_INST_TID.dom(LST_TID).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> lhs.jvm(Stream.concat(lhs.elements(), inst.arg(0).elements()).toList())),
                     instC(MULT_INST_TID.dom(LST_TID).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> lhs.jvm(lhs.elements().flatMap(a -> inst.arg(0).elements().map(b -> rel(a, b))).toList())),
-                    instC(RSHIFT_INST_TID.dom(LST_TID).rng(A.maybeSome()), lst(T(ALL.maybeSome())), (lhs, inst) -> objs(inst.arg(0).orElse((Obj) uri(Singleton.WILD_ONE.toString())).stream().map(k -> lhs.asLst().at(k)))),
+                    //  instC(RSHIFT_INST_TID.dom(LST_TID).rng(A.maybeSome()), lst(T(ALL.maybeSome())), (lhs, inst) -> objs(inst.arg(0).orElse((Obj) uri(Singleton.WILD_ONE.toString())).stream().map(k -> lhs.asLst().at(k)))),
                     // instC(LSHIFT_INST_TID.dom(LST_TID).rng(ALL_STAR), lst(isa_(INT_TYPE).else_(jnt(1))), (lhs, inst) -> lhs.parent()),
                     instC(ZERO_INST_TID.dom(LST_TID).rng(LST_TID), lst(), (lhs, inst) -> lhs.asLst().zero()),
                     instC(SPLIT_INST_TID.dom(ALL).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> lst(inst.arg(0).elements().map(e -> e.apply(lhs)).toList())),
@@ -253,6 +253,19 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
                     })
             ));
         }
+    }
+
+    public static final class Helper {
+
+        private Helper() {
+            // do nothing
+        }
+
+        public static Obj rshiftLst(final Lst lhs, final Inst inst) {
+            return inst.arg(0).isNoObj() ? objs(lhs.valueElements()) : objs(inst.arg(0).stream().map(lhs::at));
+        }
+
+
     }
 
 

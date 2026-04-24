@@ -45,7 +45,7 @@
     <script src="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js" type="text/javascript"></script>
     <script src="../highlight/languages/mtron.min.js" type="text/javascript"></script>
     <script src="../highlight/languages/json.min.js" type="text/javascript"></script>
-    <script src="../highlight/languages/bash.min.js" type="text/javascript"></script>
+   <!-- <script src="../highlight/languages/bash.min.js" type="text/javascript"></script>-->
     <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
     <script async src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js" type="text/javascript"></script>
     <script src="../lib/wow/wow.min.js" type="text/javascript"></script>
@@ -251,9 +251,35 @@ bin/metatron</code></pre>
        pre_read =>    inst?#{*}<=#{?}(uri::T),
        pre_write=>    inst?#{*}<=#{?}(uri::T,#::T),
        pattern  =>    docq,
-       obj      =>memspace::[pattern=>     <#>],
-       inst     =>instset::[pattern=>     <#>]]],
- space  =>[sub=>  {!*/m/mach,!*/m/math,!*/m/web,!*/m/iot,!*/m/grph,!*/m/llm,!*/m/tble,!*/m/dcmnt}],
+       obj      =>memspace::[pattern=><#>],
+       inst     =>instset::[pattern=><#>]]],
+ space  =>[sub=>{!*/m/mach,!*/m/math,!*/m/web,!*/m/iot,!*/m/grph,!*/m/llm,!*/m/tble,!*/m/dcmnt}],
+ type   =>[
+      bool::T,
+      int::T,
+      real::T,
+      bytes::T,
+      str::T,
+      uri::T,
+      rel::T,
+      lst::T,
+      rec::T,
+      instset::T,
+      inst::T,
+      code::T,
+      fail::T,
+      space::T,
+      memspace::T,
+      stack::T,
+      meta::T,
+      q::T,
+      subq::T,
+      sub::T,
+      typeq::T,
+      docq::T,
+      incrq::T,
+      constq::T],
+ const  =>[noobj],
  rewrite=>[
       /m/inst/rewrite/id_removal?code{?}<=code(),
       /m/inst/rewrite/map_nest?code{?}<=code(),
@@ -347,7 +373,6 @@ bin/metatron</code></pre>
       has?uri{?}<=uri(uri::T),
       split?lst<=uri(uri::T),
       merge?uri<=uri{*}(uri::T),
-      rshift?#{*}<=uri(#{*}::T),
       minus?uri<=uri(uri::T),
       plus?uri{?}<=uri(uri{?}::T),
       mult?uri{?}<=uri(uri{?}::T),
@@ -355,7 +380,6 @@ bin/metatron</code></pre>
       prod?uri<=uri{*}(),
       path?uri<=uri(uri::T),
       q?uri<=uri(rec::T),
-      lshift?uri<=uri(rec::T),
       uri:c?lst<=uri(uri::T),
       pow?uri<=uri(int::T),
       scheme?uri{?}<=uri(),
@@ -373,9 +397,6 @@ bin/metatron</code></pre>
       split(rel::T),
       dom?#{*}<=rel(),
       rng?#{*}<=rel(),
-      lshift?#{*}<=rel(),
-      rshift?#{*}<=rel(),
-      rshift?#{*}<=rel(#::T),
       get?A{?}<=rel(#::T),
       select?rel{?}<=rel(rel::T),
       plus?rel{*}<=rel(rel{*}::T),
@@ -389,7 +410,6 @@ bin/metatron</code></pre>
       reverse?lst<=lst(),
       plus?lst<=lst(lst::T),
       mult?lst<=lst(lst::T),
-      rshift?A{*}<=lst(#{*}::T),
       zero?lst<=lst(),
       split(lst::T),
       merge?A{*}<=lst(),
@@ -407,11 +427,13 @@ bin/metatron</code></pre>
       reverse?rec<=rec(),
       has?rec{?}<=rec(#::T,#::T),
       has?rec{?}<=rec(#::T),
+      get?A{*}<=rec(uri::T),
       split(rec::T),
       merge?rel{*}<=rec(),
-      dom?#{*}<=rec(),
-      rng?#{*}<=rec(),
-      rshift?#{*}<=rec(#{*}::T),
+      dom?A{*}<=rec(),
+      rng?A{*}<=rec(),
+      rshift?A{*}<=rec(#{*}::T),
+      lshift?A{*}<=rec(),
       plus?rec<=rec(rec{??}::T),
       mplus?rec<=rec(rec::T),
       select?rec{?}<=rec(rec::T),
@@ -488,39 +510,13 @@ bin/metatron</code></pre>
       take?A{*}<=A{*}(int::T),
       reify?rec<=A(),
       reduce(#::T),
-      where(#::T),
+      where?A{?}<=A(B::T),
       group?rec<=#{*}(rec::T),
-      eval?#{*}<=#{?}(code=>str::T),
+      eval?B<=A{?}(code=>str::T),
       swap?A<=A(B::T),
-      rshift?B{*}<=A(),
+      rshift?B{*}<=A(C{*}::T),
       lshift?B{*}<=A(),
-      start?A{**}<=noobj{0}(A{**}::T)],
- type   =>[
-      bool::T,
-      int::T,
-      real::T,
-      bytes::T,
-      str::T,
-      uri::T,
-      rel::T,
-      lst::T,
-      rec::T,
-      instset::T,
-      inst::T,
-      code::T,
-      fail::T,
-      space::T,
-      memspace::T,
-      stack::T,
-      meta::T,
-      q::T,
-      subq::T,
-      sub::T,
-      typeq::T,
-      docq::T,
-      incrq::T,
-      constq::T],
- const  =>[   noobj]]@/m</code></pre>
+      start?A{**}<=noobj{0}(A{**}::T)]]@/m</code></pre>
                         </div>
                     </div>
                 </div>
@@ -531,7 +527,7 @@ bin/metatron</code></pre>
             <div class="d-flex justify-content-center gap-2 flex-wrap">
                 <button class="btn btn-outline-secondary" disabled>Consts <span class="badge bg-dark">0</span></button>
                 <a href="#types" class="btn btn-outline-primary">Types <span class="badge bg-secondary">13</span></a>
-                <a href="#instructions" class="btn btn-outline-primary">Insts <span class="badge bg-secondary">249</span></a>
+                <a href="#instructions" class="btn btn-outline-primary">Insts <span class="badge bg-secondary">244</span></a>
                 <a href="#spaces" class="btn btn-outline-primary">Spaces <span class="badge bg-secondary">4</span></a>
                 <a href="#rewrites" class="btn btn-outline-primary">Rewrites <span class="badge bg-secondary">8</span></a>
             </div>
@@ -1200,11 +1196,11 @@ abc(a=&gt;?int::T,b=&gt;|(*a +10)){ _.*b }       [-- dependent arg inst    --]
                     
                     <div class="card-body p-2">
                         <pre class="mb-0"><code class="language-mtron">rec::T[?[
-     {?}constq =&gt;[     #{?}::T],
-     {?}type   =&gt;{?}[     #{*}::T],
-     {?}inst   =&gt;{?}[     inst::T],
-     {?}rewrite=&gt;{?}[     inst::T],
-     {?}sugar  =&gt;{?}[     lst::T]]]@/m/instset</code></pre>
+     {?}constq =&gt;[#{?}::T],
+     {?}type   =&gt;{?}[#{*}::T],
+     {?}inst   =&gt;{?}[inst::T],
+     {?}rewrite=&gt;{?}[inst::T],
+     {?}sugar  =&gt;{?}[lst::T]]]@/m/instset</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -1213,11 +1209,11 @@ abc(a=&gt;?int::T,b=&gt;|(*a +10)){ _.*b }       [-- dependent arg inst    --]
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">
    <pre><code class="language-mtron hljs">[
+ {?}constq =&gt; &#x27;constants used across the instset&#x27;,
+ {?}type   =&gt; &quot;types used to structure of the instset&#x27;...&quot;,
  {?}rewrite=&gt; &#x27;code&lt;=code instructions that capture th...&#x27;,
  {?}inst   =&gt; &#x27;instructions associated with the types ...&#x27;,
- {?}sugar  =&gt; &#x27;custom instruction syntax sugars given ...&#x27;,
- {?}constq =&gt; &#x27;constants used across the instset&#x27;,
- {?}type   =&gt; &quot;types used to structure of the instset&#x27;...&quot;]</code></pre></pre>
+ {?}sugar  =&gt; &#x27;custom instruction syntax sugars given ...&#x27;]</code></pre></pre>
                     </div>
                 </div>
                 <div class="card mb-3" id="type-int">
@@ -1397,7 +1393,7 @@ a/b/c/                           [-- relative/branch uri            --]
             
         <div class="container-xxl mb-4" id="instructions">
             <h3 class="text-primary mb-3">
-                Instructions <span class="badge bg-success">249</span>
+                Instructions <span class="badge bg-success">244</span>
             </h3>
             
                 <div class="card mb-3" id="inst-and">
@@ -1484,37 +1480,18 @@ a/b/c/                           [-- relative/branch uri            --]
 <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-as-doc-35-tab').click(); document.getElementById('inst-as-doc-35').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">as?file&lt;=uri(file::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-as-doc-37-tab').click(); document.getElementById('inst-as-doc-37').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">as?bytes&lt;=file(bytes::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-as-doc-36-tab').click(); document.getElementById('inst-as-doc-36').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">as?xml&lt;=str(xml::T){&lt;j&gt;}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-as-doc-38-tab').click(); document.getElementById('inst-as-doc-38').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">as?html&lt;=str(xml::T[?[html=&gt;[
-       head=&gt;[{?}title=&gt;     str::T],
-       body=&gt;    rec::T]]]@/m/web/html){&lt;j&gt;}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-as-doc-36-tab').click(); document.getElementById('inst-as-doc-36').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">as?markdown&lt;=str(rec::T@/m/web/markdown){&lt;j&gt;}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-as-doc-39-tab').click(); document.getElementById('inst-as-doc-39').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">as?str&lt;=html(str::T){&lt;j&gt;}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-as-doc-36-tab').click(); document.getElementById('inst-as-doc-36').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">as?str&lt;=markdown(str::T){&lt;j&gt;}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-as-doc-36-tab').click(); document.getElementById('inst-as-doc-36').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">as?html&lt;=markdown(xml::T[?[html=&gt;[
-       head=&gt;[{?}title=&gt;     str::T],
-       body=&gt;    rec::T]]]@/m/web/html){&lt;j&gt;}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-as-doc-40-tab').click(); document.getElementById('inst-as-doc-40').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">as?json&lt;=str(rec::T[?[uri::T=&gt;   is(or(eq(noobj{0}::T),eq(bool::T),eq(int::T),eq(str::T),eq(uri::T),eq(lst::T),eq(rec::T)))]][
-   /m/web/inst?json&lt;=#{?}(str::T)]@/m/web/json){&lt;j&gt;}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-as-doc-41-tab').click(); document.getElementById('inst-as-doc-41').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">as?str&lt;=#(str::T@/m/web/json_str){&lt;j&gt;}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-as-doc-42-tab').click(); document.getElementById('inst-as-doc-42').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">as?tool&lt;=/m/space/q/docq/docs(rec::T[?[
-     inst  =&gt;   #::T,
-     name  =&gt;   uri::T,
-     desc  =&gt;   str::T,
-     {?}arg=&gt;   #::T]]@/m/llm/tool){&lt;j&gt;}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-as-doc-43-tab').click(); document.getElementById('inst-as-doc-43').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">as?tool&lt;=inst(rec::T[?[
-     inst  =&gt;   #::T,
-     name  =&gt;   uri::T,
-     desc  =&gt;   str::T,
-     {?}arg=&gt;   #::T]]@/m/llm/tool){&lt;j&gt;}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-as-doc-44-tab').click(); document.getElementById('inst-as-doc-44').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">as?skill&lt;=dir(rec::T[?[
-     name      =&gt;   uri::T,
-     desc      =&gt;   str::T,
-     {?}content=&gt;   str::T,
-     {?}entry  =&gt;[[
-           dir    =&gt;      uri::T,
-           content=&gt;      str::T]]]]@/m/llm/skill){&lt;j&gt;}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-as-doc-36-tab').click(); document.getElementById('inst-as-doc-36').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">as?rrow&lt;=lrow(rec::T[?[uri::T=&gt;   #::T]]@/m/tble/rrow){&lt;j&gt;}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-as-doc-36-tab').click(); document.getElementById('inst-as-doc-36').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">as?lrow&lt;=rrow(lst::T@/m/tble/lrow){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-as-doc-38-tab').click(); document.getElementById('inst-as-doc-38').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">as?html&lt;=str(html::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-as-doc-39-tab').click(); document.getElementById('inst-as-doc-39').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">as?/m/web/markdown&lt;=str(markdown::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-as-doc-40-tab').click(); document.getElementById('inst-as-doc-40').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">as?str&lt;=html(str::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-as-doc-41-tab').click(); document.getElementById('inst-as-doc-41').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">as?str&lt;=/m/web/markdown(str::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-as-doc-42-tab').click(); document.getElementById('inst-as-doc-42').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">as?html&lt;=/m/web/markdown(html::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-as-doc-43-tab').click(); document.getElementById('inst-as-doc-43').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">as?json&lt;=str(json::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-as-doc-44-tab').click(); document.getElementById('inst-as-doc-44').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">as?str&lt;=#(json_str::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-as-doc-45-tab').click(); document.getElementById('inst-as-doc-45').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">as?tool&lt;=/m/space/q/docq/docs(tool::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-as-doc-46-tab').click(); document.getElementById('inst-as-doc-46').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">as?tool&lt;=inst(tool::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-as-doc-47-tab').click(); document.getElementById('inst-as-doc-47').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">as?skill&lt;=dir(skill::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-as-doc-36-tab').click(); document.getElementById('inst-as-doc-36').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">as?rrow&lt;=lrow(rrow::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-as-doc-36-tab').click(); document.getElementById('inst-as-doc-36').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">as?lrow&lt;=rrow(lrow::T){&lt;j&gt;}</code></pre>
                     </div>
                     
             <div class="card-body border-top p-0">
@@ -1836,6 +1813,27 @@ a/b/c/                           [-- relative/branch uri            --]
                         <i class="fas fa-info-circle me-1"></i> 45
                     </button>
                 </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link py-1 px-2  text-start h-100" id="inst-as-doc-45-tab" data-bs-toggle="pill" 
+                        data-bs-target="#inst-as-doc-45" type="button" role="tab" aria-controls="inst-as-doc-45" 
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
+                        <i class="fas fa-info-circle me-1"></i> 46
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link py-1 px-2  text-start h-100" id="inst-as-doc-46-tab" data-bs-toggle="pill" 
+                        data-bs-target="#inst-as-doc-46" type="button" role="tab" aria-controls="inst-as-doc-46" 
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
+                        <i class="fas fa-info-circle me-1"></i> 47
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link py-1 px-2  text-start h-100" id="inst-as-doc-47-tab" data-bs-toggle="pill" 
+                        data-bs-target="#inst-as-doc-47" type="button" role="tab" aria-controls="inst-as-doc-47" 
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
+                        <i class="fas fa-info-circle me-1"></i> 48
+                    </button>
+                </li>
                 </ul>
                 <div class="tab-content" id="inst-as-content">
                     
@@ -2044,7 +2042,7 @@ a/b/c/                           [-- relative/branch uri            --]
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any obj" <span class="text-light">=&gt;</span> "the lhs obj as the arg type"
-   <pre><code class="language-mtron hljs">[0=&gt; &#x27;the type to cast to&#x27;]</code></pre></pre>
+   <pre><code class="language-mtron hljs">[0=&gt;&#x27;the type to cast to&#x27;]</code></pre></pre>
                     </div>
                 </div>
                 <div class="tab-pane fade " id="inst-as-doc-34" role="tabpanel" aria-labelledby="inst-as-doc-34-tab">
@@ -2054,7 +2052,7 @@ a/b/c/                           [-- relative/branch uri            --]
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any obj" <span class="text-light">=&gt;</span> "the lhs obj as the arg type"
-   <pre><code class="language-mtron hljs">[0=&gt; &#x27;the type to cast to&#x27;]</code></pre></pre>
+   <pre><code class="language-mtron hljs">[0=&gt;&#x27;the type to cast to&#x27;]</code></pre></pre>
                     </div>
                 </div>
                 <div class="tab-pane fade " id="inst-as-doc-35" role="tabpanel" aria-labelledby="inst-as-doc-35-tab">
@@ -2102,39 +2100,57 @@ a/b/c/                           [-- relative/branch uri            --]
                 <div class="tab-pane fade " id="inst-as-doc-42" role="tabpanel" aria-labelledby="inst-as-doc-42-tab">
                     
                     <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
+                </div>
+                <div class="tab-pane fade " id="inst-as-doc-43" role="tabpanel" aria-labelledby="inst-as-doc-43-tab">
+                    
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
+                </div>
+                <div class="tab-pane fade " id="inst-as-doc-44" role="tabpanel" aria-labelledby="inst-as-doc-44-tab">
+                    
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
+                </div>
+                <div class="tab-pane fade " id="inst-as-doc-45" role="tabpanel" aria-labelledby="inst-as-doc-45-tab">
+                    
+                    <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">maps an instruction doc to a tool specification for llm use</p>
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"instruction documentation" <span class="text-light">=&gt;</span> "a tool specification"
-   <pre><code class="language-mtron hljs">[0=&gt; &#x27;the tool type&#x27;]</code></pre></pre>
+   <pre><code class="language-mtron hljs">[0=&gt;&#x27;the tool type&#x27;]</code></pre></pre>
                     </div>
         <div class="card-body border-top py-2">
             <small class="text-muted fw-bold">examples:</small>
             <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*eval?docq.as(tool::T)</code></pre>
         </div>
                 </div>
-                <div class="tab-pane fade " id="inst-as-doc-43" role="tabpanel" aria-labelledby="inst-as-doc-43-tab">
+                <div class="tab-pane fade " id="inst-as-doc-46" role="tabpanel" aria-labelledby="inst-as-doc-46-tab">
                     
                     <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">maps an instruction to a tool specification for llm use</p>
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"an instruction" <span class="text-light">=&gt;</span> "a tool specification"
-   <pre><code class="language-mtron hljs">[0=&gt; &#x27;the tool type&#x27;]</code></pre></pre>
+   <pre><code class="language-mtron hljs">[0=&gt;&#x27;the tool type&#x27;]</code></pre></pre>
                     </div>
         <div class="card-body border-top py-2">
             <small class="text-muted fw-bold">examples:</small>
             <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*eval.as(tool::T)</code></pre>
         </div>
                 </div>
-                <div class="tab-pane fade " id="inst-as-doc-44" role="tabpanel" aria-labelledby="inst-as-doc-44-tab">
+                <div class="tab-pane fade " id="inst-as-doc-47" role="tabpanel" aria-labelledby="inst-as-doc-47-tab">
                     
                     <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">maps a directory to an llm skill where the dir follows the standard SKILL.md structure</p>
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"a dir containing the llm SKILL.md file" <span class="text-light">=&gt;</span> "a mtron encoding of the specified skill"
-   <pre><code class="language-mtron hljs">[0=&gt; &#x27;the skill type&#x27;]</code></pre></pre>
+   <pre><code class="language-mtron hljs">[0=&gt;&#x27;the skill type&#x27;]</code></pre></pre>
                     </div>
         <div class="card-body border-top py-2">
             <small class="text-muted fw-bold">examples:</small>
@@ -2296,7 +2312,7 @@ a/b/c/                           [-- relative/branch uri            --]
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any objs" <span class="text-light">=&gt;</span> "the objs as a rec"
-   <pre><code class="language-mtron hljs">[0=&gt; &#x27;the rec to merge into&#x27;]</code></pre></pre>
+   <pre><code class="language-mtron hljs">[0=&gt;&#x27;the rec to merge into&#x27;]</code></pre></pre>
                     </div>
                 </div>
                 <div class="tab-pane fade " id="inst-barrier-doc-2" role="tabpanel" aria-labelledby="inst-barrier-doc-2-tab">
@@ -2328,7 +2344,7 @@ a/b/c/                           [-- relative/branch uri            --]
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"a blocked obj" <span class="text-light">=&gt;</span> "the unapplied arg"
-   <pre><code class="language-mtron hljs">[0=&gt; &#x27;the rhs without evaluation&#x27;]</code></pre></pre>
+   <pre><code class="language-mtron hljs">[0=&gt;&#x27;the rhs without evaluation&#x27;]</code></pre></pre>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-catch">
@@ -2348,7 +2364,7 @@ a/b/c/                           [-- relative/branch uri            --]
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any obj" <span class="text-light">=&gt;</span> "uncaught fails go to arg, others mapped by identity"
-   <pre><code class="language-mtron hljs">[0=&gt; &#x27;the obj triggered on an uncaught fail&#x27;]</code></pre></pre>
+   <pre><code class="language-mtron hljs">[0=&gt;&#x27;the obj triggered on an uncaught fail&#x27;]</code></pre></pre>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-cause">
@@ -2417,7 +2433,7 @@ a/b/c/                           [-- relative/branch uri            --]
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any obj" <span class="text-light">=&gt;</span> "the lhs obj with new coefficient"
-   <pre><code class="language-mtron hljs">[0=&gt; &#x27;a coefficient for lhs obj&#x27;]</code></pre></pre>
+   <pre><code class="language-mtron hljs">[0=&gt;&#x27;a coefficient for lhs obj&#x27;]</code></pre></pre>
                     </div>
                 </div>
                 </div>
@@ -2440,7 +2456,7 @@ a/b/c/                           [-- relative/branch uri            --]
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any obj" <span class="text-light">=&gt;</span> "the split as an objs"
-   <pre><code class="language-mtron hljs">[0=&gt; &#x27;the branches&#x27;]</code></pre></pre>
+   <pre><code class="language-mtron hljs">[0=&gt;&#x27;the branches&#x27;]</code></pre></pre>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-count">
@@ -2507,7 +2523,7 @@ a/b/c/                           [-- relative/branch uri            --]
                     </div>
                     <div class="card-body p-2">
                         <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-dom-doc-0-tab').click(); document.getElementById('inst-dom-doc-0').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">dom?#{*}&lt;=rel(){&lt;j&gt;}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-dom-doc-1-tab').click(); document.getElementById('inst-dom-doc-1').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">dom?#{*}&lt;=rec(){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-dom-doc-1-tab').click(); document.getElementById('inst-dom-doc-1').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">dom?A{*}&lt;=rec(){&lt;j&gt;}</code></pre>
                     </div>
                     
             <div class="card-body border-top p-0">
@@ -2563,7 +2579,7 @@ a/b/c/                           [-- relative/branch uri            --]
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"maybe an obj" <span class="text-light">=&gt;</span> "the lhs obj else the arg obj"
-   <pre><code class="language-mtron hljs">[0=&gt; &#x27;the rhs obj is the lhs is noobj&#x27;]</code></pre></pre>
+   <pre><code class="language-mtron hljs">[0=&gt;&#x27;the rhs obj is the lhs is noobj&#x27;]</code></pre></pre>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-end">
@@ -2602,19 +2618,19 @@ a/b/c/                           [-- relative/branch uri            --]
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any objs" <span class="text-light">=&gt;</span> "true if lhs equals rhs"
-   <pre><code class="language-mtron hljs">[0=&gt; &#x27;the rhs obj&#x27;]</code></pre></pre>
+   <pre><code class="language-mtron hljs">[0=&gt;&#x27;the rhs obj&#x27;]</code></pre></pre>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-eval">
                     <div class="card-header d-flex justify-content-between align-items-center py-2 text-light border-bottom border-secondary">
                         <span>
                             <span class="code text-primary fw-bold">eval</span>
-                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#{?}.html#type-#" data-bs-toggle="tooltip" title="maybe domain" class="code text-info">#{?}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#{*}.html#type-#" data-bs-toggle="tooltip" title="maybe some range" class="code text-success">#{*}</a></span></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#" data-bs-toggle="tooltip" title="maybe generic domain" class="code text-info">A{?}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#" data-bs-toggle="tooltip" title="generic range" class="code text-success">B</a></span></span>
                         </span>
-                        <small class="text-muted code">/m/inst/eval?#{*}&lt;=#{?}</small>
+                        <small class="text-muted code">/m/inst/eval?B&lt;=A{?}</small>
                     </div>
                     <div class="card-body p-2">
-                        <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-eval-doc-0-tab').click(); document.getElementById('inst-eval-doc-0').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">eval?#{*}&lt;=#{?}(code=&gt;str::T){&lt;j&gt;}</code></pre>
+                        <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-eval-doc-0-tab').click(); document.getElementById('inst-eval-doc-0').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">eval?B&lt;=A{?}(code=&gt;str::T){&lt;j&gt;}</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -2622,7 +2638,7 @@ a/b/c/                           [-- relative/branch uri            --]
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"can be any obj as long as the arg generated is a str" <span class="text-light">=&gt;</span> "the result of evaluating the source str arg"
-   <pre><code class="language-mtron hljs">[code=&gt; &#x27;the mtron source code to evaluate&#x27;]</code></pre></pre>
+   <pre><code class="language-mtron hljs">[code=&gt;&#x27;the mtron source code to evaluate&#x27;]</code></pre></pre>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-failure">
@@ -2690,7 +2706,7 @@ a/b/c/                           [-- relative/branch uri            --]
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any obj" <span class="text-light">=&gt;</span> "the obj referred to by the arg uri"
-   <pre><code class="language-mtron hljs">[0=&gt; &#x27;the uri to dereference&#x27;]</code></pre></pre>
+   <pre><code class="language-mtron hljs">[0=&gt;&#x27;the uri to dereference&#x27;]</code></pre></pre>
                     </div>
         <div class="card-body border-top py-2">
             <small class="text-muted fw-bold">examples:</small>
@@ -2710,11 +2726,44 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     <div class="card-body p-2">
                         <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-get-doc-0-tab').click(); document.getElementById('inst-get-doc-0').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">get?A{?}&lt;=rel(#::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-get-doc-1-tab').click(); document.getElementById('inst-get-doc-1').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">get?A{*}&lt;=rec(uri::T){&lt;j&gt;}</code></pre>
                     </div>
+                    
+            <div class="card-body border-top p-0">
+                <ul class="nav nav-pills p-2 bg-dark" id="inst-get-pills" role="tablist">
+                    <li class="nav-item disabled me-2"><span class="nav-link disabled py-1 px-0 text-muted" style="font-size: 0.75rem;">polymorph:</span></li>
+                    
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link py-1 px-2 active text-start h-100" id="inst-get-doc-0-tab" data-bs-toggle="pill" 
+                        data-bs-target="#inst-get-doc-0" type="button" role="tab" aria-controls="inst-get-doc-0" 
+                        aria-selected="true" style="font-size: 0.75rem; max-width: 60px;">
+                        <i class="fas fa-info-circle me-1"></i> 1
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link py-1 px-2  text-start h-100" id="inst-get-doc-1-tab" data-bs-toggle="pill" 
+                        data-bs-target="#inst-get-doc-1" type="button" role="tab" aria-controls="inst-get-doc-1" 
+                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
+                        <i class="fas fa-info-circle me-1"></i> 2
+                    </button>
+                </li>
+                </ul>
+                <div class="tab-content" id="inst-get-content">
+                    
+                <div class="tab-pane fade show active" id="inst-get-doc-0" role="tabpanel" aria-labelledby="inst-get-doc-0-tab">
                     
                     <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">no documentation available</p>
                     </div>
+                </div>
+                <div class="tab-pane fade " id="inst-get-doc-1" role="tabpanel" aria-labelledby="inst-get-doc-1-tab">
+                    
+                    <div class="card-body border-top py-2">
+                        <p class="mb-0 text-light">no documentation available</p>
+                    </div>
+                </div>
+                </div>
+            </div>
                 </div>
                 <div class="card mb-3" id="inst-group">
                     <div class="card-header d-flex justify-content-between align-items-center py-2 text-light border-bottom border-secondary">
@@ -2781,7 +2830,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"the lhs int" <span class="text-light">=&gt;</span> "whether the lhs is greater than the rhs"
-   <pre><code class="language-mtron hljs">[int::T=&gt; &#x27;the int to compare against the lhs&#x27;]</code></pre></pre>
+   <pre><code class="language-mtron hljs">[int::T=&gt;&#x27;the int to compare against the lhs&#x27;]</code></pre></pre>
                     </div>
                 </div>
                 <div class="tab-pane fade " id="inst-gt-doc-1" role="tabpanel" aria-labelledby="inst-gt-doc-1-tab">
@@ -2848,7 +2897,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"the lhs int" <span class="text-light">=&gt;</span> "whether the lhs is greater than or equal to the rhs"
-   <pre><code class="language-mtron hljs">[int::T=&gt; &#x27;the int to compare against the lhs&#x27;]</code></pre></pre>
+   <pre><code class="language-mtron hljs">[int::T=&gt;&#x27;the int to compare against the lhs&#x27;]</code></pre></pre>
                     </div>
                 </div>
                 <div class="tab-pane fade " id="inst-gte-doc-1" role="tabpanel" aria-labelledby="inst-gte-doc-1-tab">
@@ -2925,7 +2974,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"an str to check" <span class="text-light">=&gt;</span> "whether the domain matches arg"
-   <pre><code class="language-mtron hljs">[0=&gt; &#x27;the regex for matching&#x27;]</code></pre></pre>
+   <pre><code class="language-mtron hljs">[0=&gt;&#x27;the regex for matching&#x27;]</code></pre></pre>
                     </div>
                 </div>
                 <div class="tab-pane fade " id="inst-has-doc-1" role="tabpanel" aria-labelledby="inst-has-doc-1-tab">
@@ -2935,7 +2984,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"a uri to check" <span class="text-light">=&gt;</span> "whether the domain matches arg regex"
-   <pre><code class="language-mtron hljs">{2}[0=&gt; &#x27;the regex for matching&#x27;]</code></pre></pre>
+   <pre><code class="language-mtron hljs">{2}[0=&gt;&#x27;the regex for matching&#x27;]</code></pre></pre>
                     </div>
                 </div>
                 <div class="tab-pane fade " id="inst-has-doc-2" role="tabpanel" aria-labelledby="inst-has-doc-2-tab">
@@ -3106,7 +3155,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any obj" <span class="text-light">=&gt;</span> "the lhs obj if arg is true"
-   <pre><code class="language-mtron hljs">[0=&gt; &#x27;filter lhs if false&#x27;]</code></pre></pre>
+   <pre><code class="language-mtron hljs">[0=&gt;&#x27;filter lhs if false&#x27;]</code></pre></pre>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-isa">
@@ -3126,7 +3175,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"an obj to match" <span class="text-light">=&gt;</span> "the unaltered obj if arg matches"
-   <pre><code class="language-mtron hljs">[0=&gt; &quot;filter lhs if doesn&#x27;t match arg&quot;]</code></pre></pre>
+   <pre><code class="language-mtron hljs">[0=&gt;&quot;filter lhs if doesn&#x27;t match arg&quot;]</code></pre></pre>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-lcase">
@@ -3149,14 +3198,13 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     <div class="card-header d-flex justify-content-between align-items-center py-2 text-light border-bottom border-secondary">
                         <span>
                             <span class="code text-primary fw-bold">lshift</span>
-                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-uri" data-bs-toggle="tooltip" title="domain" class="code text-info">/m/uri</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-uri" data-bs-toggle="tooltip" title="range" class="code text-success">/m/uri</a></span></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-rec" data-bs-toggle="tooltip" title="domain" class="code text-info">/m/rec</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#" data-bs-toggle="tooltip" title="maybe some generic range" class="code text-success">A{*}</a></span></span>
                         </span>
-                        <small class="text-muted code">/m/inst/lshift?/m/uri&lt;=/m/uri</small>
+                        <small class="text-muted code">/m/inst/lshift?A{*}&lt;=/m/rec</small>
                     </div>
                     <div class="card-body p-2">
-                        <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-lshift-doc-0-tab').click(); document.getElementById('inst-lshift-doc-0').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">lshift?uri&lt;=uri(rec::T){&lt;j&gt;}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-lshift-doc-1-tab').click(); document.getElementById('inst-lshift-doc-1').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">lshift?#{*}&lt;=rel(){&lt;j&gt;}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-lshift-doc-2-tab').click(); document.getElementById('inst-lshift-doc-2').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">lshift?B{*}&lt;=A(){&lt;j&gt;}</code></pre>
+                        <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-lshift-doc-0-tab').click(); document.getElementById('inst-lshift-doc-0').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">lshift?A{*}&lt;=rec(){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-lshift-doc-1-tab').click(); document.getElementById('inst-lshift-doc-1').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">lshift?B{*}&lt;=A(){&lt;j&gt;}</code></pre>
                     </div>
                     
             <div class="card-body border-top p-0">
@@ -3177,13 +3225,6 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                         <i class="fas fa-info-circle me-1"></i> 2
                     </button>
                 </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link py-1 px-2  text-start h-100" id="inst-lshift-doc-2-tab" data-bs-toggle="pill" 
-                        data-bs-target="#inst-lshift-doc-2" type="button" role="tab" aria-controls="inst-lshift-doc-2" 
-                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
-                        <i class="fas fa-info-circle me-1"></i> 3
-                    </button>
-                </li>
                 </ul>
                 <div class="tab-content" id="inst-lshift-content">
                     
@@ -3194,12 +3235,6 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                 </div>
                 <div class="tab-pane fade " id="inst-lshift-doc-1" role="tabpanel" aria-labelledby="inst-lshift-doc-1-tab">
-                    
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
-                </div>
-                <div class="tab-pane fade " id="inst-lshift-doc-2" role="tabpanel" aria-labelledby="inst-lshift-doc-2-tab">
                     
                     <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">no documentation available</p>
@@ -3257,7 +3292,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"the lhs int" <span class="text-light">=&gt;</span> "whether the lhs is less than the rhs"
-   <pre><code class="language-mtron hljs">[int::T=&gt; &#x27;the int to compare against the lhs&#x27;]</code></pre></pre>
+   <pre><code class="language-mtron hljs">[int::T=&gt;&#x27;the int to compare against the lhs&#x27;]</code></pre></pre>
                     </div>
                 </div>
                 <div class="tab-pane fade " id="inst-lt-doc-1" role="tabpanel" aria-labelledby="inst-lt-doc-1-tab">
@@ -3324,7 +3359,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"the lhs int" <span class="text-light">=&gt;</span> "whether the lhs is less than or equal to the rhs"
-   <pre><code class="language-mtron hljs">[int::T=&gt; &#x27;the int to compare against the lhs&#x27;]</code></pre></pre>
+   <pre><code class="language-mtron hljs">[int::T=&gt;&#x27;the int to compare against the lhs&#x27;]</code></pre></pre>
                     </div>
                 </div>
                 <div class="tab-pane fade " id="inst-lte-doc-1" role="tabpanel" aria-labelledby="inst-lte-doc-1-tab">
@@ -3389,7 +3424,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"maybe some obj" <span class="text-light">=&gt;</span> "the lhs obj applied to the arg obj"
-   <pre><code class="language-mtron hljs">[0=&gt; &#x27;any obj&#x27;]</code></pre></pre>
+   <pre><code class="language-mtron hljs">[0=&gt;&#x27;any obj&#x27;]</code></pre></pre>
                     </div>
                 </div>
                 </div>
@@ -3541,7 +3576,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"an str barrier" <span class="text-light">=&gt;</span> "the join of the str barrier"
-   <pre><code class="language-mtron hljs">[0=&gt; &#x27;the join token&#x27;]</code></pre></pre>
+   <pre><code class="language-mtron hljs">[0=&gt;&#x27;the join token&#x27;]</code></pre></pre>
                     </div>
                 </div>
                 <div class="tab-pane fade " id="inst-merge-doc-1" role="tabpanel" aria-labelledby="inst-merge-doc-1-tab">
@@ -3638,7 +3673,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"the lhs int" <span class="text-light">=&gt;</span> "the result of the subtraction"
-   <pre><code class="language-mtron hljs">[int::T=&gt; &#x27;the int to subtract from the lhs&#x27;]</code></pre></pre>
+   <pre><code class="language-mtron hljs">[int::T=&gt;&#x27;the int to subtract from the lhs&#x27;]</code></pre></pre>
                     </div>
                 </div>
                 <div class="tab-pane fade " id="inst-minus-doc-1" role="tabpanel" aria-labelledby="inst-minus-doc-1-tab">
@@ -3767,7 +3802,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"the lhs int" <span class="text-light">=&gt;</span> "the result of the multiplication"
-   <pre><code class="language-mtron hljs">[int::T=&gt; &#x27;the int to multiply the lhs by&#x27;]</code></pre></pre>
+   <pre><code class="language-mtron hljs">[int::T=&gt;&#x27;the int to multiply the lhs by&#x27;]</code></pre></pre>
                     </div>
                 </div>
                 <div class="tab-pane fade " id="inst-mult-doc-2" role="tabpanel" aria-labelledby="inst-mult-doc-2-tab">
@@ -3877,7 +3912,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any objs" <span class="text-light">=&gt;</span> "true if lhs does not equal rhs"
-   <pre><code class="language-mtron hljs">[0=&gt; &#x27;the rhs obj&#x27;]</code></pre></pre>
+   <pre><code class="language-mtron hljs">[0=&gt;&#x27;the rhs obj&#x27;]</code></pre></pre>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-not">
@@ -4072,7 +4107,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any objs" <span class="text-light">=&gt;</span> "the objs sorted by the arg obj"
-   <pre><code class="language-mtron hljs">[0=&gt; &#x27;the obj to sort by&#x27;]</code></pre></pre>
+   <pre><code class="language-mtron hljs">[0=&gt;&#x27;the obj to sort by&#x27;]</code></pre></pre>
                     </div>
                 </div>
                 </div>
@@ -4219,7 +4254,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"the lhs int" <span class="text-light">=&gt;</span> "the result of the addition"
-   <pre><code class="language-mtron hljs">[int::T=&gt; &#x27;the int to add to the lhs&#x27;]</code></pre></pre>
+   <pre><code class="language-mtron hljs">[int::T=&gt;&#x27;the int to add to the lhs&#x27;]</code></pre></pre>
                     </div>
                 </div>
                 <div class="tab-pane fade " id="inst-plus-doc-3" role="tabpanel" aria-labelledby="inst-plus-doc-3-tab">
@@ -4271,7 +4306,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     <div class="card-body p-2">
                         <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-port-doc-0-tab').click(); document.getElementById('inst-port-doc-0').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">port?int{?}&lt;=uri(){&lt;j&gt;}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-port-doc-1-tab').click(); document.getElementById('inst-port-doc-1').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">port?uri&lt;=uri(int::T[is(gte(-1))]){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-port-doc-1-tab').click(); document.getElementById('inst-port-doc-1').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">port?uri&lt;=uri(int::T){&lt;j&gt;}</code></pre>
                     </div>
                     
             <div class="card-body border-top p-0">
@@ -4404,7 +4439,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"the rhs obj" <span class="text-light">=&gt;</span> "the lhs obj"
-   <pre><code class="language-mtron hljs">[0=&gt; &#x27;concatenated args followed by newline w...&#x27;]</code></pre></pre>
+   <pre><code class="language-mtron hljs">[0=&gt;&#x27;concatenated args followed by newline w...&#x27;]</code></pre></pre>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-println">
@@ -4424,7 +4459,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"the rhs obj" <span class="text-light">=&gt;</span> "the lhs obj"
-   <pre><code class="language-mtron hljs">[0=&gt; &#x27;concatenated args followed by newline w...&#x27;]</code></pre></pre>
+   <pre><code class="language-mtron hljs">[0=&gt;&#x27;concatenated args followed by newline w...&#x27;]</code></pre></pre>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-prod">
@@ -4539,7 +4574,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any objs" <span class="text-light">=&gt;</span> "the result of applying the arg inst to each obj"
-   <pre><code class="language-mtron hljs">[0=&gt; &#x27;the inst to apply to each obj&#x27;]</code></pre></pre>
+   <pre><code class="language-mtron hljs">[0=&gt;&#x27;the inst to apply to each obj&#x27;]</code></pre></pre>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-ref">
@@ -4559,7 +4594,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any obj" <span class="text-light">=&gt;</span> "writes the arg obj to the lhs uri"
-   <pre><code class="language-mtron hljs">[0=&gt; &#x27;the uri to write to&#x27;]</code></pre></pre>
+   <pre><code class="language-mtron hljs">[0=&gt;&#x27;the uri to write to&#x27;]</code></pre></pre>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-regex">
@@ -4730,7 +4765,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     <div class="card-body p-2">
                         <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-rng-doc-0-tab').click(); document.getElementById('inst-rng-doc-0').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">rng?#{*}&lt;=rel(){&lt;j&gt;}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-rng-doc-1-tab').click(); document.getElementById('inst-rng-doc-1').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">rng?#{*}&lt;=rec(){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-rng-doc-1-tab').click(); document.getElementById('inst-rng-doc-1').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">rng?A{*}&lt;=rec(){&lt;j&gt;}</code></pre>
                     </div>
                     
             <div class="card-body border-top p-0">
@@ -4773,18 +4808,13 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     <div class="card-header d-flex justify-content-between align-items-center py-2 text-light border-bottom border-secondary">
                         <span>
                             <span class="code text-primary fw-bold">rshift</span>
-                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-uri" data-bs-toggle="tooltip" title="domain" class="code text-info">/m/uri</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#{*}.html#type-#" data-bs-toggle="tooltip" title="maybe some range" class="code text-success">#{*}</a></span></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-rec" data-bs-toggle="tooltip" title="domain" class="code text-info">/m/rec</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#" data-bs-toggle="tooltip" title="maybe some generic range" class="code text-success">A{*}</a></span></span>
                         </span>
-                        <small class="text-muted code">/m/inst/rshift?#{*}&lt;=/m/uri</small>
+                        <small class="text-muted code">/m/inst/rshift?A{*}&lt;=/m/rec</small>
                     </div>
                     <div class="card-body p-2">
-                        <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-rshift-doc-0-tab').click(); document.getElementById('inst-rshift-doc-0').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">rshift?#{*}&lt;=uri(#{*}::T){&lt;j&gt;}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-rshift-doc-1-tab').click(); document.getElementById('inst-rshift-doc-1').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">rshift?#{*}&lt;=rel(){&lt;j&gt;}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-rshift-doc-1-tab').click(); document.getElementById('inst-rshift-doc-1').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">rshift?#{*}&lt;=rel(#::T){&lt;j&gt;}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-rshift-doc-2-tab').click(); document.getElementById('inst-rshift-doc-2').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">rshift?A{*}&lt;=lst(#{*}::T){&lt;j&gt;}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-rshift-doc-3-tab').click(); document.getElementById('inst-rshift-doc-3').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">rshift?#{*}&lt;=rec(#{*}::T){&lt;j&gt;}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-rshift-doc-4-tab').click(); document.getElementById('inst-rshift-doc-4').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">rshift?B{*}&lt;=A(){&lt;j&gt;}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-rshift-doc-5-tab').click(); document.getElementById('inst-rshift-doc-5').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">rshift?file{*}&lt;=file(isa(uri::T).else(&lt;#&gt;)){&lt;j&gt;}</code></pre>
+                        <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-rshift-doc-0-tab').click(); document.getElementById('inst-rshift-doc-0').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">rshift?A{*}&lt;=rec(#{*}::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-rshift-doc-1-tab').click(); document.getElementById('inst-rshift-doc-1').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">rshift?B{*}&lt;=A(C{*}::T){&lt;j&gt;}</code></pre>
                     </div>
                     
             <div class="card-body border-top p-0">
@@ -4805,34 +4835,6 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                         <i class="fas fa-info-circle me-1"></i> 2
                     </button>
                 </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link py-1 px-2  text-start h-100" id="inst-rshift-doc-2-tab" data-bs-toggle="pill" 
-                        data-bs-target="#inst-rshift-doc-2" type="button" role="tab" aria-controls="inst-rshift-doc-2" 
-                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
-                        <i class="fas fa-info-circle me-1"></i> 3
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link py-1 px-2  text-start h-100" id="inst-rshift-doc-3-tab" data-bs-toggle="pill" 
-                        data-bs-target="#inst-rshift-doc-3" type="button" role="tab" aria-controls="inst-rshift-doc-3" 
-                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
-                        <i class="fas fa-info-circle me-1"></i> 4
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link py-1 px-2  text-start h-100" id="inst-rshift-doc-4-tab" data-bs-toggle="pill" 
-                        data-bs-target="#inst-rshift-doc-4" type="button" role="tab" aria-controls="inst-rshift-doc-4" 
-                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
-                        <i class="fas fa-info-circle me-1"></i> 5
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link py-1 px-2  text-start h-100" id="inst-rshift-doc-5-tab" data-bs-toggle="pill" 
-                        data-bs-target="#inst-rshift-doc-5" type="button" role="tab" aria-controls="inst-rshift-doc-5" 
-                        aria-selected="false" style="font-size: 0.75rem; max-width: 60px;">
-                        <i class="fas fa-info-circle me-1"></i> 6
-                    </button>
-                </li>
                 </ul>
                 <div class="tab-content" id="inst-rshift-content">
                     
@@ -4843,30 +4845,6 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                 </div>
                 <div class="tab-pane fade " id="inst-rshift-doc-1" role="tabpanel" aria-labelledby="inst-rshift-doc-1-tab">
-                    
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
-                </div>
-                <div class="tab-pane fade " id="inst-rshift-doc-2" role="tabpanel" aria-labelledby="inst-rshift-doc-2-tab">
-                    
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
-                </div>
-                <div class="tab-pane fade " id="inst-rshift-doc-3" role="tabpanel" aria-labelledby="inst-rshift-doc-3-tab">
-                    
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
-                </div>
-                <div class="tab-pane fade " id="inst-rshift-doc-4" role="tabpanel" aria-labelledby="inst-rshift-doc-4-tab">
-                    
-                    <div class="card-body border-top py-2">
-                        <p class="mb-0 text-light">no documentation available</p>
-                    </div>
-                </div>
-                <div class="tab-pane fade " id="inst-rshift-doc-5" role="tabpanel" aria-labelledby="inst-rshift-doc-5-tab">
                     
                     <div class="card-body border-top py-2">
                         <p class="mb-0 text-light">no documentation available</p>
@@ -5025,7 +5003,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                         <small class="text-muted code">/m/inst/serialize?B&lt;=A</small>
                     </div>
                     <div class="card-body p-2">
-                        <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-serialize-doc-0-tab').click(); document.getElementById('inst-serialize-doc-0').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">serialize?B&lt;=A(/m/mach/io::T){&lt;j&gt;}</code></pre>
+                        <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-serialize-doc-0-tab').click(); document.getElementById('inst-serialize-doc-0').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">serialize?B&lt;=A(io::T){&lt;j&gt;}</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -5065,7 +5043,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any objs" <span class="text-light">=&gt;</span> "the objs after skipping"
-   <pre><code class="language-mtron hljs">[0=&gt; &#x27;the number of objs to skip&#x27;]</code></pre></pre>
+   <pre><code class="language-mtron hljs">[0=&gt;&#x27;the number of objs to skip&#x27;]</code></pre></pre>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-source">
@@ -5143,7 +5121,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"a str to split" <span class="text-light">=&gt;</span> "lst encoded components of the split lhs str"
-   <pre><code class="language-mtron hljs">[0=&gt; &#x27;a token to split on&#x27;]</code></pre></pre>
+   <pre><code class="language-mtron hljs">[0=&gt;&#x27;a token to split on&#x27;]</code></pre></pre>
                     </div>
                 </div>
                 <div class="tab-pane fade " id="inst-split-doc-1" role="tabpanel" aria-labelledby="inst-split-doc-1-tab">
@@ -5184,7 +5162,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"noobj" <span class="text-light">=&gt;</span> "initial objs"
-   <pre><code class="language-mtron hljs">[0=&gt; &#x27;initial objs&#x27;]</code></pre></pre>
+   <pre><code class="language-mtron hljs">[0=&gt;&#x27;initial objs&#x27;]</code></pre></pre>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-sum">
@@ -5325,7 +5303,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any objs" <span class="text-light">=&gt;</span> "the objs before skipping"
-   <pre><code class="language-mtron hljs">[0=&gt; &#x27;the number of objs to take&#x27;]</code></pre></pre>
+   <pre><code class="language-mtron hljs">[0=&gt;&#x27;the number of objs to take&#x27;]</code></pre></pre>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-thread">
@@ -5380,7 +5358,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any obj" <span class="text-light">=&gt;</span> "writes the lhs obj to the arg uri"
-   <pre><code class="language-mtron hljs">[0=&gt; &#x27;the uri to write to&#x27;]</code></pre></pre>
+   <pre><code class="language-mtron hljs">[0=&gt;&#x27;the uri to write to&#x27;]</code></pre></pre>
                     </div>
                 </div>
                 <div class="card mb-3" id="inst-type">
@@ -5555,7 +5533,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any obj" <span class="text-light">=&gt;</span> "a spatial location for the lhs obj"
-   <pre><code class="language-mtron hljs">[0=&gt; &#x27;the value id for the lhs obj&#x27;]</code></pre></pre>
+   <pre><code class="language-mtron hljs">[0=&gt;&#x27;the value id for the lhs obj&#x27;]</code></pre></pre>
                     </div>
         <div class="card-body border-top py-2">
             <small class="text-muted fw-bold">examples:</small>
@@ -5584,7 +5562,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     <div class="card-body p-2">
                         <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-where-doc-0-tab').click(); document.getElementById('inst-where-doc-0').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">where?uri{?}&lt;=uri(uri::T){&lt;j&gt;}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-where-doc-1-tab').click(); document.getElementById('inst-where-doc-1').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">where?#{?}&lt;=#(#::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-where-doc-1-tab').click(); document.getElementById('inst-where-doc-1').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">where?A{?}&lt;=A(B::T){&lt;j&gt;}</code></pre>
                     </div>
                     
             <div class="card-body border-top p-0">
@@ -5621,7 +5599,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"any obj" <span class="text-light">=&gt;</span> "filter the lhs obj based on whether the arg yields noobj or not"
-   <pre><code class="language-mtron hljs">[0=&gt; &#x27;the inst to filter objs by&#x27;]</code></pre></pre>
+   <pre><code class="language-mtron hljs">[0=&gt;&#x27;the inst to filter objs by&#x27;]</code></pre></pre>
                     </div>
                 </div>
                 </div>
@@ -5837,9 +5815,9 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     
                     <div class="mt-2">
-                        <pre class="mb-0"><code class="language-mtron">space::T[][inst?rng=memspace&amp;dom=#{?}(isa([
+                        <pre class="mb-0"><code class="language-mtron">space::T[][inst?rng=memspace&amp;dom=#{?}(?[
  pattern   =&gt; uri::T,
- {?}persist=&gt; file::T])){&lt;j&gt;}]@/m/space/memspace</code></pre>
+ {?}persist=&gt; file::T]){&lt;j&gt;}]@/m/space/memspace</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -5853,11 +5831,11 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     </div>
                     
                     <div class="mt-2">
-                        <pre class="mb-0"><code class="language-mtron">space::T[][inst?rng=meta&amp;dom=#{?}(isa([
+                        <pre class="mb-0"><code class="language-mtron">space::T[][inst?rng=meta&amp;dom=#{?}(?[
  pattern=&gt; uri::T,
  host   =&gt; uri::T,
- route  =&gt;[uri::T=&gt;  uri::T],
- peers  =&gt;[   uri{*}::T]])){&lt;j&gt;}]@/m/space/meta</code></pre>
+ route  =&gt;[uri::T=&gt;uri::T],
+ peers  =&gt;[uri{*}::T]]){&lt;j&gt;}]@/m/space/meta</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -5872,12 +5850,12 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
                     
                     <div class="mt-2">
                         <pre class="mb-0"><code class="language-mtron">rec::T[][inst?rng=q&amp;dom=#{?}([
- pattern       =&gt; uri::T,
- pre_write{?}  =&gt; inst::T,
- post_write{?} =&gt; inst::T,
- qless_write{?}=&gt; inst::T,
- pre_read{?}   =&gt; inst::T,
- post_read{?}  =&gt; inst::T]){&lt;j&gt;}]@/m/space/q</code></pre>
+     pattern       =&gt;   uri::T,
+     pre_write{?}  =&gt;   inst::T,
+     post_write{?} =&gt;   inst::T,
+     qless_write{?}=&gt;   inst::T,
+     pre_read{?}   =&gt;   inst::T,
+     post_read{?}  =&gt;   inst::T]){&lt;j&gt;}]@/m/space/q</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -5897,7 +5875,7 @@ be attached to a space before use. a space&#x27;s qprocs are accessible at
                     </div>
                     
                     <div class="mt-2">
-                        <pre class="mb-0"><code class="language-mtron">space::T[][inst?rng=stack&amp;dom=#{?}(isa([pattern=&gt; uri::T])){&lt;j&gt;}]@/m/space/stack</code></pre>
+                        <pre class="mb-0"><code class="language-mtron">space::T[][inst?rng=stack&amp;dom=#{?}(?[pattern=&gt;uri::T]){&lt;j&gt;}]@/m/space/stack</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -6057,7 +6035,7 @@ a-&gt;2+*a                   [-- 4 via sugar&#x27;d writing/reading a --]</code>
         <div class="container-xxl py-3 text-center">
             <hr class="border-secondary">
             <small class="text-muted">
-                generated by metatron instset doc generator on build 0-2026-04-21 22:19:14<br>
+                generated by metatron instset doc generator on build 0-2026-04-23 18:42:37<br>
                 © PhaseShift Studio, LLC
             </small>
         </div>
@@ -6073,6 +6051,10 @@ a-&gt;2+*a                   [-- 4 via sugar&#x27;d writing/reading a --]</code>
 <a href="#" class="btn btn-primary btn-square back-to-top"><i class="bi bi-caret-up-fill"></i></a>
 
 <script>
+    hljs.configure({
+        defaultLanguage: 'mtron', // Set your preferred default language
+        ignoreUnescapedHTML: true
+    });
     if (!hljs.initHighlighting.called) {
         hljs.initHighlighting.called = true
         ;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) {

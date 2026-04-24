@@ -63,6 +63,10 @@ public class MRec extends MObj implements Rec {
     public static Rec rec0() {
         return Rec.EMPTY_REC;
     }
+    
+    public static Rec noobjRec(){
+        return Rec.NOOBJ_REC;
+    }
 
     public static Rec rec(final Map<Obj, Obj> map, final fURI tid, final fURI vid) {
         return null == tid ? new MRec(Rec.Helper.cleanMap(map), REC_TID, vid) : MObj.of(Rec.Helper.cleanMap(map), tid, vid, Rec.class);

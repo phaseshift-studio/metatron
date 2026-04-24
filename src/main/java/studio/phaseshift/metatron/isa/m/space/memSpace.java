@@ -162,10 +162,10 @@ public class memSpace extends AbstractSpace<TopicTrie> {
         };
     }
 
-    protected void load() {
+    public Obj load() {
         final Uri path = (Uri) this.jvm().getOrDefault(uri(PERSIST), null);
         if (null == path)
-            return;
+            return this;
         //final ObjByteBufferSerializer serializer = new ObjByteBufferSerializer();
         final File file = new File(path.uriValue().toString());
         if (!file.exists()) {
@@ -181,12 +181,13 @@ public class memSpace extends AbstractSpace<TopicTrie> {
                 throw MTronException.of(e);
             }
         }
+        return this;
     }
 
-    protected void save() {
+    public Obj save() {
         final Uri path = (Uri) this.jvm().getOrDefault(uri(PERSIST), null);
         if (null == path)
-            return;
+            return this;
         final ObjByteBufferSerializer serializer = new ObjByteBufferSerializer();
         final File file = new File(path.uriValue().toString());
         if (file.exists()) assert file.delete();
@@ -212,5 +213,6 @@ public class memSpace extends AbstractSpace<TopicTrie> {
         } else {
             LOG.warn("no data to persist at %s", this.at(PERSIST));
         }
+        return this;
     }
 }

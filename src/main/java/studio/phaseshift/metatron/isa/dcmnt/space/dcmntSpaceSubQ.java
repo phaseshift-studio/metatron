@@ -177,7 +177,7 @@ public class dcmntSpaceSubQ extends BaseQ {
      * Start a background thread that watches a MongoDB change stream and dispatches events.
      */
     private void startChangeStreamWatcher(final fURI basePath, final String collectionName, final String documentId) {
-        final MongoCollection<Document> collection = space.database.getCollection(collectionName);
+        final MongoCollection<Document> collection = space.getDatabase().getCollection(collectionName);
 
         // Build the change stream pipeline
         final ChangeStreamIterable<Document> changeStream;

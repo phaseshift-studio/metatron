@@ -7,8 +7,9 @@
 :favicon: ./favicon.ico
 :highlightjsdir: highlight
 :source-highlighter: ./highlight.js
-:highlightjs-languages: mtron,bash,json
+:highlightjs-languages: mtron
 :highlightjs-theme: monokai
+:source-language: mtron
 :icons: font
 :icon-set: fas
 :stem: latexmath
@@ -272,13 +273,14 @@ rec::T[?[
             <script type="text/javascript">featurePanel("web_feature");</script>
         </div>
         <!-- IOT COMPATIBLE -->
-        <div id="iot_feature" data-title="IoT" data-icon="images/icons/iot-icon.svg" data-back-image="images/enoch-character.png">
+        <div id="iot_feature" data-title="IoT" data-icon="images/icons/iot-icon.svg" data-back-image="images/modal/iot-modal.svg">
             <div class="feature-front">
                 a <b class="metatron-name">micropython implementation</b> provides space-aware iot processors that can naturally provide and access data within the larger data space
             </div>
             <div class="feature-modal">
-                <p>Metatron's <b class="metatron-name">IoT</b> support brings the power of the virtual machine to edge devices. Using MicroPython, even small microprocessors can participate in the global data space.</p>
-                <img src="images/enoch-character.png" class="img-fluid mb-3" style="max-height: 300px; display: block; margin: auto;"/>
+                <p>a <b class="metatron-name">micropython</b> version of metatron enables the numerous ESP32, RapberryPI, etc. processors to maintain a section of the uri
+                 address space. These processors' memory and peripherials are accessible to any other metatron device and vice versa. Finally, a MQTT space makes integrating an IoT cluster into metatron a straightforward exercise.</p>
+                <img src="images/modal/iot-modal.svg" class="img-fluid mb-3 icon-color" style="max-height: 300px; display: block; margin: auto;"/>
             </div>
             <script type="text/javascript">featurePanel("iot_feature");</script>
         </div>

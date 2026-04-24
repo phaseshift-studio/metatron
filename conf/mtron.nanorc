@@ -41,8 +41,6 @@ color yellow,underline "0x"
 color yellow "(true)|(false)"
 ### type
 color magenta "::T"
-### noobj 
-color magenta "noobj"
 # q keys
 icolor cyan "(|#|\+|[a-z]|-|_|\{.\})+(=|<=)(?!>)"
 icolor blue "=([a-z]|[0-9]|\.|_|-|/|#|\+)+"
@@ -76,9 +74,13 @@ color yellow "[\"][^\"]*[\"]"
 color yellow "['][^']*[']"
 color yellow start="\"\"\"" end="\"\"\""
 color gray "<[^>]>"
+### fail
 color red "([a-z]|[0-9]|/)*fail::"
+### sugars and structures
 color magenta "=>" ">-" "-<" "==" "_/" "\\_"
 color green "\(" "\)" "\[" "\]" ","
+### noobj 
+color magenta "noobj"
 ### comments
 color gray start="\[--" end="--]"
 color gray start="\[==" end="==]"

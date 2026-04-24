@@ -95,7 +95,7 @@ public interface Router extends Space {
     }
 
     Obj write(final fURI vid, final Obj obj);
-    
+
     default Obj write(final String vid, final Obj obj) {
         return this.write(f(vid), obj);
     }

@@ -45,7 +45,7 @@
     <script src="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js" type="text/javascript"></script>
     <script src="../highlight/languages/mtron.min.js" type="text/javascript"></script>
     <script src="../highlight/languages/json.min.js" type="text/javascript"></script>
-    <script src="../highlight/languages/bash.min.js" type="text/javascript"></script>
+   <!-- <script src="../highlight/languages/bash.min.js" type="text/javascript"></script>-->
     <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
     <script async src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js" type="text/javascript"></script>
     <script src="../lib/wow/wow.min.js" type="text/javascript"></script>
@@ -248,32 +248,303 @@ bin/metatron</code></pre>
                                <pre><code>instset::[
  pattern=> /m/tble/#,
  q      =>[docq::[
-       pre_read =>    inst?#{*}<=#{?}(uri::T),
-       pre_write=>    inst?#{*}<=#{?}(uri::T,#::T),
+       pre_read =>    fail::[apply failure:][...]@/sys/fail/1240,
+       pre_write=>    fail::[apply failure:][...]@/sys/fail/1242,
        pattern  =>    docq,
-       obj      =>memspace::[pattern=>     <#>],
-       inst     =>instset::[pattern=>     <#>]]],
+       obj      =>memspace::[pattern=><#>],
+       inst     =>instset::[pattern=><#>]]],
  space  =>[
-   super=>  !*/m,
-   sub  =>  {!*/m/tble/space/schema/netflix,!*/m/tble/space/schema/classicmodels}],
+   super=>instset::[
+     pattern=>   /m/#,
+     q      =>[docq::[
+           pre_read =>      inst?#{*}<=#{?}(uri::T),
+           pre_write=>      inst?#{*}<=#{?}(uri::T,#::T),
+           pattern  =>      docq,
+           obj      =>memspace::[pattern=><#>],
+           inst     =>instset::[pattern=><#>]]],
+     space  =>[sub=>{!*/m/mach,!*/m/math,!*/m/web,!*/m/iot,!*/m/grph,!*/m/llm,!*/m/tble,!*/m/dcmnt}],
+     type   =>[
+          bool::T,
+          int::T,
+          real::T,
+          bytes::T,
+          str::T,
+          uri::T,
+          rel::T,
+          lst::T,
+          rec::T,
+          instset::T,
+          inst::T,
+          code::T,
+          fail::T,
+          space::T,
+          memspace::T,
+          stack::T,
+          meta::T,
+          q::T,
+          subq::T,
+          sub::T,
+          typeq::T,
+          docq::T,
+          incrq::T,
+          constq::T],
+     const  =>[noobj],
+     rewrite=>[
+          /m/inst/rewrite/id_removal?code{?}<=code(),
+          /m/inst/rewrite/map_nest?code{?}<=code(),
+          /m/inst/rewrite/else_after_count?code{?}<=code(),
+          /m/inst/rewrite/plus_zero?code{?}<=code(),
+          /m/inst/rewrite/mult_one?code{?}<=code(),
+          /m/inst/rewrite/split_merge_collapse?code{?}<=code(),
+          /m/inst/rewrite/split_merge_left_factor?code{?}<=code(),
+          /m/inst/rewrite/split_merge_right_factor?code{?}<=code()],
+     inst   =>[
+          as?bool<=bool(bool::T),
+          as?bytes<=bool(bytes::T),
+          as?int<=bool(int::T),
+          as?real<=bool(real::T),
+          as?str<=bool(str::T),
+          plus?bool<=bool(bool::T),
+          mult?bool<=bool(bool::T),
+          not?bool<=bool(),
+          as?bool<=bytes(bool::T),
+          as?str<=bytes(str::T),
+          zero?bytes<=bytes(),
+          plus?bytes<=bytes(bytes::T),
+          within?B<=bytes(B::T),
+          as?bool<=int(bool::T),
+          as?bytes<=int(bytes::T),
+          as?real<=int(real::T),
+          as?str<=int(str::T),
+          as?uri<=int(uri::T),
+          zero?int<=int(),
+          one?int<=int(),
+          neg?int<=int(),
+          mult?int<=int(int::T),
+          minus?int<=int(int::T),
+          plus?int<=int(int::T),
+          gt?bool<=int(int::T),
+          gte?bool<=int(int::T),
+          lt?bool<=int(int::T),
+          lte?bool<=int(int::T),
+          sum?int<=int{*}(),
+          prod?int<=int{*}(),
+          pow?int<=int(int::T),
+          mod?int<=int(int::T),
+          order?lst<=int{*}(),
+          as?int<=real(int::T),
+          as?str<=real(str::T),
+          gt?bool<=real(real::T),
+          gte?bool<=real(real::T),
+          lt?bool<=real(real::T),
+          lte?bool<=real(real::T),
+          neg?real<=real(),
+          plus?real<=real(real::T),
+          mult?real<=real(real::T),
+          div?real<=real(real::T),
+          zero?real<=real(),
+          one?real<=real(),
+          inv?real<=real(),
+          minus?real<=real(real::T),
+          sum?real<=real{*}(),
+          prod?real<=real{*}(),
+          mean?real<=real{*}(),
+          pow?real<=real(real::T),
+          math?real<=#{?}(str::T),
+          order?lst<=real{*}(),
+          as?str<=str(str::T),
+          as?bytes<=str(bytes::T),
+          as?bool<=str(bool::T),
+          as?int<=str(int::T),
+          as?real<=str(real::T),
+          as?uri<=str(uri::T),
+          reverse?str<=str(),
+          zero?str<=str(),
+          has?str{?}<=str(str::T),
+          split?lst<=str(str::T),
+          merge?str<=str{*}(str::T),
+          regex?lst<=str(str::T),
+          gt?bool<=str(str::T),
+          gte?bool<=str(str::T),
+          lt?bool<=str(str::T),
+          lte?bool<=str(str::T),
+          plus?str<=str(str::T),
+          sum?str<=str{*}(str{?}::T),
+          ucase?str<=str(),
+          lcase?str<=str(),
+          within?B<=str(B::T),
+          as?int<=uri(int::T),
+          as?uri<=uri(uri::T),
+          as?str<=uri(str::T),
+          as?rec<=uri(rec::T),
+          reverse?uri<=uri(),
+          has?uri{?}<=uri(str::T),
+          has?uri{?}<=uri(uri::T),
+          split?lst<=uri(uri::T),
+          merge?uri<=uri{*}(uri::T),
+          minus?uri<=uri(uri::T),
+          plus?uri{?}<=uri(uri{?}::T),
+          mult?uri{?}<=uri(uri{?}::T),
+          sum?uri<=uri{*}(),
+          prod?uri<=uri{*}(),
+          path?uri<=uri(uri::T),
+          q?uri<=uri(rec::T),
+          uri:c?lst<=uri(uri::T),
+          pow?uri<=uri(int::T),
+          scheme?uri{?}<=uri(),
+          scheme?uri<=uri(uri::T),
+          authority?uri{?}<=uri(),
+          host?uri{?}<=uri(),
+          host?uri<=uri(uri::T),
+          port?int{?}<=uri(),
+          port?uri<=uri(int::T),
+          select?uri{?}<=uri(uri::T),
+          where?uri{?}<=uri(uri::T),
+          as?lst<=rel(lst::T),
+          as?rec<=rel(rec::T),
+          merge?rec<=rel{*}(rec::T),
+          split(rel::T),
+          dom?#{*}<=rel(),
+          rng?#{*}<=rel(),
+          get?A{?}<=rel(#::T),
+          select?rel{?}<=rel(rel::T),
+          plus?rel{*}<=rel(rel{*}::T),
+          mult?rel{*}<=rel(rel{*}::T),
+          neg?rel<=rel(),
+          one?rel<=rel(),
+          zero?rel<=rel(),
+          as?lst<=lst(lst::T),
+          as?rec<=lst(rec::T),
+          as?code<=lst(code::T),
+          reverse?lst<=lst(),
+          plus?lst<=lst(lst::T),
+          mult?lst<=lst(lst::T),
+          zero?lst<=lst(),
+          split(lst::T),
+          merge?A{*}<=lst(),
+          merge?A{*}<=lst(uri::T),
+          merge?A{*}<=lst(str::T),
+          has?lst{?}<=lst(#::T),
+          within?lst<=lst(#{*}::T),
+          sum?lst<=lst{*}(),
+          select?lst{?}<=lst(lst::T),
+          update?lst<=lst(lst::T),
+          pow?lst<=lst(int::T),
+          as?lst<=rec(lst::T),
+          as?uri<=rec(uri::T),
+          zero?rec<=rec(),
+          reverse?rec<=rec(),
+          has?rec{?}<=rec(#::T,#::T),
+          has?rec{?}<=rec(#::T),
+          get?A{*}<=rec(uri::T),
+          split(rec::T),
+          merge?rel{*}<=rec(),
+          dom?A{*}<=rec(),
+          rng?A{*}<=rec(),
+          rshift?A{*}<=rec(#{*}::T),
+          lshift?A{*}<=rec(),
+          plus?rec<=rec(rec{??}::T),
+          mplus?rec<=rec(rec::T),
+          select?rec{?}<=rec(rec::T),
+          select?#{?}<=rec(uri::T),
+          select?rec{?}<=rec(uri{2,}::T),
+          update?rec{?}<=rec(rec::T),
+          update?rec{?}<=rec(rel::T),
+          within?rec<=rec(#{*}::T),
+          sum?rec<=rec{*}(),
+          as?lst<=code(lst::T),
+          cause?fail{?}<=fail(),
+          reify?rec<=fail(),
+          serialize?B<=A(io::T),
+          fork?A{*}<=A{*}(#::T),
+          range?A{*}<=A{*}(int::T,isa(int::T).else(0)),
+          order?A{*}<=A{*}(#::T),
+          as?noobj{0}<=A(),
+          as?B<=A(#::T),
+          import?space{*}<=#{?}(uri::T,uri{?}::T),
+          dedup?A{*}<=A{*}(),
+          barrier?lst<=#{*}(lst::T),
+          barrier?rec<=rel{*}(rec::T),
+          barrier?A{*}<=A{*}(),
+          barrier?A{*}<=A{*}(A{*}::T),
+          as?A<=A(A::T),
+          repeat?A{*}<=A(#::T,#::T),
+          !#{?}::T,
+          !*#{?}::T,
+          auto_at?#{*}<=#{?}(#{?}::T,#{?}::T),
+          auto_to(),
+          catch?A{*}<=A(A{*}::T),
+          end?noobj{0}<=#{*}(),
+          println?#{*}<=#{?}(#{*}::T),
+          print?#{*}<=#{?}(#{*}::T),
+          at?A<=A(uri{?}::T,#{?}::T),
+          id?A<=A(),
+          id?A{*}<=A{*}(),
+          and?bool<=A(bool::T,bool::T,bool{?}::T,bool{?}::T,bool{?}::T),
+          or?bool<=A(bool::T,bool::T,bool{?}::T,bool{?}::T,bool{?}::T),
+          apply(#{*}::T),
+          map?B<=A(B::T),
+          map?B{?}<=A{?}(B{?}::T),
+          filter?A{?}<=A(#{?}::T),
+          side?A<=A(#::T),
+          tid(),
+          vid?A<=A(uri::T),
+          vid(),
+          else(#{?}::T),
+          is?A{?}<=A{?}(isa(bool::T).else(false)),
+          ?#::T,
+          matches?bool<=#{?}(#{?}::T),
+          block?B<=A{?}(B::T),
+          split(#{+}::T),
+          choose(rec::T),
+          merge?lst<=A{*}(lst::T),
+          merge?#{*}<=A{*}(#{*}::T),
+          merge?A{*}<=A{*}(A{*}::T),
+          not(bool::T),
+          eq?bool<=A(A::T),
+          neq?bool<=A(A::T),
+          to?A{?}<=A{?}(uri::T),
+          *uri::T,
+          ref(#{*}::T),
+          thread?A<=A(#::T),
+          source?B{*}<=A(str::T),
+          type?/m/type<=/m/type(),
+          type?/m/type<=A(),
+          cc?int<=A{*}(),
+          cc?A{*}<=A{*}(int::T),
+          failure?fail<=#{*}(#{?}::T),
+          parent(),
+          count?int<=A{*}(),
+          skip?A{*}<=A{*}(int::T),
+          take?A{*}<=A{*}(int::T),
+          reify?rec<=A(),
+          reduce(#::T),
+          where?A{?}<=A(B::T),
+          group?rec<=#{*}(rec::T),
+          eval?B<=A{?}(code=>str::T),
+          swap?A<=A(B::T),
+          rshift?B{*}<=A(C{*}::T),
+          lshift?B{*}<=A(),
+          start?A{**}<=noobj{0}(A{**}::T)]]@/m,
+   sub  =>  {!*/m/tble/space/schema/netflix,!*/m/tble/space/schema/classicmodels,!*/m/tble/space/schema/db}],
  type   =>[
       lrow::T,
       rrow::T,
       table::T,
       tblespace::T],
  inst   =>[
-      as?rrow<=lrow(rrow::T),
-      as?lrow<=rrow(lrow::T),
-      sql?rrow{*}<=tblespace(str::T)],
+      fail::[apply failure:][...]@/sys/fail/1244,
+      fail::[apply failure:][...]@/sys/fail/1246,
+      fail::[apply failure:][...]@/sys/fail/1248],
  rewrite=>[
-      /m/tble/inst/rewrite/sql_count?code{?}<=code(),
-      /m/tble/inst/rewrite/sql_sum?code{?}<=code(),
-      /m/tble/inst/rewrite/sql_mean?code{?}<=code(),
-      /m/tble/inst/rewrite/sql_limit?code{?}<=code(),
-      /m/tble/inst/rewrite/sql_has?code{?}<=code(),
-      /m/tble/inst/rewrite/sql_where?code{?}<=code(),
-      /m/tble/inst/rewrite/sql_where_count?code{?}<=code(),
-      /m/tble/inst/rewrite/sql_select?code{?}<=code()]]@/m/tble</code></pre>
+      fail::[apply failure:][...]@/sys/fail/1250,
+      fail::[apply failure:][...]@/sys/fail/1252,
+      fail::[apply failure:][...]@/sys/fail/1254,
+      fail::[apply failure:][...]@/sys/fail/1256,
+      fail::[apply failure:][...]@/sys/fail/1258,
+      fail::[apply failure:][...]@/sys/fail/1260,
+      fail::[apply failure:][...]@/sys/fail/1262,
+      fail::[apply failure:][...]@/sys/fail/1264]]@/m/tble</code></pre>
                         </div>
                     </div>
                 </div>
@@ -302,6 +573,9 @@ bin/metatron</code></pre>
                 </a>
                 <a href="!*_m_tble_space_schema_classicmodels.html" class="btn btn-sm btn-outline-secondary">
                     <i class="bi bi-arrow-down"></i> !*/m/tble/space/schema/classicmodels
+                </a>
+                <a href="!*_m_tble_space_schema_db.html" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-down"></i> !*/m/tble/space/schema/db
                 </a>
                 </div>
             </div>
@@ -431,7 +705,7 @@ bin/metatron</code></pre>
                     </div>
                     
                     <div class="card-body p-2">
-                        <pre class="mb-0"><code class="language-mtron">rec::T[?[uri::T=&gt;   #::T]]@/m/tble/rrow</code></pre>
+                        <pre class="mb-0"><code class="language-mtron">rec::T[?[uri::T=&gt;#::T]]@/m/tble/rrow</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -479,7 +753,7 @@ bin/metatron</code></pre>
                     </div>
                     <div class="card-body py-2">
                         <pre class="mb-0 text-bright" style="font-family: monospace; font-size: 0.8em;">"a table space typically backed by an sql-compliant relational database" <span class="text-light">=&gt;</span> "a result set as a stream of rows in mtron"
-   <pre><code class="language-mtron hljs">[0=&gt; &#x27;an sql query&#x27;]</code></pre></pre>
+   <pre><code class="language-mtron hljs">[0=&gt;&#x27;an sql query&#x27;]</code></pre></pre>
                     </div>
         <div class="card-body border-top py-2">
             <small class="text-muted fw-bold">examples:</small>
@@ -501,13 +775,13 @@ bin/metatron</code></pre>
                     
                     <div class="mt-2">
                         <pre class="mb-0"><code class="language-mtron">space::T[isa([
- pattern  =&gt; uri::T,
- host     =&gt; uri::T,
- driver   =&gt; uri::T,
- route    =&gt;[uri::T=&gt;  uri::T],
- {?}table =&gt; lst::T,
- {?}root  =&gt; rec::T,
- {?}schema=&gt; instset::T])][/m/inst/ctor?rng=tblespace&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/tble/space/tblespace</code></pre>
+     pattern  =&gt;   uri::T,
+     host     =&gt;   uri::T,
+     driver   =&gt;   uri::T,
+     route    =&gt;[uri::T=&gt;uri::T],
+     {?}table =&gt;   lst::T,
+     {?}root  =&gt;   rec::T,
+     {?}schema=&gt;   instset::T])][/m/inst/ctor?rng=tblespace&amp;dom=#{?}(rec::T){&lt;j&gt;}]@/m/tble/space/tblespace</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -686,7 +960,7 @@ bin/metatron</code></pre>
         <div class="container-xxl py-3 text-center">
             <hr class="border-secondary">
             <small class="text-muted">
-                generated by metatron instset doc generator on build 0-2026-04-21 22:20:11<br>
+                generated by metatron instset doc generator on build 0-2026-04-23 18:43:21<br>
                 © PhaseShift Studio, LLC
             </small>
         </div>
@@ -702,6 +976,10 @@ bin/metatron</code></pre>
 <a href="#" class="btn btn-primary btn-square back-to-top"><i class="bi bi-caret-up-fill"></i></a>
 
 <script>
+    hljs.configure({
+        defaultLanguage: 'mtron', // Set your preferred default language
+        ignoreUnescapedHTML: true
+    });
     if (!hljs.initHighlighting.called) {
         hljs.initHighlighting.called = true
         ;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) {

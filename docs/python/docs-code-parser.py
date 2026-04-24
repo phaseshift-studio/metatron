@@ -50,6 +50,7 @@ else:  # pragma: no cover
 
 DEBUG: bool = os.environ.get("DEBUG", "0") == "1"
 
+_CALLOUT_RE = re.compile(r'\s*\[-- <\d+>\s*$')
 
 def remove_html_comment(commented_text: str) -> str:
     commented_text = commented_text.removesuffix(" -->")
@@ -77,7 +78,8 @@ def execute_code(
                 new_code.append(new_code.rstrip().removesuffix(" /\"") + "\n        " + c + "\"")
             else:
                 new_code.append("\"" + c + "\"")
-        cat = c.endswith("/")
+        stripped = _CALLOUT_RE.sub('', c.rstrip())
+        cat = stripped.endswith("/")
     full_code = " ".join(new_code)
     full_code = full_code.replace("\\|", "|")
     # full_code = full_code.replace("{", "&<<")
@@ -245,9 +247,9 @@ class ProcessingState:
         to_execute = []
         running_line = ""
         for line in self.code:
-            if line.rstrip().endswith("/"):
-                running_line += line.rstrip().removesuffix(
-                    "/") + "\n       "  # add spaces to shift right due to mtron> 
+            stripped = _CALLOUT_RE.sub('', line.rstrip())
+            if stripped.endswith("/"):
+                running_line += stripped.removesuffix("/").rstrip() + "\n       "  # add spaces to shift right due to mtron> 
             elif line.startswith("[HEADER]"):
                 to_header.append(line)
             else:

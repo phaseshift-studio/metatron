@@ -51,12 +51,8 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TID;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
-import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.tble.tbleInstSet.*;
 
@@ -241,6 +237,38 @@ public class tbleSpace extends AbstractSpace<Connection> {
         }
     }
 
+    /**
+     * Lazily initializes {@link #existingTableSchema} the first time a table-mapped write or
+     * read is attempted after the space was mounted without an initial {@code table} config key.
+     * This allows {@code /sys/space/lite/table -> [person,score]} at runtime to enable table
+     * mapping without a restart.
+     */
+    protected synchronized void lazyInitExistingTableSchema() {
+        if (this.existingTableSchema == null) {
+            try {
+                this.existingTableSchema = new ExistingTableSchema(this, "objs");
+                this.existingTableSchema.initialize(this.sjvm());
+                LOG.info("lazy-initialized {{g}}existing table schema{{X}} - discovered %s tables",
+                        this.existingTableSchema.getTableNames().size());
+            } catch (final SQLException ex) {
+                throw MTronException.of(ex);
+            }
+        }
+    }
+
+    /**
+     * Returns {@code true} if {@code tableName} is explicitly listed in the {@code TABLE}
+     * space config. Only paths whose first segment appears in the config whitelist are
+     * eligible for create-on-first-write — this prevents KV-style paths (e.g.
+     * {@code db:kv/test}) from accidentally becoming SQL tables.
+     */
+    protected boolean isConfiguredTable(final String tableName) {
+        final Obj tableConfig = this.at(uri(TABLE));
+        if (tableConfig == null || tableConfig.isNoObj() || !tableConfig.isLst()) return false;
+        return tableConfig.asLst().lstValue().stream()
+                .anyMatch(o -> o.isUri() && tableName.equalsIgnoreCase(o.asUri().uriValue().name()));
+    }
+
     @Override
     public BiFunction<fURI, Obj, Obj> directWriter() {
         return (pattern, obj) -> {
@@ -251,6 +279,30 @@ public class tbleSpace extends AbstractSpace<Connection> {
                     final fURI alignedPattern = Space.Helper.routeFromSpace(pattern, this.routes());
                     // Check if this is a table mapping path (existing table)
                     if (this.existingTableSchema != null && this.existingTableSchema.isTablePath(alignedPattern)) {
+                        this.existingTableSchema.write(this.sjvm(), alignedPattern, obj);
+                    } else if (obj.isRec()
+                            && alignedPattern.segments().size() >= 2
+                            && !alignedPattern.segments().get(1).equals("+")
+                            && !alignedPattern.segments().get(1).equals("#")
+                            && isConfiguredTable(alignedPattern.segments().getFirst())) {
+                        // "Create on first write": infer the table schema from the record's field
+                        // types and create the SQL table automatically on the first write.
+                        // Only triggers when the first path segment is explicitly listed in the
+                        // TABLE config — prevents KV-style paths (e.g. db:kv/test) from
+                        // accidentally becoming SQL tables.
+                        lazyInitExistingTableSchema();
+                        final String tableName = alignedPattern.segments().getFirst();
+                        if (!this.existingTableSchema.getTableNames().contains(tableName.toLowerCase())) {
+                            this.existingTableSchema.createTableFromRecord(this.sjvm(), tableName, obj.asRec());
+                            // Keep the live table config in sync so introspection reflects the new table
+                            final Obj currentTable = this.at(uri(TABLE));
+                            final java.util.List<Obj> tableList = new java.util.ArrayList<>();
+                            if (currentTable != null && !currentTable.isNoObj() && currentTable.isLst())
+                                tableList.addAll(currentTable.asLst().jvm());
+                            if (tableList.stream().noneMatch(o -> o.isUri() && tableName.equalsIgnoreCase(o.asUri().uriValue().name())))
+                                tableList.add(uri(tableName));
+                            this.at(uri(TABLE), lst(tableList), MUTABLE);
+                        }
                         this.existingTableSchema.write(this.sjvm(), alignedPattern, obj);
                     } else {
                         // Use key-value schema

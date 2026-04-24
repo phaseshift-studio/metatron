@@ -42,6 +42,7 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -295,7 +296,8 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
                 // Integer fields
                 Arguments.of("Integer age field", "db:users/1", "age", jnt(30)),
                 Arguments.of("Integer quantity field", "db:products/102", "quantity", jnt(50)),
-                Arguments.of("Primary key field", "db:users/3", "id", jnt(3)),
+                // Note: primary key (id) is encoded in the VID, not in the row body.
+                // To read the pk value use the path db:users/3/id, not a full-row read.
 
                 // Real/Double fields
                 Arguments.of("Real salary field", "db:users/1", "salary", real(75000.50)),
@@ -595,5 +597,163 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
         }
 
         cleanupTestDatabase();
+    }
+
+    // ========== auto_from FK Pointer Tests ==========
+
+    /**
+     * Creates {@code person} and {@code award} tables via auto-creation (first-write DDL),
+     * verifying that {@code auto_from} pointer values round-trip correctly through SQL:
+     * <ol>
+     *   <li>written as the raw FK integer PK</li>
+     *   <li>read back as a live {@code auto_from} inst pointing to the correct URI</li>
+     *   <li>dereferenced via the fURI path to the full referenced record</li>
+     * </ol>
+     * The test intentionally uses no pre-existing schema — tables are created on
+     * the first write, and FK tracking is via {@code _mtron_meta} so it is
+     * portable across SQLite, PostgreSQL, MySQL, and MariaDB.
+     */
+    @Test
+    public void testAutoFromWriteReadRoundTrip() throws Exception {
+        final fURI spaceVid = f("/sys/space/tble/autofrom_test");
+        // Use a unique scheme "pfk:" so this space has no overlap with the main "db:#" space.
+        final tbleSpace testSpace = tbleSpace.of(
+                rec(
+                        uri(PATTERN), uri("pfk:#"),
+                        uri(HOST),    uri(staticDbConfig.getJdbcHost()),
+                        uri(DRIVER),  uri(staticDbConfig.getDriverClass()),
+                        uri(TABLE),   lst(uri("person"), uri("award")),
+                        uri(ROUTE),   rec(uri("pfk:"), uri(""))
+                ).jvm(),
+                spaceVid
+        );
+
+        try {
+            // --- WRITE: auto-create person table, then award table with FK pointer ---
+            Router.writeToSpace(f("pfk:person/1"), rec(uri("name"), str("Alice")));
+            Router.writeToSpace(f("pfk:person/2"), rec(uri("name"), str("Bob")));
+
+            final Obj alicePointer = auto_from_(f("pfk:person/1")).tryToInst();
+            Router.writeToSpace(f("pfk:award/1"), rec(
+                    uri("trophy"),    str("gold"),
+                    uri("recipient"), alicePointer
+            ));
+            Router.writeToSpace(f("pfk:award/2"), rec(
+                    uri("trophy"),    str("silver"),
+                    uri("recipient"), auto_from_(f("pfk:person/2")).tryToInst()
+            ));
+
+            // --- READ: recipient must come back as an auto_from inst, not a plain str ---
+            final Obj award1 = Router.readFromSpace(f("pfk:award/1"));
+            assertTrue(award1.isRec(), "award/1 should be a record");
+            final Obj recipient = award1.asRec().at(uri("recipient"));
+            assertTrue(recipient.isAutoFrom(),
+                    "recipient should be an auto_from inst, got: " + recipient.tid());
+
+            // The pointer should reference pfk:person/1
+            assertEquals(f("pfk:person/1"), recipient.asInst().arg(0).uriValue(),
+                    "auto_from should point to pfk:person/1");
+
+            // --- DEREFERENCE: traversing the pointer should yield Alice's record ---
+            final Obj aliceRec = Router.readFromSpace(f("pfk:award/1/recipient"));
+            assertTrue(aliceRec.isRec(), "dereferenced recipient should be a record");
+            assertEquals(str("Alice"), aliceRec.asRec().at(uri("name")),
+                    "dereferenced recipient name should be Alice");
+
+            // --- SECOND ROW: verify Bob's pointer too ---
+            final Obj award2 = Router.readFromSpace(f("pfk:award/2"));
+            final Obj recipient2 = award2.asRec().at(uri("recipient"));
+            assertTrue(recipient2.isAutoFrom(), "award/2 recipient should also be auto_from");
+            assertEquals(f("pfk:person/2"), recipient2.asInst().arg(0).uriValue(),
+                    "auto_from should point to pfk:person/2");
+
+            LOG.info("auto_from round-trip test passed on {}", staticDbConfig.getDatabaseName());
+
+        } finally {
+            // Drop the auto-created tables to leave db clean for other tests
+            try (final Connection conn = staticDbConfig.getConnection();
+                 final Statement stmt = conn.createStatement()) {
+                stmt.executeUpdate("DROP TABLE IF EXISTS award");
+                stmt.executeUpdate("DROP TABLE IF EXISTS person");
+            }
+            Router.global().removeSpace(testSpace.vid());
+            testSpace.close();
+        }
+    }
+
+    /**
+     * Verifies that the {@code _mtron_meta} table is created on space init and
+     * that it correctly records auto_from column mappings after a write.
+     */
+    @Test
+    public void testMtronMetaTableTracksAutoFromColumns() throws Exception {
+        final fURI spaceVid = f("/sys/space/tble/metacheck_test");
+        // Use a unique scheme "pmk:" so this space has no overlap with the main "db:#" space.
+        final tbleSpace testSpace = tbleSpace.of(
+                rec(
+                        uri(PATTERN), uri("pmk:#"),
+                        uri(HOST),    uri(staticDbConfig.getJdbcHost()),
+                        uri(DRIVER),  uri(staticDbConfig.getDriverClass()),
+                        uri(TABLE),   lst(uri("category"), uri("item")),
+                        uri(ROUTE),   rec(uri("pmk:"), uri(""))
+                ).jvm(),
+                spaceVid
+        );
+
+        try {
+            Router.writeToSpace(f("pmk:category/10"), rec(uri("label"), str("Books")));
+            Router.writeToSpace(f("pmk:item/1"), rec(
+                    uri("title"),    str("Dune"),
+                    uri("category"), auto_from_(f("pmk:category/10")).tryToInst()
+            ));
+
+            // _mtron_meta should have one row for item.category -> category
+            try (final Connection conn = staticDbConfig.getConnection();
+                 final Statement stmt = conn.createStatement();
+                 final ResultSet rs = stmt.executeQuery(
+                         "SELECT column_name, ref_table FROM _mtron_meta " +
+                         "WHERE table_name = 'item'")) {
+                assertTrue(rs.next(), "_mtron_meta should have a row for item.category");
+                assertEquals("category", rs.getString("column_name"));
+                assertEquals("category", rs.getString("ref_table"));
+                assertFalse(rs.next(), "_mtron_meta should have exactly one row for item");
+            }
+
+            // And a subsequent space restart (re-init) must still reconstruct the auto_from
+            testSpace.close();
+            Router.global().removeSpace(testSpace.vid());
+
+            final tbleSpace testSpace2 = tbleSpace.of(
+                    rec(
+                            uri(PATTERN), uri("pmk:#"),
+                            uri(HOST),    uri(staticDbConfig.getJdbcHost()),
+                            uri(DRIVER),  uri(staticDbConfig.getDriverClass()),
+                            uri(TABLE),   lst(uri("category"), uri("item")),
+                            uri(ROUTE),   rec(uri("pmk:"), uri(""))
+                    ).jvm(),
+                    spaceVid
+            );
+            try {
+                final Obj item = Router.readFromSpace(f("pmk:item/1"));
+                final Obj catPtr = item.asRec().at(uri("category"));
+                assertTrue(catPtr.isAutoFrom(),
+                        "after restart, category should still be auto_from, got: " + catPtr.tid());
+            } finally {
+                Router.global().removeSpace(testSpace2.vid());
+                testSpace2.close();
+            }
+
+        } finally {
+            try (final Connection conn = staticDbConfig.getConnection();
+                 final Statement stmt = conn.createStatement()) {
+                stmt.executeUpdate("DROP TABLE IF EXISTS item");
+                stmt.executeUpdate("DROP TABLE IF EXISTS category");
+            }
+            try {
+                Router.global().removeSpace(testSpace.vid());
+                testSpace.close();
+            } catch (final Exception ignored) {
+            }
+        }
     }
 }

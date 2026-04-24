@@ -287,6 +287,11 @@ table {
     margin-top: -20px;
     margin-left: -15px;
 }
+#iot_feature .flip-box-back img {
+    transform: scale(1.50);
+    margin-top: -20px;
+    margin-left: -15px;
+}
 #mtron_feature .flip-box-back img,
 #uri_feature .flip-box-back img {
     transform: scale(2);
@@ -535,6 +540,14 @@ h1 {
 .neon-box {
     box-shadow: 0 0 5px #fff, 0 0 5px var(--primary), 0 0 5px var(--primary);
     /* #0fa neat green color */
+}
+
+.btn-dark:has(.bi-terminal) {
+    font-size: 1.75rem;
+    background-color: transparent;
+    border: none;
+    position: relative;
+    top: -3px;
 }
 
 
@@ -1417,7 +1430,7 @@ $(addBlockSwitches);
     <script src="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js" type="text/javascript"></script>
     <script src="./highlight/languages/mtron.min.js" type="text/javascript"></script>
     <script src="./highlight/languages/json.min.js" type="text/javascript"></script>
-    <script src="./highlight/languages/bash.min.js" type="text/javascript"></script>
+   <!-- <script src="./highlight/languages/bash.min.js" type="text/javascript"></script>-->
     <script src="https://code.jquery.com/jquery-3.4.1.min.js" type="text/javascript"></script>
     <script async src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js" type="text/javascript"></script>
     <script src="lib/wow/wow.min.js" type="text/javascript"></script>
@@ -1830,13 +1843,14 @@ rec::T[?[
             <script type="text/javascript">featurePanel("web_feature");</script>
         </div>
         <!-- IOT COMPATIBLE -->
-        <div id="iot_feature" data-title="IoT" data-icon="images/icons/iot-icon.svg" data-back-image="images/enoch-character.png">
+        <div id="iot_feature" data-title="IoT" data-icon="images/icons/iot-icon.svg" data-back-image="images/modal/iot-modal.svg">
             <div class="feature-front">
                 a <b class="metatron-name">micropython implementation</b> provides space-aware iot processors that can naturally provide and access data within the larger data space
             </div>
             <div class="feature-modal">
-                <p>Metatron's <b class="metatron-name">IoT</b> support brings the power of the virtual machine to edge devices. Using MicroPython, even small microprocessors can participate in the global data space.</p>
-                <img src="images/enoch-character.png" class="img-fluid mb-3" style="max-height: 300px; display: block; margin: auto;"/>
+                <p>a <b class="metatron-name">micropython</b> version of metatron enables the numerous ESP32, RapberryPI, etc. processors to maintain a section of the uri
+                 address space. These processors' memory and peripherials are accessible to any other metatron device and vice versa. Finally, a MQTT space makes integrating an IoT cluster into metatron a straightforward exercise.</p>
+                <img src="images/modal/iot-modal.svg" class="img-fluid mb-3 icon-color" style="max-height: 300px; display: block; margin: auto;"/>
             </div>
             <script type="text/javascript">featurePanel("iot_feature");</script>
         </div>
@@ -1879,6 +1893,10 @@ rec::T[?[
 <a href="#" class="btn btn-primary btn-square back-to-top"><i class="bi bi-caret-up-fill"></i></a>
 
 <script>
+    hljs.configure({
+        defaultLanguage: 'mtron', // Set your preferred default language
+        ignoreUnescapedHTML: true
+    });
     if (!hljs.initHighlighting.called) {
         hljs.initHighlighting.called = true
         ;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) {

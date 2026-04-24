@@ -688,6 +688,17 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
             Router.global().write(this.vid(), noobj());
     }
 
+    /**
+     * Returns the current obj stored at this obj's vid, or {@code this} if no vid is set.
+     */
+    default Obj load() {
+        return null == this.vid() ? this : Router.global().read(this.vid());
+    }
+
+    default Obj save() {
+        return null == this.vid() ? this : Router.global().write(this.vid(), this);
+    }
+
     default boolean booleanCheck() {
         if (this.isNoObj() || this.isFail())
             return false;
@@ -761,7 +772,11 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
             return SERIALIZER.write(obj);
         }
 
-        public static void objCheckAndSave(final Obj obj) {
+        /**
+         * Check that {@code obj} satisfies its declared type (when type-checking is enabled).
+         * Throws {@link MTronException} on failure. Does NOT trigger a space write.
+         */
+        public static void objTypeCheck(final Obj obj) {
             if (TypeCheck.obj_write.enabled()) {
                 if (Router.loaded() && !obj.isInstSet() && !obj.isNoObj() && !obj.isType() && !obj.test(obj.type())) {
                     if (obj.isPoly()) {
@@ -777,6 +792,10 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                         throw MTronException.of("%s is not a %s".formatted(obj, obj.type()));
                 }
             }
+        }
+
+        public static void objCheckAndSave(final Obj obj) {
+            objTypeCheck(obj);
             if (null != obj.vid() && !obj.isType())
                 Router.writeToSpace(obj.vid(), obj);
         }
@@ -1033,7 +1052,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                                                             rec(jnt(0), MObjFactory.of().toObj(lhs.jvm()))))))),
                     docWrap(instC(REDUCE_INST_TID.dom(ALL.maybeSome()).rng(ALL), lst(T(ALL)), (lhs, inst) -> Stream.concat(inst.arg(0).<Inst>as().arg(0).stream(), lhs.stream()).reduce((a, b) -> inst.arg(0).<Inst>as().args(lst(a)).apply(b)).orElse(noobj())),
                             "any objs", "the result of applying the arg inst to each obj", Map.of(jnt(0), "the inst to apply to each obj"), "a reduce function \\(f(X) \\to x\\)"),
-                    docWrap(instC(WHERE_INST_TID.dom(ALL).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> inst.arg(0).isObjCall() ? (inst.arg(0).apply(lhs).isNoObj() ? noobj() : lhs) : (lhs.test(inst.arg(0)) ? lhs : noobj())),
+                    docWrap(instC(WHERE_INST_TID.dom(A).rng(A.maybe()), lst(T(B)), (lhs, inst) -> inst.arg(0).isObjCall() ? (inst.arg(0).apply(lhs).isNoObj() ? noobj() : lhs) : (lhs.test(inst.arg(0)) ? lhs : noobj())),
                             "any obj", "filter the lhs obj based on whether the arg yields noobj or not", Map.of(jnt(0), "the inst to filter objs by"), "a filter function \\(f(x)\\to \\{\\emptyset \\cup x\\}\\)"),
                     instC(GROUP_INST_TID.dom(ALL.maybeSome()).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> {
                         final Map<Obj, Obj> result = new LinkedHashMap<>();
@@ -1048,10 +1067,23 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                                         kv.getValue().asLst().at(0).apply(kv.getValue().asLst().at(jnt(1)))))  // compute barriered value
                                 .collect(new CommonUtil.RecCollector());
                     }),
-                    docWrap(instC(EVAL_INST_TID.dom(ALL.maybe()).rng(ALL_STAR), rec(uri(Tokens.CODE), STR_TYPE), (lhs, inst) -> mParser.eval(inst.arg("code").strValue())),
+                    docWrap(instC(EVAL_INST_TID.dom(A.maybe()).rng(B), rec(uri(Tokens.CODE), STR_TYPE), (lhs, inst) -> mParser.eval(inst.arg("code").strValue())),
                             "can be any obj as long as the arg generated is a str", "the result of evaluating the source str arg", Map.of(uri(Tokens.CODE), "the mtron source code to evaluate"), "evaluates mtron source code"),
                     instC(SWAP_TID.dom(A).rng(A), lst(T(B)), (lhs, inst) -> lhs.apply(inst.arg(0))),
-                    instC(RSHIFT_INST_TID.dom(A).rng(B.maybeSome()), lst(), (lhs, inst) -> lhs.isPoly() ? lhs.<Poly<?, ?>>as().at(uri("+")) : noobj()),
+                    instC(RSHIFT_INST_TID.dom(A).rng(B.maybeSome()), lst(T(C.maybeSome())), (lhs, inst) -> {
+                        if (lhs.isRec())
+                            return Rec.Helper.rshiftRec(lhs.asRec(), inst);
+                        else if (lhs.isLst())
+                            return Lst.Helper.rshiftLst(lhs.asLst(), inst);
+                        else if (lhs.isUri())
+                            return Uri.Helper.rshiftUri(lhs.asUri(), inst);
+                        else if (lhs.isRel())
+                            return Rel.Helper.rshiftRel(lhs.asRel(), inst);
+                        else if(lhs.isObjs())
+                            return objs(lhs.asObjs().stream().flatMap(o -> inst.apply(o).stream()));
+                        else return noobj();
+                        // lhs.isPoly() ? lhs.<Poly<?, ?>>as().at(uri("+")) : noobj()
+                    }),
                     instC(LSHIFT_INST_TID.dom(A).rng(B.maybeSome()), lst(), (lhs, inst) -> lhs.parent())));
         }
     }
