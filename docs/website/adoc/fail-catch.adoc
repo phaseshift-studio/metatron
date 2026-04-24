@@ -3,50 +3,67 @@
 
 The exception handling architecture of metatron leverages a fail monad with some unique features novel to metatron. The fail monad as two states: *propagating* and *caught*.
 
-[cols="6a,4a",separator=🧱,role="table-bordered small center"]
+[width="100%", cols="2a,6a,4a",options=header,separator=🧱,role="table-bordered small center"]
 |===
-🧱
+^🧱 fail state ^🧱 fail state description ^🧱 fail state diagram
+
+^🧱
+*propagating* 🧱 `plus?\<=int(uri::T)` is not a valid instruction and a `fail::T` monad is created.
 ++++
 <!-- 🐖 
-[HIDDEN] /sys/fail/+ -> noobj
-1.plus(b).plus(3).mult(5)                 [-- <1>
-1.plus(b).plus(3).catch(2).mult(5)        [-- <2>
+[HIDDEN] */sys/fail/+.catch(_)
+1.plus(b).plus(3).mult(5)
 -->
 ++++
+
 🧱
 [source,mtron]
 ----
-      ┌─────────────────► (fail space)     
-      │            
+      ┌─────────────────►     
+      │      (fail space) 
 ──────►                            
 1.plus(b).plus(3).mult(5)
+----
 
+^🧱
+*caught* 🧱 `catch?A{+*+}\<=A(A{+*+}::T)` passes all `objs` from lhs to rhs except for a `fail::T`. A lhs `fail::T` is applied to the
+`catch()` args the result of the `catch()` body is emitted rhs.
+
+++++
+<!-- 🐖 
+[HIDDEN] */sys/fail/+.catch(_)
+1.plus(b).plus(3).catch(2).mult(5)
+-->
+++++
+
+🧱
+[source,mtron]
+----
       ┌───────────┐                 
-      │           │          
+      │           │   (inst space)         
 ──────►           ▼──────────────►
 1.plus(b).plus(3).catch(2).mult(5)
 ----
 |===
 
-<1> (*propagating*) `plus?\<=int(b)(int::T)` is not a valid instruction and a `fail::T` monad is generated.
-<2> (*caught*) `catch?A{+*+}\<=A(A{+*+}::T)` will apply a lhs `fail::T` to its argument, else it will allow the lhs `obj` to pass through unmanipulated.
-
 [.card]
 --
 [discrete,.center]
 ==== fail monad
-The diagram above illustrates the concept of https://en.wikipedia.org/wiki/Monad_(functional_programming)[monadic computing], where the obj being computed on is "lifted" out of the instruction stream when an exception occurs. The lifted `fail::T` obj is remains unaffected by the sequence of instructions below until it reaches a "flattening" instruction -- namely `catch()`. At which point, the `fail::T` value is brought back down, tagged "caught", and can be operated on like any other obj.
+The diagram above illustrates the concept of https://en.wikipedia.org/wiki/Monad_(functional_programming)[monadic computing], where when an https://en.wikipedia.org/wiki/Exception_handling[exception] occurs, the obj is immediately "lifted" out of the instruction space (the graph of `inst` objs composing a `code::T`) and continues to propagate to the right unaffected by any subsequent instructions until a "flattening" instruction is met -- namely `catch()`. At which point, `catch()` tags the `fail::T` caught and bring it back down into the computational flow of the instruction space. 
 --
 
+[discrete]
+=== fail space
 
-When an exception happens and a fail monad is created, it is immediately recorded to the subspace identified by `boot/fail_pattern`. `/sys/fail?incr=./+` is the default should no pattern be provided. The diagram above highlights that uncaught `fail::T` objs are routed to _fail space_. There are two reasons for this behavior.
+The diagram above demonstrates that uncaught `fail::T` objs are routed to _fail space_. When an exception occurs and a fail monad is created, the `fail::T` obj is immediately written to the subspace identified at `boot/fail_pattern`. The uri `/sys/fail?incr=./+` is the default fail space pattern. There are two reasons for this behavior.
 
-. The exception hasn't been handled and can be resumed at a later time in a coroutine-esque manner.
-. The exception stack trace can be clipped to reduce visual clutter and only when accessed and caught from space will the stack trace be unrolled and available to introspection.
+. The exception hasn't been handled and can be resumed at a later time in a coroutine-esque manner. This is possible even after the underlying machine has completed execution of the instruction graph.
+. The exception stack trace can be clipped to reduce visual clutter, and only when accessed and caught from fail space will the fail's trace be unrolled and available to introspection.
 
 ++++
 <!-- 🐖 
-[HIDDEN] /sys/fail/+ -> noobj
+[HIDDEN] */sys/fail/+.catch(_)
 1.plus(b)                  [-- <1>
 */sys/fail/+               [-- <2>
 */sys/fail/+.catch(_)      [-- <3>
@@ -55,19 +72,24 @@ When an exception happens and a fail monad is created, it is immediately recorde
 ++++
 
 <1> A `fail::T` monad is generated and is not caught.
-<2> The uncaught `fail::T` is written to `/sys/fail` using the `incrq`-proc.
+<2> The uncaught `fail::T` is written to `/sys/fail` using the `incrq` query processor.
 <3> The uncaught `fail::T` remains uncaught until caught.
 <4> A caught `fail::T` is removed from space.
+
+`*/sys/fail/+.catch(_)` is useful `code` for clearing the fail space and releasing memory.
+
+[discrete]
+=== the cause of failure
 
 Finally, the `cause()` instruction enables recursive stack walking for reflective exception handling.
 
 ++++
 <!-- 🐖 
-[HIDDEN] /sys/fail/+ -> noobj
+[HIDDEN] */sys/fail/+.catch(_)
 *cause                 [-- <1>
 1+b.catch(cause())     [-- <2>
 -->
 ++++
 
-<1> The `cause()` instruction with domain being `fail::T` and range being `fail{?}::T`.
-<2> Once a `fail::T` is caught, is can be introspected on with `cause()`.
+<1> The `cause()` instruction has a domain of `fail::T` and range of `fail{?}::T`. The range being potentially a previous underlying `fail::T` to the current/domain `fail::T`.
+<2> Once a `fail::T` is caught, it can be applied to `cause()` for introspection.

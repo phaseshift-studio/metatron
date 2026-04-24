@@ -81,7 +81,7 @@ public interface Type extends Obj {
     }
 
     default boolean isBaseType() {
-        return mInstSet.BASE_TYPES.contains(this.tid().basePath());
+        return mInstSet.BASE_TYPES.contains(this.vid().basePath());
     }
 
 

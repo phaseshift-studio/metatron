@@ -519,11 +519,7 @@ public class mParser {
                     }
                 })), baseType);
     }
-
-    public static Parser m_type_prefix() {
-        return m_type_prefix(null);
-    }
-
+    
     public static Parser m_vid_postfix() {
         return opt(seq(of('@'), m_furi(REDUCED_FURI_CHARS, true, false, false)).map(t -> pick(t, 1)), null);
     }

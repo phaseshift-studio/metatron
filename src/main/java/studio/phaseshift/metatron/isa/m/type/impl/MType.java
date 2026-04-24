@@ -35,6 +35,8 @@ public class MType extends MObj implements Type {
 
     protected MType(final Tuple.Pair<Call, Call> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid.big(), null == vid ? null : vid.big());
+        if (Router.loaded() && null != vid && (this.hasPredicate() || this.hasConstructor()) && !this.isBaseType())
+            Router.global().write(vid, this);
     }
 
     public static Type T(final Tuple.Pair<Call, Call> jvm, final fURI tid, final fURI vid) {
@@ -66,7 +68,7 @@ public class MType extends MObj implements Type {
                 else
                     return new MType(Tuple.Pair.with(
                             null == predicate || predicate.isNoObj() ? obj.asType().predicate() : predicate,
-                            null == constructor || constructor.isNoObj() ? obj.asType().constructor() : constructor), obj.vid().c(checkID.c()), checkID); // coefficient specific type doesn't exist, create it
+                            null == constructor || constructor.isNoObj() ? obj.asType().constructor() : constructor), obj.tid(), obj.vid()); // coefficient specific type doesn't exist, create it
             }
         }
         final boolean isBaseType = BASE_TYPES.contains(checkID.basePath());

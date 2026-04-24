@@ -151,11 +151,15 @@ public class webInstSet extends AbstractInstSet {
                                 return str(fail(e).toString());
                             }
                         }),
-                        instC(INST_TID.extend("doc_json").dom(STR_TID).rng(STR_TID), lst(), (lhs, inst) -> {
+                        instC(INST_TID.extend("doc_json").dom(ALL).rng(STR_TID), lst(), (lhs, inst) -> {
                             try {
-                                final String source = lhs.strValue();
-                                final Obj result = new ObjmtronSerializer(55).parse(source).apply();
-                                return str(ObjSimpleJSONSerializer.single().write(result).toString());
+                                if(lhs.isStr()) {
+                                    final String source = lhs.strValue();
+                                    final Obj result = new ObjmtronSerializer(55).parse(source).apply();
+                                    return str(ObjSimpleJSONSerializer.single().write(result).toString());
+                                } else {
+                                    return str(lhs.toShortString());
+                                }
                             } catch (final Exception e) {
                                 return str(fail(e).toString());
                             }

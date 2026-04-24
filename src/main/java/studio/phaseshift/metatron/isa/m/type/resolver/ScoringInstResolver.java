@@ -129,7 +129,7 @@ public class ScoringInstResolver implements InstResolver {
         final fURI lhsTid = lhs.tid();
 
         // Domain specificity (most important - 1000 points)
-        if (!apiDomTid.isGeneric()) {
+        if (!apiDomTid.isGeneric() && !apiDomTid.hasPattern()) {
             score += 1000;
             // Bonus for exact domain match (500 points)
             if (lhsTid.basePath().equals(apiDomTid.basePath())) {

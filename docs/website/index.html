@@ -422,7 +422,7 @@ table {
 }
 
 code.hljs {
-    font-size: 0.9rem;
+    font-size: 1.1rem;
     display: inline;
     /*width: 90%;*/
     overflow: hidden;
@@ -431,12 +431,16 @@ code.hljs {
 
 .code {
     font-family: 'Courier', Courier, monospace;
-    font-size: 1.3rem;
+    font-size: 1.5rem;
 }
 
 h1 {
     font-size: 3.5rem;
     line-height: 0.1rem;
+}
+
+em {
+    color: var(--primary)
 }
 
 .subtitle {
@@ -936,7 +940,7 @@ body {
         border: 1px solid #ddd !important;
         white-space: pre-wrap !important;
         word-wrap: break-word !important;
-        font-size: 9pt !important;
+        font-size: 1rem !important;
     }
 
     .hljs {
@@ -1218,9 +1222,9 @@ th {
 
 .hljs-mtron-doc-callout, .conum + b {
     display: inline-block;
-    color: var(--bs-white);
+    color: var(--myellow);
     background: var(--mred) !important;
-    transform: translateX(-15px);
+    transform: translateX(-20px);
     -webkit-border-radius: 100px;
     -moz-border-radius: 100px;
     -o-border-radius: 100px;
@@ -1228,11 +1232,11 @@ th {
     text-align: center;
     opacity: 1.0;
     float: right;
-    width: 20px;
-    height: 20px;
-    font-size: 12px;
+    width: 25px;
+    height: 25px;
+    font-size: 15px;
     font-weight: bold;
-    line-height: 20px;
+    line-height: 25px;
     /*font-family: Arial;*/
 }
 
@@ -1243,7 +1247,7 @@ strong {
 .conum + b {
     transform: translateX(-5px);
     position: static;
-    color: var(--bs-white);
+    color: var(--myellow);
 }
 
 .hljs-fos-docs-if-else-then-case-do,
@@ -1456,7 +1460,7 @@ $(addBlockSwitches);
      data-wow-delay="0.1s">
     <a href="index.html" class="navbar-brand ms-4 ms-lg-0">
         <h2 class="mb-0 text-primary logo-text">
-            <i class="bi bi-soundwave me-3"></i>
+            <i class="bi bi-soundwave me-3 icon-color"></i>
             PhaseShift Studio
         </h2>
     </a>

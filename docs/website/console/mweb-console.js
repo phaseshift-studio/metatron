@@ -134,6 +134,7 @@ class MetatronDashboard {
         this.treeState             = new Map(); // uri → boolean (expanded?)
         this.resizeState           = null;
         this.resizeListenersAdded  = false;
+        this.currentInspectorUri   = null;      // last URI focused in the inspector
 
         // Agent designer state (skills and tools managed generically)
         this.agentItems = { skills: [], tools: ['!*eval'] };
@@ -686,8 +687,11 @@ class MetatronDashboard {
     renderInspectorPanel() {
         return `
             <div class="card h-100 d-flex flex-column">
-                ${this._renderPanelHeader(this.panelRegistry.inspector,
-                    `<span id="inspectorUri" class="text-muted small me-2" style="font-family:monospace;"></span>`)}
+                ${this._renderPanelHeader(this.panelRegistry.inspector, `
+                    <button id="inspectorDocqBtn" class="btn btn-sm btn-outline-info me-2"
+                            title="fetch type documentation for this obj">
+                        <i class="bi bi-book me-1"></i>docq</button>
+                    <span id="inspectorUri" class="text-muted small me-2" style="font-family:monospace;"></span>`)}
                 <div class="card-body p-2 overflow-auto flex-grow-1">
                     <div id="inspectorContainer" class="inspector-output">
                         ${this._placeholderHtml('bi-crosshair', 'click a tree node or space to inspect')}
@@ -1160,6 +1164,7 @@ class MetatronDashboard {
 
     focusObject(uri) {
         if (!this.connected || !this.inspectorContainer) return;
+        this.currentInspectorUri = uri;
         if (this.inspectorUri) this.inspectorUri.textContent = uri;
         this._showLoading(this.inspectorContainer, 'loading…');
         this.sendQuery(`"${uri}"./m/web/inst/doc()`, (response, error) => {
@@ -1177,6 +1182,72 @@ class MetatronDashboard {
         this.sendQuery(`"*<${uri}?docq>.>>desc"./m/web/inst/doc_json()`, (response, error) => {
             if (error) { this._showError(this.inspectorContainer, error); return; }
             this.inspectorContainer.innerHTML = this._highlight(this._stripResponse(response));
+        });
+    }
+
+    // Fetch type documentation for the currently inspected obj and display it
+    // alongside the obj itself. Runs the query:
+    //   <expr>.type().vid().map(<${_}?docq>).*(_)
+    // which gets the obj's type VID, appends ?docq, and dereferences the doc URI.
+    loadObjTypeDocumentation() {
+        if (!this.connected || !this.inspectorContainer) return;
+        if (!this.currentInspectorUri) {
+            this._showError(this.inspectorContainer, 'no object selected — click a tree node first');
+            return;
+        }
+
+        const uri  = this.currentInspectorUri;
+        // Ensure we have a complete mtron dereference expression
+        const expr = uri.startsWith('*<') || uri.startsWith('*') ? uri : `*<${uri}>`;
+
+        // Render a two-section skeleton while both queries are in-flight
+        this.inspectorContainer.innerHTML = `
+            <div id="inspector-obj-section">
+                <div class="text-center py-2 text-muted small">
+                    <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>loading obj…
+                </div>
+            </div>
+            <hr class="border-secondary my-2">
+            <div class="small text-info mb-1"><i class="bi bi-book me-1"></i>type documentation</div>
+            <div id="inspector-docq-section">
+                <div class="text-center py-2 text-muted small">
+                    <div class="spinner-border spinner-border-sm text-info me-2" role="status"></div>fetching documentation…
+                </div>
+            </div>`;
+
+        // Query 1 — the obj itself (same as focusObject)
+        this.sendQuery(`"${uri}"./m/web/inst/doc()`, (response, error) => {
+            const objSection = document.getElementById('inspector-obj-section');
+            if (!objSection) return;
+            if (error) {
+                objSection.innerHTML = `<div class="text-danger small"><i class="bi bi-exclamation-triangle me-1"></i>${this.escapeHtml(error)}</div>`;
+            } else {
+                objSection.innerHTML = this._highlight(this._stripResponse(response));
+            }
+        });
+
+        // Query 2 — docq via type VID: <expr>.type().vid().map(<${_}?docq>).*(_)
+        // Note: '${_}' is literal mtron interpolation syntax, not JS template syntax.
+        const docqQuery = expr + '.type().vid().map(<${_}?docq>).*(_)./m/web/inst/doc_json()';
+        this.sendQuery(docqQuery, (response, error) => {
+            const docqSection = document.getElementById('inspector-docq-section');
+            if (!docqSection) return;
+
+            const noDoc = `
+                <div class="text-muted small">
+                    <i class="bi bi-info-circle me-1"></i>no documentation available
+                </div>`;
+
+            if (error) { docqSection.innerHTML = noDoc; return; }
+
+            const stripped = this._stripResponse(response);
+            if (!stripped || stripped === 'noobj' || stripped.includes('fail::') ||
+                    stripped.includes('no documentation available')) {
+                docqSection.innerHTML = noDoc;
+                return;
+            }
+
+            docqSection.innerHTML = this._highlight(stripped);
         });
     }
 
@@ -1419,6 +1490,7 @@ class MetatronDashboard {
         this.browsePathBtn      = document.getElementById('browsePathBtn');
         this.inspectorContainer = document.getElementById('inspectorContainer');
         this.inspectorUri       = document.getElementById('inspectorUri');
+        this.inspectorDocqBtn   = document.getElementById('inspectorDocqBtn');
         this.codeInput          = document.getElementById('codeInput');
         this.outputContainer    = document.getElementById('outputContainer');
         this.executeBtn         = document.getElementById('executeBtn');
@@ -1437,6 +1509,7 @@ class MetatronDashboard {
         this.refreshSpacesBtn?.addEventListener('click',    () => this.loadSpaces());
         this.browsePathBtn?.addEventListener('click',       () => this._browsePath());
         this.treePathInput?.addEventListener('keypress',    e  => { if (e.key === 'Enter') this._browsePath(); });
+        this.inspectorDocqBtn?.addEventListener('click',    () => this.loadObjTypeDocumentation());
         this.executeBtn?.addEventListener('click',          () => this._executeCode());
         this.clearOutputBtn?.addEventListener('click',      () => this._clearOutput());
         this.codeInput?.addEventListener('keydown', e => {
