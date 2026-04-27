@@ -31,7 +31,6 @@ import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.*;
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.nio.file.FileSystem;
@@ -43,14 +42,12 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static studio.phaseshift.metatron.Tokens.SCRIPT;
-import static studio.phaseshift.metatron.Tokens.USER_HOME;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -67,7 +64,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
             .vid(FS_SPACE_TID)
             .isaPredicate(rec(
                     uri(Tokens.PATTERN), URI_TYPE,
-                    uri(Tokens.ROUTE), rec(URI_TYPE, URI_TYPE),
+                    uri(ROUTE), rec(URI_TYPE, URI_TYPE),
                     uri(Tokens.SCRIPT).maybe(), rec(URI_TYPE, URI_TYPE)))
             .constructor(
                     instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(FS_SPACE_TID), lst(REC_TYPE),
@@ -79,14 +76,14 @@ public class fsSpace extends AbstractSpace<FileSystem> {
 
     private fsSpace(final FileSystem sjvm, final Map<Obj, Obj> jvm, final fURI vid) {
         super(sjvm, jvm, FS_SPACE_TID, vid);
-        final Map<Uri, Uri> tempRoutes = new LinkedHashMap<>(this.routes);
-        this.routes.clear();
+        final Map<Uri, Uri> tempRoutes = new LinkedHashMap<>(this.routes());
+        this.at(ROUTE).<Map<Obj, Obj>>jvmAs().clear();
         tempRoutes.entrySet()
                 .stream()
                 .map(kv -> Map.entry(
                         uri(kv.getKey().toString().replace("~", System.getProperty(USER_HOME))),
                         uri(kv.getValue().toString().replace("~", System.getProperty(USER_HOME)))))
-                .forEach(kv -> this.routes.put(kv.getKey(), kv.getValue()));
+                .forEach(kv -> this.at(ROUTE).<Map<Uri, Uri>>jvmAs().put(kv.getKey(), kv.getValue()));
     }
 
     public static File staticObjToFile(final Obj obj) {
@@ -115,7 +112,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
         try {
             if (file.exists()) {
                 if (file.isFile()) {
-                    Content.ContentType contentType = Content.ContentType.fromProbe(file);
+                    Content.ContentType contentType = Content.ContentType.fromProbe(file, Content.ContentType.APPLICATION_MTRON);
                     final FileInputStream fs = new FileInputStream(file);
                     byte[] fileBytes = fs.readAllBytes();
                     fs.close();
@@ -143,7 +140,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
         try {
             //if (!file.isFile())
             //   throw MTronException.of("not a file: %s", file);
-            final Content.ContentType contentType = Content.ContentType.fromType(obj);
+            final Content.ContentType contentType = Content.ContentType.fromType(obj, Content.ContentType.APPLICATION_MTRON);
             final File file = new File(this.redirect(vid, true).toString());
             LOG.info("writing %s to %s", obj, file.getPath());
             if (!file.exists()) {
@@ -174,7 +171,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
                 throw MTronException.of("infinite recursive walks on file system currently prohibited");
             else {
                 if (key.hasPattern()) {
-                    try (final Stream<Path> walk = Files.walk(Path.of(Space.Helper.routeFromSpace(keyQless.retractPattern(), this.routes).toString()), keyQless.hasPattern("#") ? Integer.MAX_VALUE : keyQless.asNode().path().size())) {
+                    try (final Stream<Path> walk = Files.walk(Path.of(Space.Helper.routeFromSpace(keyQless.retractPattern(), this.routes()).toString()), keyQless.hasPattern("#") ? Integer.MAX_VALUE : keyQless.asNode().path().size())) {
                         return walk
                                 .filter(p -> {
                                     try {
@@ -184,7 +181,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
                                         return false;
                                     }
                                 })
-                                .collect(Collectors.toMap(p -> Space.Helper.routeFromSpace(f(p.toString()), this.routes), p -> {
+                                .collect(Collectors.toMap(p -> Space.Helper.routeFromSpace(f(p.toString()), this.routes()), p -> {
                                     final File file = p.toFile();
                                     return fileToObj(file);
                                 }, Obj::append, LinkedHashMap::new))
@@ -198,7 +195,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
 
                 } else {
                     try {
-                        final Path vidPath = Path.of(Space.Helper.routeFromSpace(keyQless.name().equals("apply") ? keyQless.retract(1) : keyQless, this.routes).toString());
+                        final Path vidPath = Path.of(Space.Helper.routeFromSpace(keyQless.name().equals("apply") ? keyQless.retract(1) : keyQless, this.routes()).toString());
                         final File file = vidPath.toFile();
                         return IteratorUtil.of(IdObj.of(key, keyQless.name().equals("apply") ?
                                 instC(keyQless.retract(1).dom(ALL.maybe()).rng(ALL_STAR), lst(T(ALL_STAR)), (lhs, inst) -> {

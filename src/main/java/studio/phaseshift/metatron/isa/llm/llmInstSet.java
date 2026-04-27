@@ -137,6 +137,7 @@ public class llmInstSet extends AbstractInstSet {
                                                 uri(PROVIDER), LLM_CATALOG_SPACE_TYPE,
                                                 uri(NAME), URI_TYPE,
                                                 uri(THINK).maybe(), T(ALL),
+                                                uri(NOTE).maybe(), LST_TYPE.maybe(),
                                                 uri(RESPONSE).maybe(), rec(uri(TO).maybe().asUri(), INST_TYPE, uri(FORMAT).maybe(), T(ALL)).maybe(),
                                                 uri(SIZE).maybe().asUri(), BYTE_TYPE,
                                                 uri(MEMORY).maybe(), LLM_MEMORY_TYPE.maybe(),
@@ -147,6 +148,7 @@ public class llmInstSet extends AbstractInstSet {
                                         uri(NAME), "the model name from the host catalog",
                                         uri(HOST).maybe(), "the llm inferencing provider endpoint",
                                         uri(THINK).maybe(), "whether the llm should think before responding",
+                                        uri(NOTE).maybe(), "a lst of notes that llm will read and react to between chat submissions",
                                         uri(SIZE).maybe(), "the size of the model in bytes",
                                         uri(MEMORY).maybe(), "llm's memory of previous interactions",
                                         uri(SKILL).maybe(), "skill to extend the llm's abilities",
@@ -180,11 +182,11 @@ public class llmInstSet extends AbstractInstSet {
                                 "communicate with an llm that may be enriched with a tool, skill, etc.", // desc
                                 "*<ollama:qwen3:latest>+[response=>[to=>print(_)],think=>to(/ai/thoughts?incrq)].chat('what is a database?')"),*/
                         instC(LLM_INST_TID.extend("chat").dom(MODEL_TID).rng(A.maybe()),
-                                        lst(STR_TYPE),
-                                        (lhs, inst) -> model(lhs.vid(null).asRec()).chat(inst.arg(0).strValue())),
+                                lst(STR_TYPE),
+                                (lhs, inst) -> model(lhs.asRec()).chat(inst.arg(0).strValue())),
                         docWrap(instC(LLM_INST_TID.extend("chat").dom(MODEL_TID).rng(REC_TID),
                                         lst(STR_TYPE, REC_TYPE),
-                                        (lhs, inst) -> model(lhs.vid(null).asRec()).chat(inst.arg(0).strValue(),inst.arg(1).asRec())),
+                                        (lhs, inst) -> model(lhs.asRec()).chat(inst.arg(0).strValue(), inst.arg(1).asRec())),
                                 "a model to chat with",  // dom
                                 "the models chat response", // rng
                                 Map.of(jnt(0), "the message to send the model", jnt(1), "the desired response format"), // args

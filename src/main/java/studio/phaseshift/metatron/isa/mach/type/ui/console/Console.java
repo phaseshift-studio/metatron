@@ -52,11 +52,15 @@ import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.io.*;
+import java.io.Closeable;
+import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
@@ -615,7 +619,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                 if (null != parseResult && !parseResult.isNoObj()) {
                     final Obj resolvedResult = parseResult.isCall() ? Call.Helper.resolveInspection(parseResult.asCall(), unresolved -> {
                         this.status.setState(Level.WARN);
-                        LOG.warn("unable to fully resolve code. execution will require dynamic inst resolution for:\n\t%s", unresolved.stream().map(i->i.tid()).toList());
+                        LOG.warn("unable to fully resolve code. execution will require dynamic inst resolution for:\n\t%s", unresolved.stream().map(i -> i.tid()).toList());
                     }) : parseResult;
                     final Machine mach = SwarmMachine.of(resolvedResult.isCall() ? resolvedResult.as() : start_(resolvedResult)).onHalt(this::printResult);
                     // Track machine in both places for interruption
@@ -710,6 +714,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                             .addRow(List.of("prefix", ":prefix \"<text>\"", "prefix input with text"))
                             .addRow(List.of("postfix", ":postfix \"<text>\"", "postfix input with text"))
                             .addRow(List.of("back erase", "<alt>+k <char>", "erase buffer back to first occurrence of char"))
+                            .addRow(List.of("format buffer", "<ctrl>+f", "pretty-print current buffer (legal syntax only)"))
                             /// ///////////////////////////////////////////////////////////////////////////////////////
                             .addRow(List.of("{{[g]&w}}panes", "{{[g]&w}}", "{{[g]&w}}"))
                             .addRow(List.of("split horizontal", ":split v | <ctrl>+<up>", "split current pane horizontally"))
@@ -879,6 +884,21 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     class CustomWidgets extends Widgets {
         private CustomWidgets(final LineReader reader) {
             super(reader);
+            getKeyMap().bind((Widget) () -> {
+                final String current = this.reader.getBuffer().toString();
+                try {
+                    final String formatted = ObjmtronSerializer.parse(current).toString();
+                    for (String line : current.split("\n")) {
+                        terminal.writer().write(Graphitty.string("{{-X-&^1}}"));
+                    }
+                    //this.reader..readLine(prompt());
+                    this.reader.getBuffer().clear();
+                    this.reader.getBuffer().write(formatted);
+                } catch(final Exception e) {
+                    // do nothing (most likely unparsable buffer)
+                }
+                return true;
+            }, ctrl('f'));
             /// CYCLE TO NEXT PANE (Ctrl+W)
             getKeyMap().bind((Widget)
                     () -> {

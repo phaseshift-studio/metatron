@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -20,9 +20,9 @@ package studio.phaseshift.metatron.isa.web.type;
 
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.isa.dcmnt.schema.storage.ObjBSONSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.dcmnt.schema.storage.ObjBSONSerializer;
 import studio.phaseshift.metatron.isa.web.parser.ObjHTMLSerializer;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -32,21 +32,22 @@ class ContentTest extends AbstractMetatronTest {
     void testOf() {
         assertEquals(Content.ContentType.APPLICATION_JSON, Content.ContentType.of("application/json"));
         assertEquals(Content.ContentType.TEXT_HTML, Content.ContentType.of("text/html; charset=UTF-8"));
-        assertEquals(Content.ContentType.TEXT_PLAIN, Content.ContentType.of(null));
-        assertEquals(Content.ContentType.TEXT_PLAIN, Content.ContentType.of("unknown/type"));
+        assertNull(Content.ContentType.of(null));
+        assertNull(Content.ContentType.of("unknown/type"));
     }
 
     @Test
     void testFromExtension() {
-        assertEquals(Content.ContentType.TEXT_CSS, Content.ContentType.fromExtension("style.css"));
-        assertEquals(Content.ContentType.APPLICATION_JAVASCRIPT, Content.ContentType.fromExtension("script.js"));
-        assertEquals(Content.ContentType.TEXT_HTML, Content.ContentType.fromExtension("index.html"));
-        assertEquals(Content.ContentType.APPLICATION_JSON, Content.ContentType.fromExtension("data.json"));
-        assertEquals(Content.ContentType.IMAGE_PNG, Content.ContentType.fromExtension("image.png"));
-        assertEquals(Content.ContentType.IMAGE_JPEG, Content.ContentType.fromExtension("photo.jpeg"));
-        assertEquals(Content.ContentType.APPLICATION_MTRON, Content.ContentType.fromExtension("file.mtron"));
-        assertEquals(Content.ContentType.TEXT_PLAIN, Content.ContentType.fromExtension("file.unknown"));
-        assertEquals(Content.ContentType.TEXT_PLAIN, Content.ContentType.fromExtension(null));
+        assertEquals(Content.ContentType.TEXT_CSS, Content.ContentType.fromExtension("style.css", null));
+        assertEquals(Content.ContentType.APPLICATION_JAVASCRIPT, Content.ContentType.fromExtension("script.js", null));
+        assertEquals(Content.ContentType.TEXT_HTML, Content.ContentType.fromExtension("index.html", null));
+        assertEquals(Content.ContentType.APPLICATION_JSON, Content.ContentType.fromExtension("data.json", null));
+        assertEquals(Content.ContentType.IMAGE_PNG, Content.ContentType.fromExtension("image.png", null));
+        assertEquals(Content.ContentType.IMAGE_JPEG, Content.ContentType.fromExtension("photo.jpeg", null));
+        assertEquals(Content.ContentType.APPLICATION_MTRON, Content.ContentType.fromExtension("file.mtron", null));
+        assertEquals(Content.ContentType.TEXT_PLAIN, Content.ContentType.fromExtension("file.unknown", Content.ContentType.TEXT_PLAIN));
+        assertNull(Content.ContentType.fromExtension("file.unknown", null));
+        assertNull(Content.ContentType.fromExtension(null, null));
     }
 
     @Test
@@ -101,6 +102,6 @@ class ContentTest extends AbstractMetatronTest {
         assertTrue(Content.ContentType.APPLICATION_JSON.serializer() instanceof ObjSimpleJSONSerializer);
         assertTrue(Content.ContentType.TEXT_HTML.serializer() instanceof ObjHTMLSerializer);
         assertTrue(Content.ContentType.APPLICATION_BSON.serializer() instanceof ObjBSONSerializer);
-       // assertTrue(Content.ContentType.TEXT_PLAIN.serializer() instanceof ObjSimpleJSONSerializer);
+        // assertTrue(Content.ContentType.TEXT_PLAIN.serializer() instanceof ObjSimpleJSONSerializer);
     }
 }

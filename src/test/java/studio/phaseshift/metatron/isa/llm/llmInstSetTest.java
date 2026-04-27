@@ -31,10 +31,11 @@ import studio.phaseshift.metatron.isa.mach.type.Router;
 
 import java.nio.file.FileSystems;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.Tokens.ROUTE;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_SKILL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_ISA_TID;
@@ -68,8 +69,11 @@ public class llmInstSetTest extends AbstractInstSetTest {
     }, delimiter = '|')
     public void testAs(final String noNoObjCode, final String expectedType, final boolean shouldMatch) {
         Obj result = mParser.eval(noNoObjCode);
+        assertTrue(result.test(LLM_SKILL_TYPE));
+        assertTrue(result.type().test(LLM_SKILL_TYPE));
+        assertNotNull(result.tid());
         Obj expected = mParser.eval(expectedType);
-        LOG.warn("result [%s] expected [%s] [should match: %b]", result, expected, shouldMatch);
+        LOG.debug("result [%s] expected [%s] [should match: %b]", result, expected, shouldMatch);
         assertEquals(shouldMatch, result.test(expected));
     }
 }

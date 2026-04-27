@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -50,7 +50,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 public interface Space extends Rec, Closeable {
-    
+
     @Override
     default boolean isResolved(final boolean nested) {
         return true;
@@ -59,10 +59,10 @@ public interface Space extends Rec, Closeable {
     default Lst qs() {
         return this.at(uri(QSTRING)).orElse(lst());
     }
-    
+
     default Space addQ(final Q q) {
-         this.at(uri(QSTRING), this.at(uri(QSTRING)).orElse(lst()).add(q,MUTABLE), MUTABLE);
-         return this;
+        this.at(uri(QSTRING), this.at(uri(QSTRING)).orElse(lst()).add(q, MUTABLE), MUTABLE);
+        return this;
     }
 
     fURI pattern();
@@ -238,7 +238,7 @@ public interface Space extends Rec, Closeable {
                     unrollPoly(base.furi(), poly, pattern).forEach(kv -> listing.add(UriObj.of(kv.furi().toUri(), kv.obj())));
                 }
             }
-            final Stream<UriObj> prefix= listing.stream().filter(kv -> !kv.obj().isNoObj() && !kv.uri().isNoObj());
+            final Stream<UriObj> prefix = listing.stream().filter(kv -> !kv.obj().isNoObj() && !kv.uri().isNoObj());
             return pattern.isNode() ?
                     objs(prefix.map(UriObj::obj).map(o -> o.autoResolve(o)).toList()) :
                     objs(prefix.map(kv -> rel(kv.uri(), kv.obj())));
@@ -254,10 +254,10 @@ public interface Space extends Rec, Closeable {
         }
 
         public static Obj resolveWrite(final GraphittyLogger LOG, final Space space, final fURI vid, Obj obj, final BiFunction<fURI, Obj, Obj> directWriter, final Function<fURI, Iterator<IdObj>> directReader) {
-           // if (Obj.Helper.isAuto(obj)) {
-             //   LOG.info("evaluating auto %s and yielding result to: %s", obj, vid);
-           //     obj = obj.apply();
-          //  }
+            // if (Obj.Helper.isAuto(obj)) {
+            //   LOG.info("evaluating auto %s and yielding result to: %s", obj, vid);
+            //     obj = obj.apply();
+            //  }
 
             final Iterator<IdObj> current = directReader.apply(vid);
             if (current.hasNext() && vid.isNode()) {
@@ -327,6 +327,20 @@ public interface Space extends Rec, Closeable {
             return null;
         }
 
+        public static IdObj locateBaseObj(final Space space, final fURI furi, final fURI stopURI) {
+            fURI newFuri = furi.retract(1).asNode();
+            while (!newFuri.segments().isEmpty()) {
+                space.logger().info("checking %s", newFuri);
+                Obj obj = space.read(newFuri);
+                if (!obj.isNoObj())
+                    return IdObj.of(newFuri, obj);
+                newFuri = newFuri.retract(1);
+                if (newFuri.equals(stopURI))
+                    break;
+            }
+            return null;
+        }
+
         public static File locateBaseFile(final fURI vid, final String dirRootFile) {
             // if dir, check if the root file is in dir
             if (vid.isBranch() && null != dirRootFile) {
@@ -334,7 +348,7 @@ public interface Space extends Rec, Closeable {
                 if (path.toFile().exists() && path.toFile().isFile())
                     return path.toFile();
             }
-            if(vid.isNode()) {
+            if (vid.isNode()) {
                 final Path path = Path.of(vid.toString());
                 if (path.toFile().exists() && path.toFile().isFile())
                     return path.toFile();

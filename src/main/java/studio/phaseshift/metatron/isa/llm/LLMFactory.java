@@ -123,7 +123,7 @@ public final class LLMFactory {
                 yield catalogSpace;
             }
             case OPENAI -> {
-                final OpenAiModelCatalog models = OpenAiModelCatalog.builder().apiKey(spaceRec.at(API_KEY).strValue()).build();
+                final OpenAiModelCatalog models = OpenAiModelCatalog.builder().baseUrl(spaceRec.at(HOST).uriValue().toString()).apiKey(spaceRec.at(API_KEY).strValue()).build();
                 final modelCatalogSpace<OpenAiModelCatalog> catalogSpace = modelCatalogSpace.of(spaceRec.jvm(), spaceRec.vid());
                 models.listModels().forEach(m -> rec(mutableMap(
                                 uri(NAME), uri(m.name()),

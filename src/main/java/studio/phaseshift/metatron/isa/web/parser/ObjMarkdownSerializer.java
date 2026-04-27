@@ -125,7 +125,7 @@ public class ObjMarkdownSerializer extends AbstractObjSerializer<Node> {
             case ENTRY -> {
                 markdown.append("- ");
                 // List items contain paragraphs as children, write them inline
-                final Obj childrenObj = rec.at(CHILDREN);
+                final Obj childrenObj = rec.at(OUT);
                 if (!childrenObj.isNoObj() && childrenObj.isLst()) {
                     childrenObj.asLst().elements().forEach(child -> {
                         if (child.isRec()) {
@@ -156,7 +156,7 @@ public class ObjMarkdownSerializer extends AbstractObjSerializer<Node> {
                 final String title = rec.at(TITLE).orElse(str("")).strValue();
                 markdown.append("[");
                 // Prefer children over text field for formatted content
-                final Obj childrenObj = rec.at(CHILDREN);
+                final Obj childrenObj = rec.at(OUT);
                 if (!childrenObj.isNoObj() && childrenObj.isLst()) {
                     writeChildren(rec, markdown);
                 } else {
@@ -191,7 +191,7 @@ public class ObjMarkdownSerializer extends AbstractObjSerializer<Node> {
             case "emphasis" -> {
                 markdown.append("*");
                 // Prefer children over text field
-                final Obj childrenObj = rec.at(CHILDREN);
+                final Obj childrenObj = rec.at(OUT);
                 if (!childrenObj.isNoObj() && childrenObj.isLst()) {
                     writeChildren(rec, markdown);
                 } else {
@@ -204,7 +204,7 @@ public class ObjMarkdownSerializer extends AbstractObjSerializer<Node> {
             case "strong" -> {
                 markdown.append("**");
                 // Prefer children over text field
-                final Obj childrenObj = rec.at(CHILDREN);
+                final Obj childrenObj = rec.at(OUT);
                 if (!childrenObj.isNoObj() && childrenObj.isLst()) {
                     writeChildren(rec, markdown);
                 } else {
@@ -262,7 +262,7 @@ public class ObjMarkdownSerializer extends AbstractObjSerializer<Node> {
 
     private void writeChildren(final studio.phaseshift.metatron.isa.m.type.Rec rec, final StringBuilder markdown) {
         // Children are stored as a list
-        final Obj childrenObj = rec.at(CHILDREN);
+        final Obj childrenObj = rec.at(OUT);
         if (childrenObj.isNoObj() || !childrenObj.isLst()) return;
 
         childrenObj.asLst().elements().forEach(child -> {
@@ -273,7 +273,7 @@ public class ObjMarkdownSerializer extends AbstractObjSerializer<Node> {
     }
 
     private void writeOrderedListChildren(final studio.phaseshift.metatron.isa.m.type.Rec rec, final StringBuilder markdown, int start) {
-        final Obj childrenObj = rec.at(CHILDREN);
+        final Obj childrenObj = rec.at(OUT);
         if (childrenObj.isNoObj() || !childrenObj.isLst()) return;
 
         final AtomicInteger itemNumber = new AtomicInteger(start);
@@ -281,7 +281,7 @@ public class ObjMarkdownSerializer extends AbstractObjSerializer<Node> {
             if (child.isRec()) {
                 markdown.append(itemNumber.getAndIncrement()).append(". ");
                 // List items contain paragraphs as children, write them inline
-                final Obj itemChildren = child.asRec().at(CHILDREN);
+                final Obj itemChildren = child.asRec().at(OUT);
                 if (!itemChildren.isNoObj() && itemChildren.isLst()) {
                     itemChildren.asLst().elements().forEach(itemChild -> {
                         if (itemChild.isRec()) {
@@ -456,7 +456,7 @@ public class ObjMarkdownSerializer extends AbstractObjSerializer<Node> {
 
         // Add children as a list if there are any
         if (!children.isEmpty()) {
-            recRef.getAndUpdate(r -> r.asRec().at(CHILDREN, lst(children)));
+            recRef.getAndUpdate(r -> r.asRec().at(OUT, lst(children)));
         }
 
         return recRef.get();

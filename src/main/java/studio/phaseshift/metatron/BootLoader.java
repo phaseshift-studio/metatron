@@ -17,7 +17,9 @@
  */
 
 package studio.phaseshift.metatron;
-
+/// ///////////////////////////////////////////////
+import studio.phaseshift.metatron.isa.m.type.Rec;
+/// ///////////////////////////////////////////////
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.Space;
@@ -27,7 +29,6 @@ import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Feature;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.impl.MFail;
 import studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
@@ -70,7 +71,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
     private static final GraphittyLogger LOG;
     public static Router ROUTER;
     public static Rec ARGS;
-    private static final ExecutorService EXECUTOR;
+    private static volatile ExecutorService EXECUTOR;
 
 
     static {
@@ -121,7 +122,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
             }
             if (args.length > 0)
                 LOG.info("unparsed boot args:\n%s", args[0]);
-            ARGS = args.length > 0 ?  ObjmtronSerializer.parse(args[0]).as() : rec();
+            ARGS = args.length > 0 ? ObjmtronSerializer.parse(args[0]).as() : rec();
             if (ARGS.has(BOOT)) {
                 final Path bootPath = Paths.get(f(Paths.get("").toAbsolutePath().normalize().toString()).extend(ARGS.at(BOOT).uriValue()).toString());
                 fsSpace.makeFile(bootPath).vid(f("boot/file"));
@@ -133,7 +134,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
                         if (argsEnd != -1) {
                             final List<String> bootArgs = bootLines.subList(argsStart + 1, argsEnd);
                             LOG.info("header boot args:\n%s", String.join("\n", bootArgs));
-                            ARGS.jvm().putAll( ObjmtronSerializer.parse(String.join("\n", bootArgs)).as().jvmAs());
+                            ARGS.jvm().putAll(ObjmtronSerializer.parse(String.join("\n", bootArgs)).as().jvmAs());
                         } else {
                             LOG.warn("boot args section not properly closed in %s", bootPath);
                         }
@@ -149,6 +150,9 @@ public class BootLoader implements Rec, Feature.SelfClone {
 
     public static void load(final Rec args) {
         if (BOOTING) {
+            // Re-create executor if a previous test run shut it down
+            if (EXECUTOR == null || EXECUTOR.isShutdown())
+                EXECUTOR = Executors.newCachedThreadPool(r -> new Thread(r, "metatron-" + Thread.currentThread().getId()));
             /// /// PARSING OF BOOT ARGUMENT REC /// ///
             LOG.info("final boot args:\n%s", args);
             if (args.has(BOOT))

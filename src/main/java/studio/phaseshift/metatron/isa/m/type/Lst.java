@@ -242,7 +242,16 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
                     instC(WITHIN_INST_TID.dom(LST_TID).rng(LST_TID), lst(T(ALL_STAR)), (lhs, inst) -> lst(inst.arg(0).apply(objs(lhs.stream().flatMap(Obj::elements))).stream().toList())),
                     instC(SUM_INST_TID.dom(LST_TID.maybeSome()).rng(LST_TID), lst(), (lhs, inst) -> inst.seed().jvm(lhs.stream().reduce(inst.seed(), (a, b) -> ((Lst) a).plus((Lst) b)).lstValue()), lst()),
                     instC(SELECT_INST_TID.dom(LST_TID).rng(LST_TID.maybe()), lst(T(LST_TID)), (lhs, inst) -> Poly.Helper.selectLstRecursion(lhs.asLst(), inst.arg(0).asLst())),
-                    instC(UPDATE_INST_TID.dom(LST_TID).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> inst.arg(0).elements().reduce(lhs, (a, b) -> a.asLst().add(b, MUTABLE))),
+                    instC(UPDATE_INST_TID.dom(LST_TID).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> Poly.Helper.updateLstRecursion(lhs.asLst(), inst.arg(0).asLst(), MUTABLE)),
+                    instC(REMOVE_INST_TID.dom(LST_TID).rng(A.maybeSome()), lst(INT_TYPE), (lhs, inst) -> {
+                        if (lhs.isLst() && inst.arg(0).intValue() < lhs.lstValue().size()) {
+                            final List<Obj> newList = new ArrayList<>(lhs.lstValue());
+                            final Obj result = newList.remove(inst.arg(0).intValue().intValue());
+                            lhs.jvm(newList);
+                            return result;
+                        }
+                        return noobj();
+                    }),
                     instC(POW_INST_TID.dom(LST_TID).rng(LST_TID), lst(INT_TYPE), (lhs, inst) -> {
                         int pow = inst.arg(0).intValue().intValue();
                         Lst l = lhs.clone(lhs.jvm(), lhs.tid(), null);

@@ -282,16 +282,5 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
     public Set<Tuple.Triplet<Tuple.Pair<String, String>, List<fURI>, Integer>> sugars() {
         return Set.of();
     }
-    
-    
-    /*@Override
-    public AbstractInstSet clone(){
-        return this;
-    }
-
-    @Override
-    public AbstractInstSet clone(final Object jvm, final fURI tid, final fURI vid){
-        return this;
-    }*/
 
 }

@@ -82,7 +82,7 @@ public class ObjHTMLSerializer extends AbstractObjSerializer<Document> {
         element.children().forEach(e -> children.add(readElement(e)));
 
         if (!children.isEmpty()) {
-            recX.getAndUpdate(r -> r.at(uri(CHILDREN), lst(children)));
+            recX.getAndUpdate(r -> r.at(uri(OUT), lst(children)));
         }
 
         if (!element.ownText().isBlank())
@@ -139,7 +139,7 @@ public class ObjHTMLSerializer extends AbstractObjSerializer<Document> {
 
         // Add other children as list
         if (!children.isEmpty()) {
-            rec = rec.at(uri(CHILDREN), lst(children));
+            rec = rec.at(uri(OUT), lst(children));
         }
 
         // Store attributes
@@ -152,13 +152,13 @@ public class ObjHTMLSerializer extends AbstractObjSerializer<Document> {
 
     private Rec readBodyElement(final Element bodyElement) {
         Rec rec = rec();
-        final List<Obj> children = new ArrayList<>();
+        final List<Obj> outgoing = new ArrayList<>();
 
         // Process all body children
-        bodyElement.children().forEach(e -> children.add(readElement(e)));
+        bodyElement.children().forEach(e -> outgoing.add(readElement(e)));
 
-        if (!children.isEmpty()) {
-            rec = rec.at(uri(CHILDREN), lst(children));
+        if (!outgoing.isEmpty()) {
+            rec = rec.at(uri(OUT), lst(outgoing));
         }
 
         // Store attributes
@@ -182,14 +182,14 @@ public class ObjHTMLSerializer extends AbstractObjSerializer<Document> {
         rec.at(uri(TEXT)).ifPresent(text -> element.text(text.strValue()));
 
         // Process children list
-        final Obj childrenObj = rec.at(uri(CHILDREN));
-        if (!childrenObj.isNoObj() && childrenObj.isLst()) {
-            childrenObj.asLst().elements().forEach(child -> {
-                if (child.isRec()) {
-                    final Rec childRec = child.asRec();
-                    final String tagName = childRec.at(uri(TAG)).orElse(uri(DIV)).uriValue().toString();
+        final Obj outgoing = rec.at(uri(OUT));
+        if (!outgoing.isNoObj() && outgoing.isLst()) {
+            outgoing.asLst().elements().forEach(out -> {
+                if (out.isRec()) {
+                    final Rec outRec = out.asRec();
+                    final String tagName = outRec.at(uri(TAG)).orElse(uri(DIV)).uriValue().toString();
                     final Element newElement = new Element(tagName);
-                    element.appendChild(writeElement(childRec, newElement));
+                    element.appendChild(writeElement(outRec, newElement));
                 }
             });
         }
@@ -199,7 +199,7 @@ public class ObjHTMLSerializer extends AbstractObjSerializer<Document> {
                 .filter(e -> !e.first().uriValue().toString().equals(TEXT) &&
                         !e.first().uriValue().toString().equals(DATA) &&
                         !e.first().uriValue().toString().equals(TAG) &&
-                        !e.first().uriValue().toString().equals(CHILDREN))
+                        !e.first().uriValue().toString().equals(OUT))
                 .forEach(e -> {
                     if (!e.second().isRec() && !e.second().isLst()) {
                         final String attrValue = e.second().isStr() ? e.second().strValue() :
@@ -253,7 +253,7 @@ public class ObjHTMLSerializer extends AbstractObjSerializer<Document> {
         }
 
         // Write other children (meta, link, style, script, etc.)
-        final Obj childrenObj = headRec.at(uri(CHILDREN));
+        final Obj childrenObj = headRec.at(uri(OUT));
         if (!childrenObj.isNoObj() && childrenObj.isLst()) {
             childrenObj.asLst().elements().forEach(child -> {
                 if (child.isRec()) {
@@ -268,7 +268,7 @@ public class ObjHTMLSerializer extends AbstractObjSerializer<Document> {
         // Process attributes (skip title, children)
         headRec.elements()
                 .filter(e -> !e.first().uriValue().toString().equals(TITLE) &&
-                        !e.first().uriValue().toString().equals(CHILDREN))
+                        !e.first().uriValue().toString().equals(OUT))
                 .forEach(e -> {
                     if (!e.second().isRec() && !e.second().isLst()) {
                         final String attrValue = e.second().isStr() ? e.second().strValue() :
@@ -287,7 +287,7 @@ public class ObjHTMLSerializer extends AbstractObjSerializer<Document> {
         bodyRec.at(uri(TEXT)).ifPresent(text -> bodyElement.text(text.strValue()));
 
         // Write children
-        final Obj childrenObj = bodyRec.at(uri(CHILDREN));
+        final Obj childrenObj = bodyRec.at(uri(OUT));
         if (!childrenObj.isNoObj() && childrenObj.isLst()) {
             childrenObj.asLst().elements().forEach(child -> {
                 if (child.isRec()) {
@@ -302,7 +302,7 @@ public class ObjHTMLSerializer extends AbstractObjSerializer<Document> {
         // Process attributes (skip text, children)
         bodyRec.elements()
                 .filter(e -> !e.first().uriValue().toString().equals(TEXT) &&
-                        !e.first().uriValue().toString().equals(CHILDREN))
+                        !e.first().uriValue().toString().equals(OUT))
                 .forEach(e -> {
                     if (!e.second().isRec() && !e.second().isLst()) {
                         final String attrValue = e.second().isStr() ? e.second().strValue() :

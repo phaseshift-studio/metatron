@@ -53,7 +53,6 @@ import java.net.http.HttpResponse;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
@@ -72,6 +71,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.web.type.Content.ContentType.TEXT_PLAIN;
 import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
 
 /*
@@ -95,60 +95,115 @@ public class httpSpace extends AbstractSpace<HttpServer> {
         super(server, config, HTTP_SPACE_TID, vid);
         // Router.writeToSpace(this.vid.extend(ROUTE), routes);
         try {
-            this.at(ROUTE).orElse(rec()).elements().forEach(r -> {
-                final HttpContext context = server.createContext(r.first().uriValue().toString(),
+            this.at(ROUTE).orElse(rec0()).elements().forEach(r -> {
+                final boolean hostRoute = r.first().uriValue().toString().startsWith(config.get(uri(HOST)).uriValue().toString());
+                final fURI left = hostRoute ? f(r.first().uriValue().toString().replaceFirst(config.get(uri(HOST)).uriValue().toString(), "")) : r.first().uriValue();
+                if (!hostRoute && r.first().uriValue().hasHost())
+                    return;
+                LOG.info("processing http route: %s => %s => %s", r.first().uriValue().toString(), r.second().uriValue().toString(), left.toString());
+                final HttpContext context = server.createContext(left.toString(),
                         exchange -> {
                             if (exchange.getRequestMethod().equalsIgnoreCase("GET")) {
-                                // Strip the route prefix from the request path to get the relative path
-                                final String routePrefix = r.first().uriValue().toString();
-                                String requestPath = exchange.getRequestURI().getPath();
-                                if (requestPath.startsWith(routePrefix) && !routePrefix.equals("/")) {
-                                    requestPath = requestPath.substring(routePrefix.length());
-                                }
-                                final fURI requestURI = r.second().uriValue().extend(f(requestPath)).qString(exchange.getRequestURI().getQuery());
-                                LOG.debug("requesting: %s", requestURI);
-                                final File base = Space.Helper.locateBaseFile(requestURI, INDEX_HTML);
-                                // final Path filePath = null == base ? null : base.toPath(); //Files.isRegularFile(path) ? path : Path.of(path + "/" + INDEX_HTML);
-                                if (null != base) {
-                                    final Path absolutePath = base.toPath().toAbsolutePath();
-                                    final Path relativePath = base.toPath();
-                                    LOG.debug("resolving context to request=>relative=>absolute path: %s => %s => %s", uri(exchange.getRequestURI().toString()), uri(relativePath.toString()), uri(absolutePath.toString()));
-                                    // fURI toRemove = f(filePath.toString());
-                                    final fURI pretractedURI = f(requestURI.toString().replace(INDEX_HTML, "").replace(relativePath.toString().replace(INDEX_HTML, ""), "")).asRelative(); //.removeSubpath(f(base.toPath().toString())).asRelative();
-                                    LOG.debug("remaining steps in request uri: %s", pretractedURI);
-                                    if (pretractedURI.segmentLength() == 0) {
-                                        // send the full html document
-                                        // Use query param if specified, otherwise try Files.probeContentType, fallback to extension-based detection
-                                        final Content.ContentType contentType;
+                                try {
+                                    // Strip the route prefix from the request path to get the relative path
+                                    final String routePrefix = left.toString();
+                                    String requestPath = exchange.getRequestURI().getPath();
+                                    if (requestPath.startsWith(routePrefix) && !routePrefix.equals("/")) {
+                                        requestPath = requestPath.substring(routePrefix.length());
+                                    }
+                                    final fURI requestURI = r.second().uriValue().extend(f(requestPath)).qString(exchange.getRequestURI().getQuery());
+                                    LOG.info("%s/%s => %s", r.second().uriValue(), requestPath, requestURI);
+                                    if (Router.global().hasSpaceFor(r.second().uriValue())) {
+                                        LOG.info("requesting (router): %s", requestURI);
+                                        Obj requestObj = Router.global().read(requestURI);
+                                        if (requestObj.isNoObj()) {
+                                            final IdObj idobj = Space.Helper.locateBaseObj(Router.global().getSpace(requestURI), requestURI, f(""));
+                                            if (null == idobj) {
+                                                requestObj = Router.global().read(requestURI.extend(INDEX_HTML));
+                                            } else {
+                                                String subfuri = requestURI.toString().replaceFirst(idobj.furi().toString(), "");
+                                                subfuri = subfuri.startsWith("/") ? subfuri.substring(1) : subfuri;
+                                                LOG.info("found base obj: %s => %s", idobj, subfuri);
+                                                requestObj = idobj.obj().isRec() ?
+                                                        idobj.obj().asRec().at(subfuri) :
+                                                        (idobj.obj().isLst() ?
+                                                                idobj.obj().asLst().at(subfuri) :
+                                                                idobj.obj());
+                                            }
+                                        }
+                                        if (requestObj.isNoObj())
+                                            this.send404Response(exchange);
+                                        else {
+                                            final Content.ContentType contentType = exchange.getRequestHeaders().containsKey(Content.ContentType.VALUE) ?
+                                                    Content.ContentType.of(exchange.getRequestHeaders().get(Content.ContentType.VALUE).getFirst()) :
+                                                    Content.ContentType.fromType(requestObj, TEXT_PLAIN);
+                                            this.sendResponse(contentType, requestObj, exchange);
+                                        }
+                                    } else {
+                                        this.send404Response(exchange);
+                                    }
+                                } catch (final Exception e) {
+                                    LOG.error(e);
+                                } 
+                                /*else {
+                                    LOG.info("requesting (file): %s", requestURI);
+                                    final Iterator<IdObj> itty = this.directReader().apply(requestURI);
+                                    if (itty.hasNext()) {
+                                        Content.ContentType contentType;
+                                        Obj obj = itty.next().obj();
                                         if (requestURI.hasQ("content_type")) {
                                             contentType = Content.ContentType.of(requestURI.qValue("content_type", String.class));
                                         } else {
-                                            final String probed = Files.probeContentType(absolutePath);
-                                            final Content.ContentType probedType = Content.ContentType.of(probed);
-                                            // If probeContentType returned null or fell back to TEXT_PLAIN, use extension-based detection
-                                            contentType = (probed == null || probedType == Content.ContentType.TEXT_PLAIN)
-                                                    ? Content.ContentType.fromExtension(absolutePath.toString())
-                                                    : probedType;
+                                            contentType = Content.ContentType.fromType(obj);
                                         }
-                                        LOG.debug("sending with content-type: %s", contentType.value);
-                                        sendResponse(contentType, absolutePath.toFile(), exchange);
+                                        this.sendResponse(contentType, obj, exchange);
                                     } else {
-                                        // send a subset of larger html document
-                                        final Content.ContentType contentType = Content.ContentType.of(requestURI.hasQ("content_type") ? requestURI.qValue("content_type", String.class) : Content.ContentType.APPLICATION_MTRON.value);
-                                        LOG.debug("sending with content-type: %s", contentType.value);
-                                        sendResponse(contentType, ByteBuffer.wrap(
-                                                new ObjByteBufferSerializer().write(HTML_SERIALIZER.read(
-                                                        Jsoup.parse(absolutePath)).asRec().at(pretractedURI)).array()), exchange);
-                                    }
-                                } else {
-                                    String response = "<html><body><h1>404 Not Found</h1></body></html>";
-                                    exchange.getResponseHeaders().set(Content.ContentType.VALUE, Content.ContentType.TEXT_HTML.value);
-                                    exchange.sendResponseHeaders(404, response.length());
-                                    try (final OutputStream os = exchange.getResponseBody()) {
-                                        os.write(response.getBytes());
-                                        os.flush();
+                                        final File base = Space.Helper.locateBaseFile(requestURI, INDEX_HTML);
+                                        // final Path filePath = null == base ? null : base.toPath(); //Files.isRegularFile(path) ? path : Path.of(path + "/" + INDEX_HTML);
+                                        if (null != base) {
+                                            final Path absolutePath = base.toPath().toAbsolutePath();
+                                            final Path relativePath = base.toPath();
+                                            LOG.debug("resolving context to request=>relative=>absolute path: %s => %s => %s", uri(exchange.getRequestURI().toString()), uri(relativePath.toString()), uri(absolutePath.toString()));
+                                            // fURI toRemove = f(filePath.toString());
+                                            final fURI pretractedURI = f(requestURI.toString().replace(INDEX_HTML, "").replace(relativePath.toString().replace(INDEX_HTML, ""), "")).asRelative(); //.removeSubpath(f(base.toPath().toString())).asRelative();
+                                            LOG.debug("remaining steps in request uri: %s", pretractedURI);
+                                            if (pretractedURI.segmentLength() == 0) {
+                                                // send the full html document
+                                                // Use query param if specified, otherwise try Files.probeContentType, fallback to extension-based detection
+                                                final Content.ContentType contentType;
+                                                if (requestURI.hasQ("content_type")) {
+                                                    contentType = Content.ContentType.of(requestURI.qValue("content_type", String.class));
+                                                } else {
+                                                    final String probed = Files.probeContentType(absolutePath);
+                                                    final Content.ContentType probedType = Content.ContentType.of(probed);
+                                                    // If probeContentType returned null or fell back to TEXT_PLAIN, use extension-based detection
+                                                    contentType = (probed == null || probedType == Content.ContentType.TEXT_PLAIN)
+                                                            ? Content.ContentType.fromExtension(absolutePath.toString())
+                                                            : probedType;
+                                                }
+                                                LOG.debug("sending with content-type: %s", contentType.value);
+                                                sendResponse(contentType, absolutePath.toFile(), exchange);
+                                            } else {
+                                                // send a subset of larger html document
+                                                final Content.ContentType contentType = Content.ContentType.of(requestURI.hasQ("content_type") ? requestURI.qValue("content_type", String.class) : Content.ContentType.APPLICATION_MTRON.value);
+                                                LOG.debug("sending with content-type: %s", contentType.value);
+                                                sendResponse(contentType, ByteBuffer.wrap(
+                                                        new ObjByteBufferSerializer().write(HTML_SERIALIZER.read(
+                                                                Jsoup.parse(absolutePath)).asRec().at(pretractedURI)).array()), exchange);
+                                            }
+                                        } else {
+                                            String response = "<html><body><h1>404 Not Found</h1></body></html>";
+                                            exchange.getResponseHeaders().set(Content.ContentType.VALUE, Content.ContentType.TEXT_HTML.value);
+                                            exchange.sendResponseHeaders(404, response.length());
+                                            try (final OutputStream os = exchange.getResponseBody()) {
+                                                os.write(response.getBytes());
+                                                os.flush();
+                                            }
+                                        }
                                     }
                                 }
+                               
+                                }*/
                                 /// ////////////////////////////////////////////////////////////////////////////////////
                                 /// ////////////////////////////////////////////////////////////////////////////////////
                                 /// ////////////////////////////////////////////////////////////////////////////////////
@@ -189,7 +244,7 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                                         // final Path newPath = Paths.get(file.toPath().toString() + "-temp.html");
                                         Files.writeString(file.toPath(), HTML_SERIALIZER.writeRec(existingObj).toString());
                                         exchange.getResponseHeaders().set(Content.ContentType.VALUE, Content.ContentType.TEXT_HTML.value);
-                                        sendResponse(Content.ContentType.TEXT_PLAIN, ByteBuffer.wrap(
+                                        sendResponse(TEXT_PLAIN, ByteBuffer.wrap(
                                                 new ObjByteBufferSerializer().write(HTML_SERIALIZER.read(
                                                         Jsoup.parse(file.toPath())).asRec().at(reference)).array()), exchange);
 
@@ -211,6 +266,32 @@ public class httpSpace extends AbstractSpace<HttpServer> {
             LOG.warn("%s server not started", this);
         }
     }
+
+    private void send404Response(final HttpExchange exchange) throws IOException {
+        String response = String.format("""
+                                        <html>
+                                        <head>
+                                        <title>%s</title>
+                                        </head>
+                                        <body>
+                                        <h1>404 Not Found</h1>
+                                        </body>
+                                        </html>
+                                        """, this.vid());
+        exchange.getResponseHeaders().set(Content.ContentType.VALUE, Content.ContentType.TEXT_HTML.value);
+        exchange.sendResponseHeaders(404, response.length());
+        try (final OutputStream os = exchange.getResponseBody()) {
+            os.write(response.getBytes());
+            os.flush();
+        }
+    }
+
+    private void sendResponse(final Content.ContentType contentType, final Obj obj, final HttpExchange exchange) throws
+            IOException {
+        final byte[] bytes = contentType.serializer().outputBytes(obj).array();
+        sendResponse(contentType, ByteBuffer.wrap(bytes), exchange);
+    }
+
 
     private void sendResponse(final Content.ContentType contentType, final File file, final HttpExchange exchange) throws
             IOException {
@@ -259,7 +340,6 @@ public class httpSpace extends AbstractSpace<HttpServer> {
     @Override
     public Function<fURI, Iterator<IdObj>> directReader() {
         return (pattern) -> {
-            LOG.debug("retrieving %s", pattern);
             try {
                 fURI runningPattern = pattern;
                 int steps = 0;
@@ -294,22 +374,31 @@ public class httpSpace extends AbstractSpace<HttpServer> {
     public BiFunction<fURI, Obj, Obj> directWriter() {
         return (pattern, obj) -> {
             LOG.debug("writing %s", pattern);
-            try (final AutoCloseable client = (AutoCloseable) HttpClient.newHttpClient()) { // a true jvm bug!
-                final JsonElement json = JSON_TRANSLATOR.write(obj);
-                final HttpRequest request = HttpRequest.newBuilder()
-                        .header(Content.ContentType.VALUE, Content.ContentType.APPLICATION_JSON.value)
-                        .uri(URI.create(pattern.toString()))
-                        .POST(HttpRequest.BodyPublishers.ofString(json.toString()))
-                        .build();
-                final HttpResponse<byte[]> response = ((HttpClient) client).send(request, HttpResponse.BodyHandlers.ofByteArray());
-                LOG.debug("%s", response.headers().firstValue(Content.ContentType.VALUE));
-                final Optional<String> contentType = response.headers().firstValue(Content.ContentType.VALUE);
-                if (contentType.isPresent()) {
-                    return Content.ContentType.of(contentType.get()).fromBytes(response.body());
+            if (pattern.test(this.pattern)) {
+                LOG.info("mapping %s => %s", pattern, pattern.scheme(null).host(null));
+                final fURI location = Space.Helper.routeFromSpace(pattern.scheme(null).host(null), this.routes());
+                LOG.info("writing to %s: %s", location, obj);
+                Router.global().write(location, obj);
+                return obj;
+
+            } else {
+                try (final AutoCloseable client = (AutoCloseable) HttpClient.newHttpClient()) { // a true jvm bug!
+                    final JsonElement json = JSON_TRANSLATOR.write(obj);
+                    final HttpRequest request = HttpRequest.newBuilder()
+                            .header(Content.ContentType.VALUE, Content.ContentType.APPLICATION_JSON.value)
+                            .uri(URI.create(pattern.toString()))
+                            .POST(HttpRequest.BodyPublishers.ofString(json.toString()))
+                            .build();
+                    final HttpResponse<byte[]> response = ((HttpClient) client).send(request, HttpResponse.BodyHandlers.ofByteArray());
+                    LOG.debug("%s", response.headers().firstValue(Content.ContentType.VALUE));
+                    final Optional<String> contentType = response.headers().firstValue(Content.ContentType.VALUE);
+                    if (contentType.isPresent()) {
+                        return Content.ContentType.of(contentType.get()).fromBytes(response.body());
+                    }
+                    return jnt(response.statusCode());
+                } catch (final Exception e) {
+                    throw MTronException.of(e);
                 }
-                return jnt(response.statusCode());
-            } catch (final Exception e) {
-                throw MTronException.of(e);
             }
         };
     }

@@ -49,7 +49,7 @@ import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.IO_ISA_TID;
 @ExtendWith(TestSkip.TestSkipExtension.class)
 @ExtendWith(TestData.TestDataExtension.class)
 public abstract class AbstractMetatronTest {
-
+    
     protected static final Random RANDOM = new Random();
     protected GraphittyLogger LOG = Graphitty.log(this);
     protected static GraphittyLogger STATIC_LOG = Graphitty.log(AbstractMetatronTest.class);

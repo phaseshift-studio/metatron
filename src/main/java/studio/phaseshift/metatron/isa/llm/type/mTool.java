@@ -24,8 +24,8 @@ import dev.langchain4j.service.tool.ToolExecutor;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.util.Tuple;
 
@@ -109,11 +109,11 @@ public class mTool extends MRec {
         ToolExecutor toolExecutor = (toolExecutionRequest, memoryId) -> {
             Map<String, Object> arguments = fromJson(toolExecutionRequest.arguments(), Map.class);
             final Poly<?, ?> args = inst.args().isNoObj() ? lst() : (inst.args().isLst() ?
-                    lst(arguments.entrySet().stream().filter(e -> !e.getKey().equals(LHS)).map(e -> MObjFactory.single().toObjFromString(e.getValue().toString())).collect(Collectors.toList())) :
-                    rec(arguments.entrySet().stream().filter(e -> !e.getKey().equals(LHS)).collect(Collectors.toMap(e -> uri(e.getKey()), e -> MObjFactory.single().toObjFromString(e.getValue().toString())))));
+                    lst(arguments.entrySet().stream().filter(e -> !e.getKey().equals(LHS)).map(e -> ObjmtronSerializer.<Obj>parse(e.getValue().toString())).collect(Collectors.toList())) :
+                    rec(arguments.entrySet().stream().filter(e -> !e.getKey().equals(LHS)).collect(Collectors.toMap(e -> uri(e.getKey()), e -> ObjmtronSerializer.parse(e.getValue().toString())))));
             final Object result = inst
                     .args(args)
-                    .apply(arguments.containsKey(LHS) ? MObjFactory.single().toObjFromString(arguments.get(LHS).toString()) : noobj());
+                    .apply(arguments.containsKey(LHS) ? ObjmtronSerializer.parse(arguments.get(LHS).toString()) : noobj());
             inst.logger().info("evaluating mtron_inst tool: %s => %s => %s", arguments.get(LHS), inst, result);
             return result.toString();
         };

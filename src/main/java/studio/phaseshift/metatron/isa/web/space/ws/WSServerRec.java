@@ -30,15 +30,21 @@ import java.nio.ByteBuffer;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.isa.m.mInstSet.ALL_STAR;
+import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TID;
+import static studio.phaseshift.metatron.isa.m.type.InstSet.A;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 public class WSServerRec extends MRec implements WSServer {
 
-    protected final Content.ContentType inContentType;
-    protected final Content.ContentType outContentType;
+    protected Content.ContentType inContentType;
+    protected Content.ContentType outContentType;
     protected WebSocket socket = null;
 
     public WSServerRec(final Map<Obj, Obj> map, final fURI vid) {
@@ -47,31 +53,55 @@ public class WSServerRec extends MRec implements WSServer {
 
     public WSServerRec(final Map<Obj, Obj> map, final fURI tid, final fURI vid) {
         super(map, tid, vid);
-        this.outContentType = Content.ContentType.APPLICATION_MTRON;
-        this.inContentType = Content.ContentType.APPLICATION_MTRON;
+        this.outContentType = Content.ContentType.of(map.getOrDefault(uri(OUT), uri(Content.ContentType.TEXT_PLAIN.value)).uriValue().toString());
+        this.inContentType = Content.ContentType.of(map.getOrDefault(uri(IN), uri(Content.ContentType.TEXT_PLAIN.value)).uriValue().toString());
+        if (!map.containsKey(uri(SEND)))
+            this.jvm().put(uri(SEND), instC(this.vid().extend(SEND).dom(A.maybe()).rng(A.maybe()), lst(), (lhs, inst) -> {
+                this.logger().info("sending %s to %s", lhs, this.vid());
+                this.send(lhs);
+                return lhs;
+            }));
+        if (!map.containsKey(uri(CLOSE)))
+            this.jvm().put(uri(CLOSE), instC(this.vid().extend(CLOSE).dom(ALL_STAR).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
+                this.logger().info("closing %s", this.vid());
+                this.close();
+                return noobj();
+            }));
     }
 
-
+    @Override
     public Tuple.Pair<Content.ContentType, Content.ContentType> getIOSerializers() {
         return Tuple.Pair.with(this.inContentType, this.outContentType);
     }
 
+    @Override
     public void onOpen(final WebSocket conn, final ClientHandshake handshake) {
-        this.at(uri(ON_OPEN)).apply(str(handshake.getResourceDescriptor()));
+        this.at(uri(ON_OPEN)).apply(uri(handshake.getResourceDescriptor()));
     }
 
 
+    @Override
     public void onClose(final WebSocket conn, final int code, final String reason, final boolean remote) {
         this.at(uri(ON_CLOSE)).apply(rec(uri(CODE), jnt(code), uri(REASON), str(reason)));
     }
 
 
+    @Override
     public void onMessage(final WebSocket conn, final String message) {
         final Obj result = this.at(uri(ON_MESSAGE)).apply(this.inContentType.serializer().inputBytes(ByteBuffer.wrap(message.getBytes())));
-        this.send(result);
+        // noobj signals "no response" (e.g. JSON-RPC notifications have no id and require no reply)
+        if (!result.isNoObj())
+            this.send(result);
     }
 
+    @Override
+    public void onMessage(final WebSocket conn, final ByteBuffer message) {
+        final Obj result = this.at(uri(ON_MESSAGE)).apply(this.inContentType.serializer().inputBytes(message));
+        if (!result.isNoObj())
+            this.send(result);
+    }
 
+    @Override
     public void onError(final WebSocket conn, final Exception ex) {
         this.at(uri(ON_ERROR)).apply(fail(ex));
     }

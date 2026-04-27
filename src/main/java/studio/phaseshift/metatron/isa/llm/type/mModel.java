@@ -118,6 +118,14 @@ public class mModel extends MRec {
         return Optional.<Obj>ofNullable(this.at(SKILL).orElse(null)).map(o -> o.autoResolve(this)).map(Obj::asLst);
     }
 
+    public Optional<Lst> notes() {
+        return Optional.<Obj>ofNullable(this.at(NOTE).orElse(null)).map(o -> o.autoResolve(this)).map(Obj::asLst);
+    }
+
+    public void addNote(final Obj note) {
+        this.at(NOTE).orElse(lst()).asLst().append(note);
+    }
+
     public Optional<Rec> responseFormat() {
         return Optional.ofNullable(this.at(RESPONSE + "/" + FORMAT).orElse(null));
     }
@@ -129,6 +137,7 @@ public class mModel extends MRec {
     public Optional<Rec> lastResponse() {
         return Optional.<Obj>ofNullable(this.at(RESPONSE).orElse(null)).map(o -> o.autoResolve(this)).map(Obj::asRec);
     }
+
 
     /**
      * RAG (Retrieval Augmented Generation) configuration.
@@ -147,6 +156,7 @@ public class mModel extends MRec {
     }
 
     public AiServices<mAgent> agent() {
+        List<String> systemMessage = new ArrayList<>();
         final AiServices<mAgent> service = AiServices.builder(mAgent.class);
         //////////////////////////////////////////
         /////////////// MEMORY ///////////////////
@@ -179,7 +189,7 @@ public class mModel extends MRec {
                             .map(s -> mSkill.of(s.apply().asRec()).toSkill())
                             .toList()).build();
             service.toolProvider(skills.toolProvider());
-            service.systemMessage("You have access to the following skills:\n" + skills.formatAvailableSkills()
+            systemMessage.add("You have access to the following skills:\n" + skills.formatAvailableSkills()
                     + "\nWhen the user's request relates to one of these skills, activate it first using the `activate_skill` tool before proceeding.");
         }
         //////////////////////////////////////////
@@ -208,6 +218,23 @@ public class mModel extends MRec {
             if (!tools.isEmpty())
                 service.tools(tools).executeToolsConcurrently(BootLoader.getExecutor());
         }
+        /////////////////////////////////////////////
+        ///////////////   NOTES   //////////////////
+        ////////////////////////////////////////////
+        if (this.notes().isPresent()) {
+            if (null == this.vid())
+                this.logger().warn("llm has no vid (ignoring): %s", this.notes());
+            else
+                systemMessage.add("""
+                                  ### IMPORTANT ###
+                                  Always check for any notes the user has provided you.
+                                  Do this before, during, and after completing your task.
+                                  The contents of the notes should be deemed of crucial importance.
+                                  To check for notes, use your provided mtron `eval` tool with the following argument:
+                                    `*<%s/note>.remove(0)`
+                                  A result of `noobj` means "no note" at this time, but do check again periodically.
+                                  """.formatted(this.vid()));
+        }
         //////////////////////////////////////////
         ///////////////   RAG   //////////////////
         //////////////////////////////////////////
@@ -220,10 +247,10 @@ public class mModel extends MRec {
             this.logger().info("RAG enabled: pattern=%s, max=%d", pattern, maxResults);
             service.contentRetriever(new SpaceContentRetriever(pattern, maxResults));
         }
-
+        // merge all system messages into a single system message
+        service.systemMessage(String.join("\n", systemMessage));
         /// ////////////////////////////////////////////////////////////////////////////////////////
         return service;
-
     }
     
   /*  public Rec query(final Rec query) {
@@ -253,7 +280,7 @@ public class mModel extends MRec {
             final mAgent agent = this.agent()
                     .systemMessageTransformer((current, content) -> this.at(DESC).orElse(str0()).strValue() + "\n\n" + current)
                     .streamingChatModel(LLMFactory.createChatInteraction(this, this.model(), responseFormat)).build();
-            AtomicReference<String> STAGE = new AtomicReference<>("START");
+            final AtomicReference<String> STAGE = new AtomicReference<>("START");
             agent.chat(message)
                     .onToolExecuted(tool -> {
                         STAGE.set("TOOLING");

@@ -296,7 +296,15 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
 
     boolean hasPrefix(final String prefix);
 
+    default boolean hasPrefix(final fURI prefix) {
+        return this.hasPrefix(prefix.toString());
+    }
+
     boolean hasPostfix(final String postfix);
+
+    default boolean hasPostfix(final fURI postfix) {
+        return this.hasPostfix(postfix.toString());
+    }
 
     boolean hasPattern();
 

@@ -69,7 +69,7 @@ public class ObjHTMLSerializerTest extends AbstractSerializerTest<Document> {
         }
 
         // Otherwise, search in children list
-        final Obj children = parent.asRec().at(uri(CHILDREN));
+        final Obj children = parent.asRec().at(uri(OUT));
         if (children.isNoObj() || !children.isLst()) return noobj();
 
         for (Obj child : children.asLst().elements().toList()) {

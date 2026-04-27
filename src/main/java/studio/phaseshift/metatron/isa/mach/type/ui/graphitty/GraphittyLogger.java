@@ -43,6 +43,10 @@ public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
         put("TRACE", "c");
     }};
 
+    public void ero() {
+        
+    }
+
     public enum OtherLevel {NONE, EXCEPT}
 
     protected final Object source;

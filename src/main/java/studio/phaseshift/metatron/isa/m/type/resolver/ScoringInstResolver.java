@@ -128,13 +128,18 @@ public class ScoringInstResolver implements InstResolver {
         final fURI apiRngTid = apiInst.rng().tid();
         final fURI lhsTid = lhs.tid();
 
-        // Domain specificity (most important - 1000 points)
+        // domain specificity (most important - 1000 points)
         if (!apiDomTid.isGeneric() && !apiDomTid.hasPattern()) {
             score += 1000;
-            // Bonus for exact domain match (500 points)
+            // bpnus for exact domain match (500 points)
             if (lhsTid.basePath().equals(apiDomTid.basePath())) {
                 score += 500;
             }
+            // bonus for more specific dom/rng matches
+            if(!apiInst.dom().isBaseType())
+                score += 500;
+            if(!apiInst.rng().isBaseType())
+                score += 500;
         }
 
         // Argument specificity (500 points for non-generic first arg)

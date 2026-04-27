@@ -25,10 +25,14 @@ import studio.phaseshift.metatron.isa.web.type.Content;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
+import java.io.Closeable;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public interface WSServer extends Obj {
+public interface WSServer extends Obj, Closeable {
 
     void onOpen(final WebSocket conn, final ClientHandshake handshake);
 
@@ -36,15 +40,30 @@ public interface WSServer extends Obj {
 
     void onMessage(final WebSocket conn, final String message);
 
+    void onMessage(final WebSocket conn, final ByteBuffer message);
+
     void onError(final WebSocket conn, final Exception ex);
 
-    public WebSocket getWebSocket();
+    WebSocket getWebSocket();
 
-    public Tuple.Pair<Content.ContentType, Content.ContentType> getIOSerializers();
+    Tuple.Pair<Content.ContentType, Content.ContentType> getIOSerializers();
+
+    @Override
+    default void close() {
+        if (null != this.getWebSocket())
+            this.getWebSocket().close();
+    }
 
     default void send(final Obj message) {
-        if (null == this.getWebSocket())
+        if (null == this.getWebSocket()) {
             throw MTronException.of("no websocket found for %s", this);
-        this.getWebSocket().send(this.getIOSerializers().get1().serializer().outputBytes(message));
+        }
+        final Content.ContentType outType = this.getIOSerializers().get1();
+        final ByteBuffer bytes = outType.serializer().outputBytes(message);
+        if (outType.isText())
+            // send as a websocket text frame so clients using onText listeners receive it
+            this.getWebSocket().send(new String(bytes.array(), StandardCharsets.UTF_8));
+        else
+            this.getWebSocket().send(bytes);
     }
 }

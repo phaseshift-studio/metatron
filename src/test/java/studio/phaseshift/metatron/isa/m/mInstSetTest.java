@@ -788,7 +788,7 @@ public class mInstSetTest extends AbstractInstSetTest {
     }
 
     @ParameterizedTest
-    @TestData(value = {"reck -> rec::T@reck", "lyst -> lst::T@lyst"})
+    @TestData(value = {"rec::T[?[=>]]@reck", "lst::T[?[,]]@lyst"})
     @CsvSource(value = {
             "true.as(bool::T)                                                                                            % true",
             "false.as(bool::T)                                                                                           % false",

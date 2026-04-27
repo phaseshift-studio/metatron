@@ -190,6 +190,22 @@ class MetatronDashboard {
     }
 
     // ─── WebSocket ────────────────────────────────────────────────────────────
+    //
+    // The wsmtron endpoint (ws://host:port/mtron) is a WebSocket server that
+    // evaluates raw mtron expressions. The protocol is simple:
+    //
+    //   SEND: raw mtron code as UTF-8 text
+    //   RECV: raw mtron result as UTF-8 text
+    //
+    // The server uses the ObjmtronSerializer for both input and output
+    // (Content-Type: application/mtron). Responses are FIFO-ordered.
+    //
+    // Two sockets are used:
+    //   - Main socket: user-triggered queries (spaces, tree, inspector, console)
+    //   - Background socket: decorative queries (type icons, doc indicators)
+    //
+    // The background socket is fully independent so decorative queries never
+    // delay user-triggered ones.
 
     toggleConnection() {
         this.connected ? this._disconnect() : this._connect();
@@ -201,18 +217,14 @@ class MetatronDashboard {
         try {
             this._updateStatus('connecting');
             this.socket = new WebSocket(url);
-            this.socket.binaryType = 'arraybuffer';
             this.socket.onopen = () => {
                 this.connected = true;
                 this._updateStatus('connected');
                 // Open a dedicated secondary socket for background (decorative) queries.
-                // Because the server is stateless, this connection is fully independent.
-                // Background queries never block the main socket's callback queue.
                 this.bgSocket = new WebSocket(url);
-                this.bgSocket.binaryType = 'arraybuffer';
-                this.bgSocket.onmessage  = e   => this._handleBgMessage(e);
-                this.bgSocket.onerror    = err => console.warn('bg socket error:', err);
-                this.bgSocket.onclose    = ()  => { this.bgSocket = null; };
+                this.bgSocket.onmessage = e => this._handleBgMessage(e);
+                this.bgSocket.onerror   = err => console.warn('bg socket error:', err);
+                this.bgSocket.onclose   = ()  => { this.bgSocket = null; };
                 this.loadSpaces();
                 this._loadDefaultTree();
                 if (this.openPanels.has('llmAgent')) this._loadAgentProviders();
@@ -261,9 +273,9 @@ class MetatronDashboard {
         if (cfg.btn) this.connectBtn.innerHTML = cfg.btn;
     }
 
-    // Send a query on the main socket. Cancels pending (unsent) background queries
-    // so they don't queue up behind this one, but never blocks on already-sent
-    // background queries (those run on the separate bg socket).
+    // Send a query on the main socket. The wsmtron server evaluates raw mtron
+    // expressions and returns results in FIFO order. Cancels pending (unsent)
+    // background queries so they don't queue up behind this one.
     sendQuery(code, callback) {
         if (!this.connected || !this.socket) {
             callback?.(null, 'not connected');
@@ -271,13 +283,12 @@ class MetatronDashboard {
         }
         this._cancelBackgroundQueries();
         this.callbackQueue.push({ callback, code, timestamp: Date.now() });
-        this.socket.send(new TextEncoder().encode(code));
+        this.socket.send(code);
     }
 
     _handleMessage(event) {
-        const data = event.data instanceof ArrayBuffer
-            ? new TextDecoder('utf-8').decode(event.data)
-            : event.data;
+        const data = typeof event.data === 'string' ? event.data
+            : new TextDecoder('utf-8').decode(event.data);
         this.callbackQueue.shift()?.callback?.(data, null);
     }
 
@@ -302,15 +313,14 @@ class MetatronDashboard {
             }
             const { code, callback } = this.backgroundQueryQueue.shift();
             this.bgCallbackQueue.push({ callback, code });
-            this.bgSocket.send(new TextEncoder().encode(code));
+            this.bgSocket.send(code);
             this._scheduleBackgroundQuery();
         }, this.backgroundQueryDelay);
     }
 
     _handleBgMessage(event) {
-        const data = event.data instanceof ArrayBuffer
-            ? new TextDecoder('utf-8').decode(event.data)
-            : event.data;
+        const data = typeof event.data === 'string' ? event.data
+            : new TextDecoder('utf-8').decode(event.data);
         this.bgCallbackQueue.shift()?.callback?.(data, null);
     }
 
@@ -1167,6 +1177,7 @@ class MetatronDashboard {
         this.currentInspectorUri = uri;
         if (this.inspectorUri) this.inspectorUri.textContent = uri;
         this._showLoading(this.inspectorContainer, 'loading…');
+        // Use doc() inst to get a clean string representation of the object
         this.sendQuery(`"${uri}"./m/web/inst/doc()`, (response, error) => {
             if (error) { this._showError(this.inspectorContainer, error); return; }
             this.inspectorContainer.innerHTML = this._highlight(this._stripResponse(response));
@@ -1179,6 +1190,7 @@ class MetatronDashboard {
             this.inspectorUri.innerHTML = `<i class="bi bi-book me-1"></i>${this.escapeHtml(uri)}?docq`;
         }
         this._showLoading(this.inspectorContainer, 'loading documentation…');
+        // Use doc_json() to get the docq description as a JSON string
         this.sendQuery(`"*<${uri}?docq>.>>desc"./m/web/inst/doc_json()`, (response, error) => {
             if (error) { this._showError(this.inspectorContainer, error); return; }
             this.inspectorContainer.innerHTML = this._highlight(this._stripResponse(response));
@@ -1228,6 +1240,7 @@ class MetatronDashboard {
 
         // Query 2 — docq via type VID: <expr>.type().vid().map(<${_}?docq>).*(_)
         // Note: '${_}' is literal mtron interpolation syntax, not JS template syntax.
+        // The wsmtron server evaluates this as raw mtron code.
         const docqQuery = expr + '.type().vid().map(<${_}?docq>).*(_)./m/web/inst/doc_json()';
         this.sendQuery(docqQuery, (response, error) => {
             const docqSection = document.getElementById('inspector-docq-section');
@@ -1252,12 +1265,24 @@ class MetatronDashboard {
     }
 
     // ─── Console ──────────────────────────────────────────────────────────────
+    //
+    // The wsmtron server evaluates raw mtron expressions directly. The console
+    // sends the user's code as-is and receives the mtron result back.
+    //
+    // For display, we use the doc() inst which returns a clean string:
+    //   send:  """user code"""./m/web/inst/doc()
+    //   recv:  <str::T>'result string'
+    //
+    // For JSON-structured data, we use doc_json():
+    //   send:  """user code"""./m/web/inst/doc_json()
+    //   recv:  <str::T>'{"key": "value"}'
 
     _executeCode() {
         const code = this.codeInput?.value?.trim();
         if (!code) return;
         if (!this.connected) { this._appendOutput(code, null, 'not connected to metatron'); return; }
         this._showExecutionWaiting(code);
+        // Wrap in doc() to get a clean string representation
         this.sendQuery(`"""${code}"""./m/web/inst/doc()`, (response, error) => {
             this._hideExecutionWaiting();
             this._appendOutput(code, this._stripResponse(response), error);
@@ -1752,15 +1777,29 @@ class MetatronDashboard {
     }
 
     // Strip the mtron type prefix and separator tokens from a raw server response.
+    //
+    // The wsmtron server returns results in ObjmtronSerializer format:
+    //   doc()      → <str::T>'result with %%% newlines'
+    //   doc_json() → <str::T>'{"json":"value"}'
+    //
+    // We strip the type prefix and outer quotes, then replace %%% with \n.
     _stripResponse(response) {
-        let s = response.replace(/^<[^>]+>::/, '').trim();
+        if (!response) return '';
+        let s = response;
+        // Strip type prefix: <str::T> or <rec::T[...]>
+        s = s.replace(/^<[^>]+>::/, '').trim();
+        // Strip outer single quotes (from str serialization)
         if (s.startsWith("'") && s.endsWith("'")) s = s.slice(1, -1);
+        // Replace %%% newline markers with actual newlines
         return s.replaceAll('%%%', '\n');
     }
 
     // Strip and JSON-parse a server response in one step.
+    // Used for doc_json() responses which return JSON-encoded mtron objects.
     _parseJsonResponse(response) {
-        return JSON.parse(this._stripResponse(response));
+        const stripped = this._stripResponse(response);
+        if (!stripped || stripped === 'noobj') return null;
+        return JSON.parse(stripped);
     }
 
     // Parse a tree-node response into { uri, value } objects.

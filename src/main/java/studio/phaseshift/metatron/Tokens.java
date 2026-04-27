@@ -68,6 +68,7 @@ public final class Tokens {
     public static final String RNG = "rng";
     public static final String SIZE = "size";
     public static final String SKILL = "skill";
+    public static final String MIME_TYPE = "mimeType"; 
     public static final String LLM = "llm";
     public static final String MCP = "mcp";
     public static final String LICENSE = "license";
@@ -77,6 +78,8 @@ public final class Tokens {
     public static final String NOTE = "note";
     public static final String HISTORY = "history";
     public static final String TOOL = "tool";
+    public static final String PROMPT = "prompt";
+    public static final String RESOURCE = "resource";
     public static final String RESPONSE = "response";
     public static final String OBJECT = "object";
     public static final String TYPE = "type";
@@ -94,7 +97,6 @@ public final class Tokens {
     public static final String BODY = "body";
     public static final String B_LIST = "b_list";
     public static final String O_LIST = "o_list";
-    public static final String CHILDREN = "children";
     public static final String TAG = "tag";
     public static final String DIV = "div";
     public static final String QUOTE = "quote";
@@ -136,6 +138,8 @@ public final class Tokens {
     public static final String SERIALIZER = "serializer";
     public static final String LOGG = "log";
     public static final String DRIVER = "driver";
+    public static final String SEND = "send";
+    public static final String CLOSE = "close";
     public static final String TABLE = "table";
     public static final String CTOR = "ctor";
     public static final String COLLECTION = "collection";

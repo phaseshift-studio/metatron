@@ -165,6 +165,7 @@ public class mInstSet extends AbstractInstSet {
     public static final fURI BARRIER_INST_TID = M_ISA_INST_TID.extend("barrier");
     public static final fURI REIFY_INST_TID = M_ISA_INST_TID.extend("reify");
     public static final fURI SELECT_INST_TID = M_ISA_INST_TID.extend("select");
+    public static final fURI REMOVE_INST_TID = M_ISA_INST_TID.extend("remove");
     public static final fURI UPDATE_INST_TID = M_ISA_INST_TID.extend("update");
     public static final fURI WHERE_INST_TID = M_ISA_INST_TID.extend("where");
     public static final fURI GROUP_INST_TID = M_ISA_INST_TID.extend("group");
@@ -239,7 +240,7 @@ public class mInstSet extends AbstractInstSet {
         this.selfTID(INSTSET_TID);
         this.jvm().putAll(new LinkedHashMap<>(Map.of(
                 uri(PATTERN), uri(M_ISA_TID.extend(ALL)),
-                uri(CONST), lst(docWrap(noobj(), "a no object")),
+                uri(CONST), lst(docWrap(noobj(), "a no object. if an inst domain is no zeroable (e.g. {0}/{?}/{*}) then the inst will not evaluate.")),
                 uri(TYPE), lst(
                         //  docWrap(MONO_TYPE, "an atomic obj"),
                         //  docWrap(POLY_TYPE, "a obj composed of other objs"),
@@ -294,13 +295,13 @@ public class mInstSet extends AbstractInstSet {
                                 "[a=>[b=>1,c=>[d=>3]]] [-- nested rec     --]",
                                 "[a=>[b=>+1,c=>_]]     [-- inst values    --]"),
                         docWrap(INSTSET_TYPE, "", "", Map.of(
-                                        uri(CONSTQ).maybe(), "constants used across the instset",
-                                        uri(TYPE).maybe(), "types used to structure of the instset's objs",
+                                        uri(CONST).maybe(), "constants used across the instset",
+                                        uri(TYPE).maybe(), "types used to structure objs of the instset",
                                         uri(INST).maybe(), "instructions associated with the types of the instset",
-                                        uri(REWRITE).maybe(), "code<=code instructions that capture the algebraic rules of the instset",
+                                        uri(REWRITE).maybe(), "code<=code instructions that capture the algebraic equalities of the instset",
                                         uri(SUGAR).maybe(), "custom instruction syntax sugars given to the parser"),
                                 "an aggregate of consts, types, insts, rewrites, and sugars structuring a domain of discourse"),
-                        docWrap(INST_TYPE, "a call with apply defined by an lhs obj, an poly of args, and an body of code",
+                        docWrap(INST_TYPE, "a call with apply defined by an lhs obj, a poly of args, and an body of code",
                                 "abc(?int::T,?int::T){ *<0> + *<1> }        [-- position args inst    --]",
                                 "abc(a=>?int::T,b=>?int::T){ *a + *b }      [-- named args inst       --]",
                                 "abc(a=>else(1),b=>else(2)){ *a + *b }      [-- default args inst     --]",
@@ -311,31 +312,36 @@ public class mInstSet extends AbstractInstSet {
                                 "12.plus(mult(_))            [-- 2-depth code           --]",
                                 "1-<[_,-<[_,_]>-]>-.sum()    [-- sugar'd branching code --]"),
                         //  docWrap(OBJS_TYPE, "an ordered sequence poly of objs and noobjs"),
-                        docWrap(FAIL_TYPE, "a reified exception handling obj that can be caught",
+                        docWrap(FAIL_TYPE, "a reified exception obj that can be caught",
                                 "fail::[ouch]                [-- a fail obj with message --]",
                                 "fail::[doh] + 2             [-- plus(2) skipped over    --]",
                                 "fail::[dah] + 2 + catch(9)  [-- fail flattened to 9       --]"),
                         /// ///////////////////////////////////
                         docWrap(SPACE_TYPE, "storage systems structured as uri addressed objs"),
-                        docWrap(MEM_SPACE_TYPE, "a in-memory space with objs indexed by a topic trie"),
-                        docWrap(STACK_SPACE_TYPE, "the machine's thread local stack exposed as a space",
+                        docWrap(MEM_SPACE_TYPE, "an in-memory space with objs indexed by a topic trie"),
+                        docWrap(STACK_SPACE_TYPE, "a thread local stack used for global variables and machine inst frames",
                                 "2.to(a).plus(from(a))     [-- 4 via writing/reading a         --]",
                                 "a->2+*a                   [-- 4 via sugar'd writing/reading a --]"),
                         META_SPACE_TYPE,
                         docWrap(Q_TYPE, """
                                         qprocs (query processors) are optional space components.
                                         qproc behaviors are driven by a qprocs specified uri ?-query pattern.
-                                        not all spaces have the same set of attached qprocs and thus, qprocs must
-                                        be attached to a space before use. a space's qprocs are accessible at
+                                        not all spaces have the same set of attached qprocs.
+                                        qprocs must be attached to a space before use. a space's qprocs are accessible at
                                         
                                              \\(\\texttt{*space/vid/q => lst[q]::T}\\)
                                         """),
                         /// ///////////////////////////////////
-                        docWrap(SUBQ_TYPE, "addr publish-subscribe qproc",
-                                "/usr/ai/+?subq -> |print('ai update: ${_}') [-- /usr/ai subtree watch  --]",
+                        docWrap(SUBQ_TYPE, """
+                                           uri publish-subscribe qproc.
+                                           when writing an inst to a subq uri, be sure to |-block prefix 
+                                           so as to store the inst and not its evaluation in the assignment.
+                                           """,
+                                "/usr/ai/#?subq -> |print('ai update: ${_}') [-- /usr/ai subtree watch  --]",
                                 "a?subq         -> |(>>1+1.println(_).to(a)) [-- infinite incr loop     --]",
                                 "*+?subq                                     [-- all subs for addr tree --]"),
-                        SUB_TYPE,
+                        docWrap(SUB_TYPE, "a subscription obj used by ?subq qproc.",
+                                "abc?subq -> sub::[target=>abc,on_recv=>print(_)]  [-- the inst form of abc -> |print(_) is sugar for sub-form --]"),
                         docWrap(TYPEQ_TYPE, "addr type constraint qproc",
                                 "abc?typeq -> int::T       [-- abc can only reference a single integer --]",
                                 "abc?typeq -> 'not an int' [-- yields a fail::T --]"),
@@ -358,7 +364,6 @@ public class mInstSet extends AbstractInstSet {
                         Code.CodeType.insts().stream(),
                         Fail.FailType.insts().stream(),
                         //  Objs.ObjsType.insts().stream(),
-                        Type.TypeType.insts().stream(),
                         SpaceType.insts().stream(),
                         ObjType.insts().stream(),
                         NoObj.NoObjType.insts().stream()

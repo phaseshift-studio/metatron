@@ -63,14 +63,19 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
         host     => <ws://127.0.0.1:7777>,
         route    => [</b/cluster>=></shared>],
         peers    => !*boot/peers]@/sys/space/meta2;==]
+ host -> <http://localhost:8777>;
  httpspace::[host     => <http://localhost:8777>,
-        pattern  => http://#,
-        route    => [/          => examples/www,
-                     /docs      => target/docs,
-                     /dashboard => src/main/resources/web/dashboard ]]@/sys/space/www;
+             pattern  => http://#,
+             route    => [/              => <>,
+                          !${*host}/ex   => /m/inst,
+                          !${*host}/test => <local:Desktop>,
+                          /docs      => target/docs,
+                          /console   => src/main/resources/web/console ]]@/sys/space/web/http;
    wsspace::[host     => <ws://localhost:8555>,
-          pattern  => ws://#,
-          route    => [=>]]@/sys/space/ws;
+             pattern  => ws://#,
+             route    => [/mtron=> wsmtron,
+                          /mcp  => wsmcp]]@/sys/space/web/ws;
+ [-- wsmcp::T[?[tool=>[toy=>print(_)]]]@/sys/space/web/ws/wstoy;
   grphspace::[pattern  => /h/#,
         route    => [</h/+/>=><>],
         native   => [factory  => mfactory::[=>],
@@ -110,6 +115,11 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
            pattern      => <openai:#>,
            name         => <openai>,
            route        => [<openai:>=><>]]@/sys/space/openai;
+ catalog::[host         => <https://api.deepseek.com/>,
+           api_key      => !*</sys/env/DEEPSEEK_API_KEY>,
+           pattern      => <deep:#>,
+           name         => <openai>,
+           route        => [<deep:>=><>]]@/sys/space/deepseek;
   catalog::[host         => <http://localhost:8088/v1>,
             pattern      => <localai:#>,
             name         => <localai>,

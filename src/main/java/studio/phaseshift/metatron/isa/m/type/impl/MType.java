@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -35,8 +35,9 @@ public class MType extends MObj implements Type {
 
     protected MType(final Tuple.Pair<Call, Call> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid.big(), null == vid ? null : vid.big());
-        if (Router.loaded() && null != vid && (this.hasPredicate() || this.hasConstructor()) && !this.isBaseType())
-            Router.global().write(vid, this);
+        if (Router.loaded() && null != this.vid() && (this.hasPredicate() || this.hasConstructor()) && !this.isBaseType() && !this.isGeneric() && !this.isPattern()) {
+            Router.global().write(this.vid(), this);
+        }
     }
 
     public static Type T(final Tuple.Pair<Call, Call> jvm, final fURI tid, final fURI vid) {
@@ -56,7 +57,7 @@ public class MType extends MObj implements Type {
         final fURI bigVID = null == vid ? null : vid.big();
         final fURI checkID = null == bigVID ? bigTID : bigVID;
         assert checkID != null;
-        if(!checkID.basePath().equals(REL_TID) && !checkID.basePath().equals(LST_TID) && !checkID.basePath().equals(REC_TID) && !checkID.poly().isEmpty())
+        if (!checkID.basePath().equals(REL_TID) && !checkID.basePath().equals(LST_TID) && !checkID.basePath().equals(REC_TID) && !checkID.poly().isEmpty())
             throw MTronException.of("only poly types can have polynomials: %s {{r}}X=>{{X}} %s", checkID.basePath(), checkID.poly());
         if (!checkID.hasPattern() && !BASE_TYPES.contains(checkID.basePath()) && !checkID.isGeneric() && Router.loaded()) { // TODO: remove the pattern constraint - why not a type be the set of other types?
             final Obj obj = Router.readFromSpace(checkID);

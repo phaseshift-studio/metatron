@@ -81,7 +81,27 @@ public interface Type extends Obj {
     }
 
     default boolean isBaseType() {
-        return mInstSet.BASE_TYPES.contains(this.vid().basePath());
+        return this.vid() != null && mInstSet.BASE_TYPES.contains(this.vid().basePath());
+    }
+
+    default boolean isGeneric() {
+        return (null != this.vid() && this.vid().isGeneric()) || this.tid().isGeneric();
+    }
+
+    default boolean isPattern() {
+        return (null != this.vid() && this.vid().hasPattern()) || this.tid().hasPattern();
+    }
+
+    default boolean isRefinementOf(final Type other) {
+        if (this == other)
+            return true;
+        Type current = this;
+        while (!current.isBaseType()) {
+            if (current.vid().equals(other.vid()))
+                return true;
+            current = current.parentType();
+        }
+        return false;
     }
 
 

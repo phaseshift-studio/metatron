@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.web.space.ws.server;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
@@ -30,13 +31,17 @@ import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
-import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.else_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.id_;
+import static studio.phaseshift.metatron.isa.m.type.Fail.FAIL_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.InstSet.A;
+import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instLambda;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -55,21 +60,19 @@ public class wsmtronServer extends WSServerRec {
             .tid(WS_SERVER_TID)
             .vid(WS_MTRON_SERVER_TID)
             .isaPredicate(rec(uri(IN), URI_TYPE, uri(OUT), URI_TYPE))
-            .constructor(instC(M_ISA_INST_TID.extend(CTOR).dom(ALL.maybe()).rng(WS_MTRON_SERVER_TID),
-                    lst(T(REC_TID)), (lhs, inst) -> new wsmtronServer(new LinkedHashMap<>(inst.arg(0).asRec().jvm()), inst.arg(0).vid()))).create();
+            .constructor(instC(WS_MTRON_SERVER_TID.extend(CTOR).dom(ALL.maybe()).rng(WS_MTRON_SERVER_TID), lst(T(REC_TID)), (lhs, inst) -> {
+                final Rec config = inst.arg(0).asRec();
+                return new wsmtronServer(new LinkedHashMap<>(config.jvm()), config.vid());
+            })).create();
 
 
     public wsmtronServer(final Map<Obj, Obj> jvm, final fURI vid) {
         super(jvm, WS_MTRON_SERVER_TID, vid);
-        this.at(ON_OPEN, instLambda((lhs, inst) -> {
-            LOG.info("wsmtron serializers: [in=>%s,out=>%s]", this.inContentType.name(), this.outContentType.name());
+        this.jvm().put(uri(ON_OPEN), instC(vid.extend(ON_OPEN), lst(URI_TYPE), (lhs, inst) -> {
+            LOG.info("wsmtron opened w/ serializers: [in=>%s,out=>%s]", this.inContentType.name(), this.outContentType.name());
             return noobj();
-        }), MUTABLE);
-        this.at(ON_CLOSE, instLambda((lhs, inst) -> {
-            LOG.info("wsmtron serializers: [in=>%s,out=>%s]", this.inContentType.name(), this.outContentType.name());
-            return noobj();
-        }), MUTABLE);
-        this.at(ON_MESSAGE, instLambda((lhs, inst) -> {
+        }));
+        this.jvm().put(uri(ON_MESSAGE), instC(vid.extend(ON_MESSAGE).dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> {
             try {
                 return lhs.apply(noobj());
             } catch (final Exception e) {
@@ -77,11 +80,21 @@ public class wsmtronServer extends WSServerRec {
                 this.send(fail(e));
                 return fail(e);
             }
-        }), MUTABLE);
-        this.at(ON_CLOSE, instLambda((lhs, inst) -> {
-            LOG.info("closing mtron endpoint w/ %s", this.socket.getRemoteSocketAddress());
+        }));
+        this.jvm().put(uri(ON_CLOSE), instC(vid.extend(ON_CLOSE), rec(uri(CODE), INT_TYPE, uri(REASON), STR_TYPE), (lhs, inst) -> {
+            LOG.info("closing mtron endpoint w/ %s: code={{y}}%s{{X}}, reason={{y}}%s{{X}}", this.socket.getRemoteSocketAddress(), inst.arg(CODE), inst.arg(REASON));
             return noobj();
-        }), MUTABLE);
+        }));
+        this.jvm().put(uri(ON_ERROR), instC(vid.extend(ON_ERROR), lst(FAIL_TYPE), (lhs, inst) -> {
+            LOG.error("error occurred w/ %s: %s", this.socket.getRemoteSocketAddress(), inst.arg(0));
+            return noobj();
+        }));
+
+        this.jvm().put(uri(SEND), instC(this.vid().extend(SEND).dom(A.maybe()).rng(A.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> {
+            this.logger().info("sending %s to %s", lhs, this.vid());
+            this.send(inst.arg(0));
+            return inst.arg(0);
+        }));
 
     }
 }

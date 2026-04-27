@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.isa.m.type;
 
 import studio.phaseshift.metatron.BootLoader;
-import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.algebra.MultMonoid;
 import studio.phaseshift.metatron.algebra.PlusMonoid;
@@ -943,7 +942,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                     instC(AUTO_FROM_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL.maybe()), T(ALL.maybe())), (lhs, inst) -> !inst.arg(1).isNoObj() ? inst.arg(1) : Router.readFromSpace(inst.arg(0).uriValue()).autoResolve(lhs)),
                     instC(AUTO_AT_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL.maybe()), T(ALL.maybe())), (lhs, inst) -> !inst.arg(1).isNoObj() ? inst.arg(1) : Router.readFromSpace(inst.arg(0).uriValue()).orSupply(() -> inst.arg(1).vid(inst.arg(0).uriValue())).autoResolve(lhs).selfVID(inst.arg(0).uriValue())),
                     instC(M_ISA_INST_TID.extend("auto_to"), lst(), (lhs, inst) -> (null == lhs.vid() || lhs.isAutoFrom()) ? lhs : auto_from_(lhs.vid()).tryToInst()),
-                    docWrap(instC(CATCH_INST_TID.dom(A).rng(A.maybeSome()), lst(T(A.maybeSome())), (lhs, inst) -> lhs.isFail() && !lhs.isCaughtFail() ? inst.arg(0).apply(lhs.asFail().caught()).c(c -> c.mult(lhs.c())) : lhs),
+                    docWrap(instC(CATCH_INST_TID.dom(A).rng(C.maybeSome()), lst(T(B.maybeSome())), (lhs, inst) -> lhs.isFail() && !lhs.isCaughtFail() ? inst.arg(0).apply(lhs.asFail().caught()).c(c -> c.mult(lhs.c())) : lhs),
                             "any obj", "uncaught fails go to arg, others mapped by identity", Map.of(jnt(0), "the obj triggered on an uncaught fail"), "a catch function f(x)->x"),
                     docWrap(instC(END_INST_TID.dom(ALL_STAR).rng(NOOBJ_TID.zero()), lst(), (lhs, inst) -> noobj()),
                             "terminal objs", "noobj", Map.of(), "the terminal function \\(f(x)\\to \\emptyset\\)"),
@@ -956,11 +955,13 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                             "an rhs obj", "an lhs obj", Map.of(), "the obj identity function \\(f(x)\\to x\\)"),
                     docWrap(instC(ID_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(), (lhs, inst) -> lhs),
                             "the rhs obj", "the lhs obj", Map.of(), "a objs barrier identity function \\(f(X)\\to X\\)"),
-                    docWrap(instC(AND_INST_TID.dom(A).rng(BOOL_TID), lst(BOOL_TYPE, BOOL_TYPE, BOOL_TYPE.maybe(), BOOL_TYPE.maybe(), BOOL_TYPE.maybe()), (lhs, inst) -> bool(inst.args().elements().map(o -> o.orElse(BOOL_TRUE)).allMatch(Obj::boolValue))),
+                    docWrap(instC(AND_INST_TID.dom(A).rng(BOOL_TID), lst(BOOL_TYPE, BOOL_TYPE, BOOL_TYPE.maybe(), BOOL_TYPE.maybe(), BOOL_TYPE.maybe(), BOOL_TYPE.maybe(), BOOL_TYPE.maybe(), BOOL_TYPE.maybe()), (lhs, inst) -> bool(inst.args().elements().map(o -> o.orElse(BOOL_TRUE)).allMatch(Obj::boolValue))),
                             "any objs", "true if all objs are true", Map.of(), "logical \\(\\texttt{and}\\) function \\(f(X)\\to \\tt{true}\\) if all \\(X\\) are true"),
-                    docWrap(instC(OR_INST_TID.dom(A).rng(BOOL_TID), lst(BOOL_TYPE, BOOL_TYPE, BOOL_TYPE.maybe(), BOOL_TYPE.maybe(), BOOL_TYPE.maybe()), (lhs, inst) -> bool(inst.args().elements().map(o -> o.orElse(BOOL_FALSE)).anyMatch(Obj::boolValue))),
+                    docWrap(instC(OR_INST_TID.dom(A).rng(BOOL_TID), lst(BOOL_TYPE, BOOL_TYPE, BOOL_TYPE.maybe(), BOOL_TYPE.maybe(), BOOL_TYPE.maybe(), BOOL_TYPE.maybe(), BOOL_TYPE.maybe(), BOOL_TYPE.maybe()), (lhs, inst) -> bool(inst.args().elements().map(o -> o.orElse(BOOL_FALSE)).anyMatch(Obj::boolValue))),
                             "any objs", "true if any objs are true", Map.of(), "logical \\(\\texttt{or}\\) function \\(f(X)\\to \\tt{true}\\) if any \\(X\\) are true"),
-                    instC(APPLY_INST_TID.dom(ALL).rng(ALL_STAR), lst(T(ALL_STAR)), (lhs, inst) -> Router.global().read(lhs.uriValue().basePath().extend("apply")).apply(inst.args())),
+                    instC(APPLY_INST_TID.dom(ALL).rng(ALL_STAR), lst(T(ALL_STAR)), (lhs, inst) -> lhs.isInst() ?
+                            lhs.asInst().apply(inst.args()) :
+                            Router.global().read(lhs.uriValue().basePath().extend("apply")).apply(inst.args())),
                     // TODO: get rid of one of the maps
                     instC(MAP_INST_TID.dom(A).rng(B), lst(T(B)), (lhs, inst) -> inst.arg(0)),
                     docWrap(instC(MAP_INST_TID.dom(A.maybe()).rng(B.maybe()), lst(T(B.maybe())), (lhs, inst) -> inst.arg(0)), "maybe some obj", "the lhs obj applied to the arg obj", Map.of(jnt(0), "any obj"), "applies the lhs obj to the arg obj to yield the rhs obj"),
@@ -1007,9 +1008,13 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                         MTronException.wrap(() -> new Thread(() -> inst.arg(0).apply(lhs)).start());
                         return lhs;
                     }),
-                    instC(SOURCE_INST_TID.dom(A).rng(B.maybeSome()), lst(T(STR_TID)), (lhs, inst) -> mParser.eval(inst.arg(0).strValue())),
+                    docWrap(instC(SOURCE_INST_TID.dom(A.maybe()).rng(B.maybeSome()), lst(T(STR_TID)), (lhs, inst) -> mParser.eval(inst.arg(0).strValue())),
+                            "maybe an obj", "result of evaluating mtron source code", Map.of(jnt(0), "the mtron source code to evaluate"), "evaluates mtron source code"),
                     instC(TYPE_INST_TID.dom(TYPE_TID).rng(TYPE_TID), lst(), (lhs, inst) -> lhs.type()),
-                    instC(TYPE_INST_TID.dom(A).rng(TYPE_TID), lst(), (lhs, inst) -> lhs.type()),
+                    docWrap(instC(TYPE_INST_TID.dom(A).rng(TYPE_TID), lst(), (lhs, inst) -> lhs.type()),
+                            "any obj", "the lhs obj type", Map.of(), "the type of the lhs obj",
+                            "6.type()-<[tid(),vid()]      [-- [/m/int, /m/int] base types are those where vid==tid --]",
+                            "nat::6.type()-<[tid(),vid()] [-- [/m/int, nat] non-base types have tid the type they are refining (super type) --]"),
                     docWrap(instC(CC_INST_TID.dom(A.maybeSome()).rng(INT_TID), lst(), (lhs, inst) -> jnt(lhs.c().max())),
                             "any obj", "the lhs obj coefficient", Map.of(), "maps an obj to it's coefficient with a function f(lhs^c)->c"),
                     docWrap(instC(CC_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(INT_TID)), (lhs, inst) -> lhs.c(inst.arg(0).intValue())),
@@ -1067,8 +1072,8 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                                         kv.getValue().asLst().at(0).apply(kv.getValue().asLst().at(jnt(1)))))  // compute barriered value
                                 .collect(new CommonUtil.RecCollector());
                     }),
-                    docWrap(instC(EVAL_INST_TID.dom(A.maybe()).rng(B), rec(uri(Tokens.CODE), STR_TYPE), (lhs, inst) -> mParser.eval(inst.arg("code").strValue())),
-                            "can be any obj as long as the arg generated is a str", "the result of evaluating the source str arg", Map.of(uri(Tokens.CODE), "the mtron source code to evaluate"), "evaluates mtron source code"),
+                    docWrap(instC(EVAL_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> inst.arg(0)),
+                            "can be any obj", "the result of applying the lhs to the arg", Map.of(jnt(0), "the mtron obj to evaluate"), "evaluates an mtron obj"),
                     instC(SWAP_TID.dom(A).rng(A), lst(T(B)), (lhs, inst) -> lhs.apply(inst.arg(0))),
                     instC(RSHIFT_INST_TID.dom(A).rng(B.maybeSome()), lst(T(C.maybeSome())), (lhs, inst) -> {
                         if (lhs.isRec())
@@ -1079,7 +1084,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                             return Uri.Helper.rshiftUri(lhs.asUri(), inst);
                         else if (lhs.isRel())
                             return Rel.Helper.rshiftRel(lhs.asRel(), inst);
-                        else if(lhs.isObjs())
+                        else if (lhs.isObjs())
                             return objs(lhs.asObjs().stream().flatMap(o -> inst.apply(o).stream()));
                         else return noobj();
                         // lhs.isPoly() ? lhs.<Poly<?, ?>>as().at(uri("+")) : noobj()

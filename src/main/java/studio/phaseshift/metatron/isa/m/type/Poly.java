@@ -59,7 +59,7 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
     }
 
     <O extends Obj> Stream<O> elements();
-    
+
     <O extends Obj> Stream<O> valueElements();
 
     /// ////////////////////////////////////////////////////////////////////////////////////
@@ -147,7 +147,7 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
 
         public static Lst transformRecToLst(final Rec lhs, final fURI tid, final fURI vid) {
             return lst(IteratorUtil.indexedStream(lhs.recValue().entrySet().iterator())
-                    .map(r -> rel(jnt(r.get0()), rel(r.get1().getKey(),r.get1().getValue())))
+                    .map(r -> rel(jnt(r.get0()), rel(r.get1().getKey(), r.get1().getValue())))
                     .reduce(new ArrayList<>(), (a, b) -> {
                         a.add(b);
                         return a;
@@ -176,8 +176,9 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
         public static List<Obj> selectLstRecursionRaw(final Lst lhs, final Lst rhs, final BiFunction<Poly<?, ?>, Poly<?, ?>, Obj> polyRecursion) {
             final List<Obj> result = new ArrayList<>();
             final List<Obj> rhsList = rhs.lstValue();
-            for (int i = 0; i < rhsList.size(); i++) {
-                final Obj e = rhsList.get(i);
+            final List<Obj> lhsList = lhs.lstValue();
+            for (int i = 0; i < Math.max(lhsList.size(), rhsList.size()); i++) {
+                final Obj e = i < rhsList.size() ? rhsList.get(i) : lhsList.get(i);
                 final Obj selectKey = jnt(i);
                 final Obj lhsValue = lhs.at(selectKey);
                 result.add((lhsValue.isPoly() && e.isPoly() ? polyRecursion.apply(lhsValue.as(), e.as()) : e.apply(lhsValue)));

@@ -47,8 +47,18 @@ public class ObjPlainTextSerializer extends AbstractObjSerializer<String> {
     }
 
     @Override
+    public ByteBuffer outputBytes(final Obj obj) throws MTronException {
+        return ByteBuffer.wrap(obj.toString().getBytes());
+    }
+
+    @Override
     public Obj read(final String data) throws MTronException {
         return str(data);
+    }
+
+    @Override
+    public String write(final Obj obj) throws MTronException {
+        return obj.toString();
     }
 
     @Override

@@ -72,35 +72,54 @@ public class Content {
             this.value = value;
         }
 
-        public static ContentType of(final String contentType) {
-            return null == contentType ? TEXT_PLAIN : Arrays.stream(ContentType.values()).filter(ct -> (contentType.contains(ct.value))).findAny().orElse(TEXT_PLAIN);
+        /**
+         * Returns true if this content type should be transmitted as a WebSocket text frame
+         * rather than a binary frame (i.e. it is human-readable UTF-8 text).
+         */
+        public boolean isText() {
+            return this.value.startsWith("text/")
+                    || this == APPLICATION_JSON
+                    || this == APPLICATION_LD_JSON
+                    || this == APPLICATION_MTRON
+                    || this == APPLICATION_JAVASCRIPT
+                    || this == APPLICATION_XML
+                    || this == APPLICATION_XHTML_XML
+                    || this == APPLICATION_ATOM_XML;
         }
 
-        public static ContentType fromProbe(final File file) {
+        public static ContentType of(final String contentType) {
+            return null == contentType ? null : Arrays.stream(ContentType.values()).filter(ct -> (contentType.contains(ct.value))).findAny().orElse(null);
+        }
+
+        public static ContentType fromProbe(final File file, final ContentType defaultType) {
             try {
-                if (file.getName().contains("."))
-                    return fromExtension(file.getName());
                 final ContentType contentType = of(Files.probeContentType(file.toPath()));
                 LOG.debug("probed content type: %s", contentType);
-                return contentType == TEXT_PLAIN ? ContentType.APPLICATION_MTRON : contentType;
+                return contentType == null ? defaultType : contentType;
             } catch (final IOException e) {
                 LOG.error(e);
-                return TEXT_PLAIN;
+                return defaultType;
             }
         }
 
-        public static ContentType fromType(final Obj obj) {
+        /**
+         * determine the content type from the obj type. e.g. json::T, html::T, markdown::T.
+         * defaults to application/mtron.
+         */
+        public static ContentType fromType(final Obj obj, final Content.ContentType defaultType) {
             if (obj.type().vid().basePath().equals(HTML_TID)) return TEXT_HTML;
             if (obj.type().vid().basePath().equals(MARKDOWN_TID)) return TEXT_MARKDOWN;
             if (obj.type().vid().basePath().equals(JSON_TID)) return APPLICATION_JSON;
-            return APPLICATION_MTRON;
+            if (obj.type().vid().basePath().equals(XML_TID)) return APPLICATION_XML;
+            if (obj.type().vid().basePath().equals(CSS_TID)) return TEXT_CSS;
+            return defaultType;
         }
 
         /**
-         * Determine content type from file extension when Files.probeContentType() fails
+         * determine the content type from a file extension
          */
-        public static ContentType fromExtension(final String filename) {
-            if (filename == null) return TEXT_PLAIN;
+        public static ContentType fromExtension(final String filename, final ContentType defaultType) {
+            if (filename == null) return defaultType;
             final String lower = filename.toLowerCase();
             if (lower.endsWith(".mtron")) return APPLICATION_MTRON;
             if (lower.endsWith(".css")) return TEXT_CSS;
@@ -117,7 +136,7 @@ public class Content {
             if (lower.endsWith(".sh")) return TEXT_X_SHELLSCRIPT;
             if (lower.endsWith(".bash")) return TEXT_X_SHELLSCRIPT;
             if (lower.endsWith(".py")) return TEXT_X_SHELLSCRIPT;
-            return TEXT_PLAIN;
+            return defaultType;
         }
 
         public boolean isJson() {

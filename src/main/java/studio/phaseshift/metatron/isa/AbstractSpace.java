@@ -32,7 +32,6 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -43,7 +42,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 public abstract class AbstractSpace<SJVM> extends MRec implements Space {
 
-    protected final Map<Uri, Uri> routes = new LinkedHashMap<>();
     protected final fURI pattern;
     protected SJVM sjvm;
     protected Stats ioStats;
@@ -60,11 +58,6 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
         list.forEach(q -> this.addQ(q instanceof Q ? (Q) q : new BaseQ(new HashMap<>(q.asRec().jvm()), q.asRec().tid(), q.asRec().vid())));
         /// //////////// BAD
         this.ioStats = new MStats();
-        final Obj temp = config.getOrDefault(uri(ROUTE), rec());
-        if (temp.isRec())
-            temp.asRec().elements().forEach(kv -> this.routes.put(kv.first().asUri(), kv.second().asUri()));
-        else
-            this.routes.put(temp.asRel().first().asUri(), temp.asRel().second().asUri());
         LOG = Graphitty.log(this);
         // Don't auto-register InstSets - they're registered via importInstSetStream AFTER full construction
         // This ensures docq and other post-super() setup is complete before registration
@@ -107,7 +100,7 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
 
     @Override
     public Map<Uri, Uri> routes() {
-        return this.routes;
+        return this.at(ROUTE).orElse(rec0()).jvmAs();
     }
 
     @Override
