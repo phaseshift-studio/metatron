@@ -32,12 +32,12 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.AbstractWidget;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.Table;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.Utilities;
+import studio.phaseshift.metatron.isa.mach.type.ui.widget.WidgetCanvas;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.jline.keymap.KeyMap.key;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
 
 /**
@@ -162,26 +162,21 @@ public class InstSelector extends AbstractWidget<InstSelector> {
 
     @Override
     public void close() {
-        // Clear the widget display while still in raw mode
-        // Move cursor up to start of widget and clear all lines
-        if (totalHeightUsed > 0) {
-            StringBuilder clear = new StringBuilder();
-            clear.append(Graphitty.string("{{^%d}}{{|1}}", totalHeightUsed));
-            for (int i = 0; i <= totalHeightUsed; i++) {
-                clear.append("{{-X-}}\n");
-            }
-            // Move back up and position for prompt
-            clear.append(Graphitty.string("{{^%d}}{{|1}}", totalHeightUsed + 1));
-            Graphitty.out(terminal.output(), clear.toString());
-        }
+        // Erase the widget area (eraseWidget is a no-op in absolute/pane-bounded mode
+        // since renderPanes() will restore the layout; in relative mode it clears lines
+        // and positions the cursor ready for the prompt to be redrawn).
+        eraseWidget(totalHeightUsed);
 
-        // Draw the prompt and buffer content while still in raw mode
-        Graphitty.out(terminal.output(), "{{-X-}}");
-        Graphitty.out(terminal.output(), Console.LOCAL_INSTANCE.prompt());
-        Graphitty.out(terminal.output(), Highlighter.format(Console.LOCAL_INSTANCE.getReader().getBuffer().toString()));
+        // Redraw the prompt and current buffer (only needed in relative mode;
+        // in absolute mode renderPanes() called by the Console tab binding restores everything).
+        if (!hasPaneBounds()) {
+            Graphitty.out(terminal.output(), "{{-X-}}");
+            Graphitty.out(terminal.output(), Console.LOCAL_INSTANCE.prompt());
+            Graphitty.out(terminal.output(), Highlighter.format(Console.LOCAL_INSTANCE.getReader().getBuffer().toString()));
+        }
         terminal.writer().flush();
 
-        // Now restore terminal state
+        // Restore terminal state
         terminal.puts(InfoCmp.Capability.cursor_visible);
         if (savedAttributes != null) {
             terminal.setAttributes(savedAttributes);
@@ -250,62 +245,31 @@ public class InstSelector extends AbstractWidget<InstSelector> {
         }
     }
 
+    /**
+     * Redraw the selector table.
+     * <p>
+     * All rendering mechanics are delegated to the {@link WidgetCanvas} returned
+     * by {@link #beginRedraw} — this method contains no pane-boundary logic.
+     */
     private void redraw() {
-        StringBuilder output = new StringBuilder();
+        final WidgetCanvas canvas = beginRedraw(totalHeightUsed);
 
-        // Remember old height so we can clear extra lines
-        int previousHeight = totalHeightUsed;
-
-        // Move cursor up to redraw area and to column 1 (if we've drawn before)
-        if (totalHeightUsed > 0) {
-            output.append(Graphitty.string("{{^%d}}{{|1}}", totalHeightUsed));
-        }
-
-        int currentLine = 0;
-
-        // Title line - clear entire line first
-        output.append(Graphitty.string("{{-X-}}{{g}}insts with {{c}}dom={{y}}%s{{X}} {{w}}(%d found){{X}}\n",
+        // Title
+        canvas.line(Graphitty.string("{{g}}insts with {{c}}dom={{y}}%s{{X}} {{w}}(%d found){{X}}",
                 domType.small(), instructions.size()));
-        currentLine++;
 
-        // Get the formatted table lines
-        List<String> lines = this.table.rowStrings();
-
+        // Table rows
+        final List<String> lines = this.table.rowStrings();
         for (int lineIdx = 0; lineIdx < lines.size(); lineIdx++) {
-            String line = lines.get(lineIdx);
-
-            output.append("{{-X-}}"); // Clear entire line
-
-            // Data rows start at index 2 (after border + header)
-            int dataLineIdx = lineIdx - 2;
-            boolean isDataRow = dataLineIdx >= 0 && dataLineIdx < getTableRowCount();
-            boolean isSelectedRow = isDataRow && dataLineIdx == selectedRow;
-
-            if (isSelectedRow) {
-                // Show selection pointer on the correct column
-                output.append(highlightSelectedColumn(line, selectedCol));
-            } else {
-                output.append(line);
-            }
-
-            output.append("\n");
-            currentLine++;
+            final String line      = lines.get(lineIdx);
+            final int dataLineIdx  = lineIdx - 2;
+            final boolean isDataRow  = dataLineIdx >= 0 && dataLineIdx < getTableRowCount();
+            final boolean isSelected = isDataRow && dataLineIdx == selectedRow;
+            canvas.line(isSelected ? highlightSelectedColumn(line, selectedCol) : line);
         }
 
-        // Status line - no newline at end, and DON'T count it in currentLine
-        // because the cursor stays on this line (no \n)
-        output.append(Graphitty.string("{{-X-}}{{w}}{{[b]}} esc{{g}}:cancel | {{w}}<>^v{{g}}:nav | {{w}}enter{{g}}:select {{X}}"));
-
-        // Clear any extra lines from previous (larger) display
-        while (currentLine < previousHeight) {
-            output.append("\n{{-X-}}");  // Move down and clear entire line
-            currentLine++;
-        }
-
-        totalHeightUsed = currentLine;
-
-        Graphitty.out(terminal.output(), output.toString());
-        terminal.writer().flush();
+        canvas.statusLine("{{w}}{{[b]}} esc{{g}}:cancel {{w}}<>^v{{g}}:nav {{w}}enter{{g}}:select {{X}}");
+        totalHeightUsed = canvas.finish();
     }
 
     /**

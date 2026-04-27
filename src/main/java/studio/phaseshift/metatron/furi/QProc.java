@@ -44,11 +44,11 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
-public interface Q extends Rec {
+public interface QProc extends Rec {
 
-    fURI Q_TID = MTRON_TID.extend("space/q");
-    fURI ON_WRITE_TID = Q_TID.extend("on_write");
-    fURI ON_READ_TID = Q_TID.extend("on_read");
+    fURI QPROC_TID = MTRON_TID.extend("space/qproc");
+    fURI ON_WRITE_TID = QPROC_TID.extend("on_write");
+    fURI ON_READ_TID = QPROC_TID.extend("on_read");
 
     fURI ON_WRITE = f("on_write");
     fURI PRE_WRITE = f("pre_write");
@@ -57,17 +57,19 @@ public interface Q extends Rec {
     fURI ON_READ = f("on_read");
     fURI PRE_READ = f("pre_read");
     fURI POST_READ = f("post_read");
-    Type Q_TYPE = Type.Builder.build()
+    Type QPROC_TYPE = Type.Builder.build()
             .tid(REC_TID)
-            .vid(Q_TID)
-            .constructor(instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(Q_TID),
+            .vid(QPROC_TID)
+            .constructor(instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(QPROC_TID),
                     lst(rec(uri(PATTERN), T(URI_TID),
                             uri(PRE_WRITE.maybe()), T(M_ISA_INST_TID),
                             uri(POST_WRITE.maybe()), T(M_ISA_INST_TID),
                             uri(QLESS_WRITE.maybe()), T(M_ISA_INST_TID),
                             uri(PRE_READ.maybe()), T(M_ISA_INST_TID),
                             uri(POST_READ.maybe()), T(M_ISA_INST_TID))),
-                    (lhs, inst) -> new BaseQ(inst.arg(0).asRec().jvm(), inst.arg(0).asRec().at(PATTERN).uriValue(), inst.arg(0).tid()))).create();
+                    (lhs, inst) -> new BaseQ(inst.arg(0).asRec().jvm(),
+                            inst.arg(0).asRec().at(PATTERN).uriValue(),
+                            inst.arg(0).tid()))).create();
 
 
     fURI pattern();
@@ -111,7 +113,7 @@ public interface Q extends Rec {
 
         @Override
         default fURI tid() {
-            return f("/sys/space/q/on_write");
+            return ON_WRITE_TID;
         }
 
         @Override
@@ -156,7 +158,7 @@ public interface Q extends Rec {
 
         @Override
         default fURI tid() {
-            return f("/sys/space/q/on_read");
+            return ON_READ_TID;
         }
 
         @Override
@@ -172,25 +174,25 @@ public interface Q extends Rec {
 
     final class Helper {
 
-        public static String qToString(final Q q) {
-            return Obj.Helper.objToString(q);
+        public static String qToString(final QProc qProc) {
+            return Obj.Helper.objToString(qProc);
             //return Graphitty.string("{{b}}" + space.tid() + "{{g}}::[{{c}}pattern:{{b}}" + space.pattern() + "{{g}}]{{X}}");
         }
 
-        public static int qHashCode(final Q q) {
-            return Objects.hash(q.tid(), q.vid(), q.pattern());
+        public static int qHashCode(final QProc qProc) {
+            return Objects.hash(qProc.tid(), qProc.vid(), qProc.pattern());
         }
 
-        public static boolean qEquals(final Q q, final Object other) {
+        public static boolean qEquals(final QProc qProc, final Object other) {
             return other instanceof Space &&
-                    ((Obj) other).tid().equals(q.tid()) &&
-                    (q.vid() != null && ((Obj) other).vid() != null && ((Obj) other).vid().equals(q.vid()));
+                    ((Obj) other).tid().equals(qProc.tid()) &&
+                    (qProc.vid() != null && ((Obj) other).vid() != null && ((Obj) other).vid().equals(qProc.vid()));
         }
 
         public static Optional<Obj> processPreWrite(final Lst qs, final fURI vid, final Obj obj) {
-            return vid.hasQ() && !qs.isEmpty() ? qs.<Q>elements()
+            return vid.hasQ() && !qs.isEmpty() ? qs.<QProc>elements()
                     .filter(q -> vid.hasQ(q.pattern()))
-                    .map(Q::onWrite)
+                    .map(QProc::onWrite)
                     .filter(Optional::isPresent)
                     // .peek(q -> LOG.info("handling {{y}}pre write{{X}} of %s for %s %s", source, vid, obj))
                     .map(Optional::get)
@@ -202,23 +204,23 @@ public interface Q extends Rec {
 
         public static Optional<Obj> processPreRead(final Lst qs, final fURI vid) {
             return vid.hasQ() && !qs.isEmpty() ?
-                    qs.<Q>elements()
+                    qs.<QProc>elements()
                             .filter(q -> vid.hasQ(q.pattern()))
-                            .map(Q::onRead)
+                            .map(QProc::onRead)
                             .filter(Optional::isPresent)
                             //.peek(q -> LOG.debug("handling {{m}}pre read{{X}} of %s for %s", source, vid))
                             .map(Optional::get)
                             .map(q -> q.preRead(vid))
                             .filter(Optional::isPresent)
                             .map(Optional::get)
-                            .reduce(Obj::append):
+                            .reduce(Obj::append) :
                     Optional.empty();
         }
 
         public static Optional<Obj> processPostRead(final Lst qs, final fURI vid, final Obj current) {
-            return vid.hasQ() && !qs.isEmpty() ? qs.<Q>elements()
+            return vid.hasQ() && !qs.isEmpty() ? qs.<QProc>elements()
                     .filter(q -> vid.hasQ(q.pattern()))
-                    .map(Q::onRead)
+                    .map(QProc::onRead)
                     .filter(Optional::isPresent)
                     // .peek(q -> LOG.debug("handling {{c}}post read{{X}} of %s for %s", source, vid))
                     .map(Optional::get)
@@ -230,8 +232,8 @@ public interface Q extends Rec {
         }
 
         public static Optional<Obj> processQlessWrite(final Lst qs, final fURI vid, final Obj obj) {
-            return qs.<Q>elements()
-                    .map(Q::onWrite)
+            return qs.<QProc>elements()
+                    .map(QProc::onWrite)
                     .filter(Optional::isPresent)
                     // .peek(q -> LOG.debug("handling {{g}}qless write{{X}} of %s for %s", source, vid))
                     .map(Optional::get)
@@ -245,9 +247,9 @@ public interface Q extends Rec {
         }
 
         public static Optional<Obj> processPostWrite(final Lst qs, final fURI vid, final Obj obj) {
-            return vid.hasQ() && !qs.isEmpty() ? qs.<Q>elements()
+            return vid.hasQ() && !qs.isEmpty() ? qs.<QProc>elements()
                     .filter(q -> vid.hasQ(q.pattern()))
-                    .map(Q::onWrite)
+                    .map(QProc::onWrite)
                     .filter(Optional::isPresent)
                     //.peek(q -> LOG.trace("handling {{b}}post write{{X}} of %s for %s %s", source, vid, obj))
                     .map(Optional::get)
@@ -309,18 +311,18 @@ public interface Q extends Rec {
                 return this;
             }
 
-            public Q create() {
-                final Q q = BaseQ.create(this.tid, this.pattern,
+            public QProc create() {
+                final QProc qProc = BaseQ.create(this.tid, this.pattern,
                         (Function<fURI, Obj>) this.jvm.get(PRE_READ),
                         (BiFunction<fURI, Obj, Obj>) this.jvm.get(POST_READ),
                         (BiFunction<fURI, Obj, Obj>) this.jvm.get(PRE_WRITE),
                         (TriFunction<fURI, Obj, Obj, Obj>) this.jvm.get(POST_WRITE),
                         (BiFunction<fURI, Obj, Obj>) this.jvm.get(QLESS_WRITE));
                 if (jvm.containsKey(f(OBJ)))
-                    q.jvm().put(uri(OBJ), (Obj) jvm.get(f(OBJ)));
+                    qProc.jvm().put(uri(OBJ), (Obj) jvm.get(f(OBJ)));
                 if (jvm.containsKey(f(INST)))
-                    q.jvm().put(uri(INST), (Obj) jvm.get(f(INST)));
-                return q;
+                    qProc.jvm().put(uri(INST), (Obj) jvm.get(f(INST)));
+                return qProc;
             }
         }
     }

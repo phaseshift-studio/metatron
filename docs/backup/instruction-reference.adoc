@@ -90,10 +90,10 @@ These instructions work on any object type:
 |Non-deterministic choice between branches
 |`{1,2,3}-<|` → picks one branch
 
-|`q()`
+|`qProc()`
 |
 |Get coefficient of object
-|`int{5}::3.q()` → `5`
+|`int{5}::3.qProc()` → `5`
 
 |`qSet(n)`
 |

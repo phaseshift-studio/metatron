@@ -41,7 +41,7 @@ color yellow,underline "0x"
 color yellow "(true)|(false)"
 ### type
 color magenta "::T"
-# q keys
+# qProc keys
 icolor cyan "(|#|\+|[a-z]|-|_|\{.\})+(=|<=)(?!>)"
 icolor blue "=([a-z]|[0-9]|\.|_|-|/|#|\+)+"
 icolor cyan "(<=)([a-z]|[0-9]|\.|_|-|/|#|\+)+"

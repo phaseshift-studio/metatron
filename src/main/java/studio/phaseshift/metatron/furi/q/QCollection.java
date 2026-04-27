@@ -19,7 +19,7 @@
 package studio.phaseshift.metatron.furi.q;
 
 import studio.phaseshift.metatron.Tokens;
-import studio.phaseshift.metatron.furi.Q;
+import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Space;
@@ -28,14 +28,14 @@ import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.m.type.impl.MStr;
 import studio.phaseshift.metatron.isa.mach.type.Router;
-import studio.phaseshift.metatron.isa.mach.type.thread.CoreThread;
+import studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.Q.Q_TID;
+import static studio.phaseshift.metatron.furi.QProc.QPROC_TID;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
@@ -66,17 +66,17 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 public final class QCollection {
 
     public static final fURI CONSTQ_PATTERN = f("constq");
-    public static final fURI CONSTQ_TID = Q_TID.extend("constq");
-    public static final Type CONSTQ_TYPE = Type.Builder.build().tid(Q_TID).vid(CONSTQ_TID).constructor(QCollection::constQ).create();
+    public static final fURI CONSTQ_TID = QPROC_TID.extend("constq");
+    public static final Type CONSTQ_TYPE = Type.Builder.build().tid(QPROC_TID).vid(CONSTQ_TID).constructor(QCollection::constQ).create();
     //
     public static final fURI INCRQ_PATTERN = f("incrq");
-    public static final fURI INCRQ_TID = Q_TID.extend("incrq");
-    public static final Type INCRQ_TYPE = Type.Builder.build().tid(Q_TID).vid(INCRQ_TID).constructor(QCollection::incrQ).create();
+    public static final fURI INCRQ_TID = QPROC_TID.extend("incrq");
+    public static final Type INCRQ_TYPE = Type.Builder.build().tid(QPROC_TID).vid(INCRQ_TID).constructor(QCollection::incrQ).create();
     //
     public static final String DOCQ = "docq";
     public static final fURI DOCQ_PATTERN = f(DOCQ);
-    public static final fURI DOCQ_TID = Q_TID.extend("docq");
-    public static final Type DOCQ_TYPE = Type.Builder.build().tid(Q_TID).vid(DOCQ_TID).constructor(QCollection::docQ).create();
+    public static final fURI DOCQ_TID = QPROC_TID.extend("docq");
+    public static final Type DOCQ_TYPE = Type.Builder.build().tid(QPROC_TID).vid(DOCQ_TID).constructor(QCollection::docQ).create();
     public static final fURI DOCS_TID = DOCQ_TID.extend("docs");
     public static final Type DOCS_TYPE =
             Type.Builder.build()
@@ -95,13 +95,13 @@ public final class QCollection {
 
     //
     public static final fURI TYPEQ_PATTERN = f("T");
-    public static final fURI TYPEQ_TID = Q_TID.extend("typeq");
-    public static final Type TYPEQ_TYPE = Type.Builder.build().tid(Q_TID).vid(TYPEQ_TID).constructor(QCollection::typeQ).create();
+    public static final fURI TYPEQ_TID = QPROC_TID.extend("typeq");
+    public static final Type TYPEQ_TYPE = Type.Builder.build().tid(QPROC_TID).vid(TYPEQ_TID).constructor(QCollection::typeQ).create();
     //
     public static final fURI SUBQ_PATTERN = f("subq");
-    public static final fURI SUBQ_TID = Q_TID.extend("subq");
+    public static final fURI SUBQ_TID = QPROC_TID.extend("subq");
     public static final fURI SUBSCRIPTION_TID = SUBQ_TID.extend("sub");
-    public static final Type SUBQ_TYPE = Type.Builder.build().vid(SUBQ_TID).tid(Q_TID).constructor(QCollection::subq).create();
+    public static final Type SUBQ_TYPE = Type.Builder.build().vid(SUBQ_TID).tid(QPROC_TID).constructor(QCollection::subq).create();
     public static final Type SUB_TYPE =
             docWrap(Type.Builder.build()
                             .vid(SUBSCRIPTION_TID)
@@ -123,9 +123,9 @@ public final class QCollection {
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Q constQ() {
+    public static QProc constQ() {
         final Set<fURI> CONSTQ_FURIS = new HashSet<>();
-        return Q.Helper.build(CONSTQ_TID, CONSTQ_PATTERN)
+        return QProc.Helper.build(CONSTQ_TID, CONSTQ_PATTERN)
                 .preRead(furi -> bool(CONSTQ_FURIS.contains(furi.noQ())))
                 .preWrite((furi, obj) -> {
                     if (obj.isNoObj()) {
@@ -146,9 +146,9 @@ public final class QCollection {
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Q typeQ() {
+    public static QProc typeQ() {
         final memSpace TYPE_SPACE = memSpace.of(rec(uri(PATTERN), uri("#")), null);
-        return Q.Helper.build(TYPEQ_TID, TYPEQ_PATTERN)
+        return QProc.Helper.build(TYPEQ_TID, TYPEQ_PATTERN)
                 .preWrite((vid, obj) -> {
                     TYPE_SPACE.write(vid.qLess(), obj);
                     return obj;
@@ -176,9 +176,9 @@ public final class QCollection {
     public final static Rec NO_DOCS = rec(mutableMap(uri(DESC), str(NO_DOCS_STRING)), DOCS_TID, null);
 
     public static boolean isNoDocs(final Obj obj) {
-        if (obj.isNoObj() || !obj.isRec() || !obj.asRec().has(DESC))
+        if (obj.isNoObj())
             return true;
-        return obj.asRec().at(DESC).equals(str(NO_DOCS_STRING));
+        return obj.asRec().at(DESC).orElse(str("okay")).equals(str(NO_DOCS_STRING));
     }
 
     protected final static class DocInstSet extends AbstractInstSet {
@@ -233,10 +233,10 @@ public final class QCollection {
         }
     }
 
-    public static Q docQ() {
+    public static QProc docQ() {
         final memSpace OBJ_DOCS = memSpace.of(ALL, null);
         final InstSet INST_DOCS = new DocInstSet();
-        return Q.Helper.build(DOCQ_TID, DOCQ_PATTERN)
+        return QProc.Helper.build(DOCQ_TID, DOCQ_PATTERN)
                 .obj(f(INST), INST_DOCS)
                 .obj(f(OBJ), OBJ_DOCS)
                 .preWrite((vid, obj) -> {
@@ -261,9 +261,9 @@ public final class QCollection {
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Q incrQ() {
+    public static QProc incrQ() {
         final AtomicLong counter = new AtomicLong(0);
-        return Q.Helper.build(INCRQ_TID, INCRQ_PATTERN).
+        return QProc.Helper.build(INCRQ_TID, INCRQ_PATTERN).
                 preWrite((vid, obj) -> {
                     final fURI incrPattern = vid.extend(vid.qValue(INCRQ_PATTERN, fURI.class)).resolve();
                     final List<String> newPath = new ArrayList<>();
@@ -281,9 +281,9 @@ public final class QCollection {
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public static Q subq() {
+    public static QProc subq() {
         final Lst subscriptions = lst();
-        return Q.Helper.build(SUBQ_TID, SUBQ_PATTERN)
+        return QProc.Helper.build(SUBQ_TID, SUBQ_PATTERN)
                 .obj(f(OBJ), subscriptions)
                 .preRead(vid -> {
                     subscriptions.logger().debug("reading: %s", vid.basePath());
@@ -317,7 +317,7 @@ public final class QCollection {
                     subscriptions.elements().filter(e -> vid.basePath().test(e.asRec().at(TARGET).uriValue()))
                             .forEach(s -> {
                                 subscriptions.logger().debug("spawning core thread for subscription recv: %s", s);
-                                new CoreThread(mutableMap(
+                                new VirtualThread(mutableMap(
                                         uri(START), lst(List.of(vid.basePath().toUri(), obj)),
                                         uri(CODE), code(s.asRec().at(ON_RECV).asCall()).as()), MACH_CORE_THREAD_TID, null).run();
                             });
@@ -337,7 +337,7 @@ public final class QCollection {
         }
         final Docs doc = Docs.doc(obj, domDesc, rngDesc, argDescription, description, examples);
         final Space objSpace = Router.global().getSpace(objID);
-        final Optional<Q> docq = objSpace.qs().jvm().stream().filter(q -> q.tid().basePath().equals(DOCQ_TID)).map(Obj::<Q>as).findAny();
+        final Optional<QProc> docq = objSpace.qs().jvm().stream().filter(q -> q.tid().basePath().equals(DOCQ_TID)).map(Obj::<QProc>as).findAny();
         if (docq.isEmpty())
             objSpace.logger().warn("no doc query attachment mounted on %s for %s", objSpace, objID);
         else if (obj.isInst()) {

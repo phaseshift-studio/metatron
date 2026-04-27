@@ -19,7 +19,7 @@
 package studio.phaseshift.metatron.isa.iot.space.mqtt;
 
 import studio.phaseshift.metatron.BootLoader;
-import studio.phaseshift.metatron.furi.Q;
+import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.BaseQ;
 import studio.phaseshift.metatron.furi.q.QCollection;
@@ -31,7 +31,6 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Optional;
 
-import static studio.phaseshift.metatron.Tokens.SUB;
 import static studio.phaseshift.metatron.Tokens.SUBQ;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.iot.space.mqtt.mqttSpace.MQTT_SPACE_TID;
@@ -45,7 +44,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 public class MqttPubSubQ extends BaseQ {
 
     protected final mqttSpace space;
-    protected final Q subq = QCollection.subq();
+    protected final QProc subq = QCollection.subq();
 
     public MqttPubSubQ(final mqttSpace space) {
         super(new HashMap<>(), MQTT_SPACE_TID.extend("pubsub"), null);

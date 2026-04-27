@@ -191,7 +191,7 @@ class AsyncWebsocketClient:
         if length == 126:  # Magic number, length header is 2 bytes
             length, = struct.unpack('!H', await self.a_read(2))
         elif length == 127:  # Magic number, length header is 8 bytes
-            length, = struct.unpack('!Q', await self.a_read(8))
+            length, = struct.unpack('!QProc', await self.a_read(8))
 
         if mask:  # Mask is 4 bytes
             mask_bits = await self.a_read(4)

@@ -22,6 +22,7 @@ import com.hivemq.client.mqtt.MqttClient;
 import com.hivemq.client.mqtt.mqtt5.Mqtt5Client;
 import com.hivemq.client.mqtt.mqtt5.message.subscribe.Mqtt5RetainHandling;
 import studio.phaseshift.metatron.Tokens;
+import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractSpace;
@@ -70,7 +71,7 @@ public class mqttSpace extends AbstractSpace<Mqtt5Client> {
             uri(SERIALIZER).maybe(), else_(block_(auto_from_(uri(OBJ_SIMPLE_JSON_SERIALIZER_VID)).tryToInst()).tryToInst()).tryToInst(),
             //uri(CLIENT).maybe(), T(URI_TID).maybe(),
             uri(ROUTE), REC_TYPE,
-            uri(Tokens.QSTRING).c(cInt::maybe), isa_(LST_TYPE));
+            uri(Tokens.QPROC).c(cInt::maybe), isa_(LST_TYPE));
     public static final Type MQTT_SPACE_TYPE = Type.Builder.build().tid(SPACE_TID).vid(MQTT_SPACE_TID).constructor(
             instC(mInstSet.M_ISA_INST_TID.dom(ALL.maybe()).rng(MQTT_SPACE_TID),
                     lst(T(REC_TID, isa_(MQTT_SPACE_CONFIG))), (lhs, inst) ->
@@ -113,7 +114,7 @@ public class mqttSpace extends AbstractSpace<Mqtt5Client> {
         super(client, config, null == tid ? MQTT_SPACE_TID : tid, vid);
         LOG.info("{{y}}mtron{{g}}<=>{{y}}mqtt{{X}} route established: %s {{g}}<=> ({{b}}%s {{g}}<=>{{X}} %s{{g}}){{X}}", this.pattern().toUri(), config.getOrDefault(uri(ROUTE), rec()), uri(this.redirect(this.pattern(), false)));
         this.cache = memSpace.of(this.pattern(), null);
-        this.at(uri(Tokens.QSTRING), lst(List.of(new MqttPubSubQ(this))), MUTABLE);
+        this.at(uri(Tokens.QPROC), lst(List.of(new MqttPubSubQ(this))), MUTABLE);
         this.serializer = this.at(SERIALIZER).orElse(new ObjSimpleJSONSerializer());
         LOG.info("%s serializer loaded: %s", this.tid(), this.serializer);
         this.broker = this.at(uri(HOST)).orThrow(new IllegalArgumentException("config must have a host key")).uriValue();
@@ -167,15 +168,15 @@ public class mqttSpace extends AbstractSpace<Mqtt5Client> {
 
     @Override
     public Obj read(final fURI vid) {
-        return studio.phaseshift.metatron.furi.Q.Helper.processPreRead(this.qs(), vid).orElseGet(() -> {
+        return QProc.Helper.processPreRead(this.qs(), vid).orElseGet(() -> {
             final Obj result = this.cache.read(vid.one());
-            return studio.phaseshift.metatron.furi.Q.Helper.processPostRead(this.qs(), vid, result).orElse(result);
+            return QProc.Helper.processPostRead(this.qs(), vid, result).orElse(result);
         });
     }
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
-        final Obj ret = studio.phaseshift.metatron.furi.Q.Helper.processPreWrite(this.qs(), vid, obj).orElse(null);
+        final Obj ret = QProc.Helper.processPreWrite(this.qs(), vid, obj).orElse(null);
         if (null != ret)
             return ret;
         if (vid.hasPattern()) {
@@ -186,8 +187,8 @@ public class mqttSpace extends AbstractSpace<Mqtt5Client> {
             this.send(vid.qLess(), value.c(cInt.ONE()));
             return value;
         }, this.cache.directReader());*/
-        return studio.phaseshift.metatron.furi.Q.Helper.processPostWrite(this.qs(), vid, obj)
-                .orElse(studio.phaseshift.metatron.furi.Q.Helper.processQlessWrite(this.qs(), vid, obj.c(cInt.ONE())).orElse(obj));
+        return QProc.Helper.processPostWrite(this.qs(), vid, obj)
+                .orElse(QProc.Helper.processQlessWrite(this.qs(), vid, obj.c(cInt.ONE())).orElse(obj));
     }
 
     private void send(final fURI vid, final Obj obj) {

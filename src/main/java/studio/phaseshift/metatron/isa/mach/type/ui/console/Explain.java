@@ -31,6 +31,7 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.AbstractWidget;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.Table;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.Utilities;
+import studio.phaseshift.metatron.isa.mach.type.ui.widget.WidgetCanvas;
 
 import java.util.*;
 
@@ -266,122 +267,60 @@ public class Explain extends AbstractWidget<Explain> {
 
     /**
      * Redraw all levels from bottom to top with selection highlighting.
+     * <p>
+     * Rendering mechanics (absolute pane-bounded vs relative terminal-wide) are
+     * handled transparently by the {@link WidgetCanvas} returned from
+     * {@link #beginRedraw}; this method never inspects pane bounds directly.
      */
     private void redrawStack() {
-        // Build complete screen from bottom to top of stack
-        List<ExplainLevel> levels = new ArrayList<>(stack);
-        Collections.reverse(levels); // Draw bottom first
+        final List<ExplainLevel> levels = new ArrayList<>(stack);
+        Collections.reverse(levels); // Draw bottom → top
 
-        StringBuilder output = new StringBuilder();
-
-        // Remember old height so we can clear extra lines
-        int previousHeight = totalHeightUsed;
-
-        // Move cursor up to redraw area (if we've drawn before)
-        if (totalHeightUsed > 0) {
-            output.append(Graphitty.string("{{^%d}}", totalHeightUsed));
-        }
-
-        int currentLine = 0;
+        final WidgetCanvas canvas = beginRedraw(totalHeightUsed);
 
         for (int levelIdx = 0; levelIdx < levels.size(); levelIdx++) {
-            ExplainLevel level = levels.get(levelIdx);
-            boolean isTop = (levelIdx == levels.size() - 1);
-
-            // Check if there's a child level that spawned from this level
-            ExplainLevel childLevel = (levelIdx + 1 < levels.size()) ? levels.get(levelIdx + 1) : null;
-            boolean hasChild = childLevel != null && childLevel.spawnRow >= 0;
-
-            // Get the formatted table lines
-            List<String> lines = level.profile.rowStrings();
-
-            // Determine styling based on focus
-            String dimColor = isTop ? "" : "{{w}}";
-
-            // Add horizontal offset for nested levels
-            String indent = " ".repeat(level.offsetX);
+            final ExplainLevel level   = levels.get(levelIdx);
+            final boolean isTop        = (levelIdx == levels.size() - 1);
+            final ExplainLevel child   = (levelIdx + 1 < levels.size()) ? levels.get(levelIdx + 1) : null;
+            final boolean hasChild     = child != null && child.spawnRow >= 0;
+            final List<String> lines   = level.profile.rowStrings();
+            final String dimColor      = isTop ? "" : "{{w}}";
+            final String indent        = " ".repeat(level.offsetX);
 
             for (int lineIdx = 0; lineIdx < lines.size(); lineIdx++) {
-                String line = lines.get(lineIdx);
+                final String line      = lines.get(lineIdx);
+                final int dataLineIdx  = lineIdx - 2;
+                final boolean isDataRow  = dataLineIdx >= 0 && dataLineIdx < level.dataRowCount();
+                final boolean isSelected = isTop  && isDataRow && dataLineIdx == level.selectedRow;
+                final boolean isSpawn    = !isTop && hasChild  && isDataRow && dataLineIdx == child.spawnRow;
 
-                // Clear the line first, add indent
-                output.append("{{-X-}}"); // Clear line
-                output.append(indent);
-
-                // Data rows start at index 2 (after border + header)
-                int dataLineIdx = lineIdx - 2;
-                boolean isDataRow = dataLineIdx >= 0 && dataLineIdx < level.dataRowCount();
-                boolean isSelectedRow = isTop && isDataRow && dataLineIdx == level.selectedRow;
-                // Check if this is the spawn row in a parent level
-                boolean isSpawnRow = !isTop && hasChild && isDataRow && dataLineIdx == childLevel.spawnRow;
-
-                if (isSelectedRow) {
-                    // Show selection pointer at the selected column (replaces the divider with pointer)
-                    output.append(highlightSelectedColumn(line, level.selectedCol, level));
-                } else if (isSpawnRow) {
-                    // Highlight the spawn cell in parent with background color
-                    output.append(dimColor);
-                    output.append(highlightSpawnCell(line, childLevel.spawnCol, level));
+                final String content;
+                if (isSelected) {
+                    content = indent + highlightSelectedColumn(line, level.selectedCol, level);
+                } else if (isSpawn) {
+                    content = Graphitty.string(dimColor) + indent + highlightSpawnCell(line, child.spawnCol, level);
                 } else if (isTop && isDataRow) {
-                    // Non-selected data row in active window
-                    output.append(line);
+                    content = indent + line;
                 } else {
-                    // Header, border, or inactive window
-                    output.append(dimColor);
-                    output.append(line);
+                    content = Graphitty.string(dimColor) + indent + line;
                 }
-
-                output.append("\n");
-                currentLine++;
+                canvas.line(content);
             }
 
-            // Add blank line between parent and child tables
-            if (hasChild) {
-                output.append("{{-X-}}\n");
-                currentLine++;
-            }
-
-            // Show depth indicator for nested tables
+            if (hasChild) canvas.blankLine();
             if (isTop && stack.size() > 1) {
-                output.append(indent);
-                output.append(Graphitty.string("  {{y}}[depth: %d]{{X}}{{X-}}\n", stack.size()));
-                currentLine++;
+                canvas.line(Graphitty.string(indent + "  {{y}}[depth: %d]{{X}}", stack.size()));
             }
         }
 
-        // Status line
-        ExplainLevel top = stack.peek();
+        // Status / key-hint bar
+        final ExplainLevel top = stack.peek();
         if (top != null) {
-            String header = top.table.header(top.selectedCol);
-            Object value = top.table.entry(top.selectedRow, top.selectedCol);
-            String valueStr = Graphitty.strip(value.toString());
-            if (valueStr.length() > 30) {
-                valueStr = valueStr.substring(0, 30) + "...";
-            }
-            
-            output.append(Graphitty.string("{{(s)}}{{v200}}{{X-}}{{w}}{{" + (top.rewritten ? "[g]" : "[y]") + "}} R {{[b]}}{{w}} esc{{g}}:back | {{w}}<^v>{{g}}:nav | {{w}}enter{{g}}:inspect | {{w}}space{{g}}:rewrite {{(e)}}"));
-
-            // Show temporary message or current selection
-            /*if (statusMessage != null) {
-                output.append(Graphitty.string("%s {{X}}\n", statusMessage));
-                statusMessage = null;  // Clear after showing
-            } else {
-                output.append(Graphitty.string("{{y}}%s{{g}}={{c}}%s {{X}}\n", header, valueStr));
-            }*/
-            //currentLine++;
+            final String mark = top.rewritten ? "{{[g]&w}} R {{X}}" : "{{[y]&w}} R {{X}}";
+            canvas.statusLine(mark + " {{w}}esc{{g}}:back {{w}}<^v>{{g}}:nav {{w}}enter{{g}}:inspect {{w}}space{{g}}:rewrite {{X}}");
         }
 
-        // Clear any extra lines from previous (larger) display
-        // This happens when popping back to a smaller table
-        while (currentLine < previousHeight) {
-            output.append("{{X-}}\n");  // Clear line and move down
-            currentLine++;
-        }
-
-        totalHeightUsed = currentLine;
-
-        Graphitty.out(terminal.output(), output.toString());
-        terminal.writer().flush();
+        totalHeightUsed = canvas.finish();
     }
 
     /**

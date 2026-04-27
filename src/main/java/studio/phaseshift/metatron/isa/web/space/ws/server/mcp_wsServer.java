@@ -77,28 +77,28 @@ import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_SPACE_TID;
  * </pre>
  * Then register it in the wsSpace route table and connect via WebSocket.
  */
-public class wsmcpServer extends WSServerRec {
+public class mcp_wsServer extends WSServerRec {
 
-    public static final fURI WS_MCP_SERVER_TID = WS_SPACE_TID.extend("wsmcp");
+    public static final fURI MCP_WS_TID = WS_SPACE_TID.extend("mcp_ws");
     protected final GraphittyLogger LOG = Graphitty.log(this);
 
     public static final Type WS_MCP_SERVER_TYPE = Type.Builder.build()
             .tid(WS_SERVER_TID)
-            .vid(WS_MCP_SERVER_TID)
+            .vid(MCP_WS_TID)
             .isaPredicate(rec(
                     uri(TOOL).maybe().asUri(), lst(INST_TYPE),
                     uri(RESOURCE).maybe().asUri(), T(ALL),
                     uri(PROMPT).maybe().asUri(), T(ALL)))
-            .constructor(instC(WS_MCP_SERVER_TID.extend(CTOR).dom(ALL.maybe()).rng(WS_MCP_SERVER_TID), lst(T(REC_TID)), (lhs, inst) ->
-                    new wsmcpServer(new LinkedHashMap<>(inst.arg(0).asRec()
+            .constructor(instC(MCP_WS_TID.extend(CTOR).dom(ALL.maybe()).rng(MCP_WS_TID), lst(T(REC_TID)), (lhs, inst) ->
+                    new mcp_wsServer(new LinkedHashMap<>(inst.arg(0).asRec()
                             .at(uri(IN), uri(Content.ContentType.APPLICATION_JSON.value))
-                            .at(uri(OUT), uri(Content.ContentType.APPLICATION_JSON.value)).jvm()), WS_MCP_SERVER_TID, inst.arg(0).vid()))).create();
+                            .at(uri(OUT), uri(Content.ContentType.APPLICATION_JSON.value)).jvm()), MCP_WS_TID, inst.arg(0).vid()))).create();
 
-    public wsmcpServer(final Rec recClone) {
+    public mcp_wsServer(final Rec recClone) {
         this(recClone.jvm(), recClone.tid(), recClone.vid());
     }
     
-    public wsmcpServer(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
+    public mcp_wsServer(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
         this.outContentType = Content.ContentType.APPLICATION_JSON;
         this.inContentType = Content.ContentType.APPLICATION_JSON;

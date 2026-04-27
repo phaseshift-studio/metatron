@@ -68,9 +68,10 @@ public final class Tokens {
     public static final String RNG = "rng";
     public static final String SIZE = "size";
     public static final String SKILL = "skill";
-    public static final String MIME_TYPE = "mimeType"; 
+    public static final String MIME_TYPE = "mimeType";
     public static final String LLM = "llm";
     public static final String MCP = "mcp";
+    public static final String PANE = "pane";
     public static final String LICENSE = "license";
     public static final String THINK = "think";
     public static final String THOUGHT = "thought";
@@ -120,7 +121,7 @@ public final class Tokens {
     public static final String SCRIPT = "script";
     public static final String REWRITE = "rewrite";
     public static final String SUGAR = "sugar";
-    public static final String QSTRING = "q";
+    public static final String QPROC = "q";
     public static final String ICON = "icon";
     public static final String T = "T";
     public static final String C = "c";

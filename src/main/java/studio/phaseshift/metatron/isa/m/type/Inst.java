@@ -328,6 +328,7 @@ public interface Inst extends Call {
                 //Router.stack().push(rec("lhs",clhs));
                 try {
                     rhs = Objs.trySingleton(FutureObj.resolveFuture(cinst.f().apply(isMonadicInst ? lhs.asMonad().obj(clhs) : clhs, cinst)));
+                    rhs = null == rhs ? noobj() : rhs;
                     if (rhs.isUncaughtFail())
                         return rhs;
                     Graphitty.log(cinst).trace("%s (lhs) => %s (inst) => %s (rhs) evaluated successfully", clhs, cinst, rhs);
@@ -420,11 +421,11 @@ public interface Inst extends Call {
         }
 
         public static boolean filterOnDomainAllowUnique(final Obj lhs, final Inst apiInst) {
-            return lhs.test(apiInst.dom()) || (apiInst.dom().c().isOne() && lhs.c().gt(cInt.ONE()) && lhs.c(cInt.ONE()).test(apiInst.dom()));
+            return lhs.testByID(apiInst.dom()) || (apiInst.dom().c().isOne() && lhs.c().gt(cInt.ONE()) && lhs.c(cInt.ONE()).testByID(apiInst.dom()));
         }
- 
 
-       public static <O extends Obj> Optional<O> alignLHSType(final Obj lhs, final O rhs) {
+
+        public static <O extends Obj> Optional<O> alignLHSType(final Obj lhs, final O rhs) {
             if (!lhs.c().within(rhs.c()))
                 return Optional.empty();
             if (lhs.type().equals(rhs.type()))

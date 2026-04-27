@@ -114,10 +114,10 @@ public class metaSpace extends AbstractSpace<MServer> {
                 throw MTronException.of(e);
             }
         }
-        /*return studio.phaseshift.metatron.furi.Q.Helper.processPreRead(this.qs(), vid, vid).orElseGet(() -> {
+        /*return studio.phaseshift.metatron.furi.QProc.Helper.processPreRead(this.qs(), vid, vid).orElseGet(() -> {
             Obj result = Space.Helper.resolveRead(this, vid.basePath(), directReader());
             //return result;
-            return studio.phaseshift.metatron.furi.Q.Helper.processPostRead(this.qs(), vid, vid, result).orElse(result);
+            return studio.phaseshift.metatron.furi.QProc.Helper.processPostRead(this.qs(), vid, vid, result).orElse(result);
         });*/
     }
 

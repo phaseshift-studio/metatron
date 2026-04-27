@@ -82,7 +82,7 @@ public final class LLMFactory {
             case ANTHROPIC -> {
                 final AnthropicModelCatalog models = AnthropicModelCatalog.builder().baseUrl(spaceRec.at(HOST).uriValue().toString()).build();
                 final modelCatalogSpace<AnthropicModelCatalog> catalogSpace = modelCatalogSpace.of(spaceRec.jvm(), spaceRec.vid());
-                catalogSpace.at(QSTRING, catalogSpace.at(QSTRING).orElse(lst()).add(QCollection.subq(), MUTABLE), MUTABLE);
+                catalogSpace.at(QPROC, catalogSpace.at(QPROC).orElse(lst()).add(QCollection.subq(), MUTABLE), MUTABLE);
                 models.listModels().forEach(m -> rec(mutableMap(
                                 uri(NAME), uri(m.name()),
                                 uri(TYPE), m.type() == null ? noobj() : uri(m.type().name().toLowerCase(Locale.ROOT)),
@@ -95,7 +95,7 @@ public final class LLMFactory {
             case OLLAMA -> {
                 final OllamaModels models = OllamaModels.builder().baseUrl(spaceRec.at(HOST).uriValue().toString()).build();
                 final modelCatalogSpace<OllamaModels> catalogSpace = modelCatalogSpace.of(spaceRec.jvm(), spaceRec.vid());
-                catalogSpace.at(QSTRING, catalogSpace.at(QSTRING).orElse(lst()).add(QCollection.subq(), MUTABLE), MUTABLE);
+                catalogSpace.at(QPROC, catalogSpace.at(QPROC).orElse(lst()).add(QCollection.subq(), MUTABLE), MUTABLE);
                 models.availableModels().content().stream()
                         .map(m -> Tuple.Pair.with(m, models.modelCard(m.getName()).content()))
                         .forEach(m -> {
@@ -113,7 +113,7 @@ public final class LLMFactory {
             case LOCALAI -> {
                 final LocalAiModelCatalog models = new LocalAiModelCatalog(spaceRec.at(HOST).uriValue().toString());
                 final modelCatalogSpace<LocalAiModelCatalog> catalogSpace = modelCatalogSpace.of(spaceRec.jvm(), spaceRec.vid());
-                catalogSpace.at(QSTRING, catalogSpace.at(QSTRING).orElse(lst()).add(QCollection.subq(), MUTABLE), MUTABLE);
+                catalogSpace.at(QPROC, catalogSpace.at(QPROC).orElse(lst()).add(QCollection.subq(), MUTABLE), MUTABLE);
                 models.listModels().forEach(m -> rec(mutableMap(
                                 uri(NAME), uri(m.name()),
                                 uri(DESC), Optional.ofNullable(m.description()).filter(d -> !d.isBlank()).map(MStr::str).map(o -> (Obj) o).orElse(noobj()),
@@ -206,9 +206,8 @@ public final class LLMFactory {
                     .responseFormat(createResponseFormat(responseFormat2))
                     .build();
             case OPENAI -> {
-                // Don't pass empty organizationId - it causes hangs in some LangChain4j versions
+                // don't pass empty organizationId - it causes hangs in some LangChain4j versions
                 final String orgId = organization.strValue().isBlank() ? null : organization.strValue();
-                // Only use custom baseUrl if different from default
                 final String baseUrl = (host != null && !host.isBlank() && !host.equals("https://api.openai.com/v1")) ? host : null;
                 // Fail early if a response format was requested but the model can't honor it
                 if (hasResponseFormat && !openAiSupportsJsonObject(modelName))
@@ -224,11 +223,12 @@ public final class LLMFactory {
                         .baseUrl(baseUrl)
                         .modelName(modelName)
                         .returnThinking(thinking)
+                        .sendThinking(thinking,"reasoning_content")
                         .organizationId(orgId)
                         .logRequests(true)
                         .logResponses(true)
+                        .logger(Graphitty.log(OpenAiStreamingChatModel.class).logger(Level.WARN))
                         .timeout(Duration.ofSeconds(60))
-                        //.logger(Graphitty.log(OpenAiStreamingChatModel.class).logger(Level.WARN))
                         .responseFormat(openAiFormat)
                         .build();
             }

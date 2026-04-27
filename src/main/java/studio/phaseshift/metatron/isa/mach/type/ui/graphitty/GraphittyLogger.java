@@ -31,6 +31,7 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -43,8 +44,115 @@ public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
         put("TRACE", "c");
     }};
 
+    // -----------------------------------------------------------------------
+    // Static pane-writer hook – set by Console on startup.
+    // BiConsumer<paneId, formattedMessage>
+    // Kept as a plain functional field so GraphittyLogger has zero imports of
+    // Console or Pane (avoiding a circular package dependency).
+    // -----------------------------------------------------------------------
+
+    private static BiConsumer<Integer, String> paneWriter = (id, msg) -> {}; // no-op until Console registers
+
+    /**
+     * Register the pane writer.  Called once by {@code Console} during
+     * construction so that pane-targeted loggers can route their output into
+     * the correct pane buffer.
+     *
+     * @param writer {@code BiConsumer<paneId, formattedMessage>} – receives the
+     *               target pane ID and the fully-formatted (Graphitty-resolved)
+     *               log line.
+     */
+    public static void registerPaneWriter(final BiConsumer<Integer, String> writer) {
+        paneWriter = writer;
+    }
+
+    // -----------------------------------------------------------------------
+    // Global default pane target
+    // -----------------------------------------------------------------------
+
+    /**
+     * Global fallback pane ID used by every logger that has no per-instance
+     * target set.  {@code -1} means "no global default" (normal Logback output).
+     */
+    private static int defaultTargetPaneId = -1;
+
+    /**
+     * Set a global default target pane.  Every {@link GraphittyLogger} that has
+     * not been given an explicit {@link #targetPane(int)} will route its output
+     * to this pane.
+     *
+     * <p>Pass {@code -1} to clear the global default and restore normal Logback
+     * output for un-targeted loggers.
+     */
+    public static void setDefaultTargetPane(final int paneId) {
+        defaultTargetPaneId = paneId;
+    }
+
+    /** Returns the global default target pane ID, or {@code -1} if none is set. */
+    public static int getDefaultTargetPane() {
+        return defaultTargetPaneId;
+    }
+
+    // -----------------------------------------------------------------------
+    // Per-instance pane targeting
+    // -----------------------------------------------------------------------
+
+    /**
+     * Per-instance pane ID override.
+     * {@code -1} = defer to {@link #defaultTargetPaneId} (and then to Logback if that is also -1).
+     */
+    private int targetPaneId = -1;
+
+    /**
+     * Route log output from this logger instance to the pane with the given ID,
+     * overriding the global default for this logger only.
+     * The pane must exist in the Console's pane tree at the time each message is
+     * emitted; if it cannot be found the message is silently dropped.
+     *
+     * <p>Pass {@code -1} to clear the per-instance override and fall back to the
+     * global default (or normal Logback output if no global default is set).
+     *
+     * <p>Example – always log to pane 2, regardless of global default:
+     * <pre>{@code
+     *   private static final GraphittyLogger LOG = Graphitty.log(MyClass.class).targetPane(2);
+     * }</pre>
+     */
+    public GraphittyLogger targetPane(final int paneId) {
+        this.targetPaneId = paneId;
+        return this;
+    }
+
+    /** Returns the per-instance target pane ID, or {@code -1} when none is set. */
+    public int targetPane() {
+        return this.targetPaneId;
+    }
+
+    /**
+     * Returns the effective pane ID for this logger: the per-instance override
+     * if set, otherwise the global default, otherwise {@code -1}.
+     */
+    private int effectivePaneId() {
+        if (this.targetPaneId >= 0) return this.targetPaneId;
+        return defaultTargetPaneId;
+    }
+
+    private boolean hasTargetPane() {
+        return effectivePaneId() >= 0;
+    }
+
+    /** Format a message with level-coloured prefix for pane output. */
+    private String formatPaneMessage(final Level level, final Object f, final Object... args) {
+        final String msg   = this.makeMessage(true, f, args);
+        final String color = COLORS.getOrDefault(level.name(), "w");
+        return Graphitty.string("{{w}}[{{%s}}%s%s{{w}}]{{X}} %s".formatted(
+                color,
+                level.name(),
+                level.name().length() == 4 ? " " : "",
+                msg));
+    }
+
     public void ero() {
-        
+
     }
 
     public enum OtherLevel {NONE, EXCEPT}
@@ -87,7 +195,11 @@ public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
 
     protected GraphittyLogger logLevel(final Level level, final Object f, final Object... args) {
         try {
-            this.logger().makeLoggingEventBuilder(level).log(() -> this.makeMessage(true, f, args));
+            if (hasTargetPane()) {
+                paneWriter.accept(effectivePaneId(), formatPaneMessage(level, f, args));
+            } else {
+                this.logger().makeLoggingEventBuilder(level).log(() -> this.makeMessage(true, f, args));
+            }
         } catch (final Exception e) {
             System.err.println(e);
         }
@@ -99,9 +211,14 @@ public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
     }
 
     private GraphittyLogger otherLevel(final OtherLevel level, final Object f, final Object... args) {
-        if (OtherLevel.NONE == level)
-            System.out.print(this.makeMessage(false, f, args));
-        else if (OtherLevel.EXCEPT == level) {
+        if (OtherLevel.NONE == level) {
+            final String msg = this.makeMessage(false, f, args);
+            if (hasTargetPane()) {
+                paneWriter.accept(effectivePaneId(), msg);
+            } else {
+                System.out.print(msg);
+            }
+        } else if (OtherLevel.EXCEPT == level) {
             throw MTronException.of(f, args);
         }
         return this;

@@ -18,33 +18,67 @@
 
 package studio.phaseshift.metatron.isa.mach.type.thread;
 
+import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.Fail;
+import studio.phaseshift.metatron.isa.m.type.NoObj;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.mach.type.net.FutureObj;
 
 import java.util.Map;
+import java.util.UUID;
+
+import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public abstract class VirtualThread extends AbstractThread {
-    
+
+public class VirtualThread extends AbstractThread {
+
+    private Thread thread;
+    volatile FutureObj<Obj> future = new FutureObj<>(UUID.randomUUID());
+
     public VirtualThread(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
+        this.thread = Thread.ofVirtual()
+                .name(this.vid() == null ? "metatron-virtual-thread" : this.vid().toString())
+                .unstarted(() -> {
+                    this.at(STATE, uri("running"), MUTABLE);
+                    final Obj result = this.at(CODE).apply();
+                    this.at(RESULT, result, MUTABLE);
+                    this.future.setObj(result);
+                    this.at(STATE, uri("stopped"), MUTABLE);
+                });
     }
 
-  /* @Override
-    public Obj run() {
-        return false;
+
+    @Override
+    public Fail stop() {
+        try {
+            this.thread.interrupt();
+            return fail("interrupted").c(cInt.ZERO()).asFail();
+        } catch (final Exception e) {
+            return fail(e);
+        }
     }
 
     @Override
-    public Obj stop() {
-        return false;
+    public NoObj pause() {
+        return noobj(); // use semaphone that wraps the run task
     }
 
     @Override
-    public Obj pause() {
-        return false;
-    }*/
-    
+    public Obj result() {
+        return this.at(RESULT);
+    }
+
+    @Override
+    public FutureObj<Obj> run() {
+        this.thread.start();
+        return this.future;
+    }
 }

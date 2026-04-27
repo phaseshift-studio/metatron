@@ -117,7 +117,7 @@ public class MObjFactory extends MRec implements ObjFactory {
                 return (OBJ) str(value.toString(), tid, vid);
             }
             case String s -> {
-                return (OBJ) str(s, tid, vid);
+                return URI_TID.equals(tid) ? (OBJ) uri(f(s), tid, vid) : (OBJ) str(s, tid, vid);
             }
             case fURI fURI -> {
                 return (OBJ) uri(fURI, tid, vid);

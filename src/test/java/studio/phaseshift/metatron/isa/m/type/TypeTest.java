@@ -483,10 +483,10 @@ public class TypeTest extends AbstractMetatronTest {
             "nat     % .                                        % 2.as(plus(6).as(nat::T))                         % true",
             "nat     % .                                        % 2.as(plus(-6).as(nat::T))                        % true",
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            "nat     % int::T[?>0]@nat                              % nat::150                                         % true",
+            "nat     % int::T[?>0]@nat                          % nat::150                                         % true",
             ".       % .                                        % nat::-150                                        % false",
             ".       % .                                        % nat::0                                           % false",
-            "agenat  % nat::T[?<125]@agenat                            % agenat::150                                      % false",
+            "agenat  % nat::T[?<125]@agenat                     % agenat::150                                      % false",
             "agenat  % .                                        % int::2.as(agenat::T)                             % true",
             "agenat  % .                                        % int::2.as(agenat::T).as(int::T).as(agenat::T)    % true",
             //   "agenat  % .                                        % int::2.as(agenat::T).as(int::T).as(agenat::T).as(int::T)  % false",

@@ -19,7 +19,7 @@
 package studio.phaseshift.metatron.isa;
 
 import studio.phaseshift.metatron.Tokens;
-import studio.phaseshift.metatron.furi.Q;
+import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
@@ -92,7 +92,7 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
     public AbstractInstSet(final fURI tid, final fURI vid) {
         super(new LinkedHashMap<>(), mutableMap(
                 uri(Tokens.PATTERN), uri(vid.extend(ALL))), tid, vid);
-        this.at(uri(Tokens.QSTRING), lst(QCollection.docQ()), MUTABLE);
+        this.at(uri(Tokens.QPROC), lst(QCollection.docQ()), MUTABLE);
         if (Router.loaded()) {
             this.sugars().forEach(mParser::addSugar);
             this.consts().forEach(c -> Router.global().registerRedirect(f(c.vid().name()), c.vid()));
@@ -126,7 +126,7 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
 
     public AbstractInstSet(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(new LinkedHashMap<>(), jvm, tid, vid);
-        this.at(uri(Tokens.QSTRING), lst(QCollection.docQ()), MUTABLE);
+        this.at(uri(Tokens.QPROC), lst(QCollection.docQ()), MUTABLE);
         this.sugars().forEach(mParser::addSugar);
         old = false;
     }
@@ -223,7 +223,7 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
     public Obj read(final fURI pattern) {
         if (Objects.equals(this.vid, pattern))
             return this;
-        return Q.Helper.processPreRead(this.qs(), pattern).orElseGet(() -> {
+        return QProc.Helper.processPreRead(this.qs(), pattern).orElseGet(() -> {
             final Obj result = objs(INST_TABLE.entrySet()
                     .stream()
                     .filter(kv -> kv.getKey().test(pattern.basePath().asNode()))
@@ -249,14 +249,14 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
                             .map(kv -> pattern.isNode() ?
                                     kv.getValue() :
                                     rel(kv.getKey().toUri(), kv.getValue()))));
-            return Q.Helper.processPostRead(this.qs(), pattern, result).orElse(result);
+            return QProc.Helper.processPostRead(this.qs(), pattern, result).orElse(result);
         });
     }
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
-        return Q.Helper.processPreWrite(this.qs(), vid, obj).orElseGet(
-                () -> Q.Helper.processQlessWrite(this.qs(), vid, obj).orElseGet(
+        return QProc.Helper.processPreWrite(this.qs(), vid, obj).orElseGet(
+                () -> QProc.Helper.processQlessWrite(this.qs(), vid, obj).orElseGet(
                         () -> {
                             if (obj.isInst()) {
                                 final Inst inst = obj.as();
@@ -275,7 +275,7 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
                                 CONST_TABLE.put(vid, obj);
                                 // throw MTronException.of("inst set %s can only store insts, types, and rewrites: {{r}}!{{/r}} %s", this.simpeToString(), obj);
                             }
-                            return Q.Helper.processPostWrite(this.qs(), vid, obj).orElse(obj);
+                            return QProc.Helper.processPostWrite(this.qs(), vid, obj).orElse(obj);
                         }));
     }
 

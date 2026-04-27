@@ -28,12 +28,12 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
  */
 public interface MThread extends Rec {
 
-    enum thread_state {running, paused, stopped}
+    enum thread_state {ready, running, paused, stopped}
 
     thread_state state();
 
     Obj run();
-    
+
     Fail stop();
 
     NoObj pause();

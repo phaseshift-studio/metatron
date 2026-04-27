@@ -25,7 +25,7 @@ import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.m.type.reflect.ObjFieldReflection;
+import studio.phaseshift.metatron.isa.m.type.reflect.JRecElement;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjByteBufferSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
@@ -58,7 +58,7 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Rec 
     protected static final AtomicInteger sessionCounter = new AtomicInteger(0);
     protected final fURI host;
     protected final ObjSerializer<?> serializer;
-    @ObjFieldReflection(tid = "cluster")
+    @JRecElement(key = "cluster", rng = "/m/lst[/m/mach/net/connection]")
     protected final Map<fURI, MConnection> cluster = new HashMap<>();
     protected GraphittyLogger LOG = Graphitty.log(this);
     final AtomicBoolean running = new AtomicBoolean(false);

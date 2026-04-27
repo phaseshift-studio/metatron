@@ -178,7 +178,7 @@ public class mathInstSetTest extends AbstractInstSetTest {
 
     @Test
     public void testConstants() {
-        Router.global().addSpace(memSpace.of(rec(uri(PATTERN), uri("/abc/#"), uri(Tokens.QSTRING), lst(QCollection.constQ())), f("abc")));
+        Router.global().addSpace(memSpace.of(rec(uri(PATTERN), uri("/abc/#"), uri(Tokens.QPROC), lst(QCollection.constQ())), f("abc")));
         assertEquals(jnt(34), mParser.eval("/abc/xyz -> 34"));
         assertEquals(jnt(34), mParser.eval("*/abc/xyz"));
         assertEquals(jnt(99), mParser.eval("/abc/xyz -> 99"));

@@ -181,7 +181,7 @@ public class dcmntSpace extends AbstractSpace<MongoClient> {
 
         // Initialize subscription query for change streams
         this.dcmntSpaceSubQ = new dcmntSpaceSubQ(this);
-        this.at(uri(QSTRING), this.at(uri(QSTRING)).orElse(lst()).plus(lst(List.of(this.dcmntSpaceSubQ))), MUTABLE);
+        this.at(uri(QPROC), this.at(uri(QPROC)).orElse(lst()).plus(lst(List.of(this.dcmntSpaceSubQ))), MUTABLE);
         LOG.debug("initialized {{g}}change stream subscription{{X}} support");
 
         // Schema discovery always runs at startup — root and schema are always populated.

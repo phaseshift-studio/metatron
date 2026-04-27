@@ -29,7 +29,7 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjs;
 import studio.phaseshift.metatron.isa.m.type.impl.ObjectMap;
-import studio.phaseshift.metatron.isa.m.type.reflect.ObjFieldReflection;
+import studio.phaseshift.metatron.isa.m.type.reflect.JRecElement;
 import studio.phaseshift.metatron.isa.m.type.reflect.ObjReflection;
 import studio.phaseshift.metatron.isa.mach.type.MStats;
 import studio.phaseshift.metatron.isa.mach.type.Router;
@@ -60,13 +60,11 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
     public static final fURI ROUTER_TID = MACH_ISA_TID.extend("router");
     private static final Set<fURI> READ_AS_NOOBJ = Set.of(ALL.maybeSome(), ALL.maybe(), ALL);
     private final GraphittyLogger LOG = Graphitty.log(this);
-    @ObjFieldReflection(tid = "/m/str")
-    public static final String test = "testes";
     protected final Stats iostats = new MStats();
 
-    @ObjFieldReflection
+    @JRecElement(key = "small_route", rng = "/m/lst[/m/uri]")
     private final ObjectMap<fURI, Set<fURI>> smallToBigRoutes = new ObjectMap<>();
-    @ObjFieldReflection
+    @JRecElement(key = "big_route", rng = "/m/uri")
     private final ObjectMap<fURI, fURI> bigToSmallRoutes = new ObjectMap<>();
     private final ObjectMap<fURI, fURI> prefixToVID = new ObjectMap<>();
     private fURI primary = M_ISA_TID;

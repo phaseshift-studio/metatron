@@ -42,6 +42,82 @@ public abstract class AbstractWidget<W extends AbstractWidget<W>> implements Wid
     protected Cursor cursor;
     protected Attributes attributes;
 
+    // Pane bounds - set when this widget should be confined to a specific pane region.
+    // All values are 1-based terminal coordinates. paneStartRow == -1 means no constraint.
+    protected int paneStartRow = -1;
+    protected int paneStartCol = 1;
+    protected int paneAvailHeight = -1;
+    protected int paneAvailWidth = -1;
+
+    /**
+     * Constrain this widget's rendering to the given pane region so it never
+     * draws outside the pane's borders.
+     *
+     * @param startRow 1-based terminal row where the pane starts (including its top border)
+     * @param startCol 1-based terminal column where the pane starts (including its left border)
+     * @param height   total height of the pane in rows (including borders)
+     * @param width    total width of the pane in columns (including borders)
+     */
+    public void setPaneBounds(final int startRow, final int startCol,
+                              final int height, final int width) {
+        this.paneStartRow = startRow;
+        this.paneStartCol = startCol;
+        this.paneAvailHeight = height;
+        this.paneAvailWidth = width;
+    }
+
+    /** Returns {@code true} when pane bounds have been set via {@link #setPaneBounds}. */
+    public boolean hasPaneBounds() {
+        return this.paneStartRow > 0;
+    }
+
+    /**
+     * Create a {@link WidgetCanvas} for the current redraw cycle.
+     *
+     * <p>Call this at the start of every {@code redraw()} method, pass the
+     * canvas lines to draw to via {@link WidgetCanvas#line}, and finish the
+     * cycle with {@link WidgetCanvas#finish()}.  The canvas transparently
+     * handles absolute (pane-bounded) vs relative rendering – the widget
+     * author does not need to know which mode is active.
+     *
+     * @param previousTotalHeight the {@code totalHeightUsed} value from the
+     *                            preceding redraw cycle (used to clear stale
+     *                            lines in relative mode); pass {@code 0} for
+     *                            the first call.
+     */
+    protected WidgetCanvas beginRedraw(final int previousTotalHeight) {
+        return new WidgetCanvas(this, previousTotalHeight);
+    }
+
+    /**
+     * Erase the widget's rendered area.  Call from {@link #close()} instead
+     * of manually emitting cursor-movement escape sequences.
+     *
+     * <p>In <b>absolute mode</b> (pane bounds set) this is a no-op: the
+     * pane layout will be restored by the console's {@code renderPanes()}
+     * call that follows every widget invocation.
+     *
+     * <p>In <b>relative mode</b> the cursor is moved up to the start of the
+     * widget area, all rendered lines are cleared, and the cursor is
+     * repositioned ready for the caller to redraw the prompt.
+     *
+     * @param totalHeightUsed the value returned by {@link WidgetCanvas#finish()}
+     *                        in the last completed redraw cycle.
+     */
+    protected void eraseWidget(final int totalHeightUsed) {
+        if (hasPaneBounds() || totalHeightUsed <= 0) return;
+        // Relative mode: move up, clear each line, then position cursor at top
+        // so the caller can redraw the prompt at the same location.
+        final StringBuilder sb = new StringBuilder();
+        sb.append(Graphitty.string("{{^%d}}{{|1}}", totalHeightUsed));
+        for (int i = 0; i <= totalHeightUsed; i++) {
+            sb.append(Graphitty.string("{{-X-}}\n"));
+        }
+        sb.append(Graphitty.string("{{^%d}}{{|1}}", totalHeightUsed + 1));
+        Graphitty.out(terminal.output(), sb.toString());
+        terminal.writer().flush();
+    }
+
     public AbstractWidget() {
         this.size = this.terminal.getSize();
         this.display = new Display(this.terminal, false);

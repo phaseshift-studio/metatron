@@ -120,11 +120,12 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
            pattern      => <deep:#>,
            name         => <openai>,
            route        => [<deep:>=><>]]@/sys/space/deepseek;
-  catalog::[host         => <http://localhost:8088/v1>,
+  [==catalog::[host         => <http://localhost:8088/v1>,
             pattern      => <localai:#>,
             name         => <localai>,
-            route        => [<localai:>=><>]]@/sys/space/localai;
- *<local:software/metatron/.agent/skills/mtron>.as(skill::T).to(/usr/ai/skills/mtron);
+            route        => [<localai:>=><>]]@/sys/space/localai;==]
+ *<local:software/metatron/.agent/agent.mtron>;
+ print('agent loaded.');
  tblespace::[pattern => netflix:#,
         host       => <mariadb://localhost:3306/netflix?user=mtron&password=mtron>,
         route      => [<netflix:schema>=>/sys/space/netflix/schema,
@@ -150,7 +151,7 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
        root        => rec::T,
        schema      => instset::[type=>[rec::T]],
        route       => [mongo:=><>]]@/sys/space/mongo;
- mcp::[host      => <ws://localhost:8999/m/llm/mcp>]@/usr/ai/mcp/mtron;
+ [==mcp::[host      => <ws://localhost:8999/m/llm/mcp>]@/usr/ai/mcp/mtron;
  mcp::[host      => <http://127.0.0.1:29170/index-mcp/streamable-http>]@/usr/ai/mcp/intellij;
  [==mcp::[host      => <http://192.168.88.231:3721/mcp>,
              transport => <streamable-http>,

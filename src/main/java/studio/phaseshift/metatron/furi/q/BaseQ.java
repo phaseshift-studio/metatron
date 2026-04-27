@@ -19,7 +19,7 @@
 package studio.phaseshift.metatron.furi.q;
 
 import studio.phaseshift.metatron.Tokens;
-import studio.phaseshift.metatron.furi.Q;
+import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -48,7 +48,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class BaseQ extends MRec implements Q {
+public class BaseQ extends MRec implements QProc {
 
     protected final GraphittyLogger LOG;
     protected OnRead onRead;
@@ -67,17 +67,17 @@ public class BaseQ extends MRec implements Q {
 
     @Override
     public String toString() {
-        return Q.Helper.qToString(this);
+        return QProc.Helper.qToString(this);
     }
 
     @Override
     public int hashCode() {
-        return Q.Helper.qHashCode(this);
+        return QProc.Helper.qHashCode(this);
     }
 
     @Override
     public boolean equals(final Object other) {
-        return Q.Helper.qEquals(this, other);
+        return QProc.Helper.qEquals(this, other);
     }
 
     @Override
@@ -86,12 +86,12 @@ public class BaseQ extends MRec implements Q {
     }
 
     @Override
-    public Optional<Q.OnWrite> onWrite() {
+    public Optional<QProc.OnWrite> onWrite() {
         return Optional.ofNullable(this.onWrite);
     }
 
     @Override
-    public Optional<Q.OnRead> onRead() {
+    public Optional<QProc.OnRead> onRead() {
         return Optional.ofNullable(this.onRead);
     }
 
@@ -110,7 +110,7 @@ public class BaseQ extends MRec implements Q {
     }
 
 
-    public static class BaseOnRead extends MRec implements Q.OnRead {
+    public static class BaseOnRead extends MRec implements QProc.OnRead {
         public BaseOnRead(final Inst preRead, final Inst postRead) {
             super(mutableMap(uri(PRE_READ), preRead, uri(POST_READ), postRead), REC_TID, null);
         }
@@ -130,7 +130,7 @@ public class BaseQ extends MRec implements Q {
         }
     }
 
-    public static class BaseOnWrite extends MRec implements Q.OnWrite {
+    public static class BaseOnWrite extends MRec implements QProc.OnWrite {
         public BaseOnWrite(final Inst preWrite, final Inst postWrite, final Inst qlessWrite) {
             super(mutableMap(uri(PRE_WRITE), preWrite, uri(POST_WRITE), postWrite, uri(QLESS_WRITE), qlessWrite), REC_TID, null);
         }
@@ -158,12 +158,12 @@ public class BaseQ extends MRec implements Q {
         }
     }
 
-    public static Q create(final fURI tid, final fURI pattern,
-                           final Function<fURI, Obj> preRead,
-                           final BiFunction<fURI, Obj, Obj> postRead,
-                           final BiFunction<fURI, Obj, Obj> preWrite,
-                           final TriFunction<fURI, Obj, Obj, Obj> postWrite,
-                           final BiFunction<fURI, Obj, Obj> qlessWrite) {
+    public static QProc create(final fURI tid, final fURI pattern,
+                               final Function<fURI, Obj> preRead,
+                               final BiFunction<fURI, Obj, Obj> postRead,
+                               final BiFunction<fURI, Obj, Obj> preWrite,
+                               final TriFunction<fURI, Obj, Obj, Obj> postWrite,
+                               final BiFunction<fURI, Obj, Obj> qlessWrite) {
         return new BaseQ(mutableMap(
                 uri(PRE_READ), null == preRead ? noobj() : instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(URI_TYPE), (lhs, inst) -> preRead.apply(inst.arg(0).uriValue())),
                 uri(POST_READ), null == postRead ? noobj() : instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(URI_TYPE,T(ALL)), (lhs, inst) -> postRead.apply(inst.arg(0).uriValue(), inst.arg(1))),

@@ -27,7 +27,6 @@ import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.web.space.ws.AbstractWSServerIntegrationTest;
 import studio.phaseshift.metatron.isa.web.space.ws.AbstractWSServerTest;
 import studio.phaseshift.metatron.isa.web.space.ws.WSServerRec;
-import studio.phaseshift.metatron.isa.web.space.ws.wsSpace;
 import studio.phaseshift.metatron.isa.web.type.Content;
 
 import java.util.LinkedHashMap;
@@ -45,8 +44,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.web.space.ws.server.wsmcpServer.WS_MCP_SERVER_TID;
-import static studio.phaseshift.metatron.isa.web.space.ws.server.wsmcpServer.WS_MCP_SERVER_TYPE;
+import static studio.phaseshift.metatron.isa.web.space.ws.server.mcp_wsServer.MCP_WS_TID;
+import static studio.phaseshift.metatron.isa.web.space.ws.server.mcp_wsServer.WS_MCP_SERVER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_SERVER_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -54,7 +53,7 @@ public class wsmcpServerTest extends AbstractWSServerTest {
 
     @Override
     protected WSServerRec createServer(final fURI vid) {
-        return new wsmcpServer(new LinkedHashMap<>(Map.of(uri(IN), uri(Content.ContentType.APPLICATION_JSON.value), uri(OUT), uri(Content.ContentType.APPLICATION_JSON.value))), WS_MCP_SERVER_TID, vid);
+        return new mcp_wsServer(new LinkedHashMap<>(Map.of(uri(IN), uri(Content.ContentType.APPLICATION_JSON.value), uri(OUT), uri(Content.ContentType.APPLICATION_JSON.value))), MCP_WS_TID, vid);
     }
 
     /**
@@ -74,8 +73,8 @@ public class wsmcpServerTest extends AbstractWSServerTest {
 
     @Test
     public void testMCPTidNamespace() {
-        assertTrue(WS_MCP_SERVER_TID.toString().contains("wsspace"));
-        assertTrue(WS_MCP_SERVER_TID.toString().contains("wsmcp"));
+        assertTrue(MCP_WS_TID.toString().contains("wsspace"));
+        assertTrue(MCP_WS_TID.toString().contains("wsmcp"));
     }
 
     @Test
@@ -205,11 +204,11 @@ public class wsmcpServerTest extends AbstractWSServerTest {
     public void testToolsCallWithRegisteredTool() {
         // Build a server with a tool in its map and verify tools/call dispatches correctly
         final fURI vid = createTestVid();
-        final wsmcpServer withTool = new wsmcpServer(
+        final mcp_wsServer withTool = new mcp_wsServer(
                 mutableMap(
                         uri(IN), uri(Content.ContentType.APPLICATION_JSON.value),
                         uri(OUT), uri(Content.ContentType.APPLICATION_JSON.value)),
-                WS_MCP_SERVER_TID, vid);
+                MCP_WS_TID, vid);
         // Manually add a tool: addTool => instC that echoes the arguments back
         withTool.jvm().put(uri(TOOL), rec(
                 uri("echo"), instC(f("echo").dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL.maybe())),
@@ -231,8 +230,8 @@ public class wsmcpServerTest extends AbstractWSServerTest {
     public void testToolsListIncludesSchemaForRegisteredTool() {
         // A server with a named-arg inst should emit non-empty inputSchema in tools/list
         final fURI vid = createTestVid();
-        final wsmcpServer withTool = new wsmcpServer(rec(
-                new LinkedHashMap<>(), WS_MCP_SERVER_TID, vid));
+        final mcp_wsServer withTool = new mcp_wsServer(rec(
+                new LinkedHashMap<>(), MCP_WS_TID, vid));
         withTool.jvm().put(uri(TOOL), rec(
                 uri("greet"), instC(f("greet").dom(ALL.maybe()).rng(ALL.maybe()),
                         rec(uri("name"), T(ALL.maybe())),
@@ -285,7 +284,7 @@ public class wsmcpServerTest extends AbstractWSServerTest {
             return studio.phaseshift.metatron.isa.web.space.ws.wsSpace.of(rec(
                     uri(HOST), uri(hostUri.toString()),
                     uri(PATTERN), uri("ws://#"),
-                    uri(ROUTE), rec(uri("/wsmcp"), uri(WS_MCP_SERVER_TID.toString()))
+                    uri(ROUTE), rec(uri("/wsmcp"), uri(MCP_WS_TID.toString()))
             ).jvm(), f("/sys/space/ws/test"));
         }
 

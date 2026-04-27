@@ -78,7 +78,7 @@ public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
             return rec(
                     MIN, null == this.uriValue().c().min() ? noobj() : jnt((Long) this.uriValue().c().min()),
                     MAX, null == this.uriValue().c().max() ? noobj() : jnt((Long) this.uriValue().c().max()));
-        else if (k.equals(f(QSTRING)))
+        else if (k.equals(f(QPROC)))
             return rec(this.uriValue().qMap().entrySet().stream().map(kv -> rel(uri(kv.getKey()), uri(kv.getValue()))));
         else
             throw MTronException.of("unknown uri component: %s", k);
@@ -322,7 +322,7 @@ public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
                                 PORT, lhsUri.port() == -1 ? noobj() : jnt(lhsUri.port()),
                                 PATH, lhsUri.path().isEmpty() ? noobj() : lst(lhsUri.path().stream().map(MUri::uri)),
                                 C, rec(MIN, null == lhsUri.c().min() ? noobj() : jnt(lhsUri.c().min()), MAX, null == lhsUri.c().max() ? noobj() : jnt(lhsUri.c().max())),
-                                QSTRING, lhsUri.qMap().isEmpty() ? noobj() : rec(lhsUri.qMap().entrySet().stream().map(kv -> rel(uri(kv.getKey()), uri(kv.getValue())))));
+                                QPROC, lhsUri.qMap().isEmpty() ? noobj() : rec(lhsUri.qMap().entrySet().stream().map(kv -> rel(uri(kv.getKey()), uri(kv.getValue())))));
                     }),
                     instC(REVERSE_INST_TID.dom(URI_TID).rng(URI_TID), lst(), (lhs, inst) -> lhs.jvm(lhs.uriValue().path(lhs.asUri().uriValue().path().reversed()))),
                     docWrap(instC(HAS_INST_TID.dom(URI_TID).rng(URI_TID.maybe()), lst(T(STR_TID)), (lhs, inst) -> REGEX_CACHE.compute(inst.arg(0).strValue(), (k, v) -> null == v ? Pattern.compile(k) : v).matcher(lhs.uriValue().toString()).find() ? lhs : noobj()),
@@ -366,7 +366,7 @@ public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
                     instC(PATH_TID.dom(URI_TID).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(lhs.uriValue().pathString())),
                     /*   instC(URI_PORT_TID.dom(URI_TID).rng(INT_TID), lst(T(URI_TID)), (lhs, inst) -> jnt(lhs.uriValue().port())),*/
                     // instC(Q_INST_TID.dom(URI_TID).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(lhs.uriValue().qValue(inst.arg(0).uriValue().toString(), fURI.class))),
-                    instC(Q_INST_TID.dom(URI_TID).rng(URI_TID), lst(REC_TYPE), (lhs, inst) -> uri(lhs.uriValue().q((Map<String, String>) inst.arg(0).asRec().elements().collect(Collectors.toMap(kv -> kv.first().uriValue().toString(), kv -> "" + kv.second().jvm(), (a, b) -> b, LinkedHashMap::new))))),
+                    instC(Q_INST_TID.dom(URI_TID).rng(URI_TID), lst(REC_TYPE), (lhs, inst) -> lhs.jvm(lhs.uriValue().q((Map<String, String>) inst.arg(0).asRec().elements().collect(Collectors.toMap(kv -> kv.first().uriValue().toString(), kv -> "" + kv.second().jvm(), (a, b) -> b, LinkedHashMap::new))))),
                     //instC(LSHIFT_INST_TID.dom(URI_TID).rng(URI_TID), lst(REC_TYPE), (lhs, inst) -> uri(lhs.uriValue().q((Map<String, String>) inst.arg(0).asRec().elements().collect(Collectors.toMap(kv -> kv.first().uriValue().toString(), kv -> "" + kv.second().jvm(), (a, b) -> b, LinkedHashMap::new))))),
                     // instC(Q_INST_TID.dom(URI_TID).rng(REC_TID), lst(), (lhs, inst) -> rec(lhs.uriValue().qMap().entrySet().stream().map(kv -> rel(uri(kv.getKey()), uri(kv.getValue()))))),
                     // TODO  instC(Q_INST_TID.dom(URI_TID).rng(URI_TID), lst(T(REC_TID)), (lhs, inst) -> lhs.jvm(lhs.uriValue().qMap(inst.arg(0).recValue().entrySet().stream().collect(Collectors.toMap(kv -> kv.getKey().uriValue().toString(), kv -> kv.getValue().uriValue().toString(), (a, b) -> b, LinkedHashMap::new))))),
@@ -416,7 +416,7 @@ public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
                         case AUTHORITY -> lhs.uriValue().authority();
                         case PATH -> lhs.uriValue().pathString();
                         case C -> lst(jnt(lhs.uriValue().c().min()), jnt(lhs.uriValue().c().max()));
-                        case QSTRING -> lhs.uriValue().qMap().entrySet().stream()
+                        case QPROC -> lhs.uriValue().qMap().entrySet().stream()
                                 .map(kv -> rel(MObjFactory.single().toObjFromString(kv.getKey()), MObjFactory.single().toObjFromString(kv.getValue())))
                                 .collect(new CommonUtil.RecCollector());
                         default -> noobj();

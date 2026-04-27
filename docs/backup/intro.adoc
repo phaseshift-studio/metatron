@@ -203,7 +203,7 @@ Every fURI is composed of the following components:
 . *authority*: the host or domain of the fURI
 . *path*: the path or resource of the fURI
 . *coefficient*: the multiplicative factor of the fURI (called a `c`)
-. *query*: the query parameters of the fURI (called a `q`)
+. *query*: the query parameters of the fURI (called a `qProc`)
 
 The first 3 components above are familiar to most as they form the reference architecture of the world wide web (the https://en.wikipedia.org/wiki/Uniform_Resource_Identifier[ Uniform Resource Identifier] or URI). These aspects make it possible for `objs` to reference each other across memory, across machines, and across networks. The last 2 components are unique and have a special role to play in the meta structures and processes surrounding an `obj`.
 

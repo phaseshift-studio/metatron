@@ -31,7 +31,7 @@ From `boot/boot.mtron`, here are the space types:
 
 **`mem::`** - In-Memory Space
 ```metatron
-mem::[pattern => /usr/#, q => [subq::[=>]]]@/sys/space/usr;
+mem::[pattern => /usr/#, qProc => [subq::[=>]]]@/sys/space/usr;
 ```
 Stores data in memory. Fast but volatile.
 

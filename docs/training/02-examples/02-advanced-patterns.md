@@ -333,7 +333,7 @@ inst?uri<=rec(){
 ### In-Memory Cache
 ```metatron
 mem::[pattern => /cache/#,
-      q       => [subq::[=>]]]@/sys/space/cache;
+      qProc       => [subq::[=>]]]@/sys/space/cache;
 ```
 
 **Usage:**
@@ -345,7 +345,7 @@ mem::[pattern => /cache/#,
 ### User Space
 ```metatron
 mem::[pattern => /usr/#,
-      q       => [subq::[=>]]]@/sys/space/usr;
+      qProc       => [subq::[=>]]]@/sys/space/usr;
 ```
 
 **User-specific data:**

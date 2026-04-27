@@ -31,7 +31,7 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 import studio.phaseshift.metatron.BootLoader;
-import studio.phaseshift.metatron.furi.Q;
+import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.BaseQ;
 import studio.phaseshift.metatron.furi.q.QCollection;
@@ -82,7 +82,7 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 public class dcmntSpaceSubQ extends BaseQ {
 
     protected final dcmntSpace space;
-    protected final Q subq = QCollection.subq();
+    protected final QProc subq = QCollection.subq();
 
     // Track active change stream watchers: fURI pattern -> (cursor, running flag, future)
     private final Map<fURI, WatcherHandle> activeWatchers = new ConcurrentHashMap<>();

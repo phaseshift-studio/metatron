@@ -54,7 +54,7 @@ public class mcpServer extends WSServerRec {
 
     private static final Logger LOG = LoggerFactory.getLogger(mcpServer.class);
 
-    public static final Type MCP_SERVER_TYPE = T("wsmcpServer", REC_TID,
+    public static final Type MCP_SERVER_TYPE = T("mcp_wsServer", REC_TID,
             instC("onOpen", INST_TYPE, uri("onOpen", URI_TYPE)),
             instC("onClose", INST_TYPE, uri("onClose", URI_TYPE)),
             instC("onError", INST_TYPE, uri("onError", URI_TYPE)),
@@ -117,7 +117,7 @@ public class mcpServer extends WSServerRec {
 
     @Override
     public String toString() {
-        return "wsmcpServer{" +
+        return "mcp_wsServer{" +
                 "address=" + this.socket.getAddress() +
                 ", port=" + this.socket.getPort() +
                 '}';

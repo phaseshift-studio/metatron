@@ -304,7 +304,7 @@ type::[config_record]@mount_point
 Examples:
 
 ```metatron
-mem::[pattern => /usr/#, q => [subq::[=>]]]@/sys/space/usr;
+mem::[pattern => /usr/#, qProc => [subq::[=>]]]@/sys/space/usr;
 
 tble::[pattern    => netflix:#,
        host       => <mariadb://localhost:3306/netflix>,

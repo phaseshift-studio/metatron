@@ -32,8 +32,6 @@ import java.util.Map;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.else_;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.id_;
 import static studio.phaseshift.metatron.isa.m.type.Fail.FAIL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.InstSet.A;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
@@ -51,23 +49,23 @@ import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_SPACE_TID;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class wsmtronServer extends WSServerRec {
+public class mtron_wsServer extends WSServerRec {
 
-    public static final fURI WS_MTRON_SERVER_TID = WS_SPACE_TID.extend("wsmtron");
+    public static final fURI MTRON_WS_TID = WS_SPACE_TID.extend("mtron_ws");
     protected final GraphittyLogger LOG = Graphitty.log(this);
 
     public static final Type WS_MTRON_SERVER_TYPE = Type.Builder.build()
             .tid(WS_SERVER_TID)
-            .vid(WS_MTRON_SERVER_TID)
+            .vid(MTRON_WS_TID)
             .isaPredicate(rec(uri(IN), URI_TYPE, uri(OUT), URI_TYPE))
-            .constructor(instC(WS_MTRON_SERVER_TID.extend(CTOR).dom(ALL.maybe()).rng(WS_MTRON_SERVER_TID), lst(T(REC_TID)), (lhs, inst) -> {
+            .constructor(instC(MTRON_WS_TID.extend(CTOR).dom(ALL.maybe()).rng(MTRON_WS_TID), lst(T(REC_TID)), (lhs, inst) -> {
                 final Rec config = inst.arg(0).asRec();
-                return new wsmtronServer(new LinkedHashMap<>(config.jvm()), config.vid());
+                return new mtron_wsServer(new LinkedHashMap<>(config.jvm()), config.vid());
             })).create();
 
 
-    public wsmtronServer(final Map<Obj, Obj> jvm, final fURI vid) {
-        super(jvm, WS_MTRON_SERVER_TID, vid);
+    public mtron_wsServer(final Map<Obj, Obj> jvm, final fURI vid) {
+        super(jvm, MTRON_WS_TID, vid);
         this.jvm().put(uri(ON_OPEN), instC(vid.extend(ON_OPEN), lst(URI_TYPE), (lhs, inst) -> {
             LOG.info("wsmtron opened w/ serializers: [in=>%s,out=>%s]", this.inContentType.name(), this.outContentType.name());
             return noobj();

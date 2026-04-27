@@ -37,8 +37,9 @@ import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MInst;
+import studio.phaseshift.metatron.isa.m.type.reflect.JInst;
 import studio.phaseshift.metatron.isa.m.type.reflect.JRec;
-import studio.phaseshift.metatron.isa.m.type.reflect.ObjFieldReflection;
+import studio.phaseshift.metatron.isa.m.type.reflect.JRecElement;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.LogObj;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
@@ -58,6 +59,7 @@ import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
@@ -88,22 +90,22 @@ import static studio.phaseshift.metatron.util.CommonUtil.HEADER_FILE;
 public class Console extends JRec<Console> implements Closeable, Runnable {
 
     public static final fURI CONSOLE_TID = MACH_ISA_TID.extend("console");
-    @ObjFieldReflection(tid = "/m/uri")
+    @JRecElement(key = "metatron_version", rng = "/m/uri")
     public static final String METATRON_VERSION = "0.1-alpha";
-    @ObjFieldReflection(tid = "/m/uri")
+    @JRecElement(key = "mtron", rng = "/m/uri")
     public static final String MTRON = "mtron";
-    // @ObjFieldReflection(tid = FILE_TID_STRING)
+    // @JRecElement(tid = FILE_TID_STRING)
     public static final String MTRON_NANORC = "mtron.nanorc";
-    //@ObjFieldReflection(tid = FILE_TID_STRING)
-    //@ObjFieldReflection(tid = FILE_TID_STRING)
+    //@JRecElement(tid = FILE_TID_STRING)
+    //@JRecElement(tid = FILE_TID_STRING)
     public static Path HISTORY_FILE = Paths.get(".metatron.history");
-    @ObjFieldReflection(tid = "/m/inst")
+    @JRecElement(key = "history", rng = "/m/inst")
     public Inst history = instA(f("dummy"));
-    @ObjFieldReflection(tid = "/m/uri")
+    @JRecElement(key = "input", rng = "/m/uri")
     public Uri input = uri("");
-    @ObjFieldReflection(tid = "/m/str")
+    @JRecElement(key = "prefix", rng = "/m/str")
     public String prefix = "";
-    @ObjFieldReflection(tid = "/m/str")
+    @JRecElement(key = "postfix", rng = "/m/str")
     public String postfix = "";
     private final GraphittyLogger LOG = Graphitty.log(this);
     private static Terminal terminal;
@@ -122,6 +124,10 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     private Pane activePane;
     private final AtomicBoolean needsRedraw = new AtomicBoolean(false);
     private boolean splitMode = false;  // True when we have more than one pane
+
+    /** Minimum ms between content-only live redraws triggered by pane output. */
+    private static final long PANE_RENDER_THROTTLE_MS = 80;
+    private volatile long lastPaneRenderMs = 0;
 
     // Language mode for multi-language support
     public enum Language {
@@ -147,17 +153,27 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
             .constructor(instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(CONSOLE_TID), lst(T(REC_TID)), (lhs, inst) -> {
                 final Console console = new Console(inst.arg(0).as(), inst.arg(0).vid());
                 BootLoader.getExecutor().submit(console);
-                LOCAL_INSTANCE = console;
                 return console;
             })).create();
 
     public Console(final Rec options, final fURI vid) {
         super(options.jvm(), CONSOLE_TID, vid);
+        Console.LOCAL_INSTANCE = this;
         try {
             // Initialize pane system with a single pane
             this.activePane = new Pane();
             this.activePane.setConsole(this);
             this.paneRoot = this.activePane;
+            registerPaneListener(this.activePane);
+
+            // Register the pane writer so GraphittyLogger.targetPane(id) works.
+            // GraphittyLogger lives in the graphitty sub-package and cannot import Console
+            // directly, so we supply a lambda here to bridge the two.
+            GraphittyLogger.registerPaneWriter((paneId, message) ->
+                    this.getAllPanes().stream()
+                            .filter(p -> p.id() == paneId)
+                            .findFirst()
+                            .ifPresent(p -> p.appendOutput(message)));
 
             final DefaultParser parser = new DefaultParser()
                     .quoteChars(new char[]{'\'', '"'})
@@ -252,9 +268,42 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
             // Always render panes fresh to ensure correct layout (handles terminal resize, etc.)
             // renderPanes() also positions cursor at the prompt location
             this.renderPanes();
+
+            // ----------------------------------------------------------------
+            // Constrain JLine's input echo to the active pane's width.
+            //
+            // Without this, JLine thinks the terminal is full-width and typed
+            // characters overflow horizontally into adjacent panes.
+            //
+            // JLine wraps when the tracked column reaches COLUMNS, so we set
+            // it to the pane's right content boundary (1-based terminal col):
+            //   paneStartCol + paneAvailWidth - 2
+            // e.g. pane at cols 1-50 (content 2-49) → COLUMNS = 49
+            //      pane at cols 51-100 (content 52-99) → COLUMNS = 99
+            // ----------------------------------------------------------------
+            final int[] pos = calculatePanePosition(this.activePane);
+            if (pos == null) return; // activePane not in tree (stale ref) – skip constraints
+            final int paneStartCol = pos[1];   // 1-based left col of pane box
+            final int paneAvailWidth = pos[3];
+            final int contentStartCol = paneStartCol + 1;             // inside left border
+            final int rightBoundary = paneStartCol + paneAvailWidth - 2;
+            this.reader.setVariable("COLUMNS", rightBoundary);
+
+            // Secondary prompt: pad to the pane's left content column so
+            // continuation lines also stay within the pane borders.
+            final String secondaryPrompt =
+                    " ".repeat(Math.max(0, contentStartCol - 1))
+                            + Graphitty.string("{{g}}|{{X}} ");
+            this.reader.setVariable(LineReader.SECONDARY_PROMPT_PATTERN, secondaryPrompt);
+
         } else {
             // Re-enable AUTO_FRESH_LINE in normal mode
             this.reader.setOpt(LineReader.Option.AUTO_FRESH_LINE);
+
+            // Restore full terminal width / secondary prompt.
+            this.reader.setVariable("COLUMNS", terminal.getWidth());
+            this.reader.setVariable(LineReader.SECONDARY_PROMPT_PATTERN,
+                    Graphitty.string("{{-X&v1&^1&m}}     {{g}}| {{X}}"));
         }
     }
 
@@ -279,8 +328,10 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
         return this.activePane;
     }
 
+    @JRecElement(key = "pane", rng = "/m/lst[/m/mach/console/pane{*}]", mimic = JRecElement.Mimic.FIELD)
+    //@JInst(tid = "pane", dom = "#{?}", rng = "/m/lst", attach = JInst.Attach.OBJ)
     public List<Pane> getAllPanes() {
-        return this.paneRoot.getAllPanes();
+        return null == this.paneRoot ? new ArrayList<>() : this.paneRoot.getAllPanes();
     }
 
     public boolean isSplitMode() {
@@ -311,6 +362,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
         // Create new pane
         final Pane newPane = new Pane(this.activePane.language(), 1000);
         newPane.setConsole(this);
+        registerPaneListener(newPane);
 
         // Create split container with active pane and new pane
         final SplitContainer container = new SplitContainer(direction, this.activePane, newPane);
@@ -331,6 +383,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
         // Switch focus to new pane
         this.activePane = newPane;
         this.requestRedraw();
+        JInst.Helper.processInst(this);
         return newPane;
     }
 
@@ -346,8 +399,8 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
 
         final Pane toClose = this.activePane;
 
-        // Find next pane to focus
-        final int currentIndex = allPanes.indexOf(toClose);
+        // Find next pane to focus — use id() comparison to avoid equals()/jvm() issues
+        final int currentIndex = indexOfPaneById(allPanes, toClose != null ? toClose.id() : -1);
         final Pane nextPane = allPanes.get((currentIndex + 1) % allPanes.size());
 
         // Remove from tree
@@ -385,7 +438,9 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
         final List<Pane> allPanes = getAllPanes();
         if (allPanes.size() <= 1) return;
 
-        final int currentIndex = allPanes.indexOf(this.activePane);
+        // Use id() comparison to avoid equals()/jvm() issues introduced by JRec changes
+        // (JRec.jvm() now creates new instLambda objects on every call, breaking Map.equals())
+        final int currentIndex = indexOfPaneById(allPanes, this.activePane != null ? this.activePane.id() : -1);
         this.activePane = allPanes.get((currentIndex + 1) % allPanes.size());
         LOG.info("focused pane {{y}}%d{{X}}", this.activePane.id());
         this.requestRedraw();
@@ -398,10 +453,30 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
         final List<Pane> allPanes = getAllPanes();
         if (allPanes.size() <= 1) return;
 
-        final int currentIndex = allPanes.indexOf(this.activePane);
+        // Use id() comparison to avoid equals()/jvm() issues introduced by JRec changes
+        final int currentIndex = indexOfPaneById(allPanes, this.activePane != null ? this.activePane.id() : -1);
         this.activePane = allPanes.get((currentIndex - 1 + allPanes.size()) % allPanes.size());
         LOG.info("focused pane {{y}}%d{{X}}", this.activePane.id());
         this.requestRedraw();
+    }
+
+    /** Wire the output-change listener onto a pane so live output triggers a content-only redraw. */
+    private void registerPaneListener(final Pane pane) {
+        pane.setOutputListener(this::onPaneOutputChanged);
+    }
+
+    /**
+     * Find the index of a pane by its integer id, avoiding {@link Object#equals} / {@code jvm()}
+     * comparisons which are unreliable for JRec subclasses (JRec.jvm() creates new lambda
+     * instances on every call, causing Map.equals to return false even for the same object).
+     *
+     * @return the index, or -1 if not found
+     */
+    private static int indexOfPaneById(final List<Pane> panes, final int id) {
+        for (int i = 0; i < panes.size(); i++) {
+            if (panes.get(i).id() == id) return i;
+        }
+        return -1;
     }
 
     /**
@@ -449,6 +524,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     public void positionCursorInActivePane() {
         if (this.activePane == null) return;
         final int[] pos = calculatePanePosition(this.activePane);
+        if (pos == null) return; // activePane not in tree yet (e.g. during split transition)
         final int promptRow = pos[0] + pos[2] - 2; // startRow + height - 2
         final int promptCol = pos[1] + 1; // startCol + 1 to skip left border
         terminal.writer().print("\u001b[" + promptRow + ";" + promptCol + "H");
@@ -508,6 +584,40 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     }
 
     /**
+     * Render only the content rows of a single pane, in-place, with no screen clear.
+     * <p>
+     * Used by {@link Pane#appendOutput} for live output so that only the changed pane's
+     * interior is rewritten — eliminating the full-screen flicker caused by
+     * {@link #renderPanes()}.  After updating content the cursor is repositioned to the
+     * active pane's prompt so JLine continues to work correctly.
+     */
+    public void renderSinglePaneContent(final Pane pane) {
+        if (!this.splitMode || pane == null) return;
+        final int[] pos = calculatePanePosition(pane);
+        if (pos == null) return;
+        pane.renderContentOnly(terminal, pos[0], pos[1], pos[2], pos[3]);
+        // Reposition cursor at active pane's prompt so JLine stays in sync
+        positionCursorInActivePane();
+    }
+
+    /**
+     * Output-change listener registered on every pane via {@link Pane#setOutputListener}.
+     * <p>
+     * Pane calls this after every {@code appendOutput}. This method owns all
+     * throttling/rendering logic — Pane itself stays free of rendering concerns.
+     */
+    private void onPaneOutputChanged(final Pane pane) {
+        if (!this.splitMode) return;
+        final long now = System.currentTimeMillis();
+        if (now - this.lastPaneRenderMs >= PANE_RENDER_THROTTLE_MS) {
+            this.lastPaneRenderMs = now;
+            renderSinglePaneContent(pane);
+        }
+        // Within the throttle window: visibleOutput() always tails the buffer, so
+        // the next unthrottled call automatically shows all lines written since.
+    }
+
+    /**
      * Render all panes to the terminal. Called when in split mode.
      */
     public void renderPanes() {
@@ -529,6 +639,11 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
 
         // Position cursor at active pane's prompt location (use dynamic calculation)
         final int[] pos = calculatePanePosition(this.activePane);
+        if (pos == null) {
+            // activePane not found in tree (race or stale ref) – flush and bail
+            terminal.writer().flush();
+            return;
+        }
         final int promptRow = pos[0] + pos[2] - 2; // startRow + height - 2
         final int promptCol = pos[1] + 1; // startCol + 1 to skip left border
         final int paneWidth = pos[3] - 2; // width - 2 for left and right borders
@@ -684,6 +799,10 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                 // Position cursor at active pane before reading input
                 this.prepareForInput();
                 final String line = this.reader.readLine(this.prompt()).trim();
+                // An empty line can result from pane-switch (Ctrl+W clears the buffer and
+                // calls accept-line to break out of readLine so the next iteration can
+                // start fresh in the new pane).  Skip evaluation entirely.
+                if (line.isEmpty()) continue;
                 if (line.equals(":connect")) {
                     Router.writeToSpace("abc", block_(MInst.instLambda((lhs, inst) -> {
                         LOG.info("HERE %s", lhs);
@@ -710,7 +829,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                             .addRow(List.of("quit", ":quit | <ctrl>+q", "exit the console"))
                             .addRow(List.of("clear", ":clear", "clear the console"))
                             .addRow(List.of("header", ":header [ |<name>]", "print random or named metatron header"))
-                            .addRow(List.of("log", ":log [ |trace|debug|info|warn|error]", "show or set log level"))
+                            .addRow(List.of("log", ":log [ |trace|debug|info|warn|error] [ |int]", "show or set log level (and target a output to a pane)"))
                             .addRow(List.of("prefix", ":prefix \"<text>\"", "prefix input with text"))
                             .addRow(List.of("postfix", ":postfix \"<text>\"", "postfix input with text"))
                             .addRow(List.of("back erase", "<alt>+k <char>", "erase buffer back to first occurrence of char"))
@@ -728,9 +847,15 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                             .addRow(List.of("grow pane", "<alt>+>", "make active pane larger"))
                             .style().headerDivider("{{[b]&w}}|").margin(0, 0, 0, 0).apply().format()).style().margin(0, 0, 0, 0).border(Border.simple.foreground("{{b}}")).apply().format());
                 } else if (line.startsWith(":log")) {
-                    if (line.substring(4).trim().isEmpty())
-                        LOG.none("log level: %s\n", LogObj.setSLF4J(""));
-                    LogObj.setSLF4J(line.substring(4));
+                    final String[] args = line.substring(4).trim().split(" ");
+                    if (line.substring(4).trim().isBlank())
+                        LOG.none("log level: %s [target pane: %s]\n", LogObj.getSLF4J(), GraphittyLogger.getDefaultTargetPane());
+                    else {
+                        LogObj.setSLF4J(args[0]);
+                        if (args.length > 1)
+                            GraphittyLogger.setDefaultTargetPane(Integer.parseInt(args[1]));
+                    }
+
                 } else if (line.startsWith(":check")) {
                     Arrays.stream(line.substring(6).trim().split(" ")).forEach(s -> {
                         if (!s.trim().isEmpty()) {
@@ -888,13 +1013,15 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                 final String current = this.reader.getBuffer().toString();
                 try {
                     final String formatted = ObjmtronSerializer.parse(current).toString();
-                    for (String line : current.split("\n")) {
-                        terminal.writer().write(Graphitty.string("{{-X-&^1}}"));
-                    }
-                    //this.reader..readLine(prompt());
+                    // Replace the buffer and let JLine's own display engine erase the old
+                    // content and draw the new.  The old manual erase loop counted actual
+                    // '\n' characters, which broke when COLUMNS < terminal width caused
+                    // the input to visually wrap across more rows than the loop knew about.
                     this.reader.getBuffer().clear();
                     this.reader.getBuffer().write(formatted);
-                } catch(final Exception e) {
+                    // Returning true signals JLine to redraw the line; no manual
+                    // erase needed since JLine tracks exact visual row count.
+                } catch (final Exception e) {
                     // do nothing (most likely unparsable buffer)
                 }
                 return true;
@@ -904,9 +1031,15 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                     () -> {
                         if (Console.this.splitMode) {
                             Console.this.nextPane();
-                            Console.this.renderPanes();
-                            // Force JLine to redraw prompt and buffer at new cursor position
-                            Console.this.redrawBuffer();
+                            // renderPanes() would move the cursor via absolute ANSI escapes,
+                            // but JLine's internal Display.cursorPos stays stale.  When JLine
+                            // redraws after the widget it moves RELATIVE to that stale position
+                            // and draws in the wrong pane.  The only reliable fix is to
+                            // terminate the current readLine() via accept-line; the REPL loop
+                            // then calls prepareForInput() → renderPanes() and starts a fresh
+                            // readLine() correctly anchored in the new active pane.
+                            this.reader.getBuffer().clear(); // don't accidentally submit partial input
+                            callWidget("accept-line");
                         }
                         return true;
                     }, ctrl('w'));
@@ -915,9 +1048,8 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                     () -> {
                         if (Console.this.splitMode) {
                             Console.this.prevPane();
-                            Console.this.renderPanes();
-                            // Force JLine to redraw prompt and buffer at new cursor position
-                            Console.this.redrawBuffer();
+                            this.reader.getBuffer().clear();
+                            callWidget("accept-line");
                         } else {
                             // Original behavior when not in split mode
                             reader.getBuffer().up();
@@ -995,8 +1127,18 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                         if (parsed.isCode()) {
                             terminal.writer().write("\n");
                             final InstSelector selector = new InstSelector(parsed.resolve(noobj()).as(), bufferText);
-                            if (selector.hasInstructions())
+                            if (selector.hasInstructions()) {
+                                // Constrain the selector to the active pane when in split mode
+                                if (Console.this.splitMode && Console.this.activePane != null) {
+                                    final int[] pos = Console.this.calculatePanePosition(Console.this.activePane);
+                                    if (pos != null) selector.setPaneBounds(pos[0], pos[1], pos[2], pos[3]);
+                                }
                                 Utilities.runCursorLessWidget(selector, true);
+                                // Restore the full pane layout after the widget closes
+                                if (Console.this.splitMode) {
+                                    Console.this.renderPanes();
+                                }
+                            }
                         }
                     } else {
                         // Original behavior: show explain widget for code
@@ -1004,7 +1146,16 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                         if (code.isCode()) {
                             terminal.writer().write("\n");
                             final Explain explain = new Explain(code.as());
+                            // Constrain the widget to the active pane when in split mode
+                            if (Console.this.splitMode && Console.this.activePane != null) {
+                                final int[] pos = Console.this.calculatePanePosition(Console.this.activePane);
+                                if (pos != null) explain.setPaneBounds(pos[0], pos[1], pos[2], pos[3]);
+                            }
                             Utilities.runCursorLessWidget(explain, true);
+                            // Restore the full pane layout after the widget closes
+                            if (Console.this.splitMode) {
+                                Console.this.renderPanes();
+                            }
                             redrawBuffer();
                         }
                     }

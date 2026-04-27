@@ -30,7 +30,9 @@ import studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.PCMonad;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.thread.AbstractThread;
 import studio.phaseshift.metatron.isa.mach.type.thread.CoreThread;
+import studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Editor;
 import studio.phaseshift.metatron.util.CommonUtil;
@@ -61,7 +63,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjFactory.M_FACTORY_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
@@ -89,9 +90,9 @@ public class machInstSet extends AbstractInstSet {
     public static final fURI MACH_MONAD_TID = MACH_ISA_TID.extend("monad");
     public static final fURI MACH_INST_TID = MACH_ISA_TID.extend("inst");
     public static final fURI LIFT_INST_TID = MACH_INST_TID.extend("lift");
-    public static final fURI MACH_VIRTUAL_THREAD_TID = MACH_ISA_TID.extend("thread").extend("virtual");
-    public static final fURI MACH_THREAD_TID = MACH_ISA_TID.extend("thread").extend("core");
-    public static final fURI MACH_CORE_THREAD_TID = MACH_ISA_TID.extend("thread").extend("core");
+    public static final fURI MACH_THREAD_TID = MACH_ISA_TID.extend("thread");
+    public static final fURI MACH_VIRTUAL_THREAD_TID = MACH_THREAD_TID.extend("virtual");
+    public static final fURI MACH_CORE_THREAD_TID = MACH_THREAD_TID.extend("core");
     public static final fURI DROP_TID = MACH_INST_TID.extend("drop");
     public static final fURI INJECT_TID = MACH_INST_TID.extend("inject"); // inj ?
     public static final fURI RING_ZERO_TID = MACH_INST_TID.extend("ring").extend("const").extend("zero");
@@ -163,6 +164,16 @@ public class machInstSet extends AbstractInstSet {
             .isaPredicate(rec(uri(f(TOOL).maybe()), T(M_ISA_INST_TID.maybeSome())))
             .create();
     public static final Type MACH_MONAD_TYPE = Type.Builder.build().tid(LST_TID).vid(MACH_MONAD_TID).create();
+    public static final Type MACH_VIRTUAL_THREAD_TYPE = Type.Builder.build()
+            .tid(MACH_THREAD_TID)
+            .vid(MACH_VIRTUAL_THREAD_TID)
+            .isaPredicate(
+                    rec(uri(CODE), T(ALL),
+                            uri(STATE).maybe().asUri(), is_(or_(eq_(uri(STOPPED)), eq_(uri(RUNNING)), eq_(uri(PAUSED)))),
+                            uri(RESULT).maybe(), T(ALL).maybeSome()))
+            .constructor(instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(MACH_VIRTUAL_THREAD_TID), lst(T(REC_TID)),
+                    (lhs, inst) -> new VirtualThread(inst.arg(0).jvm(), MACH_VIRTUAL_THREAD_TID, inst.arg(0).vid()))) // TODO: need to handle vid
+            .create();
     public static final Type MACH_CORE_THREAD_TYPE = Type.Builder.build()
             .tid(MACH_THREAD_TID)
             .vid(MACH_CORE_THREAD_TID)
@@ -170,7 +181,8 @@ public class machInstSet extends AbstractInstSet {
                     rec(uri(CODE), T(ALL),
                             uri(STATE).maybe().asUri(), is_(or_(eq_(uri(STOPPED)), eq_(uri(RUNNING)), eq_(uri(PAUSED)))),
                             uri(RESULT).maybe(), T(ALL).maybeSome()))
-            .constructor(instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(MACH_CORE_THREAD_TID), lst(T(REC_TID)), (lhs, inst) -> new CoreThread(lhs.asRec().jvm(), MACH_THREAD_TID, inst.arg(0).vid()))) // TODO: need to handle vid
+            .constructor(instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(MACH_CORE_THREAD_TID), lst(T(REC_TID)),
+                    (lhs, inst) -> new CoreThread(inst.arg(0).jvm(), MACH_CORE_THREAD_TID, inst.arg(0).vid()))) // TODO: need to handle vid
             .create();
 
 
@@ -195,7 +207,7 @@ public class machInstSet extends AbstractInstSet {
                         FACTORY_TYPE,
                         M_FACTORY_TYPE,
                         /// ////////////////////////////
-                        /// Q PROCESSORS ///////////////
+                        /// QProc PROCESSORS ///////////////
                         /// ////////////////////////////
                         /*INCRQ_TYPE,
                         CONSTQ_TYPE,
@@ -212,6 +224,7 @@ public class machInstSet extends AbstractInstSet {
                         MCP_SERVER_TYPE,
                         /// /////////////////////
                         MACH_CORE_THREAD_TYPE,
+                        MACH_VIRTUAL_THREAD_TYPE,
                         /////////////////////
                         MACH_MONAD_TYPE,
                         MACH_MACHINE_TYPE,
@@ -310,17 +323,26 @@ public class machInstSet extends AbstractInstSet {
                             else
                                 throw MTronException.of("injection larger than tuple: 1 < %d", inst.arg(0).intValue().intValue());
                         }),
-                        instC(MACH_INST_TID.extend("run").dom(MACH_CORE_THREAD_TID).rng(MACH_CORE_THREAD_TID), lst(), (lhs, inst) -> {
-                            ((CoreThread) lhs).run();
-                            return lhs;
+                        instC(MACH_INST_TID.extend("run").dom(MACH_THREAD_TID).rng(MACH_THREAD_TID), lst(), (lhs, inst) -> {
+                            final AbstractThread thread = AbstractThread.of(lhs.asRec());
+                            if (!thread.isReady())
+                                throw MTronException.of("%s is not ready: {{r}}%s{{X}}", thread.tid(), thread.state());
+                            thread.run();
+                            return thread;
                         }),
-                        instC(MACH_INST_TID.extend("stop").dom(MACH_CORE_THREAD_TID).rng(MACH_CORE_THREAD_TID), lst(), (lhs, inst) -> {
-                            ((CoreThread) lhs).stop();
-                            return lhs;
+                        instC(MACH_INST_TID.extend("stop").dom(MACH_THREAD_TID).rng(MACH_THREAD_TID), lst(), (lhs, inst) -> {
+                            final AbstractThread thread = AbstractThread.of(lhs.asRec());
+                            if (!thread.isRunning())
+                                throw MTronException.of("%s is not running: {{r}}%s{{X}}", thread.tid(), thread.state());
+                            thread.stop();
+                            return thread;
                         }),
-                        instC(MACH_INST_TID.extend("pause").dom(MACH_CORE_THREAD_TID).rng(MACH_CORE_THREAD_TID), lst(), (lhs, inst) -> {
-                            ((CoreThread) lhs).pause();
-                            return lhs;
+                        instC(MACH_INST_TID.extend("pause").dom(MACH_THREAD_TID).rng(MACH_THREAD_TID), lst(), (lhs, inst) -> {
+                            final AbstractThread thread = AbstractThread.of(lhs.asRec());
+                            if (!thread.isRunning())
+                                throw MTronException.of("%s is not running: {{r}}%s{{X}}", thread.tid(), thread.state());
+                            thread.pause();
+                            return thread;
                         }))))));
         docWrap(this, "the reflective instruction set of metatron featuring process, monad, and code introspection");
         super.setup();

@@ -28,7 +28,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TestData;
-import studio.phaseshift.metatron.furi.Q;
+import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.q.DocQTest;
 import studio.phaseshift.metatron.isa.AbstractInstSetTest;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
@@ -64,7 +64,7 @@ public class mInstSetTest extends AbstractInstSetTest {
 
     @Test
     public void testDocs() {
-        assertTrue(new mInstSet().qs().elements().anyMatch(q -> q.<Q>as().pattern().equals(f("docq"))));
+        assertTrue(new mInstSet().qs().elements().anyMatch(q -> q.<QProc>as().pattern().equals(f("docq"))));
         DocQTest.testWritingDocs(new mInstSet());
         DocQTest.analyzeDocs(new mInstSet());
 

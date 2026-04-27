@@ -18,7 +18,7 @@
 
 package studio.phaseshift.metatron.isa;
 
-import studio.phaseshift.metatron.furi.Q;
+import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.BaseQ;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
@@ -53,9 +53,9 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
         this.sjvm = sjvm;
         this.pattern = this.at(PATTERN).uriValue();
         /// //////////// BAD
-        final List<Obj> list = this.jvm().getOrDefault(uri(QSTRING), lst()).lstValue();
-        this.jvm().remove(uri(QSTRING));
-        list.forEach(q -> this.addQ(q instanceof Q ? (Q) q : new BaseQ(new HashMap<>(q.asRec().jvm()), q.asRec().tid(), q.asRec().vid())));
+        final List<Obj> list = this.jvm().getOrDefault(uri(QPROC), lst()).lstValue();
+        this.jvm().remove(uri(QPROC));
+        list.forEach(q -> this.addQ(q instanceof QProc ? (QProc) q : new BaseQ(new HashMap<>(q.asRec().jvm()), q.asRec().tid(), q.asRec().vid())));
         /// //////////// BAD
         this.ioStats = new MStats();
         LOG = Graphitty.log(this);
@@ -68,9 +68,9 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
     @Override
     public Obj read(final fURI vid) {
         // LOG.warn("reading %s => %s", vid, Space.Helper.routeFromSpace(vid, this.routes()));
-        return Q.Helper.processPreRead(this.qs(), vid).orElseGet(() -> {
+        return QProc.Helper.processPreRead(this.qs(), vid).orElseGet(() -> {
             Obj result = Space.Helper.resolveRead(this, vid, directReader());
-            return Q.Helper.processPostRead(this.qs(), vid, result).orElse(result);
+            return QProc.Helper.processPostRead(this.qs(), vid, result).orElse(result);
         });
     }
 
@@ -91,10 +91,10 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
                 return fail("space %s requires %s at document root; got %s", this.vid(), rootConstraint, obj.type());
             }
         }
-        return Q.Helper.processPreWrite(this.qs(), vid, obj)
-                .orElseGet(() -> Q.Helper.processQlessWrite(this.qs(), vid, obj).orElseGet(() -> {
+        return QProc.Helper.processPreWrite(this.qs(), vid, obj)
+                .orElseGet(() -> QProc.Helper.processQlessWrite(this.qs(), vid, obj).orElseGet(() -> {
                     Space.Helper.resolveWrite(LOG, this, vid, obj, this.directWriter(), this.directReader());
-                    return Q.Helper.processPostWrite(this.qs(), vid, obj).orElse(obj);
+                    return QProc.Helper.processPostWrite(this.qs(), vid, obj).orElse(obj);
                 }));
     }
 

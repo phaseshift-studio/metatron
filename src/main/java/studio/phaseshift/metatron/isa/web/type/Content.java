@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.web.type;
 
 import studio.phaseshift.metatron.isa.dcmnt.schema.storage.ObjBSONSerializer;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Str;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
@@ -190,6 +191,19 @@ public class Content {
             if (this.isShell()) return ObjPlainTextSerializer.single();
             if (this.isPlain()) return ObjPlainTextSerializer.single();
             return null;
+        }
+
+        public Obj exec(final Str source) {
+            if (this.isShell()) {
+                try {
+                    Runtime.getRuntime().exec(new String[]{source.strValue()});
+                } catch (final IOException e) {
+                    throw MTronException.of(e);
+                }
+            } else if (this.isMtron()) {
+                return ObjmtronSerializer.parse(source.strValue());
+            }
+            throw MTronException.of("no exec for %s", this.value);
         }
 
         public boolean hasSerializer() {

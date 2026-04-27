@@ -32,7 +32,7 @@ import java.util.*;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.Q.Q_TYPE;
+import static studio.phaseshift.metatron.furi.QProc.QPROC_TYPE;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.*;
@@ -208,7 +208,7 @@ public class mInstSet extends AbstractInstSet {
             .vid(SPACE_TID)
             .isaPredicate(rec(
                     uri(PATTERN), URI_TYPE,
-                    uri(QSTRING).maybe(), lst(Q_TYPE),
+                    uri(QPROC).maybe(), lst(QPROC_TYPE),
                     uri(ROOT).maybe(), T(TYPE_TID),     // nominal-only: avoids structural recursion in Type
                     uri(SCHEMA).maybe(), T(INSTSET_TID) // nominal-only: avoids structural recursion in InstSet
             )).create();
@@ -323,14 +323,14 @@ public class mInstSet extends AbstractInstSet {
                                 "2.to(a).plus(from(a))     [-- 4 via writing/reading a         --]",
                                 "a->2+*a                   [-- 4 via sugar'd writing/reading a --]"),
                         META_SPACE_TYPE,
-                        docWrap(Q_TYPE, """
-                                        qprocs (query processors) are optional space components.
-                                        qproc behaviors are driven by a qprocs specified uri ?-query pattern.
-                                        not all spaces have the same set of attached qprocs.
-                                        qprocs must be attached to a space before use. a space's qprocs are accessible at
-                                        
-                                             \\(\\texttt{*space/vid/q => lst[q]::T}\\)
-                                        """),
+                        docWrap(QPROC_TYPE, """
+                                            qprocs (query processors) are optional space components.
+                                            qproc behaviors are driven by a qprocs specified uri ?-query pattern.
+                                            not all spaces have the same set of attached qprocs.
+                                            qprocs must be attached to a space before use. a space's qprocs are accessible at
+                                            
+                                                 \\(\\texttt{*space/vid/qProc => lst[qProc]::T}\\)
+                                            """),
                         /// ///////////////////////////////////
                         docWrap(SUBQ_TYPE, """
                                            uri publish-subscribe qproc.

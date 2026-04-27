@@ -68,6 +68,7 @@ public class SpaceChatMemoryStore implements ChatMemoryStore {
     @Override
     public void updateMessages(final Object memoryId, final List<ChatMessage> messages) {
         final String json = messagesToJson(messages);
+        messages.getFirst().type();
         final Obj obj = ObjSimpleJSONSerializer.parse(json);//.as(OLLM_AI_MEMORY);
         LOG.debug("updating messages for %s: %s", memoryId, obj);
         obj.vid((fURI) memoryId); // TODO: type them memory and user/ai memory

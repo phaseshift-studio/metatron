@@ -108,11 +108,15 @@ public class fsSpace extends AbstractSpace<FileSystem> {
     }
 
     /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    public Obj fileToObj(final File file) {
+    public Obj fileToObj(final File file, final Map<String, String> qMap) {
         try {
             if (file.exists()) {
                 if (file.isFile()) {
-                    Content.ContentType contentType = Content.ContentType.fromProbe(file, Content.ContentType.APPLICATION_MTRON);
+                    Content.ContentType contentType = qMap.containsKey("content_type") ?
+                            Content.ContentType.of(qMap.get("content_type")) :
+                            Content.ContentType.fromProbe(file, null);
+                    contentType = null == contentType ? 
+                            Content.ContentType.fromExtension(file.getName(), Content.ContentType.APPLICATION_MTRON) : contentType;
                     final FileInputStream fs = new FileInputStream(file);
                     byte[] fileBytes = fs.readAllBytes();
                     fs.close();
@@ -138,8 +142,6 @@ public class fsSpace extends AbstractSpace<FileSystem> {
 
     public Obj objToFile(final fURI vid, final Obj obj) {
         try {
-            //if (!file.isFile())
-            //   throw MTronException.of("not a file: %s", file);
             final Content.ContentType contentType = Content.ContentType.fromType(obj, Content.ContentType.APPLICATION_MTRON);
             final File file = new File(this.redirect(vid, true).toString());
             LOG.info("writing %s to %s", obj, file.getPath());
@@ -183,7 +185,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
                                 })
                                 .collect(Collectors.toMap(p -> Space.Helper.routeFromSpace(f(p.toString()), this.routes()), p -> {
                                     final File file = p.toFile();
-                                    return fileToObj(file);
+                                    return fileToObj(file, key.qMap());
                                 }, Obj::append, LinkedHashMap::new))
                                 .entrySet()
                                 .stream()
@@ -205,7 +207,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
                                         throw MTronException.of("file permissions prevent execution of %s", toExec);
                                     return this.internalApply(toExec, inst.args());
                                 }) :
-                                this.fileToObj(file)));
+                                this.fileToObj(file, key.qMap())));
                     } catch (final Exception e) {
                         throw MTronException.of(e);
                     }

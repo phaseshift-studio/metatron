@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.mach.type.thread;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.type.MThread;
 
@@ -28,18 +29,44 @@ import java.util.Map;
 import static studio.phaseshift.metatron.Tokens.STATE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_CORE_THREAD_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public abstract class AbstractThread extends MRec implements MThread {
-    
+
     public AbstractThread(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
-        this.at(STATE,auto_(()-> this.at(STATE).orElse(uri("stopped"))));
+        this.at(STATE, auto_(() -> this.at(STATE).orElse(uri("stopped"))));
     }
-    
+
     public thread_state state() {
-        return thread_state.valueOf(this.at(STATE).orElse(uri("stopped")).uriValue().toString());
+        return this.at(STATE).isNoObj() ? thread_state.ready : thread_state.valueOf(this.at(STATE).orElse(uri("stopped")).uriValue().toString());
     }
+
+    public static <T extends AbstractThread> T of(final Rec thread) {
+        if (thread instanceof AbstractThread)
+            return (T) thread;
+        return (T) (thread.tid().equals(MACH_CORE_THREAD_TID) ?
+                new CoreThread(thread.jvm(), thread.tid(), thread.vid()) :
+                new VirtualThread(thread.jvm(), thread.tid(), thread.vid()));
+    }
+
+    public boolean isReady() {
+        return this.state().equals(thread_state.ready);
+    }
+
+    public boolean isRunning() {
+        return this.state().equals(thread_state.running);
+    }
+
+    public boolean isPaused() {
+        return this.state().equals(thread_state.paused);
+    }
+
+    public boolean isStopped() {
+        return this.state().equals(thread_state.stopped);
+    }
+
 }

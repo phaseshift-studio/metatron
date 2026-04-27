@@ -25,12 +25,12 @@ import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.impl.*;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.PCMonad;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.web.type.Content;
 import studio.phaseshift.metatron.util.*;
 
 import java.nio.ByteBuffer;
@@ -176,7 +176,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     }
 
     default Type type() {
-        return T(this.tid()); // null == Router.global() || this.isInst() ? MType.of(this.tid()) : Router.global().read(this.tid()).orElse(MType.of(this.tid()));
+        return this.isType() ? T(this.vid()) : T(this.tid()); // null == Router.global() || this.isInst() ? MType.of(this.tid()) : Router.global().read(this.tid()).orElse(MType.of(this.tid()));
     }
 
     <O extends Obj> O clone(final Object jvm, final fURI tid, final fURI vid);
@@ -248,6 +248,19 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
 
     default Obj apply() {
         return this.apply(noobj());
+    }
+
+    default boolean testByID(final Obj rhs) {
+        Type rhsType = rhs.isType() ? rhs.asType() : rhs.type();
+        Type current = this.isType() ? this.asType() : this.type();
+        while (true) {
+            if (current.vid().test(rhsType.vid()))
+                return true;
+            if (current.isBaseType())
+                break;
+            current = current.parentType();
+        }
+        return false;
     }
 
     default boolean test(final Obj rhs) {
@@ -1008,8 +1021,12 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                         MTronException.wrap(() -> new Thread(() -> inst.arg(0).apply(lhs)).start());
                         return lhs;
                     }),
-                    docWrap(instC(SOURCE_INST_TID.dom(A.maybe()).rng(B.maybeSome()), lst(T(STR_TID)), (lhs, inst) -> mParser.eval(inst.arg(0).strValue())),
-                            "maybe an obj", "result of evaluating mtron source code", Map.of(jnt(0), "the mtron source code to evaluate"), "evaluates mtron source code"),
+                    docWrap(instC(SOURCE_INST_TID.dom(A.maybe()).rng(B.maybeSome()), lst(STR_TYPE), (lhs, inst) -> {
+                                final Str source = inst.arg(0).asStr();
+                                final Content.ContentType contentType = Content.ContentType.fromType(source, Content.ContentType.APPLICATION_MTRON);
+                                return contentType.exec(source);
+                            }),
+                            "maybe an obj", "result of evaluating source code", Map.of(jnt(0), "the source code to evaluate"), "evaluates source code"),
                     instC(TYPE_INST_TID.dom(TYPE_TID).rng(TYPE_TID), lst(), (lhs, inst) -> lhs.type()),
                     docWrap(instC(TYPE_INST_TID.dom(A).rng(TYPE_TID), lst(), (lhs, inst) -> lhs.type()),
                             "any obj", "the lhs obj type", Map.of(), "the type of the lhs obj",
@@ -1072,7 +1089,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                                         kv.getValue().asLst().at(0).apply(kv.getValue().asLst().at(jnt(1)))))  // compute barriered value
                                 .collect(new CommonUtil.RecCollector());
                     }),
-                    docWrap(instC(EVAL_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> inst.arg(0)),
+                    docWrap(instC(EVAL_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL)), (lhs, inst) -> inst.arg(0)),
                             "can be any obj", "the result of applying the lhs to the arg", Map.of(jnt(0), "the mtron obj to evaluate"), "evaluates an mtron obj"),
                     instC(SWAP_TID.dom(A).rng(A), lst(T(B)), (lhs, inst) -> lhs.apply(inst.arg(0))),
                     instC(RSHIFT_INST_TID.dom(A).rng(B.maybeSome()), lst(T(C.maybeSome())), (lhs, inst) -> {

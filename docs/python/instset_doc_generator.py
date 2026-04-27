@@ -246,7 +246,7 @@ class InstInfo:
 
 @dataclass
 class QInfo:
-    """Information about a q proc."""
+    """Information about a qProc proc."""
     vid: str
     name: str
     raw: str = ""
@@ -479,10 +479,10 @@ class InstSetDocFetcher:
         return spaces
 
     async def _fetch_q(self, vid: str) -> List[QInfo]:
-        """Fetch all q processors defined by this instruction set."""
+        """Fetch all qProc processors defined by this instruction set."""
         qs = []
         try:
-            entries = await self.client.eval_doc(f"*{vid}/space/q/+/")
+            entries = await self.client.eval_doc(f"*{vid}/space/qProc/+/")
             for entry in entries:
                 # Entry format: /path/to/space=>...
                 if "=>" in entry:
@@ -495,7 +495,7 @@ class InstSetDocFetcher:
                     # Fetch documentation
                     q_info.docs = await self.client.fetch_obj_doc(q_vid)
                     qs.append(q_info)
-                    logger.debug(f"  Found q: {q_vid}")
+                    logger.debug(f"  Found qProc: {q_vid}")
         except Exception as e:
             logger.warning(f"Could not fetch qs for {vid}: {e}")
         return qs

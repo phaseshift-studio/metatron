@@ -120,7 +120,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
             return Poly.super.test(rhs);
         }
     }
-    
+
     default Rec at(final Obj key, final Obj value, final BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {
         if (key.isUri()) {
             final fURI k = key.uriValue();
@@ -146,7 +146,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
         else {
             //if (key.uriValue().isEmpty())
             //   return this.c(c -> c.mult(key.c())).as();
-            if(key.uriValue().segmentLength() == 0)
+            if (key.uriValue().segmentLength() == 0)
                 return (OBJ) noobj();
             final boolean singleSegment = key.uriValue().segmentLength() == 1;
             //   System.out.println("%s %b".formatted(key,singleSegment));
@@ -218,7 +218,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
     default Rec selfVID(final fURI vid) {
         return (Rec) Poly.super.selfVID(vid);
     }
-    
+
     @Override
     default Obj append(final Obj obj) {
         if (obj.isNoObj())
@@ -244,11 +244,11 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
                 jvm.remove(noobj());
                 jvm.entrySet().stream().filter(e -> e.getValue() == null || e.getValue().isNoObj()).map(Map.Entry::getKey).toList().forEach(jvm::remove);
             } catch (final UnsupportedOperationException e) {
-               LOG.error(e);
+                LOG.error("underlying jvm object is immutable: %s", jvm.getClass().getName().toLowerCase());
             }
             return jvm;
         }
-        
+
         public static Obj rshiftRec(final Rec lhs, final Inst inst) {
             return inst.arg(0).isNoObj() ? objs(lhs.asRec().valueElements()) : objs(inst.arg(0).stream().map(k -> lhs.asRec().at(k)));
         }
@@ -274,8 +274,8 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
                             furi = furi.path(lhsRec.at(PATH).asLst().elements().map(Obj::uriValue).map(fURI::toString).filter(s -> !s.isEmpty()).collect(Collectors.joining("/")));
                         if (lhsRec.has(C))
                             furi = furi.c(cInt.of(cInt.of(lhsRec.at("c/min").asInt().intValue(), lhsRec.at("c/max").asInt().intValue()).toString()));
-                        //if (lhsRec.has(Q))
-                        //  furi = furi.qMap(lhsRec.at(Q).asRec().elements().map(e -> Tuple.Pair.with(e.first().toCleanString(), e.second().toCleanString())).map(p -> Tuple.Pair.<String, String>with(p.get0(), p.get1())).collect(Collectors.toMap(Tuple.Pair::get0, Tuple.Pair::get1)));
+                        //if (lhsRec.has(QProc))
+                        //  furi = furi.qMap(lhsRec.at(QProc).asRec().elements().map(e -> Tuple.Pair.with(e.first().toCleanString(), e.second().toCleanString())).map(p -> Tuple.Pair.<String, String>with(p.get0(), p.get1())).collect(Collectors.toMap(Tuple.Pair::get0, Tuple.Pair::get1)));
                         return uri(furi);
                     }),
                     instC(ZERO_INST_TID.dom(REC_TID).rng(REC_TID), lst(), (lhs, inst) -> lhs.asRec().zero()),
@@ -293,7 +293,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
                     //instC(MERGE_INST_TID.dom(REC_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> inst.arg(0).<Rec>as().plus(lhs.as())),//objs(lhs.elementStream())),
                     instC(DOM_INST_TID.dom(REC_TID).rng(A.maybeSome()), lst(), (lhs, inst) -> objs(lhs.asRec().elements().map(Rel::first))),
                     instC(RNG_INST_TID.dom(REC_TID).rng(A.maybeSome()), lst(), (lhs, inst) -> objs(lhs.asRec().elements().map(Rel::second))),
-                   // instC(RSHIFT_INST_TID.dom(REC_TID).rng(A.maybeSome()), lst(T(ALL.maybeSome())), (lhs, inst) -> objs(inst.arg(0).orElse((Obj) uri("+")).stream().map(k -> lhs.asRec().at(k)))),
+                    // instC(RSHIFT_INST_TID.dom(REC_TID).rng(A.maybeSome()), lst(T(ALL.maybeSome())), (lhs, inst) -> objs(inst.arg(0).orElse((Obj) uri("+")).stream().map(k -> lhs.asRec().at(k)))),
                     instC(LSHIFT_INST_TID.dom(REC_TID).rng(A.maybeSome()), lst(), (lhs, inst) -> lhs.parent()),
                     instC(PLUS_INST_TID.dom(REC_TID).rng(REC_TID), lst(T(REC_TID.maybeMaybe())), (lhs, inst) -> lhs.jvm(lhs.asRec().plus(inst.arg(0).asRec()).recValue())),
                     instC(MPLUS_INST_TID.dom(REC_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> inst.arg(0).<Rec>as().elements().map(Obj::<Obj>as).reduce(lhs.<Rec>as(), (a, b) -> a.<Rec>as().at(((Rel) b).first(), ((Rel) b).second(), MUTABLE))),

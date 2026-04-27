@@ -204,7 +204,7 @@ public class mModel extends MRec {
                         if (t.tid().equals(MCP_SERVER_TID)) {
                             service.toolProvider(McpToolProvider.builder().mcpClients(((mMCPServer) t).client()).build()).executeToolsConcurrently(BootLoader.getExecutor());
                         } else if (t.isObjInst()) {
-                            if (QCollection.isNoDocs(Router.readFromSpace(t.tid().addQ(DOCQ))))
+                            if (QCollection.isNoDocs(Router.global().read(t.tid().addQ(DOCQ))))
                                 t.logger().warn("ignoring inst as it has no associated ?docq: %s", t);
                             else {
                                 final Tuple.Pair<ToolSpecification, ToolExecutor> pair = mTool.mtronInstToolSpecification(mTool.mtronInstToTool(t.asInst()));

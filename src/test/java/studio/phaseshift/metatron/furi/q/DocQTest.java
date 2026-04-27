@@ -20,7 +20,7 @@ package studio.phaseshift.metatron.furi.q;
 
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
-import studio.phaseshift.metatron.furi.Q;
+import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
@@ -106,7 +106,7 @@ public class DocQTest extends AbstractMetatronTest {
     }
 
     public static void testWritingDocs(final Space space) {
-        assertTrue(space.qs().elements().anyMatch(q -> q.<Q>as().pattern().equals(f(DOCQ))));
+        assertTrue(space.qs().elements().anyMatch(q -> q.<QProc>as().pattern().equals(f(DOCQ))));
         final fURI baseURI = space.pattern().retractPattern();
         for (final Obj obj : List.of(
                 jnt(10),
