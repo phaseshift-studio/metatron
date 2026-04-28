@@ -2769,7 +2769,7 @@ ultimately dependent on the incoming lhs <code>obj</code>, where</p>
 <button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
 <h2 id="_large_language_models" class="discrete">Large Language Models</h2>
 <div class="paragraph">
-<p>Modern AI techniques are heavily leveraged across various aspects of metatron, with popular cloud service providers (e.g. <a href="https://www.anthropic.com/">Anthropic</a> and/or <a href="https://openai.com/">OpenAI</a>) and local providers (e.g. <a href="https://ollama.com/">Ollama</a>/http://localai.io[LocalAI]) serving as the compute-intensive inferencing backends.</p>
+<p>Modern AI techniques are heavily leveraged across various aspects of metatron, with popular cloud service providers (e.g. <a href="https://www.anthropic.com/">Anthropic</a> and/or <a href="https://openai.com/">OpenAI</a>) and local providers (e.g. <a href="https://ollama.com/">Ollama</a> and/or <a href="http://localai.io">LocalAI</a>) serving as the compute-intensive inferencing backends.</p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
@@ -2791,6 +2791,9 @@ ultimately dependent on the incoming lhs <code>obj</code>, where</p>
 </li>
 <li>
 <p><strong>skills</strong>: an LLM can be trained on a wide range of skills and domains, allowing them to perform complex tasks and solve domain-specific problems. Skills can be pulled from the Anthropic-designed <code>.agent</code> directory that has a corresponding <code>SKILL.md</code> file and associated resources. Or, can be created programmatically in metaron.</p>
+</li>
+<li>
+<p><strong>notes</strong>: pass information to an LLM during a chat iteration without interrupting them. LLMs will periodically check their note stack for any advice/information from the user about their task at hand.</p>
 </li>
 <li>
 <p><strong>prompts</strong>: specific prompts or instructions can be stored and retrieved to help guide an LLM&#8217;s response.</p>
@@ -2834,7 +2837,7 @@ ultimately dependent on the incoming lhs <code>obj</code>, where</p>
  provider=&gt; !*/sys/space/ollama,
  name    =&gt; llava:latest,
  skill   =&gt;[completion,vision],
- size    =&gt; gB::4.4083]@ollama:llava:latest}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/38044</code></pre>
+ size    =&gt; gB::4.4083]@ollama:llava:latest}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/38068</code></pre>
 </div>
 </div>
 <h3 id="_llm_interactions" class="discrete">llm interactions</h3>
@@ -2870,7 +2873,7 @@ ai -> *ollama:+/+                                             /
    /m/math/mB/ctor?mB&lt;=#{?}(#::T)]@/m/math/mB,data_size::T[][
    /m/math/gB/ctor?gB&lt;=#{?}(#::T)]@/m/math/gB,data_size::T[][
    /m/math/tB/ctor?tB&lt;=#{?}(#::T)]@/m/math/tB,data_size::T[][
-   /m/math/pB/ctor?pB&lt;=#{?}(#::T)]@/m/math/pB}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/38046</code></pre>
+   /m/math/pB/ctor?pB&lt;=#{?}(#::T)]@/m/math/pB}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/38070</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -2987,20 +2990,20 @@ mtron&gt; tB::1.0.as(mB::T)      ​3​
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *robotron.chat('what tools do you have access to?',
                    [number_of_tools=&gt;int::T,tool_names=&gt;str::T])         ​1​
 ==&gt;[
- number_of_tools=&gt; 2,
- tool_names     =&gt; 'mtron, read_skill_resource']
+ number_of_tools=&gt; 6,
+ tool_names     =&gt; 'functions.m_inst_eval, functions.read_skill_resource, functions.activate_skill, multi_tool_use.parallel']
 mtron&gt; *robotron.chat('what skills do you have?')                        ​2​
-==&gt;"""I have access to the following skills:
+==&gt;"""I have access to the following skill:
 
-1. **mtron**: This skill provides metatron knowledge to assist users."""
+1. **Metatron (mtron)**: This skill provides metatron knowledge to assist users."""
 mtron&gt; *robotron&gt;&gt;memory                                                 ​3​
 ==&gt;[
  mem=&gt; !*&lt;local:.agent/robotron/memory&gt;,
  max=&gt; 20]
 mtron&gt; *robotron&gt;&gt;memory/mem/2/attributes/format                         ​4​
 ==&gt;[
- number_of_tools=&gt; 2,
- tool_names     =&gt; 'mtron, read_skill_resource']</code></pre>
+ number_of_tools=&gt; 6,
+ tool_names     =&gt; 'functions.m_inst_eval, functions.read_skill_resource, functions.activate_skill, multi_tool_use.parallel']</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3186,8 +3189,176 @@ mtron&gt; *robotron.chat('what is 6 + 23?',[answer=&gt;int::T])
               .&gt;&gt;answer
               .-&lt;|[?&gt;23 =&gt; print('a big answer'),
                       _ =&gt; print('a small answer')].&gt;&gt;.mult(1000)                         ​2​
-==&gt;fail::[error during TOOLING: java.lang.IllegalArgumentException: messages cannot be null or empty][...]@/sys/fail/65066
-mtron&gt; *&lt;local:.agent/robotron/memory&gt;                                                    ​3​</code></pre>
+==&gt;fail::[error during TOOLING: dev.langchain4j.exception.InvalidRequestException: {
+  "error": {
+    "message": "Invalid parameter: messages with role 'tool' must be a response to a preceeding message with 'tool_calls'.",
+    "type": "invalid_request_error",
+    "param": "messages.[0].role",
+    "code": null
+  }
+}][...]@/sys/fail/59686
+mtron&gt; *&lt;local:.agent/robotron/memory&gt;                                                    ​3​
+==&gt;[[
+     id        =&gt;   call_y5An2PbBk5df5pbKFEg19ybL,
+     toolName  =&gt;   activate_skill,
+     contents  =&gt;[[
+           text=&gt;      """# mtron assistance
+
+Help users be effective with metatron: answering questions, connecting data sources, writing expressions, providing statistics.
+
+**Tip:** "metatron" (always lower cased) refers to the system environment while, while "mtron" (always lower cased) refers to the functional programming language used to manipulate the metatron environment. (analogous to the JVM and Java).
+
+## Using the metatron MCP Server or WebSocket Client
+
+Execute mtron expressions via the `eval-mcp-metatron` tool:
+
+```
+Tool: eval-mcp-metatron
+Parameter: code = "&lt;your mtron expression&gt;"
+```
+
+Examples:
+```mcp
+mtron_eval("*/sys/space/+/")                     [-- list spaces --]
+mtron_eval("*/sys/console/history")              [-- get history --]
+mtron_eval("*acme:customers.*(_).take(5)")       [-- query data  --]
+```
+
+If the MCP server is not available, you can use the script `scripts/mtron_ws_client.py`.
+
+Examples::
+```python
+from mtron_ws_client import mtronWebSocketClient
+client = mtronWebSocketClient(host="&lt;the users metatron websocket endpoint&gt;")
+result = client.eval(code="&lt;an mtron expression&gt;")
+```
+
+Either of the two `eval()` options above can be used for **all** mtron expression execution — reads, writes, queries, introspection, etc.
+
+## Step 1: Gather Context
+
+```mtron
+*/sys/space/+/                                    # List user's spaces
+*/sys/space/${space}                              # View space config (pattern, route, etc.)
+*/sys/console                                     # Console info (version, etc.)
+*/sys/console/history                             # User's command history (structured: time, entry)
+```
+
+### Important Concepts
+
+#### Space Patterns
+
+Each space has a `pattern` (what URIs it handles) and `route` (how URIs map internally).
+Don't assume prefixes — discover them from the space config first.
+
+#### Dereferencing URIs
+
+To retrieve the objs at a particular URI, simply dereference the URI with the `*` (`from()`) instruction. Note that URIs support MQTT-style wildcard semantics (e.g. `+` (single-level) and `#` (multi-level) wildcards). Also, if the dereferenced URI has a trailing `/`, the result is a stream of relations `uri=&gt;obj`. If no trailing `/` exists, then the result is just a stream of `obj` (same obj data in both situations save the trailing `/` usage provides the uri of the obj as well).
+
+```mtron
+*/path/to/obj/  # returns stream of uri=&gt;obj
+*/path/to/obj   # returns stream of obj
+```
+
+#### Walking/Traversing URI Spaces (Tree Navigation)
+
+URIs in mtron form a tree structure. To traverse this tree programmatically (e.g., for building a tree browser or exploring a space):
+
+**Key Concepts:**
+- **Node URI** (no trailing `/`): Points to an obj attached at that location
+- **Branch URI** (trailing `/`): Returns a `uri=&gt;obj` relation for all matches
+- **`&lt;&lt;` (left-shift)**: Applied to a relation, returns just the keys (URIs)
+- **`+` wildcard**: Matches exactly one path segment (breadth-first expansion)
+
+**Breadth-First Tree Traversal Pattern:**
+
+```mtron
+*/m/.&lt;&lt;                    # Get URI at exact path → /m
+*/m/+/.&lt;&lt;                  # Get direct children → {/m/bool, /m/int, /m/str, ...}
+*/m/+/+/.&lt;&lt;                # Get grandchildren → {/m/mach/info, /m/web/route, ...}
+*/m/str/+/.&lt;&lt;              # Children of specific node → {/m/str/split, /m/str/join, ...}
+```
+
+**For JSON output (useful for web clients):**
+
+```mtron
+*/m/+/.&lt;&lt;.as(json_str::T)  # Returns: {'/m/bool', '/m/int', '/m/str', ...}
+```
+
+**Why this works:**
+1. `*/path/+/` - dereferences all URIs one level below `path`, returning `uri=&gt;obj` relations
+2. `.&lt;&lt;` - extracts just the keys (URIs) from those relations
+3. Result is a set of child URIs that can be used for the next level of expansion
+
+**Scheme-based URIs work the same way:**
+
+```mtron
+*local:software/+/.&lt;&lt;      # Children under local:software/
+*netflix:movie/+/.&lt;&lt;       # Children under netflix:movie/
+```
+
+**Depth-first (all descendants):**
+
+```mtron
+*/m/#/.&lt;&lt;                  # All URIs at any depth under /m (use with caution - can be large)
+```
+
+#### Obj Documentation
+
+Any obj can have documentation. Use `?docq` suffix to retrieve it:
+```mtron
+*/path/to/obj           # the obj referred to by the uri
+*/path/to/obj?docq      # documentation associated with the obj (dom, rng, args, desc, examples)
+```
+
+This is useful for learning about instructions.
+
+```mtron
+*from
+```
+
+## Step 2: Load Reference (one only)
+
+| Goal | Reference |
+|------|-----------|
+| Questions | [answer-questions.md](references/answer-questions.md) |
+| Data sources | [connecting-datasources.md](references/connecting-datasources.md) |
+| Expressions | [writing-mtron-expressions.md](references/writing-mtron-expressions.md) |
+| Statistics | [providing-data-statistics.md](references/providing-data-statistics.md) |
+
+**Load only the relevant reference file, not all.**
+
+## Step 3: Confirm Plan (if needed)
+
+Required for: writes, expensive reads, or destructive operations.
+
+```
+I'll help you &lt;goal&gt;. Steps:
+1. &lt;step&gt; [complexity: low|medium|high]
+2. &lt;step&gt; [complexity: low|medium|high]
+
+Proceed?
+```
+
+## Step 4: Execute
+
+1. Run expressions
+2. Validate results after each step
+3. On errors: explain + propose alternatives
+4. Iterate as needed
+
+## Step 5: Summarize
+
+```
+Done. Summary:
+- What was done: &lt;actions&gt;
+- Results: &lt;outcomes&gt;
+- Suggestions: &lt;next steps&gt;
+```""",
+           type=&gt;      &lt;TEXT&gt;]],
+     isError   =&gt;   false,
+     attributes=&gt;[activated_skill=&gt;mtron],
+     type      =&gt;   &lt;TOOL_EXECUTION_RESULT&gt;]]@&lt;local:.agent/robotron/memory&gt;</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3263,7 +3434,7 @@ mtron&gt; *&lt;local:.agent/robotron/memory&gt;                                 
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; 1.plus(b).plus(3).mult(5)
-==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/85160</code></pre>
+==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/79782</code></pre>
 </div>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
@@ -3325,7 +3496,7 @@ mtron&gt; *&lt;local:.agent/robotron/memory&gt;                                 
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; 1.plus(b)                  ​1​
-==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/85220
+==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/79842
 mtron&gt; */sys/fail/+               ​2​
 mtron&gt; */sys/fail/+.catch(_)      ​3​
 mtron&gt; */sys/fail                 ​4​</code></pre>
@@ -3423,15 +3594,15 @@ mtron&gt; 1+b.catch(cause())     ​2​
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; [-- refining int::T --]
 mtron&gt; 4.as(int::T[?&gt;0]@nat)
 ==&gt;fail::[rhs does not match inst range:
-	'4'=&gt;(X=&gt;int::T)][...]@/sys/fail/67022
+	'4'=&gt;(X=&gt;int::T)][...]@/sys/fail/61642
 mtron&gt; -4.as(nat::T)
 ==&gt;fail::[rhs does not match inst range:
-	'-4'=&gt;(X=&gt;int::T)][...]@/sys/fail/68714
+	'-4'=&gt;(X=&gt;int::T)][...]@/sys/fail/63334
 mtron&gt; [-- refining rec::T  --]
 mtron&gt; [name=&gt;'snowbutt',age=&gt;7].as(rec::T[?[name=&gt;str::T,age=&gt;int::T]@chicken)
 ==&gt;fail::[[name=&gt;'snowbutt',age=&gt;7].as(rec::T[?[name=&gt;str::T,age=&gt;int::T]@chicken)
                           ^ end of input expected
-][...]@/sys/fail/68716
+][...]@/sys/fail/63336
 mtron&gt; [name=&gt;'punky',age=&gt;'four'].as(chicken::T)
 ==&gt;'{"name":"punky","age":"four"}'</code></pre>
 </div>
@@ -3484,15 +3655,15 @@ mtron&gt; nat::-2                                               ​4​
 ==&gt;nat::2
 mtron&gt; 2.as(nat::T)                                          ​5​
 ==&gt;fail::[rhs does not match inst range:
-	'2'=&gt;(X=&gt;int::T)][...]@/sys/fail/72202
+	'2'=&gt;(X=&gt;int::T)][...]@/sys/fail/66822
 mtron&gt; -2.as(nat::T)                                         ​6​
 ==&gt;fail::[rhs does not match inst range:
-	'-2'=&gt;(X=&gt;int::T)][...]@/sys/fail/73894
+	'-2'=&gt;(X=&gt;int::T)][...]@/sys/fail/68514
 mtron&gt; nat::2 * -1                                           ​7​
 ==&gt;fail::[nat::-2 is not a int::T[is(gt(0))][
    choose([
      is(lt(0))=&gt;   mult(-1),
-     id()     =&gt;   id()]).rshift()]][...]@/sys/fail/73900</code></pre>
+     id()     =&gt;   id()]).rshift()]][...]@/sys/fail/68520</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3519,7 +3690,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in <strong class="orange">m</strong><span class="fuchsia">e</span><strong class="aqua">T</strong><span class="red">A</span>[blue]<mark>T</mark><strong class="green">R</strong>[lime]<strong>O</strong><span class="yellow">n</span>.</p>
+This is the foundation for all other <code>objs</code> in <strong class="green">M</strong><span class="fuchsia">e</span>[orange]<mark>t</mark>[lime]<mark>A</mark><strong class="yellow">T</strong>[red]<strong>R</strong><span class="aqua">O</span>[blue]<mark>N</mark>.</p>
 </div>
 <h4 id="_cascading_type_constructions" class="discrete">cascading type constructions</h4>
 <h3 id="_mono_types" class="discrete">mono types</h3>
@@ -3613,7 +3784,7 @@ mtron&gt; a/b/c * d/e/f      ​6​
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; 'Hello'.as(bytes::T)        ​1​
 ==&gt;0x48656c6c6f
 mtron&gt; bytes::'48656c6c6f'         ​2​
-==&gt;fail::['48656c6c6f' is not a bytes::T][...]@/sys/fail/75692</code></pre>
+==&gt;fail::['48656c6c6f' is not a bytes::T][...]@/sys/fail/70312</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3637,13 +3808,13 @@ mtron&gt; bytes::'48656c6c6f'         ​2​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; kB::1024.as(mB::T)          ​1​
-==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/75708
+==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/70328
 mtron&gt; mB::1.as(kB::T)             ​2​
-==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/75724
+==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/70344
 mtron&gt; gB::5.as(mB::T)             ​3​
-==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/75740
+==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/70360
 mtron&gt; pB::1.as(tB::T)             ​4​
-==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/75756</code></pre>
+==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/70376</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3675,13 +3846,13 @@ mtron&gt; pB::1.as(tB::T)             ​4​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; mB::1024.eq(gB::1)          ​1​
-==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/75772
+==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/70392
 mtron&gt; kB::1024.eq(mB::1)          ​2​
-==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/75788
+==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/70408
 mtron&gt; gB::2.eq(mB::2048)          ​3​
-==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/75804
+==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/70424
 mtron&gt; tB::1.eq(gB::1024)          ​4​
-==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/75820</code></pre>
+==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/70440</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3890,13 +4061,13 @@ mtron&gt; [1,2,3].plus([4,5])         ​2​
     5]
 mtron&gt; [1,2,3].merge()             ​3​
 ==&gt;fail::[rhs does not match inst range:
-	{1,2,3}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/75822
+	{1,2,3}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/70442
 mtron&gt; [a=&gt;1,b=&gt;2].dom()           ​4​
 ==&gt;fail::[rhs does not match inst range:
-	{a,b}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/75824
+	{a,b}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/70444
 mtron&gt; [a=&gt;1,b=&gt;2].rng()           ​5​
 ==&gt;fail::[rhs does not match inst range:
-	{1,2}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/75826
+	{1,2}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/70446
 mtron&gt; [a=&gt;1,b=&gt;2,c=&gt;3].select([a=&gt;_,b=&gt;_])  ​6​
 ==&gt;[a=&gt;1,b=&gt;2]</code></pre>
 </div>
@@ -4067,11 +4238,11 @@ mtron&gt; *result                                                   ​3​
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; nums -&gt; {1,2,3,4,5}                                       ​1​
 ==&gt;fail::[rhs does not match inst range:
-	{1,2,3,4,5}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/75828
+	{1,2,3,4,5}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/70448
 mtron&gt; filtered -&gt; *nums-&lt;[?&gt;3 =&gt; _, _ =&gt; noobj]&gt;&gt;               ​2​
 ==&gt;fail::[filtered -&gt; *nums-&lt;[?&gt;3 =&gt; _, _ =&gt; noobj]&gt;&gt;               ​2​
                   ^ end of input expected
-][...]@/sys/fail/75830
+][...]@/sys/fail/70450
 mtron&gt; *filtered                                                 ​3​</code></pre>
 </div>
 </div>
@@ -4163,10 +4334,10 @@ mtron&gt; even -&gt; int::T[is(mod(2).eq(0))]    ​4​</code></pre>
 mtron&gt; nat::10
 ==&gt;nat::10
 mtron&gt; nat::-10
-==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]][...]@/sys/fail/75868
+==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]][...]@/sys/fail/70488
 mtron&gt; int::-10.as(nat::T)
 ==&gt;fail::[rhs does not match inst range:
-	'-10'=&gt;(X=&gt;int::T)][...]@/sys/fail/77560</code></pre>
+	'-10'=&gt;(X=&gt;int::T)][...]@/sys/fail/72180</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -4261,10 +4432,10 @@ mtron&gt; int::-10.as(nat::T)
 mtron&gt; nat::10
 ==&gt;nat::10
 mtron&gt; nat::-10
-==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]][...]@/sys/fail/77562
+==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]][...]@/sys/fail/72182
 mtron&gt; int::-10.as(nat::T)
 ==&gt;fail::[rhs does not match inst range:
-	'-10'=&gt;(X=&gt;int::T)][...]@/sys/fail/79254</code></pre>
+	'-10'=&gt;(X=&gt;int::T)][...]@/sys/fail/73874</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -4290,10 +4461,10 @@ mtron&gt; nat:125.as(age::T)
   	java.lang.Integer [line 565]
   	java.lang.Integer [line 662]
   	studio.phaseshift.metatron.isa.m.type.Uri$UriType [line 314]
-  	studio.phaseshift.metatron.isa.m.type.Inst$f [line 683]][...]@/sys/fail/81002
+  	studio.phaseshift.metatron.isa.m.type.Inst$f [line 683]][...]@/sys/fail/75622
 mtron&gt; 125.as(nat::T).as(age::T)
 ==&gt;fail::[rhs does not match inst range:
-	'125'=&gt;(X=&gt;int::T)][...]@/sys/fail/84384</code></pre>
+	'125'=&gt;(X=&gt;int::T)][...]@/sys/fail/79006</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -4425,30 +4596,30 @@ mtron&gt; *#.as[name      =&gt; _,
 <button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
 <h2 id="_console" class="discrete">Console</h2>
 <div class="paragraph">
-<p>The console offers an integrated user experience. Features include:</p>
+<p>The <a href="https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop">console</a> offers an integrated user experience. Features include:</p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p>mtron syntax highlighting</p>
+<p>mtron <a href="https://en.wikipedia.org/wiki/Syntax_highlighting">syntax highlighting</a></p>
 </li>
 <li>
-<p>step-by-step code compilation kbd:[tab]</p>
+<p>step-by-step code <a href="https://en.wikipedia.org/wiki/Compiler">compilation</a> <kbd>tab</kbd></p>
 </li>
 <li>
-<p>horizontal and vertical split screens kbd:[ctrl+↑] and kbd:[ctrl+→]</p>
+<p>horizontal and vertical <a href="https://en.wikipedia.org/wiki/Split_screen_(computing)">split screens</a> <span class="keyseq"><kbd>ctrl</kbd>+<kbd>↑</kbd></span> and <span class="keyseq"><kbd>ctrl</kbd>+<kbd>→</kbd></span></p>
 </li>
 <li>
-<p>history and search kbd:[↑]</p>
+<p>history and search <kbd>↑</kbd></p>
 </li>
 <li>
-<p>code formatting/pretty printing kbd:[ctrl+f]</p>
+<p>code formatting/https://en.wikipedia.org/wiki/Pretty-printing[pretty printing] <span class="keyseq"><kbd>ctrl</kbd>+<kbd>f</kbd></span></p>
 </li>
 <li>
-<p>adjustable type checker kbd:[ctrl+shift+T]</p>
+<p>adjustable <a href="https://en.wikipedia.org/wiki/Type_system#Type_checking">type checker</a> <span class="keyseq"><kbd>ctrl</kbd>+<kbd>shift</kbd>+<kbd>T</kbd></span></p>
 </li>
 <li>
-<p>llm pair programming kbd:[ctrl+shift+A]</p>
+<p>llm <a href="https://en.wikipedia.org/wiki/Pair_programming">pair programming</a> <span class="keyseq"><kbd>ctrl</kbd>+<kbd>shift</kbd>+<kbd>A</kbd></span></p>
 </li>
 </ol>
 </div>
@@ -4495,37 +4666,37 @@ mtron&gt; /sys/ui/console/pane/0/result('printed at ==&gt;xyz')   ​3​
 </li>
 </ol>
 </div>
-<table class="tableblock frame-all grid-all stretch table-bordered small center">
+<table class="tableblock frame-all grid-all stretch no-border small center">
 <colgroup>
-<col style="width: 50%;">
-<col style="width: 50%;">
+<col style="width: 40%;">
+<col style="width: 60%;">
 </colgroup>
 <tbody>
 <tr>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
 <p>These functions are useful for creating remote consoles, separating log output, and LLM pair programming, where an LLM can operate with their own environment fully visible to the user.</p>
 </div></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="literalblock">
+<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
-<pre>┌────────────────────┐┌────────────────────┐
-│[/usr/marko]        ││[/usr/ai/agent]     │
-│                    ││                    │
-│mtron&gt; 1-&lt;[_,_]&gt;-   ││mtron&gt; *subagent    │
-│==&gt;1                ││==&gt;[ desc     =&gt; .. │
-│==&gt;2                ││     provider =&gt; .. │
-│mtron&gt; *&lt;http://..&gt; ││     tool     =&gt; .. │
-│==&gt;[ html =&gt;    ..  ││     skill    =&gt; .. │
-│      head   =&gt; ..  ││     note     =&gt; .. │
-│       title =&gt; ..  ││     ... ]          │
-│      body=&gt; ..     ││mtron&gt;              │
-│     ...]           ││                    │
-│mtron&gt;              ││                    │
-└────────────────────┘└────────────────────┘
-┌──────────────────────────────────────────┐
-│[/sys/log/#]                              │
-│[INFO] agent2 spawned by /usr/ai/agent    │
-│[WARN] runtime inst resolution required   │
-└──────────────────────────────────────────┘</pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron"> ┌────────────────────┐┌────────────────────┐
+ │[/usr/marko]        ││[/usr/ai/agent]     │
+ │                    ││                    │
+ │mtron&gt; 1-&lt;[_,_]&gt;-   ││mtron&gt; *subagent    │
+ │==&gt;1                ││==&gt;[ desc     =&gt; .. │
+ │==&gt;2                ││     provider =&gt; .. │
+ │mtron&gt; *&lt;http://..&gt; ││     tool     =&gt; .. │
+ │==&gt;[ html =&gt;    ..  ││     skill    =&gt; .. │
+ │      head   =&gt; ..  ││     note     =&gt; .. │
+ │       title =&gt; ..  ││     ... ]          │
+ │      body=&gt; ..     ││mtron&gt;              │
+ │     ...]           ││                    │
+ │mtron&gt;              ││                    │
+ └────────────────────┘└────────────────────┘
+ ┌──────────────────────────────────────────┐
+ │[/sys/log/#]                              │
+ │[INFO] agent2 spawned by /usr/ai/agent    │
+ │[WARN] runtime inst resolution required   │
+ └──────────────────────────────────────────┘</code></pre>
 </div>
 </div></div></td>
 </tr>
@@ -4900,10 +5071,10 @@ mtron&gt; *m/0/0       ​1​
 ==&gt;0
 mtron&gt; *m/0/+       ​2​
 ==&gt;fail::[rhs does not match inst range:
-	{2,3,0,1}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/65152
+	{2,3,0,1}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/59772
 mtron&gt; *m/+/0       ​3​
 ==&gt;fail::[rhs does not match inst range:
-	{0,4,8}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/65154</code></pre>
+	{0,4,8}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/59774</code></pre>
 </div>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
@@ -4920,10 +5091,10 @@ mtron&gt; *m/0/0       ​1​
 ==&gt;0
 mtron&gt; *m/0/+       ​2​
 ==&gt;fail::[rhs does not match inst range:
-	{2,3,0,1}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/65156
+	{2,3,0,1}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/59776
 mtron&gt; *m/+/0       ​3​
 ==&gt;fail::[rhs does not match inst range:
-	{0,4,8}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/65158</code></pre>
+	{0,4,8}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/59778</code></pre>
 </div>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
@@ -4939,10 +5110,10 @@ mtron&gt; *m/0/0       ​1​
 ==&gt;0
 mtron&gt; *m/0/+       ​2​
 ==&gt;fail::[rhs does not match inst range:
-	{2,3,0,1}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/65160
+	{2,3,0,1}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/59780
 mtron&gt; *m/+/0       ​3​
 ==&gt;fail::[rhs does not match inst range:
-	{0,4,8}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/65162</code></pre>
+	{0,4,8}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/59782</code></pre>
 </div>
 </div></div></td>
 </tr>
@@ -5502,27 +5673,27 @@ mtron&gt; *g:V/1.outE()                         ​2​
 ==&gt;fail::[rhs does not match inst range:
 	{created::[weight=&gt;0.4000]@g:E/9,knows::[weight=&gt;0.5000]@g:E/7,knows::[weight=&gt;1.0000]@g:E/8}=&gt;(X=&gt;elmt::T[?[
      IN =&gt;   vrtx::T,
-     OUT=&gt;   vrtx::T]]@/m/grph/edge)][...]@/sys/fail/84990
+     OUT=&gt;   vrtx::T]]@/m/grph/edge)][...]@/sys/fail/79612
 mtron&gt; *g:V/1.outE().inV()                   ​3​
 ==&gt;fail::[rhs does not match inst range:
 	{software::[name=&gt;'lop',lang=&gt;'java']@g:V/3,person::[name=&gt;'vadas',age=&gt;27]@g:V/2,person::[age=&gt;32,name=&gt;'josh']@g:V/4}=&gt;(X=&gt;elmt::T[?[
      {?}IN =&gt;[uri::T=&gt;edge{*}::T],
-     {?}OUT=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx)][...]@/sys/fail/84992
+     {?}OUT=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx)][...]@/sys/fail/79614
 mtron&gt; *g:V/1.out()                          ​4​
 ==&gt;fail::[rhs does not match inst range:
 	{software::[name=&gt;'lop',lang=&gt;'java']@g:V/3,person::[name=&gt;'vadas',age=&gt;27]@g:V/2,person::[age=&gt;32,name=&gt;'josh']@g:V/4}=&gt;(X=&gt;elmt::T[?[
      {?}IN =&gt;[uri::T=&gt;edge{*}::T],
-     {?}OUT=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx)][...]@/sys/fail/84994
+     {?}OUT=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx)][...]@/sys/fail/79616
 mtron&gt; *g:V/1.out(knows).out(created)        ​5​
 ==&gt;fail::[rhs does not match inst range:
 	{person::[name=&gt;'vadas',age=&gt;27]@g:V/2,person::[age=&gt;32,name=&gt;'josh']@g:V/4}=&gt;(X=&gt;elmt::T[?[
      {?}IN =&gt;[uri::T=&gt;edge{*}::T],
-     {?}OUT=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx)][...]@/sys/fail/84996
+     {?}OUT=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx)][...]@/sys/fail/79618
 mtron&gt; *g:V/1.out(knows).out(created)&gt;&gt;name  ​6​
 ==&gt;fail::[rhs does not match inst range:
 	{person::[name=&gt;'vadas',age=&gt;27]@g:V/2,person::[age=&gt;32,name=&gt;'josh']@g:V/4}=&gt;(X=&gt;elmt::T[?[
      {?}IN =&gt;[uri::T=&gt;edge{*}::T],
-     {?}OUT=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx)][...]@/sys/fail/84998</code></pre>
+     {?}OUT=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx)][...]@/sys/fail/79620</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -5678,28 +5849,28 @@ mtron&gt; *g:V/+.?==[address/+/city =&gt; 'santa fe']                        ​
 	{fail::[rhs does not match inst range:
 	noobj=&gt;(X=&gt;elmt::T[?[
      {?}IN =&gt;[uri::T=&gt;edge{*}::T],
-     {?}OUT=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx)][...]@/sys/fail/85000,fail::[rhs does not match inst range:
+     {?}OUT=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx)][...]@/sys/fail/79622,fail::[rhs does not match inst range:
 	noobj=&gt;(X=&gt;elmt::T[?[
      {?}IN =&gt;[uri::T=&gt;edge{*}::T],
-     {?}OUT=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx)][...]@/sys/fail/85002,fail::[rhs does not match inst range:
+     {?}OUT=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx)][...]@/sys/fail/79624,fail::[rhs does not match inst range:
 	noobj=&gt;(X=&gt;elmt::T[?[
      {?}IN =&gt;[uri::T=&gt;edge{*}::T],
-     {?}OUT=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx)][...]@/sys/fail/85004,fail::[rhs does not match inst range:
+     {?}OUT=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx)][...]@/sys/fail/79626,fail::[rhs does not match inst range:
 	noobj=&gt;(X=&gt;elmt::T[?[
      {?}IN =&gt;[uri::T=&gt;edge{*}::T],
-     {?}OUT=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx)][...]@/sys/fail/85006,fail::[rhs does not match inst range:
+     {?}OUT=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx)][...]@/sys/fail/79628,fail::[rhs does not match inst range:
 	noobj=&gt;(X=&gt;elmt::T[?[
      {?}IN =&gt;[uri::T=&gt;edge{*}::T],
-     {?}OUT=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx)][...]@/sys/fail/85008,person::[address/work/city=&gt;'nomansland',age=&gt;29,name=&gt;'marko',address/home/city=&gt;'santa fe']@g:V/1}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/85010
+     {?}OUT=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx)][...]@/sys/fail/79630,person::[address/work/city=&gt;'nomansland',age=&gt;29,name=&gt;'marko',address/home/city=&gt;'santa fe']@g:V/1}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/79632
 mtron&gt; *g:V/+.==[address/+/city/ =&gt; _]                                 ​4​
 ==&gt;[address/+/city/=&gt;{address/work/city=&gt;'nomansland',address/home/city=&gt;'santa fe'}]
 mtron&gt; *g:V/+.&gt;&gt;address/+/city
        *g:V/+.&gt;&gt;address/+/city                                         ​6​
 ==&gt;fail::[rhs does not match inst range:
-	][...]@/sys/fail/85012
+	][...]@/sys/fail/79634
 mtron&gt; *g:V/+.&gt;&gt;address/#                                              ​7​
 ==&gt;fail::[rhs does not match inst range:
-	{'nomansland','santa fe'}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/85014</code></pre>
+	{'nomansland','santa fe'}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/79636</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -5762,28 +5933,28 @@ mtron&gt; *g:V/+.?==[address=&gt;[_ =&gt; [state=&gt;NM]]]                      
 	{fail::[rhs does not match inst range:
 	noobj=&gt;(X=&gt;elmt::T[?[
      {?}IN =&gt;[uri::T=&gt;edge{*}::T],
-     {?}OUT=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx)][...]@/sys/fail/85016,fail::[rhs does not match inst range:
+     {?}OUT=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx)][...]@/sys/fail/79638,fail::[rhs does not match inst range:
 	noobj=&gt;(X=&gt;elmt::T[?[
      {?}IN =&gt;[uri::T=&gt;edge{*}::T],
-     {?}OUT=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx)][...]@/sys/fail/85018,fail::[rhs does not match inst range:
+     {?}OUT=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx)][...]@/sys/fail/79640,fail::[rhs does not match inst range:
 	noobj=&gt;(X=&gt;elmt::T[?[
      {?}IN =&gt;[uri::T=&gt;edge{*}::T],
-     {?}OUT=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx)][...]@/sys/fail/85020,fail::[rhs does not match inst range:
+     {?}OUT=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx)][...]@/sys/fail/79642,fail::[rhs does not match inst range:
 	noobj=&gt;(X=&gt;elmt::T[?[
      {?}IN =&gt;[uri::T=&gt;edge{*}::T],
-     {?}OUT=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx)][...]@/sys/fail/85022,fail::[rhs does not match inst range:
+     {?}OUT=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx)][...]@/sys/fail/79644,fail::[rhs does not match inst range:
 	noobj=&gt;(X=&gt;elmt::T[?[
      {?}IN =&gt;[uri::T=&gt;edge{*}::T],
-     {?}OUT=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx)][...]@/sys/fail/85024,person::[
+     {?}OUT=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx)][...]@/sys/fail/79646,person::[
  :address         =&gt;[
    home=&gt;[city=&gt;'santa fe',state=&gt;NM],
    work=&gt;  !*&lt;../home&gt;],
  address/work/city=&gt; 'nomansland',
  age              =&gt; 29,
  name             =&gt; 'marko',
- address/home/city=&gt; 'santa fe']@g:V/1}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/85026
+ address/home/city=&gt; 'santa fe']@g:V/1}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/79648
 mtron&gt; *g:V/+.?==[address=&gt;[_ =&gt; [state=&gt;NM]]].&gt;&gt;address/+/city        ​5​
-==&gt;fail::[MachINe fAILeD][...]@/sys/fail/85042</code></pre>
+==&gt;fail::[MAChINe Failed][...]@/sys/fail/79664</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -6197,7 +6368,7 @@ mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
          *&lt;http://localhost:8088/v1/models/data/0/id&gt;}&gt;   ​4​
 ==&gt;[
  parameters         =&gt;[
-   model         =&gt;  &lt;smollm__1.7b&gt;,
+   model         =&gt;  &lt;mistralai_Devstral-Small-2507-Q4_K_M.gguf&gt;,
    top_p         =&gt;  0.9500,
    top_k         =&gt;  -1,
    min_p         =&gt;  0.0100,
@@ -6208,19 +6379,38 @@ mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
    typical_p     =&gt;  1,
    seed          =&gt;  -1,
    logprobs      =&gt;  false],
- name               =&gt; &lt;smollm:1.7b&gt;,
+ name               =&gt; mistralai_devstral-small-2507,
  f16                =&gt; false,
  threads            =&gt; 8,
  debug              =&gt; false,
  embeddings         =&gt; false,
  backend            =&gt; llama-cpp,
- template           =&gt;[use_tokenizer_template=&gt;true],
- known_usecases     =&gt;[FLAG_CHAT],
+ template           =&gt;[
+   chat                           =&gt;  """{{.Input -}}
+""",
+   chat_message                   =&gt;  """{{if eq .RoleName "user" -}}
+[INST] {{.Content }} [/INST]
+{{- else if .FunctionCall -}}
+[TOOL_CALLS] {{toJson .FunctionCall}} [/TOOL_CALLS]
+{{- else if eq .RoleName "tool" -}}
+[TOOL_RESULTS] {{.Content}} [/TOOL_RESULTS]
+{{- else -}}
+{{ .Content -}}
+{{ end -}}""",
+   function                       =&gt;  '[AVAILABLE_TOOLS] [{{range .Functions}}{"type": "function", "function": {"name": "{{.Name}}", "description": "{{.Description}}", "parameters": {{toJson .Parameters}} }}{{end}} ] [/AVAILABLE_TOOLS]{{.Input }}',
+   join_chat_messages_by_character=&gt;  &lt;&gt;],
+ known_usecases     =&gt;[FLAG_COMPLETION,FLAG_CHAT],
  pipeline           =&gt;[=&gt;],
  function           =&gt;[
-   grammar                        =&gt;[disable=&gt;true],
-   automatic_tool_parsing_fallback=&gt;  true],
- reasoning          =&gt;[disable_reasoning_tag_prefill=&gt;true,disable=&gt;true],
+   disable_no_action       =&gt;  true,
+   grammar                 =&gt;[parallel_calls=&gt;true,disable_parallel_new_lines=&gt;true,disable=&gt;true],
+   json_regex_match        =&gt;[&lt;(?s)\[TOOL\_CALLS\](.*)&gt;],
+   replace_function_results=&gt;[
+    [key=&gt;'(?s)^[^{\[]*'],
+    [key=&gt;'(?s)[^}\]]*$'],
+    [key=&gt;(?s)\[TOOL\_CALLS\]],
+    [key=&gt;(?s)\[\/TOOL\_CALLS\]]]],
+ reasoning          =&gt;[=&gt;],
  mirostat_eta       =&gt; 0.1000,
  mirostat_tau       =&gt; 5,
  mirostat           =&gt; 0,
@@ -6229,13 +6419,21 @@ mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
  mmlock             =&gt; false,
  low_vram           =&gt; false,
  reranking          =&gt; false,
- context_size       =&gt; 2048,
+ stopwords          =&gt;[
+      |im_end|,
+      dummy32000,
+      /tool_call,
+      |eot_id|,
+      |end_of_text|,
+      /s,
+      [/TOOL_CALLS],
+      [/ACTIONS]],
+ context_size       =&gt; 8192,
  limit_mm_per_prompt=&gt;[=&gt;],
  diffusers          =&gt;[=&gt;],
  grpc               =&gt;[=&gt;],
  tts                =&gt;[=&gt;],
- description        =&gt; 'Imported from ollama://smollm:1.7b',
- options            =&gt;[use_jinja:true],
+ options            =&gt;[gpu],
  mcp                =&gt;[=&gt;],
  agent              =&gt;[=&gt;]]</code></pre>
 </div>

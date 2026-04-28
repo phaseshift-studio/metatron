@@ -1,7 +1,7 @@
 [discrete]
 == Large Language Models
 
-Modern AI techniques are heavily leveraged across various aspects of metatron, with popular cloud service providers (e.g. link:https://www.anthropic.com/[Anthropic] and/or link:https://openai.com/[OpenAI]) and local providers (e.g. link:https://ollama.com/[Ollama]/http://localai.io[LocalAI]) serving as the compute-intensive inferencing backends.
+Modern AI techniques are heavily leveraged across various aspects of metatron, with popular cloud service providers (e.g. link:https://www.anthropic.com/[Anthropic] and/or link:https://openai.com/[OpenAI]) and local providers (e.g. link:https://ollama.com/[Ollama] and/or http://localai.io[LocalAI]) serving as the compute-intensive inferencing backends.
 
 . **Pair Programmer**: LLMs can connect to a console session, be provided a terminal split screen, and evaluate mtron expressions alongside the user. This is especially useful when developing strategies for interlinking spaces via schema alignment and entity resolution as well as quickly creating domain-specific rewrite rules to optimize mtron compilation (using mtron).
 . **Agent Development**: A large portion of an LLM's functional elements are embedded in the URI address space and made accessible to mtron via respective spaces. Such components include:
@@ -9,6 +9,7 @@ Modern AI techniques are heavily leveraged across various aspects of metatron, w
  - **thoughts**: when enabling internal reasoning with a supporting LLM, the stream of thought is published streamed and can be directed to system output, to a memory structure, to another LLM for review, etc.  
  - **memory**: an LLMs interaction/thought history can be stored and retrieved at a later time to enable long-term memory and context awareness.
  - **skills**: an LLM can be trained on a wide range of skills and domains, allowing them to perform complex tasks and solve domain-specific problems. Skills can be pulled from the Anthropic-designed `.agent` directory that has a corresponding `SKILL.md` file and associated resources. Or, can be created programmatically in metaron.
+ - **notes**: pass information to an LLM during a chat iteration without interrupting them. LLMs will periodically check their note stack for any advice/information from the user about their task at hand.
  - **prompts**: specific prompts or instructions can be stored and retrieved to help guide an LLM's response.
  - **response formats**: a mtron `rec` can serve as a schema object instructing the LLM to populate the `rec` with their answer to avoid arbitrary string responses in favor of structured responses.
  - **gguff vector files**: ...

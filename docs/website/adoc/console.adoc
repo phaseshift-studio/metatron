@@ -1,15 +1,17 @@
+:experimental:
+
 [discrete]
 == Console
 
-The console offers an integrated user experience. Features include:
+The https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop[console] offers an integrated user experience. Features include:
 
- . mtron syntax highlighting
- . step-by-step code compilation kbd:[tab]
- . horizontal and vertical split screens kbd:[ctrl+↑] and kbd:[ctrl+→]
+ . mtron https://en.wikipedia.org/wiki/Syntax_highlighting[syntax highlighting]
+ . step-by-step code https://en.wikipedia.org/wiki/Compiler[compilation] kbd:[tab]
+ . horizontal and vertical https://en.wikipedia.org/wiki/Split_screen_(computing)[split screens] kbd:[ctrl+↑] and kbd:[ctrl+→]
  . history and search kbd:[↑]
- . code formatting/pretty printing kbd:[ctrl+f]
- . adjustable type checker kbd:[ctrl+shift+T]
- . llm pair programming kbd:[ctrl+shift+A]
+ . code formatting and https://en.wikipedia.org/wiki/Pretty-printing[pretty printing] kbd:[ctrl+f]
+ . adjustable https://en.wikipedia.org/wiki/Type_system#Type_checking[type checker] kbd:[ctrl+shift+T]
+ . llm https://en.wikipedia.org/wiki/Pair_programming[pair programming] kbd:[ctrl+shift+A]
 
 The console is also an `obj`.
 ++++
@@ -30,11 +32,13 @@ There are 3 instructions associated with a `/m/mach/console/pane`.
 2. `result(str::T)` - write to the pane using the standard result prefix `=\=> xyz`.
 3. `stream(str::T)` - write to the pane without a newline as in `abc xyz`.
 
-[cols="5a,5a",separator=🧱,role="table-bordered small center"]
+[cols="4a,6a",separator=🧱,role="no-border small center"]
 |===
 🧱
 These functions are useful for creating remote consoles, separating log output, and LLM pair programming, where an LLM can operate with their own environment fully visible to the user.
 🧱
+[source,mtron]
+----
  ┌────────────────────┐┌────────────────────┐
  │[/usr/marko]        ││[/usr/ai/agent]     │
  │                    ││                    │
@@ -54,5 +58,6 @@ These functions are useful for creating remote consoles, separating log output, 
  │[INFO] agent2 spawned by /usr/ai/agent    │
  │[WARN] runtime inst resolution required   │
  └──────────────────────────────────────────┘
+----
 🧱
 |===
