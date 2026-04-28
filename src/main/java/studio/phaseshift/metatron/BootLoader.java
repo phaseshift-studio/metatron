@@ -46,6 +46,7 @@ import java.net.InetAddress;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -72,6 +73,8 @@ public class BootLoader implements Rec, Feature.SelfClone {
     public static Router ROUTER;
     public static Rec ARGS;
     private static volatile ExecutorService EXECUTOR;
+    /** Keeps the main thread alive in headless mode (no console REPL to block it). */
+    private static final CountDownLatch SHUTDOWN_LATCH = new CountDownLatch(1);
 
 
     static {
@@ -228,6 +231,15 @@ public class BootLoader implements Rec, Feature.SelfClone {
             BOOTING = false;
             System.gc();
             /// /// END OF BOOTING PROCESS /// ///
+            // If a console (or other blocking component) was loaded from the boot script, it
+            // will have blocked mParser.eval() above and we never reach here.  In headless mode
+            // (no console) we reach here immediately -- park the main thread so the JVM stays
+            // alive until SIGTERM triggers close() → SHUTDOWN_LATCH.countDown().
+            try {
+                SHUTDOWN_LATCH.await();
+            } catch (final InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
         } else {
             LOG.warn("boot processes previously completed -- ignoring request to boot");
         }
@@ -236,6 +248,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
     public static void close() {
         try {
             BOOTING = true;
+            SHUTDOWN_LATCH.countDown();  // release headless main-thread park (no-op if already 0)
             LOG.none("\n");
             if (Router.loaded())
                 Router.global().close();

@@ -230,8 +230,7 @@ public class mInstSet extends AbstractInstSet {
             .vid(POLY_TID)
             .predicate((lhs, inst) -> bool(lhs.isLst() || lhs.isRec() || lhs.isRel() || lhs.isCode()))
             .create();*/
-
-
+    public static final Uri NONE = uri(f("none"),URI_TID,f("/m/const/none"));
     public mInstSet() {
         super(new LinkedHashMap<>(Map.of(uri(PATTERN), uri(M_ISA_TID.extend(ALL)))), M_ISA_TID, M_ISA_TID);
     }
@@ -240,7 +239,6 @@ public class mInstSet extends AbstractInstSet {
         this.selfTID(INSTSET_TID);
         this.jvm().putAll(new LinkedHashMap<>(Map.of(
                 uri(PATTERN), uri(M_ISA_TID.extend(ALL)),
-                uri(CONST), lst(docWrap(noobj(), "a no object. if an inst domain is no zeroable (e.g. {0}/{?}/{*}) then the inst will not evaluate.")),
                 uri(TYPE), lst(
                         //  docWrap(MONO_TYPE, "an atomic obj"),
                         //  docWrap(POLY_TYPE, "a obj composed of other objs"),
@@ -350,6 +348,9 @@ public class mInstSet extends AbstractInstSet {
                                 "*int?docq  [-- documentation for int::T --]"),
                         docWrap(INCRQ_TYPE, "a query that returns an increment"),
                         docWrap(CONSTQ_TYPE, "a query that returns a constant")),
+                uri(CONST), lst(
+                        docWrap(noobj(), "a no object. if an inst domain is no zeroable (e.g. {0}/{?}/{*}) then the inst will not evaluate."),
+                        docWrap(NONE, "a token uri denoting nothing. used for deleting obj in space.")),
                 uri(INST), lst(Stream.of(
                         Bool.BoolType.insts().stream(),
                         Bytes.BytesType.insts().stream(),

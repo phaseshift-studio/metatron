@@ -20,11 +20,11 @@ package studio.phaseshift.metatron.isa.web.space.ws.server;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.web.space.ws.WSServerRec;
+import studio.phaseshift.metatron.isa.web.type.Content;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -59,8 +59,12 @@ public class mtron_wsServer extends WSServerRec {
             .vid(MTRON_WS_TID)
             .isaPredicate(rec(uri(IN), URI_TYPE, uri(OUT), URI_TYPE))
             .constructor(instC(MTRON_WS_TID.extend(CTOR).dom(ALL.maybe()).rng(MTRON_WS_TID), lst(T(REC_TID)), (lhs, inst) -> {
-                final Rec config = inst.arg(0).asRec();
-                return new mtron_wsServer(new LinkedHashMap<>(config.jvm()), config.vid());
+                final Map<Obj, Obj> config = new LinkedHashMap<>(inst.arg(0).asRec().jvm());
+                if (!config.containsKey(uri(OUT)))
+                    config.put(uri(OUT), uri(Content.ContentType.APPLICATION_MTRON.value));
+                if (!config.containsKey(uri(IN)))
+                    config.put(uri(IN), uri(Content.ContentType.APPLICATION_MTRON.value));
+                return new mtron_wsServer(config, inst.arg(0).asRec().vid());
             })).create();
 
 
@@ -72,10 +76,11 @@ public class mtron_wsServer extends WSServerRec {
         }));
         this.jvm().put(uri(ON_MESSAGE), instC(vid.extend(ON_MESSAGE).dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> {
             try {
-                return lhs.apply(noobj());
+                final Obj rhs = lhs.apply(noobj());
+                LOG.debug("received mtron message: %s", rhs);
+                return rhs;
             } catch (final Exception e) {
                 LOG.error("error processing message: %s", lhs, e);
-                this.send(fail(e));
                 return fail(e);
             }
         }));

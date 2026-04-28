@@ -51,21 +51,21 @@ import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_SPACE_TID;
  */
 public class mcp_mtron_wsServer extends WSServerRec {
 
-    public static final fURI MCP_MTRON_WS_TOD = WS_SPACE_TID.extend("mcp_mtron_ws");
+    public static final fURI MCP_MTRON_WS_TID = WS_SPACE_TID.extend("mcp_mtron_ws");
     protected final GraphittyLogger LOG = Graphitty.log(this);
 
     public static final Type WS_MCP_MTRON_SERVER_TYPE = Type.Builder.build()
             .tid(MCP_WS_TID)
-            .vid(MCP_MTRON_WS_TOD)
+            .vid(MCP_MTRON_WS_TID)
             .isaPredicate(rec(uri(IN), URI_TYPE, uri(OUT), URI_TYPE))
-            .constructor(instC(MCP_MTRON_WS_TOD.extend(CTOR).dom(ALL.maybe()).rng(MCP_MTRON_WS_TOD), lst(T(REC_TID)), (lhs, inst) -> {
+            .constructor(instC(MCP_MTRON_WS_TID.extend(CTOR).dom(ALL.maybe()).rng(MCP_MTRON_WS_TID), lst(T(REC_TID)), (lhs, inst) -> {
                 final Rec config = inst.arg(0).asRec();
                 return new mcp_mtron_wsServer(new LinkedHashMap<>(config.jvm()), config.vid());
             })).create();
 
 
     public mcp_mtron_wsServer(final Map<Obj, Obj> jvm, final fURI vid) {
-        super(jvm, MCP_MTRON_WS_TOD, vid);
+        super(jvm, MCP_MTRON_WS_TID, vid);
         this.jvm().put(uri(ON_OPEN), instC(vid.extend(ON_OPEN), lst(URI_TYPE), (lhs, inst) -> {
             LOG.info("mcp_mtron_ws session opened w/ serializers: [in=>%s,out=>%s]", this.inContentType.name(), this.outContentType.name());
             return noobj();

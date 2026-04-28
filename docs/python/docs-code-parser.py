@@ -27,6 +27,7 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
+import asyncio
 
 from colors import *
 from runner.mytron import Mytron
@@ -161,7 +162,7 @@ class ProcessingState:
         self.colors = []
         return text
 
-    def process_line(self, line: str, *, verbose: bool = False) -> None:
+    async def process_line(self, line: str, *, verbose: bool = False) -> None:
         """Process a line of the asciidoc file."""
         if self.section == "X":
             self.section = "👨‍🌾"
@@ -176,12 +177,12 @@ class ProcessingState:
             self.new_lines = self.new_lines[:-1]  # remove the ++++ wrapper
             self.code.append(remove_html_comment(line.strip()).replace("🐖", ""))
             if line.rstrip().endswith("-->"):
-                self._process_chicken_code(verbose=verbose)
+                await self._process_chicken_code(verbose=verbose)
                 self._process_output_start(line)
                 self.section = "🐓"
         elif self.section == "🐖":
             if line.lstrip() == "-->":
-                self._process_chicken_code(verbose=verbose)
+                await self._process_chicken_code(verbose=verbose)
                 self._process_output_start("")
                 self.section = "🐓"
             else:
@@ -215,8 +216,9 @@ class ProcessingState:
             list,
         ), f"output must be a list, not {type(self.output)}, line: {line}"
 
-        pre_header = [] if "[NO_HEADER]" in self.output[0] else [""]
-        post_header = ["----"] if "[NO_HEADER]" in self.output[0] else ["[source,mtron]", "----"]
+        first_output = self.output[0] if self.output else ""
+        pre_header = [] if "[NO_HEADER]" in first_output else [""]
+        post_header = ["----"] if "[NO_HEADER]" in first_output else ["[source,mtron]", "----"]
         new_output = []
         new_header = []
         for c in self.output:
@@ -242,7 +244,7 @@ class ProcessingState:
         self.new_lines.extend(["----"])
         self.output = None  # Reset output after processing end of the output section
 
-    def _process_chicken_code(self, *, verbose: bool) -> None:
+    async def _process_chicken_code(self, *, verbose: bool) -> None:
         to_header = []
         to_execute = []
         running_line = ""
@@ -263,44 +265,62 @@ class ProcessingState:
         for line in to_execute:
             current = current + line
             if not line.endswith("%"):
-                final_code.append(current)
+                if current.strip():  # skip blank lines left over from comment parsing
+                    final_code.append(current)
                 current = ""
         print(f"code: {final_code}")
         for line in final_code:
             if -1 == line.find("[HIDDEN]"):
                 result.append(
                     f"mtron> {'\n       '.join(line.split("%"))}")  # the spaces are to shift right due to mtron> 
-                result.append(f"{self.mtron.exec(line.replace("%", "").strip())}")
+                result.append(f"{await self.mtron.eval(line.replace("%", "").strip())}")
                 # result.append("​")
+                # Clear accumulated failures after every visible eval so the catch()
+                # response never grows large enough to trigger a timeout.
+                await self.mtron.eval_hidden("/sys/fail/+ -> noobj")
             else:
-                self.mtron.exec(line.replace("%", "").replace("[HIDDEN]", "").strip())
-        self.output.extend(result[1:]) # first line is always a blank (for some reason)
+                await self.mtron.eval_hidden(line.replace("%", "").replace("[HIDDEN]", "").strip())
+        self.output.extend(result)
         print(self.output)
         self.code = []
         self.backtick_options = {}
 
 
-def process_asciidoc(content: list[str], *, verbose: bool = False) -> list[str]:
+async def process_asciidoc(content: list[str], prefix_content: list[str] | None = None, *, verbose: bool = False) -> list[str]:
     assert isinstance(content, list), "input must be a list"
     state = ProcessingState()
+    await state.mtron.connect()
+    # Run prefix lines first (e.g. [HIDDEN] initialisation) and discard their output.
+    # The Mytron connection and any server-side side-effects are preserved.
+    if prefix_content:
+        for line in prefix_content:
+            await state.process_line(line, verbose=verbose)
+        state.new_lines = []
     for i, line in enumerate(content):
         if verbose:
             nr = _bold(f"line {i:4d}")
             print(f"{nr}: {line}")
-        state.process_line(line, verbose=verbose)
-    state.mtron.close()
+        await state.process_line(line, verbose=verbose)
+    await state.mtron.close()
     return state.new_lines
 
 
-def update_asciidoc_file(
+async def update_asciidoc_file(
         input_filepath: Path | str,
         output_filepath: Path | str | None = None,
         *,
         verbose: bool = False,
         copy_only: bool = False,
+        prefix: Path | str | None = None,
 ) -> None:
     if isinstance(input_filepath, str):  # pragma: no cover
         input_filepath = Path(input_filepath)
+    prefix_content: list[str] | None = None
+    if prefix is not None:
+        with Path(prefix).open() as pf:
+            prefix_content = [line.rstrip("\n") for line in pf.readlines()]
+        if verbose:
+            print(f"prefix file: {prefix} ({len(prefix_content)} lines)")
     files = [f for f in os.listdir(input_filepath) if os.path.isfile(os.path.join(input_filepath, f))]
     for file in files:
         if file.endswith(".adoc"):
@@ -309,7 +329,7 @@ def update_asciidoc_file(
                 original_lines = [line.rstrip("\n") for line in f.readlines()]
             if verbose:
                 print(f"copying input file: {file}" if copy_only else f"processing input file: {file}")
-            new_lines = original_lines if copy_only else process_asciidoc(original_lines, verbose=verbose)
+            new_lines = original_lines if copy_only else await process_asciidoc(original_lines, prefix_content, verbose=verbose)
             updated_content = "\n".join(new_lines).rstrip()
             if verbose:
                 print(f"writing output to: {out_file}")
@@ -320,7 +340,7 @@ def update_asciidoc_file(
         print("done")
 
 
-def main() -> None:
+async def main() -> None:
     """Parse command line arguments and run the script."""
     parser = argparse.ArgumentParser(
         description="Automatically update asciidoc files with code block output.",
@@ -355,13 +375,20 @@ def main() -> None:
         action="store_true",
         help="Copy input file to output file without processing (default: False)",
     )
+    parser.add_argument(
+        "-p",
+        "--prefix",
+        type=str,
+        help="Path to an adoc file whose code blocks run before each input file (output discarded).",
+        default=None,
+    )
     args = parser.parse_args()
     print("\n[Docs Runner v0.224-db-a345c3456.3342323]\n\targs: ", args)
     input_filepath = Path(args.input)
     output_filepath = Path(args.output) if args.output is not None else input_filepath
     print(f"{input_filepath} => {output_filepath}")
-    update_asciidoc_file(input_filepath, output_filepath, verbose=args.verbose, copy_only=args.copy_only)
+    await update_asciidoc_file(input_filepath, output_filepath, verbose=args.verbose, copy_only=args.copy_only, prefix=args.prefix)
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

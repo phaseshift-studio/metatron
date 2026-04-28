@@ -270,9 +270,10 @@ bin/metatron</code></pre>
       server::T,
       protocol::T,
       native::T,
-      mcp_ws::T,
+      mcp_old_ws::T,
       server::T,
       core::T,
+      virtual::T,
       monad::T,
       machine::T,
       swarm::T],
@@ -290,9 +291,9 @@ bin/metatron</code></pre>
       one?A<=A(),
       which(uri::T),
       inject(int::T,#::T),
-      run?core<=core(),
-      stop?core<=core(),
-      pause?core<=core()]]@/m/mach</code></pre>
+      run?/m/mach/thread<=/m/mach/thread(),
+      stop?/m/mach/thread<=/m/mach/thread(),
+      pause?/m/mach/thread<=/m/mach/thread()]]@/m/mach</code></pre>
                         </div>
                     </div>
                 </div>
@@ -691,12 +692,12 @@ bin/metatron</code></pre>
                     <div class="card-header d-flex justify-content-between align-items-center py-2 text-light border-bottom border-secondary">
                         <span>
                             <span class="code text-primary fw-bold">pause</span>
-                            <span class="ms-1"><span class="instset-doc-small-code"><a href="m_mach_thread.html#type-core" data-bs-toggle="tooltip" title="domain" class="code text-info">/m/mach/thread/core</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m_mach_thread.html#type-core" data-bs-toggle="tooltip" title="range" class="code text-success">/m/mach/thread/core</a></span></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-thread" data-bs-toggle="tooltip" title="domain" class="code text-info">/m/mach/thread</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-thread" data-bs-toggle="tooltip" title="range" class="code text-success">/m/mach/thread</a></span></span>
                         </span>
-                        <small class="text-muted code">/m/mach/inst/pause?/m/mach/thread/core&lt;=/m/mach/thread/core</small>
+                        <small class="text-muted code">/m/mach/inst/pause?/m/mach/thread&lt;=/m/mach/thread</small>
                     </div>
                     <div class="card-body p-2">
-                        <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-pause-doc-0-tab').click(); document.getElementById('inst-pause-doc-0').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">pause?core&lt;=core(){&lt;j&gt;}</code></pre>
+                        <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-pause-doc-0-tab').click(); document.getElementById('inst-pause-doc-0').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">pause?/m/mach/thread&lt;=/m/mach/thread(){&lt;j&gt;}</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -723,12 +724,12 @@ bin/metatron</code></pre>
                     <div class="card-header d-flex justify-content-between align-items-center py-2 text-light border-bottom border-secondary">
                         <span>
                             <span class="code text-primary fw-bold">run</span>
-                            <span class="ms-1"><span class="instset-doc-small-code"><a href="m_mach_thread.html#type-core" data-bs-toggle="tooltip" title="domain" class="code text-info">/m/mach/thread/core</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m_mach_thread.html#type-core" data-bs-toggle="tooltip" title="range" class="code text-success">/m/mach/thread/core</a></span></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-thread" data-bs-toggle="tooltip" title="domain" class="code text-info">/m/mach/thread</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-thread" data-bs-toggle="tooltip" title="range" class="code text-success">/m/mach/thread</a></span></span>
                         </span>
-                        <small class="text-muted code">/m/mach/inst/run?/m/mach/thread/core&lt;=/m/mach/thread/core</small>
+                        <small class="text-muted code">/m/mach/inst/run?/m/mach/thread&lt;=/m/mach/thread</small>
                     </div>
                     <div class="card-body p-2">
-                        <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-run-doc-0-tab').click(); document.getElementById('inst-run-doc-0').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">run?core&lt;=core(){&lt;j&gt;}</code></pre>
+                        <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-run-doc-0-tab').click(); document.getElementById('inst-run-doc-0').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">run?/m/mach/thread&lt;=/m/mach/thread(){&lt;j&gt;}</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -739,12 +740,12 @@ bin/metatron</code></pre>
                     <div class="card-header d-flex justify-content-between align-items-center py-2 text-light border-bottom border-secondary">
                         <span>
                             <span class="code text-primary fw-bold">stop</span>
-                            <span class="ms-1"><span class="instset-doc-small-code"><a href="m_mach_thread.html#type-core" data-bs-toggle="tooltip" title="domain" class="code text-info">/m/mach/thread/core</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m_mach_thread.html#type-core" data-bs-toggle="tooltip" title="range" class="code text-success">/m/mach/thread/core</a></span></span>
+                            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-thread" data-bs-toggle="tooltip" title="domain" class="code text-info">/m/mach/thread</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-thread" data-bs-toggle="tooltip" title="range" class="code text-success">/m/mach/thread</a></span></span>
                         </span>
-                        <small class="text-muted code">/m/mach/inst/stop?/m/mach/thread/core&lt;=/m/mach/thread/core</small>
+                        <small class="text-muted code">/m/mach/inst/stop?/m/mach/thread&lt;=/m/mach/thread</small>
                     </div>
                     <div class="card-body p-2">
-                        <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-stop-doc-0-tab').click(); document.getElementById('inst-stop-doc-0').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">stop?core&lt;=core(){&lt;j&gt;}</code></pre>
+                        <pre class="mb-1 clickable-signature" style="font-size: 0.85rem; cursor: pointer;" onclick="document.getElementById('inst-stop-doc-0-tab').click(); document.getElementById('inst-stop-doc-0').scrollIntoView({behavior: 'smooth', block: 'center'});"><code class="language-mtron">stop?/m/mach/thread&lt;=/m/mach/thread(){&lt;j&gt;}</code></pre>
                     </div>
                     
                     <div class="card-body border-top py-2">
@@ -813,7 +814,7 @@ bin/metatron</code></pre>
         <div class="container-xxl py-3 text-center">
             <hr class="border-secondary">
             <small class="text-muted">
-                generated by metatron instset doc generator on build 0-2026-04-24 00:09:53<br>
+                generated by metatron instset doc generator on build 0-2026-04-27 19:19:30<br>
                 © PhaseShift Studio, LLC
             </small>
         </div>

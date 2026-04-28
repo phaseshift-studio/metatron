@@ -45,7 +45,7 @@ ai -> *ollama:+/+                                             /
        .take(1)                                               
 *ai>>=[think=>true,                                           /
        memory=>[mem=>/usr/mem,max=>5],                        /
-       tools =>!*eval]
+       tools =>[!*eval]
 *ai.+[think=>print(_),response=>to(/usr/ai/response)]  
    .chat("Remember the word 'metatron'. I'll ask you to recall this word later.")
 */usr/ai/response
@@ -131,6 +131,69 @@ The content and metadata associated with the chat interaction are stored at the 
 <2> without a response format, the agent replies in free, unstructured text.
 <3> the agent's memory records structured responses.
 
+[discrete]
+=== agent notes
+metatron introduces the concept of _notes_ to the agent toolkit. Notes are a message board written to and read from (potentially many times) by an LLM during the execution of a task -- that is, within a single chat iteration. Notes are useful in the following situations:
+
+ . **real-time feedback**: if the agent has made a mistake in their _thinking_, there is no need to wait for the agent's response to complete nor halt the agent mid-thought. Instead, a note can be pushed on the agent's note stack and the agent will pop off the note, read it, and adjust itself accordingly.
+ . **real-time system message**: the agent's system message is written at the start of chat and remains static for the duration of the interaction. Notes serve as dynamic system messages allowing programmatic alterations in the agent's behavior within a single interaction.
+
+Notes are enabled by adding `note=>[,]` to the agent's configuration.
+The `eval` tool must also be present — the agent uses it to poll and pop notes from the note stack.
+
+[source,mtron]
+----
+*<openai:gpt-4o>.at(robotron).
+ >>=[tool => [!*eval],        [-- <1>
+     note => [,]]             [-- <2>
+----
+<1> `eval` is required — the agent calls it internally to read and consume notes.
+<2> `[,]` initializes an empty note list and activates the note-checking instruction in the agent's system message.
+
+While `robotron` is executing a task, a note can be pushed at any time from any other mtron context:
+
+[source,mtron]
+----
+*<robotron/note> + ['Reconsider — the user wants the result in euros, not dollars']   [-- <1>
+----
+<1> `+` concatenates to the note list at `{vid}/note`. Because the list carries its `@vid`, the mutation is automatically persisted to space — no explicit save needed.
+
+[.card]
+--
+[discrete,.center]
+==== @vid auto-persistence
+Any `obj` that carries a `@vid` annotation is _space-aware_: mutations to it (via `+`, `remove()`, or any other mutating instruction) are automatically reflected in the space at that address — no explicit re-assignment required.
+
+The difference between `.to()` and `.at()` is critical here:
+
+[source,mtron]
+----
+1.to(a) + 2 + 3    [-- <1>
+*a                 [-- <2>
+1.at(a) + 2 + 3    [-- <3>
+*a                 [-- <4>
+----
+<1> `.to()` saves a snapshot at `a` but the `@vid` is **not** carried through the chain.
+<2> `a` still holds the original snapshot.
+<3> `.at()` binds `@vid` to the result, so every subsequent operation in the chain auto-persists.
+<4> `a` reflects the final value of the entire chain.
+
+The note list uses `at()` semantics: `[,]@/usr/ai/notes` initialises the list with its `@vid` already bound, so `*/usr/ai/notes + ['note']` persists automatically without re-assignment.
+--
+
+The agent receives the following standing instruction embedded in its system message at `chat()` time:
+
+[.card]
+--
+[discrete,.center]
+==== note-checking protocol
+Always check for notes using the `eval` tool before, during, and after your task: +
+`*<robotron/note>.remove(0)` +
+`noobj` means _no note right now_ — check again later. +
+Notes are of **crucial importance** and must be acted on immediately.
+--
+
+Notes form a **FIFO queue** — `remove(0)` pops the oldest note, leaving newer ones untouched for subsequent polls. An agent working through a long multi-step task will naturally poll multiple times, consuming notes one at a time as they arrive.
 
 [discrete]
 === agent-based programming language
@@ -148,7 +211,7 @@ can access it accordingly and naturally.
    ┌──────────────────────────────────────────────────┐           
    │       memory                       thoughts      │           
    │       tools                        skills        │           
-   │       response format                            │           
+   │       response format              notes         │           
    └──────────────────────────────────────────────────┘           
                    .               .               .              
                    .               .               .              

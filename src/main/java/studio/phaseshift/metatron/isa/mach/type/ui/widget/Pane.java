@@ -111,7 +111,7 @@ public class Pane extends JRec<Pane> implements PaneNode, Stylable<Pane> {
         this.machine = null;
         // Default to simple border style (ASCII: +, |, -) for visibility
         this.style = this.style().border(Border.simple).apply().getStyle();
-        this.subscribe();
+      //  this.subscribe();
     }
 
     @Override

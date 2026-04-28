@@ -47,7 +47,7 @@ import static studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty.si
  */
 public class McpProtocolHandler extends MRec implements MServerProtocolHandler {
 
-    public static final String MACH_SERVER_MCP_PROTOCOL_TID = MSERVER_TID.extend("protocol").extend("mcp_ws").toString();
+    public static final String MACH_SERVER_MCP_PROTOCOL_TID = MSERVER_TID.extend("protocol").extend("mcp_old_ws").toString();
 
     private final MetatronMcpServer mcpServer;
     private final Map<WebSocket, McpServerSession> mcpSessions = new ConcurrentHashMap<>();

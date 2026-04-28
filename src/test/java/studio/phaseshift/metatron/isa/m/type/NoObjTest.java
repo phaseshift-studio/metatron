@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.m.type;
 
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
@@ -26,12 +27,25 @@ import studio.phaseshift.metatron.isa.m.parser.mParser;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.isa.m.mInstSet.NONE;
+import static studio.phaseshift.metatron.isa.m.type.Obj.none;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class NoObjTest extends AbstractMetatronTest {
-    
+
+    @Test
+    public void testNone() {
+        assertEquals(NONE, none());
+        assertTrue(NONE.isNone());
+        assertFalse(jnt(0).isNone());
+        assertTrue(none().isNone());
+        assertTrue(uri("none").isNone());
+    }
+
     @ParameterizedTest
     @CsvSource(value = {
             "noobj               | noobj                 |true",

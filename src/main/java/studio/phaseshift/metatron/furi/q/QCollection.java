@@ -107,12 +107,12 @@ public final class QCollection {
                             .vid(SUBSCRIPTION_TID)
                             .tid(REC_TID)
                             .isaPredicate(rec(
-                                    TARGET, URI_TYPE,
-                                    ON_RECV, T(ALL.dom(LST_TID))))
+                                    uri(TARGET).maybe().asUri(), URI_TYPE,
+                                    uri(ON_RECV), T(ALL.dom(LST_TID))))
                             .create(), "a subscription specification", "", mutableMap(
-                            uri(TARGET), "the address scope of the subscription",
+                            uri(TARGET), "the pattern that will trigger the on_recv callback (automatically added when new sub created)",
                             uri(ON_RECV), "a callback when scope of subscription changes"),
-                    "a subscription for subq qproc",
+                    "subscribe to mutations within a pattern of space",
                     "abc?subq -> |(?[uri::T,#::T].print(_))  [-- [target,new_obj] to on_recv --]");
 
     private QCollection() {
@@ -282,8 +282,8 @@ public final class QCollection {
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public static QProc subq() {
-        final Lst subscriptions = lst();
-        return QProc.Helper.build(SUBQ_TID, SUBQ_PATTERN)
+        final Lst subscriptions = lst(new ArrayList<>());
+        return QProc.Helper.build(SUBQ_TID, f(SUBQ))
                 .obj(f(OBJ), subscriptions)
                 .preRead(vid -> {
                     subscriptions.logger().debug("reading: %s", vid.basePath());
@@ -291,19 +291,22 @@ public final class QCollection {
                 })
                 .preWrite((vid, obj) -> {
                     final Obj subscription;
-                    final fURI subID = vid.qValue(SUB, fURI.class);
-                    if (obj.isNoObj()) {
+                    final fURI subID = vid.qValue(SUBQ, fURI.class);
+                    obj.logger().info("removing: %s", subID);
+                    if (obj.isNoObj() || obj.isNone()) {
                         subscription = noobj();
-                        subscriptions.lstValue().removeIf(e -> {
-                            if (subID != null)
-                                return e.asRec().at(ID).isUri();
-                            return vid.basePath().test(e.asRec().at(TARGET).uriValue());
-                        });
-                        subscription.logger().info("unsubscribing from %s", vid.basePath());
+                        subscriptions.lstValue().removeIf(existingSub ->
+                                (subID != null && null != existingSub.vid() && existingSub.vid().bimatches(subID)) ||
+                                        vid.basePath().bimatches(existingSub.asRec().at(TARGET).uriValue()));
+                        obj.logger().info("unsubscribing from %s", vid.basePath());
                     } else if (obj.tid().basePath().equals(SUBSCRIPTION_TID)) {
                         subscription = obj;
-                        subscriptions.lstValue().add(subscription);
-                        subscription.logger().info("subscribing to %s", vid.basePath());
+                        if (!subscription.asRec().has(TARGET))
+                            subscription.asRec().at(TARGET, uri(vid.basePath()), MUTABLE);
+                        if (subscriptions.lstValue().stream().noneMatch(subscription::equals)) {
+                            subscriptions.lstValue().add(subscription);
+                            subscription.logger().info("subscribing to %s", vid.basePath());
+                        }
                     } else {
                         subscription = rec(mutableMap(uri(TARGET), uri(vid.basePath()), uri(ON_RECV), obj), SUBSCRIPTION_TID, null);
                         subscriptions.lstValue().add(subscription);
@@ -314,9 +317,11 @@ public final class QCollection {
                 })
                 .qlessWrite((vid, obj) -> {
                     // subscriptions.logger().info("qless write to %s", vid.basePath());
+                    if (vid.hasQ(SUBQ))
+                        return noobj();
                     subscriptions.elements().filter(e -> vid.basePath().test(e.asRec().at(TARGET).uriValue()))
                             .forEach(s -> {
-                                subscriptions.logger().debug("spawning core thread for subscription recv: %s", s);
+                                subscriptions.logger().debug("spawning virtual thread for subscription recv: %s", s);
                                 new VirtualThread(mutableMap(
                                         uri(START), lst(List.of(vid.basePath().toUri(), obj)),
                                         uri(CODE), code(s.asRec().at(ON_RECV).asCall()).as()), MACH_CORE_THREAD_TID, null).run();

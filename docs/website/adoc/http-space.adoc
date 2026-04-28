@@ -56,7 +56,7 @@ When the REST resource is manipulated to fit the structural specification of `mo
 
 
 ++++
-<!-- 🐖
+<!-- 
 *<http://localhost:8088/v1/models/data/0>>-.           /
   -<[name=>>>id.as(uri::T),                            /
      type=>>>object.as(uri::T),                        /

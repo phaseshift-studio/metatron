@@ -16,39 +16,94 @@
 import asyncio
 import websockets
 import logging
-import re
 
 logger = logging.getLogger(__name__)
 
-
-async def submit(ws, code):
-    async with ws as websocket:
-        await websocket.send(code)
-        result = await asyncio.wait_for(websocket.recv(), timeout=2000)
-        return result
-
-
 class Mytron:
-    def __init__(self, host: str = "ws://127.0.0.1:8999"):
+    """WebSocket client for communicating with a running metatron instance.
+
+    Connects to the mtron_wsServer endpoint (ws://host:8555/mtron).  Each
+    connection is a dedicated session instance of the mtron_ws type, so the
+    server evaluates metatron expressions and returns clean metatron-syntax
+    results (no %%% separators, no </m/type>:: prefixes for base types).
+    """
+
+    def __init__(self, host: str = "ws://localhost:8555/mtron", timeout: int = 30):
         self.host = host
-        logger.info(f"connecting to {self.host}")
-        self.ws = websockets.connect(self.host)
-        logger.info(f"connected to {self.host}")
+        self.timeout = timeout
+        self._ws = None
 
-    def exec(self, code: str) -> list:
-        doc_call: str = f"\"\"\"{code}\"\"\"./m/web/inst/doc()"
-        print(f"send: {doc_call}")
-        future = asyncio.get_event_loop().run_until_complete(submit(self.ws, f"{doc_call}"))
-        result = str(future, 'utf-8').strip()
-        result = result.removeprefix("</m/str>::")
-        result = result[1:-1]
-        print(f"recv: {result}")
-        result2 = ""
-        for a in str(result).split(sep="%%%"):
-            a = a.strip()
-            if a != "noobj" and a != "":
-                result2 = result2 + f"==>{a}\n"
-        return result2[0:-1]
+    async def connect(self):
+        """Establish WebSocket connection."""
+        print(f"[mytron] connecting to {self.host} ...")
+        try:
+            self._ws = await websockets.connect(self.host)
+            print(f"[mytron] connected ok")
+        except Exception as e:
+            raise RuntimeError(f"[mytron] connection failed: {e}")
 
-    def close(self):
-        logger.info(f"closing websocket connection to {self.host}")
+    async def close(self):
+        """Close WebSocket connection."""
+        if self._ws:
+            await self._ws.close()
+            logger.info("Connection closed")
+
+    async def eval_hidden(self, expression: str, timeout: int = 120) -> None:
+        """Evaluate a hidden expression, discarding the result.
+
+        Uses a longer timeout than eval() since hidden expressions (e.g. fail
+        clears) can produce large responses.  Reconnects automatically on
+        timeout so subsequent evals are unaffected.
+        """
+        if not self._ws:
+            raise RuntimeError("Not connected. Call connect() first.")
+        print(f"send [hidden]: {expression}")
+        await self._ws.send(expression)
+        try:
+            raw = await asyncio.wait_for(self._ws.recv(), timeout=timeout)
+            raw_str = raw if isinstance(raw, str) else raw.decode('utf-8')
+            print(f"recv [hidden]: {len(raw_str)} chars")
+        except (asyncio.TimeoutError, TimeoutError):
+            print(f"[mytron] hidden eval timed out ({timeout}s): {expression!r} — reconnecting")
+            await self._reconnect()
+        except websockets.exceptions.ConnectionClosedError as e:
+            print(f"[mytron] connection closed during hidden eval: {e} — reconnecting")
+            await self._reconnect()
+
+    async def _reconnect(self):
+        """Close the current connection and open a fresh one."""
+        try:
+            if self._ws:
+                await self._ws.close()
+        except Exception:
+            pass
+        self._ws = None
+        await self.connect()
+
+    async def eval(self, expression: str) -> str:
+        """Evaluate a metatron expression and return the formatted result."""
+        if not self._ws:
+            raise RuntimeError("Not connected. Call connect() first.")
+
+        print(f"send: {expression}")
+        await self._ws.send(expression)
+        try:
+            raw = await asyncio.wait_for(self._ws.recv(), timeout=self.timeout)
+        except (asyncio.TimeoutError, TimeoutError):
+            print(f"[mytron] recv timed out for: {expression!r} — reconnecting")
+            await self._reconnect()
+            return ""
+        except websockets.exceptions.ConnectionClosedError as e:
+            print(f"[mytron] connection closed during eval: {e} — reconnecting")
+            await self._reconnect()
+            return ""
+
+        raw_str = (raw if isinstance(raw, str) else raw.decode('utf-8')).strip()
+        print(f"recv: {raw_str}")
+
+        # mtron_wsServer uses ObjmtronSerializer (APPLICATION_MTRON) — one response
+        # per send, clean metatron syntax, no %%% separators, no type prefixes for
+        # base types.  noobj means the expression produced no meaningful result.
+        if raw_str == "" or raw_str == "noobj":
+            return ""
+        return f"==>{raw_str}"

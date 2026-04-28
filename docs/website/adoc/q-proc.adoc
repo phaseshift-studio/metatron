@@ -1,26 +1,29 @@
 [discrete]
 == Q Processors
 
-A q-processor is a space attachment that intercepts reads and writes to the space according to the query component of the read from or written to fURI.
+A query process (_qproc_) is a space attachment that intercepts reads and writes according to the query parameters of the uri. These space extensions provide a practical technique that spans many use cases ranging from pub/sub, documentation, counters, transactions, type constraints, immutable constants, permissions, and more. 
+
+Currently, metarton provides the following qprocs in the core distribution.
 
 [cols="1a,2a,5a",options=header,role="table-bordered small center",header]
 |===
 ^| q     ^| key=value | description
-| subq  | subq      | subscribe to any mutations at the specific space uri
-| docq  | docq      | associate documentation with a space furi
-| incrQ | incrQ     | increment a space global counter
-| typeQ | T         | constrain objs at a space furi to be a specific type
+| subq   | subq      | subscribe to obj mutations within a furi pattern.
+| docq   | docq      | read and write obj documentation.
+| incrq  | incrq     | increment a space global counter.
+| typeq  | T         | constrain furis to only allow objs of a certain type.
+| constq | constq    | prevent objs from being mutated (updated or deleted).
 |===
 
 The q-processor type is defined as
 
 ++++
 <!-- 🐖
-*q
+*qproc
 -->
 ++++
 
-where a q-processor may implement any of the associated read/write stages.
+where a qproc may implement any of the associated read/write interception stages.
 
 [cols="7a,4a",separator=🧱,role="table-bordered small center"]
 |===
@@ -54,3 +57,39 @@ where a q-processor may implement any of the associated read/write stages.
        └─────────────┘     └─────────────┘                                         
 ----
 |===
+
+[discrete]
+=== qproc examples
+
+[discrete]
+==== subq: publish and subscribe to patterns in space
+
+++++
+<!-- 🐖
+*/sys/space/usr
+/usr/notes/#?subq -> sub::[on_recv=>print('${>>1} written to ${>>0}')]
+*/usr/notes/#?subq
+/usr/notes/#?subq -> none
+*/usr/notes/#?subq
+-->
+++++
+
+For target removal of subscriptions, place the subscription in space by vid. Then use `subq` value to match on the vid.
+
+++++
+<!-- 🐖
+/usr/notes/#?subq -> sub::[on_recv=>print('${>>1} written to ${>>0}')]@abc
+*/usr/notes/#?subq
+/usr/notes/#?subq=abc -> none
+*/usr/notes/#?subq
+-->
+++++
+
+[discrete]
+==== docq: documentation for human and agent
+
+[discrete]
+==== typeq: space type constraints
+
+[discrete]
+==== incrq: furis with counters

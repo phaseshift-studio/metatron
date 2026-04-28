@@ -182,9 +182,9 @@ ultimately dependent on the incoming lhs `obj`, where
 
 ++++
 <!-- 🐖 [NO_HEADER]
-{1,2,3,4,5}-<[?>2 => as(str::T) + ' greater than 2', /
-              ?>5 => as(str::T) + ' greater than 5', /
-              _   => as(str::T) + ' is something.']
+{1,2,3,4,5}-<[?>2 => '${_} greater than 2', /
+              ?>5 => '${_} greater than 5', /
+              _   => '${_} is something.']
 -->
 ++++
 
@@ -213,8 +213,8 @@ ultimately dependent on the incoming lhs `obj`, where
 
 ++++
 <!-- 🐖 
-{1,2,3,4,5}-<[?>2 => as(str::T) + ' greater than 2', /
-              ?>5 => as(str::T) + ' greater than 5', /
-              _   => as(str::T) + ' is something.'].>>
+{1,2,3,4,5}-<[?>2 => '${_} greater than 2', /
+              ?>5 => '${_} greater than 5', /
+              _   => '${_} is something.']>>
 -->
 ++++

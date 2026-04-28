@@ -198,6 +198,7 @@ public interface Inst extends Call {
                 this.tid().basePath().equals(WHERE_INST_TID) ||
                 this.tid().basePath().equals(GROUP_INST_TID) ||
                 this.tid().basePath().equals(REPEAT_INST_TID) ||
+                this.tid().basePath().equals(ELSE_INST_TID) ||
                 this.tid().basePath().equals(CATCH_INST_TID);
     }
 
@@ -519,6 +520,8 @@ public interface Inst extends Call {
                                     return arg;
                                 else {
                                     final Obj r = Objs.trySingleton(arg.apply(lhs));
+                                    if (null == r)
+                                        return null;
                                     // Allow template expansion: if arg is Uri or Str with templates, always return expanded result
                                     final boolean isTemplateExpansion = (arg.isUri() && arg.asUri().hasTemplates()) ||
                                             (arg.isStr() && arg.strValue().contains("${"));

@@ -90,14 +90,14 @@ public class WSServerRec extends MRec implements WSServer {
     public void onMessage(final WebSocket conn, final String message) {
         final Obj result = this.at(uri(ON_MESSAGE)).apply(this.inContentType.serializer().inputBytes(ByteBuffer.wrap(message.getBytes())));
         // noobj signals "no response" (e.g. JSON-RPC notifications have no id and require no reply)
-        if (!result.isNoObj())
+        //if (result.isNoObj())
             this.send(result);
     }
 
     @Override
     public void onMessage(final WebSocket conn, final ByteBuffer message) {
         final Obj result = this.at(uri(ON_MESSAGE)).apply(this.inContentType.serializer().inputBytes(message));
-        if (!result.isNoObj())
+        //if (!result.isNoObj())
             this.send(result);
     }
 

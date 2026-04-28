@@ -253,8 +253,8 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     default boolean testByID(final Obj rhs) {
         Type rhsType = rhs.isType() ? rhs.asType() : rhs.type();
         Type current = this.isType() ? this.asType() : this.type();
-        while (true) {
-            if (current.vid().test(rhsType.vid()))
+        while (null != current) {
+            if (null != current.vid() && current.vid().test(rhsType.vid()))
                 return true;
             if (current.isBaseType())
                 break;
@@ -311,6 +311,14 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     @Override
     default Iterator<Obj> iterator() {
         return this.isNoObj() ? IteratorUtil.of() : (this.isObjs() ? this.objsValue().iterator() : IteratorUtil.of(this));
+    }
+
+    default boolean isNone() {
+        return this.isUri() && this.uriValue().basePath().toString().equals("none");
+    }
+
+     static Uri none() {
+        return NONE;
     }
 
     default Type dom() {

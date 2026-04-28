@@ -37,6 +37,7 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
@@ -159,7 +160,10 @@ public class tbleSpace extends AbstractSpace<Connection> {
         MTronException.wrap(() -> Class.forName(config.get(uri(DRIVER)).uriValue().toString()));
         try {
             final Connection conn = DriverManager.getConnection(JDBC + config.get(uri(HOST)).uriValue().toString());
-            return new tbleSpace(conn, config, TBLE_SPACE_TID, vid);
+            // Defensive copy: the constructor mutates the config map (adds TABLE/SCHEMA entries).
+            // The original map is the shared jvm() of the caller's Rec — modifying it concurrently
+            // while another thread iterates it causes ConcurrentModificationException.
+            return new tbleSpace(conn, new LinkedHashMap<>(config), TBLE_SPACE_TID, vid);
         } catch (final SQLException ex) {
             throw MTronException.of(ex);
         }

@@ -98,8 +98,8 @@ include::grid-button.adoc[]
 include::grid-button.adoc[]
 
 :card-id: 7
-:card-title: IoT Integration
-:card-disabled: disabled
+:card-title: Console
+:card-disabled:
 include::grid-button.adoc[]
 
 :card-id: 8
@@ -312,8 +312,8 @@ include::grid-button.adoc[]
 include::grid-button.adoc[]
 
 :card-id: 7
-:card-title: IoT Integration
-:card-disabled: disabled
+:card-title: Console
+:card-disabled:
 include::grid-button.adoc[]
 
 ++++
@@ -426,6 +426,10 @@ include::card.adoc[]
 :card-file: types.adoc
 include::card.adoc[]
 
+:card-id: 7
+:card-file: console.adoc
+include::card.adoc[]
+
 :card-id: 8
 :card-file: poly-obj.adoc
 include::card.adoc[]
@@ -435,7 +439,7 @@ include::card.adoc[]
 include::card.adoc[]
 
 :card-id: 10
-:card-file: q-processors-panel.adoc
+:card-file: q-proc.adoc
 include::card.adoc[]
 
 :card-id: 11

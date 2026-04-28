@@ -1645,7 +1645,7 @@ bin/metatron</code></pre>
 <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-4" aria-expanded="false" aria-controls="card-4" >Instruction Sets</button></div>
 <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-5" aria-expanded="false" aria-controls="card-5" >Fail and Catch</button></div>
 <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-6" aria-expanded="false" aria-controls="card-6" >Types</button></div>
-<div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-7" aria-expanded="false" aria-controls="card-7" disabled>IoT Integration</button></div>
+<div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-7" aria-expanded="false" aria-controls="card-7" >Console</button></div>
 <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-8" aria-expanded="false" aria-controls="card-8" >Poly Obj</button></div>
 <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-9" aria-expanded="false" aria-controls="card-9" >Uniform Resource Identifiers</button></div>
 <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-10" aria-expanded="false" aria-controls="card-10" >Q Processors</button></div>
@@ -1707,7 +1707,7 @@ bin/metatron</code></pre>
                     <div class="row row-cols-4 g-3 tutorial-grid">
 <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-4" aria-expanded="false" aria-controls="card-4" >Instruction Sets</button></div>
 <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-3" aria-expanded="false" aria-controls="card-3" >Large Language Models</button></div>
-<div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-7" aria-expanded="false" aria-controls="card-7" disabled>IoT Integration</button></div>
+<div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-7" aria-expanded="false" aria-controls="card-7" >Console</button></div>
                         <div class="col"></div>
                         <div class="col"></div>
                         <div class="col"></div>
@@ -1976,7 +1976,12 @@ lhs =&gt; inst(arg1,...,argN){ inst1...instN } =&gt; rhs
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *&lt;+/#/&gt;
-==&gt;boot/args=&gt;[
+==&gt;fail::[rhs does not match inst range:
+	{abc/on_recv=&gt;print('${&gt;&gt;1} written to ${&gt;&gt;0}'),boot/script/python=&gt;/usr/bin/python3,testy/name=&gt;deepseek-v4-pro,boot/script/bash=&gt;/bin/bash,testy/note=&gt;!*/usr/ai/notes,boot/args/local=&gt;booger,testy/response=&gt;[to=&gt;print(id())],equipment=&gt;rec::T[?[
+     model=&gt;   uri::T,
+     year =&gt;   int::T]]@equipment,animal=&gt;rec::T[?[
+     name=&gt;   str::T,
+     age =&gt;   int::T]]@animal,a=&gt;b,boot/peers/1=&gt;&lt;ws://127.0.0.1:7777&gt;,boot/script/sh=&gt;/bin/sh,boot/args=&gt;[
  host =&gt; &lt;ws://0.0.0.0:8999&gt;,
  boot =&gt; &lt;/home/killswitch/software/metatron/boot/boot.mtron&gt;,
  log  =&gt; info,
@@ -1984,46 +1989,36 @@ lhs =&gt; inst(arg1,...,argN){ inst1...instN } =&gt; rhs
  web  =&gt;[
    http=&gt;  http://localhost:8777,
    ws  =&gt;  ws://localhost:8999],
- local=&gt; booger,
- mqtt =&gt;[broker=&gt;&lt;mqtt://chibi.local:1883&gt;]]
-==&gt;boot/script/python=&gt;/usr/bin/python3
-==&gt;boot/args/mqtt=&gt;[broker=&gt;&lt;mqtt://chibi.local:1883&gt;]
-==&gt;boot/script/bash=&gt;/bin/bash
-==&gt;boot/args/local=&gt;booger
-==&gt;equipment=&gt;rec::T[?[
-     model=&gt;   uri::T,
-     year =&gt;   int::T]]@equipment
-==&gt;animal=&gt;rec::T[?[
-     name=&gt;   str::T,
-     age =&gt;   int::T]]@animal
-==&gt;a=&gt;b
-==&gt;boot/peers/1=&gt;&lt;ws://127.0.0.1:7777&gt;
-==&gt;boot/script/sh=&gt;/bin/sh
-==&gt;boot/args/host=&gt;&lt;ws://0.0.0.0:8999&gt;
-==&gt;boot/script=&gt;[
+ local=&gt; booger],testy/desc=&gt;'testy the agent',boot/args/host=&gt;&lt;ws://0.0.0.0:8999&gt;,abc=&gt;sub::[
+ on_recv=&gt; print('${&gt;&gt;1} written to ${&gt;&gt;0}'),
+ target =&gt; /usr/notes/#]@abc,testy/memory=&gt;memory::[
+ max=&gt; 20,
+ mem=&gt; !*/usr/ai/memory],boot/script=&gt;[
  sh    =&gt; /bin/sh,
  bash  =&gt; /bin/bash,
  zsh   =&gt; /bin/zsh,
  python=&gt; /usr/bin/python3,
  perl  =&gt; /usr/bin/perl,
- mtron =&gt; /bin/mtron]
-==&gt;boot/args/web=&gt;[
+ mtron =&gt; /bin/mtron],testy/think=&gt;/usr/ui/console/pane/0/stream(id()),boot/args/web=&gt;[
  http=&gt; http://localhost:8777,
- ws  =&gt; ws://localhost:8999]
-==&gt;boot/args/boot=&gt;&lt;/home/killswitch/software/metatron/boot/boot.mtron&gt;
-==&gt;fs_prefix=&gt;booger
-==&gt;chicken=&gt;animal::T@chicken
-==&gt;boot/script/perl=&gt;/usr/bin/perl
-==&gt;b=&gt;c
-==&gt;boot/args/log=&gt;info
-==&gt;boot/peers=&gt;[
+ ws  =&gt; ws://localhost:8999],boot/args/boot=&gt;&lt;/home/killswitch/software/metatron/boot/boot.mtron&gt;,abc/target=&gt;/usr/notes/#,fs_prefix=&gt;booger,chicken=&gt;animal::T@chicken,boot/script/perl=&gt;/usr/bin/perl,b=&gt;c,testy/tool=&gt;[
+    !*eval,
+    !*sql],boot/args/log=&gt;info,boot/peers=&gt;[
     ws://localhost:6666,
-    &lt;ws://127.0.0.1:7777&gt;]
-==&gt;boot/script/zsh=&gt;/bin/zsh
-==&gt;boot/args/space=&gt;/sys/space
-==&gt;boot/peers/0=&gt;ws://localhost:6666
-==&gt;boot/script/mtron=&gt;/bin/mtron
-==&gt;boot/file=&gt;&lt;/home/killswitch/software/metatron/boot/boot.mtron&gt;@boot/file</code></pre>
+    &lt;ws://127.0.0.1:7777&gt;],testy/provider=&gt;!*/sys/space/deepseek,boot/script/zsh=&gt;/bin/zsh,boot/args/space=&gt;/sys/space,boot/peers/0=&gt;ws://localhost:6666,boot/script/mtron=&gt;/bin/mtron,host=&gt;http://localhost:8777,testy/skill=&gt;[!*&lt;local:software/metatron/.agent/skills/mtron&gt;.as(skill::T)],testy=&gt;model::[
+ think   =&gt; /usr/ui/console/pane/0/stream(id()),
+ desc    =&gt; 'testy the agent',
+ memory  =&gt;memory::[
+   max=&gt;  20,
+   mem=&gt;  !*/usr/ai/memory],
+ tool    =&gt;[
+      !*eval,
+      !*sql],
+ note    =&gt; !*/usr/ai/notes,
+ skill   =&gt;[!*&lt;local:software/metatron/.agent/skills/mtron&gt;.as(skill::T)],
+ response=&gt;[to=&gt;print(id())],
+ name    =&gt; deepseek-v4-pro,
+ provider=&gt; !*/sys/space/deepseek]@testy,boot/file=&gt;&lt;/home/killswitch/software/metatron/boot/boot.mtron&gt;@boot/file}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/19724</code></pre>
 </div>
 </div>
 </div>
@@ -2077,9 +2072,7 @@ Given the filtering behavior of the instruction, the signature of <code>band</co
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; |inst?int{?}&lt;=int(_,_){ is(and(gte(*0),lte(*1))) }@band  ​1​
-==&gt;inst?rng=int{?}&amp;dom=int(id(),id()){is(and(gte(*0),lte(*1)))}@band
 mtron&gt; *band                                                    ​2​
-==&gt;inst?rng=int{?}&amp;dom=int(id(),id()){is(and(gte(*0),lte(*1)))}@band
 mtron&gt; 3.band(2,8)                                              ​3​
 ==&gt;3
 mtron&gt; 10.band(2,8)                                             ​4​</code></pre>
@@ -2134,7 +2127,6 @@ arguments are resolved from the stack via their furi name.</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; |inst?int{?}&lt;=int(min=&gt;_,max=&gt;_){ is(and(gte(*min),lte(*max))) }@band
-==&gt;inst?rng=int{?}&amp;dom=int(min=&gt;id(),max=&gt;id()){is(and(gte(*min),lte(*max)))}@band
 mtron&gt; 3.band(min=&gt;2,max=&gt;4)                 ​1​
 ==&gt;3
 mtron&gt; 3.band(2,8)                           ​2​
@@ -2196,7 +2188,6 @@ If the incoming <code>obj</code> to <code>else</code> is <code>noobj</code>, the
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; |inst?int{?}&lt;=int(min=&gt;else(2),max=&gt;else(8)){ is(and(gte(*min),lte(*max))) }@band
-==&gt;inst?rng=int{?}&amp;dom=int(min=&gt;else(2),max=&gt;else(8)){is(and(gte(*min),lte(*max)))}@band
 mtron&gt; 1.band(min=&gt;1)                        ​1​
 ==&gt;1
 mtron&gt; 10.band()                             ​2​
@@ -2249,25 +2240,19 @@ can be any arbitrary <code>obj</code> (thus, <code>code</code>). Type arguments 
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; nat  -&gt; int::T[?&gt;0]         ​1​
-==&gt;int::T[is(gt(0))]
 mtron&gt; |inst?int{?}&lt;=int(min=&gt;?nat::T,max=&gt;?nat::T){ is(and(gte(*min),lte(*max))) }@band
-==&gt;inst?rng=int{?}&amp;dom=int(min=&gt;?nat::T,max=&gt;?nat::T){is(and(gte(*min),lte(*max)))}@band
 mtron&gt; 15.band(10,20)              ​2​
 ==&gt;15
 mtron&gt; -15.band(-20,-10)           ​3​
 ==&gt;-15
 mtron&gt; band -&gt; |inst?int{?}&lt;=int(min=&gt;as(nat::T),max=&gt;as(nat::T)){ is(and(gte(*min),lte(*max))) }
-==&gt;inst?rng=int{?}&amp;dom=int(min=&gt;as(nat::T),max=&gt;as(nat::T)){is(and(gte(*min),lte(*max)))}
 mtron&gt; 15.band(10,20)              ​4​
-==&gt;15
 mtron&gt; -15.band(-20,-10)           ​5​
 mtron&gt; band -&gt; |inst?int{?}&lt;=int(min=&gt;?nat::T.else(fail()),max=&gt;?nat::T.else(fail())){ is(and(gte(*min),lte(*max))) }
-==&gt;fail::[fail() is not a fail::T][...]@/sys/fail/280
+==&gt;fail::[fail() is not a fail::T][...]@/sys/fail/26390
 mtron&gt; 15.band(10,20)              ​6​
-==&gt;15
 mtron&gt; -15.band(-20,-10)           ​7​
 mtron&gt; band -&gt; |inst?int{?}&lt;=int(min=&gt;?nat::T.else(-100),max=&gt;?nat::T.else(100)){ is(and(gte(*min),lte(*max))) }
-==&gt;inst?rng=int{?}&amp;dom=int(min=&gt;isa(nat::T).else(-100),max=&gt;isa(nat::T).else(100)){is(and(gte(*min),lte(*max)))}
 mtron&gt; 15.band(10,20)              ​8​
 ==&gt;15
 mtron&gt; -15.band(-20,-10)           ​9​
@@ -2317,15 +2302,15 @@ Finally, a degenerate anonymous <code>inst</code> with no specified variable fra
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; 10.(min=&gt;2,max=&gt;8){ is(and(gte(*min),lte(*max))) }                ​1​
 ==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/294
+	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/33056
 mtron&gt; 10.(min=&gt;minus(1),max=&gt;plus(1)){ is(and(gte(*min),lte(*max))) }   ​2​
 ==&gt;10
 mtron&gt; 10.(min=&gt;2,max=&gt;8){ is(and(gte(*bad_min),lte(*bad_max))) }        ​3​
 ==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/296
+	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/33058
 mtron&gt; 10.(){ is(and(gte(*min),lte(*max))) }                             ​4​
 ==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/298
+	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/33060
 mtron&gt; 10.is(and(gte(minus(1)),lte(plus(1))))                            ​5​
 ==&gt;10</code></pre>
 </div>
@@ -2364,11 +2349,11 @@ mtron&gt; 10.is(and(gte(minus(1)),lte(plus(1))))                            ​5
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;_)[mod(*by).eq(0)]
 ==&gt;fail::[is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;_)[mod(*by).eq(0)]
                                       ^ end of input expected
-][...]@/sys/fail/300
+][...]@/sys/fail/33062
 mtron&gt; 10.is_divisible(2)
-==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/302
+==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/33064
 mtron&gt; 10.is_divisible('abc')
-==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/304</code></pre>
+==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/33066</code></pre>
 </div>
 </div>
 </div>
@@ -2393,7 +2378,7 @@ mtron&gt; 10.is_divisible('abc')
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; band -&gt; |band?int{?}&lt;=int(min=&gt;_,max=&gt;is(gt(*min)).else(*min.plus(1)))[is(gte(*min)).is(lte(*max))]
 ==&gt;fail::[band -&gt; |band?int{?}&lt;=int(min=&gt;_,max=&gt;is(gt(*min)).else(*min.plus(1)))[is(gte(*min)).is(lte(*max))]
                                                                       ^ end of input expected
-][...]@/sys/fail/306
+][...]@/sys/fail/33068
 mtron&gt; 2.band(min=&gt;1,max=&gt;1)                 ​1​</code></pre>
 </div>
 </div>
@@ -2415,11 +2400,11 @@ mtron&gt; 2.band(min=&gt;1,max=&gt;1)                 ​1​</code></pre>
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;is(neq(0)).else(print('error').map(1)))[mod(*by).eq(0)]
 ==&gt;fail::[is_divisible -&gt; |is_divisble?bool&lt;=int(by?int=&gt;is(neq(0)).else(print('error').map(1)))[mod(*by).eq(0)]
                                       ^ end of input expected
-][...]@/sys/fail/308
+][...]@/sys/fail/33070
 mtron&gt; 10.is_divisible(2)
-==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/310
+==&gt;fail::[unable to locate inst-f of is_divisible(2)][...]@/sys/fail/33072
 mtron&gt; 10.is_divisible('abc')
-==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/312</code></pre>
+==&gt;fail::[unable to locate inst-f of is_divisible('abc')][...]@/sys/fail/33074</code></pre>
 </div>
 </div>
 </div>
@@ -2446,10 +2431,9 @@ a type structure, a coefficient, and polymorphic generics.</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; triple -&gt; |inst?lst&lt;=int{3}(){&gt;-[,]}
-==&gt;inst?rng=lst&amp;dom=int{3}(){merge([,])}
 mtron&gt; {1,2,3,4,5,6}.triple()
-==&gt;[1,2,3]
-==&gt;[4,5,6]</code></pre>
+==&gt;fail::[rhs does not match inst range:
+	{[1,2,3],[4,5,6]}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/33076</code></pre>
 </div>
 </div>
 <div class="admonitionblock note">
@@ -2466,9 +2450,7 @@ This ensures the uri <code>triple</code> is not applied to the <code>inst</code>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; triple -&gt; |inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}
-==&gt;inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}
-mtron&gt; *triple
-==&gt;inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}</code></pre>
+mtron&gt; *triple</code></pre>
 </div>
 </div>
 </td>
@@ -2481,10 +2463,9 @@ mtron&gt; *triple
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; triple -&gt; |inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}
-==&gt;inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}
 mtron&gt; {1,2,3,4,5,6}.triple()
-==&gt;[1,2,3]
-==&gt;[4,5,6]</code></pre>
+==&gt;fail::[rhs does not match inst range:
+	{[1,2,3],[4,5,6]}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/33078</code></pre>
 </div>
 </div>
 <div class="admonitionblock note">
@@ -2626,16 +2607,16 @@ That is, given <code>rec</code> relations,</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; {1,2}                                          ​1​
-==&gt;1
-==&gt;2
+==&gt;fail::[rhs does not match inst range:
+	{1,2}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/16010
 mtron&gt; {1,2}.split([is(lt(2))  =&gt; plus(9),
                     is(gte(2)) =&gt; plus(3)])
-==&gt;[1=&gt;10]
-==&gt;[2=&gt;5]
+==&gt;fail::[rhs does not match inst range:
+	{[1=&gt;10],[2=&gt;5]}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/16012
 mtron&gt; {1,2}.split([is(lt(2))  =&gt; plus(9),
                     is(gte(2)) =&gt; plus(3)]).rshift()  ​5​
-==&gt;10
-==&gt;5</code></pre>
+==&gt;fail::[rhs does not match inst range:
+	{10,5}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/16014</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -2675,11 +2656,11 @@ mtron&gt; {1,2}.split([is(lt(2))  =&gt; plus(9),
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; {1,2}-&lt;[?&lt;2=&gt;+9,?&gt;=2=&gt;+3]
-==&gt;[1=&gt;10]
-==&gt;[2=&gt;5]
+==&gt;fail::[rhs does not match inst range:
+	{[1=&gt;10],[2=&gt;5]}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/16016
 mtron&gt; {1,2}-&lt;[?&lt;2=&gt;+9,?&gt;=2=&gt;+3]&gt;&gt;
-==&gt;10
-==&gt;5</code></pre>
+==&gt;fail::[rhs does not match inst range:
+	{10,5}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/16018</code></pre>
 </div>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="ulist">
@@ -2707,15 +2688,15 @@ mtron&gt; {1,2}-&lt;[?&lt;2=&gt;+9,?&gt;=2=&gt;+3]&gt;&gt;
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; {1,2}-&lt;[gte(2),gt(3)]            ​1​
-==&gt;[false,false]
-==&gt;[true,false]
+==&gt;fail::[rhs does not match inst range:
+	{[false,false],[true,false]}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/16020
 mtron&gt; {1,2}-&lt;[?&gt;=2,?&gt;3]                ​2​
-==&gt;[
+==&gt;fail::[rhs does not match inst range:
+	{[
     noobj,
-    noobj]
-==&gt;[
+    noobj],[
     2,
-    noobj]
+    noobj]}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/16022
 mtron&gt; {1,2}-&lt;[?&gt;=2,?&gt;3]&gt;-              ​3​
 ==&gt;2</code></pre>
 </div>
@@ -2751,14 +2732,11 @@ ultimately dependent on the incoming lhs <code>obj</code>, where</p>
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre>mtron&gt; {1,2,3,4,5}-&lt;[?&gt;2 =&gt; as(str::T) + ' greater than 2',
-                     ?&gt;5 =&gt; as(str::T) + ' greater than 5',
-                     _   =&gt; as(str::T) + ' is something.']
-==&gt;[1=&gt;'1 is something.']
-==&gt;[2=&gt;'2 is something.']
-==&gt;[3=&gt;{'3 greater than 2','3 is something.'}]
-==&gt;[4=&gt;{'4 greater than 2','4 is something.'}]
-==&gt;[5=&gt;{'5 greater than 2','5 is something.'}]</pre>
+<pre>mtron&gt; {1,2,3,4,5}-&lt;[?&gt;2 =&gt; '${_} greater than 2',
+                     ?&gt;5 =&gt; '${_} greater than 5',
+                     _   =&gt; '${_} is something.']
+==&gt;fail::[rhs does not match inst range:
+	{[1=&gt;'1 is something.'],[2=&gt;'2 is something.'],[3=&gt;{'3 greater than 2','3 is something.'}],[4=&gt;{'4 greater than 2','4 is something.'}],[5=&gt;{'5 greater than 2','5 is something.'}]}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/16024</pre>
 </div>
 </div>
 </div>
@@ -2778,17 +2756,11 @@ ultimately dependent on the incoming lhs <code>obj</code>, where</p>
 <h3 id="_ifthenelse" class="discrete">If/Then/Else</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; {1,2,3,4,5}-&lt;[?&gt;2 =&gt; as(str::T) + ' greater than 2',
-                     ?&gt;5 =&gt; as(str::T) + ' greater than 5',
-                     _   =&gt; as(str::T) + ' is something.'].&gt;&gt;
-==&gt;1 is something.
-==&gt;2 is something.
-==&gt;3 greater than 2
-==&gt;3 is something.
-==&gt;4 greater than 2
-==&gt;4 is something.
-==&gt;5 greater than 2
-==&gt;5 is something.</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; {1,2,3,4,5}-&lt;[?&gt;2 =&gt; '${_} greater than 2',
+                     ?&gt;5 =&gt; '${_} greater than 5',
+                     _   =&gt; '${_} is something.']&gt;&gt;
+==&gt;fail::[rhs does not match inst range:
+	{'1 is something.','2 is something.','3 greater than 2','3 is something.','4 greater than 2','4 is something.','5 greater than 2','5 is something.'}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/16026</code></pre>
 </div>
 </div>
 </div>
@@ -2843,41 +2815,26 @@ ultimately dependent on the incoming lhs <code>obj</code>, where</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */m/llm/model
-==&gt;rec::T[?[
-     provider   =&gt;   catalog::T,
-     name       =&gt;   uri::T,
-     {?}think   =&gt;   #::T,
-     {?}response=&gt;{?}[
-       {?}to    =&gt;    inst::T,
-       {?}format=&gt;    #::T],
-     {?}size    =&gt;   bB::T,
-     {?}memory  =&gt;   memory{?}::T,
-     {?}desc    =&gt;   str::T,
-     {?}skill   =&gt;   lst{?}::T,
-     {?}tool    =&gt;[split([
-    ?tool::T,
-    ?mcp::T])]]]@/m/llm/model</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */m/llm/model</code></pre>
 </div>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *ollama:+.take(3)
-==&gt;model::[
+==&gt;fail::[rhs does not match inst range:
+	{model::[
  provider=&gt; !*/sys/space/ollama,
  name    =&gt; qwen3-coder-next:latest,
  skill   =&gt;[completion,tools],
- size    =&gt; gB::48.1881]@ollama:qwen3-coder-next:latest
-==&gt;model::[
+ size    =&gt; gB::48.1881]@ollama:qwen3-coder-next:latest,model::[
  provider=&gt; !*/sys/space/ollama,
  name    =&gt; llama3-groq-tool-use:latest,
  skill   =&gt;[completion,tools],
- size    =&gt; gB::4.3411]@ollama:llama3-groq-tool-use:latest
-==&gt;model::[
+ size    =&gt; gB::4.3411]@ollama:llama3-groq-tool-use:latest,model::[
  provider=&gt; !*/sys/space/ollama,
  name    =&gt; llava:latest,
  skill   =&gt;[completion,vision],
- size    =&gt; gB::4.4083]@ollama:llava:latest</code></pre>
+ size    =&gt; gB::4.4083]@ollama:llava:latest}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/38044</code></pre>
 </div>
 </div>
 <h3 id="_llm_interactions" class="discrete">llm interactions</h3>
@@ -2892,7 +2849,7 @@ ai -> *ollama:+/+                                             /
        .take(1)
 *ai>>=[think=>true,                                           /
        memory=>[mem=>/usr/mem,max=>5],                        /
-       tools =>!*eval]
+       tools =>[!*eval]
 *ai.+[think=>print(_),response=>to(/usr/ai/response)]
    .chat("Remember the word 'metatron'. I'll ask you to recall this word later.")
 */usr/ai/response
@@ -2906,19 +2863,14 @@ ai -> *ollama:+/+                                             /
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */m/math.&gt;&gt;type.&gt;&gt;    ​1​
-==&gt;real::T@/m/math/data_size
-==&gt;data_size::T[][
-   /m/math/bB/ctor?bB&lt;=#{?}(#::T)]@/m/math/bB
-==&gt;data_size::T[][
-   /m/math/kB/ctor?kB&lt;=#{?}(#::T)]@/m/math/kB
-==&gt;data_size::T[][
-   /m/math/mB/ctor?mB&lt;=#{?}(#::T)]@/m/math/mB
-==&gt;data_size::T[][
-   /m/math/gB/ctor?gB&lt;=#{?}(#::T)]@/m/math/gB
-==&gt;data_size::T[][
-   /m/math/tB/ctor?tB&lt;=#{?}(#::T)]@/m/math/tB
-==&gt;data_size::T[][
-   /m/math/pB/ctor?pB&lt;=#{?}(#::T)]@/m/math/pB</code></pre>
+==&gt;fail::[rhs does not match inst range:
+	{real::T@/m/math/data_size,data_size::T[][
+   /m/math/bB/ctor?bB&lt;=#{?}(#::T)]@/m/math/bB,data_size::T[][
+   /m/math/kB/ctor?kB&lt;=#{?}(#::T)]@/m/math/kB,data_size::T[][
+   /m/math/mB/ctor?mB&lt;=#{?}(#::T)]@/m/math/mB,data_size::T[][
+   /m/math/gB/ctor?gB&lt;=#{?}(#::T)]@/m/math/gB,data_size::T[][
+   /m/math/tB/ctor?tB&lt;=#{?}(#::T)]@/m/math/tB,data_size::T[][
+   /m/math/pB/ctor?pB&lt;=#{?}(#::T)]@/m/math/pB}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/38046</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -2932,11 +2884,11 @@ ai -> *ollama:+/+                                             /
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; gB::500.0.as(mB::T)    ​1​
-==&gt;mB::512000.0000
+==&gt;'500.0'
 mtron&gt; gB::500.0.as(kB::T)    ​2​
-==&gt;kB::524288000.0000
+==&gt;'500.0'
 mtron&gt; tB::1.0.as(mB::T)      ​3​
-==&gt;mB::1048576.0000</code></pre>
+==&gt;'1.0'</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3035,20 +2987,20 @@ mtron&gt; tB::1.0.as(mB::T)      ​3​
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *robotron.chat('what tools do you have access to?',
                    [number_of_tools=&gt;int::T,tool_names=&gt;str::T])         ​1​
 ==&gt;[
- number_of_tools=&gt; 5,
- tool_names     =&gt; 'mtron, activate_skill, m_inst_eval, rea...']
+ number_of_tools=&gt; 2,
+ tool_names     =&gt; 'mtron, read_skill_resource']
 mtron&gt; *robotron.chat('what skills do you have?')                        ​2​
-==&gt;I have access to the following skill:
+==&gt;"""I have access to the following skills:
 
-1. **mtron**: Metatron knowledge to assist users.
+1. **mtron**: This skill provides metatron knowledge to assist users."""
 mtron&gt; *robotron&gt;&gt;memory                                                 ​3​
 ==&gt;[
  mem=&gt; !*&lt;local:.agent/robotron/memory&gt;,
  max=&gt; 20]
 mtron&gt; *robotron&gt;&gt;memory/mem/2/attributes/format                         ​4​
 ==&gt;[
- number_of_tools=&gt; 5,
- tool_names     =&gt; 'mtron, activate_skill, m_inst_eval, rea...']</code></pre>
+ number_of_tools=&gt; 2,
+ tool_names     =&gt; 'mtron, read_skill_resource']</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3067,6 +3019,118 @@ mtron&gt; *robotron&gt;&gt;memory/mem/2/attributes/format                       
 </tr>
 </table>
 </div>
+<h3 id="_agent_notes" class="discrete">agent notes</h3>
+<div class="paragraph">
+<p>metatron introduces the concept of <em>notes</em> to the agent toolkit. Notes are a message board written to and read from (potentially many times) by an LLM during the execution of a task&#8201;&#8212;&#8201;that is, within a single chat iteration. Notes are useful in the following situations:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>real-time feedback</strong>: if the agent has made a mistake in their <em>thinking</em>, there is no need to wait for the agent&#8217;s response to complete nor halt the agent mid-thought. Instead, a note can be pushed on the agent&#8217;s note stack and the agent will pop off the note, read it, and adjust itself accordingly.</p>
+</li>
+<li>
+<p><strong>real-time system message</strong>: the agent&#8217;s system message is written at the start of chat and remains static for the duration of the interaction. Notes serve as dynamic system messages allowing programmatic alterations in the agent&#8217;s behavior within a single interaction.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>Notes are enabled by adding <code>note&#8658;[,]</code> to the agent&#8217;s configuration.
+The <code>eval</code> tool must also be present — the agent uses it to poll and pop notes from the note stack.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">*&lt;openai:gpt-4o&gt;.at(robotron).
+ &gt;&gt;=[tool =&gt; [!*eval],        [<i class="conum" data-value="1"></i><b>(1)</b>
+     note =&gt; [,]]             [<i class="conum" data-value="2"></i><b>(2)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td><code>eval</code> is required — the agent calls it internally to read and consume notes.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td><code>[,]</code> initializes an empty note list and activates the note-checking instruction in the agent&#8217;s system message.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>While <code>robotron</code> is executing a task, a note can be pushed at any time from any other mtron context:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">*&lt;robotron/note&gt; + ['Reconsider — the user wants the result in euros, not dollars']   [<i class="conum" data-value="1"></i><b>(1)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td><code>+</code> concatenates to the note list at <code>{vid}/note</code>. Because the list carries its <code>@vid</code>, the mutation is automatically persisted to space — no explicit save needed.</td>
+</tr>
+</table>
+</div>
+<div class="openblock card">
+<div class="content">
+<h4 id="_vid_auto_persistence" class="discrete">@vid auto-persistence</h4>
+<div class="paragraph">
+<p>Any <code>obj</code> that carries a <code>@vid</code> annotation is <em>space-aware</em>: mutations to it (via <code>+</code>, <code>remove()</code>, or any other mutating instruction) are automatically reflected in the space at that address — no explicit re-assignment required.</p>
+</div>
+<div class="paragraph">
+<p>The difference between <code>.to()</code> and <code>.at()</code> is critical here:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">1.to(a) + 2 + 3    [<i class="conum" data-value="1"></i><b>(1)</b>
+*a                 [<i class="conum" data-value="2"></i><b>(2)</b>
+1.at(a) + 2 + 3    [<i class="conum" data-value="3"></i><b>(3)</b>
+*a                 [<i class="conum" data-value="4"></i><b>(4)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td><code>.to()</code> saves a snapshot at <code>a</code> but the <code>@vid</code> is <strong>not</strong> carried through the chain.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td><code>a</code> still holds the original snapshot.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td><code>.at()</code> binds <code>@vid</code> to the result, so every subsequent operation in the chain auto-persists.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td><code>a</code> reflects the final value of the entire chain.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The note list uses <code>at()</code> semantics: <code>[,]@/usr/ai/notes</code> initialises the list with its <code>@vid</code> already bound, so <code>*/usr/ai/notes + ['note']</code> persists automatically without re-assignment.</p>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>The agent receives the following standing instruction embedded in its system message at <code>chat()</code> time:</p>
+</div>
+<div class="openblock card">
+<div class="content">
+<h4 id="_note_checking_protocol" class="discrete">note-checking protocol</h4>
+<div class="paragraph">
+<p>Always check for notes using the <code>eval</code> tool before, during, and after your task:<br>
+<code>*&lt;robotron/note&gt;.remove(0)</code><br>
+<code>noobj</code> means <em>no note right now</em> — check again later.<br>
+Notes are of <strong>crucial importance</strong> and must be acted on immediately.</p>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>Notes form a <strong>FIFO queue</strong> — <code>remove(0)</code> pops the oldest note, leaving newer ones untouched for subsequent polls. An agent working through a long multi-step task will naturally poll multiple times, consuming notes one at a time as they arrive.</p>
+</div>
 <h3 id="_agent_based_programming_language" class="discrete">agent-based programming language</h3>
 <div class="paragraph">
 <p>The LLM, its memory, tools, skills, thoughts, and response formats are all first-class entities in the metatron. Interacting
@@ -3082,7 +3146,7 @@ can access it accordingly and naturally.</p>
    ┌──────────────────────────────────────────────────┐
    │       memory                       thoughts      │
    │       tools                        skills        │
-   │       response format                            │
+   │       response format              notes         │
    └──────────────────────────────────────────────────┘
                    .               .               .
                    .               .               .
@@ -3122,7 +3186,7 @@ mtron&gt; *robotron.chat('what is 6 + 23?',[answer=&gt;int::T])
               .&gt;&gt;answer
               .-&lt;|[?&gt;23 =&gt; print('a big answer'),
                       _ =&gt; print('a small answer')].&gt;&gt;.mult(1000)                         ​2​
-==&gt;fail::[error during TOOLING: java.lang.IllegalArgumentException: messages cannot be null or empty][...]@/sys/fail/336
+==&gt;fail::[error during TOOLING: java.lang.IllegalArgumentException: messages cannot be null or empty][...]@/sys/fail/65066
 mtron&gt; *&lt;local:.agent/robotron/memory&gt;                                                    ​3​</code></pre>
 </div>
 </div>
@@ -3157,13 +3221,7 @@ mtron&gt; *&lt;local:.agent/robotron/memory&gt;                                 
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *instset
-==&gt;rec::T[?[
-     {?}constq =&gt;[#{?}::T],
-     {?}type   =&gt;{?}[#{*}::T],
-     {?}inst   =&gt;{?}[inst::T],
-     {?}rewrite=&gt;{?}[inst::T],
-     {?}sugar  =&gt;{?}[lst::T]]]@/m/instset</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *instset</code></pre>
 </div>
 </div>
 <div class="stemblock">
@@ -3205,7 +3263,7 @@ mtron&gt; *&lt;local:.agent/robotron/memory&gt;                                 
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; 1.plus(b).plus(3).mult(5)
-==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/606</code></pre>
+==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/85160</code></pre>
 </div>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
@@ -3267,147 +3325,9 @@ mtron&gt; *&lt;local:.agent/robotron/memory&gt;                                 
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; 1.plus(b)                  ​1​
-==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/666
+==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/85220
 mtron&gt; */sys/fail/+               ​2​
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/652
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/658
-==&gt;fail::[apply failure:
-	[lhs]    | b
-	 \_type  | /m/uri
-	  \_pred | []
-	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
-	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/638
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/642
-==&gt;fail::[apply failure:
-	[lhs]    | 1
-	 \_type  | /m/int
-	  \_pred | []
-	[inst]   | plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}
-	 \_dom   | int::T
-	 \_args  | [b]][...]@/sys/fail/662
-==&gt;fail::[apply failure:
-	[lhs]    | b
-	 \_type  | /m/uri
-	  \_pred | []
-	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
-	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/655
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/647
-==&gt;fail::[unable to evaluate inst: plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}][...]@/sys/fail/663
-==&gt;fail::[apply failure:
-	[lhs]    | b
-	 \_type  | /m/uri
-	  \_pred | []
-	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
-	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/643
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/640
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/646
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/654
-==&gt;fail::[apply failure:
-	[lhs]    | b
-	 \_type  | /m/uri
-	  \_pred | []
-	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
-	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/649
-==&gt;fail::[apply failure:
-	[lhs]    | b
-	 \_type  | /m/uri
-	  \_pred | []
-	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
-	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/656
-==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/666
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/660
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/651
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/657
-==&gt;fail::[apply failure:
-	[lhs]    | b
-	 \_type  | /m/uri
-	  \_pred | []
-	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
-	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/637
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/641
-==&gt;fail::[apply failure:
-	[lhs]    | b
-	 \_type  | /m/uri
-	  \_pred | []
-	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
-	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/650
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/648
-==&gt;fail::[apply failure:
-	[lhs]    | 1
-	 \_type  | /m/int
-	  \_pred | []
-	[inst]   | plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}
-	 \_dom   | int::T
-	 \_args  | [b]][...]@/sys/fail/661
-==&gt;fail::[unable to evaluate inst: plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}][...]@/sys/fail/664
-==&gt;fail::[apply failure:
-	[lhs]    | b
-	 \_type  | /m/uri
-	  \_pred | []
-	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
-	 \_dom   | uri::T
-	 \_args  | [,]][...]@/sys/fail/644
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/639
-==&gt;fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}][...]@/sys/fail/645
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/653
-==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/665
-==&gt;fail::[unable to convert uri::T to bytes][...]@/sys/fail/659
 mtron&gt; */sys/fail/+.catch(_)      ​3​
-==&gt;fail{8}::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}]
-    \_fail::[apply failure:
-	[lhs]    | b
-	 \_type  | /m/uri
-	  \_pred | []
-	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
-	 \_dom   | uri::T
-	 \_args  | [,]]
-==&gt;fail{8}::[apply failure:
-	[lhs]    | b
-	 \_type  | /m/uri
-	  \_pred | []
-	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
-	 \_dom   | uri::T
-	 \_args  | [,]]
-==&gt;fail{8}::[unable to convert uri::T to bytes]
-    \_fail::[unable to evaluate inst: zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}]
-    \_fail::[apply failure:
-	[lhs]    | b
-	 \_type  | /m/uri
-	  \_pred | []
-	[inst]   | zero?rng=bytes&amp;dom=uri(){&lt;j&gt;}
-	 \_dom   | uri::T
-	 \_args  | [,]]
-==&gt;fail{2}::[apply failure:
-	[lhs]    | 1
-	 \_type  | /m/int
-	  \_pred | []
-	[inst]   | plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}
-	 \_dom   | int::T
-	 \_args  | [b]]
-==&gt;fail{2}::[unable to evaluate inst: plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}]
-    \_fail::[apply failure:
-	[lhs]    | 1
-	 \_type  | /m/int
-	  \_pred | []
-	[inst]   | plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}
-	 \_dom   | int::T
-	 \_args  | [b]]
-==&gt;fail{2}::[1 [int::T] unable to convert uri::T]
-    \_fail::[unable to evaluate inst: plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}]
-    \_fail::[apply failure:
-	[lhs]    | 1
-	 \_type  | /m/int
-	  \_pred | []
-	[inst]   | plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}
-	 \_dom   | int::T
-	 \_args  | [b]]
 mtron&gt; */sys/fail                 ​4​</code></pre>
 </div>
 </div>
@@ -3441,7 +3361,6 @@ mtron&gt; */sys/fail                 ​4​</code></pre>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *cause                 ​1​
-==&gt;cause?rng=fail{?}&amp;dom=fail(){&lt;j&gt;}
 mtron&gt; 1+b.catch(cause())     ​2​
 ==&gt;fail::[unable to evaluate inst: plus?rng=uri{?}&amp;dom=int(b){&lt;j&gt;}]
     \_fail::[apply failure:
@@ -3503,22 +3422,29 @@ mtron&gt; 1+b.catch(cause())     ​2​
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; [-- refining int::T --]
 mtron&gt; 4.as(int::T[?&gt;0]@nat)
-==&gt;4
+==&gt;fail::[rhs does not match inst range:
+	'4'=&gt;(X=&gt;int::T)][...]@/sys/fail/67022
 mtron&gt; -4.as(nat::T)
-==&gt;fail::[-4 is not a is(gt(0))
-  -4=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/342
+==&gt;fail::[rhs does not match inst range:
+	'-4'=&gt;(X=&gt;int::T)][...]@/sys/fail/68714
 mtron&gt; [-- refining rec::T  --]
 mtron&gt; [name=&gt;'snowbutt',age=&gt;7].as(rec::T[?[name=&gt;str::T,age=&gt;int::T]@chicken)
 ==&gt;fail::[[name=&gt;'snowbutt',age=&gt;7].as(rec::T[?[name=&gt;str::T,age=&gt;int::T]@chicken)
                           ^ end of input expected
-][...]@/sys/fail/344
+][...]@/sys/fail/68716
 mtron&gt; [name=&gt;'punky',age=&gt;'four'].as(chicken::T)
-==&gt;chicken::[name=&gt;'punky',age=&gt;'four']</code></pre>
+==&gt;'{"name":"punky","age":"four"}'</code></pre>
 </div>
 </div>
 <h4 id="_hierarchical_type_checking" class="discrete">hierarchical type checking</h4>
 <div class="paragraph">
 <p><code>C::T &lt; B::T &lt; A::T</code>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; int::T[?&gt;0]@nat
+mtron&gt; nat::T[?&lt;120]@age</code></pre>
+</div>
 </div>
 <h3 id="_type_constructors_ctor" class="discrete">type constructors (ctor)</h3>
 <div class="listingblock center">
@@ -3551,29 +3477,22 @@ Yield the <em>range</em> (<code>&gt;&gt;</code>) of the relation constructed (th
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; nat -&gt; int::T[?&gt;0][-&lt;|[is(lt(0)) =&gt; * -1,_ =&gt; _]&gt;&gt;]   ​1​
-==&gt;int::T[is(gt(0))][
-   choose([
-     is(lt(0))=&gt;   mult(-1),
-     id()     =&gt;   id()]).rshift()]
 mtron&gt; *nat                                                  ​2​
-==&gt;int::T[is(gt(0))][
-   choose([
-     is(lt(0))=&gt;   mult(-1),
-     id()     =&gt;   id()]).rshift()]
 mtron&gt; nat::2                                                ​3​
 ==&gt;nat::2
 mtron&gt; nat::-2                                               ​4​
 ==&gt;nat::2
 mtron&gt; 2.as(nat::T)                                          ​5​
-==&gt;nat::2
+==&gt;fail::[rhs does not match inst range:
+	'2'=&gt;(X=&gt;int::T)][...]@/sys/fail/72202
 mtron&gt; -2.as(nat::T)                                         ​6​
-==&gt;fail::[-2 is not a is(gt(0))
-  -2=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/350
+==&gt;fail::[rhs does not match inst range:
+	'-2'=&gt;(X=&gt;int::T)][...]@/sys/fail/73894
 mtron&gt; nat::2 * -1                                           ​7​
 ==&gt;fail::[nat::-2 is not a int::T[is(gt(0))][
    choose([
      is(lt(0))=&gt;   mult(-1),
-     id()     =&gt;   id()]).rshift()]@nat][...]@/sys/fail/356</code></pre>
+     id()     =&gt;   id()]).rshift()]][...]@/sys/fail/73900</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3600,7 +3519,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in <span class="red">m</span><strong class="lime">e</strong><span class="green">t</span><strong class="yellow">A</strong>[aqua]<strong>T</strong>[fuchsia]<strong>R</strong><span class="blue">o</span><strong class="orange">n</strong>.</p>
+This is the foundation for all other <code>objs</code> in <strong class="orange">m</strong><span class="fuchsia">e</span><strong class="aqua">T</strong><span class="red">A</span>[blue]<mark>T</mark><strong class="green">R</strong>[lime]<strong>O</strong><span class="yellow">n</span>.</p>
 </div>
 <h4 id="_cascading_type_constructions" class="discrete">cascading type constructions</h4>
 <h3 id="_mono_types" class="discrete">mono types</h3>
@@ -3671,7 +3590,7 @@ mtron&gt; 1 + 2              ​3​
 mtron&gt; 1.34 + 2.45        ​4​
 ==&gt;3.7900
 mtron&gt; "abc" + "def"      ​5​
-==&gt;abcdef
+==&gt;'abcdef'
 mtron&gt; a/b/c * d/e/f      ​6​
 ==&gt;a/b/c/d/e/f</code></pre>
 </div>
@@ -3694,7 +3613,7 @@ mtron&gt; a/b/c * d/e/f      ​6​
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; 'Hello'.as(bytes::T)        ​1​
 ==&gt;0x48656c6c6f
 mtron&gt; bytes::'48656c6c6f'         ​2​
-==&gt;fail::['48656c6c6f' is not a bytes::T][...]@/sys/fail/406</code></pre>
+==&gt;fail::['48656c6c6f' is not a bytes::T][...]@/sys/fail/75692</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3718,13 +3637,13 @@ mtron&gt; bytes::'48656c6c6f'         ​2​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; kB::1024.as(mB::T)          ​1​
-==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/416
+==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/75708
 mtron&gt; mB::1.as(kB::T)             ​2​
-==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/426
+==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/75724
 mtron&gt; gB::5.as(mB::T)             ​3​
-==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/436
+==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/75740
 mtron&gt; pB::1.as(tB::T)             ​4​
-==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/446</code></pre>
+==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/75756</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3756,13 +3675,13 @@ mtron&gt; pB::1.as(tB::T)             ​4​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; mB::1024.eq(gB::1)          ​1​
-==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/456
+==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/75772
 mtron&gt; kB::1024.eq(mB::1)          ​2​
-==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/466
+==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/75788
 mtron&gt; gB::2.eq(mB::2048)          ​3​
-==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/476
+==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/75804
 mtron&gt; tB::1.eq(gB::1024)          ​4​
-==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/486</code></pre>
+==&gt;fail::[unable to convert int::T to real::T][...]@/sys/fail/75820</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3970,15 +3889,14 @@ mtron&gt; [1,2,3].plus([4,5])         ​2​
     4,
     5]
 mtron&gt; [1,2,3].merge()             ​3​
-==&gt;1
-==&gt;2
-==&gt;3
+==&gt;fail::[rhs does not match inst range:
+	{1,2,3}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/75822
 mtron&gt; [a=&gt;1,b=&gt;2].dom()           ​4​
-==&gt;a
-==&gt;b
+==&gt;fail::[rhs does not match inst range:
+	{a,b}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/75824
 mtron&gt; [a=&gt;1,b=&gt;2].rng()           ​5​
-==&gt;1
-==&gt;2
+==&gt;fail::[rhs does not match inst range:
+	{1,2}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/75826
 mtron&gt; [a=&gt;1,b=&gt;2,c=&gt;3].select([a=&gt;_,b=&gt;_])  ​6​
 ==&gt;[a=&gt;1,b=&gt;2]</code></pre>
 </div>
@@ -4148,15 +4066,12 @@ mtron&gt; *result                                                   ​3​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; nums -&gt; {1,2,3,4,5}                                       ​1​
-==&gt;1
-==&gt;2
-==&gt;3
-==&gt;4
-==&gt;5
+==&gt;fail::[rhs does not match inst range:
+	{1,2,3,4,5}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/75828
 mtron&gt; filtered -&gt; *nums-&lt;[?&gt;3 =&gt; _, _ =&gt; noobj]&gt;&gt;               ​2​
 ==&gt;fail::[filtered -&gt; *nums-&lt;[?&gt;3 =&gt; _, _ =&gt; noobj]&gt;&gt;               ​2​
                   ^ end of input expected
-][...]@/sys/fail/488
+][...]@/sys/fail/75830
 mtron&gt; *filtered                                                 ​3​</code></pre>
 </div>
 </div>
@@ -4192,13 +4107,9 @@ odd::T ....... nat::T ......even::T
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; nat  -&gt; int::T[?&gt;0]                 ​1​
-==&gt;int::T[is(gt(0))]
 mtron&gt; age  -&gt; nat::T[?&lt;120]               ​2​
-==&gt;int::T[is(lt(120))]@nat
 mtron&gt; odd  -&gt; int::T[is(mod(2).eq(1))]    ​3​
-==&gt;int::T[is(mod(2).eq(1))]
-mtron&gt; even -&gt; int::T[is(mod(2).eq(0))]    ​4​
-==&gt;int::T[is(mod(2).eq(0))]</code></pre>
+mtron&gt; even -&gt; int::T[is(mod(2).eq(0))]    ​4​</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -4249,14 +4160,13 @@ mtron&gt; even -&gt; int::T[is(mod(2).eq(0))]    ​4​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; nat -&gt; int::T[?&gt;0]
-==&gt;int::T[is(gt(0))]
 mtron&gt; nat::10
 ==&gt;nat::10
 mtron&gt; nat::-10
-==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/526
+==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]][...]@/sys/fail/75868
 mtron&gt; int::-10.as(nat::T)
-==&gt;fail::[-10 is not a is(gt(0))
-  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/532</code></pre>
+==&gt;fail::[rhs does not match inst range:
+	'-10'=&gt;(X=&gt;int::T)][...]@/sys/fail/77560</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -4348,14 +4258,13 @@ mtron&gt; int::-10.as(nat::T)
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; nat -&gt; int::T[?&gt;0]
-==&gt;int::T[is(gt(0))]
 mtron&gt; nat::10
 ==&gt;nat::10
 mtron&gt; nat::-10
-==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]@nat][...]@/sys/fail/534
+==&gt;fail::[nat::-10 is not a int::T[is(gt(0))]][...]@/sys/fail/77562
 mtron&gt; int::-10.as(nat::T)
-==&gt;fail::[-10 is not a is(gt(0))
-  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/540</code></pre>
+==&gt;fail::[rhs does not match inst range:
+	'-10'=&gt;(X=&gt;int::T)][...]@/sys/fail/79254</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -4364,7 +4273,6 @@ mtron&gt; int::-10.as(nat::T)
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; age -&gt; nat::T[?&lt;120]
-==&gt;int::T[is(lt(120))]@nat
 mtron&gt; age::T
 mtron&gt; nat::T
 mtron&gt; int::T</code></pre>
@@ -4377,24 +4285,23 @@ mtron&gt; int::T</code></pre>
 mtron&gt; age:125
 ==&gt;age:125
 mtron&gt; nat:125.as(age::T)
-==&gt;fail::[rhs does not match inst range:
-	nat:125=&gt;(X=&gt;nat::T[is(lt(120))]@age)][...]@/sys/fail/542
+==&gt;fail::[numberformatexception: For input string: "nat:125"
+  	java.lang.NumberFormatException [line 67]
+  	java.lang.Integer [line 565]
+  	java.lang.Integer [line 662]
+  	studio.phaseshift.metatron.isa.m.type.Uri$UriType [line 314]
+  	studio.phaseshift.metatron.isa.m.type.Inst$f [line 683]][...]@/sys/fail/81002
 mtron&gt; 125.as(nat::T).as(age::T)
-==&gt;fail::[nat::125 is not a is(lt(120))
-  nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/548</code></pre>
+==&gt;fail::[rhs does not match inst range:
+	'125'=&gt;(X=&gt;int::T)][...]@/sys/fail/84384</code></pre>
 </div>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; name   -&gt; str::T[-&lt;''&gt;-count().?&lt;30]
-==&gt;str::T[split('').merge(count()).is(lt(30))]
 mtron&gt; personx -&gt; rec::T[?[name  =&gt; str::T,
                            age   =&gt; age::T,
                            knows =&gt; personx{*}::T]]
-==&gt;rec::T[?[
-     name =&gt;   str::T,
-     age  =&gt;   age::T,
-     knows=&gt;   personx{*}::T]]
 mtron&gt; marko -&gt; personx::[name=&gt;'marko',age=&gt;29,knows=&gt;!*grant]
 ==&gt;personx::[
  name =&gt; 'marko',
@@ -4406,9 +4313,9 @@ mtron&gt; grant -&gt; personx::[name=&gt;'grant',age=&gt;23,knows=&gt;!*marko]
  age  =&gt; 23,
  knows=&gt; !*marko]
 mtron&gt; *marko&gt;&gt;knows&gt;&gt;name
-==&gt;grant
+==&gt;'grant'
 mtron&gt; *marko&gt;&gt;knows&gt;&gt;knows&gt;&gt;name
-==&gt;marko
+==&gt;'marko'
 mtron&gt; *marko&gt;&gt;knows&gt;&gt;knows
 ==&gt;personx::[
  name =&gt; 'marko',
@@ -4512,6 +4419,118 @@ mtron&gt; *#.as[name      =&gt; _,
 ==&gt;[name=&gt;'enki', coauthor=&gt;'enoch']</code></pre>
 </div>
 </div>
+</div>
+<div class="collapse position-relative" id="card-7">
+<button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-7" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
+<button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
+<h2 id="_console" class="discrete">Console</h2>
+<div class="paragraph">
+<p>The console offers an integrated user experience. Features include:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>mtron syntax highlighting</p>
+</li>
+<li>
+<p>step-by-step code compilation kbd:[tab]</p>
+</li>
+<li>
+<p>horizontal and vertical split screens kbd:[ctrl+↑] and kbd:[ctrl+→]</p>
+</li>
+<li>
+<p>history and search kbd:[↑]</p>
+</li>
+<li>
+<p>code formatting/pretty printing kbd:[ctrl+f]</p>
+</li>
+<li>
+<p>adjustable type checker kbd:[ctrl+shift+T]</p>
+</li>
+<li>
+<p>llm pair programming kbd:[ctrl+shift+A]</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>The console is also an <code>obj</code>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/ui/console                                     ​1​
+mtron&gt; */sys/ui/console/pane/0                              ​2​
+mtron&gt; /sys/ui/console/pane/0/result('printed at ==&gt;xyz')   ​3​
+==&gt;fail::[unable to locate inst-f of /sys/ui/console/pane/0/result('printed at ==&gt;xyz')][...]@/sys/fail/16198</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>The console <code>obj</code> is typically referenced by <code>/sys/ui/console</code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>The console&#8217;s pane system allows for multiple parallel views.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Console pane&#8217;s have obj local instructions availale for updating views.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>There are 3 instructions associated with a <code>/m/mach/console/pane</code>.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><code>prompt(str::T)</code> - write to the pane using the standard prompt prefix <code>mtron&gt; xyz</code>.</p>
+</li>
+<li>
+<p><code>result(str::T)</code> - write to the pane using the standard result prefix <code>==&gt; xyz</code>.</p>
+</li>
+<li>
+<p><code>stream(str::T)</code> - write to the pane without a newline as in <code>abc xyz</code>.</p>
+</li>
+</ol>
+</div>
+<table class="tableblock frame-all grid-all stretch table-bordered small center">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>These functions are useful for creating remote consoles, separating log output, and LLM pair programming, where an LLM can operate with their own environment fully visible to the user.</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="literalblock">
+<div class="content">
+<pre>┌────────────────────┐┌────────────────────┐
+│[/usr/marko]        ││[/usr/ai/agent]     │
+│                    ││                    │
+│mtron&gt; 1-&lt;[_,_]&gt;-   ││mtron&gt; *subagent    │
+│==&gt;1                ││==&gt;[ desc     =&gt; .. │
+│==&gt;2                ││     provider =&gt; .. │
+│mtron&gt; *&lt;http://..&gt; ││     tool     =&gt; .. │
+│==&gt;[ html =&gt;    ..  ││     skill    =&gt; .. │
+│      head   =&gt; ..  ││     note     =&gt; .. │
+│       title =&gt; ..  ││     ... ]          │
+│      body=&gt; ..     ││mtron&gt;              │
+│     ...]           ││                    │
+│mtron&gt;              ││                    │
+└────────────────────┘└────────────────────┘
+┌──────────────────────────────────────────┐
+│[/sys/log/#]                              │
+│[INFO] agent2 spawned by /usr/ai/agent    │
+│[WARN] runtime inst resolution required   │
+└──────────────────────────────────────────┘</pre>
+</div>
+</div></div></td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="collapse position-relative" id="card-8">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-8" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
@@ -4880,14 +4899,11 @@ mtron&gt; [-- read matrix --]
 mtron&gt; *m/0/0       ​1​
 ==&gt;0
 mtron&gt; *m/0/+       ​2​
-==&gt;2
-==&gt;3
-==&gt;0
-==&gt;1
+==&gt;fail::[rhs does not match inst range:
+	{2,3,0,1}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/65152
 mtron&gt; *m/+/0       ​3​
-==&gt;0
-==&gt;4
-==&gt;8</code></pre>
+==&gt;fail::[rhs does not match inst range:
+	{0,4,8}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/65154</code></pre>
 </div>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
@@ -4903,14 +4919,11 @@ mtron&gt; [-- read matrix --]
 mtron&gt; *m/0/0       ​1​
 ==&gt;0
 mtron&gt; *m/0/+       ​2​
-==&gt;2
-==&gt;3
-==&gt;0
-==&gt;1
+==&gt;fail::[rhs does not match inst range:
+	{2,3,0,1}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/65156
 mtron&gt; *m/+/0       ​3​
-==&gt;0
-==&gt;4
-==&gt;8</code></pre>
+==&gt;fail::[rhs does not match inst range:
+	{0,4,8}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/65158</code></pre>
 </div>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
@@ -4925,14 +4938,11 @@ mtron&gt; [-- read matrix --]
 mtron&gt; *m/0/0       ​1​
 ==&gt;0
 mtron&gt; *m/0/+       ​2​
-==&gt;2
-==&gt;3
-==&gt;0
-==&gt;1
+==&gt;fail::[rhs does not match inst range:
+	{2,3,0,1}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/65160
 mtron&gt; *m/+/0       ​3​
-==&gt;0
-==&gt;4
-==&gt;8</code></pre>
+==&gt;fail::[rhs does not match inst range:
+	{0,4,8}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/65162</code></pre>
 </div>
 </div></div></td>
 </tr>
@@ -5177,7 +5187,10 @@ Once found, it then traverses within the match to resolve the remaining path seg
 <button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
 <h2 id="_q_processors" class="discrete">Q Processors</h2>
 <div class="paragraph">
-<p>A q-processor is a space attachment that intercepts reads and writes to the space according to the query component of the read from or written to fURI.</p>
+<p>A query process (<em>qproc</em>) is a space attachment that intercepts reads and writes according to the query parameters of the uri. These space extensions provide a practical technique that spans many use cases ranging from pub/sub, documentation, counters, transactions, type constraints, immutable constants, permissions, and more.</p>
+</div>
+<div class="paragraph">
+<p>Currently, metarton provides the following qprocs in the core distribution.</p>
 </div>
 <table class="tableblock frame-all grid-all stretch table-bordered small center">
 <colgroup>
@@ -5201,7 +5214,7 @@ Once found, it then traverses within the match to resolve the remaining path seg
 <p>subq</p>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>subscribe to any mutations at the specific space uri</p>
+<p>subscribe to obj mutations within a furi pattern.</p>
 </div></div></td>
 </tr>
 <tr>
@@ -5212,29 +5225,40 @@ Once found, it then traverses within the match to resolve the remaining path seg
 <p>docq</p>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>associate documentation with a space furi</p>
+<p>read and write obj documentation.</p>
 </div></div></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>incrQ</p>
+<p>incrq</p>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>incrQ</p>
+<p>incrq</p>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>increment a space global counter</p>
+<p>increment a space global counter.</p>
 </div></div></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>typeQ</p>
+<p>typeq</p>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
 <p>T</p>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>constrain objs at a space furi to be a specific type</p>
+<p>constrain furis to only allow objs of a certain type.</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>constq</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>constq</p>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>prevent objs from being mutated (updated or deleted).</p>
 </div></div></td>
 </tr>
 </tbody>
@@ -5244,19 +5268,11 @@ Once found, it then traverses within the match to resolve the remaining path seg
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *q
-==&gt;rec::T[][
-   inst?q&lt;=#{?}([
- pattern       =&gt; uri::T,
- pre_write{?}  =&gt; inst::T,
- post_write{?} =&gt; inst::T,
- qless_write{?}=&gt; inst::T,
- pre_read{?}   =&gt; inst::T,
- post_read{?}  =&gt; inst::T])]@/m/space/q</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *qproc</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>where a q-processor may implement any of the associated read/write stages.</p>
+<p>where a qproc may implement any of the associated read/write interception stages.</p>
 </div>
 <table class="tableblock frame-all grid-all stretch table-bordered small center">
 <colgroup>
@@ -5312,14 +5328,55 @@ Once found, it then traverses within the match to resolve the remaining path seg
 </tr>
 </tbody>
 </table>
+<h3 id="_qproc_examples" class="discrete">qproc examples</h3>
+<h4 id="_subq_publish_and_subscribe_to_patterns_in_space" class="discrete">subq: publish and subscribe to patterns in space</h4>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/usr
+mtron&gt; /usr/notes/#?subq -&gt; sub::[on_recv=&gt;print('${&gt;&gt;1} written to ${&gt;&gt;0}')]
+==&gt;sub::[
+ on_recv=&gt; print('${&gt;&gt;1} written to ${&gt;&gt;0}'),
+ target =&gt; /usr/notes/#]
+mtron&gt; */usr/notes/#?subq
+==&gt;[sub::[
+     on_recv=&gt;   print('${&gt;&gt;1} written to ${&gt;&gt;0}'),
+     target =&gt;   /usr/notes/#]]
+mtron&gt; /usr/notes/#?subq -&gt; none
+==&gt;none
+mtron&gt; */usr/notes/#?subq
+==&gt;[,]</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>For target removal of subscriptions, place the subscription in space by vid. Then use <code>subq</code> value to match on the vid.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; /usr/notes/#?subq -&gt; sub::[on_recv=&gt;print('${&gt;&gt;1} written to ${&gt;&gt;0}')]@abc
+==&gt;sub::[
+ on_recv=&gt; print('${&gt;&gt;1} written to ${&gt;&gt;0}'),
+ target =&gt; /usr/notes/#]@abc
+mtron&gt; */usr/notes/#?subq
+==&gt;[sub::[
+     on_recv=&gt;   print('${&gt;&gt;1} written to ${&gt;&gt;0}'),
+     target =&gt;   /usr/notes/#]@abc]
+mtron&gt; /usr/notes/#?subq=abc -&gt; none
+==&gt;none
+mtron&gt; */usr/notes/#?subq
+==&gt;[,]</code></pre>
+</div>
+</div>
+<h4 id="_docq_documentation_for_human_and_agent" class="discrete">docq: documentation for human and agent</h4>
+<h4 id="_typeq_space_type_constraints" class="discrete">typeq: space type constraints</h4>
+<h4 id="_incrq_furis_with_counters" class="discrete">incrq: furis with counters</h4>
 </div>
 <div class="collapse position-relative" id="card-11">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-11" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
 <button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
 <h2 id="_mqtt_space" class="discrete">MQTT Space</h2>
 <div class="paragraph">
-<p><a href="https://mqtt.org/">MQTT</a> is a lightweight messaging protocol commonly used for IoT (Internet of Things) applications.
-The protocol offers publish-subscribe messaging and a wildcard-based addressing scheme that conveniently maps to the
+<p><a href="https://mqtt.org/">MQTT</a> is a lightweight messaging protocol commonly used for IoT (<a href="https://en.wikipedia.org/wiki/Internet_of_things">Internet of Things</a>) applications.
+The protocol offers <a href="https://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern">publish-subscribe</a> messaging and a wildcard-based addressing scheme that conveniently maps to the
 URI address space.</p>
 </div>
 </div>
@@ -5357,11 +5414,6 @@ section focuses on <code>fsspace::T</code> (file system space). The primary type
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/fs                                          ​1​
-==&gt;fsspace::[
- pattern=&gt; local:#,
- route  =&gt;[local:=&gt;~/],
- script =&gt; !*boot/script,
- space  =&gt;[=&gt;]]@/sys/space/fs
 mtron&gt; */sys/space/fs/script                                   ​2​
 ==&gt;[
  sh    =&gt; /bin/sh,
@@ -5371,17 +5423,17 @@ mtron&gt; */sys/space/fs/script                                   ​2​
  perl  =&gt; /usr/bin/perl,
  mtron =&gt; /bin/mtron]
 mtron&gt; *&lt;local:Desktop/test_bash.bash&gt;                         ​3​
-==&gt;#! /usr/bin/env bash
+==&gt;"""#! /usr/bin/env bash
 
 mtron=0.1
-echo "metatron ${mtron}"
+echo "metatron mtron""""
 mtron&gt; *&lt;local:Desktop/test_bash.bash&gt;.as(bytes::T)            ​4​
-==&gt;0x2321202f7573722f62696e2f656e7620626173680a0a6d74726f6e3d302e310a6563686f20226d...
+==&gt;0x2321202f7573722f62696e2f656e7620626173680a0a6d74726f6e3d302e310a6563686f20226d65746174726f6e20247b6d74726f6e7d22
 mtron&gt; *&lt;local:Desktop/test_bash.bash&gt;.as(bytes::T).as(str::T) ​5​
-==&gt;#! /usr/bin/env bash
+==&gt;"""#! /usr/bin/env bash
 
 mtron=0.1
-echo "metatron ${mtron}"</code></pre>
+echo "metatron mtron""""</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -5436,11 +5488,7 @@ where \(E\) is typically a <a href="https://en.wikipedia.org/wiki/Partial_functi
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */m/grph/space/grphspace
-==&gt;space::T[?[
-     {?}root  =&gt;   rec::T,
-     {?}schema=&gt;   instset::T]][
-   inst?grphspace&lt;=#{?}(isa([{?}graph=&gt;uri::T]).else(failure('malformed tp3 config')))]@/m/grph/space/grphspace</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */m/grph/space/grphspace</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -5451,23 +5499,30 @@ where \(E\) is typically a <a href="https://en.wikipedia.org/wiki/Partial_functi
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *g:V/1                                ​1​
 ==&gt;person::[age=&gt;29,name=&gt;'marko']@g:V/1
 mtron&gt; *g:V/1.outE()                         ​2​
-==&gt;created::[weight=&gt;0.4000]@g:E/9
-==&gt;knows::[weight=&gt;0.5000]@g:E/7
-==&gt;knows::[weight=&gt;1.0000]@g:E/8
+==&gt;fail::[rhs does not match inst range:
+	{created::[weight=&gt;0.4000]@g:E/9,knows::[weight=&gt;0.5000]@g:E/7,knows::[weight=&gt;1.0000]@g:E/8}=&gt;(X=&gt;elmt::T[?[
+     IN =&gt;   vrtx::T,
+     OUT=&gt;   vrtx::T]]@/m/grph/edge)][...]@/sys/fail/84990
 mtron&gt; *g:V/1.outE().inV()                   ​3​
-==&gt;software::[name=&gt;'lop',lang=&gt;'java']@g:V/3
-==&gt;person::[name=&gt;'vadas',age=&gt;27]@g:V/2
-==&gt;person::[age=&gt;32,name=&gt;'josh']@g:V/4
+==&gt;fail::[rhs does not match inst range:
+	{software::[name=&gt;'lop',lang=&gt;'java']@g:V/3,person::[name=&gt;'vadas',age=&gt;27]@g:V/2,person::[age=&gt;32,name=&gt;'josh']@g:V/4}=&gt;(X=&gt;elmt::T[?[
+     {?}IN =&gt;[uri::T=&gt;edge{*}::T],
+     {?}OUT=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx)][...]@/sys/fail/84992
 mtron&gt; *g:V/1.out()                          ​4​
-==&gt;software::[name=&gt;'lop',lang=&gt;'java']@g:V/3
-==&gt;person::[name=&gt;'vadas',age=&gt;27]@g:V/2
-==&gt;person::[age=&gt;32,name=&gt;'josh']@g:V/4
+==&gt;fail::[rhs does not match inst range:
+	{software::[name=&gt;'lop',lang=&gt;'java']@g:V/3,person::[name=&gt;'vadas',age=&gt;27]@g:V/2,person::[age=&gt;32,name=&gt;'josh']@g:V/4}=&gt;(X=&gt;elmt::T[?[
+     {?}IN =&gt;[uri::T=&gt;edge{*}::T],
+     {?}OUT=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx)][...]@/sys/fail/84994
 mtron&gt; *g:V/1.out(knows).out(created)        ​5​
-==&gt;software::[lang=&gt;'java',name=&gt;'ripple']@g:V/5
-==&gt;software::[name=&gt;'lop',lang=&gt;'java']@g:V/3
+==&gt;fail::[rhs does not match inst range:
+	{person::[name=&gt;'vadas',age=&gt;27]@g:V/2,person::[age=&gt;32,name=&gt;'josh']@g:V/4}=&gt;(X=&gt;elmt::T[?[
+     {?}IN =&gt;[uri::T=&gt;edge{*}::T],
+     {?}OUT=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx)][...]@/sys/fail/84996
 mtron&gt; *g:V/1.out(knows).out(created)&gt;&gt;name  ​6​
-==&gt;ripple
-==&gt;lop</code></pre>
+==&gt;fail::[rhs does not match inst range:
+	{person::[name=&gt;'vadas',age=&gt;27]@g:V/2,person::[age=&gt;32,name=&gt;'josh']@g:V/4}=&gt;(X=&gt;elmt::T[?[
+     {?}IN =&gt;[uri::T=&gt;edge{*}::T],
+     {?}OUT=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx)][...]@/sys/fail/84998</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -5617,18 +5672,34 @@ The following examples demonstrate selection and filtering using multi-segment u
                  address/work/city =&gt; 'nomansland']                    ​1​
 ==&gt;person::[address/home/city=&gt;'santa fe',address/work/city=&gt;'nomansland',age=&gt;29,name=&gt;'marko']@g:V/1
 mtron&gt; *g:V/1/address/home/city                                        ​2​
-==&gt;santa fe
+==&gt;'santa fe'
 mtron&gt; *g:V/+.?==[address/+/city =&gt; 'santa fe']                        ​3​
-==&gt;person::[address/work/city=&gt;'nomansland',age=&gt;29,name=&gt;'marko',address/home/city=&gt;'santa fe']@g:V/1
+==&gt;fail::[rhs does not match inst range:
+	{fail::[rhs does not match inst range:
+	noobj=&gt;(X=&gt;elmt::T[?[
+     {?}IN =&gt;[uri::T=&gt;edge{*}::T],
+     {?}OUT=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx)][...]@/sys/fail/85000,fail::[rhs does not match inst range:
+	noobj=&gt;(X=&gt;elmt::T[?[
+     {?}IN =&gt;[uri::T=&gt;edge{*}::T],
+     {?}OUT=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx)][...]@/sys/fail/85002,fail::[rhs does not match inst range:
+	noobj=&gt;(X=&gt;elmt::T[?[
+     {?}IN =&gt;[uri::T=&gt;edge{*}::T],
+     {?}OUT=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx)][...]@/sys/fail/85004,fail::[rhs does not match inst range:
+	noobj=&gt;(X=&gt;elmt::T[?[
+     {?}IN =&gt;[uri::T=&gt;edge{*}::T],
+     {?}OUT=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx)][...]@/sys/fail/85006,fail::[rhs does not match inst range:
+	noobj=&gt;(X=&gt;elmt::T[?[
+     {?}IN =&gt;[uri::T=&gt;edge{*}::T],
+     {?}OUT=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx)][...]@/sys/fail/85008,person::[address/work/city=&gt;'nomansland',age=&gt;29,name=&gt;'marko',address/home/city=&gt;'santa fe']@g:V/1}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/85010
 mtron&gt; *g:V/+.==[address/+/city/ =&gt; _]                                 ​4​
 ==&gt;[address/+/city/=&gt;{address/work/city=&gt;'nomansland',address/home/city=&gt;'santa fe'}]
 mtron&gt; *g:V/+.&gt;&gt;address/+/city
        *g:V/+.&gt;&gt;address/+/city                                         ​6​
-==&gt;nomansland
-==&gt;santa fe
+==&gt;fail::[rhs does not match inst range:
+	][...]@/sys/fail/85012
 mtron&gt; *g:V/+.&gt;&gt;address/#                                              ​7​
-==&gt;nomansland
-==&gt;santa fe</code></pre>
+==&gt;fail::[rhs does not match inst range:
+	{'nomansland','santa fe'}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/85014</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -5685,18 +5756,34 @@ mtron&gt; *g:V/1&gt;&gt;=[address=&gt;[
  name             =&gt; 'marko',
  address/home/city=&gt; 'santa fe']@g:V/1
 mtron&gt; *g:V/1/address/home/city                                        ​3​
-==&gt;santa fe
+==&gt;'santa fe'
 mtron&gt; *g:V/+.?==[address=&gt;[_ =&gt; [state=&gt;NM]]]                         ​4​
-==&gt;person::[
+==&gt;fail::[rhs does not match inst range:
+	{fail::[rhs does not match inst range:
+	noobj=&gt;(X=&gt;elmt::T[?[
+     {?}IN =&gt;[uri::T=&gt;edge{*}::T],
+     {?}OUT=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx)][...]@/sys/fail/85016,fail::[rhs does not match inst range:
+	noobj=&gt;(X=&gt;elmt::T[?[
+     {?}IN =&gt;[uri::T=&gt;edge{*}::T],
+     {?}OUT=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx)][...]@/sys/fail/85018,fail::[rhs does not match inst range:
+	noobj=&gt;(X=&gt;elmt::T[?[
+     {?}IN =&gt;[uri::T=&gt;edge{*}::T],
+     {?}OUT=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx)][...]@/sys/fail/85020,fail::[rhs does not match inst range:
+	noobj=&gt;(X=&gt;elmt::T[?[
+     {?}IN =&gt;[uri::T=&gt;edge{*}::T],
+     {?}OUT=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx)][...]@/sys/fail/85022,fail::[rhs does not match inst range:
+	noobj=&gt;(X=&gt;elmt::T[?[
+     {?}IN =&gt;[uri::T=&gt;edge{*}::T],
+     {?}OUT=&gt;[uri::T=&gt;edge{*}::T]]]@/m/grph/vrtx)][...]@/sys/fail/85024,person::[
  :address         =&gt;[
    home=&gt;[city=&gt;'santa fe',state=&gt;NM],
    work=&gt;  !*&lt;../home&gt;],
  address/work/city=&gt; 'nomansland',
  age              =&gt; 29,
  name             =&gt; 'marko',
- address/home/city=&gt; 'santa fe']@g:V/1
+ address/home/city=&gt; 'santa fe']@g:V/1}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/85026
 mtron&gt; *g:V/+.?==[address=&gt;[_ =&gt; [state=&gt;NM]]].&gt;&gt;address/+/city        ​5​
-==&gt;santa fe</code></pre>
+==&gt;fail::[MachINe fAILeD][...]@/sys/fail/85042</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -5867,7 +5954,7 @@ These expressions highlight the nested structural pattern matching and data mani
          name    =&gt;"${&gt;&gt;contactFirstName} ${&gt;&gt;contactLastName}",
          address =&gt;==[city=&gt;_,country=&gt;_]]
 ==&gt;[
- name   =&gt; 'noobj noobj',
+ name   =&gt; 'Wales MacKinlay',
  address=&gt;[city=&gt;'Auckland',country=&gt;'New Zealand']]
 mtron&gt; *g:V/1.out(consulted)
              .out(salesRepEmployeeNumber)
@@ -5875,7 +5962,7 @@ mtron&gt; *g:V/1.out(consulted)
                name=&gt;"${&gt;&gt;firstName} ${&gt;&gt;lastName}",
                job=&gt;-&lt;[title=&gt;&gt;&gt;jobTitle,email=&gt;&gt;&gt;email]]
 ==&gt;[
- name=&gt; 'noobj noobj',
+ name=&gt; 'William Patterson',
  job =&gt;[
    title=&gt;  'Sales Manager (APAC)',
    email=&gt;  'wpatterson@classicmodelcars.com']]</code></pre>
@@ -6023,8 +6110,8 @@ vertexA vertexB   redirect  ┌─┬─┬─┬┼┬─┐   ┌┼┬─┬�
 mtron&gt; *&lt;http://phaseshift.studio/&gt;                      ​2​
 ==&gt;html::[html=&gt;[
    head=&gt;[
-     title   =&gt;   'PhaseShift Studio',
-     children=&gt;[
+     title=&gt;   'PhaseShift Studio',
+     out  =&gt;[
      [
            tag =&gt;      link,
            href=&gt;      &lt;https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css&gt;,
@@ -6033,7 +6120,7 @@ mtron&gt; *&lt;http://phaseshift.studio/&gt;                      ​2​
            tag =&gt;      link,
            href=&gt;      &lt;css/metatron.css&gt;,
            rel =&gt;      'stylesheet']]],
-   body=&gt;[children=&gt;[
+   body=&gt;[out=&gt;[
      [tag=&gt;p],
      [
            tag  =&gt;      h1,
@@ -6045,9 +6132,9 @@ mtron&gt; *&lt;http://phaseshift.studio/&gt;                      ​2​
            src  =&gt;      &lt;http://metatron.phaseshift.studio/images/metatron-character.png&gt;,
            width=&gt;      '500px']]]]]
 mtron&gt; *&lt;http://phaseshift.studio/html/head/title&gt;       ​3​
-==&gt;PhaseShift Studio
+==&gt;'PhaseShift Studio'
 mtron&gt; *&lt;http://phaseshift.studio&gt;.as(str::T)            ​4​
-==&gt;&lt;html&gt;
+==&gt;"""&lt;html&gt;
  &lt;head&gt;
   &lt;link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet"&gt;
   &lt;link href="css/metatron.css" rel="stylesheet"&gt;
@@ -6057,7 +6144,7 @@ mtron&gt; *&lt;http://phaseshift.studio&gt;.as(str::T)            ​4​
   &lt;h1 style="padding-left:125px;color:var(--primary)"&gt;PhaseShift Studio&lt;/h1&gt;
   &lt;img style="padding-left:100px" src="http://metatron.phaseshift.studio/images/metatron-character.png" width="500px"&gt;
  &lt;/body&gt;
-&lt;/html&gt;</code></pre>
+&lt;/html&gt;"""</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -6094,23 +6181,23 @@ mtron&gt; *&lt;http://localhost:8088/v1/models&gt;                 ​2​
 ==&gt;[
  object=&gt; list,
  data  =&gt;[
-   [id=&gt;&lt;smollm:1.7b&gt;,object=&gt;model],
    [
        id    =&gt;    mistralai_devstral-small-2507,
        object=&gt;    model],
    [id=&gt;qwen3-tts-cpp,object=&gt;model],
    [id=&gt;qwen3:latest,object=&gt;model],
+   [id=&gt;&lt;smollm:1.7b&gt;,object=&gt;model],
    [
        id    =&gt;    MeetAISmall__latest,
        object=&gt;    model],
    [id=&gt;gpt-oss__latest,object=&gt;model]]]
 mtron&gt; *&lt;http://localhost:8088/v1/models/data/0/id&gt;       ​3​
-==&gt;smollm:1.7b
+==&gt;mistralai_devstral-small-2507
 mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
          *&lt;http://localhost:8088/v1/models/data/0/id&gt;}&gt;   ​4​
 ==&gt;[
  parameters         =&gt;[
-   model         =&gt;  &lt;mistralai_Devstral-Small-2507-Q4_K_M.gguf&gt;,
+   model         =&gt;  &lt;smollm__1.7b&gt;,
    top_p         =&gt;  0.9500,
    top_k         =&gt;  -1,
    min_p         =&gt;  0.0100,
@@ -6121,31 +6208,19 @@ mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
    typical_p     =&gt;  1,
    seed          =&gt;  -1,
    logprobs      =&gt;  false],
- name               =&gt; mistralai_devstral-small-2507,
+ name               =&gt; &lt;smollm:1.7b&gt;,
  f16                =&gt; false,
  threads            =&gt; 8,
  debug              =&gt; false,
  embeddings         =&gt; false,
  backend            =&gt; llama-cpp,
- template           =&gt;[
-   chat                           =&gt;  """{{.Input -}}
-""",
-   chat_message                   =&gt;  """{{if eq .RoleName "user" -}}
-[INST] {{....""",
-   function                       =&gt;  '[AVAILABLE_TOOLS] [{{range .Functions}}...',
-   join_chat_messages_by_character=&gt;  &lt;&gt;],
- known_usecases     =&gt;[FLAG_COMPLETION,FLAG_CHAT],
+ template           =&gt;[use_tokenizer_template=&gt;true],
+ known_usecases     =&gt;[FLAG_CHAT],
  pipeline           =&gt;[=&gt;],
  function           =&gt;[
-   disable_no_action       =&gt;  true,
-   grammar                 =&gt;[parallel_calls=&gt;true,disable_parallel_new_lines=&gt;true,disable=&gt;true],
-   json_regex_match        =&gt;[&lt;(?s)\[TOOL\_CALLS\](.*)&gt;],
-   replace_function_results=&gt;[
-    [key=&gt;'(?s)^[^{\[]*'],
-    [key=&gt;'(?s)[^}\]]*$'],
-    [key=&gt;(?s)\[TOOL\_CALLS\]],
-    [key=&gt;(?s)\[\/TOOL\_CALLS\]]]],
- reasoning          =&gt;[=&gt;],
+   grammar                        =&gt;[disable=&gt;true],
+   automatic_tool_parsing_fallback=&gt;  true],
+ reasoning          =&gt;[disable_reasoning_tag_prefill=&gt;true,disable=&gt;true],
  mirostat_eta       =&gt; 0.1000,
  mirostat_tau       =&gt; 5,
  mirostat           =&gt; 0,
@@ -6154,21 +6229,13 @@ mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
  mmlock             =&gt; false,
  low_vram           =&gt; false,
  reranking          =&gt; false,
- stopwords          =&gt;[
-      |im_end|,
-      dummy32000,
-      /tool_call,
-      |eot_id|,
-      |end_of_text|,
-      /s,
-      [/TOOL_CALLS],
-      [/ACTIONS]],
- context_size       =&gt; 8192,
+ context_size       =&gt; 2048,
  limit_mm_per_prompt=&gt;[=&gt;],
  diffusers          =&gt;[=&gt;],
  grpc               =&gt;[=&gt;],
  tts                =&gt;[=&gt;],
- options            =&gt;[gpu],
+ description        =&gt; 'Imported from ollama://smollm:1.7b',
+ options            =&gt;[use_jinja:true],
  mcp                =&gt;[=&gt;],
  agent              =&gt;[=&gt;]]</code></pre>
 </div>
@@ -6199,23 +6266,7 @@ mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */m/llm/model                      ​1​
-==&gt;rec::T[?[
-     provider   =&gt;   catalog::T,
-     name       =&gt;   uri::T,
-     {?}think   =&gt;   #::T,
-     {?}response=&gt;{?}[
-       {?}to    =&gt;    inst::T,
-       {?}format=&gt;    #::T],
-     {?}size    =&gt;   bB::T,
-     {?}memory  =&gt;   memory{?}::T,
-     {?}desc    =&gt;   str::T,
-     {?}skill   =&gt;   lst{?}::T,
-     {?}tool    =&gt;[split([
-    ?tool::T,
-    ?mcp::T])]]]@/m/llm/model
-mtron&gt; */m/llm/inst/+?dom=model
-==&gt;chat?rng=A{?}&amp;dom=model(str::T){&lt;j&gt;}
-==&gt;chat?rng=rec&amp;dom=model(str::T,rec::T){&lt;j&gt;}</code></pre>
+mtron&gt; */m/llm/inst/+?dom=model</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -6233,57 +6284,13 @@ mtron&gt; */m/llm/inst/+?dom=model
 <div class="paragraph">
 <p>When the REST resource is manipulated to fit the structural specification of <code>model::T</code>, then  <code><a href="http://localhost:8088/v1/models/data/0" class="bare">http://localhost:8088/v1/models/data/0</a></code> can be the source of <code>chat?#&lt;=model</code>.</p>
 </div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *&lt;http://localhost:8088/v1/models/data/0&gt;&gt;-.
-         -&lt;[name=&gt;&gt;&gt;id.as(uri::T),
-            type=&gt;&gt;&gt;object.as(uri::T),
-            provider=&gt;|!*/sys/space/localai].as(model::T)
-         .chat('are you there?')                       ​1​
-==&gt;YesYes, I'm here! How can I assist you today?
-==&gt;fail::[[
- type    =&gt; model,
- provider=&gt; !*/sys/space/localai] is not a isa([
-     provider   =&gt;   catalog::T,
-     name       =&gt;   uri::T,
-     {?}think   =&gt;   #::T,
-     {?}response=&gt;{?}[
-       {?}to    =&gt;    inst::T,
-       {?}format=&gt;    #::T],
-     {?}size    =&gt;   bB::T,
-     {?}memory  =&gt;   memory{?}::T,
-     {?}desc    =&gt;   str::T,
-     {?}skill   =&gt;   lst{?}::T,
-     {?}tool    =&gt;[split([
-    ?tool::T,
-    ?mcp::T])]])
-  [
-   provider=&gt;(==&gt;provider)=&gt; catalog::[
-   host   =&gt; http://localhost:8088/v1,
-   pattern=&gt; localai:#,
-   name   =&gt; localai,
-   route  =&gt;[localai:=&gt;&lt;&gt;],
-   space  =&gt;[=&gt;],
-   q      =&gt;[subq::[
-         pre_read   =&gt;    inst?#{*}&lt;=#{?}(uri::T),
-         pre_write  =&gt;    inst?#{*}&lt;=#{?}(uri::T,#::T),
-         qless_write=&gt;    inst?#{*}&lt;=#{?}(uri::T,#::T),
-         pattern    =&gt;    subq,
-         obj        =&gt;[,]]]]@/sys/space/localai=&gt;==&gt;catalog::T,
-   noobj=&gt;(X=&gt;name)       =&gt; noobj=&gt;X=&gt;uri::T,
-   noobj=&gt;(==&gt;{?}think)   =&gt; noobj=&gt;/=&gt;#::T,
-   noobj=&gt;(==&gt;{?}response)=&gt; noobj=&gt;==&gt;{?}[
-   {?}to    =&gt; inst::T,
-   {?}format=&gt; #::T],
-   noobj=&gt;(==&gt;{?}size)    =&gt; noobj=&gt;/=&gt;bB::T,
-   noobj=&gt;(==&gt;{?}memory)  =&gt; noobj=&gt;==&gt;memory{?}::T,
-   noobj=&gt;(==&gt;{?}desc)    =&gt; noobj=&gt;/=&gt;str::T,
-   noobj=&gt;(==&gt;{?}skill)   =&gt; noobj=&gt;==&gt;lst{?}::T,
-   noobj=&gt;(==&gt;{?}tool)    =&gt; noobj=&gt;/=&gt;[split([
-      ?tool::T,
-      ?mcp::T])]]][...]@/sys/fail/318</code></pre>
-</div>
-</div>
+<!--
+*<http://localhost:8088/v1/models/data/0>>-.           /
+  -<[name=>>>id.as(uri::T),                            /
+     type=>>>object.as(uri::T),                        /
+     provider=>|!*/sys/space/localai].as(model::T)     /
+  .chat('are you there?')                       [-- <1>
+-->
 <div class="colist arabic">
 <table>
 <tr>
@@ -6363,15 +6370,7 @@ mtron&gt; */m/llm/inst/+?dom=model
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */m/dcmnt/space/dcmntspace
-==&gt;space::T[?[
-     pattern      =&gt;   uri::T,
-     host         =&gt;   uri::T,
-     {?}serializer=&gt;   uri::T,
-     route        =&gt;[uri::T=&gt;uri::T],
-     {?}root      =&gt;   type::T,
-     {?}schema    =&gt;   instset::T]][
-   inst?dcmntspace&lt;=#{?}(rec::T)]@/m/dcmnt/space/dcmntspace</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */m/dcmnt/space/dcmntspace</code></pre>
 </div>
 </div>
 <table class="tableblock frame-all grid-all stretch table-bordered center">
@@ -6389,13 +6388,7 @@ the root is <code>rec::T[?[collection_name=&gt;collection_type{*}::T]]</code>.</
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *instset
-==&gt;rec::T[?[
-     {?}constq =&gt;[#{?}::T],
-     {?}type   =&gt;{?}[#{*}::T],
-     {?}inst   =&gt;{?}[inst::T],
-     {?}rewrite=&gt;{?}[inst::T],
-     {?}sugar  =&gt;{?}[lst::T]]]@/m/instset</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *instset</code></pre>
 </div>
 </div></div></td>
 </tr>
@@ -6404,15 +6397,8 @@ the root is <code>rec::T[?[collection_name=&gt;collection_type{*}::T]]</code>.</
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; animal    -&gt; rec::T[?[name=&gt;str::T,  age=&gt;int::T]]@animal                     ​1​
-==&gt;rec::T[?[
-     name=&gt;   str::T,
-     age =&gt;   int::T]]@animal
 mtron&gt; chicken   -&gt; animal::T@chicken                                                ​2​
-==&gt;animal::T@chicken
 mtron&gt; equipment -&gt; rec::T[?[model=&gt;uri::T, year=&gt;int::T]]@equipment                 ​3​
-==&gt;rec::T[?[
-     model=&gt;   uri::T,
-     year =&gt;   int::T]]@equipment
 mtron&gt; farmset::[type=&gt;[animal::T,equipment::T,chicken::T]]@/m/dcmnt/schema/farmset  ​4​
 ==&gt;farmset::[type=&gt;[
       animal::T,
@@ -6461,7 +6447,7 @@ mtron&gt; farmset::[type=&gt;[animal::T,equipment::T,chicken::T]]@/m/dcmnt/schem
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; farm:animals/1 -&gt; 'a chicken named trill'                                     ​1​
-==&gt;fail::[space /sys/space/farm requires rec::T[?[{?}animals=&gt;animals::T]] at document root; got str::T][...]@/sys/fail/266
+==&gt;fail::[space /sys/space/farm requires rec::T[?[{?}animals=&gt;animals::T]] at document root; got str::T][...]@/sys/fail/16284
 mtron&gt; farm:animals/1 -&gt; chicken::[name=&gt;'trill',age=&gt;7]                             ​2​
 ==&gt;chicken::[name=&gt;'trill',age=&gt;7]
 mtron&gt; *farm:animals/1                                                               ​3​
@@ -6497,7 +6483,7 @@ identity. metatron preserves type information transparently on the way in and re
 mtron&gt; *farm:animals/1                                                               ​2​
 ==&gt;chicken::[name=&gt;'trill',age=&gt;7]
 mtron&gt; *farm:animals/1/name                                                          ​3​
-==&gt;trill</code></pre>
+==&gt;'trill'</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -6542,16 +6528,7 @@ rows. In metatron, a relational database is a <strong>tblespace</strong> backed 
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *tblespace
-==&gt;space::T[?[
-     pattern  =&gt;   uri::T,
-     host     =&gt;   uri::T,
-     driver   =&gt;   uri::T,
-     route    =&gt;[uri::T=&gt;uri::T],
-     {?}table =&gt;   lst::T,
-     {?}root  =&gt;   rec::T,
-     {?}schema=&gt;   instset::T]][
-   /m/inst/ctor?tblespace&lt;=#{?}(rec::T)]@/m/tble/space/tblespace</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *tblespace</code></pre>
 </div>
 </div></div></td>
 </tr>
@@ -6570,11 +6547,11 @@ mtron&gt; lite:person/2 -&gt; [name=&gt;'grant', age=&gt;25]             ​3​
 ==&gt;[name=&gt;'grant',age=&gt;25]
 mtron&gt; *lite:person
        *lite:person/+/name                                   ​5​
-==&gt;grant
-==&gt;marko
+==&gt;fail::[rhs does not match inst range:
+	{'grant','marko'}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/164
 mtron&gt; *lite:person/+/id                                     ​6​
-==&gt;1
-==&gt;2</code></pre>
+==&gt;fail::[rhs does not match inst range:
+	{1,2}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/166</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -6612,32 +6589,18 @@ mtron&gt; *lite:person/+/id                                     ​6​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/lite/schema
-==&gt;instset::[
- pattern=&gt; /m/tble/space/schema/db/#,
- type   =&gt;[
-      award::T,
-      person::T,
-      score::T],
- q      =&gt;[docq::[
-       pre_read =&gt;    inst?#{*}&lt;=#{?}(uri::T),
-       pre_write=&gt;    inst?#{*}&lt;=#{?}(uri::T,#::T),
-       pattern  =&gt;    docq,
-       obj      =&gt;memspace::[pattern=&gt;&lt;#&gt;],
-       inst     =&gt;instset::[pattern=&gt;&lt;#&gt;]]],
- space  =&gt;[super=&gt;!*/m/tble]]@/m/tble/space/schema/db
 mtron&gt; */sys/space/lite/schema/type/+
-==&gt;rrow::T[?[
+==&gt;fail::[rhs does not match inst range:
+	{rrow::T[?[
      id    =&gt;   int::T,
      player=&gt;   str::T,
-     points=&gt;   int::T]]@/m/tble/space/schema/db/type/score
-==&gt;rrow::T[?[
+     points=&gt;   int::T]]@/m/tble/space/schema/db/type/score,rrow::T[?[
      id       =&gt;   int::T,
      trophy   =&gt;   str::T,
-     recipient=&gt;   int::T]]@/m/tble/space/schema/db/type/award
-==&gt;rrow::T[?[
+     recipient=&gt;   int::T]]@/m/tble/space/schema/db/type/award,rrow::T[?[
      id  =&gt;   int::T,
      name=&gt;   str::T,
-     age =&gt;   int::T]]@/m/tble/space/schema/db/type/person</code></pre>
+     age =&gt;   int::T]]@/m/tble/space/schema/db/type/person}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/168</code></pre>
 </div>
 </div>
 <div class="openblock card">
@@ -6668,10 +6631,10 @@ mtron&gt; *lite:kv/nest
      c=&gt;   2,
      d=&gt;   !*lite:kv/nest]]]
 mtron&gt; *lite:kv/nest/a/b/+
-==&gt;[a=&gt;[b=&gt;[
+==&gt;fail::[rhs does not match inst range:
+	{[a=&gt;[b=&gt;[
      c=&gt;   2,
-     d=&gt;   !*lite:kv/nest]]]
-==&gt;2
+     d=&gt;   !*lite:kv/nest]]],2}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/170
 mtron&gt; *lite:kv/nest/a/b/d
 ==&gt;[a=&gt;[b=&gt;[
      c=&gt;   2,
@@ -6703,13 +6666,13 @@ code''' └────────────────┘ └────�
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *lite:person/+.?==[age=&gt;?&lt;30]      ​1​
-==&gt;rrow::[id=&gt;1,name=&gt;'marko',age=&gt;29]
-==&gt;rrow::[id=&gt;2,name=&gt;'grant',age=&gt;25]
+==&gt;fail::[rhs does not match inst range:
+	{rrow::[id=&gt;1,name=&gt;'marko',age=&gt;29],rrow::[id=&gt;2,name=&gt;'grant',age=&gt;25]}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/172
 mtron&gt; *lite:person/+/name.count()        ​2​
 ==&gt;2
 mtron&gt; *lite:person/+.==[name=&gt;_]         ​3​
-==&gt;[name=&gt;'grant']
-==&gt;[name=&gt;'marko']</code></pre>
+==&gt;fail::[rhs does not match inst range:
+	{[name=&gt;'grant'],[name=&gt;'marko']}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/174</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -6734,10 +6697,10 @@ mtron&gt; *lite:person/+.==[name=&gt;_]         ​3​
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/lite.sql("SELECT name,age FROM person WHERE age &lt; 30")            ​1​
-==&gt;[name=&gt;'marko',age=&gt;29]
-==&gt;[name=&gt;'grant',age=&gt;25]
+==&gt;fail::[rhs does not match inst range:
+	{[name=&gt;'marko',age=&gt;29],[name=&gt;'grant',age=&gt;25]}=&gt;(X=&gt;rec::T[?[uri::T=&gt;#::T]]@/m/tble/rrow)][...]@/sys/fail/176
 mtron&gt; */sys/space/lite.sql("SELECT name,age FROM person WHERE age &lt; 30")&gt;&gt;age.sum() ​2​
-==&gt;54</code></pre>
+==&gt;fail::[unable to convert mfail to int::T][...]@/sys/fail/184</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -6785,63 +6748,15 @@ whose values happen to match <code>person.name</code> — the link is purely alg
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/lite&gt;&gt;=[table=&gt;[person,score]]                                                              ​1​
-==&gt;tblespace::[
- table  =&gt;[person,score],
- pattern=&gt; lite:#,
- host   =&gt; sqlite:target/test?cache=shared,
- driver =&gt; &lt;org.sqlite.JDBC&gt;,
- route  =&gt;[lite:=&gt;&lt;&gt;],
- space  =&gt;[=&gt;],
- schema =&gt;instset::[
-   pattern=&gt;  /m/tble/space/schema/db/#,
-   type   =&gt;[
-        award::T,
-        person::T,
-        score::T],
-   q      =&gt;[docq::[
-         pre_read =&gt;     fail::[apply failure:][...]@/sys/fail/74,
-         pre_write=&gt;     fail::[apply failure:][...]@/sys/fail/76,
-         pattern  =&gt;     docq,
-         obj      =&gt;memspace::[pattern=&gt;&lt;#&gt;],
-         inst     =&gt;instset::[pattern=&gt;&lt;#&gt;]]],
-   space  =&gt;[super=&gt;instset::[
-       pattern=&gt;    /m/tble/#,
-       q      =&gt;[docq::[
-             pre_read =&gt;       inst?#{*}&lt;=#{?}(uri::T),
-             pre_write=&gt;       inst?#{*}&lt;=#{?}(uri::T,#::T),
-             pattern  =&gt;       docq,
-             obj      =&gt;memspace::[pattern=&gt;&lt;#&gt;],
-             inst     =&gt;instset::[pattern=&gt;&lt;#&gt;]]],
-       space  =&gt;[
-         super=&gt;     !*/m,
-         sub  =&gt;     {!*/m/tble/space/schema/netflix,!*/m/tble/space/schema/classicmodels,!*/m/tble/space/schema/db}],
-       type   =&gt;[
-            lrow::T,
-            rrow::T,
-            table::T,
-            tblespace::T],
-       inst   =&gt;[
-            as?rrow&lt;=lrow(rrow::T),
-            as?lrow&lt;=rrow(lrow::T),
-            sql?rrow{*}&lt;=tblespace(str::T)],
-       rewrite=&gt;[
-            /m/tble/inst/rewrite/sql_count?code{?}&lt;=code(),
-            /m/tble/inst/rewrite/sql_sum?code{?}&lt;=code(),
-            /m/tble/inst/rewrite/sql_mean?code{?}&lt;=code(),
-            /m/tble/inst/rewrite/sql_limit?code{?}&lt;=code(),
-            /m/tble/inst/rewrite/sql_has?code{?}&lt;=code(),
-            /m/tble/inst/rewrite/sql_where?code{?}&lt;=code(),
-            /m/tble/inst/rewrite/sql_where_count?code{?}&lt;=code(),
-            /m/tble/inst/rewrite/sql_select?code{?}&lt;=code()]]@/m/tble]]@/m/tble/space/schema/db]@/sys/space/lite
 mtron&gt; lite:score/1 -&gt; [player=&gt;'marko', points=&gt;42]                                                           ​2​
 ==&gt;[player=&gt;'marko',points=&gt;42]
 mtron&gt; lite:score/2 -&gt; [player=&gt;'grant', points=&gt;99]                                                           ​3​
 ==&gt;[player=&gt;'grant',points=&gt;99]
 mtron&gt; *lite:score/+.?==[player=&gt;'marko']                                                                      ​4​
-==&gt;fail::[failed to execute native where operation][...]@/sys/fail/90
+==&gt;fail::[failed to execute native where operation][...]@/sys/fail/214
 mtron&gt; */sys/space/lite.sql("SELECT p.name,p.age,s.points FROM person p JOIN score s ON p.name=s.player")      ​5​
-==&gt;[name=&gt;'marko',age=&gt;29,points=&gt;42]
-==&gt;[name=&gt;'grant',age=&gt;25,points=&gt;99]</code></pre>
+==&gt;fail::[rhs does not match inst range:
+	{[name=&gt;'marko',age=&gt;29,points=&gt;42],[name=&gt;'grant',age=&gt;25,points=&gt;99]}=&gt;(X=&gt;rec::T[?[uri::T=&gt;#::T]]@/m/tble/rrow)][...]@/sys/fail/240</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -6876,325 +6791,6 @@ Unlike a matching column value, the pointer encodes the full address of the link
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/lite&gt;&gt;=[table=&gt;[person,score,award]]                                                        ​6​
-==&gt;tblespace::[
- table  =&gt;[person,score,award],
- pattern=&gt; lite:#,
- host   =&gt; sqlite:target/test?cache=shared,
- driver =&gt; &lt;org.sqlite.JDBC&gt;,
- route  =&gt;[lite:=&gt;&lt;&gt;],
- space  =&gt;[=&gt;],
- schema =&gt;instset::[
-   pattern=&gt;  /m/tble/space/schema/db/#,
-   type   =&gt;[
-        award::T,
-        person::T,
-        score::T],
-   q      =&gt;[docq::[
-         pre_read =&gt;     fail::[apply failure:][...]@/sys/fail/176,
-         pre_write=&gt;     fail::[apply failure:][...]@/sys/fail/178,
-         pattern  =&gt;     docq,
-         obj      =&gt;memspace::[pattern=&gt;&lt;#&gt;],
-         inst     =&gt;instset::[pattern=&gt;&lt;#&gt;]]],
-   space  =&gt;[super=&gt;instset::[
-       pattern=&gt;    /m/tble/#,
-       q      =&gt;[docq::[
-             pre_read =&gt;       fail::[apply failure:][...]@/sys/fail/180,
-             pre_write=&gt;       fail::[apply failure:][...]@/sys/fail/182,
-             pattern  =&gt;       docq,
-             obj      =&gt;memspace::[pattern=&gt;&lt;#&gt;],
-             inst     =&gt;instset::[pattern=&gt;&lt;#&gt;]]],
-       space  =&gt;[
-         super=&gt;instset::[
-           pattern=&gt;      /m/#,
-           q      =&gt;[docq::[
-                 pre_read =&gt;         inst?#{*}&lt;=#{?}(uri::T),
-                 pre_write=&gt;         inst?#{*}&lt;=#{?}(uri::T,#::T),
-                 pattern  =&gt;         docq,
-                 obj      =&gt;memspace::[pattern=&gt;&lt;#&gt;],
-                 inst     =&gt;instset::[pattern=&gt;&lt;#&gt;]]],
-           space  =&gt;[sub=&gt;{!*/m/mach,!*/m/math,!*/m/web,!*/m/iot,!*/m/grph,!*/m/llm,!*/m/tble,!*/m/dcmnt}],
-           const  =&gt;[noobj],
-           type   =&gt;[
-                bool::T,
-                int::T,
-                real::T,
-                bytes::T,
-                str::T,
-                uri::T,
-                rel::T,
-                lst::T,
-                rec::T,
-                instset::T,
-                inst::T,
-                code::T,
-                fail::T,
-                space::T,
-                memspace::T,
-                stack::T,
-                meta::T,
-                q::T,
-                subq::T,
-                sub::T,
-                typeq::T,
-                docq::T,
-                incrq::T,
-                constq::T],
-           inst   =&gt;[
-                as?bool&lt;=bool(bool::T),
-                as?bytes&lt;=bool(bytes::T),
-                as?int&lt;=bool(int::T),
-                as?real&lt;=bool(real::T),
-                as?str&lt;=bool(str::T),
-                plus?bool&lt;=bool(bool::T),
-                mult?bool&lt;=bool(bool::T),
-                not?bool&lt;=bool(),
-                as?bool&lt;=bytes(bool::T),
-                as?str&lt;=bytes(str::T),
-                zero?bytes&lt;=bytes(),
-                plus?bytes&lt;=bytes(bytes::T),
-                within?B&lt;=bytes(B::T),
-                as?bool&lt;=int(bool::T),
-                as?bytes&lt;=int(bytes::T),
-                as?real&lt;=int(real::T),
-                as?str&lt;=int(str::T),
-                as?uri&lt;=int(uri::T),
-                zero?int&lt;=int(),
-                one?int&lt;=int(),
-                neg?int&lt;=int(),
-                mult?int&lt;=int(int::T),
-                minus?int&lt;=int(int::T),
-                plus?int&lt;=int(int::T),
-                gt?bool&lt;=int(int::T),
-                gte?bool&lt;=int(int::T),
-                lt?bool&lt;=int(int::T),
-                lte?bool&lt;=int(int::T),
-                sum?int&lt;=int{*}(),
-                prod?int&lt;=int{*}(),
-                pow?int&lt;=int(int::T),
-                mod?int&lt;=int(int::T),
-                order?lst&lt;=int{*}(),
-                as?int&lt;=real(int::T),
-                as?str&lt;=real(str::T),
-                gt?bool&lt;=real(real::T),
-                gte?bool&lt;=real(real::T),
-                lt?bool&lt;=real(real::T),
-                lte?bool&lt;=real(real::T),
-                neg?real&lt;=real(),
-                plus?real&lt;=real(real::T),
-                mult?real&lt;=real(real::T),
-                div?real&lt;=real(real::T),
-                zero?real&lt;=real(),
-                one?real&lt;=real(),
-                inv?real&lt;=real(),
-                minus?real&lt;=real(real::T),
-                sum?real&lt;=real{*}(),
-                prod?real&lt;=real{*}(),
-                mean?real&lt;=real{*}(),
-                pow?real&lt;=real(real::T),
-                math?real&lt;=#{?}(str::T),
-                order?lst&lt;=real{*}(),
-                as?str&lt;=str(str::T),
-                as?bytes&lt;=str(bytes::T),
-                as?bool&lt;=str(bool::T),
-                as?int&lt;=str(int::T),
-                as?real&lt;=str(real::T),
-                as?uri&lt;=str(uri::T),
-                reverse?str&lt;=str(),
-                zero?str&lt;=str(),
-                has?str{?}&lt;=str(str::T),
-                split?lst&lt;=str(str::T),
-                merge?str&lt;=str{*}(str::T),
-                regex?lst&lt;=str(str::T),
-                gt?bool&lt;=str(str::T),
-                gte?bool&lt;=str(str::T),
-                lt?bool&lt;=str(str::T),
-                lte?bool&lt;=str(str::T),
-                plus?str&lt;=str(str::T),
-                sum?str&lt;=str{*}(str{?}::T),
-                ucase?str&lt;=str(),
-                lcase?str&lt;=str(),
-                within?B&lt;=str(B::T),
-                as?int&lt;=uri(int::T),
-                as?uri&lt;=uri(uri::T),
-                as?str&lt;=uri(str::T),
-                as?rec&lt;=uri(rec::T),
-                reverse?uri&lt;=uri(),
-                has?uri{?}&lt;=uri(str::T),
-                has?uri{?}&lt;=uri(uri::T),
-                split?lst&lt;=uri(uri::T),
-                merge?uri&lt;=uri{*}(uri::T),
-                minus?uri&lt;=uri(uri::T),
-                plus?uri{?}&lt;=uri(uri{?}::T),
-                mult?uri{?}&lt;=uri(uri{?}::T),
-                sum?uri&lt;=uri{*}(),
-                prod?uri&lt;=uri{*}(),
-                path?uri&lt;=uri(uri::T),
-                q?uri&lt;=uri(rec::T),
-                uri:c?lst&lt;=uri(uri::T),
-                pow?uri&lt;=uri(int::T),
-                scheme?uri{?}&lt;=uri(),
-                scheme?uri&lt;=uri(uri::T),
-                authority?uri{?}&lt;=uri(),
-                host?uri{?}&lt;=uri(),
-                host?uri&lt;=uri(uri::T),
-                port?int{?}&lt;=uri(),
-                port?uri&lt;=uri(int::T),
-                select?uri{?}&lt;=uri(uri::T),
-                where?uri{?}&lt;=uri(uri::T),
-                as?lst&lt;=rel(lst::T),
-                as?rec&lt;=rel(rec::T),
-                merge?rec&lt;=rel{*}(rec::T),
-                split(rel::T),
-                dom?#{*}&lt;=rel(),
-                rng?#{*}&lt;=rel(),
-                get?A{?}&lt;=rel(#::T),
-                select?rel{?}&lt;=rel(rel::T),
-                plus?rel{*}&lt;=rel(rel{*}::T),
-                mult?rel{*}&lt;=rel(rel{*}::T),
-                neg?rel&lt;=rel(),
-                one?rel&lt;=rel(),
-                zero?rel&lt;=rel(),
-                as?lst&lt;=lst(lst::T),
-                as?rec&lt;=lst(rec::T),
-                as?code&lt;=lst(code::T),
-                reverse?lst&lt;=lst(),
-                plus?lst&lt;=lst(lst::T),
-                mult?lst&lt;=lst(lst::T),
-                zero?lst&lt;=lst(),
-                split(lst::T),
-                merge?A{*}&lt;=lst(),
-                merge?A{*}&lt;=lst(uri::T),
-                merge?A{*}&lt;=lst(str::T),
-                has?lst{?}&lt;=lst(#::T),
-                within?lst&lt;=lst(#{*}::T),
-                sum?lst&lt;=lst{*}(),
-                select?lst{?}&lt;=lst(lst::T),
-                update?lst&lt;=lst(lst::T),
-                pow?lst&lt;=lst(int::T),
-                as?lst&lt;=rec(lst::T),
-                as?uri&lt;=rec(uri::T),
-                zero?rec&lt;=rec(),
-                reverse?rec&lt;=rec(),
-                has?rec{?}&lt;=rec(#::T,#::T),
-                has?rec{?}&lt;=rec(#::T),
-                get?A{*}&lt;=rec(uri::T),
-                split(rec::T),
-                merge?rel{*}&lt;=rec(),
-                dom?A{*}&lt;=rec(),
-                rng?A{*}&lt;=rec(),
-                rshift?A{*}&lt;=rec(#{*}::T),
-                lshift?A{*}&lt;=rec(),
-                plus?rec&lt;=rec(rec{??}::T),
-                mplus?rec&lt;=rec(rec::T),
-                select?rec{?}&lt;=rec(rec::T),
-                select?#{?}&lt;=rec(uri::T),
-                select?rec{?}&lt;=rec(uri{2,}::T),
-                update?rec{?}&lt;=rec(rec::T),
-                update?rec{?}&lt;=rec(rel::T),
-                within?rec&lt;=rec(#{*}::T),
-                sum?rec&lt;=rec{*}(),
-                as?lst&lt;=code(lst::T),
-                cause?fail{?}&lt;=fail(),
-                reify?rec&lt;=fail(),
-                serialize?B&lt;=A(io::T),
-                fork?A{*}&lt;=A{*}(#::T),
-                range?A{*}&lt;=A{*}(int::T,isa(int::T).else(0)),
-                order?A{*}&lt;=A{*}(#::T),
-                as?noobj{0}&lt;=A(),
-                as?B&lt;=A(#::T),
-                import?space{*}&lt;=#{?}(uri::T,uri{?}::T),
-                dedup?A{*}&lt;=A{*}(),
-                barrier?lst&lt;=#{*}(lst::T),
-                barrier?rec&lt;=rel{*}(rec::T),
-                barrier?A{*}&lt;=A{*}(),
-                barrier?A{*}&lt;=A{*}(A{*}::T),
-                as?A&lt;=A(A::T),
-                repeat?A{*}&lt;=A(#::T,#::T),
-                !#{?}::T,
-                !*#{?}::T,
-                auto_at?#{*}&lt;=#{?}(#{?}::T,#{?}::T),
-                auto_to(),
-                catch?A{*}&lt;=A(A{*}::T),
-                end?noobj{0}&lt;=#{*}(),
-                println?#{*}&lt;=#{?}(#{*}::T),
-                print?#{*}&lt;=#{?}(#{*}::T),
-                at?A&lt;=A(uri{?}::T,#{?}::T),
-                id?A&lt;=A(),
-                id?A{*}&lt;=A{*}(),
-                and?bool&lt;=A(bool::T,bool::T,bool{?}::T,bool{?}::T,bool{?}::T),
-                or?bool&lt;=A(bool::T,bool::T,bool{?}::T,bool{?}::T,bool{?}::T),
-                apply(#{*}::T),
-                map?B&lt;=A(B::T),
-                map?B{?}&lt;=A{?}(B{?}::T),
-                filter?A{?}&lt;=A(#{?}::T),
-                side?A&lt;=A(#::T),
-                tid(),
-                vid?A&lt;=A(uri::T),
-                vid(),
-                else(#{?}::T),
-                is?A{?}&lt;=A{?}(isa(bool::T).else(false)),
-                ?#::T,
-                matches?bool&lt;=#{?}(#{?}::T),
-                block?B&lt;=A{?}(B::T),
-                split(#{+}::T),
-                choose(rec::T),
-                merge?lst&lt;=A{*}(lst::T),
-                merge?#{*}&lt;=A{*}(#{*}::T),
-                merge?A{*}&lt;=A{*}(A{*}::T),
-                not(bool::T),
-                eq?bool&lt;=A(A::T),
-                neq?bool&lt;=A(A::T),
-                to?A{?}&lt;=A{?}(uri::T),
-                *uri::T,
-                ref(#{*}::T),
-                thread?A&lt;=A(#::T),
-                source?B{*}&lt;=A(str::T),
-                type?/m/type&lt;=/m/type(),
-                type?/m/type&lt;=A(),
-                cc?int&lt;=A{*}(),
-                cc?A{*}&lt;=A{*}(int::T),
-                failure?fail&lt;=#{*}(#{?}::T),
-                parent(),
-                count?int&lt;=A{*}(),
-                skip?A{*}&lt;=A{*}(int::T),
-                take?A{*}&lt;=A{*}(int::T),
-                reify?rec&lt;=A(),
-                reduce(#::T),
-                where?A{?}&lt;=A(B::T),
-                group?rec&lt;=#{*}(rec::T),
-                eval?B&lt;=A{?}(code=&gt;str::T),
-                swap?A&lt;=A(B::T),
-                rshift?B{*}&lt;=A(C{*}::T),
-                lshift?B{*}&lt;=A(),
-                start?A{**}&lt;=noobj{0}(A{**}::T)],
-           rewrite=&gt;[
-                /m/inst/rewrite/id_removal?code{?}&lt;=code(),
-                /m/inst/rewrite/map_nest?code{?}&lt;=code(),
-                /m/inst/rewrite/else_after_count?code{?}&lt;=code(),
-                /m/inst/rewrite/plus_zero?code{?}&lt;=code(),
-                /m/inst/rewrite/mult_one?code{?}&lt;=code(),
-                /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
-                /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
-                /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()]]@/m,
-         sub  =&gt;     {!*/m/tble/space/schema/netflix,!*/m/tble/space/schema/classicmodels,!*/m/tble/space/schema/db}],
-       type   =&gt;[
-            lrow::T,
-            rrow::T,
-            table::T,
-            tblespace::T],
-       inst   =&gt;[
-            fail::[apply failure:][...]@/sys/fail/184,
-            fail::[apply failure:][...]@/sys/fail/186,
-            fail::[apply failure:][...]@/sys/fail/188],
-       rewrite=&gt;[
-            fail::[apply failure:][...]@/sys/fail/190,
-            fail::[apply failure:][...]@/sys/fail/192,
-            fail::[apply failure:][...]@/sys/fail/194,
-            fail::[apply failure:][...]@/sys/fail/196,
-            fail::[apply failure:][...]@/sys/fail/198,
-            fail::[apply failure:][...]@/sys/fail/200,
-            fail::[apply failure:][...]@/sys/fail/202,
-            fail::[apply failure:][...]@/sys/fail/204]]@/m/tble]]@/m/tble/space/schema/db]@/sys/space/lite
 mtron&gt; lite:award/1 -&gt; [trophy=&gt;'gold',   recipient=&gt;!*lite:person/1]                                          ​7​
 ==&gt;[
  trophy   =&gt; 'gold',
@@ -7204,12 +6800,12 @@ mtron&gt; lite:award/2 -&gt; [trophy=&gt;'silver', recipient=&gt;!*lite:person/2
  trophy   =&gt; 'silver',
  recipient=&gt; !*lite:person/2]
 mtron&gt; *lite:award/+                                                                                           ​9​
-==&gt;[
+==&gt;fail::[rhs does not match inst range:
+	{[
  trophy   =&gt; 'gold',
- recipient=&gt; !*lite:person/1]
-==&gt;[
+ recipient=&gt; !*lite:person/1],[
  trophy   =&gt; 'silver',
- recipient=&gt; !*lite:person/2]
+ recipient=&gt; !*lite:person/2]}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/412
 mtron&gt; *lite:award/1/recipient                                                                                 ​10​
 ==&gt;[name=&gt;'marko',age=&gt;29]</code></pre>
 </div>
@@ -7339,16 +6935,8 @@ mtron&gt; *lite:award/1/recipient                                               
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/env/+/.take(10)
-==&gt;/sys/env/GTK3_MODULES=&gt;'xapp-gtk3-module'
-==&gt;/sys/env/JAVA_HOME=&gt;'/home/killswitch/.sdkman/candidates/java/current'
-==&gt;/sys/env/QT_IM_MODULE=&gt;'ibus'
-==&gt;/sys/env/GNOME_DESKTOP_SESSION_ID=&gt;'this-is-deprecated'
-==&gt;/sys/env/HOMEBREW_CELLAR=&gt;'/home/linuxbrew/.linuxbrew/Cellar'
-==&gt;/sys/env/JBANG_HOME=&gt;'/home/killswitch/.sdkman/candidates/jbang/current'
-==&gt;/sys/env/USER=&gt;'killswitch'
-==&gt;/sys/env/HOMEBREW_PREFIX=&gt;'/home/linuxbrew/.linuxbrew'
-==&gt;/sys/env/LIBVIRT_DEFAULT_URI=&gt;'qemu:///system'
-==&gt;/sys/env/XDG_SEAT=&gt;'seat0'</code></pre>
+==&gt;fail::[rhs does not match inst range:
+	{/sys/env/GTK3_MODULES=&gt;'xapp-gtk3-module',/sys/env/JAVA_HOME=&gt;'/home/killswitch/.sdkman/candidates/java/current',/sys/env/QT_IM_MODULE=&gt;'ibus',/sys/env/GNOME_DESKTOP_SESSION_ID=&gt;'this-is-deprecated',/sys/env/HOMEBREW_CELLAR=&gt;'/home/linuxbrew/.linuxbrew/Cellar',/sys/env/JBANG_HOME=&gt;'/home/killswitch/.sdkman/candidates/jbang/current',/sys/env/USER=&gt;'killswitch',/sys/env/HOMEBREW_PREFIX=&gt;'/home/linuxbrew/.linuxbrew',/sys/env/LIBVIRT_DEFAULT_URI=&gt;'qemu:///system',/sys/env/XDG_SEAT=&gt;'seat0'}=&gt;(X=&gt;#{?}::T)][...]@/sys/fail/16112</code></pre>
 </div>
 </div>
 <h3 id="_boot_loader" class="discrete">Boot Loader</h3>

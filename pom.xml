@@ -461,6 +461,8 @@
                                 <argument>--verbose</argument>
                                 <argument>-o</argument>
                                 <argument>${project.build.directory}/temp</argument>
+                                <argument>-p</argument>
+                                <argument>docs/python/prefix.adoc</argument>
                                 <argument>${project.build.directory}/temp/src/adoc</argument>
                             </arguments>
                         </configuration>

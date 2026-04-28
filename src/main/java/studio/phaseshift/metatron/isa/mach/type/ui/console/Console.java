@@ -403,7 +403,8 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
         final int currentIndex = indexOfPaneById(allPanes, toClose != null ? toClose.id() : -1);
         final Pane nextPane = allPanes.get((currentIndex + 1) % allPanes.size());
 
-        // Remove from tree
+        // Remove from tree — unsubscribe first so no stale space subscriptions linger
+        if (toClose != null) toClose.unsubscribe();
         this.paneRoot = this.paneRoot.removePane(toClose);
         if (this.paneRoot == null) {
             // Shouldn't happen, but safety
@@ -460,9 +461,10 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
         this.requestRedraw();
     }
 
-    /** Wire the output-change listener onto a pane so live output triggers a content-only redraw. */
+    /** Wire the output-change listener and space subscriptions onto a pane. */
     private void registerPaneListener(final Pane pane) {
         pane.setOutputListener(this::onPaneOutputChanged);
+        pane.subscribe();
     }
 
     /**
@@ -817,7 +819,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                     Graphitty.out(terminal.output(), "{{XX}}");
                     this.status.refresh();
                 } else if (line.equals(":help")) {
-                    Graphitty.out(terminal.output(), new Panel("{{c}}metatron console help{{X}}", new Table(
+                    final String helpText = new Panel("{{c}}metatron console help{{X}}", new Table(
                             List.of("name", "short", "description"))
                             /// ///////////////////////////////////////////////////////////////////////////////////////
                             .addRow(List.of("{{[g]&w}}mtron", "{{[g]&w}}", "{{[g]&w}}"))
@@ -845,7 +847,12 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                             .addRow(List.of("prev pane", "<alt>+w", "cycle to previous pane"))
                             .addRow(List.of("shrink pane", "<alt>+<", "make active pane smaller"))
                             .addRow(List.of("grow pane", "<alt>+>", "make active pane larger"))
-                            .style().headerDivider("{{[b]&w}}|").margin(0, 0, 0, 0).apply().format()).style().margin(0, 0, 0, 0).border(Border.simple.foreground("{{b}}")).apply().format());
+                            .style().headerDivider("{{[b]&w}}|").margin(0, 0, 0, 0).apply().format()).style().margin(0, 0, 0, 0).border(Border.simple.foreground("{{b}}")).apply().format();
+                    if (this.splitMode && this.activePane != null) {
+                        this.activePane.appendOutput(helpText);
+                    } else {
+                        Graphitty.out(terminal.output(), helpText);
+                    }
                 } else if (line.startsWith(":log")) {
                     final String[] args = line.substring(4).trim().split(" ");
                     if (line.substring(4).trim().isBlank())

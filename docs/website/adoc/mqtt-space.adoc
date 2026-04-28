@@ -1,8 +1,8 @@
 [discrete]
 == MQTT Space
 
-https://mqtt.org/[MQTT] is a lightweight messaging protocol commonly used for IoT (Internet of Things) applications. 
-The protocol offers publish-subscribe messaging and a wildcard-based addressing scheme that conveniently maps to the 
+https://mqtt.org/[MQTT] is a lightweight messaging protocol commonly used for IoT (https://en.wikipedia.org/wiki/Internet_of_things[Internet of Things]) applications. 
+The protocol offers https://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern[publish-subscribe] messaging and a wildcard-based addressing scheme that conveniently maps to the 
 URI address space.
 
 ++++
@@ -46,11 +46,9 @@ mqtt::[pattern => <esp32:#>,                                /
        │ /a       -> [b=>[c=>1]]  │          
        │ /a/b     -> [c=>1]       │          
    ┌───► /a/b/c   -> 1            ◄───┐
-   │   └──▲─────▲──────▲──────▲───┘   │      
-   │      │     │      │      │       │      
+   │   └──▲─────▲──────▲──────▲───┘   │       
    │      │pub  │      │pub   │       │pub   
-   │sub   │     │sub   │      │sub    │      
-   │      │     │      │      │       │        
+   │sub   │     │sub   │      │sub    │
 ┌──▼─┐ ┌──▼─┐ ┌─▼──┐ ┌─▼──┐ ┌─▼──┐ ┌──▼─┐    
 │    │ │    │ │    │ │    │ │    │ │    │
 └────┘ └────┘ └────┘ └────┘ └────┘ └────┘

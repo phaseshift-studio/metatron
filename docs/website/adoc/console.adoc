@@ -1,0 +1,58 @@
+[discrete]
+== Console
+
+The console offers an integrated user experience. Features include:
+
+ . mtron syntax highlighting
+ . step-by-step code compilation kbd:[tab]
+ . horizontal and vertical split screens kbd:[ctrl+↑] and kbd:[ctrl+→]
+ . history and search kbd:[↑]
+ . code formatting/pretty printing kbd:[ctrl+f]
+ . adjustable type checker kbd:[ctrl+shift+T]
+ . llm pair programming kbd:[ctrl+shift+A]
+
+The console is also an `obj`.
+++++
+<!-- 🐖
+*/sys/ui/console                                     [-- <1>
+*/sys/ui/console/pane/0                              [-- <2>
+/sys/ui/console/pane/0/result('printed at ==>xyz')   [-- <3>
+-->
+++++
+
+<1> The console `obj` is typically referenced by `/sys/ui/console`.
+<2> The console's pane system allows for multiple parallel views.
+<3> Console pane's have obj local instructions availale for updating views.
+
+There are 3 instructions associated with a `/m/mach/console/pane`.
+
+1. `prompt(str::T)` - write to the pane using the standard prompt prefix `mtron> xyz`.
+2. `result(str::T)` - write to the pane using the standard result prefix `=\=> xyz`.
+3. `stream(str::T)` - write to the pane without a newline as in `abc xyz`.
+
+[cols="5a,5a",separator=🧱,role="table-bordered small center"]
+|===
+🧱
+These functions are useful for creating remote consoles, separating log output, and LLM pair programming, where an LLM can operate with their own environment fully visible to the user.
+🧱
+ ┌────────────────────┐┌────────────────────┐
+ │[/usr/marko]        ││[/usr/ai/agent]     │
+ │                    ││                    │
+ │mtron> 1-<[_,_]>-   ││mtron> *subagent    │
+ │==>1                ││==>[ desc     => .. │
+ │==>2                ││     provider => .. │
+ │mtron> *<http://..> ││     tool     => .. │
+ │==>[ html =>    ..  ││     skill    => .. │
+ │      head   => ..  ││     note     => .. │
+ │       title => ..  ││     ... ]          │
+ │      body=> ..     ││mtron>              │
+ │     ...]           ││                    │
+ │mtron>              ││                    │
+ └────────────────────┘└────────────────────┘
+ ┌──────────────────────────────────────────┐
+ │[/sys/log/#]                              │
+ │[INFO] agent2 spawned by /usr/ai/agent    │
+ │[WARN] runtime inst resolution required   │
+ └──────────────────────────────────────────┘
+🧱
+|===

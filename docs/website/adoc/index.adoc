@@ -14,6 +14,7 @@
 :icon-set: fas
 :stem: latexmath
 :data-uri:
+:experimental:
 :sectnums!:
 :toc: none
 :linkcss!:
@@ -191,7 +192,7 @@ docs::[
        <!-- EMBED -->
         <div id="embed_feature" data-title="embed" data-icon="images/icons/storage-icon.svg" data-back-image="images/modal/embed-modal.svg">
             <div class="feature-front">
-                A data structure can have an inter- or intra-space <b class="metatron-name">embedding</b> suc that each subset of its form can take advantage of the respective time-space tradeoffs of the underlying spaces.
+                A data structure can have an inter- or intra-space <b class="metatron-name">embedding</b> such that each subset of its form can take advantage of the respective time-space tradeoffs of the underlying storage system.
             </div>
             <div class="feature-modal">
                 <p>A data structure such as a vertex in a graph can have many incoming and outgoing edges with different edge labels and properties. Such diversity entails not all edges will require the same read/write performance characteristics. In metatron, it's possible to <b class="metatron-name">embed</b> one edge set in a space optimized for fast retrievals (e.g. an in-memory space) and another subset in a space optimized for static, long-term storage (e.g. a disk-backed space). Other considerations may include the indices associated with a space and whether certain properties of an edge can be indexed for non-linear access.</p>
@@ -202,10 +203,10 @@ docs::[
         <!-- TYPE -->
         <div id="type_feature" data-title="type" data-icon="images/icons/type-icon.svg" data-back-image="images/type-diagram.svg">
             <div class="feature-front">
-                obj structures are constrained using a <b class="metatron-name">structural type system</b> that can express inherited, refined, dependent, and recursive types with constructs to express cardinalities, optionals, generics, predicates, and more.
+               objs are constrained using a <b class="metatron-name">structural type system</b> that can express inherited, refined, dependent, and recursive types with constructs for expressing cardinality, optionals, generics, predicates, and more.
             </div>
             <div class="feature-modal">
-                <p>The <b class="metatron-name">structural type system</b> of metatron ensures that the label ascribed to obj's form (its nominal type) is but a secondary concern relative to the obj's relational structural within the larger data space as a whole. If an obj meets all the specified constraints of a defined type, then it is of that type and can be processed by instructions and composed within larger types requiring said type. From this vantage point, many homomorphic transformations can be realized that render the distinctions between a row in a relational database, a tag in an HTML document, a vertex in graph, and a value in a key/value store to be simply differences of name, not function.</p>
+                <p>The <b class="metatron-name">structural type system</b> of metatron ensures that the label ascribed to an obj's form (its nominal type) is but a secondary concern relative to the obj's relational structural within the larger data space as a whole. If an obj meets all the specified constraints of a defined type, then it is of that type and can be processed by instructions and composed within larger types requiring said type. From this vantage point, many homomorphic transformations can be realized that render the distinctions between a row in a relational database, a tag in an HTML document, a vertex in graph, and a value in a key/value store to be simply differences of name, not function.</p>
                 <img src="images/type-diagram.svg" class="img-fluid mb-3 icon-color" style="max-height: 400px; display: block; margin: auto;"/>
             </div>
             <script type="text/javascript">featurePanel("type_feature");</script>
@@ -227,7 +228,7 @@ docs::[
                 a <b class="metatron-name">monad swarm</b> machine supports asynchronous, parallel, distributed traversals over large regions of space
             </div>
             <div class="feature-modal">
-                <p><b class="metatron-name">OLRP</b> (Online Real-time Processing) realizes computing as a swarm of asynchronous, distributed monads traversing a data graph whose paths through that graph are guided by an instruction graph. Hundreds of thousands of monads can traverse vast swathes of the data landscape, across different physical machines, all in pursuit of a solution to a problem that has been formally captured within the structure of an obj called code.</p>
+                <p><b class="metatron-name">OLRP</b> (online real-time processing) realizes computing as a swarm of asynchronous, distributed monads traversing a data graph whose paths through that graph are guided by an instruction graph. Hundreds of thousands of monads can traverse vast swathes of the data landscape, across different physical machines, all in pursuit of a solution to a problem that has been formally captured within the structure of an obj called code.</p>
                 <img src="images/modal/olrp-modal.svg" class="img-fluid mb-3 icon-color" style="max-height: 300px; display: block; margin: auto;"/>
             </div>
             <script type="text/javascript">featurePanel("olrp_feature");</script>
@@ -238,7 +239,7 @@ docs::[
                 a <b class="metatron-name">monad vector</b> machine supports stateful bulk synchronous processing of massive regions of space
             </div>
             <div class="feature-modal">
-                <p><b class="metatron-name">OLAP</b> operations are handled by a machine that frames computing as a bulk synchronous process where a series of parallelly executing stages are demarcated by serializing stateful barriers. Together, the pulse of expanding and contracting processes forms the heartbeat of the computation.</p>
+                <p><b class="metatron-name">OLAP</b> (online analytical processing) operations are handled by a machine that frames computing as a bulk synchronous process where a series of parallelly executing stages are demarcated by serializing stateful barriers. Together, the pulse of expanding and contracting processes forms the heartbeat of the computation.</p>
                 <img src="images/modal/olap-modal.svg" class="img-fluid mb-3 icon-color" style="max-height: 300px; display: block; margin: auto;"/>
             </div>
             <script type="text/javascript">featurePanel("olap_feature");</script>
@@ -246,10 +247,10 @@ docs::[
         <!-- WEB -->
         <div id="web_feature" data-title="web" data-icon="images/icons/web-icon.svg" data-back-image="images/modal/web-modal.svg">
             <div class="feature-front">
-                a multi-protocol <b class="metatron-name">web-oriented instset</b> allows metatron to expose space resources to external clients as well as realize the external web as a metatron space in and of itself.
+                a multi-protocol <b class="metatron-name">web-oriented instset</b> expose space resources to external clients as well as realize the external web as a metatron space in and of itself.
             </div>
             <div class="feature-modal">
-                <p><b class="metatron-name">HTTP space</b> translates the <code>GET/PUT</code> semantics of <code>http://</code> to the read/write semantics of a metatron space -- enabling the selective access, referencing, and manipulation of HTML, XML, and JSON documents. Similarly, <b class="metatron-name">web socket space</b> offers session-based interactions with metatron via a simple string-based mtron evaluation protocol, or an MCP server, or a custom protocol if needed.</p>
+                <p><b class="metatron-name">HTTP space</b> translates the <code>GET/PUT</code> semantics of <code>http://</code> to the read/write semantics of a metatron space -- enabling the selective access, referencing, and manipulation of HTML, XML, and JSON documents. Similarly, <b class="metatron-name">WebSocket space</b> offers session-based interactions via a simple string-based mtron evaluation protocol, or an MCP server, or a custom protocol if needed.</p>
                 <table>
                 <tr>
                 <td>
