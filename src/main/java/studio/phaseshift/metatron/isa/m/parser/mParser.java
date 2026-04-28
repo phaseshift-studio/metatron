@@ -24,6 +24,7 @@ import org.petitparser.parser.combinators.*;
 import org.petitparser.parser.primitive.CharacterParser;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.Sugar;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.Fail;
@@ -76,8 +77,10 @@ public class mParser {
 
     public static final SettableParser furi_parser = SettableParser.undefined();
     private static final GraphittyLogger LOG = Graphitty.log(mParser.class);
+    private static final SettableParser base_obj_parser = SettableParser.undefined();
     private static final SettableParser obj_parser = SettableParser.undefined();
     private static final SettableParser obj_no_code_parser = SettableParser.undefined();
+    private static final SettableParser obj_no_call_parser = SettableParser.undefined();
     private static final SettableParser lst_parser = SettableParser.undefined();
     private static final SettableParser rec_parser = SettableParser.undefined();
     public static final SettableParser inst_parser = SettableParser.undefined();
@@ -101,15 +104,28 @@ public class mParser {
         new mInstSet().sugars().forEach(mParser::addSugar);
         // Cache the sugar parser after all sugars are loaded
         cachedSugarParser = PARSERS.isEmpty() ? null : choice(PARSERS.toArray(new Parser[0]));
-
         // Initialize all parsers first
         furi_parser.set(seq(word().or(seq(of("::").not(),
                         anyOf(REDUCED_FURI_CHARS))).plus().flatten(),
                 opt(m_furi_poly_type(), null),
                 opt(m_furi_coefficient(), null),
                 opt(none(), null)).map(t -> f(pick(t, 0)).poly(pick(t, 1)).c(cInt.of((String) pick(t, 2))).qString(pick(t, 3))));
-
         rel_parser.set(seq(m_type_prefix(REL_TID), m_paren_wrap(seq(obj_rel_back_parser, of("=>").trim(), m_obj()))).map(t -> rel(Tuple.Pair.with(pick(pick(t, 1), 0), pick(pick(t, 1), 2)), pick(t, 0), null)));
+        obj_no_call_parser.set(choice(
+                m_comment(),
+                m_type(),
+                m_rec(),
+                m_paren_wrap(m_rel(), true),
+                m_fail(),
+                m_noobj(),
+                m_bytes(),
+                m_bool(),
+                m_real(),
+                m_int(),
+                m_str(),
+                m_lst(),
+                m_uri(),
+                m_objs()));
         obj_no_code_parser.set(choice(
                 m_comment(),
                 m_type(),
@@ -197,35 +213,52 @@ public class mParser {
                 .end();
     }
 
-    public static LinkedHashSet<Parser> addSugar(final Tuple.Triplet<Tuple.Pair<String, String>, List<fURI>, Integer> triplet) {
-        final String startToken = triplet.get0().get0();
-        final String endToken = triplet.get0().get1();
+    public static LinkedHashSet<Parser> addSugar(final Sugar sugar) {
+        final String startToken = sugar.getStartToken();
+        final String endToken = sugar.getEndToken();
 
         // Check if the sugar definition has spaces (space-aware)
         final boolean startHasLeadingSpace = startToken.startsWith(" ");
         final boolean startHasTrailingSpace = startToken.endsWith(" ");
         final String trimmedStart = startToken.trim();
 
-        // If spaces are present in the definition, create a space-aware parser
-        if (startHasLeadingSpace || startHasTrailingSpace) {
+        if (sugar.getPosition() == Sugar.Position.INFIX) {
+            PARSERS.add(generate_infix_sugar_parser(
+                    sugar.getInstChain(),
+                    trimmedStart
+            ));
+        } else if (startHasLeadingSpace || startHasTrailingSpace) {
             PARSERS.add(generate_space_aware_sugar_parser(
-                    triplet.get1(),
+                    sugar.getInstChain(),
                     trimmedStart,
                     startHasLeadingSpace,
                     startHasTrailingSpace,
-                    triplet.get2(),
+                    sugar.getArgCount(),
                     endToken
             ));
         } else {
             // Standard space-insensitive sugar (uses .trim())
             PARSERS.add(generate_sugar_parser(
-                    triplet.get1(),
+                    sugar.getInstChain(),
                     of(startToken),
-                    triplet.get2(),
+                    sugar.getArgCount(),
                     null == endToken ? null : of(endToken)
             ));
         }
         return PARSERS;
+    }
+
+    private static Parser generate_infix_sugar_parser(final List<fURI> instChain, final String token) {
+        // Infix parser: m_obj_no_sugar() + token + m_obj_no_sugar()
+        return seq(m_obj_no_sugar(), of(token).trim(),m_obj()).map(t -> {
+            final Obj lhs = pick(t, 0);
+            final Obj rhs = pick(t, 2);
+            Obj current = lhs;
+            for (final fURI tid : instChain) {
+                current = instB(tid, lst(current, rhs));
+            }
+            return current;
+        });
     }
 
     private static Parser generate_space_aware_sugar_parser(
@@ -496,6 +529,10 @@ public class mParser {
 
     public static Parser m_obj() {
         return mParser.m_obj(true);
+    }
+
+    public static Parser m_obj_no_sugar() {
+        return obj_no_call_parser.or(inst_parser);
     }
 
     public static Parser m_noobj() {

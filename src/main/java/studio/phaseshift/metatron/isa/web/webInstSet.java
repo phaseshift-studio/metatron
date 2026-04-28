@@ -44,6 +44,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.space.http.httpSpace.HTTP_SPACE_TYPE;
+import static studio.phaseshift.metatron.isa.web.space.ws.server.mcp_mtron_wsServer.WS_MCP_MTRON_SERVER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.ws.server.mcp_wsServer.WS_MCP_SERVER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.ws.server.mtron_wsServer.WS_MTRON_SERVER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_SERVER_TYPE;
@@ -126,7 +127,8 @@ public class webInstSet extends AbstractInstSet {
                                 "<ws://localhost:8999/mtron/0/send>('ping') [-- sends str to wsmtron server session --]"),
                         docWrap(WS_SERVER_TYPE, "an websocket server written in mtron through respective insts"),
                         docWrap(WS_MTRON_SERVER_TYPE, "a simple websocket server accepting mtron expressions and return mtron results"),
-                        docWrap(WS_MCP_SERVER_TYPE, "a simple websocket server accepting mtron expressions and return mtron results")),
+                        docWrap(WS_MCP_SERVER_TYPE, "an abstract mcp websocket server providing necessary json-rpc infrastructure for other mcp servers to leverage"),
+                        docWrap(WS_MCP_MTRON_SERVER_TYPE, "an mcp websocket server with built-in metatron eval, space listing, router info and instruction listing tools")),
                 uri(INST), lst(
                         instC(AS_INST_TID.dom(STR_TID).rng(XML_TID), lst(T(XML_TID)), (lhs, inst) -> ObjXMLSerializer.parse(lhs.asStr().strValue())),
                         instC(AS_INST_TID.dom(STR_TID).rng(HTML_TID), lst(HTML_TYPE), (lhs, inst) -> ObjHTMLSerializer.parse(lhs.asStr().strValue())),

@@ -74,7 +74,7 @@ public class wsmcpServerTest extends AbstractWSServerTest {
     @Test
     public void testMCPTidNamespace() {
         assertTrue(MCP_WS_TID.toString().contains("wsspace"));
-        assertTrue(MCP_WS_TID.toString().contains("wsmcp"));
+        assertTrue(MCP_WS_TID.toString().contains("mcp"));
     }
 
     @Test

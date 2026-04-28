@@ -229,7 +229,7 @@ public interface Type extends Obj {
                 /// //////////////////
                 /// OBJ <=> TYPE ///
                 /// //////////////////
-                if (rhs.tid().isGeneric() || rhs.test(T(CODE_TID)) || rhs.test(T(M_ISA_INST_TID)))
+                if (rhs.tid().isGeneric() || rhs.isObjCall())
                     return true;
                 if (rhs.tid().hasPoly()) {
                     if (rhs.tid().hasPoly()) {

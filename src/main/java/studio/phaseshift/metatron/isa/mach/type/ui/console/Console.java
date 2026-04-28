@@ -125,7 +125,9 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     private final AtomicBoolean needsRedraw = new AtomicBoolean(false);
     private boolean splitMode = false;  // True when we have more than one pane
 
-    /** Minimum ms between content-only live redraws triggered by pane output. */
+    /**
+     * Minimum ms between content-only live redraws triggered by pane output.
+     */
     private static final long PANE_RENDER_THROTTLE_MS = 80;
     private volatile long lastPaneRenderMs = 0;
 
@@ -461,7 +463,9 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
         this.requestRedraw();
     }
 
-    /** Wire the output-change listener and space subscriptions onto a pane. */
+    /**
+     * Wire the output-change listener and space subscriptions onto a pane.
+     */
     private void registerPaneListener(final Pane pane) {
         pane.setOutputListener(this::onPaneOutputChanged);
         pane.subscribe();
@@ -735,8 +739,12 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                 final Level startLevel = this.status.getState();
                 if (null != parseResult && !parseResult.isNoObj()) {
                     final Obj resolvedResult = parseResult.isCall() ? Call.Helper.resolveInspection(parseResult.asCall(), unresolved -> {
-                        this.status.setState(Level.WARN);
-                        LOG.warn("unable to fully resolve code. execution will require dynamic inst resolution for:\n\t%s", unresolved.stream().map(i -> i.tid()).toList());
+                        if (TypeCheck.code_resolve.enabled()) {
+                            throw MTronException.of("unable to fully resolve code. execution will require dynamic inst resolution for:\n\t%s", unresolved.stream().map(Obj::tid).toList());
+                        } else {
+                            this.status.setState(Level.WARN);
+                            LOG.warn("unable to fully resolve code. execution will require dynamic inst resolution for:\n\t%s", unresolved.stream().map(Obj::tid).toList());
+                        }
                     }) : parseResult;
                     final Machine mach = SwarmMachine.of(resolvedResult.isCall() ? resolvedResult.as() : start_(resolvedResult)).onHalt(this::printResult);
                     // Track machine in both places for interruption

@@ -38,6 +38,7 @@ import studio.phaseshift.metatron.isa.mach.type.ui.console.Editor;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.ImageUtil;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.isa.Sugar;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.io.File;
@@ -350,9 +351,9 @@ public class machInstSet extends AbstractInstSet {
     }
 
     @Override
-    public Set<Tuple.Triplet<Tuple.Pair<String, String>, List<fURI>, Integer>> sugars() {
+    public Set<Sugar> sugars() {
         return new LinkedHashSet<>(List.of(
-                Tuple.Triplet.with(Tuple.Pair.with("^", null), List.of(LIFT_INST_TID), 0)
+                Sugar.prefix("^", List.of(LIFT_INST_TID), 0)
         ));
     }
 }

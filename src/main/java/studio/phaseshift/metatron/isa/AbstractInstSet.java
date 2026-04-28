@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.Sugar;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.*;
@@ -94,7 +95,7 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
                 uri(Tokens.PATTERN), uri(vid.extend(ALL))), tid, vid);
         this.at(uri(Tokens.QPROC), lst(QCollection.docQ()), MUTABLE);
         if (Router.loaded()) {
-            this.sugars().forEach(mParser::addSugar);
+            this.sugars().forEach(sugar -> mParser.addSugar(sugar));
             this.consts().forEach(c -> Router.global().registerRedirect(f(c.vid().name()), c.vid()));
             this.types().stream().filter(t -> null != t.vid()).forEach(t -> Router.global().registerRedirect(f(t.vid().name()), t.vid()));
             this.insts().forEach(t -> Router.global().registerRedirect(f(t.tid().name()), t.tid().basePath()));
@@ -127,7 +128,7 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
     public AbstractInstSet(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(new LinkedHashMap<>(), jvm, tid, vid);
         this.at(uri(Tokens.QPROC), lst(QCollection.docQ()), MUTABLE);
-        this.sugars().forEach(mParser::addSugar);
+        this.sugars().forEach(sugar -> mParser.addSugar(sugar));
         old = false;
     }
 
@@ -279,7 +280,7 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
                         }));
     }
 
-    public Set<Tuple.Triplet<Tuple.Pair<String, String>, List<fURI>, Integer>> sugars() {
+    public Set<Sugar> sugars() {
         return Set.of();
     }
 

@@ -41,6 +41,9 @@ lite:person/2 -> [name=>'grant', age=>25]             [-- <3>
 [discrete]
 === schema discovery
 
+[cols="5a,6a",separator=🧱,role="no-border center"]
+|===
+🧱
 On connection, `tblespace` introspects the live database and generates an `instset` schema. Each discovered table is some refinement on `rec{*}::T` (zero or more rows) with `rel` keys matching a table column name and values matching a table column type.
 
 ++++
@@ -49,6 +52,30 @@ On connection, `tblespace` introspects the live database and generates an `insts
 */sys/space/lite/schema/type/+
 -->
 ++++
+🧱
+
+[source,mtron]
+----
+┌──────────────────────────────┐  
+│┌── k0   k1   k2   k3   k4    │r 
+r│  ┌───┐┌───┐┌───┐┌───┐┌───┐│ │e 
+e│  │v0 ││v1 ││v2 ││v3 ││v4 ││ │c 
+l└─ └───┘└───┘└───┘└───┘└───┘├─┘  
+    ┌───┐┌───┐┌───┐┌───┐┌───┐│    
+    │v0 ││v1 ││v2 ││v3 ││v4 ││t   
+    └───┘└───┘└───┘└───┘└───┘│a   
+    ┌───┐┌───┐┌───┐┌───┐┌───┐│b   
+    │v0 ││v1 ││v2 ││v3 ││v4 ││l   
+    └───┘└───┘└───┘└───┘└───┘│e   
+    ┌───┐┌───┐┌───┐┌───┐┌───┐│    
+    │v0 ││v1 ││v2 ││v3 ││v4 ││    
+    └───┘└───┘└───┘└───┘└───┘│    
+    ┌───┐┌───┐┌───┐┌───┐┌───┐│    
+    │v0 ││v1 ││v2 ││v3 ││v4 ││    
+    └───┘└───┘└───┘└───┘└───┘     
+----
+🧱
+|===
 
 [.card]
 --

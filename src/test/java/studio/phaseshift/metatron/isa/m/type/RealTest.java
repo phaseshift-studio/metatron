@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -18,12 +18,10 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.algebra.AbstractAlgebraTest;
-import studio.phaseshift.metatron.isa.m.mInstSet;
 
 import java.util.Set;
 
@@ -74,6 +72,14 @@ public class RealTest extends AbstractAlgebraTest<Real> {
             "{1.0,2.0,3.0}.mean()                                             % 2.0",
             "{1.0,0.0}.mean()                                                 % 0.5",
             "{1.1,2.2,3.3}.mean().?>2.1.lt(2.3)                               % true", // java double too wiggly
+            "{1.1,2.2,3.3}.mean().and(gt(2.1),lt(2.3))                        % true", // java double too wiggly
+            "{1.1,2.2,3.3}.mean().and(gt(22.1),lt(42.3))                      % false", // java double too wiggly
+            "{1.1,2.2,3.3}.mean().map(and(gt(22.1),lt(42.3)))                 % false", // java double too wiggly
+            "{1.1,2.2,3.3}.mean().map(and(gt(2.1),lt(2.3)))                   % true", // java double too wiggly
+            //"{1.1,2.2,3.3}.mean().map(gt(2.1) & lt(2.3))                      % true", // java double too wiggly
+            //"{1.1,2.2,3.3}.mean().map(gt(442.1) & lt(233.3))                  % false", // java double too wiggly
+            "{1.1,2.2,3.3}.mean().and(gt(32.1),lt(52.3))                      % false", // java double too wiggly
+            //"{1.1,2.2,3.3}.mean().is(gt(32.1) & lt(52.3))                     % noobj",
             "1.1.mean()                                                       % 1.1",
             "{}.mean()                                                        % 0.0",
             "[1.0,2.0,3.0]>-.mean()                                           % 2.0",

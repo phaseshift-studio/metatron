@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 
+import java.util.AbstractMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -135,6 +136,7 @@ public class TopicTrieTest extends AbstractMetatronTest {
         trie.put(f("/a/b/c"), jnt(3));
 
         assertFalse(trie.isEmpty());
+        assertEquals(3, trie.size());
         trie.clear();
         assertTrue(trie.isEmpty());
         assertEquals(0, trie.size());
@@ -287,6 +289,10 @@ public class TopicTrieTest extends AbstractMetatronTest {
         assertEquals(jnt(1), trie.get(f("/a/b/c/d/e/f/g")));
 
         final List<Map.Entry<fURI, Obj>> results = trie.match(f("/a/b/c/d/e/f/+"));
+        assertTrue(results.contains(new AbstractMap.SimpleEntry<>(f("/a/b/c/d/e/f/g"), jnt(1))));
+        assertTrue(results.contains(new AbstractMap.SimpleEntry<>(f("/a/b/c/d/e/f/h"), jnt(2))));
+        assertFalse(results.contains(new AbstractMap.SimpleEntry<>(f("/ab/c/d/ef/h"), jnt(22))));
+        assertFalse(results.contains(new AbstractMap.SimpleEntry<>(f("/ab/c/de/f/h"), jnt(12))));
         assertEquals(2, results.size());
     }
 

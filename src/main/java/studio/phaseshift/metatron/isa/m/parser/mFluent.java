@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -21,15 +21,14 @@ package studio.phaseshift.metatron.isa.m.parser;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Fluent;
 import studio.phaseshift.metatron.isa.m.mInstSet;
-import studio.phaseshift.metatron.isa.m.type.Code;
-import studio.phaseshift.metatron.isa.m.type.Inst;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Uri;
+import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
+import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import static studio.phaseshift.metatron.isa.m.mInstSet.ID_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
@@ -37,9 +36,16 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Code {
+
+    private static Obj simplify(final Obj obj) {
+        if (obj.isCall())
+            return obj.asCall().tryToInst();
+        return obj;
+    }
 
     // ========================================
     // Constructors and Core Methods
@@ -54,7 +60,10 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
     }
 
     public F addInst(final Inst inst) {
-        this.codeValue().add(inst);
+        final Poly<?, ?> polyArgs = inst.args().isLst() ?
+                lst(inst.args().lstValue().stream().map(mFluent::simplify).toList()) :
+                rec(inst.args().recValue().entrySet().stream().map(kv -> Tuple.Pair.with(mFluent.simplify(kv.getKey()), mFluent.simplify(kv.getValue()))).collect(Collectors.toMap(Tuple.Pair::get0, Tuple.Pair::get1)));
+        this.codeValue().add(inst.args(polyArgs));
         return (F) this;
     }
 
@@ -113,7 +122,7 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
     public F one_() {
         return this.addInst(instB(mInstSet.ONE_INST_TID, lst()));
     }
-    
+
     public F thread_(final Obj obj) {
         return this.addInst(instB(mInstSet.THREAD_INST_TID, lst(obj)));
     }
@@ -339,7 +348,6 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
     }
 
 
-
     public F type_(final Obj obj) {
         return this.addInst(instB(mInstSet.TYPE_INST_TID, lst(obj)));
     }
@@ -463,7 +471,7 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
         public static <F extends mFluent<F>> F update_(final Obj obj) {
             return new mFluent<F>().update_(obj);
         }
-        
+
         public static <F extends mFluent<F>> F block_(final Obj obj) {
             return new mFluent<F>().block_(obj);
         }
@@ -507,7 +515,7 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
         public static <F extends mFluent<F>> F one_() {
             return new mFluent<F>().one_();
         }
-        
+
         // ========================================
         // Logical Operators
         // ========================================

@@ -18,8 +18,7 @@
 
 package studio.phaseshift.metatron;
 /// ///////////////////////////////////////////////
-import studio.phaseshift.metatron.isa.m.type.Rec;
-/// ///////////////////////////////////////////////
+
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.Space;
@@ -29,6 +28,7 @@ import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Feature;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.impl.MFail;
 import studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
@@ -49,7 +49,9 @@ import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Supplier;
 
+import static ch.qos.logback.classic.Level.TRACE;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -63,7 +65,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 public class BootLoader implements Rec, Feature.SelfClone {
-
+    private static final String SUREFIRE_REAL_CLASS_PATH = "surefire.real.class.path";
     /// ////////////////////////////////////////////////////////////////////////
     /// the global variables that must be gc()'d on close
     /// ////////////////////////////////////////////////////////////////////////
@@ -73,14 +75,18 @@ public class BootLoader implements Rec, Feature.SelfClone {
     public static Router ROUTER;
     public static Rec ARGS;
     private static volatile ExecutorService EXECUTOR;
-    /** Keeps the main thread alive in headless mode (no console REPL to block it). */
+    /**
+     * Keeps the main thread alive in headless mode (no console REPL to block it).
+     */
     private static final CountDownLatch SHUTDOWN_LATCH = new CountDownLatch(1);
-
+    private static final Supplier<ExecutorService> THREAD_POOL_SUPPLIER = () -> {
+        return Executors.newCachedThreadPool(r -> new Thread(r, "metatron-" + Thread.currentThread().getId()));
+    };
 
     static {
         LOG = Graphitty.log(new BootLoader());
         //EXECUTOR = Executors.newCachedThreadPool(new mThreadFactory());
-        EXECUTOR = Executors.newCachedThreadPool(r -> new Thread(r, "metatron-" + Thread.currentThread().getId()));
+        EXECUTOR = THREAD_POOL_SUPPLIER.get();
     }
 
     public static ExecutorService getExecutor() {
@@ -89,8 +95,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
 
     public static void main(final String[] args) throws IOException {
         if (args.length == 1 && args[0].equals("--help")) {
-            LOG.none("""
-                     
+            LOG.none("""  
                      %s: %s
                        {{g}}({{X}}arguments must be provided as a single mtron %s{{g}}){{X}}
                        \te.g. %s
@@ -155,7 +160,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
         if (BOOTING) {
             // Re-create executor if a previous test run shut it down
             if (EXECUTOR == null || EXECUTOR.isShutdown())
-                EXECUTOR = Executors.newCachedThreadPool(r -> new Thread(r, "metatron-" + Thread.currentThread().getId()));
+                EXECUTOR = THREAD_POOL_SUPPLIER.get();
             /// /// PARSING OF BOOT ARGUMENT REC /// ///
             LOG.info("final boot args:\n%s", args);
             if (args.has(BOOT))
@@ -224,7 +229,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
                 }
                 LOG.info("\t {{m}}END:{{g}} evaluating provided boot loader: {{b}}%s{{X}}\n", args.at(uri(Tokens.BOOT)).uriValue());
             }
-            final Obj log = Router.writeToSpace(LogObj.of(rec(args.at("log").orElse(uri("trace")), lst(uri(ALL))), SYS_VID.extend("log")));
+            final Obj log = Router.writeToSpace(LogObj.of(rec(args.at(LOGG).orElse(uri(TRACE.levelStr)), lst(uri(ALL))), SYS_VID.extend(LOGG)));
             LOG.info("logging now handled by %s", log);
             ///////////////////////////////////////////////////////////////
             LOG.info("%s {{g}}successfully{{/g}} booted", Graphitty.sillyPrint("metatron", true, true));
@@ -233,12 +238,15 @@ public class BootLoader implements Rec, Feature.SelfClone {
             /// /// END OF BOOTING PROCESS /// ///
             // If a console (or other blocking component) was loaded from the boot script, it
             // will have blocked mParser.eval() above and we never reach here.  In headless mode
-            // (no console) we reach here immediately -- park the main thread so the JVM stays
-            // alive until SIGTERM triggers close() → SHUTDOWN_LATCH.countDown().
-            try {
-                SHUTDOWN_LATCH.await();
-            } catch (final InterruptedException e) {
-                Thread.currentThread().interrupt();
+            // (no console, not testing) we reach here immediately -- park the main thread so the
+            // JVM stays alive until SIGTERM triggers close() → SHUTDOWN_LATCH.countDown().
+            final String surefireClassPath = System.getProperty(SUREFIRE_REAL_CLASS_PATH);
+            if (!TESTING && (surefireClassPath == null || surefireClassPath.isEmpty())) {
+                try {
+                    SHUTDOWN_LATCH.await();
+                } catch (final InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
             }
         } else {
             LOG.warn("boot processes previously completed -- ignoring request to boot");

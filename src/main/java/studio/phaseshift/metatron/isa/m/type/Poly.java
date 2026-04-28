@@ -287,7 +287,7 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
         public static Lst diffTypeLstRecursion(final Lst lhs, final Type rhs) {
             Type temp = rhs;
             final Lst result = lst();
-            while (null != temp && !temp.isNoObj() && temp.asType().hasPredicate()) {
+            while (null != temp && !temp.isNoObj() && !temp.isNone() && temp.asType().hasPredicate()) {
                 result.jvm().addAll(Poly.Helper.diffLstRecursion(lhs.asLst(), Type.Helper.typePredicateObj(temp).asLst()).jvm());
                 temp = temp.parentType();
             }
@@ -297,7 +297,7 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
         public static Rec diffTypeRecRecursion(final Rec lhs, final Type rhs) {
             Type temp = rhs;
             final Rec result = rec();
-            while (null != temp && !temp.isNoObj() && temp.asType().hasPredicate()) {
+            while (null != temp && !temp.isNoObj() && !temp.isNone() && temp.asType().hasPredicate()) {
                 result.jvm().putAll(Poly.Helper.diffRecRecursion(lhs.asRec(), Type.Helper.typePredicateObj(temp).asRec()).jvm());
                 temp = temp.parentType();
             }

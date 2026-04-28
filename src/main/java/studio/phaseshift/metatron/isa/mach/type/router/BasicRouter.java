@@ -212,6 +212,9 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
                 .toList()
                 .stream()
                 .peek(kv -> this.spaces().jvm().remove(kv.getKey()))
+                .peek(kv -> {
+                    this.prefixToVID.entrySet().stream().filter(pv -> pv.getValue().uriValue().test(((Space)kv.getValue()).pattern())).forEach(pv -> this.prefixToVID.remove(pv.getKey()));
+                })
                 .forEach(kv -> Space.Helper.spaceCloseLog(this, (Space) kv.getValue()));
     }
 

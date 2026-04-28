@@ -24,12 +24,31 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * A metatron global type-checking configuration for specifying varying levels of type-safety.
+ */
 public enum TypeCheck {
-    type_cons,
+    /**
+     * require type constructor match for obj creation
+     */
+    type_ctor,
+    /**
+     * require obj type match for space write
+     */
     obj_write,
+    /**
+     * require inst range type match post-evaluation
+     */
     inst_rng,
-    inst_dom;
-
+    /**
+     * require inst domain type match pre-evaluation
+     */
+    inst_dom,
+    /**
+     * require code to be fully resolved pre-evaluation
+     */
+    code_resolve;
+    
     private static final Set<TypeCheck> TYPE_CHECKS = new LinkedHashSet<>(List.of(values()));
 
     public boolean enabled() {
@@ -51,18 +70,20 @@ public enum TypeCheck {
     public static Set<TypeCheck> getEnabled() {
         return new LinkedHashSet<>(TYPE_CHECKS);
     }
-
+    
     public static String colorLevel() {
         final int level = level();
-        if (level == 4)
+        if (level == 5)
             return "g";
-        else if (level == 3)
+        else if (level == 4)
             return "y";
+        else if (level == 3)
+            return "m";
         else if (level == 2)
             return "r";
         else if (level == 1)
             return "k";
-        else if (level == 0)
+        else if(level == 0)
             return "w";
         else
             throw MTronException.of("invalid type check level: %d", level);

@@ -30,6 +30,7 @@ import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.Tuple;
 
@@ -40,6 +41,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.EDGE_TID;
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.GRPH_ISA_TID;
 import static studio.phaseshift.metatron.isa.grph.space.schema.modernSchema.MODERN_SCHEMA_TID;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -92,7 +94,7 @@ public class grphSpaceTest extends AbstractSpaceTest {
     @BeforeAll
     public static void setupInstSet() {
         InstSet.importInstSet(GRPH_ISA_TID);
-        //  InstSet.importInstSet(MODERN_SCHEMA_TID);
+        InstSet.importInstSet(MODERN_SCHEMA_TID);
     }
 
     @Test
@@ -156,7 +158,7 @@ public class grphSpaceTest extends AbstractSpaceTest {
             //     "*/g/V/1/OUT/+/IN/OUT/+/IN.count()                                              % 2",
             //   "*/g/V/1/OUT/+>>IN/OUT/+>>IN.count()                                            % 2",
             "*/g/V/1>>OUT/+/IN/OUT/+/IN/OUT/+/IN.count()                                   % 0",
-           // "*/g/V/1/OUT/+/IN/OUT/+/IN/OUT/+/IN.count()                                     % 0",
+            // "*/g/V/1/OUT/+/IN/OUT/+/IN/OUT/+/IN.count()                                     % 0",
             "*/g/V/#.count()                                                                % 6",
             "*/g/E/+.count()                                                                % 6",
             "*/g/V/1.count()                                                                % 1",
@@ -191,7 +193,7 @@ public class grphSpaceTest extends AbstractSpaceTest {
 
     }, delimiter = '%')
     public void testVertexUpdate(final String update, final String select, final String expected) {
-        mParser.eval(update);
+        ObjmtronSerializer.parse(update).apply(noobj());
         AbstractMetatronTest.checkCodeParseApply(LOG, select, expected);
     }
 

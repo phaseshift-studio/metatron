@@ -86,7 +86,7 @@ public class mcp_wsServer extends WSServerRec {
             .tid(WS_SERVER_TID)
             .vid(MCP_WS_TID)
             .isaPredicate(rec(
-                    uri(TOOL).maybe().asUri(), lst(INST_TYPE),
+                    uri(TOOL).maybe().asUri(), rec(URI_TYPE, INST_TYPE).maybe(),
                     uri(RESOURCE).maybe().asUri(), T(ALL),
                     uri(PROMPT).maybe().asUri(), T(ALL)))
             .constructor(instC(MCP_WS_TID.extend(CTOR).dom(ALL.maybe()).rng(MCP_WS_TID), lst(T(REC_TID)), (lhs, inst) ->
@@ -97,7 +97,7 @@ public class mcp_wsServer extends WSServerRec {
     public mcp_wsServer(final Rec recClone) {
         this(recClone.jvm(), recClone.tid(), recClone.vid());
     }
-    
+
     public mcp_wsServer(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
         this.outContentType = Content.ContentType.APPLICATION_JSON;
