@@ -65,7 +65,6 @@ public class StatusLine implements Runnable {
         this.line = new ArrayList<>();
         this.status = Status.getStatus(Console.getTerminal());
         this.addWidget(f("type_check_"), () -> "{{w&[%s]}} T {{X}}".formatted(TypeCheck.colorLevel()));
-        this.addWidget(f("host"), () -> "{{w}}%s".formatted(Router.global().server().isRunning() ? Router.global().server().host() : "{{r}}<node down>"));
         //this.addWidget(f("spaces"), () -> "{{w}}spaces:{{y}}%d".formatted(Router.global().spaces().count()));
         //this.addWidget(f("nodes"), () -> "{{w}}nodes:{{y}}%d".formatted(Router.global().server().nodes().size()));
         this.addWidget(f("in_bytes"), () -> "{{w}}in:{{y}}%s".formatted(bytesFormat(Router.global().stats().ioStats().bytesRecv())));
@@ -193,7 +192,7 @@ public class StatusLine implements Runnable {
 
     public void run() {
         while (!Thread.currentThread().isInterrupted()) {
-            final boolean serverRunning = Router.global().server().isRunning();
+            final boolean serverRunning = Router.loaded();
             if (!serverRunning)
                 this.setState(ERROR);
             /// ////////////////////////////////////////////////

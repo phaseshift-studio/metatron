@@ -70,29 +70,17 @@ public class mtron_wsServer extends WSServerRec {
 
     public mtron_wsServer(final Map<Obj, Obj> jvm, final fURI vid) {
         super(jvm, MTRON_WS_TID, vid);
-        this.jvm().put(uri(ON_OPEN), instC(vid.extend(ON_OPEN), lst(URI_TYPE), (lhs, inst) -> {
-            LOG.info("wsmtron opened w/ serializers: [in=>%s,out=>%s]", this.inContentType.name(), this.outContentType.name());
-            return noobj();
-        }));
         this.jvm().put(uri(ON_MESSAGE), instC(vid.extend(ON_MESSAGE).dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> {
             try {
                 final Obj rhs = lhs.apply(noobj());
                 LOG.debug("received mtron message: %s", rhs);
-                return rhs;
+                this.send(rhs);
+                return noobj();
             } catch (final Exception e) {
                 LOG.error("error processing message: %s", lhs, e);
                 return fail(e);
             }
         }));
-        this.jvm().put(uri(ON_CLOSE), instC(vid.extend(ON_CLOSE), rec(uri(CODE), INT_TYPE, uri(REASON), STR_TYPE), (lhs, inst) -> {
-            LOG.info("closing mtron endpoint w/ %s: code={{y}}%s{{X}}, reason={{y}}%s{{X}}", this.socket.getRemoteSocketAddress(), inst.arg(CODE), inst.arg(REASON));
-            return noobj();
-        }));
-        this.jvm().put(uri(ON_ERROR), instC(vid.extend(ON_ERROR), lst(FAIL_TYPE), (lhs, inst) -> {
-            LOG.error("error occurred w/ %s: %s", this.socket.getRemoteSocketAddress(), inst.arg(0));
-            return noobj();
-        }));
-
         this.jvm().put(uri(SEND), instC(this.vid().extend(SEND).dom(A.maybe()).rng(A.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> {
             this.logger().info("sending %s to %s", lhs, this.vid());
             this.send(inst.arg(0));

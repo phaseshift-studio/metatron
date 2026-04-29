@@ -20,6 +20,8 @@ package studio.phaseshift.metatron.isa.web.space.ws;
 
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
+import studio.phaseshift.metatron.BootLoader;
+import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.web.type.Content;
 import studio.phaseshift.metatron.util.MTronException;
@@ -28,6 +30,9 @@ import studio.phaseshift.metatron.util.Tuple;
 import java.io.Closeable;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -46,6 +51,12 @@ public interface WSServer extends Obj, Closeable {
 
     WebSocket getWebSocket();
 
+    default fURI getClientVID() {
+        return null == this.getWebSocket() || null == this.getWebSocket().getRemoteSocketAddress() ?
+                NOOBJ_TID :
+                f(this.getWebSocket().getRemoteSocketAddress().toString());
+    }
+
     Tuple.Pair<Content.ContentType, Content.ContentType> getIOSerializers();
 
     @Override
@@ -56,6 +67,8 @@ public interface WSServer extends Obj, Closeable {
 
     default void send(final Obj message) {
         if (null == this.getWebSocket()) {
+            if (BootLoader.TESTING)
+                return;
             throw MTronException.of("no websocket found for %s", this);
         }
         final Content.ContentType outType = this.getIOSerializers().get1();

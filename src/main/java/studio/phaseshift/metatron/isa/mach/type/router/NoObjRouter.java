@@ -27,7 +27,6 @@ import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.type.MStats;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.Stats;
-import studio.phaseshift.metatron.isa.mach.type.net.MServer;
 
 import java.util.Map;
 
@@ -49,12 +48,7 @@ public final class NoObjRouter extends MRec implements Router {
     private NoObjRouter() {
         super(Map.of(), ROUTER_TID, null);
     }
-
-    @Override
-    public MServer server() {
-        return null;
-    }
-
+    
     @Override
     public void start() {
 

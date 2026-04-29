@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -25,7 +25,6 @@ import studio.phaseshift.metatron.isa.m.space.stackSpace;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.mach.type.net.MServer;
 import studio.phaseshift.metatron.isa.mach.type.router.NoObjRouter;
 
 import java.util.LinkedHashSet;
@@ -79,8 +78,6 @@ public interface Router extends Space {
         return this.at(uri(SPACE)).as();
     }
 
-    MServer server();
-
     void start();
 
     Obj read(final fURI vid);
@@ -116,7 +113,7 @@ public interface Router extends Space {
     void removeSpace(final fURI vid);
 
     void registerRedirect(final fURI small, final fURI big);
-    
+
     void registerPrefix(final fURI prefix, final fURI vid);
 
     fURI redirect(final fURI furi, final boolean big);

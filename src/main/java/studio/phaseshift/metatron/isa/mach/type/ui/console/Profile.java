@@ -29,6 +29,7 @@ import studio.phaseshift.metatron.isa.mach.type.ui.widget.Table;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static studio.phaseshift.metatron.furi.q.QCollection.DOCQ;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 
 /*
@@ -60,7 +61,7 @@ public class Profile extends AbstractWidget<Profile> {
                     "{{m}}" + Inst.Form.of(i).toString(),
                     "{{g}}{{{" + (inDom ? "y" : "r") + "}}" + dom.toString() + "{{g}}}{{X}}",
                     "{{g}}{{{y}}" + rng.toString() + "{{g}}}{{X}}")).style().background("{{[b]}}").foreground("{{y}}").divider("{{r}}|").apply();
-            this.instTable.addMetadata(List.of(i, i.dom(), i.rng(), i.args(), null == i.f() ? Inst.f.of(noobj()) : i.f(), Router.global().read(i.tid().q("doc", null)), i.dom().c(), i.rng().c()));
+            this.instTable.addMetadata(List.of(i, i.dom(), i.rng(), i.args(), null == i.f() ? Inst.f.of(noobj()) : i.f(), Router.global().read(i.tid().q(DOCQ)), i.dom().c(), i.rng().c()));
         }
         this.style().attachment(this.instTable, true).apply();
     }
@@ -70,12 +71,12 @@ public class Profile extends AbstractWidget<Profile> {
         if (args.isLst()) {
             argsString = args.lstValue().stream().map(o -> o.isCall() ?
                     o.asCall().insts().stream().map(i -> i.tid().name()).reduce((a, b) -> a + "." + b).orElse("") :
-                    o.toShortString()).collect(Collectors.joining(","));
+                    o.toShortString()).collect(Collectors.joining(",")).replaceAll("\n","").trim();
         } else {
             argsString = args.recValue().entrySet().stream().map(kv ->
                     kv.getKey().uriValue().toString() + "=>" + (kv.getValue().isCall() ?
                             kv.getValue().asCall().insts().stream().map(i -> i.tid().name()).reduce((a, b) -> a + "." + b).orElse("") :
-                            kv.getValue().toShortString())).collect(Collectors.joining(","));
+                            kv.getValue().toShortString())).collect(Collectors.joining(",")).replaceAll("\n","").trim();
         }
         return argsString.length() > CLIP_LENGTH ? (argsString.substring(0, CLIP_LENGTH - 1) + "...") : argsString;
     }

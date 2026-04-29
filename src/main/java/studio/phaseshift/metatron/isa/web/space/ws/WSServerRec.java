@@ -28,16 +28,11 @@ import studio.phaseshift.metatron.util.Tuple;
 
 import java.nio.ByteBuffer;
 import java.util.Map;
+import java.util.Objects;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.isa.m.mInstSet.ALL_STAR;
-import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TID;
-import static studio.phaseshift.metatron.isa.m.type.InstSet.A;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
-import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -55,18 +50,20 @@ public class WSServerRec extends MRec implements WSServer {
         super(map, tid, vid);
         this.outContentType = Content.ContentType.of(map.getOrDefault(uri(OUT), uri(Content.ContentType.TEXT_PLAIN.value)).uriValue().toString());
         this.inContentType = Content.ContentType.of(map.getOrDefault(uri(IN), uri(Content.ContentType.TEXT_PLAIN.value)).uriValue().toString());
-        if (!map.containsKey(uri(SEND)))
+        if(!this.has(ON_OPEN))
+            this.jvm().put(uri(ON_OPEN), Obj.none());
+        if(!this.has(ON_MESSAGE))
+            this.jvm().put(uri(ON_MESSAGE), Obj.none());
+        if(!this.has(ON_CLOSE))
+            this.jvm().put(uri(ON_CLOSE), Obj.none());
+        if(!this.has(ON_ERROR))
+            this.jvm().put(uri(ON_ERROR), Obj.none());
+        /*if (!map.containsKey(uri(SEND)))
             this.jvm().put(uri(SEND), instC(this.vid().extend(SEND).dom(A.maybe()).rng(A.maybe()), lst(), (lhs, inst) -> {
                 this.logger().info("sending %s to %s", lhs, this.vid());
                 this.send(lhs);
                 return lhs;
-            }));
-        if (!map.containsKey(uri(CLOSE)))
-            this.jvm().put(uri(CLOSE), instC(this.vid().extend(CLOSE).dom(ALL_STAR).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
-                this.logger().info("closing %s", this.vid());
-                this.close();
-                return noobj();
-            }));
+            }));*/
     }
 
     @Override
@@ -76,33 +73,30 @@ public class WSServerRec extends MRec implements WSServer {
 
     @Override
     public void onOpen(final WebSocket conn, final ClientHandshake handshake) {
+        this.logger().info("{{y}}%s {{g}}<=> {{y}}%s{{X}} opened w/ serializers: [{{c}}in{{y}}=>{{X}}%s,{{c}}out{{y}}=>{{X}}%s]", this.vid(), this.getClientVID(), this.inContentType.name(), this.outContentType.name());
         this.at(uri(ON_OPEN)).apply(uri(handshake.getResourceDescriptor()));
     }
 
-
     @Override
     public void onClose(final WebSocket conn, final int code, final String reason, final boolean remote) {
+        this.logger().info("{{y}}%s {{g}}<=> {{y}}%s{{X}} closed: code={{y}}%s{{X}}, reason={{y}}%s{{X}}", this.vid(), this.getClientVID(), code, reason);
         this.at(uri(ON_CLOSE)).apply(rec(uri(CODE), jnt(code), uri(REASON), str(reason)));
     }
 
 
     @Override
     public void onMessage(final WebSocket conn, final String message) {
-        final Obj result = this.at(uri(ON_MESSAGE)).apply(this.inContentType.serializer().inputBytes(ByteBuffer.wrap(message.getBytes())));
-        // noobj signals "no response" (e.g. JSON-RPC notifications have no id and require no reply)
-        //if (result.isNoObj())
-            this.send(result);
+        this.at(uri(ON_MESSAGE)).apply(Objects.requireNonNull(this.inContentType.serializer()).inputBytes(ByteBuffer.wrap(message.getBytes())));
     }
 
     @Override
     public void onMessage(final WebSocket conn, final ByteBuffer message) {
-        final Obj result = this.at(uri(ON_MESSAGE)).apply(this.inContentType.serializer().inputBytes(message));
-        //if (!result.isNoObj())
-            this.send(result);
+        this.at(uri(ON_MESSAGE)).apply(Objects.requireNonNull(this.inContentType.serializer()).inputBytes(message));
     }
 
     @Override
     public void onError(final WebSocket conn, final Exception ex) {
+        this.logger().error("{{y}}%s {{g}}<=> {{y}}%s{{X}} errored: %s", this.vid(), this.getClientVID(), ex);
         this.at(uri(ON_ERROR)).apply(fail(ex));
     }
 

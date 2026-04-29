@@ -25,7 +25,6 @@ import studio.phaseshift.metatron.isa.m.type.NoObj;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.machine.SwarmMachine;
-import studio.phaseshift.metatron.isa.mach.type.net.FutureObj;
 
 import java.util.List;
 import java.util.Map;

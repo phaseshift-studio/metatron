@@ -176,17 +176,7 @@ public abstract class AbstractWSServerTest extends AbstractMetatronTest {
     public void testHasOnError() {
         assertFalse(server.at(uri(ON_ERROR)).isNoObj(), "missing ON_ERROR");
     }
-
-    @Test
-    public void testHasSend() {
-        assertFalse(server.at(uri(SEND)).isNoObj(), "missing SEND");
-    }
-
-    @Test
-    public void testHasClose() {
-        assertFalse(server.at(uri(CLOSE)).isNoObj(), "missing CLOSE");
-    }
-
+    
     // =========================================================
     // Handler invocation (no real WebSocket needed)
     // =========================================================

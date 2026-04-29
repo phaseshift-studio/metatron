@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.web.space.ws.server;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
@@ -32,10 +33,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.EVAL_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Fail.FAIL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Inst.INST_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -89,18 +87,6 @@ public class mcp_mtron_wsServer extends mcp_wsServer {
         // buildJvm() pre-populates the eval tool (and any caller-supplied tools/resources/prompts)
         // BEFORE super() sets up ON_MESSAGE, so the inherited JSON-RPC dispatch sees everything.
         super(buildJvm(jvm), MCP_MTRON_WS_TID, vid);
-        this.jvm().put(uri(ON_OPEN), instC(vid.extend(ON_OPEN), lst(URI_TYPE), (lhs, inst) -> {
-            LOG.info("mcp_mtron session opened: [in=>%s, out=>%s]", this.inContentType.name(), this.outContentType.name());
-            return noobj();
-        }));
-        this.jvm().put(uri(ON_CLOSE), instC(vid.extend(ON_CLOSE), rec(uri(CODE), INT_TYPE, uri(REASON), STR_TYPE), (lhs, inst) -> {
-            LOG.info("mcp_mtron session closed: code=%s, reason=%s", inst.arg(CODE), inst.arg(REASON));
-            return noobj();
-        }));
-        this.jvm().put(uri(ON_ERROR), instC(vid.extend(ON_ERROR), lst(FAIL_TYPE), (lhs, inst) -> {
-            LOG.error("error in mcp_mtron session %s: %s", this.socket.getRemoteSocketAddress(), inst.arg(0));
-            return noobj();
-        }));
     }
 
     /**
@@ -122,9 +108,19 @@ public class mcp_mtron_wsServer extends mcp_wsServer {
 
             // eval — the foundational tool: an agent with eval can build, query,
             // and mutate the entire metatron space.
-            final Obj evalInst = Router.global().read(EVAL_INST_TID);
-            if (!evalInst.isNoObj() && evalInst.isObjInst())
-                tools.at(uri(EVAL_INST_TID.name()), evalInst, Rec.MUTABLE);
+            // The MCP client sends arguments as {"code": "..."} (named) or {"0": "..."} (positional).
+            // ObjSimpleJSONSerializer is URI-biased so string args arrive as URIs — use toCleanString().
+            tools.at(uri(EVAL_INST_TID.name()), instC(
+                    MCP_MTRON_WS_TID.extend(EVAL_INST_TID.name()).dom(ALL.maybe()).rng(ALL.maybe()),
+                    rec(uri("code"), STR_TYPE.maybe()), (lhs, inst) -> {
+                        // Try "code" first (named), then positional "0", then lhs itself
+                        Obj codeArg = inst.arg("code");
+                        if (codeArg.isNoObj()) codeArg = inst.arg("0");
+                        if (codeArg.isNoObj() && !lhs.isNoObj()) codeArg = lhs;
+                        if (codeArg.isNoObj()) return str("error: no code argument provided");
+                        final String code = codeArg.toCleanString();
+                        return mParser.eval(code);
+                    }), Rec.MUTABLE);
 
             // mtron_list_space — return an index of currently accessible spaces.
             // Result shape: vid => space@vid (each space accessible via its vid).
@@ -162,6 +158,7 @@ public class mcp_mtron_wsServer extends mcp_wsServer {
                     }), Rec.MUTABLE);
 
             jvm.put(uri(TOOL), tools);
+            // }
         }
 
         return jvm;

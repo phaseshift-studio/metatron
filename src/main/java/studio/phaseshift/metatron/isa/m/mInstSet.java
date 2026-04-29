@@ -39,7 +39,6 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.space.memSpace.MEM_SPACE_TYPE;
-import static studio.phaseshift.metatron.isa.m.space.metaSpace.META_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.space.stackSpace.STACK_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Bytes.BYTES_TYPE;
@@ -321,7 +320,6 @@ public class mInstSet extends AbstractInstSet {
                         docWrap(STACK_SPACE_TYPE, "a thread local stack used for global variables and machine inst frames",
                                 "2.to(a).plus(from(a))     [-- 4 via writing/reading a         --]",
                                 "a->2+*a                   [-- 4 via sugar'd writing/reading a --]"),
-                        META_SPACE_TYPE,
                         docWrap(QPROC_TYPE, """
                                             qprocs (query processors) are optional space components.
                                             qproc behaviors are driven by a qprocs specified uri ?-query pattern.

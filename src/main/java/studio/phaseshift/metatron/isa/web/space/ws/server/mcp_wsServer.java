@@ -34,11 +34,8 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.q.QCollection.DOCQ;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
-import static studio.phaseshift.metatron.isa.m.type.Fail.FAIL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Inst.INST_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -102,13 +99,9 @@ public class mcp_wsServer extends WSServerRec {
         super(jvm, tid, vid);
         this.outContentType = Content.ContentType.APPLICATION_JSON;
         this.inContentType = Content.ContentType.APPLICATION_JSON;
-        this.jvm().put(uri(ON_OPEN), instC(vid.extend(ON_OPEN), lst(URI_TYPE), (lhs, inst) -> {
-            LOG.info("mcp server opened w/ serializers: [in=>%s,out=>%s]", this.inContentType.name(), this.outContentType.name());
-            return noobj();
-        }));
         this.jvm().put(uri(ON_MESSAGE), instC(vid.extend(ON_MESSAGE).dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> {
             try {
-                LOG.info("incoming mcp message for %s: %s", this.vid(), lhs);
+                LOG.info("incoming mcp message from %s: %s", this.getClientVID(), lhs);
                 // MCP JSON-RPC message handling
                 // If the input is not a Rec (e.g. a plain string), pass it through
                 if (!lhs.isRec()) {
@@ -128,10 +121,10 @@ public class mcp_wsServer extends WSServerRec {
                     // Tools
                     // ========================================
                     case "tools/list" -> {
-                        // Return the list of available tools with docq-derived JSON Schema
-                        final Rec tools = this.at(TOOL).isNoObj() ? rec() : this.at(TOOL).asRec();
+                        // Return the list of available tools with docq-derived JSON Schema.
+                        // MCP protocol uses the plural key "tools" in the response.
                         result = mcpResponse(id, rec(
-                                uri(TOOL), lst(tools.elements()
+                                uri("tools"), lst(this.at(TOOL).orElse(rec0()).elements()
                                         .map(kv -> (Obj) rec(
                                                 uri(NAME), str(kv.first().uriValue().toString()),
                                                 uri(DESC), str(toolDescription(kv.second())),
@@ -145,7 +138,7 @@ public class mcp_wsServer extends WSServerRec {
                         // keys are bound as named inst args via inst.args(argsRec).apply(lhs).
                         final String toolName = params.at(uri(NAME)).isNoObj() ? "" : params.at(uri(NAME)).toCleanString();
                         final Rec arguments = params.at(uri("arguments")).isNoObj() ? rec() : params.at(uri("arguments")).asRec();
-                        final Obj toolEntry = this.at(TOOL).isNoObj() ? noobj() : this.at(TOOL).asRec().at(uri(toolName));
+                        final Obj toolEntry = this.at(TOOL).orElse(rec0()).at(uri(toolName));
                         if (toolEntry.isNoObj()) {
                             result = mcpError(id, jnt(-32601), str("tool not found: " + toolName));
                         } else {
@@ -153,11 +146,9 @@ public class mcp_wsServer extends WSServerRec {
                             // Use a distinct name ("toolLhs") to avoid shadowing the outer lambda's lhs.
                             final Obj toolLhs = arguments.at(uri(LHS)).orElse(noobj());
                             final Obj toolResult = toolEntry.asInst().args(arguments).apply(toolLhs);
-                            result = mcpResponse(id, rec(
-                                    uri(CONTENT), lst(
-                                            (Obj) rec(
-                                                    uri(TYPE), str("text"),
-                                                    uri(TEXT), str(toolResult.toCleanString())))));
+                            result = mcpResponse(id, rec(uri(CONTENT), lst(rec(
+                                    uri(TYPE), str("text"),
+                                    uri(TEXT), str(toolResult.toCleanString())))));
                         }
                     }
 
@@ -165,10 +156,10 @@ public class mcp_wsServer extends WSServerRec {
                     // Resources
                     // ========================================
                     case "resources/list" -> {
-                        // Return the list of available resources
-                        final Rec resources = this.at(RESOURCE).isNoObj() ? rec() : this.at(RESOURCE).asRec();
+                        // Return the list of available resources.
+                        // MCP protocol uses the plural key "resources" in the response.
                         result = mcpResponse(id, rec(
-                                uri(RESOURCE), lst(resources.elements()
+                                uri("resources"), lst(this.at(RESOURCE).orElse(rec0()).elements()
                                         .map(kv -> (Obj) rec(
                                                 uri(URI), uri(kv.first().uriValue().toString()),
                                                 uri(NAME), str(kv.first().uriValue().toString()),
@@ -178,18 +169,16 @@ public class mcp_wsServer extends WSServerRec {
                     case "resources/read" -> {
                         // Read a specific resource by URI
                         final String resourceUri = params.at(uri(URI)).isNoObj() ? "" : params.at(uri(URI)).toCleanString();
-                        final Obj resourceEntry = this.at(RESOURCE).isNoObj() ? noobj() : this.at(RESOURCE).asRec().at(uri(resourceUri));
+                        final Obj resourceEntry = this.at(RESOURCE).orElse(rec0()).at(uri(resourceUri));
                         if (resourceEntry.isNoObj()) {
                             result = mcpError(id, jnt(-32602), str("resource not found: " + resourceUri));
                         } else {
                             // Resolve the resource value (could be a URI reference or inline content)
                             final Obj resolved = resourceEntry.resolve(noobj());
-                            result = mcpResponse(id, rec(
-                                    uri(CONTENT), lst(
-                                            (Obj) rec(
-                                                    uri(URI), uri(resourceUri),
-                                                    uri(TEXT), str(resolved.toCleanString()),
-                                                    uri("mimeType"), str("text/plain")))));
+                            result = mcpResponse(id, rec(uri(CONTENT), lst(rec(
+                                    uri(URI), uri(resourceUri),
+                                    uri(TEXT), str(resolved.toCleanString()),
+                                    uri("mimeType"), str("text/plain")))));
                         }
                     }
 
@@ -197,10 +186,10 @@ public class mcp_wsServer extends WSServerRec {
                     // Prompts
                     // ========================================
                     case "prompts/list" -> {
-                        // Return the list of available prompts
-                        final Rec prompts = this.at(PROMPT).isNoObj() ? rec() : this.at(PROMPT).asRec();
+                        // Return the list of available prompts.
+                        // MCP protocol uses the plural key "prompts" in the response.
                         result = mcpResponse(id, rec(
-                                uri(PROMPT), lst(prompts.elements()
+                                uri("prompts"), lst(this.at(PROMPT).orElse(rec0()).elements()
                                         .map(kv -> (Obj) rec(
                                                 uri(NAME), str(kv.first().uriValue().toString()),
                                                 uri(DESC), str(kv.second().toShortString())))
@@ -209,18 +198,16 @@ public class mcp_wsServer extends WSServerRec {
                     case "prompts/get" -> {
                         // Get a specific prompt by name
                         final String promptName = params.at(uri(NAME)).isNoObj() ? "" : params.at(uri(NAME)).toCleanString();
-                        final Obj promptEntry = this.at(PROMPT).isNoObj() ? noobj() : this.at(PROMPT).asRec().at(uri(promptName));
+                        final Obj promptEntry = this.at(PROMPT).orElse(rec0()).at(uri(promptName));
                         if (promptEntry.isNoObj()) {
                             result = mcpError(id, jnt(-32602), str("prompt not found: " + promptName));
                         } else {
                             final Obj resolved = promptEntry.resolve(noobj());
-                            result = mcpResponse(id, rec(
-                                    uri("messages"), lst(
-                                            (Obj) rec(
-                                                    uri("role"), str("user"),
-                                                    uri(CONTENT), rec(
-                                                            uri(TYPE), str("text"),
-                                                            uri(TEXT), str(resolved.toCleanString()))))));
+                            result = mcpResponse(id, rec(uri("messages"), lst(rec(
+                                    uri("role"), str("user"),
+                                    uri(CONTENT), rec(
+                                            uri(TYPE), str("text"),
+                                            uri(TEXT), str(resolved.toCleanString()))))));
                         }
                     }
 
@@ -228,12 +215,19 @@ public class mcp_wsServer extends WSServerRec {
                     // Initialize / Ping / Notifications
                     // ========================================
                     case "initialize" -> {
+                        // MCP initialize response: capabilities advertise *support* for each
+                        // category using plural keys with an empty {} value.  Clients then
+                        // call tools/list, resources/list, prompts/list to get the actual items.
+                        final boolean hasTools = !this.at(TOOL).isNoObj();
+                        final boolean hasResources = !this.at(RESOURCE).isNoObj();
+                        final boolean hasPrompts = !this.at(PROMPT).isNoObj();
+                        final Rec caps = rec();
+                        if (hasTools) caps.at(uri("tools"), rec(), Rec.MUTABLE);
+                        if (hasResources) caps.at(uri("resources"), rec(), Rec.MUTABLE);
+                        if (hasPrompts) caps.at(uri("prompts"), rec(), Rec.MUTABLE);
                         result = mcpResponse(id, rec(
                                 uri("protocolVersion"), str("2025-03-26"),
-                                uri("capabilities"), rec(
-                                        uri(TOOL), rec(),
-                                        uri(RESOURCE), rec(),
-                                        uri(PROMPT), rec()),
+                                uri("capabilities"), caps,
                                 uri("serverInfo"), rec(
                                         uri(NAME), str("metatron-mcp"),
                                         uri("version"), str("0.1.0"))));
@@ -242,8 +236,8 @@ public class mcp_wsServer extends WSServerRec {
                         result = mcpResponse(id, rec());
                     }
                     case "notifications/initialized", "notifications/cancelled" -> {
-                        // Notifications have no id — return noobj to avoid sending a response
-                        result = noobj();
+                        // Notifications have no id — return null to avoid sending a response
+                        result = null;
                     }
 
                     // ========================================
@@ -254,23 +248,21 @@ public class mcp_wsServer extends WSServerRec {
                         result = mcpError(id, jnt(-32601), str("method not found: " + method));
                     }
                 }
+                if (null != result) send(result);
                 return result;
             } catch (final Exception e) {
                 LOG.error("error processing mcp message: %s -- %s", lhs, e.getMessage() == null ? e.getClass().getName() : e.getMessage());
                 for (var ste : e.getStackTrace()) {
                     LOG.error("  at %s.%s(%s:%d)", ste.getClassName(), ste.getMethodName(), ste.getFileName(), ste.getLineNumber());
                 }
+                send(fail(e));
                 return fail(e);
             }
         }));
-        this.jvm().put(uri(ON_CLOSE), instC(vid.extend(ON_CLOSE), rec(uri(CODE), INT_TYPE, uri(REASON), STR_TYPE), (lhs, inst) -> {
-            LOG.info("closing mcp endpoint w/ %s: code={{y}}%s{{X}}, reason={{y}}%s{{X}}", this.socket.getRemoteSocketAddress(), inst.arg(CODE), inst.arg(REASON));
-            return noobj();
-        }));
-        this.jvm().put(uri(ON_ERROR), instC(vid.extend(ON_ERROR), lst(FAIL_TYPE), (lhs, inst) -> {
-            LOG.error("error occurred w/ %s: %s", this.socket.getRemoteSocketAddress(), inst.arg(0));
-            return noobj();
-        }));
+    }
+
+    public Rec getToolList() {
+        return rec();
     }
 
     // ========================================

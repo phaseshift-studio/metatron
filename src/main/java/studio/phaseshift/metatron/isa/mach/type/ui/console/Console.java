@@ -832,8 +832,8 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                             /// ///////////////////////////////////////////////////////////////////////////////////////
                             .addRow(List.of("{{[g]&w}}mtron", "{{[g]&w}}", "{{[g]&w}}"))
                             .addRow(List.of("explain", "<tab>", "a tabular view of the current code"))
-                            .addRow(List.of("type check", ":check [-| ][ |type_cons|obj_write|inst_rng|inst_dom]", "show or enable/disable stage type checking"))
-                            .addRow(List.of("cycle type check", "<ctrl>+t", "cycle stage type check activations"))
+                            .addRow(List.of("type check", ":check [-| ] [ |type_ctor|obj_write|inst_rng|inst_dom|code_resolve]", "show or enable/disable type checking stages"))
+                            .addRow(List.of("cycle type check", "<ctrl>+t", "cycle type check activations"))
                             /// ///////////////////////////////////////////////////////////////////////////////////////
                             .addRow(List.of("{{[g]&w}}console", "{{[g]&w}}", "{{[g]&w}}"))
                             .addRow(List.of("quit", ":quit | <ctrl>+q", "exit the console"))

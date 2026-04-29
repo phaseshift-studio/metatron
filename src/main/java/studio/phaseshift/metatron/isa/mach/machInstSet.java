@@ -73,11 +73,6 @@ import static studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace.makeFile;
 import static studio.phaseshift.metatron.isa.mach.io.space.serial.serialSpace.SERIAL_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.mach.type.Machine.MACH_MACHINE_TYPE;
 import static studio.phaseshift.metatron.isa.mach.type.machine.SwarmMachine.MACH_SWARM_MACHINE_TYPE;
-import static studio.phaseshift.metatron.isa.mach.type.net.MServer.MSERVER_TID;
-import static studio.phaseshift.metatron.isa.mach.type.net.mcp.MetatronMcpServer.MACH_SERVER_MCP_SERVER_TID;
-import static studio.phaseshift.metatron.isa.mach.type.net.protocol.MServerProtocolHandler.MACH_SERVER_PROTOCOL_TID;
-import static studio.phaseshift.metatron.isa.mach.type.net.protocol.McpProtocolHandler.MACH_SERVER_MCP_PROTOCOL_TID;
-import static studio.phaseshift.metatron.isa.mach.type.net.protocol.NativeMetatronProtocolHandler.MACH_SERVER_NATIVE_PROTOCOL_TID;
 import static studio.phaseshift.metatron.isa.mach.type.ui.console.Console.CONSOLE_TYPE;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -143,27 +138,6 @@ public class machInstSet extends AbstractInstSet {
             .vid(IMAGE_TID).create();
 
     /// //////////////////////////////////////////////////////////////////////
-    public static final Type SERVER_TYPE = Type.Builder.build()
-            .tid(REC_TID)
-            .vid(MSERVER_TID)
-            .create();
-    public static final Type SERVER_PROTOCOL_TYPE = Type.Builder.build()
-            .tid(REC_TID)
-            .vid(f(MACH_SERVER_PROTOCOL_TID))
-            .create();
-    public static final Type NATIVE_SERVER_PROTOCOL_TYPE = Type.Builder.build()
-            .tid(f(MACH_SERVER_PROTOCOL_TID))
-            .vid(f(MACH_SERVER_NATIVE_PROTOCOL_TID))
-            .create();
-    public static final Type MCP_SERVER_PROTOCOL_TYPE = Type.Builder.build()
-            .tid(f(MACH_SERVER_PROTOCOL_TID))
-            .vid(f(MACH_SERVER_MCP_PROTOCOL_TID))
-            .create();
-    public static final Type MCP_SERVER_TYPE = Type.Builder.build()
-            .tid(REC_TID)
-            .vid(f(MACH_SERVER_MCP_SERVER_TID))
-            .isaPredicate(rec(uri(f(TOOL).maybe()), T(M_ISA_INST_TID.maybeSome())))
-            .create();
     public static final Type MACH_MONAD_TYPE = Type.Builder.build().tid(LST_TID).vid(MACH_MONAD_TID).create();
     public static final Type MACH_VIRTUAL_THREAD_TYPE = Type.Builder.build()
             .tid(MACH_THREAD_TID)
@@ -217,12 +191,6 @@ public class machInstSet extends AbstractInstSet {
                         SUB_TYPE,
                         SUBQ_TYPE,
                         TYPEQ_TYPE,*/
-                        /// /////////////////////
-                        SERVER_TYPE,
-                        SERVER_PROTOCOL_TYPE,
-                        NATIVE_SERVER_PROTOCOL_TYPE,
-                        MCP_SERVER_PROTOCOL_TYPE,
-                        MCP_SERVER_TYPE,
                         /// /////////////////////
                         MACH_CORE_THREAD_TYPE,
                         MACH_VIRTUAL_THREAD_TYPE,

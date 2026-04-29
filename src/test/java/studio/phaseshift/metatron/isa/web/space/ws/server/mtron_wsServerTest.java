@@ -21,5 +21,5 @@ package studio.phaseshift.metatron.isa.web.space.ws.server;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class wsmtronServerTest {
+public class mtron_wsServerTest {
 }

@@ -59,7 +59,7 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
  */
 public abstract class AbstractWSServerIntegrationTest extends AbstractMetatronTest {
 
-    protected wsSpace wsSpace;
+    protected wsSpace space;
     protected String wsHost;
     protected int wsPort;
     protected HttpClient httpClient;
@@ -85,7 +85,7 @@ public abstract class AbstractWSServerIntegrationTest extends AbstractMetatronTe
      * first entry in {@code space.at(ROUTE)}.
      */
     protected String primaryRoutePath() {
-        final Obj routes = wsSpace.at(ROUTE);
+        final Obj routes = space.at(ROUTE);
         if (routes.isNoObj()) return "/";
         return routes.asRec().elements()
                 .map(r -> r.first().uriValue().toString())
@@ -100,12 +100,12 @@ public abstract class AbstractWSServerIntegrationTest extends AbstractMetatronTe
     @BeforeEach
     public void setupWsSpace() {
         InstSet.importInstSet(WEB_ISA_TID);
-        this.wsSpace = createWSSpace();
-        assertNotNull(this.wsSpace, "wsSpace should be created");
+        this.space = createWSSpace();
+        assertNotNull(this.space, "wsSpace should be created");
 
         // Derive host and port from the space
-        this.wsHost = this.wsSpace.at(HOST).uriValue().host();
-        this.wsPort = this.wsSpace.at(HOST).uriValue().port();
+        this.wsHost = this.space.at(HOST).uriValue().host();
+        this.wsPort = this.space.at(HOST).uriValue().port();
 
         // Give the server a moment to start
         CommonUtil.sleepThread(500);
@@ -127,10 +127,10 @@ public abstract class AbstractWSServerIntegrationTest extends AbstractMetatronTe
             }
             this.webSocket = null;
         }
-        if (this.wsSpace != null) {
-            Router.global().removeSpace(this.wsSpace.vid());
-            this.wsSpace.close();
-            this.wsSpace = null;
+        if (this.space != null) {
+            Router.global().removeSpace(this.space.vid());
+            this.space.close();
+            this.space = null;
         }
         if (this.httpClient != null) {
             this.httpClient.close();
@@ -219,7 +219,7 @@ public abstract class AbstractWSServerIntegrationTest extends AbstractMetatronTe
 
     @Test
     public void testServerTypeIsRegisteredInRouter() {
-        final Obj routes = wsSpace.at(ROUTE);
+        final Obj routes = space.at(ROUTE);
         assertFalse(routes.isNoObj(), "wsSpace should have a route table");
         routes.asRec().elements().forEach(r -> {
             final Obj type = Router.global().read(r.second().uriValue());

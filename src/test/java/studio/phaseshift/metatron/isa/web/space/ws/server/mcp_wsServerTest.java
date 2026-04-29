@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.web.space.ws.server;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.provider.Arguments;
 import studio.phaseshift.metatron.furi.fURI;
@@ -49,7 +50,7 @@ import static studio.phaseshift.metatron.isa.web.space.ws.server.mcp_wsServer.WS
 import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_SERVER_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
-public class wsmcpServerTest extends AbstractWSServerTest {
+public class mcp_wsServerTest extends AbstractWSServerTest {
 
     @Override
     protected WSServerRec createServer(final fURI vid) {
@@ -142,7 +143,7 @@ public class wsmcpServerTest extends AbstractWSServerTest {
                 uri("method"), uri("tools/list")));
         assertFalse(res.at(uri(RESULT)).isNoObj());
         // no tools registered — list should exist and be empty
-        assertFalse(res.at(uri(RESULT)).asRec().at(uri(TOOL)).isNoObj(), "result should have 'tool' key");
+        assertFalse(res.at(uri(RESULT)).asRec().at(uri("tools")).isNoObj(), "result should have 'tool' key");
     }
 
     @Test
@@ -213,7 +214,6 @@ public class wsmcpServerTest extends AbstractWSServerTest {
         withTool.jvm().put(uri(TOOL), rec(
                 uri("echo"), instC(f("echo").dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL.maybe())),
                         (lhs, inst) -> str("echoed!"))));
-
         final Obj response = withTool.at(uri(ON_MESSAGE)).apply(rec(
                 uri(JSONRPC), str("2.0"),
                 uri(ID), jnt(1),
@@ -223,6 +223,7 @@ public class wsmcpServerTest extends AbstractWSServerTest {
         assertFalse(response.isNoObj());
         assertFalse(response.isFail());
         assertTrue(response.isRec());
+        LOG.error(response);
         assertFalse(response.asRec().at(uri(RESULT)).isNoObj(), "tool call should succeed");
     }
 
@@ -231,18 +232,17 @@ public class wsmcpServerTest extends AbstractWSServerTest {
         // A server with a named-arg inst should emit non-empty inputSchema in tools/list
         final fURI vid = createTestVid();
         final mcp_wsServer withTool = new mcp_wsServer(rec(
-                new LinkedHashMap<>(), MCP_WS_TID, vid));
-        withTool.jvm().put(uri(TOOL), rec(
-                uri("greet"), instC(f("greet").dom(ALL.maybe()).rng(ALL.maybe()),
-                        rec(uri("name"), T(ALL.maybe())),
-                        (lhs, inst) -> str("Hello, " + inst.arg("name").toCleanString()))));
+                mutableMap(uri(TOOL), rec(
+                        uri("greet"), instC(f("greet").dom(ALL.maybe()).rng(ALL.maybe()),
+                                rec(uri("name"), T(ALL.maybe())),
+                                (lhs, inst) -> str("Hello, " + inst.arg("name").toCleanString())))), MCP_WS_TID, vid));
 
         final Obj response = withTool.at(uri(ON_MESSAGE)).apply(rec(
                 uri(JSONRPC), str("2.0"),
                 uri(ID), jnt(1),
                 uri("method"), uri("tools/list")));
         assertTrue(response.isRec());
-        final Rec toolList = response.asRec().at(uri(RESULT)).asRec().at(uri(TOOL)).asLst().lstValue().get(0).asRec();
+        final Rec toolList = response.asRec().at(uri(RESULT)).asRec().at(uri("tools")).asLst().lstValue().get(0).asRec();
         assertEquals(str("greet"), toolList.at(uri(NAME)));
         // inputSchema should have properties (at minimum the "name" arg)
         final Rec schema = toolList.at(uri("inputSchema")).asRec();

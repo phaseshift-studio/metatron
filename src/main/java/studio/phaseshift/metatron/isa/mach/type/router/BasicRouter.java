@@ -34,7 +34,6 @@ import studio.phaseshift.metatron.isa.m.type.reflect.ObjReflection;
 import studio.phaseshift.metatron.isa.mach.type.MStats;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.Stats;
-import studio.phaseshift.metatron.isa.mach.type.net.MServer;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
@@ -54,7 +53,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_ISA_TID;
 
 @ObjReflection
-public class BasicRouter extends AbstractSpace<MServer> implements Router {
+public class BasicRouter extends AbstractSpace<Map<Obj, Obj>> implements Router {
 
     public static final Uri PRIMARY = uri("primary");
     public static final fURI ROUTER_TID = MACH_ISA_TID.extend("router");
@@ -70,7 +69,7 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
     private fURI primary = M_ISA_TID;
 
     public BasicRouter(final fURI host, final fURI vid) {
-        super(new MServer(host, Collections.emptyList()), new ConcurrentHashMap<>(Map.of(
+        super(new HashMap<>(), new ConcurrentHashMap<>(Map.of(
                         uri(PATTERN), uri(ALL),
                         PRIMARY, uri(M_ISA_TID),
                         uri(Tokens.SPACE), rec(new ConcurrentHashMap<>(Map.of(uri("+/#"), new stackSpace(f("+/#"))))))),
@@ -83,15 +82,6 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
 
     private static Obj appendOnRead(final boolean send, final Obj base, final Obj addition) {
         return addition.isNoObj() ? base : (send ? base.append(rel(addition.vid().toUri(), addition)) : base.append(addition));
-    }
-
-    @Override
-    public MServer server() {
-        return this.sjvm();
-    }
-
-    public void start() {
-        this.server().start();
     }
 
     public Rec at(final Obj key, final Obj value) {
@@ -213,7 +203,7 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
                 .stream()
                 .peek(kv -> this.spaces().jvm().remove(kv.getKey()))
                 .peek(kv -> {
-                    this.prefixToVID.entrySet().stream().filter(pv -> pv.getValue().uriValue().test(((Space)kv.getValue()).pattern())).forEach(pv -> this.prefixToVID.remove(pv.getKey()));
+                    this.prefixToVID.entrySet().stream().filter(pv -> pv.getValue().uriValue().test(((Space) kv.getValue()).pattern())).forEach(pv -> this.prefixToVID.remove(pv.getKey()));
                 })
                 .forEach(kv -> Space.Helper.spaceCloseLog(this, (Space) kv.getValue()));
     }
@@ -247,6 +237,11 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
             }
         }
         return readableVID;
+    }
+
+    @Override
+    public void start() {
+
     }
 
     @Override
