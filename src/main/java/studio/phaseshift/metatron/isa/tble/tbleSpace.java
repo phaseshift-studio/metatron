@@ -24,8 +24,9 @@ import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.tble.schema.domain.ExistingTableSchema;
 import studio.phaseshift.metatron.isa.tble.schema.domain.SQLSchemaGenerator;
 import studio.phaseshift.metatron.isa.tble.schema.domain.SQLSchemaInstSet;
@@ -34,16 +35,12 @@ import studio.phaseshift.metatron.isa.tble.schema.storage.TypedKeyValueSchema;
 import studio.phaseshift.metatron.isa.tble.schema.storage.fURIAwareIndexedSchema;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.sql.*;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-
-import studio.phaseshift.metatron.isa.mach.type.Router;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
@@ -55,7 +52,8 @@ import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.tble.tbleInstSet.*;
+import static studio.phaseshift.metatron.isa.tble.tbleInstSet.TBLE_ISA_INST_TID;
+import static studio.phaseshift.metatron.isa.tble.tbleInstSet.TBLE_ISA_TID;
 
 /**
  * tbleSpace - A dual-mode SQL database connector for Metatron with pluggable schema support
@@ -132,7 +130,12 @@ import static studio.phaseshift.metatron.isa.tble.tbleInstSet.*;
  */
 public class tbleSpace extends AbstractSpace<Connection> {
 
-    public static fURI SQL_INST_TID =TBLE_ISA_INST_TID.extend(SQL);
+    public static final String MARIADB = "mariadb";
+    public static final String MYSQL = "mysql";
+    public static final String POSTGRESQL = "postgresql";
+    public static final String SQLITE = "sqlite";
+
+    public static fURI SQL_INST_TID = TBLE_ISA_INST_TID.extend(SQL);
     public static fURI TBLE_SPACE_TID = TBLE_ISA_TID.extend(SPACE).extend("tblespace");
     public static final Type TBLE_SPACE_TYPE =
             Type.Builder.build()
@@ -175,16 +178,16 @@ public class tbleSpace extends AbstractSpace<Connection> {
         // Initialize schema - auto-detect based on database type
         try {
             final String dbProductName = sjvm.getMetaData().getDatabaseProductName().toLowerCase();
-            if (dbProductName.contains("mariadb") || dbProductName.contains("mysql")) {
+            if (dbProductName.contains(MARIADB) || dbProductName.contains(MYSQL)) {
                 this.schema = new fURIAwareIndexedSchema();
                 // Use ObjmtronSerializer for fURIAwareIndexedSchema to avoid JSON parsing issues
-                this.serializer = this.at(uri(SERIALIZER)).orElse(new ObjmtronSerializer());
+                this.serializer = this.at(SERIALIZER).orElse(new ObjmtronSerializer());
                 LOG.info("detected {{b}}mariadb/mysql{{X}} - using {{g}}mqtt schema with clean string serializer");
             } else {
                 // Use TypedKeyValueSchema for isomorphic type-preserving storage
                 this.schema = new TypedKeyValueSchema();
                 // TypedKeyValueSchema handles serialization internally, but set a default anyway
-                this.serializer = this.at(uri(SERIALIZER)).orElse(new ObjmtronSerializer());
+                this.serializer = this.at(SERIALIZER).orElse(new ObjmtronSerializer());
                 LOG.info("detected {{b}}%s{{X}} - using {{g}}typed schema", dbProductName);
             }
             this.schema.initialize(sjvm);
@@ -226,7 +229,7 @@ public class tbleSpace extends AbstractSpace<Connection> {
                 //   - KV store paths accept any type (no constraint needed)
                 //   - Table mapping paths are constrained by the individual table Types in the schema
                 // Setting root=REC_TYPE here would break all KV store writes (lists, primitives, etc.)
-                this.at(uri(SCHEMA), schemaInstset, MUTABLE);
+                this.at(SCHEMA, schemaInstset, MUTABLE);
 
                 LOG.info("initialized {{g}}SQL schema{{X}} in config with %s table types",
                         this.existingTableSchema.getTableNames().size());

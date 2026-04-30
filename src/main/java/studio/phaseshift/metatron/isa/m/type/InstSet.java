@@ -103,7 +103,7 @@ public interface InstSet extends Space {
 
     /// ///////////////////////////////////////////////////////////////////////////////////////
 
-    static Stream<ServiceLoader.Provider<InstSet>> loadInstSetProvider(final fURI vid) {
+    static Stream<ServiceLoader.Provider<InstSet>> loadInstSetProvider(final fURI pattern) {
         return ServiceLoader.load(InstSet.class)
                 .stream()
                 .peek(p -> {
@@ -111,7 +111,7 @@ public interface InstSet extends Space {
                         Graphitty.log(InstSet.class).warn("an inst set without a service metadata located: %s", p.type().getCanonicalName());
                 })
                 .filter(p -> p.type().isAnnotationPresent(JREService.class))
-                .filter(p -> f(p.type().getAnnotation(JREService.class).vid()).test(vid));
+                .filter(p -> f(p.type().getAnnotation(JREService.class).vid()).test(pattern));
     }
 
     static Stream<InstSet> importInstSetStream(final fURI vid) {
@@ -129,6 +129,7 @@ public interface InstSet extends Space {
 
     static void importInstSet(final fURI vid, final fURI prefix) {
         importInstSetStream(vid, prefix).forEach(isa -> {
+            Graphitty.log(isa.getClass()).error("loading instruction set: %s",isa);
         });
     }
 

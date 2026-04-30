@@ -61,7 +61,7 @@ public class Profile extends AbstractWidget<Profile> {
                     "{{m}}" + Inst.Form.of(i).toString(),
                     "{{g}}{{{" + (inDom ? "y" : "r") + "}}" + dom.toString() + "{{g}}}{{X}}",
                     "{{g}}{{{y}}" + rng.toString() + "{{g}}}{{X}}")).style().background("{{[b]}}").foreground("{{y}}").divider("{{r}}|").apply();
-            this.instTable.addMetadata(List.of(i, i.dom(), i.rng(), i.args(), null == i.f() ? Inst.f.of(noobj()) : i.f(), Router.global().read(i.tid().q(DOCQ)), i.dom().c(), i.rng().c()));
+            this.instTable.addMetadata(List.of(i, i.dom(), i.rng(), i.args(), null == i.f() ? Inst.f.of(noobj()) : i.f(), i /*Router.global().read(i.tid().q(DOCQ))*/, i.dom().c(), i.rng().c()));
         }
         this.style().attachment(this.instTable, true).apply();
     }

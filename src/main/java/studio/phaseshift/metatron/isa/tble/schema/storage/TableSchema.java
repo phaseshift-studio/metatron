@@ -39,7 +39,7 @@ public interface TableSchema {
      * @param conn the database connection
      * @throws SQLException if schema initialization fails
      */
-    void initialize(Connection conn) throws SQLException;
+    void initialize(final Connection conn) throws SQLException;
 
     /**
      * Write an object to the database at the given fURI.
@@ -51,7 +51,7 @@ public interface TableSchema {
      * @return number of rows affected
      * @throws SQLException if write fails
      */
-    int write(Connection conn, fURI furi, String objJson) throws SQLException;
+    int write(final Connection conn, final fURI furi, final String objJson) throws SQLException;
 
     /**
      * Read objects matching the given fURI pattern.
@@ -62,7 +62,7 @@ public interface TableSchema {
      * @return iterator of matching fURIs and their JSON objects
      * @throws SQLException if read fails
      */
-    Iterator<Space.IdObj> read(Connection conn, fURI pattern) throws SQLException;
+    Iterator<Space.IdObj> read(final Connection conn, final fURI pattern) throws SQLException;
 
     /**
      * Delete an object at the given fURI.
@@ -72,7 +72,7 @@ public interface TableSchema {
      * @return number of rows deleted
      * @throws SQLException if delete fails
      */
-    int delete(Connection conn, fURI furi) throws SQLException;
+    int delete(final Connection conn, final fURI furi) throws SQLException;
 
     /**
      * Check if the schema supports MQTT-style pattern matching.

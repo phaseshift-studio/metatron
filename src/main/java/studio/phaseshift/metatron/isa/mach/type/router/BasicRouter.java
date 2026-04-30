@@ -213,7 +213,7 @@ public class BasicRouter extends AbstractSpace<Map<Obj, Obj>> implements Router 
         if (match.test(NOOBJ))
             return noobjSpace.single();
         // using jvm() for speed (given the heavy use of this method)
-        final Optional<S> space = this.spaces().values()// using jvm() for speed (given the heavy use of this method)
+        final Optional<S> space = this.spaces().values()
                 .map(Obj::<S>as)
                 .filter(s -> match.basePath().test(s.pattern()))
                 .min(Comparator.comparing(Space::pattern));

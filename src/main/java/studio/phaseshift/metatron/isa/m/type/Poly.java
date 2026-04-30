@@ -64,6 +64,8 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
 
     /// ////////////////////////////////////////////////////////////////////////////////////
 
+    Poly<?, ?> zero();
+
     <O extends Obj> O at(final Obj key);
 
     default <O extends Obj> O at(final String key) {
@@ -128,8 +130,9 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
 
     @Override
     default boolean isResolved(final boolean nested) {
-        return this.elements().allMatch(x -> x.isResolved(nested));
-    }
+        return true; 
+    }//return this.elements().allMatch(x -> x.isResolved(nested));
+    
 
   /*  @Override
     default Obj autoResolve(final Obj obj) {
@@ -244,10 +247,11 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
             lhs.jvm().entrySet().forEach(kv -> result.compute(kv.getKey().c(cInt::one), (a, b) -> {
                 if (null == b) {
                     if (kv.getValue().isPoly()) {
-                        return updatePolyRecursion(kv.getValue().as(), kv.getValue().as(), operation);
-                    }
-                    if (kv.getValue().isNoObj()) {
+                        return updatePolyRecursion(kv.getValue().<Poly<?, ?>>as(), kv.getValue().as(), operation);
+                    } else if (kv.getValue().isNoObj()) {
                         return noobj();
+                    } else if (kv.getValue().isNone()) {
+                        return null;
                     } else {
                         return a.isAutoFrom() ? a : kv.getValue().apply(lhs);
                     }
@@ -255,7 +259,8 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
                     if (b.isNoObj()) {
                         //  lhs.logger().warn("FOUND");
                         return noobj();
-
+                    } else if (b.isNone()) {
+                        return null;
                     }
                     return b;
                 }
@@ -265,7 +270,7 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
 
         public static Obj updateLstRecursion(final Lst lhs, final Lst rhs, BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {
             final List<Obj> result = Poly.Helper.selectLstRecursionRaw(lhs, rhs, (a, b) -> updatePolyRecursion(a.as(), b.as(), operation));
-            // TODO: ??
+            result.removeIf(Obj::isNone);
             return operation.apply(lhs, result);
         }
 
@@ -287,7 +292,7 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
         public static Lst diffTypeLstRecursion(final Lst lhs, final Type rhs) {
             Type temp = rhs;
             final Lst result = lst();
-            while (null != temp && !temp.isNoObj() && !temp.isNone() && temp.asType().hasPredicate()) {
+            while (!temp.isRootType() && !temp.isNoObj() && !temp.isNone() && temp.asType().hasPredicate()) {
                 result.jvm().addAll(Poly.Helper.diffLstRecursion(lhs.asLst(), Type.Helper.typePredicateObj(temp).asLst()).jvm());
                 temp = temp.parentType();
             }
@@ -297,7 +302,7 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
         public static Rec diffTypeRecRecursion(final Rec lhs, final Type rhs) {
             Type temp = rhs;
             final Rec result = rec();
-            while (null != temp && !temp.isNoObj() && !temp.isNone() && temp.asType().hasPredicate()) {
+            while (!temp.isRootType() && !temp.isNoObj() && !temp.isNone() && temp.asType().hasPredicate()) {
                 result.jvm().putAll(Poly.Helper.diffRecRecursion(lhs.asRec(), Type.Helper.typePredicateObj(temp).asRec()).jvm());
                 temp = temp.parentType();
             }

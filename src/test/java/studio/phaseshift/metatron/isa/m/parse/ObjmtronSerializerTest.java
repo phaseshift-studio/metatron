@@ -1,5 +1,5 @@
 /*
- * Metatron: A Distributed Computing Language and Virtual Machine
+ * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
  *  
  * This program is free software: you can redistribute it and/or modify
@@ -16,20 +16,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.m.type.impl;
+package studio.phaseshift.metatron.isa.m.parse;
 
-import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.AbstractSerializerTest;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
-/*
- * @author Marko A. Rodriguez (http://markorodriguez.com)
- */
-@Target({ElementType.METHOD})
-@Retention(RetentionPolicy.RUNTIME)
-public @interface OBJ {
-    Class<? extends Obj> value();
+public class ObjmtronSerializerTest extends AbstractSerializerTest<String> {
+    public ObjmtronSerializerTest() {
+        super(new ObjmtronSerializer());
+    }
 }
+
+

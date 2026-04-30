@@ -45,8 +45,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 public class InstTest extends AbstractObjTest {
-
-
+    
+    
     @ParameterizedTest
     @CsvSource(value = {
             // furi | tid | dom | range

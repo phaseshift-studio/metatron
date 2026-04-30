@@ -33,4 +33,8 @@ public abstract class MVec<E> extends MObj implements Vec {
     public MVec(final Vector<E> value, final fURI tid, final fURI vid) {
         super(value, tid, vid);
     }
+    
+    public Vector<E> jvm() {
+        return this.jvm();
+    }
 }

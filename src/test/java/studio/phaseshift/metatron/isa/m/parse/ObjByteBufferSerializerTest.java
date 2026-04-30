@@ -1,5 +1,5 @@
 /*
- * Metatron: A Distributed Computing Language and Virtual Machine
+ * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
  *  
  * This program is free software: you can redistribute it and/or modify
@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.mach.serial;
+package studio.phaseshift.metatron.isa.m.parse;
 
 import studio.phaseshift.metatron.AbstractSerializerTest;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjByteBufferSerializer;

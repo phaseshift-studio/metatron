@@ -31,6 +31,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.NOOBJ;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -99,20 +100,21 @@ public interface Code extends Call {
         Obj token = lhs.isType() ? lhs : lhs.type();
         final List<Inst> resolvedCode = new ArrayList<>();
         boolean fullResolution = true;
+        int i = 0;
         for (final Inst inst : rewrittenCode.insts()) {
             try {
                 LOG.trace("   {{g}}=>{{/g}} resolving %s => %s", token, inst);
                 final Inst resolvedInst = (inst.tid().basePath().equals(AS_INST_TID) ? inst.rng(inst.arg(0).asType()).asInst() : inst).resolve(token);
 
                 if (!resolvedInst.hasDom()) {
-                    resolvedCode.add(inst);
+                    resolvedCode.add(inst.clone().selfVID(f("" + i)).as());
                     token = inst.hasRng() ? inst.rng() : token;
                 } else {
-                    resolvedCode.add(resolvedInst);
+                    resolvedCode.add(resolvedInst.clone().selfVID(f("" + i)).as());
                     token = resolvedInst.rng();
                     if (resolvedInst.isInitial()) {
                         LOG.trace("  {{g}}==>{{/g}} marking {{y}}initial{{/y}} at %s", resolvedInst);
-                        token = resolvedInst.arg(0).type();
+                        token = resolvedInst.arg(0).isType() ? resolvedInst.arg(0) : resolvedInst.arg(0).type();
                         //this.running().append(MMonad.of(NoObj.single(), instB));
                     } else if (resolvedInst.isGather()) {
                         // many-to-?
@@ -121,11 +123,12 @@ public interface Code extends Call {
                 }
                 token = token.c(c -> c.mult(resolvedInst.c()));
             } catch (final Exception e) {
-                resolvedCode.add(inst);
+                resolvedCode.add(inst.clone().selfVID(f("" + i)).as());
                 LOG.debug("runtime resolution of %s required: not enough context to determine inst", null == inst ? "[0]" : inst);
                 //e.printStackTrace();
                 fullResolution = false;
             }
+            i++;
         }
         final Code resolved = this.jvm(resolvedCode);
         LOG.debug("%s code:\n        [{{g}}COMPILED{{/g}}]\n%s", fullResolution ? "{{g}}resolved{{/g}}" : "{{y}}semi-resolved{{/y}}", ObjmtronSerializer.prettyPrintCode(resolved));
@@ -134,14 +137,12 @@ public interface Code extends Call {
     }
 
     default Inst nextInst(final Inst inst) {
-        if (inst.isNoObj())
-            return noobj();
-        boolean found = false;
-        for (final Inst i : this.jvm()) {
-            if (found) return i;
-            if (i == inst) found = true;
+        if (inst.isNoObj()) return noobj();
+        int i = Integer.valueOf(inst.vid().toString()) + 1;
+        for (final Inst in : this.jvm()) {
+            if (Integer.valueOf(in.vid().toString()) == i)
+                return in;
         }
-        //if (found) return this.value().get(this.value().size() - 1);
         return noobj();
     }
 

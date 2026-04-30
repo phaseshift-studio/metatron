@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.tble.schema.domain;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSQLSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
@@ -124,11 +125,11 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         try (final Statement stmt = conn.createStatement()) {
             stmt.executeUpdate(
                     "CREATE TABLE IF NOT EXISTS " + MTRON_META_TABLE + " (" +
-                    "  table_name  TEXT NOT NULL, " +
-                    "  column_name TEXT NOT NULL, " +
-                    "  ref_table   TEXT NOT NULL, " +
-                    "  PRIMARY KEY (table_name, column_name)" +
-                    ")"
+                            "  table_name  TEXT NOT NULL, " +
+                            "  column_name TEXT NOT NULL, " +
+                            "  ref_table   TEXT NOT NULL, " +
+                            "  PRIMARY KEY (table_name, column_name)" +
+                            ")"
             );
         }
     }
@@ -503,8 +504,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
     /**
      * Write an entire row (update existing or insert new)
      */
-    private int writeRow(final Connection conn, final TableMetadata metadata, final String rowId,
-                         final studio.phaseshift.metatron.isa.m.type.Rec rec) throws SQLException {
+    private int writeRow(final Connection conn, final TableMetadata metadata, final String rowId, final Rec rec) throws SQLException {
         // Check if row exists
         final String pkColumn = metadata.primaryKeys.getFirst();
         final String checkSql = String.format("SELECT COUNT(*) FROM %s WHERE %s = ?", metadata.tableName, pkColumn);
@@ -537,8 +537,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
     /**
      * Update an existing row
      */
-    private int updateRow(final Connection conn, final TableMetadata metadata, final String rowId,
-                          final studio.phaseshift.metatron.isa.m.type.Rec rec) throws SQLException {
+    private int updateRow(final Connection conn, final TableMetadata metadata, final String rowId, final Rec rec) throws SQLException {
         final List<String> setClauses = new ArrayList<>();
         final List<Tuple.Pair<Obj, ColumnMetadata>> values = new ArrayList<>();
 
@@ -608,8 +607,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
     /**
      * Insert a new row
      */
-    private int insertRow(final Connection conn, final TableMetadata metadata, final String rowId,
-                          final studio.phaseshift.metatron.isa.m.type.Rec rec) throws SQLException {
+    private int insertRow(final Connection conn, final TableMetadata metadata, final String rowId, final Rec rec) throws SQLException {
         final List<String> columnNames = new ArrayList<>();
         final List<Tuple.Pair<Obj, ColumnMetadata>> values = new ArrayList<>();
 

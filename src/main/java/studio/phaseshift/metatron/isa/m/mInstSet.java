@@ -202,7 +202,7 @@ public class mInstSet extends AbstractInstSet {
             STR_TID, URI_TID, REL_TID,
             LST_TID, REC_TID, M_ISA_INST_TID,
             CODE_TID, OBJS_TID, NOOBJ_TID);
-
+    public static final Type ALL_TYPE = Type.Builder.build().tid(ALL).vid(ALL).create();
     public static final Type SPACE_TYPE = Type.Builder.build()
             .tid(REC_TID)
             .vid(SPACE_TID)
@@ -243,6 +243,12 @@ public class mInstSet extends AbstractInstSet {
                         //  docWrap(MONO_TYPE, "an atomic obj"),
                         //  docWrap(POLY_TYPE, "a obj composed of other objs"),
                         //  docWrap(NOOBJ_TYPE, "a no object"),
+                        docWrap(ALL_TYPE,"universal type matching all objs within coefficient range",
+                                "abc.matches(#::T)              [-- true --]",
+                                "12.3.matches(#::T)             [-- true --]",
+                                "{2}'a string'.matches(#::T)    [-- false --]",
+                                "{2}'b string'.matches(#{2}::T) [-- true --]",
+                                "{2}'c string'.matches(#{+}::T) [-- true --]"),
                         docWrap(BOOL_TYPE, "a 2 valued mono: true or false",
                                 "true",
                                 "false",

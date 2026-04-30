@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -18,11 +18,11 @@
 
 package studio.phaseshift.metatron.isa.m.type.impl;
 
-import studio.phaseshift.metatron.furi.C;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Objs;
+import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -96,7 +96,7 @@ public class MObjs implements Objs {
     private MObjs attemptBulk(final boolean force) {
         if (force || this.jvm.size() > BULK_TRIGGER) {
             final Map<Obj, cInt> map = new LinkedHashMap<>();
-            this.jvm.forEach(o -> map.merge(o.c(C::one), o.c(), cInt::plus));
+            this.jvm.forEach(o -> map.merge(o.c(studio.phaseshift.metatron.furi.C::one), o.c(), cInt::plus));
             this.jvm.clear();
             map.forEach((k, v) -> this.jvm.add(k.c(v)));
             assert this.jvm.size() == map.size();
@@ -261,7 +261,12 @@ public class MObjs implements Objs {
 
     @Override
     public fURI tid() {
-        try {
+       /* if (null == this.tid || ALL_STAR == this.tid) {
+            List<Type> types = this.jvm.stream().map(o -> o.isType() ? o.asType() : o.type()).toList();
+            final Type lcd = Type.Helper.findLCD(types);
+            this.tid = lcd.vid();
+        }*/
+       try {
             return this.jvm
                     .stream()
                     .map(Obj::tid)
@@ -273,6 +278,7 @@ public class MObjs implements Objs {
                     .map(Obj::tid).reduce(fURI::plus)
                     .orElse(fURI.Singleton.NOOBJ);
         }
+        //  return this.tid;
     }
 
     @Override

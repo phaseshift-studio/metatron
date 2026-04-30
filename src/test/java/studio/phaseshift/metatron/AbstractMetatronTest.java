@@ -49,7 +49,7 @@ import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.IO_ISA_TID;
 @ExtendWith(TestSkip.TestSkipExtension.class)
 @ExtendWith(TestData.TestDataExtension.class)
 public abstract class AbstractMetatronTest {
-    
+
     protected static final Random RANDOM = new Random();
     protected GraphittyLogger LOG = Graphitty.log(this);
     protected static GraphittyLogger STATIC_LOG = Graphitty.log(AbstractMetatronTest.class);
@@ -60,6 +60,7 @@ public abstract class AbstractMetatronTest {
 
     @BeforeAll
     public static void begin() {
+        TypeCheck.disable(TypeCheck.code_resolve);
         BootLoader.BOOTING = true;
         BootLoader.TESTING = true;
         BootLoader.load(rec(uri(HOST), uri("ws://localhost:" + generatePort()), uri(LOGG), uri(LogObj.getSLF4J().toString().toLowerCase())));
@@ -73,16 +74,24 @@ public abstract class AbstractMetatronTest {
 
 
     public static void checkMatches(final GraphittyLogger LOG, final String lhs, final String rhs, final boolean matches) {
-        final Obj a = mParser.m_obj().parse(lhs).get();
-        final Obj b = mParser.m_obj().parse(rhs).get();
+        final Obj a = ObjmtronSerializer.parse(lhs).apply(noobj());
+        final Obj b = ObjmtronSerializer.parse(rhs);
         final boolean m = a.test(b);
         LOG.debug("testing %s matches %s: %s [expected:%s]", a, b, m, matches);
         assertEquals(matches, m);
     }
 
+    public static void checkMatchesByID(final GraphittyLogger LOG, final String lhs, final String rhs, final boolean matches) {
+        final Obj a = ObjmtronSerializer.parse(lhs).apply(jnt(1));
+        final Obj b = ObjmtronSerializer.parse(rhs);
+        final boolean m = a.testByID(b);
+        LOG.debug("testing %s matches by ID %s: %s [expected:%s]", a, b, m, matches);
+        assertEquals(matches, m);
+    }
+
     public static void checkCodeEvaluate(final GraphittyLogger LOG, final String lhs, final String expected) {
-        final Obj a = mParser.eval(lhs);
-        final Obj b = mParser.eval(expected);
+        final Obj a = ObjmtronSerializer.parse(lhs);
+        final Obj b = ObjmtronSerializer.parse(expected);
         final Obj actual = b.apply(a);
         LOG.debug("testing %s => %s [expected:%s]", a, b, actual);
         if (!expected.trim().equals("<ERROR>")) {
@@ -96,6 +105,36 @@ public abstract class AbstractMetatronTest {
             final boolean fails = actual.stream().anyMatch(Obj::isFail);
             if (!fails)
                 a.elements().forEach(LOG::error);
+            assertTrue(fails, "should have failed");
+        }
+
+    }
+
+    public static void checkCodeEvaluate(final GraphittyLogger LOG, final String evaluate, final String fetchResult, final String expectedResult) {
+        final Obj evaluation = mParser.eval(evaluate);
+        final Obj actual = mParser.eval(fetchResult);
+        final Obj expected = mParser.eval(expectedResult);
+        LOG.debug("testing %s; %s [expected:%s]", evaluation, actual, expected);
+        if (!expectedResult.trim().equals("<ERROR>")) {
+            boolean noFails = evaluation.stream().noneMatch(Obj::isFail);
+            if (!noFails)
+                evaluation.stream().map(f -> f.asFail().caught()).forEach(LOG::error);
+            assertTrue(noFails, "evaluation should not have failed");
+            noFails = actual.stream().noneMatch(Obj::isFail);
+            if (!noFails)
+                actual.stream().map(f -> f.asFail().caught()).forEach(LOG::error);
+            assertTrue(noFails, "actual should not have failed");
+            assertEquals(expected, actual);
+        } else {
+            boolean fails = evaluation.stream().anyMatch(Obj::isFail);
+            if (!fails) {
+                fails = actual.stream().anyMatch(Obj::isFail);
+                if (!fails) {
+                    evaluation.elements().forEach(LOG::error);
+                    actual.elements().forEach(LOG::error);
+                }
+                assertTrue(fails, "should have failed");
+            }
             assertTrue(fails, "should have failed");
         }
 

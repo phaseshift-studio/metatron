@@ -18,10 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.type.resolver;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
@@ -158,7 +155,7 @@ public abstract class AbstractInstResolverTest extends AbstractMetatronTest {
             "'ABC'.lcase()                                                          % \"abc\"",
             "'abc'.ucase()                                                          % \"ABC\"",
     }, delimiter = '%', quoteCharacter = '~')
-    public void testStringOperations(final String code, final String expected) {
+    public void testStrOperations(final String code, final String expected) {
         checkCodeParseApply(LOG, code, expected);
     }
 
@@ -172,7 +169,7 @@ public abstract class AbstractInstResolverTest extends AbstractMetatronTest {
             "[1,2,3]>-.sum()                                                          % 6",
             "{1,2,3}.plus(2)                                                        % {3,4,5}",
     }, delimiter = '%')
-    public void testListOperations(final String code, final String expected) {
+    public void testLstOperations(final String code, final String expected) {
         checkCodeParseApply(LOG, code, expected);
     }
 
@@ -186,7 +183,7 @@ public abstract class AbstractInstResolverTest extends AbstractMetatronTest {
             "[a=>1,b=>2,c=>3].>>b                                                   % 2",
             "[a=>1,b=>2,c=>3]>-.count()                                               % 3",
     }, delimiter = '%')
-    public void testRecordOperations(final String code, final String expected) {
+    public void testRecOperations(final String code, final String expected) {
         checkCodeParseApply(LOG, code, expected);
     }
 
@@ -339,6 +336,7 @@ public abstract class AbstractInstResolverTest extends AbstractMetatronTest {
     }
 
     @Test
+    @Disabled
     @DisplayName("Benchmark: instruction resolution performance")
     public void benchmarkResolutionPerformance() {
         List<BenchmarkResult> results = new ArrayList<>();
@@ -363,6 +361,6 @@ public abstract class AbstractInstResolverTest extends AbstractMetatronTest {
 
         // Calculate totals
         double totalAvgMicros = results.stream().mapToDouble(BenchmarkResult::avgMicros).sum();
-        LOG.warn("Total avg time for all ops: %.2fμs", totalAvgMicros);
+        LOG.warn("total avg time for all ops: %.2fμs", totalAvgMicros);
     }
 }

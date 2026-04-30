@@ -251,14 +251,25 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     }
 
     default boolean testByID(final Obj rhs) {
-        Type rhsType = rhs.isType() ? rhs.asType() : rhs.type();
-        Type current = this.isType() ? this.asType() : this.type();
-        while (null != current) {
-            if (null != current.vid() && current.vid().test(rhsType.vid()))
+        if(this.isType() && !rhs.isType())
+            return false;
+        final Type rhsType = rhs.isType() ? rhs.asType() : rhs.type();
+        if (this.c().isZero()) return rhsType.c().isZeroable();
+        if (rhsType.isRootType())
+            return this.c().within(rhsType.c());
+        Type lhsType = this.isType() ? this.asType() : this.type();
+        if (lhsType.isGeneric() && rhsType.isGeneric())
+            return lhsType.tid().test(rhsType.tid());// lhsType.c().within(rhsType.c());//&& lhsType.tid().basePath().equals(rhsType.tid().basePath());
+        if(rhsType.hasPredicate() && rhsType.predicate().apply(this).isNoObj())
+            return false;
+        while (!lhsType.isRootType()) {
+            if (lhsType.vid().test(rhsType.vid()))
                 return true;
-            if (current.isBaseType())
-                break;
-            current = current.parentType();
+            if (rhsType.tid().isGeneric())
+                return lhsType.vid().c().within(rhsType.tid().c());
+            if (rhsType.vid() != null && rhsType.vid().isGeneric() && lhsType.vid().c().within(rhsType.vid().c()))
+                return true;
+            lhsType = lhsType.parentType();
         }
         return false;
     }
@@ -266,10 +277,12 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     default boolean test(final Obj rhs) {
         if (Obj.Helper.isAuto(rhs))
             return true;
+        if (rhs.isType() && rhs.asType().isRootType())
+            return this.c().within(rhs.c());
         if (rhs.isType() && !rhs.asType().isBaseType() && this.tid().test(rhs.tid()))
             return !rhs.asType().hasPredicate() || !rhs.asType().predicate().apply(this).isNoObj();
-        else if (this.isNoObj() && (rhs.tid().c().isZeroable() || rhs.tid().equals(NOOBJ_TID)))
-            return true;
+        else if (this.isNoObj())
+            return (rhs.tid().c().isZeroable() || rhs.tid().equals(NOOBJ_TID));
         else if (this.tid().c().isZeroable() && rhs.isNoObj())
             return true;
         else if (rhs.isNoObj())
@@ -297,8 +310,12 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         }
         if (this.isObjCall())
             return this.tid().c().within(rhs.tid().c()); // TODO: this is really flimsy.
-        if (rhs.isObjCall())
-            return this.test(rhs.dom()) && rhs.apply(this).test(rhs.rng());
+        if (rhs.isObjCall()) { 
+            if (!this.test(rhs.dom()))
+                return false;
+            if (rhs.rng().c().within(cInt.MAYBE())) // only test predicates
+                return rhs.apply(this).test(rhs.rng());
+        }
         if (!this.c().within(rhs.c()))
             return false;
         if (rhs.isType()) {
@@ -317,7 +334,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         return this.isUri() && this.uriValue().basePath().toString().equals("none");
     }
 
-     static Uri none() {
+    static Uri none() {
         return NONE;
     }
 
@@ -330,7 +347,8 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     }
 
     default fURI baseType() {
-        if (this.isBool()) return BOOL_TID.c(this.c());
+        if (this.type().isRootType()) return ALL.c(this.c());
+        else if (this.isBool()) return BOOL_TID.c(this.c());
         else if (this.isBytes()) return BYTES_TID.c(this.c());
         else if (this.isInt()) return INT_TID.c(this.c());
         else if (this.isReal()) return REAL_TID.c(this.c());
@@ -902,7 +920,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                             return str(serialization.toString());
                         }
                     }),
-                    instC(FORK_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(ALL)), (lhs, inst) -> {
+                    instC(FORK_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(ALL_TYPE), (lhs, inst) -> {
                         BootLoader.getExecutor().submit(() -> {
                             final Obj forking = inst.arg(0);
                             forking.apply(lhs);
@@ -910,10 +928,10 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                         return lhs;
                     }),
                     instC(RANGE_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(INT_TYPE, isa_(INT_TYPE).else_(jnt(0)).tryToInst()), (lhs, inst) -> lhs.take(cInt.of(inst.arg(0).intValue())).get1().take(cInt.of(inst.arg(1).intValue())).get0()),
-                    docWrap(instC(ORDER_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()).q(BLOCK, null), lst(T(ALL)), (lhs, inst) -> objs(lhs.stream().sorted(new ObjSelectComparator(inst.arg(0))))),
+                    docWrap(instC(ORDER_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()).q(BLOCK, null), lst(ALL_TYPE), (lhs, inst) -> objs(lhs.stream().sorted(new ObjSelectComparator(inst.arg(0))))),
                             "any objs", "the objs sorted by the arg obj", Map.of(jnt(0), "the obj to sort by"), "a sorting function \\(f(X)\\to X'\\)"),
                     instC(AS_INST_TID.dom(A).rng(NOOBJ_TID.zero()), lst(), (lhs, inst) -> noobj()),
-                    docWrap(instC(AS_INST_TID.dom(A).rng(B), lst(T(ALL)), (lhs, inst) -> inst.arg(0).isType() ? lhs.as(inst.arg(0).asType()) : fail(MTronException.of("%s is not a %s", lhs, inst.arg(0)))),
+                    docWrap(instC(AS_INST_TID.dom(A).rng(B), lst(ALL_TYPE), (lhs, inst) -> inst.arg(0).isType() ? lhs.as(inst.arg(0).asType()) : fail(MTronException.of("%s is not a %s", lhs, inst.arg(0)))),
                             "any obj", "the lhs obj as the arg type", Map.of(jnt(0), "the type to cast to"), "a type casting function \\(f(x)\\to x\\)"),
                     instC(IMPORT_INST_TID.dom(ALL.maybe()).rng(SPACE_TID.maybeSome()), lst(URI_TYPE, T(URI_TID.maybe())),
                             (lhs, inst) -> MTronException.wrap(() ->
@@ -930,7 +948,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                             "any objs", "the objs appended to the arg objs", Map.of(jnt(0), "the objs to append"), "an append function \\(f(X)\\to X\\)"),
                     docWrap(instC(AS_INST_TID.dom(A).rng(A), lst(T(A)), (lhs, inst) -> lhs.as(inst.arg(0).asType())),
                             "any obj", "the lhs obj as the arg type", Map.of(jnt(0), "the type to cast to"), "a type casting function \\(f(x)\\to x\\)"),
-                  /*  instC(REPEAT_INST_TID.dom(A).rng(A.maybeSome()).q(MONAD, null), lst(T(ALL), T(ALL)), (lhs, inst) -> {
+                  /*  instC(REPEAT_INST_TID.dom(A).rng(A.maybeSome()).q(MONAD, null), lst(ALL_TYPE, ALL_TYPE), (lhs, inst) -> {
                         try {
                             Obj current = lhs.asMonad().obj();
                             if (current.isNoObj()) return lhs.asMonad().nextInst();
@@ -947,7 +965,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                             throw e;
                         }
                     }),*/
-                    instC(REPEAT_INST_TID.dom(A).rng(A.maybeSome()).addQ(MONAD), lst(T(ALL), T(ALL)), (lhs, inst) -> {
+                    instC(REPEAT_INST_TID.dom(A).rng(A.maybeSome()).addQ(MONAD), lst(ALL_TYPE, ALL_TYPE), (lhs, inst) -> {
                         Obj current = ((PCMonad) lhs).obj();
                         final Obj repeatedApply = inst.arg(0);
                         final int times = inst.arg(1).apply(current).intValue().intValue();
@@ -987,23 +1005,23 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                     instC(MAP_INST_TID.dom(A).rng(B), lst(T(B)), (lhs, inst) -> inst.arg(0)),
                     docWrap(instC(MAP_INST_TID.dom(A.maybe()).rng(B.maybe()), lst(T(B.maybe())), (lhs, inst) -> inst.arg(0)), "maybe some obj", "the lhs obj applied to the arg obj", Map.of(jnt(0), "any obj"), "applies the lhs obj to the arg obj to yield the rhs obj"),
                     instC(FILTER_INST_TID.dom(A).rng(A.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> inst.arg(0).isNoObj() ? noobj() : lhs),
-                    instC(SIDE_INST_TID.dom(A).rng(A), lst(T(ALL)), (lhs, inst) -> Optional.of(inst.arg(0).apply(lhs)).map(x -> (Obj) null).orElse(lhs)),
+                    instC(SIDE_INST_TID.dom(A).rng(A), lst(ALL_TYPE), (lhs, inst) -> Optional.of(inst.arg(0).apply(lhs)).map(x -> (Obj) null).orElse(lhs)),
                     docWrap(instC(TID_INST_TID.dom(ALL).rng(URI_TID), lst(), (lhs, inst) -> lhs.tid().toUri()),
                             "any obj", "the lhs obj type id", Map.of(), "the geometric location of the lhs obj [equivalent to f(x) ~ vid(type())]"),
-                    docWrap(instC(VID_INST_TID.dom(A).rng(A), lst(T(URI_TID)), (lhs, inst) -> lhs.vid(inst.arg(0).uriValue())),
-                            "any obj", "a spatial location for the lhs obj", Map.of(jnt(0), "the value id for the lhs obj"), "specifies the spatial location of the lhs obj", "1@abc.vid() [-- abc --]"),
                     docWrap(instC(VID_INST_TID.dom(ALL).rng(URI_TID.maybe()), lst(), (lhs, inst) -> null == lhs.vid() ? noobj() : lhs.vid().toUri()),
                             "any obj", "the lhs obj value id", Map.of(), "the spatial location of the lhs obj"),
+                    docWrap(instC(VID_INST_TID.dom(A).rng(A), lst(T(URI_TID)), (lhs, inst) -> lhs.vid(inst.arg(0).uriValue())),
+                            "any obj", "a spatial location for the lhs obj", Map.of(jnt(0), "the value id for the lhs obj"), "specifies the spatial location of the lhs obj", "1@abc.vid() [-- abc --]"),
                     docWrap(instC(ELSE_INST_TID.dom(ALL.maybe()).rng(ALL), lst(T(ALL.maybe())), (lhs, inst) -> lhs.isNoObj() ? inst.arg(0) : lhs),
                             "maybe an obj", "the lhs obj else the arg obj", Map.of(jnt(0), "the rhs obj is the lhs is noobj"), "\\[ f(\\tt{lhs}) = \\left\\{ \\begin{aligned} \\tt{lhs} & \\quad \\text{if } \\tt{lhs} \\neq \\emptyset \\\\ \\tt{arg}_0 & \\quad \\text{otherwise.} \\end{aligned} \\right. \\]"),// TODO: rec args needs resolution on generics connected
                     docWrap(instC(IS_INST_TID.dom(A.maybe()).rng(A.maybe()), lst(isa_(T(BOOL_TID)).else_(BOOL_FALSE).tryToInst()), (lhs, inst) -> inst.arg(0).orElse(BOOL_FALSE).boolValue() ? lhs : noobj()),
                             "any obj", "the lhs obj if arg is true", Map.of(jnt(0), "filter lhs if false"), "filters the lhs obj"), // TODO: generics are not working for some reason
-                    docWrap(instC(ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> lhs.test(inst.arg(0)) ? lhs : noobj()),
+                    docWrap(instC(ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(ALL_TYPE), (lhs, inst) -> lhs.test(inst.arg(0)) ? lhs : noobj()),
                             "an obj to match", "the unaltered obj if arg matches", Map.of(jnt(0), "filter lhs if doesn't match arg"), "a filter function \\(f(x)\\to \\{\\emptyset \\cup x\\}\\)"),
                     instC(MATCHES_INST_TID.dom(ALL.maybe()).rng(BOOL_TID), lst(T(ALL.maybe())), (lhs, inst) -> bool(lhs.test(inst.arg(0)))),
                     docWrap(instC(BLOCK_INST_TID.dom(A.maybe()).rng(B), lst(T(B)), (lhs, inst) -> inst.arg(0)),
-                            "a blocked obj", "the unapplied arg", Map.of(jnt(0), "the rhs without evaluation"), "the lhs obj is halted and the arg is the rhs obj"),
-                    //instC(SPLIT_INST_TID.dom(ALL).rng(ALL.maybeSome()), lst(T(ALL.some())), (lhs, inst) -> objs(inst.arg(0).stream().map(o -> o.apply(lhs)))),
+                            "maybe an obj", "the arg without an applied lhs", Map.of(jnt(0), "the unapplied rhs"), "the lhs obj is halted and the arg is the rhs obj"),
+                    instC(SPLIT_INST_TID.dom(ALL).rng(ALL.maybeSome()), lst(T(ALL.some())), (lhs, inst) -> objs(inst.arg(0).stream().map(o -> o.apply(lhs)))),
                     docWrap(instC(CHOOSE_INST_TID.dom(ALL).rng(REL_TID.maybe()), lst(T(REC_TID)), (lhs, inst) -> inst.arg(0).<Rec>as().elements().map(Obj::<Rel>as).map(e -> e.<Rel>jvm(Tuple.Pair.with(e.first().apply(lhs), e.second()))).filter(e -> !e.first().isNoObj()).findFirst().map(e -> e.<Obj>jvm(Tuple.Pair.with(e.first(), e.second().apply(lhs)))).orElse(noobj())),
                             "any obj", "the split as an objs", Map.of(jnt(0), "the branches"), "a branching function f(x):g(a)->a',g(b)->b',..."),
                     instC(MERGE_INST_TID.dom(A.maybeSome()).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> inst.arg(0).jvm(Stream.concat(lhs.stream(), inst.arg(0).elements()).toList())),
@@ -1017,32 +1035,34 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                     docWrap(instC(TO_INST_TID.dom(A.maybe()).rng(A.maybe()), lst(T(URI_TID)), (lhs, inst) -> Router.writeToSpace(inst.arg(0).uriValue(), lhs)),
                             "any obj", "writes the lhs obj to the arg uri", Map.of(jnt(0), "the uri to write to"), "associates the lhs obj to the arg uri"),
                     // instC(FROM_INST_TID.dom(ALL.maybe()).rng(ALL_STAR), lst(), (lhs, inst) -> Router.stack().peekAll()),
-                    docWrap(instC(FROM_INST_TID.dom(A.maybe()).rng(B.maybeSome()), lst(T(URI_TID)), (lhs, inst) -> Router.readFromSpace(inst.arg(0).isInt() ? f("" + inst.arg(0).intValue()) : inst.arg(0).uriValue())), // TODO: only resolves when explicit mono args (not code args)
+                    docWrap(instC(FROM_INST_TID.dom(ALL.maybe()).rng(B.maybeSome()), lst(T(URI_TID)), (lhs, inst) -> Router.readFromSpace(inst.arg(0).isInt() ? f("" + inst.arg(0).intValue()) : inst.arg(0).uriValue())), // TODO: only resolves when explicit mono args (not code args)
                             "any obj", "the obj referred to by the arg uri", Map.of(jnt(0), "the uri to dereference"), "dereferences a uri to an obj (sugar'd *)",
                             "*abc        [-- obj at abc                            --]",
                             "abc.*_      [-- obj at abc via dynamic arg generation --]",
                             "c.*ab${_}   [-- obj at abc via uri template parameter --]",
                             "from(abc)   [-- obj at abc non-sugar form             --]"),
                     docWrap(instC(REF_INST_TID.dom(ALL).rng(ALL_STAR), lst(T(ALL_STAR)), (lhs, inst) -> Router.writeToSpace(lhs.uriValue(), inst.arg(0))),
-                            "any obj", "writes the arg obj to the lhs uri", Map.of(jnt(0), "the uri to write to"), "associates the arg obj to the lhs uri (inverse of /m/inst/to)"),
-                    instC(THREAD_INST_TID.dom(A).rng(A), lst(T(ALL)), (lhs, inst) -> {
-                        MTronException.wrap(() -> new Thread(() -> inst.arg(0).apply(lhs)).start());
-                        return lhs;
-                    }),
+                            "a uri reference", "writes the arg obj to the lhs uri", Map.of(jnt(0), "an obj to be the referent of the uri"), "associates the arg obj to the lhs uri (inverse of /m/inst/to)"),
+                    /*docWrap(instC(REF_APPLY_INST_TID.dom(URI_TID).rng(A.maybeSome()), lst(T(A.maybeSome())), (lhs, inst) -> {
+                                final Obj read = Router.readFromSpace(lhs.uriValue());
+                                return Router.writeToSpace(lhs.uriValue(), inst.arg(0).apply(read));
+                            }),
+                            "a uri reference", "writes to lhs uri the result of applying the current lhs uri referent to the inst arg", Map.of(jnt(0), "the obj to apply to the lhs uri referent"), "associates the arg obj to the lhs uri (inverse of /m/inst/to)"),
+                    */
                     docWrap(instC(SOURCE_INST_TID.dom(A.maybe()).rng(B.maybeSome()), lst(STR_TYPE), (lhs, inst) -> {
                                 final Str source = inst.arg(0).asStr();
                                 final Content.ContentType contentType = Content.ContentType.fromType(source, Content.ContentType.APPLICATION_MTRON);
                                 return contentType.exec(source);
                             }),
                             "maybe an obj", "result of evaluating source code", Map.of(jnt(0), "the source code to evaluate"), "evaluates source code"),
-                    instC(TYPE_INST_TID.dom(TYPE_TID).rng(TYPE_TID), lst(), (lhs, inst) -> lhs.type()),
-                    docWrap(instC(TYPE_INST_TID.dom(A).rng(TYPE_TID), lst(), (lhs, inst) -> lhs.type()),
+                    //  instC(TYPE_INST_TID.dom(A).rng(B), lst(), (lhs, inst) -> lhs.type()),
+                    docWrap(instC(TYPE_INST_TID.dom(ALL).rng(ALL), lst(), (lhs, inst) -> lhs.isType() ? lhs.asType().parentType() : lhs.type()),
                             "any obj", "the lhs obj type", Map.of(), "the type of the lhs obj",
                             "6.type()-<[tid(),vid()]      [-- [/m/int, /m/int] base types are those where vid==tid --]",
-                            "nat::6.type()-<[tid(),vid()] [-- [/m/int, nat] non-base types have tid the type they are refining (super type) --]"),
+                            "nat::6.type()-<[tid(),vid()] [-- [/m/int, nat] non-base types tids are the types they are refining (super type) --]"),
                     docWrap(instC(CC_INST_TID.dom(A.maybeSome()).rng(INT_TID), lst(), (lhs, inst) -> jnt(lhs.c().max())),
                             "any obj", "the lhs obj coefficient", Map.of(), "maps an obj to it's coefficient with a function f(lhs^c)->c"),
-                    docWrap(instC(CC_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(INT_TID)), (lhs, inst) -> lhs.c(inst.arg(0).intValue())),
+                    docWrap(instC(CC_INST_TID.dom(A).rng(A.maybeSome()), lst(T(INT_TID)), (lhs, inst) -> lhs.c(inst.arg(0).intValue())),
                             "any obj", "the lhs obj with new coefficient", Map.of(jnt(0), "a coefficient for lhs obj"), "sets the coefficient of the lhs obj via f(lhs,c)->lhs^c"),
                     instC(FAILURE_INST_TID.dom(ALL.maybeSome()).rng(FAIL_TID), lst(T(ALL.maybe())), (lhs, inst) -> fail(MTronException.of("%s", inst.arg(0).toString()))),
                     instC(PARENT_INST_TID.dom(ALL).rng(ALL.maybe()), lst(), (lhs, inst) -> lhs.parent()),
@@ -1080,7 +1100,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                                                     "projection", lhs.jvm() instanceof Tuple ?
                                                             rec(IteratorUtil.indexedStream(lhs.<Tuple>jvmAs().iterator()).map(p -> rel(jnt(p.get0()), MObjFactory.of().createOrFail(p.get1())))) :
                                                             rec(jnt(0), MObjFactory.of().toObj(lhs.jvm()))))))),
-                    docWrap(instC(REDUCE_INST_TID.dom(ALL.maybeSome()).rng(ALL), lst(T(ALL)), (lhs, inst) -> Stream.concat(inst.arg(0).<Inst>as().arg(0).stream(), lhs.stream()).reduce((a, b) -> inst.arg(0).<Inst>as().args(lst(a)).apply(b)).orElse(noobj())),
+                    docWrap(instC(REDUCE_INST_TID.dom(ALL.maybeSome()).rng(ALL), lst(ALL_TYPE), (lhs, inst) -> Stream.concat(inst.arg(0).<Inst>as().arg(0).stream(), lhs.stream()).reduce((a, b) -> inst.arg(0).<Inst>as().args(lst(a)).apply(b)).orElse(noobj())),
                             "any objs", "the result of applying the arg inst to each obj", Map.of(jnt(0), "the inst to apply to each obj"), "a reduce function \\(f(X) \\to x\\)"),
                     docWrap(instC(WHERE_INST_TID.dom(A).rng(A.maybe()), lst(T(B)), (lhs, inst) -> inst.arg(0).isObjCall() ? (inst.arg(0).apply(lhs).isNoObj() ? noobj() : lhs) : (lhs.test(inst.arg(0)) ? lhs : noobj())),
                             "any obj", "filter the lhs obj based on whether the arg yields noobj or not", Map.of(jnt(0), "the inst to filter objs by"), "a filter function \\(f(x)\\to \\{\\emptyset \\cup x\\}\\)"),
@@ -1097,7 +1117,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                                         kv.getValue().asLst().at(0).apply(kv.getValue().asLst().at(jnt(1)))))  // compute barriered value
                                 .collect(new CommonUtil.RecCollector());
                     }),
-                    docWrap(instC(EVAL_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL)), (lhs, inst) -> inst.arg(0)),
+                    docWrap(instC(EVAL_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(ALL_TYPE), (lhs, inst) -> inst.arg(0)),
                             "can be any obj", "the result of applying the lhs to the arg", Map.of(jnt(0), "the mtron obj to evaluate"), "evaluates an mtron obj"),
                     instC(SWAP_TID.dom(A).rng(A), lst(T(B)), (lhs, inst) -> lhs.apply(inst.arg(0))),
                     instC(RSHIFT_INST_TID.dom(A).rng(B.maybeSome()), lst(T(C.maybeSome())), (lhs, inst) -> {

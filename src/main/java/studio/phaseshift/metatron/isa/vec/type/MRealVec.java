@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -33,13 +33,22 @@ import java.util.stream.Stream;
  */
 public class MRealVec extends MVec<Double> {
 
-    public MRealVec(final Double value, final fURI tid, final fURI vid) {
-        super(new Vector<>(List.of(value)), tid, vid);
+    public MRealVec(final Vector<Double> value, final fURI tid, final fURI vid) {
+        super(value, tid, vid);
+    }
+
+    @Override
+    public MRealVec zero() {
+        final Vector<Double> vec = new Vector<>(this.jvm().size());
+        for (int i = 0; i < vec.size(); i++) {
+            vec.set(i, 0.0);
+        }
+        return new MRealVec(vec, this.tid(), this.vid());
     }
 
     @Override
     public long count() {
-        return 0;
+        return this.jvm().size();
     }
 
     @Override

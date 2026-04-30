@@ -105,7 +105,7 @@ public class grphInstSet extends AbstractInstSet {
     public static final Uri OUT = uri(Direction.OUT.name());
 
     public grphInstSet() {
-        super(mutableMap(uri(PATTERN), uri(GRPH_ISA_TID.extend(ALL))), INSTSET_TID, GRPH_ISA_TID);
+        super(mutableMap(uri(PATTERN), uri(GRPH_ISA_TID.extend(ALL))), GRPH_ISA_TID, GRPH_ISA_TID);
     }
 
     /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -153,6 +153,7 @@ public class grphInstSet extends AbstractInstSet {
 
     @Override
     public void setup() {
+        this.selfTID(INSTSET_TID);
         this.jvm().putAll(mutableMap(
                 uri(PATTERN), uri(GRPH_ISA_TID.extend(ALL)),
                 uri(CONSTQ), lst(ObjTP3Serializer.single()),

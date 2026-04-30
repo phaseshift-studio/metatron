@@ -46,6 +46,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
  * These tests measure the time taken to resolve instructions under various conditions.
  * Use these benchmarks to compare performance before and after optimization changes.
  */
+@Disabled("Run manually: mvn test -Dtest=InstResolverBenchmarkTest")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class InstResolverBenchmarkTest extends AbstractMetatronTest {
 

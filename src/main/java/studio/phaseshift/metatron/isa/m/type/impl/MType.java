@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.Objects;
 
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 
 

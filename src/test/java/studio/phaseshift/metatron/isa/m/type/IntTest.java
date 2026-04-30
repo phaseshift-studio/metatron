@@ -55,7 +55,7 @@ public class IntTest extends AbstractAlgebraTest<Int> {
             "1                                   % int{0,4}::T[]                % true",
             "int{5}::1                           % int{0,4}::T[]                % false",
             "int{5}::1                           % int{*}::T[]                  % true",
-            "int{0}::1                           % noobj[0}::T[]                % true",
+            "int{0}::1                           % noobj{0}::T[]                % true",
             "int{**}::1                          % int{**}::T[]                 % true",
             "int{-1}::1                          % int{**}::T[]                 % true",
             "int{-1}::1                          % int{0,1}::T[]                % false",

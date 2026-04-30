@@ -22,6 +22,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.tble.tbleSpace;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -103,7 +104,7 @@ public class TypedKeyValueSchema implements TableSchema {
 
         // Detect database type for appropriate upsert syntax
         final String dbProductName = conn.getMetaData().getDatabaseProductName().toLowerCase();
-        final boolean isPostgreSQL = dbProductName.contains("postgresql");
+        final boolean isPostgreSQL = dbProductName.contains(tbleSpace.POSTGRESQL);
 
         // Determine the type and appropriate column
         final String type;

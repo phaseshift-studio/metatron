@@ -1175,7 +1175,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                         }
                     }
                 } catch (final Exception e) {
-                    // do nothing
+                   LOG.error(e);
                 }
                 return true;
             }, key(Console.terminal, InfoCmp.Capability.tab));

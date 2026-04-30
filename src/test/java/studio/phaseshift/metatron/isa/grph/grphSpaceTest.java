@@ -26,13 +26,19 @@ import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
 import studio.phaseshift.metatron.isa.grph.space.grphSpace;
+import studio.phaseshift.metatron.isa.grph.space.schema.modernSchema;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.Tuple;
+
+import java.util.Map;
 
 import static org.apache.tinkerpop.gremlin.LoadGraphWith.GraphData.MODERN;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -42,6 +48,7 @@ import static studio.phaseshift.metatron.isa.grph.grphInstSet.EDGE_TID;
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.GRPH_ISA_TID;
 import static studio.phaseshift.metatron.isa.grph.space.schema.modernSchema.MODERN_SCHEMA_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -59,6 +66,8 @@ public class grphSpaceTest extends AbstractSpaceTest {
     public grphSpaceTest() {
         super(() -> {
             // Example: TinkerGraph with modern dataset (legacy format - still supported)
+            InstSet.importInstSet(GRPH_ISA_TID);
+            InstSet.importInstSet(MODERN_SCHEMA_TID);
             return grphSpace.of(rec(
                             PATTERN, uri("/g/#"),
                             ROUTE, rec(
@@ -116,6 +125,40 @@ public class grphSpaceTest extends AbstractSpaceTest {
         LOG.error("gremlin> %s [%s ms]", gremlinResult.get0(), gremlinResult.get1());
         // BootLoader.TYPE_CHECK = true;
     }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "*/g/V/1                                                                  % person::T    % true",
+            "*/g/V/1                                                                  % rec::T       % true",
+            "*/g/V/1                                                                  % vrtx::T       % true",
+            "*/g/V/2                                                                  % person::T    % true",
+            "*/g/V/2                                                                  % software::T  % false",
+            "*/g/V/3                                                                  % software::T  % true",
+            "*/g/V/3                                                                  % created::T   % false",
+            "*/g/V/1                                                                  % created::T   % false",
+            "*/g/V/+                                                                  % vrtx{+}::T   % true",
+            "*/g/V/+                                                                  % rec{+}::T   % true",
+            "*/g/V/1{2}                                                               % int{2}::T  % false",
+            "*/g/V/1.-<[_,_]>-                                                        % rec{2}::T  % true",
+            "*/g/V/1{2}                                                               % elmt{2}::T  % true",
+            "*/g/V/1{2}                                                               % person{2}::T % true",
+            "*/g/V/1{2}                                                               % vrtx{2}::T   % true",
+            "*/g/V/1.-<[_,_]>-                                                        % rec{3}::T   % false",
+    }, delimiter = '%')
+    public void testTypeInheritance(final String lhs, final String type, final boolean matches) {
+        new grphInstSet().setup();
+        new modernSchema().setup();
+        final Obj obj = mParser.parse(lhs).apply(jnt(1));
+        StringBuilder sb = new StringBuilder("lhs type: ").append(obj);
+        Type current = obj.type();
+        while (!current.isRootType()) {
+            sb.append("=>").append(current.vid());
+            current = current.parentType();
+        }
+        LOG.warn(sb.toString());
+        AbstractSpaceTest.checkMatchesByID(LOG, lhs, type, matches);
+    }
+
 
     @ParameterizedTest
     @CsvSource(value = {
@@ -188,7 +231,7 @@ public class grphSpaceTest extends AbstractSpaceTest {
             "*/g/V/1>>=[age=>'hello']                                          % */g/V/1>>age                     % \"hello\"",
             "*/g/V/1>>=[likes=>food]                                           % */g/V/1>>likes                   % food",
             "*/g/V/1>>=[likes=>|!*/g/V/2]                                      % */g/V/1>>likes                   % */g/V/2",
-            "*/g/V/1>>=[likes=>[!*/g/V/2,!*/g/V/3]]                            % */g/V/1>>likes>-                 % 1-<{*/g/V/2,*/g/V/3}",
+            "*/g/V/1>>=[likes=>[!*/g/V/2,!*/g/V/3]]                            % */g/V/1>>likes>-                 % 1-<[*/g/V/2,*/g/V/3]>-",
             // "*/g/V/1>>=[worksWith=>|!*/g/V/3]                                  % */g/V/1                          % */g/V/3"
 
     }, delimiter = '%')

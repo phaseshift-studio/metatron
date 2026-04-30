@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
+import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.form.SAPPCQfURI;
 import studio.phaseshift.metatron.isa.m.mInstSet;
@@ -36,7 +37,8 @@ import static studio.phaseshift.metatron.Tokens.CTOR;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
-import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.mInstSet.ALL_TYPE;
+import static studio.phaseshift.metatron.isa.m.mInstSet.ISA_INST_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -81,7 +83,7 @@ public interface Type extends Obj {
     }
 
     default boolean isBaseType() {
-        return this.vid() != null && mInstSet.BASE_TYPES.contains(this.vid().basePath());
+        return this.vid() != null && (this.isRootType() || mInstSet.BASE_TYPES.contains(this.vid().basePath()));
     }
 
     default boolean isGeneric() {
@@ -93,12 +95,11 @@ public interface Type extends Obj {
     }
 
     default boolean isRefinementOf(final Type other) {
-        if (this == other)
-            return true;
         Type current = this;
-        while (!current.isBaseType()) {
-            if (current.vid().equals(other.vid()))
+        while (!current.isRootType()) {
+            if (current.vid() != null && current.vid().equals(other.vid()))
                 return true;
+            if (current.isBaseType()) break;
             current = current.parentType();
         }
         return false;
@@ -108,7 +109,7 @@ public interface Type extends Obj {
     default List<Call> predicateStack() {
         final List<Call> result = new ArrayList<>();
         Type type = this;
-        while (null != type) {
+        while (!type.isRootType()) {
             if (type.hasPredicate())
                 result.add(type.predicate());
             type = type.parentType();
@@ -117,10 +118,14 @@ public interface Type extends Obj {
     }
 
     default Type parentType() {
-        if (this.tid().equals(this.vid()))
-            return null;
-        final Obj type = Router.global().read(this.tid().basePath());
-        return type.isNoObj() ? null : type.asType();
+        if (this.isRootType() || this.tid().equals(this.vid()))
+            return ALL_TYPE;
+        final Type type = T(this.tid());
+        return type.isNoObj() ? null : type.as();
+    }
+
+    default boolean isRootType() {
+        return Objects.equals(this.vid(), ALL) || (null == this.vid() && Objects.equals(this.tid().basePath(),ALL));
     }
 
     default Call constructor() {
@@ -153,10 +158,12 @@ public interface Type extends Obj {
             return this.test(rhs.dom());
         if (!rhs.isType())
             return false;
+        if (rhs.isType() && rhs.asType().isRootType())
+            return this.c().within(rhs.c());
         if (null != this.vid() &&
                 this.vid().test(rhs.vid()) &&
                 (!rhs.asType().hasPredicate() || (Objects.equals(this.predicate(), rhs.asType().predicate()))))
-            return true;
+            return this.c().within(rhs.c());
         if (!this.c().within(rhs.c()))
             return false;
         // if(rhs.asType().parentType()!= null && !this.test(rhs.asType().parentType()))
@@ -170,8 +177,8 @@ public interface Type extends Obj {
 
     @Override
     default Obj apply(final Obj obj) {
-        Obj parentType = this.parentType();
-        if (null != parentType) {
+        Type parentType = this.parentType();
+        if (!parentType.isRootType()) {
             final Obj parentApply = parentType.apply(obj);
             if (parentApply.isNoObj())
                 return noobj();
@@ -182,6 +189,30 @@ public interface Type extends Obj {
     }
 
     final static class Helper {
+
+        public static Type findLCD(final List<Type> types) {
+            if (types == null || types.isEmpty())
+                return null;
+            if (types.size() == 1)
+                return types.getFirst();
+            // Build the full ancestry chain of the first type, from most-specific to most-general
+            final List<Type> chain = new ArrayList<>();
+            Type t = types.getFirst();
+            while (!t.isRootType()) {
+                chain.add(t);
+                if (t.isBaseType()) break;
+                t = t.parentType();
+            }
+            final cInt lcdC = types.stream().map(Type::c).reduce(cInt::plus).orElse(cInt.ONE());
+            // Walk the chain outward; the first ancestor that ALL types share is the LCD
+            for (final Type candidate : chain) {
+                if (types.stream().allMatch(type -> type.isRefinementOf(candidate)))
+                    return candidate.c(lcdC).as();
+            }
+            // No common ancestor — types are from disjoint hierarchies; fall back to the universal type
+            return ALL_TYPE.c(lcdC).as();
+        }
+
         public static Obj typePredicateObj(final Type type) {
             if (type.hasPredicate() && type.predicate().insts().size() == 1 && type.predicate().insts().getFirst().tid().basePath().equals(ISA_INST_TID))
                 return type.predicate().insts().getFirst().arg(0);
@@ -243,7 +274,7 @@ public interface Type extends Obj {
                     return true;
                 if (rhs.asType().isBaseType() && !lhs.baseType().test(rhs.tid()))
                     return false;
-                return !rhs.asType().hasPredicate() || rhs.apply(lhs).booleanCheck();
+                return !rhs.asType().hasPredicate() || !rhs.apply(lhs).isNoObj();
             } else {
                 return lhs.test(rhs);
             }

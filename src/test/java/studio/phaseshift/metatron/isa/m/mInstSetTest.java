@@ -472,6 +472,48 @@ public class mInstSetTest extends AbstractInstSetTest {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
+    @Disabled
+    @ParameterizedTest
+    @CsvSource(value = {
+            "a ->> _                                                  % *a             % a",
+            "a ->> |(* b)                                             % *a             % a/b",
+            "a ->> |-<[_,_]                                           % *a             % [a/b,a/b]",
+            "a ->> 1                                                  % *a             % 1",
+            "a ->> |+2                                                % *a             % 3",
+            "a ->> |+5                                                % *a             % 8",
+            "a ->> (*a + 2)                                           % *a             % 10",
+            "a ->  (*a + 2)                                           % *a             % 12"
+    }, delimiter = '%')
+    public void testRefApply(final String code, final String fetch, final String expected) {
+        AbstractMetatronTest.checkCodeEvaluate(LOG, code, fetch, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "[1,2]@a >>= [_,+4]                                         % [1,6]@a",
+           // "[1,2] >>= -<[>-]>-                                       % [1,2]",
+            "[1,2] >>= [a,_,c]                                        % [a,2,c]",
+            "[1,2] >>= +[a,_,c]                                       % [1,2,a,noobj,c]",
+            "[1,2] >>= +[a,|_,c]                                      % [1,2,a,_,c]",
+            "[1,2] >>= +[a,c]                                         % [1,2,a,c]",
+            "[a=>1,b=>2] >>= [_=>_]                                   % [a=>1,b=>2]",
+            "[a=>1,b=>2] >>= [=>]                                            % [a=>1,b=>2]",
+            "[a=>1,b=>2] >>= [_=>none]                                       % [=>]",
+            "[a=>1,b=>2] >>= [b=>none]                                            % [a=>1]",
+            "[a=>1,b=>[c=>[d=>2,e=>3]]] >>= [b=>[c=>[e=>none]]]                   % [a=>1,b=>[c=>[d=>2]]]",
+            "[a=>1,b=>[c=>[1,2,3]]]     >>= [b=>[c=>none]]                        % [a=>1,b=>[=>]]",
+            "[a=>1,b=>[c=>[1,2,3]]]     >>= [b=>[c=>none]]                        % [a=>1,b=>[=>]]",
+            "[a=>1,b=>[c=>[1,2,3]]]     >>= [b=>none]                             % [a=>1]",
+            "[a=>1,b=>[c=>[1,2,3]]]     >>= [a=>+2,b=>[c=>none]]                  % [a=>3,b=>[=>]]",
+            "[a=>1,b=>[c=>[1,2,3]]]     >>= [b=>[c=>[_,_,_]]]                     % [a=>1,b=>[c=>[1,2,3]]]",
+            "[a=>1,b=>[c=>[1,2,3]]]     >>= [b=>[c=>[_,none,_]]]                  % [a=>1,b=>[c=>[1,3]]]",
+            "[a=>1,b=>[c=>[1,2,3]]]     >>= [b=>[c=>[_,parent().(_,_){*0 + *1}]]] % [a=>1,b=>[c=>[1,[1,2,3,1,2,3],3]]]"
+    }, delimiter = '%')
+    public void testUpdate(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+    
+
     @ParameterizedTest
     @TestData(value = {
             "x -> noobj",
@@ -554,7 +596,8 @@ public class mInstSetTest extends AbstractInstSetTest {
             "fail::['bad']['really bad']['oh no'].plus('okay now').catch(_)           % fail::['bad']['really bad']['oh no'].catch(_)",
             "1.plus(1).failure('bad').plus(2).plus(3).catch(_)                        % fail::['bad'].catch(_)",
             "1.plus(1).failure('bad').plus(2).catch(34).plus(3)                       % 37",
-            "1.plus('a').catch(cause().cause())                                       % noobj",
+            "1.plus('a').catch(cause().cause().cause())                               % noobj",
+            "1.plus('a').catch(cause().cause().cause().cause())                       % noobj",
             "1.plus('a').catch(failure('bad')).catch(_)                               % fail::['bad'].catch(_)",
             "1.plus(mult(failure('bad'))).mult(23).catch(34).plus(2)                  % 36",
     }, delimiter = '%')

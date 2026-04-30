@@ -161,6 +161,10 @@ public class BootLoader implements Rec, Feature.SelfClone {
             // Re-create executor if a previous test run shut it down
             if (EXECUTOR == null || EXECUTOR.isShutdown())
                 EXECUTOR = THREAD_POOL_SUPPLIER.get();
+            if (args.has("type_check")) {
+                TypeCheck.disable(TypeCheck.values());
+                args.at("type_check").lstValue().stream().map(t -> TypeCheck.valueOf(t.uriValue().toString())).forEach(TypeCheck::enable);
+            }
             /// /// PARSING OF BOOT ARGUMENT REC /// ///
             LOG.info("final boot args:\n%s", args);
             if (args.has(BOOT))

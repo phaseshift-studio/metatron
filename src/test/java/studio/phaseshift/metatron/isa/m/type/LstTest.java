@@ -159,7 +159,7 @@ public class LstTest extends AbstractAlgebraTest<Lst> {
             "lst{10}::[1,2,3]._/sum()\\_.>-.-<?lst<=#{*}([_])._/sum()\\_                             % [60]",
             "lst{10}::[1,2,3]._/sum()\\_.-<?lst<=#{*}[_]                                             % [{10}[6]]",
             "lst{10}::[1,2,3]._/sum()\\_.-<[_]                                                       % {10}[[6]]",
-            "lst{10}::[1,2,3]._/sum()\\_.-<?lst<=#{*}[-<[_]]                                         % [[{10}[6]]]",
+            "lst{10}::[1,2,3]._/sum()\\_.-<?lst<=#{*}[-<[_]]                                         % [{10}[[6]]]",
             "lst{10}::[1,2,3]._/sum()\\_.-<?lst<=#{*}[-<[_]-<[_]]                                    % [{10}[[[6]]]]",
             "lst{10}::[1,2,3]._/sum()\\_.-<[-<[_]-<[_]]                                              % {10}[[[[6]]]]",
             "lst{10}::[1,2,3]._/sum()\\_.-<[-<[-<[_]>-]]                                             % {10}[[[6]]]",
@@ -292,8 +292,8 @@ public class LstTest extends AbstractAlgebraTest<Lst> {
             "lst[int,str{+},real]::T                     % lst[int,str{+},real]::T      % true",
             "lst[int,str,real]::T                        % lst[int,str{+},real]::T      % true",
             "lst[int,str{0},real]::T                     % lst[int,str{+},real]::T      % false",
-            "[{1,2,3},{'a','b'}]::T                      % lst[int{3},str{+}]::T        % true",
-            "[{1,2,3},{'a','b'}]::T                      % lst[int{*}]::T               % true",
+            "[{1,2,3},{'a','b'}]                         % lst[int{3},str{+}]::T        % true",
+            "[{1,2,3},{'a','b'}]                         % lst[int{*}]::T               % true",
     }, delimiter = '%')
     public void testPoly(final String list, final String type, final boolean matches) {
         AbstractMetatronTest.checkMatches(LOG, list, type,matches);
