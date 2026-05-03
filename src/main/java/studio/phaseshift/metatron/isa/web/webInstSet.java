@@ -25,12 +25,13 @@ import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.web.parser.*;
+import studio.phaseshift.metatron.isa.web.type.Content;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.inside_;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
@@ -47,8 +48,7 @@ import static studio.phaseshift.metatron.isa.web.space.http.httpSpace.HTTP_SPACE
 import static studio.phaseshift.metatron.isa.web.space.ws.server.mcp_mtron_wsServer.WS_MCP_MTRON_SERVER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.ws.server.mcp_wsServer.WS_MCP_SERVER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.ws.server.mtron_wsServer.WS_MTRON_SERVER_TYPE;
-import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_SERVER_TYPE;
-import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_SPACE_TYPE;
+import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.*;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
@@ -57,7 +57,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 @JREService(vid = "/m/web")
 public class webInstSet extends AbstractInstSet {
 
-    public static final fURI WEB_ISA_TID = MTRON_TID.extend("web");
+    public static final fURI WEB_ISA_TID = M_ISA_TID.extend("web");
     public static final fURI INST_TID = WEB_ISA_TID.extend("inst");
     public static final fURI XML_TID = WEB_ISA_TID.extend("xml");
     public static final fURI HTML_TID = WEB_ISA_TID.extend("html");
@@ -65,6 +65,21 @@ public class webInstSet extends AbstractInstSet {
     public static final fURI JSON_STR_TID = WEB_ISA_TID.extend("json_str");
     public static final fURI CSS_TID = WEB_ISA_TID.extend("css");
     public static final fURI MARKDOWN_TID = WEB_ISA_TID.extend("markdown");
+    public static final fURI CONTENT_TYPE_TID = WEB_ISA_TID.extend("content_type");
+
+    public static final Type CONTENT_TYPE = Type.Builder.build()
+            .tid(URI_TID)
+            .vid(CONTENT_TYPE_TID)
+            .isaPredicate(inside_(lst(
+                    uri(Content.ContentType.TEXT_PLAIN.value),
+                    uri(Content.ContentType.TEXT_HTML.value),
+                    uri(Content.ContentType.TEXT_CSS.value),
+                    uri(Content.ContentType.TEXT_MARKDOWN.value),
+                    uri(Content.ContentType.TEXT_JAVASCRIPT.value),
+                    uri(Content.ContentType.APPLICATION_MTRON.value),
+                    uri(Content.ContentType.TEXT_X_SHELLSCRIPT.value),
+                    uri(Content.ContentType.APPLICATION_JSON.value))))
+            .create();
 
     public static final Type XML_TYPE = Type.Builder.build()
             .tid(REC_TID)
@@ -72,21 +87,21 @@ public class webInstSet extends AbstractInstSet {
     public static final Type HTML_TYPE = Type.Builder.build()
             .tid(XML_TID)
             .vid(HTML_TID)
-            .predicate(isa_(rec(uri(HTML), rec(uri(HEAD), rec(uri(TITLE).maybe().asUri(), STR_TYPE), uri(BODY), REC_TYPE))).tryToInst()).create();
+            .isaPredicate(rec(uri(HTML), rec(uri(HEAD), rec(uri(TITLE).maybe().asUri(), STR_TYPE), uri(BODY), REC_TYPE))).create();
     public static final Type JSON_STR_TYPE = Type.Builder.build()
             .tid(STR_TID)
             .vid(JSON_STR_TID).create();
     public static final Type JSON_TYPE = Type.Builder.build()
             .tid(REC_TID)
             .vid(JSON_TID)
-            .predicate(isa_(rec(URI_TYPE, isa_(or_(
+            .isaPredicate(rec(URI_TYPE, inside_(lst(
                     NOOBJ_TYPE,
                     BOOL_TYPE,
                     INT_TYPE,
                     STR_TYPE,
                     URI_TYPE,
                     LST_TYPE,
-                    REC_TYPE)))).tryToInst()).create();
+                    REC_TYPE)))).create();
     public static final Type CSS_TYPE = Type.Builder.build()
             .tid(REC_TID)
             .vid(CSS_TID).create();
@@ -99,7 +114,6 @@ public class webInstSet extends AbstractInstSet {
     @Override
     public void setup() {
         this.jvm().putAll(mutableMap(
-                uri(PATTERN), uri(WEB_ISA_TID.extend(ALL)),
                 uri(CONST), lst(
                         ObjXMLSerializer.single(),
                         ObjHTMLSerializer.single(),
@@ -107,12 +121,12 @@ public class webInstSet extends AbstractInstSet {
                         ObjMarkdownSerializer.single(),
                         ObjPlainTextSerializer.single()),
                 uri(TYPE), lst(
-                        XML_TYPE,
+                        docWrap(CONTENT_TYPE, "indicates the media type of the data as specified by RFC-9110"),
+                        docWrap(XML_TYPE, "a rec encoding of an xml document"),
                         docWrap(HTML_TYPE, "a rec encoding of an html document"),
                         docWrap(JSON_TYPE, "a rec encoding of a json document"),
-                        CSS_TYPE,
+                        docWrap(CSS_TYPE, "a rec encoding of a css document"),
                         docWrap(MARKDOWN_TYPE, "a rec encoding of a markdown document"),
-                        JSON_STR_TYPE,
                         docWrap(HTTP_SPACE_TYPE, """
                                                  a space for reading and writing web-related resources. 
                                                  for http://# patterns and remote routes, uri resolution will fetch remote web resources and httpspace will handle nested addresses client-side. 
@@ -125,7 +139,9 @@ public class webInstSet extends AbstractInstSet {
                         docWrap(WS_SPACE_TYPE, "a space for exposing and managing web socket servers.",
                                 "*<ws://localhost:8999/mtron>               [-- creates a wsmtron server session    --]",
                                 "<ws://localhost:8999/mtron/0/send>('ping') [-- sends str to wsmtron server session --]"),
-                        docWrap(WS_SERVER_TYPE, "an websocket server written in mtron through respective insts"),
+                        docWrap(WS_WEBSOCKET_TYPE, "a generic websocket obj which can be refined with useful behaviors"),
+                        docWrap(WS_SERVER_TYPE, "a websocket server which should be refined to implement protocol specs"),
+                        docWrap(WS_CLIENT_TYPE, "an websocket client which should be refined to implement protocol specs"),
                         docWrap(WS_MTRON_SERVER_TYPE, "a simple websocket server accepting mtron expressions and return mtron results"),
                         docWrap(WS_MCP_SERVER_TYPE, "an abstract mcp websocket server providing necessary json-rpc infrastructure for other mcp servers to leverage"),
                         docWrap(WS_MCP_MTRON_SERVER_TYPE, "an mcp websocket server with built-in metatron eval, space listing, router info and instruction listing tools")),

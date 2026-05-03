@@ -239,8 +239,8 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
         return this.addInst(instB(mInstSet.GET_INST_TID, lst(obj)));
     }
 
-    public F in_(final Obj obj) {
-        return this.addInst(instB(mInstSet.MATCHES_INST_TID, lst(obj)));
+    public F inside_(final Obj obj) {
+        return this.addInst(instB(mInstSet.INSIDE_INST_TID, lst(obj)));
     }
 
     public F split_(final Obj obj) {
@@ -408,8 +408,8 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
         return this.addInst(instB(mInstSet.PRINT_INST_TID, lst(obj)));
     }
 
-    public F failure_(final Obj obj) {
-        return this.addInst(instB(mInstSet.FAILURE_INST_TID, lst(obj)));
+    public F throw_(final Obj obj) {
+        return this.addInst(instB(mInstSet.THROW_INST_TID, lst(obj)));
     }
 
     public F q_(final Obj obj) {
@@ -544,6 +544,7 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
             return new mFluent<F>().has_(obj);
         }
 
+
         // ========================================
         // Comparison Operators
         // ========================================
@@ -628,8 +629,8 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
             return new mFluent<F>().get_(obj);
         }
 
-        public static <F extends mFluent<F>> F in_(final Obj obj) {
-            return new mFluent<F>().in_(obj);
+        public static <F extends mFluent<F>> F inside_(final Obj obj) {
+            return new mFluent<F>().inside_(obj);
         }
 
         public static <F extends mFluent<F>> F split_(final Obj obj) {
@@ -813,7 +814,7 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
         }
 
         public static <F extends mFluent<F>> F failure_(final Obj obj) {
-            return new mFluent<F>().failure_(obj);
+            return new mFluent<F>().throw_(obj);
         }
 
         public static <F extends mFluent<F>> F q_(final Obj obj) {

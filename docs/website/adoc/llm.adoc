@@ -139,14 +139,14 @@ metatron introduces the concept of _notes_ to the agent toolkit. Notes are a mes
  . **real-time feedback**: if the agent has made a mistake in their _thinking_, there is no need to wait for the agent's response to complete nor halt the agent mid-thought. Instead, a note can be pushed on the agent's note stack and the agent will pop off the note, read it, and adjust itself accordingly.
  . **real-time system message**: the agent's system message is written at the start of chat and remains static for the duration of the interaction. Notes serve as dynamic system messages allowing programmatic alterations in the agent's behavior within a single interaction.
 
-Notes are enabled by adding `note=>[,]` to the agent's configuration.
+Notes are enabled by adding `note\=>[,]` to the agent's configuration.
 The `eval` tool must also be present — the agent uses it to poll and pop notes from the note stack.
 
 [source,mtron]
 ----
 *<openai:gpt-4o>.at(robotron).
- >>=[tool => [!*eval],        [-- <1>
-     note => [,]]             [-- <2>
+ >>=[tool => [!*eval],           [-- <1>
+     note => [,]]                [-- <2>
 ----
 <1> `eval` is required — the agent calls it internally to read and consume notes.
 <2> `[,]` initializes an empty note list and activates the note-checking instruction in the agent's system message.
@@ -167,13 +167,14 @@ Any `obj` that carries a `@vid` annotation is _space-aware_: mutations to it (vi
 
 The difference between `.to()` and `.at()` is critical here:
 
-[source,mtron]
-----
+++++
+<!-- 🐖 
 1.to(a) + 2 + 3    [-- <1>
 *a                 [-- <2>
 1.at(a) + 2 + 3    [-- <3>
 *a                 [-- <4>
-----
+-->
+++++
 <1> `.to()` saves a snapshot at `a` but the `@vid` is **not** carried through the chain.
 <2> `a` still holds the original snapshot.
 <3> `.at()` binds `@vid` to the result, so every subsequent operation in the chain auto-persists.

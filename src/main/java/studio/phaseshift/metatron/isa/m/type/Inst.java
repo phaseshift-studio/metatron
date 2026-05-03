@@ -41,6 +41,7 @@ import static studio.phaseshift.metatron.Tokens.MONAD;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
@@ -693,8 +694,7 @@ public interface Inst extends Call {
     public static final class InstType {
 
         public static Set<Inst> insts() {
-            return new LinkedHashSet<>(List.of());
-            // instC(LIFT_INST_TID.dom(ALL).rng(ALL), lst(T(ALL)), (lhs, inst) -> inst.arg(0).<Inst>as().args(lhs.<Poly>as()))));
+            return new LinkedHashSet<>(List.of(instC(ARGS_INST_TID.dom(M_ISA_INST_TID).rng(LST_TID), lst(), (lhs, inst) -> inst.args())));
             //instC(LSHIFT_INST_TID.dom(INST_TID).rng(ALL), lst(), (lhs, inst) -> lhs.dom()),
                     /*instC(RSHIFT_INST_TID.dom(INST_TID).rng(ALL.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(inst.arg(0).orElse((Obj) uri(ONE_WILD_STRING)).stream().map(u ->
                             rec(uri(ARGS), lhs.asInst().args(),

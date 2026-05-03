@@ -68,7 +68,7 @@ public class BasicRouter extends AbstractSpace<Map<Obj, Obj>> implements Router 
     private final ObjectMap<fURI, fURI> prefixToVID = new ObjectMap<>();
     private fURI primary = M_ISA_TID;
 
-    public BasicRouter(final fURI host, final fURI vid) {
+    public BasicRouter(final fURI vid) {
         super(new HashMap<>(), new ConcurrentHashMap<>(Map.of(
                         uri(PATTERN), uri(ALL),
                         PRIMARY, uri(M_ISA_TID),
@@ -164,7 +164,7 @@ public class BasicRouter extends AbstractSpace<Map<Obj, Obj>> implements Router 
 
     @Override
     public void addSpace(final Space space) {
-        if (null == space.vid() && !(space instanceof stackSpace)) {
+        if (null == space.vid()) {
             LOG.debug("vid-less spaces are self-managed and not indexed by router: %s", space);
             return;
         }
@@ -281,7 +281,7 @@ public class BasicRouter extends AbstractSpace<Map<Obj, Obj>> implements Router 
         final fURI writableVID = this.alignPrefix(vid);
         /// ///////////////
         final Space space = this.getSpace(writableVID);
-        LOG.trace("writing %s {{g}}=>{{b}} %s{{X}} in %s", obj, vid, space);
+        LOG.trace("writing %s {{g}}=>{{b}} %s{{X}} in %s", obj, vid, space.vid());
         return space.write(writableVID, obj);
     }
 

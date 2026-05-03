@@ -54,9 +54,9 @@ public class stackSpace extends AbstractSpace<Stack<Poly<?, ?>>> {
             .vid(STACK_SPACE_TID)
             .constructor(instC(mInstSet.M_ISA_INST_TID.dom(ALL.maybe()).rng(STACK_SPACE_TID),  // constructor
                     lst(isa_(rec(uri(PATTERN), URI_TYPE)).tryToInst()), (lhs, inst) -> {
-                        final Space space = new stackSpace(inst.arg(0).asRec().at(PATTERN).uriValue());
-                        Router.global().addSpace(space);
-                        return space;
+                        //final Space space = new stackSpace(inst.arg(0).asRec().at(PATTERN).uriValue());
+                        //outer.global().addSpace(space);
+                        return Router.THREAD_STACK.get();
                     })).create();
 
     private final GraphittyLogger LOG = Graphitty.log(this);

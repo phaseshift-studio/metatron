@@ -98,6 +98,10 @@ public interface Call extends Obj, Ring<Call> {
             return List.of();
         }
     }
+    
+    default boolean isPredicate(final Obj lhs) {
+        return  !this.isNoObj() &&  this.resolve(lhs).insts().getLast().rng().c().equals(cInt.MAYBE());
+    }
 
     @Override
     Call resolve(final Obj start);

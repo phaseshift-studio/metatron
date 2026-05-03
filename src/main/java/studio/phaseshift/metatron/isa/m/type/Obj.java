@@ -251,7 +251,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     }
 
     default boolean testByID(final Obj rhs) {
-        if(this.isType() && !rhs.isType())
+        if (this.isType() && !rhs.isType())
             return false;
         final Type rhsType = rhs.isType() ? rhs.asType() : rhs.type();
         if (this.c().isZero()) return rhsType.c().isZeroable();
@@ -260,8 +260,8 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         Type lhsType = this.isType() ? this.asType() : this.type();
         if (lhsType.isGeneric() && rhsType.isGeneric())
             return lhsType.tid().test(rhsType.tid());// lhsType.c().within(rhsType.c());//&& lhsType.tid().basePath().equals(rhsType.tid().basePath());
-        if(rhsType.hasPredicate() && rhsType.predicate().apply(this).isNoObj())
-            return false;
+        //if (rhsType.hasPredicate() && rhsType.predicate().apply(this).isNoObj())
+        //  return false;
         while (!lhsType.isRootType()) {
             if (lhsType.vid().test(rhsType.vid()))
                 return true;
@@ -277,20 +277,20 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     default boolean test(final Obj rhs) {
         if (Obj.Helper.isAuto(rhs))
             return true;
-        if (rhs.isType() && rhs.asType().isRootType())
-            return this.c().within(rhs.c());
-        if (rhs.isType() && !rhs.asType().isBaseType() && this.tid().test(rhs.tid()))
-            return !rhs.asType().hasPredicate() || !rhs.asType().predicate().apply(this).isNoObj();
         else if (this.isNoObj())
             return (rhs.tid().c().isZeroable() || rhs.tid().equals(NOOBJ_TID));
-        else if (this.tid().c().isZeroable() && rhs.isNoObj())
-            return true;
         else if (rhs.isNoObj())
-            return false;
+            return this.c().isZeroable();
+        if (rhs.isObjCall() && !rhs.asCall().isPredicate(this))
+            return true;
+        if (rhs.isType() && !rhs.asType().isBaseType() && this.tid().test(rhs.vid()))
+            return rhs.asType().isRootType() ?
+                    this.c().within(rhs.c()) :
+                    (!rhs.asType().hasPredicate() || !rhs.asType().predicate().apply(this).isNoObj());
         /// //////////////////////////////
         if (rhs.isUri() && this.isUri() && !this.uriValue().test(rhs.uriValue()))
             return false;
-        final fURI base = this.tid().basePath();
+        /*final fURI base = this.tid().basePath();
         if (BASE_TYPES.contains(base) &&
                 !(this instanceof Objs) &&
                 !((this.isBool() && base.equals(BOOL_TID)) ||
@@ -307,14 +307,13 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                         (this.isType() && base.equals(TYPE_TID)) ||
                         (this.isFail() || this.isCaughtFail() && base.equals(FAIL_TID)))) {
             return false;
-        }
+        }*/
         if (this.isObjCall())
             return this.tid().c().within(rhs.tid().c()); // TODO: this is really flimsy.
-        if (rhs.isObjCall()) { 
-            if (!this.test(rhs.dom()))
-                return false;
-            if (rhs.rng().c().within(cInt.MAYBE())) // only test predicates
-                return rhs.apply(this).test(rhs.rng());
+        if (rhs.isObjCall()) {
+            //if (!this.testByID(rhs.dom()))
+            //  return false;
+            return rhs.apply(this).test(rhs.rng());
         }
         if (!this.c().within(rhs.c()))
             return false;
@@ -911,6 +910,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     final class ObjType {
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
+                    instC(INSIDE_INST_TID.dom(A).rng(A.maybe()), lst(LST_TYPE), (lhs, inst) -> inst.arg(0).lstValue().contains(lhs) ? lhs : noobj()),
                     instC(SERIALIZE_INST_TID.dom(A).rng(B), lst(T(OBJ_SERIAL_TID)), (lhs, inst) -> {
                         final Object serialization = inst.arg(0).<ObjSerializer<?>>as().write(lhs);
                         try {
@@ -1064,7 +1064,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                             "any obj", "the lhs obj coefficient", Map.of(), "maps an obj to it's coefficient with a function f(lhs^c)->c"),
                     docWrap(instC(CC_INST_TID.dom(A).rng(A.maybeSome()), lst(T(INT_TID)), (lhs, inst) -> lhs.c(inst.arg(0).intValue())),
                             "any obj", "the lhs obj with new coefficient", Map.of(jnt(0), "a coefficient for lhs obj"), "sets the coefficient of the lhs obj via f(lhs,c)->lhs^c"),
-                    instC(FAILURE_INST_TID.dom(ALL.maybeSome()).rng(FAIL_TID), lst(T(ALL.maybe())), (lhs, inst) -> fail(MTronException.of("%s", inst.arg(0).toString()))),
+                    instC(THROW_INST_TID.dom(ALL.maybeSome()).rng(FAIL_TID), lst(T(ALL.maybe())), (lhs, inst) -> fail(MTronException.of("%s", inst.arg(0).toString()))),
                     instC(PARENT_INST_TID.dom(ALL).rng(ALL.maybe()), lst(), (lhs, inst) -> lhs.parent()),
                     docWrap(instC(COUNT_INST_TID.dom(A.maybeSome()).rng(INT_TID), lst(), (lhs, inst) -> inst.seed().jvm(lhs.stream().reduce(inst.seed(), (a, b) -> jnt(a.intValue() + b.c().max())).intValue()/* * inst.c().max()*/), jnt(0)),
                             "any objs", "the count of objs", Map.of(), "counts the number of objs"),
@@ -1081,6 +1081,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                                                     "port", nullOrElse(z.port() == -1 ? null : (long) lhs.tid().port(), NoObj::noobj, MInt::jnt)
                                             )),
                                             "path", uri(lhs.tid().pathString()),
+                                            "poly", ((Optional) lhs.tid().polyParsed()).orElse(noobj()),
                                             "c", rec(
                                                     "min", jnt(lhs.tid().c().min()),
                                                     "max", jnt(lhs.tid().c().max())),

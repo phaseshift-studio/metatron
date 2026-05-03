@@ -32,6 +32,8 @@ import(/m/grph);
 import(/m/llm);
 import(/m/tble);
 import(/m/dcmnt);
+import(/m/rdf);
+
 [== global settings store in boot ==]
 print("{{y}}mqtt broker location{{X}}: ", <boot/args/mqtt>.else(boot/args/mqtt -> [broker => <mqtt://chibi.local:1883>]),"\n");
 print("{{y}}cluster peers{{X}}: ", *<boot/peers>.else(boot/peers -> [ws://localhost:6666,<ws://127.0.0.1:7777>]),"\n");
@@ -66,7 +68,7 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
         peers    => !*boot/peers]@/sys/space/meta2;==]
  host -> <http://localhost:8777>;
  httpspace::[host     => <http://localhost:8777>,
-             pattern  => http://#,
+             pattern  => <http://localhost:8777/#>,
              route    => [/              => <>,
                           !${*host}/ex   => /m/inst,
                           !${*host}/test => <local:Desktop>,
@@ -150,6 +152,7 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
         host       => <mariadb://localhost:3306/tble_space?user=mtron&password=mtron>,
         route      => [db:=><>],
         root        => rec::T,
+        table      => [play],
         schema      => instset::[type=>[rec::T]],
         driver     => <org.mariadb.jdbc.Driver>]@/sys/space/db;
  dcmntspace::[pattern   => mongo:#,
@@ -158,6 +161,15 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
        root        => rec::T,
        schema      => instset::[type=>[rec::T]],
        route       => [mongo:=><>]]@/sys/space/mongo;
+ rdfspace::[pattern => <wikidata:#>,
+            host    => <https://query.wikidata.org/sparql>,
+            serializer => !*</m/mach/io/serializer/rdf>,
+            route   => [
+              bd:       =><http://www.bigdata.com/rdf#>,
+              wikibase: =><http://wikiba.se/ontology#>,
+              wd:       =><http://www.wikidata.org/entity/>,
+              wdt:      =><http://www.wikidata.org/prop/direct/>,
+              wikidata: =><>]]@/sys/space/wikidata;
  [==mcp::[host      => <ws://localhost:8999/m/llm/mcp>]@/usr/ai/mcp/mtron;
  mcp::[host      => <http://127.0.0.1:29170/index-mcp/streamable-http>]@/usr/ai/mcp/intellij;
  [==mcp::[host      => <http://192.168.88.231:3721/mcp>,

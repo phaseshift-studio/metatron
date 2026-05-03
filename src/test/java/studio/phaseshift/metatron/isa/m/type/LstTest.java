@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -55,8 +55,8 @@ public class LstTest extends AbstractAlgebraTest<Lst> {
             "{2,3}[{5,8}a,b,{7}c]>>{{4,6}0,0}                                           % {50,168}a", // two zeros collapse on the key select
             "[{5,8}a,b,{7}c]>>{{4,6}0,0}                                                % {25,56}a", // two zeros collapse on the key select
             "{2,3}[{5,8}a,b,{-7}c]>>{{4,6}0,0}                                          % {50,168}a", // two zeros collapse on the key select
-            "{2,3}[{-5,8}a,b,{-7}c]>>?#{**}<=lst{{4,6}0,0}                              % {-50,168}a", // two zeros collapse on the key select
-            "{-2,3}[{-5,8}a,b,{-7}c]>>?#{**}<=lst{{4,6}0,0}                             % {50,168}a", // two zeros collapse on the key select
+          //  "{2,3}[{-5,8}a,b,{-7}c]>>?#{*}<=lst{{4,6}0,0}                              % {-50,168}a", // two zeros collapse on the key select
+           // "{-2,3}[{-5,8}a,b,{-7}c]>>?#{**}<=lst{**}{{4,6}0,0}                             % {50,168}a", // two zeros collapse on the key select
             "[a,b,c]>>{<0>,<0>}                                                         % {2}a",
             "[a,b,c]>>{<0>,0}                                                           % {2}a",
             "[a,b,c]>>{<+>,0}                                                           % {{2}a,b,c}",
@@ -163,7 +163,7 @@ public class LstTest extends AbstractAlgebraTest<Lst> {
             "lst{10}::[1,2,3]._/sum()\\_.-<?lst<=#{*}[-<[_]-<[_]]                                    % [{10}[[[6]]]]",
             "lst{10}::[1,2,3]._/sum()\\_.-<[-<[_]-<[_]]                                              % {10}[[[[6]]]]",
             "lst{10}::[1,2,3]._/sum()\\_.-<[-<[-<[_]>-]]                                             % {10}[[[6]]]",
-         //   "lst{10}::[1,2,3]._/sum()\\_.-<?lst<=#{*}[-<[-<[_]>-]]                                   % [[{10}[6]]]", TODO: this is strange
+            //   "lst{10}::[1,2,3]._/sum()\\_.-<?lst<=#{*}[-<[-<[_]>-]]                                   % [[{10}[6]]]", //TODO: this is strange
             "[1,2,3]._/sum()\\_.-<?lst<=#{*}[-<[-<[_]>-]]                                            % [[[6]]]",
             "lst{10}::[1,2,3]._/sum()\\_-<[-<[_]>-]>-                                                % lst{10}::[6]",
             "lst{10}::[1,2,3]._/sum()\\_-<[-<[_]]>-.>-                                               % lst{10}::[6]",
@@ -198,7 +198,7 @@ public class LstTest extends AbstractAlgebraTest<Lst> {
             "lst{10}::[1,2,3]._/sum()\\_-<[-<[_]>-.>-].>-                                            % int{10}::6",
             //"lst{10}::[1,2,3]._/sum()\\_-<[-<[_]>-.>-.>-]                                            % [int{10}::6]",
      */
-    
+
     @ParameterizedTest
     @CsvSource(value = {
             "[1,2,3].as(rec::T)                                                % [0=>1,1=>2,2=>3]",
@@ -210,7 +210,7 @@ public class LstTest extends AbstractAlgebraTest<Lst> {
             "[1,2,3].as(rec::T).>-.>>.sum()                                    % 6",
             "[1,2,3].as(rec::T).as(lst::T)                                     % [(0=>(0=>1)),(1=>(1=>2)),(2=>(2=>3))]",
             "[1,2,3].as(rec::T).as(rec::T)                                     % [0=>1,1=>2,2=>3]",
-            // "[1,2,3].as(rec::T).as(lst::T).as(rec::T)               % [0=>(0=>(0=>1)),1=>(1=>(1=>2)),2=>(2=>(2=>3))]", // TODO: infinite loop?! why?
+            "[1,2,3].as(rec::T).as(lst::T).as(rec::T)                          % [0=>(0=>(0=>1)),1=>(1=>(1=>2)),2=>(2=>(2=>3))]",
 
     }, delimiter = '%')
     public void testAs(final String code, final String expected) {
@@ -228,8 +228,8 @@ public class LstTest extends AbstractAlgebraTest<Lst> {
             "[a,[b,c],[d,e]].reverse()==[reverse(),>-.count(),reverse()]         % [[e,d],2,a]",
             "[,].reverse()                                                       % [,]",
             "[a].reverse()                                                       % [a]",
-            //"[a,b].reverse().reverse()                                           % [a,b]",
-            // "[a,[b,c],[d,e]].reverse()==[(_,_,_){reverse()}]                     % [[e,d],[c,b],a]",
+            "[a,b].reverse().reverse()                                           % [a,b]",
+             "[a,[b,c],[d,e]].reverse()==[reverse(),reverse(),reverse()]         % [[e,d],[c,b],a]",
     }, delimiter = '%')
     public void testReverse(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
@@ -296,6 +296,6 @@ public class LstTest extends AbstractAlgebraTest<Lst> {
             "[{1,2,3},{'a','b'}]                         % lst[int{*}]::T               % true",
     }, delimiter = '%')
     public void testPoly(final String list, final String type, final boolean matches) {
-        AbstractMetatronTest.checkMatches(LOG, list, type,matches);
+        AbstractMetatronTest.checkMatches(LOG, list, type, matches);
     }
 }

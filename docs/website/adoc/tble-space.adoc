@@ -20,7 +20,7 @@ creating a `tblespace` requires a JDBC `host` URI, a `driver`, and a `route`. th
 ++++
 <!-- 🐖
 tblespace::[pattern => lite:#,                             /
-            host    => <sqlite:target/test?cache=shared>,  /
+            host    => <sqlite:target/test>,               /
             driver  => <org.sqlite.JDBC>,                  /
             table   => [person],                           /
             route   => [lite:=><>]]@/sys/space/lite   [-- <1>

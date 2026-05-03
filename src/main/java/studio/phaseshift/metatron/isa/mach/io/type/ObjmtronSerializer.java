@@ -74,7 +74,7 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
         this();
         this.clip = clipLength;
     }
-    
+
     public fURI vid() {
         return OBJ_MTRON_STRING_SERIALIZER_VID;
     }
@@ -291,22 +291,21 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
     private StringBuilder handleVID(final StringBuilder sb, final Obj obj) {
         if (null == obj.vid())
             return sb;
-        return sb.append("@").append(wrapUri(obj.vid()));
+        return sb.append("@").append(wrapUri(Router.loaded() ? Router.global().redirect(obj.vid(), false) : obj.vid()));
     }
 
     private boolean isNested(final Poly<?, ?> poly) {
         if (!poly.isLst() && !poly.isRec())
             return false;
         final long count = poly.count();
-        return count != 1 && (count > 4 ||
-                (poly.isLst() ? poly.lstValue().stream() : poly.recValue().values().stream()).anyMatch(o ->
-                        null != o.vid() ||
-                                o.isPoly() ||
-                                o.isObjCall() ||
-                                (o.isStr() && o.strValue().length() > 15) ||
-                                (o.isUri() && o.uriValue().toString().length() > 15) ||
-                                (o.isBytes() && o.bytesValue().capacity() > 15) ||
-                                isComplexType(o)));
+        return count != 1 && (count > 4 || poly.values().anyMatch(o ->
+                null != o.vid() ||
+                        o.isPoly() ||
+                        o.isObjCall() ||
+                        (o.isStr() && o.strValue().length() > 15) ||
+                        (o.isUri() && o.uriValue().toString().length() > 15) ||
+                        (o.isBytes() && o.bytesValue().capacity() > 15) ||
+                        isComplexType(o)));
     }
 
     private StringBuilder generateLst(final StringBuilder sb, final Lst lst, final int depth) {

@@ -34,6 +34,7 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
@@ -77,7 +78,7 @@ public class tbleInstSet extends AbstractInstSet {
     public static final Type TABLE_TYPE = Type.Builder.build()
             .tid(URI_TID)
             .vid(TABLE_TID)
-            //.predicate(isa_(T(LST_ROW_TID.maybeSome())).tryToInst())
+            .predicate(isa_(T(LST_ROW_TID.maybeSome())).tryToInst())
             .create();
 
 
@@ -88,7 +89,6 @@ public class tbleInstSet extends AbstractInstSet {
     @Override
     public void setup() {
         this.jvm().putAll(mutableMap(
-                uri(PATTERN), uri(TBLE_ISA_TID.extend(ALL)),
                 uri(TYPE), lst(
                         docWrap(LST_ROW_TYPE, "a table row indexed by column number"),
                         docWrap(REC_ROW_TYPE, "a table row indexed by column name"),
@@ -105,7 +105,7 @@ public class tbleInstSet extends AbstractInstSet {
                                 "a table row indexed by column number",
                                 Map.of(),
                                 "maps a rec row to a lst row"),
-                        docWrap(instC(SQL_INST_TID.dom(TBLE_SPACE_TID).rng(REC_ROW_TID.maybeSome()), lst(STR_TYPE), (lhs, inst) -> {
+                        docWrap(instC(SQL_INST_TID.dom(TBLE_SPACE_TID).rng(REC_TID.maybeSome()), lst(STR_TYPE), (lhs, inst) -> {
                                     try {
                                         final Statement statement = lhs.<tbleSpace>as().sjvm().createStatement();
                                         final ResultSet result = statement.executeQuery(inst.arg(0).strValue());

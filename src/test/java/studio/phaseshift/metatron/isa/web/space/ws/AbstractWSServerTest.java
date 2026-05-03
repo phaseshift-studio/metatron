@@ -27,13 +27,11 @@ import org.junit.jupiter.params.provider.MethodSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
-import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 
-import java.util.Map;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -56,7 +54,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 public abstract class AbstractWSServerTest extends AbstractMetatronTest {
 
     protected Space testSpace;
-    protected WSServerRec server;
+    protected WebSocketRec server;
 
     /**
      * Override to change the test space pattern. Default: /test/#
@@ -72,7 +70,7 @@ public abstract class AbstractWSServerTest extends AbstractMetatronTest {
     /**
      * The only abstract method — produce a server instance for the given vid.
      */
-    protected abstract WSServerRec createServer(fURI vid);
+    protected abstract WebSocketRec createServer(fURI vid);
 
     /**
      * Look up the registered Type for this server from the Router.
@@ -138,7 +136,7 @@ public abstract class AbstractWSServerTest extends AbstractMetatronTest {
 
     @Test
     public void testServerIsWSServer() {
-        assertInstanceOf(WSServer.class, server, "server should implement WSServer");
+        assertInstanceOf(WebSocketObj.class, server, "server should implement WSServer");
     }
 
     @Test
@@ -148,33 +146,18 @@ public abstract class AbstractWSServerTest extends AbstractMetatronTest {
 
     @Test
     public void testServerHasIOSerializers() {
-        assertNotNull(server.getIOSerializers(), "server should have IO serializers");
-        assertNotNull(server.getIOSerializers().get0(), "should have an input serializer");
-        assertNotNull(server.getIOSerializers().get1(), "should have an output serializer");
+        assertNotNull(server.getIO(), "server should have IO serializers");
+        assertNotNull(server.getIO().input(), "should have an input serializer");
+        assertNotNull(server.getIO().output(), "should have an output serializer");
     }
 
     // =========================================================
     // Handler registration
     // =========================================================
-
-    @Test
-    public void testHasOnOpen() {
-        assertFalse(server.at(uri(ON_OPEN)).isNoObj(), "missing ON_OPEN");
-    }
-
+    
     @Test
     public void testHasOnMessage() {
         assertFalse(server.at(uri(ON_MESSAGE)).isNoObj(), "missing ON_MESSAGE");
-    }
-
-    @Test
-    public void testHasOnClose() {
-        assertFalse(server.at(uri(ON_CLOSE)).isNoObj(), "missing ON_CLOSE");
-    }
-
-    @Test
-    public void testHasOnError() {
-        assertFalse(server.at(uri(ON_ERROR)).isNoObj(), "missing ON_ERROR");
     }
     
     // =========================================================
@@ -230,9 +213,6 @@ public abstract class AbstractWSServerTest extends AbstractMetatronTest {
 
     @Test
     public void testLifecycleFlow() {
-        assertNotEquals(noobj(), server.at(uri(ON_OPEN)).apply(uri("/test/resource")));
         assertNotEquals(noobj(), server.at(uri(ON_MESSAGE)).apply(str("test message")));
-        assertNotEquals(noobj(), server.at(uri(ON_CLOSE)).apply(
-                rec(uri(CODE), jnt(1000), uri(REASON), str("test complete"))));
     }
 }

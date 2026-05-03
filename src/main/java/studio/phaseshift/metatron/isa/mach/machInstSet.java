@@ -205,7 +205,7 @@ public class machInstSet extends AbstractInstSet {
                             else
                                 return monad;
                         }),
-                        instC(REWRITE_INST_TID.dom(ALL.maybe()).rng(REC_TID), lst(URI_TYPE), (lhs, inst) -> rec(
+                        instC(REWRITE_INST_TID.dom(ALL.maybe()).rng(f("rec[short=>uri,long=>uri]")), lst(URI_TYPE), (lhs, inst) -> rec(
                                 uri(SHORT), uri(Router.global().redirect(inst.arg(0).uriValue(), false)),
                                 uri(LONG), uri(Router.global().redirect(inst.arg(0).uriValue(), true)))),
                         instC(MACH_INST_TID.extend("close").dom(ROUTER_TID).rng(NOOBJ_TID), lst(), (lhs, inst) -> {

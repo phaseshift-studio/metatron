@@ -74,7 +74,7 @@ public abstract class AbstractMetatronTest {
 
 
     public static void checkMatches(final GraphittyLogger LOG, final String lhs, final String rhs, final boolean matches) {
-        final Obj a = ObjmtronSerializer.parse(lhs).apply(noobj());
+        final Obj a = ObjmtronSerializer.parse(lhs);
         final Obj b = ObjmtronSerializer.parse(rhs);
         final boolean m = a.test(b);
         LOG.debug("testing %s matches %s: %s [expected:%s]", a, b, m, matches);
@@ -234,7 +234,7 @@ public abstract class AbstractMetatronTest {
                     }
                 });
             } catch (final Exception e) {
-                LOG.debug("testing %s => %s", code, e.getMessage());
+                LOG.error("testing %s => %s", code, e.getMessage());
             }
         } else {
             final Obj cd = code.contains(";") ? mParser.eval(code) : mParser.m_call_prefix(START_INST_TID).parse(code).get();

@@ -22,6 +22,8 @@ import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.form.*;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Poly;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -34,7 +36,23 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.Tokens.COEFFICIENT;
+import static studio.phaseshift.metatron.Tokens.CONSTQ;
+import static studio.phaseshift.metatron.Tokens.DOM;
+import static studio.phaseshift.metatron.Tokens.HOST;
+import static studio.phaseshift.metatron.Tokens.PATH;
+import static studio.phaseshift.metatron.Tokens.POLY;
+import static studio.phaseshift.metatron.Tokens.PORT;
+import static studio.phaseshift.metatron.Tokens.QUERY;
+import static studio.phaseshift.metatron.Tokens.RNG;
+import static studio.phaseshift.metatron.Tokens.SCHEME;
+import static studio.phaseshift.metatron.Tokens.T;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst0;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /*
@@ -209,11 +227,17 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
     }
 
     default fURI big() {
-        return Router.loaded() ? Router.global().redirect(this, true) : this;
+        if (!Router.loaded())
+            return this;
+        final fURI temp = this.hasPoly() ? this.poly(this.poly().stream().map(p -> Router.global().redirect(Singleton.f(p), true)).map(fURI::toString).toList()) : this;
+        return Router.global().redirect(temp, true);
     }
 
     default fURI small() {
-        return Router.loaded() ? Router.global().redirect(this, false) : this;
+        if (!Router.loaded())
+            return this;
+        final fURI temp = this.hasPoly() ? this.poly(this.poly().stream().map(p -> Router.global().redirect(Singleton.f(p), false)).map(fURI::toString).toList()) : this;
+        return Router.global().redirect(temp, false);
     }
 
     default boolean isEmpty() {
@@ -313,6 +337,35 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
     fURI basePath();
 
     List<String> poly();
+
+    default Optional<Poly<?, ?>> polyParsed() {
+        // if (null != this.parsedPoly)
+        //    return this.parsedPoly;
+        if (!this.hasPoly()) return Optional.empty();
+        final List<String> poly = this.poly();
+        if (poly.size() == 1) {
+            if (poly.getFirst().trim().equals(","))
+                return Optional.of(lst0());
+            else if (poly.getFirst().trim().equals("=>"))
+                return Optional.of(rec0());
+        }
+        if (poly.getFirst().contains("=>")) {
+            final Map<Obj, Obj> map = new LinkedHashMap<>();
+            for (final String s : poly) {
+                final String[] kv = s.split("=>");
+                if (kv.length != 2)
+                    throw MTronException.of("invalid rec type poly %s", s);
+                map.put(uri(f(kv[0].trim()).big()), T(f(kv[1].trim()).big()));
+            }
+            return Optional.of(rec(map));
+        } else {
+            final List<Obj> list = new ArrayList<>();
+            for (final String s : poly) {
+                list.add(T(f(s.trim()).big()));
+            }
+            return Optional.of(lst(list));
+        }
+    }
 
     int pathLength();
 

@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.isa.web.space.ws.server;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.provider.Arguments;
 import studio.phaseshift.metatron.furi.fURI;
@@ -27,7 +26,7 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.web.space.ws.AbstractWSServerIntegrationTest;
 import studio.phaseshift.metatron.isa.web.space.ws.AbstractWSServerTest;
-import studio.phaseshift.metatron.isa.web.space.ws.WSServerRec;
+import studio.phaseshift.metatron.isa.web.space.ws.WebSocketRec;
 import studio.phaseshift.metatron.isa.web.type.Content;
 
 import java.util.LinkedHashMap;
@@ -48,12 +47,13 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.space.ws.server.mcp_wsServer.MCP_WS_TID;
 import static studio.phaseshift.metatron.isa.web.space.ws.server.mcp_wsServer.WS_MCP_SERVER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_SERVER_TID;
+import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_WEBSOCKET_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 public class mcp_wsServerTest extends AbstractWSServerTest {
 
     @Override
-    protected WSServerRec createServer(final fURI vid) {
+    protected WebSocketRec createServer(final fURI vid) {
         return new mcp_wsServer(new LinkedHashMap<>(Map.of(uri(IN), uri(Content.ContentType.APPLICATION_JSON.value), uri(OUT), uri(Content.ContentType.APPLICATION_JSON.value))), MCP_WS_TID, vid);
     }
 

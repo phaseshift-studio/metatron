@@ -149,7 +149,7 @@ public class tbleSpace extends AbstractSpace<Connection> {
                             uri(TABLE).maybe(), LST_TYPE,
                             uri(ROOT).maybe(), REC_TYPE,
                             uri(SCHEMA).maybe(), InstSet.INSTSET_TYPE))
-                    .constructor(instC(M_ISA_INST_TID.extend(CTOR).dom(ALL.maybe()).rng(TBLE_SPACE_TID),
+                    .constructor(instC(TBLE_SPACE_TID.extend(CTOR).dom(ALL.maybe()).rng(TBLE_SPACE_TID),
                             lst(REC_TYPE),
                             (lhs, inst) -> tbleSpace.of(inst.arg(0).asRec().jvm(), inst.arg(0).vid())))
                     .create();

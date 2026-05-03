@@ -27,4 +27,4 @@ section focuses on `fsspace::T` (file system space). The primary types of this s
 <2> set of scripting environments accessible to metatron.
 <3> files and directories are accessible through dereferencing.
 <4> the binary content of a file is accessed by transforming `file::T` to `bytes::T`.
-<5> accessing the text content of a file requires a `file => bytes => str` chain of transformations.
+<5> accessing the text content of a file requires a `file \=> bytes \=> str` chain of transformations.

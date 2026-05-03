@@ -32,7 +32,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.web.space.ws.AbstractWSServerIntegrationTest;
-import studio.phaseshift.metatron.isa.web.space.ws.WSServerRec;
+import studio.phaseshift.metatron.isa.web.space.ws.WebSocketRec;
 import studio.phaseshift.metatron.isa.web.type.Content;
 
 import java.util.LinkedHashMap;
@@ -51,6 +51,7 @@ import static studio.phaseshift.metatron.isa.web.space.ws.server.mcp_mtron_wsSer
 import static studio.phaseshift.metatron.isa.web.space.ws.server.mcp_mtron_wsServer.WS_MCP_MTRON_SERVER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.ws.server.mcp_wsServer.MCP_WS_TID;
 import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_SERVER_TID;
+import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_WEBSOCKET_TID;
 
 /**
  * Integration tests for {@link mcp_mtron_wsServer}.
@@ -75,7 +76,7 @@ public class mcp_mtron_wsServerTest extends AbstractWSServerIntegrationTest {
     private Space testHoldingSpace;
 
     /** Direct-invocation server reference (no WebSocket required for handler calls). */
-    private WSServerRec server;
+    private WebSocketRec server;
 
     // ========================================
     // Integration test infrastructure

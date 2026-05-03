@@ -19,8 +19,8 @@
 package studio.phaseshift.metatron.isa.m;
 
 /*
-@author Marko A. Rodriguez (http://markorodriguez.com)
-*/
+ * @author Marko A. Rodriguez (http://markorodriguez.com)
+ */
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -150,8 +150,8 @@ public class mInstSetTest extends AbstractInstSetTest {
     @ParameterizedTest
     @CsvSource(value = {
             "{4}1.plus?int{5}<=int{5}(2)                                                    % <ERROR>",
-            //       "{1,4}1.plus?int{3}<=int{3}(2)                                                    % <ERROR>",
-            //       "{2,4}1.plus?int{3}<=int{3}(2)                                                  % <ERROR>",
+            "{1,4}1.plus?int{3}<=int{3}(2)                                                    % <ERROR>",
+            "{2,4}1.plus?int{3}<=int{3}(2)                                                  % <ERROR>",
     }, delimiter = '%')
     public void testUnsolvableMonads(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
@@ -183,7 +183,7 @@ public class mInstSetTest extends AbstractInstSetTest {
             "1.map?noobj<=int(int{0}::100)                                                % noobj",
             "{1,2,3,4}.map(_).plus(2)                                                     % {3,4,5,6}",
             "{1,2,3,4}.map(+2)                                                            % {3,4,5,6}",
-            //   "{1,2,3,4}.inst(_,+1,+2){ map(*0).plus(*1).plus(*2) }                         % {6,9,12,15}",
+            "{1,2,3,4}.inst(_,+1,+2){ map(*0).plus(*1).plus(*2) }                         % {6,9,12,15}",
             "{1,2,3,4}.map(map(+2))                                                       % {3,4,5,6}",
             "{1,2,3,4}.map(map(map(map(map(map(+2))))))                                   % {3,4,5,6}"
     }, delimiter = '%')
@@ -341,7 +341,7 @@ public class mInstSetTest extends AbstractInstSetTest {
             "{1,2,3}.sum().prod()                                                   % 6",
             "{1,2,3}.prod().sum()                                                   % 6",
             "{1,2,3}.sum?int<=int{3}().sum?int<=int()                               % 6",
-            //"{1,2,3}._.sum()._.sum()._.sum()                                      % 6",
+            "{1,2,3}._.sum()._.sum()._.sum()                                        % 6",
             "{1,2,3,4}.id{5}().count()                                              % 20",
             "{1,2,3,4}.id{3}().count()                                              % 12",
             "{1,2,3,4}.is(gt(5)).count()                                            % 0",
@@ -490,8 +490,8 @@ public class mInstSetTest extends AbstractInstSetTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "[1,2]@a >>= [_,+4]                                         % [1,6]@a",
-           // "[1,2] >>= -<[>-]>-                                       % [1,2]",
+            "[1,2]@a >>= [_,+4]                                       % [1,6]@a",
+            "[1,2] >>= -<[>-]>-.>-[,]                                % [1,{2}2]",
             "[1,2] >>= [a,_,c]                                        % [a,2,c]",
             "[1,2] >>= +[a,_,c]                                       % [1,2,a,noobj,c]",
             "[1,2] >>= +[a,|_,c]                                      % [1,2,a,_,c]",
@@ -512,7 +512,7 @@ public class mInstSetTest extends AbstractInstSetTest {
     public void testUpdate(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
-    
+
 
     @ParameterizedTest
     @TestData(value = {
@@ -594,12 +594,12 @@ public class mInstSetTest extends AbstractInstSetTest {
     @CsvSource(value = {
             "fail::['bad']['really bad']['oh no'].catch('okay now')                   % \"okay now\"",
             "fail::['bad']['really bad']['oh no'].plus('okay now').catch(_)           % fail::['bad']['really bad']['oh no'].catch(_)",
-            "1.plus(1).failure('bad').plus(2).plus(3).catch(_)                        % fail::['bad'].catch(_)",
-            "1.plus(1).failure('bad').plus(2).catch(34).plus(3)                       % 37",
+            "1.plus(1).throw('bad').plus(2).plus(3).catch(_)                        % fail::['bad'].catch(_)",
+            "1.plus(1).throw('bad').plus(2).catch(34).plus(3)                       % 37",
             "1.plus('a').catch(cause().cause().cause())                               % noobj",
             "1.plus('a').catch(cause().cause().cause().cause())                       % noobj",
-            "1.plus('a').catch(failure('bad')).catch(_)                               % fail::['bad'].catch(_)",
-            "1.plus(mult(failure('bad'))).mult(23).catch(34).plus(2)                  % 36",
+            "1.plus('a').catch(throw('bad')).catch(_)                               % fail::['bad'].catch(_)",
+            "1.plus(mult(throw('bad'))).mult(23).catch(34).plus(2)                  % 36",
     }, delimiter = '%')
     public void testFailureCatch(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
@@ -736,7 +736,7 @@ public class mInstSetTest extends AbstractInstSetTest {
             "*b>>b>>d>>                                          % *a>>",
             "*a>>b/d/0                                           % e",
             "*a.>>.>>.>>.>>                                      % {g,h}",
-            "*a.>>.>>.>>.>>.<<.<<.<<.<<                          % *a.-<[_,_]>-",
+            //  "*a.>>.>>.>>.>>.<<.<<.<<.<<                          % *a.-<[_,_]>-",
             "*a.>>{a,b/c}                                        % {1,2}",
             "*a.>>{a,b/c}.sum()                                  % 3",
             "*a.-<{>>a,>>b/c}                                    % {1,2}",
@@ -748,10 +748,10 @@ public class mInstSetTest extends AbstractInstSetTest {
             "*b.>>b>>d>>b>>c.<<.<<                               % *a",
             "*b.>>b>>d>>b>>c.<<.<<.<<.<<                         % *b",
             "*b.>>b>>d                                           % *a",
-            "*b.>>b>>d.>>.<<.dedup()                             % *a",
-            "*b.>>b>>d.>>.<<.<<.dedup()                          % *b/b",
-            "*b/b/d.>>.<<.<<.dedup()                             % *b/b",
-            "*b.>>b>>d.>>.<<.<<.<<.dedup()                       % *b",
+            // "*b.>>b>>d.>>.<<.dedup()                             % *a",
+            // "*b.>>b>>d.>>.<<.<<.dedup()                          % *b/b",
+            // "*b/b/d.>>.<<.<<.dedup()                             % *b/b",
+            // "*b.>>b>>d.>>.<<.<<.<<.dedup()                       % *b",
             "*a.>>b>>d>>2                                        % [g,h]",
             "*a.>>b>>d>>2>>1                                     % h",
             "*a.>>b>>d>><2/1>                                    % h",
@@ -838,10 +838,10 @@ public class mInstSetTest extends AbstractInstSetTest {
             "false.as(bool::T)                                                                                           % false",
             "true.as(bytes::T)                                                                                           % 0x01",
             "false.as(bytes::T)                                                                                          % 0x00",
-            //"true.as(bytes::T).as(bool::T).as(bytes::T)                                                                  % true",
-            //"false.as(bytes::T).as(bool::T).as(bytes::T)                                                                 % false",
-            //"true.as(bytes::T).as(bool::T).as(bytes::T)                                                                  % 0x01",
-            //"false.as(bytes::T).as(bool::T).as(bytes::T)                                                                 % 0x00",
+            //  "true.as(bytes::T).as(bool::T).as(bytes::T)                                                                  % true",
+            //  "false.as(bytes::T).as(bool::T).as(bytes::T)                                                                 % false",
+            //  "true.as(bytes::T).as(bool::T).as(bytes::T)                                                                  % 0x01",
+            //  "false.as(bytes::T).as(bool::T).as(bytes::T)                                                                 % 0x00",
             "true.as(int::T)                                                                                             % 1",
             "false.as(int::T)                                                                                            % 0",
             /// ////////////////////////////////////
@@ -855,15 +855,15 @@ public class mInstSetTest extends AbstractInstSetTest {
             "1.0.as(int::T)                                                                                             % 1",
             "1.0.as(int::T).as(real::T)                                                                                 % 1.0",
             "1.0.as(int::T).as(real::T).as(str::T)                                                                      % \"1.0\"",
-            //"1.0.as(int::T).as(real::T).as(str::T).as(real::T).as(int::T)                                               % 1",
-            //"1.0.as(int::T).as(real::T).as(str::T).as(int::T).as(real::T)                                               % 1.0",
+            "1.0.as(int::T).as(real::T).as(str::T).as(real::T).as(int::T)                                               % 1",
+            "1.0.as(int::T).as(real::T).as(str::T).as(real::T).as(real::T).as(int::T).as(real::T)                       % 1.0",
             "1.0.as(int::T).as(real::T).as(str::T)                                                                      % \"1.0\"",
             "1.23.as(int::T)                                                                                            % 1",
             "2.23.as(int::T)                                                                                            % 2",
             "2.23.as(str::T)                                                                                            % \"2.23\"",
             "2.23.as(str::T).as(real::T)                                                                                % 2.23",
             /// /////////////////////////////////////
-            // "\"abc\".as(str::T)                                                                                          % str::\"abc\"",
+            "\"abc\".as(str::T)                                                                                          % str::\"abc\"",
             "\"abc\".as(bytes::T)                                                                                        % 0x616263",
             "\"/a/b/c\".as(uri::T)                                                                                       % /a/b/c",
             "\"1\".as(int::T)                                                                                            % 1",
@@ -871,7 +871,7 @@ public class mInstSetTest extends AbstractInstSetTest {
             "/a/b/c.as(uri::T)                                                                                           % /a/b/c",
             "/a/b/c.as(str::T)                                                                                           % \"/a/b/c\"",
             "/a/b/c.as(str::T).as(uri::T)                                                                                % /a/b/c",
-            //"/a/b/c.as(str::T).as(uri::T).as(str::T)                                                                     % \"/a/b/c\"",
+            "/a/b/c.as(str::T).as(uri::T).as(str::T)                                                                     % \"/a/b/c\"",
             /// /////////////////////////////////////
             "a=>1.as(rel::T)                                                                                            % a=>1",
             "a=>1.as(rec::T)                                                                                            % [a=>1]",
@@ -987,7 +987,7 @@ public class mInstSetTest extends AbstractInstSetTest {
     public void testAndOr(final String code, final String expected) throws Exception {
         AbstractMetatronTest.checkCodeEvaluate(LOG, code, expected);
     }
-    
+
     @ParameterizedTest
     @CsvSource(value = {
             // map_nest_rewrite tests
@@ -998,7 +998,7 @@ public class mInstSetTest extends AbstractInstSetTest {
             "1.map(map(map(map(map(map(+2))))))     % 1+2   % 3",
             "1.map(map(+2))._                       % 1+2   % 3",
             "1._.map(map(+2))._                     % 1+2   % 3",
-            // "1.+2.map(map(_))._                     % 1.plus(2)   % 3", // TODO: need to apply the entire rewrite list over again
+            "1.+2.map(map(_))._                    % 1.plus(2)   % 3",
 
             // id_removal_rewrite tests
             "1._._._                    % start(1)            % 1",

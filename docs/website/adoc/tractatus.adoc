@@ -177,6 +177,11 @@ include::grid-button.adoc[]
 :card-disabled:
 include::grid-button.adoc[]
 
+:card-id: 23
+:card-title: RDF Space
+:card-disabled:
+include::grid-button.adoc[]
+
 ++++
                     </div>
                 </div>
@@ -212,6 +217,11 @@ include::grid-button.adoc[]
 
 :card-id: 9
 :card-title: Uniform Resource Identifiers
+:card-disabled:
+include::grid-button.adoc[]
+
+:card-id: 23
+:card-title: RDF Space
 :card-disabled:
 include::grid-button.adoc[]
 
@@ -468,6 +478,10 @@ include::card.adoc[]
 
 :card-id: 22
 :card-file: boot.adoc
+include::card.adoc[]
+
+:card-id: 23
+:card-file: rdf-space.adoc
 include::card.adoc[]
 
 ++++

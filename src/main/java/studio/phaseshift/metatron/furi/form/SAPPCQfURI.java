@@ -19,22 +19,11 @@
 package studio.phaseshift.metatron.furi.form;
 
 import studio.phaseshift.metatron.furi.C;
-import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
-import studio.phaseshift.metatron.util.MTronException;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst0;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0;
-import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
-import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import java.util.Optional;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -54,33 +43,13 @@ public class SAPPCQfURI extends SAPXCQfURI {
         return this.poly;
     }
 
-    public Poly<?, ?> polyParsed() {
+    @Override
+    public Optional<Poly<?, ?>> polyParsed() {
         if (null != this.parsedPoly)
-            return this.parsedPoly;
-        if (!this.hasPoly())
-            return this.parsedPoly = null;
-        final List<String> poly = this.poly();
-        if (poly.size() == 1) {
-            if (poly.getFirst().trim().equals(","))
-                return this.parsedPoly = lst0();
-            else if (poly.getFirst().trim().equals("=>"))
-                return this.parsedPoly = rec0();
-        }
-        if (poly.getFirst().contains("=>")) {
-            final Map<Obj, Obj> map = new LinkedHashMap<>();
-            for (final String s : poly) {
-                final String[] kv = s.split("=>");
-                if (kv.length != 2)
-                    throw MTronException.of("invalid rec type poly %s", s);
-                map.put(uri(f(kv[0].trim()).big()), T(f(kv[1].trim()).big()));
-            }
-            return this.parsedPoly = rec(map);
-        } else {
-            final List<Obj> list = new ArrayList<>();
-            for (final String s : poly) {
-                list.add(T(f(s.trim()).big()));
-            }
-            return this.parsedPoly = lst(list);
+            return Optional.of(this.parsedPoly);
+        else {
+            this.parsedPoly = super.polyParsed().orElse(null);
+            return Optional.ofNullable(this.parsedPoly);
         }
     }
 

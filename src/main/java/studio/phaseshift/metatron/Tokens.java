@@ -93,6 +93,7 @@ public final class Tokens {
     public static final String ONLINE = "online";
     public static final String OFFLINE = "offline";
     public static final String HTML = "html";
+    public static final String RDF = "rdf";
     public static final String HEAD = "head";
     public static final String P = "p";
     public static final String BODY = "body";
@@ -143,6 +144,7 @@ public final class Tokens {
     public static final String CLOSE = "close";
     public static final String TABLE = "table";
     public static final String CTOR = "ctor";
+    public static final String SPARQL = "sparql";
     public static final String COLLECTION = "collection";
     public static final String REFERENCE = "reference";
     public static final String VALUE = "value";

@@ -20,7 +20,6 @@ package studio.phaseshift.metatron.isa.m.type;
 
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.furi.form.SAPPCQfURI;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -125,7 +124,7 @@ public interface Type extends Obj {
     }
 
     default boolean isRootType() {
-        return Objects.equals(this.vid(), ALL) || (null == this.vid() && Objects.equals(this.tid().basePath(),ALL));
+        return Objects.equals(this.vid(), ALL) || (null == this.vid() && Objects.equals(this.tid().basePath(), ALL));
     }
 
     default Call constructor() {
@@ -225,12 +224,6 @@ public interface Type extends Obj {
             return null;
         }
 
-        public static Poly<?, ?> parsePoly(final fURI furi) {
-            if (furi.hasPoly())
-                return ((SAPPCQfURI) furi).polyParsed();
-            throw MTronException.of("furi does not have poly: %s", furi);
-        }
-
         public static boolean typeCheck(final Obj lhs, final Obj rhs) {
             if (lhs.isType()) {
                 /// /////////////////////////
@@ -246,6 +239,10 @@ public interface Type extends Obj {
                     return false;
                 if (!lhs.c().within(rhs.c()))
                     return false;
+                if (rhs.isType() &&lhs.tid().hasPoly() && rhs.tid().hasPoly()) {
+                    if (!lhs.tid().polyParsed().orElse(null).test(rhs.tid().polyParsed().orElse(null)))
+                        return false;
+                }
                 // if(rhs.asType().parentType()!= null && !this.test(rhs.asType().parentType()))
                 //     return false;
                 if (lhs.asType().isBaseType())
@@ -263,10 +260,8 @@ public interface Type extends Obj {
                 if (rhs.tid().isGeneric() || rhs.isObjCall())
                     return true;
                 if (rhs.tid().hasPoly()) {
-                    if (rhs.tid().hasPoly()) {
-                        if (!lhs.test(parsePoly(rhs.tid())))
-                            return false;
-                    }
+                    if (!lhs.test(rhs.tid().polyParsed().orElse(null)))
+                        return false;
                 }
                 if (lhs.isObjs() && lhs.stream().anyMatch(Obj::isObjCall)) // TODO: a hack (see RecTest requirements vs. TypeTest requirements)
                     return false;

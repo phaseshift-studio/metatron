@@ -12,7 +12,7 @@
 <title>metatron</title>
 <style>
 :root {
-    --maincolor: #282c34;
+    --maincolor: #000000;
     --primarycolor: #952e1e;
     --secondarycolor: #191C24;
     --tertiarycolor: #6565f3;
@@ -1013,6 +1013,10 @@ body {
     .hljs-emphasis {
         font-style: italic !important;
     }
+    
+    .hljs-mtron-template {
+        color: var(--tertiarycolor);
+    }
 
     .hljs-mtron-comment {
         color: #666 !important;
@@ -1232,11 +1236,11 @@ th {
     text-align: center;
     opacity: 1.0;
     float: right;
-    width: 25px;
-    height: 25px;
-    font-size: 15px;
+    width: 20px;
+    height: 20px;
+    font-size: 13px;
     font-weight: bold;
-    line-height: 25px;
+    line-height: 22px;
     /*font-family: Arial;*/
 }
 
@@ -1491,7 +1495,7 @@ bin/metatron</code></pre>
                     <li>
                         <div class="terminal-box">
                             <span class="badge bg-danger">only linux tested</span>
-                            <pre><code>curl -L https://github.com/phaseshift-studio/metatron.git</code></pre>
+                            <pre><code>curl -fsSL https://metatron.phaseshift.studio/install.sh | bash</code></pre>
                         </div>
                     </li>
                 </ul>

@@ -86,10 +86,12 @@ Finally, the `cause()` instruction enables recursive stack walking for reflectiv
 ++++
 <!-- 🐖 
 [HIDDEN] */sys/fail/+.catch(_)
-*cause                 [-- <1>
-1+b.catch(cause())     [-- <2>
+*cause                               [-- <1>
+1+b.catch(cause())                   [-- <2>
+throw('bad').catch(cause())          [-- <3>
 -->
 ++++
 
 <1> The `cause()` instruction has a domain of `fail::T` and range of `fail{?}::T`. The range being potentially a previous underlying `fail::T` to the current/domain `fail::T`.
 <2> Once a `fail::T` is caught, it can be applied to `cause()` for introspection.
+<3> `throw()` can be used to create a `fail::T` monad.

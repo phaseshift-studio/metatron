@@ -24,10 +24,9 @@ import studio.phaseshift.metatron.algebra.rewrite.Rewriter;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
+import studio.phaseshift.metatron.isa.Sugar;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
-import studio.phaseshift.metatron.isa.Sugar;
-import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.*;
 import java.util.stream.Stream;
@@ -140,7 +139,7 @@ public class mInstSet extends AbstractInstSet {
     public static final fURI VID_INST_TID = M_ISA_INST_TID.extend("vid");
     public static final fURI TYPE_INST_TID = M_ISA_INST_TID.extend("type");
     public static final fURI GET_INST_TID = M_ISA_INST_TID.extend("get");
-    public static final fURI FAILURE_INST_TID = M_ISA_INST_TID.extend("failure");
+    public static final fURI THROW_INST_TID = M_ISA_INST_TID.extend("throw");
     public static final fURI AS_INST_TID = M_ISA_INST_TID.extend("as");
     public static final fURI REVERSE_INST_TID = M_ISA_INST_TID.extend("reverse");
     public static final fURI CLOSE_INST_TID = M_ISA_INST_TID.extend("close");
@@ -158,12 +157,14 @@ public class mInstSet extends AbstractInstSet {
     public static final fURI ORDER_INST_TID = M_ISA_INST_TID.extend("order");
     public static final fURI LT_INST_TID = M_ISA_INST_TID.extend("lt");
     public static final fURI GTE_INST_TID = M_ISA_INST_TID.extend("gte");
+    public static final fURI ARGS_INST_TID = M_ISA_INST_TID.extend("args");
     public static final fURI LTE_INST_TID = M_ISA_INST_TID.extend("lte");
     public static final fURI NOT_INST_TID = M_ISA_INST_TID.extend("not");
     public static final fURI TAKE_INST_TID = M_ISA_INST_TID.extend("take");
     public static final fURI SKIP_INST_TID = M_ISA_INST_TID.extend("skip");
     public static final fURI BARRIER_INST_TID = M_ISA_INST_TID.extend("barrier");
     public static final fURI REIFY_INST_TID = M_ISA_INST_TID.extend("reify");
+    public static final fURI INSIDE_INST_TID = M_ISA_INST_TID.extend("inside");
     public static final fURI SELECT_INST_TID = M_ISA_INST_TID.extend("select");
     public static final fURI REMOVE_INST_TID = M_ISA_INST_TID.extend("remove");
     public static final fURI UPDATE_INST_TID = M_ISA_INST_TID.extend("update");
@@ -225,12 +226,14 @@ public class mInstSet extends AbstractInstSet {
             .predicate((lhs, inst) -> bool(lhs.isInt() || lhs.isReal()))
             .create();*/
 
-   /* public static final Type POLY_TYPE = Type.Builder.build()
-            .tid(POLY_TID)
-            .vid(POLY_TID)
-            .predicate((lhs, inst) -> bool(lhs.isLst() || lhs.isRec() || lhs.isRel() || lhs.isCode()))
-            .create();*/
-    public static final Uri NONE = uri(f("none"),URI_TID,f("/m/const/none"));
+    /* public static final Type POLY_TYPE = Type.Builder.build()
+             .tid(POLY_TID)
+             .vid(POLY_TID)
+             .predicate((lhs, inst) -> bool(lhs.isLst() || lhs.isRec() || lhs.isRel() || lhs.isCode()))
+             .create();*/
+    public static final Uri NONE = uri(f("none"), URI_TID, f("/m/const/none"));
+
+
     public mInstSet() {
         super(new LinkedHashMap<>(Map.of(uri(PATTERN), uri(M_ISA_TID.extend(ALL)))), M_ISA_TID, M_ISA_TID);
     }
@@ -243,7 +246,7 @@ public class mInstSet extends AbstractInstSet {
                         //  docWrap(MONO_TYPE, "an atomic obj"),
                         //  docWrap(POLY_TYPE, "a obj composed of other objs"),
                         //  docWrap(NOOBJ_TYPE, "a no object"),
-                        docWrap(ALL_TYPE,"universal type matching all objs within coefficient range",
+                        docWrap(ALL_TYPE, "universal type matching all objs within coefficient range",
                                 "abc.matches(#::T)              [-- true --]",
                                 "12.3.matches(#::T)             [-- true --]",
                                 "{2}'a string'.matches(#::T)    [-- false --]",

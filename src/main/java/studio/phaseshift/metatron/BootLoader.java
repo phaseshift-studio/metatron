@@ -188,14 +188,13 @@ public class BootLoader implements Rec, Feature.SelfClone {
             if (null == hostname)
                 LOG.warn("booting metatron on a non-networked jvm");
             else {
-                localAuthority = args.at(HOST).orElse(uri(WS + "://" + hostname + ".local" + ":" + 8999)).uriValue();
                 args.at(LOCAL, uri(hostname), MUTABLE);
             }
             final fURI SYS_VID = f("/sys");
             final Space sysSpace = memSpace.of(SYS_VID.extend("#"), null);
             sysSpace.jvm().put(uri(QPROC), lst(QCollection.docQ(), QCollection.subq(), QCollection.incrQ()));
             /// CREATE A ROUTER AND ATTACH IT TO SYS
-            ROUTER = new BasicRouter(localAuthority, SYS_VID.extend("router"));
+            ROUTER = new BasicRouter(SYS_VID.extend("router"));
             sysSpace.write(ROUTER.vid(), ROUTER);
             Router.global().addSpace(sysSpace.self(sysSpace.jvm(), sysSpace.tid(), SYS_VID).as());
             LOG.debug("router location: %s", ROUTER.vid());

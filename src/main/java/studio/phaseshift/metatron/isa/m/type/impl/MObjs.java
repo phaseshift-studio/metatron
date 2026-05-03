@@ -265,7 +265,7 @@ public class MObjs implements Objs {
             List<Type> types = this.jvm.stream().map(o -> o.isType() ? o.asType() : o.type()).toList();
             final Type lcd = Type.Helper.findLCD(types);
             this.tid = lcd.vid();
-        }*/
+        }*/ // TODO: messes up at reduction instructions
        try {
             return this.jvm
                     .stream()

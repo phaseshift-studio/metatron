@@ -56,6 +56,10 @@
     overflow: hidden;
 }
 
+pre code.hljs {
+    padding: 0.1rem !important;
+}
+
 /* Let highlight.js handle the code styling inside pre */
 .instset-doc pre code.hljs {
   /*  background: var(--dark);*/
@@ -87,6 +91,10 @@
 .instset-doc .card-header {
     background: var(--maincolor);
     border-bottom: 1px solid var(--mdarkgray);
+}
+
+.card-body pre {
+    overflow: hidden;
 }
 
 .instset-doc .card-body {
@@ -257,4 +265,11 @@
     .instset-doc .card-header small {
         font-size: 0.7rem;
     }
+}
+
+/* ==========================================================================
+   Anchor scroll offset — compensate for the sticky navbar (~80px)
+   ========================================================================== */
+.card[id] {
+    scroll-margin-top: 5.5rem;
 }

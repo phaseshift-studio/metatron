@@ -45,8 +45,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 public class InstTest extends AbstractObjTest {
-    
-    
+
+
     @ParameterizedTest
     @CsvSource(value = {
             // furi | tid | dom | range
@@ -226,25 +226,30 @@ public class InstTest extends AbstractObjTest {
 
     @ParameterizedTest
     @CsvSource(quoteCharacter = '"', delimiter = '%', value = {
-            "1               % _._._._                          % [int/int,int/int,int/int,int/int]       % 1",
+            "1               % plus(1)._._._                    % [int/int,int/int,int/int,int/int]       % 2",
+            "{1,1}           % plus(1)._                        % [int{2}/int{2},int{2}/int{2}]           % {2}2",
+           // "{1,7}           % plus(1)._                        % [int{2}/int{2},int{2}/int{2}]           % {2,8}",
             "1               % _._._.plus(1)                    % [int/int,int/int,int/int,int/int]       % 2",
             "1               % plus(0).plus(1).plus(0)          % [int/int,int/int,int/int]               % 2",
             "1               % plus(2)                          % [int/int]                               % 3",
             "1               % plus(2).id()                     % [int/int,int/int]                       % 3",
             "1               % plus(2).id().mult(35)            % [int/int,int/int,int/int]               % 105",
             "3               % mult(3).mult(3)                  % [int/int,int/int]                       % 27",
-         //   "{2}3            % mult(3).mult(3)                  % [int{2}/int{2},int{2}/int{2}]           % {2}27",
-         //   "3               % mult(3).mult{2}(3)               % [int/int,int/int{2}]                    % 27",
+            //   "{2}3            % mult(3).mult(3)                  % [int{2}/int{2},int{2}/int{2}]           % {2}27",
+            //   "3               % mult(3).mult{2}(3)               % [int/int,int/int{2}]                    % 27",
             "1               % as(str::T)                       % [int/str]                               % '1'",
-           // "1               % as(str::T).as(int::T).as(str::T) % [int/str,str/int,int/str]               % '1'",
+            "1               % as(str::T).as(real::T).as(int::T)% [int/str,str/real,real/int]             % 1",
+            "1               % as(str::T).as(int::T).as(str::T) % [int/str,str/int,int/str]               % '1'",
             "1               % plus(2).as(str::T)               % [int/int,int/str]                       % '3'",
             "1               % as(str::T).count()               % [int/str,str{*}/int]                    % 1",
             "{1,2,3}         % sum()                            % [int{*}/int,int/int]                    % 6",
             "{1,2,3,4,5}     % sum()                            % [int{*}/int]                            % 15",
             "[1,2,3]         % >-.sum()                         % [lst/#{*},#{*}/#]                       % 6",
             "[1,2,3]         % >-?int{*}<=lst[int].sum()        % [lst[int]/int{*},int{*}/int]            % 6",
-          //  "[1,2,3]         % >-?<=lst[int].sum()            % [lst[int]/int{*},int{*}/int]          % 6",
-          //  "1               % -<[_]-<[_,_]>-                 % [#/lst[int],lst[lst]/lst[int]{2}]       % {2}[1]",
+            "[1,2,3]         % >-?<=lst[int].sum()              % [lst[int]/int{*},int{*}/int]            % 6",
+            "1              % -<[_]-<[_,_]>-                    % [int/lst[int],lst[lst]/lst[int]{2}]                        % {2}[1]",
+            "1              % -<[_]-<[_,_,_]>-                  % [int/lst[int],lst[lst]/lst[int]{3}]                        % {3}[1]",
+            "1              % -<[_]-<[_,_,_]>-.>-               % [int/lst[int],lst[lst]/lst[int]{3},lst[int]{3}/int{3}]     % {3}1",
     })
     public void testCodeInternalDomRng(final String lhs, final String code, final String domRngPerStep, final String rhs) {
         final Obj lhsObj = mParser.m_obj().parse(lhs.trim()).get();
@@ -258,8 +263,14 @@ public class InstTest extends AbstractObjTest {
             final Type domType = T(f(domRngPerStepArray[i].split("/")[0]));
             final Type rngType = T(f(domRngPerStepArray[i].split("/")[1]));
             final int ii = i;
-            assertTrue(step.dom().test(domType), () -> String.format("%s.dom() does not match expected %s at step %d", step.dom().tid(), domType, ii));
-            assertTrue(step.rng().test(rngType), () -> String.format("%s.rng() does not match expected %s at step %d", step.rng().tid(), rngType, ii));
+            if (!domType.test(step.dom()))
+                assertTrue(domType.c(c -> domType.uniqueC()).test(step.dom()), () -> String.format("%s.dom() does not match expected %s at step %d", step.dom().tid(), domType, ii));
+            else
+                assertTrue(domType.test(step.dom()), () -> String.format("%s.dom() does not match expected %s at step %d", step.dom().tid(), domType, ii));
+            if (!rngType.test(step.rng()))
+                assertTrue(rngType.c(c -> rngType.uniqueC()).test(step.rng()), () -> String.format("%s.rng() does not match expected %s at step %d", step.rng().tid(), rngType, ii));
+            else
+                assertTrue(rngType.test(step.rng()), () -> String.format("%s.rng() does not match expected %s at step %d", step.rng().tid(), rngType, ii));
             finalRngType = rngType;
         }
         final Obj rhsObj = codeResolved.apply(lhsObj);

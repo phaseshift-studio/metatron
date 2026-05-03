@@ -57,7 +57,7 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.*;
      //   "testMonoReadWrite"  // Include this CRUD test even though CRUD tag is skipped
 })
 public class httpSpaceTest extends AbstractSpaceTest {
-    private static final String BASE_URL = "http://localhost:8777";
+    private static final String BASE_URL =  "http://localhost:" + generatePort();
 
     public httpSpaceTest() {
         super(f(BASE_URL), () -> {

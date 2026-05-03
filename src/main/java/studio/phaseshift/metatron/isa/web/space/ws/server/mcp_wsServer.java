@@ -24,7 +24,7 @@ import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
-import studio.phaseshift.metatron.isa.web.space.ws.WSServerRec;
+import studio.phaseshift.metatron.isa.web.space.ws.WebSocketRec;
 import studio.phaseshift.metatron.isa.web.type.Content;
 
 import java.util.LinkedHashMap;
@@ -44,8 +44,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_SERVER_TID;
-import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_SPACE_TID;
+import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.*;
 
 /**
  * MCP (Model Context Protocol) server for wsSpace.
@@ -74,7 +73,7 @@ import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_SPACE_TID;
  * </pre>
  * Then register it in the wsSpace route table and connect via WebSocket.
  */
-public class mcp_wsServer extends WSServerRec {
+public class mcp_wsServer extends WebSocketRec {
 
     public static final fURI MCP_WS_TID = WS_SPACE_TID.extend("mcp_ws");
     protected final GraphittyLogger LOG = Graphitty.log(this);
@@ -97,11 +96,9 @@ public class mcp_wsServer extends WSServerRec {
 
     public mcp_wsServer(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
-        this.outContentType = Content.ContentType.APPLICATION_JSON;
-        this.inContentType = Content.ContentType.APPLICATION_JSON;
         this.jvm().put(uri(ON_MESSAGE), instC(vid.extend(ON_MESSAGE).dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> {
             try {
-                LOG.info("incoming mcp message from %s: %s", this.getClientVID(), lhs);
+                LOG.info("incoming mcp message from %s: %s", this.getOtherVID(), lhs);
                 // MCP JSON-RPC message handling
                 // If the input is not a Rec (e.g. a plain string), pass it through
                 if (!lhs.isRec()) {
@@ -259,6 +256,13 @@ public class mcp_wsServer extends WSServerRec {
                 return fail(e);
             }
         }));
+    }
+
+    @Override
+    public IO getIO() {
+        return new IO(
+                Content.ContentType.of(this.at(IN).orElse(uri(Content.ContentType.APPLICATION_JSON.value)).uriValue().toString()),
+                Content.ContentType.of(this.at(OUT).orElse(uri(Content.ContentType.APPLICATION_JSON.value)).uriValue().toString()));
     }
 
     public Rec getToolList() {

@@ -24,12 +24,12 @@ import org.java_websocket.server.WebSocketServer;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.Space;
-import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.web.type.Content;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -56,6 +56,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.space.http.httpSpace.CONFIG;
+import static studio.phaseshift.metatron.isa.web.webInstSet.CONTENT_TYPE;
 import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -66,19 +67,38 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 public class wsSpace extends AbstractSpace<WebSocketServer> {
 
     public static final fURI WS_SPACE_TID = WEB_ISA_TID.extend(SPACE).extend("wsspace");
+    public static final fURI WS_WEBSOCKET_TID = WS_SPACE_TID.extend("websocket");
     public static final fURI WS_SERVER_TID = WS_SPACE_TID.extend("wsserver");
-    public static final Type WS_SERVER_TYPE = Type.Builder.build()
+    public static final fURI WS_CLIENT_TID = WS_SPACE_TID.extend("wsclient");
+
+    public static final Type WS_WEBSOCKET_TYPE = Type.Builder.build()
             .tid(REC_TID)
-            .vid(WS_SERVER_TID)
+            .vid(WS_WEBSOCKET_TID)
             .isaPredicate(rec(
+                    uri(IN).maybe().asUri(), isa_(CONTENT_TYPE).orElse(uri(Content.ContentType.APPLICATION_MTRON.value)),
+                    uri(OUT).maybe().asUri(), isa_(CONTENT_TYPE).orElse(uri(Content.ContentType.APPLICATION_MTRON.value)),
                     uri(SEND).maybe().asUri(), INST_TYPE,
                     uri(ON_OPEN).maybe(), T(ALL),
                     uri(ON_ERROR).maybe(), T(ALL),
                     uri(ON_MESSAGE).maybe(), T(ALL),
-                    uri(ON_CLOSE).maybe(), T(ALL)))
-            .constructor(instC(mInstSet.M_ISA_INST_TID.dom(ALL.maybe()).rng(WS_SERVER_TID),
+                    uri(ON_CLOSE).maybe(), T(ALL))).create();
+
+
+    public static final Type WS_SERVER_TYPE = Type.Builder.build()
+            .tid(WS_WEBSOCKET_TID)
+            .vid(WS_SERVER_TID)
+            .constructor(instC(WS_SERVER_TID.extend(CTOR).dom(ALL.maybe()).rng(WS_WEBSOCKET_TID),
                     lst(T(REC_TID)), (lhs, inst) ->
-                            new WSServerRec(inst.arg(0).asRec().jvm(), inst.arg(0).vid()))).create();
+                            new WebSocketRec(inst.arg(0).asRec().jvm(), inst.arg(0).vid()))).create();
+
+    public static final Type WS_CLIENT_TYPE = Type.Builder.build()
+            .tid(WS_WEBSOCKET_TID)
+            .vid(WS_CLIENT_TID)
+            .constructor(instC(WS_CLIENT_TID.extend(CTOR).dom(ALL.maybe()).rng(WS_WEBSOCKET_TID),
+                    lst(T(REC_TID)), (lhs, inst) -> {
+                        final WebSocketRecClient client = new WebSocketRecClient(new WebSocketRec(inst.arg(0).asRec().jvm(), inst.arg(0).vid()));
+                        return client;
+                    })).create();
 
     public static final Type WS_SPACE_TYPE = Type.Builder.build()
             .tid(SPACE_TID)
@@ -87,7 +107,7 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
                     uri(HOST), URI_TYPE,
                     uri(PATTERN), URI_TYPE,
                     uri(ROUTE), REC_TYPE))
-            .constructor(instC(mInstSet.M_ISA_INST_TID.dom(WS_SPACE_TID).rng(WS_SPACE_TID),
+            .constructor(instC(WS_SPACE_TID.extend(CTOR).dom(WS_SPACE_TID).rng(WS_SPACE_TID),
                     lst(T(REC_TID, isa_(CONFIG))), (lhs, inst) -> wsSpace.of(inst.arg(0).recValue(), inst.arg(0).vid()))).create();
 
     private final memSpace cache;
@@ -172,40 +192,41 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
             this.space = space;
         }
 
-        protected WSServer createServer(final WebSocket conn) {
+        protected WebSocketObj createServer(final WebSocket conn) {
             try {
                 if (null == conn)
                     return null;
-                // Construct the lookup URI the same way as the test setup:
-                // baseURI (ws://host:port) extended with the route path (e.g. "mcp")
-                final String routePath = conn.getResourceDescriptor().startsWith("/")
+                final fURI routePath = f(conn.getResourceDescriptor().startsWith("/")
                         ? conn.getResourceDescriptor()
-                        : "/" + conn.getResourceDescriptor();
-                final fURI wsServerTypeVID = Space.Helper.routeFromSpace(f(routePath), this.space.routes());
+                        : "/" + conn.getResourceDescriptor());
+                final fURI wsServerTypeVID = Space.Helper.routeFromSpace(routePath.qLess(), this.space.routes());
                 final Obj serverType = Router.global().read(wsServerTypeVID);
                 if (!serverType.isType())
                     throw MTronException.of("ws server type required: %s at %s", serverType, wsServerTypeVID);
                 this.space.LOG.info("starting session with ws server: %s", serverType);
-                final fURI vid = this.baseURI.extend(conn.getResourceDescriptor()).extend(this.counter.getAndIncrement() + "");
+                final fURI vid = this.baseURI.extend(routePath.qLess()).extend(this.counter.getAndIncrement() + "");
 
                 // Delegate construction to the metatron type system:
                 // rec(map, tid, vid) -> MObj.of() -> Obj.Helper.construct() which looks up
                 // the Type at wsServerTypeVID in the Router and calls its constructor if present.
-                // This allows user-defined wsmcp::T subtypes to be instantiated correctly.
+                // This allows user-defined wsserver::T subtypes to be instantiated correctly.
                 // Pass an empty map — the type's constructor applies its own defaults for IN/OUT.
-                final Obj server = rec(mutableMap(), wsServerTypeVID, vid);
+                final Obj server = rec(mutableMap(
+                                uri(IN), routePath.hasQ(IN) ? uri(routePath.q(IN)) : noobj(),
+                                uri(OUT), routePath.hasQ(OUT) ? uri(routePath.q(OUT)) : noobj()),
+                        wsServerTypeVID, vid);
                 if (server.isNoObj() || server.isFail()) {
                     conn.close(4000, "unable to construct server " + server);
                     throw MTronException.of("client {{b}}%s{{X}} wsserver construction failed: {{y}}%s{{X}}", conn.getRemoteSocketAddress(), server);
                 }
-                return (WSServerRec) server;
+                return (WebSocketRec) server;
             } catch (final Exception e) {
                 throw MTronException.of("unable to create ws server for %s: %s", conn.getRemoteSocketAddress(), e);
             }
         }
 
 
-        protected Optional<WSServer> getSession(final WebSocket conn) {
+        protected Optional<WebSocketObj> getSession(final WebSocket conn) {
             if (null == conn)
                 return Optional.empty();
             final Obj session = this.space.cache.read(conn.<fURI>getAttachment());
@@ -213,7 +234,7 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
                 conn.closeConnection(1000, "no session found at " + session);
                 return Optional.empty();
             }
-            return Optional.of((WSServer) session);
+            return Optional.of((WebSocketObj) session);
         }
 
         private boolean ignore(final WebSocket conn) {
@@ -232,11 +253,10 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
                     conn.send(this.space.at(ROUTE).toString());
                     conn.closeConnection(1000, "end transmission");
                 } else {
-                    final WSServer server = this.createServer(conn);
+                    final WebSocketObj server = this.createServer(conn);
                     if (null != server) {
-                        conn.setAttachment(server.vid());
-                        this.space.cache.write(server.vid(), server);
-                        ((WSServerRec) server).socket = conn;
+                        server.setWebSocket(conn);
+                        this.space.cache.write(server.getThisVID(), server);
                         server.onOpen(conn, handshake);
                     }
                 }
@@ -253,9 +273,9 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
         public void onClose(final WebSocket conn, final int code, final String reason, final boolean remote) {
             try {
                 if (ignore(conn)) return;
-                final WSServer session = this.getSession(conn).orElseThrow(() -> MTronException.of("no session found for %s", conn));
+                final WebSocketObj session = this.getSession(conn).orElseThrow(() -> MTronException.of("no session found for %s", conn));
                 session.onClose(conn, code, reason, remote);
-                this.space.cache.write(session.vid(), noobj());
+                this.space.cache.write(session.getThisVID(), noobj());
             } catch (final Exception e) {
                 this.space.LOG.error(e);
             }
@@ -266,8 +286,8 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
         public void onMessage(final WebSocket conn, final String message) {
             try {
                 if (ignore(conn)) return;
-                final WSServer session = this.getSession(conn).orElseThrow(() -> MTronException.of("no session found for %s", conn));
-                session.onMessage(conn, message);
+                final WebSocketObj session = this.getSession(conn).orElseThrow(() -> MTronException.of("no session found for %s", conn));
+                session.onMessage(conn, session.getIO().input().fromBytes(message));
             } catch (final Exception e) {
                 this.space.LOG.error(e);
             }
@@ -277,8 +297,8 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
         public void onMessage(final WebSocket conn, final ByteBuffer message) {
             try {
                 if (ignore(conn)) return;
-                final WSServer session = this.getSession(conn).orElseThrow(() -> MTronException.of("no session found for %s", conn));
-                session.onMessage(conn, message);
+                final WebSocketObj session = this.getSession(conn).orElseThrow(() -> MTronException.of("no session found for %s", conn));
+                session.onMessage(conn, session.getIO().input().fromBytes(message.array()));
             } catch (final Exception e) {
                 this.space.LOG.error(e);
             }
@@ -289,7 +309,7 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
         public void onError(final WebSocket conn, final Exception ex) {
             try {
                 if (ignore(conn)) return;
-                final WSServer session = this.getSession(conn).orElseThrow(() -> MTronException.of("no session found for %s", conn));
+                final WebSocketObj session = this.getSession(conn).orElseThrow(() -> MTronException.of("no session found for %s", conn));
                 session.onError(conn, ex);
             } catch (final Exception e) {
                 this.space.LOG.error(e);

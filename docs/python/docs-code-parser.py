@@ -19,6 +19,7 @@ mtron code runner for metatron documentation
 from __future__ import annotations
 
 import argparse
+import asyncio
 import os
 import random
 import re
@@ -27,10 +28,9 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
-import asyncio
 
 from colors import *
-from runner.mytron import Mytron
+from runner.mytron import Mytron, MtronSession
 
 if TYPE_CHECKING:
     try:
@@ -53,9 +53,44 @@ DEBUG: bool = os.environ.get("DEBUG", "0") == "1"
 
 _CALLOUT_RE = re.compile(r'\s*\[-- <\d+>\s*$')
 
+
 def remove_html_comment(commented_text: str) -> str:
     commented_text = commented_text.removesuffix(" -->")
     return commented_text.replace("<!-- ", "")
+
+
+def _unroll_stream(s: str) -> list[str]:
+    """Split a mtron stream result '{a,b,c}' into individual items.
+
+    Uses a bracket-depth counter so commas inside rec[a=>b,c=>d] or
+    nested streams are not treated as item separators.
+    Returns a single-element list when the result is not a stream.
+    """
+    s = s.strip()
+    if not (s.startswith("{") and s.endswith("}")):
+        return [s]
+    inner = s[1:-1]
+    items: list[str] = []
+    depth = 0
+    buf: list[str] = []
+    for ch in inner:
+        if ch in "([{":
+            depth += 1
+            buf.append(ch)
+        elif ch in ")]}":
+            depth -= 1
+            buf.append(ch)
+        elif ch == "," and depth == 0:
+            item = "".join(buf).strip()
+            if item:
+                items.append(item)
+            buf = []
+        else:
+            buf.append(ch)
+    last = "".join(buf).strip()
+    if last:
+        items.append(last)
+    return items if items else [s]
 
 
 def execute_code(
@@ -125,7 +160,7 @@ def _bold(text: str) -> str:
 class ProcessingState:
     """State of the processing of an asciidoc file."""
 
-    mtron: mytron = Mytron()
+    mtron: Mytron = field(default_factory=Mytron)
     section: Literal[
         "🐖",
         "👨‍🌾",
@@ -146,7 +181,7 @@ class ProcessingState:
         color = self.colors[index]
         self.colors.remove(color)
         sep = "#" if bool(random.randint(0, 1)) else "*"
-        return "[" + color + "]" + sep + to_color + sep #+ "​"
+        return "[" + color + "]" + sep + to_color + sep  # + "​"
 
     def random_metatron(self):
         self.colors = ["red", "blue", "lime", "yellow", "fuchsia", "aqua", "green", "orange"]
@@ -251,7 +286,8 @@ class ProcessingState:
         for line in self.code:
             stripped = _CALLOUT_RE.sub('', line.rstrip())
             if stripped.endswith("/"):
-                running_line += stripped.removesuffix("/").rstrip() + "\n       "  # add spaces to shift right due to mtron> 
+                running_line += stripped.removesuffix(
+                    "/").rstrip() + "\n       "  # add spaces to shift right due to mtron> 
             elif line.startswith("[HEADER]"):
                 to_header.append(line)
             else:
@@ -273,35 +309,64 @@ class ProcessingState:
             if -1 == line.find("[HIDDEN]"):
                 result.append(
                     f"mtron> {'\n       '.join(line.split("%"))}")  # the spaces are to shift right due to mtron> 
-                result.append(f"{await self.mtron.eval(line.replace("%", "").strip())}")
+                for _item in _unroll_stream(await self.mtron.eval(line.replace('%', '').strip())):
+                    result.append(f"==>{_item}")
                 # result.append("​")
                 # Clear accumulated failures after every visible eval so the catch()
                 # response never grows large enough to trigger a timeout.
-                await self.mtron.eval_hidden("/sys/fail/+ -> noobj")
-            else:
-                await self.mtron.eval_hidden(line.replace("%", "").replace("[HIDDEN]", "").strip())
+                # await self.mtron.eval_hidden("/sys/fail/+ -> noobj")
+            elif line is not None:
+                await self.mtron.eval(line.replace("%", "").replace("[HIDDEN]", "").strip())
         self.output.extend(result)
         print(self.output)
         self.code = []
         self.backtick_options = {}
 
 
-async def process_asciidoc(content: list[str], prefix_content: list[str] | None = None, *, verbose: bool = False) -> list[str]:
+async def process_asciidoc(
+    content: list[str],
+    prefix_content: list[str] | None = None,
+    *,
+    mtron: Mytron | None = None,
+    verbose: bool = False,
+) -> list[str]:
+    """Process one asciidoc file, evaluating all 🐖 code blocks.
+
+    Args:
+        content:        Lines of the .adoc file to process.
+        prefix_content: Optional lines whose code blocks run first (output discarded).
+                        Use for [HIDDEN] setup that should apply to every file.
+        mtron:          A connected Mytron instance to reuse.  If None, a new
+                        connection is created and closed automatically.  Pass a
+                        shared instance from MtronSession.native to avoid the
+                        per-file connect/close overhead and to inherit a longer
+                        timeout.
+        verbose:        Enable line-by-line debug output.
+    """
     assert isinstance(content, list), "input must be a list"
-    state = ProcessingState()
-    await state.mtron.connect()
-    # Run prefix lines first (e.g. [HIDDEN] initialisation) and discard their output.
-    # The Mytron connection and any server-side side-effects are preserved.
-    if prefix_content:
-        for line in prefix_content:
+
+    owned = mtron is None
+    state = ProcessingState(mtron=mtron if mtron is not None else Mytron())
+    if owned:
+        await state.mtron.connect()
+
+    try:
+        # Run prefix lines first (e.g. [HIDDEN] initialisation) and discard output.
+        # Side-effects on the server are preserved across the shared connection.
+        if prefix_content:
+            for line in prefix_content:
+                await state.process_line(line, verbose=verbose)
+            state.new_lines = []
+
+        for i, line in enumerate(content):
+            if verbose:
+                nr = _bold(f"line {i:4d}")
+                print(f"{nr}: {line}")
             await state.process_line(line, verbose=verbose)
-        state.new_lines = []
-    for i, line in enumerate(content):
-        if verbose:
-            nr = _bold(f"line {i:4d}")
-            print(f"{nr}: {line}")
-        await state.process_line(line, verbose=verbose)
-    await state.mtron.close()
+    finally:
+        if owned:
+            await state.mtron.close()
+
     return state.new_lines
 
 
@@ -312,30 +377,74 @@ async def update_asciidoc_file(
         verbose: bool = False,
         copy_only: bool = False,
         prefix: Path | str | None = None,
+        timeout: int = 8,
 ) -> None:
-    if isinstance(input_filepath, str):  # pragma: no cover
-        input_filepath = Path(input_filepath)
+    """Process all .adoc files in input_filepath, writing results to output_filepath.
+
+    Opens a single MtronSession shared across every file so that connection
+    overhead is paid only once.
+
+    Args:
+        timeout: Seconds to wait per eval.  30 s works for most expressions;
+                 increase for runs that include LLM or other slow calls.
+    """
+    input_filepath  = Path(input_filepath)
+    output_dir      = Path(output_filepath) if output_filepath is not None else input_filepath
+
     prefix_content: list[str] | None = None
     if prefix is not None:
         with Path(prefix).open() as pf:
             prefix_content = [line.rstrip("\n") for line in pf.readlines()]
         if verbose:
             print(f"prefix file: {prefix} ({len(prefix_content)} lines)")
-    files = [f for f in os.listdir(input_filepath) if os.path.isfile(os.path.join(input_filepath, f))]
-    for file in files:
-        if file.endswith(".adoc"):
-            out_file = Path(f"{output_filepath}/{os.path.basename(file)}")
-            with Path(f"{input_filepath}/{file}").open() as f:
+
+    adoc_files = sorted(
+        f for f in os.listdir(input_filepath)
+        if os.path.isfile(os.path.join(input_filepath, f)) and f.endswith(".adoc")
+    )
+
+    if not adoc_files:
+        print("no .adoc files found")
+        return
+
+    if copy_only:
+        # Fast path — no metatron connection needed.
+        for file in adoc_files:
+            out_file = output_dir / os.path.basename(file)
+            with (input_filepath / file).open() as f:
+                content = f.read().rstrip()
+            if verbose:
+                print(f"copying {file} → {out_file}")
+            out_file.write_text(content)
+        if verbose:
+            print("done (copy only)")
+        return
+
+    # One shared session for all files — timeout is configurable via the caller.
+    session = MtronSession(timeout=timeout)
+    await session.connect()
+    print(f"[docs-runner] processing {len(adoc_files)} file(s) with shared connection (timeout={timeout}s)")
+
+    try:
+        for file in adoc_files:
+            out_file = output_dir / os.path.basename(file)
+            with (input_filepath / file).open() as f:
                 original_lines = [line.rstrip("\n") for line in f.readlines()]
             if verbose:
-                print(f"copying input file: {file}" if copy_only else f"processing input file: {file}")
-            new_lines = original_lines if copy_only else await process_asciidoc(original_lines, prefix_content, verbose=verbose)
-            updated_content = "\n".join(new_lines).rstrip()
-            if verbose:
-                print(f"writing output to: {out_file}")
-            output_filepath = (input_filepath if output_filepath is None else Path(output_filepath))
-            with out_file.open("w") as f:
-                f.write(updated_content)
+                print(f"processing {file} → {out_file}")
+            else:
+                print(f"[docs-runner] {file}")
+
+            new_lines = await process_asciidoc(
+                original_lines,
+                prefix_content,
+                mtron=session.native,
+                verbose=verbose,
+            )
+            out_file.write_text("\n".join(new_lines).rstrip())
+    finally:
+        await session.close()
+
     if verbose:
         print("done")
 
@@ -372,8 +481,9 @@ async def main() -> None:
     parser.add_argument(
         "-c",
         "--copy_only",
-        action="store_true",
+        type=str,
         help="Copy input file to output file without processing (default: False)",
+        default="False",
     )
     parser.add_argument(
         "-p",
@@ -382,12 +492,21 @@ async def main() -> None:
         help="Path to an adoc file whose code blocks run before each input file (output discarded).",
         default=None,
     )
+    parser.add_argument(
+        "-t",
+        "--timeout",
+        type=int,
+        default=8,
+        help="Seconds to wait per mtron eval (default: 5). Increase for LLM or slow expressions.",
+    )
     args = parser.parse_args()
     print("\n[Docs Runner v0.224-db-a345c3456.3342323]\n\targs: ", args)
     input_filepath = Path(args.input)
     output_filepath = Path(args.output) if args.output is not None else input_filepath
     print(f"{input_filepath} => {output_filepath}")
-    await update_asciidoc_file(input_filepath, output_filepath, verbose=args.verbose, copy_only=args.copy_only, prefix=args.prefix)
+    await update_asciidoc_file(input_filepath, output_filepath, verbose=args.verbose,
+                               copy_only=args.copy_only == 'true', prefix=args.prefix,
+                               timeout=args.timeout)
 
 
 if __name__ == "__main__":

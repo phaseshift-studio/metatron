@@ -26,7 +26,12 @@ import org.apache.tinkerpop.shaded.kryo.io.ByteBufferInputStream;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import studio.phaseshift.metatron.BootLoader;
-import studio.phaseshift.metatron.Tokens;
+import static studio.phaseshift.metatron.Tokens.CTOR;
+import static studio.phaseshift.metatron.Tokens.HOST;
+import static studio.phaseshift.metatron.Tokens.PATTERN;
+import static studio.phaseshift.metatron.Tokens.ROUTE;
+import static studio.phaseshift.metatron.Tokens.HTTP;
+import studio.phaseshift.metatron.Tokens.*;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.Space;
@@ -82,11 +87,11 @@ public class httpSpace extends AbstractSpace<HttpServer> {
 
     public static final String INDEX_HTML = "index.html";
     public static final fURI HTTP_SPACE_TID = WEB_ISA_TID.extend("space/httpspace");
-    public static final Rec CONFIG = rec(uri(Tokens.PATTERN), T(URI_TID), uri(HOST), T(URI_TID), uri(ROUTE), T(REC_TID));
+    public static final Rec CONFIG = rec(uri(PATTERN), T(URI_TID), uri(HOST), T(URI_TID), uri(ROUTE), T(REC_TID));
     public static final Type HTTP_SPACE_TYPE = Type.Builder.build()
             .tid(SPACE_TID)
             .vid(HTTP_SPACE_TID)
-            .constructor(instC(mInstSet.M_ISA_INST_TID.dom(ALL.maybe()).rng(HTTP_SPACE_TID),
+            .constructor(instC(HTTP_SPACE_TID.extend(CTOR).dom(ALL.maybe()).rng(HTTP_SPACE_TID),
                     lst(T(REC_TID, isa_(CONFIG))), (lhs, inst) -> httpSpace.of(inst.arg(0).asRec(), inst.arg(0).vid()))).create();
     private static final ObjHTMLSerializer HTML_SERIALIZER = new ObjHTMLSerializer();
     private static final ObjJSONSerializer JSON_TRANSLATOR = new ObjJSONSerializer();
@@ -256,7 +261,7 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                         });
                 LOG.debug("http route attached: %s", rel(uri(context.getPath()), r.second()));
             });
-            LOG.info("starting web server at %s", this.at(HOST).uriValue().scheme(Tokens.HTTP).toUri());
+            LOG.info("starting web server at %s", this.at(HOST).uriValue().scheme(HTTP).toUri());
             server.setExecutor(BootLoader.getExecutor());
             Runtime.getRuntime().addShutdownHook(new Thread(this::close));
             LOG.info("available routes: %s", this.at(ROUTE));

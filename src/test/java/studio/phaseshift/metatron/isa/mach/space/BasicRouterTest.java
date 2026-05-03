@@ -33,10 +33,10 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class basicRouterTest extends AbstractRouterTest {
+public class BasicRouterTest extends AbstractRouterTest {
     
-    public basicRouterTest() {
-        super(new BasicRouter(f("ws://localhost:" + generatePort()), f("/m/test")));
+    public BasicRouterTest() {
+        super(new BasicRouter(f("/m/test")));
     }
     
     @Test

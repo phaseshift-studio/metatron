@@ -28,7 +28,6 @@ import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.Objects;
 
-import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 
 
@@ -57,11 +56,13 @@ public class MType extends MObj implements Type {
         final fURI bigTID = null == tid ? vid.big() : tid.big();
         final fURI bigVID = null == vid ? null : vid.big();
         final fURI checkID = null == bigVID ? bigTID : bigVID;
+        //System.out.println("CC: " + tid +"  "+ vid + "  "+ checkID);
         assert checkID != null;
         if (!checkID.basePath().equals(REL_TID) && !checkID.basePath().equals(LST_TID) && !checkID.basePath().equals(REC_TID) && !checkID.poly().isEmpty())
             throw MTronException.of("only poly types can have polynomials: %s {{r}}X=>{{X}} %s", checkID.basePath(), checkID.poly());
         if (!checkID.hasPattern() && !BASE_TYPES.contains(checkID.basePath()) && !checkID.isGeneric() && Router.loaded()) { // TODO: remove the pattern constraint - why not a type be the set of other types?
-            final Obj obj = Router.readFromSpace(checkID);
+            Obj obj = Router.readFromSpace(checkID);
+            obj = obj.selfTID(obj.tid().c(checkID.c()));
             if (obj.isType()) {
                 if (checkID.c().equals(obj.c()) &&
                         Objects.equals(obj.asType().predicate(), predicate) &&
@@ -70,7 +71,7 @@ public class MType extends MObj implements Type {
                 else
                     return new MType(Tuple.Pair.with(
                             null == predicate || predicate.isNoObj() ? obj.asType().predicate() : predicate,
-                            null == constructor || constructor.isNoObj() ? obj.asType().constructor() : constructor), obj.tid(), obj.vid()); // coefficient specific type doesn't exist, create it
+                            null == constructor || constructor.isNoObj() ? obj.asType().constructor() : constructor), obj.tid(), obj.vid()).selfTID(obj.tid().c(checkID.c())).as(); // coefficient specific type doesn't exist, create it
             }
         }
         final boolean isBaseType = BASE_TYPES.contains(checkID.basePath());
@@ -79,7 +80,7 @@ public class MType extends MObj implements Type {
                     new MType(Tuple.Pair.with(predicate, constructor), bigTID, bigTID) :
                     new MType(Tuple.Pair.with(predicate, constructor), bigTID, bigVID);
         //throw MTronException.of("type not found: %s@%s", tid, vid); // TODO: a few cases fail --namely around equality checks. fix and then replace the bottom with this/
-        return new MType(Tuple.Pair.with(predicate, constructor), null == bigTID ? checkID : bigTID, null == bigVID ? checkID : bigVID);
+        return new MType(Tuple.Pair.with(predicate, constructor), null == bigTID ? checkID : bigTID, null == bigVID ? checkID : bigVID).c(checkID.c()).as();
     }
 
     @Override
