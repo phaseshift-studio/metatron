@@ -194,6 +194,11 @@ public class ScoringInstResolver implements InstResolver {
             score += 100;
         }
 
+        // Function-body bonus: a candidate with an inst-f is preferable to one without
+        if (apiInst.hasf()) {
+            score += 50;
+        }
+
         return score;
     }
 }

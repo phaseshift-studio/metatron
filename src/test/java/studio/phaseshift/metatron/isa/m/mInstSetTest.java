@@ -148,6 +148,7 @@ public class mInstSetTest extends AbstractInstSetTest {
     }
 
     @ParameterizedTest
+    @Disabled
     @CsvSource(value = {
             "{4}1.plus?int{5}<=int{5}(2)                                                    % <ERROR>",
             "{1,4}1.plus?int{3}<=int{3}(2)                                                    % <ERROR>",

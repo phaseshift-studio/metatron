@@ -268,8 +268,8 @@ public interface Inst extends Call {
         } catch (final Exception e) {
             this.logger().error(e);
         }
-        // find all other insts of the same name 
-        // if they all have the same domain coefficient as the lhs obj, 
+        // find all other insts of the same name
+        // if they all have the same domain coefficient as the lhs obj,
         // then that can be hard coded into the compilation
         Obj resolved2 = Router.readFromSpace(this.tid());
         final List<cInt> uniqueDomains = resolved2.stream().map(v -> v.tid().dom().c()).distinct().toList();
@@ -425,6 +425,8 @@ public interface Inst extends Call {
         }
 
         public static boolean filterOnDomainAllowUnique(final Obj lhs, final Inst apiInst) {
+            if (lhs.isNoObj())
+                return true; // noobj lhs means "any domain is acceptable"
             return lhs.testByID(apiInst.dom()) || (apiInst.dom().c().isOne() && lhs.c().gt(cInt.ONE()) && lhs.c(cInt.ONE()).testByID(apiInst.dom()));
         }
 
