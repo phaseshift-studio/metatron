@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 
 import java.util.Comparator;
+import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
 
@@ -65,30 +66,35 @@ public class ScoringInstResolver implements InstResolver {
         final GraphittyLogger LOG = Graphitty.log(lhs);
         if (userInst.isNoObj())
             return null;
-        return candidates
+
+        // Collect viable candidates after cheap pre-filters (before expensive bindGenerics + resolveArgs)
+        final List<Inst> viable = candidates
                 .filter(Obj::isObjInst)
                 .map(Obj::asInst)
-                // Basic compatibility filters (same as FirstFindInstResolver)
                 .filter(i -> (i.args().isEmpty() && userInst.args().isEmpty()) || i.args().isRec() || i.args().count() >= userInst.args().count())
                 .filter(i -> !lhs.isInst() || (i.dom().baseType().equals(M_ISA_INST_TID)))
-                // Score BEFORE transformation (capture original specificity)
-                //.filter(apiInst -> !userInst.hasDom() || userInst.dom().test(apiInst.dom()))
-                //.filter(apiInst -> !userInst.hasRng() || userInst.rng().test(apiInst.rng()))
+                .toList();
+
+        if (viable.isEmpty())
+            return null;
+
+        // Short-circuit: single candidate needs no scoring
+        if (viable.size() == 1) {
+            return transformCandidate(lhs, userInst, viable.getFirst());
+        }
+
+        // Multiple candidates: score by specificity and select best
+        return viable.stream()
                 .map(apiInst -> {
                     final int score = scoreSpecificity(lhs, userInst, apiInst);
-                    // Apply transformations
                     Inst transformed = userInst.hasDom() ? apiInst.dom(userInst.dom()) : apiInst;
                     transformed = userInst.hasRng() ? transformed.rng(userInst.rng()) : transformed;
                     transformed = userInst.tid().basePath().equals(AS_INST_TID) ? transformed.rng(userInst.arg(0).asType()) : transformed;
                     transformed = lhs.isInst() ? transformed : Inst.Helper.bindGenerics(lhs, transformed, userInst);
-                    int scoreBoost = 0;
-                    return new ScoredCandidate(apiInst, transformed, score + scoreBoost);
+                    return new ScoredCandidate(apiInst, transformed, score);
                 })
-                // .peek(i ->  LOG.info("transformed inst: %s score %s", i.transformed, i.score))
                 .filter(sc -> sc.transformed != null)
-               .filter(sc -> lhs.isInst() || Inst.Helper.filterOnDomainAllowUnique(lhs,sc.transformed)) // lhs.test(sc.transformed.dom()))
-          //      .map(sc -> Inst.Helper.filterOnDomainAllowUnique(lhs,sc.transformed) ? new ScoredCandidate(sc.original, sc.transformed.c(lhs.c()), sc.score) : sc)
-                // Resolve args
+                .filter(sc -> lhs.isInst() || Inst.Helper.filterOnDomainAllowUnique(lhs, sc.transformed))
                 .map(sc -> {
                     final Poly<?, ?> resolvedArgs = Inst.Helper.resolveArgs(userInst, sc.transformed, lhs);
                     if (null == resolvedArgs)
@@ -96,21 +102,35 @@ public class ScoringInstResolver implements InstResolver {
                     return new ScoredCandidate(sc.original, sc.transformed.args(resolvedArgs), sc.score);
                 })
                 .filter(Objects::nonNull)
-                // Apply final transformations
                 .map(sc -> {
                     Inst result = sc.transformed.isInitial() ? sc.transformed.rng(sc.transformed.arg(0).type()) : sc.transformed;
                     result = result.c(userInst.c());
                     return new ScoredCandidate(sc.original, result, sc.score);
                 })
-                // Select highest scoring candidate
                 .max(Comparator.comparingInt(ScoredCandidate::score))
-                .map(sc -> {
-                    /*LOG.info("resolved %s with score %d (dom=%s, rng=%s)",
-                            sc.transformed.tid().basePath(), sc.score,
-                            sc.original.dom().tid(), sc.original.rng().tid());*/
-                    return sc.transformed;
-                })
+                .map(ScoredCandidate::transformed)
                 .orElse(null);
+    }
+
+    /**
+     * Apply the full transformation pipeline to a single candidate without scoring overhead.
+     * Used when there is only one viable candidate — no need to wrap/unwrap in ScoredCandidate.
+     */
+    private Inst transformCandidate(final Obj lhs, final Inst userInst, final Inst apiInst) {
+        Inst transformed = userInst.hasDom() ? apiInst.dom(userInst.dom()) : apiInst;
+        transformed = userInst.hasRng() ? transformed.rng(userInst.rng()) : transformed;
+        transformed = userInst.tid().basePath().equals(AS_INST_TID) ? transformed.rng(userInst.arg(0).asType()) : transformed;
+        transformed = lhs.isInst() ? transformed : Inst.Helper.bindGenerics(lhs, transformed, userInst);
+        if (transformed == null)
+            return null;
+        if (!lhs.isInst() && !Inst.Helper.filterOnDomainAllowUnique(lhs, transformed))
+            return null;
+        final Poly<?, ?> resolvedArgs = Inst.Helper.resolveArgs(userInst, transformed, lhs);
+        if (resolvedArgs == null)
+            return null;
+        transformed = transformed.args(resolvedArgs);
+        transformed = transformed.isInitial() ? transformed.rng(transformed.arg(0).type()) : transformed;
+        return transformed.c(userInst.c());
     }
 
     /**

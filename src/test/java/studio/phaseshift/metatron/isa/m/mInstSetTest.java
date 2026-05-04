@@ -52,7 +52,7 @@ public class mInstSetTest extends AbstractInstSetTest {
     public mInstSetTest() {
         super(() -> null);
     }
-
+ 
     @Override
     @Disabled
     @Test

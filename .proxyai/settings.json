@@ -1,0 +1,51 @@
+{
+    "subagents": [
+        {
+            "id": 1,
+            "title": "Explorer",
+            "objective": "Read-only subagent for codebase exploration and insight gathering.",
+            "tools": [
+                "read",
+                "todowrite",
+                "intellijsearch",
+                "diagnostics",
+                "websearch",
+                "webfetch",
+                "MCP",
+                "resolvelibraryid",
+                "getlibrarydocs",
+                "loadskill",
+                "bashoutput",
+                "killshell",
+                "edit",
+                "write",
+                "bash",
+                "exit"
+            ]
+        },
+        {
+            "id": 2,
+            "title": "General Task",
+            "objective": "General-purpose subagent for executing concrete coding tasks.",
+            "tools": [
+                "read",
+                "todowrite",
+                "intellijsearch",
+                "diagnostics",
+                "websearch",
+                "webfetch",
+                "MCP",
+                "resolvelibraryid",
+                "getlibrarydocs",
+                "loadskill",
+                "bashoutput",
+                "killshell",
+                "edit",
+                "write",
+                "bash",
+                "exit"
+            ]
+        }
+    ],
+    "hooks": {}
+}

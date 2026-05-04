@@ -1,0 +1,72 @@
+{
+    "bin": {
+        "metatron": "jdeploy-bundle/jdeploy.js"
+    },
+    "author": "PhaseShift Studio",
+    "description": "Interconnect Heterogeneous Data Sources and Processes",
+    "main": "index.js",
+    "preferGlobal": true,
+    "repository": {
+        "url": "https://github.com/phaseshift-studio/metatron"
+    },
+    "version": "0.1",
+    "jdeploy": {
+        "args": [
+            "-Dlogback.configurationFile=conf/logback.xml",
+            "--add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED",
+            "--enable-native-access=ALL-UNNAMED",
+            "-cp target/metatron-0.1-SNAPSHOT-jar-with-dependencies.jar studio.phaseshift.metatron.BootLoader \"$@\""
+        ],
+        "fallbackToUniversal": true,
+        "generateLegacyBundles": false,
+        "javaVersion": "25",
+        "urlSchemes": [
+            "mtron"
+        ],
+        "jar": "target/metatron-0.1-SNAPSHOT-jar-with-dependencies.jar",
+        "title": "metatron",
+        "platformBundlesEnabled": true,
+        "downloadPage": {
+            "platforms": [
+                "default"
+            ]
+        },
+        "commands": {
+            "repl": {
+                "implements": [
+                    "launcher"
+                ],
+                "args": [
+                    "-Dlogback.configurationFile=conf/logback.xml",
+                    "--add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED",
+                    "--enable-native-access=ALL-UNNAMED",
+                    "-cp target/metatron-0.1-SNAPSHOT-jar-with-dependencies.jar",
+                    "studio.phaseshift.metatron.BootLoader \"$@\""
+                ],
+                "description": "launch metatron repl"
+            }
+        }
+    },
+    "dependencies": {
+        "@jetbrains/mcp-proxy": "^1.8.0",
+        "command-exists-promise": "^2.0.2",
+        "node-fetch": "2.6.7",
+        "phantom": "^6.3.0",
+        "shelljs": "^0.8.4",
+        "tar": "^7.5.13",
+        "website": "^0.1.1",
+        "yauzl": "^2.10.0"
+    },
+    "license": "AGPL3",
+    "name": "metatron",
+    "files": [
+        "jdeploy-bundle"
+    ],
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "homepage": "http://metatron.phaseshift.studio",
+    "devDependencies": {
+        "rimraf": "^6.1.3"
+    }
+}
