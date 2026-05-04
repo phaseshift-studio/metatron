@@ -31,8 +31,9 @@ import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.type.Router;
-import studio.phaseshift.metatron.isa.web.space.ws.AbstractWSServerIntegrationTest;
+import studio.phaseshift.metatron.isa.web.space.ws.AbstractWebSocketServerIntegrationTest;
 import studio.phaseshift.metatron.isa.web.space.ws.WebSocketRec;
+import studio.phaseshift.metatron.isa.web.space.ws.wsSpace;
 import studio.phaseshift.metatron.isa.web.type.Content;
 
 import java.util.LinkedHashMap;
@@ -51,7 +52,6 @@ import static studio.phaseshift.metatron.isa.web.space.ws.server.mcp_mtron_wsSer
 import static studio.phaseshift.metatron.isa.web.space.ws.server.mcp_mtron_wsServer.WS_MCP_MTRON_SERVER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.ws.server.mcp_wsServer.MCP_WS_TID;
 import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_SERVER_TID;
-import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_WEBSOCKET_TID;
 
 /**
  * Integration tests for {@link mcp_mtron_wsServer}.
@@ -61,11 +61,11 @@ import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_WEBSOCKET_T
  * query the Router for registered spaces at invocation time.  Running against an empty-route
  * {@code wsSpace} (as {@code AbstractWSServerTest} provides) causes those look-ups to fail.
  * <p>
- * The {@link AbstractWSServerIntegrationTest} base class starts a real {@code wsSpace} with
+ * The {@link AbstractWebSocketServerIntegrationTest} base class starts a real {@code wsSpace} with
  * the correct route table, ensuring the Router has a properly registered WS space available
  * for every test — both for direct handler invocations and live WebSocket round-trips.
  */
-public class mcp_mtron_wsServerTest extends AbstractWSServerIntegrationTest {
+public class mcp_mtron_wsServerIntegrationTest extends AbstractWebSocketServerIntegrationTest {
 
     /**
      * Lightweight in-memory holding space for the direct-invocation server vid.
@@ -83,9 +83,9 @@ public class mcp_mtron_wsServerTest extends AbstractWSServerIntegrationTest {
     // ========================================
 
     @Override
-    protected studio.phaseshift.metatron.isa.web.space.ws.wsSpace createWSSpace() {
+    protected wsSpace createWSSpace() {
         final fURI hostUri = f("ws://localhost:" + generatePort());
-        return studio.phaseshift.metatron.isa.web.space.ws.wsSpace.of(rec(
+        return wsSpace.of(rec(
                 uri(HOST), uri(hostUri.toString()),
                 uri(PATTERN), uri("ws://#"),
                 uri(ROUTE), rec(uri("/mcp-mtron"), uri(MCP_MTRON_WS_TID.toString()))
@@ -95,7 +95,7 @@ public class mcp_mtron_wsServerTest extends AbstractWSServerIntegrationTest {
     /**
      * Creates a memSpace with pattern {@code /test/#} so the server vid is
      * resolvable in the Router, then instantiates the direct-invocation server.
-     * Runs after {@link AbstractWSServerIntegrationTest#setupWsSpace()} so the
+     * Runs after {@link AbstractWebSocketServerIntegrationTest#setupWsSpace()} so the
      * integration wsSpace (and its registered types) are already in the Router.
      */
     @BeforeEach

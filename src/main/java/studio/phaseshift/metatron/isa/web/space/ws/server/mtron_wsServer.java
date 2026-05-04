@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.web.space.ws.server;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.Fail;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -71,11 +72,12 @@ public class mtron_wsServer extends WebSocketRec {
                 final Obj rhs = lhs.apply(noobj());
                 LOG.debug("received mtron message: %s => %s", lhs, rhs);
                 this.send(rhs);
-                return noobj();
+                return rhs;
             } catch (final Exception e) {
                 LOG.error("error processing message: %s => %s", lhs, fail(e));
-                this.send(fail(e));
-                return noobj();
+                final Fail failure = fail(e);
+                this.send(failure);
+                return failure;
             }
         }));
         this.jvm().put(uri(ON_ERROR), instC(this.vid().extend(ON_ERROR).dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> {

@@ -18,8 +18,46 @@
 
 package studio.phaseshift.metatron.isa.web.space.ws.server;
 
+import org.junit.jupiter.api.BeforeEach;
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.space.memSpace;
+import studio.phaseshift.metatron.isa.web.space.ws.AbstractWebSocketServerIntegrationTest;
+import studio.phaseshift.metatron.isa.web.space.ws.AbstractWebSocketServerTest;
+import studio.phaseshift.metatron.isa.web.space.ws.WebSocketRec;
+import studio.phaseshift.metatron.isa.web.space.ws.wsSpace;
+import studio.phaseshift.metatron.isa.web.type.Content;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.web.space.ws.server.mtron_wsServer.MTRON_WS_TID;
+
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class mtron_wsServerTest {
+public class mtron_wsServerTest extends AbstractWebSocketServerTest {
+    @Override
+    protected WebSocketRec createServer(final fURI vid) {
+        return new mtron_wsServer(new LinkedHashMap<>(Map.of(
+                uri(IN), uri(Content.ContentType.APPLICATION_MTRON.value),
+                uri(OUT), uri(Content.ContentType.APPLICATION_MTRON.value))), vid);
+    }
+
+    public static class mtron_wsServerIntegrationTest extends AbstractWebSocketServerIntegrationTest {
+
+        @Override
+        protected wsSpace createWSSpace() {
+            return wsSpace.of(rec(
+                    uri(NAME), uri("mtron-test"),
+                    uri(HOST), uri("ws://localhost:" + generatePort()),
+                    uri(PATTERN), uri("ws://#"),
+                    uri(ROUTE), rec(uri("/mtron"), uri(MTRON_WS_TID.toString()))
+            ).jvm(), f("/sys/space/ws/mtron-test"));
+        }
+    }
 }
+

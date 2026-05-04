@@ -57,7 +57,7 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
  * The first entry in the route table is used as the primary connection path
  * for the base-class tests.
  */
-public abstract class AbstractWSServerIntegrationTest extends AbstractMetatronTest {
+public abstract class AbstractWebSocketServerIntegrationTest extends AbstractMetatronTest {
 
     protected wsSpace space;
     protected String wsHost;
@@ -96,7 +96,6 @@ public abstract class AbstractWSServerIntegrationTest extends AbstractMetatronTe
     // ========================================
     // Lifecycle
     // ========================================
-
     @BeforeEach
     public void setupWsSpace() {
         InstSet.importInstSet(WEB_ISA_TID);
@@ -129,6 +128,7 @@ public abstract class AbstractWSServerIntegrationTest extends AbstractMetatronTe
         }
         if (this.space != null) {
             Router.global().removeSpace(this.space.vid());
+            Router.global().removeSpace(WEB_ISA_TID);
             this.space.close();
             this.space = null;
         }

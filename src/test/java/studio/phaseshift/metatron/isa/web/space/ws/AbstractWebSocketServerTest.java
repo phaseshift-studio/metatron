@@ -51,7 +51,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * Subclasses only need to provide {@link #createServer(fURI)}.
  * The server instance is available as {@link #server} in all tests.
  */
-public abstract class AbstractWSServerTest extends AbstractMetatronTest {
+public abstract class AbstractWebSocketServerTest extends AbstractMetatronTest {
 
     protected Space testSpace;
     protected WebSocketRec server;

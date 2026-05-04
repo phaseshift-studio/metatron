@@ -24,8 +24,8 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.web.space.ws.AbstractWSServerIntegrationTest;
-import studio.phaseshift.metatron.isa.web.space.ws.AbstractWSServerTest;
+import studio.phaseshift.metatron.isa.web.space.ws.AbstractWebSocketServerIntegrationTest;
+import studio.phaseshift.metatron.isa.web.space.ws.AbstractWebSocketServerTest;
 import studio.phaseshift.metatron.isa.web.space.ws.WebSocketRec;
 import studio.phaseshift.metatron.isa.web.type.Content;
 
@@ -47,10 +47,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.space.ws.server.mcp_wsServer.MCP_WS_TID;
 import static studio.phaseshift.metatron.isa.web.space.ws.server.mcp_wsServer.WS_MCP_SERVER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_SERVER_TID;
-import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_WEBSOCKET_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
-public class mcp_wsServerTest extends AbstractWSServerTest {
+public class mcp_wsServerTest extends AbstractWebSocketServerTest {
 
     @Override
     protected WebSocketRec createServer(final fURI vid) {
@@ -276,7 +275,7 @@ public class mcp_wsServerTest extends AbstractWSServerTest {
     // Integration tests
     // =========================================================
 
-    public static class Integration extends AbstractWSServerIntegrationTest {
+    public static class Integration extends AbstractWebSocketServerIntegrationTest {
 
         @Override
         protected studio.phaseshift.metatron.isa.web.space.ws.wsSpace createWSSpace() {
