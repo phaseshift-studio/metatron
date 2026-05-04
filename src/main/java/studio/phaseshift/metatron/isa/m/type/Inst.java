@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.m.type;
 import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.resolver.InstResolver;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
@@ -242,10 +243,11 @@ public interface Inst extends Call {
         */
 
         try {
-            Obj fetched = Router.global().read(this.tid().basePath());
+            final Space space = Router.global().getSpace(this.tid().basePath());
+            Obj fetched = space.read(this.tid().basePath());
             /// //////////////////////////////////////////////////
             if (fetched.stream().noneMatch(Obj::isInstObj)) {
-                fetched = Router.global().read(this.tid().extend("apply"));
+                fetched = space.read(this.tid().extend("apply"));
                 if (fetched.stream().noneMatch(Obj::isInstObj))
                     fetched = Router.global().read(this.type().tid().extend("apply"));
                 LOG.debug("apply() insts at: %s => %s", this.tid().extend("apply"), fetched);

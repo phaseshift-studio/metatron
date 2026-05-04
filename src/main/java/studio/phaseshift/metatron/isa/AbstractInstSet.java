@@ -95,7 +95,7 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
                 uri(Tokens.PATTERN), uri(vid.extend(ALL))), tid, vid);
         this.at(uri(Tokens.QPROC), lst(QCollection.docQ()), MUTABLE);
         if (Router.loaded()) {
-            this.sugars().forEach(sugar -> mParser.addSugar(sugar));
+            this.sugars().forEach(mParser::addSugar);
             this.consts().forEach(c -> Router.global().registerRedirect(f(c.vid().name()), c.vid()));
             this.types().stream().filter(t -> null != t.vid()).forEach(t -> Router.global().registerRedirect(f(t.vid().name()), t.vid()));
             this.insts().forEach(t -> Router.global().registerRedirect(f(t.tid().name()), t.tid().basePath()));
