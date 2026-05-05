@@ -130,7 +130,7 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
 
     @Override
     default boolean isResolved(final boolean nested) {
-        return true; 
+        return true;
     }//return this.elements().allMatch(x -> x.isResolved(nested));
     
 
@@ -228,7 +228,16 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
 
         /// //////////////////////////////////////////////////////////////////////////
 
-        public static Obj updatePolyRecursion(final Poly<?, ?> lhs, final Poly<?, ?> rhs, final BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {
+        public static Obj updateRecursion(final Obj lhs, final Obj rhs, final BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {
+            if (lhs.isPoly() && rhs.isPoly() && lhs.tid().equals(rhs.tid()))
+                return updatePolyRecursion(lhs.as(), rhs.as(), operation);
+            else
+                return rhs.apply(lhs);
+        }
+
+
+        public static Obj updatePolyRecursion(final Poly<?, ?> lhs, final Obj rhs, final BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {
+            if (rhs.isCall()) return updatePolyRecursion(lhs, rhs.apply(lhs), operation);
             if (lhs.isRec() && rhs.isRec())
                 return updateRecRecursion(lhs.asRec(), rhs.asRec(), operation);
             else if (lhs.isLst() && rhs.isLst())
@@ -236,10 +245,10 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
             else if (lhs.isRel() && rhs.isRel())
                 return updateRelRecursion(lhs.asRel(), rhs.asRel(), operation);
             else
-                return noobj();
+                return rhs.apply(lhs);
         }
 
-        public static Obj updateRecRecursion(final Rec lhs, final Rec rhs, BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {
+        private static Obj updateRecRecursion(final Rec lhs, final Rec rhs, BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {
             final Map<Obj, Obj> result = Poly.Helper.selectRecRecursionRaw(lhs, rhs, (a, b) -> updatePolyRecursion(a.as(), b.as(), operation));
            /* if(operation == MUTABLE) {
                 result.forEach((k, v) -> lhs.recValue().compute(k.c(cInt::one), (a, b) -> v));
@@ -255,6 +264,10 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
                     } else {
                         return a.isAutoFrom() ? a : kv.getValue().apply(lhs);
                     }
+                   
+                        
+                    //return a.isAutoFrom() ? a : updateRecursion(kv.getValue(), a, operation);
+
                 } else {
                     if (b.isNoObj()) {
                         //  lhs.logger().warn("FOUND");
@@ -268,13 +281,23 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
             return operation.apply(lhs, result);
         }
 
-        public static Obj updateLstRecursion(final Lst lhs, final Lst rhs, BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {
+        private static Obj updateLstRecursion(final Lst lhs, final Lst rhs, BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {
             final List<Obj> result = Poly.Helper.selectLstRecursionRaw(lhs, rhs, (a, b) -> updatePolyRecursion(a.as(), b.as(), operation));
             result.removeIf(Obj::isNone);
+            /*final int lhsSize = lhs.asLst().lstValue().size();
+            final int rhsSize = rhs.asLst().lstValue().size();
+            final List<Obj> result = new ArrayList<>();
+            for (int i = 0; i < Math.max(rhsSize, lhsSize); i++) {
+                final Obj lhsElement = i < lhsSize ? lhs.asLst().lstValue().get(i) : noobj();
+                final Obj rhsElement = i < rhsSize ? rhs.asLst().lstValue().get(i) : noobj();
+                final Obj newElement = updateRecursion(lhsElement, rhsElement, operation);
+                if (!newElement.isNone())
+                    result.add(newElement);
+            }*/
             return operation.apply(lhs, result);
         }
 
-        public static Obj updateRelRecursion(final Rel lhs, final Rel rhs, BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {
+        private static Obj updateRelRecursion(final Rel lhs, final Rel rhs, BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {
             final Object result = Poly.Helper.selectRelRecursionRaw(lhs, rhs, (a, b) -> updatePolyRecursion(a.as(), b.as(), operation));
             return result instanceof Obj ? (Obj) result : operation.apply(lhs, result);
         }

@@ -22,6 +22,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TestData;
+import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
@@ -159,7 +160,7 @@ public class TypeTest extends AbstractMetatronTest {
     }, delimiter = '|')
     public void testType(final String obj, final String typefURI, final boolean matches) {
         try {
-            Obj o = mParser.m_obj().parse(obj).get();
+            Obj o = ObjmtronSerializer.parse(obj);
             Type t = T(f(typefURI.trim()));
             LOG.debug("testing %s %s %s", o, matches ? "{{c}}in{{/c}}" : "{{c}}not in{{/c}}", t);
             // assertEquals(matches, o.type().tid().matches(f(typefURI)));
@@ -182,11 +183,11 @@ public class TypeTest extends AbstractMetatronTest {
             // obj               | type                                         | matches?
             "noobj               | noobj{0}::T                                | true",
             "noobj{0}            | noobj{0}::T                                   | true",
-           // "noobj               | abc{*}::T                                  | true",
-           // "noobj               | abc{?}::T                                  | true",
+            // "noobj               | abc{*}::T                                  | true",
+            // "noobj               | abc{?}::T                                  | true",
             "noobj               | int{?}::T                                  | true",
             "noobj               | A{?}::T                                    | true",
-           // TODO: "{0}noobj            | abc{+}::T                                  | false",
+            // TODO: "{0}noobj            | abc{+}::T                                  | false",
             "1                   | noobj::T                                   | false",
             "1                   | str::T                                     | false",
             "1                   | lst::T                                     | false",
@@ -236,11 +237,11 @@ public class TypeTest extends AbstractMetatronTest {
     },
             delimiter = '|')
     public void testTypeObj(final String obj, final String type, final boolean matches) {
-        Obj o = mParser.m_obj().parse(obj).get();
-        Type t = mParser.m_obj().parse(type).get();
+        Obj o = ObjmtronSerializer.parse(obj);
+        Type t = ObjmtronSerializer.parse(type);
         LOG.debug("testing %s {{g}}({{b}}%s{{g}}){{X}} %s %s", o, o.tid(), matches ? "{{g}}is a{{/g}}" : "{{r}}is not a{{/r}}", t);
         assertEquals(matches, o.test(t));
-        if(!t.hasPredicate())
+        if (!t.hasPredicate())
             assertEquals(matches, o.testByID(t));
     }
 
@@ -269,7 +270,7 @@ public class TypeTest extends AbstractMetatronTest {
             "int::T              | str::T                                     | false",
             "int::T              | #::T                                       | true",
             "int::T              | #{?}::T                                    | true",
-            "int::T              | #::T{?}                                    | true",
+            "int::T              | #{+}::T                                    | true",
             "int::T              | #{2}::T                                    | false",
             "int{0}::T           | str{0}::T                                  | true",
             "int::T              | int::T                                     | true",
@@ -311,32 +312,34 @@ public class TypeTest extends AbstractMetatronTest {
             delimiter = '|')
 
     public void testTypeInheritance(final String typeA, final String typeB, final boolean matches) throws Exception {
-        Obj a = mParser.m_obj().parse(typeA).get();
-        Obj b = mParser.m_obj().parse(typeB).get();
-        LOG.trace("testing %s %s %s", a, matches ? "{{g}}is a{{/g}}" : "{{r}}is not a{{/r}}", b);
-        //assertEquals(matches, Objects.equals(a.vid(), b.vid()) || a.vid().matches(b.tid()));
+        final Obj a = ObjmtronSerializer.parse(typeA);
+        final Obj b = ObjmtronSerializer.parse(typeB);
+        final fURI aTID = a.tid();
+        final fURI bTID = b.tid();
+        LOG.debug("testing %s %s %s", a, matches ? "{{g}}is a{{/g}}" : "{{r}}is not a{{/r}}", b);
         assertEquals(matches, a.test(b));
-        //if(b.isType() && !b.asType().hasPredicate())
+        if (b.isType() && !b.asType().hasPredicate())
             assertEquals(matches, a.testByID(b));
-        //assertEquals(matches, a.fastMatch(b));
+        assertEquals(aTID, a.tid());
+        assertEquals(bTID, b.tid());
     }
 
     @ParameterizedTest
-    @TestData(value = {"nat -> int::T[is(gt(0))]", "bignat -> nat::T[is(gt(100))]",})
+    @TestData(value = {"nat -> int::T[is(gt(0))]@nat", "bignat -> nat::T[is(gt(100))]@bignat",})
     @CsvSource(value = {
-            "/m/int | /m/int | true",
-            "/m/int | nat    | false",
-            "nat    | /m/int | true",
-            "nat    | nat    | true",
-            // "bignat | nat    | true",
-            "bignat | /m/int | true",
-            "/m/int | bignat | false",
-            "nat    | bignat | false",
-            "bignat | bignat | true",
+            "/m/int::T | /m/int::T | true",
+            "/m/int::T | nat::T    | false",
+            "nat::T    | /m/int::T | true",
+            "nat::T    | nat::T    | true",
+            //"bignat::T | nat::T    | true",
+            "bignat::T | int::T | true",
+            "/m/int::T | bignat::T | false",
+            "nat::T    | bignat::T | false",
+            "bignat::T | bignat::T | true",
     }, delimiter = '|')
     public void testBaseTypes(final String type, final String baseType, final boolean matches) throws Exception {
-        Obj a = mParser.eval("*" + type);
-        Obj b = mParser.eval("*" + baseType);
+        Obj a = ObjmtronSerializer.parse(type);
+        Obj b = ObjmtronSerializer.parse(baseType);
         LOG.debug("testing %s %s %s", a, matches ? "{{g}}is a{{/g}}" : "{{r}}is not a{{/r}}", b);
         assertEquals(matches, a.test(b));
     }
@@ -518,10 +521,10 @@ public class TypeTest extends AbstractMetatronTest {
             Obj type = ObjmtronSerializer.parse(typeDef.trim().equals(".") ? LAST_TYPE_DEF : typeDef.trim());
             LAST_TYPE_DEF = typeDef.trim().equals(".") ? LAST_TYPE_DEF : typeDef.trim();
             Router.writeToSpace(tid, type);
-           // assertEquals(type, Router.readFromSpace(tid));
+            // assertEquals(type, Router.readFromSpace(tid));
             LOG.debug("testing %s %s %s", instance, shouldSucceed ? "{{g}}is a{{/g}}" : "{{r}}is not a{{/r}}", type);
             try {
-                Obj inst = mParser.parse(instance.trim()).apply(noobj());
+                Obj inst = ObjmtronSerializer.parse(instance.trim()).apply();
                 //LOG.debug("instance: %s", inst);
                 if (!shouldSucceed) {
                     LOG.debug("instance: %s %s %s", inst.type(), inst.isFail(), inst.tid().equals(FAIL_TID));
@@ -590,9 +593,9 @@ public class TypeTest extends AbstractMetatronTest {
     }, delimiter = '|')
     public void testTypeRecursion(final String instance, final String type, final boolean matches, final String stack) {
         //LOG.debug("testing %s %s", mParser.eval("*h"), mParser.eval("*h").asType().parentType());
-        final Obj instanceObj = mParser.m_obj().parse(instance).get();
+        final Obj instanceObj = ObjmtronSerializer.parse(instance);
         final List<Type> expectedTypeStack = ObjmtronSerializer.parse(stack).lstValue().stream().map(o -> ObjmtronSerializer.<Type>parse(o.toString() + "::T")).toList();
-        final List<Type> deducedTypeStack = deducedTypeStack(mParser.m_obj().parse(type).get());
+        final List<Type> deducedTypeStack = deducedTypeStack(ObjmtronSerializer.parse(type));
         final List<Boolean> matchesTypeStack = deducedTypeStack.stream().map(instanceObj::test).toList();
         LOG.debug("testing type stack of %s:\n\t%s\n\t%s\n\t%s", instanceObj, expectedTypeStack, deducedTypeStack, matchesTypeStack);
         assertEquals(matches, matchesTypeStack.stream().reduce(true, (a, b) -> a && b));
@@ -606,7 +609,7 @@ public class TypeTest extends AbstractMetatronTest {
             "person   -> being::T[?[name=>str::T]]",
             "mortal   -> person::T[?[age=>?<120]]",
             "immortal -> being::T[?[alias=>str{2,3}::T]]",
-            "team     -> rec::T[?[flag=>str::T.-<''>-.count().?=2, member=>being{+}::T]]"})
+            "team     -> rec::T[?[flag=>?str::T.-<''>-.count().?=2, member=>being{+}::T]]"})
     @CsvSource(value = {
             "[age=>2]                                                            % rec::T                % true",
             "[age=>2]                                                            % lst::T                % false",

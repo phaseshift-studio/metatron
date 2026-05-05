@@ -20,8 +20,10 @@ package studio.phaseshift.metatron.isa.m.type.impl;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Bool;
+import studio.phaseshift.metatron.isa.m.type.Int;
 import studio.phaseshift.metatron.isa.m.type.Real;
 
+import static studio.phaseshift.metatron.isa.m.mInstSet.INT_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REAL_TID;
 
 
@@ -40,13 +42,13 @@ public class MReal extends MObj implements Real {
     }
 
     public static Real real(final Double jvm, final fURI tid, final fURI vid) {
-        return new MReal(jvm, tid, vid);
+       return null == tid ? new MReal(jvm, REAL_TID, vid) : MObj.of(jvm, tid, vid, Real.class);
     }
 
     public static Real real(final Float jvm, final fURI tid, final fURI vid) {
         return real(jvm.doubleValue(), tid, vid);
     }
-
+     
     public static Real of(final double jvm) {
         return new MReal(jvm, REAL_TID,null);
     }

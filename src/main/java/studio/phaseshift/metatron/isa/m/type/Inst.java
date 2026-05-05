@@ -51,6 +51,8 @@ import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
 public interface Inst extends Call {
 
+    public record ArgsFunction(Poly<?,?> args, f f){}
+    
     String ARGS = "args";
     String DOM = "dom";
     String RNG = "rng";
@@ -246,12 +248,12 @@ public interface Inst extends Call {
             final Space space = Router.global().getSpace(this.tid().basePath());
             Obj fetched = space.read(this.tid().basePath());
             /// //////////////////////////////////////////////////
-            if (fetched.stream().noneMatch(Obj::isInstObj)) {
+            /*if (fetched.stream().noneMatch(Obj::isInstObj)) {
                 fetched = space.read(this.tid().extend("apply"));
                 if (fetched.stream().noneMatch(Obj::isInstObj))
                     fetched = Router.global().read(this.type().tid().extend("apply"));
                 LOG.debug("apply() insts at: %s => %s", this.tid().extend("apply"), fetched);
-            }
+            }*/
             /// //////////////////////////////////////////////////
             LOG.debug("fetched insts: %s => %s", this.tid().basePath(), fetched);
             final Inst resolved = InstResolver.get().resolve(lhs, this, fetched.stream());

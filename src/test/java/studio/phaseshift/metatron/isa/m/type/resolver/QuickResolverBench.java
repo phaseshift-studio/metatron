@@ -24,6 +24,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
  * Throwaway: one-shot resolver benchmark. Delete after running.
  * Usage: mvn test -Dtest=QuickResolverBench -pl .
  */
+@Disabled
 public class QuickResolverBench extends AbstractMetatronTest {
 
     private static final int WARMUP = 500;

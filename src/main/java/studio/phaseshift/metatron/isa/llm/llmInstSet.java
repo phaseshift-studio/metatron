@@ -175,15 +175,15 @@ public class llmInstSet extends AbstractInstSet {
                                 "maps a directory to an llm skill where the dir follows the standard SKILL.md structure",
                                 "*<local:.agent/skills>.as(skill::T)"),
                         // CHAT INSTRUCTION        
-                     /*   docWrap(instC(LLM_INST_TID.extend("chat").dom(MODEL_TID).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> model(lhs.asRec()).chat(inst.arg(0).strValue())),
+                        docWrap(instC(LLM_INST_TID.extend("chat").dom(MODEL_TID).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> model(lhs.asRec()).chat(inst.arg(0).strValue())),
                                 "a model to chat with",  // dom
                                 "the models chat response", // rng
                                 Map.of(jnt(0), "the message to send the model"), // args
                                 "communicate with an llm that may be enriched with a tool, skill, etc.", // desc
-                                "*<ollama:qwen3:latest>+[response=>[to=>print(_)],think=>to(/ai/thoughts?incrq)].chat('what is a database?')"),*/
-                        instC(LLM_INST_TID.extend("chat").dom(MODEL_TID).rng(A.maybe()),
+                                "*<ollama:qwen3:latest>+[response=>[to=>print(_)],think=>to(/ai/thoughts?incrq)].chat('what is a database?')"),
+                        /*instC(LLM_INST_TID.extend("chat").dom(MODEL_TID).rng(A.maybe()),
                                 lst(STR_TYPE),
-                                (lhs, inst) -> model(lhs.asRec()).chat(inst.arg(0).strValue())),
+                                (lhs, inst) -> model(lhs.asRec()).chat(inst.arg(0).strValue())),*/
                         docWrap(instC(LLM_INST_TID.extend("chat").dom(MODEL_TID).rng(REC_TID),
                                         lst(STR_TYPE, REC_TYPE),
                                         (lhs, inst) -> model(lhs.asRec()).chat(inst.arg(0).strValue(), inst.arg(1).asRec())),

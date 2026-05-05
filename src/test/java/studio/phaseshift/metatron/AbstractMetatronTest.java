@@ -49,6 +49,9 @@ import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.IO_ISA_TID;
 @ExtendWith(TestSkip.TestSkipExtension.class)
 @ExtendWith(TestData.TestDataExtension.class)
 public abstract class AbstractMetatronTest {
+    static {
+        BootLoader.TESTING = true;
+    }
 
     protected static final Random RANDOM = new Random();
     protected GraphittyLogger LOG = Graphitty.log(this);
@@ -111,9 +114,9 @@ public abstract class AbstractMetatronTest {
     }
 
     public static void checkCodeEvaluate(final GraphittyLogger LOG, final String evaluate, final String fetchResult, final String expectedResult) {
-        final Obj evaluation = mParser.eval(evaluate);
-        final Obj actual = mParser.eval(fetchResult);
-        final Obj expected = mParser.eval(expectedResult);
+        final Obj evaluation = ObjmtronSerializer.parse(evaluate).apply();
+        final Obj actual = ObjmtronSerializer.parse(fetchResult).apply();
+        final Obj expected = ObjmtronSerializer.parse(expectedResult).apply();
         LOG.debug("testing %s; %s [expected:%s]", evaluation, actual, expected);
         if (!expectedResult.trim().equals("<ERROR>")) {
             boolean noFails = evaluation.stream().noneMatch(Obj::isFail);
@@ -149,8 +152,8 @@ public abstract class AbstractMetatronTest {
     }
 
     public static void checkSpaceMutation(final GraphittyLogger LOG, final String stateCode, final String mutationCode, final Map<fURI, String> expected) {
-        final Obj stateResult = mParser.eval(stateCode);
-        final Obj mutationResult = mParser.eval(mutationCode);
+        final Obj stateResult = ObjmtronSerializer.parse(stateCode).apply();
+        final Obj mutationResult = ObjmtronSerializer.parse(mutationCode).apply();
         LOG.debug("testing %s <= %s", stateResult, mutationResult);
         expected.forEach((k, v) -> {
             final Obj actual = Router.readFromSpace(k);
@@ -199,8 +202,8 @@ public abstract class AbstractMetatronTest {
     public static void checkCodeParseApply(final GraphittyLogger LOG, final String lhs, final String code, final String expected) {
         if (expected.trim().equals("<ERROR>")) {
             try {
-                final Obj a = mParser.m_obj().parse(lhs).get();
-                final Obj b = mParser.m_obj().parse(code).get();
+                final Obj a = ObjmtronSerializer.parse(lhs);
+                final Obj b = ObjmtronSerializer.parse(code);
                 final Obj actual = b.apply(a);
                 LOG.debug("testing %s.%s => %s [expected:%s]", a, b, actual, expected);
                 fail("expected error but got " + actual);
@@ -208,9 +211,9 @@ public abstract class AbstractMetatronTest {
                 LOG.debug("testing %s.%s => %s [expected:%s]", lhs, code, e.getMessage(), expected);
             }
         } else {
-            final Obj a = mParser.m_obj().parse(lhs).get();
-            final Obj b = mParser.m_obj().parse(code).get();
-            final Obj ex = mParser.m_obj().parse(expected).get();
+            final Obj a = ObjmtronSerializer.parse(lhs);
+            final Obj b = ObjmtronSerializer.parse(code);
+            final Obj ex = ObjmtronSerializer.parse(expected);
             final Obj actual = b.apply(a);
             LOG.debug("testing %s.%s => %s [expected:%s]", a, b, actual, ex);
             checkEquality(LOG, ex, actual, true);
@@ -220,7 +223,7 @@ public abstract class AbstractMetatronTest {
     public static void checkCodeParseApply(final GraphittyLogger LOG, final String code, final String expected) {
         if (expected.trim().equals("<ERROR>")) {
             try {
-                final Obj cd = code.contains(";") ? mParser.eval(code) : mParser.m_call_prefix(START_INST_TID).parse(code).get();
+                final Obj cd = code.contains(";") ? mParser.eval(code) : ObjmtronSerializer.parse(code);
                 final Obj actual2 = cd.apply(noobj());
                 LOG.debug("testing %s <= %s", cd, actual2.type());
                 actual2.stream().forEach(actual -> {
@@ -237,8 +240,8 @@ public abstract class AbstractMetatronTest {
                 LOG.error("testing %s => %s", code, e.getMessage());
             }
         } else {
-            final Obj cd = code.contains(";") ? mParser.eval(code) : mParser.m_call_prefix(START_INST_TID).parse(code).get();
-            final Obj ex = mParser.eval(expected);
+            final Obj cd = code.contains(";") ? mParser.eval(code) : ObjmtronSerializer.parse(code);
+            final Obj ex = ObjmtronSerializer.parse(expected).apply();
             final Obj actual = cd.apply(noobj());
             LOG.debug("testing %s => %s => %s [expected:%s]", cd, code, actual, ex);
             if (!actual.equals(ex) && actual.stream().anyMatch(Obj::isFail))

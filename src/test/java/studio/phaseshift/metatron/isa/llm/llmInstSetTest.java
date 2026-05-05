@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.llm;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.isa.AbstractInstSetTest;
@@ -68,6 +69,21 @@ public class llmInstSetTest extends AbstractInstSetTest {
             "*<local:skills/mtron>.as(skill::T) | *skill | true",
     }, delimiter = '|')
     public void testAs(final String noNoObjCode, final String expectedType, final boolean shouldMatch) {
+        Obj result = mParser.eval(noNoObjCode);
+        assertTrue(result.test(LLM_SKILL_TYPE));
+        assertTrue(result.type().test(LLM_SKILL_TYPE));
+        assertNotNull(result.tid());
+        Obj expected = mParser.eval(expectedType);
+        LOG.debug("result [%s] expected [%s] [should match: %b]", result, expected, shouldMatch);
+        assertEquals(shouldMatch, result.test(expected));
+    }
+    
+    @Disabled
+    @ParameterizedTest
+    @CsvSource(value = {
+            "abc->model::[ | *skill | true",
+    }, delimiter = '|')
+    public void testChatResolution(final String noNoObjCode, final String expectedType, final boolean shouldMatch) {
         Obj result = mParser.eval(noNoObjCode);
         assertTrue(result.test(LLM_SKILL_TYPE));
         assertTrue(result.type().test(LLM_SKILL_TYPE));

@@ -260,8 +260,14 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         Type lhsType = this.isType() ? this.asType() : this.type();
         if (lhsType.isGeneric() && rhsType.isGeneric())
             return lhsType.tid().test(rhsType.tid());// lhsType.c().within(rhsType.c());//&& lhsType.tid().basePath().equals(rhsType.tid().basePath());
-        //if (rhsType.hasPredicate() && rhsType.predicate().apply(this).isNoObj())
-        //  return false;
+
+        if (rhsType.hasPredicate()) {
+            if (lhsType.isType()) {
+                if (!lhsType.hasPredicate() || !Objects.equals(lhsType.predicate(), rhsType.predicate()))
+                    return false;
+            } else if (rhsType.predicate().apply(this).isNoObj())
+                return false;
+        }
         while (!lhsType.isRootType()) {
             if (lhsType.vid().test(rhsType.vid()))
                 return true;
@@ -360,6 +366,12 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         else if (this.isCode()) return CODE_TID.c(this.c());
         else if (this.isNoObj()) return NOOBJ_TID.c(this.c());
         else if (this.isFail()) return FAIL_TID.c(this.c());
+        else if (this.isType()) {
+            final Type parent = this.asType().parentType();
+            if (parent.isBaseType())
+                return parent.tid();
+            else return parent.baseType();
+        }
        /* else if (this.isType()) {
             if(null != this.vid()) {
                 final Obj temp = Router.readFromSpace(this.vid());
@@ -541,6 +553,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
             if (!match)
                 throw MTronException.of("%s is not a %s\n%s", this, type.predicate(), indent(Poly.Helper.diffObjRecursion(this, Type.Helper.typePredicateObj(type)).toString(), 2));
         }
+        //return type.hasConstructor() ? type.constructor().apply(this).selfTID(type.vid()) : this.tid(type.vidOrTid());
         return type.hasConstructor() ? Obj.Helper.objClone(this, this.jvm(), type.vidOrTid(), this.vid()) : this.tid(type.vidOrTid());
     }
 
@@ -937,7 +950,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                             (lhs, inst) -> MTronException.wrap(() ->
                                     objs((Stream) InstSet.importInstSetStream(inst.arg(0).uriValue(), inst.arg(1).isNoObj() ? null : inst.arg(1).uriValue())))),
                     docWrap(instC(DEDUP_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(), (lhs, inst) -> objs(lhs.stream().map(o -> o.c().gt(cInt.ZERO()) ? o.c(cInt::one) : o.c(c -> cInt.of(-1))).distinct())),
-                            "any objs", "the deduplicated objs", Map.of(), "a deduplication function f({c}X)->{d<=c}X"),
+                            "any objs", "the deduplicated objs", Map.of(), "a deduplication function \\(f({c}X) \\to {1<=c}X\\)"),
                     instC(BARRIER_INST_TID.dom(ALL_STAR).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> lhs.stream().reduce(inst.arg(0), (a, b) -> a.asLst().add(b))),
                     docWrap(instC(BARRIER_INST_TID.dom(REL_TID.maybeSome()).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> lhs.stream().reduce(inst.arg(0), (a, b) -> a.asRec().at(b.asRel().first(), b.asRel().second()))),
                             "any objs", "the objs as a rec", Map.of(jnt(0), "the rec to merge into"), "a rec merging function \\(f(X)\\to X\\)"),
@@ -947,7 +960,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                     docWrap(instC(BARRIER_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(A.maybeSome())), (lhs, inst) -> inst.arg(0).append(lhs)),
                             "any objs", "the objs appended to the arg objs", Map.of(jnt(0), "the objs to append"), "an append function \\(f(X)\\to X\\)"),
                     docWrap(instC(AS_INST_TID.dom(A).rng(A), lst(T(A)), (lhs, inst) -> lhs.as(inst.arg(0).asType())),
-                            "any obj", "the lhs obj as the arg type", Map.of(jnt(0), "the type to cast to"), "a type casting function \\(f(x)\\to x\\)"),
+                            "any obj", "the lhs obj as the arg type", Map.of(jnt(0), "the type to construct from the lhs"), "a type construction function \\(f(x)\\to x\\)"),
                   /*  instC(REPEAT_INST_TID.dom(A).rng(A.maybeSome()).q(MONAD, null), lst(ALL_TYPE, ALL_TYPE), (lhs, inst) -> {
                         try {
                             Obj current = lhs.asMonad().obj();
@@ -1007,9 +1020,9 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                     instC(FILTER_INST_TID.dom(A).rng(A.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> inst.arg(0).isNoObj() ? noobj() : lhs),
                     instC(SIDE_INST_TID.dom(A).rng(A), lst(ALL_TYPE), (lhs, inst) -> Optional.of(inst.arg(0).apply(lhs)).map(x -> (Obj) null).orElse(lhs)),
                     docWrap(instC(TID_INST_TID.dom(ALL).rng(URI_TID), lst(), (lhs, inst) -> lhs.tid().toUri()),
-                            "any obj", "the lhs obj type id", Map.of(), "the geometric location of the lhs obj [equivalent to f(x) ~ vid(type())]"),
-                    docWrap(instC(VID_INST_TID.dom(ALL).rng(URI_TID.maybe()), lst(), (lhs, inst) -> null == lhs.vid() ? noobj() : lhs.vid().toUri()),
-                            "any obj", "the lhs obj value id", Map.of(), "the spatial location of the lhs obj"),
+                            "any obj", "the lhs obj type id", Map.of(), "the spatial location of the lhs obj [equivalent to f(x) ~ vid(type())]"),
+                    docWrap(instC(VID_INST_TID.dom(A).rng(URI_TID.maybe()), lst(), (lhs, inst) -> null == lhs.vid() ? noobj() : uri(lhs.vid())),
+                            "any obj", "a spatial location for the lhs obj", Map.of(jnt(0), "the value id for the lhs obj"), "specifies the spatial location of the lhs obj", "1@abc.vid() [-- abc --]"),
                     docWrap(instC(VID_INST_TID.dom(A).rng(A), lst(T(URI_TID)), (lhs, inst) -> lhs.vid(inst.arg(0).uriValue())),
                             "any obj", "a spatial location for the lhs obj", Map.of(jnt(0), "the value id for the lhs obj"), "specifies the spatial location of the lhs obj", "1@abc.vid() [-- abc --]"),
                     docWrap(instC(ELSE_INST_TID.dom(ALL.maybe()).rng(ALL), lst(T(ALL.maybe())), (lhs, inst) -> lhs.isNoObj() ? inst.arg(0) : lhs),
@@ -1072,6 +1085,28 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                             "any objs", "the objs after skipping", Map.of(jnt(0), "the number of objs to skip"), "skips the first n objs"),
                     docWrap(instC(TAKE_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(INT_TID)), (lhs, inst) -> lhs.take(cInt.of(inst.arg(0).intValue())).get0()), // remaining
                             "any objs", "the objs before skipping", Map.of(jnt(0), "the number of objs to take"), "takes the first n objs"),
+                    instC(UPDATE_INST_TID.dom(A).rng(B), lst(T(B)), (lhs, inst) -> {
+                        final fURI vid = Obj.Helper.getPointer(lhs).orElse(lhs.vid());
+                        if (null == vid) {
+                            return lhs.isPoly() ? Poly.Helper.updatePolyRecursion(lhs.as(), inst.arg(0).as(), MUTABLE) : inst.arg(0);
+                        } else {
+                            final Obj resolvedLHS = Obj.Helper.isPointer(lhs) ? lhs.apply(noobj()) : lhs;
+                            final boolean applyVID = null != lhs.vid();
+                            //Graphitty.log(lhs).info("UPDATE_INST_TID: %s %s %s %s", lhs, inst.arg(0), applyVID, vid);
+                            Obj newObj;
+                            if (resolvedLHS.isPoly()) {
+                                newObj = Poly.Helper.updatePolyRecursion(resolvedLHS.as(), inst.arg(0).as(), MUTABLE);
+                            } else {
+                                newObj = inst.arg(0).apply(resolvedLHS);
+                            }
+                            if (applyVID)
+                                return newObj.vid(lhs.vid());
+                            else {
+                                return Router.global().write(vid, newObj);
+                                //return newObj;
+                            }
+                        }
+                    }),
                     instC(REIFY_INST_TID.dom(A).rng(REC_TID), lst(), (lhs, inst) -> rec(
                             "type", rec(
                                     "tid", rec(

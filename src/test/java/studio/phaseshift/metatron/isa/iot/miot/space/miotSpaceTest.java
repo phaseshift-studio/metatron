@@ -31,6 +31,7 @@ import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -102,8 +103,8 @@ public class miotSpaceTest extends AbstractSpaceTest implements SubQTest {
     public void testSubscriptions(final String subscription, final String write, final String check) {
         final Rec sub = mParser.eval(subscription);
         assertEquals(SUBSCRIPTION_TID, sub.tid());
-        final Obj writeObj = mParser.eval(write);
-        final Obj checkObj = mParser.eval(check);
+        final Obj writeObj = ObjmtronSerializer.parse(write).apply();
+        final Obj checkObj = ObjmtronSerializer.parse(check).apply();
         assertNotEquals(noobj(), checkObj);
     }
 }

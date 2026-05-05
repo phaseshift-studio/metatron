@@ -79,7 +79,7 @@ public class TypeQTest extends AbstractMetatronTest {
         if (!result.trim().equals("<ERROR>"))
             checkCodeEvaluate(LOG, readFrom, result);
         else
-            assertEquals(noobj(), mParser.eval(readFrom));
-        assertEquals(obj.isType() ? obj : T(ALL).maybeSome(), mParser.eval(readFrom + "?T"));
+            assertEquals(noobj(), ObjmtronSerializer.parse(readFrom).apply());
+        assertEquals(obj.isType() ? obj : T(ALL).maybeSome(), ObjmtronSerializer.parse(readFrom + "?T").apply());
     }
 }

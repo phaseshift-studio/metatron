@@ -112,7 +112,7 @@ public class MTronException extends RuntimeException {
         if (lname.contains("rel"))
             return "rel::T";
         if (lname.contains("type"))
-            return "T::T";
+            return "type";
         else
             return lname;
     }

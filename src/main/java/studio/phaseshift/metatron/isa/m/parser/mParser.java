@@ -43,6 +43,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -250,7 +251,7 @@ public class mParser {
 
     private static Parser generate_infix_sugar_parser(final List<fURI> instChain, final String token) {
         // Infix parser: m_obj_no_sugar() + token + m_obj_no_sugar()
-        return seq(m_obj_no_sugar(), of(token).trim(),m_obj()).map(t -> {
+        return seq(m_obj_no_sugar(), of(token).trim(), m_obj()).map(t -> {
             final Obj lhs = pick(t, 0);
             final Obj rhs = pick(t, 2);
             Obj current = lhs;
@@ -376,7 +377,8 @@ public class mParser {
     }
 
     public static <O extends Obj> O eval(final String code) {
-        final Obj obj = objs(splitOnNonQuotedSequence(code.replaceAll("\\[==.*?==\\]", ""), ';', false).stream()
+        final AtomicReference<Obj> running = new AtomicReference<>(noobj());
+        splitOnNonQuotedSequence(code.replaceAll("\\[==.*?==\\]", ""), ';', false).stream()
                 .filter(s -> !s.trim().isEmpty())
                 .map(s -> Arrays.stream(s.split("\n"))
                         .map(String::trim)
@@ -384,8 +386,8 @@ public class mParser {
                         .reduce("", (a, b) -> a + b + "\n"))
                 .map(s -> mParser.parse(s).apply())
                 .filter(o -> !o.isNoObj())
-                .map(Obj::as));
-        return (O) obj;
+                .forEach(o -> running.getAndUpdate(o::apply));
+        return (O) running.get();
     }
 
     public static <O extends Obj> O parse(final String code) {
@@ -556,7 +558,7 @@ public class mParser {
                     }
                 })), baseType);
     }
-    
+
     public static Parser m_vid_postfix() {
         return opt(seq(of('@'), m_furi(REDUCED_FURI_CHARS, true, false, false)).map(t -> pick(t, 1)), null);
     }

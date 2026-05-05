@@ -29,6 +29,7 @@ import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -151,7 +152,7 @@ public class mathInstSetTest extends AbstractInstSetTest {
             // TODO: Fix comparison logic to handle non-exact unit conversions correctly
     }, delimiter = '%', quoteCharacter = '~')
     public void testConversionRelations(final String code, final boolean match) {
-        assertEquals(match, mParser.eval(code).boolValue());
+        assertEquals(match, ObjmtronSerializer.parse(code).apply().boolValue());
     }
 
     @ParameterizedTest
@@ -170,8 +171,8 @@ public class mathInstSetTest extends AbstractInstSetTest {
             "pB::1.0.as(tB::T)            | *tB   | true",
     }, delimiter = '|')
     public void testAs(String code, String expectedType, boolean shouldMatch) {
-        Obj result = mParser.eval(code);
-        Obj expected = mParser.eval(expectedType);
+        Obj result = ObjmtronSerializer.parse(code);
+        Obj expected = ObjmtronSerializer.parse(expectedType);
         LOG.debug("result [%s] expected [%s] [should match: %b]", result, expected, shouldMatch);
         assertEquals(shouldMatch, result.test(expected));
     }
