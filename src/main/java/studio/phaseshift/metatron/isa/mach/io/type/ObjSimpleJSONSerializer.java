@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -113,7 +113,7 @@ public class ObjSimpleJSONSerializer extends AbstractObjSerializer<JsonElement> 
     public Obj read(final JsonElement json) throws MTronException {
         try {
             if (json.isJsonNull())
-                return NoObj.noobj();
+                return uri("null");
             else if (json.isJsonPrimitive()) {
                 final JsonPrimitive jp = (JsonPrimitive) json;
                 if (jp.isBoolean())
@@ -127,12 +127,16 @@ public class ObjSimpleJSONSerializer extends AbstractObjSerializer<JsonElement> 
                     if (HEX_PATTERN.matcher(jp.getAsString()).matches())
                         return bytes(ByteBuffer.wrap(HexFormat.of().parseHex(jp.getAsString().substring(2))));
                     final String jpstr = jp.getAsString();
-                    if (jpstr.startsWith("<") && jpstr.endsWith(">"))
-                        return uri(jpstr.substring(1, jpstr.length() - 1));
-                    else if (!jpstr.contains(" ") && jpstr.contains("/") && !jpstr.contains("^") && !jpstr.contains("|"))
-                        return uri(jpstr);
-                    else if (this.biasTowardsURI && !jpstr.contains(" ") && !jpstr.contains("^") && !jpstr.contains("|"))
-                        return uri(jpstr);
+                    try {
+                        if (jpstr.startsWith("<") && jpstr.endsWith(">"))
+                            return uri(jpstr.substring(1, jpstr.length() - 1));
+                        else if (!jpstr.contains(" ") && jpstr.contains("/") && !jpstr.contains("^") && !jpstr.contains("|"))
+                            return uri(jpstr);
+                        else if (this.biasTowardsURI && !jpstr.contains(" ") && !jpstr.contains("^") && !jpstr.contains("|"))
+                            return uri(jpstr);
+                    } catch (Exception e) {
+                        // do nothiing
+                    }
                     try {
                         final Result r = ObjmtronSerializer.parse(jpstr);
                         return r.isSuccess() ? r.get() : ObjmtronSerializer.parse(jpstr);

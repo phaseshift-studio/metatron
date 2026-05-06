@@ -127,8 +127,6 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
             pattern      => <localai:#>,
             name         => <localai>,
             route        => [<localai:>=><>]]@/sys/space/localai;
- *<local:software/metatron/.agent/agent.mtron>;
- print('\n-- agent loaded --\n');
  tblespace::[pattern => play:#,
              host    => <mariadb://localhost:3306/play?user=mtron&password=mtron&createDatabaseIfNotExist=true>,
              table   => [,],
@@ -170,12 +168,13 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
               wd:       =><http://www.wikidata.org/entity/>,
               wdt:      =><http://www.wikidata.org/prop/direct/>,
               wikidata: =><>]]@/sys/space/wikidata;
- [==mcp::[host      => <ws://localhost:8999/m/llm/mcp>]@/usr/ai/mcp/mtron;
- mcp::[host      => <http://127.0.0.1:29170/index-mcp/streamable-http>]@/usr/ai/mcp/intellij;
+ mcp::[host => <ws://localhost:8999/m/llm/mcp>]@/usr/ai/mcp/mtron;
+ mcp::[host => <http://127.0.0.1:29170/index-mcp/streamable-http>]@/usr/ai/mcp/intellij;
  [==mcp::[host      => <http://192.168.88.231:3721/mcp>,
              transport => <streamable-http>,
-             headers   => [authorization => "Bearer yFCufT0BTOHuvnmXod8sissMvzIMsmAlsKBtkEb/0j0="]]@/usr/ai/mcp/openclaw;==]
-                       
+             headers   => [authorization => "Bearer yFCufT0BTOHuvnmXod8sissMvzIMsmAlsKBtkEb/0j0="]]@/usr/ai/mcp/openclaw;==]                     
+ *<local:software/metatron/.agent/agent.mtron>;
+ print('\n-- agent loaded --\n');
 [== load user console (skip if MTRON_HEADLESS env var or --headless boot arg is set) ==]
 [-- *</sys/env/MTRON_HEADLESS>.else(console::[=>]@/usr/ui/console);
 console::[=>]@/usr/ui/console;

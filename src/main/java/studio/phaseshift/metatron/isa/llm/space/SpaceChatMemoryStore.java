@@ -19,6 +19,8 @@
 package studio.phaseshift.metatron.isa.llm.space;
 
 import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.data.message.ChatMessageSerializer;
+import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Lst;
@@ -30,15 +32,13 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static dev.langchain4j.data.message.ChatMessageDeserializer.messageFromJson;
-import static dev.langchain4j.data.message.ChatMessageSerializer.messagesToJson;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_MEMORY_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -60,18 +60,34 @@ public class SpaceChatMemoryStore implements ChatMemoryStore {
         final Lst messages = Router.readFromSpace((fURI) memoryId).orSupply(() -> lst(new ArrayList<>(), LST_TID, (fURI) memoryId));
         final List<ChatMessage> llmMessages = messages.isEmpty() ?
                 new ArrayList<>() :
-                messages.elements().map(e -> messageFromJson(ObjSimpleJSONSerializer.single().write(e).toString())).collect(Collectors.toCollection(ArrayList::new));
+                messages.elements().map(e -> {
+                            try {
+                                return messageFromJson(ObjSimpleJSONSerializer.single().write(e).toString());
+                            } catch (final Exception ex) {
+                                LOG.warn("error making json chat messages (ignoring): %s %s", e, ex);
+                                return new ToolExecutionResultMessage("abc","abc","abc");
+                            }
+                        })
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toCollection(ArrayList::new));
         LOG.debug("getting messages for %s:\n%s\n---\n%s", memoryId, messages, llmMessages);
         return llmMessages;
     }
 
     @Override
     public void updateMessages(final Object memoryId, final List<ChatMessage> messages) {
-        final String json = messagesToJson(messages);
-        messages.getFirst().type();
-        final Obj obj = ObjSimpleJSONSerializer.parse(json);//.as(OLLM_AI_MEMORY);
-        LOG.debug("updating messages for %s: %s", memoryId, obj);
-        obj.vid((fURI) memoryId); // TODO: type them memory and user/ai memory
+        final List<Obj> jsonMessages = new ArrayList<>();
+        for (final ChatMessage message : messages) {
+            try {
+                final String jsonMessage = ChatMessageSerializer.messageToJson(message);
+                final Obj obj = ObjSimpleJSONSerializer.parse(jsonMessage);
+                jsonMessages.add(obj);
+            } catch (final Exception e) {
+                LOG.warn("error making obj chat message (ignoring): %s %s", message, e);
+            }
+        }
+        final Lst objMessages = lst(jsonMessages, LST_TID, (fURI) memoryId);
+        LOG.debug("updating messages for %s [count: %d]", memoryId, objMessages.count());
     }
 
     @Override
