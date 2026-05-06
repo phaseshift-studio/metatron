@@ -168,13 +168,19 @@ public class BasicRouter extends AbstractSpace<Map<Obj, Obj>> implements Router 
             LOG.debug("vid-less spaces are self-managed and not indexed by router: %s", space);
             return;
         }
-        if (this.spaces()
-                .values()
-                .map(r -> ((Space) r).pattern())
-                .anyMatch(f -> f.compareTo(space.pattern()) == 0)) {
-            LOG.warn("%s has an overlapping address space: %s <=> %s", space, space.pattern(), space.pattern());
-            return;
-        }
+        // Evict any previously registered space that shares the exact same pattern so
+        // the fresh space can take its place.  Re-registering a pattern with a newer
+        // incarnation (e.g. a fresh JDBC connection) replaces the stale one rather
+        // than being silently dropped.  Resources (connections, etc.) are closed first.
+        this.spaces().values()
+                .map(r -> (Space) r)
+                .filter(s -> space.pattern().compareTo(s.pattern()) == 0)
+                .toList()
+                .forEach(s -> {
+                    LOG.warn("%s evicting %s (same pattern %s)", space, s.vid(), space.pattern());
+                    s.close();
+                    this.spaces().jvm().remove(s.vid().toUri());
+                });
         final Space superSpace = this.hasSpaceFor(space.pattern()) ? this.getSpace(space.pattern()) : noobjSpace.single();
         final Rec subSpaces = space.jvm().getOrDefault(uri(SPACE), rec()).as();
         if (!(superSpace instanceof noobjSpace)) {

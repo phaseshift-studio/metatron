@@ -1,5 +1,5 @@
 /*
- * Metatron: A Distributed Computing Language and Virtual Machine
+ * metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
@@ -47,7 +47,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.tble.tbleInstSet.TABLE_TID;
 
 /**
- * Schema for mapping existing SQL tables to Metatron objects.
+ * Schema for mapping existing SQL tables to metatron objects.
  * Discovers tables in the database and makes them accessible via fURIs.
  * <p>
  * Path format: /table_name/row_id[/field_name]
@@ -60,7 +60,7 @@ import static studio.phaseshift.metatron.isa.tble.tbleInstSet.TABLE_TID;
  * - /users/123 → [name=>marko,age=>29] (update/insert entire row)
  * - /users/123/name → marko (update single field)
  * <p>
- * SQL rows are converted to Metatron records where column names are keys.
+ * SQL rows are converted to metatron records where column names are keys.
  * Writes support both full row updates and individual field updates.
  * The Space.Helper.resolveWrite() method handles poly unrolling automatically.
  *
@@ -187,6 +187,8 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
             }
         }
         this.space.logger().info("discovered {{b}}%s{{X}} tables: %s", tableSchemas.size(), tableSchemas.keySet());
+        // Ensure _mtron_meta exists before querying it — creates it once, no-ops thereafter
+        ensureMetaTable(conn);
         // Augment all discovered tables with any metatron-tracked FK pointer columns
         loadMetaForeignKeys(conn);
     }
@@ -251,7 +253,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
             // the body on full-row reads, mirroring how dcmntSpace strips _id.
             if (rowNames.length == 0 && metadata.primaryKeys.contains(col.name)) continue;
             if (rowNames.length == 0 || Arrays.asList(rowNames).contains(col.name)) {
-                final Obj value = readColumnWithMetadata(rs, col);
+                final Obj value = readColumnWithMetadata(rs, col, metadata.tableName);
                 labeledValues.put(uri(col.name), value);
                 if (!value.isNoObj())
                     Router.global().stats().ioStats().incrBytesRecv(value.toString().getBytes().length);
@@ -265,27 +267,25 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
      * This is especially important for SQLite which stores BOOLEAN as INTEGER.
      * Also handles foreign key traversal - if a column is a foreign key, returns the referenced row.
      */
-    private Obj readColumnWithMetadata(final ResultSet rs, final ColumnMetadata col) throws SQLException {
+    private Obj readColumnWithMetadata(final ResultSet rs, final ColumnMetadata col,
+                                       final String tableName) throws SQLException {
         // Check if this column is a foreign key
-        final TableMetadata currentTable = getCurrentTableMetadata(rs);
-        if (currentTable != null) {
-            final ForeignKeyMetadata fk = getForeignKeyForColumn(currentTable.tableName, col.name);
-            if (fk != null) {
-                // This is a foreign key - return an auto_from instruction for lazy resolution
-                final Object fkValue = rs.getObject(col.name);
-                if (fkValue != null && !rs.wasNull()) {
-                    // Build the full path to the referenced row including space pattern
-                    // e.g., "acme:employees/1056" not just "employees/1056"
-                    // Use retractPattern() to strip the wildcard from the pattern (acme:# -> acme:)
-                    final fURI referencedPath = this.space.pattern().retractPattern()
-                            .extend(fk.toTable())
-                            .extend(fkValue.toString());
-                    // Return auto_from instruction that will resolve lazily when accessed
-                    return auto_from_(referencedPath).tryToInst();
-                }
-                // FK value is null, return noobj
-                return noobj();
+        final ForeignKeyMetadata fk = getForeignKeyForColumn(tableName, col.name);
+        if (fk != null) {
+            // This is a foreign key - return an auto_from instruction for lazy resolution
+            final Object fkValue = rs.getObject(col.name);
+            if (fkValue != null && !rs.wasNull()) {
+                // Build the full path to the referenced row including space pattern
+                // e.g., "acme:employees/1056" not just "employees/1056"
+                // Use retractPattern() to strip the wildcard from the pattern (acme:# -> acme:)
+                final fURI referencedPath = this.space.pattern().retractPattern()
+                        .extend(fk.toTable())
+                        .extend(fkValue.toString());
+                // Return auto_from instruction that will resolve lazily when accessed
+                return auto_from_(referencedPath).tryToInst();
             }
+            // FK value is null, return noobj
+            return noobj();
         }
 
         // Check if this is a BOOLEAN column that SQLite reports as INTEGER
@@ -302,21 +302,6 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         }
         // Use standard column reading for other types
         return readColumn(rs, col.name, col.sqlType);
-    }
-
-    /**
-     * Get the table metadata for the current ResultSet
-     */
-    private TableMetadata getCurrentTableMetadata(final ResultSet rs) throws SQLException {
-        try {
-            final String tableName = rs.getMetaData().getTableName(1);
-            if (tableName != null && !tableName.isEmpty()) {
-                return tableSchemas.get(tableName.toLowerCase());
-            }
-        } catch (SQLException e) {
-            // Some JDBC drivers don't support getTableName, ignore
-        }
-        return null;
     }
 
 
@@ -894,8 +879,8 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
     }
 
     /**
-     * Create a SQL table from a Metatron record's field structure, then register it.
-     * Column SQL types are inferred from the Metatron type of each field's value.
+     * Create a SQL table from rec field structure, then register it.
+     * Column SQL types are inferred from the metron type of each field's value.
      * If the record contains no field named "id", an {@code id INTEGER PRIMARY KEY} column
      * is prepended automatically so the table always has a usable primary key.
      *

@@ -37,6 +37,7 @@ import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -54,7 +55,18 @@ import static studio.phaseshift.metatron.isa.tble.tbleInstSet.TBLE_ISA_TID;
 
 /**
  * Abstract base test suite for tbleSpace with database-agnostic tests.
- * Subclasses provide database-specific configuration via DatabaseConfig.
+ * Subclasses provide database-specific configuration via {@link DatabaseConfig}.
+ *
+ * <h3>Adding test cases</h3>
+ * Most parameterized tests use {@code @CsvSource} with a simple type-prefix
+ * convention for expected values:
+ * <pre>
+ *   str:Alice    →   str("Alice")
+ *   jnt:42       →   jnt(42)
+ *   real:99.99   →   real(99.99)
+ *   bool:true    →   bool(true)
+ * </pre>
+ * See {@link #parseObj(String)}.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -64,16 +76,13 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
     protected static final fURI SPACE_VID = f("/sys/space/tabledb/test");
     protected static DatabaseConfig staticDbConfig;
     protected final DatabaseConfig dbConfig;
+    private static final AtomicInteger testSpaceCounter = new AtomicInteger(0);
 
     public AbstractTbleSpaceTest(final DatabaseConfig dbConfig) {
-        // Use scheme-based baseURI like dcmntSpaceTest does (mongo:test_collection/rewrite_test)
-        // This ensures the parent memSpace has a specific pattern (tble:kv/#)
-        // which is MORE SPECIFIC than the tbleSpace pattern (tble:#)
-        // so that tble:users routes to tbleSpace, not the parent memSpace
         super(f("db:kv/test"), () -> {
-            // This lambda is called lazily, so staticDbConfig will be set by @BeforeAll
             if (staticDbConfig == null) {
-                throw new IllegalStateException("staticDbConfig not initialized. @BeforeAll method must run first.");
+                throw new IllegalStateException(
+                        "staticDbConfig not initialized. @BeforeAll method must run first.");
             }
             return tbleSpace.of(
                     rec(
@@ -87,115 +96,150 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
             );
         });
         this.dbConfig = dbConfig;
-        // Don't set staticDbConfig here - let @BeforeAll do it after starting the container
     }
+
+    // =========================================================================
+    //  Lifecycle
+    // =========================================================================
 
     @BeforeAll
     public static void setupInstSet() throws Exception {
         InstSet.importInstSet(TBLE_ISA_TID);
     }
 
-    /**
-     * Setup database - called once before all tests.
-     * Note: This is NOT annotated with @BeforeAll because it needs to be called
-     * by subclasses after they set staticDbConfig in their @BeforeAll method.
-     */
+    /** Called by subclass {@code @BeforeAll} methods after setting {@code staticDbConfig}. */
     protected static void setupDatabase() throws Exception {
-        if (staticDbConfig == null) {
-            throw new IllegalStateException("Database config not initialized. Ensure constructor is called.");
-        }
-        staticDbConfig.setup();
+        if (staticDbConfig == null)
+            throw new IllegalStateException(
+                    "Database config not initialized. Ensure constructor is called.");
 
-        // Create test tables for parameterized tests
+        staticDbConfig.setup();
         try (Connection conn = staticDbConfig.getConnection();
              Statement stmt = conn.createStatement()) {
 
-            // Create users table
             stmt.executeUpdate(staticDbConfig.getUsersTableDDL());
+            stmt.executeUpdate(String.format(
+                    "INSERT INTO users VALUES (1, 'Alice', 30, 75000.0, %d, 'alice@example.com')",
+                    staticDbConfig.getBooleanTrue()));
+            stmt.executeUpdate(String.format(
+                    "INSERT INTO users VALUES (2, 'Bob', 25, 60000.0, %d, 'bob@example.com')",
+                    staticDbConfig.getBooleanTrue()));
+            stmt.executeUpdate(String.format(
+                    "INSERT INTO users VALUES (3, 'Charlie', 35, 85000.0, %d, 'charlie@example.com')",
+                    staticDbConfig.getBooleanFalse()));
 
-            // Insert test data into users
-            stmt.executeUpdate(String.format("INSERT INTO users VALUES (1, 'Alice', 30, 75000.0, %d, 'alice@example.com')", staticDbConfig.getBooleanTrue()));
-            stmt.executeUpdate(String.format("INSERT INTO users VALUES (2, 'Bob', 25, 60000.0, %d, 'bob@example.com')", staticDbConfig.getBooleanTrue()));
-            stmt.executeUpdate(String.format("INSERT INTO users VALUES (3, 'Charlie', 35, 85000.0, %d, 'charlie@example.com')", staticDbConfig.getBooleanFalse()));
-
-            // Create products table
             stmt.executeUpdate(staticDbConfig.getProductsTableDDL());
+            stmt.executeUpdate(String.format(
+                    "INSERT INTO products VALUES (101, 'Laptop', 1299.99, %d, 15, 'Electronics')",
+                    staticDbConfig.getBooleanTrue()));
+            stmt.executeUpdate(String.format(
+                    "INSERT INTO products VALUES (102, 'Mouse', 29.99, %d, 50, 'Electronics')",
+                    staticDbConfig.getBooleanTrue()));
+            stmt.executeUpdate(String.format(
+                    "INSERT INTO products VALUES (103, 'Keyboard', 79.99, %d, 30, 'Electronics')",
+                    staticDbConfig.getBooleanTrue()));
+            stmt.executeUpdate(String.format(
+                    "INSERT INTO products VALUES (1, 'Monitor', 399.99, %d, 0, 'Electronics')",
+                    staticDbConfig.getBooleanFalse()));
+            stmt.executeUpdate(String.format(
+                    "INSERT INTO products VALUES (105, 'Desk Chair', 249.99, %d, 20, 'Furniture')",
+                    staticDbConfig.getBooleanTrue()));
+            stmt.executeUpdate(String.format(
+                    "INSERT INTO products VALUES (106, 'Desk', 499.99, %d, 10, 'Furniture')",
+                    staticDbConfig.getBooleanTrue()));
+            stmt.executeUpdate(String.format(
+                    "INSERT INTO products VALUES (107, 'Notebook', 4.99, %d, 100, 'Stationery')",
+                    staticDbConfig.getBooleanTrue()));
+            stmt.executeUpdate(String.format(
+                    "INSERT INTO products VALUES (108, 'Pen Set', 12.99, %d, 75, 'Stationery')",
+                    staticDbConfig.getBooleanTrue()));
+            stmt.executeUpdate(String.format(
+                    "INSERT INTO products VALUES (109, 'Webcam', 89.99, %d, 0, 'Electronics')",
+                    staticDbConfig.getBooleanFalse()));
+            stmt.executeUpdate(String.format(
+                    "INSERT INTO products VALUES (110, 'Headphones', 149.99, %d, 25, 'Electronics')",
+                    staticDbConfig.getBooleanTrue()));
 
-            // Insert test data into products
-            stmt.executeUpdate(String.format("INSERT INTO products VALUES (101, 'Laptop', 1299.99, %d, 15, 'Electronics')", staticDbConfig.getBooleanTrue()));
-            stmt.executeUpdate(String.format("INSERT INTO products VALUES (102, 'Mouse', 29.99, %d, 50, 'Electronics')", staticDbConfig.getBooleanTrue()));
-            stmt.executeUpdate(String.format("INSERT INTO products VALUES (103, 'Keyboard', 79.99, %d, 30, 'Electronics')", staticDbConfig.getBooleanTrue()));
-            stmt.executeUpdate(String.format("INSERT INTO products VALUES (1, 'Monitor', 399.99, %d, 0, 'Electronics')", staticDbConfig.getBooleanFalse()));
-            stmt.executeUpdate(String.format("INSERT INTO products VALUES (105, 'Desk Chair', 249.99, %d, 20, 'Furniture')", staticDbConfig.getBooleanTrue()));
-            stmt.executeUpdate(String.format("INSERT INTO products VALUES (106, 'Desk', 499.99, %d, 10, 'Furniture')", staticDbConfig.getBooleanTrue()));
-            stmt.executeUpdate(String.format("INSERT INTO products VALUES (107, 'Notebook', 4.99, %d, 100, 'Stationery')", staticDbConfig.getBooleanTrue()));
-            stmt.executeUpdate(String.format("INSERT INTO products VALUES (108, 'Pen Set', 12.99, %d, 75, 'Stationery')", staticDbConfig.getBooleanTrue()));
-            stmt.executeUpdate(String.format("INSERT INTO products VALUES (109, 'Webcam', 89.99, %d, 0, 'Electronics')", staticDbConfig.getBooleanFalse()));
-            stmt.executeUpdate(String.format("INSERT INTO products VALUES (110, 'Headphones', 149.99, %d, 25, 'Electronics')", staticDbConfig.getBooleanTrue()));
-
-            // Create rewrite_test table for CommonRewritesTestContract
             stmt.executeUpdate(staticDbConfig.getRewriteTestTableDDL());
-
-            // Insert 10 rows of test data for rewrite tests
             for (int i = 1; i <= 10; i++) {
-                final int active = (i % 2 == 1) ? staticDbConfig.getBooleanTrue() : staticDbConfig.getBooleanFalse();
+                final int active = (i % 2 == 1)
+                        ? staticDbConfig.getBooleanTrue()
+                        : staticDbConfig.getBooleanFalse();
                 stmt.executeUpdate(String.format(
-                    "INSERT INTO rewrite_test (id, value, name, active) VALUES (%d, %d, 'item%d', %d)",
-                    i, i, i, active
-                ));
+                        "INSERT INTO rewrite_test (id, value, name, active) VALUES (%d, %d, 'item%d', %d)",
+                        i, i, i, active));
             }
         }
     }
 
-    /**
-     * Cleanup database - called once after all tests.
-     * Note: This is NOT annotated with @AfterAll because it needs to be called
-     * by subclasses in their @AfterAll method.
-     */
+    /** Called by subclass {@code @AfterAll} methods. */
     protected static void cleanupDatabase() throws Exception {
-        if (staticDbConfig != null) {
+        if (staticDbConfig != null)
             staticDbConfig.teardown();
-        }
     }
 
-    // ========== Helper Methods ==========
+    // =========================================================================
+    //  Per-test helpers
+    // =========================================================================
 
-    /**
-     * Setup test database with users and products tables.
-     * Used by parameterized tests that need a fresh database state.
-     */
+    /** Creates/inserts test data for parameterized tests that need fresh state. */
     protected void setupTestDatabase() throws Exception {
         try (final Connection conn = staticDbConfig.getConnection();
              final Statement stmt = conn.createStatement()) {
-
-            // Drop tables if they exist
             stmt.executeUpdate("DROP TABLE IF EXISTS users");
             stmt.executeUpdate("DROP TABLE IF EXISTS products");
 
-            // Create users table
             stmt.executeUpdate(staticDbConfig.getUsersTableDDL());
+            stmt.executeUpdate(String.format(
+                    "INSERT INTO users VALUES (1, 'Alice', 30, 75000.50, %d, 'alice@example.com')",
+                    staticDbConfig.getBooleanTrue()));
+            stmt.executeUpdate(String.format(
+                    "INSERT INTO users VALUES (2, 'Bob', 25, 60000.00, %d, 'bob@example.com')",
+                    staticDbConfig.getBooleanTrue()));
+            stmt.executeUpdate(String.format(
+                    "INSERT INTO users VALUES (3, 'Charlie', 35, 85000.75, %d, 'charlie@example.com')",
+                    staticDbConfig.getBooleanFalse()));
+            stmt.executeUpdate(String.format(
+                    "INSERT INTO users VALUES (4, 'Diana', 28, 70000.25, %d, 'diana@example.com')",
+                    staticDbConfig.getBooleanTrue()));
+            stmt.executeUpdate(String.format(
+                    "INSERT INTO users VALUES (5, 'Eve', 42, 95000.00, %d, 'eve@example.com')",
+                    staticDbConfig.getBooleanTrue()));
 
-            // Insert test data
-            stmt.executeUpdate(String.format("INSERT INTO users VALUES (1, 'Alice', 30, 75000.50, %d, 'alice@example.com')", staticDbConfig.getBooleanTrue()));
-            stmt.executeUpdate(String.format("INSERT INTO users VALUES (2, 'Bob', 25, 60000.00, %d, 'bob@example.com')", staticDbConfig.getBooleanTrue()));
-            stmt.executeUpdate(String.format("INSERT INTO users VALUES (3, 'Charlie', 35, 85000.75, %d, 'charlie@example.com')", staticDbConfig.getBooleanFalse()));
-            stmt.executeUpdate(String.format("INSERT INTO users VALUES (4, 'Diana', 28, 70000.25, %d, 'diana@example.com')", staticDbConfig.getBooleanTrue()));
-            stmt.executeUpdate(String.format("INSERT INTO users VALUES (5, 'Eve', 42, 95000.00, %d, 'eve@example.com')", staticDbConfig.getBooleanTrue()));
-
-            // Create products table
             stmt.executeUpdate(staticDbConfig.getProductsTableDDL());
-
-            stmt.executeUpdate(String.format("INSERT INTO products VALUES (101, 'Laptop', 1299.99, %d, 15, 'Electronics')", staticDbConfig.getBooleanTrue()));
-            stmt.executeUpdate(String.format("INSERT INTO products VALUES (102, 'Mouse', 29.99, %d, 50, 'Electronics')", staticDbConfig.getBooleanTrue()));
-            stmt.executeUpdate(String.format("INSERT INTO products VALUES (103, 'Keyboard', 79.99, %d, 30, 'Electronics')", staticDbConfig.getBooleanTrue()));
-            stmt.executeUpdate(String.format("INSERT INTO products VALUES (1, 'Monitor', 399.99, %d, 0, 'Electronics')", staticDbConfig.getBooleanFalse()));
-            stmt.executeUpdate(String.format("INSERT INTO products VALUES (105, 'Desk Chair', 249.99, %d, 20, 'Furniture')", staticDbConfig.getBooleanTrue()));
+            stmt.executeUpdate(String.format(
+                    "INSERT INTO products VALUES (101, 'Laptop', 1299.99, %d, 15, 'Electronics')",
+                    staticDbConfig.getBooleanTrue()));
+            stmt.executeUpdate(String.format(
+                    "INSERT INTO products VALUES (102, 'Mouse', 29.99, %d, 50, 'Electronics')",
+                    staticDbConfig.getBooleanTrue()));
+            stmt.executeUpdate(String.format(
+                    "INSERT INTO products VALUES (103, 'Keyboard', 79.99, %d, 30, 'Electronics')",
+                    staticDbConfig.getBooleanTrue()));
+            stmt.executeUpdate(String.format(
+                    "INSERT INTO products VALUES (1, 'Monitor', 399.99, %d, 0, 'Electronics')",
+                    staticDbConfig.getBooleanFalse()));
+            stmt.executeUpdate(String.format(
+                    "INSERT INTO products VALUES (105, 'Desk Chair', 249.99, %d, 20, 'Furniture')",
+                    staticDbConfig.getBooleanTrue()));
+            stmt.executeUpdate(String.format(
+                    "INSERT INTO products VALUES (106, 'Desk', 499.99, %d, 10, 'Furniture')",
+                    staticDbConfig.getBooleanTrue()));
+            stmt.executeUpdate(String.format(
+                    "INSERT INTO products VALUES (107, 'Notebook', 4.99, %d, 100, 'Stationery')",
+                    staticDbConfig.getBooleanTrue()));
+            stmt.executeUpdate(String.format(
+                    "INSERT INTO products VALUES (108, 'Pen Set', 12.99, %d, 75, 'Stationery')",
+                    staticDbConfig.getBooleanTrue()));
+            stmt.executeUpdate(String.format(
+                    "INSERT INTO products VALUES (109, 'Webcam', 89.99, %d, 0, 'Electronics')",
+                    staticDbConfig.getBooleanFalse()));
+            stmt.executeUpdate(String.format(
+                    "INSERT INTO products VALUES (110, 'Headphones', 149.99, %d, 25, 'Electronics')",
+                    staticDbConfig.getBooleanTrue()));
         }
     }
 
-    /**
-     * Cleanup test database.
-     */
     protected void cleanupTestDatabase() throws Exception {
         try (final Connection conn = staticDbConfig.getConnection();
              final Statement stmt = conn.createStatement()) {
@@ -204,10 +248,10 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
         }
     }
 
-    /**
-     * Create a test space instance.
-     */
     protected tbleSpace createTestSpace() {
+        // Evict the lazily-constructed parent space (SPACE_VID, pattern db:#) so it
+        // doesn't block the fresh space from registering.
+        Router.global().removeSpace(SPACE_VID);
         return tbleSpace.of(
                 rec(
                         uri(PATTERN), uri("db:#"),
@@ -216,7 +260,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
                         uri(ROUTE), rec(uri("db:"), uri("")),
                         uri(TABLE), lst()
                 ).jvm(),
-                f("/sys/space/tble/test")
+                f("/sys/space/tble/test/" + testSpaceCounter.getAndIncrement())
         );
     }
 
@@ -229,6 +273,39 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
     public String getNativeInstructionPrefix() {
         return "sql_";
     }
+
+    // =========================================================================
+    //  Type-prefix parser for @CsvSource test data
+    // =========================================================================
+
+    /**
+     * Parses a type-prefixed string into its corresponding {@link Obj}.
+     * <pre>
+     *   str:Alice    → str("Alice")
+     *   jnt:42       → jnt(42)
+     *   real:99.99   → real(99.99)
+     *   bool:true    → bool(true)
+     *   bool:false   → bool(false)
+     * </pre>
+     */
+    protected static Obj parseObj(final String encoded) {
+        if (encoded == null) return str("");
+        final int colon = encoded.indexOf(':');
+        if (colon < 0) return str(encoded);
+        final String type = encoded.substring(0, colon);
+        final String value = encoded.substring(colon + 1);
+        return switch (type) {
+            case "str"  -> str(value);
+            case "jnt"  -> jnt(Long.parseLong(value));
+            case "real" -> real(Double.parseDouble(value));
+            case "bool" -> bool(Boolean.parseBoolean(value));
+            default     -> str(encoded);
+        };
+    }
+
+    // =========================================================================
+    //  Rewrite tests (delegated to PostgreSQLTbleSpaceTest for test data)
+    // =========================================================================
 
     @ParameterizedTest(name = "[{index}] {0}")
     @MethodSource("provideAllRewriteTestCases")
@@ -249,9 +326,11 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
         LOG.info("Testing Rewrite Plan: %s", description);
         LOG.info("  Code: %s", code);
         LOG.info("  Plan: %s", rewritten);
-        
+
         final String fullNativeInstName = getNativeInstructionPrefix() + nativeInstName;
-        assertTrue(rewritten.stream().anyMatch(obj -> obj.isInst() && obj.asInst().tid().name().equals(fullNativeInstName)),
+        assertTrue(rewritten.stream().anyMatch(
+                obj -> obj.isInst()
+                       && obj.asInst().tid().name().equals(fullNativeInstName)),
                 "Plan should contain " + fullNativeInstName);
     }
 
@@ -259,300 +338,275 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
         return new PostgreSQLTbleSpaceTest().generatePlanVerificationTestCases();
     }
 
-    // ========== Parameterized Tests ==========
+    // =========================================================================
+    //  testReadIndividualFields
+    // =========================================================================
 
     /**
-     * Test reading individual fields from database rows.
+     * Reads a single field from a row and compares it to the expected value.
+     * <br>
+     * CSV columns: {@code description, rowUri, fieldName, expectedValue}
+     * <br>
+     * {@code expectedValue} uses type-prefix encoding (see {@link #parseObj}).
+     * <br>
+     * Note: primary keys are encoded in the VID, not in the row body.
+     * Use {@code table/id} path traversal to read PK values, not a full-row read.
      */
     @ParameterizedTest(name = "[{index}] Read {0}")
-    @MethodSource("provideFieldReadTestCases")
-    public void testReadIndividualFields(String description, String tableRowUri, String fieldName, Obj expectedValue) throws Exception {
+    @CsvSource(delimiter = '|', textBlock = """
+            String field from users             | db:users/1    | name         | str:Alice
+            String field from products          | db:products/101 | product_name | str:Laptop
+            Email field                         | db:users/2    | email        | str:bob@example.com
+            Category field                      | db:products/105 | category     | str:Furniture
+            Category stationery                  | db:products/107 | category     | str:Stationery
+            Integer age field                   | db:users/1    | age          | jnt:30
+            Integer quantity field              | db:products/102 | quantity     | jnt:50
+            Integer quantity zero               | db:products/101 | quantity     | jnt:15
+            Integer age field user 2            | db:users/2    | age          | jnt:25
+            Integer age field user 3            | db:users/3    | age          | jnt:35
+            Real salary field                   | db:users/1    | salary       | real:75000.50
+            Real price field                    | db:products/101 | price        | real:1299.99
+            Small price value                   | db:products/102 | price        | real:29.99
+            Real salary Diana                   | db:users/4    | salary       | real:70000.25
+            Real price furniture                 | db:products/105 | price        | real:249.99
+            """)
+    public void testReadIndividualFields(String description, String rowUri,
+                                         String fieldName, String expectedEncoded) throws Exception {
+        final Obj expectedValue = parseObj(expectedEncoded);
         setupTestDatabase();
-
         final tbleSpace testSpace = createTestSpace();
         try {
-            final Obj row = Router.readFromSpace(f(tableRowUri));
-            assertFalse(row.isNoObj(), "should not be a noobj");
-            assertTrue(row.isRec(), "should return a rec");
-
-            final Obj actualValue = row.asRec().at(uri(fieldName));
-            assertEquals(expectedValue, actualValue, description);
-        } finally {
-            Router.global().removeSpace(testSpace.vid());
-            testSpace.close();
-        }
-
-        cleanupTestDatabase();
-    }
-
-    protected static Stream<Arguments> provideFieldReadTestCases() {
-        return Stream.of(
-                // String fields
-                Arguments.of("String field from users", "db:users/1", "name", str("Alice")),
-                Arguments.of("String field from products", "db:products/101", "product_name", str("Laptop")),
-                Arguments.of("Email field", "db:users/2", "email", str("bob@example.com")),
-                Arguments.of("Category field", "db:products/105", "category", str("Furniture")),
-
-                // Integer fields
-                Arguments.of("Integer age field", "db:users/1", "age", jnt(30)),
-                Arguments.of("Integer quantity field", "db:products/102", "quantity", jnt(50)),
-                // Note: primary key (id) is encoded in the VID, not in the row body.
-                // To read the pk value use the path db:users/3/id, not a full-row read.
-
-                // Real/Double fields
-                Arguments.of("Real salary field", "db:users/1", "salary", real(75000.50)),
-                Arguments.of("Real price field", "db:products/101", "price", real(1299.99)),
-                Arguments.of("Small price value", "db:products/102", "price", real(29.99))
-
-                // Boolean fields - REMOVED because PostgreSQL uses INTEGER columns
-                // Different databases return different types (bool vs int)
-                // Arguments.of("Boolean true value", "db:users/1", "active", bool(true)),
-                // Arguments.of("Boolean false value", "db:users/3", "active", bool(false)),
-                // Arguments.of("Product in stock true", "db:products/101", "in_stock", bool(true)),
-                // Arguments.of("Product in stock false", "db:products/1", "in_stock", bool(false))
-        );
-    }
-
-    /**
-     * Test writing individual fields to database rows.
-     */
-    @ParameterizedTest(name = "[{index}] Write {2} to {0}/{1}")
-    @MethodSource("provideFieldWriteTestCases")
-    public void testWriteIndividualFields(String table, String rowId, String field, Obj newValue, Obj expectedValue) throws Exception {
-        setupTestDatabase();
-
-        final tbleSpace testSpace = createTestSpace();
-        try {
-            final String writeUri = String.format("db:%s/%s/%s", table, rowId, field);
-            Router.writeToSpace(f(writeUri), newValue);
-
-            final String rowUri = String.format("db:%s/%s", table, rowId);
             final Obj row = Router.readFromSpace(f(rowUri));
             assertFalse(row.isNoObj(), "should not be a noobj");
             assertTrue(row.isRec(), "should return a rec");
-
-            final Obj actualValue = row.asRec().at(uri(field));
-            assertEquals(expectedValue, actualValue, String.format("field %s should be updated", field));
+            assertEquals(expectedValue, row.asRec().at(uri(fieldName)), description);
         } finally {
             Router.global().removeSpace(testSpace.vid());
             testSpace.close();
         }
-
         cleanupTestDatabase();
     }
 
-    protected static Stream<Arguments> provideFieldWriteTestCases() {
-        return Stream.of(
-                // String updates
-                Arguments.of("users", "1", "name", str("Alice Updated"), str("Alice Updated")),
-                Arguments.of("users", "2", "email", str("bob.new@example.com"), str("bob.new@example.com")),
-                Arguments.of("products", "101", "product_name", str("Gaming Laptop"), str("Gaming Laptop")),
-
-                // Integer updates
-                Arguments.of("users", "1", "age", jnt(31), jnt(31)),
-                Arguments.of("users", "2", "age", jnt(26), jnt(26)),
-                Arguments.of("products", "102", "quantity", jnt(100), jnt(100)),
-
-                // Real updates
-                Arguments.of("users", "1", "salary", real(80000.00), real(80000.00)),
-                Arguments.of("products", "101", "price", real(999.00), real(999.00))
-
-                // Boolean updates - REMOVED (PostgreSQL uses INTEGER)
-                // Arguments.of("users", "3", "active", bool(true), bool(true)),
-                // Arguments.of("users", "1", "active", bool(false), bool(false)),
-                // Arguments.of("products", "1", "in_stock", bool(true), bool(true)),
-                // Arguments.of("products", "103", "in_stock", bool(false), bool(false))
-        );
-    }
+    // =========================================================================
+    //  testWriteIndividualFields
+    // =========================================================================
 
     /**
-     * Test reading entire rows as records.
+     * Writes a value to a single field and reads it back to verify round-trip.
+     * <br>
+     * CSV columns: {@code table, rowId, field, newValue, expectedValue}
      */
-    @ParameterizedTest(name = "[{index}] Read row {0}")
-    @CsvSource({
-            "db:users/1, name, Alice",
-            "db:users/2, name, Bob",
-            "db:users/5, name, Eve",
-            "db:products/101, product_name, Laptop",
-            "db:products/105, product_name, Desk Chair"
-    })
-    public void testReadEntireRow(String uri, String fieldName, String expectedFieldValue) throws Exception {
+    @ParameterizedTest(name = "[{index}] Write {2} to {0}/{1}")
+    @CsvSource(delimiter = '|', textBlock = """     
+            users | 1   | name         | str:Alice Updated     | str:Alice Updated
+            users | 2   | email        | str:bob.new@example.com | str:bob.new@example.com
+            products | 101 | product_name | str:Gaming Laptop   | str:Gaming Laptop
+            products | 105 | category   | str:Office            | str:Office
+            users | 1   | age          | jnt:31                | jnt:31
+            users | 2   | age          | jnt:26                | jnt:26
+            products | 102 | quantity     | jnt:100              | jnt:100
+            products | 103 | quantity     | jnt:0                | jnt:0
+            users | 1   | salary       | real:80000.00         | real:80000.00
+            products | 101 | price        | real:999.00          | real:999.00
+            users | 3   | salary       | real:100000.50        | real:100000.50
+            """)
+    public void testWriteIndividualFields(String table, String rowId, String field,
+                                          String newValueEncoded, String expectedEncoded) throws Exception {
+        final Obj newValue = parseObj(newValueEncoded);
+        final Obj expectedValue = parseObj(expectedEncoded);
         setupTestDatabase();
+        final tbleSpace testSpace = createTestSpace();
+        try {
+            Router.writeToSpace(f("db:%s/%s/%s".formatted(table, rowId, field)), newValue);
+            final Obj row = Router.readFromSpace(f("db:%s/%s".formatted(table, rowId)));
+            assertFalse(row.isNoObj(), "should not be a noobj");
+            assertTrue(row.isRec(), "should return a rec");
+            assertEquals(expectedValue, row.asRec().at(uri(field)),
+                    "field " + field + " should be updated");
+        } finally {
+            Router.global().removeSpace(testSpace.vid());
+            testSpace.close();
+        }
+        cleanupTestDatabase();
+    }
 
+    // =========================================================================
+    //  testReadEntireRow
+    // =========================================================================
+
+    @ParameterizedTest(name = "[{index}] Read row {0}")
+    @CsvSource(delimiter = '|', textBlock = """
+            db:users/1       | name         | Alice
+            db:users/2       | name         | Bob
+            db:users/3       | name         | Charlie
+            db:users/4       | name         | Diana
+            db:users/5       | name         | Eve
+            db:products/101  | product_name | Laptop
+            db:products/102  | product_name | Mouse
+            db:products/103  | product_name | Keyboard
+            db:products/105  | product_name | Desk Chair
+            """)
+    public void testReadEntireRow(String uri, String fieldName, String expectedFieldValue)
+            throws Exception {
+        setupTestDatabase();
         final tbleSpace testSpace = createTestSpace();
         try {
             final Obj row = Router.readFromSpace(f(uri));
             assertTrue(row.isRec(), "Should return a record");
-
-            final Rec rec = row.asRec();
-            final Obj fieldValue = rec.at(uri(fieldName));
-            assertEquals(str(expectedFieldValue), fieldValue, String.format("Field %s should match", fieldName));
+            assertEquals(str(expectedFieldValue), row.asRec().at(uri(fieldName)),
+                    "Field " + fieldName + " should match");
         } finally {
             Router.global().removeSpace(testSpace.vid());
             testSpace.close();
         }
-
         cleanupTestDatabase();
     }
 
+    // =========================================================================
+    //  testInsertNewRows
+    // =========================================================================
+
     /**
-     * Test inserting new rows with various data types.
+     * Inserts a new row via a full-record write and reads it back.
+     * <br>
+     * CSV columns: {@code table, rowId, verifyField, expectedValue, col1, val1, ... colN, valN}
+     * <br>
+     * The trailing pairs define the record body.  All values use type-prefix encoding.
      */
     @ParameterizedTest(name = "[{index}] Insert new row into {0}")
-    @MethodSource("provideRowInsertTestCases")
-    public void testInsertNewRows(String table, String rowId, Rec rowData, String verifyField, Obj expectedValue) throws Exception {
+    @CsvSource(delimiter = '|', textBlock = """
+            users    | 100 | name | str:Test User | name | str:Test User | age | jnt:25 | salary | real:50000.00 | active | bool:true | email | str:test@example.com
+            products | 200 | product_name | str:New Product | product_name | str:New Product | price | real:199.99 | in_stock | bool:true | quantity | jnt:10 | category | str:Test Category
+            users    | 101 | age  | jnt:0  | name | str:Zero Age | age | jnt:0 | salary | real:0.0 | active | bool:false | email | str:zero@example.com
+            users    | 102 | name | str:Max Val | name | str:Max Val | age | jnt:999 | salary | real:999999.99 | active | bool:true | email | str:max@example.com
+            products | 201 | price | real:0.0 | product_name | str:Free Item | price | real:0.0 | in_stock | bool:true | quantity | jnt:0 | category | str:Free
+            """)
+    public void testInsertNewRows(String table, String rowId, String verifyField,
+                                  String expectedEncoded,
+                                  String col1, String val1,
+                                  String col2, String val2,
+                                  String col3, String val3,
+                                  String col4, String val4,
+                                  String col5, String val5) throws Exception {
+        final Obj expectedValue = parseObj(expectedEncoded);
+        final Obj rowData = rec(
+                uri(col1), parseObj(val1),
+                uri(col2), parseObj(val2),
+                uri(col3), parseObj(val3),
+                uri(col4), parseObj(val4),
+                uri(col5), parseObj(val5)
+        );
         setupTestDatabase();
-
         final tbleSpace testSpace = createTestSpace();
         try {
-            final String writeUri = String.format("db:%s/%s", table, rowId);
-            Router.writeToSpace(f(writeUri), rowData);
-
-            final Obj insertedRow = Router.readFromSpace(f(writeUri));
+            Router.writeToSpace(f("db:%s/%s".formatted(table, rowId)), rowData);
+            final Obj insertedRow = Router.readFromSpace(
+                    f("db:%s/%s".formatted(table, rowId)));
             assertTrue(insertedRow.isRec(), "Should return a record");
-
-            final Obj fieldValue = insertedRow.asRec().at(uri(verifyField));
-            assertEquals(expectedValue, fieldValue, String.format("Field %s should match", verifyField));
+            assertEquals(expectedValue, insertedRow.asRec().at(uri(verifyField)),
+                    "Field " + verifyField + " should match");
         } finally {
             Router.global().removeSpace(testSpace.vid());
             testSpace.close();
         }
-
         cleanupTestDatabase();
     }
 
-    protected static Stream<Arguments> provideRowInsertTestCases() {
-        return Stream.of(
-                Arguments.of(
-                        "users", "100",
-                        rec(
-                                uri(NAME), str("Test User"),
-                                uri("age"), jnt(25),
-                                uri("salary"), real(50000.00),
-                                uri("active"), bool(true),
-                                uri("email"), str("test@example.com")
-                        ),
-                        "name", str("Test User")
-                ),
-                Arguments.of(
-                        "products", "200",
-                        rec(
-                                uri("product_name"), str("New Product"),
-                                uri("price"), real(199.99),
-                                uri("in_stock"), bool(true),
-                                uri("quantity"), jnt(10),
-                                uri("category"), str("Test Category")
-                        ),
-                        "product_name", str("New Product")
-                )
-        );
-    }
+    // =========================================================================
+    //  testTypeConversions
+    // =========================================================================
 
     /**
-     * Test type conversions and edge cases.
+     * Writes a value and reads it back, verifying type-preserving round-trip
+     * behaviour.  (PostgreSQL uses INTEGER columns for booleans, so bool writes
+     * come back as jnt.)
+     * <br>
+     * CSV columns: {@code description, table, rowId, field, writeValue, expectedReadValue}
      */
     @ParameterizedTest(name = "[{index}] {0}")
-    @MethodSource("provideTypeConversionTestCases")
-    public void testTypeConversions(String description, String table, String rowId, String field, Obj writeValue, Obj expectedReadValue) throws Exception {
+    @CsvSource(delimiter = '|', textBlock = """
+            boolean true converts and back   | users | 1 | active | bool:true  | jnt:1
+            boolean false converts and back  | users | 1 | active | bool:false | jnt:0
+            real number with decimals        | users | 1 | salary | real:12345.00 | real:12345.00
+            real number zero                 | users | 1 | salary | real:0.0     | real:0.0
+            real negative                    | users | 1 | salary | real:-500.25  | real:-500.25
+            real large                       | users | 1 | salary | real:9999999.99 | real:9999999.99
+            integer zero                     | users | 1 | age    | jnt:0       | jnt:0
+            integer large value              | users | 1 | age    | jnt:999     | jnt:999
+            integer negative                 | users | 1 | age    | jnt:-1      | jnt:-1
+            integer max long                 | users | 1 | age    | jnt:2147483647 | jnt:2147483647
+            empty string                     | users | 1 | name   | str:        | str:
+            string with spaces               | users | 1 | name   | str:  Test  | str:  Test
+            string with special chars         | users | 1 | email  | str:test+tag@example.com | str:test+tag@example.com
+            string unicode                   | users | 1 | name   | str:José María | str:José María
+            """)
+    public void testTypeConversions(String description, String table, String rowId,
+                                    String field, String writeEncoded,
+                                    String expectedEncoded) throws Exception {
+        final Obj writeValue = parseObj(writeEncoded);
+        final Obj expectedReadValue = parseObj(expectedEncoded);
         setupTestDatabase();
-
         final tbleSpace testSpace = createTestSpace();
         try {
-            final String writeUri = String.format("db:%s/%s/%s", table, rowId, field);
-            Router.writeToSpace(f(writeUri), writeValue);
-
-            final String rowUri = String.format("db:%s/%s", table, rowId);
-            final Obj row = Router.readFromSpace(f(rowUri));
+            Router.writeToSpace(
+                    f("db:%s/%s/%s".formatted(table, rowId, field)), writeValue);
+            final Obj row = Router.readFromSpace(
+                    f("db:%s/%s".formatted(table, rowId)));
             assertTrue(row.isRec() || row.isStr(), "should return a rec or str");
-
-            final Obj actualValue = row.asRec().at(uri(field));
-            assertEquals(expectedReadValue, actualValue, description);
+            assertEquals(expectedReadValue, row.asRec().at(uri(field)), description);
         } finally {
             Router.global().removeSpace(testSpace.vid());
             testSpace.close();
         }
-
         cleanupTestDatabase();
     }
 
-    protected static Stream<Arguments> provideTypeConversionTestCases() {
-        return Stream.of(
-                // Boolean conversions - PostgreSQL uses INTEGER columns, so booleans are stored/read as 0/1
-                Arguments.of("boolean true converts and back", "users", "1", "active", bool(true), jnt(1)),
-                Arguments.of("boolean false converts and back", "users", "1", "active", bool(false), jnt(0)),
+    // =========================================================================
+    //  testSpecialStringValues (override)
+    // =========================================================================
 
-                // Real number precision
-                Arguments.of("real number with decimals", "users", "1", "salary", real(12345.00), real(12345.00)),
-                Arguments.of("real number zero", "users", "1", "salary", real(0.0), real(0.0)),
-
-                // Integer boundaries
-                Arguments.of("integer zero", "users", "1", "age", jnt(0), jnt(0)),
-                Arguments.of("integer large value", "users", "1", "age", jnt(999), jnt(999)),
-
-                // String edge cases
-                Arguments.of("empty string", "users", "1", "name", str(""), str("")),
-                Arguments.of("string with spaces", "users", "1", "name", str("  Test  "), str("  Test  ")),
-                Arguments.of("string with special chars", "users", "1", "email", str("test+tag@example.com"), str("test+tag@example.com"))
-        );
-    }
-
-    /**
-     * Override parent's testSpecialStringValues to skip null character test for PostgreSQL.
-     * PostgreSQL doesn't support null bytes (\0) in strings.
-     */
     @Override
     @ParameterizedTest(name = "[{index}] Special string: {0}")
     @CsvSource(value = {
             "newline              | 'line1\\nline2'",
             "tab                  | 'col1\\tcol2'",
             "carriage return      | 'line1\\rline2'",
-            // "null character       | 'before\\0after'",  // PostgreSQL doesn't support null bytes
             "rtl text             | 'مرحبا'",
             "mixed scripts        | 'Hello世界مرحبا'"
     }, delimiter = '|', ignoreLeadingAndTrailingWhitespace = false)
     public void testSpecialStringValues(String description, String value) {
         final fURI uri = testUri("special_string/" + description.replaceAll("\\s+", "_"));
-
-        // Unescape special characters
         String unescaped = value
                 .replace("\\n", "\n")
                 .replace("\\t", "\t")
                 .replace("\\r", "\r")
                 .replace("\\0", "\0");
-
-        // Remove surrounding quotes if present
-        if (unescaped.startsWith("'") && unescaped.endsWith("'")) {
+        if (unescaped.startsWith("'") && unescaped.endsWith("'"))
             unescaped = unescaped.substring(1, unescaped.length() - 1);
-        }
-
-        // Write and read back
         this.space.write(uri, str(unescaped));
-        final Obj result = this.space.read(uri);
-        assertEquals(str(unescaped), result, description);
+        assertEquals(str(unescaped), this.space.read(uri), description);
     }
+
+    // =========================================================================
+    //  testComprehensiveTableOperations
+    // =========================================================================
 
     @Test
     public void testComprehensiveTableOperations() throws Exception {
-        LOG.info("Testing comprehensive table operations with multiple data types on {}", staticDbConfig.getDatabaseName());
-
+        LOG.info("Testing comprehensive table operations with multiple data types on {}",
+                staticDbConfig.getDatabaseName());
         setupTestDatabase();
-
         final tbleSpace testSpace = createTestSpace();
-
         try {
             LOG.info("Discovered tables: %s", testSpace.existingTableSchema.getTableNames());
 
-            // TEST 1: Read specific rows
-            LOG.info("TEST 1: Reading specific rows");
+            // Read specific row
             final Obj user1 = Router.readFromSpace(f("db:users/1"));
-            LOG.info("User 1: %s", user1);
             assertTrue(user1.isRec(), "Should return a record");
-            final Rec user1Rec = user1.asRec();
-            assertEquals(str("Alice"), user1Rec.at(uri(NAME)), "Name should be Alice");
-            assertEquals(jnt(30), user1Rec.at(uri("age")), "Age should be 30");
+            assertEquals(str("Alice"), user1.asRec().at(uri(NAME)), "Name should be Alice");
+            assertEquals(jnt(30), user1.asRec().at(uri("age")), "Age should be 30");
 
-            // TEST 2: Write entire row (update existing)
-            LOG.info("TEST 2: Updating entire row");
+            // Update entire row
             Router.writeToSpace(f("db:users/1"), rec(
                     uri(NAME), str("Alice Smith"),
                     uri("age"), jnt(31),
@@ -560,63 +614,49 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
                     uri("active"), bool(true),
                     uri("email"), str("alice.smith@example.com")
             ));
-
             final Obj updatedUser1 = Router.readFromSpace(f("db:users/1"));
-            LOG.info("Updated User 1: %s", updatedUser1);
-            final Rec updatedUser1Rec = updatedUser1.asRec();
-            assertEquals(str("Alice Smith"), updatedUser1Rec.at(uri(NAME)), "Name should be updated");
-            assertEquals(jnt(31), updatedUser1Rec.at(uri("age")), "Age should be updated");
+            assertEquals(str("Alice Smith"), updatedUser1.asRec().at(uri(NAME)));
+            assertEquals(jnt(31), updatedUser1.asRec().at(uri("age")));
 
-            // TEST 3: Write single field
-            LOG.info("TEST 3: Updating single field");
+            // Update single fields
             Router.writeToSpace(f("db:users/2/age"), jnt(26));
             Router.writeToSpace(f("db:users/2/salary"), real(62000.00));
-
             final Obj updatedUser2 = Router.readFromSpace(f("db:users/2"));
-            LOG.info("Updated User 2: %s", updatedUser2);
-            final Rec updatedUser2Rec = updatedUser2.asRec();
-            assertEquals(jnt(26), updatedUser2Rec.at(uri("age")), "Age should be updated to 26");
-            assertEquals(real(62000.00), updatedUser2Rec.at(uri("salary")), "Salary should be updated");
+            assertEquals(jnt(26), updatedUser2.asRec().at(uri("age")));
+            assertEquals(real(62000.00), updatedUser2.asRec().at(uri("salary")));
 
-            // TEST 4: Verify data in database directly
-            LOG.info("TEST 4: Verifying data in database");
+            // Verify directly in DB
             try (final Connection conn = staticDbConfig.getConnection();
                  final Statement stmt = conn.createStatement();
-                 final ResultSet rs = stmt.executeQuery("SELECT name, age FROM users WHERE id = 1")) {
+                 final ResultSet rs = stmt.executeQuery(
+                         "SELECT name, age FROM users WHERE id = 1")) {
                 if (rs.next()) {
-                    assertEquals("Alice Smith", rs.getString("name"), "DB should have updated name");
-                    assertEquals(31, rs.getInt("age"), "DB should have updated age");
+                    assertEquals("Alice Smith", rs.getString("name"));
+                    assertEquals(31, rs.getInt("age"));
                 }
             }
 
-            LOG.info("All comprehensive tests passed for {}!", staticDbConfig.getDatabaseName());
-
+            LOG.info("All comprehensive tests passed for {}!",
+                    staticDbConfig.getDatabaseName());
         } finally {
             Router.global().removeSpace(testSpace.vid());
             testSpace.close();
         }
-
         cleanupTestDatabase();
     }
 
-    // ========== auto_from FK Pointer Tests ==========
+    // =========================================================================
+    //  auto_from FK pointer tests
+    // =========================================================================
 
     /**
-     * Creates {@code person} and {@code award} tables via auto-creation (first-write DDL),
-     * verifying that {@code auto_from} pointer values round-trip correctly through SQL:
-     * <ol>
-     *   <li>written as the raw FK integer PK</li>
-     *   <li>read back as a live {@code auto_from} inst pointing to the correct URI</li>
-     *   <li>dereferenced via the fURI path to the full referenced record</li>
-     * </ol>
-     * The test intentionally uses no pre-existing schema — tables are created on
-     * the first write, and FK tracking is via {@code _mtron_meta} so it is
-     * portable across SQLite, PostgreSQL, MySQL, and MariaDB.
+     * Verifies FK pointer round-trip: writes {@code auto_from} insts, reads back
+     * via {@code rec.at()} (which eagerly resolves), and verifies the dereferenced
+     * record is correct.
      */
     @Test
     public void testAutoFromWriteReadRoundTrip() throws Exception {
         final fURI spaceVid = f("/sys/space/tble/autofrom_test");
-        // Use a unique scheme "pfk:" so this space has no overlap with the main "db:#" space.
         final tbleSpace testSpace = tbleSpace.of(
                 rec(
                         uri(PATTERN), uri("pfk:#"),
@@ -627,50 +667,38 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
                 ).jvm(),
                 spaceVid
         );
-
         try {
-            // --- WRITE: auto-create person table, then award table with FK pointer ---
             Router.writeToSpace(f("pfk:person/1"), rec(uri("name"), str("Alice")));
             Router.writeToSpace(f("pfk:person/2"), rec(uri("name"), str("Bob")));
 
-            final Obj alicePointer = auto_from_(f("pfk:person/1")).tryToInst();
             Router.writeToSpace(f("pfk:award/1"), rec(
                     uri("trophy"),    str("gold"),
-                    uri("recipient"), alicePointer
-            ));
+                    uri("recipient"), auto_from_(f("pfk:person/1")).tryToInst()));
             Router.writeToSpace(f("pfk:award/2"), rec(
                     uri("trophy"),    str("silver"),
-                    uri("recipient"), auto_from_(f("pfk:person/2")).tryToInst()
-            ));
+                    uri("recipient"), auto_from_(f("pfk:person/2")).tryToInst()));
 
-            // --- READ: recipient must come back as an auto_from inst, not a plain str ---
+            // rec.at() eagerly resolves auto_from → the person record
             final Obj award1 = Router.readFromSpace(f("pfk:award/1"));
             assertTrue(award1.isRec(), "award/1 should be a record");
             final Obj recipient = award1.asRec().at(uri("recipient"));
-            assertTrue(recipient.isAutoFrom(),
-                    "recipient should be an auto_from inst, got: " + recipient.tid());
+            assertTrue(recipient.isRec(), "at(recipient) should resolve to person record");
+            assertEquals(str("Alice"), recipient.asRec().at(uri("name")));
 
-            // The pointer should reference pfk:person/1
-            assertEquals(f("pfk:person/1"), recipient.asInst().arg(0).uriValue(),
-                    "auto_from should point to pfk:person/1");
-
-            // --- DEREFERENCE: traversing the pointer should yield Alice's record ---
+            // Path traversal pfk:award/1/recipient → also resolves to person
             final Obj aliceRec = Router.readFromSpace(f("pfk:award/1/recipient"));
             assertTrue(aliceRec.isRec(), "dereferenced recipient should be a record");
-            assertEquals(str("Alice"), aliceRec.asRec().at(uri("name")),
-                    "dereferenced recipient name should be Alice");
+            assertEquals(str("Alice"), aliceRec.asRec().at(uri("name")));
 
-            // --- SECOND ROW: verify Bob's pointer too ---
+            // Second row → Bob
             final Obj award2 = Router.readFromSpace(f("pfk:award/2"));
             final Obj recipient2 = award2.asRec().at(uri("recipient"));
-            assertTrue(recipient2.isAutoFrom(), "award/2 recipient should also be auto_from");
-            assertEquals(f("pfk:person/2"), recipient2.asInst().arg(0).uriValue(),
-                    "auto_from should point to pfk:person/2");
+            assertTrue(recipient2.isRec());
+            assertEquals(str("Bob"), recipient2.asRec().at(uri("name")));
 
-            LOG.info("auto_from round-trip test passed on {}", staticDbConfig.getDatabaseName());
-
+            LOG.info("auto_from round-trip test passed on {}",
+                    staticDbConfig.getDatabaseName());
         } finally {
-            // Drop the auto-created tables to leave db clean for other tests
             try (final Connection conn = staticDbConfig.getConnection();
                  final Statement stmt = conn.createStatement()) {
                 stmt.executeUpdate("DROP TABLE IF EXISTS award");
@@ -682,13 +710,12 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
     }
 
     /**
-     * Verifies that the {@code _mtron_meta} table is created on space init and
-     * that it correctly records auto_from column mappings after a write.
+     * Verifies the {@code _mtron_meta} table records auto_from column mappings
+     * and that those mappings survive a space restart.
      */
     @Test
     public void testMtronMetaTableTracksAutoFromColumns() throws Exception {
         final fURI spaceVid = f("/sys/space/tble/metacheck_test");
-        // Use a unique scheme "pmk:" so this space has no overlap with the main "db:#" space.
         final tbleSpace testSpace = tbleSpace.of(
                 rec(
                         uri(PATTERN), uri("pmk:#"),
@@ -699,15 +726,14 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
                 ).jvm(),
                 spaceVid
         );
-
         try {
-            Router.writeToSpace(f("pmk:category/10"), rec(uri("label"), str("Books")));
+            Router.writeToSpace(f("pmk:category/10"),
+                    rec(uri("label"), str("Books")));
             Router.writeToSpace(f("pmk:item/1"), rec(
                     uri("title"),    str("Dune"),
-                    uri("category"), auto_from_(f("pmk:category/10")).tryToInst()
-            ));
+                    uri("category"), auto_from_(f("pmk:category/10")).tryToInst()));
 
-            // _mtron_meta should have one row for item.category -> category
+            // _mtron_meta should have one row for item.category → category
             try (final Connection conn = staticDbConfig.getConnection();
                  final Statement stmt = conn.createStatement();
                  final ResultSet rs = stmt.executeQuery(
@@ -719,7 +745,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
                 assertFalse(rs.next(), "_mtron_meta should have exactly one row for item");
             }
 
-            // And a subsequent space restart (re-init) must still reconstruct the auto_from
+            // Restart: close space, re-open → FK must survive
             testSpace.close();
             Router.global().removeSpace(testSpace.vid());
 
@@ -734,15 +760,17 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
                     spaceVid
             );
             try {
+                // at() eagerly resolves auto_from → the category record
                 final Obj item = Router.readFromSpace(f("pmk:item/1"));
                 final Obj catPtr = item.asRec().at(uri("category"));
-                assertTrue(catPtr.isAutoFrom(),
-                        "after restart, category should still be auto_from, got: " + catPtr.tid());
+                assertTrue(catPtr.isRec(),
+                        "after restart, category should resolve to the category record, got: "
+                        + catPtr.tid());
+                assertEquals(str("Books"), catPtr.asRec().at(uri("label")));
             } finally {
                 Router.global().removeSpace(testSpace2.vid());
                 testSpace2.close();
             }
-
         } finally {
             try (final Connection conn = staticDbConfig.getConnection();
                  final Statement stmt = conn.createStatement()) {

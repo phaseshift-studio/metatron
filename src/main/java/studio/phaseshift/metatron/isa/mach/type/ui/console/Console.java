@@ -862,15 +862,14 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                         Graphitty.out(terminal.output(), helpText);
                     }
                 } else if (line.startsWith(":log")) {
-                    final String[] args = line.substring(4).trim().split(" ");
-                    if (line.substring(4).trim().isBlank())
-                        LOG.none("log level: %s [target pane: %s]\n", LogObj.getSLF4J(), GraphittyLogger.getDefaultTargetPane());
-                    else {
+                    if (!line.substring(4).trim().isBlank()) {
+                        //LOG.none("updating log level: %s\n",  line.substring(4).trim());
+                        final String[] args = line.substring(4).trim().split(" ");
                         LogObj.setSLF4J(args[0]);
                         if (args.length > 1)
                             GraphittyLogger.setDefaultTargetPane(Integer.parseInt(args[1]));
                     }
-
+                    LOG.none("log level: %s [target pane: %s]\n", LogObj.getSLF4J().toString().toLowerCase(), GraphittyLogger.getDefaultTargetPane());
                 } else if (line.startsWith(":check")) {
                     Arrays.stream(line.substring(6).trim().split(" ")).forEach(s -> {
                         if (!s.trim().isEmpty()) {
@@ -1175,7 +1174,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                         }
                     }
                 } catch (final Exception e) {
-                   LOG.error(e);
+                    LOG.error(e);
                 }
                 return true;
             }, key(Console.terminal, InfoCmp.Capability.tab));

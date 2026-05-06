@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.llm.type;
 
 import dev.langchain4j.agent.tool.ToolSpecification;
+import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.mcp.McpToolProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.request.json.*;
@@ -195,6 +196,7 @@ public class mModel extends MRec {
         //////////////////////////////////////////
         ///////////////  TOOLS  //////////////////
         //////////////////////////////////////////
+        service.hallucinatedToolNameStrategy(tool -> new ToolExecutionResultMessage(ToolExecutionResultMessage.builder().toolName(tool.name()).text("unknown or inaccessible tool")));
         if (this.tools().isPresent()) {
             final Map<ToolSpecification, ToolExecutor> tools = new HashMap<>();
             this.tools().get()

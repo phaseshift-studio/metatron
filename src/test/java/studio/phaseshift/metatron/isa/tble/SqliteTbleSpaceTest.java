@@ -446,7 +446,9 @@
                  // Integer fields
                  Arguments.of("Integer age field", "db:users/1", "age", jnt(30)),
                  Arguments.of("Integer quantity field", "db:products/102", "quantity", jnt(50)),
-                 Arguments.of("Primary key field", "db:users/3", "id", jnt(3)),
+                 // PK is encoded in the VID, stripped from body on full-row reads.
+                // Use db:users/3/id path to read PK from the VID directly.
+
 
                  // Real/Double fields
                  Arguments.of("Real salary field", "db:users/1", "salary", real(75000.50)),
@@ -707,7 +709,7 @@
                                  bool(true),                // active
                                  str("newuser@example.com") // email
                          ),
-                         "id", jnt(50),  // Verify the PK from list was used, not from URI
+                         "name", str("New User"),  // Verify name field (PK stripped from body)
                          "50"  // Read from the actual ID that was inserted (from list, not URI)
                  )
          );

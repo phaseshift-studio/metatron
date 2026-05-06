@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.mach.type;
 
 import ch.qos.logback.classic.filter.ThresholdFilter;
 import ch.qos.logback.core.Appender;
+import ch.qos.logback.core.filter.Filter;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 import studio.phaseshift.metatron.Tokens;
@@ -86,13 +87,12 @@ public class LogObj extends MRec {
             final Appender<?> appender = root.getAppender("STDOUT");
             if (null != appender)
                 appender.clearAllFilters();
-            else
-                root.setLevel(ch.qos.logback.classic.Level.valueOf(level));
+            root.setLevel(ch.qos.logback.classic.Level.valueOf(level));
             ThresholdFilter filter = new ThresholdFilter();
-            filter.setLevel(level.replace(":log", "").trim());
+            filter.setLevel(level);
             filter.start();
             if (appender != null)
-                root.getAppender("STDOUT").addFilter(filter);
+                appender.addFilter((Filter)filter);
             return uri(level);
         }
     }

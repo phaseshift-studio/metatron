@@ -37,6 +37,7 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.function.BiFunction;
@@ -56,84 +57,53 @@ import static studio.phaseshift.metatron.isa.tble.tbleInstSet.TBLE_ISA_INST_TID;
 import static studio.phaseshift.metatron.isa.tble.tbleInstSet.TBLE_ISA_TID;
 
 /**
- * tbleSpace - A dual-mode SQL database connector for Metatron with pluggable schema support
+ * A dual-mode JDBC-backed {@link Space} that provides both a key-value store and
+ * automatic SQL-table mapping.
  *
- * <p>Provides two modes of operation:
- * <ol>
- *   <li><b>Key-Value Store Mode:</b> Stores arbitrary Metatron objects as JSON using pluggable schemas
- *       (fURIAwareIndexedSchema for MariaDB/MySQL, SimpleKeyValueSchema for others)</li>
- *   <li><b>Table Mapping Mode:</b> Maps existing SQL tables to Metatron objects automatically</li>
- * </ol>
+ * <h3>Modes</h3>
+ * <dl>
+ *   <dt>Key-Value</dt>
+ *   <dd>Paths that don't match a known SQL table are stored as typed key-value
+ *       pairs.  On MariaDB/MySQL this uses an indexed MQTT-pattern schema; on
+ *       PostgreSQL, SQLite, and others a {@link TypedKeyValueSchema} preserves
+ *       full type fidelity.</dd>
+ *   <dt>Table Mapping</dt>
+ *   <dd>When the {@code TABLE} config key is present, the space auto-discovers
+ *       existing SQL tables via JDBC metadata and routes reads/writes for those
+ *       table paths to {@link ExistingTableSchema}.  Tables listed in
+ *       {@code TABLE} but not yet in the database are created on first write
+ *       ("create-on-first-write").</dd>
+ * </dl>
  *
- * <p>Supports any JDBC-compatible database (PostgreSQL, MySQL, MariaDB, SQLite, etc.)
+ * <h3>Foreign keys and {@code auto_from}</h3>
+ * <p>When a record field is an {@code auto_from} instruction, tbleSpace stores
+ * only the raw FK value in an {@code INTEGER} column and records the pointer
+ * metadata in {@code _mtron_meta}.  On read the pointer is reconstructed and
+ * lazily resolved — see {@link ExistingTableSchema)}.
  *
- * <h2>Features</h2>
- * <ul>
- *   <li>Pluggable schema architecture for different database backends</li>
- *   <li>MQTT-style pattern matching with indexed segments (MariaDB/MySQL)</li>
- *   <li>Automatic discovery and mapping of existing SQL tables</li>
- *   <li>Read SQL table rows as Metatron lists</li>
- *   <li>Primary key-based row identification</li>
- *   <li>Automatic SQL type to Metatron type conversion</li>
- * </ul>
- *
- * <h2>Configuration</h2>
+ * <h3>Configuration</h3>
  * <pre>{@code
- * tbleSpace space = tbleSpace.of(
- *     rec(
- *         uri(PATTERN), uri("/tble/#"),
- *         uri(HOST), uri("postgresql://localhost:5432/mydb"),  // Note: no "jdbc:" prefix
- *         uri(DRIVER), uri("org.postgresql.Driver"),
- *         uri("table_mapping"), uri("true")      // optional, default: "true"
- *     ).jvm(),
- *     f("/sys/space/tble")
- * );
- * }</pre>
- *
- * <h2>Table Mapping Mode</h2>
- * <p>When table mapping is enabled (default), tbleSpace automatically discovers existing SQL tables
- * and makes them accessible via fURIs:
- *
- * <pre>{@code
- * // Read a specific row by primary key
- * Obj row = space.read(f("/users/123"));  // Returns a record: [name=>marko,age=>29]
- *
- * // Read all rows from a table
- * Obj allRows = space.read(f("/users/+"));  // Returns multiple records
- *
- * // Pattern matching
- * Obj rows = space.read(f("/users/#"));  // Returns all rows and nested data
- *
- * // Write an entire row (update or insert)
- * space.write(f("/users/123"), rec(uri("name"), str("marko"), uri("age"), jnt(29)));
- *
- * // Write a single field
- * space.write(f("/users/123/name"), str("marko"));
- * }</pre>
- *
- * <p>SQL rows are converted to Metatron records where column names are keys.
- * Primary keys are used to identify individual rows.
- * The Space.Helper.resolveWrite() method automatically handles poly unrolling for nested writes.
- *
- * <h2>Key-Value Store Mode</h2>
- * <p>For paths that don't match existing tables, tbleSpace uses its key-value store:
- *
- * <pre>{@code
- * // Store arbitrary objects
- * space.write(f("/my/data"), rec(uri("name"), str("Alice")));
- *
- * // Read them back
- * Obj data = space.read(f("/my/data"));
+ * tbleSpace.of(rec(
+ *     uri(PATTERN), uri("db:#"),
+ *     uri(HOST),    uri("postgresql://localhost:5432/mydb"),
+ *     uri(DRIVER),  uri("org.postgresql.Driver"),
+ *     uri(TABLE),   lst(uri("users"), uri("orders")),  // optional whitelist
+ *     uri(ROUTE),   rec(uri("db:"), uri(""))
+ * ).jvm(), f("/sys/space/tble"));
  * }</pre>
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class tbleSpace extends AbstractSpace<Connection> {
 
+    // ---- Database product-name fragments (matched case-insensitively) -----------
+
     public static final String MARIADB = "mariadb";
     public static final String MYSQL = "mysql";
     public static final String POSTGRESQL = "postgresql";
     public static final String SQLITE = "sqlite";
+
+    // ---- Type system -----------------------------------------------------------
 
     public static fURI SQL_INST_TID = TBLE_ISA_INST_TID.extend(SQL);
     public static fURI TBLE_SPACE_TID = TBLE_ISA_TID.extend(SPACE).extend("tblespace");
@@ -154,101 +124,167 @@ public class tbleSpace extends AbstractSpace<Connection> {
                             (lhs, inst) -> tbleSpace.of(inst.arg(0).asRec().jvm(), inst.arg(0).vid())))
                     .create();
 
+    // ---- Instance state --------------------------------------------------------
+
     protected ObjSerializer<?> serializer;
     protected TableSchema schema;
     protected ExistingTableSchema existingTableSchema;
     protected SQLSchemaGenerator schemaGenerator;
 
+    // =========================================================================
+    //  Factory
+    // =========================================================================
+
+    /**
+     * Creates and returns a new {@code tbleSpace} from a configuration map.
+     * The {@code HOST} key must be a JDBC-connectable URI <em>without</em> the
+     * {@code jdbc:} prefix — it is prepended automatically.
+     */
     public static tbleSpace of(final Map<Obj, Obj> config, final fURI vid) {
         MTronException.wrap(() -> Class.forName(config.get(uri(DRIVER)).uriValue().toString()));
         try {
-            final Connection conn = DriverManager.getConnection(JDBC + config.get(uri(HOST)).uriValue().toString());
-            // Defensive copy: the constructor mutates the config map (adds TABLE/SCHEMA entries).
-            // The original map is the shared jvm() of the caller's Rec — modifying it concurrently
-            // while another thread iterates it causes ConcurrentModificationException.
+            final Connection conn = DriverManager.getConnection(
+                    JDBC + config.get(uri(HOST)).uriValue().toString());
+            // Defensive copy: the constructor mutates the config map (adds TABLE/SCHEMA
+            // entries).  The original map is the shared jvm() of the caller's Rec —
+            // modifying it concurrently while another thread iterates it causes
+            // ConcurrentModificationException.
             return new tbleSpace(conn, new LinkedHashMap<>(config), TBLE_SPACE_TID, vid);
         } catch (final SQLException ex) {
             throw MTronException.of(ex);
         }
     }
 
-    protected tbleSpace(final Connection sjvm, final Map<Obj, Obj> config, final fURI tid, final fURI vid) {
+    // =========================================================================
+    //  Constructor
+    // =========================================================================
+
+    protected tbleSpace(final Connection sjvm, final Map<Obj, Obj> config,
+                        final fURI tid, final fURI vid) {
         super(sjvm, config, tid, vid);
         LOG.info("connected {{b}}%s{{X}}", config.get(uri(HOST)));
-        // Initialize schema - auto-detect based on database type
         try {
-            final String dbProductName = sjvm.getMetaData().getDatabaseProductName().toLowerCase();
-            if (dbProductName.contains(MARIADB) || dbProductName.contains(MYSQL)) {
-                this.schema = new fURIAwareIndexedSchema();
-                // Use ObjmtronSerializer for fURIAwareIndexedSchema to avoid JSON parsing issues
-                this.serializer = this.at(SERIALIZER).orElse(new ObjmtronSerializer());
-                LOG.info("detected {{b}}mariadb/mysql{{X}} - using {{g}}mqtt schema with clean string serializer");
-            } else {
-                // Use TypedKeyValueSchema for isomorphic type-preserving storage
-                this.schema = new TypedKeyValueSchema();
-                // TypedKeyValueSchema handles serialization internally, but set a default anyway
-                this.serializer = this.at(SERIALIZER).orElse(new ObjmtronSerializer());
-                LOG.info("detected {{b}}%s{{X}} - using {{g}}typed schema", dbProductName);
-            }
-            this.schema.initialize(sjvm);
-            LOG.info("initialized schema {{b}}%s{{X}} (version: %s)",
-                    this.schema.getClass().getSimpleName(), this.schema.version());
-
-            // Initialize existing table schema for table mapping
-            // Check if table mapping is enabled (default: true)
-            final boolean enableTableMapping = config.getOrDefault(uri(TABLE), null) != null;
-
-            if (enableTableMapping) {
-                this.existingTableSchema = new ExistingTableSchema(this, "objs");
-                this.existingTableSchema.initialize(sjvm);
-                LOG.info("initialized {{g}}existing table schema{{X}} - discovered %s tables for database %s",
-                        this.existingTableSchema.getTableNames().size(), this.sjvm().getCatalog());
-                this.at(uri(TABLE), lst(this.existingTableSchema.getTableMetadata().stream().map(t -> (Obj) uri(t.tableName())).toList()), MUTABLE);
-
-                // Initialize SQL schema generator
-                final String dbName = sjvm.getCatalog() != null ? sjvm.getCatalog() : "db";
-                // Schema VID MUST be in /m/ namespace — backed by system memSpace, not tbleSpace.
-                // A VID in the tbleSpace's own pattern (e.g., db:schema/...) would cause
-                // Router.addSpace() to route reads/writes back into this space → recursion.
-                final fURI schemaVid = f("/m/tble/space/schema/").extend(dbName);
-
-                this.schemaGenerator = new SQLSchemaGenerator(
-                        this.existingTableSchema.getTableMetadata(),
-                        schemaVid
-                );
-
-                // Build a proper SQLSchemaInstSet and register it as a space in the /m/ namespace.
-                // Type VIDs are under schemaVid/type/{table} — safely within checkPattern() scope.
-                // Follow grphSpace pattern: addSpace → setup() → store object directly (not !* pointer).
-                final SQLSchemaInstSet schemaInstset = this.schemaGenerator.generateSchemaInstset(schemaVid);
-                Router.global().addSpace(schemaInstset);
-                schemaInstset.setup();
-
-                // Store the schema instset object directly (same as grphSpace stores modernSchema).
-                // NOTE: root is NOT set at the tbleSpace level because tbleSpace is a hybrid:
-                //   - KV store paths accept any type (no constraint needed)
-                //   - Table mapping paths are constrained by the individual table Types in the schema
-                // Setting root=REC_TYPE here would break all KV store writes (lists, primitives, etc.)
-                this.at(SCHEMA, schemaInstset, MUTABLE);
-
-                LOG.info("initialized {{g}}SQL schema{{X}} in config with %s table types",
-                        this.existingTableSchema.getTableNames().size());
-
-            } else {
-                this.existingTableSchema = null;
-                this.schemaGenerator = null;
-                LOG.info("table mapping {{y}}disabled{{X}}");
-            }
+            initializeSchema(sjvm);
+            initializeTableMapping(sjvm);
         } catch (final SQLException ex) {
             throw MTronException.of(ex);
         }
     }
 
+    // =========================================================================
+    //  Schema / table-mapping initialization
+    // =========================================================================
+
+    /** Auto-detects the database product and installs the matching KV schema. */
+    private void initializeSchema(final Connection conn) throws SQLException {
+        final String dbProductName = conn.getMetaData().getDatabaseProductName().toLowerCase();
+        if (dbProductName.contains(MARIADB) || dbProductName.contains(MYSQL)) {
+            this.schema = new fURIAwareIndexedSchema();
+            this.serializer = this.at(SERIALIZER).orElse(new ObjmtronSerializer());
+            LOG.info("detected {{b}}mariadb/mysql{{X}} - using {{g}}mqtt schema with clean string serializer");
+        } else {
+            this.schema = new TypedKeyValueSchema();
+            this.serializer = this.at(SERIALIZER).orElse(new ObjmtronSerializer());
+            LOG.info("detected {{b}}%s{{X}} - using {{g}}typed schema", dbProductName);
+        }
+        this.schema.initialize(conn);
+        LOG.info("initialized schema {{b}}%s{{X}} (version: %s)",
+                this.schema.getClass().getSimpleName(), this.schema.version());
+    }
+
     /**
-     * Lazily initializes {@link #existingTableSchema} the first time a table-mapped write or
-     * read is attempted after the space was mounted without an initial {@code table} config key.
-     * This allows {@code /sys/space/lite/table -> [person,score]} at runtime to enable table
-     * mapping without a restart.
+     * Sets up auto-discovery of existing SQL tables and the schema generator.
+     *
+     * <p>When the {@code TABLE} config key is absent the space operates in pure
+     * key-value mode.  When present (even as an empty list) table mapping is
+     * enabled: JDBC metadata is scanned for existing tables, user-configured
+     * tables are merged in, and a {@link SQLSchemaInstSet} is registered with
+     * the Router in the {@code /m/} namespace for type resolution.
+     */
+    private void initializeTableMapping(final Connection conn) throws SQLException {
+        final boolean enableTableMapping = this.at(uri(TABLE)) != null;
+        if (!enableTableMapping) {
+            this.existingTableSchema = null;
+            this.schemaGenerator = null;
+            LOG.info("table mapping {{y}}disabled{{X}}");
+            return;
+        }
+
+        this.existingTableSchema = new ExistingTableSchema(this, "objs");
+        this.existingTableSchema.initialize(conn);
+        LOG.info("initialized {{g}}existing table schema{{X}} - discovered %s tables for database %s",
+                this.existingTableSchema.getTableNames().size(), conn.getCatalog());
+
+        // Merge user-configured tables (whitelist for create-on-first-write)
+        // with JDBC-discovered tables (actual schema).  Order: user first,
+        // then discovered — user intent preserved, discovery appended.
+        syncTableConfig(new ArrayList<>());
+
+        // Schema VID is in /m/ namespace — backed by system memSpace, not this
+        // tbleSpace.  A VID under the tbleSpace pattern would cause the Router
+        // to route schema reads/writes back into this space → recursion.
+        final String dbName = conn.getCatalog() != null ? conn.getCatalog() : "db";
+        final fURI schemaVid = f("/m/tble/space/schema/").extend(dbName);
+        this.schemaGenerator = new SQLSchemaGenerator(
+                this.existingTableSchema.getTableMetadata(), schemaVid);
+
+        // Register schema instset as a Router space for type resolution (e.g.
+        // /m/tble/space/schema/db/type/users → users::T).  Stored at the
+        // SCHEMA config key as a human-readable rec for introspection.
+        final SQLSchemaInstSet schemaInstset = this.schemaGenerator.generateSchemaInstset(schemaVid);
+        Router.global().addSpace(schemaInstset);
+        schemaInstset.setup();
+        this.at(SCHEMA, this.schemaGenerator.generateSchema(), MUTABLE);
+
+        LOG.info("initialized {{g}}SQL schema{{X}} with %s table types",
+                this.existingTableSchema.getTableNames().size());
+    }
+
+    // =========================================================================
+    //  Table-config helpers
+    // =========================================================================
+
+    /**
+     * Merges the given table names into the live {@code TABLE} config list,
+     * preserving any names already present.  Used both during initialisation
+     * (JDBC-discovered tables) and create-on-first-write (new tables).
+     */
+    private void syncTableConfig(final Collection<String> additional) {
+        final Obj current = this.at(uri(TABLE));
+        final List<Obj> tableList = new ArrayList<>();
+        if (current != null && !current.isNoObj() && current.isLst())
+            tableList.addAll(current.asLst().jvm());
+        for (final String name : additional) {
+            if (tableList.stream().noneMatch(
+                    o -> o.isUri() && name.equalsIgnoreCase(o.asUri().uriValue().name())))
+                tableList.add(uri(name));
+        }
+        this.at(uri(TABLE), lst(tableList), MUTABLE);
+    }
+
+    /**
+     * Returns {@code true} when {@code tableName} appears in the {@code TABLE}
+     * config list.  Only whitelisted names are eligible for create-on-first-write
+     * — this prevents KV paths (e.g. {@code db:kv/test}) from accidentally
+     * becoming SQL tables.
+     */
+    protected boolean isConfiguredTable(final String tableName) {
+        final Obj tableConfig = this.at(uri(TABLE));
+        if (tableConfig == null || tableConfig.isNoObj() || !tableConfig.isLst())
+            return false;
+        return tableConfig.asLst().lstValue().stream()
+                .anyMatch(o -> o.isUri()
+                        && tableName.equalsIgnoreCase(o.asUri().uriValue().name()));
+    }
+
+    // =========================================================================
+    //  Lazy table-schema initialisation
+    // =========================================================================
+
+    /**
+     * Creates the {@link ExistingTableSchema} on first access when the space was
+     * mounted without a {@code TABLE} config key and one is added at runtime via
+     * {@code /sys/space/.../table -> [person,score]}.
      */
     protected synchronized void lazyInitExistingTableSchema() {
         if (this.existingTableSchema == null) {
@@ -263,64 +299,45 @@ public class tbleSpace extends AbstractSpace<Connection> {
         }
     }
 
-    /**
-     * Returns {@code true} if {@code tableName} is explicitly listed in the {@code TABLE}
-     * space config. Only paths whose first segment appears in the config whitelist are
-     * eligible for create-on-first-write — this prevents KV-style paths (e.g.
-     * {@code db:kv/test}) from accidentally becoming SQL tables.
-     */
-    protected boolean isConfiguredTable(final String tableName) {
-        final Obj tableConfig = this.at(uri(TABLE));
-        if (tableConfig == null || tableConfig.isNoObj() || !tableConfig.isLst()) return false;
-        return tableConfig.asLst().lstValue().stream()
-                .anyMatch(o -> o.isUri() && tableName.equalsIgnoreCase(o.asUri().uriValue().name()));
-    }
+    // =========================================================================
+    //  I/O — Writer
+    // =========================================================================
 
     @Override
     public BiFunction<fURI, Obj, Obj> directWriter() {
         return (pattern, obj) -> {
             try {
                 if (pattern.hasPattern()) {
-                    this.directReader().apply(pattern).forEachRemaining(kv -> this.write(kv.furi(), obj));
+                    // Wildcard write: expand to matching keys, write to each
+                    this.directReader().apply(pattern)
+                            .forEachRemaining(kv -> this.write(kv.furi(), obj));
                 } else {
-                    final fURI alignedPattern = Space.Helper.routeFromSpace(pattern, this.routes());
-                    // Check if this is a table mapping path (existing table)
-                    if (this.existingTableSchema != null && this.existingTableSchema.isTablePath(alignedPattern)) {
-                        this.existingTableSchema.write(this.sjvm(), alignedPattern, obj);
+                    final fURI aligned = Space.Helper.routeFromSpace(pattern, this.routes());
+
+                    if (this.existingTableSchema != null
+                            && this.existingTableSchema.isTablePath(aligned)) {
+                        // ── table-mapped path (existing table) ──
+                        this.existingTableSchema.write(this.sjvm(), aligned, obj);
+
                     } else if (obj.isRec()
-                            && alignedPattern.segments().size() >= 2
-                            && !alignedPattern.segments().get(1).equals("+")
-                            && !alignedPattern.segments().get(1).equals("#")
-                            && isConfiguredTable(alignedPattern.segments().getFirst())) {
-                        // "Create on first write": infer the table schema from the record's field
-                        // types and create the SQL table automatically on the first write.
-                        // Only triggers when the first path segment is explicitly listed in the
-                        // TABLE config — prevents KV-style paths (e.g. db:kv/test) from
-                        // accidentally becoming SQL tables.
+                            && aligned.segments().size() >= 2
+                            && !aligned.segments().get(1).equals("+")
+                            && !aligned.segments().get(1).equals("#")
+                            && isConfiguredTable(aligned.segments().getFirst())) {
+                        // ── create-on-first-write (whitelisted table, not yet in DB) ──
                         lazyInitExistingTableSchema();
-                        final String tableName = alignedPattern.segments().getFirst();
-                        if (!this.existingTableSchema.getTableNames().contains(tableName.toLowerCase())) {
-                            this.existingTableSchema.createTableFromRecord(this.sjvm(), tableName, obj.asRec());
-                            // Keep the live table config in sync so introspection reflects the new table
-                            final Obj currentTable = this.at(uri(TABLE));
-                            final java.util.List<Obj> tableList = new java.util.ArrayList<>();
-                            if (currentTable != null && !currentTable.isNoObj() && currentTable.isLst())
-                                tableList.addAll(currentTable.asLst().jvm());
-                            if (tableList.stream().noneMatch(o -> o.isUri() && tableName.equalsIgnoreCase(o.asUri().uriValue().name())))
-                                tableList.add(uri(tableName));
-                            this.at(uri(TABLE), lst(tableList), MUTABLE);
+                        final String tableName = aligned.segments().getFirst();
+                        if (!this.existingTableSchema.getTableNames()
+                                .contains(tableName.toLowerCase())) {
+                            this.existingTableSchema.createTableFromRecord(
+                                    this.sjvm(), tableName, obj.asRec());
+                            syncTableConfig(List.of(tableName));
                         }
-                        this.existingTableSchema.write(this.sjvm(), alignedPattern, obj);
+                        this.existingTableSchema.write(this.sjvm(), aligned, obj);
+
                     } else {
-                        // Use key-value schema
-                        if (this.schema instanceof TypedKeyValueSchema) {
-                            // TypedKeyValueSchema can write Obj directly without JSON serialization
-                            ((TypedKeyValueSchema) this.schema).write(this.sjvm(), pattern, obj);
-                        } else {
-                            // Other schemas need JSON serialization
-                            final String objJson = obj.isNoObj() ? null : this.serializer.write(obj).toString();
-                            this.schema.write(this.sjvm(), pattern, objJson);
-                        }
+                        // ── key-value path ──
+                        writeKV(pattern, obj);
                     }
                 }
             } catch (final SQLException e) {
@@ -330,51 +347,73 @@ public class tbleSpace extends AbstractSpace<Connection> {
         };
     }
 
+    /** Dispatches a key-value write to the appropriate schema backend. */
+    private void writeKV(final fURI pattern, final Obj obj) throws SQLException {
+        if (this.schema instanceof TypedKeyValueSchema typed) {
+            typed.write(this.sjvm(), pattern, obj);
+        } else {
+            final String json = obj.isNoObj() ? null : this.serializer.write(obj).toString();
+            this.schema.write(this.sjvm(), pattern, json);
+        }
+    }
+
+    // =========================================================================
+    //  I/O — Reader
+    // =========================================================================
+
     @Override
     public Function<fURI, Iterator<IdObj>> directReader() {
         return (pattern) -> {
             try {
                 LOG.debug("looking for table vid: %s", pattern);
-                final fURI alignedPattern = Space.Helper.routeFromSpace(pattern, this.routes());
+                final fURI aligned = Space.Helper.routeFromSpace(pattern, this.routes());
 
-                // Check if this is a table mapping path (existing table)
-                if (this.existingTableSchema != null && this.existingTableSchema.isTablePath(alignedPattern)) {
-                    // Known table from schema - use existing table schema
-                    final Iterator<IdObj> rawResults = this.existingTableSchema.read(this.sjvm(), alignedPattern);
-                    final List<IdObj> allResults = new ArrayList<>();
-                    rawResults.forEachRemaining(kv -> {
-                        allResults.add(kv);  // Add the base object
-                        if (pattern.hasPattern() && kv.obj().isPoly()) {
-                            // Add unrolled nested paths (like memSpace does) - only when pattern has wildcards
-                            allResults.addAll(Space.Helper.unrollPoly(kv.furi(), kv.obj().as(), pattern.asNode()));
-                        }
+                // ── table-mapped path ──
+                if (this.existingTableSchema != null
+                        && this.existingTableSchema.isTablePath(aligned)) {
+                    final Iterator<IdObj> raw = this.existingTableSchema.read(
+                            this.sjvm(), aligned);
+                    final List<IdObj> all = new ArrayList<>();
+                    raw.forEachRemaining(kv -> {
+                        all.add(kv);  // always include — filtering is handled by the table schema
+                        if (pattern.hasPattern() && kv.obj().isPoly())
+                            all.addAll(Space.Helper.unrollPoly(
+                                    kv.furi(), kv.obj().as(), pattern.asNode()));
                     });
-                    return allResults.iterator();
+                    return all.iterator();
                 }
 
-                // Use key-value schema (TypedKeyValueSchema or SimpleKeyValueSchema)
-                // Get raw results and add poly unrolling (matching memSpace pattern)
-                final Iterator<IdObj> rawResults = this.schema.read(this.sjvm(), pattern);
-                final List<IdObj> allResults = new ArrayList<>();
-                rawResults.forEachRemaining(kv -> {
-                    if (pattern.hasPattern()) {
-                        // For pattern queries: add base if matches, AND unroll poly independently
-                        if (kv.furi().test(pattern.asNode())) {
-                            allResults.add(kv);  // Add the base object if it matches the pattern
-                        }
-                        if (kv.obj().isPoly()) {
-                            // Unroll poly independently - children might match even if base doesn't
-                            allResults.addAll(Space.Helper.unrollPoly(kv.furi(), kv.obj().as(), pattern.asNode()));
-                        }
-                    } else {
-                        allResults.add(kv);  // Exact match - add the result
-                    }
-                });
-                return allResults.iterator();
+                // ── key-value path ──
+                return collectResults(this.schema.read(this.sjvm(), pattern), pattern);
+
             } catch (final Exception e) {
                 throw MTronException.of(e);
             }
         };
     }
 
+    /**
+     * Wraps a raw result iterator, adding poly-unrolling for wildcard patterns.
+     * Shared by both the table-mapped and key-value read paths.
+     */
+    private Iterator<IdObj> collectResults(final Iterator<IdObj> raw,
+                                           final fURI pattern) {
+        final List<IdObj> all = new ArrayList<>();
+        raw.forEachRemaining(kv -> {
+            if (pattern.hasPattern()) {
+                // Wildcard query: include the base if it matches the pattern,
+                // then independently unroll any poly children (they may match
+                // even when the parent doesn't).
+                if (kv.furi().test(pattern.asNode()))
+                    all.add(kv);
+                if (kv.obj().isPoly())
+                    all.addAll(Space.Helper.unrollPoly(
+                            kv.furi(), kv.obj().as(), pattern.asNode()));
+            } else {
+                // Exact match — add directly
+                all.add(kv);
+            }
+        });
+        return all.iterator();
+    }
 }

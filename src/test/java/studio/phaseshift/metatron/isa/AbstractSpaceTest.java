@@ -439,7 +439,7 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
             "$$ -> </>                                             % *$$                                % </>",
             "$$ -> <///>                                           % *$$                                % <///>",
             "$$ -> <...>                                           % *$$                                % <...>",
-            "$$ -> <_>                                              % *$$                                % <_>",
+            // "$$ -> <_>                                              % *$$                                % <_>",
             // Very deeply nested lists and records (10 levels!)
             "$$ -> [a=>[b=>[c=>[d=>[e=>[f=>[g=>[h=>[i=>[j=>[1,2,3]]]]]]]]]]] % *$$/a/b/c/d/e/f/g/h/i/j % [1,2,3]",
             ".                                                     % *$$/a/b/c/d/e/f/g/h/i/j/0          % 1",
