@@ -76,9 +76,16 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
                           /console   => src/main/resources/web/console ]]@/sys/space/web/http;
    wsspace::[host     => <ws://localhost:8555>,
              pattern  => ws://#,
+             q        => [subq::[=>]],
              route    => [/mtron=> mtron_ws,
                           /mcp  => mcp_mtron_ws]]@/sys/space/web/ws;
- [-- wsmcp::T[?[tool=>[toy=>print(_)]]]@/sys/space/web/ws/wstoy;
+  [-- support for server->client notifications --]
+   <ws://localhost:8555/mcp/+/notifications/#?subq> -> sub::[                                           
+      on_recv => inst?#<=lst(message=>?lst::T){                    
+        -<json::[jsonrpc => '2.0', 
+           method  => >>0 - <ws://localhost:8555/mcp/${*message>>0>>1}${/}>,              
+           params  => *message>>1](payload=>_){                                        
+             *<ws://localhost:8555/mcp/${*message>>0>>1}>>>send.apply(*payload)}}];
   grphspace::[pattern  => /h/#,
         route    => [</h/+/>=><>],
         native   => [factory  => mfactory::[=>],
@@ -168,7 +175,7 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
               wd:       =><http://www.wikidata.org/entity/>,
               wdt:      =><http://www.wikidata.org/prop/direct/>,
               wikidata: =><>]]@/sys/space/wikidata;
- mcp::[host => <ws://localhost:8999/m/llm/mcp>]@/usr/ai/mcp/mtron;
+ [-- mcp::[host => <ws://localhost:8999/m/llm/mcp>]@/usr/ai/mcp/mtron; --]
  mcp::[host => <http://127.0.0.1:29170/index-mcp/streamable-http>]@/usr/ai/mcp/intellij;
  [==mcp::[host      => <http://192.168.88.231:3721/mcp>,
              transport => <streamable-http>,

@@ -322,9 +322,7 @@ public final class QCollection {
                     subscriptions.elements().filter(e -> vid.basePath().test(e.asRec().at(TARGET).uriValue()))
                             .forEach(s -> {
                                 subscriptions.logger().debug("spawning virtual thread for subscription recv: %s", s);
-                                new VirtualThread(mutableMap(
-                                        uri(START), lst(List.of(vid.basePath().toUri(), obj)),
-                                        uri(CODE), code(s.asRec().at(ON_RECV).asCall()).as()), MACH_CORE_THREAD_TID, null).run();
+                                new VirtualThread(mutableMap(uri(CODE), code(s.asRec().at(ON_RECV).asCall()).as()), MACH_CORE_THREAD_TID, null).apply(lst(List.of(vid.basePath().toUri(), obj)));
                             });
                     return noobj();
                 }).create();

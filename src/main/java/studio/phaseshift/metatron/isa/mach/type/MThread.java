@@ -32,8 +32,6 @@ public interface MThread extends Rec {
 
     thread_state state();
 
-    Obj run();
-
     Fail stop();
 
     NoObj pause();

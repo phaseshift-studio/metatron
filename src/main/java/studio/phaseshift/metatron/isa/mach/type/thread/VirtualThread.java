@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.mach.type.thread;
 
+import dev.langchain4j.agent.tool.P;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Fail;
@@ -47,7 +48,7 @@ public class VirtualThread extends AbstractThread {
                 .name(this.vid() == null ? "metatron-virtual-thread" : this.vid().toString())
                 .unstarted(() -> {
                     this.at(STATE, uri("running"), MUTABLE);
-                    final Obj result = this.at(CODE).apply();
+                    final Obj result = this.at(CODE).apply(this.at(START));
                     this.at(RESULT, result, MUTABLE);
                     this.future.setObj(result);
                     this.at(STATE, uri("stopped"), MUTABLE);
@@ -76,7 +77,8 @@ public class VirtualThread extends AbstractThread {
     }
 
     @Override
-    public FutureObj<Obj> run() {
+    public FutureObj<Obj> apply(final Obj other) {
+        this.jvm().put(uri(START), other);
         this.thread.start();
         return this.future;
     }

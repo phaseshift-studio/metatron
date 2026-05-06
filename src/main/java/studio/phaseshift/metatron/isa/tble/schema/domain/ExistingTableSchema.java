@@ -125,9 +125,9 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
         try (final Statement stmt = conn.createStatement()) {
             stmt.executeUpdate(
                     "CREATE TABLE IF NOT EXISTS " + MTRON_META_TABLE + " (" +
-                            "  table_name  TEXT NOT NULL, " +
-                            "  column_name TEXT NOT NULL, " +
-                            "  ref_table   TEXT NOT NULL, " +
+                            "  table_name  VARCHAR(255) NOT NULL, " +
+                            "  column_name VARCHAR(255) NOT NULL, " +
+                            "  ref_table   VARCHAR(512) NOT NULL, " +
                             "  PRIMARY KEY (table_name, column_name)" +
                             ")"
             );

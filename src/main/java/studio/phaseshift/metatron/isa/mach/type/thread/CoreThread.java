@@ -39,12 +39,11 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  */
 public class CoreThread extends AbstractThread {
 
-    final Machine machine;
+    Machine machine;
     final FutureObj<Obj> future = new FutureObj<>(UUID.randomUUID());
 
     public CoreThread(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
-        this.machine = SwarmMachine.of(this.at(START), this.at(CODE).as());
     }
 
     @Override
@@ -63,7 +62,9 @@ public class CoreThread extends AbstractThread {
     }
 
     @Override
-    public FutureObj<Obj> run() {
+    public FutureObj<Obj> apply(final Obj other) {
+        this.jvm().put(uri(START),other);
+        this.machine = SwarmMachine.of(this.at(START), this.at(CODE).as());
         BootLoader.getExecutor().submit(() -> {
             this.at(STATE, uri("running"), MUTABLE);
            final Obj result = this.machine.apply();

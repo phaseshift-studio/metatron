@@ -292,13 +292,6 @@ public class machInstSet extends AbstractInstSet {
                             else
                                 throw MTronException.of("injection larger than tuple: 1 < %d", inst.arg(0).intValue().intValue());
                         }),
-                        instC(MACH_INST_TID.extend("run").dom(MACH_THREAD_TID).rng(MACH_THREAD_TID), lst(), (lhs, inst) -> {
-                            final AbstractThread thread = AbstractThread.of(lhs.asRec());
-                            if (!thread.isReady())
-                                throw MTronException.of("%s is not ready: {{r}}%s{{X}}", thread.tid(), thread.state());
-                            thread.run();
-                            return thread;
-                        }),
                         instC(MACH_INST_TID.extend("stop").dom(MACH_THREAD_TID).rng(MACH_THREAD_TID), lst(), (lhs, inst) -> {
                             final AbstractThread thread = AbstractThread.of(lhs.asRec());
                             if (!thread.isRunning())
