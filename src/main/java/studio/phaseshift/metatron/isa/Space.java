@@ -125,12 +125,15 @@ public interface Space extends Rec, Closeable {
     class Helper {
 
         public static void spaceCloseLog(final Obj source, final Space space) {
-            source.logger().info("closed space %s", space);
+            if (space instanceof InstSet)
+                source.logger().info("closed inst set {{b}}%s", space.vid());
+            else
+                source.logger().info("closed space {{b}}%s {{g}}[{{c}}pattern: {{b}}%s{{g}}]", space.vid(),space.pattern());
         }
 
         public static void spaceOpenLog(final Obj source, final Space space) {
             if (space instanceof InstSet)
-                source.logger().info("opened inst set %s", space);
+                source.logger().info("opened inst set {{b}}%s", space.vid());
             else
                 source.logger().info("opened space %s", space);
         }

@@ -169,7 +169,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
             LOG.info("final boot args:\n%s", args);
             if (args.has(BOOT))
                 args.at(uri(BOOT), f(Paths.get("").toAbsolutePath().normalize().toString()).extend(args.at(BOOT).uriValue()).toUri(), MUTABLE);
-            LogObj.setSLF4J(args.has(uri("log")) ? args.at(uri("log")).uriValue().toString() : "info");
+            LogObj.setSLF4J(args.has(uri("log")) ? args.at(uri("log")).uriValue().toString() : "warn");
             LOG.info("%s", Graphitty.sillyPrint("booting metatron", true, true));
             Runtime.getRuntime().addShutdownHook(new Thread(BootLoader::close));
             LOG.info("available instruction sets\n\t(via %s%s)%s", "META-INF/services/",

@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -32,6 +33,7 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.algebra.Form.PLUS_MONOID;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.update_;
 import static studio.phaseshift.metatron.isa.m.type.Poly.IMMUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
@@ -47,6 +49,19 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
         super(rec(uri("a"), jnt(1), uri("b"), jnt(2), uri("c"), jnt(3)), Set.of(PLUS_MONOID));
     }
 
+    
+    @Test
+    @Disabled
+    public void testDereference() {
+        final Rec r = ObjmtronSerializer.parse("[a=>1@x,b=>2]");
+        assertEquals(Long.valueOf(1), r.at("a").jvm());
+        assertEquals(Long.valueOf(2), r.at("b").jvm());
+        assertEquals(Long.valueOf(3), ObjmtronSerializer.parse("@x + 2").apply().jvm());
+        assertEquals(Long.valueOf(3), r.at("a").jvm());
+        assertEquals(Long.valueOf(2), r.at("b").jvm());
+    }
+    
+    
     @ParameterizedTest
     @CsvSource(value = {
             // rec                                 | key                  | value

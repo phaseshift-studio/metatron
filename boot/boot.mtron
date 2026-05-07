@@ -66,17 +66,14 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
         host     => <ws://127.0.0.1:7777>,
         route    => [</b/cluster>=></shared>],
         peers    => !*boot/peers]@/sys/space/meta2;==]
- host -> <http://localhost:8777>;
  httpspace::[host     => <http://localhost:8777>,
-             pattern  => <http://localhost:8777/#>,
-             route    => [/              => <>,
-                          !${*host}/ex   => /m/inst,
-                          !${*host}/test => <local:Desktop>,
+             pattern  => <http://#>,
+             route    => [/          =>   <>,
                           /docs      => target/docs,
-                          /console   => src/main/resources/web/console ]]@/sys/space/web/http;
+                          /console   => src/main/resources/web/console]]@/sys/space/web/http;
    wsspace::[host     => <ws://localhost:8555>,
              pattern  => ws://#,
-             q        => [subq::[=>]],
+             q        => !*<local:persist/qs/websocket_stuff/lst>,
              route    => [/mtron=> mtron_ws,
                           /mcp  => mcp_mtron_ws]]@/sys/space/web/ws;
   [-- support for server->client notifications --]
@@ -175,18 +172,12 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
               wd:       =><http://www.wikidata.org/entity/>,
               wdt:      =><http://www.wikidata.org/prop/direct/>,
               wikidata: =><>]]@/sys/space/wikidata;
- [-- mcp::[host => <ws://localhost:8999/m/llm/mcp>]@/usr/ai/mcp/mtron; --]
- mcp::[host => <http://127.0.0.1:29170/index-mcp/streamable-http>]@/usr/ai/mcp/intellij;
- [==mcp::[host      => <http://192.168.88.231:3721/mcp>,
-             transport => <streamable-http>,
-             headers   => [authorization => "Bearer yFCufT0BTOHuvnmXod8sissMvzIMsmAlsKBtkEb/0j0="]]@/usr/ai/mcp/openclaw;==]                     
- *<local:software/metatron/.agent/agent.mtron>;
- print('\n-- agent loaded --\n');
+ mcp::[host => <http://127.0.0.1:29170/index-mcp/streamable-http>]@/usr/ai/mcp/intellij;                    
+ *<local:software/metatron/.metatron/agent.mtron>.print('\\n-------- agent loaded ---------\\n${_}\\n--------------------------\\n');
 [== load user console (skip if MTRON_HEADLESS env var or --headless boot arg is set) ==]
 [-- *</sys/env/MTRON_HEADLESS>.else(console::[=>]@/usr/ui/console);
 console::[=>]@/usr/ui/console;
 *boot/args.print(_,'\n');
-[==*<local:.mtron/agent/#>.*(_).filter(tid().is(eq(/m/mach/file))).as(bytes::T).as(str::T).source(_);==]
 print('{{y}}mounting {{b}}boot/usr/# {{y}}to {{b}}/usr/# {{g}}(count:{{y}}${*x}{{g}}){{X}}\n');
  
 

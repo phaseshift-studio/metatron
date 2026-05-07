@@ -243,7 +243,9 @@ The MCP notifications specification notes the following method specs:
 🧱 `roots/list_changed` 🧱 Sent when the list of filesystem roots accessible to the server has changed.
 |===
 
-If an MCP session is spawned at `ws://localhost:8555/mcp/0`, then writing an obj to `ws://localhost:8555/mcp/0/notification/x/y` will automatically be routed to the MCP client in a proper https://www.jsonrpc.org/[JSON-RPC 2.0] transport object. 
+If an MCP session is spawned at `ws://localhost:8555/mcp/0`, then writing an obj to `ws://localhost:8555/mcp/0/notification/x/y` will automatically be routed to the MCP client in a proper https://www.jsonrpc.org/[JSON-RPC 2.0] transport object.
+
+TIP: A link:../../.claude/skills/mtron/references/mcp-server-notifications.md[mini-SKILL] is available for this pattern — it captures the development session learnings, pitfalls, and mechanics for agents and users working with MCP server→client notifications.
 
 
 [discrete]

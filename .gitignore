@@ -1,8 +1,6 @@
-/.idea/
-/target/
-/.claude/
-/.mvn/
-/metatron/
+.*
+!.metatron/
+target/
 .metatron.history
 *.iml
 /.venv/
@@ -37,4 +35,3 @@ hs_err_pid*
 replay_pid*
 
 .ai/
-/.agent/

@@ -506,6 +506,15 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         return this.isInst() && (base.equals(AUTO_FROM_INST_TID) || base.equals(AUTO_AT_INST_TID) || base.equals(AUTO_INST_TID)) ?
                 this.apply(obj) :
                 this;
+     //   return Obj.Helper.getAutoPointer(this).map(Router::readFromSpace).orElse(this);
+    }
+
+    default Obj dereference() {
+        return this.autoResolve(noobj());
+    }
+
+    default Obj reference() {
+        return (null == this.vid() || this.isAutoFrom()) ? this : auto_from_(this.vid()).tryToInst();
     }
 
     default boolean isInstObj() {
@@ -742,7 +751,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
      * Returns the current obj stored at this obj's vid, or {@code this} if no vid is set.
      */
     default Obj load() {
-        return null == this.vid() ? this : Router.global().read(this.vid());
+        return null == this.vid() ? this : this.selfJVM(Router.readFromSpace(this.vid()).jvm());
     }
 
     default Obj save() {
@@ -777,6 +786,13 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
 
         public static fURI autoPointerVID(final Obj autoPointerInst) {
             return autoPointerInst.asInst().arg(0).uriValue();
+        }
+
+        public static Optional<fURI> getAutoPointer(final Obj obj) {
+            if (isAutoPointer(obj))
+                return Optional.of(autoPointerVID(obj));
+            else
+                return Optional.empty();
         }
 
         public static Optional<fURI> getPointer(final Obj obj) {
@@ -1002,7 +1018,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                             "the rhs obj", "the lhs obj", Map.of(jnt(0), "concatenated args followed by newline written to stdout"), "a side-effect function \\(f(x)\\nearrow x\\)"),
                     docWrap(instC(PRINT_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL_STAR)), (lhs, inst) -> objs(inst.args().elements().peek(o -> inst.logger().none("%s", o.isStr() ? o.strValue() : o.toString())).filter(x -> false).findAny().orElse(lhs))),
                             "the rhs obj", "the lhs obj", Map.of(jnt(0), "concatenated args followed by newline written to stdout"), "a side-effect function \\(f(x)\\nearrow x\\)"),
-                    instC(AT_INST_TID.dom(A).rng(A), lst(T(URI_TID.maybe()), T(ALL.maybe())), (lhs, inst) -> inst.arg(0).isNoObj() ? lhs.vid(null) : (lhs.isNoObj() ? Router.readFromSpace(inst.arg(0).uriValue()).orElse(inst.arg(1)).vid(inst.arg(0).uriValue()) : lhs.vid(inst.arg(0).uriValue()))),
+                    instC(AT_INST_TID.dom(ALL.maybe()).rng(A.maybeSome()), lst(T(URI_TID)), (lhs, inst) -> Router.readFromSpace(inst.arg(0).uriValue()).vid(inst.arg(0).uriValue())),
                     docWrap(instC(ID_INST_TID.dom(A).rng(A), lst(), (lhs, inst) -> lhs),
                             "an rhs obj", "an lhs obj", Map.of(), "the obj identity function \\(f(x)\\to x\\)"),
                     docWrap(instC(ID_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(), (lhs, inst) -> lhs),

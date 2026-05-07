@@ -429,7 +429,7 @@ public interface Inst extends Call {
         public static boolean filterOnDomainAllowUnique(final Obj lhs, final Inst apiInst) {
             if (lhs.isNoObj())
                 return true; // noobj lhs means "any domain is acceptable"
-            return lhs.testByID(apiInst.dom()) || (apiInst.dom().c().isOne() && lhs.c().gt(cInt.ONE()) && lhs.c(cInt.ONE()).testByID(apiInst.dom()));
+            return (lhs.testByID(apiInst.dom()) || lhs.test(apiInst.dom())) || (apiInst.dom().c().isOne() && lhs.c().gt(cInt.ONE()) && lhs.c(cInt.ONE()).testByID(apiInst.dom()));
         }
 
 

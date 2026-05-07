@@ -922,13 +922,13 @@ public class mInstSetTest extends AbstractInstSetTest {
 
     @ParameterizedTest
     @TestData(value = {
-            "a -> [x=>!(*(b))]",
-            "b -> [x=>!(*(c))]",
+            "a -> [x=>!*b]",
+            "b -> [x=>!*c]",
             "c -> 6"
     })
     @CsvSource(value = {
-            "*a                                           % [x=>!(*(b))]",
-            "*a.>>x                                       % [x=>!(*(c))]",
+            "*a                                           % [x=>!*b]",
+            "*a.>>x                                       % [x=>!*c]",
             "*a.>>x/x                                     % 6",
             "*a.>>x>>x.plus(4)                            % 10",
     }, delimiter = '%')

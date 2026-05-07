@@ -1,0 +1,12 @@
+[,]@</usr/ai/memory>;
+[,]@</usr/ai/notes>;
+[think    => |/usr/ui/console/pane/0/stream(_),
+ desc     => "testy the agent",
+ provider => !*deep:deepseek-v4-pro/provider,
+ name     => !*deep:deepseek-v4-pro/name,
+ memory   => memory::[max=>20,mem=>!*</usr/ai/memory>],
+ tool     => [!*eval,!*sql,!*</usr/ai/mcp/mtron>,!*</usr/ai/mcp/intellij>],
+ note     => !*</usr/ai/notes>,
+ skill    =>[!*<local:software/metatron/.metatron/skills/mtron>.as(skill::T)],
+ response =>[to=>print(_)]]@testy.as(model::T);
+*/usr/ai/notes>>=+['add the word DRAGON to your final answer.'];

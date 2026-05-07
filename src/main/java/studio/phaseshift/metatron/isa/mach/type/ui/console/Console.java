@@ -840,6 +840,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                             .addRow(List.of("clear", ":clear", "clear the console"))
                             .addRow(List.of("header", ":header [ |<name>]", "print random or named metatron header"))
                             .addRow(List.of("log", ":log [ |trace|debug|info|warn|error] [ |int]", "show or set log level (and target a output to a pane)"))
+                            .addRow(List.of("word jump", "<shift>+<left/right>", "jump to start/end of a word"))
                             .addRow(List.of("prefix", ":prefix \"<text>\"", "prefix input with text"))
                             .addRow(List.of("postfix", ":postfix \"<text>\"", "postfix input with text"))
                             .addRow(List.of("back erase", "<alt>+k <char>", "erase buffer back to first occurrence of char"))
@@ -1115,6 +1116,17 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                             TypeCheck.disable(TypeCheck.getEnabled().stream().toList().getFirst());
                         return true;
                     }, ctrl('t'));
+            /// FAST NAVIGATION: JUMP BY WORD (Shift+Left/Right)
+            getKeyMap().bind((Widget)
+                    () -> {
+                        callWidget("backward-word");
+                        return true;
+                    }, "\033[1;2D");  // Shift+<left>
+            getKeyMap().bind((Widget)
+                    () -> {
+                        callWidget("forward-word");
+                        return true;
+                    }, "\033[1;2C");  // Shift+<right>
             /// CREATE NEW LINE BELOW CURRENT LOCATION
             getKeyMap().bind((Widget)
                     () -> {

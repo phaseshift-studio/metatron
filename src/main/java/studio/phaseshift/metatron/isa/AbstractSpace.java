@@ -22,6 +22,7 @@ import studio.phaseshift.metatron.furi.QProc;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.BaseQ;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
+import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
@@ -53,9 +54,9 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
         this.sjvm = sjvm;
         this.pattern = this.at(PATTERN).uriValue();
         /// //////////// BAD
-        final List<Obj> list = this.jvm().getOrDefault(uri(QPROC), lst()).lstValue();
-        this.jvm().remove(uri(QPROC));
-        list.forEach(q -> this.addQ(q instanceof QProc ? (QProc) q : new BaseQ(new HashMap<>(q.asRec().jvm()), q.asRec().tid(), q.asRec().vid())));
+        //final Lst qprocs = this.at(uri(QPROC)).orElse(lst());
+        //this.jvm().remove(uri(QPROC));
+        //qprocs.elements().forEach(q -> this.addQ(QProc.Helper.wrap(q.asRec())));
         /// //////////// BAD
         this.ioStats = new MStats();
         LOG = Graphitty.log(this);
