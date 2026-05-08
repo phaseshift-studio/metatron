@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Rel;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 
@@ -43,6 +44,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 
@@ -201,6 +203,22 @@ public final class CommonUtil {
         return result;
     }
 
+    public static fURI mintUUID(final fURI baseURI) {
+        final String uuid = UUID.randomUUID().toString().toLowerCase();
+        return null == baseURI ? f(uuid) : baseURI.extend(uuid);
+    }
+
+    public static fURI mintShortUUID(final fURI baseURI, boolean retryIfCollision) {
+        fURI shortId;
+        do {
+            final UUID uuid = UUID.randomUUID();
+            shortId = baseURI.extend(Long.toHexString(uuid.getMostSignificantBits())
+                      .substring(0, 8) // Take first 8 hex chars of the MSB
+            );
+        } while (retryIfCollision && !Router.readFromSpace(shortId).isNoObj());
+        return shortId;
+    }
+
     public static String replaceGroups(String s, final String leftDelim, final String rightDelim,
                                        final Function<String, String> replaceFunction) {
         String ss = s;
@@ -276,7 +294,7 @@ public final class CommonUtil {
 
     public static final String HEADER_SEPARATOR = "####################";
     public static final String HEADER_FILE = "./conf/ansi_headers.txt";
-    
+
     public static String getHeader(final String headerFile, final String headerName, final boolean applyGraphitty) {
         try {
             final Map<String, String> headers = new HashMap<>();

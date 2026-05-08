@@ -221,6 +221,7 @@ public final class Tokens {
     public static final String CONFIG = "config";
     public static final String STATE = "state";
     public static final String ROOT = "root";
+    public static final String SESSION = "session";
 
 
 }

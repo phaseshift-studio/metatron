@@ -57,6 +57,9 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
            [--route => [!*fs_prefix=><~/>],--]
             route   => [local:=><~/>],
             script  => !*boot/script]@/sys/space/fs;
+            
+ fsspace::[pattern  => mtronfs:#,
+           route   => [mtronfs:=><.metatron>]]@/sys/space/mtronfs;
        
  [==meta::[pattern  => </a/cluster/#>,
         host     => <ws://localhost:6666>,
@@ -73,7 +76,7 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
                           /console   => src/main/resources/web/console]]@/sys/space/web/http;
    wsspace::[host     => <ws://localhost:8555>,
              pattern  => ws://#,
-             q        => !*<local:persist/qs/websocket_stuff/lst>,
+             q        => [docq::[=>],subq::[=>]],
              route    => [/mtron=> mtron_ws,
                           /mcp  => mcp_mtron_ws]]@/sys/space/web/ws;
   [-- support for server->client notifications --]

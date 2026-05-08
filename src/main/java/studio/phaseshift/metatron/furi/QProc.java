@@ -46,7 +46,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 public interface QProc extends Rec {
 
-    fURI QPROC_TID = MTRON_TID.extend("space/qproc");
+    fURI QPROC_TID = M_ISA_TID.extend("space/qproc");
     fURI ON_WRITE_TID = QPROC_TID.extend("on_write");
     fURI ON_READ_TID = QPROC_TID.extend("on_read");
 

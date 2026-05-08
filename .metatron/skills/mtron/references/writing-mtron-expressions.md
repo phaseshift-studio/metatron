@@ -10,25 +10,26 @@
 
 ## Operations
 
-| Op | Syntax | Purpose |
-|----|--------|---------|
-| Filter | `.filter(cond)` | Keep matching |
-| Limit | `.limit(N)` | First N |
-| Select | `.select(f1, f2)` | Project fields |
-| Map | `.map(transform)` | Transform each |
-| Count | `.count()` | Count items |
-| Sum/Avg | `.sum(f)` / `.avg(f)` | Aggregate |
-| Min/Max | `.min(f)` / `.max(f)` | Extremes |
-| GroupBy | `.groupBy(f)` | By category |
-| Distinct | `.distinct(f)` | Unique |
-| Sort | `.sort(f)` | Order |
+| Op       | Syntax                | Purpose |
+|----------|-----------------------|---------|
+| filter   | `.filter(cond)`       | Keep matching |
+| limit    | `.take(N)`            | First N |
+| select   | `.select(f1, f2)`     | Project fields |
+| map      | `.map(transform)`     | Transform each |
+| count    | `.count()`            | Count items |
+| sum/avg  | `.sum(f)` / `.avg(f)` | Aggregate |
+| min/max  | `.min(f)` / `.max(f)` | Extremes |
+| group    | `.group(f)`           | By category |
+| distinct | `.distinct(f)`        | Unique |
+| sort     | `.order(f)`           | Order |
 
 ## Type Conversions
 
-| From → To | Expression |
-|-----------|------------|
-| bytes → string | `.as(bytes::T).as(str::T)` |
-| any → type | `.as(${type}::T)` |
+| From → To       | Expression |
+|-----------------|------------|
+| bytes → string  | `.as(bytes::T).as(str::T)` |
+| any → type      | `.as(${type}::T)` |
+ | html → markdown | `.as(html::T).as(markdown::T)` |
 
 ## Universal (all environments)
 
@@ -81,4 +82,4 @@
 *${space}:${table}.*(_).limit(1).type()       # Check type
 ```
 
-**Tips:** Use `.limit()` during dev. Move `.filter()` early. Break down on errors.
+**tips:** Use `.take()` during dev. Move `.filter()` early. Break down on errors.

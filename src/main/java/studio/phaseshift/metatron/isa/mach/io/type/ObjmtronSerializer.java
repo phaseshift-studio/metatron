@@ -47,7 +47,7 @@ import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.OBJ_MTRON_STRING_
 public class ObjmtronSerializer extends AbstractObjSerializer<String> {
     private static final String NOOBJ_STRING = "noobj";
     protected boolean leftJustify;
-    public static final int CLIP_LENGTH = 40;
+    public static final int CLIP_LENGTH = 50;
     protected int clip = CLIP_LENGTH;
     public static String REAL_FORMAT = "%.4f";
 

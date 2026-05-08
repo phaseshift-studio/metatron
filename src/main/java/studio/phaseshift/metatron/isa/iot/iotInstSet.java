@@ -32,8 +32,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.iot.haos.space.haosSpace.HAOS_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.iot.space.mqtt.mqttSpace.MQTT_SPACE_TYPE;
-import static studio.phaseshift.metatron.isa.m.mInstSet.INSTSET_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.MTRON_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
@@ -44,7 +43,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 @InstSet.JREService(vid = "/m/iot")
 public class iotInstSet extends AbstractInstSet {
 
-    public static final fURI IOT_ISA_TID = MTRON_TID.extend("iot");
+    public static final fURI IOT_ISA_TID = M_ISA_TID.extend("iot");
     public static final fURI IOT_INST_TID = IOT_ISA_TID.extend("inst");
 
     public static final fURI SOC_TID = IOT_ISA_TID.extend("soc");

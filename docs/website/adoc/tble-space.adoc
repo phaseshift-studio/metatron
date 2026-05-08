@@ -12,7 +12,7 @@ creating a `tblespace` requires a JDBC `host` URI, a `driver`, and a `route`. th
 🧱
 ++++
 <!-- 🐖
-*tblespace
+tblespace::T
 -->
 ++++
 |===

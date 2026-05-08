@@ -70,7 +70,7 @@ public class mtron_wsServer extends WebSocketRec {
         this.jvm().put(uri(ON_MESSAGE), instC(vid.extend(ON_MESSAGE).dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> {
             try {
                 final Obj rhs = lhs.apply(noobj());
-                LOG.debug("received mtron message: %s => %s", lhs, rhs);
+                LOG.debug("processed mtron message: %s => %s", lhs, rhs);
                 this.send(rhs);
                 return rhs;
             } catch (final Exception e) {

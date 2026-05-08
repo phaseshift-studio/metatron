@@ -193,6 +193,13 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                     }
                 }
             }).encoding(StandardCharsets.UTF_8).system(true).build();
+            // Request extended key reporting so terminals that support it (kitty, ghostty,
+            // xterm with modifyOtherKeys, iTerm2, etc.) will send distinguishable
+            // sequences for Shift+Backspace and other modified keys.
+            // Backward-compatible: terminals that don't understand these sequences ignore them.
+            terminal.writer().print("\033[>1u");   // kitty progressive enhancement 1 (disambiguate)
+            terminal.writer().print("\033[>4;2m"); // xterm modifyOtherKeys level 2
+            terminal.writer().flush();
             this.outputHeader("");
             final Supplier<Path> currentDir = () -> Paths.get("");
             final Builtins builtins = new Builtins(currentDir, Console.configurations, null);
@@ -232,6 +239,11 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     public void close() {
         try {
             this.reader.getBuffer().clear();
+            // Disable extended key reporting before exit so we don't leave the
+            // terminal in a state that confuses subsequent applications.
+            terminal.writer().print("\033[<u");    // kitty: pop keyboard enhancement
+            terminal.writer().print("\033[>4m");  // xterm: reset modifyOtherKeys
+            terminal.writer().flush();
             terminal.close();
         } catch (final IOException e) {
             LOG.error(e);
@@ -820,7 +832,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                         return lhs;
                     })));
                 } else if (line.equals(":header"))
-                    this.outputHeader(line.substring(6).trim());
+                    this.outputHeader(line.substring(7).trim());
                 else if (line.equals(":quit"))
                     break;
                 else if (line.equals(":clear")) {
@@ -841,7 +853,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                             .addRow(List.of("header", ":header [ |<name>]", "print random or named metatron header"))
                             .addRow(List.of("log", ":log [ |trace|debug|info|warn|error] [ |int]", "show or set log level (and target a output to a pane)"))
                             .addRow(List.of("word jump", "<shift>+<left/right>", "jump to start/end of a word"))
-                            .addRow(List.of("word delete", "<shift>+<backspace>", "delete previous word"))
+                            .addRow(List.of("word delete", "<ctrl>+<backspace>", "delete previous word"))
                             .addRow(List.of("prefix", ":prefix \"<text>\"", "prefix input with text"))
                             .addRow(List.of("postfix", ":postfix \"<text>\"", "postfix input with text"))
                             .addRow(List.of("back erase", "<alt>+k <char>", "erase buffer back to first occurrence of char"))
@@ -1128,12 +1140,24 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                         callWidget("forward-word");
                         return true;
                     }, "\033[1;2C");  // Shift+<right>
-            /// FAST DELETION: DELETE WORD BACKWARDS (Shift+Backspace)
+            /// FAST DELETION: DELETE WORD BACKWARDS (Ctrl+Backspace)
+            // CSI u / kitty keyboard protocol format (kitty, ghostty, iTerm2, xterm-modifyOtherKeys)
             getKeyMap().bind((Widget)
                     () -> {
                         callWidget("backward-kill-word");
                         return true;
-                    }, "\033[127;2u");  // Shift+<backspace> (CSI u)
+                    }, "\033[127;5u");
+            getKeyMap().bind((Widget)
+                    () -> {
+                        callWidget("backward-kill-word");
+                        return true;
+                    }, "\033[8;5u");
+            // Fallback: terminals without extended key reporting often send plain BS (0x08)
+            getKeyMap().bind((Widget)
+                    () -> {
+                        callWidget("backward-kill-word");
+                        return true;
+                    }, "\b");
             /// CREATE NEW LINE BELOW CURRENT LOCATION
             getKeyMap().bind((Widget)
                     () -> {

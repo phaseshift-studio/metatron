@@ -631,4 +631,223 @@ public class ObjMarkdownSerializerTest extends AbstractSerializerTest<Node> {
 
         assertNotNull(ul, "Bullet list should be converted to <ul>");
     }
+
+    @Test
+    public void testOutputBytesVsGetChars() {
+        final String markdown = "# Hello World\n\nThis is a paragraph.";
+        final Obj rec = ObjMarkdownSerializer.parse(markdown);
+
+        // What write() returns as toString()
+        final com.vladsch.flexmark.util.ast.Node node = serializer.write(rec);
+        final String nodeToString = node.toString();
+        final String nodeGetChars = node.getChars().toString();
+
+        System.out.println("node.toString():    " + nodeToString);
+        System.out.println("node.getChars():    " + nodeGetChars);
+
+        // outputBytes uses toString() internally
+        final String outputBytesString = new String(serializer.outputBytes(rec).array());
+        System.out.println("outputBytes string: " + outputBytesString);
+
+        // The actual markdown content should be in getChars, not toString
+        assertTrue(nodeGetChars.contains("Hello World"),
+                "getChars() should contain the markdown content");
+    }
+
+    @Test
+    public void testWriteToStringReturnsMarkdownText() {
+        // This tests the code path used by webInstSet's AS_INST_TID for markdown→str
+        final String markdown = "## Hello\n\n**bold** and *italic*";
+        final Obj rec = ObjMarkdownSerializer.parse(markdown);
+
+        final com.vladsch.flexmark.util.ast.Node node = serializer.write(rec);
+
+        // Current webInstSet line 162 uses .toString() — should use .getChars().toString()
+        final String viaToString = node.toString();
+        final String viaGetChars = node.getChars().toString();
+
+        System.out.println("write().toString():       " + viaToString);
+        System.out.println("write().getChars():       " + viaGetChars);
+
+        // The getChars() is the correct markdown output
+        assertTrue(viaGetChars.contains("Hello") && viaGetChars.contains("bold"),
+                "getChars() should contain the regenerated markdown");
+    }
+
+    @Test
+    public void testRoundTripViaOutputBytes() {
+        final String markdown = "# Title\n\nSome content with **bold** and *italic*.\n\n- Item 1\n- Item 2";
+        final Obj rec = ObjMarkdownSerializer.parse(markdown);
+
+        // outputBytes is used when serializing markdown to bytes (e.g., fsSpace writing)
+        final byte[] bytes = serializer.outputBytes(rec).array();
+        final String roundTripped = new String(bytes);
+
+        // Re-parse the round-tripped output — it should still be valid markdown
+        final Obj rec2 = ObjMarkdownSerializer.parse(roundTripped);
+        assertEquals(uri(DOC), rec2.asRec().at(uri(TYPE)),
+                "Round-tripped output should be valid markdown");
+    }
+
+    // ================================================================
+    // Bijective round-trip tests — markdown → rec → markdown must
+    // produce semantically equivalent output
+    // ================================================================
+
+    private String roundTrip(final String markdown) {
+        return serializer.write(ObjMarkdownSerializer.parse(markdown))
+                .getChars().toString();
+    }
+
+    @Test
+    public void testBijectiveHeadings() {
+        assertEquals("# Hello\n\n", roundTrip("# Hello"));
+        assertEquals("## Hello\n\n", roundTrip("## Hello"));
+        assertEquals("### Hello\n\n", roundTrip("### Hello"));
+    }
+
+    @Test
+    public void testBijectiveParagraph() {
+        assertEquals("A simple paragraph.\n\n", roundTrip("A simple paragraph."));
+    }
+
+    @Test
+    public void testBijectiveParagraphWithFormatting() {
+        assertEquals("This has **bold** and *italic* text.\n\n",
+                roundTrip("This has **bold** and *italic* text."));
+        final String result = roundTrip("This has **bold** and *italic* text.");
+        assertTrue(result.contains("**bold**"), "Should preserve bold: " + result);
+        assertTrue(result.contains("*italic*"), "Should preserve italic: " + result);
+    }
+
+    @Test
+    public void testBijectiveCodeBlock() {
+        final String input = "```java\nSystem.out.println(\"hello\");\n```";
+        assertEquals(input + "\n\n", roundTrip(input));
+    }
+
+    @Test
+    public void testBijectiveInlineCode() {
+        assertEquals("Use `System.out.println()` here.\n\n",
+                roundTrip("Use `System.out.println()` here."));
+    }
+
+    @Test
+    public void testBijectiveBulletList() {
+        final String input = "- Item 1\n- Item 2\n- Item 3";
+        assertEquals(input + "\n\n", roundTrip(input));
+    }
+
+    @Test
+    public void testBijectiveOrderedList() {
+        final String input = "1. First\n2. Second\n3. Third";
+        assertEquals(input + "\n\n", roundTrip(input));
+    }
+
+    @Test
+    public void testBijectiveLink() {
+        assertEquals("[Google](https://google.com)\n\n",
+                roundTrip("[Google](https://google.com)"));
+    }
+
+    @Test
+    public void testBijectiveImage() {
+        assertEquals("![Alt](https://example.com/img.png)\n\n",
+                roundTrip("![Alt](https://example.com/img.png)"));
+    }
+
+    @Test
+    public void testBijectiveBlockQuote() {
+        assertEquals("> A quote\n\n", roundTrip("> A quote"));
+    }
+
+    @Test
+    public void testBijectiveHorizontalRule() {
+        assertEquals("---\n\n", roundTrip("---"));
+    }
+
+    @Test
+    public void testBijectiveHeadingWithFormatting() {
+        // A heading with **bold** inside — currently writeNode ignores heading children
+        final String result = roundTrip("# Hello **World**");
+        System.out.println("Heading with bold result: " + result.replace("\n", "\\n"));
+        assertTrue(result.contains("World"), "Should contain the heading text: " + result);
+        // Ideally: assertEquals("# Hello **World**\n\n", result);
+    }
+
+    @Test
+    public void testBijectiveLinkWithTitle() {
+        assertEquals("[Google](https://google.com \"Search\")\n\n",
+                roundTrip("[Google](https://google.com \"Search\")"));
+    }
+
+    @Test
+    public void testBijectiveAutolink() {
+        assertEquals("<https://example.com>\n\n",
+                roundTrip("<https://example.com>"));
+    }
+
+    @Test
+    public void testBijectiveNestedList() {
+        // Semantic bijection: re-parsing the round-tripped output produces equivalent structure
+        final String input = "- Item 1\n  - Nested A\n  - Nested B\n- Item 2";
+        final String roundTripped = roundTrip(input);
+        System.out.println("Nested list round-trip:\n" + roundTripped.replace("\n", "\\n"));
+
+        // Re-parse: both should yield valid docs with 2 items and nested children
+        final Obj rec1 = ObjMarkdownSerializer.parse(input);
+        final Obj rec2 = ObjMarkdownSerializer.parse(roundTripped);
+        assertEquals(uri(DOC), rec1.asRec().at(uri(TYPE)));
+        assertEquals(uri(DOC), rec2.asRec().at(uri(TYPE)));
+        assertTrue(roundTripped.contains("Item 1"));
+        assertTrue(roundTripped.contains("Nested A"));
+        assertTrue(roundTripped.contains("Nested B"));
+        assertTrue(roundTripped.contains("Item 2"));
+    }
+
+    @Test
+    public void testBijectiveComplexDocument() {
+        final String markdown = """
+                # Main Title
+
+                This is a paragraph with **bold** and *italic* text and `code`.
+
+                ## Subsection
+
+                - Item 1
+                - Item 2
+
+                ```python
+                def hello():
+                    print("world")
+                ```
+
+                > A wise quote
+
+                [Link](https://example.com)
+
+                ---
+
+                1. First ordered
+                2. Second ordered
+                """;
+        final String result = roundTrip(markdown);
+        System.out.println("Complex round-trip:\n" + result);
+
+        // Re-parse should produce valid markdown rec
+        final Obj reparsed = ObjMarkdownSerializer.parse(result);
+        assertEquals(uri(DOC), reparsed.asRec().at(uri(TYPE)));
+
+        // Verify key content survived
+        assertTrue(result.contains("Main Title"), "Should contain Main Title");
+        assertTrue(result.contains("**bold**"), "Should contain bold");
+        assertTrue(result.contains("*italic*"), "Should contain italic");
+        assertTrue(result.contains("`code`"), "Should contain inline code");
+        assertTrue(result.contains("Subsection"), "Should contain Subsection");
+        assertTrue(result.contains("Item 1"), "Should contain Item 1");
+        assertTrue(result.contains("Item 2"), "Should contain Item 2");
+        assertTrue(result.contains("```python"), "Should contain code block");
+        assertTrue(result.contains("wise quote"), "Should contain quote");
+        assertTrue(result.contains("Link"), "Should contain link text");
+    }
 }

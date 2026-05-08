@@ -29,6 +29,7 @@ import studio.phaseshift.metatron.isa.mach.io.type.AbstractObjSerializer;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -75,6 +76,11 @@ public class ObjMarkdownSerializer extends AbstractObjSerializer<Node> {
     }
 
     @Override
+    public ByteBuffer outputBytes(final Obj obj) throws MTronException {
+        return ByteBuffer.wrap(this.write(obj).getChars().toString().getBytes(StandardCharsets.UTF_8));
+    }
+
+    @Override
     public Node write(final Obj obj) {
         if (!obj.isRec()) {
             return parser.parse(obj.isStr() ? obj.strValue() : obj.toString());
@@ -86,79 +92,91 @@ public class ObjMarkdownSerializer extends AbstractObjSerializer<Node> {
     }
 
     private void writeNode(final studio.phaseshift.metatron.isa.m.type.Rec rec, final StringBuilder markdown) {
+        writeNode(rec, markdown, "");
+    }
+
+    private void writeNode(final studio.phaseshift.metatron.isa.m.type.Rec rec, final StringBuilder markdown, final String indent) {
         final String type = rec.at(TYPE).orElse(uri("unknown")).uriValue().toString();
 
         switch (type) {
-            case DOC -> writeChildren(rec, markdown);
+            case DOC -> writeChildren(rec, markdown, indent);
 
             case HEAD -> {
                 final int level = rec.at(LEVEL).orElse(jnt(1)).intValue().intValue();
-                final String text = rec.at(TEXT).orElse(str("")).strValue();
-                markdown.append("#".repeat(level)).append(" ").append(text).append("\n\n");
+                markdown.append(indent).append("#".repeat(level)).append(" ");
+                writeChildren(rec, markdown, indent);
+                markdown.append("\n\n");
             }
 
             case P -> {
-                writeChildren(rec, markdown);
+                writeChildren(rec, markdown, indent);
                 markdown.append("\n\n");
             }
 
             case CODE -> {
                 final String language = rec.at(LANG).orElse(str("")).strValue();
                 final String code = rec.at(CODE).orElse(str("")).strValue();
-                markdown.append("```").append(language).append("\n");
-                markdown.append(code);
-                if (!code.endsWith("\n")) markdown.append("\n");
-                markdown.append("```\n\n");
+                markdown.append(indent).append("```").append(language).append("\n");
+                final String[] codeLines = code.split("\n", -1);
+                for (int i = 0; i < codeLines.length; i++) {
+                    if (i == codeLines.length - 1 && codeLines[i].isEmpty()) break;
+                    markdown.append(indent).append(codeLines[i]).append("\n");
+                }
+                markdown.append(indent).append("```\n\n");
             }
 
             case B_LIST -> {
-                writeChildren(rec, markdown);
+                writeChildren(rec, markdown, indent);
                 markdown.append("\n");
             }
 
             case O_LIST -> {
                 final int start = rec.at(START).orElse(jnt(1)).intValue().intValue();
-                writeOrderedListChildren(rec, markdown, start);
+                writeOrderedListChildren(rec, markdown, start, indent);
                 markdown.append("\n");
             }
 
             case ENTRY -> {
-                markdown.append("- ");
-                // List items contain paragraphs as children, write them inline
+                markdown.append(indent).append("- ");
                 final Obj childrenObj = rec.at(OUT);
+                boolean lastWasBlock = false;
                 if (!childrenObj.isNoObj() && childrenObj.isLst()) {
-                    childrenObj.asLst().elements().forEach(child -> {
+                    final var children = childrenObj.asLst().elements().toList();
+                    for (int i = 0; i < children.size(); i++) {
+                        final Obj child = children.get(i);
                         if (child.isRec()) {
                             final String childType = child.asRec().at(TYPE).orElse(uri("unknown")).uriValue().toString();
                             if (P.equals(childType)) {
-                                // For paragraphs inside list items, write children without the paragraph wrapper
-                                writeChildren(child.asRec(), markdown);
+                                writeChildren(child.asRec(), markdown, indent);
                             } else {
-                                writeNode(child.asRec(), markdown);
+                                markdown.append("\n");
+                                writeNode(child.asRec(), markdown, indent + "  ");
+                                lastWasBlock = (i == children.size() - 1);
                             }
                         }
-                    });
+                    }
                 }
-                markdown.append("\n");
+                if (!lastWasBlock) {
+                    markdown.append("\n");
+                }
             }
 
             case QUOTE -> {
                 markdown.append("> ");
-                writeChildren(rec, markdown);
-                markdown.append("\n\n");
+                writeChildren(rec, markdown, indent);
+                // P children already provide their own trailing "\n\n", so no extra here
             }
 
-            case "horizontal_rule" -> markdown.append("---\n\n");
+            case "horizontal_rule" -> markdown.append(indent).append("---\n\n");
 
             case EDGE -> {
                 final Obj urlObj = rec.at(URI).orElse(str(""));
                 final String url = urlObj.isUri() ? urlObj.uriValue().toString() : urlObj.strValue();
                 final String title = rec.at(TITLE).orElse(str("")).strValue();
                 markdown.append("[");
-                // Prefer children over text field for formatted content
                 final Obj childrenObj = rec.at(OUT);
                 if (!childrenObj.isNoObj() && childrenObj.isLst()) {
-                    writeChildren(rec, markdown);
+                    writeChildren(rec, markdown, indent);
                 } else {
                     final String text = rec.at(TEXT).orElse(str("")).strValue();
                     markdown.append(text);
@@ -190,10 +208,9 @@ public class ObjMarkdownSerializer extends AbstractObjSerializer<Node> {
 
             case "emphasis" -> {
                 markdown.append("*");
-                // Prefer children over text field
                 final Obj childrenObj = rec.at(OUT);
                 if (!childrenObj.isNoObj() && childrenObj.isLst()) {
-                    writeChildren(rec, markdown);
+                    writeChildren(rec, markdown, indent);
                 } else {
                     final String text = rec.at(TEXT).orElse(str("")).strValue();
                     markdown.append(text);
@@ -203,10 +220,9 @@ public class ObjMarkdownSerializer extends AbstractObjSerializer<Node> {
 
             case "strong" -> {
                 markdown.append("**");
-                // Prefer children over text field
                 final Obj childrenObj = rec.at(OUT);
                 if (!childrenObj.isNoObj() && childrenObj.isLst()) {
-                    writeChildren(rec, markdown);
+                    writeChildren(rec, markdown, indent);
                 } else {
                     final String text = rec.at(TEXT).orElse(str("")).strValue();
                     markdown.append(text);
@@ -230,7 +246,7 @@ public class ObjMarkdownSerializer extends AbstractObjSerializer<Node> {
 
             case "html_block" -> {
                 final String html = rec.at(HTML).orElse(str("")).strValue();
-                markdown.append(html).append("\n\n");
+                markdown.append(indent).append(html).append("\n\n");
             }
 
             case "html_inline" -> {
@@ -254,48 +270,52 @@ public class ObjMarkdownSerializer extends AbstractObjSerializer<Node> {
                 // Unknown type - try to write children or content
                 rec.at(CONTENT).ifPresent(content -> markdown.append(content.strValue()));
                 if (!rec.has(CONTENT)) {
-                    writeChildren(rec, markdown);
+                    writeChildren(rec, markdown, indent);
                 }
             }
         }
     }
 
-    private void writeChildren(final studio.phaseshift.metatron.isa.m.type.Rec rec, final StringBuilder markdown) {
-        // Children are stored as a list
+    private void writeChildren(final studio.phaseshift.metatron.isa.m.type.Rec rec, final StringBuilder markdown, final String indent) {
         final Obj childrenObj = rec.at(OUT);
         if (childrenObj.isNoObj() || !childrenObj.isLst()) return;
 
         childrenObj.asLst().elements().forEach(child -> {
             if (child.isRec()) {
-                writeNode(child.asRec(), markdown);
+                writeNode(child.asRec(), markdown, indent);
             }
         });
     }
 
-    private void writeOrderedListChildren(final studio.phaseshift.metatron.isa.m.type.Rec rec, final StringBuilder markdown, int start) {
+    private void writeOrderedListChildren(final studio.phaseshift.metatron.isa.m.type.Rec rec, final StringBuilder markdown, int start, final String indent) {
         final Obj childrenObj = rec.at(OUT);
         if (childrenObj.isNoObj() || !childrenObj.isLst()) return;
 
         final AtomicInteger itemNumber = new AtomicInteger(start);
         childrenObj.asLst().elements().forEach(child -> {
             if (child.isRec()) {
-                markdown.append(itemNumber.getAndIncrement()).append(". ");
-                // List items contain paragraphs as children, write them inline
+                markdown.append(indent).append(itemNumber.getAndIncrement()).append(". ");
                 final Obj itemChildren = child.asRec().at(OUT);
+                boolean lastWasBlock = false;
                 if (!itemChildren.isNoObj() && itemChildren.isLst()) {
-                    itemChildren.asLst().elements().forEach(itemChild -> {
+                    final var children = itemChildren.asLst().elements().toList();
+                    for (int i = 0; i < children.size(); i++) {
+                        final Obj itemChild = children.get(i);
                         if (itemChild.isRec()) {
                             final String childType = itemChild.asRec().at(TYPE).orElse(uri("unknown")).uriValue().toString();
                             if (P.equals(childType)) {
-                                // For paragraphs inside list items, write children without the paragraph wrapper
-                                writeChildren(itemChild.asRec(), markdown);
+                                writeChildren(itemChild.asRec(), markdown, indent);
                             } else {
-                                writeNode(itemChild.asRec(), markdown);
+                                markdown.append("\n");
+                                writeNode(itemChild.asRec(), markdown, indent + "  ");
+                                lastWasBlock = (i == children.size() - 1);
                             }
                         }
-                    });
+                    }
                 }
-                markdown.append("\n");
+                if (!lastWasBlock) {
+                    markdown.append("\n");
+                }
             }
         });
     }

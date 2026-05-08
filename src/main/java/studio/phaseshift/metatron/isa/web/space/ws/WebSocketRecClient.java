@@ -26,6 +26,7 @@ import org.java_websocket.handshake.ServerHandshake;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.web.type.Content;
@@ -41,6 +42,7 @@ import static studio.phaseshift.metatron.Tokens.ON_MESSAGE;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.ALL_TYPE;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.print_;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -80,6 +82,21 @@ public class WebSocketRecClient extends WebSocketClient implements Rec, Closeabl
         } catch (final Exception e) {
             LOG.error(MTronException.of(e));
         }
+    }
+
+    @Override
+    public String toString() {
+        return this.wsclient.toString();
+    }
+
+    @Override
+    public boolean equals(final Object o) {
+        return this.wsclient.equals(o);
+    }
+
+    @Override
+    public int hashCode() {
+        return this.wsclient.hashCode();
     }
 
 

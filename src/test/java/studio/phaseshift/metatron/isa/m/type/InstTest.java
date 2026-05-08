@@ -36,6 +36,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
+import static studio.phaseshift.metatron.isa.m.type.Inst.INST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -58,7 +59,8 @@ public class InstTest extends AbstractObjTest {
     public void testDomRng(final String f, final String op, final String dom, final String rng, final String test) {
         final fURI furi = f(f);
         final Inst inst = MInst.instA(furi);
-        final Obj testObj = mParser.m_obj().parse(test).get();
+        final Obj testObj = ObjmtronSerializer.parse(test);
+        assertTrue(inst.test(INST_TYPE));
         assertEquals(op, inst.tid().pathString());
         assertEquals(f(dom), inst.dom().tid());
         assertEquals(f(rng), inst.rng().tid());
@@ -88,11 +90,13 @@ public class InstTest extends AbstractObjTest {
             "noobj     % test?A{*}<=A{0}(A{*}::T)         % test({1,2,3})    % test?int{3}<=int{0}(int{3}::T)",
     }, delimiter = '%')
     public void testResolution(final String lhs, final String def, final String spec, final String resolution) {
-        final Obj lhsA = mParser.m_obj().parse(lhs).get();
-        final Inst defA = mParser.m_obj().parse(def).get();
-        final Inst specA = mParser.m_obj().parse(spec).get();
-        final Inst resolutionA = mParser.m_obj().parse(resolution).get();
+        final Obj lhsA = ObjmtronSerializer.parse(lhs);
+        final Inst defA = ObjmtronSerializer.parse(def);
+        final Inst specA = ObjmtronSerializer.parse(spec);
+        final Inst resolutionA = ObjmtronSerializer.parse(resolution);
         final Inst resultA = Inst.Helper.bindGenerics(lhsA, specA, defA);
+        assertFalse(lhsA.test(INST_TYPE));
+        assertTrue(defA.test(INST_TYPE));
         LOG.info("{{b}}%s{{/b}} resolution matches {{b}}%s{{/b}} specification", resultA.tid(), resolutionA.tid());
         final boolean match = resultA.tid().test(resolutionA.tid());
         assertTrue(match);
@@ -157,11 +161,17 @@ public class InstTest extends AbstractObjTest {
             "noobj             % test({1,2,3})                  % test?A{*}<=A{0}(A{*}::T)                 % test?int{3}<=int{0}(int{3}::T)",
     })
     public void testBindGenerics(final String lhs, final String def, final String spec, final String resolution) {
-        final Obj lhsA = mParser.m_obj().parse(lhs.trim()).get();
-        final Inst defA = mParser.m_obj().parse(def.trim()).get();   // userInst — what user typed
-        final Inst specA = mParser.m_obj().parse(spec.trim()).get(); // apiInst  — registry instruction (has generics)
-        final Inst resolutionA = mParser.m_obj().parse(resolution.trim()).get();
+        final Obj lhsA = ObjmtronSerializer.parse(lhs.trim());
+        final Inst defA = ObjmtronSerializer.parse(def.trim());   // userInst — what user typed
+        final Inst specA = ObjmtronSerializer.parse(spec.trim()); // apiInst  — registry instruction (has generics)
+        final Inst resolutionA = ObjmtronSerializer.parse(resolution.trim());
         final Inst resultA = Inst.Helper.bindGenerics(lhsA, specA, defA);
+        assertEquals(lhs.contains("."), lhsA.test(INST_TYPE));
+        assertTrue(defA.test(INST_TYPE));
+        assertTrue(specA.test(INST_TYPE));
+        assertTrue(resolutionA.test(INST_TYPE));
+        assertNotNull(resultA);
+        assertTrue(resultA.test(INST_TYPE));
         assertNotNull(resultA, () -> String.format("bindGenerics returned null for lhs=%s spec=%s def=%s", lhsA, specA, defA));
         assertTrue(resultA.tid().test(resolutionA.tid()),
                 () -> String.format("result %s not compatible with expected %s", resultA.tid(), resolutionA.tid()));
@@ -212,7 +222,13 @@ public class InstTest extends AbstractObjTest {
 
         // Execute the chain
         final Obj result = chainObj.apply(lhsObj);
-
+        
+        // same basic type checks
+        assertFalse(lhsObj.test(INST_TYPE));
+        assertTrue(chainObj.test(INST_TYPE));
+        assertFalse(expectedObj.test(INST_TYPE));
+        assertFalse(result.test(INST_TYPE));
+        
         // Verify result value
         assertEquals(expectedObj, result,
                 () -> String.format("%s .%s => %s (expected %s)", lhsObj, chainObj, result, expectedObj));
@@ -228,7 +244,7 @@ public class InstTest extends AbstractObjTest {
     @CsvSource(quoteCharacter = '"', delimiter = '%', value = {
             "1               % plus(1)._._._                    % [int/int,int/int,int/int,int/int]       % 2",
             "{1,1}           % plus(1)._                        % [int{2}/int{2},int{2}/int{2}]           % {2}2",
-           // "{1,7}           % plus(1)._                        % [int{2}/int{2},int{2}/int{2}]           % {2,8}",
+            // "{1,7}           % plus(1)._                        % [int{2}/int{2},int{2}/int{2}]           % {2,8}",
             "1               % _._._.plus(1)                    % [int/int,int/int,int/int,int/int]       % 2",
             "1               % plus(0).plus(1).plus(0)          % [int/int,int/int,int/int]               % 2",
             "1               % plus(2)                          % [int/int]                               % 3",
@@ -252,11 +268,16 @@ public class InstTest extends AbstractObjTest {
             "1              % -<[_]-<[_,_,_]>-.>-               % [int/lst[int],lst[lst]/lst[int]{3},lst[int]{3}/int{3}]     % {3}1",
     })
     public void testCodeInternalDomRng(final String lhs, final String code, final String domRngPerStep, final String rhs) {
-        final Obj lhsObj = mParser.m_obj().parse(lhs.trim()).get();
+        final Obj lhsObj = ObjmtronSerializer.parse(lhs.trim());
         final Obj codeObj = ObjmtronSerializer.parse(code.trim());  // full code, not just first obj
-        final Obj expectedRHSObj = mParser.m_obj().parse(rhs.trim()).get();
+        final Obj expectedRHSObj = ObjmtronSerializer.parse(rhs.trim());
         final Call codeResolved = codeObj.resolve(lhsObj).as();
         Type finalRngType = lhsObj.type();
+        assertFalse(lhsObj.test(INST_TYPE));
+        assertTrue(codeObj.test(INST_TYPE));
+        assertFalse(expectedRHSObj.test(INST_TYPE));
+        assertTrue(codeResolved.test(INST_TYPE));
+        
         final String[] domRngPerStepArray = domRngPerStep.substring(1, domRngPerStep.length() - 1).split(",");
         for (int i = 0; i < codeResolved.insts().size(); i++) {
             final Inst step = codeResolved.insts().get(i);

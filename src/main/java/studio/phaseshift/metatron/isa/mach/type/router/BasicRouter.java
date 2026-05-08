@@ -258,6 +258,7 @@ public class BasicRouter extends AbstractSpace<Map<Obj, Obj>> implements Router 
             return this;
         // if (vid.hasAuthority())
         //   return this.server().sendRecv((a, b) -> a.authority().matches(b.remoteHost().authority()), vid, from_(vid.localize().toUri()).tryToInst());
+        //   return this.server().sendRecv((a, b) -> a.authority().matches(b.remoteHost().authority()), vid, from_(vid.localize().toUri()).tryToInst());
         final fURI readableVID = this.alignPrefix(vid);
         /// ///////////////////
         if (readableVID.isGeneric())
@@ -284,6 +285,10 @@ public class BasicRouter extends AbstractSpace<Map<Obj, Obj>> implements Router 
             this.server().send((a, b) -> a.authority().matches(b.remoteHost().authority()), vid, start_(obj.vid(null)).to_(vid.localize().toUri()).tryToInst());
             return obj;
         }*/
+        if (null == vid) {
+            LOG.warn("the provided write uri was null");
+            return noobj();
+        }
         final fURI writableVID = this.alignPrefix(vid);
         /// ///////////////
         final Space space = this.getSpace(writableVID);

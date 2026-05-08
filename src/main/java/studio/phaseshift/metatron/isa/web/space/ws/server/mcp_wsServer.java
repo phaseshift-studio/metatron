@@ -77,6 +77,7 @@ public class mcp_wsServer extends WebSocketRec {
 
     public static final fURI MCP_WS_TID = WS_SPACE_TID.extend("mcp_ws");
     protected final GraphittyLogger LOG = Graphitty.log(this);
+    private static final String DESCRIPTION = "description";
 
     public static final Type WS_MCP_SERVER_TYPE = Type.Builder.build()
             .tid(WS_SERVER_TID)
@@ -124,7 +125,7 @@ public class mcp_wsServer extends WebSocketRec {
                                 uri("tools"), lst(this.at(TOOL).orElse(rec0()).elements()
                                         .map(kv -> (Obj) rec(
                                                 uri(NAME), str(kv.first().uriValue().toString()),
-                                                uri(DESC), str(toolDescription(kv.second())),
+                                                uri(DESCRIPTION), str(toolDescription(kv.second())),
                                                 uri("inputSchema"), buildInputSchema(kv.second())))
                                         .toList())));
                     }
@@ -160,7 +161,7 @@ public class mcp_wsServer extends WebSocketRec {
                                         .map(kv -> (Obj) rec(
                                                 uri(URI), uri(kv.first().uriValue().toString()),
                                                 uri(NAME), str(kv.first().uriValue().toString()),
-                                                uri(DESC), str(kv.second().toShortString())))
+                                                uri(DESCRIPTION), str(kv.second().toShortString())))
                                         .toList())));
                     }
                     case "resources/read" -> {
@@ -172,7 +173,7 @@ public class mcp_wsServer extends WebSocketRec {
                         } else {
                             // Resolve the resource value (could be a URI reference or inline content)
                             final Obj resolved = resourceEntry.resolve(noobj());
-                            result = mcpResponse(id, rec(uri(CONTENT), lst(rec(
+                            result = mcpResponse(id, rec(uri("contents"), lst(rec(
                                     uri(URI), uri(resourceUri),
                                     uri(TEXT), str(resolved.toCleanString()),
                                     uri("mimeType"), str("text/plain")))));
@@ -189,7 +190,7 @@ public class mcp_wsServer extends WebSocketRec {
                                 uri("prompts"), lst(this.at(PROMPT).orElse(rec0()).elements()
                                         .map(kv -> (Obj) rec(
                                                 uri(NAME), str(kv.first().uriValue().toString()),
-                                                uri(DESC), str(kv.second().toShortString())))
+                                                uri(DESCRIPTION), str(kv.second().toShortString())))
                                         .toList())));
                     }
                     case "prompts/get" -> {
@@ -360,7 +361,7 @@ public class mcp_wsServer extends WebSocketRec {
                     ? "" : docArgs.at(uri(Inst.DOM)).toCleanString();
             properties.at(uri(LHS),
                     rec(uri(TYPE), str(objTypeToJsonSchema(inst.dom())),
-                            uri(DESC), str(argDesc)),
+                            uri(DESCRIPTION), str(argDesc)),
                     Rec.MUTABLE);
             required.add(str(LHS));
         }
@@ -375,8 +376,8 @@ public class mcp_wsServer extends WebSocketRec {
                             ? "" : docArgs.at(rel.first()).toCleanString();
                     properties.at(uri(argName),
                             rec(uri(TYPE), str(objTypeToJsonSchema(rel.second())),
-                                    uri(DESC), str(argDesc)),
-                            Rec.MUTABLE);
+                                    uri(DESCRIPTION), str(argDesc)),
+                                    Rec.MUTABLE);
                     if (!rel.second().c().isZeroable())
                         required.add(str(argName));
                 });
@@ -388,7 +389,7 @@ public class mcp_wsServer extends WebSocketRec {
                     final String argDesc = docEntry.isNoObj() ? "" : docEntry.toCleanString();
                     properties.at(uri(argName),
                             rec(uri(TYPE), str(objTypeToJsonSchema(argType)),
-                                    uri(DESC), str(argDesc)),
+                                    uri(DESCRIPTION), str(argDesc)),
                             Rec.MUTABLE);
                     if (!argType.c().isZeroable())
                         required.add(str(argName));
