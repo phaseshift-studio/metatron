@@ -120,3 +120,85 @@ farm:animals/1 -> chicken::[name=>'trill',age=>7]                             [-
 <2> read it back — `chicken::T` is preserved through the round-trip.
 <3> subfield reads navigate into the document without loading the whole record.
 <4> a branch read lists all documents in `animals` as a `uri\=>obj` map.
+
+An `auto_from` cell in a dcmntspace document is stored as a native MongoDB
+https://www.mongodb.com/docs/manual/reference/database-references/#dbrefs[DBRef] — `$ref` carries the collection
+(or `scheme:collection` for external targets) and `$id` carries the document id.
+No metatron-specific footprint is left in the stored data.
+
+[discrete]
+=== Inter-Space References
+
+A `dcmntspace` cell can carry an `!*` pointer to any URI in metatron.
+Below, a `loc:` memspace holds barn information, and `farm:animals/1` (the chicken named Trill) is
+updated with a `shelter` cell pointing at `loc:barns/1` — a **cross-space** reference.
+On write, the serializer encodes the external pointer as `$ref: "loc:barns"` in MongoDB;
+on read, the `loc:` scheme is detected and the reference is routed to the memspace.
+
+++++
+<!-- 🐖
+memspace::[pattern => loc:#]@/sys/space/loc                                       [-- <1>
+loc:barns/1 -> [label=>'old_red_barn',capacity=>12]                               [-- <2>
+farm:animals/1 >>= [shelter=>!*loc:barns/1]                                       [-- <3>
+*farm:animals/1                                                                    [-- <4>
+*farm:animals/1/shelter                                                            [-- <5>
+farm:animals/2 -> chicken::[name=>'cluck',age=>3,shelter=>!*loc:barns/1]          [-- <6>
+*farm:animals/2                                                                    [-- <7>
+*farm:animals/2/shelter                                                            [-- <8>
+-->
+++++
+<1> a `loc:` memspace serves as the cross-space target — any space type (grphSpace, tbleSpace, etc.) works the same way.
+<2> write the barn record into `loc:` memspace.
+<3> update the existing `animals/1` document (`>>=`) with a `shelter` reference — `!*loc:barns/1` is an `auto_from` pointer.
+<4> read the updated document — `shelter` renders as `!*loc:barns/1` with the `loc:` scheme intact (not rewritten to `farm:`).
+<5> traversing the cross-space FK: the `shelter` path segment forces `auto_from` to read from `loc:barns/1` via the router, returning the full barn record.
+<6> create a second animal with both a nominal `chicken::T` type and a cross-space reference in a single write.
+<7> both the type and the reference are preserved through the BSON round-trip.
+<8> the same `shelter` traversal resolves identically — cross-space routing is transparent to the reader.
+
+[.card]
+--
+[discrete,.center]
+==== bson dbref encoding
+metatron serializes `auto_from` references as native
+https://www.mongodb.com/docs/manual/reference/database-references/#dbrefs[MongoDB DBRef] documents.
+A DBRef is a plain BSON `\{$ref, $id\}` object — no custom fields, no proprietary envelope — so collections with references remain fully compatible with external MongoDB tooling.
+
+**intra-space references** store a bare collection name in `$ref` and the document id in `$id`:
+
+[source,json,role="center-code"]
+----
+{
+  "_id": "trill",
+  "name": "Trill",
+  "age": 7,
+  "shelter": { "$ref": "barns", "$id": 1 }
+}
+----
+
+**cross-space references** prefix the `$ref` field with the target scheme — the colon is the
+discriminator that tells the serializer to route through metatron's router rather than the local database:
+
+[source,json,role="center-code"]
+----
+{
+  "_id": "trill",
+  "name": "Trill",
+  "age": 7,
+  "shelter": { "$ref": "loc:barns", "$id": 1 }
+}
+----
+
+`$id` can be an `ObjectId` (24-char hex), a string, or most numeric types — the
+serializer auto-detects the format and the deserializer recovers the original id value.
+`$db` is deliberately left unused so that existing MongoDB drivers interpret cross-space
+refs as ordinary references to a collection named `"loc:barns"` (valid under
+https://www.mongodb.com/docs/manual/reference/limits/#naming-restrictions[MongoDB naming rules])
+until metatron traverses them.
+
+The `loc:` prefix in `$ref` is the **only place** metatron stores cross-space routing
+information. There is no `_mtron_meta` table, no side-channel metadata, and no
+proprietary BSON type. The reference is a standard DBRef — metatron simply reads
+the `$ref` field and checks for a colon. If none is found, the space-local pattern is used;
+if one is found, the reference is routed to the named scheme's space.
+--

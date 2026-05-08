@@ -35,10 +35,12 @@ import studio.phaseshift.metatron.algebra.rewrite.CommonRewritesTestContract;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
 import studio.phaseshift.metatron.isa.dcmnt.space.dcmntSpace;
+import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.impl.MStr;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 
 import java.net.InetSocketAddress;
 import java.util.LinkedHashMap;
@@ -48,6 +50,7 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.dcmnt.dcmntInstSet.DCMNT_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
@@ -1590,6 +1593,198 @@ public class dcmntSpaceTest extends AbstractSpaceTest implements CommonRewritesT
     // ========================================
     // Reference Resolution Tests (auto_from_)
     // ========================================
+
+    /**
+     * Intra-space auto_from: write a record with {@code !*mongo:collection/id} through
+     * the metatron write path, verifying it's serialized as a standard MongoDB DBRef
+     * ({@code $ref: "collection"}) and reconstructions correctly on read.
+     */
+    @Test
+    public void testIntraSpaceAutoFromRoundTrip() {
+        final dcmntSpace space = (dcmntSpace) this.spaceSupplier.get();
+        try {
+            // Write target record
+            Router.writeToSpace(f("mongo:locations/1"),
+                    rec(uri(NAME), str("downtown"),
+                        uri("capacity"), jnt(5000)));
+
+            // Write record with intra-space auto_from → mongo:locations/1
+            Router.writeToSpace(f("mongo:arenas/1"), rec(
+                    uri(NAME),    str("main_stage"),
+                    uri("venue"), auto_from_(f("mongo:locations/1")).tryToInst()));
+
+            // Read back: auto_from reconstructs from DBRef with bare collection name
+            final Obj arena = Router.readFromSpace(f("mongo:arenas/1"));
+            final Obj venueInst = arena.recValue().get(uri("venue"));
+            assertTrue(venueInst.isInst(), "venue should be a lazy auto_from inst");
+            assertEquals(f("mongo:locations/1"), venueInst.asInst().arg(0).uriValue(),
+                    "intra-space auto_from should use space pattern (bare $ref)");
+
+            // Resolution via rec.at() fetches the target record
+            final Obj resolved = arena.asRec().at(uri("venue"));
+            assertTrue(resolved.isRec(), "resolved value should be a record");
+            assertEquals(str("downtown"), resolved.asRec().at(uri(NAME)));
+            assertEquals(jnt(5000), resolved.asRec().at(uri("capacity")));
+
+            LOG.info("intra-space auto_from round-trip test passed");
+        } finally {
+            space.close();
+            // Clean up collections so they don't interfere with schema discovery
+            // in subsequent tests (DBRef documents can't be decoded by in-memory MongoDB codecs)
+            try (final MongoClient client = MongoClients.create(connectionString)) {
+                client.getDatabase(DB_NAME).getCollection("arenas").drop();
+                client.getDatabase(DB_NAME).getCollection("locations").drop();
+            }
+        }
+    }
+
+    /**
+     * Cross-space auto_from: write a record with {@code !*grph:V/1} through the
+     * metatron write path, verifying it's serialized as {@code $ref: "grph:V"}
+     * (scheme-prefixed DBRef) and resolves through the router to a memSpace target.
+     */
+    @Test
+    public void testCrossSpaceAutoFromRoundTrip() {
+        final dcmntSpace space = (dcmntSpace) this.spaceSupplier.get();
+        final fURI memSpaceVid = f("/sys/space/mem/dcmnt_xspace_target");
+        final memSpace targetSpace = memSpace.of(f("grph:#"), memSpaceVid);
+        Router.global().addSpace(targetSpace);
+        try {
+            // Write the cross-space target into memSpace
+            Router.writeToSpace(f("grph:vertices/42"),
+                    rec(uri("label"), str("plaza"),
+                        uri("zone"),  str("A")));
+
+            // Write dcmntSpace record with cross-space auto_from → grph:vertices/42
+            Router.writeToSpace(f("mongo:stages/1"), rec(
+                    uri(NAME),   str("open_air"),
+                    uri("spot"), auto_from_(f("grph:vertices/42")).tryToInst()));
+
+            // Read back: auto_from reconstructs from $ref: "grph:vertices" → grph:vertices/42
+            final Obj stage = Router.readFromSpace(f("mongo:stages/1"));
+            final Obj spotInst = stage.recValue().get(uri("spot"));
+            assertTrue(spotInst.isInst(), "spot should be a lazy auto_from inst");
+            assertEquals(f("grph:vertices/42"), spotInst.asInst().arg(0).uriValue(),
+                    "cross-space auto_from should preserve original scheme");
+
+            // Resolution through router: rec.at() fetches the memSpace target
+            final Obj resolved = stage.asRec().at(uri("spot"));
+            assertTrue(resolved.isRec(),
+                    "cross-space auto_from should resolve to memSpace record");
+            assertEquals(str("plaza"), resolved.asRec().at(uri("label")));
+            assertEquals(str("A"), resolved.asRec().at(uri("zone")));
+
+            LOG.info("cross-space auto_from round-trip test passed");
+        } finally {
+            space.close();
+            Router.global().removeSpace(targetSpace.vid());
+            targetSpace.close();
+            // Clean up collection so DBRef schema discovery doesn't break subsequent tests
+            try (final MongoClient client = MongoClients.create(connectionString)) {
+                client.getDatabase(DB_NAME).getCollection("stages").drop();
+            }
+        }
+    }
+
+    /**
+     * Verifies that deeply nested DBRef objects (from auto_from references inside
+     * sub-documents) survive the round-trip without crashing {@code toBsonDocument()}.
+     * The in-memory MongoDB driver (bwaldvogel) converts {@code {$ref,$id}} to
+     * {@code com.mongodb.DBRef} objects, which the BSON codec cannot serialize.
+     * {@code normalizeDBRefs()} converts them back recursively before BSON conversion.
+     */
+    @Test
+    public void testNestedDBRefInSubDocument() {
+        final dcmntSpace space = (dcmntSpace) this.spaceSupplier.get();
+        try {
+            // Write a target record
+            Router.writeToSpace(f("mongo:cities/1"),
+                    rec(uri(NAME), str("santa_fe")));
+
+            // Write a document with a sub-document containing a DBRef
+            Router.writeToSpace(f("mongo:events/1"), rec(
+                    uri(NAME), str("fiesta"),
+                    uri("details"), rec(
+                            uri("venue"), str("plaza"),
+                            uri("city"), auto_from_(f("mongo:cities/1")).tryToInst()
+                    )));
+
+            // Read back — the nested DBRef must not crash processDocument
+            final Obj event = Router.readFromSpace(f("mongo:events/1"));
+            assertTrue(event.isRec(), "event should be a record");
+
+            // Navigate into the sub-document and resolve the nested reference
+            final Obj details = event.asRec().at(uri("details"));
+            assertTrue(details.isRec(), "details should be a sub-record");
+            final Obj city = details.asRec().at(uri("city"));
+            assertTrue(city.isRec(), "nested DBRef should resolve to a record");
+            assertEquals(str("santa_fe"), city.asRec().at(uri(NAME)));
+
+            LOG.info("nested DBRef in sub-document test passed");
+        } finally {
+            space.close();
+            try (final MongoClient client = MongoClients.create(connectionString)) {
+                client.getDatabase(DB_NAME).getCollection("events").drop();
+                client.getDatabase(DB_NAME).getCollection("cities").drop();
+            }
+        }
+    }
+
+    /**
+     * Verifies that writing noobj to a specific field path issues an $unset
+     * (field deletion) rather than a $set of null.
+     */
+    @Test
+    public void testFieldWriteNoobjDeletesField() {
+        // Verify $unset works after replaceOne+upsert (metatron's write path)
+        // — some in-memory MongoDB implementations have gaps here.
+        try (final MongoClient client = MongoClients.create(connectionString)) {
+            final MongoDatabase db = client.getDatabase(DB_NAME);
+            // Mimic metatron's write path: replaceOne with upsert, then updateOne with $unset
+            db.getCollection("items_raw").replaceOne(
+                    new Document("_id", "1"),
+                    new Document("_id", "1").append("name", "widget").append("color", "red"),
+                    new com.mongodb.client.model.ReplaceOptions().upsert(true));
+            db.getCollection("items_raw").updateOne(
+                    new Document("_id", "1"),
+                    new Document("$unset", new Document("color", "")));
+            final Document after = db.getCollection("items_raw")
+                    .find(new Document("_id", "1")).first();
+            org.junit.jupiter.api.Assumptions.assumeTrue(
+                    after != null && !after.containsKey("color"),
+                    "$unset after replaceOne+upsert is supported by this MongoDB driver");
+        }
+
+        final dcmntSpace space = (dcmntSpace) this.spaceSupplier.get();
+        try {
+            // Write the full document first
+            Router.writeToSpace(f("mongo:items/1"), rec(
+                    uri(NAME), str("widget"),
+                    uri("color"), str("red")));
+
+            // Verify the full document exists
+            final Obj before = Router.readFromSpace(f("mongo:items/1"));
+            assertTrue(before.isRec(), "doc should exist before field delete");
+            assertEquals(str("red"), before.asRec().at(uri("color")));
+
+            // Delete the 'color' field by writing noobj to the field path
+            Router.writeToSpace(f("mongo:items/1/color"), noobj());
+
+            // Read back — color should be gone
+            final Obj after = Router.readFromSpace(f("mongo:items/1"));
+            assertTrue(after.isRec(), "doc should still exist after field delete");
+            assertFalse(after.recValue().containsKey(uri("color")),
+                    "color field should be unset");
+            assertEquals(str("widget"), after.asRec().at(uri(NAME)));
+
+            LOG.info("field-write noobj delete test passed");
+        } finally {
+            space.close();
+            try (final MongoClient client = MongoClients.create(connectionString)) {
+                client.getDatabase(DB_NAME).getCollection("items").drop();
+            }
+        }
+    }
 
     /**
      * Setup test data with references for testing lazy resolution

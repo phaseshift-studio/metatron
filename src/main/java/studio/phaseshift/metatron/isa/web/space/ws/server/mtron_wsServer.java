@@ -91,11 +91,9 @@ public class mtron_wsServer extends WebSocketRec {
         }));
         this.jvm().put(uri(SEND), instC(this.vid().extend(SEND).dom(A.maybe()).rng(A.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> {
           try {
-            this.logger().info("sending %s to %s", lhs, this.vid());
             this.send(inst.arg(0));
             return inst.arg(0);
           } catch (final Exception e) {
-            LOG.error("error sending %s to %s: %s", inst.arg(0), this.vid(), e);
             return noobj();
           }
         }));

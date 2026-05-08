@@ -112,7 +112,9 @@ public class ExistingCollectionSchema {
         int docCount = 0;
 
         for (final Document doc : database.getCollection(collectionName).find().limit(this.sampleSize)) {
-            analyzeDocument("", doc.toBsonDocument(), fieldTypeCounts);
+            // DBRef objects (from in-memory MongoDB) crash toBsonDocument(); normalise first
+            final Document safeDoc = (Document) dcmntSpace.normalizeDBRefs(doc);
+            analyzeDocument("", safeDoc.toBsonDocument(), fieldTypeCounts);
             docCount++;
         }
 

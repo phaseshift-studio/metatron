@@ -123,7 +123,16 @@ public class webInstSet extends AbstractInstSet {
                 uri(TYPE), lst(
                         docWrap(CONTENT_TYPE, "indicates the media type of the data as specified by RFC-9110"),
                         docWrap(XML_TYPE, "a rec encoding of an xml document"),
-                        docWrap(HTML_TYPE, "a rec encoding of an html document"),
+                        docWrap(HTML_TYPE, "a rec encoding of an html document",
+                        "*<http://metatron.phaseshift.studio> [-- yields an html::T --]",
+                        """
+                        html::[html=>
+                               [head=>
+                                [title=>\"metatron\"]],
+                                body=>
+                                 [out=>[
+                                  [tag=>a,href=>...],
+                                  [tag...]]]]"""),
                         docWrap(JSON_TYPE, "a rec encoding of a json document"),
                         docWrap(CSS_TYPE, "a rec encoding of a css document"),
                         docWrap(MARKDOWN_TYPE, "a rec encoding of a markdown document"),
@@ -142,7 +151,7 @@ public class webInstSet extends AbstractInstSet {
                         docWrap(WS_WEBSOCKET_TYPE, "a generic websocket obj which can be refined with useful behaviors"),
                         docWrap(WS_SERVER_TYPE, "a websocket server which should be refined to implement protocol specs"),
                         docWrap(WS_CLIENT_TYPE, "an websocket client which should be refined to implement protocol specs"),
-                        docWrap(WS_MTRON_SERVER_TYPE, "a simple websocket server accepting mtron expressions and return mtron results"),
+                        docWrap(WS_MTRON_SERVER_TYPE, "a simple websocket server accepting mtron expressions and return mtron results","mtron_ws::[=>]"),
                         docWrap(WS_MCP_SERVER_TYPE, "an abstract mcp websocket server providing necessary json-rpc infrastructure for other mcp servers to leverage"),
                         docWrap(WS_MCP_MTRON_SERVER_TYPE, "an mcp websocket server with built-in metatron eval, space listing, router info and instruction listing tools")),
                 uri(INST), lst(

@@ -34,10 +34,18 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.io.Closeable;
 import java.nio.ByteBuffer;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static studio.phaseshift.metatron.Tokens.HOST;
 import static studio.phaseshift.metatron.Tokens.ON_MESSAGE;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.mInstSet.ALL_TYPE;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.print_;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_CLIENT_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -51,8 +59,17 @@ public class WebSocketRecClient extends WebSocketClient implements Rec, Closeabl
         super(java.net.URI.create(wsclient.at(HOST).uriValue().toString()));
         this.wsclient = wsclient;
         this.wsclient.socket = this;
+        this.wsclient.selfTID(WS_CLIENT_TID);
         this.wsclient.socket.setAttachment(this.wsclient.vid());
-        this.connect();
+        if (this.wsclient.at(ON_MESSAGE).isNoObj()) {
+            this.wsclient.at(ON_MESSAGE, instC(f(ON_MESSAGE), lst(ALL_TYPE), (lhs, inst) -> print_(str("recieved ${_}")).apply(lhs)), MUTABLE);
+        }
+        try {
+            this.connectBlocking(5000, TimeUnit.MILLISECONDS);
+        } catch (final Exception e) {
+            LOG.error(MTronException.of(e));
+            return;
+        }
         LOG.info("{{y}}%s {{g}}<=> {{y}}%s{{X}} opened", this.wsclient.getThisVID(), this.wsclient.getOtherVID());
     }
 
@@ -64,8 +81,8 @@ public class WebSocketRecClient extends WebSocketClient implements Rec, Closeabl
             LOG.error(MTronException.of(e));
         }
     }
-    
-    
+
+
     public WebSocketObj.IO getIO() {
         return WebSocketObj.IO.of(this.wsclient, Content.ContentType.APPLICATION_MTRON);
     }
@@ -84,11 +101,11 @@ public class WebSocketRecClient extends WebSocketClient implements Rec, Closeabl
     public void onMessage(final ByteBuffer message) {
         this.wsclient.onMessage(this, this.getIO().input().serializer().inputBytes(message));
     }
-    
+
     public void send(final Obj message) {
         this.wsclient.send(message);
     }
-    
+
     @Override
     public void onClose(int code, String reason, boolean remote) {
         this.wsclient.onClose(this, code, reason, remote);

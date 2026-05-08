@@ -127,6 +127,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 public class dcmntSpace extends AbstractSpace<MongoClient> {
     private static final String NATIVE_CONNACK = "native/connack";
     public static final String ID_FIELD = "_id";
+    /** 24-char hex ObjectId pattern, shared across serialiser and rewrite helpers */
+    public static final String OBJECT_ID_REGEX = "[0-9a-fA-F]{24}";
     /**
      * Internal field used to wrap non-Rec values (Lst, primitives) in a BSON document
      */
@@ -161,10 +163,19 @@ public class dcmntSpace extends AbstractSpace<MongoClient> {
                     instance = dcmntSpace.this.jvm().containsKey(uri(SERIALIZER))
                             ? dcmntSpace.this.at(uri(SERIALIZER)).<ObjBSONSerializer>as()
                             : new ObjBSONSerializer();
-                    instance.setReferencePathBuilder(refInfo ->
-                            dcmntSpace.this.pattern.retractPattern()
-                                    .extend(refInfo.collection())
-                                    .extend(refInfo.id()));
+                    instance.setLocalScheme(dcmntSpace.this.pattern().scheme());
+                    instance.setReferencePathBuilder(refInfo -> {
+                        final String collection = refInfo.collection();
+                        if (collection.indexOf(':') >= 0) {
+                            // Cross-space DBRef: $ref: "grph:V" → grph:V/1
+                            return f(collection).extend(refInfo.id());
+                        } else {
+                            // Intra-space DBRef: $ref: "users" → mongo:users/507f...
+                            return dcmntSpace.this.pattern().retractPattern()
+                                    .extend(collection)
+                                    .extend(refInfo.id());
+                        }
+                    });
                 }
                 return instance;
             }
@@ -263,12 +274,12 @@ public class dcmntSpace extends AbstractSpace<MongoClient> {
                 }
                 return collectionStream.map(c -> this.getDatabase().getCollection(c)).flatMap(collection -> {
                     LOG.debug("WRITING: %s %s", collectionName, documentID);
-                    if (obj.isNoObj()) {
-                        // Delete document
-                        LOG.trace("deleting document %s from collection %s", documentID, collectionName);
-                        collection.deleteOne(Filters.eq(ID_FIELD, parseObjectId(documentID)));
-                    } else if (fieldPath == null || fieldPath.isEmpty()) {
-                        if (obj.isRec()) {
+                    if (fieldPath == null || fieldPath.isEmpty()) {
+                        if (obj.isNoObj()) {
+                            // Delete entire document
+                            LOG.trace("deleting document %s from collection %s", documentID, collectionName);
+                            collection.deleteOne(Filters.eq(ID_FIELD, parseObjectId(documentID)));
+                        } else if (obj.isRec()) {
                             // Write entire document as BSON document fields
                             final Document doc = new Document(this.getSerializer().writeRec(obj.asRec()).asDocument());
                             doc.put(ID_FIELD, parseObjectId(documentID));
@@ -286,11 +297,21 @@ public class dcmntSpace extends AbstractSpace<MongoClient> {
                     } else {
                         // Write to a specific field within a document
                         final String fieldPathStr = String.join(".", fieldPath);
-                        LOG.trace("updating field %s in document %s", fieldPathStr, documentID);
-                        collection.updateOne(
-                                Filters.eq(ID_FIELD, parseObjectId(documentID)),
-                                new Document("$set", new Document(fieldPathStr, this.getSerializer().write(obj)))
-                        );
+                        if (obj.isNoObj()) {
+                            // $unset is the correct MongoDB operator for field deletion.
+                            // The value ("") is ignored by MongoDB per spec.
+                            LOG.trace("unsetting field %s in document %s", fieldPathStr, documentID);
+                            collection.updateOne(
+                                    Filters.eq(ID_FIELD, parseObjectId(documentID)),
+                                    new Document("$unset", new Document(fieldPathStr, ""))
+                            );
+                        } else {
+                            LOG.trace("updating field %s in document %s", fieldPathStr, documentID);
+                            collection.updateOne(
+                                    Filters.eq(ID_FIELD, parseObjectId(documentID)),
+                                    new Document("$set", new Document(fieldPathStr, this.getSerializer().write(obj)))
+                            );
+                        }
                     }
                     return Stream.of(obj);
                 }).iterator().next();
@@ -430,8 +451,8 @@ public class dcmntSpace extends AbstractSpace<MongoClient> {
             return objs(IteratorUtil
                     .stream(this.getDatabase()
                             .getCollection(collection)
-                            .find(ObjBSONSerializer.single().writeRec(query)))
-                    .map(doc -> ObjBSONSerializer.single().read(doc.toBsonDocument())));
+                            .find(this.getSerializer().writeRec(query)))
+                    .map(doc -> this.getSerializer().read(doc.toBsonDocument())));
         } catch (final Exception e) {
             throw MTronException.of(e);
         }
@@ -465,8 +486,35 @@ public class dcmntSpace extends AbstractSpace<MongoClient> {
      * {@code __mtron_tid} field — restoring the nominal TID (e.g. {@code chicken::T})
      * that was written alongside the document fields for round-trip fidelity.
      */
+    /**
+     * Recursively convert {@code com.mongodb.DBRef} objects to embedded {@code {$ref, $id}}
+     * Documents. In-memory MongoDB (bwaldvogel) deserialises the DBRef pattern into the
+     * legacy DBRef class which lacks a BSON codec and causes {@code toBsonDocument()} to
+     * throw. Real MongoDB drivers keep them as plain nested Documents, so this is a no-op
+     * in production.
+     */
+    public static Object normalizeDBRefs(final Object value) {
+        if (value instanceof com.mongodb.DBRef dbref) {
+            return new Document()
+                    .append("$ref", dbref.getCollectionName())
+                    .append("$id", dbref.getId());
+        }
+        if (value instanceof Document doc) {
+            final Document out = new Document();
+            for (final String key : doc.keySet()) {
+                out.put(key, normalizeDBRefs(doc.get(key)));
+            }
+            return out;
+        }
+        if (value instanceof List<?> list) {
+            return list.stream().map(dcmntSpace::normalizeDBRefs).toList();
+        }
+        return value;
+    }
+
     private Obj processDocument(final Document doc) {
-        final BsonDocument bsonDoc = doc.toBsonDocument();
+        final Document normalized = (Document) normalizeDBRefs(doc);
+        final BsonDocument bsonDoc = normalized.toBsonDocument();
         if (bsonDoc.containsKey(MTRON_VALUE_FIELD)) {
             // Non-Rec value was wrapped in a special field — unwrap and return directly
             // (VID is tracked via IdObj.furi(); do NOT attach it to the value itself)
@@ -482,7 +530,7 @@ public class dcmntSpace extends AbstractSpace<MongoClient> {
      * Convert a document-ID string to the appropriate BsonValue for use in BsonDocument writes.
      */
     private BsonValue toBsonId(final String id) {
-        if (id != null && id.matches("[0-9a-fA-F]{24}"))
+        if (id != null && id.matches(OBJECT_ID_REGEX))
             return new BsonObjectId(new ObjectId(id));
         return new BsonString(id != null ? id : "");
     }
@@ -494,11 +542,9 @@ public class dcmntSpace extends AbstractSpace<MongoClient> {
         if (id == null) {
             return null;
         }
-        // Try to parse as ObjectId (24-character hex string)
-        if (id.matches("[0-9a-fA-F]{24}")) {
+        if (id.matches(OBJECT_ID_REGEX)) {
             return new ObjectId(id);
         }
-        // Otherwise use as-is (could be a string ID or other format)
         return id;
     }
 }

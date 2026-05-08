@@ -171,11 +171,23 @@ public class tbleSpace extends AbstractSpace<Connection> {
         }
     }
 
+    @Override
+    public void close() {
+        try {
+            if (this.has("instset"))
+                this.at("instset").<InstSet>as().close();
+        } finally {
+            super.close();
+        }
+    }
+
     // =========================================================================
     //  Schema / table-mapping initialization
     // =========================================================================
 
-    /** Auto-detects the database product and installs the matching KV schema. */
+    /**
+     * Auto-detects the database product and installs the matching KV schema.
+     */
     private void initializeSchema(final Connection conn) throws SQLException {
         final String dbProductName = conn.getMetaData().getDatabaseProductName().toLowerCase();
         if (dbProductName.contains(MARIADB) || dbProductName.contains(MYSQL)) {
@@ -224,7 +236,7 @@ public class tbleSpace extends AbstractSpace<Connection> {
         // tbleSpace.  A VID under the tbleSpace pattern would cause the Router
         // to route schema reads/writes back into this space → recursion.
         final String dbName = conn.getCatalog() != null ? conn.getCatalog() : "db";
-        final fURI schemaVid = f("/m/tble/space/schema/").extend(dbName);
+        final fURI schemaVid = this.vid().extend("instset");
         this.schemaGenerator = new SQLSchemaGenerator(
                 this.existingTableSchema.getTableMetadata(), schemaVid);
 
@@ -347,7 +359,9 @@ public class tbleSpace extends AbstractSpace<Connection> {
         };
     }
 
-    /** Dispatches a key-value write to the appropriate schema backend. */
+    /**
+     * Dispatches a key-value write to the appropriate schema backend.
+     */
     private void writeKV(final fURI pattern, final Obj obj) throws SQLException {
         if (this.schema instanceof TypedKeyValueSchema typed) {
             typed.write(this.sjvm(), pattern, obj);

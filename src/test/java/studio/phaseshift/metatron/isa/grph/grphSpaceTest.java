@@ -75,9 +75,9 @@ public class grphSpaceTest extends AbstractSpaceTest {
                                     uri("/g/V"), uri("V"),
                                     uri("/g/E"), uri("E"),
                                     uri("/g/S"), uri(MODERN_SCHEMA_TID)),
-                            // GRAPH, rec(
-                            //         uri("gremlin.graph"),
-                            //         str("org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph")),
+                            GRAPH, rec(
+                                    uri("gremlin.graph"),
+                                    uri("org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph")),
                             NATIVE, rec(
                                     uri("factory"), MObjFactory.single(),
                                     uri(LOAD), uri(MODERN.name().toLowerCase()))),
@@ -106,7 +106,7 @@ public class grphSpaceTest extends AbstractSpaceTest {
         InstSet.importInstSet(GRPH_ISA_TID);
         InstSet.importInstSet(MODERN_SCHEMA_TID);
     }
-    
+
     @AfterAll
     public static void cleanupSchema() {
         Router.global().removeSpace(MODERN_SCHEMA_TID);
@@ -135,18 +135,18 @@ public class grphSpaceTest extends AbstractSpaceTest {
     @ParameterizedTest
     @CsvSource(value = {
             "*/g/V/1                                                                  % person::T    % true",
-          //  "*/g/V/1                                                                  % rec::T       % true",
+            //  "*/g/V/1                                                                  % rec::T       % true",
             "*/g/V/1                                                                  % vrtx::T       % true",
             "*/g/V/2                                                                  % person::T    % true",
             "*/g/V/2                                                                  % software::T  % false",
             "*/g/V/3                                                                  % software::T  % true",
             "*/g/V/3                                                                  % created::T   % false",
             "*/g/V/1                                                                  % created::T   % false",
-         //   "*/g/V/+                                                                  % vrtx{+}::T   % true",
-         //   "*/g/V/+                                                                  % rec{+}::T   % true",
+            //   "*/g/V/+                                                                  % vrtx{+}::T   % true",
+            //   "*/g/V/+                                                                  % rec{+}::T   % true",
             "*/g/V/1{2}                                                               % int{2}::T  % false",
-         //   "*/g/V/1.-<[_,_]>-                                                        % rec{2}::T  % true",
-          //  "*/g/V/1{2}                                                               % elmt{2}::T  % true",
+            //   "*/g/V/1.-<[_,_]>-                                                        % rec{2}::T  % true",
+            //  "*/g/V/1{2}                                                               % elmt{2}::T  % true",
             "*/g/V/1{2}                                                               % person{2}::T % true",
             "*/g/V/1{2}                                                               % vrtx{2}::T   % true",
             "*/g/V/1.-<[_,_]>-                                                        % rec{3}::T   % false",

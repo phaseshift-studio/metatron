@@ -45,14 +45,14 @@ class Mytron:
         content_type: Dict with 'in' and 'out' MIME types.  Omit for native
                       mtron text; use {"out": "application/json"} for JSON.
         timeout:      Seconds to wait for a single eval response.  Increase for
-                      complex/slow expressions.  Default: 30 s.
+                      complex/slow expressions.  Default: 5 s.
     """
 
     def __init__(
         self,
         host: str = DEFAULT_HOST,
         content_type: dict | None = None,
-        timeout: int = 30,
+        timeout: int = 5,
     ):
         self.content_type = content_type or {"in": "application/mtron", "out": "application/mtron"}
         self.host    = host
@@ -212,7 +212,7 @@ class MtronSession:
         return []
 
     async def fetch_relations(self, expr: str) -> list[tuple[str, str]]:
-        """Run a /+/ relation query; returns (uri, definition) pairs."""
+        """Run a /+/ relation query; returns (uri, obj) pairs."""
         result = await self.eval_json(expr)
         if not isinstance(result, list):
             return []

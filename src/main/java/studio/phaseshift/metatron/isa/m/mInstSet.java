@@ -131,6 +131,7 @@ public class mInstSet extends AbstractInstSet {
     public static final fURI WITHIN_INST_TID = M_ISA_INST_TID.extend("within");
     public static final fURI AUTO_INST_TID = M_ISA_INST_TID.extend("auto");
     public static final fURI AUTO_FROM_INST_TID = M_ISA_INST_TID.extend("auto_from");
+    public static final fURI AUTO_TO_INST_TID = M_ISA_INST_TID.extend("auto_to");
     public static final fURI AUTO_AT_INST_TID = M_ISA_INST_TID.extend("auto_at");
     public static final fURI BLOCK_INST_TID = M_ISA_INST_TID.extend("block");
     public static final fURI RNG_INST_TID = M_ISA_INST_TID.extend("rng");

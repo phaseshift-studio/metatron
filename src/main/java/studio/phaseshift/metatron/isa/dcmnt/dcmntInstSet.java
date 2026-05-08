@@ -288,9 +288,8 @@ public class dcmntInstSet extends AbstractInstSet {
                                            final int limit) {
         return objs(IteratorUtil.stream(collection.find().limit(limit).iterator()).map(doc -> {
             final Object docId = doc.get("_id");
-            final String idStr = docId instanceof org.bson.types.ObjectId
-                    ? ((org.bson.types.ObjectId) docId).toHexString()
-                    : docId.toString();
+            final String idStr = docId instanceof org.bson.types.ObjectId oid
+                    ? oid.toHexString() : docId.toString();
             final fURI docUri = baseUri.extend(collection.getNamespace().getCollectionName()).extend(idStr);
             return space.getSerializer().read(doc.toBsonDocument()).selfVID(docUri);
         }));
@@ -305,9 +304,8 @@ public class dcmntInstSet extends AbstractInstSet {
                                                    final Bson filter) {
         return objs(IteratorUtil.stream(collection.find(filter).iterator()).map(doc -> {
             final Object docId = doc.get("_id");
-            final String idStr = docId instanceof org.bson.types.ObjectId
-                    ? ((org.bson.types.ObjectId) docId).toHexString()
-                    : docId.toString();
+            final String idStr = docId instanceof org.bson.types.ObjectId oid
+                    ? oid.toHexString() : docId.toString();
             final fURI docUri = baseUri.extend(collection.getNamespace().getCollectionName()).extend(idStr);
             return space.getSerializer().read(doc.toBsonDocument()).selfVID(docUri);
         }));

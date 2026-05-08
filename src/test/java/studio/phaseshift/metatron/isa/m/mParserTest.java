@@ -35,6 +35,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.start_;
 import static studio.phaseshift.metatron.isa.m.parser.mParser.m_bool;
 import static studio.phaseshift.metatron.isa.m.parser.mParser.m_bytes;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
@@ -53,10 +54,14 @@ public class mParserTest extends AbstractMetatronTest {
     @Test
     public void testCommentParse() {
         assertEquals(NoObj.noobj(), ObjmtronSerializer.parse("[-- a comment"));
+        assertEquals(start_(jnt(1)).plus_(jnt(2)).end_().map_(jnt(4)), ObjmtronSerializer.parse("1+2;map(4)"));
+        assertEquals(start_(jnt(1)).plus_(jnt(2)), ObjmtronSerializer.parse("[-- a comment\n\r1+2"));
         assertEquals(NoObj.noobj(), ObjmtronSerializer.parse("[-- a comment --]"));
-        // assertThrows(Exception.class, () -> ObjmtronSerializer.parse("[-- a comment\n\r\n\r --]"));
+        assertThrows(Exception.class, () -> ObjmtronSerializer.parse("[-- a comment\n\r\n\r --]1+2"));
         assertThrows(Exception.class, () -> ObjmtronSerializer.parse("-- a comment\n\n --"));
-        assertEquals(NoObj.noobj(), ObjmtronSerializer.parse("[--- a comment\n\n ---]"));
+        assertThrows(Exception.class, () ->  ObjmtronSerializer.parse("[--- a comment\n\n ---]"));
+        assertThrows(Exception.class, () ->  ObjmtronSerializer.parse("[--- a comment\n\n ---]"));
+        assertEquals(NoObj.noobj(), ObjmtronSerializer.parse("[--- a comment\n\n"));
     }
 
     @Test

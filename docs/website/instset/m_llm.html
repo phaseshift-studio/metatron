@@ -244,30 +244,7 @@ bin/metatron</code></pre>
             <div id="flush-collapseOne" class="accordion-collapse collapse"
                 aria-labelledby="flush-headingOne" data-bs-parent="#accordianInstSet">
                 <div class="accordion-body">
-                    <pre><code>instset::[
- pattern=&gt; /m/llm/#,
- q      =&gt;[docq::[
-       pre_read =&gt;    inst?#{*}&lt;=#{?}(uri::T),
-       pre_write=&gt;    inst?#{*}&lt;=#{?}(uri::T,#::T),
-       pattern  =&gt;    docq,
-       obj      =&gt;memspace::[pattern=&gt;&lt;#&gt;],
-       inst     =&gt;instset::[pattern=&gt;&lt;#&gt;]]],
- space  =&gt;[super=&gt;!*/m],
- type   =&gt;[
-      catalog::T,
-      mcp::T,
-      tool::T,
-      memory::T,
-      user::T,
-      AI::T,
-      skill::T,
-      model::T],
- inst   =&gt;[
-      as?tool&lt;=/m/space/qproc/docq/docs(tool::T),
-      as?tool&lt;=inst(tool::T),
-      as?skill&lt;=dir(skill::T),
-      chat?A{?}&lt;=model(str::T),
-      chat?rec&lt;=model(str::T,rec::T)]]@/m/llm</code></pre>
+                    <pre><code></code></pre>
                 </div>
             </div>
         </div>
@@ -334,9 +311,9 @@ bin/metatron</code></pre>
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">"a mcp server specification" <span class="text-light">=&gt;</span> "creates a connection to an existing mcp server"</pre>
     <small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  {?}tool <span class="text-light">=&gt;</span> <span class="text-info">"the tools/functions available for use on the mcp server"</span>
-  host <span class="text-light">=&gt;</span> <span class="text-info">"the mcp server endpoint"</span>
-  {?}status <span class="text-light">=&gt;</span> <span class="text-info">"the current status of the mcp server"</span></pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  {?}status <span class="text-light">=&gt;</span> <span class="text-info">"the current status of the mcp server"</span>
+  {?}tool <span class="text-light">=&gt;</span> <span class="text-info">"the tools/functions available for use on the mcp server"</span>
+  host <span class="text-light">=&gt;</span> <span class="text-info">"the mcp server endpoint"</span></pre>
 </div>
 <div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -384,14 +361,14 @@ mcp::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron                 
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">"a large language model" <span class="text-light">=&gt;</span> "the model construction"</pre>
     <small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  {?}think <span class="text-light">=&gt;</span> <span class="text-info">"whether the llm should think before responding"</span>
-  {?}size <span class="text-light">=&gt;</span> <span class="text-info">"the size of the model in bytes"</span>
-  name <span class="text-light">=&gt;</span> <span class="text-info">"the model name from the host catalog"</span>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  name <span class="text-light">=&gt;</span> <span class="text-info">"the model name from the host catalog"</span>
   {?}tool <span class="text-light">=&gt;</span> <span class="text-info">"tool functions the llm can use to solve problems"</span>
   {?}host <span class="text-light">=&gt;</span> <span class="text-info">"the llm inferencing provider endpoint"</span>
   {?}skill <span class="text-light">=&gt;</span> <span class="text-info">"skill to extend the llm&#x27;s abilities"</span>
   {?}memory <span class="text-light">=&gt;</span> <span class="text-info">"llm&#x27;s memory of previous interactions"</span>
-  {?}note <span class="text-light">=&gt;</span> <span class="text-info">"a lst of notes that llm will read and react to between chat submissions"</span></pre>
+  {?}note <span class="text-light">=&gt;</span> <span class="text-info">"a lst of notes that llm will read and react to between chat submissions"</span>
+  {?}think <span class="text-light">=&gt;</span> <span class="text-info">"whether the llm should think before responding"</span>
+  {?}size <span class="text-light">=&gt;</span> <span class="text-info">"the size of the model in bytes"</span></pre>
 </div>
 </div>
 <div class="card mb-3" id="type-skill">
@@ -413,10 +390,10 @@ mcp::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron                 
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">"a skill.md specification" <span class="text-light">=&gt;</span> "?"</pre>
     <small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  desc <span class="text-light">=&gt;</span> <span class="text-info">"skill description"</span>
-  {?}entry <span class="text-light">=&gt;</span> <span class="text-info">"skill assets, references, and scripts"</span>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  {?}entry <span class="text-light">=&gt;</span> <span class="text-info">"skill assets, references, and scripts"</span>
   name <span class="text-light">=&gt;</span> <span class="text-info">"skill name"</span>
-  {?}content <span class="text-light">=&gt;</span> <span class="text-info">"skill.md document content"</span></pre>
+  {?}content <span class="text-light">=&gt;</span> <span class="text-info">"skill.md document content"</span>
+  desc <span class="text-light">=&gt;</span> <span class="text-info">"skill description"</span></pre>
 </div>
 <div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -440,9 +417,9 @@ mcp::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron                 
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">"a tool specification" <span class="text-light">=&gt;</span> "?"</pre>
     <small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  name <span class="text-light">=&gt;</span> <span class="text-info">"tool name"</span>
-  desc <span class="text-light">=&gt;</span> <span class="text-info">"tool description"</span>
-  {?}arg <span class="text-light">=&gt;</span> <span class="text-info">"tool arguments"</span></pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  {?}arg <span class="text-light">=&gt;</span> <span class="text-info">"tool arguments"</span>
+  name <span class="text-light">=&gt;</span> <span class="text-info">"tool name"</span>
+  desc <span class="text-light">=&gt;</span> <span class="text-info">"tool description"</span></pre>
 </div>
 <div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -472,11 +449,11 @@ mcp::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron                 
                 text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">chat</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-model" data-bs-toggle="tooltip" title="domain" class="code text-info">/m/llm/model</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#" data-bs-toggle="tooltip" title="maybe generic range" class="code text-success">A{?}</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-model" data-bs-toggle="tooltip" title="domain" class="code text-info">/m/llm/model</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-str" data-bs-toggle="tooltip" title="range" class="code text-success">/m/str</a></span></span>
         </span>
-        <small class="text-muted code">/m/llm/inst/chat?A{?}&lt;=/m/llm/model</small>
+        <small class="text-muted code">/m/llm/inst/chat?/m/str&lt;=/m/llm/model</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-chat-doc-0-tab').click();document.getElementById('inst-chat-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">chat?A{?}&lt;=model(str::T){&lt;j&gt;}</code></pre><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-chat-doc-0-tab').click();document.getElementById('inst-chat-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">chat?rec&lt;=model(str::T,rec::T){&lt;j&gt;}</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-chat-doc-0-tab').click();document.getElementById('inst-chat-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">chat?str&lt;=model(str::T){&lt;j&gt;}</code></pre><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-chat-doc-0-tab').click();document.getElementById('inst-chat-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">chat?rec&lt;=model(str::T,rec::T){&lt;j&gt;}</code></pre></div>
     
 </div>
 </div>
@@ -490,20 +467,15 @@ mcp::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron                 
            class="code text-primary fw-bold text-decoration-none">catalog</a>
         <small class="text-muted code">/m/llm/space/catalog</small>
     </div>
-    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[
-     name   =&gt;   is(or(eq(anthropic),eq(openai),eq(ollama),eq(localai))),
-     pattern=&gt;   uri::T,
-     {?}host=&gt;   uri::T,
-     route  =&gt;[uri::T=&gt;uri::T]]][
-   inst?catalog&lt;=#{?}(rec::T)]@/m/llm/space/catalog</code></pre></div>
+    
     <div class="card-body border-top py-2"><p class="mb-0 text-light">a space for accessing llm models</p></div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">"llm model catalog specification" <span class="text-light">=&gt;</span> "creates a model catalog"</pre>
     <small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  {?}host <span class="text-light">=&gt;</span> <span class="text-info">"the llm inferencing provider endpoint"</span>
-  pattern <span class="text-light">=&gt;</span> <span class="text-info">"catalog address space"</span>
-  name <span class="text-light">=&gt;</span> <span class="text-info">"the provider name (anthropic, openai, ollama, or localai)"</span>
-  route <span class="text-light">=&gt;</span> <span class="text-info">"internal space routes"</span></pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  name <span class="text-light">=&gt;</span> <span class="text-info">"the provider name (anthropic, openai, ollama, or localai)"</span>
+  route <span class="text-light">=&gt;</span> <span class="text-info">"internal space routes"</span>
+  {?}host <span class="text-light">=&gt;</span> <span class="text-info">"the llm inferencing provider endpoint"</span>
+  pattern <span class="text-light">=&gt;</span> <span class="text-info">"catalog address space"</span></pre>
 </div>
 </div>
 </div>
@@ -511,7 +483,7 @@ mcp::[host =&gt; &lt;ws://localhost:8999&gt;]@/usr/ai/mcp/mtron                 
 <div class="container-xxl py-3 text-center">
     <hr class="border-secondary">
     <small class="text-muted">
-        generated by metatron instset doc generator on build 0-2026-05-02 21:06:03<br>
+        generated by metatron instset doc generator on build 0-2026-05-08 03:26:16<br>
         © PhaseShift Studio, LLC
     </small>
 </div></main>

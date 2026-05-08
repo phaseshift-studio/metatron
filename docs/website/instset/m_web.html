@@ -244,47 +244,7 @@ bin/metatron</code></pre>
             <div id="flush-collapseOne" class="accordion-collapse collapse"
                 aria-labelledby="flush-headingOne" data-bs-parent="#accordianInstSet">
                 <div class="accordion-body">
-                    <pre><code>instset::[
- pattern=&gt; /m/web/#,
- q      =&gt;[docq::[
-       pre_read =&gt;    inst?#{*}&lt;=#{?}(uri::T),
-       pre_write=&gt;    inst?#{*}&lt;=#{?}(uri::T,#::T),
-       pattern  =&gt;    docq,
-       obj      =&gt;memspace::[pattern=&gt;&lt;#&gt;],
-       inst     =&gt;instset::[pattern=&gt;&lt;#&gt;]]],
- space  =&gt;[super=&gt;!*/m],
- const  =&gt;[
-      !*/m/mach/io/serializer/xml,
-      !*/m/mach/io/serializer/html,
-      !*/m/mach/io/serializer/json,
-      !*/m/mach/io/serializer/markdown,
-      !*/m/mach/io/serializer/plain/text],
- type   =&gt;[
-      content_type::T,
-      xml::T,
-      html::T,
-      json::T,
-      css::T,
-      markdown::T,
-      httpspace::T,
-      wsspace::T,
-      websocket::T,
-      wsserver::T,
-      wsclient::T,
-      mtron_ws::T,
-      mcp_ws::T,
-      mcp_mtron_ws::T],
- inst   =&gt;[
-      as?xml&lt;=str(xml::T),
-      as?html&lt;=str(html::T),
-      as?markdown&lt;=str(markdown::T),
-      as?str&lt;=html(str::T),
-      as?str&lt;=markdown(str::T),
-      as?html&lt;=markdown(html::T),
-      as?json&lt;=str(json::T),
-      as(json_str::T),
-      doc?str&lt;=str(),
-      doc_json?str&lt;=str()]]@/m/web</code></pre>
+                    <pre><code></code></pre>
                 </div>
             </div>
         </div>
@@ -353,7 +313,7 @@ bin/metatron</code></pre>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">html::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m_web.html#type-xml" class="instset-doc-small-code text-info code">xml::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">xml::T</span></span>
         </span>
         <small class="text-muted code">/m/web/html</small>
     </div>
@@ -361,6 +321,17 @@ bin/metatron</code></pre>
        head=&gt;[{?}title=&gt;str::T],
        body=&gt;    rec::T]]]</code></pre></div>
     <div class="card-body border-top py-2"><p class="mb-0 text-light">a rec encoding of an html document</p></div>
+<div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;http://metatron.phaseshift.studio&gt; [-- yields an html::T --]
+html::[html=&gt;
+       [head=&gt;
+        [title=&gt;&quot;metatron&quot;]],
+        body=&gt;
+         [out=&gt;[
+          [tag=&gt;a,href=&gt;...],
+          [tag...]]]]</code></pre>
+</div>
 </div>
 <div class="card mb-3" id="type-json">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -395,7 +366,7 @@ bin/metatron</code></pre>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">mcp_mtron_ws::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m_web_space_wsspace.html#type-mcp_ws" class="instset-doc-small-code text-info code">mcp_ws::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">mcp_ws::T</span></span>
         </span>
         <small class="text-muted code">/m/web/space/wsspace/mcp_mtron_ws</small>
     </div>
@@ -410,7 +381,7 @@ bin/metatron</code></pre>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">mcp_ws::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m_web_space_wsspace.html#type-wsserver" class="instset-doc-small-code text-info code">wsserver::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">wsserver::T</span></span>
         </span>
         <small class="text-muted code">/m/web/space/wsspace/mcp_ws</small>
     </div>
@@ -425,7 +396,7 @@ bin/metatron</code></pre>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">mtron_ws::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m_web_space_wsspace.html#type-wsserver" class="instset-doc-small-code text-info code">wsserver::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">wsserver::T</span></span>
         </span>
         <small class="text-muted code">/m/web/space/wsspace/mtron_ws</small>
     </div>
@@ -434,6 +405,10 @@ bin/metatron</code></pre>
      {?}out=&gt;   isa(content_type::T).else(application/mtron)]][
    /m/web/space/wsspace/mtron_ws/ctor?mtron_ws&lt;=#{?}(rec::T)]</code></pre></div>
     <div class="card-body border-top py-2"><p class="mb-0 text-light">a simple websocket server accepting mtron expressions and return mtron results</p></div>
+<div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">mtron_ws::[=&gt;]</code></pre>
+</div>
 </div>
 <div class="card mb-3" id="type-websocket">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -457,7 +432,7 @@ bin/metatron</code></pre>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">wsclient::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m_web_space_wsspace.html#type-websocket" class="instset-doc-small-code text-info code">websocket::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">websocket::T</span></span>
         </span>
         <small class="text-muted code">/m/web/space/wsspace/wsclient</small>
     </div>
@@ -469,7 +444,7 @@ bin/metatron</code></pre>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">wsserver::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m_web_space_wsspace.html#type-websocket" class="instset-doc-small-code text-info code">websocket::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">websocket::T</span></span>
         </span>
         <small class="text-muted code">/m/web/space/wsspace/wsserver</small>
     </div>
@@ -528,8 +503,7 @@ bin/metatron</code></pre>
            class="code text-primary fw-bold text-decoration-none">httpspace</a>
         <small class="text-muted code">/m/web/space/httpspace</small>
     </div>
-    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[][
-   /m/web/space/httpspace/ctor?httpspace&lt;=#{?}(rec::T)]@/m/web/space/httpspace</code></pre></div>
+    
     <div class="card-body border-top py-2"><p class="mb-0 text-light">a space for reading and writing web-related resources.
 for http://# patterns and remote routes, uri resolution will fetch remote web resources and httpspace will handle nested addresses client-side.
 for local routes, uri resolution will fetch from local web server backing httpspace.
@@ -547,11 +521,7 @@ httpspace webserver is furi aware and will perform server-side extraction of nes
            class="code text-primary fw-bold text-decoration-none">wsspace</a>
         <small class="text-muted code">/m/web/space/wsspace</small>
     </div>
-    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[?[
-     host   =&gt;   uri::T,
-     pattern=&gt;   uri::T,
-     route  =&gt;   rec::T]][
-   /m/web/space/wsspace/ctor?wsspace&lt;=wsspace(rec::T)]@/m/web/space/wsspace</code></pre></div>
+    
     <div class="card-body border-top py-2"><p class="mb-0 text-light">a space for exposing and managing web socket servers.</p></div>
 <div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -564,7 +534,7 @@ httpspace webserver is furi aware and will perform server-side extraction of nes
 <div class="container-xxl py-3 text-center">
     <hr class="border-secondary">
     <small class="text-muted">
-        generated by metatron instset doc generator on build 0-2026-05-02 21:06:02<br>
+        generated by metatron instset doc generator on build 0-2026-05-08 03:26:09<br>
         © PhaseShift Studio, LLC
     </small>
 </div></main>

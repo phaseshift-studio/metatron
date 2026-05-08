@@ -32,6 +32,7 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 
 import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import java.sql.Connection;
@@ -782,6 +783,246 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
                 testSpace.close();
             } catch (final Exception ignored) {
             }
+        }
+    }
+
+    /**
+     * Verifies that cross-space auto_from references (e.g. {@code !*g:V/1} in a
+     * {@code play:#} space) are stored with their full scheme:segment in
+     * {@code _mtron_meta.ref_table} and reconstructed to point at the original
+     * cross-space URI, not the space's own pattern.
+     */
+    @Test
+    public void testCrossSpaceAutoFromReference() throws Exception {
+        final fURI spaceVid = f("/sys/space/tble/xspace_test");
+        final tbleSpace testSpace = tbleSpace.of(
+                rec(
+                        uri(PATTERN), uri("play:#"),
+                        uri(HOST),    uri(staticDbConfig.getJdbcHost()),
+                        uri(DRIVER),  uri(staticDbConfig.getDriverClass()),
+                        uri(TABLE),   lst(uri("place"), uri("venue")),
+                        uri(ROUTE),   rec(uri("play:"), uri(""))
+                ).jvm(),
+                spaceVid
+        );
+        try {
+            // --- cross-space: addr → g:V/1 ---
+            Router.writeToSpace(f("play:place/1"), rec(
+                    uri("name"), str("fun_area"),
+                    uri("addr"), auto_from_(f("g:V/1")).tryToInst()));
+
+            // Verify _mtron_meta stores scheme:segment for cross-space ref
+            try (final Connection conn = staticDbConfig.getConnection();
+                 final Statement stmt = conn.createStatement();
+                 final ResultSet rs = stmt.executeQuery(
+                         "SELECT column_name, ref_table FROM _mtron_meta " +
+                         "WHERE table_name = 'place'")) {
+                assertTrue(rs.next(), "_mtron_meta should have a row for place.addr");
+                assertEquals("addr", rs.getString("column_name"));
+                assertEquals("g:V", rs.getString("ref_table"),
+                        "cross-space ref should store scheme:segment, not bare table name");
+                assertFalse(rs.next(), "should have exactly one row for place");
+            }
+
+            // Read back: auto_from inst points to g:V/1 (not play:V/1)
+            final Obj row = Router.readFromSpace(f("play:place/1"));
+            final Obj addr = row.recValue().get(uri("addr"));
+            assertTrue(addr.isAutoFrom(), "addr should be an auto_from inst");
+            final fURI targetURI = addr.asInst().arg(0).uriValue();
+            assertEquals(f("g:V/1"), targetURI,
+                    "cross-space auto_from should point at original URI, not space-pattern URI");
+
+            // --- internal FK: venue.parent → play:place/1 (separate table, single create) ---
+            Router.writeToSpace(f("play:venue/1"), rec(
+                    uri("name"),   str("indoor_zone"),
+                    uri("parent"), auto_from_(f("play:place/1")).tryToInst()));
+
+            try (final Connection conn = staticDbConfig.getConnection();
+                 final Statement stmt = conn.createStatement();
+                 final ResultSet rs = stmt.executeQuery(
+                         "SELECT column_name, ref_table FROM _mtron_meta " +
+                         "WHERE table_name = 'venue'")) {
+                assertTrue(rs.next(), "_mtron_meta should have a row for venue.parent");
+                assertEquals("parent", rs.getString("column_name"));
+                assertEquals("place", rs.getString("ref_table"),
+                        "internal FK should store bare table name");
+            }
+
+            // Read back: internal FK uses space pattern
+            final Obj row2 = Router.readFromSpace(f("play:venue/1"));
+            final Obj parent = row2.recValue().get(uri("parent"));
+            assertTrue(parent.isAutoFrom());
+            final fURI parentURI = parent.asInst().arg(0).uriValue();
+            assertEquals(f("play:place/1"), parentURI,
+                    "internal FK should use space pattern");
+
+            LOG.info("cross-space auto_from test passed on {}",
+                    staticDbConfig.getDatabaseName());
+        } finally {
+            try (final Connection conn = staticDbConfig.getConnection();
+                 final Statement stmt = conn.createStatement()) {
+                stmt.executeUpdate("DROP TABLE IF EXISTS venue");
+                stmt.executeUpdate("DROP TABLE IF EXISTS place");
+            }
+            Router.global().removeSpace(testSpace.vid());
+            testSpace.close();
+        }
+    }
+
+    /**
+     * Verifies that a cross-space auto_from reference resolves through the router
+     * to an actual record in another space. Sets up a memSpace as the target and
+     * a tbleSpace as the source to test end-to-end cross-space FK resolution.
+     */
+    @Test
+    public void testCrossSpaceAutoFromResolution() throws Exception {
+        final fURI memSpaceVid = f("/sys/space/mem/xspace_target");
+        final fURI tbleSpaceVid = f("/sys/space/tble/xspace_source");
+
+        // Target space: memSpace with pattern grph:#
+        final memSpace targetSpace = memSpace.of(f("grph:#"), memSpaceVid);
+        Router.global().addSpace(targetSpace);
+
+        final tbleSpace sourceSpace = tbleSpace.of(
+                rec(
+                        uri(PATTERN), uri("play:#"),
+                        uri(HOST),    uri(staticDbConfig.getJdbcHost()),
+                        uri(DRIVER),  uri(staticDbConfig.getDriverClass()),
+                        uri(TABLE),   lst(uri("arena")),
+                        uri(ROUTE),   rec(uri("play:"), uri(""))
+                ).jvm(),
+                tbleSpaceVid
+        );
+        try {
+            // Write the target record into memSpace
+            Router.writeToSpace(f("grph:vertices/42"),
+                    rec(uri("label"), str("downtown"),
+                        uri("capacity"), jnt(5000)));
+
+            // Write a tbleSpace record with cross-space auto_from pointing at grph:vertices/42
+            Router.writeToSpace(f("play:arena/1"), rec(
+                    uri("name"),     str("main_stage"),
+                    uri("location"), auto_from_(f("grph:vertices/42")).tryToInst()));
+
+            // Verify storage: _mtron_meta records scheme:segment
+            try (final Connection conn = staticDbConfig.getConnection();
+                 final Statement stmt = conn.createStatement();
+                 final ResultSet rs = stmt.executeQuery(
+                         "SELECT ref_table FROM _mtron_meta " +
+                         "WHERE table_name = 'arena' AND column_name = 'location'")) {
+                assertTrue(rs.next());
+                assertEquals("grph:vertices", rs.getString("ref_table"),
+                        "multi-segment cross-space ref stores scheme:firstSegment");
+            }
+
+            // Verify the instruction is properly reconstructed
+            final Obj row = Router.readFromSpace(f("play:arena/1"));
+            final Obj locInst = row.recValue().get(uri("location"));
+            assertTrue(locInst.isAutoFrom());
+            assertEquals(f("grph:vertices/42"), locInst.asInst().arg(0).uriValue());
+
+            // Verify resolution through the router: rec.at() eagerly resolves
+            // the auto_from, fetching the memSpace record
+            final Obj resolved = row.asRec().at(uri("location"));
+            assertTrue(resolved.isRec(),
+                    "cross-space auto_from should resolve to a record, got: " + resolved.tid());
+            assertEquals(str("downtown"), resolved.asRec().at(uri("label")),
+                    "resolved record should be the memSpace target");
+            assertEquals(jnt(5000), resolved.asRec().at(uri("capacity")));
+
+            LOG.info("cross-space auto_from resolution test passed on {}",
+                    staticDbConfig.getDatabaseName());
+        } finally {
+            try (final Connection conn = staticDbConfig.getConnection();
+                 final Statement stmt = conn.createStatement()) {
+                stmt.executeUpdate("DROP TABLE IF EXISTS arena");
+            }
+            Router.global().removeSpace(sourceSpace.vid());
+            sourceSpace.close();
+            Router.global().removeSpace(targetSpace.vid());
+            targetSpace.close();
+        }
+    }
+
+    /**
+     * Verifies intra-space cross-table FK resolution: a record in one table
+     * referencing a record in another table within the same space. This is the
+     * standard internal FK use case. Also tests self-referencing FKs.
+     */
+    @Test
+    public void testIntraSpaceCrossTableAutoFromResolution() throws Exception {
+        final fURI spaceVid = f("/sys/space/tble/intraspace_test");
+        final tbleSpace testSpace = tbleSpace.of(
+                rec(
+                        uri(PATTERN), uri("net:#"),
+                        uri(HOST),    uri(staticDbConfig.getJdbcHost()),
+                        uri(DRIVER),  uri(staticDbConfig.getDriverClass()),
+                        uri(TABLE),   lst(uri("org"), uri("employee")),
+                        uri(ROUTE),   rec(uri("net:"), uri(""))
+                ).jvm(),
+                spaceVid
+        );
+        try {
+            // --- cross-table FK: employee.org_id → org ---
+            Router.writeToSpace(f("net:org/1"),
+                    rec(uri("label"), str("PhaseShift Studio")));
+            // Write the first employee with ALL FK columns in one shot (cross-table
+            // org_id + self-referencing manager_id) so the table is created with
+            // every FK column. self-ref points at its own row — the raw INTEGER
+            // value stores fine before the row exists.
+            Router.writeToSpace(f("net:employee/1"), rec(
+                    uri("name"),       str("Marko"),
+                    uri("org_id"),     auto_from_(f("net:org/1")).tryToInst(),
+                    uri("manager_id"), auto_from_(f("net:employee/1")).tryToInst()));
+
+            // _mtron_meta has rows for both FK columns
+            try (final Connection conn = staticDbConfig.getConnection();
+                 final Statement stmt = conn.createStatement();
+                 final ResultSet rs = stmt.executeQuery(
+                         "SELECT column_name, ref_table FROM _mtron_meta " +
+                         "WHERE table_name = 'employee' ORDER BY column_name")) {
+                assertTrue(rs.next());
+                assertEquals("manager_id", rs.getString("column_name"));
+                assertEquals("employee", rs.getString("ref_table"),
+                        "self-referencing FK stores own table name");
+                assertTrue(rs.next());
+                assertEquals("org_id", rs.getString("column_name"));
+                assertEquals("org", rs.getString("ref_table"),
+                        "cross-table internal FK stores bare target table name");
+                assertFalse(rs.next());
+            }
+
+            // Read back: org_id instruction points within same space
+            final Obj emp = Router.readFromSpace(f("net:employee/1"));
+            final Obj orgInst = emp.recValue().get(uri("org_id"));
+            assertTrue(orgInst.isAutoFrom());
+            assertEquals(f("net:org/1"), orgInst.asInst().arg(0).uriValue());
+
+            // Resolution via rec.at() fetches the target org record
+            final Obj resolved = emp.asRec().at(uri("org_id"));
+            assertTrue(resolved.isRec());
+            assertEquals(str("PhaseShift Studio"), resolved.asRec().at(uri("label")));
+
+            // Self-referencing instruction
+            final Obj mgrInst = emp.recValue().get(uri("manager_id"));
+            assertTrue(mgrInst.isAutoFrom());
+            assertEquals(f("net:employee/1"), mgrInst.asInst().arg(0).uriValue());
+
+            // Self-referencing resolution: rec.at() resolves to the own row
+            final Obj mgr = emp.asRec().at(uri("manager_id"));
+            assertTrue(mgr.isRec());
+            assertEquals(str("Marko"), mgr.asRec().at(uri("name")));
+
+            LOG.info("intra-space auto_from resolution test passed on {}",
+                    staticDbConfig.getDatabaseName());
+        } finally {
+            try (final Connection conn = staticDbConfig.getConnection();
+                 final Statement stmt = conn.createStatement()) {
+                stmt.executeUpdate("DROP TABLE IF EXISTS employee");
+                stmt.executeUpdate("DROP TABLE IF EXISTS org");
+            }
+            Router.global().removeSpace(testSpace.vid());
+            testSpace.close();
         }
     }
 }

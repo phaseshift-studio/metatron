@@ -128,7 +128,7 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
     public AbstractInstSet(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(new LinkedHashMap<>(), jvm, tid, vid);
         this.at(uri(Tokens.QPROC), lst(QCollection.docQ()), MUTABLE);
-        this.sugars().forEach(sugar -> mParser.addSugar(sugar));
+        this.sugars().forEach(mParser::addSugar);
         old = false;
     }
 

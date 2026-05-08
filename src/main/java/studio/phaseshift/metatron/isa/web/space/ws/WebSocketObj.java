@@ -103,12 +103,12 @@ public interface WebSocketObj extends Closeable {
             if (outType.isText()) {
                 // send as a websocket text frame so clients using onText listeners receive it
                 final String outgoing = new String(bytes.array(), StandardCharsets.UTF_8);
-                Graphitty.log(this).info("sending %s to %s", outgoing, this.getWebSocket().getAttachment());
+                Graphitty.log(this).info("sending %s to %s", outgoing, this.getWebSocket().getRemoteSocketAddress());
                 this.getWebSocket().send(outgoing);
             } else
                 this.getWebSocket().send(bytes);
         } catch (final Exception e) {
-            Graphitty.log(this).error("error sending message: %s", message, e);
+            Graphitty.log(this).error("error sending %s: %s", message, e);
         }
     }
 

@@ -68,9 +68,4 @@ public class CollectionSchemaInstSet extends AbstractInstSet {
                 uri(TYPE), lst(types.stream().map(t -> (Obj) t).toList())
         ), INSTSET_TID, schemaVid);
     }
-
-    @Override
-    public void setup() {
-        super.setup();
-    }
 }

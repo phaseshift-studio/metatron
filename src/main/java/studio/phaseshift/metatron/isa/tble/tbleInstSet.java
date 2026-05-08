@@ -249,6 +249,8 @@ public class tbleInstSet extends AbstractInstSet {
                                 tbleSpace.class,
                                 TBLE_ISA_REWRITE_TID.extend("sql_where"),
                                 (space, furi, sqlWhere) -> {
+                                    if (furi.segments().isEmpty())
+                                        throw MTronException.of("uri must contain a table reference: $s", furi);
                                     final String tableName = furi.segments().getFirst();
                                     final String sql = "SELECT * FROM " + tableName + " WHERE " + sqlWhere;
                                     try (final Statement stmt = space.sjvm().createStatement();
@@ -257,6 +259,8 @@ public class tbleInstSet extends AbstractInstSet {
                                     } catch (SQLException e) {
                                         if (e.getErrorCode() == 1054)
                                             return noobj();
+                                        throw MTronException.of(e, "%s", sql);
+                                    } catch (final Exception e) {
                                         throw MTronException.of(e, "%s", sql);
                                     }
                                 }

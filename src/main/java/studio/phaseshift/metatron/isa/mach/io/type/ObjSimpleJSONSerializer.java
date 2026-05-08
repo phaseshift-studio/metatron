@@ -35,6 +35,7 @@ import java.util.regex.Pattern;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.BASE_TYPES;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -105,7 +106,7 @@ public class ObjSimpleJSONSerializer extends AbstractObjSerializer<JsonElement> 
             return this.read(JsonParser.parseReader(ObjSimpleJSONSerializer.makeReader(new String(bytes.array(), StandardCharsets.UTF_8))));
         } catch (final Exception e) {
             LOG.warn("ignoring json parse problem with %s: %s", new String(bytes.array(), StandardCharsets.UTF_8), e);
-            return NoObj.noobj();
+            return noobj();
         }
     }
 
@@ -138,8 +139,10 @@ public class ObjSimpleJSONSerializer extends AbstractObjSerializer<JsonElement> 
                         // do nothiing
                     }
                     try {
-                        final Result r = ObjmtronSerializer.parse(jpstr);
-                        return r.isSuccess() ? r.get() : ObjmtronSerializer.parse(jpstr);
+                        final Obj parse = ObjmtronSerializer.parse(jpstr);
+                        if (parse.isNoObj())
+                            return noobj();
+                        else return parse;
                         // if (jpstr.charAt(0) == '"' && jpstr.charAt(jpstr.length() - 1) == '"')
                         //     jpstr = jpstr.substring(1, jpstr.length() - 1);
                     } catch (Exception e) {
@@ -180,7 +183,7 @@ public class ObjSimpleJSONSerializer extends AbstractObjSerializer<JsonElement> 
                 return ObjmtronSerializer.parse(json.getAsString()).apply();
             } catch (final Exception e2) {
                 LOG.warn("ignoring json parse problem with %s: %s", json, e);
-                return NoObj.noobj();
+                return noobj();
             }
         }
     }

@@ -139,6 +139,7 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
         return Obj.super.autoResolve(obj).parent(this);
     }*/
 
+
     /// ///////////////////////////////////////////////////////////////////////////////////////
 
     class Helper {
@@ -212,15 +213,19 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
             final Map<Obj, Obj> result = new LinkedHashMap<>();
             rhs.jvm().forEach((key, value) -> {
                 final Obj selectKeys = objs(lhs.jvm().keySet().stream().map(key).filter(k2 -> !k2.isNoObj()));
-                selectKeys.stream().forEach(selectKey -> {
+                selectKeys.stream().filter(k -> !k.isNoObj()).forEach(selectKey -> {
                     final Obj selectKeyOne = selectKey.c(cInt::one);
-                    final Obj lhsValue = lhs.asRec().at(selectKeyOne);
-                    final Obj rhsValue = value.isAutoFrom() ? value : value.autoResolve(rhs);
-                    final Obj selectValue = lhsValue.isPoly() && rhsValue.isPoly() ?
-                            polyRecursion.apply(lhsValue.as(), rhsValue.as()) :
-                            rhsValue.apply(lhsValue);
-                    if (!selectValue.isNoObj() && (!selectValue.isRec() || !selectValue.asRec().isEmpty()))
-                        result.compute(selectKeyOne, (a, b) -> null == b ? selectValue : b.append(selectValue)); // TODO: the c(1) may not be necessary
+                    if (!selectKey.isNoObj()) {
+                        final Obj lhsValue = lhs.asRec().at(selectKeyOne);
+                        if (!lhsValue.isNoObj()) {
+                            final Obj rhsValue = value.isAutoFrom() ? value : value.autoResolve(rhs);
+                            final Obj selectValue = lhsValue.isPoly() && rhsValue.isPoly() ?
+                                    polyRecursion.apply(lhsValue.as(), rhsValue.as()) :
+                                    lhsValue.test(rhsValue.dom()) ? rhsValue.apply(lhsValue) : rhsValue;
+                            if (!selectValue.isNoObj() && (!selectValue.isRec() || !selectValue.asRec().isEmpty()))
+                                result.compute(selectKeyOne, (a, b) -> null == b ? selectValue : b.append(selectValue)); // TODO: the c(1) may not be necessary
+                        }
+                    }
                 });
             });
             return result;
@@ -264,8 +269,8 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
                     } else {
                         return a.isAutoFrom() ? a : kv.getValue().apply(lhs);
                     }
-                   
-                        
+
+
                     //return a.isAutoFrom() ? a : updateRecursion(kv.getValue(), a, operation);
 
                 } else {

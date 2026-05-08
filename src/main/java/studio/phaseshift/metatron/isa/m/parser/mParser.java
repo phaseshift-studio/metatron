@@ -378,7 +378,7 @@ public class mParser {
 
     public static <O extends Obj> O eval(final String code) {
         final AtomicReference<Obj> running = new AtomicReference<>(noobj());
-        splitOnNonQuotedSequence(code.replaceAll("\\[==.*?==\\]", ""), ';', false).stream()
+        splitOnNonQuotedSequence(code.replaceAll("\\[==.*?==]", ""), ';', false).stream()
                 .filter(s -> !s.trim().isEmpty())
                 .map(s -> Arrays.stream(s.split("\n"))
                         .map(String::trim)
@@ -391,7 +391,13 @@ public class mParser {
     }
 
     public static <O extends Obj> O parse(final String code) {
-        final String trimmed = code.trim().replaceAll("\\[==.*?==\\]", "");
+        final String trimmed = Arrays.stream(code.trim()
+                        .replaceAll("\\[==.*?==]", "")
+                        .split("\n"))
+                .map(String::trim)
+                .filter(t -> !t.startsWith("[--"))
+                .reduce("", (a, b) -> a + b + "\n")
+                .trim();
         if (trimmed.isEmpty())
             return (O) noobj();
         // Use cached parser instead of rebuilding on every call
@@ -418,7 +424,7 @@ public class mParser {
 
     public static Parser m_comment() {
         return choice(
-                seq(of("[--").trim(), any().starGreedy(anyOf("\n\r").or(new EndOfInputParser("end of input")))),
+                seq(of("[--"), noneOf("\n\r").star(), opt(choice(anyOf("\n\r"), of("--]")), "")),
                 seq(of("[==").trim(), any().starGreedy(of("==]")), of("==]"))).map(t -> noobj());
     }
 

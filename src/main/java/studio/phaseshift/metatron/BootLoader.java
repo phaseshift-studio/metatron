@@ -169,7 +169,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
             LOG.info("final boot args:\n%s", args);
             if (args.has(BOOT))
                 args.at(uri(BOOT), f(Paths.get("").toAbsolutePath().normalize().toString()).extend(args.at(BOOT).uriValue()).toUri(), MUTABLE);
-            LogObj.setSLF4J(args.has(uri("log")) ? args.at(uri("log")).uriValue().toString() : "warn");
+            LogObj.setSLF4J(args.at(uri("log")).orElse(uri("warn")).uriValue().toString());
             LOG.info("%s", Graphitty.sillyPrint("booting metatron", true, true));
             Runtime.getRuntime().addShutdownHook(new Thread(BootLoader::close));
             LOG.info("available instruction sets\n\t(via %s%s)%s", "META-INF/services/",
@@ -191,7 +191,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
                 args.at(LOCAL, uri(hostname), MUTABLE);
             }
             final fURI SYS_VID = f("/sys");
-            final Space sysSpace = memSpace.of(SYS_VID.extend("#"), null);
+            final Space sysSpace = memSpace.of(SYS_VID.extend(ALL), null);
             sysSpace.jvm().put(uri(QPROC), lst(QCollection.docQ(), QCollection.subq(), QCollection.incrQ()));
             /// CREATE A ROUTER AND ATTACH IT TO SYS
             ROUTER = new BasicRouter(SYS_VID.extend("router"));

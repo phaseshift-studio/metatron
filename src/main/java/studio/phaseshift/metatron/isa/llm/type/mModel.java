@@ -172,7 +172,7 @@ public class mModel extends MRec {
                         .maxMessages(this.memory().asRec().at("max").intValue().intValue())
                         .id(memoryVID)
                         .chatMemoryStore(SpaceChatMemoryStore.single())
-                        .build());
+                        .build()).storeRetrievedContentInChatMemory(true);
             }
         }
         //////////////////////////////////////////

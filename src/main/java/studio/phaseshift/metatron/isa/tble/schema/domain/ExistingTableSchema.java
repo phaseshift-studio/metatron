@@ -275,12 +275,20 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
             // This is a foreign key - return an auto_from instruction for lazy resolution
             final Object fkValue = rs.getObject(col.name);
             if (fkValue != null && !rs.wasNull()) {
-                // Build the full path to the referenced row including space pattern
-                // e.g., "acme:employees/1056" not just "employees/1056"
-                // Use retractPattern() to strip the wildcard from the pattern (acme:# -> acme:)
-                final fURI referencedPath = this.space.pattern().retractPattern()
-                        .extend(fk.toTable())
-                        .extend(fkValue.toString());
+                // Build the full path to the referenced row.
+                // Internal FK (ref_table = "person"): use space pattern → pfk:person/1
+                // Cross-space ref (ref_table = "g:V"): use stored URI → g:V/1
+                final fURI referencedPath;
+                final String refTable = fk.toTable();
+                if (refTable.indexOf(':') >= 0) {
+                    // Cross-space reference: stored "scheme:segment", extend with PK value → g:V/1
+                    referencedPath = f(refTable).extend(fkValue.toString());
+                } else {
+                    // Internal FK: stored "table", build from space pattern → pfk:person/1
+                    referencedPath = this.space.pattern().retractPattern()
+                            .extend(refTable)
+                            .extend(fkValue.toString());
+                }
                 // Return auto_from instruction that will resolve lazily when accessed
                 return auto_from_(referencedPath).tryToInst();
             }
@@ -917,9 +925,20 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
 
             final Obj val = entry.getValue();
             if (val.isAutoFrom()) {
-                // FK pointer: store raw PK as INTEGER; track in _mtron_meta for round-trip
-                // segments() on e.g. 'lite:person/1' yields ["person","1"]; first = table name
-                final String refTable = val.asInst().arg(0).uriValue().segments().getFirst();
+                // Store raw PK as INTEGER; track in _mtron_meta for round-trip.
+                // If the auto_from URI tests within the space's pattern, it's an internal FK
+                // → store bare table name (SQL-level optimization).
+                // Otherwise, it's a cross-space reference → store scheme:segment so the router
+                // can reach the target on read.
+                final fURI refURI = val.asInst().arg(0).uriValue();
+                final String refTable;
+                if (refURI.test(space.pattern())) {
+                    // Internal FK: pfk:person/1 → person
+                    refTable = refURI.segments().getFirst();
+                } else {
+                    // Cross-space: g:V/1 → g:V  (keep scheme, drop ID segment)
+                    refTable = refURI.segments(List.of(refURI.segments().getFirst())).toString();
+                }
                 autoFromColumns.put(colName, refTable);
                 ddl.append(colName).append(" INTEGER");
             } else {

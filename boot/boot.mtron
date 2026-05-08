@@ -1,4 +1,4 @@
-[== boot args ==];
+[== boot args ==]
 [host  => <ws://0.0.0.0:8999>,
  space => /sys/space,
  web    => [
@@ -6,8 +6,8 @@
    ws   => <ws://localhost:8999>],
  type_check => [inst_dom,inst_rng,type_ctor,obj_write]
 ] 
-[===============];
-[== metatron example boot ==];
+[===============]
+[== metatron example boot ==]
 print("""
 {{y}} ____    ___    ___   ______    ___ ___  ______  ____    ___   ____  
 |    \  /   \  /   \ |      |  |   T   T|      ||    \  /   \ |    \ 
@@ -45,7 +45,7 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
   perl   => /usr/bin/perl,
   mtron  => /bin/mtron]),"\n");
    
-[== mount computing spaces ==];
+[== mount computing spaces ==]
  memspace::[pattern   => /usr/#,                                 
        q         => [subq::[=>],incrq::[=>]]]@/sys/space/usr;
  /usr/ai/pattern/template -> [think=>[to=>print(_)],response=>[to=>print(_)],memory=>[from=>/usr/ai/memory]];
@@ -88,7 +88,8 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
         native   => [factory  => mfactory::[=>],
                      load     => grateful]]@/sys/space/grateful;                    
   grphspace::[pattern  => g:#,
-        route    => [<g:V>=><V>,
+        route    => [<g:> =><>,
+                     <g:V>=><V>,
                      <g:E>=><E>,
                      <g:S>=>/m/grph/schema/modern],
         native   => [factory  => mfactory::[=>],
@@ -132,11 +133,11 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
             name         => <localai>,
             route        => [<localai:>=><>]]@/sys/space/localai;
  tblespace::[pattern => play:#,
-             host    => <mariadb://localhost:3306/play?user=mtron&password=mtron&createDatabaseIfNotExist=true>,
+             host    => <sqlite:///tmp/play.db>,
              table   => [,],
              route   => [play:schema => /sys/space/play/schema,
                          play:       => <>],
-             driver  => <org.mariadb.jdbc.Driver>]@/sys/space/play;
+             driver  => <org.sqlite.JDBC>]@/sys/space/play;
  tblespace::[pattern => netflix:#,
         host       => <mariadb://localhost:3306/netflix?user=mtron&password=mtron>,
         route      => [<netflix:schema>=>/sys/space/netflix/schema,

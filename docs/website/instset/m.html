@@ -244,280 +244,7 @@ bin/metatron</code></pre>
             <div id="flush-collapseOne" class="accordion-collapse collapse"
                 aria-labelledby="flush-headingOne" data-bs-parent="#accordianInstSet">
                 <div class="accordion-body">
-                    <pre><code>instset::[
- pattern=&gt; /m/#,
- q      =&gt;[docq::[
-       pre_read =&gt;    inst?#{*}&lt;=#{?}(uri::T),
-       pre_write=&gt;    inst?#{*}&lt;=#{?}(uri::T,#::T),
-       pattern  =&gt;    docq,
-       obj      =&gt;memspace::[pattern=&gt;&lt;#&gt;],
-       inst     =&gt;instset::[pattern=&gt;&lt;#&gt;]]],
- space  =&gt;[sub=&gt;{!*/m/mach,!*/m/math,!*/m/web,!*/m/iot,!*/m/grph,!*/m/llm,!*/m/tble,!*/m/dcmnt,!*/m/rdf}],
- rewrite=&gt;[
-      /m/inst/rewrite/id_removal?code{?}&lt;=code(),
-      /m/inst/rewrite/map_nest?code{?}&lt;=code(),
-      /m/inst/rewrite/else_after_count?code{?}&lt;=code(),
-      /m/inst/rewrite/plus_zero?code{?}&lt;=code(),
-      /m/inst/rewrite/mult_one?code{?}&lt;=code(),
-      /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
-      /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
-      /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()],
- inst   =&gt;[
-      as?bool&lt;=bool(bool::T),
-      as?bytes&lt;=bool(bytes::T),
-      as?int&lt;=bool(int::T),
-      as?real&lt;=bool(real::T),
-      as?str&lt;=bool(str::T),
-      plus?bool&lt;=bool(bool::T),
-      mult?bool&lt;=bool(bool::T),
-      not?bool&lt;=bool(),
-      as?bool&lt;=bytes(bool::T),
-      as?str&lt;=bytes(str::T),
-      zero?bytes&lt;=bytes(),
-      plus?bytes&lt;=bytes(bytes::T),
-      within?B&lt;=bytes(B::T),
-      as?bool&lt;=int(bool::T),
-      as?bytes&lt;=int(bytes::T),
-      as?real&lt;=int(real::T),
-      as?str&lt;=int(str::T),
-      as?uri&lt;=int(uri::T),
-      zero?int&lt;=int(),
-      one?int&lt;=int(),
-      neg?int&lt;=int(),
-      mult?int&lt;=int(int::T),
-      minus?int&lt;=int(int::T),
-      plus?int&lt;=int(int::T),
-      gt?bool&lt;=int(int::T),
-      gte?bool&lt;=int(int::T),
-      lt?bool&lt;=int(int::T),
-      lte?bool&lt;=int(int::T),
-      sum?int&lt;=int{*}(),
-      prod?int&lt;=int{*}(),
-      pow?int&lt;=int(int::T),
-      mod?int&lt;=int(int::T),
-      order?lst&lt;=int{*}(),
-      as?int&lt;=real(int::T),
-      as?str&lt;=real(str::T),
-      gt?bool&lt;=real(real::T),
-      gte?bool&lt;=real(real::T),
-      lt?bool&lt;=real(real::T),
-      lte?bool&lt;=real(real::T),
-      neg?real&lt;=real(),
-      plus?real&lt;=real(real::T),
-      mult?real&lt;=real(real::T),
-      div?real&lt;=real(real::T),
-      zero?real&lt;=real(),
-      one?real&lt;=real(),
-      inv?real&lt;=real(),
-      minus?real&lt;=real(real::T),
-      sum?real&lt;=real{*}(),
-      prod?real&lt;=real{*}(),
-      mean?real&lt;=real{*}(),
-      pow?real&lt;=real(real::T),
-      math?real&lt;=#{?}(str::T),
-      order?lst&lt;=real{*}(),
-      as?str&lt;=str(str::T),
-      as?bytes&lt;=str(bytes::T),
-      as?bool&lt;=str(bool::T),
-      as?int&lt;=str(int::T),
-      as?real&lt;=str(real::T),
-      as?uri&lt;=str(uri::T),
-      reverse?str&lt;=str(),
-      zero?str&lt;=str(),
-      has?str{?}&lt;=str(str::T),
-      split?lst&lt;=str(str::T),
-      merge?str&lt;=str{*}(str::T),
-      regex?lst&lt;=str(str::T),
-      gt?bool&lt;=str(str::T),
-      gte?bool&lt;=str(str::T),
-      lt?bool&lt;=str(str::T),
-      lte?bool&lt;=str(str::T),
-      plus?str&lt;=str(str::T),
-      sum?str&lt;=str{*}(str{?}::T),
-      ucase?str&lt;=str(),
-      lcase?str&lt;=str(),
-      within?B&lt;=str(B::T),
-      as?int&lt;=uri(int::T),
-      as?uri&lt;=uri(uri::T),
-      as?str&lt;=uri(str::T),
-      as?rec&lt;=uri(rec::T),
-      reverse?uri&lt;=uri(),
-      has?uri{?}&lt;=uri(str::T),
-      has?uri{?}&lt;=uri(uri::T),
-      split?lst&lt;=uri(uri::T),
-      merge?uri&lt;=uri{*}(uri::T),
-      minus?uri&lt;=uri(uri::T),
-      plus?uri{?}&lt;=uri(uri{?}::T),
-      mult?uri{?}&lt;=uri(uri{?}::T),
-      sum?uri&lt;=uri{*}(),
-      prod?uri&lt;=uri{*}(),
-      path?uri&lt;=uri(uri::T),
-      q?uri&lt;=uri(rec::T),
-      uri:c?lst&lt;=uri(uri::T),
-      pow?uri&lt;=uri(int::T),
-      scheme?uri{?}&lt;=uri(),
-      scheme?uri&lt;=uri(uri::T),
-      authority?uri{?}&lt;=uri(),
-      host?uri{?}&lt;=uri(),
-      host?uri&lt;=uri(uri::T),
-      port?int{?}&lt;=uri(),
-      port?uri&lt;=uri(int::T),
-      select?uri{?}&lt;=uri(uri::T),
-      where?uri{?}&lt;=uri(uri::T),
-      args?lst&lt;=inst(),
-      as?lst&lt;=rel(lst::T),
-      as?rec&lt;=rel(rec::T),
-      merge?rec&lt;=rel{*}(rec::T),
-      split?rel&lt;=A(rel::T),
-      dom?#{*}&lt;=rel(),
-      rng?#{*}&lt;=rel(),
-      get?A{?}&lt;=rel(#::T),
-      select?rel{?}&lt;=rel(rel::T),
-      plus?rel{*}&lt;=rel(rel{*}::T),
-      mult?rel{*}&lt;=rel(rel{*}::T),
-      neg?rel&lt;=rel(),
-      one?rel&lt;=rel(),
-      zero?rel&lt;=rel(),
-      as?lst&lt;=lst(lst::T),
-      as?rec&lt;=lst(rec::T),
-      as?code&lt;=lst(code::T),
-      reverse?lst&lt;=lst(),
-      plus?lst&lt;=lst(lst::T),
-      mult?lst&lt;=lst(lst::T),
-      zero?lst&lt;=lst(),
-      split?lst&lt;=A(lst::T),
-      merge?A{*}&lt;=lst(),
-      merge?A{*}&lt;=lst(uri::T),
-      merge?A{*}&lt;=lst(str::T),
-      has?lst{?}&lt;=lst(#::T),
-      within?lst&lt;=lst(#{*}::T),
-      sum?lst&lt;=lst{*}(),
-      select?lst{?}&lt;=lst(lst::T),
-      update?lst&lt;=lst(lst::T),
-      remove?A{*}&lt;=lst(int::T),
-      pow?lst&lt;=lst(int::T),
-      as?lst&lt;=rec(lst::T),
-      as?uri&lt;=rec(uri::T),
-      zero?rec&lt;=rec(),
-      reverse?rec&lt;=rec(),
-      has?rec{?}&lt;=rec(#::T,#::T),
-      has?rec{?}&lt;=rec(#::T),
-      get?A{*}&lt;=rec(uri::T),
-      split?rec&lt;=A(rec::T),
-      merge?rel{*}&lt;=rec(),
-      dom?A{*}&lt;=rec(),
-      rng?A{*}&lt;=rec(),
-      lshift?A{*}&lt;=rec(),
-      plus?rec&lt;=rec(rec{??}::T),
-      mplus?rec&lt;=rec(rec::T),
-      select?rec{?}&lt;=rec(rec::T),
-      select?#{?}&lt;=rec(uri::T),
-      select?rec{?}&lt;=rec(uri{2,}::T),
-      update?rec{?}&lt;=rec(rec::T),
-      update?rec{?}&lt;=rec(rel::T),
-      within?rec&lt;=rec(#{*}::T),
-      sum?rec&lt;=rec{*}(),
-      as?lst&lt;=code(lst::T),
-      cause?fail{?}&lt;=fail(),
-      reify?rec&lt;=fail(),
-      inside?A{?}&lt;=A(lst::T),
-      serialize?B&lt;=A(io::T),
-      fork?A{*}&lt;=A{*}(#::T),
-      range?A{*}&lt;=A{*}(int::T,isa(int::T).else(0)),
-      order?A{*}&lt;=A{*}(#::T),
-      as?noobj{0}&lt;=A(),
-      as?B&lt;=A(#::T),
-      import?space{*}&lt;=#{?}(uri::T,uri{?}::T),
-      dedup?A{*}&lt;=A{*}(),
-      barrier?lst&lt;=#{*}(lst::T),
-      barrier?rec&lt;=rel{*}(rec::T),
-      barrier?A{*}&lt;=A{*}(),
-      barrier?A{*}&lt;=A{*}(A{*}::T),
-      as?A&lt;=A(A::T),
-      repeat?A{*}&lt;=A(#::T,#::T),
-      !#{?}::T,
-      !*#{?}::T,
-      auto_at?#{*}&lt;=#{?}(#{?}::T,#{?}::T),
-      auto_to(),
-      catch?C{*}&lt;=A(B{*}::T),
-      end?noobj{0}&lt;=#{*}(),
-      println?#{*}&lt;=#{?}(#{*}::T),
-      print?#{*}&lt;=#{?}(#{*}::T),
-      at?A&lt;=A(uri{?}::T,#{?}::T),
-      id?A&lt;=A(),
-      id?A{*}&lt;=A{*}(),
-      and?bool&lt;=A(bool::T,bool::T,bool{?}::T,bool{?}::T,bool{?}::T,bool{?}::T,bool{?}::T,bool{?}::T),
-      or?bool&lt;=A(bool::T,bool::T,bool{?}::T,bool{?}::T,bool{?}::T,bool{?}::T,bool{?}::T,bool{?}::T),
-      apply(#{*}::T),
-      map?B&lt;=A(B::T),
-      map?B{?}&lt;=A{?}(B{?}::T),
-      filter?A{?}&lt;=A(#{?}::T),
-      side?A&lt;=A(#::T),
-      tid(),
-      vid(),
-      vid?A&lt;=A(uri::T),
-      else(#{?}::T),
-      is?A{?}&lt;=A{?}(isa(bool::T).else(false)),
-      ?#::T,
-      matches?bool&lt;=#{?}(#{?}::T),
-      block?B&lt;=A{?}(B::T),
-      split(#{+}::T),
-      choose(rec::T),
-      merge?lst&lt;=A{*}(lst::T),
-      merge?#{*}&lt;=A{*}(#{*}::T),
-      merge?A{*}&lt;=A{*}(A{*}::T),
-      not(bool::T),
-      eq?bool&lt;=A(A::T),
-      neq?bool&lt;=A(A::T),
-      to?A{?}&lt;=A{?}(uri::T),
-      *uri::T,
-      ref(#{*}::T),
-      source?B{*}&lt;=A{?}(str::T),
-      type(),
-      cc?int&lt;=A{*}(),
-      cc?A{*}&lt;=A(int::T),
-      throw?fail&lt;=#{*}(#{?}::T),
-      parent(),
-      count?int&lt;=A{*}(),
-      skip?A{*}&lt;=A{*}(int::T),
-      take?A{*}&lt;=A{*}(int::T),
-      reify?rec&lt;=A(),
-      reduce(#::T),
-      where?A{?}&lt;=A(B::T),
-      group?rec&lt;=#{*}(rec::T),
-      eval?#{*}&lt;=#{?}(#::T),
-      swap?A&lt;=A(B::T),
-      rshift?B{*}&lt;=A(C{*}::T),
-      lshift?B{*}&lt;=A(),
-      start?A{**}&lt;=noobj{0}(A{**}::T)],
- const  =&gt;[
-      noobj,
-      none@none],
- type   =&gt;[
-      #::T,
-      bool::T,
-      int::T,
-      real::T,
-      bytes::T,
-      str::T,
-      uri::T,
-      rel::T,
-      lst::T,
-      rec::T,
-      instset::T,
-      inst::T,
-      code::T,
-      fail::T,
-      space{*}::T,
-      memspace::T,
-      stack::T,
-      qproc{?}::T,
-      subq::T,
-      sub::T,
-      typeq::T,
-      docq::T,
-      incrq::T,
-      constq::T]]@/m</code></pre>
+                    <pre><code></code></pre>
                 </div>
             </div>
         </div>
@@ -526,7 +253,7 @@ bin/metatron</code></pre>
 
 <div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <button class="btn btn-outline-secondary" disabled>Consts <span class="badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">Types <span class="badge bg-secondary">8</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="badge bg-secondary">244</span></a><a href="#spaces" class="btn btn-outline-primary">Spaces <span class="badge bg-secondary">3</span></a><a href="#rewrites" class="btn btn-outline-primary">Rewrites <span class="badge bg-secondary">8</span></a>
+        <button class="btn btn-outline-secondary" disabled>Consts <span class="badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">Types <span class="badge bg-secondary">8</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="badge bg-secondary">242</span></a><a href="#spaces" class="btn btn-outline-primary">Spaces <span class="badge bg-secondary">3</span></a><a href="#rewrites" class="btn btn-outline-primary">Rewrites <span class="badge bg-secondary">8</span></a>
     </div>
 </div>
 
@@ -560,7 +287,7 @@ bin/metatron</code></pre>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">constq::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m_space.html#type-qproc" class="instset-doc-small-code text-info code">qproc::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">qproc::T</span></span>
         </span>
         <small class="text-muted code">/m/space/qproc/constq</small>
     </div>
@@ -572,7 +299,7 @@ bin/metatron</code></pre>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">docq::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m_space.html#type-qproc" class="instset-doc-small-code text-info code">qproc::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">qproc::T</span></span>
         </span>
         <small class="text-muted code">/m/space/qproc/docq</small>
     </div>
@@ -589,7 +316,7 @@ bin/metatron</code></pre>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">incrq::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m_space.html#type-qproc" class="instset-doc-small-code text-info code">qproc::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">qproc::T</span></span>
         </span>
         <small class="text-muted code">/m/space/qproc/incrq</small>
     </div>
@@ -613,11 +340,11 @@ bin/metatron</code></pre>
      {?}sugar  =&gt;{?}[lst::T]]]</code></pre></div>
     <div class="card-body border-top py-2"><p class="mb-0 text-light">an aggregate of consts, types, insts, rewrites, and sugars structuring a domain of discourse</p></div><div class="card-body py-2">
     <small class="text-muted fw-bold">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  {?}rewrite <span class="text-light">=&gt;</span> <span class="text-info">"code&lt;=code instructions that capture the algebraic equalities of the instset"</span>
-  {?}inst <span class="text-light">=&gt;</span> <span class="text-info">"instructions associated with the types of the instset"</span>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  {?}inst <span class="text-light">=&gt;</span> <span class="text-info">"instructions associated with the types of the instset"</span>
   {?}sugar <span class="text-light">=&gt;</span> <span class="text-info">"custom instruction syntax sugars given to the parser"</span>
   {?}const <span class="text-light">=&gt;</span> <span class="text-info">"constants used across the instset"</span>
-  {?}type <span class="text-light">=&gt;</span> <span class="text-info">"types used to structure objs of the instset"</span></pre>
+  {?}type <span class="text-light">=&gt;</span> <span class="text-info">"types used to structure objs of the instset"</span>
+  {?}rewrite <span class="text-light">=&gt;</span> <span class="text-info">"code&lt;=code instructions that capture the algebraic equalities of the instset"</span></pre>
 </div>
 </div>
 <div class="card mb-3" id="type-qproc">
@@ -664,7 +391,7 @@ qprocs must be attached to a space before use. a space&#x27;s qprocs are accessi
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">subq::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m_space.html#type-qproc" class="instset-doc-small-code text-info code">qproc::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">qproc::T</span></span>
         </span>
         <small class="text-muted code">/m/space/qproc/subq</small>
     </div>
@@ -684,7 +411,7 @@ a?subq         -&gt; |(&gt;&gt;1+1.println(_).to(a)) [-- infinite incr loop     
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">typeq::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m_space.html#type-qproc" class="instset-doc-small-code text-info code">qproc::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">qproc::T</span></span>
         </span>
         <small class="text-muted code">/m/space/qproc/typeq</small>
     </div>
@@ -700,7 +427,7 @@ abc?typeq -&gt; &#x27;not an int&#x27; [-- yields a fail::T --]</code></pre>
 </div>
 
 <div class="container-xxl mb-4" id="instructions">
-    <h3 class="text-primary mb-3">Instructions <span class="badge bg-success">244</span></h3>
+    <h3 class="text-primary mb-3">Instructions <span class="badge bg-success">242</span></h3>
     
 <div class="card mb-3" id="inst-and">
     <div class="card-header d-flex justify-content-between align-items-center py-2
@@ -831,11 +558,11 @@ abc?typeq -&gt; &#x27;not an int&#x27; [-- yields a fail::T --]</code></pre>
 </div>
 </div>
 <div class="tab-pane fade " id="inst-as-doc-4" role="tabpanel" aria-labelledby="inst-as-doc-4-tab">
-    <div class="card-body border-top py-2"><p class="mb-0 text-light">a type casting function \(f(x)\to x\)</p></div><div class="card-body py-2">
+    <div class="card-body border-top py-2"><p class="mb-0 text-light">a type construction function \(f(x)\to x\)</p></div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">"any obj" <span class="text-light">=&gt;</span> "the lhs obj as the arg type"</pre>
     <small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  0 <span class="text-light">=&gt;</span> <span class="text-info">"the type to cast to"</span></pre>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  0 <span class="text-light">=&gt;</span> <span class="text-info">"the type to construct from the lhs"</span></pre>
 </div>
 </div>
     </div>
@@ -846,11 +573,11 @@ abc?typeq -&gt; &#x27;not an int&#x27; [-- yields a fail::T --]</code></pre>
                 text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">at</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#" data-bs-toggle="tooltip" title="generic domain" class="code text-info">A</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#" data-bs-toggle="tooltip" title="generic range" class="code text-success">A</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#{?}.html#type-#" data-bs-toggle="tooltip" title="maybe domain" class="code text-info">#{?}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#" data-bs-toggle="tooltip" title="maybe some generic range" class="code text-success">A{*}</a></span></span>
         </span>
-        <small class="text-muted code">/m/inst/at?A&lt;=A</small>
+        <small class="text-muted code">/m/inst/at?A{*}&lt;=#{?}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-at-doc-0-tab').click();document.getElementById('inst-at-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">at?A&lt;=A(uri{?}::T,#{?}::T){&lt;j&gt;}</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-at-doc-0-tab').click();document.getElementById('inst-at-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">at?A{*}&lt;=#{?}(uri::T){&lt;j&gt;}</code></pre></div>
     
 </div>
 <div class="card mb-3" id="inst-authority">
@@ -906,12 +633,17 @@ abc?typeq -&gt; &#x27;not an int&#x27; [-- yields a fail::T --]</code></pre>
                 text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">auto_to</span>
-            
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#{?}.html#type-#" data-bs-toggle="tooltip" title="maybe domain" class="code text-info">#{?}</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#.html#type-#" data-bs-toggle="tooltip" title="range" class="code text-success">#</a></span></span>
         </span>
-        <small class="text-muted code">/m/inst/auto_to</small>
+        <small class="text-muted code">/m/inst/auto_to?#&lt;=#{?}</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-auto_to-doc-0-tab').click();document.getElementById('inst-auto_to-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">auto_to(){&lt;j&gt;}</code></pre></div>
-    
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-auto_to-doc-0-tab').click();document.getElementById('inst-auto_to-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">auto_to?#&lt;=#{?}(#::T){&lt;j&gt;}</code></pre></div>
+    <div class="card-body border-top py-2"><p class="mb-0 text-light">like !*(vid), except that the obj arg is converted to an !* reference (an inverse dereference) immediately upon inst access (no inst apply required).</p></div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">"any obj" <span class="text-light">=&gt;</span> "the uri (if possible) that refers to the obj arg"</pre>
+    <small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  0 <span class="text-light">=&gt;</span> <span class="text-info">"the obj to reference"</span></pre>
+</div>
 </div>
 <div class="card mb-3" id="inst-barrier">
     <div class="card-header d-flex justify-content-between align-items-center py-2
@@ -1069,7 +801,7 @@ abc?typeq -&gt; &#x27;not an int&#x27; [-- yields a fail::T --]</code></pre>
         <small class="text-muted code">/m/inst/dedup?A{*}&lt;=A{*}</small>
     </div>
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-dedup-doc-0-tab').click();document.getElementById('inst-dedup-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">dedup?A{*}&lt;=A{*}(){&lt;j&gt;}</code></pre></div>
-    <div class="card-body border-top py-2"><p class="mb-0 text-light">a deduplication function f({c}X)-&gt;{d&lt;=c}X</p></div><div class="card-body py-2">
+    <div class="card-body border-top py-2"><p class="mb-0 text-light">a deduplication function \(f({c}X) \to {1&lt;=c}X\)</p></div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">"any objs" <span class="text-light">=&gt;</span> "the deduplicated objs"</pre>
 </div>
 </div>
@@ -2089,7 +1821,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
         <small class="text-muted code">/m/inst/tid?/m/uri&lt;=#</small>
     </div>
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-tid-doc-0-tab').click();document.getElementById('inst-tid-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">tid?uri&lt;=#(){&lt;j&gt;}</code></pre></div>
-    <div class="card-body border-top py-2"><p class="mb-0 text-light">the geometric location of the lhs obj [equivalent to f(x) ~ vid(type())]</p></div><div class="card-body py-2">
+    <div class="card-body border-top py-2"><p class="mb-0 text-light">the spatial location of the lhs obj [equivalent to f(x) ~ vid(type())]</p></div><div class="card-body py-2">
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">"any obj" <span class="text-light">=&gt;</span> "the lhs obj type id"</pre>
 </div>
 </div>
@@ -2146,11 +1878,11 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
                 text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">update</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-lst" data-bs-toggle="tooltip" title="domain" class="code text-info">/m/lst</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-lst" data-bs-toggle="tooltip" title="range" class="code text-success">/m/lst</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#" data-bs-toggle="tooltip" title="generic domain" class="code text-info">A</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#" data-bs-toggle="tooltip" title="generic range" class="code text-success">B</a></span></span>
         </span>
-        <small class="text-muted code">/m/inst/update?/m/lst&lt;=/m/lst</small>
+        <small class="text-muted code">/m/inst/update?B&lt;=A</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-update-doc-0-tab').click();document.getElementById('inst-update-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">update?lst&lt;=lst(lst::T){&lt;j&gt;}</code></pre><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-update-doc-0-tab').click();document.getElementById('inst-update-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">update?rec{?}&lt;=rec(rec::T){&lt;j&gt;}</code></pre><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-update-doc-0-tab').click();document.getElementById('inst-update-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">update?rec{?}&lt;=rec(rel::T){&lt;j&gt;}</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-update-doc-0-tab').click();document.getElementById('inst-update-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">update?B&lt;=A(B::T){&lt;j&gt;}</code></pre></div>
     
 </div>
 <div class="card mb-3" id="inst-uri:c">
@@ -2170,11 +1902,11 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
                 text-light border-bottom border-secondary">
         <span>
             <span class="code text-primary fw-bold">vid</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="#.html#type-#" data-bs-toggle="tooltip" title="domain" class="code text-info">#</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-uri" data-bs-toggle="tooltip" title="maybe range" class="code text-success">/m/uri{?}</a></span></span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#" data-bs-toggle="tooltip" title="generic domain" class="code text-info">A</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-uri" data-bs-toggle="tooltip" title="maybe range" class="code text-success">/m/uri{?}</a></span></span>
         </span>
-        <small class="text-muted code">/m/inst/vid?/m/uri{?}&lt;=#</small>
+        <small class="text-muted code">/m/inst/vid?/m/uri{?}&lt;=A</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-vid-doc-0-tab').click();document.getElementById('inst-vid-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">vid?uri{?}&lt;=#(){&lt;j&gt;}</code></pre><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-vid-doc-1-tab').click();document.getElementById('inst-vid-doc-1').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">vid?A&lt;=A(uri::T){&lt;j&gt;}</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-vid-doc-0-tab').click();document.getElementById('inst-vid-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">vid?uri{?}&lt;=A(){&lt;j&gt;}</code></pre><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-vid-doc-1-tab').click();document.getElementById('inst-vid-doc-1').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">vid?A&lt;=A(uri::T){&lt;j&gt;}</code></pre></div>
     
 <div class="card-body border-top p-0">
     <ul class="nav nav-pills p-2 bg-dark" id="inst-vid-pills" role="tablist">
@@ -2202,8 +1934,15 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
     <div class="tab-content" id="inst-vid-content">
         
 <div class="tab-pane fade show active" id="inst-vid-doc-0" role="tabpanel" aria-labelledby="inst-vid-doc-0-tab">
-    <div class="card-body border-top py-2"><p class="mb-0 text-light">the spatial location of the lhs obj</p></div><div class="card-body py-2">
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">"any obj" <span class="text-light">=&gt;</span> "the lhs obj value id"</pre>
+    <div class="card-body border-top py-2"><p class="mb-0 text-light">specifies the spatial location of the lhs obj</p></div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">"any obj" <span class="text-light">=&gt;</span> "a spatial location for the lhs obj"</pre>
+    <small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  0 <span class="text-light">=&gt;</span> <span class="text-info">"the value id for the lhs obj"</span></pre>
+</div>
+<div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">1@abc.vid() [-- abc --]</code></pre>
 </div>
 </div>
 <div class="tab-pane fade " id="inst-vid-doc-1" role="tabpanel" aria-labelledby="inst-vid-doc-1-tab">
@@ -2273,10 +2012,7 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
            class="code text-primary fw-bold text-decoration-none">memspace</a>
         <small class="text-muted code">/m/space/memspace</small>
     </div>
-    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[][
-   inst?memspace&lt;=#{?}(?[
- pattern   =&gt; uri::T,
- {?}persist=&gt; file::T])]@/m/space/memspace</code></pre></div>
+    
     <div class="card-body border-top py-2"><p class="mb-0 text-light">an in-memory space with objs indexed by a topic trie</p></div>
 </div>
 <div class="card mb-3" id="space-qproc">
@@ -2285,14 +2021,7 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
            class="code text-primary fw-bold text-decoration-none">qproc</a>
         <small class="text-muted code">/m/space/qproc</small>
     </div>
-    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">rec::T[][
-   inst?qproc&lt;=#{?}([
- pattern       =&gt; uri::T,
- pre_write{?}  =&gt; inst::T,
- post_write{?} =&gt; inst::T,
- qless_write{?}=&gt; inst::T,
- pre_read{?}   =&gt; inst::T,
- post_read{?}  =&gt; inst::T])]@/m/space/qproc</code></pre></div>
+    
     <div class="card-body border-top py-2"><p class="mb-0 text-light">qprocs (query processors) are optional space components.
 qproc behaviors are driven by a qprocs specified uri ?-query pattern.
 not all spaces have the same set of attached qprocs.
@@ -2306,8 +2035,7 @@ qprocs must be attached to a space before use. a space&#x27;s qprocs are accessi
            class="code text-primary fw-bold text-decoration-none">stack</a>
         <small class="text-muted code">/m/space/stack</small>
     </div>
-    <div class="mt-2"><pre class="mb-0"><code class="language-mtron">space::T[][
-   inst?stack&lt;=#{?}(?[pattern=&gt;uri::T])]@/m/space/stack</code></pre></div>
+    
     <div class="card-body border-top py-2"><p class="mb-0 text-light">a thread local stack used for global variables and machine inst frames</p></div>
 <div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -2413,7 +2141,7 @@ a-&gt;2+*a                   [-- 4 via sugar&#x27;d writing/reading a --]</code>
 <div class="container-xxl py-3 text-center">
     <hr class="border-secondary">
     <small class="text-muted">
-        generated by metatron instset doc generator on build 0-2026-05-02 21:05:47<br>
+        generated by metatron instset doc generator on build 0-2026-05-08 03:25:31<br>
         © PhaseShift Studio, LLC
     </small>
 </div></main>

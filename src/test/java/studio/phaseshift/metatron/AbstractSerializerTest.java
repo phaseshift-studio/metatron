@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -23,6 +23,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 
 import java.util.Objects;
 
@@ -136,15 +137,16 @@ public abstract class AbstractSerializerTest<T> extends AbstractMetatronTest {
             "[,]",
             "< >",
             "[a,[b,12,'abc'],[a=>b,c=>[c=>d]]]",
-            "rec{0}::[a,[b,12,'abc'],[a=>b,c=>[c=>d]]]",
-           // "{1,2,3,4,5}",
-           // "{true, false, 1,0, -100, 12.55, -12.35}",
-           // "{[1,2],[3,4],[5,6]}",
-           // "{true, false, {1,0}, {-100, 12.35, -12.35}}",
+            "rec{0}::[a=>b,c=>[c=>d]]",
+            "rec::[a=>b,c=>[c=>d]]",
+            "{1,2,3,4,5}",
+            "{true, false, 1,0, -100, 12.55, -12.35}",
+            "{[1,2],[3,4],[5,6]}",
+            "{true, false, {1,0}, {-100, 12.35, -12.35}}",
             "{,}"
     }, delimiter = '|')
     public void testSerializeDeserializeObj(final String objString) {
-        final Obj obj = mParser.eval(objString);
+        final Obj obj = ObjmtronSerializer.parse(objString).apply();
         Obj obj2 = null;
         try {
             final T buffer = this.serializer.write(obj);
@@ -159,7 +161,7 @@ public abstract class AbstractSerializerTest<T> extends AbstractMetatronTest {
                     LOG.debug("ignoring fail for %s <=> %s", objString, obj);
             } else {
                 assertEquals(obj, obj);
-                assertEquals(obj.type(),obj2.type());
+                assertEquals(obj.type(), obj2.type());
             }
 
         }

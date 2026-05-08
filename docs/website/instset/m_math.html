@@ -244,41 +244,7 @@ bin/metatron</code></pre>
             <div id="flush-collapseOne" class="accordion-collapse collapse"
                 aria-labelledby="flush-headingOne" data-bs-parent="#accordianInstSet">
                 <div class="accordion-body">
-                    <pre><code>instset::[
- pattern=&gt; /m/math/#,
- q      =&gt;[docq::[
-       pre_read =&gt;    inst?#{*}&lt;=#{?}(uri::T),
-       pre_write=&gt;    inst?#{*}&lt;=#{?}(uri::T,#::T),
-       pattern  =&gt;    docq,
-       obj      =&gt;memspace::[pattern=&gt;&lt;#&gt;],
-       inst     =&gt;instset::[pattern=&gt;&lt;#&gt;]]],
- space  =&gt;[super=&gt;!*/m],
- type   =&gt;[
-      data_size::T,
-      bB::T,
-      kB::T,
-      mB::T,
-      gB::T,
-      tB::T,
-      pB::T],
- inst   =&gt;[
-      cos?real&lt;=#{?}(as(real::T)),
-      sin?real&lt;=#{?}(real::T),
-      tan?real&lt;=#{?}(real::T),
-      sqrt?real&lt;=#{?}(real::T),
-      pow?real&lt;=#{?}(real::T),
-      atan?real&lt;=#{?}(real::T),
-      atan2?real&lt;=#{?}(real{2}::T),
-      log?real&lt;=#{?}(real::T),
-      log10?real&lt;=#{?}(real::T),
-      exp?real&lt;=#{?}(real::T),
-      abs?real&lt;=#{?}(real::T),
-      ceil?real&lt;=#{?}(real::T),
-      floor?real&lt;=#{?}(real::T),
-      round?int&lt;=#{?}(real::T)],
- const  =&gt;[
-      2.7183@/m/math/e?constq,
-      3.1416@/m/math/pi?constq]]@/m/math</code></pre>
+                    <pre><code></code></pre>
                 </div>
             </div>
         </div>
@@ -338,7 +304,7 @@ bin/metatron</code></pre>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">bB::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m_math.html#type-data_size" class="instset-doc-small-code text-info code">data_size::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">data_size::T</span></span>
         </span>
         <small class="text-muted code">/m/math/bB</small>
     </div>
@@ -361,7 +327,7 @@ bin/metatron</code></pre>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">gB::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m_math.html#type-data_size" class="instset-doc-small-code text-info code">data_size::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">data_size::T</span></span>
         </span>
         <small class="text-muted code">/m/math/gB</small>
     </div>
@@ -373,7 +339,7 @@ bin/metatron</code></pre>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">kB::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m_math.html#type-data_size" class="instset-doc-small-code text-info code">data_size::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">data_size::T</span></span>
         </span>
         <small class="text-muted code">/m/math/kB</small>
     </div>
@@ -385,7 +351,7 @@ bin/metatron</code></pre>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">mB::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m_math.html#type-data_size" class="instset-doc-small-code text-info code">data_size::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">data_size::T</span></span>
         </span>
         <small class="text-muted code">/m/math/mB</small>
     </div>
@@ -397,7 +363,7 @@ bin/metatron</code></pre>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">pB::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m_math.html#type-data_size" class="instset-doc-small-code text-info code">data_size::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">data_size::T</span></span>
         </span>
         <small class="text-muted code">/m/math/pB</small>
     </div>
@@ -409,7 +375,7 @@ bin/metatron</code></pre>
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">tB::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m_math.html#type-data_size" class="instset-doc-small-code text-info code">data_size::T</a></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">data_size::T</span></span>
         </span>
         <small class="text-muted code">/m/math/tB</small>
     </div>
@@ -595,7 +561,7 @@ bin/metatron</code></pre>
 <div class="container-xxl py-3 text-center">
     <hr class="border-secondary">
     <small class="text-muted">
-        generated by metatron instset doc generator on build 0-2026-05-02 21:06:01<br>
+        generated by metatron instset doc generator on build 0-2026-05-08 03:26:02<br>
         © PhaseShift Studio, LLC
     </small>
 </div></main>

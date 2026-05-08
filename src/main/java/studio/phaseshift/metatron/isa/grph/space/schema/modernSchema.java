@@ -22,18 +22,21 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.m.type.Type;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
+import static studio.phaseshift.metatron.Tokens.PATTERN;
+import static studio.phaseshift.metatron.Tokens.TYPE;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.INSTSET_TID;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Real.REAL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -78,19 +81,22 @@ public class modernSchema extends AbstractInstSet {
                     uri("weight"), REAL_TYPE,
                     OUT, PERSON_TYPE,
                     IN, SOFTWARE_TYPE)).create();
-    
+
     public modernSchema() {
-        super(INSTSET_TID, MODERN_SCHEMA_TID);
+        super(mutableMap(uri(PATTERN), uri(MODERN_SCHEMA_TID.extend(ALL))), INSTSET_TID, MODERN_SCHEMA_TID);
     }
 
     @Override
-    public Set<Type> types() {
-        return new HashSet<>(List.of(
-                docWrap(PERSON_TYPE, "a person"),
-                docWrap(SOFTWARE_TYPE, "a software"),
-                docWrap(KNOWS_TYPE, "a knows"),
-                docWrap(CREATED_TYPE, "a created")
-        ));
+    public void setup() {
+        this.jvm().putAll(new LinkedHashMap<>(Map.of(
+                uri(TYPE), lst(
+                        docWrap(PERSON_TYPE, "a person"),
+                        docWrap(SOFTWARE_TYPE, "a software"),
+                        docWrap(KNOWS_TYPE, "a knows"),
+                        docWrap(CREATED_TYPE, "a created")
+                )
+        )));
+        super.setup();
     }
 }
 

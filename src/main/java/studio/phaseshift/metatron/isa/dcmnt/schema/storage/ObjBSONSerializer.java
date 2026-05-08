@@ -26,8 +26,12 @@ import org.bson.codecs.EncoderContext;
 import org.bson.io.BasicOutputBuffer;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.dcmnt.space.dcmntSpace;
+import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.io.type.AbstractObjSerializer;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.PCMonad;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -78,6 +82,10 @@ public class ObjBSONSerializer extends AbstractObjSerializer<BsonValue> {
 
     // Optional: Function to build reference paths (set by dcmntSpace)
     private Function<ReferenceInfo, fURI> referencePathBuilder = null;
+
+    // Space-local URI scheme, used to discriminate intra- vs cross-space auto_from refs.
+    // When set, writeInst encodes cross-space refs as $ref: "scheme:collection".
+    private String localScheme = null;
     //  private ObjFactory objFactory = MObjFactory.single();
 
     /**
@@ -96,6 +104,15 @@ public class ObjBSONSerializer extends AbstractObjSerializer<BsonValue> {
      */
     public void setReferencePathBuilder(final Function<ReferenceInfo, fURI> builder) {
         this.referencePathBuilder = builder;
+    }
+
+    /**
+     * Sets the space-local URI scheme. When set, auto_from Insts with a different scheme
+     * are serialized as cross-space DBRefs ({@code $ref: "scheme:collection"}) instead of
+     * bare collection names.
+     */
+    public void setLocalScheme(final String scheme) {
+        this.localScheme = scheme;
     }
 
     public static ObjBSONSerializer single() {
@@ -247,9 +264,19 @@ public class ObjBSONSerializer extends AbstractObjSerializer<BsonValue> {
                         final BsonValue idValue = refDoc.get("$id");
                         final String id = idValue.isObjectId()
                                 ? idValue.asObjectId().getValue().toHexString()
+                                : idValue.isString()
+                                ? idValue.asString().getValue()
                                 : idValue.toString();
 
-                        final fURI referencedPath = this.referencePathBuilder.apply(new ReferenceInfo(collection, id));
+                        final fURI referencedPath;
+                        if (collection.indexOf(':') >= 0) {
+                            // Cross-space DBRef: $ref: "grph:V" → grph:V/1
+                            referencedPath = f(collection).extend(id);
+                        } else {
+                            // Intra-space DBRef: $ref: "users" → mongo:users/507f...
+                            referencedPath = this.referencePathBuilder.apply(
+                                    new ReferenceInfo(collection, id));
+                        }
                         return rel(uri(key), auto_from_(referencedPath).tryToInst());
                     }
 
@@ -334,5 +361,79 @@ public class ObjBSONSerializer extends AbstractObjSerializer<BsonValue> {
                 .map(kv -> new BsonElement(kv.getKey().jvm().toString(), this.write(kv.getValue())))
                 .forEach(elements::add);
         return new BsonDocument(elements);
+    }
+
+    // -- structured type overrides (required to prevent default infinite recursion) --
+
+    @Override
+    public BsonDocument writeInst(final Inst inst) {
+        final fURI baseTid = inst.tid().basePath();
+        if (baseTid.equals(mInstSet.AUTO_FROM_INST_TID) ||
+            baseTid.equals(mInstSet.AUTO_AT_INST_TID)) {
+            // Serialize auto_from / auto_at as a MongoDB DBRef.
+            // Intra-space:  $ref: "collection",     $id: value  (native MongoDB footprint)
+            // Cross-space: $ref: "scheme:collection", $id: value  (scheme prefixed in $ref)
+            final fURI refURI = inst.arg(0).uriValue();
+            final List<String> segs = refURI.segments();
+            final String id = segs.getLast();
+            final String collection;
+            if (this.localScheme != null && refURI.hasScheme() &&
+                !refURI.scheme().equals(this.localScheme)) {
+                // Cross-space: g:V/1 → $ref: "g:V"
+                collection = refURI.scheme() + ":" + segs.getFirst();
+            } else {
+                // Intra-space: mongo:users/507f... → $ref: "users"
+                collection = segs.getFirst();
+            }
+            // 24-char hex → BsonObjectId (native MongoDB); otherwise BsonString
+            final BsonValue idValue = (id != null && id.matches(dcmntSpace.OBJECT_ID_REGEX))
+                    ? new BsonObjectId(new org.bson.types.ObjectId(id))
+                    : new BsonString(id != null ? id : "");
+            return new BsonDocument(List.of(
+                    new BsonElement("$ref", new BsonString(collection)),
+                    new BsonElement("$id", idValue)
+            ));
+        }
+        throw MTronException.of("unsupported Inst type in BSON serializer: %s", inst.tid());
+    }
+
+    @Override
+    public BsonDocument writeRel(final Rel rel) {
+        return new BsonDocument(List.of(
+                new BsonElement("k", this.write(rel.jvm().get0())),
+                new BsonElement("v", this.write(rel.jvm().get1()))
+        ));
+    }
+
+    @Override
+    public BsonString writeCode(final Code code) {
+        return new BsonString(code.toString());
+    }
+
+    @Override
+    public BsonArray writeObjs(final Objs objs) {
+        final List<BsonValue> out = new ArrayList<>();
+        objs.jvm().forEach(obj -> out.add(this.write(obj)));
+        return new BsonArray(out);
+    }
+
+    @Override
+    public BsonString writeType(final Type type) {
+        return new BsonString(type.toString());
+    }
+
+    @Override
+    public BsonDocument writeMonad(final PCMonad monad) {
+        return new BsonDocument(List.of(
+                new BsonElement("obj", this.write(monad.obj())),
+                new BsonElement("inst", this.write(monad.inst()))
+        ));
+    }
+
+    @Override
+    public BsonDocument writeMachine(final Machine machine) {
+        return new BsonDocument(List.of(
+                new BsonElement("code", this.writeCode(machine.code()))
+        ));
     }
 }

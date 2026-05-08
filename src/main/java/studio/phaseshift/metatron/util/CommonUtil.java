@@ -106,8 +106,10 @@ public final class CommonUtil {
 
     public static void close(final Object object) {
         try {
-            if (object instanceof Closeable)
-                ((Closeable) object).close();
+            // AutoCloseable covers both java.io.Closeable and java.sql.Connection
+            // (which extends AutoCloseable via Wrapper, not via java.io.Closeable)
+            if (object instanceof AutoCloseable)
+                ((AutoCloseable) object).close();
         } catch (final Exception e) {
             throw MTronException.of(e);
         }

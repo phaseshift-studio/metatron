@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -27,12 +27,15 @@ import studio.phaseshift.metatron.isa.mach.io.type.ObjByteBufferSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
+import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.INSTSET_TID;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_ISA_TID;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 
 /*
@@ -50,23 +53,18 @@ public class ioInstSet extends AbstractInstSet {
     public static final Type OBJ_SERIAL_TYPE = Type.Builder.build().tid(OBJ_SERIALIZER_TID).vid(OBJ_SERIALIZER_TID).create();
 
     public ioInstSet() {
-        super(INSTSET_TID, IO_ISA_TID);
+        super(mutableMap(uri(PATTERN), uri(IO_ISA_TID.extend(ALL))), INSTSET_TID, IO_ISA_TID);
     }
 
     @Override
-    public Set<Obj> consts() {
-        return new LinkedHashSet<>(List.of(
-                new ObjmtronSerializer(),
-                new ObjByteBufferSerializer(),
-                new ObjSimpleJSONSerializer()
-        ));
+    public void setup() {
+        this.jvm().putAll(new LinkedHashMap<>(Map.of(
+                uri(TYPE), lst(OBJ_SERIAL_TYPE),
+                uri(CONST), lst(
+                        new ObjmtronSerializer(),
+                        new ObjByteBufferSerializer(),
+                        new ObjSimpleJSONSerializer())
+        )));
+        super.setup();
     }
-
-    @Override
-    public Set<Type> types() {
-        return new LinkedHashSet<>(List.of(
-                OBJ_SERIAL_TYPE
-        ));
-    }
-
 }
