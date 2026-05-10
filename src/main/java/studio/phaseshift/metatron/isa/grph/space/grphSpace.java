@@ -30,6 +30,7 @@
  import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph;
  import studio.phaseshift.metatron.furi.fURI;
  import studio.phaseshift.metatron.isa.AbstractSpace;
+ import studio.phaseshift.metatron.isa.SchemaSpace;
  import studio.phaseshift.metatron.isa.Space;
  import studio.phaseshift.metatron.isa.grph.grphInstSet;
  import studio.phaseshift.metatron.isa.grph.space.schema.modernSchema;
@@ -55,6 +56,7 @@
  import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TID;
  import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.failure_;
  import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
+ import static studio.phaseshift.metatron.isa.m.type.InstSet.instset0;
  import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
  import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
  import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
@@ -66,11 +68,12 @@
  /*
   * @author Marko A. Rodriguez (http://markorodriguez.com)
   */
- public class grphSpace extends AbstractSpace<Graph> {
+ public class grphSpace extends AbstractSpace<Graph> implements SchemaSpace {
 
      public static final String GRAPH_CONFIGURATION_KEY = "mtron.grph.vid";
      public static final ObjSerializer<String> SERIALIZER = new ObjmtronSerializer();
      public static final Rec GRAPH_CONFIG = rec(uri(GRAPH).maybe().asUri(), URI_TYPE);
+     
 
      protected static ObjFactory FACTORY = null;
      private static final fURI V_SOME = f("V/+");
@@ -80,7 +83,7 @@
              .vid(GRPH_SPACE_TID)
              .isaPredicate(rec(
                      (Obj) uri(ROOT).maybe(), Rec.REC_TYPE,
-                     uri(SCHEMA).maybe(), InstSet.INSTSET_TYPE))
+                     uri(SCHEMA).maybe(), SCHEMA_CONFIG))
              .constructor(
                      instC(mInstSet.M_ISA_INST_TID.dom(ALL.maybe()).rng(GRPH_SPACE_TID),
                              lst(isa_(GRAPH_CONFIG).else_(failure_(str("malformed tp3 config"))).tryToInst()),
@@ -211,7 +214,7 @@
                  throw MTronException.of("cannot read all tp3 space");
              } else {
                  final fURI routed = Space.Helper.routeFromSpace(pattern, this.routes()).asRelative().asNode();
-                 LOG.info("reading tp3 vid: %s => %s", pattern, routed);
+                 LOG.debug("reading tp3 vid: %s => %s", pattern, routed);
                  if (routed.hasScheme()) {
                      return new IdObj(routed, Router.global().read(routed)).iterator();
                  }
@@ -230,7 +233,7 @@
                      else iterator = IteratorUtil.of();
                      return IteratorUtil.stream(iterator).map(v -> IdObj.of(this.elementVID(v), VertexMap.vertexToRec(v, this))).map(idobj -> {
                          if (routed.pathLength() > 2) {
-                             LOG.info("searching for %s and %s", idobj.furi().extend(routed.pretract(2)), routed.pretract(2));
+                             LOG.debug("searching for %s and %s", idobj.furi().extend(routed.pretract(2)), routed.pretract(2));
                              // CommonUtil.sleepThread(10000);
                              return IdObj.of(idobj.furi().extend(routed.pretract(2)), idobj.obj().<VertexMap>jvmAs().get(uri(routed.pretract(2))));
                          } else {
@@ -260,7 +263,7 @@
          return (pattern, obj) -> {
              if (obj.isNoObj()) {
                  this.read(pattern).stream().forEach(e -> {
-                     LOG.info("deleting element %s", e.vid());
+                     LOG.debug("deleting element %s", e.vid());
                      ((ElementMap) e.jvm()).getBase().remove();
                  });
                  return noobj();
@@ -268,7 +271,7 @@
                  if (obj.jvm() instanceof ElementMap) // vertex already exists, all updates already occurred, no need to write it again
                      return obj;
                  final fURI routed = Space.Helper.routeFromSpace(pattern, this.routes());
-                 LOG.info("writing tp3 vid: %s => %s", pattern, routed);
+                 LOG.debug("writing tp3 vid: %s => %s", pattern, routed);
                  if (routed.test(V_SOME)) {
                      final Integer id = Integer.parseInt(routed.name());
                      try { //  a newly created vertex from a rec
@@ -276,15 +279,15 @@
                                  this.sjvm.addVertex(
                                          org.apache.tinkerpop.gremlin.structure.T.label, obj.tid().basePath().toString(),
                                          org.apache.tinkerpop.gremlin.structure.T.id, id));
-                         LOG.info("writing vertex %s => %s", vid, vertex);
+                         LOG.debug("writing vertex %s => %s", vid, vertex);
                          /// SET VERTEX PROPERTIES
                          obj.asRec().jvm().entrySet().stream()
                                  .filter(e -> !e.getKey().equals(grphInstSet.IN) && !e.getValue().equals(grphInstSet.OUT))
                                  .forEach(e -> {
-                                     LOG.info("writing vertex property %s =%s=> %s", vertex, e.getKey(), e.getValue());
+                                     LOG.debug("writing vertex property %s =%s=> %s", vertex, e.getKey(), e.getValue());
                                      ElementMap.Helper.tp3KeyValue kv = new ElementMap.Helper.tp3KeyValue(e.getKey(), e.getValue());
                                      vertex.property((String) kv.key()).remove();
-                                     if (!e.getValue().equals(uri("/noobj")) && !e.getValue().isNoObj())
+                                     if (!e.getValue().equals(Obj.none()))
                                          vertex.property((String) kv.key(), kv.value());
                                  });
                          /// SET VERTEX OUT EDGES
@@ -293,11 +296,11 @@
                                          .elements()
                                          .map(Rel::second)
                                          .forEach(e -> {
-                                             LOG.info("writing edge %s =%s=> %s", vertex, label, e);
+                                             LOG.debug("writing edge %s =%s=> %s", vertex, label, e);
                                              try {
-                                                 LOG.info("reading edge target %s", e);
+                                                 LOG.debug("reading edge target %s", e);
                                                  final Edge edge = vertex.addEdge(label.jvm().get0().uriValue().toString(), ((VertexMap) this.read(e.uriValue()).jvm()).getBase());
-                                                 LOG.info("writing edge %s", edge);
+                                                 LOG.debug("writing edge %s", edge);
                                              } catch (final Exception ex) {
                                                  LOG.warn("unable to write edge %s =%s=> %s: %s", vertex, label, e, ex);
                                              }
@@ -366,12 +369,12 @@
             }
         }
     }*/
-
+     
      @Override
      public void close() {
          try {
              this.sjvm().close();
-             Router.global().write(this.vid().extend("instset"), noobj());
+             SchemaSpace.super.close();
          } catch (final Exception e) {
              LOG.error(MTronException.of(e));
          } finally {

@@ -48,13 +48,13 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.web.space.ws.server.mcp_mtron_wsServer.MCP_MTRON_WS_TID;
-import static studio.phaseshift.metatron.isa.web.space.ws.server.mcp_mtron_wsServer.WS_MCP_MTRON_SERVER_TYPE;
-import static studio.phaseshift.metatron.isa.web.space.ws.server.mcp_wsServer.MCP_WS_TID;
+import static studio.phaseshift.metatron.isa.web.space.ws.server.mcp_mtron_wsHandler.MCP_MTRON_WS_HANDLER_TID;
+import static studio.phaseshift.metatron.isa.web.space.ws.server.mcp_mtron_wsHandler.WS_MCP_MTRON_HANDLER_TYPE;
+import static studio.phaseshift.metatron.isa.web.space.ws.server.mcp_wsHandler.MCP_WS_HANDLER_TID;
 import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_SERVER_TID;
 
 /**
- * Integration tests for {@link mcp_mtron_wsServer}.
+ * Integration tests for {@link mcp_mtron_wsHandler}.
  * <p>
  * All tests require a live WebSocket environment because {@code mcp_mtron_wsServer}'s
  * built-in tools ({@code list_space}, {@code router_info}, {@code list_inst})
@@ -65,7 +65,7 @@ import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_SERVER_TID;
  * the correct route table, ensuring the Router has a properly registered WS space available
  * for every test — both for direct handler invocations and live WebSocket round-trips.
  */
-public class mcp_mtron_wsServerIntegrationTest extends AbstractWebSocketServerIntegrationTest {
+public class mcp_mtron_wsHandlerIntegrationTest extends AbstractWebSocketServerIntegrationTest {
 
     /**
      * Lightweight in-memory holding space for the direct-invocation server vid.
@@ -88,7 +88,7 @@ public class mcp_mtron_wsServerIntegrationTest extends AbstractWebSocketServerIn
         return wsSpace.of(rec(
                 uri(HOST), uri(hostUri.toString()),
                 uri(PATTERN), uri("ws://#"),
-                uri(ROUTE), rec(uri("/mcp-mtron"), uri(MCP_MTRON_WS_TID.toString()))
+                uri(ROUTE), rec(uri("/mcp-mtron"), uri(MCP_MTRON_WS_HANDLER_TID.toString()))
         ).jvm(), f("/sys/space/ws/mcp-mtron/test"));
     }
 
@@ -102,7 +102,7 @@ public class mcp_mtron_wsServerIntegrationTest extends AbstractWebSocketServerIn
     public void createServer() {
         this.testHoldingSpace = memSpace.of(f("/test/#"), f("/sys/space/test/mcp-mtron-direct"));
         final fURI vid = f("/test/" + getClass().getSimpleName() + "/" + System.nanoTime());
-        this.server = new mcp_mtron_wsServer(
+        this.server = new mcp_mtron_wsHandler(
                 new LinkedHashMap<>(Map.of(
                         uri(IN), uri(Content.ContentType.APPLICATION_JSON.value),
                         uri(OUT), uri(Content.ContentType.APPLICATION_JSON.value))),
@@ -125,14 +125,14 @@ public class mcp_mtron_wsServerIntegrationTest extends AbstractWebSocketServerIn
 
     @Test
     public void testMcpMtronTIDNamespace() {
-        assertTrue(MCP_MTRON_WS_TID.toString().contains("wsspace"));
-        assertTrue(MCP_MTRON_WS_TID.toString().contains("mcp_mtron_ws"));
+        assertTrue(MCP_MTRON_WS_HANDLER_TID.toString().contains("wsspace"));
+        assertTrue(MCP_MTRON_WS_HANDLER_TID.toString().contains("mcp_mtron_ws"));
     }
 
     // todo: test type, not tid
     @Test
     public void testMcpMtronTypeIsSubtypeOfMcpWs() {
-        assertEquals(MCP_WS_TID, WS_MCP_MTRON_SERVER_TYPE.tid(),
+        assertEquals(MCP_WS_HANDLER_TID, WS_MCP_MTRON_HANDLER_TYPE.tid(),
                 "mcp_mtron type should declare mcp_ws as its parent type");
     }
 
@@ -140,7 +140,7 @@ public class mcp_mtron_wsServerIntegrationTest extends AbstractWebSocketServerIn
     @Test
     public void testMcpWsTypeDeclaresMcpServerAsParent() {
         // mcp_ws declares WS_SERVER_TID as its tid.
-        assertEquals(WS_SERVER_TID, mcp_wsServer.WS_MCP_SERVER_TYPE.tid(),
+        assertEquals(WS_SERVER_TID, mcp_wsHandler.WS_MCP_HANDLER_TYPE.tid(),
                 "mcp_ws type should declare ws_server as its parent type");
     }
 
@@ -292,7 +292,7 @@ public class mcp_mtron_wsServerIntegrationTest extends AbstractWebSocketServerIn
     public void testCallerSuppliedToolsWin() {
         // If the caller provides their own tool rec, buildJvm() should not overwrite it.
         final fURI vid = f("/test/" + getClass().getSimpleName() + "/custom-" + System.nanoTime());
-        final mcp_mtron_wsServer customServer = new mcp_mtron_wsServer(
+        final mcp_mtron_wsHandler customServer = new mcp_mtron_wsHandler(
                 new LinkedHashMap<>(Map.of(
                         uri(IN), uri(Content.ContentType.APPLICATION_JSON.value),
                         uri(OUT), uri(Content.ContentType.APPLICATION_JSON.value),

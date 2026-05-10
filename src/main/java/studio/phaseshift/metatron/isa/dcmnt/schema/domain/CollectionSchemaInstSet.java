@@ -46,7 +46,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  * <p>Uses the {@code setup()} model (jvm map pre-loaded with types) to avoid calling
  * {@code types()} during super-constructor execution before fields are initialized.
  *
- * <p><b>Routing safety</b>: VIDs MUST be in the {@code /m/} namespace. A VID in the
+ * <p><b>Routing safety</b>: A VID in the
  * dcmntSpace's own data pattern (e.g. {@code mongo:schema/...}) would route back into
  * the space via {@code Router.global().addSpace()} causing infinite recursion.
  *

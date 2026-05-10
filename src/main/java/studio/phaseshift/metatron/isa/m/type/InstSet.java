@@ -18,7 +18,9 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
+import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -44,6 +46,10 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 public interface InstSet extends Space {
+
+    InstSet instset0 = (new AbstractInstSet(false) {
+    }).c(cInt.ZERO()).as();
+
     Type INSTSET_TYPE = Type.Builder.build().tid(REC_TID).vid(INSTSET_TID)
             .isaPredicate(rec(
                     uri(CONSTQ).maybe().asUri(), lst(T(ALL.maybe())),
@@ -129,7 +135,7 @@ public interface InstSet extends Space {
 
     static void importInstSet(final fURI vid, final fURI prefix) {
         importInstSetStream(vid, prefix).forEach(isa -> {
-            Graphitty.log(isa.getClass()).error("loading instruction set: %s",isa);
+            Graphitty.log(isa.getClass()).error("loading instruction set: %s", isa);
         });
     }
 

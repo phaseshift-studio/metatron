@@ -96,6 +96,10 @@ public class MType extends MObj implements Type {
     @Override
     public boolean equals(final Object other) {
         //return other instanceof Type && (Objects.equals(this.vid(), ((Type) other).vid()) || (Objects.equals(this.tid, ((Type) other).tid()) && Objects.equals(this.jvm(), ((Type) other).jvm())));
+        if (!(other instanceof Obj))
+            return false;
+        if (this.isNoObj() && ((Obj) other).isNoObj())
+            return true;
         return other instanceof Type && Objects.equals(this.vid, ((Type) other).vid()) && Objects.equals(this.tid, ((Type) other).tid());
     }
 

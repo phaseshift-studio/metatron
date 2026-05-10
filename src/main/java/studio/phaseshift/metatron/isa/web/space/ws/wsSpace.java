@@ -118,7 +118,7 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
         /*if (null != vid)
             this.at(ROUTE, this.at(ROUTE).orElse(rec0())
                     .plus(rec(this.pattern.host(null).scheme(null).retractPattern().extend("wsmtron").toUri(), WS_MTRON_SERVER_TYPE))
-                    .plus(rec(this.pattern.host(null).scheme(null).retractPattern().extend("wsmcp").toUri(), WS_MCP_SERVER_TYPE)), MUTABLE);*/
+                    .plus(rec(this.pattern.host(null).scheme(null).retractPattern().extend("wsmcp").toUri(), WS_MCP_HANDLER_TYPE)), MUTABLE);*/
     }
 
     public static wsSpace of(final Map<Obj, Obj> config, final fURI vid) {

@@ -101,7 +101,6 @@ public interface Space extends Rec, Closeable {
     default void close() {
         try {
             CommonUtil.close(this.sjvm());
-            //CommonUtil.close(this.jvm());
         } catch (final Exception e) {
             throw MTronException.of(e);
         } finally {

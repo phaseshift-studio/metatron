@@ -136,19 +136,19 @@ public class grphSpaceTest extends AbstractSpaceTest {
     @CsvSource(value = {
             "*/g/V/1                                                                  % person::T    % true",
             //  "*/g/V/1                                                                  % rec::T       % true",
-            "*/g/V/1                                                                  % vrtx::T       % true",
+            "*/g/V/1                                                                  % rec::T       % true",
             "*/g/V/2                                                                  % person::T    % true",
             "*/g/V/2                                                                  % software::T  % false",
             "*/g/V/3                                                                  % software::T  % true",
             "*/g/V/3                                                                  % created::T   % false",
             "*/g/V/1                                                                  % created::T   % false",
-            //   "*/g/V/+                                                                  % vrtx{+}::T   % true",
+            //   "*/g/V/+                                                                  % rec{+}::T   % true",
             //   "*/g/V/+                                                                  % rec{+}::T   % true",
             "*/g/V/1{2}                                                               % int{2}::T  % false",
             //   "*/g/V/1.-<[_,_]>-                                                        % rec{2}::T  % true",
             //  "*/g/V/1{2}                                                               % elmt{2}::T  % true",
             "*/g/V/1{2}                                                               % person{2}::T % true",
-            "*/g/V/1{2}                                                               % vrtx{2}::T   % true",
+            "*/g/V/1                                                                  % rec{2}::T   % true",
             "*/g/V/1.-<[_,_]>-                                                        % rec{3}::T   % false",
     }, delimiter = '%')
     public void testTypeInheritance(final String lhs, final String type, final boolean matches) {
@@ -231,13 +231,14 @@ public class grphSpaceTest extends AbstractSpaceTest {
             "*/g/V/1                                                           % */g/V/1>>age                     % 29",
             "*/g/V/1>>=[age=>/noobj]                                           % */g/V/1>>age                     % noobj",
             "*/g/V/1>>=[age=>-<[_]>-]                                          % */g/V/1>>age                     % 29",
+            "*/g/V/1>>=[age=>-<[_,_]>-.sum()]                                  % */g/V/1>>age                     % 58",
             "*/g/V/1>>=[age=>_]                                                % */g/V/1>>age                     % 29",
             "*/g/V/1>>=[name=>-<[_,<<.>>age.as(str::T)]>-.sum?str<=str{*}()]   % */g/V/1>>name                    % \"marko29\"",
             "*/g/V/1>>=[age=><<>>name]                                         % */g/V/1>>age                     % \"marko\"",
             "*/g/V/1>>=[age=>'hello']                                          % */g/V/1>>age                     % \"hello\"",
-            "*/g/V/1>>=[likes=>food]                                           % */g/V/1>>likes                   % food",
-            "*/g/V/1>>=[likes=>|!*/g/V/2]                                      % */g/V/1>>likes                   % */g/V/2",
-            "*/g/V/1>>=[likes=>[!*/g/V/2,!*/g/V/3]]                            % */g/V/1>>likes>-                 % 1-<[*/g/V/2,*/g/V/3]>-",
+            "*/g/V/1>>=+[likes=>food]                                           % */g/V/1>>likes                   % food",
+            "*/g/V/1>>=+[likes=>|!*/g/V/2]                                      % */g/V/1>>likes                   % */g/V/2",
+            "*/g/V/1>>=+[likes=>[!*/g/V/2,!*/g/V/3]]                            % */g/V/1>>likes>-                 % 1-<[*/g/V/2,*/g/V/3]>-",
             // "*/g/V/1>>=[worksWith=>|!*/g/V/3]                                  % */g/V/1                          % */g/V/3"
 
     }, delimiter = '%')

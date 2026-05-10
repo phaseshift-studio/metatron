@@ -1542,12 +1542,12 @@
          );
 
          // Access the schema from space configuration (not via Router)
-         final Obj schema = space.at(uri(SCHEMA));
-         assertNotNull(schema, "Schema should be accessible");
-         assertTrue(schema.isRec(), "Schema should be a rec");
+         final Obj nativeSchema = space.at(uri(f(SCHEMA).extend(NATIVE)));
+         assertNotNull(nativeSchema, "Schema should be accessible");
+         assertTrue(nativeSchema.isRec(), "Schema should be a rec");
 
          // Access the tables list from the schema
-         final Obj tables = schema.asRec().at(uri(TABLES));
+         final Obj tables = nativeSchema.asRec().at(uri(TABLES));
          assertNotNull(tables, "Schema should have a tables field");
          assertTrue(tables.isLst(), "Tables should be a list");
 
@@ -1618,12 +1618,12 @@
 
          try {
              // Access the schema from space configuration (not via Router)
-             final Obj schema = space.at(uri(SCHEMA));
-             assertNotNull(schema, "Schema should be accessible");
-             assertTrue(schema.isRec(), "Schema should be a rec");
+             final Obj nativeSchema = space.nativeSchema();
+             assertNotNull(nativeSchema, "Schema should be accessible");
+             assertTrue(nativeSchema.isRec(), "Schema should be a rec");
 
              // Check that references field exists (unified name, was foreign_keys)
-             final Obj foreignKeys = schema.asRec().at(uri(REFERENCES));
+             final Obj foreignKeys = nativeSchema.asRec().at(uri(REFERENCES));
              assertNotNull(foreignKeys, "Schema should have a references field");
              assertTrue(foreignKeys.isLst(), "Foreign keys should be a list");
 
@@ -1734,7 +1734,7 @@
 
          try {
              // Access the schema from space configuration (not via Router)
-             final Obj schema = space.at(uri(SCHEMA));
+             final Obj schema = space.nativeSchema();
              assertNotNull(schema, "Schema should be accessible");
 
              final Obj foreignKeys = schema.asRec().at(uri(REFERENCES));
@@ -1903,7 +1903,7 @@
 
          try {
              // Access the schema from space configuration (not via Router)
-             final Obj schema = space.at(uri(SCHEMA));
+             final Obj schema = space.nativeSchema();
              assertNotNull(schema, "Schema should be accessible");
 
              final Obj foreignKeys = schema.asRec().at(uri(REFERENCES));

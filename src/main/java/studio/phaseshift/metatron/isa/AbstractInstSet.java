@@ -39,6 +39,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.INSTSET_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.NOOBJ_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
@@ -63,17 +64,17 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
 
     protected boolean checkPattern(final Obj obj) {
         if (obj.isInst()) {
-            if (!obj.tid().test(this.pattern())) {
-                LOG.warn("migrating obj at {{b}}%s{{X}} to respective instset: %s", obj.tid(), obj);
+            if (obj.tid().isAbsolute() && !obj.tid().test(this.pattern())) {
+                LOG.warn("migrating inst at {{b}}%s{{X}} to respective instset: %s", obj.tid(), obj);
                 return false;
             }
-        } else if (null != obj.vid() && !obj.vid().test(this.pattern())) {
-            LOG.warn("migrating obj at {{b}}%s{{X}} to respective instset: %s", obj.tid(), obj);
+        } else if (null != obj.vid() && obj.vid().isAbsolute() && !obj.vid().test(this.pattern())) {
+            LOG.warn("migrating obj at {{b}}%s{{X}} to respective instset: %s", obj.vid(), obj);
             return false;
         }
         return true;
     }
-
+    
     protected boolean checkDepth(final Obj obj, final fURI requiredPrefix) {
         if (false && null != obj.tid() && !obj.tid().hasPrefix(requiredPrefix.toString())) {
             LOG.warn("obj at %s must have prefix at %s: (ignoring) %s", obj.tid(), requiredPrefix, obj);
@@ -210,14 +211,11 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
 
     @Override
     public void close() {
-       /* this.types().forEach(t -> Router.global().registerRewrite(fURI.of(t.tid().name()), null));
-        this.consts().forEach(c -> Router.global().registerRewrite(fURI.of(c.vid().name()), null));
-        this.insts().forEach(i -> Router.global().registerRewrite(fURI.of(i.tid().name()),null));
-        this.rewrites().forEach(r -> Router.global().registerRewrite(fURI.of(r.tid().name()), null));
-        this.types().forEach(t -> Router.writeToSpace(t.tid(),noobj()));
-        this.consts().forEach(c -> Router.writeToSpace(c.vid(),noobj()));
-        this.insts().forEach(i -> Router.writeToSpace(i.tid(),noobj()));
-        this.rewrites().forEach(r -> Router.writeToSpace(r.tid(),noobj()));*/
+        this.types().stream().filter(t->t.vid().test(this.pattern())).forEach(t -> Router.global().unregisterRedirect(f(t.vid().name()), t.vid()));
+        this.consts().stream().filter(c->c.vid().test(this.pattern())).forEach(c -> Router.global().unregisterRedirect(f(c.vid().name()), c.vid()));
+        this.insts().stream().filter(i->i.tid().test(this.pattern())).forEach(i -> Router.global().unregisterRedirect(f(i.tid().name()), i.tid()));
+        this.rewrites().stream().filter(r->r.tid().test(this.pattern())).forEach(r -> Router.global().unregisterRedirect(f(r.tid().name()), r.tid()));
+        super.close();
     }
 
     @Override

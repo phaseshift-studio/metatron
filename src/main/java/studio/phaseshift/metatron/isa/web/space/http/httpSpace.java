@@ -28,6 +28,8 @@ import org.jsoup.Jsoup;
 import studio.phaseshift.metatron.BootLoader;
 import static studio.phaseshift.metatron.Tokens.CTOR;
 import static studio.phaseshift.metatron.Tokens.HOST;
+import static studio.phaseshift.metatron.Tokens.IN;
+import static studio.phaseshift.metatron.Tokens.OUT;
 import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.Tokens.ROUTE;
 import static studio.phaseshift.metatron.Tokens.HTTP;
@@ -36,6 +38,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mInstSet;
+import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
@@ -70,6 +73,9 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -95,9 +101,11 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                     lst(T(REC_TID, isa_(CONFIG))), (lhs, inst) -> httpSpace.of(inst.arg(0).asRec(), inst.arg(0).vid()))).create();
     private static final ObjHTMLSerializer HTML_SERIALIZER = new ObjHTMLSerializer();
     private static final ObjJSONSerializer JSON_TRANSLATOR = new ObjJSONSerializer();
+    private final memSpace cache;
 
     protected httpSpace(final HttpServer server, final Map<Obj, Obj> config, final fURI vid) {
         super(server, config, HTTP_SPACE_TID, vid);
+        this.cache = memSpace.of(rec(uri(PATTERN), config.getOrDefault(uri(PATTERN), noobj())), null);
         // Router.writeToSpace(this.vid.extend(ROUTE), routes);
         try {
             this.at(ROUTE).orElse(rec0()).elements().forEach(r -> {
@@ -106,6 +114,22 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                 if (!hostRoute && r.first().uriValue().hasHost())
                     return;
                 LOG.info("processing http route: %s => %s => %s", r.first().uriValue().toString(), r.second().uriValue().toString(), left.toString());
+
+                // ── Handler route: if the route value resolves to a Type, construct an HttpRec
+                //    via the metatron type system and delegate all HTTP methods to it.
+                //    Route values that aren't Types (file paths, local: URIs, empty URIs)
+                //    fall through to the existing file/Router handler. ──
+                final fURI targetVID = r.second().uriValue();
+                if (!targetVID.toString().isEmpty()) {
+                    final Obj targetObj = Router.global().read(targetVID);
+                    if (targetObj.isType()) {
+                        LOG.info("handling as handler route: %s => %s", left, targetVID);
+                        createHandlerRoute(server, left, targetVID);
+                        return;
+                    }
+                }
+
+                // ── Static file / Router route (existing behavior) ──
                 final HttpContext context = server.createContext(left.toString(),
                         exchange -> {
                             if (exchange.getRequestMethod().equalsIgnoreCase("GET")) {
@@ -289,6 +313,41 @@ public class httpSpace extends AbstractSpace<HttpServer> {
             os.write(response.getBytes());
             os.flush();
         }
+    }
+
+    /**
+     * Create a handler route that delegates all HTTP methods to an {@link HttpRec}
+     * constructed via the metatron type system.  Sessions are stored in the
+     * {@code cache} memSpace, keyed by session VID.
+     */
+    private void createHandlerRoute(final HttpServer server, final fURI path, final fURI typeVID) {
+        server.createContext(path.toString(), exchange -> {
+            final String sid = exchange.getRequestHeaders().getFirst("Mcp-Session-Id");
+            final fURI sessionVid = this.vid().extend(path.name()).extend(sid != null ? sid : "default");
+            try {
+                Obj handler = cache.read(sessionVid);
+                if (handler.isNoObj()) {
+                    handler = rec(mutableMap(
+                            uri(IN), uri(Content.ContentType.APPLICATION_JSON.value),
+                            uri(OUT), uri(Content.ContentType.APPLICATION_JSON.value)
+                    ), typeVID, sessionVid);
+                    cache.write(sessionVid, handler);
+                }
+                if (handler instanceof HttpRec hr) {
+                    hr.handle(exchange);
+                } else {
+                    LOG.error("handler at %s is not an HttpRec: %s", sessionVid, handler.getClass().getName());
+                    exchange.sendResponseHeaders(500, 0);
+                    exchange.close();
+                }
+            } catch (final IOException e) {
+                throw e;
+            } catch (final Exception e) {
+                LOG.error("error in handler route %s: %s", sessionVid, e.getMessage());
+                exchange.sendResponseHeaders(500, 0);
+                exchange.close();
+            }
+        });
     }
 
     private void sendResponse(final Content.ContentType contentType, final Obj obj, final HttpExchange exchange) throws

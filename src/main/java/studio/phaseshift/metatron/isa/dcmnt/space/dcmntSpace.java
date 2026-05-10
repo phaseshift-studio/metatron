@@ -27,10 +27,12 @@ import org.bson.*;
 import org.bson.types.ObjectId;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractSpace;
+import studio.phaseshift.metatron.isa.SchemaSpace;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.dcmnt.schema.domain.CollectionSchemaInstSet;
 import studio.phaseshift.metatron.isa.dcmnt.schema.domain.ExistingCollectionSchema;
 import studio.phaseshift.metatron.isa.dcmnt.schema.storage.ObjBSONSerializer;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
@@ -50,6 +52,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.dcmnt.dcmntInstSet.COLLECTION_TID;
 import static studio.phaseshift.metatron.isa.dcmnt.dcmntInstSet.DCMNT_SPACE_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
+import static studio.phaseshift.metatron.isa.m.type.InstSet.instset0;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
@@ -124,7 +127,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class dcmntSpace extends AbstractSpace<MongoClient> {
+public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpace {
     private static final String NATIVE_CONNACK = "native/connack";
     public static final String ID_FIELD = "_id";
     /**
@@ -202,16 +205,11 @@ public class dcmntSpace extends AbstractSpace<MongoClient> {
         // Schema discovery always runs at startup — root and schema are always populated.
         this.existingCollectionSchema = new ExistingCollectionSchema(this);
         this.existingCollectionSchema.initialize(this.database);
-
-        // Build a CollectionSchemaInstSet in /m/ namespace (never routes back into dcmntSpace).
-        // Type VIDs are under schemaVid/type/{collection} — within checkPattern() scope.
-        // Follow grphSpace pattern: addSpace → setup() → store object directly.
-        final fURI schemaVid = f("/m/dcmnt/space/schema/").extend(this.databaseName);
         final CollectionSchemaInstSet schemaInstset =
-                this.existingCollectionSchema.generateSchemaInstset(schemaVid);
+                this.existingCollectionSchema.generateSchemaInstset(this.vid().extend(f(SCHEMA).extend(INSTSET)));
         Router.global().addSpace(schemaInstset);
         schemaInstset.setup();
-        this.at(uri(SCHEMA), schemaInstset, MUTABLE);
+        this.at(uri(f(SCHEMA).extend(INSTSET)), schemaInstset, MUTABLE);
 
         // Build a structured root type encoding the per-collection type map.
         // Each collection type is a rec::T refinement (space-agnostic, not tied to MongoDB).
@@ -448,7 +446,7 @@ public class dcmntSpace extends AbstractSpace<MongoClient> {
                 this.sjvm().close();
                 LOG.info("closed document store connection at {{b}}%s{{X}}", this.databaseName);
             }
-            Router.global().write(this.vid().extend("instset"), noobj());
+            SchemaSpace.super.close();
         } finally {
             super.close();
         }

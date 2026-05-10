@@ -107,7 +107,24 @@ public class BasicRouter extends AbstractSpace<Map<Obj, Obj>> implements Router 
         throw MTronException.of("router not loaded");
     }
 
+    public void unregisterRedirect(final fURI small, final fURI big) {
+        if (big.isRelative())
+            return;
+        this.smallToBigRoutes.computeRaw(small, (k, v) -> {
+            if (null != v) {
+                v.removeIf(x -> x.equals(big.basePath()));
+                if (v.isEmpty())
+                    return null;
+                return v;
+            }
+            return null;
+        });
+        this.bigToSmallRoutes.remove(uri(big));
+    }
+
     public void registerRedirect(final fURI small, final fURI big) {
+       if(big.isRelative())
+           return;
         this.smallToBigRoutes.computeRaw(small, (k, v) -> {
             if (null == v) {
                 final Set<fURI> set = new HashSet<>();

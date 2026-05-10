@@ -218,10 +218,10 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
                     if (!selectKey.isNoObj()) {
                         final Obj lhsValue = lhs.asRec().at(selectKeyOne);
                         if (!lhsValue.isNoObj()) {
-                            final Obj rhsValue = value.isAutoFrom() ? value : value.autoResolve(rhs);
+                            final Obj rhsValue = value.autoResolve(rhs);
                             final Obj selectValue = lhsValue.isPoly() && rhsValue.isPoly() ?
                                     polyRecursion.apply(lhsValue.as(), rhsValue.as()) :
-                                    lhsValue.test(rhsValue.dom()) ? rhsValue.apply(lhsValue) : rhsValue;
+                                    true || lhsValue.test(rhsValue.dom()) ? rhsValue.apply(lhsValue) : rhsValue;
                             if (!selectValue.isNoObj() && (!selectValue.isRec() || !selectValue.asRec().isEmpty()))
                                 result.compute(selectKeyOne, (a, b) -> null == b ? selectValue : b.append(selectValue)); // TODO: the c(1) may not be necessary
                         }

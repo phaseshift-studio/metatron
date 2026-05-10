@@ -31,6 +31,8 @@ import studio.phaseshift.metatron.furi.fURI;
 
 import java.util.*;
 
+import static studio.phaseshift.metatron.Tokens.TYPE;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -106,7 +108,7 @@ public class ExistingCollectionSchema {
         this.space.logger().info("discovered {{b}}%d{{X}} collections: %s",
                 collectionSchemas.size(), collectionSchemas.keySet());
     }
-    
+
     private List<FieldMetadata> inferFieldTypes(final MongoDatabase database, final String collectionName) {
         final Map<String, Map<BsonType, Integer>> fieldTypeCounts = new LinkedHashMap<>();
         int docCount = 0;
@@ -120,7 +122,7 @@ public class ExistingCollectionSchema {
 
         return buildFieldMetadata(fieldTypeCounts, docCount);
     }
-    
+
     private void analyzeDocument(final String prefix, final org.bson.BsonDocument doc,
                                  final Map<String, Map<BsonType, Integer>> counts) {
         for (final String key : doc.keySet()) {
@@ -137,11 +139,11 @@ public class ExistingCollectionSchema {
             }
         }
     }
-    
+
     private boolean isDBRef(final org.bson.BsonDocument doc) {
         return doc.containsKey("$ref") && doc.containsKey("$id");
     }
-    
+
     private List<FieldMetadata> buildFieldMetadata(final Map<String, Map<BsonType, Integer>> counts,
                                                    final int docCount) {
         final List<FieldMetadata> fields = new ArrayList<>();
@@ -201,15 +203,15 @@ public class ExistingCollectionSchema {
 
         return refs;
     }
-    
+
     public Set<String> getCollectionNames() {
         return collectionSchemas.keySet();
     }
-    
+
     public List<CollectionMetadata> getCollectionMetadata() {
         return new ArrayList<>(collectionSchemas.values());
     }
-    
+
     public CollectionMetadata getCollectionMetadata(final String collectionName) {
         return collectionSchemas.get(collectionName.toLowerCase());
     }
@@ -233,13 +235,13 @@ public class ExistingCollectionSchema {
         //    collectionPath.add("+");
         return collectionPath;
     }
-    
+
     /**
      * Generate a {@link CollectionSchemaInstSet} for all discovered collections.
      *
-     * <p>The instset VID is {@code schemaVid} (must be in the {@code /m/} namespace so it is
+     * <p>The instset VID is {@code schemaVID} (must be in the {@code /m/} namespace so it is
      * backed by memSpace and never routes back into the dcmntSpace's data pattern).
-     * Each collection Type's VID is placed under {@code schemaVid/type/{collectionName}}.
+     * Each collection Type's VID is placed under {@code schemaVID/type/{collectionName}}.
      *
      * <p>Fields sampled from fewer than 100% of documents receive a {@code .maybe()} key
      * in the isaPredicate, reflecting MongoDB's schema-less nature. Only top-level fields
@@ -247,22 +249,21 @@ public class ExistingCollectionSchema {
      * is handled at runtime by the dcmntSpace directReader.
      *
      * <p>Register the returned instset via {@code Router.global().addSpace(instset)} then
-     * call {@code instset.setup()} — safe because its VID is in {@code /m/}, not in the
-     * dcmntSpace's data namespace.
+     * call {@code instset.setup()}.
      *
-     * @param schemaVid VID for the schema instset, e.g. {@code f("/m/dcmnt/space/schema/mydb")}
+     * @param schemaVID VID for the schema instset
      * @return a fully-populated {@link CollectionSchemaInstSet}
      */
-    public CollectionSchemaInstSet generateSchemaInstset(final fURI schemaVid) {
-        final fURI typeBase = schemaVid.extend("type");
+    public CollectionSchemaInstSet generateSchemaInstset(final fURI schemaVID) {
+        //  final fURI typeBase = schemaVID.extend(TYPE);
         final List<Type> types = new ArrayList<>();
 
         for (final CollectionMetadata collection : this.collectionSchemas.values()) {
-            final fURI typeVid = typeBase.extend(collection.collectionName().toLowerCase());
-            types.add(generateCollectionType(collection, typeVid));
+            final fURI typeVID = f(collection.collectionName().toLowerCase());
+            types.add(generateCollectionType(collection, typeVID));
         }
 
-        return new CollectionSchemaInstSet(schemaVid, types);
+        return new CollectionSchemaInstSet(schemaVID, types);
     }
 
     /**
@@ -306,7 +307,7 @@ public class ExistingCollectionSchema {
         final List<String> parsed = parseCollectionPath(furi.asNode());
         return parsed != null ? parsed.getFirst() : null;
     }
-    
+
     public String getDocumentId(final fURI furi) {
         final List<String> parsed = parseCollectionPath(furi.asNode());
         return parsed != null && parsed.size() > 1 ? parsed.get(1) : null;

@@ -27,6 +27,7 @@ import java.sql.Types;
 import java.util.*;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Real.REAL_TYPE;
@@ -125,7 +126,7 @@ public class SQLSchemaGenerator {
         return Type.Builder.build()
                 .tid(REC_ROW_TID)
                 .vid(tableTypePath)
-                .isaPredicate(studio.phaseshift.metatron.isa.m.type.impl.MRec.rec(fields))
+                .isaPredicate(rec(fields))
                 .create();
     }
 
@@ -187,10 +188,9 @@ public class SQLSchemaGenerator {
      * @return a fully-populated {@link SQLSchemaInstSet}
      */
     public SQLSchemaInstSet generateSchemaInstset(final fURI schemaVid) {
-        final fURI typeBase = schemaVid.extend("type");
         final List<Type> types = new ArrayList<>();
         for (final ExistingTableSchema.TableMetadata table : tableMetadata) {
-            final fURI typeVid = typeBase.extend(table.tableName().toLowerCase());
+            final fURI typeVid = f(table.tableName().toLowerCase());
             types.add(generateTableTypeAt(table, typeVid));
         }
         return new SQLSchemaInstSet(schemaVid, types);
@@ -198,7 +198,6 @@ public class SQLSchemaGenerator {
 
     /**
      * Generate a table Type with a specific VID (for use within a schema instset).
-     * The VID must fall under the instset's pattern so it is stored locally.
      */
     private Type generateTableTypeAt(final ExistingTableSchema.TableMetadata table, final fURI typeVid) {
         final LinkedHashMap<Obj, Obj> fields = new LinkedHashMap<>();
@@ -208,7 +207,7 @@ public class SQLSchemaGenerator {
         return Type.Builder.build()
                 .tid(REC_ROW_TID)
                 .vid(typeVid)
-                .isaPredicate(studio.phaseshift.metatron.isa.m.type.impl.MRec.rec(fields))
+                .isaPredicate(rec(fields))
                 .create();
     }
 
@@ -262,7 +261,7 @@ public class SQLSchemaGenerator {
             final Map<Obj, Obj> tableEntry = new LinkedHashMap<>();
             tableEntry.put(uri(NAME), str(table.tableName()));
             tableEntry.put(uri(URI), uri(tableUri));
-            tableEntry.put(uri(SCHEMA), rec(schemaRec));
+            tableEntry.put(uri(f(SCHEMA).extend(SCHEMA)), rec(schemaRec));
             tableEntry.put(uri(TYPE), tableType);
 
             tableList.add(rec(tableEntry));

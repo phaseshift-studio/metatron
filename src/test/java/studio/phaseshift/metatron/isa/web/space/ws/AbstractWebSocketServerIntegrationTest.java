@@ -110,7 +110,7 @@ public abstract class AbstractWebSocketServerIntegrationTest extends AbstractMet
         CommonUtil.sleepThread(500);
 
         // InstSet.importInstSet(WEB_ISA_TID) above already registers all web types
-        // (WS_MCP_SERVER_TYPE at WS_MCP_SERVER_TID, etc.) in the Router.
+        // (WS_MCP_HANDLER_TYPE at WS_MCP_SERVER_TID, etc.) in the Router.
         // createServer() reads from the TID directly via routeFromSpace(), so no
         // additional per-host URI registration is needed here.
 

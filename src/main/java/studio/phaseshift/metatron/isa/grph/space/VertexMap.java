@@ -35,6 +35,7 @@ import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
@@ -109,7 +110,7 @@ public class VertexMap extends ElementMap {
         entries.add(new SimpleEntry<Uri, Obj>(IN, auto_(() -> this.get(IN)).tryToInst()));
         return entries;
     }*/
-
+    
     @Override
     public Obj put(final Uri key, final Obj value) {
         if (key.equals(grphInstSet.IN)) {

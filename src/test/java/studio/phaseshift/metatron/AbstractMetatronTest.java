@@ -240,7 +240,7 @@ public abstract class AbstractMetatronTest {
                 LOG.error("testing %s => %s", code, e.getMessage());
             }
         } else {
-            final Obj cd = code.contains(";") ? ObjmtronSerializer.parse(code).apply() : ObjmtronSerializer.parse(code);
+            final Obj cd = ObjmtronSerializer.parse(code);
             final Obj ex = ObjmtronSerializer.parse(expected).apply();
             final Obj actual = cd.apply(noobj());
             LOG.debug("testing %s => %s => %s [expected:%s]", cd, code, actual, ex);

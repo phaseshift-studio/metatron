@@ -71,7 +71,8 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
         peers    => !*boot/peers]@/sys/space/meta2;==]
  httpspace::[host     => <http://localhost:8777>,
              pattern  => <http://#>,
-             route    => [/          =>   <>,
+             route    => [/          => <>,
+                          /mcp       => mcp_mtron_http, 
                           /docs      => target/docs,
                           /console   => src/main/resources/web/console]]@/sys/space/web/http;
    wsspace::[host     => <ws://localhost:8555>,

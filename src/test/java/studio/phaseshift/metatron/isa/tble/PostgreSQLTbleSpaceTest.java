@@ -25,7 +25,7 @@ import org.junit.jupiter.api.MethodOrderer;
 
 /**
  * Test suite for tbleSpace with PostgreSQL database using TestContainers.
- * Extends AbstractTbleSpaceTest to inherit all common database tests.
+ * Extends AbstractTbleSpaceTest to inherit all common relational database tests.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */

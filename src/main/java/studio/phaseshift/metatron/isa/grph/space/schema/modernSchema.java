@@ -30,6 +30,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.INSTSET_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Real.REAL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
@@ -53,21 +54,21 @@ public class modernSchema extends AbstractInstSet {
     public static final Type MODERN_SCHEMA_TYPE = T(MODERN_SCHEMA_TID);
 
     public static final Type PERSON_TYPE = Type.Builder.build()
-            .tid(VRTX_TID)
+            .tid(REC_TID)
             .vid(PERSON_TID)
             .isaPredicate(rec(
                     uri("name"), STR_TYPE,
                     uri("age"), INT_TYPE)).create();
 
     public static final Type SOFTWARE_TYPE = Type.Builder.build()
-            .tid(VRTX_TID)
+            .tid(REC_TID)
             .vid(SOFTWARE_TID)
             .isaPredicate(rec(
                     uri("name"), STR_TYPE,
                     uri("lang"), STR_TYPE)).create();
 
     public static final Type KNOWS_TYPE = Type.Builder.build()
-            .tid(EDGE_TID)
+            .tid(REC_TID)
             .vid(KNOWS_TID)
             .isaPredicate(rec(
                     uri("weight"), REAL_TYPE,
@@ -75,7 +76,7 @@ public class modernSchema extends AbstractInstSet {
                     IN, PERSON_TYPE)).create();
 
     public static final Type CREATED_TYPE = Type.Builder.build()
-            .tid(EDGE_TID)
+            .tid(REC_TID)
             .vid(CREATED_TID)
             .isaPredicate(rec(
                     uri("weight"), REAL_TYPE,

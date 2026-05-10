@@ -44,16 +44,16 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.web.space.ws.server.mcp_wsServer.MCP_WS_TID;
-import static studio.phaseshift.metatron.isa.web.space.ws.server.mcp_wsServer.WS_MCP_SERVER_TYPE;
+import static studio.phaseshift.metatron.isa.web.space.ws.server.mcp_wsHandler.MCP_WS_HANDLER_TID;
+import static studio.phaseshift.metatron.isa.web.space.ws.server.mcp_wsHandler.WS_MCP_HANDLER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_SERVER_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
-public class mcp_wsServerTest extends AbstractWebSocketServerTest {
+public class mcp_wsHandlerTest extends AbstractWebSocketServerTest {
 
     @Override
     protected WebSocketRec createServer(final fURI vid) {
-        return new mcp_wsServer(new LinkedHashMap<>(Map.of(uri(IN), uri(Content.ContentType.APPLICATION_JSON.value), uri(OUT), uri(Content.ContentType.APPLICATION_JSON.value))), MCP_WS_TID, vid);
+        return new mcp_wsHandler(new LinkedHashMap<>(Map.of(uri(IN), uri(Content.ContentType.APPLICATION_JSON.value), uri(OUT), uri(Content.ContentType.APPLICATION_JSON.value))), MCP_WS_HANDLER_TID, vid);
     }
 
     /**
@@ -64,7 +64,7 @@ public class mcp_wsServerTest extends AbstractWebSocketServerTest {
      */
     @Override
     protected Type serverType() {
-        return WS_MCP_SERVER_TYPE;
+        return WS_MCP_HANDLER_TYPE;
     }
 
     // =========================================================
@@ -73,24 +73,24 @@ public class mcp_wsServerTest extends AbstractWebSocketServerTest {
 
     @Test
     public void testMCPTidNamespace() {
-        assertTrue(MCP_WS_TID.toString().contains("wsspace"));
-        assertTrue(MCP_WS_TID.toString().contains("mcp"));
+        assertTrue(MCP_WS_HANDLER_TID.toString().contains("wsspace"));
+        assertTrue(MCP_WS_HANDLER_TID.toString().contains("mcp"));
     }
 
     @Test
     public void testMCPTypeIsWSServerSubtype() {
-        // WS_MCP_SERVER_TYPE declares WS_SERVER_TID as its parent (tid).
+        // WS_MCP_HANDLER_TYPE declares WS_SERVER_TID as its parent (tid).
         // isRefinementOf() traverses parentType() which resolves via Router;
         // after a Router reset the routing can pick mInstSet (shortest prefix)
         // which has no WEB types, causing parentType() to return null → NPE.
         // Checking the tid() directly tests the same semantics without Router.
-        assertEquals(WS_SERVER_TID, WS_MCP_SERVER_TYPE.tid(),
-                "WS_MCP_SERVER_TYPE should declare WS_SERVER_TID as its parent type");
+        assertEquals(WS_SERVER_TID, WS_MCP_HANDLER_TYPE.tid(),
+                "WS_MCP_HANDLER_TYPE should declare WS_SERVER_TID as its parent type");
     }
 
     @Test
     public void testMCPTypePredicateHasToolResourcePrompt() {
-        final Rec pred = WS_MCP_SERVER_TYPE.predicate().asInst().arg(0).asRec();
+        final Rec pred = WS_MCP_HANDLER_TYPE.predicate().asInst().arg(0).asRec();
         assertFalse(pred.at(uri(TOOL)).isNoObj(), "predicate should declare tool");
         assertFalse(pred.at(uri(RESOURCE)).isNoObj(), "predicate should declare resource");
         assertFalse(pred.at(uri(PROMPT)).isNoObj(), "predicate should declare prompt");
@@ -204,11 +204,11 @@ public class mcp_wsServerTest extends AbstractWebSocketServerTest {
     public void testToolsCallWithRegisteredTool() {
         // Build a server with a tool in its map and verify tools/call dispatches correctly
         final fURI vid = createTestVid();
-        final mcp_wsServer withTool = new mcp_wsServer(
+        final mcp_wsHandler withTool = new mcp_wsHandler(
                 mutableMap(
                         uri(IN), uri(Content.ContentType.APPLICATION_JSON.value),
                         uri(OUT), uri(Content.ContentType.APPLICATION_JSON.value)),
-                MCP_WS_TID, vid);
+                MCP_WS_HANDLER_TID, vid);
         // Manually add a tool: addTool => instC that echoes the arguments back
         withTool.jvm().put(uri(TOOL), rec(
                 uri("echo"), instC(f("echo").dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL.maybe())),
@@ -230,11 +230,11 @@ public class mcp_wsServerTest extends AbstractWebSocketServerTest {
     public void testToolsListIncludesSchemaForRegisteredTool() {
         // A server with a named-arg inst should emit non-empty inputSchema in tools/list
         final fURI vid = createTestVid();
-        final mcp_wsServer withTool = new mcp_wsServer(rec(
+        final mcp_wsHandler withTool = new mcp_wsHandler(rec(
                 mutableMap(uri(TOOL), rec(
                         uri("greet"), instC(f("greet").dom(ALL.maybe()).rng(ALL.maybe()),
                                 rec(uri("name"), T(ALL.maybe())),
-                                (lhs, inst) -> str("Hello, " + inst.arg(f("name"),0).toCleanString())))), MCP_WS_TID, vid));
+                                (lhs, inst) -> str("Hello, " + inst.arg(f("name"),0).toCleanString())))), MCP_WS_HANDLER_TID, vid));
 
         final Obj response = withTool.at(uri(ON_MESSAGE)).apply(rec(
                 uri(JSONRPC), str("2.0"),
@@ -283,7 +283,7 @@ public class mcp_wsServerTest extends AbstractWebSocketServerTest {
             return studio.phaseshift.metatron.isa.web.space.ws.wsSpace.of(rec(
                     uri(HOST), uri(hostUri.toString()),
                     uri(PATTERN), uri("ws://#"),
-                    uri(ROUTE), rec(uri("/wsmcp"), uri(MCP_WS_TID.toString()))
+                    uri(ROUTE), rec(uri("/wsmcp"), uri(MCP_WS_HANDLER_TID.toString()))
             ).jvm(), f("/sys/space/ws/test"));
         }
 

@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.tble;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractSpace;
+import studio.phaseshift.metatron.isa.SchemaSpace;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -48,6 +49,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TID;
+import static studio.phaseshift.metatron.isa.m.type.InstSet.instset0;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
@@ -95,7 +97,7 @@ import static studio.phaseshift.metatron.isa.tble.tbleInstSet.TBLE_ISA_TID;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class tbleSpace extends AbstractSpace<Connection> {
+public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace {
 
     // ---- Database product-name fragments (matched case-insensitively) -----------
 
@@ -119,7 +121,7 @@ public class tbleSpace extends AbstractSpace<Connection> {
                             uri(ROUTE), rec(URI_TYPE, URI_TYPE),
                             uri(TABLE).maybe(), LST_TYPE,
                             uri(ROOT).maybe(), REC_TYPE,
-                            uri(SCHEMA).maybe(), InstSet.INSTSET_TYPE))
+                            uri(SCHEMA).maybe(), SCHEMA_CONFIG))
                     .constructor(instC(TBLE_SPACE_TID.extend(CTOR).dom(ALL.maybe()).rng(TBLE_SPACE_TID),
                             lst(REC_TYPE),
                             (lhs, inst) -> tbleSpace.of(inst.arg(0).asRec().jvm(), inst.arg(0).vid())))
@@ -172,12 +174,16 @@ public class tbleSpace extends AbstractSpace<Connection> {
         }
     }
 
+    
+
+
     @Override
     public void close() {
         try {
-            Router.global().write(this.vid().extend("instset"),noobj());
-           // if (this.has("instset"))
-           //     this.at("instset").<InstSet>as().close();
+            this.sjvm().close();
+            SchemaSpace.super.close();
+        } catch (final Exception e) {
+            LOG.error(e);
         } finally {
             super.close();
         }
@@ -237,8 +243,7 @@ public class tbleSpace extends AbstractSpace<Connection> {
         // Schema VID is in /m/ namespace — backed by system memSpace, not this
         // tbleSpace.  A VID under the tbleSpace pattern would cause the Router
         // to route schema reads/writes back into this space → recursion.
-        final String dbName = conn.getCatalog() != null ? conn.getCatalog() : "db";
-        final fURI schemaVid = this.vid().extend("instset");
+        final fURI schemaVid = this.vid().extend(SCHEMA).extend(INSTSET);
         this.schemaGenerator = new SQLSchemaGenerator(
                 this.existingTableSchema.getTableMetadata(), schemaVid);
 
@@ -248,7 +253,7 @@ public class tbleSpace extends AbstractSpace<Connection> {
         final SQLSchemaInstSet schemaInstset = this.schemaGenerator.generateSchemaInstset(schemaVid);
         Router.global().addSpace(schemaInstset);
         schemaInstset.setup();
-        this.at(SCHEMA, this.schemaGenerator.generateSchema(), MUTABLE);
+        this.at(f(SCHEMA).extend(NATIVE), this.schemaGenerator.generateSchema(), MUTABLE);
 
         LOG.info("initialized {{g}}SQL schema{{X}} with %s table types",
                 this.existingTableSchema.getTableNames().size());

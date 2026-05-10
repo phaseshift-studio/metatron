@@ -114,6 +114,8 @@ public interface Router extends Space {
 
     void registerRedirect(final fURI small, final fURI big);
 
+    void unregisterRedirect(final fURI small, final fURI big);
+
     void registerPrefix(final fURI prefix, final fURI vid);
 
     fURI redirect(final fURI furi, final boolean big);

@@ -209,6 +209,7 @@ public final class Tokens {
     public static final String ON_RECV = "on_recv";
     public static final String HOSTNAME = "HOSTNAME";
     public static final String SCHEMA = "schema";
+    public static final String INSTSET = "instset";
     public static final String TABLES = "tables";
     public static final String ALT = "alt";
     public static final String REFERENCES = "references";

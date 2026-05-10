@@ -100,6 +100,11 @@ public final class NoObjRouter extends MRec implements Router {
     }
 
     @Override
+    public void unregisterRedirect(fURI small, fURI big) {
+        
+    }
+
+    @Override
     public void registerPrefix(fURI prefix, fURI vid) {
         
     }

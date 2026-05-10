@@ -28,6 +28,7 @@ import dev.langchain4j.model.localai.LocalAiStreamingChatModel;
 import dev.langchain4j.model.ollama.OllamaModels;
 import dev.langchain4j.model.ollama.OllamaStreamingChatModel;
 import dev.langchain4j.model.openai.OpenAiModelCatalog;
+import dev.langchain4j.model.openai.OpenAiResponsesStreamingChatModel;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
 import org.slf4j.event.Level;
 import studio.phaseshift.metatron.furi.fURI;
@@ -196,17 +197,22 @@ public final class LLMFactory {
                     .logRequests(true)
                     .logResponses(true)
                     .build();
-            case OLLAMA -> OllamaStreamingChatModel.builder()
-                    .baseUrl(host)
-                    .modelName(name)
-                    .think(thinking)
-                    .returnThinking(thinking)
-                    .logRequests(true)
-                    .logResponses(true)
-                   // .listeners(model.cost().isPresent() ? List.of(new CostCalculator(model.cost().get())) : null)
-                    .logger(Graphitty.log(OllamaStreamingChatModel.class).logger(Level.WARN))
-                    .responseFormat(createResponseFormat(responseFormat2))
-                    .build();
+            case OLLAMA -> {
+                final OllamaStreamingChatModel.OllamaStreamingChatModelBuilder builder =
+                        OllamaStreamingChatModel.builder()
+                                .baseUrl(host)
+                                .modelName(name)
+                                .think(thinking)
+                                .returnThinking(thinking)
+                                .logRequests(true)
+                                .logResponses(true)
+                                // .listeners(model.cost().isPresent() ? List.of(new CostCalculator(model.cost().get())) : null)
+                                .logger(Graphitty.log(OllamaStreamingChatModel.class).logger(Level.WARN))
+                                .responseFormat(createResponseFormat(responseFormat2));
+                if (model.cost().isPresent())
+                    builder.listeners(List.of(new CostCalculator(model.cost().get())));
+                yield builder.build();
+            }
             case OPENAI -> {
                 // don't pass empty organizationId - it causes hangs in some LangChain4j versions
                 final String orgId = organization.strValue().isBlank() ? null : organization.strValue();
@@ -220,31 +226,37 @@ public final class LLMFactory {
                 final ResponseFormat openAiFormat = openAiSupportsStructuredOutputs(modelName) ?
                         createResponseFormat(responseFormat) :
                         createJsonObjectResponseFormat(responseFormat);
-                yield OpenAiStreamingChatModel.builder()
+                final OpenAiStreamingChatModel.OpenAiStreamingChatModelBuilder builder = OpenAiStreamingChatModel.builder()
                         .apiKey(api_key.strValue())
                         .baseUrl(baseUrl)
                         .modelName(modelName)
                         .returnThinking(thinking)
                         .sendThinking(thinking, "reasoning_content")
                         .organizationId(orgId)
-                      //  .listeners(model.cost().isPresent() ? List.of(new CostCalculator(model.cost().get())) : null)
                         .logRequests(true)
                         .logResponses(true)
                         .logger(Graphitty.log(OpenAiStreamingChatModel.class).logger(Level.WARN))
                         .timeout(Duration.ofSeconds(60))
-                        .responseFormat(openAiFormat)
-                        .build();
+                        .responseFormat(openAiFormat);
+                if (model.cost().isPresent())
+                    builder.listeners(List.of(new CostCalculator(model.cost().get())));
+                yield builder.build();
             }
-            case ANTHROPIC -> AnthropicStreamingChatModel.builder()
-                    .apiKey(api_key.strValue())
-                    .modelName(modelName)
-                    .returnThinking(thinking)
-                    .logRequests(true)
-                    .logResponses(true)
-                   // .listeners(model.cost().isPresent() ? List.of(new CostCalculator(model.cost().get())) : null)
-                    .logger(Graphitty.log(AnthropicStreamingChatModel.class).logger(Level.WARN))
-                    .responseFormat(createResponseFormat(responseFormat))
-                    .build();
+            case ANTHROPIC -> {
+                final AnthropicStreamingChatModel.AnthropicStreamingChatModelBuilder builder =
+                        AnthropicStreamingChatModel.builder()
+                                .apiKey(api_key.strValue())
+                                .modelName(modelName)
+                                .returnThinking(thinking)
+                                .logRequests(true)
+                                .logResponses(true)
+                                // .listeners(model.cost().isPresent() ? List.of(new CostCalculator(model.cost().get())) : null)
+                                .logger(Graphitty.log(AnthropicStreamingChatModel.class).logger(Level.WARN))
+                                .responseFormat(createResponseFormat(responseFormat));
+                if (model.cost().isPresent())
+                    builder.listeners(List.of(new CostCalculator(model.cost().get())));
+                yield builder.build();
+            }
 
             default -> throw MTronException.of("unsupported LLM provider: %s", provider);
         };
