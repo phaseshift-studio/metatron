@@ -47,7 +47,7 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
    
 [== mount computing spaces ==]
  memspace::[pattern   => /usr/#,                                 
-       q         => [subq::[=>],incrq::[=>]]]@/sys/space/usr;
+       q         => [mintq::[=>],docq::[=>],subq::[=>],incrq::[=>]]]@/sys/space/usr;
  /usr/ai/pattern/template -> [think=>[to=>print(_)],response=>[to=>print(_)],memory=>[from=>/usr/ai/memory]];
        
  memspace::[pattern   => /shared/#,

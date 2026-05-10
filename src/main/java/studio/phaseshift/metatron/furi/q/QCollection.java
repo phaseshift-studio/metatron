@@ -29,6 +29,7 @@ import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.m.type.impl.MStr;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.thread.VirtualThread;
+import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
@@ -46,6 +47,7 @@ import static studio.phaseshift.metatron.isa.m.type.Inst.RNG;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Type.LOG;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MCode.code;
@@ -65,6 +67,10 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  */
 public final class QCollection {
 
+    public static final fURI MINTQ_PATTERN = f("mintq");
+    public static final fURI MINTQ_TID = QPROC_TID.extend("mintq");
+    public static final Type MINTQ_TYPE = Type.Builder.build().tid(QPROC_TID).vid(MINTQ_TID).constructor(QCollection::mintQ).create();
+    //
     public static final fURI CONSTQ_PATTERN = f("constq");
     public static final fURI CONSTQ_TID = QPROC_TID.extend("constq");
     public static final Type CONSTQ_TYPE = Type.Builder.build().tid(QPROC_TID).vid(CONSTQ_TID).constructor(QCollection::constQ).create();
@@ -117,6 +123,21 @@ public final class QCollection {
 
     private QCollection() {
         // do nothing 
+    }
+
+    /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public static QProc mintQ() {
+        return QProc.Helper.build(MINTQ_TID, MINTQ_PATTERN)
+                .preWrite((furi, obj) -> {
+                    final fURI mint = CommonUtil.mintShortUUID(furi.basePath(), true);
+                    final Obj mintedObj = obj.vid(mint);
+                    LOG.info("vid %s minted for %s", mint, mintedObj);
+                    Router.writeToSpace(mintedObj);
+                    return mintedObj;
+                }).create();
     }
 
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////

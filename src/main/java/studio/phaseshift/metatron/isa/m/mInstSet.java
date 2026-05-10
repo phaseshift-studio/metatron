@@ -356,6 +356,8 @@ public class mInstSet extends AbstractInstSet {
                         docWrap(DOCQ_TYPE, "addr documentation qproc",
                                 "*docq?docq [-- this documentation --]",
                                 "*int?docq  [-- documentation for int::T --]"),
+                        docWrap(MINTQ_TYPE, "mint a unique uri extension to obj vid",
+                                "1@abc?mintq [-- 1@abc/235ae3 --]"),
                         docWrap(INCRQ_TYPE, "a query that returns an increment"),
                         docWrap(CONSTQ_TYPE, "a query that returns a constant")),
                 uri(CONST), lst(
