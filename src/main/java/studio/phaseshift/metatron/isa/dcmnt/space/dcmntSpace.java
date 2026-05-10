@@ -127,7 +127,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 public class dcmntSpace extends AbstractSpace<MongoClient> {
     private static final String NATIVE_CONNACK = "native/connack";
     public static final String ID_FIELD = "_id";
-    /** 24-char hex ObjectId pattern, shared across serialiser and rewrite helpers */
+    /**
+     * 24-char hex ObjectId pattern, shared across serialiser and rewrite helpers
+     */
     public static final String OBJECT_ID_REGEX = "[0-9a-fA-F]{24}";
     /**
      * Internal field used to wrap non-Rec values (Lst, primitives) in a BSON document
@@ -158,7 +160,9 @@ public class dcmntSpace extends AbstractSpace<MongoClient> {
         // Each dcmntSpace needs its own serializer instance (can't mutate the shared SINGLE).
         this.serializer = new Supplier<>() {
             private ObjBSONSerializer instance;
-            @Override public ObjBSONSerializer get() {
+
+            @Override
+            public ObjBSONSerializer get() {
                 if (instance == null) {
                     instance = dcmntSpace.this.jvm().containsKey(uri(SERIALIZER))
                             ? dcmntSpace.this.at(uri(SERIALIZER)).<ObjBSONSerializer>as()
@@ -436,13 +440,17 @@ public class dcmntSpace extends AbstractSpace<MongoClient> {
 
     @Override
     public void close() {
-        // Close all change stream watchers first
-        if (this.dcmntSpaceSubQ != null) {
-            this.dcmntSpaceSubQ.closeAll();
-        }
-        if (this.sjvm() != null) {
-            this.sjvm().close();
-            LOG.info("closed document store connection at {{b}}%s{{X}}", this.databaseName);
+        try {
+            // Close all change stream watchers first
+            if (this.dcmntSpaceSubQ != null)
+                this.dcmntSpaceSubQ.closeAll();
+            if (this.sjvm() != null) {
+                this.sjvm().close();
+                LOG.info("closed document store connection at {{b}}%s{{X}}", this.databaseName);
+            }
+            Router.global().write(this.vid().extend("instset"), noobj());
+        } finally {
+            super.close();
         }
     }
 

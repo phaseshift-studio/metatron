@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.TestCategory;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.CommonUtil;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -55,11 +56,11 @@ public interface SubQTest {
     }, delimiter = '%')
     default void testSubQ(String subscription, String writing, String expecting) {
         getSpace().qs().lstValue().stream().filter(x -> x.tid().equals(SUBQ_TID)).findAny().orElseThrow();
-        final Obj sub = mParser.eval(make(subscription));
+        final Obj sub = ObjmtronSerializer.parse(make(subscription)).apply();
         assertEquals(SUBSCRIPTION_TID, sub.tid());
-        final Obj writeObj = mParser.eval(make(writing));
+        final Obj writeObj =ObjmtronSerializer.parse(make(writing)).apply();
         assertNotEquals(sub, writeObj);
         CommonUtil.sleepThread(1500);
-        assertTrue(mParser.eval(make(expecting)).boolValue());
+        assertTrue(ObjmtronSerializer.parse(make(expecting)).apply().boolValue());
     }
 }

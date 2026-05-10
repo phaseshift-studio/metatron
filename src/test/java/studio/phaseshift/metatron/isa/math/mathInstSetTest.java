@@ -180,17 +180,17 @@ public class mathInstSetTest extends AbstractInstSetTest {
     @Test
     public void testConstants() {
         Router.global().addSpace(memSpace.of(rec(uri(PATTERN), uri("/abc/#"), uri(Tokens.QPROC), lst(QCollection.constQ())), f("abc")));
-        assertEquals(jnt(34), mParser.eval("/abc/xyz -> 34"));
-        assertEquals(jnt(34), mParser.eval("*/abc/xyz"));
-        assertEquals(jnt(99), mParser.eval("/abc/xyz -> 99"));
-        assertEquals(jnt(99), mParser.eval("*/abc/xyz"));
-        assertFalse(mParser.eval("*/abc/xyz?constq").boolValue());
-        assertEquals(noobj(), mParser.eval("/abc/xyz?constq -> noobj"));
-        assertEquals(jnt(989), mParser.eval("/abc/xyz?constq -> 989"));
-        assertTrue(mParser.eval("*/abc/xyz?constq").boolValue());
+        assertEquals(jnt(34), ObjmtronSerializer.parse("/abc/xyz -> 34").apply());
+        assertEquals(jnt(34), ObjmtronSerializer.parse("*/abc/xyz").apply());
+        assertEquals(jnt(99), ObjmtronSerializer.parse("/abc/xyz -> 99").apply());
+        assertEquals(jnt(99), ObjmtronSerializer.parse("*/abc/xyz").apply());
+        assertFalse(ObjmtronSerializer.parse("*/abc/xyz?constq").apply().boolValue());
+        assertEquals(noobj(), ObjmtronSerializer.parse("/abc/xyz?constq -> noobj").apply());
+        assertEquals(jnt(989), ObjmtronSerializer.parse("/abc/xyz?constq -> 989").apply());
+        assertTrue(ObjmtronSerializer.parse("*/abc/xyz?constq").apply().boolValue());
         //assertEquals(jnt(989), mParser.eval("*/abc/xyz"));
-        assertTrue(mParser.eval("/abc/xyz -> 100").isFail());
-        assertEquals(jnt(88), mParser.eval("/abc/xyz?constq -> 88"));
+        assertTrue(ObjmtronSerializer.parse("/abc/xyz -> 100").apply().isFail());
+        assertEquals(jnt(88), ObjmtronSerializer.parse("/abc/xyz?constq -> 88").apply());
         //assertEquals(jnt(88), mParser.eval("*/abc/xyz"));
     }
 }

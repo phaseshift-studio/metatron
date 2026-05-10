@@ -157,7 +157,7 @@ public abstract class AbstractMetatronTest {
         LOG.debug("testing %s <= %s", stateResult, mutationResult);
         expected.forEach((k, v) -> {
             final Obj actual = Router.readFromSpace(k);
-            final Obj desired = mParser.eval(v);
+            final Obj desired = ObjmtronSerializer.parse(v).apply();
             LOG.debug("\t%s [expected] == %s [actual]", desired, actual);
             assertEquals(desired, actual);
         });
@@ -223,7 +223,7 @@ public abstract class AbstractMetatronTest {
     public static void checkCodeParseApply(final GraphittyLogger LOG, final String code, final String expected) {
         if (expected.trim().equals("<ERROR>")) {
             try {
-                final Obj cd = code.contains(";") ? mParser.eval(code) : ObjmtronSerializer.parse(code);
+                final Obj cd = code.contains(";") ? ObjmtronSerializer.parse(code).apply() : ObjmtronSerializer.parse(code);
                 final Obj actual2 = cd.apply(noobj());
                 LOG.debug("testing %s <= %s", cd, actual2.type());
                 actual2.stream().forEach(actual -> {
@@ -240,7 +240,7 @@ public abstract class AbstractMetatronTest {
                 LOG.error("testing %s => %s", code, e.getMessage());
             }
         } else {
-            final Obj cd = code.contains(";") ? mParser.eval(code) : ObjmtronSerializer.parse(code);
+            final Obj cd = code.contains(";") ? ObjmtronSerializer.parse(code).apply() : ObjmtronSerializer.parse(code);
             final Obj ex = ObjmtronSerializer.parse(expected).apply();
             final Obj actual = cd.apply(noobj());
             LOG.debug("testing %s => %s => %s [expected:%s]", cd, code, actual, ex);

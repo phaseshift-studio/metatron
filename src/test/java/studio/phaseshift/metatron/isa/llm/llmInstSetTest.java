@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 
 import java.nio.file.FileSystems;
@@ -69,11 +70,11 @@ public class llmInstSetTest extends AbstractInstSetTest {
             "*<local:skills/mtron>.as(skill::T) | *skill | true",
     }, delimiter = '|')
     public void testAs(final String noNoObjCode, final String expectedType, final boolean shouldMatch) {
-        Obj result = mParser.eval(noNoObjCode);
+        Obj result = ObjmtronSerializer.parse(noNoObjCode).apply();
         assertTrue(result.test(LLM_SKILL_TYPE));
         assertTrue(result.type().test(LLM_SKILL_TYPE));
         assertNotNull(result.tid());
-        Obj expected = mParser.eval(expectedType);
+        Obj expected = ObjmtronSerializer.parse(expectedType).apply();
         LOG.debug("result [%s] expected [%s] [should match: %b]", result, expected, shouldMatch);
         assertEquals(shouldMatch, result.test(expected));
     }
@@ -84,11 +85,11 @@ public class llmInstSetTest extends AbstractInstSetTest {
             "abc->model::[ | *skill | true",
     }, delimiter = '|')
     public void testChatResolution(final String noNoObjCode, final String expectedType, final boolean shouldMatch) {
-        Obj result = mParser.eval(noNoObjCode);
+        Obj result = ObjmtronSerializer.parse(noNoObjCode).apply();
         assertTrue(result.test(LLM_SKILL_TYPE));
         assertTrue(result.type().test(LLM_SKILL_TYPE));
         assertNotNull(result.tid());
-        Obj expected = mParser.eval(expectedType);
+        Obj expected = ObjmtronSerializer.parse(expectedType).apply();
         LOG.debug("result [%s] expected [%s] [should match: %b]", result, expected, shouldMatch);
         assertEquals(shouldMatch, result.test(expected));
     }

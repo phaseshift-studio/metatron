@@ -156,17 +156,9 @@ public interface Inst extends Call {
     default Inst c(final cInt c) {
         return this.tid(this.tid().c(c));
     }
-
-    default Obj arg(final fURI key) {
-        return this.args().<Rec>as().at(key.toUri());
-    }
-
-    default Obj arg(final String key) {
-        return this.args().<Rec>as().at(key);
-    }
-
+    
     default Obj arg(final fURI key, final int index) {
-        return this.args().isRec() ? this.arg(key) : this.arg(index);
+        return this.args().isRec() ? this.args().<Rec>as().at(key.toUri()) : this.arg(index);
     }
 
     default Inst.f f() {

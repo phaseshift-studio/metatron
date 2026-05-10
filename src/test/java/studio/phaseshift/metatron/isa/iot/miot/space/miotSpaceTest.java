@@ -101,7 +101,7 @@ public class miotSpaceTest extends AbstractSpaceTest implements SubQTest {
             "/t/b?subq -> sub::[target=>/t/b,on_recv=><abc>->4]                            % /t/b -> 3                       % *abc.?=4",
     }, delimiter = '%')
     public void testSubscriptions(final String subscription, final String write, final String check) {
-        final Rec sub = mParser.eval(subscription);
+        final Rec sub = ObjmtronSerializer.parse(subscription).apply().as();
         assertEquals(SUBSCRIPTION_TID, sub.tid());
         final Obj writeObj = ObjmtronSerializer.parse(write).apply();
         final Obj checkObj = ObjmtronSerializer.parse(check).apply();

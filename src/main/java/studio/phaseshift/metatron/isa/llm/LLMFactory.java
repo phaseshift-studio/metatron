@@ -47,6 +47,7 @@ import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
@@ -202,6 +203,7 @@ public final class LLMFactory {
                     .returnThinking(thinking)
                     .logRequests(true)
                     .logResponses(true)
+                   // .listeners(model.cost().isPresent() ? List.of(new CostCalculator(model.cost().get())) : null)
                     .logger(Graphitty.log(OllamaStreamingChatModel.class).logger(Level.WARN))
                     .responseFormat(createResponseFormat(responseFormat2))
                     .build();
@@ -223,8 +225,9 @@ public final class LLMFactory {
                         .baseUrl(baseUrl)
                         .modelName(modelName)
                         .returnThinking(thinking)
-                        .sendThinking(thinking,"reasoning_content")
+                        .sendThinking(thinking, "reasoning_content")
                         .organizationId(orgId)
+                      //  .listeners(model.cost().isPresent() ? List.of(new CostCalculator(model.cost().get())) : null)
                         .logRequests(true)
                         .logResponses(true)
                         .logger(Graphitty.log(OpenAiStreamingChatModel.class).logger(Level.WARN))
@@ -238,6 +241,7 @@ public final class LLMFactory {
                     .returnThinking(thinking)
                     .logRequests(true)
                     .logResponses(true)
+                   // .listeners(model.cost().isPresent() ? List.of(new CostCalculator(model.cost().get())) : null)
                     .logger(Graphitty.log(AnthropicStreamingChatModel.class).logger(Level.WARN))
                     .responseFormat(createResponseFormat(responseFormat))
                     .build();

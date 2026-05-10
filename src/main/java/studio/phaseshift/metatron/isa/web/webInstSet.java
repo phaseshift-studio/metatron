@@ -162,37 +162,7 @@ public class webInstSet extends AbstractInstSet {
                         instC(AS_INST_TID.dom(MARKDOWN_TID).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> str(ObjMarkdownSerializer.single().write(lhs).getChars().toString())),
                         instC(AS_INST_TID.dom(MARKDOWN_TID).rng(HTML_TID), lst(HTML_TYPE), (lhs, inst) -> ObjMarkdownSerializer.single().toHTML(ObjMarkdownSerializer.single().write(lhs))),
                         instC(AS_INST_TID.dom(STR_TID).rng(JSON_TID), lst(JSON_TYPE), (lhs, inst) -> ObjSimpleJSONSerializer.parse(lhs.asStr().strValue())),
-                        instC(AS_INST_TID.dom(ALL).rng(STR_TID), lst(JSON_STR_TYPE), (lhs, inst) -> str(ObjSimpleJSONSerializer.single().write(lhs).toString())),
-                        instC(INST_TID.extend("doc").dom(STR_TID).rng(STR_TID), lst(), (lhs, inst) -> {
-                            try {
-                                final String source = lhs.strValue();
-                                final Obj result = ObjmtronSerializer.singleNoClip().parse(source).apply();
-                                final String resultString = result.isObjs() ?
-                                        result.stream()
-                                                .map(Obj::toCleanString)
-                                                //.map(Highlighter::unformat)
-                                                .reduce((a, b) -> a + "%%%" + b)
-                                                .orElse("") :
-                                        result.toCleanString();
-                                //Highlighter.unformat(result.toString());
-                                return str(resultString);
-                            } catch (final Exception e) {
-                                return str(fail(e).toString());
-                            }
-                        }),
-                        instC(INST_TID.extend("doc_json").dom(STR_TID).rng(STR_TID), lst(), (lhs, inst) -> {
-                            try {
-                                if (lhs.isStr()) {
-                                    final String source = lhs.strValue();
-                                    final Obj result = ObjmtronSerializer.singleNoClip().parse(source).apply();
-                                    return str(ObjSimpleJSONSerializer.single().write(result).toString());
-                                } else {
-                                    return str(lhs.toShortString());
-                                }
-                            } catch (final Exception e) {
-                                return str(fail(e).toString());
-                            }
-                        }))));
+                        instC(AS_INST_TID.dom(ALL).rng(STR_TID), lst(JSON_STR_TYPE), (lhs, inst) -> str(ObjSimpleJSONSerializer.single().write(lhs).toString())))));
         docWrap(this,
                 "the world of the web within the metatron",
                 "/usr/idea -> *<http://metatron.phaseshift.studio/html/head/title>");

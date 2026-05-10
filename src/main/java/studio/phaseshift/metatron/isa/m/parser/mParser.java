@@ -78,7 +78,6 @@ public class mParser {
 
     public static final SettableParser furi_parser = SettableParser.undefined();
     private static final GraphittyLogger LOG = Graphitty.log(mParser.class);
-    private static final SettableParser base_obj_parser = SettableParser.undefined();
     private static final SettableParser obj_parser = SettableParser.undefined();
     private static final SettableParser obj_no_code_parser = SettableParser.undefined();
     private static final SettableParser obj_no_call_parser = SettableParser.undefined();
@@ -391,13 +390,7 @@ public class mParser {
     }
 
     public static <O extends Obj> O parse(final String code) {
-        final String trimmed = Arrays.stream(code.trim()
-                        .replaceAll("\\[==.*?==]", "")
-                        .split("\n"))
-                .map(String::trim)
-                .filter(t -> !t.startsWith("[--"))
-                .reduce("", (a, b) -> a + b + "\n")
-                .trim();
+        final String trimmed = code.trim();
         if (trimmed.isEmpty())
             return (O) noobj();
         // Use cached parser instead of rebuilding on every call

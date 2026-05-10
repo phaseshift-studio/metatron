@@ -49,6 +49,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TID;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -174,8 +175,9 @@ public class tbleSpace extends AbstractSpace<Connection> {
     @Override
     public void close() {
         try {
-            if (this.has("instset"))
-                this.at("instset").<InstSet>as().close();
+            Router.global().write(this.vid().extend("instset"),noobj());
+           // if (this.has("instset"))
+           //     this.at("instset").<InstSet>as().close();
         } finally {
             super.close();
         }

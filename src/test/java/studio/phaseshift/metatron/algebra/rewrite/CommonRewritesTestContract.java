@@ -132,7 +132,7 @@ public interface CommonRewritesTestContract {
      * @param expected    The expected result
      */
     default void runRewriteTest(String description, String code, Obj expected) throws Exception {
-        final Obj result = mParser.eval(code);
+        final Obj result = ObjmtronSerializer.parse(code).apply();
         assertEquals(expected, result, description);
     }
 

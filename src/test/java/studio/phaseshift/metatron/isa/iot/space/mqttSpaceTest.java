@@ -32,6 +32,7 @@ import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -93,12 +94,12 @@ public class mqttSpaceTest extends AbstractSpaceTest implements SubQTest {
             "/t/d?subq -> /m/space/qproc/subq/sub::[target=>/t/d,on_recv=><ggg>->1]                                        % /t/d -> 3                           % *ggg.?=1",
     }, delimiter = '%')
     public void testSubscriptions(final String subscription, final String write, final String check) {
-        final Rec sub = mParser.eval(subscription);
+        final Rec sub = ObjmtronSerializer.parse(subscription).apply().as();
         CommonUtil.sleepThread(this.sleepBetweenReads+50);
         assertEquals(SUBSCRIPTION_TID, sub.tid());
-        mParser.eval(write);
+        ObjmtronSerializer.parse(write).apply();
         CommonUtil.sleepThread(this.sleepBetweenReads+50);
-        final Obj checkObj = mParser.eval(check);
+        final Obj checkObj =ObjmtronSerializer.parse(check).apply();
         assertNotEquals(noobj(), checkObj);
         MoquetteServer.clear();
     }

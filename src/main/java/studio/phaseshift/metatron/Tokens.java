@@ -74,10 +74,12 @@ public final class Tokens {
     public static final String PANE = "pane";
     public static final String LICENSE = "license";
     public static final String THINK = "think";
+    public static final String COST = "cost";
     public static final String THOUGHT = "thought";
     public static final String MEMORY = "memory";
     public static final String NOTE = "note";
     public static final String HISTORY = "history";
+    public static final String HREF = "href";
     public static final String TOOL = "tool";
     public static final String PROMPT = "prompt";
     public static final String RESOURCE = "resource";

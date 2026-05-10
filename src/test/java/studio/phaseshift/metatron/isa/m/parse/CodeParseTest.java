@@ -23,6 +23,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -39,7 +40,7 @@ public class CodeParseTest extends AbstractMetatronTest {
             "/m/int::2.plus(/m/int::5)% /m/int::7"
     }, delimiter = '%')
     void testStandardExpressions(final String expression, final String expectedResult) {
-        assertEquals(mParser.m_obj().parse(expectedResult).<Obj>get(), mParser.eval(expression));
+        assertEquals(ObjmtronSerializer.parse(expectedResult), ObjmtronSerializer.parse(expression).apply());
     }
 
     @ParameterizedTest
@@ -47,7 +48,7 @@ public class CodeParseTest extends AbstractMetatronTest {
             "1-<[_,plus(1),3]% [1,2,3]",
     }, delimiter = '%')
     void testSugarExpressions(final String expression, final String expectedResult) {
-        assertEquals(mParser.m_obj().parse(expectedResult).get(), mParser.<Obj>eval(expression));
+        assertEquals(ObjmtronSerializer.parse(expectedResult), ObjmtronSerializer.parse(expression).apply());
     }
 
 

@@ -56,6 +56,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 @InstSet.JREService(vid = "/m")
 public class mInstSet extends AbstractInstSet {
@@ -302,7 +303,7 @@ public class mInstSet extends AbstractInstSet {
                                 "[a=>1,b=>2]           [-- 2 uri=>int rec --]",
                                 "[a=>[b=>1,c=>[d=>3]]] [-- nested rec     --]",
                                 "[a=>[b=>+1,c=>_]]     [-- inst values    --]"),
-                        docWrap(INSTSET_TYPE, "", "", Map.of(
+                        docWrap(INSTSET_TYPE, "", "",  mutableMap(
                                         uri(CONST).maybe(), "constants used across the instset",
                                         uri(TYPE).maybe(), "types used to structure objs of the instset",
                                         uri(INST).maybe(), "instructions associated with the types of the instset",

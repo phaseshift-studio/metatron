@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -53,11 +54,10 @@ public class InstParseTest extends AbstractMetatronTest {
             //"/m/code[plus(1).plus(2)].plus([d,e,f])% [a,b,c,d,e,f]" (requires union())
     }, delimiter = '%')
     void testInstDefinitions(final String definition, final String usage, final String expected) {
-        Call def = mParser.eval(definition);
-        Obj use = mParser.eval(usage);
-        Obj exp = mParser.m_obj().parse(expected).get();
+        Call def = ObjmtronSerializer.parse(definition).apply().as();
+        Obj use = ObjmtronSerializer.parse(usage).apply();
+        Obj exp = ObjmtronSerializer.parse(expected).apply();
         assertEquals(exp, use);
-        //assertEquals(inst, ObjParser.eval(expression).next());
     }
 
     @ParameterizedTest
@@ -78,7 +78,7 @@ public class InstParseTest extends AbstractMetatronTest {
             //"/m/code[plus(1).plus(2)].plus([d,e,f])% [a,b,c,d,e,f]" (requires union())
     }, delimiter = '%')
     void testPlusInst(final String expression, final String expectedResult) {
-        assertEquals(mParser.m_obj().parse(expectedResult).get(), mParser.<Obj>eval(expression));
+        assertEquals(ObjmtronSerializer.parse(expectedResult), ObjmtronSerializer.parse(expression).apply());
     }
 
     @ParameterizedTest
@@ -92,7 +92,7 @@ public class InstParseTest extends AbstractMetatronTest {
             //"{1,2,3}.plus(sum())-|id()                   % {2,4,6}"
     }, delimiter = '%')
     public void testCountInst(final String expression, final String expectedResult) {
-        assertEquals(mParser.m_obj().parse(expectedResult).get(), mParser.<Obj>eval(expression));
+        assertEquals(ObjmtronSerializer.parse(expectedResult), ObjmtronSerializer.parse(expression).apply());
     }
 
     @ParameterizedTest
@@ -119,7 +119,7 @@ public class InstParseTest extends AbstractMetatronTest {
             "[1,2,3]_/sum()\\_                            % [6]",
     }, delimiter = '%')
     public void testSumInst(final String expression, final String expectedResult) {
-        assertEquals(mParser.m_obj().parse(expectedResult).get(), mParser.<Obj>eval(expression));
+        assertEquals(ObjmtronSerializer.parse(expectedResult),ObjmtronSerializer.parse(expression).apply());
     }
 
 }

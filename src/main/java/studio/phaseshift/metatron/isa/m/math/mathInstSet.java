@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.isa.m.type.Type;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.as_;
@@ -72,6 +73,15 @@ public class mathInstSet extends AbstractInstSet {
     public static final String MATH_GBYTE_STRING = "/m/math/gB";
     public static final String MATH_TBYTE_STRING = "/m/math/tB";
     public static final String MATH_PBYTE_STRING = "/m/math/pB";
+    /// ///////////////////////
+
+    public static final fURI MATH_CURRENCY_TID = f("/m/math/currency");
+    public static final fURI MATH_USD_TID = MATH_CURRENCY_TID.extend("usd");
+    public static final fURI MATH_EURO_TID = MATH_CURRENCY_TID.extend("euro");
+    public static final Type MATH_CURRENCY_TYPE = Type.Builder.build()
+            .tid(REAL_TID)
+            .vid(MATH_CURRENCY_TID)
+            .create();
 
     static {
         assert MATH_BYTE_STRING.equals(MATH_BYTE_TID.toString());
@@ -195,13 +205,17 @@ public class mathInstSet extends AbstractInstSet {
         this.jvm().putAll(mutableMap(
                 uri(PATTERN), uri(MATH_ISA_TID.extend(ALL)),
                 uri(TYPE), lst(DATA_SIZE_TYPE,
-                        BYTE_TYPE,
-                        KBYTE_TYPE,
-                        MBYTE_TYPE,
-                        GBYTE_TYPE,
-                        TBYTE_TYPE,
-                        PBYTE_TYPE),
-                uri(INST), lst(instC(MATH_COS_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(as_(REAL_TYPE).tryToInst()), (lhs, inst) -> real(Math.cos(inst.arg(0).realValue()))),
+                        docWrap(BYTE_TYPE, "a byte of data"),
+                        docWrap(KBYTE_TYPE, "a kilobyte (1024 bytes) of data"),
+                        docWrap(MBYTE_TYPE, "a megabyte (1024 kilobytes) of data"),
+                        docWrap(GBYTE_TYPE, "a gigabyte (1024 megabytes) of data"),
+                        docWrap(TBYTE_TYPE, "a terabyte (1024 gigabytes) of data"),
+                        docWrap(PBYTE_TYPE, "a petabyte (1024 terabytes) of data"),
+                        docWrap(MATH_CURRENCY_TYPE, "a currency amount"),
+                        docWrap(Type.Builder.build().tid(MATH_CURRENCY_TID).vid(MATH_USD_TID).create(), "united states currency"),
+                        docWrap(Type.Builder.build().tid(MATH_CURRENCY_TID).vid(MATH_EURO_TID).create(), "european union currency")),
+                uri(INST), lst(
+                        instC(MATH_COS_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(as_(REAL_TYPE).tryToInst()), (lhs, inst) -> real(Math.cos(inst.arg(0).realValue()))),
                         instC(MATH_SIN_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(REAL_TYPE), (lhs, inst) -> real(Math.sin(inst.arg(0).realValue()))),
                         instC(MATH_TAN_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(REAL_TYPE), (lhs, inst) -> real(Math.tan(inst.arg(0).realValue()))),
                         instC(MATH_SQRT_INST_TID.dom(ALL.maybe()).rng(REAL_TID), lst(REAL_TYPE), (lhs, inst) -> real(Math.sqrt(inst.arg(0).realValue()))),

@@ -59,9 +59,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class mMCPServer extends MRec {
+public class mMcpClient extends MRec {
 
-    protected static final GraphittyLogger LOG = Graphitty.log(mMCPServer.class);
+    protected static final GraphittyLogger LOG = Graphitty.log(mMcpClient.class);
 
     public static final Type MCP_SERVER_TYPE = docWrap(Type.Builder.build().tid(REC_TID).vid(MCP_SERVER_TID)
                     .isaPredicate(rec(
@@ -69,7 +69,7 @@ public class mMCPServer extends MRec {
                             uri(TOOL).maybe(), rec(URI_TYPE, T(LLM_TOOL_TID)).maybe(),
                             uri(STATUS).maybe(), isa_(BOOL_TYPE).else_(BOOL_FALSE)))
                     .constructor(instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(MCP_SERVER_TID), lst(T(REC_TID)),
-                            (x, inst) -> new mMCPServer(inst.arg(0).asRec().jvm(), MCP_SERVER_TID, inst.arg(0).vid())))
+                            (x, inst) -> new mMcpClient(inst.arg(0).asRec().jvm(), MCP_SERVER_TID, inst.arg(0).vid())))
                     .create(), "a mcp server specification", "creates a connection to an existing mcp server",
             Map.of(
                     uri(HOST), "the mcp server endpoint",
@@ -88,7 +88,7 @@ public class mMCPServer extends MRec {
 
     protected final McpClient client;
 
-    public mMCPServer(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
+    public mMcpClient(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
         this.client = DefaultMcpClient.builder()
                 .clientName(METATRON)
@@ -133,7 +133,7 @@ public class mMCPServer extends MRec {
     }
 
     @Override
-    public mMCPServer clone() {
+    public mMcpClient clone() {
         return this;
     }
 

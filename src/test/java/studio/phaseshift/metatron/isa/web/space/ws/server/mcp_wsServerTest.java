@@ -234,7 +234,7 @@ public class mcp_wsServerTest extends AbstractWebSocketServerTest {
                 mutableMap(uri(TOOL), rec(
                         uri("greet"), instC(f("greet").dom(ALL.maybe()).rng(ALL.maybe()),
                                 rec(uri("name"), T(ALL.maybe())),
-                                (lhs, inst) -> str("Hello, " + inst.arg("name").toCleanString())))), MCP_WS_TID, vid));
+                                (lhs, inst) -> str("Hello, " + inst.arg(f("name"),0).toCleanString())))), MCP_WS_TID, vid));
 
         final Obj response = withTool.at(uri(ON_MESSAGE)).apply(rec(
                 uri(JSONRPC), str("2.0"),

@@ -73,7 +73,7 @@ public class ObjHTMLSerializer extends AbstractObjSerializer<Document> {
 
         // Store attributes
         element.attributes().forEach(a -> recX.getAndUpdate(r -> r.at(uri(a.getKey()),
-                a.getKey().equalsIgnoreCase("src") || a.getKey().equalsIgnoreCase("href") ?
+                a.getKey().equalsIgnoreCase(SRC) || a.getKey().equalsIgnoreCase(HREF) ?
                         uri(a.getValue()) :
                         str(a.getValue()))));
 

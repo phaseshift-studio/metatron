@@ -57,7 +57,7 @@ import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_SERVER_TID;
  * Integration tests for {@link mcp_mtron_wsServer}.
  * <p>
  * All tests require a live WebSocket environment because {@code mcp_mtron_wsServer}'s
- * built-in tools ({@code mtron_list_space}, {@code mtron_router_info}, {@code mtron_list_inst})
+ * built-in tools ({@code list_space}, {@code router_info}, {@code list_inst})
  * query the Router for registered spaces at invocation time.  Running against an empty-route
  * {@code wsSpace} (as {@code AbstractWSServerTest} provides) causes those look-ups to fail.
  * <p>
@@ -124,17 +124,19 @@ public class mcp_mtron_wsServerIntegrationTest extends AbstractWebSocketServerIn
     // =========================================================
 
     @Test
-    public void testMcpMtronTidNamespace() {
+    public void testMcpMtronTIDNamespace() {
         assertTrue(MCP_MTRON_WS_TID.toString().contains("wsspace"));
         assertTrue(MCP_MTRON_WS_TID.toString().contains("mcp_mtron_ws"));
     }
 
+    // todo: test type, not tid
     @Test
     public void testMcpMtronTypeIsSubtypeOfMcpWs() {
         assertEquals(MCP_WS_TID, WS_MCP_MTRON_SERVER_TYPE.tid(),
                 "mcp_mtron type should declare mcp_ws as its parent type");
     }
 
+    // todo: test type, not tid
     @Test
     public void testMcpWsTypeDeclaresMcpServerAsParent() {
         // mcp_ws declares WS_SERVER_TID as its tid.
@@ -178,8 +180,8 @@ public class mcp_mtron_wsServerIntegrationTest extends AbstractWebSocketServerIn
                 uri("method"), uri("tools/list")));
         final boolean hasListSpace = res.at(uri(RESULT)).asRec().at(uri("tools")).asLst().lstValue()
                 .stream()
-                .anyMatch(t -> t.isRec() && str("mtron_list_space").equals(t.asRec().at(uri(NAME))));
-        assertTrue(hasListSpace, "tools/list should include 'mtron_list_space'");
+                .anyMatch(t -> t.isRec() && str("list_space").equals(t.asRec().at(uri(NAME))));
+        assertTrue(hasListSpace, "tools/list should include 'list_space'");
     }
 
     @Test
@@ -190,8 +192,8 @@ public class mcp_mtron_wsServerIntegrationTest extends AbstractWebSocketServerIn
                 uri("method"), uri("tools/list")));
         final boolean hasRouterInfo = res.at(uri(RESULT)).asRec().at(uri("tools")).asLst().lstValue()
                 .stream()
-                .anyMatch(t -> t.isRec() && str("mtron_router_info").equals(t.asRec().at(uri(NAME))));
-        assertTrue(hasRouterInfo, "tools/list should include 'mtron_router_info'");
+                .anyMatch(t -> t.isRec() && str("router_info").equals(t.asRec().at(uri(NAME))));
+        assertTrue(hasRouterInfo, "tools/list should include 'router_info'");
     }
 
     @Test
@@ -202,8 +204,8 @@ public class mcp_mtron_wsServerIntegrationTest extends AbstractWebSocketServerIn
                 uri("method"), uri("tools/list")));
         final boolean hasListInst = res.at(uri(RESULT)).asRec().at(uri("tools")).asLst().lstValue()
                 .stream()
-                .anyMatch(t -> t.isRec() && str("mtron_list_inst").equals(t.asRec().at(uri(NAME))));
-        assertTrue(hasListInst, "tools/list should include 'mtron_list_inst'");
+                .anyMatch(t -> t.isRec() && str("list_inst").equals(t.asRec().at(uri(NAME))));
+        assertTrue(hasListInst, "tools/list should include 'list_inst'");
     }
 
     // =========================================================
@@ -217,12 +219,12 @@ public class mcp_mtron_wsServerIntegrationTest extends AbstractWebSocketServerIn
                 uri(ID), jnt(10),
                 uri("method"), uri("tools/call"),
                 uri("params"), rec(
-                        uri(NAME), str("mtron_list_space"),
+                        uri(NAME), str("list_space"),
                         uri("arguments"), rec())));
-        assertFalse(res.at(uri(RESULT)).isNoObj(), "mtron_list_space should return a result");
-        assertFalse(res.at(uri("error")).isRec(), "mtron_list_space should not error");
+        assertFalse(res.at(uri(RESULT)).isNoObj(), "list_space should return a result");
+        assertFalse(res.at(uri("error")).isRec(), "list_space should not error");
         // Result content is a Rec mapping space vids → space objects
-        assertTrue(res.at(uri(RESULT)).isRec(), "mtron_list_space result should be a Rec");
+        assertTrue(res.at(uri(RESULT)).isRec(), "list_space result should be a Rec");
     }
 
     @Test
@@ -232,10 +234,10 @@ public class mcp_mtron_wsServerIntegrationTest extends AbstractWebSocketServerIn
                 uri(ID), jnt(11),
                 uri("method"), uri("tools/call"),
                 uri("params"), rec(
-                        uri(NAME), str("mtron_router_info"),
+                        uri(NAME), str("router_info"),
                         uri("arguments"), rec())));
-        assertFalse(res.at(uri(RESULT)).isNoObj(), "mtron_router_info should return a result");
-        assertFalse(res.at(uri("error")).isRec(), "mtron_router_info should not error");
+        assertFalse(res.at(uri(RESULT)).isNoObj(), "router_info should return a result");
+        assertFalse(res.at(uri("error")).isRec(), "router_info should not error");
         // tools/call wraps the output in {content:[{type:"text",text:"...serialized..."}]}
         final Obj contentList = res.at(uri(RESULT)).asRec().at(uri(CONTENT));
         assertFalse(contentList.isNoObj(), "result should have a content field");
@@ -251,10 +253,10 @@ public class mcp_mtron_wsServerIntegrationTest extends AbstractWebSocketServerIn
                 uri(ID), jnt(12),
                 uri("method"), uri("tools/call"),
                 uri("params"), rec(
-                        uri(NAME), str("mtron_list_inst"),
+                        uri(NAME), str("list_inst"),
                         uri("arguments"), rec())));
-        assertFalse(res.at(uri(RESULT)).isNoObj(), "mtron_list_inst should return a result");
-        assertFalse(res.at(uri("error")).isRec(), "mtron_list_inst should not error");
+        assertFalse(res.at(uri(RESULT)).isNoObj(), "list_inst should return a result");
+        assertFalse(res.at(uri("error")).isRec(), "list_inst should not error");
     }
 
     @Test
@@ -266,10 +268,10 @@ public class mcp_mtron_wsServerIntegrationTest extends AbstractWebSocketServerIn
                 uri(ID), jnt(13),
                 uri("method"), uri("tools/call"),
                 uri("params"), rec(
-                        uri(NAME), str("mtron_list_inst"),
+                        uri(NAME), str("list_inst"),
                         uri("arguments"), rec(uri("doc"), uri("true")))));
-        assertFalse(res.at(uri(RESULT)).isNoObj(), "mtron_list_inst(doc=true) should return a result");
-        assertFalse(res.at(uri("error")).isRec(), "mtron_list_inst(doc=true) should not error");
+        assertFalse(res.at(uri(RESULT)).isNoObj(), "list_inst(doc=true) should return a result");
+        assertFalse(res.at(uri("error")).isRec(), "list_inst(doc=true) should not error");
     }
 
     @Test
@@ -316,7 +318,7 @@ public class mcp_mtron_wsServerIntegrationTest extends AbstractWebSocketServerIn
         // Default tools should NOT be injected when caller provides own tool rec
         final boolean hasListSpace = response.asRec().at(uri(RESULT)).asRec().at(uri("tools")).asLst().lstValue()
                 .stream()
-                .anyMatch(t -> t.isRec() && str("mtron_list_space").equals(t.asRec().at(uri(NAME))));
+                .anyMatch(t -> t.isRec() && str("list_space").equals(t.asRec().at(uri(NAME))));
         assertFalse(hasListSpace, "default tools should not be injected when caller provides a tool rec");
     }
 
@@ -389,7 +391,7 @@ public class mcp_mtron_wsServerIntegrationTest extends AbstractWebSocketServerIn
         assertTrue(resp.contains("\"result\""), "tools/list should have a result");
         // At least one of the metatron-native tools should appear in the JSON
         assertTrue(
-                resp.contains("mtron_list_space") || resp.contains("mtron_router_info") || resp.contains("mtron_list_inst"),
+                resp.contains("list_space") || resp.contains("router_info") || resp.contains("list_inst"),
                 "tools/list should include at least one metatron-native tool");
     }
 
@@ -397,33 +399,33 @@ public class mcp_mtron_wsServerIntegrationTest extends AbstractWebSocketServerIn
     public void testCallListSpaceRoundTrip() throws Exception {
         connectToServer("/mcp-mtron");
         final String req = "{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"tools/call\","
-                + "\"params\":{\"name\":\"mtron_list_space\",\"arguments\":{}}}";
+                + "\"params\":{\"name\":\"list_space\",\"arguments\":{}}}";
         final String resp = sendAndReceive(req);
-        assertNotNull(resp, "mtron_list_space call should return a response");
-        assertFalse(resp.contains("\"error\""), "mtron_list_space should not error: " + resp);
-        assertTrue(resp.contains("\"result\""), "mtron_list_space should return a result");
+        assertNotNull(resp, "list_space call should return a response");
+        assertFalse(resp.contains("\"error\""), "list_space should not error: " + resp);
+        assertTrue(resp.contains("\"result\""), "list_space should return a result");
     }
 
     @Test
     public void testCallRouterInfoRoundTrip() throws Exception {
         connectToServer("/mcp-mtron");
         final String req = "{\"jsonrpc\":\"2.0\",\"id\":4,\"method\":\"tools/call\","
-                + "\"params\":{\"name\":\"mtron_router_info\",\"arguments\":{}}}";
+                + "\"params\":{\"name\":\"router_info\",\"arguments\":{}}}";
         final String resp = sendAndReceive(req);
-        assertNotNull(resp, "mtron_router_info call should return a response");
-        assertFalse(resp.contains("\"error\""), "mtron_router_info should not error: " + resp);
-        assertTrue(resp.contains("\"result\""), "mtron_router_info should return a result");
+        assertNotNull(resp, "router_info call should return a response");
+        assertFalse(resp.contains("\"error\""), "router_info should not error: " + resp);
+        assertTrue(resp.contains("\"result\""), "router_info should return a result");
     }
 
     @Test
     public void testCallListInstRoundTrip() throws Exception {
         connectToServer("/mcp-mtron");
         final String req = "{\"jsonrpc\":\"2.0\",\"id\":5,\"method\":\"tools/call\","
-                + "\"params\":{\"name\":\"mtron_list_inst\",\"arguments\":{}}}";
+                + "\"params\":{\"name\":\"list_inst\",\"arguments\":{}}}";
         final String resp = sendAndReceive(req);
-        assertNotNull(resp, "mtron_list_inst call should return a response");
-        assertFalse(resp.contains("\"error\""), "mtron_list_inst should not error: " + resp);
-        assertTrue(resp.contains("\"result\""), "mtron_list_inst should return a result");
+        assertNotNull(resp, "list_inst call should return a response");
+        assertFalse(resp.contains("\"error\""), "list_inst should not error: " + resp);
+        assertTrue(resp.contains("\"result\""), "list_inst should return a result");
     }
 
     @Test

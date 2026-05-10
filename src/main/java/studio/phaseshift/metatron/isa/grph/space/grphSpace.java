@@ -366,4 +366,16 @@
             }
         }
     }*/
+
+     @Override
+     public void close() {
+         try {
+             this.sjvm().close();
+             Router.global().write(this.vid().extend("instset"), noobj());
+         } catch (final Exception e) {
+             LOG.error(MTronException.of(e));
+         } finally {
+             super.close();
+         }
+     }
  }

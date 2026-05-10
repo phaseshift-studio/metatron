@@ -147,7 +147,7 @@ public class tbleInstSet extends AbstractInstSet {
                                     }
                                 }), "a table space typically backed by an sql-compliant relational database",
                                 "a result set as a stream of rows in mtron",
-                                Map.of(jnt(0), "an sql query"),
+                                mutableMap(jnt(0), "an sql query"),
                                 "query a relational database in native sql and yield an mtron mapped result set",
                                 "*/sys/space/netflix.sql('SELECT * FROM movie WHERE runtime < ${*next_event - time(now)') [-- str templates are useful --]"))),
                 uri(REWRITE), lst(

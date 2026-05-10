@@ -23,6 +23,7 @@ import org.junit.jupiter.api.extension.AfterTestExecutionCallback;
 import org.junit.jupiter.api.extension.BeforeTestExecutionCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
@@ -157,7 +158,7 @@ public @interface TestData {
                                     LOG.debug("line %d: evaluating: %s", lineNumber, processedLine);
                                     try {
                                         // Execute each write statement individually and consume the stream
-                                        mParser.eval(processedLine).forEach(obj -> {});
+                                        ObjmtronSerializer.parse(processedLine).apply().forEach(obj -> {});
                                         System.out.println("==> TestData line " + lineNumber + ": completed");
                                         LOG.debug("line %d: completed", lineNumber);
                                         recordCount++;
@@ -186,7 +187,7 @@ public @interface TestData {
                             .filter(value -> !value.trim().isEmpty())
                             .peek(value -> LOG.debug("loading test data: %s", value))
                             .peek(v -> this.testDataLoaded = true)
-                            .forEach(mParser::eval);
+                            .forEach(v -> ObjmtronSerializer.parse(v).apply());
                 }
             } catch (Exception e) {
                 throw MTronTestException.of(e);

@@ -115,6 +115,10 @@ public class mModel extends MRec {
         return Optional.<Obj>ofNullable(this.at(TOOL).orElse(null)).map(o -> o.autoResolve(this)).map(Obj::asLst);
     }
 
+    public Optional<Rec> cost() {
+        return Optional.<Rec>ofNullable(this.at(COST).orElse(null)).map(o -> o.autoResolve(this)).map(Obj::asRec);
+    }
+
     public Optional<Lst> skills() {
         return Optional.<Obj>ofNullable(this.at(SKILL).orElse(null)).map(o -> o.autoResolve(this)).map(Obj::asLst);
     }
@@ -193,6 +197,7 @@ public class mModel extends MRec {
             systemMessage.add("You have access to the following skills:\n" + skills.formatAvailableSkills()
                     + "\nWhen the user's request relates to one of these skills, activate it first using the `activate_skill` tool before proceeding.");
         }
+
         //////////////////////////////////////////
         ///////////////  TOOLS  //////////////////
         //////////////////////////////////////////
@@ -204,7 +209,7 @@ public class mModel extends MRec {
                     .flatMap(e -> e.isObjs() ? e.elements() : Stream.of(e))
                     .forEach(t -> {
                         if (t.tid().equals(MCP_SERVER_TID)) {
-                            service.toolProvider(McpToolProvider.builder().mcpClients(((mMCPServer) t).client()).build()).executeToolsConcurrently(BootLoader.getExecutor());
+                            service.toolProvider(McpToolProvider.builder().mcpClients(((mMcpClient) t).client()).build()).executeToolsConcurrently(BootLoader.getExecutor());
                         } else if (t.isObjInst()) {
                             if (QCollection.isNoDocs(Router.global().read(t.tid().addQ(DOCQ))))
                                 t.logger().warn("ignoring inst as it has no associated ?docq: %s", t);
@@ -278,6 +283,7 @@ public class mModel extends MRec {
         final AtomicBoolean isComplete = new AtomicBoolean(false);
         final AtomicBoolean isTooling = new AtomicBoolean(false);
         final AtomicReference<MTronException> isError = new AtomicReference<>();
+
         try {
             final mAgent agent = this.agent()
                     .systemMessageTransformer((current, content) -> this.at(DESC).orElse(str0()).strValue() + "\n\n" + current)

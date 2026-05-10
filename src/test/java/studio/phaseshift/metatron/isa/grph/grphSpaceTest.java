@@ -117,14 +117,14 @@ public class grphSpaceTest extends AbstractSpaceTest {
     public void testProfiling() {
         //  BootLoader.TYPE_CHECK = false;
         final Tuple.Pair<Obj, Long> mtronResult = CommonUtil.clock(() -> {
-            final Obj result = mParser.eval("*/g/V/+.out().>|.out().>|.out().>|.out().count()");
+            final Obj result = ObjmtronSerializer.parse("*/g/V/+.out().>|.out().>|.out().>|.out().count()").apply();
             // Force any lazy evaluation by consuming the result
             final String s = result.toString();
             return result;
         });
         LOG.error("mtron>   %s [%s ms]", mtronResult.get0(), mtronResult.get1());
         final Tuple.Pair<Obj, Long> gremlinResult = CommonUtil.clock(() -> {
-            final Obj result = mParser.eval("*</sys/space/test>.gremlin?#<=#('g.V().out().out().out().out().count().next()')");
+            final Obj result = ObjmtronSerializer.parse("*</sys/space/test>.gremlin?#<=#('g.V().out().out().out().out().count().next()')").apply();
             final String s = result.toString();
             return result;
         });
@@ -252,7 +252,7 @@ public class grphSpaceTest extends AbstractSpaceTest {
             "*/g/V/1.addE(likes,*/g/V/2)                                       % */g/V/1.out(likes)                     % */g/V/2",
     }, delimiter = '%')
     public void testAddVertex(final String update, final String select, final String expected) {
-        assertTrue(mParser.eval(update).test(T(EDGE_TID)));
+        assertTrue(ObjmtronSerializer.parse(update).test(T(EDGE_TID)));
         AbstractMetatronTest.checkCodeParseApply(LOG, select, expected);
     }
 

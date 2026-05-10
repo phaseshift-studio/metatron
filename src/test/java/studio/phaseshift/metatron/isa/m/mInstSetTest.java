@@ -35,6 +35,7 @@ import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.NoObj;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
@@ -597,7 +598,7 @@ public class mInstSetTest extends AbstractInstSetTest {
     public void testRepeat(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
         long current = System.currentTimeMillis();
-        mParser.eval("1.repeat(plus(1),35000)");
+        ObjmtronSerializer.parse("1.repeat(plus(1),35000)").apply();
         long time = System.currentTimeMillis() - current;
         if (time > 1500)
             throw MTronException.of("repeat took too long: %s --- inst resolution isn't being cached", time);
@@ -630,7 +631,7 @@ public class mInstSetTest extends AbstractInstSetTest {
             "a -> [b=>[c=>d]]              % <a/b/..> -> 22                  % a            % 22",
             "a -> [b=>[c=>{1,2,3}]]        % <a/b/c> -> {4,5,6}              % a/b/c        % {1,2,3,4,5,6}",
             "a -> [b=>[c=>{1,2,3}]]        % <a/b/c> -> {4,5,6}              % a            % [b=>[c=>{1,2,3,4,5,6}]]",
-          //  "a -> [b=>[c=>{1,2,3}]]        % *<a/b/c>>>=+{4,5,6}             % a            % [b=>[c=>{1,2,3,4,5,6}]]",
+            //  "a -> [b=>[c=>{1,2,3}]]        % *<a/b/c>>>=+{4,5,6}             % a            % [b=>[c=>{1,2,3,4,5,6}]]",
             "a -> [b=>[c=>[1,2,3]]]        % *<a/b/c>>>=+[4,5,6]             % a            % [b=>[c=>[1,2,3,4,5,6]]]",
             "a -> [b=>[c=>[1=>2]]]         % *<a/b/c>>>=+[2=>3]              % a            % [b=>[c=>[1=>2,2=>3]]]",
             "a -> [b=>[c=>[1=>2]]]         % *<a/b/c>>>=-<[1=>rng()+2]       % a            % [b=>[c=>[1=>4]]]",
@@ -644,7 +645,7 @@ public class mInstSetTest extends AbstractInstSetTest {
             "a -> [1,2,3,4]                % *a>>=[5,6,7]                    % a            % [5,6,7,4]",
             "a -> [1,2,3,4]                % *a>>=[5,6,7,none]               % a            % [5,6,7]",
             "a -> [1,2,3,4]                % *a>>=+[5,6,7]                   % a            % [1,2,3,4,5,6,7]",
-         //   "a -> [1,2,3,4]                % *a>>=[{*}none]                  % a            % [5,6,7]",
+            //   "a -> [1,2,3,4]                % *a>>=[{*}none]                  % a            % [5,6,7]",
             "a -> noobj                    % a -> noobj                      % a            % noobj",
             "a -> [1]                      % *a>>=+[2,3,4]                   % a            % [1,2,3,4]",
             "a -> noobj                    % a -> noobj                      % a            % noobj",

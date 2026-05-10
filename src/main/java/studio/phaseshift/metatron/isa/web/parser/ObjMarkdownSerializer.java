@@ -60,7 +60,7 @@ public class ObjMarkdownSerializer extends AbstractObjSerializer<Node> {
     }
 
     public Obj toHTML(final Node markdown) {
-        HtmlRenderer renderer = HtmlRenderer.builder().build();
+        final HtmlRenderer renderer = HtmlRenderer.builder().build();
         return ObjHTMLSerializer.parse(renderer.render(markdown));
     }
 

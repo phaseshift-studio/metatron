@@ -120,7 +120,7 @@ public class mcp_mtron_wsServer extends mcp_wsServer {
             tools.at(uri("eval_mtron"), docWrap(instC(
                             MCP_MTRON_WS_TID.extend("eval_mtron").dom(NOOBJ_TID.zero()).rng(ALL.maybeSome()),
                             rec(uri("code"), STR_TYPE), (lhs, inst) -> {
-                                final Obj codeArg = inst.arg("code");
+                                final Obj codeArg = inst.arg(f("code"),0);
                                 return ObjmtronSerializer.parse(codeArg.toCleanString()).apply();
                             }), "noobj lhs", "the result of the code evaluation",
                     Map.of(uri(CODE), "mtron code to evaluate"), "returns the result of evaluating the provided mtron expression"), MUTABLE);
@@ -154,7 +154,7 @@ public class mcp_mtron_wsServer extends mcp_wsServer {
             tools.at(uri("list_inst"), instC(
                     MCP_MTRON_WS_TID.extend("list_inst").dom(NOOBJ_TID.zero()).rng(ALL.maybe()),
                     rec(uri(DOC), BOOL_TYPE.maybe()), (lhs, inst) -> {
-                        final Obj docArg = inst.arg(DOC);
+                        final Obj docArg = inst.arg(f(DOC),0);
                         final boolean withDoc = docArg.isBool() && docArg.boolValue()
                                 || !docArg.isNoObj() && docArg.toCleanString().equalsIgnoreCase("true");
                         return lst(Router.global().read(withDoc ? "/m/inst/#?doc" : "/m/inst/+"));
@@ -197,17 +197,17 @@ public class mcp_mtron_wsServer extends mcp_wsServer {
         // accesses them, so content is always live from disk — no need to update
         // Java code when reference docs change.  .jvm().put() bypasses Rec.at()
         // path-decomposition so keys stay flat (no nesting).
-        if (!jvm.containsKey(uri(RESOURCE))) {
+        if (false && !jvm.containsKey(uri(RESOURCE))) {
             final fURI prefix = f("mtronfs:skills/mtron/");
             final Rec resources = rec(mutableMap());
-            resources.jvm().put(uri("SKILL.md"), auto_(auto_from_(prefix.extend("SKILL.md")).as_(STR_TYPE).asCode()).tryToInst());
+          //  resources.jvm().put(uri("SKILL.md"), auto_(auto_from_(prefix.extend("SKILL.md")).as_(STR_TYPE).asCode()).tryToInst());
             resources.jvm().put(uri("writing-mtron-expressions.md"), auto_(auto_from_(prefix.extend("references/writing-mtron-expressions.md")).as_(STR_TYPE).asCode()).tryToInst());
-            resources.jvm().put(uri("connecting-datasources.md"), auto_(auto_from_(prefix.extend("references/connecting-datasources.md")).as_(STR_TYPE).asCode()).tryToInst());
-            resources.jvm().put(uri("providing-data-statistics.md"), auto_(auto_from_(prefix.extend("references/providing-data-statistics.md")).as_(STR_TYPE).asCode()).tryToInst());
-            resources.jvm().put(uri("mcp-server-architecture.md"), auto_(auto_from_(prefix.extend("references/mcp-server-architecture.md")).as_(STR_TYPE).asCode()).tryToInst());
-            resources.jvm().put(uri("mcp-server-notifications.md"), auto_(auto_from_(prefix.extend("references/mcp-server-notifications.md")).as_(STR_TYPE).asCode()).tryToInst());
-            resources.jvm().put(uri("http-page-fetching.md"), auto_(auto_from_(prefix.extend("references/http-page-fetching.md")).as_(STR_TYPE).asCode()).tryToInst());
-            resources.jvm().put(uri("answer-questions.md"), auto_(auto_from_(prefix.extend("references/answer-questions.md")).as_(STR_TYPE).asCode()).tryToInst());
+          //  resources.jvm().put(uri("connecting-datasources.md"), auto_(auto_from_(prefix.extend("references/connecting-datasources.md")).as_(STR_TYPE).asCode()).tryToInst());
+          //  resources.jvm().put(uri("providing-data-statistics.md"), auto_(auto_from_(prefix.extend("references/providing-data-statistics.md")).as_(STR_TYPE).asCode()).tryToInst());
+           // resources.jvm().put(uri("mcp-server-architecture.md"), auto_(auto_from_(prefix.extend("references/mcp-server-architecture.md")).as_(STR_TYPE).asCode()).tryToInst());
+           // resources.jvm().put(uri("mcp-server-notifications.md"), auto_(auto_from_(prefix.extend("references/mcp-server-notifications.md")).as_(STR_TYPE).asCode()).tryToInst());
+           // resources.jvm().put(uri("http-page-fetching.md"), auto_(auto_from_(prefix.extend("references/http-page-fetching.md")).as_(STR_TYPE).asCode()).tryToInst());
+           // resources.jvm().put(uri("answer-questions.md"), auto_(auto_from_(prefix.extend("references/answer-questions.md")).as_(STR_TYPE).asCode()).tryToInst());
             jvm.put(uri(RESOURCE), resources);
         }
 

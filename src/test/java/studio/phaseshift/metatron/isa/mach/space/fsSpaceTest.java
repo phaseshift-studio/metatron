@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -51,13 +52,13 @@ public class fsSpaceTest extends AbstractSpaceTest {
 
     public fsSpaceTest() {
         super(f("test:"), () -> {
-            mParser.eval("boot/script ->\n" +
+            ObjmtronSerializer.parse("boot/script ->\n" +
                     "  [sh     => /bin/sh,\n" +
                     "   bash   => /bin/bash,\n" +
                     "   zsh    => /bin/zsh,\n" +
                     "   python => /usr/bin/python3,\n" +
                     "   perl   => /usr/bin/perl,\n" +
-                    "   mtron  => /bin/mtron]");
+                    "   mtron  => /bin/mtron]").apply();
             return fsSpace.of(FileSystems.getDefault(), rec(
                             uri(PATTERN), uri("test:#"), 
                             uri(SCRIPT), auto_from_(f("boot/script")),
@@ -107,7 +108,7 @@ public class fsSpaceTest extends AbstractSpaceTest {
             "*<test:file/test-bash.bash>       % #! /usr/bin/env bash",
     }, delimiter = '%')
     public void testFileTypes(final String code, final String expected) {
-        final Obj shell = mParser.eval(code);
+        final Obj shell = ObjmtronSerializer.parse(code).apply();
         LOG.warn("loaded shell: %s", shell);
         assertEquals(STR_TID, shell.tid(), "shell file data should be a string");
         assertTrue(shell.strValue().startsWith(expected));
@@ -119,7 +120,7 @@ public class fsSpaceTest extends AbstractSpaceTest {
             "<test:file/test-bash.bash>(1)     % /usr/bin/env bash",
     }, delimiter = '%')
     public void testShellEvaluation(final String code, final String expected) {
-        final Obj shell = mParser.eval(code);
+        final Obj shell = ObjmtronSerializer.parse(code).apply();
         LOG.warn("loaded shell: %s", shell);
         assertTrue(shell.isStr());
         assertTrue(shell.strValue().startsWith(expected));

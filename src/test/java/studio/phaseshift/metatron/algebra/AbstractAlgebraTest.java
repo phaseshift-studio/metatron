@@ -23,6 +23,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.isa.AbstractObjTest;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 
 import java.util.Set;
@@ -74,8 +75,8 @@ public abstract class AbstractAlgebraTest<O extends Obj> extends AbstractObjTest
             assertEquals("0 - a         = (-a)", group.neg(), group.zero().minus(group));
             /// /////////////////////////////////////////////////////////////////////////
             Router.global().write("a", group);
-            final Obj lhsObj = mParser.eval(lhs);
-            final Obj rhsObj = mParser.eval(rhs);
+            final Obj lhsObj = ObjmtronSerializer.parse(lhs).apply();
+            final Obj rhsObj = ObjmtronSerializer.parse(rhs).apply();
             assertEquals(lhs + " != " + rhs, lhsObj, rhsObj);
 
         } else {
@@ -110,8 +111,8 @@ public abstract class AbstractAlgebraTest<O extends Obj> extends AbstractObjTest
             assertEquals("a / 1         = a", group.div(group.one()), group);
             /// /////////////////////////////////////////////////////////////////////////
             Router.global().write("a", group);
-            final Obj lhsObj = mParser.eval(lhs);
-            final Obj rhsObj = mParser.eval(rhs);
+            final Obj lhsObj = ObjmtronSerializer.parse(lhs).apply();
+            final Obj rhsObj = ObjmtronSerializer.parse(rhs).apply();
             assertEquals(lhs + " != " + rhs, lhsObj, rhsObj);
         } else {
             LOG.warn("skipping testing for non mult group: %s %s", this.obj.type(), this.forms);
@@ -136,8 +137,8 @@ public abstract class AbstractAlgebraTest<O extends Obj> extends AbstractObjTest
             assertEquals("a + 0 = a", monoid, monoid.plus(monoid.zero()));
             /// /////////////////////////////////////////////////////////////////////////
             Router.global().write("a", monoid);
-            final Obj lhsObj = mParser.eval(lhs);
-            final Obj rhsObj = mParser.eval(rhs);
+            final Obj lhsObj = ObjmtronSerializer.parse(lhs).apply();
+            final Obj rhsObj = ObjmtronSerializer.parse(rhs).apply();
             assertEquals(lhs + " != " + rhs, lhsObj, rhsObj);
         } else {
             LOG.warn("skipping testing for non plus monoid: %s %s", this.obj.type(), this.forms);
@@ -161,8 +162,8 @@ public abstract class AbstractAlgebraTest<O extends Obj> extends AbstractObjTest
             assertEquals("a * 1 = a", monoid, monoid.mult(monoid.one()));
             /// /////////////////////////////////////////////////////////////////////////
             Router.global().write("a", monoid);
-            final Obj lhsObj = mParser.eval(lhs);
-            final Obj rhsObj = mParser.eval(rhs);
+            final Obj lhsObj = ObjmtronSerializer.parse(lhs).apply();
+            final Obj rhsObj = ObjmtronSerializer.parse(rhs).apply();
             assertEquals(lhs + " != " + rhs, lhsObj, rhsObj);
         } else {
             LOG.warn("skipping testing for non mult monoid: %s %s", this.obj.type(), this.forms);
