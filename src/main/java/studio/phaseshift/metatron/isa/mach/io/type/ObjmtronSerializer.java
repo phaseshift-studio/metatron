@@ -33,7 +33,6 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HexFormat;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
@@ -50,6 +49,8 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
     public static final int CLIP_LENGTH = 50;
     protected int clip = CLIP_LENGTH;
     public static String REAL_FORMAT = "%.4f";
+    public static final int INDENT_SIZE = 1;
+    public static final int NESTED_STRING_THRESHOLD = 30;
 
     private static final ObjmtronSerializer INSTANCE = new ObjmtronSerializer();
     private static final ObjmtronSerializer NO_CLIP_INSTANCE = new ObjmtronSerializer(Integer.MAX_VALUE);
@@ -194,7 +195,7 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
 
     @Override
     public String writeRec(final Rec rec) {
-        return this.generateRec(new StringBuilder(), rec, 0, 0).toString();
+        return this.generateRec(new StringBuilder(), rec, 0).toString();
     }
 
     @Override
@@ -205,23 +206,23 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
     public StringBuilder generateInst(final StringBuilder sb, final Inst inst, final int depth, final int padding, boolean nested) {
         if (inst.tid().basePath().equals(AUTO_FROM_INST_TID)) {
             sb.append("!*");
-            this.processNestedPoly(sb, depth + 1, padding, nested, inst.arg(0));
+            renderInstArg(sb, depth + 1, padding, nested, inst.arg(0));
         } else if (inst.tid().basePath().equals(AUTO_AT_INST_TID) && inst.arg(1).isNoObj()) {
             sb.append("!@");
-            this.processNestedPoly(sb, depth + 1, padding, nested, inst.arg(0));
+            renderInstArg(sb, depth + 1, padding, nested, inst.arg(0));
 
         } else if (inst.tid().basePath().equals(AUTO_INST_TID)) {
             sb.append("!");
-            this.processNestedPoly(sb, depth + 1, padding, nested, inst.arg(0));
+            renderInstArg(sb, depth + 1, padding, nested, inst.arg(0));
 
         } else if (inst.tid().basePath().equals(FROM_INST_TID)) {
             sb.append("*");
-            this.processNestedPoly(sb, depth + 1, padding, nested, inst.arg(0));
+            renderInstArg(sb, depth + 1, padding, nested, inst.arg(0));
         } else {
             final String internal = inst.args().elements()
                     .map(o -> {
                         final StringBuilder temp = new StringBuilder();
-                        processNestedPoly(temp, depth + 1, padding, nested, o);
+                        renderInstArg(temp, depth + 1, padding, nested, o);
                         return cleanEnding(temp).toString();
                     })
                     .reduce(",", (a, b) -> a + b + ",");
@@ -302,9 +303,9 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
                 null != o.vid() ||
                         o.isPoly() ||
                         o.isObjCall() ||
-                        (o.isStr() && o.strValue().length() > 15) ||
-                        (o.isUri() && o.uriValue().toString().length() > 15) ||
-                        (o.isBytes() && o.bytesValue().capacity() > 15) ||
+                        (o.isStr() && o.strValue().length() > NESTED_STRING_THRESHOLD) ||
+                        (o.isUri() && o.uriValue().toString().length() > NESTED_STRING_THRESHOLD) ||
+                        (o.isBytes() && o.bytesValue().capacity() > NESTED_STRING_THRESHOLD) ||
                         isComplexType(o)));
     }
 
@@ -314,13 +315,17 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
             sb.append("[,]");
         } else {
             boolean nested = isNested(lst);
-            sb.append("[").append(nested ? "\n" : "");
+            sb.append("[");
+            if (nested) sb.append("\n");
             lst.jvm().forEach(v -> {
-                if (nested)
-                    sb.append(" ".repeat(depth + 2));
-                this.processNestedPoly(sb, depth + 1, 0, nested, v);
+                if (nested) {
+                    sb.append(" ".repeat((depth + 1) * INDENT_SIZE));
+                }
+                renderValue(sb, nested ? depth + 1 : 0, v);
+                sb.append(",");
+                if (nested) sb.append("\n");
             });
-            this.cleanEnding(sb);
+            cleanEnding(sb);
             sb.append("]");
         }
         return handleVID(sb, lst);
@@ -336,67 +341,62 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
     }
 
     private StringBuilder generateType(final StringBuilder sb, final Type type, final int depth) {
-        StringBuilder typeString = new StringBuilder(
+        sb.append(
                 (Router.loaded() ? Router.global().redirect(type.tid(), false) : type.tid()).toString())
                 .append("::T");
         if (type.hasPredicate()) {
             if (type.predicate().isObjInst() && type.predicate().tid().basePath().equals(ISA_INST_TID) && type.predicate().asInst().arg(0).isPoly()) {
-                typeString.append("[?");
-                processNestedPoly(sb, depth + 1, 0, true, type.predicate().asInst().arg(0));
-                typeString.append(sb, 0, sb.length() - 2); // remove ,\n
-                typeString.append("]");
+                sb.append("[?");
+                StringBuilder temp = new StringBuilder();
+                renderValue(temp, depth + 1, type.predicate().asInst().arg(0));
+                sb.append(temp);
+                sb.append("]");
             } else {
-                typeString.append("[").append(type.predicate()).append("]");
+                sb.append("[").append(type.predicate()).append("]");
             }
         }
         if (type.hasConstructor()) {
             if (!type.hasPredicate())
-                typeString.append("[]");
-            typeString.append("[\n");
-            // final StringBuilder temp = new StringBuilder();
-            processNestedPoly(typeString, depth + 1, depth + 1, true, type.constructor());
-            typeString.delete(typeString.length() - 2, typeString.length()); // remove ,\n
-            typeString.append("]");
+                sb.append("[]");
+            sb.append("[\n");
+            StringBuilder temp = new StringBuilder();
+            temp.append(" ".repeat((depth + 1) * INDENT_SIZE));
+            renderValue(temp, depth + 1, type.constructor());
+            cleanEnding(temp);
+            sb.append(temp);
+            sb.append("\n");
+            sb.append(" ".repeat(depth * INDENT_SIZE));
+            sb.append("]");
         }
         if (type.vid() != null && !type.tid().equals(type.vid()))
-            typeString.append("@").append(type.vid());
-        return typeString;
+            sb.append("@").append(type.vid());
+        return sb;
     }
 
     private boolean isComplexType(final Obj type) {
         return type.isType() && (type.asType().hasPredicate() || type.asType().hasConstructor());
     }
 
-    private StringBuilder generateRec(final StringBuilder sb, final Rec rec, final int depth, final int padding) {
+    private StringBuilder generateRec(final StringBuilder sb, final Rec rec, final int depth) {
         handleTID(sb, rec, true);
-        //   if(rec.tid().basePath().equals(DOC_TID)) // TODO: the concept of toString() needs to exist for metatron
-        //      return sb.append(rec.toString());
         if (rec.isEmpty()) {
             sb.append("[=>]");
         } else {
             boolean nested = isNested(rec);
-            final int maxKeyLength = nested ? rec.jvm().keySet().stream().map(this::write).map(String::length).reduce(0, Integer::max) : 0;
-            final AtomicBoolean first = new AtomicBoolean(false);
-            sb.append("[").append(nested ? "\n" : "");
+            sb.append("[");
+            if (nested) sb.append("\n");
             rec.jvm().forEach((k, v) -> {
-                int indent = nested ? (first.getAndSet(false) ?
-                        (depth * 2) - (padding + 4) :
-                        (depth * 2) + (padding + 1)) : 0;
-                if (indent < 0) {
-                    indent = (depth * 2) + (padding + 1);
-                    sb.append("\n");
+                if (nested) {
+                    sb.append(" ".repeat((depth + 1) * INDENT_SIZE));
                 }
-                sb.append(" ".repeat(indent));
-                final String keyString = write(k);
-                final int childPadding = nested ? (maxKeyLength - keyString.length()) : 0;
-                sb.append(" ".repeat(nested && !leftJustify ? childPadding : 0))
-                        .append(keyString)
-                        .append(" ".repeat(nested && leftJustify ? childPadding : 0)).append("=>");
+                sb.append(write(k)).append("=>");
                 if (v == rec)
                     throw MTronException.of("prevented infinite recursion on nested rec: key %s", k);
-                this.processNestedPoly(sb, depth, leftJustify ? 0 : childPadding, nested, v);
+                renderValue(sb, nested ? depth + 1 : 0, v);
+                sb.append(",");
+                if (nested) sb.append("\n");
             });
-            this.cleanEnding(sb);
+            cleanEnding(sb);
             sb.append("]");
         }
         return handleVID(sb, rec);
@@ -422,20 +422,27 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
         return sb;
     }
 
-    private void processNestedPoly(final StringBuilder sb, final int depth, final int padding, final boolean nested, final Obj v) {
+    private void renderValue(final StringBuilder sb, final int depth, final Obj v) {
         if (v.isRec()) {
-            this.generateRec(sb, v.as(), depth + 1, padding);
+            this.generateRec(sb, v.as(), depth);
         } else if (v.isLst()) {
-            this.generateLst(sb, v.as(), depth + 1);
+            this.generateLst(sb, v.as(), depth);
         } else {
-            if (nested)
-                sb.append(" ".repeat(depth + 1));
-            sb.append(" ".repeat(padding));
             this.writeClip(sb, v);
         }
-        sb.append(",");
-        if (nested)
-            sb.append("\n");
+    }
+
+    private void renderInstArg(final StringBuilder sb, final int depth, final int padding, final boolean nested, final Obj arg) {
+        if (arg.isRec()) {
+            this.generateRec(sb, arg.as(), depth);
+        } else if (arg.isLst()) {
+            this.generateLst(sb, arg.as(), depth);
+        } else {
+            if (nested) {
+                sb.append(" ".repeat(depth * INDENT_SIZE + padding));
+            }
+            this.writeClip(sb, arg);
+        }
     }
 
     public StringBuilder prettyPrintCode(final StringBuilder sb, final Obj call, final int depth) {

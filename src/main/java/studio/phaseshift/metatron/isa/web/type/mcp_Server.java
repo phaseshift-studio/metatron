@@ -28,7 +28,7 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.web.space.ws.WebSocketRec;
 import studio.phaseshift.metatron.isa.web.space.ws.WebSocketRecClient;
-import studio.phaseshift.metatron.isa.web.space.ws.server.mcp_wsHandler;
+import studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_wsHandler;
 import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.util.LinkedHashMap;
@@ -453,7 +453,7 @@ public class mcp_Server extends MRec {
 
             // spawn_wshandler — create a websocket handler
             tools.at(uri("spawn_wshandler"), docWrap(instC(
-                            vid.extend("spawn_wshandler").dom(NOOBJ_TID.zero()).rng(WS_SERVER_TID),
+                            vid.extend("spawn_wshandler").dom(NOOBJ_TID.zero()).rng(WS_HANDLER_TID),
                             rec(uri(HOST), URI_TYPE, uri(ON_MESSAGE), INST_TYPE), (lhs, inst) -> {
                                 final WebSocketRec server = new WebSocketRec(
                                         new LinkedHashMap<>(inst.args().jvm()),

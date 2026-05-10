@@ -19,34 +19,20 @@
 package studio.phaseshift.metatron.isa.web.space.http;
 
 import com.google.gson.JsonElement;
-import com.sun.net.httpserver.HttpContext;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
-import org.apache.tinkerpop.shaded.kryo.io.ByteBufferInputStream;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import studio.phaseshift.metatron.BootLoader;
-import static studio.phaseshift.metatron.Tokens.CTOR;
-import static studio.phaseshift.metatron.Tokens.HOST;
-import static studio.phaseshift.metatron.Tokens.IN;
-import static studio.phaseshift.metatron.Tokens.OUT;
-import static studio.phaseshift.metatron.Tokens.PATTERN;
-import static studio.phaseshift.metatron.Tokens.ROUTE;
-import static studio.phaseshift.metatron.Tokens.HTTP;
-import studio.phaseshift.metatron.Tokens.*;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.Space;
-import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.Uri;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjByteBufferSerializer;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
-import studio.phaseshift.metatron.isa.web.parser.ObjHTMLSerializer;
 import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.isa.web.type.Content;
 import studio.phaseshift.metatron.util.IteratorUtil;
@@ -54,36 +40,33 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.*;
 import java.net.InetSocketAddress;
-import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import static studio.phaseshift.metatron.Tokens.HOST;
-import static studio.phaseshift.metatron.Tokens.ROUTE;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.isa.m.type.Inst.INST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
-import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.web.type.Content.ContentType.TEXT_PLAIN;
+import static studio.phaseshift.metatron.isa.web.space.http.handler.web_httpHandler.WEB_HTTP_TID;
+import static studio.phaseshift.metatron.isa.web.webInstSet.CONTENT_TYPE;
 import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -91,22 +74,57 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
 
 public class httpSpace extends AbstractSpace<HttpServer> {
 
-    public static final String INDEX_HTML = "index.html";
     public static final fURI HTTP_SPACE_TID = WEB_ISA_TID.extend("space/httpspace");
+    public static final fURI HTTP_SOCKET_TID = HTTP_SPACE_TID.extend("socket");
+    public static final fURI HTTP_HANDLER_TID = HTTP_SPACE_TID.extend("http_handler");
+    public static final fURI HTTP_CLIENT_TID = HTTP_SPACE_TID.extend("http_client");
+
     public static final Rec CONFIG = rec(uri(PATTERN), T(URI_TID), uri(HOST), T(URI_TID), uri(ROUTE), T(REC_TID));
     public static final Type HTTP_SPACE_TYPE = Type.Builder.build()
             .tid(SPACE_TID)
             .vid(HTTP_SPACE_TID)
             .constructor(instC(HTTP_SPACE_TID.extend(CTOR).dom(ALL.maybe()).rng(HTTP_SPACE_TID),
                     lst(T(REC_TID, isa_(CONFIG))), (lhs, inst) -> httpSpace.of(inst.arg(0).asRec(), inst.arg(0).vid()))).create();
-    private static final ObjHTMLSerializer HTML_SERIALIZER = new ObjHTMLSerializer();
-    private static final ObjJSONSerializer JSON_TRANSLATOR = new ObjJSONSerializer();
+
     private final memSpace cache;
+    private static final ObjJSONSerializer JSON_TRANSLATOR = new ObjJSONSerializer();
+
+    public static final Type HTTP_HANDLER_TYPE = Type.Builder.build()
+            .tid(HTTP_SOCKET_TID)
+            .vid(HTTP_HANDLER_TID)
+            .constructor(instC(HTTP_HANDLER_TID.extend(CTOR).dom(ALL.maybe()).rng(HTTP_SOCKET_TID),
+                    lst(T(REC_TID)), (lhs, inst) ->
+                            new HttpRec(inst.arg(0).asRec().jvm(), inst.arg(0).tid(), inst.arg(0).vid()))).create();
+
+    public static final Type HTTP_SOCKET_TYPE = Type.Builder.build()
+            .tid(REC_TID)
+            .vid(HTTP_SOCKET_TID)
+            .isaPredicate(rec(
+                    uri(IN).maybe().asUri(), isa_(CONTENT_TYPE).orElse(uri(Content.ContentType.APPLICATION_MTRON.value)),
+                    uri(OUT).maybe().asUri(), isa_(CONTENT_TYPE).orElse(uri(Content.ContentType.APPLICATION_MTRON.value)),
+                    uri(SEND).maybe().asUri(), INST_TYPE,
+                    uri(ON_GET).maybe(), T(ALL),
+                    uri(ON_POST).maybe(), T(ALL),
+                    uri(ON_PUT).maybe(), T(ALL),
+                    uri(ON_DELETE).maybe(), T(ALL),
+                    uri(ON_PATCH).maybe(), T(ALL),
+                    uri(ON_HEAD).maybe(), T(ALL),
+                    uri(ON_OPTIONS).maybe(), T(ALL),
+                    uri(ON_ERROR).maybe(), T(ALL),
+                    uri(ON_CLOSE).maybe(), T(ALL))).create();
+
+    public static final Type HTTP_CLIENT_TYPE = Type.Builder.build()
+            .tid(HTTP_SOCKET_TID)
+            .vid(HTTP_CLIENT_TID)
+            .constructor(instC(HTTP_CLIENT_TID.extend(CTOR).dom(ALL.maybe()).rng(HTTP_SOCKET_TID),
+                    lst(T(REC_TID)), (lhs, inst) -> {
+                        throw MTronException.of("http client not implemented");
+                    })).create();
+
 
     protected httpSpace(final HttpServer server, final Map<Obj, Obj> config, final fURI vid) {
         super(server, config, HTTP_SPACE_TID, vid);
         this.cache = memSpace.of(rec(uri(PATTERN), config.getOrDefault(uri(PATTERN), noobj())), null);
-        // Router.writeToSpace(this.vid.extend(ROUTE), routes);
         try {
             this.at(ROUTE).orElse(rec0()).elements().forEach(r -> {
                 final boolean hostRoute = r.first().uriValue().toString().startsWith(config.get(uri(HOST)).uriValue().toString());
@@ -115,175 +133,20 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                     return;
                 LOG.info("processing http route: %s => %s => %s", r.first().uriValue().toString(), r.second().uriValue().toString(), left.toString());
 
-                // ── Handler route: if the route value resolves to a Type, construct an HttpRec
-                //    via the metatron type system and delegate all HTTP methods to it.
-                //    Route values that aren't Types (file paths, local: URIs, empty URIs)
-                //    fall through to the existing file/Router handler. ──
+                // ── All routes go through handler type construction ──
                 final fURI targetVID = r.second().uriValue();
                 if (!targetVID.toString().isEmpty()) {
                     final Obj targetObj = Router.global().read(targetVID);
                     if (targetObj.isType()) {
+                        // Type route: construct handler via type system (MCP, mtron, web_http, etc.)
                         LOG.info("handling as handler route: %s => %s", left, targetVID);
                         createHandlerRoute(server, left, targetVID);
-                        return;
+                    } else {
+                        // Non-type route: treat as web root — auto-create a web_httpHandler
+                        LOG.info("handling as web route: %s => %s (WEB_ROOT=%s)", left, WEB_HTTP_TID, targetVID);
+                        createWebHandlerRoute(server, left, targetVID);
                     }
                 }
-
-                // ── Static file / Router route (existing behavior) ──
-                final HttpContext context = server.createContext(left.toString(),
-                        exchange -> {
-                            if (exchange.getRequestMethod().equalsIgnoreCase("GET")) {
-                                try {
-                                    // Strip the route prefix from the request path to get the relative path
-                                    final String routePrefix = left.toString();
-                                    String requestPath = exchange.getRequestURI().getPath();
-                                    if (requestPath.startsWith(routePrefix) && !routePrefix.equals("/")) {
-                                        requestPath = requestPath.substring(routePrefix.length());
-                                    }
-                                    final fURI requestURI = r.second().uriValue().extend(f(requestPath)).qString(exchange.getRequestURI().getQuery());
-                                    LOG.info("%s/%s => %s", r.second().uriValue(), requestPath, requestURI);
-                                    if (Router.global().hasSpaceFor(r.second().uriValue())) {
-                                        LOG.info("requesting (router): %s", requestURI);
-                                        Obj requestObj = Router.global().read(requestURI);
-                                        if (requestObj.isNoObj()) {
-                                            final IdObj idobj = Space.Helper.locateBaseObj(Router.global().getSpace(requestURI), requestURI, f(""));
-                                            if (null == idobj) {
-                                                requestObj = Router.global().read(requestURI.extend(INDEX_HTML));
-                                            } else {
-                                                String subfuri = requestURI.toString().replaceFirst(idobj.furi().toString(), "");
-                                                subfuri = subfuri.startsWith("/") ? subfuri.substring(1) : subfuri;
-                                                LOG.info("found base obj: %s => %s", idobj, subfuri);
-                                                requestObj = idobj.obj().isRec() ?
-                                                        idobj.obj().asRec().at(subfuri) :
-                                                        (idobj.obj().isLst() ?
-                                                                idobj.obj().asLst().at(subfuri) :
-                                                                idobj.obj());
-                                            }
-                                        }
-                                        if (requestObj.isNoObj())
-                                            this.send404Response(exchange);
-                                        else {
-                                            final Content.ContentType contentType = exchange.getRequestHeaders().containsKey(Content.ContentType.VALUE) ?
-                                                    Content.ContentType.of(exchange.getRequestHeaders().get(Content.ContentType.VALUE).getFirst()) :
-                                                    Content.ContentType.fromType(requestObj, TEXT_PLAIN);
-                                            this.sendResponse(contentType, requestObj, exchange);
-                                        }
-                                    } else {
-                                        this.send404Response(exchange);
-                                    }
-                                } catch (final Exception e) {
-                                    LOG.error(e);
-                                } 
-                                /*else {
-                                    LOG.info("requesting (file): %s", requestURI);
-                                    final Iterator<IdObj> itty = this.directReader().apply(requestURI);
-                                    if (itty.hasNext()) {
-                                        Content.ContentType contentType;
-                                        Obj obj = itty.next().obj();
-                                        if (requestURI.hasQ("content_type")) {
-                                            contentType = Content.ContentType.of(requestURI.qValue("content_type", String.class));
-                                        } else {
-                                            contentType = Content.ContentType.fromType(obj);
-                                        }
-                                        this.sendResponse(contentType, obj, exchange);
-                                    } else {
-                                        final File base = Space.Helper.locateBaseFile(requestURI, INDEX_HTML);
-                                        // final Path filePath = null == base ? null : base.toPath(); //Files.isRegularFile(path) ? path : Path.of(path + "/" + INDEX_HTML);
-                                        if (null != base) {
-                                            final Path absolutePath = base.toPath().toAbsolutePath();
-                                            final Path relativePath = base.toPath();
-                                            LOG.debug("resolving context to request=>relative=>absolute path: %s => %s => %s", uri(exchange.getRequestURI().toString()), uri(relativePath.toString()), uri(absolutePath.toString()));
-                                            // fURI toRemove = f(filePath.toString());
-                                            final fURI pretractedURI = f(requestURI.toString().replace(INDEX_HTML, "").replace(relativePath.toString().replace(INDEX_HTML, ""), "")).asRelative(); //.removeSubpath(f(base.toPath().toString())).asRelative();
-                                            LOG.debug("remaining steps in request uri: %s", pretractedURI);
-                                            if (pretractedURI.segmentLength() == 0) {
-                                                // send the full html document
-                                                // Use query param if specified, otherwise try Files.probeContentType, fallback to extension-based detection
-                                                final Content.ContentType contentType;
-                                                if (requestURI.hasQ("content_type")) {
-                                                    contentType = Content.ContentType.of(requestURI.qValue("content_type", String.class));
-                                                } else {
-                                                    final String probed = Files.probeContentType(absolutePath);
-                                                    final Content.ContentType probedType = Content.ContentType.of(probed);
-                                                    // If probeContentType returned null or fell back to TEXT_PLAIN, use extension-based detection
-                                                    contentType = (probed == null || probedType == Content.ContentType.TEXT_PLAIN)
-                                                            ? Content.ContentType.fromExtension(absolutePath.toString())
-                                                            : probedType;
-                                                }
-                                                LOG.debug("sending with content-type: %s", contentType.value);
-                                                sendResponse(contentType, absolutePath.toFile(), exchange);
-                                            } else {
-                                                // send a subset of larger html document
-                                                final Content.ContentType contentType = Content.ContentType.of(requestURI.hasQ("content_type") ? requestURI.qValue("content_type", String.class) : Content.ContentType.APPLICATION_MTRON.value);
-                                                LOG.debug("sending with content-type: %s", contentType.value);
-                                                sendResponse(contentType, ByteBuffer.wrap(
-                                                        new ObjByteBufferSerializer().write(HTML_SERIALIZER.read(
-                                                                Jsoup.parse(absolutePath)).asRec().at(pretractedURI)).array()), exchange);
-                                            }
-                                        } else {
-                                            String response = "<html><body><h1>404 Not Found</h1></body></html>";
-                                            exchange.getResponseHeaders().set(Content.ContentType.VALUE, Content.ContentType.TEXT_HTML.value);
-                                            exchange.sendResponseHeaders(404, response.length());
-                                            try (final OutputStream os = exchange.getResponseBody()) {
-                                                os.write(response.getBytes());
-                                                os.flush();
-                                            }
-                                        }
-                                    }
-                                }
-                               
-                                }*/
-                                /// ////////////////////////////////////////////////////////////////////////////////////
-                                /// ////////////////////////////////////////////////////////////////////////////////////
-                                /// ////////////////////////////////////////////////////////////////////////////////////
-                            } else if (exchange.getRequestMethod().equalsIgnoreCase("POST")) {
-                                LOG.debug("POST request received for %s", exchange.getRequestURI());
-                                // Strip the route prefix from the request path to get the relative path
-                                final String postRoutePrefix = r.first().uriValue().toString();
-                                String postRequestPath = exchange.getRequestURI().getPath();
-                                if (postRequestPath.startsWith(postRoutePrefix) && !postRoutePrefix.equals("/")) {
-                                    postRequestPath = postRequestPath.substring(postRoutePrefix.length());
-                                }
-                                final String post = new BufferedReader(new InputStreamReader(exchange.getRequestBody())).lines().reduce("", (a, b) -> a + b + "\n");
-                                final Content.ContentType contentType = Content.ContentType.of(exchange.getRequestHeaders().containsKey(Content.ContentType.VALUE) ?
-                                        exchange.getRequestHeaders().get(Content.ContentType.VALUE).getFirst() :
-                                        Content.ContentType.APPLICATION_MTRON.value);
-                                final File file = Space.Helper.locateBaseFile(r.second().uriValue().extend(f(postRequestPath)), INDEX_HTML);
-                                if (file == null) {
-                                    if (contentType.isMtron()) {
-                                        final fURI writePattern = r.second().uriValue().extend(f(postRequestPath));
-                                        Router.writeToSpace(writePattern, ObjmtronSerializer.parse(post));
-                                    } else {
-                                        File newFile = new File(r.second().uriValue().extend(f(postRequestPath)).toString());
-                                        FileWriter writer = new FileWriter(newFile);
-                                        writer.write(post);
-                                        writer.close();
-                                        String response = "<html><body><h1>404 Not Found</h1></body></html>";
-                                        sendResponse(Content.ContentType.TEXT_HTML, ByteBuffer.wrap(response.getBytes(StandardCharsets.UTF_8)), exchange);
-                                    }
-                                } else {
-                                    try {
-                                        String fileContent = Files.readString(file.toPath());
-                                        final Rec existingObj = HTML_SERIALIZER.readRec(Jsoup.parse(fileContent));
-                                        final Obj extendingObj = contentType.fromBytes(post.getBytes());
-                                        final fURI reference = f(exchange.getRequestURI().getPath()).removePrefix(f(file.toPath().toString()));
-                                        LOG.debug("remaining: %s", reference);
-                                        existingObj.at(reference, extendingObj, MUTABLE);
-                                        LOG.debug("existing obj: %s", existingObj);
-                                        // final Path newPath = Paths.get(file.toPath().toString() + "-temp.html");
-                                        Files.writeString(file.toPath(), HTML_SERIALIZER.writeRec(existingObj).toString());
-                                        exchange.getResponseHeaders().set(Content.ContentType.VALUE, Content.ContentType.TEXT_HTML.value);
-                                        sendResponse(TEXT_PLAIN, ByteBuffer.wrap(
-                                                new ObjByteBufferSerializer().write(HTML_SERIALIZER.read(
-                                                        Jsoup.parse(file.toPath())).asRec().at(reference)).array()), exchange);
-
-                                    } catch (final Exception e) {
-                                        throw MTronException.of(e);
-                                    }
-                                }
-                            }
-                        });
-                LOG.debug("http route attached: %s", rel(uri(context.getPath()), r.second()));
             });
             LOG.info("starting web server at %s", this.at(HOST).uriValue().scheme(HTTP).toUri());
             server.setExecutor(BootLoader.getExecutor());
@@ -296,41 +159,36 @@ public class httpSpace extends AbstractSpace<HttpServer> {
         }
     }
 
-    private void send404Response(final HttpExchange exchange) throws IOException {
-        String response = String.format("""
-                                        <html>
-                                        <head>
-                                        <title>%s</title>
-                                        </head>
-                                        <body>
-                                        <h1>404 Not Found</h1>
-                                        </body>
-                                        </html>
-                                        """, this.vid());
-        exchange.getResponseHeaders().set(Content.ContentType.VALUE, Content.ContentType.TEXT_HTML.value);
-        exchange.sendResponseHeaders(404, response.length());
-        try (final OutputStream os = exchange.getResponseBody()) {
-            os.write(response.getBytes());
-            os.flush();
-        }
+    // ──────────────────────────────────────────────
+    // Route creation — all routes create handler instances via the type system
+    // ──────────────────────────────────────────────
+
+    /**
+     * Create a handler route for a Type-based route target.
+     * Constructs the handler via {@code rec(map, typeVID, sessionVid)} which invokes
+     * the type's constructor. Sessions are cached in the local memSpace.
+     */
+    private void createHandlerRoute(final HttpServer server, final fURI path, final fURI typeVID) {
+        createHandlerRoute(server, path, typeVID, mutableMap());
     }
 
     /**
-     * Create a handler route that delegates all HTTP methods to an {@link HttpRec}
-     * constructed via the metatron type system.  Sessions are stored in the
-     * {@code cache} memSpace, keyed by session VID.
+     * Create a handler route with additional handler config keys (e.g. WEB_ROOT).
      */
-    private void createHandlerRoute(final HttpServer server, final fURI path, final fURI typeVID) {
+    private void createHandlerRoute(final HttpServer server, final fURI path, final fURI typeVID,
+                                    final Map<Obj, Obj> handlerConfig) {
         server.createContext(path.toString(), exchange -> {
             final String sid = exchange.getRequestHeaders().getFirst("Mcp-Session-Id");
             final fURI sessionVid = this.vid().extend(path.name()).extend(sid != null ? sid : "default");
             try {
                 Obj handler = cache.read(sessionVid);
                 if (handler.isNoObj()) {
-                    handler = rec(mutableMap(
+                    final Map<Obj, Obj> config = mutableMap(
                             uri(IN), uri(Content.ContentType.APPLICATION_JSON.value),
                             uri(OUT), uri(Content.ContentType.APPLICATION_JSON.value)
-                    ), typeVID, sessionVid);
+                    );
+                    config.putAll(handlerConfig);
+                    handler = rec(config, typeVID, sessionVid);
                     cache.write(sessionVid, handler);
                 }
                 if (handler instanceof HttpRec hr) {
@@ -344,45 +202,31 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                 throw e;
             } catch (final Exception e) {
                 LOG.error("error in handler route %s: %s", sessionVid, e.getMessage());
-                exchange.sendResponseHeaders(500, 0);
-                exchange.close();
+                try {
+                    exchange.sendResponseHeaders(500, 0);
+                    exchange.close();
+                } catch (final IOException ignored) {}
             }
         });
     }
 
-    private void sendResponse(final Content.ContentType contentType, final Obj obj, final HttpExchange exchange) throws
-            IOException {
-        final byte[] bytes = contentType.serializer().outputBytes(obj).array();
-        sendResponse(contentType, ByteBuffer.wrap(bytes), exchange);
+    /**
+     * Create a web handler route: the target value is treated as the WEB_ROOT
+     * and a {@link web_httpHandler} is constructed to serve content from it.
+     */
+    private void createWebHandlerRoute(final HttpServer server, final fURI path, final fURI webRoot) {
+        createHandlerRoute(server, path, WEB_HTTP_TID, mutableMap(uri(WEB_ROOT), uri(webRoot)));
     }
 
-
-    private void sendResponse(final Content.ContentType contentType, final File file, final HttpExchange exchange) throws
-            IOException {
-        sendResponse(contentType, ByteBuffer.wrap(Files.readAllBytes(file.toPath())), exchange);
-    }
-
-    private void sendResponse(final Content.ContentType contentType, final ByteBuffer bytes, final HttpExchange exchange) throws
-            IOException {
-        exchange.getResponseHeaders().set(Content.ContentType.VALUE, contentType.value);
-        exchange.sendResponseHeaders(200, bytes.remaining());
-        try (final InputStream is = new ByteBufferInputStream(bytes);
-             final OutputStream os = exchange.getResponseBody()) {
-            byte[] buffer = new byte[8192]; // 8KB buffer
-            int bytesRead;
-            while ((bytesRead = is.read(buffer)) != -1) {
-                os.write(buffer, 0, bytesRead);
-                os.flush();
-            }
-        } catch (final Exception e) {
-            exchange.sendResponseHeaders(500, 0);
-            throw MTronException.of(e);
-        }
-    }
+    // ──────────────────────────────────────────────
+    // Factory, lifecycle
+    // ──────────────────────────────────────────────
 
     public static httpSpace of(final Rec config, final fURI vid) {
         try {
-            final HttpServer server = HttpServer.create(new InetSocketAddress(config.at(HOST).uriValue().host(), config.at(HOST).uriValue().port()), 0);
+            final HttpServer server = HttpServer.create(
+                    new InetSocketAddress(config.at(HOST).uriValue().host(),
+                            config.at(HOST).uriValue().port()), 0);
             server.setExecutor(BootLoader.getExecutor());
             return new httpSpace(server, config.jvm(), vid);
         } catch (final Exception e) {
@@ -401,16 +245,37 @@ public class httpSpace extends AbstractSpace<HttpServer> {
         return (httpSpace) super.tid(tid);
     }
 
+    // ──────────────────────────────────────────────
+    // Router I/O — local routes first, then remote web
+    // ──────────────────────────────────────────────
+
+    /**
+     * Read from the http:// address space.
+     * First tries the local route table; if no match, fetches from the remote web via Jsoup.
+     * Supports nested path resolution: a 404 walks up the path to find a containing resource,
+     * then navigates into it (e.g. {@code http://host/page/section} → fetch {@code /page}
+     * and extract {@code section} from the result).
+     */
     @Override
     public Function<fURI, Iterator<IdObj>> directReader() {
         return (pattern) -> {
+            // 1 — Try local route table first
+            try {
+                final fURI route = Space.Helper.routeFromSpace(pattern.scheme(null).host(null), this.routes());
+                if (route != null && !route.toString().isEmpty()) {
+                    final Iterator<IdObj> local = this.cache.directReader().apply(route);
+                    if (local.hasNext())
+                        return local;
+                }
+            } catch (final Exception ignored) {}
+
+            // 2 — Remote web fetch via Jsoup
             try {
                 fURI runningPattern = pattern;
                 int steps = 0;
                 while (true) {
-                    LOG.debug("fetching %s", runningPattern.toString());
-                    final Connection.Response response = Jsoup.connect(runningPattern.toString()).ignoreContentType(true).ignoreHttpErrors(true).execute();
-                    LOG.debug("code: %d (%s)", response.statusCode(), runningPattern);
+                    final Connection.Response response = Jsoup.connect(runningPattern.toString())
+                            .ignoreContentType(true).ignoreHttpErrors(true).execute();
                     if (response.statusCode() == 404) {
                         if (runningPattern.segmentLength() == 0)
                             return IteratorUtil.of();
@@ -418,11 +283,11 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                         runningPattern = runningPattern.asRelativeNode().retract(1).asAbsolute();
                     } else {
                         final Content.ContentType contentType = Content.ContentType.of(response.contentType());
-                        LOG.debug("content-type: %s => %s", response.contentType(), contentType);
                         final Obj docObj = contentType.fromBytes(response.body());
                         final Uri key = uri(pattern.scheme(null).host(null).tail(steps).asRelative());
-                        LOG.debug("page found -- searching for %s in %s", key, runningPattern);
-                        final Obj subDocObj = key.uriValue().toString().trim().isEmpty() ? docObj : docObj.asRec().at(key);
+                        final Obj subDocObj = key.uriValue().toString().trim().isEmpty()
+                                ? docObj
+                                : docObj.asRec().at(key);
                         return subDocObj.isNoObj() ? IteratorUtil.of() : IteratorUtil.of(IdObj.of(pattern, subDocObj));
                     }
                 }
@@ -434,35 +299,40 @@ public class httpSpace extends AbstractSpace<HttpServer> {
         };
     }
 
+    /**
+     * Write to the http:// address space.
+     * If the URI matches this space's pattern, routes to a local space.
+     * Otherwise POSTs to the remote server via HttpClient.
+     */
     @Override
     public BiFunction<fURI, Obj, Obj> directWriter() {
         return (pattern, obj) -> {
-            LOG.debug("writing %s", pattern);
+            // 1 — Try local route
             if (pattern.test(this.pattern)) {
-                LOG.info("mapping %s => %s", pattern, pattern.scheme(null).host(null));
                 final fURI location = Space.Helper.routeFromSpace(pattern.scheme(null).host(null), this.routes());
-                LOG.info("writing to %s: %s", location, obj);
-                Router.global().write(location, obj);
-                return obj;
-
-            } else {
-                try (final AutoCloseable client = (AutoCloseable) HttpClient.newHttpClient()) { // a true jvm bug!
-                    final JsonElement json = JSON_TRANSLATOR.write(obj);
-                    final HttpRequest request = HttpRequest.newBuilder()
-                            .header(Content.ContentType.VALUE, Content.ContentType.APPLICATION_JSON.value)
-                            .uri(URI.create(pattern.toString()))
-                            .POST(HttpRequest.BodyPublishers.ofString(json.toString()))
-                            .build();
-                    final HttpResponse<byte[]> response = ((HttpClient) client).send(request, HttpResponse.BodyHandlers.ofByteArray());
-                    LOG.debug("%s", response.headers().firstValue(Content.ContentType.VALUE));
-                    final Optional<String> contentType = response.headers().firstValue(Content.ContentType.VALUE);
-                    if (contentType.isPresent()) {
-                        return Content.ContentType.of(contentType.get()).fromBytes(response.body());
-                    }
-                    return jnt(response.statusCode());
-                } catch (final Exception e) {
-                    throw MTronException.of(e);
+                if (location != null && !location.toString().isEmpty()) {
+                    return Router.global().write(location, obj);
                 }
+            }
+
+            // 2 — Remote POST via HttpClient
+            try {
+                final JsonElement json = JSON_TRANSLATOR.write(obj);
+                final HttpRequest request = HttpRequest.newBuilder()
+                        .header(Content.ContentType.VALUE, Content.ContentType.APPLICATION_JSON.value)
+                        .uri(java.net.URI.create(pattern.toString()))
+                        .POST(HttpRequest.BodyPublishers.ofString(json.toString()))
+                        .build();
+                final HttpResponse<byte[]> response;
+                try (final HttpClient client = HttpClient.newHttpClient()) {
+                    response = client.send(request, HttpResponse.BodyHandlers.ofByteArray());
+                }
+                final Optional<String> contentType = response.headers().firstValue(Content.ContentType.VALUE);
+                if (contentType.isPresent())
+                    return Content.ContentType.of(contentType.get()).fromBytes(response.body());
+                return jnt(response.statusCode());
+            } catch (final Exception e) {
+                throw MTronException.of(e);
             }
         };
     }

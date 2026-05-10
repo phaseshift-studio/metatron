@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.Space;
+import studio.phaseshift.metatron.isa.web.space.http.handler.mcp_mtron_httpHandler;
 import studio.phaseshift.metatron.isa.web.type.mcp_Server;
 import studio.phaseshift.metatron.isa.web.type.Content;
 
@@ -42,9 +43,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.web.space.http.mcp_httpHandler.MCP_HTTP_TID;
-import static studio.phaseshift.metatron.isa.web.space.http.mcp_mtron_httpHandler.MCP_MTRON_HTTP_TID;
-import static studio.phaseshift.metatron.isa.web.space.http.mcp_mtron_httpHandler.MCP_MTRON_HTTP_TYPE;
+import static studio.phaseshift.metatron.isa.web.space.http.handler.mcp_httpHandler.HTTP_MCP_HANDLER_TID;
+import static studio.phaseshift.metatron.isa.web.space.http.handler.mcp_mtron_httpHandler.HTTP_MTRON_MCP_TID;
+import static studio.phaseshift.metatron.isa.web.space.http.handler.mcp_mtron_httpHandler.HTTP_MTRON_MCP_TYPE;
 
 /**
  * Integration tests for {@link mcp_mtron_httpHandler}.
@@ -66,7 +67,7 @@ public class mcp_mtron_httpHandlerTest extends AbstractHTTPServerIntegrationTest
         return httpSpace.of(rec(
                 uri(HOST), uri(hostUri.toString()),
                 uri(PATTERN), uri("http://#"),
-                uri(ROUTE), rec(uri("/mcp"), uri(MCP_MTRON_HTTP_TID.toString()))
+                uri(ROUTE), rec(uri("/mcp"), uri(HTTP_MTRON_MCP_TID.toString()))
         ), f("/sys/space/http/mcp-mtron/test"));
     }
 
@@ -109,13 +110,13 @@ public class mcp_mtron_httpHandlerTest extends AbstractHTTPServerIntegrationTest
 
     @Test
     public void testMcpHttpTIDNamespace() {
-        assertTrue(MCP_MTRON_HTTP_TID.toString().contains("httpspace"));
-        assertTrue(MCP_MTRON_HTTP_TID.toString().contains("mcp_mtron_http"));
+        assertTrue(HTTP_MTRON_MCP_TID.toString().contains("httpspace"));
+        assertTrue(HTTP_MTRON_MCP_TID.toString().contains("mcp_mtron_http"));
     }
 
     @Test
     public void testMcpHttpTypeIsSubtypeOfMcpHttp() {
-        assertEquals(MCP_HTTP_TID, MCP_MTRON_HTTP_TYPE.tid(),
+        assertEquals(HTTP_MCP_HANDLER_TID, HTTP_MTRON_MCP_TYPE.tid(),
                 "mcp_mtron_http type should declare mcp_http as its parent type");
     }
 

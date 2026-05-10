@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
+import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.type.Router;
@@ -31,6 +32,8 @@ import studio.phaseshift.metatron.isa.mach.type.Router;
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -70,6 +73,10 @@ public abstract class AbstractHTTPServerTest extends AbstractMetatronTest {
     @BeforeEach
     public void setupTestSpace() {
         InstSet.importInstSet(WEB_ISA_TID);
+        this.testSpace = memSpace.of(rec(
+                uri(PATTERN), uri(testSpacePattern()),
+                uri(ROUTE), rec()
+        ), f("/sys/space/test/http/" + getClass().getSimpleName()));
         this.handler = createHandler(createTestVid());
     }
 

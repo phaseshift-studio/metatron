@@ -68,7 +68,7 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
 
     public static final fURI WS_SPACE_TID = WEB_ISA_TID.extend(SPACE).extend("wsspace");
     public static final fURI WS_WEBSOCKET_TID = WS_SPACE_TID.extend("websocket");
-    public static final fURI WS_SERVER_TID = WS_SPACE_TID.extend("wsserver");
+    public static final fURI WS_HANDLER_TID = WS_SPACE_TID.extend("wshandler");
     public static final fURI WS_CLIENT_TID = WS_SPACE_TID.extend("wsclient");
 
     public static final Type WS_WEBSOCKET_TYPE = Type.Builder.build()
@@ -84,10 +84,10 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
                     uri(ON_CLOSE).maybe(), T(ALL))).create();
 
 
-    public static final Type WS_SERVER_TYPE = Type.Builder.build()
+    public static final Type WS_HANDLER_TYPE = Type.Builder.build()
             .tid(WS_WEBSOCKET_TID)
-            .vid(WS_SERVER_TID)
-            .constructor(instC(WS_SERVER_TID.extend(CTOR).dom(ALL.maybe()).rng(WS_WEBSOCKET_TID),
+            .vid(WS_HANDLER_TID)
+            .constructor(instC(WS_HANDLER_TID.extend(CTOR).dom(ALL.maybe()).rng(WS_WEBSOCKET_TID),
                     lst(T(REC_TID)), (lhs, inst) ->
                             new WebSocketRec(inst.arg(0).asRec().jvm(), inst.arg(0).vid()))).create();
 
@@ -199,27 +199,27 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
                 final fURI routePath = f(conn.getResourceDescriptor().startsWith("/")
                         ? conn.getResourceDescriptor()
                         : "/" + conn.getResourceDescriptor());
-                final fURI wsServerTypeVID = Space.Helper.routeFromSpace(routePath.qLess(), this.space.routes());
-                final Obj serverType = Router.global().read(wsServerTypeVID);
-                if (!serverType.isType())
-                    throw MTronException.of("ws server type required: %s at %s", serverType, wsServerTypeVID);
-                this.space.LOG.info("starting session with ws server: %s", serverType);
+                final fURI wsHandlerTypeVID = Space.Helper.routeFromSpace(routePath.qLess(), this.space.routes());
+                final Obj wsHandlerType = Router.global().read(wsHandlerTypeVID);
+                if (!wsHandlerType.isType())
+                    throw MTronException.of("websocket handler type required: %s at %s", wsHandlerType, wsHandlerTypeVID);
+                this.space.LOG.info("starting session with websocket handler: %s", wsHandlerType);
                 final fURI vid = this.baseURI.extend(routePath.qLess()).extend(this.counter.getAndIncrement() + "");
 
                 // Delegate construction to the metatron type system:
                 // rec(map, tid, vid) -> MObj.of() -> Obj.Helper.construct() which looks up
-                // the Type at wsServerTypeVID in the Router and calls its constructor if present.
-                // This allows user-defined wsserver::T subtypes to be instantiated correctly.
+                // the Type at wsHandlerTypeVID in the Router and calls its constructor if present.
+                // This allows user-defined websocket handler subtypes to be instantiated correctly.
                 // Pass an empty map — the type's constructor applies its own defaults for IN/OUT.
-                final Obj server = rec(mutableMap(
+                final Obj handler = rec(mutableMap(
                                 uri(IN), routePath.hasQ(IN) ? uri(routePath.q(IN)) : noobj(),
                                 uri(OUT), routePath.hasQ(OUT) ? uri(routePath.q(OUT)) : noobj()),
-                        wsServerTypeVID, vid);
-                if (server.isNoObj() || server.isFail()) {
-                    conn.close(4000, "unable to construct server " + server);
-                    throw MTronException.of("client {{b}}%s{{X}} wsserver construction failed: {{y}}%s{{X}}", conn.getRemoteSocketAddress(), server);
+                        wsHandlerTypeVID, vid);
+                if (handler.isNoObj() || handler.isFail()) {
+                    conn.close(4000, "unable to construct server " + handler);
+                    throw MTronException.of("client {{b}}%s{{X}} wsserver construction failed: {{y}}%s{{X}}", conn.getRemoteSocketAddress(), handler);
                 }
-                return (WebSocketRec) server;
+                return (WebSocketRec) handler;
             } catch (final Exception e) {
                 throw MTronException.of("unable to create ws server for %s: %s", conn.getRemoteSocketAddress(), e);
             }

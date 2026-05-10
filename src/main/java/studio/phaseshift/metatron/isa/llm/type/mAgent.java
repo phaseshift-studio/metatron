@@ -18,10 +18,13 @@
 
 package studio.phaseshift.metatron.isa.llm.type;
 
+import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.invocation.InvocationParameters;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.service.TokenStream;
 import dev.langchain4j.service.UserMessage;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.vec.type.Vec;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -33,5 +36,7 @@ public interface mAgent {
     TokenStream chat(final @UserMessage ChatRequest userMessage,  final InvocationParameters parameters);
 
     TokenStream chat(final @UserMessage String userMessage);
+    
+    Vec embed(final @UserMessage Obj obj); 
 
 }

@@ -59,10 +59,7 @@ import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
@@ -224,7 +221,9 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
             BootLoader.getExecutor().submit(this.status);
             this.history = auto_(instC(f("history").dom(ALL).rng(REC_TID.maybeSome()), lst(T(ALL)),
                     (lhs, inst) -> objs(IteratorUtil.stream(this.reader.getHistory().reverseIterator())
-                            .map(s -> rec(uri(TIME), str(s.time().toString()), uri(ENTRY), str(s.line())))))).tryToInst().as();
+                            .sorted(Comparator.comparing(History.Entry::time))
+                            .map(s -> rec(uri(TIME), str(s.time().toString()), uri(ENTRY), str(s.line())))
+                    ))).tryToInst().as();
             this.input = null == this.vid() ? uri("") : uri(this.vid().extend("in"));
         } catch (final Exception e) {
             throw MTronException.of(e);

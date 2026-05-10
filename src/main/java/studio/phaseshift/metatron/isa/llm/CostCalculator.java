@@ -20,6 +20,9 @@ package studio.phaseshift.metatron.isa.llm;
 
 import dev.langchain4j.model.chat.listener.ChatModelListener;
 import dev.langchain4j.model.chat.listener.ChatModelResponseContext;
+import dev.langchain4j.model.embedding.listener.EmbeddingModelListener;
+import dev.langchain4j.model.embedding.listener.EmbeddingModelRequestContext;
+import dev.langchain4j.model.embedding.listener.EmbeddingModelResponseContext;
 import dev.langchain4j.model.output.TokenUsage;
 import dev.langchain4j.observability.api.listener.AiServiceListener;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -30,7 +33,7 @@ import static studio.phaseshift.metatron.Tokens.OUT;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class CostCalculator implements ChatModelListener {
+public class CostCalculator implements ChatModelListener, EmbeddingModelListener {
     private final double costPerInputToken;
     private final double costPerOutputToken;
     private double totalCost = 0;
@@ -51,6 +54,18 @@ public class CostCalculator implements ChatModelListener {
             totalCost += callCost;
         }
     }
+    
+    @Override
+    public void onResponse(final EmbeddingModelResponseContext responseContext) {
+        TokenUsage tokenUsage = responseContext.response().tokenUsage();
+        if (tokenUsage != null) {
+            int inputTokens = tokenUsage.inputTokenCount() != null ? tokenUsage.inputTokenCount() : 0;
+            int outputTokens = tokenUsage.outputTokenCount() != null ? tokenUsage.outputTokenCount() : 0;
+
+            double callCost = (inputTokens * costPerInputToken) + (outputTokens * costPerOutputToken);
+            totalCost += callCost;
+        }
+    }   
 
     public double getTotalCost() {
         return totalCost;

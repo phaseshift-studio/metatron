@@ -19,24 +19,32 @@
 package studio.phaseshift.metatron.isa.llm.type;
 
 import dev.langchain4j.agent.tool.ToolSpecification;
+import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
+import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.mcp.McpToolProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.request.json.*;
+import dev.langchain4j.model.embedding.EmbeddingModel;
+import dev.langchain4j.model.output.Response;
 import dev.langchain4j.service.AiServices;
 import dev.langchain4j.service.tool.ToolExecutor;
 import dev.langchain4j.skills.Skills;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.QCollection;
+import studio.phaseshift.metatron.isa.llm.CostCalculator;
 import studio.phaseshift.metatron.isa.llm.LLMFactory;
 import studio.phaseshift.metatron.isa.llm.space.SpaceChatMemoryStore;
 import studio.phaseshift.metatron.isa.llm.space.SpaceContentRetriever;
 import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.impl.MReal;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.vec.type.MVec;
+import studio.phaseshift.metatron.isa.vec.type.Vec;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
@@ -51,8 +59,7 @@ import java.util.stream.Stream;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.DOCQ;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.MCP_SERVER_TID;
-import static studio.phaseshift.metatron.isa.llm.llmInstSet.MODEL_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
 import static studio.phaseshift.metatron.isa.llm.type.mTool.LLM_TOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
@@ -64,8 +71,10 @@ import static studio.phaseshift.metatron.isa.m.type.Str.str0;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.vec.vecInstSet.VEC_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -340,6 +349,20 @@ public class mModel extends MRec {
             throw MTronException.of(e);
         }
         return this.processResponse(str(response.toString()), !responseFormat.isNoObj() && !responseFormat.isEmpty());
+    }
+
+    public Lst embed(final Obj toEmbed) {
+        final EmbeddingModel agent = LLMFactory.createEmbeddingInteraction(this, this.model());
+        if (this.cost().isPresent())
+            agent.addListener(new CostCalculator(this.cost().get()));
+        final TextSegment embeddingString = TextSegment.from(toEmbed.toString());
+        if (toEmbed.vid() != null)
+            embeddingString.metadata().put("vid", toEmbed.vid().toString());
+        embeddingString.metadata().put("tid", toEmbed.tid().toString());
+        final Response<Embedding> response = agent.embed(embeddingString);
+        if (null != response.tokenUsage())
+            this.logger().info("embedding token usage: %s", response.tokenUsage());
+        return lst((List) new MVec<>(new Vector<>(response.content().vectorAsList().stream().map(MReal::real).toList()), VEC_TID, null).jvm().stream().toList());
     }
 
     public static class Helper {

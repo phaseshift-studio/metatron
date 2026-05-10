@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *
+ *  
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ *  
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.web.space.ws.server;
+package studio.phaseshift.metatron.isa.web.space.ws;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.provider.Arguments;
@@ -24,9 +24,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.web.space.ws.AbstractWebSocketServerIntegrationTest;
-import studio.phaseshift.metatron.isa.web.space.ws.AbstractWebSocketServerTest;
-import studio.phaseshift.metatron.isa.web.space.ws.WebSocketRec;
+import studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_wsHandler;
 import studio.phaseshift.metatron.isa.web.type.Content;
 
 import java.util.LinkedHashMap;
@@ -44,16 +42,16 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.web.space.ws.server.mcp_wsHandler.MCP_WS_HANDLER_TID;
-import static studio.phaseshift.metatron.isa.web.space.ws.server.mcp_wsHandler.WS_MCP_HANDLER_TYPE;
-import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_SERVER_TID;
+import static studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_wsHandler.WS_MCP_HANDLER_TID;
+import static studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_wsHandler.WS_MCP_HANDLER_TYPE;
+import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_HANDLER_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 public class mcp_wsHandlerTest extends AbstractWebSocketServerTest {
 
     @Override
     protected WebSocketRec createServer(final fURI vid) {
-        return new mcp_wsHandler(new LinkedHashMap<>(Map.of(uri(IN), uri(Content.ContentType.APPLICATION_JSON.value), uri(OUT), uri(Content.ContentType.APPLICATION_JSON.value))), MCP_WS_HANDLER_TID, vid);
+        return new mcp_wsHandler(new LinkedHashMap<>(Map.of(uri(IN), uri(Content.ContentType.APPLICATION_JSON.value), uri(OUT), uri(Content.ContentType.APPLICATION_JSON.value))), WS_MCP_HANDLER_TID, vid);
     }
 
     /**
@@ -73,8 +71,8 @@ public class mcp_wsHandlerTest extends AbstractWebSocketServerTest {
 
     @Test
     public void testMCPTidNamespace() {
-        assertTrue(MCP_WS_HANDLER_TID.toString().contains("wsspace"));
-        assertTrue(MCP_WS_HANDLER_TID.toString().contains("mcp"));
+        assertTrue(WS_MCP_HANDLER_TID.toString().contains("wsspace"));
+        assertTrue(WS_MCP_HANDLER_TID.toString().contains("mcp"));
     }
 
     @Test
@@ -84,7 +82,7 @@ public class mcp_wsHandlerTest extends AbstractWebSocketServerTest {
         // after a Router reset the routing can pick mInstSet (shortest prefix)
         // which has no WEB types, causing parentType() to return null → NPE.
         // Checking the tid() directly tests the same semantics without Router.
-        assertEquals(WS_SERVER_TID, WS_MCP_HANDLER_TYPE.tid(),
+        assertEquals(WS_HANDLER_TID, WS_MCP_HANDLER_TYPE.tid(),
                 "WS_MCP_HANDLER_TYPE should declare WS_SERVER_TID as its parent type");
     }
 
@@ -208,7 +206,7 @@ public class mcp_wsHandlerTest extends AbstractWebSocketServerTest {
                 mutableMap(
                         uri(IN), uri(Content.ContentType.APPLICATION_JSON.value),
                         uri(OUT), uri(Content.ContentType.APPLICATION_JSON.value)),
-                MCP_WS_HANDLER_TID, vid);
+                WS_MCP_HANDLER_TID, vid);
         // Manually add a tool: addTool => instC that echoes the arguments back
         withTool.jvm().put(uri(TOOL), rec(
                 uri("echo"), instC(f("echo").dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL.maybe())),
@@ -234,7 +232,7 @@ public class mcp_wsHandlerTest extends AbstractWebSocketServerTest {
                 mutableMap(uri(TOOL), rec(
                         uri("greet"), instC(f("greet").dom(ALL.maybe()).rng(ALL.maybe()),
                                 rec(uri("name"), T(ALL.maybe())),
-                                (lhs, inst) -> str("Hello, " + inst.arg(f("name"),0).toCleanString())))), MCP_WS_HANDLER_TID, vid));
+                                (lhs, inst) -> str("Hello, " + inst.arg(f("name"),0).toCleanString())))), WS_MCP_HANDLER_TID, vid));
 
         final Obj response = withTool.at(uri(ON_MESSAGE)).apply(rec(
                 uri(JSONRPC), str("2.0"),
@@ -283,7 +281,7 @@ public class mcp_wsHandlerTest extends AbstractWebSocketServerTest {
             return studio.phaseshift.metatron.isa.web.space.ws.wsSpace.of(rec(
                     uri(HOST), uri(hostUri.toString()),
                     uri(PATTERN), uri("ws://#"),
-                    uri(ROUTE), rec(uri("/wsmcp"), uri(MCP_WS_HANDLER_TID.toString()))
+                    uri(ROUTE), rec(uri("/wsmcp"), uri(WS_MCP_HANDLER_TID.toString()))
             ).jvm(), f("/sys/space/ws/test"));
         }
 

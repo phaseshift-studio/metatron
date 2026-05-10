@@ -29,23 +29,36 @@ import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.isa.web.type.Content;
 
 import java.io.*;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
+import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TID;
+import static studio.phaseshift.metatron.isa.m.type.InstSet.A;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.space.http.httpSpace.HTTP_SPACE_TID;
 
 /**
  * Base class for HTTP-based metatron objects — the HTTP analog of {@code WebSocketRec}.
  * <p>
- * Each {@code HttpRec} handles a single route in an {@link httpSpace}. Subclasses
- * override {@code doGet}, {@code doPost}, {@code doDelete} to implement specific
- * HTTP behavior. Session multiplexing is the subclass's responsibility.
+ * Each {@code HttpRec} handles HTTP requests by delegating to mtron-level handlers
+ * stored at keys {@code ON_GET}, {@code ON_POST}, {@code ON_PUT}, {@code ON_DELETE},
+ * {@code ON_PATCH}, {@code ON_HEAD}, {@code ON_OPTIONS} in the rec map.
+ * Subclasses (like {@code mcp_httpHandler}) may override the {@code doGet}/{@code doPost}
+ * etc. methods for custom Java-level behavior.
  * <p>
- * The metatron type system constructs instances via the Type constructor when
- * a handler route is matched in the httpSpace route table.
+ * Default {@code SEND} and {@code CLOSE} instC entries are registered in the constructor,
+ * mirroring {@code WebSocketRec}'s pattern.
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -59,45 +72,152 @@ public class HttpRec extends MRec {
 
     public HttpRec(final Map<Obj, Obj> map, final fURI tid, final fURI vid) {
         super(map, tid, vid);
+        // Default SEND — mirror WebSocketRec
+        if (!map.containsKey(uri(SEND)))
+            this.jvm().put(uri(SEND), instC(this.vid().extend(SEND).dom(ALL.maybe()).rng(NOOBJ_TID), lst(T(A.maybe())), (lhs, inst) -> {
+                try {
+                    this.send(inst.arg(0));
+                    return noobj();
+                } catch (final Exception e) {
+                    LOG.error("error sending response: %s", e);
+                    return fail(e);
+                }
+            }));
+        // Default CLOSE — mirror WebSocketRec
+        if (!map.containsKey(uri(CLOSE)))
+            this.jvm().put(uri(CLOSE), instC(this.vid().extend(CLOSE).dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
+                this.logger().info("closing %s", this.vid());
+                this.close();
+                return noobj();
+            }));
     }
 
+    // ========================================
+    // Entry point — dispatches by HTTP method
+    // ========================================
+
     /**
-     * Entry point for HTTP request handling. Dispatches by HTTP method.
+     * Entry point for HTTP request handling. Dispatches by HTTP method to either
+     * subclass overrides (OOP) or mtron-level handlers (ON_GET, ON_POST, etc.).
      */
     public void handle(final HttpExchange exchange) throws IOException {
         this.exchange = exchange;
         try {
             switch (exchange.getRequestMethod().toUpperCase()) {
-                case "GET"    -> doGet(exchange);
-                case "POST"   -> doPost(exchange);
-                case "DELETE" -> doDelete(exchange);
+                case "GET"     -> doGet(exchange);
+                case "POST"    -> doPost(exchange);
+                case "PUT"     -> doPut(exchange);
+                case "DELETE"  -> doDelete(exchange);
+                case "PATCH"   -> doPatch(exchange);
+                case "HEAD"    -> doHead(exchange);
+                case "OPTIONS" -> doOptions(exchange);
                 default -> sendError(405, "Method Not Allowed");
             }
         } catch (final Exception e) {
             LOG.error("error handling %s %s: %s", exchange.getRequestMethod(), exchange.getRequestURI(),
                     e.getMessage() == null ? e.getClass().getName() : e.getMessage());
-            try {
-                sendError(500, "Internal Server Error");
-            } catch (final IOException ignored) {
-                // best effort
-            }
+            onError(exchange, e);
         }
     }
 
     // ========================================
-    // Subclass overrides
+    // Default HTTP method handlers — delegate to mtron
+    // Subclasses may override for custom Java-level behavior
     // ========================================
 
     protected void doGet(final HttpExchange exchange) throws IOException {
-        sendError(405, "GET not supported");
+        dispatchToMtron(ON_GET, exchange);
     }
 
     protected void doPost(final HttpExchange exchange) throws IOException {
-        sendError(405, "POST not supported");
+        dispatchToMtron(ON_POST, exchange);
+    }
+
+    protected void doPut(final HttpExchange exchange) throws IOException {
+        dispatchToMtron(ON_PUT, exchange);
     }
 
     protected void doDelete(final HttpExchange exchange) throws IOException {
-        sendError(405, "DELETE not supported");
+        dispatchToMtron(ON_DELETE, exchange);
+    }
+
+    protected void doPatch(final HttpExchange exchange) throws IOException {
+        dispatchToMtron(ON_PATCH, exchange);
+    }
+
+    protected void doHead(final HttpExchange exchange) throws IOException {
+        dispatchToMtron(ON_HEAD, exchange);
+    }
+
+    protected void doOptions(final HttpExchange exchange) throws IOException {
+        dispatchToMtron(ON_OPTIONS, exchange);
+    }
+
+    // ========================================
+    // Mtron delegation
+    // ========================================
+
+    /**
+     * Delegate an HTTP method to its mtron-level handler.
+     * The mtron handler is responsible for calling {@link #send(Obj)} to respond.
+     */
+    protected void dispatchToMtron(final String methodKey, final HttpExchange exchange) throws IOException {
+        final Obj handler = this.at(uri(methodKey));
+        if (handler.isNoObj() || handler.isFail()) {
+            sendError(405, exchange.getRequestMethod() + " not supported");
+            return;
+        }
+        final Obj request = buildRequest(exchange);
+        handler.apply(request);
+    }
+
+    /**
+     * Handle errors via mtron delegation (ON_ERROR key).
+     * Falls back to a plain 500 response if no ON_ERROR handler is registered.
+     */
+    protected void onError(final HttpExchange exchange, final Exception e) {
+        LOG.error("error in %s: %s", this.vid(), e.getMessage());
+        final Obj handler = this.at(uri(ON_ERROR));
+        if (!handler.isNoObj() && !handler.isFail()) {
+            try {
+                handler.apply(fail(e));
+            } catch (final Exception ex) {
+                LOG.error("error in on_error handler: %s", ex.getMessage());
+                try { sendError(500, "Internal Server Error"); } catch (final IOException ignored) {}
+            }
+        } else {
+            try { sendError(500, e.getMessage() == null ? "Internal Server Error" : e.getMessage()); } catch (final IOException ignored) {}
+        }
+    }
+
+    /**
+     * Build a request rec from the HttpExchange for mtron handler consumption.
+     * Includes method, uri, headers, and body (for methods that carry one).
+     */
+    protected Obj buildRequest(final HttpExchange exchange) throws IOException {
+        final Map<Obj, Obj> map = new LinkedHashMap<>();
+        map.put(uri(METHOD), str(exchange.getRequestMethod()));
+        map.put(uri(URI), uri(exchange.getRequestURI().toString()));
+        // Headers
+        final Map<Obj, Obj> headerMap = new LinkedHashMap<>();
+        exchange.getRequestHeaders().forEach((k, v) ->
+                headerMap.put(str(k), str(String.join(",", v))));
+        map.put(uri(HEADERS), rec(headerMap));
+        // Body for methods that carry one (not GET, HEAD, DELETE, OPTIONS)
+        final String reqMethod = exchange.getRequestMethod().toUpperCase();
+        if (!"GET".equals(reqMethod) && !"HEAD".equals(reqMethod)
+                && !"DELETE".equals(reqMethod) && !"OPTIONS".equals(reqMethod)) {
+            final String bodyStr = readBody(exchange);
+            if (!bodyStr.isEmpty()) {
+                final HttpIO io = getHttpIO();
+                try {
+                    map.put(uri(BODY), io.input().serializer().inputBytes(ByteBuffer.wrap(bodyStr.getBytes(StandardCharsets.UTF_8))));
+                } catch (final Exception e) {
+                    map.put(uri(BODY), str(bodyStr));
+                }
+            }
+        }
+        return rec(map);
     }
 
     // ========================================
@@ -139,6 +259,72 @@ public class HttpRec extends MRec {
      */
     protected void sendError(final int status, final String message) throws IOException {
         sendJsonString(status, "{\"error\":\"" + message.replace("\"", "\\\"") + "\"}");
+    }
+
+    /**
+     * Send a response via the current HttpExchange.
+     * Serializes the message using the output ContentType from {@link #getHttpIO()}.
+     * This is the HTTP analog of {@code WebSocketObj.send(Obj)}.
+     */
+    public void send(final Obj message) {
+        if (this.exchange == null) {
+            LOG.error("no exchange available to send response");
+            return;
+        }
+        try {
+            final HttpIO io = getHttpIO();
+            final byte[] bytes = io.output().serializer().outputBytes(message).array();
+            this.exchange.getResponseHeaders().set(Content.ContentType.VALUE, io.output().value);
+            this.exchange.sendResponseHeaders(200, bytes.length);
+            try (final OutputStream os = this.exchange.getResponseBody()) {
+                os.write(bytes);
+            }
+        } catch (final Exception e) {
+            LOG.error("error sending response: %s", e.getMessage());
+            try {
+                if (this.exchange != null)
+                    sendError(500, "error sending response: " + e.getMessage());
+            } catch (final IOException ignored) {}
+        }
+    }
+
+    /**
+     * Send a response with an explicit content type.
+     * This is used by web_httpHandler to serve files with dynamic content types
+     * (text/html, text/css, application/json, etc.) rather than the configured OUT type.
+     */
+    public void send(final Obj message, final Content.ContentType contentType) {
+        if (this.exchange == null) {
+            LOG.error("no exchange available to send response");
+            return;
+        }
+        try {
+            final byte[] bytes = contentType.toBytes(message);
+            this.exchange.getResponseHeaders().set(Content.ContentType.VALUE, contentType.value);
+            this.exchange.sendResponseHeaders(200, bytes.length);
+            try (final OutputStream os = this.exchange.getResponseBody()) {
+                os.write(bytes);
+            }
+        } catch (final Exception e) {
+            LOG.error("error sending response: %s", e.getMessage());
+            try {
+                if (this.exchange != null)
+                    sendError(500, "error sending response: " + e.getMessage());
+            } catch (final IOException ignored) {}
+        }
+    }
+
+    /**
+     * Close the underlying HttpExchange.
+     */
+    public void close() {
+        if (this.exchange != null) {
+            try {
+                this.exchange.close();
+            } catch (final Exception e) {
+                LOG.error("error closing exchange: %s", e.getMessage());
+            }
+        }
     }
 
     // ========================================

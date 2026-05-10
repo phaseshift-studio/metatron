@@ -1,12 +1,12 @@
 /*
- * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC
- *
+ * metatron: a distributed virtual machine and language
+ *  Copyright (C) 2025- PhaseShift Studio, LLC
+ *  
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ *  
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.web.space.ws.server;
+package studio.phaseshift.metatron.isa.web.space.ws.handler;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
@@ -70,20 +70,20 @@ import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.*;
  */
 public class mcp_wsHandler extends WebSocketRec {
 
-    public static final fURI MCP_WS_HANDLER_TID = WS_SPACE_TID.extend("mcp_ws");
+    public static final fURI WS_MCP_HANDLER_TID = WS_SPACE_TID.extend("mcp_ws");
     protected final GraphittyLogger LOG = Graphitty.log(this);
 
     public static final Type WS_MCP_HANDLER_TYPE = Type.Builder.build()
-            .tid(WS_SERVER_TID)
-            .vid(MCP_WS_HANDLER_TID)
+            .tid(WS_HANDLER_TID)
+            .vid(WS_MCP_HANDLER_TID)
             .isaPredicate(rec(
                     uri(TOOL).maybe().asUri(), rec(URI_TYPE, INST_TYPE).maybe(),
                     uri(RESOURCE).maybe().asUri(), T(ALL),
                     uri(PROMPT).maybe().asUri(), T(ALL)))
-            .constructor(instC(MCP_WS_HANDLER_TID.extend(CTOR).dom(ALL.maybe()).rng(MCP_WS_HANDLER_TID), lst(T(REC_TID)), (lhs, inst) ->
+            .constructor(instC(WS_MCP_HANDLER_TID.extend(CTOR).dom(ALL.maybe()).rng(WS_MCP_HANDLER_TID), lst(T(REC_TID)), (lhs, inst) ->
                     new mcp_wsHandler(new LinkedHashMap<>(inst.arg(0).asRec()
                             .at(uri(IN), uri(Content.ContentType.APPLICATION_JSON.value))
-                            .at(uri(OUT), uri(Content.ContentType.APPLICATION_JSON.value)).jvm()), MCP_WS_HANDLER_TID, inst.arg(0).vid()))).create();
+                            .at(uri(OUT), uri(Content.ContentType.APPLICATION_JSON.value)).jvm()), WS_MCP_HANDLER_TID, inst.arg(0).vid()))).create();
 
     // Transport-agnostic protocol handler (composition)
     private final mcp_Server mcp;

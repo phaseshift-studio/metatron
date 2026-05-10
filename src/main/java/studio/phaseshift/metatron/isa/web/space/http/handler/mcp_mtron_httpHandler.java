@@ -1,12 +1,12 @@
 /*
- * Metatron: A Distributed Computing Language and Virtual Machine
+ * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *
+ *  
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ *  
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.web.space.http;
+package studio.phaseshift.metatron.isa.web.space.http.handler;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -49,16 +49,16 @@ import static studio.phaseshift.metatron.isa.web.space.http.httpSpace.HTTP_SPACE
  */
 public class mcp_mtron_httpHandler extends mcp_httpHandler {
 
-    public static final fURI MCP_MTRON_HTTP_TID = HTTP_SPACE_TID.extend("mcp_mtron_http");
+    public static final fURI HTTP_MTRON_MCP_TID = HTTP_SPACE_TID.extend("mcp_mtron_http");
 
-    public static final Type MCP_MTRON_HTTP_TYPE = Type.Builder.build()
-            .tid(MCP_HTTP_TID)
-            .vid(MCP_MTRON_HTTP_TID)
+    public static final Type HTTP_MTRON_MCP_TYPE = Type.Builder.build()
+            .tid(HTTP_MCP_HANDLER_TID)
+            .vid(HTTP_MTRON_MCP_TID)
             .isaPredicate(rec(
                     uri(TOOL).maybe().asUri(), rec(URI_TYPE, INST_TYPE),
                     uri(RESOURCE).maybe().asUri(), T(ALL),
                     uri(PROMPT).maybe().asUri(), T(ALL)))
-            .constructor(instC(MCP_MTRON_HTTP_TID.extend(CTOR).dom(ALL.maybe()).rng(MCP_MTRON_HTTP_TID),
+            .constructor(instC(HTTP_MTRON_MCP_TID.extend(CTOR).dom(ALL.maybe()).rng(HTTP_MTRON_MCP_TID),
                     lst(T(REC_TID)),
                     (lhs, inst) -> {
                         final Rec config = inst.arg(0).asRec();
@@ -69,6 +69,6 @@ public class mcp_mtron_httpHandler extends mcp_httpHandler {
             .create();
 
     public mcp_mtron_httpHandler(final Map<Obj, Obj> jvm, final fURI vid) {
-        super(mcp_Server.buildMetatronTools(jvm, vid), MCP_MTRON_HTTP_TID, vid);
+        super(mcp_Server.buildMetatronTools(jvm, vid), HTTP_MTRON_MCP_TID, vid);
     }
 }

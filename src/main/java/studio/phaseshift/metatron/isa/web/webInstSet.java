@@ -42,13 +42,14 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.web.space.http.httpSpace.HTTP_SPACE_TYPE;
-import static studio.phaseshift.metatron.isa.web.space.http.mcp_httpHandler.MCP_HTTP_TYPE;
-import static studio.phaseshift.metatron.isa.web.space.http.mcp_mtron_httpHandler.MCP_MTRON_HTTP_TYPE;
-import static studio.phaseshift.metatron.isa.web.space.ws.server.mcp_mtron_wsHandler.WS_MCP_MTRON_HANDLER_TYPE;
+import static studio.phaseshift.metatron.isa.web.space.http.handler.mcp_httpHandler.HTTP_MCP_HANDLER_TYPE;
+import static studio.phaseshift.metatron.isa.web.space.http.handler.mcp_mtron_httpHandler.HTTP_MTRON_MCP_TYPE;
+import static studio.phaseshift.metatron.isa.web.space.http.handler.mtron_httpHandler.HTTP_MTRON_HANDLER_TYPE;
+import static studio.phaseshift.metatron.isa.web.space.http.httpSpace.*;
+import static studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_mtron_wsHandler.WS_MTRON_MCP_HANDLER_TYPE;
 import static studio.phaseshift.metatron.isa.web.type.mcp_Server.MCP_SERVER_TYPE;
-import static studio.phaseshift.metatron.isa.web.space.ws.server.mcp_wsHandler.WS_MCP_HANDLER_TYPE;
-import static studio.phaseshift.metatron.isa.web.space.ws.server.mtron_wsServer.WS_MTRON_SERVER_TYPE;
+import static studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_wsHandler.WS_MCP_HANDLER_TYPE;
+import static studio.phaseshift.metatron.isa.web.space.ws.handler.mtron_wsHandler.WS_MTRON_HANDLER_TYPE;
 import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.*;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -150,15 +151,22 @@ public class webInstSet extends AbstractInstSet {
                                 "*<ws://localhost:8999/mtron>               [-- creates a wsmtron server session    --]",
                                 "<ws://localhost:8999/mtron/0/send>('ping') [-- sends str to wsmtron server session --]"),
                         docWrap(WS_WEBSOCKET_TYPE, "a generic websocket obj which can be refined with useful behaviors"),
-                        docWrap(WS_SERVER_TYPE, "a websocket server which should be refined to implement protocol specs"),
+                        docWrap(WS_HANDLER_TYPE, "a websocket server which should be refined to implement protocol specs"),
                         docWrap(WS_CLIENT_TYPE, "an websocket client which should be refined to implement protocol specs"),
-                        docWrap(WS_MTRON_SERVER_TYPE, "a simple websocket server accepting mtron expressions and return mtron results","mtron_ws::[=>]"),
-                        docWrap(WS_MCP_HANDLER_TYPE, "an abstract mcp websocket server providing necessary json-rpc infrastructure for other mcp servers to leverage"),
-                        docWrap(WS_MCP_MTRON_HANDLER_TYPE, "an mcp websocket server with built-in metatron eval, space listing, router info and instruction listing tools"),
-                        docWrap(MCP_SERVER_TYPE, "transport-agnostic MCP JSON-RPC protocol handler"),
-                        docWrap(MCP_HTTP_TYPE, "MCP Streamable HTTP transport handler"),
-                        docWrap(MCP_MTRON_HTTP_TYPE, "MCP Streamable HTTP transport handler with built-in metatron tools")),
+                        docWrap(WS_MTRON_HANDLER_TYPE, "a simple websocket handler accepting mtron expressions and return mtron results","mtron_ws::[=>]"),
+                        docWrap(WS_MCP_HANDLER_TYPE, "an abstract mcp websocket handler providing necessary json-rpc infrastructure for mcp servers to leverage"),
+                        docWrap(WS_MTRON_MCP_HANDLER_TYPE, "an mcp handler server with built-in mtron eval, space listing, router info and instruction listing tools"),
+                        /// //////////////////////////////
+                        docWrap(HTTP_SOCKET_TYPE, "a generic http obj which can be refined with useful behaviors"),
+                        docWrap(HTTP_HANDLER_TYPE, "a http server which should be refined to implement protocol specs"),
+                        docWrap(HTTP_CLIENT_TYPE, "an http client which should be refined to implement protocol specs"),
+                        docWrap(HTTP_MTRON_HANDLER_TYPE, "a simple http handler accepting mtron expressions and return mtron results","mtron_http::[=>]"),
+                        docWrap(HTTP_MCP_HANDLER_TYPE, "an abstract mcp http handler providing necessary json-rpc infrastructure for mcp servers to leverage"),
+                        docWrap(HTTP_MTRON_MCP_TYPE, "mcp streamable http transport handler with built-in metatron tools"),
+                        /// //////////////////////////////
+                        docWrap(MCP_SERVER_TYPE, "transport-agnostic mcp json-rpc protocol handler")),
                 uri(INST), lst(
+                        instC(WEB_ISA_TID.extend("inst/format").dom(MARKDOWN_TID).rng(STR_TID), lst(), (lhs, inst) -> str(ObjMarkdownSerializer.format(ObjMarkdownSerializer.single().write(lhs).getChars().toString()))),
                         instC(AS_INST_TID.dom(STR_TID).rng(XML_TID), lst(T(XML_TID)), (lhs, inst) -> ObjXMLSerializer.parse(lhs.asStr().strValue())),
                         instC(AS_INST_TID.dom(STR_TID).rng(HTML_TID), lst(HTML_TYPE), (lhs, inst) -> ObjHTMLSerializer.parse(lhs.asStr().strValue())),
                         instC(AS_INST_TID.dom(STR_TID).rng(MARKDOWN_TID), lst(MARKDOWN_TYPE), (lhs, inst) -> ObjMarkdownSerializer.parse(lhs.asStr().strValue())),

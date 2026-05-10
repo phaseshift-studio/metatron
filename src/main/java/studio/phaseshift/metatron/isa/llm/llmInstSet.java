@@ -24,7 +24,10 @@ import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.llm.type.mSkill;
 import studio.phaseshift.metatron.isa.llm.type.mTool;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
+import studio.phaseshift.metatron.isa.m.type.ObjFactory;
 import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
+import studio.phaseshift.metatron.isa.vec.type.MVec;
 
 import java.util.Map;
 
@@ -52,6 +55,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace.staticObjToFile;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.DIR_TID;
+import static studio.phaseshift.metatron.isa.vec.vecInstSet.VEC_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
@@ -78,7 +82,7 @@ public class llmInstSet extends AbstractInstSet {
     public static Type LLM_SKILL_TYPE;
     public static Type LLM_MEMORY_TYPE;
     public static Type LLM_NOTES_TYPE;
-
+    public static ObjFactory LLM_OBJ_FACTORY = MObjFactory.of().addExtension(MVec.class, x -> lst(x.jvm().stream().toList()));
 
     public llmInstSet() {
         super(mutableMap(uri(PATTERN), uri(LLM_ISA_TID.extend(ALL))), INSTSET_TID, LLM_ISA_TID);
@@ -187,6 +191,12 @@ public class llmInstSet extends AbstractInstSet {
                                 mutableMap(jnt(0), "the message to send the model"), // args
                                 "communicate with an llm that may be enriched with a tool, skill, etc.", // desc
                                 "*<ollama:qwen3:latest>+[response=>[to=>print(_)],think=>to(/ai/thoughts?incrq)].chat('what is a database?')"),
+                        docWrap(instC(LLM_INST_TID.extend("embed").dom(MODEL_TID).rng(VEC_TID), lst(ALL_TYPE), (lhs, inst) -> model(lhs.asRec()).embed(inst.arg(0))),
+                                "a model to embed arg into",  // dom
+                                "the obj as a vector embedding", // rng
+                                mutableMap(jnt(0), "the object to embed"), // args
+                                "embed an object with an llm", // desc
+                                "*<ollama:qwen3:latest>.embed('what is a database?')"),
                         /*instC(LLM_INST_TID.extend("chat").dom(MODEL_TID).rng(A.maybe()),
                                 lst(STR_TYPE),
                                 (lhs, inst) -> model(lhs.asRec()).chat(inst.arg(0).strValue())),*/

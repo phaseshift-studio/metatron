@@ -1,12 +1,12 @@
 /*
- * Metatron: A Distributed Computing Language and Virtual Machine
+ * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *
+ *  
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ *  
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -16,13 +16,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.web.space.http;
+package studio.phaseshift.metatron.isa.web.space.http.handler;
 
 import com.sun.net.httpserver.HttpExchange;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.web.space.http.HttpRec;
 import studio.phaseshift.metatron.isa.web.type.mcp_Server;
 import studio.phaseshift.metatron.isa.web.type.Content;
 
@@ -43,6 +44,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.space.http.httpSpace.HTTP_SPACE_TID;
+import static studio.phaseshift.metatron.isa.web.type.Content.ContentType.APPLICATION_JSON;
 
 /**
  * Streamable HTTP MCP transport handler. Composes a {@link mcp_Server} for JSON-RPC
@@ -56,20 +58,20 @@ import static studio.phaseshift.metatron.isa.web.space.http.httpSpace.HTTP_SPACE
  */
 public class mcp_httpHandler extends HttpRec {
 
-    public static final fURI MCP_HTTP_TID = HTTP_SPACE_TID.extend("mcp_http");
+    public static final fURI HTTP_MCP_HANDLER_TID = HTTP_SPACE_TID.extend("mcp_http");
 
-    public static final Type MCP_HTTP_TYPE = Type.Builder.build()
+    public static final Type HTTP_MCP_HANDLER_TYPE = Type.Builder.build()
             .tid(HTTP_REC_TID)
-            .vid(MCP_HTTP_TID)
+            .vid(HTTP_MCP_HANDLER_TID)
             .isaPredicate(rec(
                     uri(TOOL).maybe().asUri(), rec(URI_TYPE, INST_TYPE).maybe(),
                     uri(RESOURCE).maybe().asUri(), T(ALL),
                     uri(PROMPT).maybe().asUri(), T(ALL)))
-            .constructor(instC(MCP_HTTP_TID.extend(CTOR).dom(ALL.maybe()).rng(MCP_HTTP_TID),
+            .constructor(instC(HTTP_MCP_HANDLER_TID.extend(CTOR).dom(ALL.maybe()).rng(HTTP_MCP_HANDLER_TID),
                     lst(T(REC_TID)),
                     (lhs, inst) -> new mcp_httpHandler(
                             new LinkedHashMap<>(inst.arg(0).asRec().jvm()),
-                            MCP_HTTP_TID, inst.arg(0).vid())))
+                            HTTP_MCP_HANDLER_TID, inst.arg(0).vid())))
             .create();
 
     // Transport-agnostic protocol handler (composition)
@@ -96,7 +98,7 @@ public class mcp_httpHandler extends HttpRec {
         // Parse incoming JSON-RPC
         final Obj request;
         try {
-            request = Content.ContentType.APPLICATION_JSON.fromBytes(body);
+            request = APPLICATION_JSON.fromBytes(body);
         } catch (final Exception e) {
             LOG.warn("failed to parse JSON-RPC body: %s", e.getMessage());
             sendError(400, "Invalid JSON-RPC body");
@@ -131,7 +133,7 @@ public class mcp_httpHandler extends HttpRec {
             // Response
             final String jsonStr = JSON.write(result).toString();
             final byte[] bytes = jsonStr.getBytes(StandardCharsets.UTF_8);
-            exchange.getResponseHeaders().set("Content-Type", "application/json");
+            exchange.getResponseHeaders().set(Content.ContentType.VALUE, APPLICATION_JSON.value);
             if (sessionId != null) {
                 exchange.getResponseHeaders().set("Mcp-Session-Id", sessionId);
             }
@@ -148,9 +150,7 @@ public class mcp_httpHandler extends HttpRec {
 
     @Override
     protected void doGet(final HttpExchange exchange) throws IOException {
-        // SSE streaming for server→client notifications (not yet needed —
-        // notifications are handled at the mtron level per user confirmation)
-        exchange.getResponseHeaders().set("Content-Type", "text/event-stream");
+        exchange.getResponseHeaders().set(Content.ContentType.VALUE, "text/event-stream");
         sendError(501, "SSE streaming not yet implemented");
     }
 

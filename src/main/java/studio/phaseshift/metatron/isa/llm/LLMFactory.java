@@ -24,9 +24,13 @@ import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.request.ResponseFormat;
 import dev.langchain4j.model.chat.request.ResponseFormatType;
 import dev.langchain4j.model.chat.request.json.JsonSchema;
+import dev.langchain4j.model.embedding.EmbeddingModel;
+import dev.langchain4j.model.localai.LocalAiEmbeddingModel;
 import dev.langchain4j.model.localai.LocalAiStreamingChatModel;
+import dev.langchain4j.model.ollama.OllamaEmbeddingModel;
 import dev.langchain4j.model.ollama.OllamaModels;
 import dev.langchain4j.model.ollama.OllamaStreamingChatModel;
+import dev.langchain4j.model.openai.OpenAiEmbeddingModel;
 import dev.langchain4j.model.openai.OpenAiModelCatalog;
 import dev.langchain4j.model.openai.OpenAiResponsesStreamingChatModel;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
@@ -258,7 +262,36 @@ public final class LLMFactory {
                 yield builder.build();
             }
 
-            default -> throw MTronException.of("unsupported LLM provider: %s", provider);
+            default -> throw MTronException.of("llm provider does not support chatting: %s", provider);
         };
+    }
+
+    public static EmbeddingModel createEmbeddingInteraction(final mModel model, String modelName) {
+        return switch (model.at(f(PROVIDER)).asRec().at(NAME).uriValue().toString().toLowerCase()) {
+            case LOCALAI -> LocalAiEmbeddingModel.builder()
+                    .baseUrl(model.at(f(PROVIDER)).asRec().at(HOST).uriValue().toString())
+                    .modelName(modelName)
+                    .logRequests(true)
+                    .logResponses(true)
+                    .logger(Graphitty.log(LocalAiEmbeddingModel.class).logger(Level.WARN))
+                    .build();
+            case OLLAMA -> OllamaEmbeddingModel.builder()
+                    .baseUrl(model.at(f(PROVIDER)).asRec().at(HOST).uriValue().toString())
+                    .modelName(modelName)
+                    .logRequests(true)
+                    .logResponses(true)
+                    .build();
+            case OPENAI -> OpenAiEmbeddingModel.builder()
+                    .apiKey(model.at(f(PROVIDER)).asRec().at(API_KEY).strValue())
+                    .baseUrl(model.at(f(PROVIDER)).asRec().at(HOST).uriValue().toString())
+                    .modelName(modelName)
+                    .logRequests(true)
+                    .logResponses(true)
+                    .logger(Graphitty.log(OpenAiEmbeddingModel.class).logger(Level.WARN))
+                    .build();
+            default ->
+                    throw MTronException.of("llm provider does not support embedding: %s", model.at(f(PROVIDER)).asRec().at(NAME).uriValue());
+        };
+
     }
 }

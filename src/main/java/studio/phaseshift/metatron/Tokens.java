@@ -107,6 +107,7 @@ public final class Tokens {
     public static final String CODE = "code";
     public static final String LANG = "lang";
     public static final String START = "start";
+    public static final String METHOD = "method";
     public static final String MESSAGE = "message";
     public static final String RUNNING = "running";
     public static final String HALTED = "halted";
@@ -158,6 +159,13 @@ public final class Tokens {
     public static final String ON_ERROR = "on_error";
     public static final String ON_MESSAGE = "on_message";
     public static final String ON_CLOSE = "on_close";
+    public static final String ON_GET = "on_get";
+    public static final String ON_POST = "on_post";
+    public static final String ON_PUT = "on_put";
+    public static final String ON_DELETE = "on_delete";
+    public static final String ON_PATCH = "on_patch";
+    public static final String ON_HEAD = "on_head";
+    public static final String ON_OPTIONS = "on_options";
     public static final String HOST = "host";
     public static final String HEADERS = "headers";
     public static final String TRANSPORT = "transport";
@@ -225,6 +233,9 @@ public final class Tokens {
     public static final String STATE = "state";
     public static final String ROOT = "root";
     public static final String SESSION = "session";
+    public static final String WEB_ROOT = "web_root";
+    public static final String DEFAULT_PAGE = "default_page";
+    public static final String READ_ONLY = "read_only";
 
 
 }

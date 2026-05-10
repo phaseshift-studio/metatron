@@ -48,6 +48,7 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.MARKDOWN_TID;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
+
 public class ObjMarkdownSerializer extends AbstractObjSerializer<Node> {
 
     private static final ObjMarkdownSerializer INSTANCE = new ObjMarkdownSerializer();
@@ -355,8 +356,7 @@ public class ObjMarkdownSerializer extends AbstractObjSerializer<Node> {
                 recRef.getAndUpdate(r -> r.asRec().at(LANG, str(codeBlock.getInfo().toString())));
             if (!codeBlock.getContentChars().isBlank())
                 recRef.getAndUpdate(r -> r.asRec().at(CODE, str(codeBlock.getContentChars().toString())));
-        }
-        else if (node instanceof IndentedCodeBlock codeBlock) {
+        } else if (node instanceof IndentedCodeBlock codeBlock) {
             recRef.getAndUpdate(r -> r.asRec().at(TYPE, uri(CODE)));
             if (!codeBlock.getContentChars().isBlank())
                 recRef.getAndUpdate(r -> r.asRec().at(CODE, str(codeBlock.getContentChars().toString())));
@@ -364,15 +364,12 @@ public class ObjMarkdownSerializer extends AbstractObjSerializer<Node> {
         // Lists
         else if (node instanceof BulletList) {
             recRef.getAndUpdate(r -> r.asRec().at(TYPE, uri(B_LIST)));
-        }
-        else if (node instanceof OrderedList orderedList) {
+        } else if (node instanceof OrderedList orderedList) {
             recRef.getAndUpdate(r -> r.asRec().at(TYPE, uri(O_LIST)));
             recRef.getAndUpdate(r -> r.asRec().at(START, jnt(orderedList.getStartNumber())));
-        }
-        else if (node instanceof BulletListItem) {
+        } else if (node instanceof BulletListItem) {
             recRef.getAndUpdate(r -> r.asRec().at(TYPE, uri(ENTRY)));
-        }
-        else if (node instanceof OrderedListItem) {
+        } else if (node instanceof OrderedListItem) {
             recRef.getAndUpdate(r -> r.asRec().at(TYPE, uri(ENTRY)));
         }
         // Block quotes
@@ -392,8 +389,7 @@ public class ObjMarkdownSerializer extends AbstractObjSerializer<Node> {
                 recRef.getAndUpdate(r -> r.asRec().at(TITLE, str(link.getTitle().toString())));
             if (!link.getText().isBlank())
                 recRef.getAndUpdate(r -> r.asRec().at(TEXT, str(link.getText().toString())));
-        }
-        else if (node instanceof AutoLink autoLink) {
+        } else if (node instanceof AutoLink autoLink) {
             recRef.getAndUpdate(r -> r.asRec().at(TYPE, uri("autolink")));
             if (!autoLink.getUrl().isBlank())
                 recRef.getAndUpdate(r -> r.asRec().at(URI, uri(autoLink.getUrl().toString())));
@@ -415,8 +411,7 @@ public class ObjMarkdownSerializer extends AbstractObjSerializer<Node> {
             recRef.getAndUpdate(r -> r.asRec().at(TYPE, uri("emphasis")));
             if (!node.getChars().isBlank())
                 recRef.getAndUpdate(r -> r.asRec().at(TEXT, str(node.getChars().toString())));
-        }
-        else if (node instanceof StrongEmphasis) {
+        } else if (node instanceof StrongEmphasis) {
             recRef.getAndUpdate(r -> r.asRec().at(TYPE, uri("strong")));
             if (!node.getChars().isBlank())
                 recRef.getAndUpdate(r -> r.asRec().at(TEXT, str(node.getChars().toString())));
@@ -446,8 +441,7 @@ public class ObjMarkdownSerializer extends AbstractObjSerializer<Node> {
             recRef.getAndUpdate(r -> r.asRec().at(TYPE, uri("html_block")));
             if (!htmlBlock.getContentChars().isBlank())
                 recRef.getAndUpdate(r -> r.asRec().at(HTML, str(htmlBlock.getContentChars().toString())));
-        }
-        else if (node instanceof HtmlInline htmlInline) {
+        } else if (node instanceof HtmlInline htmlInline) {
             recRef.getAndUpdate(r -> r.asRec().at(TYPE, uri("html_inline")));
             if (!htmlInline.getChars().isBlank())
                 recRef.getAndUpdate(r -> r.asRec().at(HTML, str(htmlInline.getChars().toString())));
@@ -480,6 +474,44 @@ public class ObjMarkdownSerializer extends AbstractObjSerializer<Node> {
         }
 
         return recRef.get();
+    }
+
+    public static final String format(final String markdownString) {
+        return markdownString
+                // Bold
+                .replaceAll("\\*\\*(.*?)\\*\\*", "\u001B[1m$1\u001B[0m")
+                // Italic
+                .replaceAll("\\*(.*?)\\*", "\u001B[3m$1\u001B[0m")
+                // Underline
+                .replaceAll("__(.*?)__", "\u001B[4m$1\u001B[0m")
+                // Strikethrough
+                .replaceAll("~~(.*?)~~", "\u001B[9m$1\u001B[0m")
+                // Blockquote
+                .replaceAll("(> ?.*)",
+                        "\u001B[3m\u001B[34m\u001B[1m$1\u001B[22m\u001B[0m")
+                // Lists (bold magenta number and bullet)
+                .replaceAll("([\\d]+\\.|-|\\*) (.*)",
+                        "\u001B[35m\u001B[1m$1\u001B[22m\u001B[0m $2")
+                // Block code (black on gray)
+                .replaceAll("(?s)```(\\w+)?\\n(.*?)\\n```",
+                        "\u001B[3m\u001B[1m$1\u001B[22m\u001B[0m\n\u001B[57;107m$2\u001B[0m\n")
+                // Inline code (black on gray)
+                .replaceAll("`(.*?)`", "\u001B[57;107m$1\u001B[0m")
+                // Headers (cyan bold)
+                .replaceAll("(#{1,6}) (.*?)\n",
+                        "\u001B[36m\u001B[1m$1 $2\u001B[22m\u001B[0m\n")
+                // Headers with a single line of text followed by 2 or more equal signs
+                .replaceAll("(.*?\n={2,}\n)",
+                        "\u001B[36m\u001B[1m$1\u001B[22m\u001B[0m\n")
+                // Headers with a single line of text followed by 2 or more dashes
+                .replaceAll("(.*?\n-{2,}\n)",
+                        "\u001B[36m\u001B[1m$1\u001B[22m\u001B[0m\n")
+                // Images (blue underlined)
+                .replaceAll("!\\[(.*?)]\\((.*?)\\)",
+                        "\u001B[34m$1\u001B[0m (\u001B[34m\u001B[4m$2\u001B[0m)")
+                // Links (blue underlined)
+                .replaceAll("!?\\[(.*?)]\\((.*?)\\)",
+                        "\u001B[34m$1\u001B[0m (\u001B[34m\u001B[4m$2\u001B[0m)");
     }
 
     @Override

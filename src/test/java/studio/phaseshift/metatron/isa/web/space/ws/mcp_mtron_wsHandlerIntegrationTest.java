@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *
+ *  
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ *  
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -16,13 +16,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.web.space.ws.server;
+package studio.phaseshift.metatron.isa.web.space.ws;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.furi.fURI;
@@ -31,9 +32,8 @@ import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.type.Router;
-import studio.phaseshift.metatron.isa.web.space.ws.AbstractWebSocketServerIntegrationTest;
-import studio.phaseshift.metatron.isa.web.space.ws.WebSocketRec;
-import studio.phaseshift.metatron.isa.web.space.ws.wsSpace;
+import studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_mtron_wsHandler;
+import studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_wsHandler;
 import studio.phaseshift.metatron.isa.web.type.Content;
 
 import java.util.LinkedHashMap;
@@ -48,10 +48,10 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.web.space.ws.server.mcp_mtron_wsHandler.MCP_MTRON_WS_HANDLER_TID;
-import static studio.phaseshift.metatron.isa.web.space.ws.server.mcp_mtron_wsHandler.WS_MCP_MTRON_HANDLER_TYPE;
-import static studio.phaseshift.metatron.isa.web.space.ws.server.mcp_wsHandler.MCP_WS_HANDLER_TID;
-import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_SERVER_TID;
+import static studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_mtron_wsHandler.WS_MTRON_MCP_HANDLER_TID;
+import static studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_mtron_wsHandler.WS_MTRON_MCP_HANDLER_TYPE;
+import static studio.phaseshift.metatron.isa.web.space.ws.handler.mcp_wsHandler.WS_MCP_HANDLER_TID;
+import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.WS_HANDLER_TID;
 
 /**
  * Integration tests for {@link mcp_mtron_wsHandler}.
@@ -88,7 +88,7 @@ public class mcp_mtron_wsHandlerIntegrationTest extends AbstractWebSocketServerI
         return wsSpace.of(rec(
                 uri(HOST), uri(hostUri.toString()),
                 uri(PATTERN), uri("ws://#"),
-                uri(ROUTE), rec(uri("/mcp-mtron"), uri(MCP_MTRON_WS_HANDLER_TID.toString()))
+                uri(ROUTE), rec(uri("/mcp-mtron"), uri(WS_MTRON_MCP_HANDLER_TID.toString()))
         ).jvm(), f("/sys/space/ws/mcp-mtron/test"));
     }
 
@@ -125,14 +125,14 @@ public class mcp_mtron_wsHandlerIntegrationTest extends AbstractWebSocketServerI
 
     @Test
     public void testMcpMtronTIDNamespace() {
-        assertTrue(MCP_MTRON_WS_HANDLER_TID.toString().contains("wsspace"));
-        assertTrue(MCP_MTRON_WS_HANDLER_TID.toString().contains("mcp_mtron_ws"));
+        assertTrue(WS_MTRON_MCP_HANDLER_TID.toString().contains("wsspace"));
+        assertTrue(WS_MTRON_MCP_HANDLER_TID.toString().contains("mcp_mtron_ws"));
     }
 
     // todo: test type, not tid
     @Test
     public void testMcpMtronTypeIsSubtypeOfMcpWs() {
-        assertEquals(MCP_WS_HANDLER_TID, WS_MCP_MTRON_HANDLER_TYPE.tid(),
+        assertEquals(WS_MCP_HANDLER_TID, WS_MTRON_MCP_HANDLER_TYPE.tid(),
                 "mcp_mtron type should declare mcp_ws as its parent type");
     }
 
@@ -140,7 +140,7 @@ public class mcp_mtron_wsHandlerIntegrationTest extends AbstractWebSocketServerI
     @Test
     public void testMcpWsTypeDeclaresMcpServerAsParent() {
         // mcp_ws declares WS_SERVER_TID as its tid.
-        assertEquals(WS_SERVER_TID, mcp_wsHandler.WS_MCP_HANDLER_TYPE.tid(),
+        Assertions.assertEquals(WS_HANDLER_TID, mcp_wsHandler.WS_MCP_HANDLER_TYPE.tid(),
                 "mcp_ws type should declare ws_server as its parent type");
     }
 

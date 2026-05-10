@@ -1,12 +1,12 @@
 /*
  * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *
+ *  
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ *  
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.web.space.ws.server;
+package studio.phaseshift.metatron.isa.web.space.ws.handler;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -62,23 +62,23 @@ import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.*;
  */
 public class mcp_mtron_wsHandler extends mcp_wsHandler {
 
-    public static final fURI MCP_MTRON_WS_HANDLER_TID = WS_SPACE_TID.extend("mcp_mtron_ws");
+    public static final fURI WS_MTRON_MCP_HANDLER_TID = WS_SPACE_TID.extend("mcp_mtron_ws");
 
-    public static final Type WS_MCP_MTRON_HANDLER_TYPE = Type.Builder.build()
-            .tid(MCP_WS_HANDLER_TID)
-            .vid(MCP_MTRON_WS_HANDLER_TID)
+    public static final Type WS_MTRON_MCP_HANDLER_TYPE = Type.Builder.build()
+            .tid(WS_MCP_HANDLER_TID)
+            .vid(WS_MTRON_MCP_HANDLER_TID)
             .isaPredicate(rec(
                     uri(TOOL).maybe().asUri(), rec(URI_TYPE, INST_TYPE),
                     uri(RESOURCE).maybe().asUri(), T(ALL),
                     uri(PROMPT).maybe().asUri(), T(ALL)))
-            .constructor(instC(MCP_MTRON_WS_HANDLER_TID.extend(CTOR).dom(ALL.maybe()).rng(MCP_MTRON_WS_HANDLER_TID), lst(T(REC_TID)), (lhs, inst) -> {
+            .constructor(instC(WS_MTRON_MCP_HANDLER_TID.extend(CTOR).dom(ALL.maybe()).rng(WS_MTRON_MCP_HANDLER_TID), lst(T(REC_TID)), (lhs, inst) -> {
                 final Rec config = inst.arg(0).asRec();
                 return new mcp_mtron_wsHandler(new LinkedHashMap<>(config.jvm()), config.vid());
             })).create();
 
     public mcp_mtron_wsHandler(final Map<Obj, Obj> jvm, final fURI vid) {
         // buildMetatronTools() pre-populates tools before super() sets up ON_MESSAGE
-        super(buildJvm(jvm, vid), MCP_MTRON_WS_HANDLER_TID, vid);
+        super(buildJvm(jvm, vid), WS_MTRON_MCP_HANDLER_TID, vid);
     }
 
     private static Map<Obj, Obj> buildJvm(final Map<Obj, Obj> base, final fURI vid) {

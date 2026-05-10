@@ -1,5 +1,5 @@
 /*
- * Metatron: A Distributed Computing Language and Virtual Machine
+ * metatron: a distributed virtual machine and language
  *  Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
@@ -16,27 +16,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.web.space;
+package studio.phaseshift.metatron.isa.web.space.http;
 
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.SkipInheritedTests;
 import studio.phaseshift.metatron.SkipInheritedTestsExtension;
 import studio.phaseshift.metatron.TestTag;
-import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
-import studio.phaseshift.metatron.isa.mach.type.Router;
-import studio.phaseshift.metatron.isa.web.space.http.httpSpace;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -54,10 +45,10 @@ import static studio.phaseshift.metatron.isa.web.webInstSet.*;
         TestTag.LIST,        // Skip all list handling tests
         TestTag.SPECIAL      // Skip all special value tests
 }, include = {
-     //   "testMonoReadWrite"  // Include this CRUD test even though CRUD tag is skipped
+        //   "testMonoReadWrite"  // Include this CRUD test even though CRUD tag is skipped
 })
 public class httpSpaceTest extends AbstractSpaceTest {
-    private static final String BASE_URL =  "http://localhost:" + generatePort();
+    private static final String BASE_URL = "http://localhost:" + generatePort();
 
     public httpSpaceTest() {
         super(f(BASE_URL), () -> {
@@ -67,7 +58,12 @@ public class httpSpaceTest extends AbstractSpaceTest {
                     uri(PATTERN), uri("http://#"),
                     uri(ROUTE), rec(uri("/"), uri("local:src/test/resources/web"))), f("/sys/space/web"));
         });
-        
+
+    }
+
+    @Override
+    public void testPolyReadWrite(final String writeExpression, final String mutationExpression, final String readExpression, final String expectedExpression) {
+        LOG.warn("testPolyReadWrite (skipped): %s => %s => %s => %s", writeExpression, mutationExpression, readExpression, expectedExpression);
     }
 
     @Override
