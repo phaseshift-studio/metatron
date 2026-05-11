@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.web.space.http.handler.mcp_mtron_httpHandler;
+import studio.phaseshift.metatron.isa.web.type.mMCPUtility;
 import studio.phaseshift.metatron.isa.web.type.mcp_Server;
 import studio.phaseshift.metatron.isa.web.type.Content;
 
@@ -75,7 +76,7 @@ public class mcp_mtron_httpHandlerTest extends AbstractHTTPServerIntegrationTest
     public void createHandler() {
         this.testHoldingSpace = memSpace.of(f("/test/#"), f("/sys/space/test/http-mcp-direct"));
         final fURI vid = f("/test/" + getClass().getSimpleName() + "/" + System.nanoTime());
-        this.mcp = new mcp_Server(mcp_Server.buildMetatronTools(
+        this.mcp = new mcp_Server(mMCPUtility.buildMetatronTools(
                 new LinkedHashMap<>(Map.of(
                         uri(IN), uri(Content.ContentType.APPLICATION_JSON.value),
                         uri(OUT), uri(Content.ContentType.APPLICATION_JSON.value))), vid),

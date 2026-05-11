@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Fail;
 import studio.phaseshift.metatron.isa.m.type.NoObj;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Map;
 import java.util.UUID;
@@ -63,6 +64,23 @@ public class VirtualThread extends AbstractThread {
             return fail("interrupted").c(cInt.ZERO()).asFail();
         } catch (final Exception e) {
             return fail(e);
+        }
+    }
+    
+    @Override
+    public Obj at(final Obj key) {
+        if(!key.equals(uri(RESULT)))
+            return super.at(key);
+        else {
+            try {
+                if (this.future.isDone())
+                    return this.future.get();
+                else {
+                    return Obj.none();
+                }
+            } catch(final Exception e) {
+                throw MTronException.of(e);
+            }
         }
     }
 

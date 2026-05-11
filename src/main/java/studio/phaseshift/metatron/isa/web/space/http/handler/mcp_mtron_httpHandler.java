@@ -22,6 +22,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.web.type.mMCPUtility;
 import studio.phaseshift.metatron.isa.web.type.mcp_Server;
 
 import java.util.LinkedHashMap;
@@ -69,6 +70,6 @@ public class mcp_mtron_httpHandler extends mcp_httpHandler {
             .create();
 
     public mcp_mtron_httpHandler(final Map<Obj, Obj> jvm, final fURI vid) {
-        super(mcp_Server.buildMetatronTools(jvm, vid), HTTP_MTRON_MCP_TID, vid);
+        super(mMCPUtility.buildMetatronTools(jvm, vid), HTTP_MTRON_MCP_TID, vid);
     }
 }

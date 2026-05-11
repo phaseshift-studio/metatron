@@ -22,6 +22,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.web.type.mMCPUtility;
 import studio.phaseshift.metatron.isa.web.type.mcp_Server;
 
 import java.util.LinkedHashMap;
@@ -82,6 +83,6 @@ public class mcp_mtron_wsHandler extends mcp_wsHandler {
     }
 
     private static Map<Obj, Obj> buildJvm(final Map<Obj, Obj> base, final fURI vid) {
-        return mcp_Server.buildMetatronTools(base, vid);
+        return mMCPUtility.buildMetatronTools(base, vid);
     }
 }

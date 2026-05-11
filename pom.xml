@@ -282,6 +282,17 @@
             <artifactId>jsoup</artifactId>
             <version>${jsoup.version}</version>
         </dependency>
+        <!-- DOCS: asciidoctorj for DocRunner HTML generation -->
+        <dependency>
+            <groupId>org.asciidoctor</groupId>
+            <artifactId>asciidoctorj</artifactId>
+            <version>${asciidoctorj.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.bmuschko</groupId>
+            <artifactId>asciidoctorj-tabbed-code-extension</artifactId>
+            <version>0.3</version>
+        </dependency>
         <!-- CONSOLE -->
         <dependency>
             <groupId>org.jline</groupId>
@@ -438,6 +449,21 @@
                     <include>ansi_headers.txt</include>
                 </includes>
             </resource>
+           <!-- <resource>
+                <directory>src/main/resources</directory>
+                <targetPath>${project.build.directory}/classes</targetPath>
+                <includes>
+                    <include>META-INF/services/**</include>
+                </includes>
+            </resource>-->
+            <!--<resource>
+                <directory>src/main/resources</directory>
+                <excludes>
+                    <exclude>logback.xml</exclude>
+                    <exclude>ansi_headers.txt</exclude>
+                    <exclude>META-INF/**</exclude>
+                </excludes>
+            </resource>-->
         </resources>
         <!--
         ####################################################################################################
@@ -461,16 +487,40 @@
                         </goals>
                     </execution>
                     <execution>
-                        <id>run-python-script</id>
+                        <id>run-doc-runner</id>
                         <phase>site</phase>
                         <goals>
                             <goal>exec</goal>
                         </goals>
                         <configuration>
-                            <!-- <skip>${skipRunner}</skip>-->
-                            <executable>python</executable>
+                            <skip>${skipRunner}</skip>
+                            <executable>java</executable>
                             <arguments>
-                                <argument>docs/python/docs-code-parser.py</argument>
+                                <argument>--enable-native-access=ALL-UNNAMED</argument>
+                                <argument>--add-modules</argument>
+                                <argument>jdk.incubator.vector</argument>
+                                <argument>--add-opens</argument>
+                                <argument>java.base/java.lang=ALL-UNNAMED</argument>
+                                <argument>--add-opens</argument>
+                                <argument>java.base/java.lang.invoke=ALL-UNNAMED</argument>
+                                <argument>--add-opens</argument>
+                                <argument>java.base/java.lang.reflect=ALL-UNNAMED</argument>
+                                <argument>--add-opens</argument>
+                                <argument>java.base/java.util=ALL-UNNAMED</argument>
+                                <argument>--add-opens</argument>
+                                <argument>java.base/java.util.concurrent.atomic=ALL-UNNAMED</argument>
+                                <argument>--add-opens</argument>
+                                <argument>java.base/java.io=ALL-UNNAMED</argument>
+                                <argument>--add-opens</argument>
+                                <argument>java.base/java.nio=ALL-UNNAMED</argument>
+                                <argument>--add-opens</argument>
+                                <argument>java.base/java.net=ALL-UNNAMED</argument>
+                                <argument>--add-opens</argument>
+                                <argument>java.base/sun.nio.cs=ALL-UNNAMED</argument>
+                                <argument>-classpath</argument>
+                                <classpath/>
+                                <argument>studio.phaseshift.metatron.docs.DocRunner</argument>
+                                <argument>${project.build.directory}/temp/src/adoc</argument>
                                 <argument>--copy_only</argument>
                                 <argument>${skipRunner}</argument>
                                 <argument>--verbose</argument>

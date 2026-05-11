@@ -292,6 +292,12 @@ public class machInstSet extends AbstractInstSet {
                             else
                                 throw MTronException.of("injection larger than tuple: 1 < %d", inst.arg(0).intValue().intValue());
                         }),
+                        instC(THREAD_INST_TID.dom(ALL).rng(MACH_THREAD_TID), lst(T(ALL)), (lhs, inst) -> {
+                            final fURI baseVID = f("/sys/thread");
+                            final VirtualThread thread = new VirtualThread(mutableMap(uri(CODE), inst.arg(0)), MACH_VIRTUAL_THREAD_TID, CommonUtil.mintShortUUID(baseVID, true));
+                            thread.apply(lhs);
+                            return thread;
+                        }),
                         instC(MACH_INST_TID.extend("stop").dom(MACH_THREAD_TID).rng(MACH_THREAD_TID), lst(), (lhs, inst) -> {
                             final AbstractThread thread = AbstractThread.of(lhs.asRec());
                             if (!thread.isRunning())
