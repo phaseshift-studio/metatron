@@ -335,7 +335,8 @@ public class InstTest extends AbstractObjTest {
             "3.band(2,8)                                  % 3",
             "10.band(2,8)                                 % noobj",
             "5.band(-10,10)                               % 5",
-            "10.band(2)                                   % noobj",
+            "10.band(2)                                   % <ERROR>",
+            "10.band(2,+1)                                % 10",
             "\"abc\".band?int{?}<=int(2,8)                % <ERROR>",
             "\"abc\".band(2,8)                            % <ERROR>"
     }, delimiter = '%')

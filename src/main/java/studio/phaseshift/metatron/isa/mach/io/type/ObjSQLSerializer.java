@@ -208,6 +208,26 @@ public class ObjSQLSerializer extends AbstractObjSerializer<ResultSet> {
     }
 
     /**
+     * Read the current row from a ResultSet as a Rec without advancing the cursor.
+     *
+     * @param rs the ResultSet positioned at a valid row
+     * @return a Rec containing the current row's data
+     * @throws SQLException if reading fails
+     */
+    public static Rec readCurrentAsRec(final ResultSet rs) throws SQLException {
+        final ResultSetMetaData metaData = rs.getMetaData();
+        final int columnCount = metaData.getColumnCount();
+        final Map<Obj, Obj> rowData = new LinkedHashMap<>();
+        for (int i = 1; i <= columnCount; i++) {
+            final String columnName = metaData.getColumnName(i);
+            final int sqlType = metaData.getColumnType(i);
+            final Obj value = readColumnStatic(rs, i, sqlType);
+            rowData.put(uri(columnName), value);
+        }
+        return rec(rowData, REC_ROW_TID, null);
+    }
+
+    /**
      * Read all rows from a ResultSet as an Objs stream of Rec (rrows).
      * This is useful for returning from instruction implementations.
      *

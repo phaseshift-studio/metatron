@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.util.CommonUtil;
+import studio.phaseshift.metatron.util.MTronException;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.furi.q.QCollection.SUBQ_TID;
@@ -45,22 +46,21 @@ public interface SubQTest {
     @TestCategory.Crud
     @TestCategory.Concurrent
     @ParameterizedTest(name = "[{index}] String: {0}")
-    @Disabled
     @CsvSource(value = {
-            "$$/xyz?subq     ->(||(>>1.to($$/abc)))             % $$/xyz -> 32            % *$$/abc.eq(32)",
-            "$$/xyz?subq     ->(||(>>1.plus(10).to($$/abc)))    % $$/xyz -> 12            % *$$/abc.eq(22)",
-            "$$/xyz/a?subq   ->(||(>>0.to($$/abc)))             % $$/xyz/a -> 12          % *$$/abc.eq($$/xyz/a)",
-            "$$/xyz/#?subq   ->(||(>>0.to($$/abc)))             % $$/xyz/a -> 12          % *$$/abc.eq($$/xyz/a)",
-            "$$/xyz/+/+?subq ->(||(>>0.to($$/abc)))             % $$/xyz/a -> 12          % *$$/abc.else(true)",
-            "$$/xyz/+/+?subq ->(||(>>1.to($$/abc)))             % $$/xyz/a/b -> 12        % *$$/abc.eq(12)"
+            "$$/xyz?subq     ->sub::[on_recv=>>>1.to($$/abc)]             % $$/xyz -> 32            % *$$/abc.eq(32)",
+            "$$/xyz?subq     ->sub::[on_recv=>>>1.plus(10).to($$/abc)]    % $$/xyz -> 12            % *$$/abc.eq(22)",
+            "$$/xyz/a?subq   ->sub::[on_recv=>>>0.to($$/abc)]             % $$/xyz/a -> 12          % *$$/abc.eq($$/xyz/a)",
+            "$$/xyz/#?subq   ->sub::[on_recv=>>>0.to($$/abc)]             % $$/xyz/a -> 12          % *$$/abc.eq($$/xyz/a)",
+            "$$/xyz/+/+?subq ->sub::[on_recv=>>>0.to($$/abc)]             % $$/xyz/a -> 12          % *$$/abc.else(true)",
+            "$$/xyz/+/+?subq ->sub::[on_recv=>>>1.to($$/abc)]             % $$/xyz/a/b -> 12        % *$$/abc.eq(12)"
     }, delimiter = '%')
     default void testSubQ(String subscription, String writing, String expecting) {
-        getSpace().qs().lstValue().stream().filter(x -> x.tid().equals(SUBQ_TID)).findAny().orElseThrow();
+        getSpace().qs().lstValue().stream().filter(x -> x.tid().equals(SUBQ_TID)).findAny().orElseThrow(() -> MTronException.of("%s doesn't have a subq::T attachment", this.getSpace()));
         final Obj sub = ObjmtronSerializer.parse(make(subscription)).apply();
         assertEquals(SUBSCRIPTION_TID, sub.tid());
-        final Obj writeObj =ObjmtronSerializer.parse(make(writing)).apply();
+        final Obj writeObj = ObjmtronSerializer.parse(make(writing)).apply();
         assertNotEquals(sub, writeObj);
-        CommonUtil.sleepThread(1500);
+        CommonUtil.sleepThread(500);
         assertTrue(ObjmtronSerializer.parse(make(expecting)).apply().boolValue());
     }
 }

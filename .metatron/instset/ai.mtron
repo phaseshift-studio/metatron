@@ -1,0 +1,17 @@
+[=================================================================
+ == an mtron instruction set useful when working with ai models ==
+ == author: marko a. rodriguez (http://markorodriguez.com)      ==
+ =================================================================];
+import(/m/llm);
+[== instset obj ==];
+instset::[pattern=>/usr/ai/#,
+          inst=>[/usr/ai/inst/clone_model?model<=model(to_model=>_){
+                   >>=[provider=>!*/sys/space/ollama,name=><ollama:batiai/qwen3.6-27b:iq3>,_=>^*_]}],
+          type=>[
+           [==mcp::[host => <ws://127.0.0.1:8555/mcp>]@/usr/ai/mcp/mtron,==]
+           mcp::[host => <http://127.0.0.1:29170/index-mcp/streamable-http>]@/usr/ai/mcp/intellij]]@/usr/ai;
+[== inst docs ==];
+/usr/ai/inst/clone_model?docq -> docs::[desc=>'take the full structure of an existing model and replaces it with the provider and name of the arg model',
+                                        dom=>'the model template',
+                                        rng=>'the clone of the lhs with arg provider/model',
+                                        args=>[to_model=>'a minimal model with provider and name to replace on lhs template model']]

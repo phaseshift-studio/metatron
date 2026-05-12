@@ -97,6 +97,41 @@ public interface DatabaseConfig {
     }
 
     /**
+     * Get SQL for creating the people table.
+     * Used by testMonoUpdate — schema matches the seed data in AbstractSpaceTest.
+     */
+    default String getPeopleTableDDL() {
+        return """
+               CREATE TABLE people (
+                   id INTEGER PRIMARY KEY,
+                   name TEXT NOT NULL,
+                   age INTEGER,
+                   title TEXT,
+                   salary REAL,
+                   company INTEGER,
+                   active INTEGER
+               )
+               """;
+        // REFERENCES companies(id)
+    }
+
+    /**
+     * Get SQL for creating the companies table.
+     * Used by testMonoUpdate — referenced via company FK from people table.
+     */
+    default String getCompaniesTableDDL() {
+        return """
+               CREATE TABLE companies (
+                   id INTEGER PRIMARY KEY,
+                   name TEXT NOT NULL,
+                   city TEXT,
+                   employees INTEGER,
+                   public INTEGER
+               )
+               """;
+    }
+
+    /**
      * Get SQL for creating the rewrite_test table.
      */
     default String getRewriteTestTableDDL() {

@@ -82,6 +82,13 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
     private final String excludeTableName;
 
     /**
+     * Logical type overrides: tableName → (columnName → mtronTypeTID).
+     * Populated when writing a value whose mtron type differs from the SQL column type
+     * (e.g. bool → INTEGER in SQLite). Used on read to coerce values back.
+     */
+    private final Map<String, Map<String, fURI>> logicalTypes = new LinkedHashMap<>();
+
+    /**
      * Metadata about a SQL table
      */
     public record TableMetadata(String dbName, String tableName, List<ColumnMetadata> columns,
@@ -296,6 +303,19 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
             return noobj();
         }
 
+        // Check logical type overrides (e.g. bool stored in SQLite INTEGER column)
+        final Map<String, fURI> tableTypes = this.logicalTypes.get(tableName.toLowerCase());
+        if (tableTypes != null) {
+            final fURI logicalType = tableTypes.get(col.name.toLowerCase());
+            if (logicalType != null) {
+                final Object value = rs.getObject(col.name);
+                if (value == null || rs.wasNull()) return noobj();
+                if (logicalType.name().equals("bool")) {
+                    return studio.phaseshift.metatron.isa.m.type.impl.MBool.bool(rs.getInt(col.name) != 0);
+                }
+            }
+        }
+
         // Check if this is a BOOLEAN column that SQLite reports as INTEGER
         if ("BOOLEAN".equalsIgnoreCase(col.typeName) &&
                 (col.sqlType == Types.INTEGER || col.sqlType == Types.TINYINT ||
@@ -372,6 +392,9 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
             return writeField(conn, metadata, rowId, fieldName, obj);
         } else {
             // Row-level write: /table/rowId
+            if (obj.isNoObj()) {
+                return delete(conn, furi);
+            }
             if (obj.isRec()) {
                 // Record with named fields (keys are column names)
                 return writeRow(conn, metadata, rowId, obj.asRec());
@@ -456,10 +479,42 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
             return insertRow(conn, metadata, pkValue, rec);
         }
     }
-
+/*
     /**
      * Write a single field value to a row
      */
+    /**
+     * Coerce a row's column values to match recorded logical types (e.g. INTEGER → bool).
+     * Called by native rewrites after reading raw SQL rows to restore mtron type fidelity.
+     */
+  /*  public Rec coerceRow(final String tableName, final Rec row) {
+        final Map<String, fURI> tableTypes = this.logicalTypes.get(tableName.toLowerCase());
+        if (tableTypes == null || tableTypes.isEmpty()) return row;
+
+        final Map<Obj, Obj> coerced = new LinkedHashMap<>(row.recValue());
+        coerced.replaceAll((key, value) -> {
+            final fURI logicalType = tableTypes.get(key.uriValue().name().toLowerCase());
+            if (logicalType != null && "bool".equals(logicalType.name()) && value.isInt()) {
+                return studio.phaseshift.metatron.isa.m.type.impl.MBool.bool(value.intValue() != 0);
+            }
+            return value;
+        });
+        return rec(coerced, row.tid(), row.vid());
+    }
+*/
+    /**
+     * Record a logical type override when an Obj's mtron type differs from the SQL column type.
+     * E.g. SQLite INTEGER column storing boolean values.
+     */
+    private void trackLogicalType(final TableMetadata metadata, final String columnName,
+                                  final Obj value, final int sqlType) {
+        if (sqlType == Types.INTEGER && value.isBool()) {
+            this.logicalTypes
+                    .computeIfAbsent(metadata.tableName.toLowerCase(), k -> new LinkedHashMap<>())
+                    .put(columnName.toLowerCase(), value.tid());
+        }
+    }
+
     private int writeField(final Connection conn, final TableMetadata metadata, final String rowId,
                            final String fieldName, final Obj value) throws SQLException {
         // Verify the field exists in the table
@@ -473,6 +528,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                 metadata.tableName, column.name, pkColumn);
 
         try (final PreparedStatement stmt = conn.prepareStatement(sql)) {
+            trackLogicalType(metadata, column.name, value, column.sqlType);
             writeParameter(stmt, 1, value, column.sqlType);
 
             // Set WHERE clause parameter with proper type based on primary key column type
@@ -556,6 +612,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                     .orElse(null);
 
             if (column != null) {
+                trackLogicalType(metadata, column.name, entry.getValue(), column.sqlType);
                 setClauses.add(column.name + " = ?");
                 values.add(Tuple.Pair.with(entry.getValue(), column));
             } else {
@@ -648,6 +705,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
                     .orElse(null);
 
             if (column != null) {
+                trackLogicalType(metadata, column.name, entry.getValue(), column.sqlType);
                 columnNames.add(column.name);
                 values.add(Tuple.Pair.with(entry.getValue(), column));
             } else {
@@ -807,8 +865,45 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
 
     @Override
     public int delete(final Connection conn, final fURI furi) throws SQLException {
-        // ExistingTableSchema is read-only
-        throw new UnsupportedOperationException("ExistingTableSchema is read-only. Cannot delete from existing tables.");
+        final String tableName = furi.segments().get(0);
+        final String rowId = furi.segments().size() >= 2 ? furi.segments().get(1) : null;
+
+        if (rowId == null) {
+            // No row ID — nothing to delete at the field level
+            return 0;
+        }
+
+        if (furi.segments().size() >= 3) {
+            // Field-level delete: SET column = NULL
+            final String column = furi.segments().get(2);
+            final String pkCol = getPrimaryKeyColumn(conn, tableName);
+            final String sql = "UPDATE \"" + tableName + "\" SET \"" + column
+                    + "\" = NULL WHERE \"" + pkCol + "\" = ?";
+            try (final PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setString(1, rowId);
+                return stmt.executeUpdate();
+            }
+        }
+
+        // Row-level delete: DELETE FROM table WHERE pk = ?
+        final String pkCol = getPrimaryKeyColumn(conn, tableName);
+        final String sql = "DELETE FROM \"" + tableName + "\" WHERE \"" + pkCol + "\" = ?";
+        try (final PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, rowId);
+            return stmt.executeUpdate();
+        }
+    }
+
+    /**
+     * Discover the primary key column name for a table.
+     */
+    private String getPrimaryKeyColumn(final Connection conn, final String tableName) throws SQLException {
+        try (final ResultSet pkRs = conn.getMetaData().getPrimaryKeys(null, null, tableName)) {
+            if (pkRs.next()) {
+                return pkRs.getString("COLUMN_NAME");
+            }
+        }
+        return "id"; // fallback: assume 'id' as PK column
     }
 
     @Override

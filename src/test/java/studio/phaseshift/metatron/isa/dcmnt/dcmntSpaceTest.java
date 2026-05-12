@@ -42,6 +42,7 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.impl.MStr;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 
+import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -85,7 +86,17 @@ public class dcmntSpaceTest extends AbstractSpaceTest implements CommonRewritesT
                 SPACE_VID
         ));
     }
-    
+
+    @Override
+    public String make(final String expression, final Method testMethod) {
+        // For testMonoUpdate, $$ → mongo: so seed data writes to mongo:<collection>/<docId>
+        // and update/read expressions resolve to the same two-segment document paths.
+        if (testMethod != null && "testMonoUpdate".equals(testMethod.getName())) {
+            return expression.contains("$$") ? expression.replace("$$", "mongo:") : expression;
+        }
+        return super.make(expression, testMethod);
+    }
+
     @BeforeAll
     public static void setupInstSet() {
         InstSet.importInstSet(DCMNT_ISA_TID);

@@ -190,7 +190,7 @@ public class Content {
             if (this.isBSON()) return ObjBSONSerializer.single();
             if (this.isShell()) return ObjPlainTextSerializer.single();
             if (this.isPlain()) return ObjPlainTextSerializer.single();
-            return null;
+            return ObjPlainTextSerializer.single();
         }
 
         public Obj exec(final Str source) {

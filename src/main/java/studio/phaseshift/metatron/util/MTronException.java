@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -34,8 +34,9 @@ public class MTronException extends RuntimeException {
     public static final int MAX_STACK_TRACE = 5;
 
     private MTronException(final String message, final Throwable cause) {
-        super(Graphitty.string(message), cause);
-        //this.printStackTrace();
+        super(null == cause ? Graphitty.string(message) : Graphitty.string(message + "[%s:%d]",
+                cause.getStackTrace()[0].getClassName(),
+                cause.getStackTrace()[0].getLineNumber()), cause);
     }
 
     private MTronException(final String message) {
@@ -54,14 +55,14 @@ public class MTronException extends RuntimeException {
     public static MTronException of(final String format, final Object... args) {
         return new MTronException(Graphitty.string(format.formatted(args)));
     }
-    
+
     public static MTronException of(final fURI source, final String format, final Object... args) {
         return new MTronException("[%s] %s".formatted(source, Graphitty.string(format.formatted(args))));
     }
 
     public static MTronException of(final Object throwableOrformat, final Object... args) {
         //if (throwableOrformat instanceof Throwable)
-         //   ((Throwable) throwableOrformat).printStackTrace();
+        //   ((Throwable) throwableOrformat).printStackTrace();
         return throwableOrformat instanceof Throwable ?
                 new MTronException(Graphitty.string(((String) args[0]).formatted(Arrays.copyOfRange(args, 1, args.length))),
                         convert((Throwable) throwableOrformat)) :

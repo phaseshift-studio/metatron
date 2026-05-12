@@ -40,6 +40,7 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.Inst.INST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Type.TYPE_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
@@ -52,11 +53,19 @@ public interface InstSet extends Space {
 
     Type INSTSET_TYPE = Type.Builder.build().tid(REC_TID).vid(INSTSET_TID)
             .isaPredicate(rec(
+                    uri(PATTERN).maybe().asUri(), URI_TYPE,
                     uri(CONSTQ).maybe().asUri(), lst(T(ALL.maybe())),
                     uri(TYPE).maybe(), lst(T(ALL_STAR)).maybe(),
                     uri(INST).maybe(), lst(INST_TYPE).maybe(),
                     uri(REWRITE).maybe(), lst(INST_TYPE).maybe(),
-                    uri(SUGAR).maybe(), lst(LST_TYPE).maybe())).create();
+                    uri(SUGAR).maybe(), lst(LST_TYPE).maybe()))
+            .constructor(arg -> {
+                final InstSet isa = new AbstractInstSet(arg.asRec().jvm(), arg.tid(), arg.vid()) {
+                };
+                Router.global().addSpace(isa);
+                isa.setup();
+                return isa;
+            }).create();
 
     fURI A = f("A");
     fURI B = f("B");

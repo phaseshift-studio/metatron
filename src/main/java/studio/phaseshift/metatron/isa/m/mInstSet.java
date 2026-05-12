@@ -353,6 +353,7 @@ public class mInstSet extends AbstractInstSet {
                         docWrap(TYPEQ_TYPE, "addr type constraint qproc",
                                 "abc?typeq -> int::T       [-- abc can only reference a single integer --]",
                                 "abc?typeq -> 'not an int' [-- yields a fail::T --]"),
+                        docWrap(DOCS_TYPE, "a documentation structure to attach to objs and access via docq query processor"),
                         docWrap(DOCQ_TYPE, "addr documentation qproc",
                                 "*docq?docq [-- this documentation --]",
                                 "*int?docq  [-- documentation for int::T --]"),

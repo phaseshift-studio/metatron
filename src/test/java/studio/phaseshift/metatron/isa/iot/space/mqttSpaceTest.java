@@ -23,6 +23,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.furi.q.SubQTest;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
 import studio.phaseshift.metatron.isa.iot.MoquetteServer;
@@ -43,6 +44,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.SUBSCRIPTION_TID;
 import static studio.phaseshift.metatron.isa.iot.iotInstSet.IOT_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -60,6 +62,7 @@ public class mqttSpaceTest extends AbstractSpaceTest implements SubQTest {
         super(() -> {
             try {
                 return mqttSpace.of(rec(
+                        uri(QPROC), lst(QCollection.subq()),
                         uri(HOST), uri("mqtt://127.0.0.1:" + PORT),
                         uri(PATTERN), uri("/t/#"),
                         uri(REWRITE), rel(uri("/t"), uri("/t"))), f("/sys/router/space/t"));
@@ -84,26 +87,7 @@ public class mqttSpaceTest extends AbstractSpaceTest implements SubQTest {
         CommonUtil.sleepThread(1000);
         AbstractMetatronTest.end();
     }
-
-    @ParameterizedTest
-    @CsvSource(value = {
-            "/t/a?subq -> /m/space/qproc/subq/sub::[target=>/t/a,on_recv=><abc>->3]                                        % /t/a -> 4                           % *abc.?=3",
-            "/t/b?subq -> /m/space/qproc/subq/sub::[target=>/t/b,on_recv=><abc>->4]                                        % /t/b -> 3                           % *abc.?=4",
-         //   "/t/c/+?sub -> sub::[src=>a,tgt=>/t/+,on_recv=>(){*<zzz>.else(0).plus(4).to(zzz).print(_)}]   % 3.to(/t/c/b).map(7).to(/t/c/a)      % *zzz.?=8",
-           // "/t/c?sub -> sub::[src=>a,tgt=>/t/c,on_recv=>(){*</t/c>.plus(4).to(yyy).print(_)}]            % 3.to(/t/c)                          % *yyy.?=7",
-            "/t/d?subq -> /m/space/qproc/subq/sub::[target=>/t/d,on_recv=><ggg>->1]                                        % /t/d -> 3                           % *ggg.?=1",
-    }, delimiter = '%')
-    public void testSubscriptions(final String subscription, final String write, final String check) {
-        final Rec sub = ObjmtronSerializer.parse(subscription).apply().as();
-        CommonUtil.sleepThread(this.sleepBetweenReads+50);
-        assertEquals(SUBSCRIPTION_TID, sub.tid());
-        ObjmtronSerializer.parse(write).apply();
-        CommonUtil.sleepThread(this.sleepBetweenReads+50);
-        final Obj checkObj =ObjmtronSerializer.parse(check).apply();
-        assertNotEquals(noobj(), checkObj);
-        MoquetteServer.clear();
-    }
-
+    @Override @Disabled public void testMonoUpdate(String description, String value, String temp) {}
     // Disable all abstract tests - mqttSpace uses pub/sub model, not traditional CRUD
 //    @Override @Disabled public void testMonoReadWrite(String writeExpression, String readExpression, String expectedExpression) {}
     @Override @Disabled public void testStringCornerCases(String description, String value) {}

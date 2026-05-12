@@ -75,7 +75,7 @@ public class llmInstSetTest extends AbstractInstSetTest {
         assertTrue(result.type().test(LLM_SKILL_TYPE));
         assertNotNull(result.tid());
         Obj expected = ObjmtronSerializer.parse(expectedType).apply();
-        LOG.debug("result [%s] expected [%s] [should match: %b]", result, expected, shouldMatch);
+        LOG.info("result [%s] expected [%s] [should match: %b]", result, expected, shouldMatch);
         assertEquals(shouldMatch, result.test(expected));
     }
     

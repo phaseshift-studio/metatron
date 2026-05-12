@@ -114,7 +114,7 @@ public class ObjSimpleJSONSerializer extends AbstractObjSerializer<JsonElement> 
     public Obj read(final JsonElement json) throws MTronException {
         try {
             if (json.isJsonNull())
-                return uri("null");
+                return noobj();
             else if (json.isJsonPrimitive()) {
                 final JsonPrimitive jp = (JsonPrimitive) json;
                 if (jp.isBoolean())
@@ -131,21 +131,9 @@ public class ObjSimpleJSONSerializer extends AbstractObjSerializer<JsonElement> 
                     try {
                         if (jpstr.startsWith("<") && jpstr.endsWith(">"))
                             return uri(jpstr.substring(1, jpstr.length() - 1));
-                        else if (!jpstr.contains(" ") && jpstr.contains("/") && !jpstr.contains("^") && !jpstr.contains("|"))
-                            return uri(jpstr);
-                        else if (this.biasTowardsURI && !jpstr.contains(" ") && !jpstr.contains("^") && !jpstr.contains("|"))
-                            return uri(jpstr);
-                    } catch (Exception e) {
-                        // do nothiing
-                    }
-                    try {
-                        final Obj parse = ObjmtronSerializer.parse(jpstr);
-                        if (parse.isNoObj())
-                            return noobj();
-                        else return parse;
-                        // if (jpstr.charAt(0) == '"' && jpstr.charAt(jpstr.length() - 1) == '"')
-                        //     jpstr = jpstr.substring(1, jpstr.length() - 1);
-                    } catch (Exception e) {
+                        else
+                            return ObjmtronSerializer.parse(jpstr);
+                    } catch (final Exception e) {
                         return str(jpstr);
                     }
                 }
@@ -228,7 +216,7 @@ public class ObjSimpleJSONSerializer extends AbstractObjSerializer<JsonElement> 
 
     @Override
     public JsonPrimitive writeUri(final Uri uri) {
-        return new JsonPrimitive(uri.uriValue().toString());
+        return new JsonPrimitive("<" + uri.uriValue().toString() + ">");
     }
 
     @Override

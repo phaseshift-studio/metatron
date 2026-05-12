@@ -74,7 +74,7 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
         }
         return true;
     }
-    
+
     protected boolean checkDepth(final Obj obj, final fURI requiredPrefix) {
         if (false && null != obj.tid() && !obj.tid().hasPrefix(requiredPrefix.toString())) {
             LOG.warn("obj at %s must have prefix at %s: (ignoring) %s", obj.tid(), requiredPrefix, obj);
@@ -211,10 +211,10 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
 
     @Override
     public void close() {
-        this.types().stream().filter(t->t.vid().test(this.pattern())).forEach(t -> Router.global().unregisterRedirect(f(t.vid().name()), t.vid()));
-        this.consts().stream().filter(c->c.vid().test(this.pattern())).forEach(c -> Router.global().unregisterRedirect(f(c.vid().name()), c.vid()));
-        this.insts().stream().filter(i->i.tid().test(this.pattern())).forEach(i -> Router.global().unregisterRedirect(f(i.tid().name()), i.tid()));
-        this.rewrites().stream().filter(r->r.tid().test(this.pattern())).forEach(r -> Router.global().unregisterRedirect(f(r.tid().name()), r.tid()));
+        this.types().stream().filter(t -> t.vid() != null).filter(t -> t.vid().test(this.pattern())).forEach(t -> Router.global().unregisterRedirect(f(t.vid().name()), t.vid()));
+        this.consts().stream().filter(c -> c.vid() != null).filter(c -> c.vid().test(this.pattern())).forEach(c -> Router.global().unregisterRedirect(f(c.vid().name()), c.vid()));
+        this.insts().stream().filter(i -> i.tid().test(this.pattern())).forEach(i -> Router.global().unregisterRedirect(f(i.tid().name()), i.tid()));
+        this.rewrites().stream().filter(r -> r.tid().test(this.pattern())).forEach(r -> Router.global().unregisterRedirect(f(r.tid().name()), r.tid()));
         super.close();
     }
 

@@ -222,7 +222,7 @@ public class SQLSchemaGenerator {
      *   <li>references: list of foreign key relationships</li>
      * </ul>
      */
-    public Obj generateSchema() {
+    public Obj generateNativeSchema() {
         final Map<Obj, Obj> schemaMap = new LinkedHashMap<>();
 
         // Add pattern (aligned with docdb)

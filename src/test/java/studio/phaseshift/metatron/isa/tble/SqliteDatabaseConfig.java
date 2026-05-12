@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.tble;
 import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.Statement;
 
 /**
  * SQLite database configuration for testing.
@@ -47,7 +48,11 @@ public class SqliteDatabaseConfig implements DatabaseConfig {
 
     @Override
     public Connection getConnection() throws Exception {
-        return DriverManager.getConnection("jdbc:sqlite:" + dbPath);
+        final Connection conn = DriverManager.getConnection("jdbc:sqlite:" + dbPath);
+        try (Statement stmt = conn.createStatement()) {
+            stmt.execute("PRAGMA foreign_keys = ON");
+        }
+        return conn;
     }
 
     @Override

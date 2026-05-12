@@ -35,6 +35,8 @@ import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
+
+import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -108,7 +110,9 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
         InstSet.importInstSet(TBLE_ISA_TID);
     }
 
-    /** Called by subclass {@code @BeforeAll} methods after setting {@code staticDbConfig}. */
+    /**
+     * Called by subclass {@code @BeforeAll} methods after setting {@code staticDbConfig}.
+     */
     protected static void setupDatabase() throws Exception {
         if (staticDbConfig == null)
             throw new IllegalStateException(
@@ -170,10 +174,35 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
                         "INSERT INTO rewrite_test (id, value, name, active) VALUES (%d, %d, 'item%d', %d)",
                         i, i, i, active));
             }
+
+            // testMonoUpdate schema — companies first (FK target), then people (FK source)
+            stmt.executeUpdate(staticDbConfig.getCompaniesTableDDL());
+            stmt.executeUpdate(String.format(
+                    "INSERT INTO companies VALUES (101, 'Acme Corp', 'NYC', 50, %d)",
+                    staticDbConfig.getBooleanFalse()));
+            stmt.executeUpdate(String.format(
+                    "INSERT INTO companies VALUES (102, 'Globex Inc', 'LA', 200, %d)",
+                    staticDbConfig.getBooleanTrue()));
+
+            stmt.executeUpdate(staticDbConfig.getPeopleTableDDL());
+            stmt.executeUpdate(String.format(
+                    "INSERT INTO people VALUES (1, 'Alice', 30, 'Engineer', 75000.0, 101, %d)",
+                    staticDbConfig.getBooleanTrue()));
+            stmt.executeUpdate(String.format(
+                    "INSERT INTO people VALUES (2, 'Bob', 25, 'Designer', 60000.0, 101, %d)",
+                    staticDbConfig.getBooleanTrue()));
+            stmt.executeUpdate(String.format(
+                    "INSERT INTO people VALUES (3, 'Charlie', 35, 'Manager', 85000.0, 102, %d)",
+                    staticDbConfig.getBooleanFalse()));
+            stmt.executeUpdate(String.format(
+                    "INSERT INTO people VALUES (4, 'Diana', 28, 'Engineer', 70000.0, 102, %d)",
+                    staticDbConfig.getBooleanTrue()));
         }
     }
 
-    /** Called by subclass {@code @AfterAll} methods. */
+    /**
+     * Called by subclass {@code @AfterAll} methods.
+     */
     protected static void cleanupDatabase() throws Exception {
         if (staticDbConfig != null)
             staticDbConfig.teardown();
@@ -183,7 +212,9 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
     //  Per-test helpers
     // =========================================================================
 
-    /** Creates/inserts test data for parameterized tests that need fresh state. */
+    /**
+     * Creates/inserts test data for parameterized tests that need fresh state.
+     */
     protected void setupTestDatabase() throws Exception {
         try (final Connection conn = staticDbConfig.getConnection();
              final Statement stmt = conn.createStatement()) {
@@ -271,6 +302,16 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
     }
 
     @Override
+    public String make(final String expression, final Method testMethod) {
+        // For table-mapped tests, $$ → db: (table path: db:people/1, db:companies/101)
+        // For key-value tests, $$ → db:kv/test (kv path: db:kv/test/key)
+        if (testMethod != null && "testMonoUpdate".equals(testMethod.getName())) {
+            return expression.contains("$$") ? expression.replace("$$", "db:") : expression;
+        }
+        return super.make(expression, testMethod);
+    }
+
+    @Override
     public String getNativeInstructionPrefix() {
         return "sql_";
     }
@@ -296,11 +337,11 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
         final String type = encoded.substring(0, colon);
         final String value = encoded.substring(colon + 1);
         return switch (type) {
-            case "str"  -> str(value);
-            case "jnt"  -> jnt(Long.parseLong(value));
+            case "str" -> str(value);
+            case "jnt" -> jnt(Long.parseLong(value));
             case "real" -> real(Double.parseDouble(value));
             case "bool" -> bool(Boolean.parseBoolean(value));
-            default     -> str(encoded);
+            default -> str(encoded);
         };
     }
 
@@ -330,8 +371,8 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
 
         final String fullNativeInstName = getNativeInstructionPrefix() + nativeInstName;
         assertTrue(rewritten.stream().anyMatch(
-                obj -> obj.isInst()
-                       && obj.asInst().tid().name().equals(fullNativeInstName)),
+                        obj -> obj.isInst()
+                                && obj.asInst().tid().name().equals(fullNativeInstName)),
                 "Plan should contain " + fullNativeInstName);
     }
 
@@ -355,22 +396,22 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
      */
     @ParameterizedTest(name = "[{index}] Read {0}")
     @CsvSource(delimiter = '|', textBlock = """
-            String field from users             | db:users/1    | name         | str:Alice
-            String field from products          | db:products/101 | product_name | str:Laptop
-            Email field                         | db:users/2    | email        | str:bob@example.com
-            Category field                      | db:products/105 | category     | str:Furniture
-            Category stationery                  | db:products/107 | category     | str:Stationery
-            Integer age field                   | db:users/1    | age          | jnt:30
-            Integer quantity field              | db:products/102 | quantity     | jnt:50
-            Integer quantity zero               | db:products/101 | quantity     | jnt:15
-            Integer age field user 2            | db:users/2    | age          | jnt:25
-            Integer age field user 3            | db:users/3    | age          | jnt:35
-            Real salary field                   | db:users/1    | salary       | real:75000.50
-            Real price field                    | db:products/101 | price        | real:1299.99
-            Small price value                   | db:products/102 | price        | real:29.99
-            Real salary Diana                   | db:users/4    | salary       | real:70000.25
-            Real price furniture                 | db:products/105 | price        | real:249.99
-            """)
+                                            String field from users             | db:users/1    | name         | str:Alice
+                                            String field from products          | db:products/101 | product_name | str:Laptop
+                                            Email field                         | db:users/2    | email        | str:bob@example.com
+                                            Category field                      | db:products/105 | category     | str:Furniture
+                                            Category stationery                  | db:products/107 | category     | str:Stationery
+                                            Integer age field                   | db:users/1    | age          | jnt:30
+                                            Integer quantity field              | db:products/102 | quantity     | jnt:50
+                                            Integer quantity zero               | db:products/101 | quantity     | jnt:15
+                                            Integer age field user 2            | db:users/2    | age          | jnt:25
+                                            Integer age field user 3            | db:users/3    | age          | jnt:35
+                                            Real salary field                   | db:users/1    | salary       | real:75000.50
+                                            Real price field                    | db:products/101 | price        | real:1299.99
+                                            Small price value                   | db:products/102 | price        | real:29.99
+                                            Real salary Diana                   | db:users/4    | salary       | real:70000.25
+                                            Real price furniture                 | db:products/105 | price        | real:249.99
+                                            """)
     public void testReadIndividualFields(String description, String rowUri,
                                          String fieldName, String expectedEncoded) throws Exception {
         final Obj expectedValue = parseObj(expectedEncoded);
@@ -399,18 +440,18 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
      */
     @ParameterizedTest(name = "[{index}] Write {2} to {0}/{1}")
     @CsvSource(delimiter = '|', textBlock = """     
-            users | 1   | name         | str:Alice Updated     | str:Alice Updated
-            users | 2   | email        | str:bob.new@example.com | str:bob.new@example.com
-            products | 101 | product_name | str:Gaming Laptop   | str:Gaming Laptop
-            products | 105 | category   | str:Office            | str:Office
-            users | 1   | age          | jnt:31                | jnt:31
-            users | 2   | age          | jnt:26                | jnt:26
-            products | 102 | quantity     | jnt:100              | jnt:100
-            products | 103 | quantity     | jnt:0                | jnt:0
-            users | 1   | salary       | real:80000.00         | real:80000.00
-            products | 101 | price        | real:999.00          | real:999.00
-            users | 3   | salary       | real:100000.50        | real:100000.50
-            """)
+                                            users | 1   | name         | str:Alice Updated     | str:Alice Updated
+                                            users | 2   | email        | str:bob.new@example.com | str:bob.new@example.com
+                                            products | 101 | product_name | str:Gaming Laptop   | str:Gaming Laptop
+                                            products | 105 | category   | str:Office            | str:Office
+                                            users | 1   | age          | jnt:31                | jnt:31
+                                            users | 2   | age          | jnt:26                | jnt:26
+                                            products | 102 | quantity     | jnt:100              | jnt:100
+                                            products | 103 | quantity     | jnt:0                | jnt:0
+                                            users | 1   | salary       | real:80000.00         | real:80000.00
+                                            products | 101 | price        | real:999.00          | real:999.00
+                                            users | 3   | salary       | real:100000.50        | real:100000.50
+                                            """)
     public void testWriteIndividualFields(String table, String rowId, String field,
                                           String newValueEncoded, String expectedEncoded) throws Exception {
         final Obj newValue = parseObj(newValueEncoded);
@@ -437,16 +478,16 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
 
     @ParameterizedTest(name = "[{index}] Read row {0}")
     @CsvSource(delimiter = '|', textBlock = """
-            db:users/1       | name         | Alice
-            db:users/2       | name         | Bob
-            db:users/3       | name         | Charlie
-            db:users/4       | name         | Diana
-            db:users/5       | name         | Eve
-            db:products/101  | product_name | Laptop
-            db:products/102  | product_name | Mouse
-            db:products/103  | product_name | Keyboard
-            db:products/105  | product_name | Desk Chair
-            """)
+                                            db:users/1       | name         | Alice
+                                            db:users/2       | name         | Bob
+                                            db:users/3       | name         | Charlie
+                                            db:users/4       | name         | Diana
+                                            db:users/5       | name         | Eve
+                                            db:products/101  | product_name | Laptop
+                                            db:products/102  | product_name | Mouse
+                                            db:products/103  | product_name | Keyboard
+                                            db:products/105  | product_name | Desk Chair
+                                            """)
     public void testReadEntireRow(String uri, String fieldName, String expectedFieldValue)
             throws Exception {
         setupTestDatabase();
@@ -476,12 +517,12 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
      */
     @ParameterizedTest(name = "[{index}] Insert new row into {0}")
     @CsvSource(delimiter = '|', textBlock = """
-            users    | 100 | name | str:Test User | name | str:Test User | age | jnt:25 | salary | real:50000.00 | active | bool:true | email | str:test@example.com
-            products | 200 | product_name | str:New Product | product_name | str:New Product | price | real:199.99 | in_stock | bool:true | quantity | jnt:10 | category | str:Test Category
-            users    | 101 | age  | jnt:0  | name | str:Zero Age | age | jnt:0 | salary | real:0.0 | active | bool:false | email | str:zero@example.com
-            users    | 102 | name | str:Max Val | name | str:Max Val | age | jnt:999 | salary | real:999999.99 | active | bool:true | email | str:max@example.com
-            products | 201 | price | real:0.0 | product_name | str:Free Item | price | real:0.0 | in_stock | bool:true | quantity | jnt:0 | category | str:Free
-            """)
+                                            users    | 100 | name | str:Test User | name | str:Test User | age | jnt:25 | salary | real:50000.00 | active | bool:true | email | str:test@example.com
+                                            products | 200 | product_name | str:New Product | product_name | str:New Product | price | real:199.99 | in_stock | bool:true | quantity | jnt:10 | category | str:Test Category
+                                            users    | 101 | age  | jnt:0  | name | str:Zero Age | age | jnt:0 | salary | real:0.0 | active | bool:false | email | str:zero@example.com
+                                            users    | 102 | name | str:Max Val | name | str:Max Val | age | jnt:999 | salary | real:999999.99 | active | bool:true | email | str:max@example.com
+                                            products | 201 | price | real:0.0 | product_name | str:Free Item | price | real:0.0 | in_stock | bool:true | quantity | jnt:0 | category | str:Free
+                                            """)
     public void testInsertNewRows(String table, String rowId, String verifyField,
                                   String expectedEncoded,
                                   String col1, String val1,
@@ -526,21 +567,21 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
      */
     @ParameterizedTest(name = "[{index}] {0}")
     @CsvSource(delimiter = '|', textBlock = """
-            boolean true converts and back   | users | 1 | active | bool:true  | jnt:1
-            boolean false converts and back  | users | 1 | active | bool:false | jnt:0
-            real number with decimals        | users | 1 | salary | real:12345.00 | real:12345.00
-            real number zero                 | users | 1 | salary | real:0.0     | real:0.0
-            real negative                    | users | 1 | salary | real:-500.25  | real:-500.25
-            real large                       | users | 1 | salary | real:9999999.99 | real:9999999.99
-            integer zero                     | users | 1 | age    | jnt:0       | jnt:0
-            integer large value              | users | 1 | age    | jnt:999     | jnt:999
-            integer negative                 | users | 1 | age    | jnt:-1      | jnt:-1
-            integer max long                 | users | 1 | age    | jnt:2147483647 | jnt:2147483647
-            empty string                     | users | 1 | name   | str:        | str:
-            string with spaces               | users | 1 | name   | str:  Test  | str:  Test
-            string with special chars         | users | 1 | email  | str:test+tag@example.com | str:test+tag@example.com
-            string unicode                   | users | 1 | name   | str:José María | str:José María
-            """)
+                                            boolean true converts and back   | users | 1 | active | bool:true  | jnt:1
+                                            boolean false converts and back  | users | 1 | active | bool:false | jnt:0
+                                            real number with decimals        | users | 1 | salary | real:12345.00 | real:12345.00
+                                            real number zero                 | users | 1 | salary | real:0.0     | real:0.0
+                                            real negative                    | users | 1 | salary | real:-500.25  | real:-500.25
+                                            real large                       | users | 1 | salary | real:9999999.99 | real:9999999.99
+                                            integer zero                     | users | 1 | age    | jnt:0       | jnt:0
+                                            integer large value              | users | 1 | age    | jnt:999     | jnt:999
+                                            integer negative                 | users | 1 | age    | jnt:-1      | jnt:-1
+                                            integer max long                 | users | 1 | age    | jnt:2147483647 | jnt:2147483647
+                                            empty string                     | users | 1 | name   | str:        | str:
+                                            string with spaces               | users | 1 | name   | str:  Test  | str:  Test
+                                            string with special chars        | users | 1 | email  | str:test+tag@example.com | str:test+tag@example.com
+                                            string unicode                   | users | 1 | name   | str:José María | str:José María
+                                            """)
     public void testTypeConversions(String description, String table, String rowId,
                                     String field, String writeEncoded,
                                     String expectedEncoded) throws Exception {
@@ -554,7 +595,10 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
             final Obj row = Router.readFromSpace(
                     f("db:%s/%s".formatted(table, rowId)));
             assertTrue(row.isRec() || row.isStr(), "should return a rec or str");
-            assertEquals(expectedReadValue, row.asRec().at(uri(field)), description);
+            if (expectedReadValue.isReal())
+                assertEquals(expectedReadValue.asReal().realValue(), row.asRec().at(uri(field)).asReal().realValue(), 0.01f);
+            else
+                assertEquals(expectedReadValue, row.asRec().at(uri(field)), description);
         } finally {
             Router.global().removeSpace(testSpace.vid());
             testSpace.close();
@@ -661,10 +705,10 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
         final tbleSpace testSpace = tbleSpace.of(
                 rec(
                         uri(PATTERN), uri("pfk:#"),
-                        uri(HOST),    uri(staticDbConfig.getJdbcHost()),
-                        uri(DRIVER),  uri(staticDbConfig.getDriverClass()),
-                        uri(TABLE),   lst(uri("person"), uri("award")),
-                        uri(ROUTE),   rec(uri("pfk:"), uri(""))
+                        uri(HOST), uri(staticDbConfig.getJdbcHost()),
+                        uri(DRIVER), uri(staticDbConfig.getDriverClass()),
+                        uri(TABLE), lst(uri("person"), uri("award")),
+                        uri(ROUTE), rec(uri("pfk:"), uri(""))
                 ).jvm(),
                 spaceVid
         );
@@ -673,10 +717,10 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
             Router.writeToSpace(f("pfk:person/2"), rec(uri("name"), str("Bob")));
 
             Router.writeToSpace(f("pfk:award/1"), rec(
-                    uri("trophy"),    str("gold"),
+                    uri("trophy"), str("gold"),
                     uri("recipient"), auto_from_(f("pfk:person/1")).tryToInst()));
             Router.writeToSpace(f("pfk:award/2"), rec(
-                    uri("trophy"),    str("silver"),
+                    uri("trophy"), str("silver"),
                     uri("recipient"), auto_from_(f("pfk:person/2")).tryToInst()));
 
             // rec.at() eagerly resolves auto_from → the person record
@@ -720,10 +764,10 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
         final tbleSpace testSpace = tbleSpace.of(
                 rec(
                         uri(PATTERN), uri("pmk:#"),
-                        uri(HOST),    uri(staticDbConfig.getJdbcHost()),
-                        uri(DRIVER),  uri(staticDbConfig.getDriverClass()),
-                        uri(TABLE),   lst(uri("category"), uri("item")),
-                        uri(ROUTE),   rec(uri("pmk:"), uri(""))
+                        uri(HOST), uri(staticDbConfig.getJdbcHost()),
+                        uri(DRIVER), uri(staticDbConfig.getDriverClass()),
+                        uri(TABLE), lst(uri("category"), uri("item")),
+                        uri(ROUTE), rec(uri("pmk:"), uri(""))
                 ).jvm(),
                 spaceVid
         );
@@ -731,7 +775,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
             Router.writeToSpace(f("pmk:category/10"),
                     rec(uri("label"), str("Books")));
             Router.writeToSpace(f("pmk:item/1"), rec(
-                    uri("title"),    str("Dune"),
+                    uri("title"), str("Dune"),
                     uri("category"), auto_from_(f("pmk:category/10")).tryToInst()));
 
             // _mtron_meta should have one row for item.category → category
@@ -739,7 +783,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
                  final Statement stmt = conn.createStatement();
                  final ResultSet rs = stmt.executeQuery(
                          "SELECT column_name, ref_table FROM _mtron_meta " +
-                         "WHERE table_name = 'item'")) {
+                                 "WHERE table_name = 'item'")) {
                 assertTrue(rs.next(), "_mtron_meta should have a row for item.category");
                 assertEquals("category", rs.getString("column_name"));
                 assertEquals("category", rs.getString("ref_table"));
@@ -753,10 +797,10 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
             final tbleSpace testSpace2 = tbleSpace.of(
                     rec(
                             uri(PATTERN), uri("pmk:#"),
-                            uri(HOST),    uri(staticDbConfig.getJdbcHost()),
-                            uri(DRIVER),  uri(staticDbConfig.getDriverClass()),
-                            uri(TABLE),   lst(uri("category"), uri("item")),
-                            uri(ROUTE),   rec(uri("pmk:"), uri(""))
+                            uri(HOST), uri(staticDbConfig.getJdbcHost()),
+                            uri(DRIVER), uri(staticDbConfig.getDriverClass()),
+                            uri(TABLE), lst(uri("category"), uri("item")),
+                            uri(ROUTE), rec(uri("pmk:"), uri(""))
                     ).jvm(),
                     spaceVid
             );
@@ -766,7 +810,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
                 final Obj catPtr = item.asRec().at(uri("category"));
                 assertTrue(catPtr.isRec(),
                         "after restart, category should resolve to the category record, got: "
-                        + catPtr.tid());
+                                + catPtr.tid());
                 assertEquals(str("Books"), catPtr.asRec().at(uri("label")));
             } finally {
                 Router.global().removeSpace(testSpace2.vid());
@@ -798,10 +842,10 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
         final tbleSpace testSpace = tbleSpace.of(
                 rec(
                         uri(PATTERN), uri("play:#"),
-                        uri(HOST),    uri(staticDbConfig.getJdbcHost()),
-                        uri(DRIVER),  uri(staticDbConfig.getDriverClass()),
-                        uri(TABLE),   lst(uri("place"), uri("venue")),
-                        uri(ROUTE),   rec(uri("play:"), uri(""))
+                        uri(HOST), uri(staticDbConfig.getJdbcHost()),
+                        uri(DRIVER), uri(staticDbConfig.getDriverClass()),
+                        uri(TABLE), lst(uri("place"), uri("venue")),
+                        uri(ROUTE), rec(uri("play:"), uri(""))
                 ).jvm(),
                 spaceVid
         );
@@ -816,7 +860,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
                  final Statement stmt = conn.createStatement();
                  final ResultSet rs = stmt.executeQuery(
                          "SELECT column_name, ref_table FROM _mtron_meta " +
-                         "WHERE table_name = 'place'")) {
+                                 "WHERE table_name = 'place'")) {
                 assertTrue(rs.next(), "_mtron_meta should have a row for place.addr");
                 assertEquals("addr", rs.getString("column_name"));
                 assertEquals("g:V", rs.getString("ref_table"),
@@ -834,14 +878,14 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
 
             // --- internal FK: venue.parent → play:place/1 (separate table, single create) ---
             Router.writeToSpace(f("play:venue/1"), rec(
-                    uri("name"),   str("indoor_zone"),
+                    uri("name"), str("indoor_zone"),
                     uri("parent"), auto_from_(f("play:place/1")).tryToInst()));
 
             try (final Connection conn = staticDbConfig.getConnection();
                  final Statement stmt = conn.createStatement();
                  final ResultSet rs = stmt.executeQuery(
                          "SELECT column_name, ref_table FROM _mtron_meta " +
-                         "WHERE table_name = 'venue'")) {
+                                 "WHERE table_name = 'venue'")) {
                 assertTrue(rs.next(), "_mtron_meta should have a row for venue.parent");
                 assertEquals("parent", rs.getString("column_name"));
                 assertEquals("place", rs.getString("ref_table"),
@@ -886,10 +930,10 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
         final tbleSpace sourceSpace = tbleSpace.of(
                 rec(
                         uri(PATTERN), uri("play:#"),
-                        uri(HOST),    uri(staticDbConfig.getJdbcHost()),
-                        uri(DRIVER),  uri(staticDbConfig.getDriverClass()),
-                        uri(TABLE),   lst(uri("arena")),
-                        uri(ROUTE),   rec(uri("play:"), uri(""))
+                        uri(HOST), uri(staticDbConfig.getJdbcHost()),
+                        uri(DRIVER), uri(staticDbConfig.getDriverClass()),
+                        uri(TABLE), lst(uri("arena")),
+                        uri(ROUTE), rec(uri("play:"), uri(""))
                 ).jvm(),
                 tbleSpaceVid
         );
@@ -897,11 +941,11 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
             // Write the target record into memSpace
             Router.writeToSpace(f("grph:vertices/42"),
                     rec(uri("label"), str("downtown"),
-                        uri("capacity"), jnt(5000)));
+                            uri("capacity"), jnt(5000)));
 
             // Write a tbleSpace record with cross-space auto_from pointing at grph:vertices/42
             Router.writeToSpace(f("play:arena/1"), rec(
-                    uri("name"),     str("main_stage"),
+                    uri("name"), str("main_stage"),
                     uri("location"), auto_from_(f("grph:vertices/42")).tryToInst()));
 
             // Verify storage: _mtron_meta records scheme:segment
@@ -909,7 +953,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
                  final Statement stmt = conn.createStatement();
                  final ResultSet rs = stmt.executeQuery(
                          "SELECT ref_table FROM _mtron_meta " +
-                         "WHERE table_name = 'arena' AND column_name = 'location'")) {
+                                 "WHERE table_name = 'arena' AND column_name = 'location'")) {
                 assertTrue(rs.next());
                 assertEquals("grph:vertices", rs.getString("ref_table"),
                         "multi-segment cross-space ref stores scheme:firstSegment");
@@ -955,10 +999,10 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
         final tbleSpace testSpace = tbleSpace.of(
                 rec(
                         uri(PATTERN), uri("net:#"),
-                        uri(HOST),    uri(staticDbConfig.getJdbcHost()),
-                        uri(DRIVER),  uri(staticDbConfig.getDriverClass()),
-                        uri(TABLE),   lst(uri("org"), uri("employee")),
-                        uri(ROUTE),   rec(uri("net:"), uri(""))
+                        uri(HOST), uri(staticDbConfig.getJdbcHost()),
+                        uri(DRIVER), uri(staticDbConfig.getDriverClass()),
+                        uri(TABLE), lst(uri("org"), uri("employee")),
+                        uri(ROUTE), rec(uri("net:"), uri(""))
                 ).jvm(),
                 spaceVid
         );
@@ -971,8 +1015,8 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
             // every FK column. self-ref points at its own row — the raw INTEGER
             // value stores fine before the row exists.
             Router.writeToSpace(f("net:employee/1"), rec(
-                    uri("name"),       str("Marko"),
-                    uri("org_id"),     auto_from_(f("net:org/1")).tryToInst(),
+                    uri("name"), str("Marko"),
+                    uri("org_id"), auto_from_(f("net:org/1")).tryToInst(),
                     uri("manager_id"), auto_from_(f("net:employee/1")).tryToInst()));
 
             // _mtron_meta has rows for both FK columns
@@ -980,7 +1024,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
                  final Statement stmt = conn.createStatement();
                  final ResultSet rs = stmt.executeQuery(
                          "SELECT column_name, ref_table FROM _mtron_meta " +
-                         "WHERE table_name = 'employee' ORDER BY column_name")) {
+                                 "WHERE table_name = 'employee' ORDER BY column_name")) {
                 assertTrue(rs.next());
                 assertEquals("manager_id", rs.getString("column_name"));
                 assertEquals("employee", rs.getString("ref_table"),

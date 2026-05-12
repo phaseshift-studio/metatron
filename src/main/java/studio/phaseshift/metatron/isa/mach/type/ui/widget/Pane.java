@@ -111,7 +111,7 @@ public class Pane extends JRec<Pane> implements PaneNode, Stylable<Pane> {
         this.machine = null;
         // Default to simple border style (ASCII: +, |, -) for visibility
         this.style = this.style().border(Border.simple).apply().getStyle();
-      //  this.subscribe();
+        //  this.subscribe();
     }
 
     @Override
@@ -138,17 +138,25 @@ public class Pane extends JRec<Pane> implements PaneNode, Stylable<Pane> {
         this.console = console;
     }
 
-    /** Register a listener that is called after every {@link #appendOutput} call. */
+    /**
+     * Register a listener that is called after every {@link #appendOutput} call.
+     */
     public void setOutputListener(final Consumer<Pane> listener) {
         this.outputListener = listener;
     }
 
     public void unsubscribe() {
+        if (this.vid() == null)
+            return;
         Router.global().write(this.vid().extend(IN).addQ(SUBQ), noobj());
         Router.global().write(this.vid().extend(OUT).addQ(SUBQ), noobj());
     }
 
     public void subscribe() {
+        if (this.vid() == null) {
+            LOG.warn("console has no vid. unable to support pane subscriptions.");
+            return;
+        }
         Router.global().write(this.vid().extend(IN).addQ(SUBQ), rec(mutableMap(
                 uri(TARGET), uri(this.vid().extend(IN)),
                 uri(ON_RECV), instC(f("in_pane").dom(ALL).rng(NOOBJ_TID.zero()), lst(), (lhs, inst) -> {

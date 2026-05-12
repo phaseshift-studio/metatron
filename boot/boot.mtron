@@ -176,13 +176,14 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
               wikibase: =><http://wikiba.se/ontology#>,
               wd:       =><http://www.wikidata.org/entity/>,
               wdt:      =><http://www.wikidata.org/prop/direct/>,
-              wikidata: =><>]]@/sys/space/wikidata;
- mcp::[host => <http://127.0.0.1:29170/index-mcp/streamable-http>]@/usr/ai/mcp/intellij;                    
- *<local:software/metatron/.metatron/agent.mtron>.print('\\n-------- agent loaded ---------\\n${_}\\n--------------------------\\n');
-[== load user console (skip if MTRON_HEADLESS env var or --headless boot arg is set) ==]
+              wikidata: =><>]]@/sys/space/wikidata;                  
+*<mtronfs:instset/ai.mtron>;
+*<local:software/metatron/.metatron/agent.mtron>;
+[== load user console (skip if MTRON_HEADLESS env var or --headless boot arg is set) ==];
 [-- *</sys/env/MTRON_HEADLESS>.else(console::[=>]@/usr/ui/console);
 console::[=>]@/usr/ui/console;
 *boot/args.print(_,'\n');
+/usr/ai/use -> |inst(m=>model::T){ *testy>>=[provider=>*m/provider,name=>*m/name]>>=[_=>^*] };
 print('{{y}}mounting {{b}}boot/usr/# {{y}}to {{b}}/usr/# {{g}}(count:{{y}}${*x}{{g}}){{X}}\n');
  
 

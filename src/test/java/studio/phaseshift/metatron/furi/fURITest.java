@@ -1291,4 +1291,54 @@ public class fURITest extends AbstractMetatronTest {
         return "";
     }
 
+    @ParameterizedTest
+    @CsvSource(value = {
+            "test:/a/b/c     | test:/a/b",
+            "test:/a/b       | test:/a",
+            "test:/a         | test:",
+            "test:           | test:",
+            "mem:/x/y        | mem:/x",
+            "mem:/x          | mem:",
+            "mem:            | mem:",
+            "/a/b/c          | /a/b",
+    }, delimiter = '|')
+    public void testRetract(final String original, final String expected) {
+        final fURI furi = f(original);
+        final fURI retracted = furi.retract(1);
+        final fURI expectedFuri = f(expected);
+        LOG.warn("retract: %s -> %s (expected: %s)  class=%s  segments=%s  segmentLen=%d  pathLen=%d",
+                furi, retracted, expectedFuri,
+                furi.getClass().getSimpleName(),
+                furi.segments(), furi.segmentLength(), furi.pathLength());
+        assertEquals(expectedFuri, retracted, "retract(1) of " + original);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "test:/a/b/c     | 3       | 4",
+            "test:/a/b       | 2       | 3",
+            "test:/a         | 1       | 2",
+            "test:           | 0       | 0",
+            "mem:/x/y        | 2       | 3",
+            "mem:            | 0       | 0",
+            "/a/b/c          | 3       | 4",
+    }, delimiter = '|')
+    public void testSegmentLength(final String furiStr, final int expectedSegLen, final int expectedPathLen) {
+        final fURI furi = f(furiStr);
+        assertEquals(expectedSegLen, furi.segmentLength(), "segmentLength of " + furiStr);
+        assertEquals(expectedPathLen, furi.pathLength(), "pathLength of " + furiStr);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "test:/a/b/c     | a/b/c",
+            "test:/a         | a",
+    }, delimiter = '|')
+    public void testRemovePrefix(final String vid, final String base) {
+        final fURI vidF = f(vid);
+        final fURI baseF = f(base);
+        final fURI remainder = vidF.removePrefix(baseF);
+        LOG.warn("removePrefix: %s - %s = %s", vidF, baseF, remainder);
+    }
+
 }

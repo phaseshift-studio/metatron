@@ -33,6 +33,7 @@ import java.util.Optional;
 
 import static studio.phaseshift.metatron.Tokens.SUBQ;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.furi.q.QCollection.SUBQ_TID;
 import static studio.phaseshift.metatron.isa.iot.space.mqtt.mqttSpace.MQTT_SPACE_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -47,7 +48,7 @@ public class MqttPubSubQ extends BaseQ {
     protected final QProc subq = QCollection.subq();
 
     public MqttPubSubQ(final mqttSpace space) {
-        super(new HashMap<>(), MQTT_SPACE_TID.extend("pubsub"), null);
+        super(new HashMap<>(),f(SUBQ), SUBQ_TID);
         this.space = space;
         this.onWrite = new MqttPubSubQ.OnWrite();
         this.onRead =   this.subq.onRead().get();

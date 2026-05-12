@@ -488,7 +488,7 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
     }
 
     @ParameterizedTest
-    @TestData(value = {"[x=>[y=>1,z=>2]]@xyz"})
+    @TestData(value = {"xyz -> [x=>[y=>1,z=>2]]@xyz"})
     @CsvSource(value = {
             "[a=>1,b=>2]                            % [a=>3]                %  [a=>3,b=>2]",
             "[a=>1,b=>2]                            % [a=>+3]               %  [a=>4,b=>2]",
@@ -497,18 +497,18 @@ public class RecTest extends AbstractAlgebraTest<Rec> {
             "[a=>1,b=>[c=>3]]                       % [b=>_]                %  [a=>1,b=>[c=>3]]",
             "[a=>1,b=>[c=>3]]                       % [b=>3]                %  [a=>1,b=>3]",
             "[a=>1,b=>[c=>3]]                       % [b=>[c=>[d=>e]]]      %  [a=>1,b=>[c=>[d=>e]]]",
-            "[a=>!*xyz]                             % [a=>_]                %  [a=>[x=>[y=>1,z=>2]]@xyz]",
+            "[a=>!*xyz]                             % [a=>_]                %  [a=>[x=>[y=>1,z=>2]]]",
             "[a=>1,b=>[c=>!*xyz]]                   % [b=>_]                %  [a=>1,b=>[c=>!*xyz]]",
             "[a=>1,b=>[c=>!*xyz]]                   % [b=>[c=>2]]           %  [a=>1,b=>[c=>2]]",
            // TODO: equality issue    "[a=>1,b=>[c=>!*xyz]]                   % [a=>1,b=>[c=>^*]]     %  [a=>1,b=>[c=>!*xyz]]",
            // "[a=>1,b=>[c=>!*xyz]]                   % [b=>[c=>[!*xyz]]]     %  [a=>1,[b=>[c=>[!*xyz]]]]",
             "[a=>1,b=>[c=>2]]                       % [b=>[c=>[!*xyz]]]     %  [a=>1,b=>[c=>[!*xyz]]]",
-            "[a=>1,b=>[c=>2]]                       % [b=>[c=>!*xyz]]       %  [a=>1,b=>[c=>[x=>[y=>1,z=>2]]@xyz]]",
+            "[a=>1,b=>[c=>2]]                       % [b=>[c=>!*xyz]]       %  [a=>1,b=>[c=>[x=>[y=>1,z=>2]]]]",
             "[a=>1,b=>[c=>[1,2,3]]]                 % [b=>[c=>[2,_,_]]]     %  [a=>1,b=>[c=>[2,2,3]]]",
             "[a=>1,b=>[c=>[1,2,3]]]                 % [b=>[c=>[2,+23,+2]]]  %  [a=>1,b=>[c=>[2,25,5]]]",
-            "[a=>1,b=>[c=>[1,!*xyz,3]]]             % [b=>[c=>[2,_,+2]]]     %  [a=>1,b=>[c=>[2,[x=>[y=>1,z=>2]]@xyz,5]]]",
+            "[a=>1,b=>[c=>[1,!*xyz,3]]]             % [b=>[c=>[2,_,+2]]]     %  [a=>1,b=>[c=>[2,[x=>[y=>1,z=>2]],5]]]",
             "[a=>1,b=>[c=>[1,!*xyz,3]]]             % [b=>[c=>[2,7,+2]]]     %  [a=>1,b=>[c=>[2,7,5]]]",
-            "[a=>1,b=>[c=>[1,_,3]]]                 % [b=>[c=>[2,!*xyz,+2]]] %  [a=>1,b=>[c=>[2,[x=>[y=>1,z=>2]]@xyz,5]]]",
+            "[a=>1,b=>[c=>[1,_,3]]]                 % [b=>[c=>[2,!*xyz,+2]]] %  [a=>1,b=>[c=>[2,[x=>[y=>1,z=>2]],5]]]",
             // "[a=>1,b=>[c=>3]]                       % [b=>noobj]            %  [a=>1]"
     }, delimiter = '%')
     public void testUpdate(final String original, final String update, final String expected) {

@@ -124,7 +124,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
                     final fURI vid = source.startsWith("[-- @<") ? f(source.substring(6, source.indexOf("> --]\n")).trim()) : null;
                     if (vid != null) contentType = Content.ContentType.APPLICATION_MTRON;
                     LOG.debug("fileToObj: %s => %s", file.getPath(), vid);
-                    return contentType.hasSerializer() ? contentType.fromBytes(fileBytes).selfVID(vid) : uri(this.redirect(f(file.getPath()), false), FILE_TID, null);
+                    return contentType.hasSerializer() ? contentType.fromBytes(fileBytes) : uri(this.redirect(f(file.getPath()), false), FILE_TID, null);
                 } else {
                     return uri(this.redirect(f(file.getPath()), false), DIR_TID, null);
                 }
@@ -290,7 +290,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
             if (pattern.hasPattern()) {
                 this.directReader().apply(pattern).forEachRemaining(kv -> this.write(kv.furi(), kv.obj()));
             } else {
-                final Path path = Paths.get(this.redirect(pattern.basePath(), false).toString());
+                final Path path = Paths.get(this.redirect(pattern.basePath(), true).toString());
                 final File file = path.toFile();
                 try {
                     if (obj.isNoObj()) {

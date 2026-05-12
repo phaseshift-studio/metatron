@@ -123,8 +123,8 @@ public class BasicRouter extends AbstractSpace<Map<Obj, Obj>> implements Router 
     }
 
     public void registerRedirect(final fURI small, final fURI big) {
-       if(big.isRelative())
-           return;
+        if (big.isRelative())
+            return;
         this.smallToBigRoutes.computeRaw(small, (k, v) -> {
             if (null == v) {
                 final Set<fURI> set = new HashSet<>();
@@ -193,10 +193,11 @@ public class BasicRouter extends AbstractSpace<Map<Obj, Obj>> implements Router 
                 .map(r -> (Space) r)
                 .filter(s -> space.pattern().compareTo(s.pattern()) == 0)
                 .toList()
-                .forEach(s -> {
-                    LOG.warn("%s evicting %s (same pattern %s)", space, s.vid(), space.pattern());
-                    s.close();
-                    this.spaces().jvm().remove(s.vid().toUri());
+                .forEach(spc -> {
+                    LOG.warn("%s evicting %s (same pattern %s)", space, spc.vid(), space.pattern());
+                    spc.close();
+                    if (spc.vid() != null)
+                        this.spaces().jvm().remove(spc.vid().toUri());
                 });
         final Space superSpace = this.hasSpaceFor(space.pattern()) ? this.getSpace(space.pattern()) : noobjSpace.single();
         final Rec subSpaces = space.jvm().getOrDefault(uri(SPACE), rec()).as();

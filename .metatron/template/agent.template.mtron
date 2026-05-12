@@ -1,0 +1,18 @@
+ai_template?model<=#{?}(base_uri  =>uri::T,
+                        model_uri =>uri::T,
+                        agent_name=>uri::T) {
+"""
+[,]@<${*base_uri}/memory>.print('created agent memory: ${_}');
+[,]@<${*base_uri}/notes>.print('created agent notes: ${_}');
+[think    => |/usr/ui/console/pane/0/stream(_),
+ desc     => ${*agent_name}.as(str::T) + ' mtron created agent',
+ provider => !*<${*model_uri}/provider>,
+ name     => !*<${*model_uri}/name>,
+ memory   => memory::[max=>20,mem=>!*</usr/agent/memory>],
+ tool     => [!*eval,!*sql,!*</usr/ai/mcp/intellij>],
+ note     => !*<${*base_uri}notes>,
+ skill    => [!*<local:software/metatron/.metatron/skills/mtron>.as(skill::T)],
+ response => [to=>print(_)]]@${*base_uri}/${*agent_name}.as(model::T);
+*${base_uri}notes>>=+['review your work before replying'];
+""".source(_)
+}

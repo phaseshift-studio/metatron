@@ -136,6 +136,10 @@ public class mModel extends MRec {
         return Optional.<Obj>ofNullable(this.at(NOTE).orElse(null)).map(o -> o.autoResolve(this)).map(Obj::asLst);
     }
 
+    public Optional<Obj> prompt() {
+        return Optional.<Obj>ofNullable(this.at(PROMPT).orElse(null)).map(o -> o.autoResolve(this));
+    }
+
     public void addNote(final Obj note) {
         this.at(NOTE).orElse(lst()).asLst().append(note);
     }
@@ -172,6 +176,12 @@ public class mModel extends MRec {
     public AiServices<mAgent> agent() {
         List<String> systemMessage = new ArrayList<>();
         final AiServices<mAgent> service = AiServices.builder(mAgent.class);
+        //////////////////////////////////////////
+        /////////////// PROMPT ///////////////////
+        //////////////////////////////////////////
+        /*if (this.prompt().isPresent()) {
+            service.userMessage(this.prompt().get().as(STR_TYPE).strValue());
+        }*/
         //////////////////////////////////////////
         /////////////// MEMORY ///////////////////
         //////////////////////////////////////////

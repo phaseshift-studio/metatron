@@ -115,7 +115,8 @@ public class mTool extends MRec {
                     .args(args)
                     .apply(arguments.containsKey(LHS) ? ObjmtronSerializer.parse(arguments.get(LHS).toString()) : noobj());
             inst.logger().info("evaluating mtron_inst tool: %s => %s => %s", arguments.get(LHS), inst, result);
-            return result.toString();
+            final String stringResult = result.toString();
+            return (null == stringResult || stringResult.isBlank()) ? "noobj" : stringResult; // prevents OpenAI protocol from failing on empty or null results
         };
         return Tuple.Pair.with(toolSpecBuilder.build(), toolExecutor);
     }

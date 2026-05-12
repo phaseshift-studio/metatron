@@ -94,17 +94,4 @@ public class miotSpaceTest extends AbstractSpaceTest implements SubQTest {
         AbstractMetatronTest.end();
         CommonUtil.sleepThread(1000);
     }
-
-    @ParameterizedTest
-    @CsvSource(value = {
-            "/t/a?subq -> sub::[target=>/t/a,on_recv=><abc>->3]                            % /t/a -> 4                       % *abc.?=3",
-            "/t/b?subq -> sub::[target=>/t/b,on_recv=><abc>->4]                            % /t/b -> 3                       % *abc.?=4",
-    }, delimiter = '%')
-    public void testSubscriptions(final String subscription, final String write, final String check) {
-        final Rec sub = ObjmtronSerializer.parse(subscription).apply().as();
-        assertEquals(SUBSCRIPTION_TID, sub.tid());
-        final Obj writeObj = ObjmtronSerializer.parse(write).apply();
-        final Obj checkObj = ObjmtronSerializer.parse(check).apply();
-        assertNotEquals(noobj(), checkObj);
-    }
 }

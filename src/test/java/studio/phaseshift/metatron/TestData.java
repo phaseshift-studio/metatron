@@ -23,6 +23,7 @@ import org.junit.jupiter.api.extension.AfterTestExecutionCallback;
 import org.junit.jupiter.api.extension.BeforeTestExecutionCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -126,7 +127,7 @@ public @interface TestData {
                                 String line;
                                 while ((line = reader.readLine()) != null) {
                                     lineNumber++;
-                                    final String processedLine = spaceTest.make(line).trim();
+                                    final String processedLine = spaceTest.make(line, context.getRequiredTestMethod()).trim();
 
                                     // Skip empty lines
                                     if (processedLine.isEmpty()) {
@@ -182,12 +183,19 @@ public @interface TestData {
                         this.testDataLoaded = true;
                     }
 
-                    // Also load inline values
+                    // Also load inline values (with $$ substitution for AbstractSpaceTest)
+                    final java.lang.reflect.Method testMethod = context.getRequiredTestMethod();
+                    final Object testInstance = context.getRequiredTestInstance();
                     Arrays.stream(annotation.value())
                             .filter(value -> !value.trim().isEmpty())
-                            .peek(value -> LOG.debug("loading test data: %s", value))
                             .peek(v -> this.testDataLoaded = true)
-                            .forEach(v -> ObjmtronSerializer.parse(v).apply());
+                            .forEach(v -> {
+                                final String resolved = testInstance instanceof studio.phaseshift.metatron.isa.AbstractSpaceTest
+                                        ? ((studio.phaseshift.metatron.isa.AbstractSpaceTest) testInstance).make(v, testMethod)
+                                        : v;
+                                final Obj result = ObjmtronSerializer.parse(resolved).apply();
+                                LOG.debug("loaded test data: %s -> %s", resolved, result);
+                            });
                 }
             } catch (Exception e) {
                 throw MTronTestException.of(e);

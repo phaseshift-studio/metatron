@@ -28,6 +28,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TestCategory;
 import studio.phaseshift.metatron.TestData;
+import studio.phaseshift.metatron.TestScope;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -36,10 +37,12 @@ import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.CommonUtil;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -64,9 +67,12 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
     protected final Supplier<Space> spaceSupplier;
     protected Space spaceStorage = null;
     protected static final List<String> PREVIOUS_LINE = new ArrayList<>(List.of("", "", ""));
-    /** Set to true when a seed write is skipped (rejected by root enforcement); cleared on next non-"." row. */
+    /**
+     * Set to true when a seed write is skipped (rejected by root enforcement); cleared on next non-"." row.
+     */
     protected static boolean seedWriteSkipped = false;
     protected final fURI baseURI;
+    public AtomicBoolean inScope = new AtomicBoolean(false);
 
     public AbstractSpaceTest(final Supplier<Space> spaceSupplier) {
         this(f("/t"), spaceSupplier);
@@ -97,31 +103,35 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
 
     @BeforeEach
     protected void setup() {
-        //if (!Router.global().hasSpaceFor(this.baseURI))
-        //    this.spaceStorage = memSpace.of(rec(uri(PATTERN), uri(this.baseURI.retract(1).extend("#"))), f("/sys/space").extend(this.baseURI.retractPattern().name()));
-        this.space = this.spaceSupplier.get();
-        if (null == this.space)
-            Assertions.fail("space supplier yielded a null space");
-        if (this.space.vid() == null)
-            LOG.debug("provided space has no vid and thus can not be shutdown automatically");
+        if (!this.inScope.get()) {
+            //if (!Router.global().hasSpaceFor(this.baseURI))
+            //    this.spaceStorage = memSpace.of(rec(uri(PATTERN), uri(this.baseURI.retract(1).extend("#"))), f("/sys/space").extend(this.baseURI.retractPattern().name()));
+            this.space = this.spaceSupplier.get();
+            if (null == this.space)
+                Assertions.fail("space supplier yielded a null space");
+            if (this.space.vid() == null)
+                LOG.debug("provided space has no vid and thus can not be shutdown automatically");
+        }
     }
 
     @AfterEach
     protected void stop() {
-        if (null == this.space) {
-            Assertions.fail("space nullified over course of testing");
-            return;
+        if (!this.inScope.get()) {
+            if (null == this.space) {
+                Assertions.fail("space nullified over course of testing");
+                return;
+            }
+            if (null != this.space.vid()) {
+                Router.global().removeSpace(this.space.vid());
+                assertDoesNotThrow(this.space::close);
+            }
+            if (null != this.spaceStorage) {
+                Router.global().removeSpace(this.spaceStorage.vid());
+                this.spaceStorage.close();
+                this.spaceStorage = null;
+            }
+            this.space = null;
         }
-        if (null != this.space.vid()) {
-            Router.global().removeSpace(this.space.vid());
-            assertDoesNotThrow(this.space::close);
-        }
-        if (null != this.spaceStorage) {
-            Router.global().removeSpace(this.spaceStorage.vid());
-            this.spaceStorage.close();
-            this.spaceStorage = null;
-        }
-        this.space = null;
     }
 
     public static Map<fURI, Obj> generateRandomData(final fURI furiPrefix, int size) {
@@ -243,8 +253,8 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
             "$$ -> [a=>1,b=>2,c=>3,d=>4,e=>5]                      % *<$$/+>                            % {1,2,3,4,5}",
             ".                                                     % *<$$/b>                            % 2",
             ".                                                     % *<$$/+/>                           % [$$/a=>1,$$/b=>2,$$/c=>3,$$/d=>4,$$/e=>5]>-",
-            "1.vid(abc)                                            % *abc                               % 1@abc",
-            "1.vid(abc)                                            % *abc.vid(<.>)                    % 1",
+            "1.vid(abc)                                            % *abc                               % 1",
+            "1.vid(abc)                                            % *abc.vid(<.>)                      % 1",
             // "[1@a,2@b,3@c]@d.map(10).vid(b)                        % *d                               % [1@a,10@b,3@c]@d",
             // "[1@a,2@b,3@c]@d.map(10@b)                             % *d                               % [1@a,10@b,3@c]@d",
             // "[1@a,2@b,3@c]@d.map(*b + 10@b)                        % *d                               % [1@a,12@b,3@c]@d",
@@ -509,6 +519,64 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
         }
     }
 
+    /**
+     * WARNING: The original dataset mutates over the course of the test cases being added.
+     */
+    @TestCategory.Crud
+    @TestCategory.ReadWrite
+    @ParameterizedTest
+    @TestScope 
+    @TestData(oneTime = true, value = {
+            // --- people (4 rows) ---
+            "$$/people/1 -> [name=>'Alice', age=>30, title=>'Engineer', salary=>75000.0, company=>101, active=>true]",
+            "$$/people/2 -> [name=>'Bob', age=>25, title=>'Designer', salary=>60000.0, company=>101, active=>true]",
+            "$$/people/3 -> [name=>'Charlie', age=>35, title=>'Manager', salary=>85000.0, company=>101, active=>false]",
+            "$$/people/4 -> [name=>'Diana', age=>28, title=>'Engineer', salary=>70000.0, company=>102, active=>true]",
+            // --- companies (2 rows) — referenced via !*$$/people/X/company ---
+            "$$/companies/101 -> [name=>'Acme Corp', city=>'NYC', employees=>50, public=>false];",
+            "$$/companies/102 -> [name=>'Globex Inc', city=>'LA', employees=>200, public=>true];",
+    })
+    @CsvSource(value = {
+            "*$$/people/1                                                         %  *$$/people/1/name.map(*$$/people/1/name)                        % \"Alice\"",
+            "*$$/people/1                                                         %  *$$/people/1>>name                                              % \"Alice\"",
+            "*$$/people/1                                                         %  *$$/people/1/age                                                % 30",
+            "@$$/people/1 >>= [age=>29,title=> +' Specialist']                    %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'Alice',age=>29,title=>'Engineer Specialist']",
+            "*$$/people/1 >>= [age=>30,title=>'NONE']                             %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'Alice',age=>29,title=>'Engineer Specialist']",
+            "@$$/people/1/age >>= 45                                              %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'Alice',age=>45,title=>'Engineer Specialist']",
+            "*$$/people/1/age >>= 55                                              %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'Alice',age=>45,title=>'Engineer Specialist']",
+            "@$$/people/1/age >>=(+ 12 * 2)                                       %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'Alice',age=>114,title=>'Engineer Specialist']",
+            "@$$/people/1 >>= [name=>'XYZ']                                       %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'XYZ',age=>114,title=>'Engineer Specialist']",
+            "@$$/people/1 >>= [name=>+'ZYX']                                      %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'XYZZYX',age=>114,title=>'Engineer Specialist']",
+            "@$$/people/1 >>= [name=><<.>>name.+'ABC']                            %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'XYZZYXABC',age=>114,title=>'Engineer Specialist']",
+            "@$$/people/2 >>= [name=><<.-<[>>name,' the ',>>title]._/sum()\\_>-]  %  *$$/people/2==[name=>_,age=>_,title=>_]                         % [name=>'Bob the Designer',age=>25,title=>'Designer']",
+            //"@$$/people/+                                        %  *$$/people/2==[active=>_]                                       % [active=>true]",
+            //"@$$/people/+>>=[active=>not(_)]                     %  *$$/people/2==[active=>_]                                       % [active=>false]",
+            //"noobj                                               %  *$$/people/+.>>company.group([>>name => _])==[_=>count()]       % [\"Acme Corp\"=>3,\"Globex Inc\"=>1]",
+            // TODO: write >>= update test cases
+            // Format: *$$/people/1 >>= [field=>newVal]   %   *$$/people/1/field   %   expectedValue
+            // Foreign-key dereference: !*$$/people/1/company reads the linked company record
+    }, delimiter = '%')
+    public void testMonoUpdate(final String updateExpression, final String readExpression, final String expectedExpression) {
+        ObjmtronSerializer.parse(make(updateExpression)).apply();
+
+        if (this.sleepBetweenReads > 0)
+            CommonUtil.sleepThread(this.sleepBetweenReads);
+
+        final Obj readObj = ObjmtronSerializer.parse(make(readExpression)).apply();
+        final Obj expectedObj = ObjmtronSerializer.parse(make(expectedExpression)).apply();
+
+        if (!updateExpression.equals("."))
+            PREVIOUS_LINE.set(0, make(updateExpression));
+        if (!readExpression.equals("."))
+            PREVIOUS_LINE.set(1, make(readExpression));
+        if (!expectedExpression.equals("."))
+            PREVIOUS_LINE.set(2, make(expectedExpression));
+        /*LOG.error("\n\tupdate [%s => %s]\n\tread [%s => %s]\n\texpected [%s => %s]",
+                make(updateExpression), ObjmtronSerializer.parse(make(updateExpression)).resolve(noobj()),
+                make(readExpression), readObj,
+                make(expectedExpression), expectedObj);*/
+        assertEquals(expectedObj, readObj, "update: " + make(updateExpression) + " | read: " + make(readExpression));
+    }
 
     @ParameterizedTest
     @TestData(oneTime = false, value = {""})
@@ -520,8 +588,8 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
             "[a=>[b=>[c=>d]@$$/a]]@$$/b                     % >>=[a=>[_=> * cc]]        % *$$/b        % <ERROR>",
             "[a=>[b=>c,d=>e]]@$$/a                          % >>=[a=>[_=> * cc]]        % *$$/a        % [a=>[b=>c/cc,d=>e/cc]]@$$/a",
             "[a=>[b=>c,d=>e]]@$$/a                          % >>=[a=>[_=> * cc]]        % *$$/a/a/b    % c/cc",
-           // "[a=>[b=>c,d=>e]]@$$/a                          % >>=[a=>[b=>|!*$$/a]]      % *$$/a/a/b  % [a=>[b=>|!*$$/a,d=>e]]@$$/a",
-           // "[a=>[b=>c,d=>e]]@$$/a                          % >>=[a=>[b=>|!*$$/a]]      % *$$/a      % [a=>[b=>|!*$$/a,d=>e]]@$$/a",
+            // "[a=>[b=>c,d=>e]]@$$/a                          % >>=[a=>[b=>|!*$$/a]]      % *$$/a/a/b  % [a=>[b=>|!*$$/a,d=>e]]@$$/a",
+            // "[a=>[b=>c,d=>e]]@$$/a                          % >>=[a=>[b=>|!*$$/a]]      % *$$/a      % [a=>[b=>|!*$$/a,d=>e]]@$$/a",
             "[a=>[b=>c,d=>e]]@$$/a                          % >>=[a=>[b=>|!*$$/a]]      % *$$/a/a/d    % e",
     }, delimiter = '%')
     public void testPolyReadWrite(final String writeExpression, final String mutationExpression, final String readExpression, final String expectedExpression) {
@@ -545,6 +613,37 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
     }
 
     public String make(final String expression) {
+        if (!expression.contains("$$")) return expression;
+        final Method testMethod = resolveTestMethod();
+        return make(expression, testMethod);
+    }
+
+    /**
+     * Walk the stack to find the @Test/@ParameterizedTest method that invoked make().
+     */
+    private Method resolveTestMethod() {
+        for (final StackTraceElement frame : Thread.currentThread().getStackTrace()) {
+            if (frame.getMethodName().startsWith("test")) {
+                try {
+                    final Method[] methods = this.getClass().getMethods();
+                    for (final Method m : methods) {
+                        if (m.getName().equals(frame.getMethodName())) {
+                            return m;
+                        }
+                    }
+                } catch (final Exception ignored) {
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Replace {@code $$} placeholder with the appropriate base URI for the given test method.
+     * Subclasses override to customize per-test: e.g. tbleSpace maps {@code $$} to {@code db:}
+     * for table-mapped tests while keeping {@code db:kv/test} for key-value tests.
+     */
+    public String make(final String expression, final Method testMethod) {
         return expression.contains("$$") ? expression.replace("$$", this.baseURI.toString()) : expression;
     }
 

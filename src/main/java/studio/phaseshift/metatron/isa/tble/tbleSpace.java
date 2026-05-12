@@ -253,7 +253,7 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
         final SQLSchemaInstSet schemaInstset = this.schemaGenerator.generateSchemaInstset(schemaVid);
         Router.global().addSpace(schemaInstset);
         schemaInstset.setup();
-        this.at(f(SCHEMA).extend(NATIVE), this.schemaGenerator.generateSchema(), MUTABLE);
+        this.at(f(SCHEMA).extend(NATIVE), this.schemaGenerator.generateNativeSchema(), MUTABLE);
 
         LOG.info("initialized {{g}}SQL schema{{X}} with %s table types",
                 this.existingTableSchema.getTableNames().size());
@@ -396,10 +396,15 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
                             this.sjvm(), aligned);
                     final List<IdObj> all = new ArrayList<>();
                     raw.forEachRemaining(kv -> {
-                        all.add(kv);  // always include — filtering is handled by the table schema
+                        // Use pattern for exact node queries so the fURI matches what
+                        // locateBasePoly/unrollPoly produce — prevents dupes in resolveRead
+                        final fURI external = pattern.isNode()
+                                ? pattern
+                                : Space.Helper.routeToSpace(kv.furi(), this.routes());
+                        all.add(IdObj.of(external, kv.obj()));
                         if (pattern.hasPattern() && kv.obj().isPoly())
                             all.addAll(Space.Helper.unrollPoly(
-                                    kv.furi(), kv.obj().as(), pattern.asNode()));
+                                    external, kv.obj().as(), pattern.asNode()));
                     });
                     return all.iterator();
                 }
