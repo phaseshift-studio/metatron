@@ -185,6 +185,15 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                             .filter(p -> p.id() == paneId)
                             .findFirst()
                             .ifPresent(p -> p.appendOutput(message)));
+            // Append-without-newline writer — mirrors System.out.print() for
+            // logger.none() (e.g. waiting dots in mModel.chat()).  Without this,
+            // each . would be its own buffer line, producing vertical dots instead
+            // of horizontal accumulation.
+            GraphittyLogger.registerAppendPaneWriter((paneId, message) ->
+                    this.getAllPanes().stream()
+                            .filter(p -> p.id() == paneId)
+                            .findFirst()
+                            .ifPresent(p -> p.appendOutput(message, false)));
 
             final DefaultParser parser = new DefaultParser()
                     .quoteChars(new char[]{'\'', '"'})
