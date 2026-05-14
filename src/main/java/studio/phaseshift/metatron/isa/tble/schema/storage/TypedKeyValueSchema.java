@@ -154,21 +154,22 @@ public class TypedKeyValueSchema implements TableSchema {
         }
 
         try (final PreparedStatement stmt = conn.prepareStatement(sql)) {
+            final Obj writeObj = obj.selfVID(null);
             stmt.setString(1, furi.toString());
             stmt.setString(2, type);
 
             // Set the appropriate value based on type
             if (obj.isBool()) {
-                stmt.setBoolean(3, obj.asBool().boolValue());
+                stmt.setBoolean(3, writeObj.asBool().boolValue());
             } else if (obj.isInt()) {
-                stmt.setLong(3, obj.asInt().intValue());
+                stmt.setLong(3, writeObj.asInt().intValue());
             } else if (obj.isReal()) {
-                stmt.setDouble(3, obj.asReal().realValue());
+                stmt.setDouble(3, writeObj.asReal().realValue());
             } else if (obj.isStr()) {
-                stmt.setString(3, obj.asStr().strValue());
+                stmt.setString(3, writeObj.asStr().strValue());
             } else {
                 // Use ObjmtronSerializer for complex types
-                stmt.setString(3, SERIALIZER.write(obj));
+                stmt.setString(3, SERIALIZER.write(writeObj));
             }
 
             return stmt.executeUpdate();

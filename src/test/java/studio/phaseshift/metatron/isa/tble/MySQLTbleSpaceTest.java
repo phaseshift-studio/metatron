@@ -26,12 +26,11 @@ import org.junit.jupiter.api.*;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@Disabled
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class MySQLTbleSpaceTest extends AbstractTbleSpaceTest {
 
     public MySQLTbleSpaceTest() {
-        super(new MySQLDatabaseConfig());
+        super(staticDbConfig);
     }
 
     @BeforeAll

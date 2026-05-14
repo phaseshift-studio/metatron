@@ -29,7 +29,6 @@ import org.junit.jupiter.api.*;
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@Disabled
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class MariaDBTbleSpaceTest extends AbstractTbleSpaceTest {
 
@@ -38,10 +37,10 @@ public class MariaDBTbleSpaceTest extends AbstractTbleSpaceTest {
      * This is called once per test class.
      */
     @BeforeAll
-    public static void setupDatabase() throws Exception {
+    public static void setupMariaDBDatabase() throws Exception {
         staticDbConfig = new MariaDBDatabaseConfig();
-        staticDbConfig.setup();
-        System.out.println("MariaDB container started: " + staticDbConfig.getJdbcHost());
+        setupDatabase();
+        LOG.info("MariaDB container started: " + staticDbConfig.getJdbcHost());
     }
 
     /**
@@ -49,11 +48,9 @@ public class MariaDBTbleSpaceTest extends AbstractTbleSpaceTest {
      * This is called once per test class.
      */
     @AfterAll
-    public static void teardownDatabase() throws Exception {
-        if (staticDbConfig != null) {
-            staticDbConfig.teardown();
-            System.out.println("MariaDB container stopped");
-        }
+    public static void teardownMariaDBDatabase() throws Exception {
+        cleanupDatabase();
+        LOG.info("MariaDB container stopped");
     }
 
     /**

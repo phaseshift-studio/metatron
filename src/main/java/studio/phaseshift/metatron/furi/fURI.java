@@ -190,6 +190,24 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
         return hasCapitalGeneric;
     }
 
+    default boolean hasAnchor() {
+        if (this.hasScheme())
+            return this.scheme().startsWith("@");
+        else if (this.hasHost())
+            return this.host().startsWith("@");
+        else if (!this.segments().isEmpty())
+            return this.segments().getFirst().startsWith("@");
+        return false;
+    }
+
+    default fURI stripAnchor() {
+        return this.hasAnchor() ? f(this.toString().substring(1)) : this;
+    }
+
+    default fURI addAnchor() {
+        return this.hasAnchor() ? this : f("@" + this.toString());
+    }
+
     default boolean bimatches(final fURI other) {
         return this.test(other) || other.test(this);
     }

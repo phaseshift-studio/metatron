@@ -513,7 +513,7 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
                 make(readExpression), readObj,
                 make(expectedExpression), resultObj);
         try {
-            assertEquals(resultObj, readObj);
+            assertEquals(resultObj, readObj.selfVID(null));
         } catch (final Exception e) {
             LOG.error(e);
         }
@@ -545,12 +545,17 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
             "@$$/people/1/age >>= 45                                              %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'Alice',age=>45,title=>'Engineer Specialist']",
             "*$$/people/1/age >>= 55                                              %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'Alice',age=>45,title=>'Engineer Specialist']",
             "@$$/people/1/age >>=(+ 12 * 2)                                       %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'Alice',age=>114,title=>'Engineer Specialist']",
-            "@$$/people/1 >>= [name=>'XYZ']                                       %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'XYZ',age=>114,title=>'Engineer Specialist']",
-            "@$$/people/1 >>= [name=>+'ZYX']                                      %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'XYZZYX',age=>114,title=>'Engineer Specialist']",
-            "@$$/people/1 >>= [name=><<.>>name.+'ABC']                            %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'XYZZYXABC',age=>114,title=>'Engineer Specialist']",
+            "@$$/people/1/age >>= 140                 %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'Alice',age=>140,title=>'Engineer Specialist']",
+            "@$$/people/1 >>= [name=>'XYZ']                                       %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'XYZ',age=>140,title=>'Engineer Specialist']",
+            "@$$/people/1 >>= [name=>+'ZYX']                                      %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'XYZZYX',age=>140,title=>'Engineer Specialist']",
+            "@$$/people/1 >>= [name=><<.>>name.+'ABC']                            %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'XYZZYXABC',age=>140,title=>'Engineer Specialist']",
             "@$$/people/2 >>= [name=><<.-<[>>name,' the ',>>title]._/sum()\\_>-]  %  *$$/people/2==[name=>_,age=>_,title=>_]                         % [name=>'Bob the Designer',age=>25,title=>'Designer']",
-            //"@$$/people/+                                        %  *$$/people/2==[active=>_]                                       % [active=>true]",
-            //"@$$/people/+>>=[active=>not(_)]                     %  *$$/people/2==[active=>_]                                       % [active=>false]",
+            "@<$$/people/+>                                                       %  *<$$/people/+>.vid()                                            % {$$/people/1,$$/people/2,$$/people/3,$$/people/4}",
+            "@<$$/people/+/name>.>>= \"Dark Wing Duck\"                           %  *<$$/people/+>==[name=>_]>>name                                 % {4}\"Dark Wing Duck\"",
+            "@<$$/people/+>.>>= [name=>\"Micky Mouse\"]                           %  *<$$/people/+/name>                                             % {4}\"Micky Mouse\"",
+            "@<$$/people/+>.>>= [name=>none]                                      %  *<$$/people/+/name>                                             % {4}none",
+            "@<$$/people/+>                                        %  *<$$/people/2>==[active=>_]                                       % [active=>true]",
+            "@<$$/people/+>.>>=[active=>false]                     %  *<$$/people/2>==[active=>_]                                       % [active=>false]",
             //"noobj                                               %  *$$/people/+.>>company.group([>>name => _])==[_=>count()]       % [\"Acme Corp\"=>3,\"Globex Inc\"=>1]",
             // TODO: write >>= update test cases
             // Format: *$$/people/1 >>= [field=>newVal]   %   *$$/people/1/field   %   expectedValue
@@ -701,7 +706,7 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
         this.space.write(uri, str(value));
 
         // Read back and verify
-        final Obj result = this.space.read(uri);
+        final Obj result = this.space.read(uri).selfVID(null);
         assertEquals(str(value), result, description);
     }
 
@@ -735,7 +740,7 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
         this.space.write(uri, jnt(value));
 
         // Read back and verify
-        final Obj result = this.space.read(uri);
+        final Obj result = this.space.read(uri).selfVID(null);
         assertEquals(jnt(value), result, description);
     }
 
@@ -796,7 +801,7 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
         this.space.write(uri, bool(value));
 
         // Read back and verify
-        final Obj result = this.space.read(uri);
+        final Obj result = this.space.read(uri).selfVID(null);
         assertEquals(bool(value), result, description);
     }
 
@@ -846,12 +851,12 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
             this.space.write(uri, jnt(i));
 
             // Verify each update
-            final Obj result = this.space.read(uri);
+            final Obj result = this.space.read(uri).selfVID(null);
             assertEquals(jnt(i), result, "Iteration " + i + " should match");
         }
 
         // Final verification
-        final Obj finalResult = this.space.read(uri);
+        final Obj finalResult = this.space.read(uri).selfVID(null);
         assertEquals(jnt(iterations - 1), finalResult, "Final value should be last iteration");
     }
 
@@ -877,7 +882,7 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
         this.space.write(uri, value);
 
         // READ: Verify it exists
-        Obj result = this.space.read(uri);
+        Obj result = this.space.read(uri).selfVID(null);
         assertFalse(result.isNoObj(), "Value should exist after create");
         assertEquals(value, result, "Read value should match written value");
 
@@ -885,13 +890,13 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
         final Obj updatedValue = str("updated_" + valueStr);
         this.space.write(uri, updatedValue);
 
-        result = this.space.read(uri);
+        result = this.space.read(uri).selfVID(null);
         assertEquals(updatedValue, result, "Updated value should match");
 
         // DELETE: Write noobj
         this.space.write(uri, noobj());
 
-        result = this.space.read(uri);
+        result = this.space.read(uri).selfVID(null);
         assertEquals(noobj(), result, "Value should not exist after delete");
     }
 
@@ -933,7 +938,7 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
         this.space.write(uri, value);
 
         // Read back
-        final Obj result = this.space.read(uri);
+        final Obj result = this.space.read(uri).selfVID(null);
 
         // Verify value and type
         if (value.isReal())
@@ -1023,7 +1028,7 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
         this.space.write(uri, listValue);
 
         // Read back
-        final Obj result = this.space.read(uri);
+        final Obj result = this.space.read(uri).selfVID(null);
         assertTrue(result.isLst(), "Result should be a list");
         assertEquals(expectedCount, result.asLst().count(), "List should have correct count");
         assertEquals(listValue, result, description);
@@ -1055,12 +1060,12 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
 
         // Write initial value
         this.space.write(uri, initialValue);
-        Obj result = this.space.read(uri);
+        Obj result = this.space.read(uri).selfVID(null);
         assertEquals(initialValue, result, "Initial value should match");
 
         // Update to different type
         this.space.write(uri, updatedValue);
-        result = this.space.read(uri);
+        result = this.space.read(uri).selfVID(null);
         assertEquals(updatedValue, result, "Updated value should match");
     }
 
@@ -1106,7 +1111,7 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
         }
 
         // Read back entire record and verify all fields updated
-        final Obj result = this.space.read(baseUri);
+        final Obj result = this.space.read(baseUri).selfVID(null);
         if (result.isRec()) {
             final Rec resultRec = result.asRec();
             for (int i = 0; i < fieldCount; i++) {

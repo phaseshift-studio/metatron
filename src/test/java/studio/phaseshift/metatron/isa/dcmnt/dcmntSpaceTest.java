@@ -92,7 +92,7 @@ public class dcmntSpaceTest extends AbstractSpaceTest implements CommonRewritesT
         // For testMonoUpdate, $$ → mongo: so seed data writes to mongo:<collection>/<docId>
         // and update/read expressions resolve to the same two-segment document paths.
         if (testMethod != null && "testMonoUpdate".equals(testMethod.getName())) {
-            return expression.contains("$$") ? expression.replace("$$", "mongo:") : expression;
+            return expression.contains("$$") ? expression.replace("$$/", "mongo:").replace("$$", "mongo:") : expression;
         }
         return super.make(expression, testMethod);
     }

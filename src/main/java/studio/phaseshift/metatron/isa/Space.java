@@ -172,7 +172,17 @@ public interface Space extends Rec, Closeable {
             return routes.entrySet().stream()
                     //.sorted(Map.Entry.comparingByKey(Comparator.reverseOrder()))
                     .filter(e -> vid.toString().startsWith(e.getKey().autoResolve(noobj()).uriValue().toString()))
-                    .map(e -> e.getValue().autoResolve(noobj()).uriValue().extend(vid.toString().replaceFirst(e.getKey().autoResolve(noobj()).uriValue().toString(), "")).q(vid.qMap()))
+                    .map(e -> {
+                        String remainder = vid.toString().replaceFirst(
+                                e.getKey().autoResolve(noobj()).uriValue().toString(), "");
+                        // When the scheme prefix is stripped (e.g. "db:" → "") the
+                        // remainder often starts with "/" ("/people/+").  fURI.extend()
+                        // on an empty base preserves that leading slash as an empty
+                        // first path segment, which breaks isTablePath() and hasPattern().
+                        if (remainder.startsWith("/")) remainder = remainder.substring(1);
+                        return e.getValue().autoResolve(noobj()).uriValue()
+                                .extend(remainder).q(vid.qMap());
+                    })
                     .findFirst()
                     .orElse(vid);
         }

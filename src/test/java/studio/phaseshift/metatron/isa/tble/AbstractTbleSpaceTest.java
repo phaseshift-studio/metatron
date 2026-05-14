@@ -35,6 +35,8 @@ import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 
 import java.lang.reflect.Method;
 import java.sql.Connection;
@@ -80,6 +82,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
     protected static DatabaseConfig staticDbConfig;
     protected final DatabaseConfig dbConfig;
     private static final AtomicInteger testSpaceCounter = new AtomicInteger(0);
+    protected static final GraphittyLogger LOG = Graphitty.log(AbstractTbleSpaceTest.class);
 
     public AbstractTbleSpaceTest(final DatabaseConfig dbConfig) {
         super(f("db:kv/test"), () -> {
@@ -306,7 +309,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
         // For table-mapped tests, $$ → db: (table path: db:people/1, db:companies/101)
         // For key-value tests, $$ → db:kv/test (kv path: db:kv/test/key)
         if (testMethod != null && "testMonoUpdate".equals(testMethod.getName())) {
-            return expression.contains("$$") ? expression.replace("$$", "db:") : expression;
+            return expression.contains("$$") ? expression.replace("$$/", "db:").replace("$$", "db:") : expression;
         }
         return super.make(expression, testMethod);
     }
@@ -567,8 +570,8 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
      */
     @ParameterizedTest(name = "[{index}] {0}")
     @CsvSource(delimiter = '|', textBlock = """
-                                            boolean true converts and back   | users | 1 | active | bool:true  | jnt:1
-                                            boolean false converts and back  | users | 1 | active | bool:false | jnt:0
+                                            boolean true converts and back   | users | 1 | active | bool:true  | bool:true
+                                            boolean false converts and back  | users | 1 | active | bool:false | bool:false
                                             real number with decimals        | users | 1 | salary | real:12345.00 | real:12345.00
                                             real number zero                 | users | 1 | salary | real:0.0     | real:0.0
                                             real negative                    | users | 1 | salary | real:-500.25  | real:-500.25
@@ -629,7 +632,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
         if (unescaped.startsWith("'") && unescaped.endsWith("'"))
             unescaped = unescaped.substring(1, unescaped.length() - 1);
         this.space.write(uri, str(unescaped));
-        assertEquals(str(unescaped), this.space.read(uri), description);
+        assertEquals(str(unescaped), this.space.read(uri).selfVID(null), description);
     }
 
     // =========================================================================

@@ -153,7 +153,7 @@ public class SqliteTbleSpaceTest extends AbstractTbleSpaceTest {
             Router.writeToSpace(f(uri), writeValue);
 
             // Read it back
-            final Obj actualValue = Router.readFromSpace(f(uri));
+            final Obj actualValue = Router.readFromSpace(f(uri)).selfVID(null);
 
             // Verify exact type preservation
             assertEquals(expectedValue, actualValue, description);

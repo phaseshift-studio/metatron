@@ -18,66 +18,71 @@
 
 package studio.phaseshift.metatron.isa.tble;
 
-import org.testcontainers.containers.MySQLContainer;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.utility.DockerImageName;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 
 /**
  * MySQL database configuration for testing using TestContainers.
+ * Uses GenericContainer to avoid requiring the MySQL JDBC driver on the classpath
+ * for TestContainers' internal readiness checks (uses MariaDB driver instead).
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class MySQLDatabaseConfig implements DatabaseConfig {
 
-    private MySQLContainer<?> mysqlContainer;
+    private GenericContainer<?> mysqlContainer;
+    private static final String DB_NAME = "testdb";
+    private static final String DB_USER = "test";
+    private static final String DB_PASS = "test";
 
     @Override
     public String getJdbcHost() {
-        if (mysqlContainer == null) {
+        if (mysqlContainer == null || !mysqlContainer.isRunning()) {
             throw new IllegalStateException("MySQL container not started. Call setup() first.");
         }
         // Return in the format expected by tbleSpace (without jdbc: prefix)
-        // Include username and password in the URL for MySQL authentication
-        return "mysql://" + mysqlContainer.getHost() + ":" + mysqlContainer.getFirstMappedPort() +
-               "/" + mysqlContainer.getDatabaseName() +
-               "?user=" + mysqlContainer.getUsername() +
-               "&password=" + mysqlContainer.getPassword();
+        return "mysql://" + mysqlContainer.getHost() + ":" + mysqlContainer.getMappedPort(3306) +
+               "/" + DB_NAME +
+               "?user=" + DB_USER +
+               "&password=" + DB_PASS +
+               "&allowPublicKeyRetrieval=true&useSSL=false";
     }
 
     @Override
     public String getDriverClass() {
-        return "com.mysql.cj.jdbc.Driver";
+        // Use MariaDB driver which is already in pom.xml and supports MySQL
+        return "org.mariadb.jdbc.Driver";
     }
 
     @Override
     public Connection getConnection() throws Exception {
-        if (mysqlContainer == null) {
+        if (mysqlContainer == null || !mysqlContainer.isRunning()) {
             throw new IllegalStateException("MySQL container not started. Call setup() first.");
         }
-        return DriverManager.getConnection(
-                mysqlContainer.getJdbcUrl(),
-                mysqlContainer.getUsername(),
-                mysqlContainer.getPassword()
-        );
+        String url = "jdbc:mysql://" + mysqlContainer.getHost() + ":" + mysqlContainer.getMappedPort(3306) +
+                     "/" + DB_NAME + "?allowPublicKeyRetrieval=true&useSSL=false";
+        return DriverManager.getConnection(url, DB_USER, DB_PASS);
     }
 
     @Override
     public void setup() throws Exception {
-        // Start MySQL container with specific version and configuration
-        mysqlContainer = new MySQLContainer<>("mysql:8.0.33")
-                .withDatabaseName("testdb")
-                .withUsername("test")
-                .withPassword("test")
+        mysqlContainer = new GenericContainer<>(DockerImageName.parse("mysql:8.0.33"))
+                .withExposedPorts(3306)
+                .withEnv("MYSQL_DATABASE", DB_NAME)
+                .withEnv("MYSQL_USER", DB_USER)
+                .withEnv("MYSQL_PASSWORD", DB_PASS)
                 .withEnv("MYSQL_ROOT_PASSWORD", "root")
                 .withCommand("--default-authentication-plugin=mysql_native_password")
-                .withStartupTimeout(java.time.Duration.ofMinutes(2));  // Give it more time
+                .waitingFor(Wait.forLogMessage(".*ready for connections.*", 1))
+                .withStartupTimeout(java.time.Duration.ofMinutes(3));
+
         mysqlContainer.start();
 
-        // Wait a bit for MySQL to be fully ready
-        Thread.sleep(2000);
-
-        // Load MySQL JDBC driver
+        // Load MariaDB JDBC driver
         Class.forName(getDriverClass());
     }
 

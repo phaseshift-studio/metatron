@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.tble;
 
 import org.testcontainers.containers.MariaDBContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerImageName;
 
 import java.sql.Connection;
@@ -45,8 +46,10 @@ public class MariaDBDatabaseConfig implements DatabaseConfig {
 
     @Override
     public String getJdbcHost() {
+        if (container == null || !container.isRunning()) {
+            throw new IllegalStateException("MariaDB container not started. Call setup() first.");
+        }
         // Return in the format expected by tbleSpace (without jdbc: prefix)
-        // Include username and password in the URL for MariaDB authentication
         return "mariadb://" + container.getHost() + ":" + container.getFirstMappedPort() +
                "/" + container.getDatabaseName() +
                "?user=" + container.getUsername() +
@@ -59,7 +62,10 @@ public class MariaDBDatabaseConfig implements DatabaseConfig {
     }
 
     @Override
-    public Connection getConnection() throws SQLException {
+    public Connection getConnection() throws Exception {
+        if (container == null || !container.isRunning()) {
+            throw new IllegalStateException("MariaDB container not started. Call setup() first.");
+        }
         return DriverManager.getConnection(
                 container.getJdbcUrl(),
                 container.getUsername(),
@@ -69,6 +75,11 @@ public class MariaDBDatabaseConfig implements DatabaseConfig {
 
     @Override
     public void setup() throws Exception {
+        if (container == null) {
+             throw new IllegalStateException("MariaDB container not initialized");
+        }
+        container.waitingFor(Wait.forLogMessage(".*ready for connections.*", 1));
+        container.withStartupTimeout(java.time.Duration.ofMinutes(3));
         container.start();
     }
 
@@ -82,6 +93,18 @@ public class MariaDBDatabaseConfig implements DatabaseConfig {
         return "MariaDB";
     }
 
+    @Override
+    public String getRewriteTestTableDDL() {
+        return """
+               CREATE TABLE rewrite_test (
+                   id INT PRIMARY KEY,
+                   value INT NOT NULL,
+                   name VARCHAR(255) NOT NULL,
+                   active BOOLEAN NOT NULL
+               )
+               """;
+    }
+    
     @Override
     public String getUsersTableDDL() {
         // MariaDB uses MySQL-compatible syntax

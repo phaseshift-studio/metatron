@@ -90,7 +90,7 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
                     && !vid.isBranch()
                     && vid.segments().size() >= 1 && vid.segments().size() <= 2
                     && !obj.test(rootConstraint.as())) {
-                return fail("space %s requires %s at document root; got %s", this.vid(), rootConstraint, obj.type());
+                return fail("space %s requires %s at root; got %s", this.vid(), rootConstraint, obj.type());
             }
         }
         QProc.Helper.checkSpaceQProcs(this, vid);

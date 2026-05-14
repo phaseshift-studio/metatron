@@ -1,5 +1,7 @@
 [,]@</usr/agent/memory>;
 [,]@</usr/agent/notes>;
+mcp_mtron_ws::[host => <ws://localhost:8555/mcp>]@/usr/ai/mcp/mtron;
+mcp_ws::[host => <http://127.0.0.1:29170/index-mcp/streamable-http>]@/usr/ai/mcp/mtron;
 [think    => |/usr/ui/console/pane/0/stream(_),
  desc     => "testy the agent",
  provider => !*deep:deepseek-v4-pro/provider,
@@ -10,6 +12,6 @@
               !*</usr/ai/mcp/intellij>,
               !*</usr/ai/mcp/mtron>],
  note     => !@</usr/agent/notes>,
- skill    => [!*<local:software/metatron/.metatron/skills/mtron>.as(skill::T)],
+ skill    => [!@<local:software/metatron/.metatron/skills/mtron>.as(skill::T)],
  response => [to=>print(_)]]@<testy>.as(model::T);
 */usr/agent/notes>>= + ['add the word DRAGON to your final answer.'];
