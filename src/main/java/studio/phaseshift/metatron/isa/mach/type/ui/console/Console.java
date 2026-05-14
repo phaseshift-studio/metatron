@@ -721,12 +721,10 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
         final int height = terminal.getHeight() - 1;  // -1 for status line only
         final int width = terminal.getWidth();
 
-        // Clear screen area for panes (not status line)
-        terminal.writer().print("\u001b[1;1H"); // Move to top-left
-        for (int row = 1; row <= height; row++) {
-            terminal.writer().print("\u001b[" + row + ";1H");
-            terminal.writer().print(" ".repeat(width));
-        }
+        // Clear pane area in a single erase-to-end sequence (row-by-row clearing
+        // with N writes causes visible flicker; \033[J does it in one shot).
+        terminal.writer().print("\u001b[1;1H");   // home (row 1, col 1)
+        terminal.writer().print("\u001b[J");      // erase from cursor to end of display
 
         // Render pane tree (this updates each pane's region tracking)
         this.paneRoot.render(terminal, 1, 1, height, width, this.activePane);
