@@ -717,16 +717,16 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
         final int height = terminal.getHeight() - 1;  // -1 for status line only
         final int width = terminal.getWidth();
 
-        // Clear pane area in a single erase-to-end sequence (row-by-row clearing
-        // with N writes causes visible flicker; \033[J does it in one shot).
-        terminal.writer().print("\u001b[1;1H");   // home (row 1, col 1)
-        terminal.writer().print("\u001b[J");      // erase from cursor to end of display
+        // Clear pane area row-by-row with \033[K (erase-to-end-of-line).
+        // Each row is a single atomic ANSI operation — far faster than writing
+        // N×width spaces (which caused visible flicker), and unlike \033[J it
+        // never touches the status line row.
+        for (int row = 1; row <= height; row++) {
+            terminal.writer().print("\u001b[" + row + ";1H\u001b[K");
+        }
 
         // Render pane tree (this updates each pane's region tracking)
         this.paneRoot.render(terminal, 1, 1, height, width, this.activePane);
-        // Force a full status-bar redraw — \033[J cleared the status row above,
-        // and the StatusLine thread normally only redraws changed segments.
-        this.status.refresh();
 
         // Position cursor at active pane's prompt location (use dynamic calculation)
         final int[] pos = calculatePanePosition(this.activePane);
