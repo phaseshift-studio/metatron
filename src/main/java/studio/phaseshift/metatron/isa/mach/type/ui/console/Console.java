@@ -128,6 +128,15 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     private static final long PANE_RENDER_THROTTLE_MS = 80;
     private volatile long lastPaneRenderMs = 0;
 
+    /** While true, non-active-pane rendering is deferred until the keyboard has been
+     * idle for {@link #INPUT_IDLE_THRESHOLD_MS}.  Set at the top of the REPL loop,
+     * cleared when readLine() returns. */
+    private volatile boolean inReadLine = false;
+    private volatile long readLineStartMs = 0;
+    private volatile boolean pendingPaneFlush = false;
+    /** Milliseconds of keyboard inactivity after which non-active panes may render. */
+    private static final long INPUT_IDLE_THRESHOLD_MS = 500;
+
     // Language mode for multi-language support
     public enum Language {
         MTRON("mtron", "{{m}}mtron{{g}}> "),
@@ -625,6 +634,13 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
      */
     private void onPaneOutputChanged(final Pane pane) {
         if (!this.splitMode) return;
+
+        // Defer rendering while the user is actively typing so the cursor doesn't
+        // jump to a different pane mid-input.  After the idle threshold expires,
+        // the next output event will render; when readLine() finally returns the
+        // REPL loop flushes everything.
+        if (deferNonActivePaneRender()) return;
+
         final long now = System.currentTimeMillis();
         if (now - this.lastPaneRenderMs >= PANE_RENDER_THROTTLE_MS) {
             this.lastPaneRenderMs = now;
@@ -635,10 +651,42 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     }
 
     /**
+     * Returns {@code true} when the user is actively typing and we should defer
+     * non-active-pane rendering.  As a side effect sets {@link #pendingPaneFlush}
+     * so the REPL loop can drain accumulated output once input completes.
+     *
+     * <p>Once the keyboard has been idle at least {@link #INPUT_IDLE_THRESHOLD_MS}
+     * the method returns {@code false} and rendering proceeds normally — the user
+     * is reading or thinking, so brief cursor detours are harmless.
+     */
+    private boolean deferNonActivePaneRender() {
+        if (!this.inReadLine) return false;
+        if (System.currentTimeMillis() - this.readLineStartMs >= INPUT_IDLE_THRESHOLD_MS) {
+            return false; // keyboard idle long enough — allow render
+        }
+        this.pendingPaneFlush = true;
+        return true;
+    }
+
+    /**
      * Render all panes to the terminal. Called when in split mode.
+     * Deferral is enabled by default — background subscription callbacks will
+     * not steal the cursor while the user is mid-input.
      */
     public void renderPanes() {
+        renderPanes(true);
+    }
+
+    /**
+     * @param deferIfTyping when true (background output), rendering is deferred while
+     *                      the user is actively typing.  Pass false for user-initiated
+     *                      widget actions (split, resize) that must render immediately.
+     */
+    private void renderPanes(final boolean deferIfTyping) {
         if (!this.splitMode) return;
+
+        // Defer non-essential rendering while the user is actively typing.
+        if (deferIfTyping && deferNonActivePaneRender()) return;
 
         // Get terminal dimensions (leave room for status line)
         final int height = terminal.getHeight() - 1;  // -1 for status line only
@@ -819,7 +867,15 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
             try {
                 // Position cursor at active pane before reading input
                 this.prepareForInput();
+                this.inReadLine = true;
+                this.readLineStartMs = System.currentTimeMillis();
                 final String line = this.reader.readLine(this.prompt()).trim();
+                this.inReadLine = false;
+                // Drain any agent output that was deferred while the user was typing.
+                if (this.pendingPaneFlush) {
+                    this.pendingPaneFlush = false;
+                    if (this.splitMode) this.renderPanes();
+                }
                 // An empty line can result from pane-switch (Ctrl+W clears the buffer and
                 // calls accept-line to break out of readLine so the next iteration can
                 // start fresh in the new pane).  Skip evaluation entirely.
@@ -1089,7 +1145,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                     () -> {
                         if (Console.this.splitMode) {
                             Console.this.resizeActivePane(-0.05f);
-                            Console.this.renderPanes();
+                            Console.this.renderPanes(false); // user-initiated — force render
                             Console.this.redrawBuffer();
                         }
                         return true;
@@ -1099,7 +1155,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                     () -> {
                         if (Console.this.splitMode) {
                             Console.this.resizeActivePane(0.05f);
-                            Console.this.renderPanes();
+                            Console.this.renderPanes(false); // user-initiated — force render
                             Console.this.redrawBuffer();
                         }
                         return true;
@@ -1108,14 +1164,14 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
             getKeyMap().bind((Widget)
                     () -> {
                         Console.this.split(SplitLayout.VERTICAL);
-                        Console.this.renderPanes();
+                        Console.this.renderPanes(false); // user-initiated — force render
                         Console.this.redrawBuffer();
                         return true;
                     }, "\033[1;5C");  // Ctrl+<right>
             getKeyMap().bind((Widget)
                     () -> {
                         Console.this.split(SplitLayout.HORIZONTAL);
-                        Console.this.renderPanes();
+                        Console.this.renderPanes(false); // user-initiated — force render
                         Console.this.redrawBuffer();
                         return true;
                     }, "\033[1;5A");  // Ctrl+<up>
@@ -1192,7 +1248,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                                 Utilities.runCursorLessWidget(selector, true);
                                 // Restore the full pane layout after the widget closes
                                 if (Console.this.splitMode) {
-                                    Console.this.renderPanes();
+                                    Console.this.renderPanes(false); // restore after fullscreen widget
                                 }
                             }
                         }
@@ -1210,7 +1266,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                             Utilities.runCursorLessWidget(explain, true);
                             // Restore the full pane layout after the widget closes
                             if (Console.this.splitMode) {
-                                Console.this.renderPanes();
+                                Console.this.renderPanes(false); // restore after fullscreen widget
                             }
                             redrawBuffer();
                         }
