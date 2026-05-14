@@ -132,7 +132,10 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
      * idle for {@link #INPUT_IDLE_THRESHOLD_MS}.  Set at the top of the REPL loop,
      * cleared when readLine() returns. */
     private volatile boolean inReadLine = false;
-    private volatile long readLineStartMs = 0;
+    /** Timestamp of the last detected keystroke (buffer-length change). */
+    private volatile long lastKeyActivityMs = 0;
+    /** Snapshot of buffer length used to detect keystrokes via polling. */
+    private volatile int lastBufferLength = 0;
     private volatile boolean pendingPaneFlush = false;
     /** Milliseconds of keyboard inactivity after which non-active panes may render. */
     private static final long INPUT_IDLE_THRESHOLD_MS = 500;
@@ -612,18 +615,21 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     /**
      * Render only the content rows of a single pane, in-place, with no screen clear.
      * <p>
-     * Used by {@link Pane#appendOutput} for live output so that only the changed pane's
-     * interior is rewritten — eliminating the full-screen flicker caused by
-     * {@link #renderPanes()}.  After updating content the cursor is repositioned to the
-     * active pane's prompt so JLine continues to work correctly.
+     * Uses ANSI save/restore cursor ({@code \033[s} / {@code \033[u}) to preserve the
+     * exact cursor position the user was typing at, including mid-buffer column offset.
+     * Without this, repositioning to the start of the prompt line would cause JLine to
+     * echo subsequent keystrokes at column 1 instead of where the user left off.
      */
     public void renderSinglePaneContent(final Pane pane) {
         if (!this.splitMode || pane == null) return;
         final int[] pos = calculatePanePosition(pane);
         if (pos == null) return;
+        // Save cursor — preserves exact row/col (including buffer offset)
+        terminal.writer().print("\033[s");
         pane.renderContentOnly(terminal, pos[0], pos[1], pos[2], pos[3]);
-        // Reposition cursor at active pane's prompt so JLine stays in sync
-        positionCursorInActivePane();
+        // Restore cursor to where the user was mid-input
+        terminal.writer().print("\033[u");
+        terminal.writer().flush();
     }
 
     /**
@@ -655,13 +661,23 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
      * non-active-pane rendering.  As a side effect sets {@link #pendingPaneFlush}
      * so the REPL loop can drain accumulated output once input completes.
      *
-     * <p>Once the keyboard has been idle at least {@link #INPUT_IDLE_THRESHOLD_MS}
-     * the method returns {@code false} and rendering proceeds normally — the user
-     * is reading or thinking, so brief cursor detours are harmless.
+     * <p>Keystroke detection works by polling {@code reader.getBuffer().length()}
+     * on every call (which fires whenever a background pane has output to render).
+     * If the buffer length changed since the last poll the user typed something,
+     * so we reset the idle timer.  Once the keyboard has been idle at least
+     * {@link #INPUT_IDLE_THRESHOLD_MS} the method returns {@code false} and
+     * rendering proceeds — the user is reading or thinking, cursor detours are safe.
      */
     private boolean deferNonActivePaneRender() {
         if (!this.inReadLine) return false;
-        if (System.currentTimeMillis() - this.readLineStartMs >= INPUT_IDLE_THRESHOLD_MS) {
+        // Poll JLine's buffer — length changes mean the user typed.
+        // getBuffer() is safe to read cross-thread (returns live Buffer ref).
+        final int currentLen = this.reader.getBuffer().length();
+        if (currentLen != this.lastBufferLength) {
+            this.lastBufferLength = currentLen;
+            this.lastKeyActivityMs = System.currentTimeMillis();
+        }
+        if (System.currentTimeMillis() - this.lastKeyActivityMs >= INPUT_IDLE_THRESHOLD_MS) {
             return false; // keyboard idle long enough — allow render
         }
         this.pendingPaneFlush = true;
@@ -868,7 +884,8 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                 // Position cursor at active pane before reading input
                 this.prepareForInput();
                 this.inReadLine = true;
-                this.readLineStartMs = System.currentTimeMillis();
+                this.lastKeyActivityMs = System.currentTimeMillis();
+                this.lastBufferLength = 0; // fresh buffer for new readLine
                 final String line = this.reader.readLine(this.prompt()).trim();
                 this.inReadLine = false;
                 // Drain any agent output that was deferred while the user was typing.
