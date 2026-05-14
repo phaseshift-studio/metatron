@@ -52,6 +52,9 @@ public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
     // -----------------------------------------------------------------------
 
     private static BiConsumer<Integer, String> paneWriter = (id, msg) -> {}; // no-op until Console registers
+    /** Writer for {@link OtherLevel#NONE} messages — mirrors {@code System.out.print()}
+     *  semantics (append without a trailing line break). */
+    private static BiConsumer<Integer, String> appendPaneWriter = (id, msg) -> {};
 
     /**
      * Register the pane writer.  Called once by {@code Console} during
@@ -64,6 +67,17 @@ public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
      */
     public static void registerPaneWriter(final BiConsumer<Integer, String> writer) {
         paneWriter = writer;
+    }
+
+    /**
+     * Register the append-without-newline pane writer.  Called once by
+     * {@code Console} during construction.  Messages routed through
+     * {@link #none(Object, Object...)} use this writer so that print()-style
+     * output (e.g. waiting dots {@code .}) accumulates horizontally on one
+     * line instead of each call creating a new buffer line.
+     */
+    public static void registerAppendPaneWriter(final BiConsumer<Integer, String> writer) {
+        appendPaneWriter = writer;
     }
 
     // -----------------------------------------------------------------------
@@ -214,7 +228,10 @@ public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
         if (OtherLevel.NONE == level) {
             final String msg = this.makeMessage(false, f, args);
             if (hasTargetPane()) {
-                paneWriter.accept(effectivePaneId(), msg);
+                // Use append writer — mirrors System.out.print() (no trailing line break).
+                // This lets waiting dots (.) accumulate horizontally rather than each dot
+                // becoming its own buffer line.
+                appendPaneWriter.accept(effectivePaneId(), msg);
             } else {
                 System.out.print(msg);
             }
