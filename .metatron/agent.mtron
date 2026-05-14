@@ -4,9 +4,12 @@
  desc     => "testy the agent",
  provider => !*deep:deepseek-v4-pro/provider,
  name     => !*deep:deepseek-v4-pro/name,
- memory   => memory::[max=>20,mem=>!*</usr/agent/memory>],
- tool     => [!*eval,!*sql,!*</usr/ai/mcp/intellij>],
- note     => !*</usr/ai/notes>,
+ memory   => memory::[max=>20,mem=>!@</usr/agent/memory>],
+ tool     => [!*eval,
+              !*sql,
+              !*</usr/ai/mcp/intellij>,
+              !*</usr/ai/mcp/mtron>],
+ note     => !@</usr/agent/notes>,
  skill    => [!*<local:software/metatron/.metatron/skills/mtron>.as(skill::T)],
- response => [to=>print(_)]]@testy.as(model::T);
-*/usr/agent/notes>>=+['add the word DRAGON to your final answer.'];
+ response => [to=>print(_)]]@<testy>.as(model::T);
+*/usr/agent/notes>>= + ['add the word DRAGON to your final answer.'];

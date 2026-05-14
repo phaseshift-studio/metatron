@@ -96,14 +96,14 @@ public interface WebSocketObj extends Closeable {
             if (null == this.getWebSocket()) {
                 if (BootLoader.TESTING)
                     return;
-                throw MTronException.of("no websocket found for %s", this);
+                return;
             }
             final Content.ContentType outType = this.getIO().output();
             final ByteBuffer bytes = outType.serializer().outputBytes(message);
             if (outType.isText()) {
                 // send as a websocket text frame so clients using onText listeners receive it
                 final String outgoing = new String(bytes.array(), StandardCharsets.UTF_8);
-                Graphitty.log(this).info("sending %s to %s", outgoing, this.getWebSocket().getRemoteSocketAddress());
+                Graphitty.log(this).debug("sending %s to %s", outgoing, this.getWebSocket().getRemoteSocketAddress());
                 this.getWebSocket().send(outgoing);
             } else
                 this.getWebSocket().send(bytes);

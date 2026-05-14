@@ -233,11 +233,11 @@ public class mInstSet extends AbstractInstSet {
              .vid(POLY_TID)
              .predicate((lhs, inst) -> bool(lhs.isLst() || lhs.isRec() || lhs.isRel() || lhs.isCode()))
              .create();*/
-    public static final Uri NONE = uri(f("none"), URI_TID, f("/m/const/none"));
+    public static final Uri NONE = uri(f("none"), URI_TID, f("none"));
 
 
     public mInstSet() {
-        super(new LinkedHashMap<>(Map.of(uri(PATTERN), uri(M_ISA_TID.extend(ALL)))), M_ISA_TID, M_ISA_TID);
+        super(new LinkedHashMap<>(Map.of(uri(PATTERN), uri(M_ISA_TID.extend(ALL)))), INSTSET_TID, M_ISA_TID);
     }
 
     public void setup() {

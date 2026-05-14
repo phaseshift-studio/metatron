@@ -47,6 +47,7 @@ import java.util.function.Function;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.Space.Helper.attachVIDs;
 import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TID;
 import static studio.phaseshift.metatron.isa.m.type.InstSet.instset0;
@@ -401,16 +402,16 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
                         final fURI external = pattern.isNode()
                                 ? pattern
                                 : Space.Helper.routeToSpace(kv.furi(), this.routes());
-                        all.add(IdObj.of(external, kv.obj()));
+                        all.add(IdObj.of(Space.Helper.routeToSpace(kv.furi(), this.routes()), kv.obj()));
                         if (pattern.hasPattern() && kv.obj().isPoly())
                             all.addAll(Space.Helper.unrollPoly(
                                     external, kv.obj().as(), pattern.asNode()));
                     });
-                    return all.iterator();
+                    return attachVIDs(all.iterator());
                 }
 
                 // ── key-value path ──
-                return collectResults(this.schema.read(this.sjvm(), pattern), pattern);
+                return collectResults(attachVIDs(this.schema.read(this.sjvm(), pattern)), pattern);
 
             } catch (final Exception e) {
                 throw MTronException.of(e);

@@ -60,6 +60,7 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.DOCQ;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.*;
+import static studio.phaseshift.metatron.isa.llm.type.mMcpClient.MCP_CLIENT_TYPE;
 import static studio.phaseshift.metatron.isa.llm.type.mTool.LLM_TOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
@@ -226,9 +227,11 @@ public class mModel extends MRec {
             this.tools().get()
                     .elements()
                     .flatMap(e -> e.isObjs() ? e.elements() : Stream.of(e))
+                    .map(e -> e.autoResolve(this))
+                    .filter(t -> !t.isNoObj())
                     .forEach(t -> {
-                        if (t.tid().equals(MCP_SERVER_TID)) {
-                            service.toolProvider(McpToolProvider.builder().mcpClients(((mMcpClient) t).client()).build()).executeToolsConcurrently(BootLoader.getExecutor());
+                        if (t.isRec() && t.test(MCP_CLIENT_TYPE)) {
+                            service.toolProvider(McpToolProvider.builder().mcpClients(Rec.wrap(t.as(), mMcpClient.class).client()).build()).executeToolsConcurrently(BootLoader.getExecutor());
                         } else if (t.isObjInst()) {
                             if (QCollection.isNoDocs(Router.global().read(t.tid().addQ(DOCQ))))
                                 t.logger().warn("ignoring inst as it has no associated ?docq: %s", t);
@@ -236,7 +239,7 @@ public class mModel extends MRec {
                                 final Tuple.Pair<ToolSpecification, ToolExecutor> pair = mTool.mtronInstToolSpecification(mTool.mtronInstToTool(t.asInst()));
                                 tools.put(pair.get0(), pair.get1());
                             }
-                        } else if (t.test(LLM_TOOL_TYPE)) {
+                        } else if (t.isRec() && t.test(LLM_TOOL_TYPE)) {
                             final Tuple.Pair<ToolSpecification, ToolExecutor> pair = mTool.mtronInstToolSpecification(t.asRec());
                             tools.put(pair.get0(), pair.get1());
                         }
@@ -325,14 +328,14 @@ public class mModel extends MRec {
                     .onPartialToolCall(partialToolCall -> {
                         if (!isTooling.getAndSet(true)) {
                             STAGE.set("TOOLING (" + partialToolCall.name() + ")");
-                            this.logger().none(Graphitty.sillyPrint("tooling:\n", true, true));
+                            this.logger().none(Graphitty.sillyPrint("tooling...\n", true, true));
                             this.logger().none("\t{{y}}partial{{X}}: {{b}}%s{{g}}({{b}}%s{{g}}){{X}}\n", partialToolCall.name(), partialToolCall.partialArguments());
                         }
                     })
                     .onPartialResponse(s -> {
                         STAGE.set("RESPONDING");
                         if (!isResponding.getAndSet(true))
-                            this.logger().none(Graphitty.sillyPrint("responding", true, true));
+                            this.logger().none(Graphitty.sillyPrint("responding...", true, true));
                         Router.global().stats().ioStats().incrBytesRecv(s.getBytes().length);
                         response.append(s);
                     })

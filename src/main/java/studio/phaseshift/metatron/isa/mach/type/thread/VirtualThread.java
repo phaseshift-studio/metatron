@@ -50,7 +50,7 @@ public class VirtualThread extends AbstractThread {
                 .unstarted(() -> {
                     this.at(STATE, uri("running"), MUTABLE);
                     final Obj result = this.at(CODE).apply(this.at(START));
-                    this.at(RESULT, result, MUTABLE);
+                    this.at(RESULT, result.isNoObj() ? Obj.none() : result, MUTABLE);
                     this.future.setObj(result);
                     this.at(STATE, uri("stopped"), MUTABLE);
                 });

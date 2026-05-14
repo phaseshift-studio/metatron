@@ -26,10 +26,8 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.util.TriFunction;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -187,6 +185,21 @@ public interface QProc extends Rec {
             return other instanceof Space &&
                     ((Obj) other).tid().equals(qProc.tid()) &&
                     (qProc.vid() != null && ((Obj) other).vid() != null && ((Obj) other).vid().equals(qProc.vid()));
+        }
+
+        public static boolean checkSpaceQProcs(final Space space, final fURI vid) {
+            if (vid.hasQ()) {
+                final AtomicBoolean check = new AtomicBoolean(true);
+                final List<String> qSpace = space.qs().lstValue().stream().map(q -> q.asRec().at(PATTERN).uriValue()).map(fURI::toString).toList();
+                vid.qMap().keySet().stream().filter(k -> !k.equals(DOM) && !k.equals(RNG)).forEach(k -> {
+                    if (!qSpace.contains(k)) {
+                        space.logger().warn("no %s query processor attached", k);
+                        check.set(false);
+                    }
+                });
+                return check.get();
+            }
+            return true;
         }
 
         public static Optional<Obj> processPreWrite(final Lst qs, final fURI vid, final Obj obj) {

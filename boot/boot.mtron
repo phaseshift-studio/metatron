@@ -54,7 +54,6 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
        persist   => </tmp/shared.mtron>]@/sys/space/shared;
  fs_prefix     -> *boot/args/local.as(str::T).plus(':#').as(uri::T);
  fsspace::[pattern  => local:#,
-           [--route => [!*fs_prefix=><~/>],--]
             route   => [local:=><~/>],
             script  => !*boot/script]@/sys/space/fs;
             
@@ -120,7 +119,6 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
            pattern => <ollama:#>,
            name    => <ollama>,
            route   => [ollama:=><>]]@/sys/space/ollama;
- [-- *ollama:+.plus([think=>[to=>print(_)],response=>[to=>print(_)],memory=>[from=>/usr/ai/memory]]);
  catalog::[host         => <https://api.openai.com/v1>,
            organization => !*</sys/env/OPENAI_ORG_ID>,
            api_key      => !*</sys/env/OPENAI_API_KEY>,
@@ -136,12 +134,12 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
             pattern      => <localai:#>,
             name         => <localai>,
             route        => [<localai:>=><>]]@/sys/space/localai;
- tblespace::[pattern => play:#,
-             host    => <sqlite:///tmp/play.db>,
+ tblespace::[pattern => nw:#,
+             host    => <mariadb://localhost:3306/northwind?user=mtron&password=mtron>,
              table   => [,],
-             route   => [play:schema => /sys/space/play/schema,
-                         play:       => <>],
-             driver  => <org.sqlite.JDBC>]@/sys/space/play;
+             route   => [nw:schema => /sys/space/play/schema,
+                         nw:       => <>],
+             driver  => <org.mariadb.jdbc.Driver>]@/sys/space/nw;
  tblespace::[pattern => netflix:#,
         host       => <mariadb://localhost:3306/netflix?user=mtron&password=mtron>,
         route      => [<netflix:schema>=>/sys/space/netflix/schema,
@@ -178,12 +176,9 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
               wdt:      =><http://www.wikidata.org/prop/direct/>,
               wikidata: =><>]]@/sys/space/wikidata;                  
 *<mtronfs:instset/ai.mtron>;
-*<local:software/metatron/.metatron/agent.mtron>;
-[== load user console (skip if MTRON_HEADLESS env var or --headless boot arg is set) ==];
-[-- *</sys/env/MTRON_HEADLESS>.else(console::[=>]@/usr/ui/console);
+*<mtronfs:agent.mtron>;
 console::[=>]@/usr/ui/console;
 *boot/args.print(_,'\n');
-/usr/ai/use -> |inst(m=>model::T){ *testy>>=[provider=>*m/provider,name=>*m/name]>>=[_=>^*] };
 print('{{y}}mounting {{b}}boot/usr/# {{y}}to {{b}}/usr/# {{g}}(count:{{y}}${*x}{{g}}){{X}}\n');
  
 

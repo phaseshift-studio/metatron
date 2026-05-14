@@ -219,6 +219,8 @@ public class mcp_Server extends MRec {
                 // Unknown method
                 // ========================================
                 default -> {
+                    if(method.isBlank())
+                        yield noobj();
                     LOG.warn("unknown mcp method: %s", method);
                     yield mcpError(id, jnt(-32601), str("method not found: " + method));
                 }

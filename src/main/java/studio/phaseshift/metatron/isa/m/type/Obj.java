@@ -339,7 +339,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         return this.isUri() && this.uriValue().basePath().toString().equals("none");
     }
 
-    static Uri none() {
+    static Obj none() {
         return NONE;
     }
 

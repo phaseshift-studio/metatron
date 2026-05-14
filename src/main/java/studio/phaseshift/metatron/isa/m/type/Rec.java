@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
+import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.*;
@@ -230,6 +231,16 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
 
     @Override
     Rec self(final Object jvm, final fURI tid, final fURI vid);
+
+    public static <T> T wrap(final Obj obj, final Class<T> t) {
+        if(null == obj || !obj.isRec())
+            throw MTronException.of("%s is not a rec::T", obj);
+        try {
+            return t.getConstructor(Map.class, fURI.class, fURI.class).newInstance(new LinkedHashMap<>(obj.jvm()), obj.tid(), obj.vid());
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
+    }
 
     final class Helper {
         public Helper() {

@@ -69,6 +69,7 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
     @Override
     public Obj read(final fURI vid) {
         // LOG.warn("reading %s => %s", vid, Space.Helper.routeFromSpace(vid, this.routes()));
+        QProc.Helper.checkSpaceQProcs(this, vid);
         return QProc.Helper.processPreRead(this.qs(), vid).orElseGet(() -> {
             Obj result = Space.Helper.resolveRead(this, vid, directReader());
             return QProc.Helper.processPostRead(this.qs(), vid, result).orElse(result);
@@ -92,6 +93,7 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
                 return fail("space %s requires %s at document root; got %s", this.vid(), rootConstraint, obj.type());
             }
         }
+        QProc.Helper.checkSpaceQProcs(this, vid);
         return QProc.Helper.processPreWrite(this.qs(), vid, obj)
                 .orElseGet(() -> QProc.Helper.processQlessWrite(this.qs(), vid, obj).orElseGet(() -> {
                     Space.Helper.resolveWrite(LOG, this, vid, obj, this.directWriter(), this.directReader());

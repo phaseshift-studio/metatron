@@ -82,7 +82,7 @@ color green "\(" "\)" "\[" "\]" ","
 ### noobj 
 color magenta "noobj"
 ### @vid
-color yellow "@(/|([a-z]+(://))|[a-z])([0-9]|[a-z]|\.|-|_)+(:)?[0-9]*(/)?([a-z]|/|\_|[0-9])*"
+color yellow "@<(/|[a-zA-Z0-9]|\.| |:|-|_|\?)+>" "@(/|[a-zA-Z0-9]|:|-|_|\?)+"
 ### comments
 color gray start="\[--" end="--]"
 color gray start="\[==" end="==]"

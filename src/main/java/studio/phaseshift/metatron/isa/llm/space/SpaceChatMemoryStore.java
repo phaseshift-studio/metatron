@@ -18,6 +18,9 @@
 
 package studio.phaseshift.metatron.isa.llm.space;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.ChatMessageSerializer;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
@@ -62,7 +65,18 @@ public class SpaceChatMemoryStore implements ChatMemoryStore {
                 new ArrayList<>() :
                 messages.elements().map(e -> {
                             try {
-                                return messageFromJson(ObjSimpleJSONSerializer.single().write(e).toString());
+                                final JsonObject element = ObjSimpleJSONSerializer.single().write(e).getAsJsonObject();
+                                if(element.has("contents")) { // necessary in case tool fails during evaluation or noobj results
+                                    final JsonArray content = element.getAsJsonArray("contents");
+                                    for (final JsonElement jo : content.asList()) {
+                                        final JsonObject joObj = jo.getAsJsonObject();
+                                        if (joObj.has("type") && joObj.get("type").getAsString().equalsIgnoreCase("text")) {
+                                            if (!joObj.has("text"))
+                                                joObj.addProperty("text", "none");
+                                        }
+                                    }
+                                }
+                                return messageFromJson(element.toString());
                             } catch (final Exception ex) {
                                 LOG.warn("error making json chat messages (ignoring): %s %s", e, ex);
                                 return new ToolExecutionResultMessage("abc","abc","abc");

@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.mach.io;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
+import studio.phaseshift.metatron.isa.dcmnt.schema.storage.ObjBSONSerializer;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
@@ -63,7 +64,8 @@ public class ioInstSet extends AbstractInstSet {
                 uri(CONST), lst(
                         new ObjmtronSerializer(),
                         new ObjByteBufferSerializer(),
-                        new ObjSimpleJSONSerializer())
+                        new ObjSimpleJSONSerializer(),
+                        new ObjBSONSerializer())
         )));
         super.setup();
     }

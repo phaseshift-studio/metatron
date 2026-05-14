@@ -33,6 +33,7 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -63,29 +64,23 @@ public class mMcpClient extends MRec {
 
     protected static final GraphittyLogger LOG = Graphitty.log(mMcpClient.class);
 
-    public static final Type MCP_SERVER_TYPE = docWrap(Type.Builder.build().tid(REC_TID).vid(MCP_SERVER_TID)
+    public static final fURI MCP_CLIENT_TID = MCP_SERVER_TID.extend("mcp_client");
+    public static final Type MCP_CLIENT_TYPE = docWrap(Type.Builder.build().tid(REC_TID).vid(MCP_CLIENT_TID)
                     .isaPredicate(rec(
                             uri(HOST), URI_TYPE,
                             uri(TOOL).maybe(), rec(URI_TYPE, T(LLM_TOOL_TID)).maybe(),
                             uri(STATUS).maybe(), isa_(BOOL_TYPE).else_(BOOL_FALSE)))
-                    .constructor(instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(MCP_SERVER_TID), lst(T(REC_TID)),
-                            (x, inst) -> new mMcpClient(inst.arg(0).asRec().jvm(), MCP_SERVER_TID, inst.arg(0).vid())))
-                    .create(), "a mcp server specification", "creates a connection to an existing mcp server",
+                    .constructor(instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(MCP_CLIENT_TID), lst(T(REC_TID)),
+                            (x, inst) -> new mMcpClient(inst.arg(0).asRec().jvm(), MCP_CLIENT_TID, inst.arg(0).vid())))
+                    .create(), "a mcp client specification", "creates a connection to an existing mcp client",
             Map.of(
                     uri(HOST), "the mcp server endpoint",
                     uri(TOOL).maybe(), "the tools/functions available for use on the mcp server",
-                    uri(STATUS).maybe(), "the current status of the mcp server"),
-            "a server implementing the model content protocol used by llms for the acquisition of tools and access to extenal software systems",
-            "mcp::[host => <http://127.0.0.1:29170/index-mcp/streamable-http>]@/usr/ai/mcp/intellij [-- connection populates tool and status      --]",
-            "mcp::[host => <ws://localhost:8999>]@/usr/ai/mcp/mtron                                 [-- mtron router server exposes an mcp server --]");
-
-    /*public static final Type MCP_TOOL_TYPE = Type.Builder.build().tid(REC_TID).vid(MCP_TOOL_TID)
-            .isaPredicate(rec(
-                    uri(NAME), URI_TYPE,
-                    uri(DESC), STR_TYPE,
-                    uri(ARG).maybe(), rec(URI_TYPE, T(ALL)).maybe()))
-            .create();*/
-
+                    uri(STATUS).maybe(), "the current status of the mcp client/server connection"),
+            "a client implementing the model content protocol used by llms for the acquisition of tools and access to external software systems",
+            "mcp_client::[host => <http://127.0.0.1:29170/index-mcp/streamable-http>]@/usr/ai/mcp/intellij [-- connection populates tool and status      --]",
+            "mcp_client::[host => <ws://localhost:8999>]@/usr/ai/mcp/mtron                                 [-- mtron router server exposes an mcp server --]");
+    
     protected final McpClient client;
 
     public mMcpClient(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {

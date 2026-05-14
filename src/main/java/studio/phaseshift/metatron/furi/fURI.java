@@ -181,7 +181,7 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
         if (this.segmentLength() == 1 && (this.path().getFirst().equals("#") || this.path().getFirst().equals("+")))
             return false;
         boolean hasCapitalGeneric = false;
-        for (final String seg : this.one().path()) { // TODO: this is necessary because {} is appended to final segment (needs to be fixed ASAP!).
+        for (final String seg : this.path()) {
             if (!seg.isEmpty() && seg.chars().allMatch(Character::isUpperCase))
                 hasCapitalGeneric = true;
             if (seg.chars().anyMatch(c -> c != '#' && c != '+' && !Character.isAlphabetic(c) || Character.isLowerCase(c)))
@@ -241,7 +241,7 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
     }
 
     default boolean isEmpty() {
-        return this.toString().isEmpty();
+        return !this.hasScheme() && !this.hasHost() && !this.hasPort() && this.path().isEmpty() && !this.hasQ();
     }
 
     default String authority() {

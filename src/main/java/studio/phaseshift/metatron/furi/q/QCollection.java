@@ -428,13 +428,14 @@ public final class QCollection {
         }
 
         public static Docs doc(final Obj inst, final String domDesc, final String rngDesc, final Map<Obj, String> argDescription, final String description, final String... examples) {
-            return new Docs(rec(
+            final List<Str> ex = Arrays.stream(examples).map(MStr::str).toList();
+            return new Docs(mutableMap(
                     uri(OBJ), inst,
                     uri(DOM), null == domDesc ? noobj() : str(domDesc),
                     uri(RNG), null == rngDesc ? noobj() : str(rngDesc),
                     uri(ARGS), null == argDescription ? noobj() : rec(argDescription.entrySet().stream().map(kv -> rel(kv.getKey(), str(kv.getValue())))),
                     uri(DESC), str(description),
-                    uri(EXAMPLE), lst(Arrays.stream(examples).map(MStr::str))).jvm(), DOCS_TID, null);
+                    uri(EXAMPLE), (ex.isEmpty() ? noobj() : lst((List) ex))), DOCS_TID, null);
         }
     }
 }

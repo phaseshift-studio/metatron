@@ -40,6 +40,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.space.ws.wsSpace.*;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /**
  * MCP (Model Context Protocol) server for wsSpace.
@@ -89,7 +90,7 @@ public class mcp_wsHandler extends WebSocketRec {
     private final mcp_Server mcp;
 
     public mcp_wsHandler(final Rec recClone) {
-        this(recClone.jvm(), recClone.tid(), recClone.vid());
+        this(mutableMap(recClone.jvm()), recClone.tid(), recClone.vid());
     }
 
     public mcp_wsHandler(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
@@ -97,7 +98,7 @@ public class mcp_wsHandler extends WebSocketRec {
         this.mcp = new mcp_Server(jvm, tid, vid);
         this.jvm().put(uri(ON_MESSAGE), instC(vid.extend(ON_MESSAGE).dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> {
             try {
-                LOG.info("incoming mcp message from %s: %s", this.getOtherVID(), lhs);
+                LOG.debug("incoming mcp message from %s: %s", this.getOtherVID(), lhs);
                 final Obj result = this.mcp.handleMessage(lhs);
                 if (null != result && !result.isNoObj()) send(result);
                 return result;

@@ -35,6 +35,7 @@ import org.slf4j.event.Level;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.TypeCheck;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.llm.type.mModel;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MInst;
 import studio.phaseshift.metatron.isa.m.type.reflect.JInst;
@@ -46,6 +47,7 @@ import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.machine.SwarmMachine;
 import studio.phaseshift.metatron.isa.mach.type.ui.Border;
+import studio.phaseshift.metatron.isa.mach.type.ui.console.menu.ColonMenu;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.mach.type.ui.widget.*;
@@ -68,6 +70,7 @@ import static studio.phaseshift.metatron.BootLoader.BOOTING;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.llm.type.mModel.model;
 import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
@@ -108,6 +111,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     private static Terminal terminal;
     private final LineReader reader;
     private final StatusLine status;
+    private final ColonMenu colonMenu = new ColonMenu(this);
     private final static ConfigurationPath configurations = new ConfigurationPath(
             Paths.get("conf"),                                     // application-wide settings
             Paths.get(System.getProperty("user.home"), ".metatron") // user-specific settings
@@ -802,7 +806,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                             throw MTronException.of("unable to fully resolve code. execution will require dynamic inst resolution for:\n\t%s", unresolved.stream().map(Obj::tid).toList());
                         } else {
                             this.status.setState(Level.WARN);
-                            LOG.warn("unable to fully resolve code. execution will require dynamic inst resolution for:\n\t%s", unresolved.stream().map(Obj::tid).toList());
+                            parseResult.logger().warn("unable to fully resolve code. execution will require dynamic inst resolution for:\n\t%s", unresolved.stream().map(Obj::tid).toList());
                         }
                     }) : parseResult;
                     final Machine mach = SwarmMachine.of(resolvedResult.isCall() ? resolvedResult.as() : start_(resolvedResult)).onHalt(this::printResult);
@@ -880,153 +884,124 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                 // calls accept-line to break out of readLine so the next iteration can
                 // start fresh in the new pane).  Skip evaluation entirely.
                 if (line.isEmpty()) continue;
-                if (line.equals(":connect")) {
-                    Router.writeToSpace("abc", block_(MInst.instLambda((lhs, inst) -> {
-                        LOG.info("HERE %s", lhs);
-                        reader.getBuffer().write(lhs.asLst().at(1).strValue());
-                        return lhs;
-                    })));
-                } else if (line.equals(":header"))
-                    this.outputHeader(line.substring(7).trim());
-                else if (line.equals(":quit"))
-                    break;
-                else if (line.equals(":clear")) {
-                    Graphitty.out(terminal.output(), "{{XX}}");
-                    this.status.refresh();
-                } else if (line.equals(":help")) {
-                    final String helpText = new Panel("{{c}}metatron console help{{X}}", new Table(
-                            List.of("name", "short", "description"))
-                            /// ///////////////////////////////////////////////////////////////////////////////////////
-                            .addRow(List.of("{{[g]&w}}mtron", "{{[g]&w}}", "{{[g]&w}}"))
-                            .addRow(List.of("explain", "<tab>", "a tabular view of the current code"))
-                            .addRow(List.of("type check", ":check [-| ] [ |type_ctor|obj_write|inst_rng|inst_dom|code_resolve]", "show or enable/disable type checking stages"))
-                            .addRow(List.of("cycle type check", "<ctrl>+t", "cycle type check activations"))
-                            /// ///////////////////////////////////////////////////////////////////////////////////////
-                            .addRow(List.of("{{[g]&w}}console", "{{[g]&w}}", "{{[g]&w}}"))
-                            .addRow(List.of("quit", ":quit | <ctrl>+q", "exit the console"))
-                            .addRow(List.of("clear", ":clear", "clear the console"))
-                            .addRow(List.of("header", ":header [ |<name>]", "print random or named metatron header"))
-                            .addRow(List.of("log", ":log [ |trace|debug|info|warn|error] [ |int]", "show or set log level (and target a output to a pane)"))
-                            .addRow(List.of("word jump", "<shift>+<left/right>", "jump to start/end of a word"))
-                            .addRow(List.of("word delete", "<ctrl>+<backspace>", "delete previous word"))
-                            .addRow(List.of("prefix", ":prefix \"<text>\"", "prefix input with text"))
-                            .addRow(List.of("postfix", ":postfix \"<text>\"", "postfix input with text"))
-                            .addRow(List.of("back erase", "<alt>+k <char>", "erase buffer back to first occurrence of char"))
-                            .addRow(List.of("format buffer", "<ctrl>+f", "pretty-print current buffer (legal syntax only)"))
-                            /// ///////////////////////////////////////////////////////////////////////////////////////
-                            .addRow(List.of("{{[g]&w}}panes", "{{[g]&w}}", "{{[g]&w}}"))
-                            .addRow(List.of("split horizontal", ":split v | <ctrl>+<up>", "split current pane horizontally"))
-                            .addRow(List.of("split vertical", ":split h | <ctrl>+<right>", "split current pane vertically"))
-                            .addRow(List.of("focus", ":focus <id>", "focus pane by id"))
-                            .addRow(List.of("panes", ":panes", "list all panes"))
-                            .addRow(List.of("close", ":close", "close active pane"))
-                            .addRow(List.of("next pane", "<ctrl>+w", "cycle to next pane"))
-                            .addRow(List.of("prev pane", "<alt>+w", "cycle to previous pane"))
-                            .addRow(List.of("shrink pane", "<alt>+<", "make active pane smaller"))
-                            .addRow(List.of("grow pane", "<alt>+>", "make active pane larger"))
-                            .style().headerDivider("{{[b]&w}}|").margin(0, 0, 0, 0).apply().format()).style().margin(0, 0, 0, 0).border(Border.simple.foreground("{{b}}")).apply().format();
-                    if (this.splitMode && this.activePane != null) {
-                        this.activePane.appendOutput(helpText);
+                if (line.startsWith(":")) {
+                    if (this.colonMenu.has(line.substring(1))) {
+                        this.colonMenu.at(line.substring(1)).apply(noobj());
                     } else {
-                        Graphitty.out(terminal.output(), helpText);
-                    }
-                } else if (line.startsWith(":log")) {
-                    if (!line.substring(4).trim().isBlank()) {
-                        //LOG.none("updating log level: %s\n",  line.substring(4).trim());
-                        final String[] args = line.substring(4).trim().split(" ");
-                        LogObj.setSLF4J(args[0]);
-                        if (args.length > 1)
-                            GraphittyLogger.setDefaultTargetPane(Integer.parseInt(args[1]));
-                    }
-                    LOG.none("log level: %s [target pane: %s]\n", LogObj.getSLF4J().toString().toLowerCase(), GraphittyLogger.getDefaultTargetPane());
-                } else if (line.startsWith(":check")) {
-                    Arrays.stream(line.substring(6).trim().split(" ")).forEach(s -> {
-                        if (!s.trim().isEmpty()) {
-                            if (s.startsWith("-"))
-                                TypeCheck.disable(TypeCheck.valueOf(s.substring(1).toLowerCase()));
-                            else
-                                TypeCheck.enable(TypeCheck.valueOf(s.toLowerCase()));
+                        if (line.startsWith(":chat")) {
+                            final String chatLine = line.substring(5).trim();
+                            Rec.wrap(Router.global().read("testy"), mModel.class).chat(chatLine);
+                        } else if (line.equals(":connect")) {
+                            Router.writeToSpace("abc", block_(MInst.instLambda((lhs, inst) -> {
+                                reader.getBuffer().write(lhs.asLst().at(1).strValue());
+                                return lhs;
+                            })));
+                        } else if (line.equals(":header"))
+                            this.outputHeader(line.substring(7).trim());
+                        else if (line.equals(":quit"))
+                            break;
+                        else if (line.equals(":clear")) {
+                            Graphitty.out(terminal.output(), "{{XX}}");
+                            this.status.refresh();
+                        } else if (line.startsWith(":log")) {
+                            if (!line.substring(4).trim().isBlank()) {
+                                //LOG.none("updating log level: %s\n",  line.substring(4).trim());
+                                final String[] args = line.substring(4).trim().split(" ");
+                                LogObj.setSLF4J(args[0]);
+                                if (args.length > 1)
+                                    GraphittyLogger.setDefaultTargetPane(Integer.parseInt(args[1]));
+                            }
+                            LOG.none("log level: %s [target pane: %s]\n", LogObj.getSLF4J().toString().toLowerCase(), GraphittyLogger.getDefaultTargetPane());
+                        } else if (line.startsWith(":check")) {
+                            Arrays.stream(line.substring(6).trim().split(" ")).forEach(s -> {
+                                if (!s.trim().isEmpty()) {
+                                    if (s.startsWith("-"))
+                                        TypeCheck.disable(TypeCheck.valueOf(s.substring(1).toLowerCase()));
+                                    else
+                                        TypeCheck.enable(TypeCheck.valueOf(s.toLowerCase()));
+                                }
+                            });
+                            LOG.info("type check stages {{%s}}%s{{X}}", TypeCheck.colorLevel(), TypeCheck.getEnabled());
+                        } else if (line.startsWith(":top")) {
+                            TTop.ttop(terminal, new PrintStream(terminal.output()), System.err, new String[0]);
+                        } else if (line.startsWith(":less")) {
+                            Commands.less(terminal, terminal.input(), new PrintStream(terminal.output()), System.err, Paths.get(""), new String[0]);
+                        } else if (line.startsWith(":subs")) {
+                            final SubsWidget selector = new SubsWidget(this);
+                            selector.run();
+                            selector.close();
+                        } else if (line.startsWith(":justify")) {
+                            final boolean leftJustify = line.substring(8).trim().equalsIgnoreCase("left");
+                            ((Highlighter) this.reader.getHighlighter()).justify(leftJustify);
+                            LOG.info("%s justifying nested polys", leftJustify ? "{{y}}left{{X}}" : "{{y}}right{{X}}");
+                        } else if (line.startsWith(":state")) {
+                            this.status.setState(Level.valueOf(line.substring(6).trim().toUpperCase()));
+                        } else if (line.startsWith(":lang")) {
+                            final String langName = line.substring(5).trim().toLowerCase();
+                            try {
+                                final Language newLang = Language.valueOf(langName.toUpperCase());
+                                this.setLanguage(newLang);
+                            } catch (IllegalArgumentException e) {
+                                LOG.error("unknown language: {{r}}%s{{X}}. Available: mtron, gremlin, sql", langName);
+                            }
+                        } else if (line.startsWith(":prefix")) {
+                            this.prefix = line.substring(7).trim();
+                            if (this.prefix.startsWith("\""))
+                                this.prefix = this.prefix.substring(1);
+                            if (this.prefix.endsWith("\""))
+                                this.prefix = this.prefix.substring(0, this.prefix.length() - 1);
+                        } else if (line.startsWith(":postfix")) {
+                            this.postfix = line.substring(8).trim();
+                            if (this.postfix.startsWith("\""))
+                                this.postfix = this.postfix.substring(1);
+                            if (this.postfix.endsWith("\""))
+                                this.postfix = this.postfix.substring(0, this.postfix.length() - 1);
                         }
-                    });
-                    LOG.info("type check stages {{%s}}%s{{X}}", TypeCheck.colorLevel(), TypeCheck.getEnabled());
-                } else if (line.startsWith(":top")) {
-                    TTop.ttop(terminal, new PrintStream(terminal.output()), System.err, new String[0]);
-                } else if (line.startsWith(":less")) {
-                    Commands.less(terminal, terminal.input(), new PrintStream(terminal.output()), System.err, Paths.get(""), new String[0]);
-                } else if (line.startsWith(":subs")) {
-                    final SubsWidget selector = new SubsWidget(this);
-                    selector.run();
-                    selector.close();
-                } else if (line.startsWith(":justify")) {
-                    final boolean leftJustify = line.substring(8).trim().equalsIgnoreCase("left");
-                    ((Highlighter) this.reader.getHighlighter()).justify(leftJustify);
-                    LOG.info("%s justifying nested polys", leftJustify ? "{{y}}left{{X}}" : "{{y}}right{{X}}");
-                } else if (line.startsWith(":state")) {
-                    this.status.setState(Level.valueOf(line.substring(6).trim().toUpperCase()));
-                } else if (line.startsWith(":lang")) {
-                    final String langName = line.substring(5).trim().toLowerCase();
-                    try {
-                        final Language newLang = Language.valueOf(langName.toUpperCase());
-                        this.setLanguage(newLang);
-                    } catch (IllegalArgumentException e) {
-                        LOG.error("unknown language: {{r}}%s{{X}}. Available: mtron, gremlin, sql", langName);
-                    }
-                } else if (line.startsWith(":prefix")) {
-                    this.prefix = line.substring(7).trim();
-                    if (this.prefix.startsWith("\""))
-                        this.prefix = this.prefix.substring(1);
-                    if (this.prefix.endsWith("\""))
-                        this.prefix = this.prefix.substring(0, this.prefix.length() - 1);
-                } else if (line.startsWith(":postfix")) {
-                    this.postfix = line.substring(8).trim();
-                    if (this.postfix.startsWith("\""))
-                        this.postfix = this.postfix.substring(1);
-                    if (this.postfix.endsWith("\""))
-                        this.postfix = this.postfix.substring(0, this.postfix.length() - 1);
-                }
-                // ========== Split Pane Commands ==========
-                else if (line.startsWith(":split")) {
-                    final String arg = line.substring(6).trim();
-                    try {
-                        final SplitLayout direction = arg.isEmpty()
-                                ? SplitLayout.VERTICAL  // Default to vertical
-                                : SplitLayout.parse(arg);
-                        this.split(direction);
-                        this.renderPanes();
-                    } catch (IllegalArgumentException e) {
-                        LOG.error(e.getMessage());
-                    }
-                } else if (line.equals(":unsplit") || line.equals(":close")) {
-                    this.closeActivePane();
-                    if (this.splitMode) {
-                        this.renderPanes();
-                    } else {
-                        Graphitty.out(terminal.output(), "{{XX}}"); // Clear screen
-                    }
-                } else if (line.startsWith(":focus")) {
-                    final String arg = line.substring(6).trim();
-                    if (arg.isEmpty()) {
-                        // List all panes
-                        LOG.info("panes: %s, active: {{y}}%d{{X}}",
-                                getAllPanes().stream().map(p -> String.valueOf(p.id())).toList(),
-                                this.activePane.id());
-                    } else {
-                        try {
-                            final int paneId = Integer.parseInt(arg);
-                            this.focusPane(paneId);
-                            if (this.splitMode) this.renderPanes();
-                        } catch (NumberFormatException e) {
-                            LOG.error("invalid pane id: {{r}}%s{{X}}", arg);
+                        // ========== Split Pane Commands ==========
+                        else if (line.startsWith(":split")) {
+                            final String arg = line.substring(6).trim();
+                            try {
+                                final SplitLayout direction = arg.isEmpty()
+                                        ? SplitLayout.VERTICAL  // Default to vertical
+                                        : SplitLayout.parse(arg);
+                                this.split(direction);
+                                this.renderPanes();
+                            } catch (IllegalArgumentException e) {
+                                LOG.error(e.getMessage());
+                            }
+                        } else if (line.equals(":unsplit") || line.equals(":close")) {
+                            this.closeActivePane();
+                            if (this.splitMode) {
+                                this.renderPanes();
+                            } else {
+                                Graphitty.out(terminal.output(), "{{XX}}"); // Clear screen
+                            }
+                        } else if (line.startsWith(":focus")) {
+                            final String arg = line.substring(6).trim();
+                            if (arg.isEmpty()) {
+                                // List all panes
+                                LOG.info("panes: %s, active: {{y}}%d{{X}}",
+                                        getAllPanes().stream().map(p -> String.valueOf(p.id())).toList(),
+                                        this.activePane.id());
+                            } else {
+                                try {
+                                    final int paneId = Integer.parseInt(arg);
+                                    this.focusPane(paneId);
+                                    if (this.splitMode) this.renderPanes();
+                                } catch (NumberFormatException e) {
+                                    LOG.error("invalid pane id: {{r}}%s{{X}}", arg);
+                                }
+                            }
+                        } else if (line.equals(":panes")) {
+                            // Show all panes
+                            final List<Pane> panes = getAllPanes();
+                            LOG.info("{{y}}%d{{X}} pane(s):", panes.size());
+                            for (final Pane p : panes) {
+                                final String active = (p == this.activePane) ? " {{g}}[active]{{X}}" : "";
+                                LOG.info("  [{{y}}%d{{X}}] %s, %d lines%s",
+                                        p.id(), p.language().name, p.outputBuffer().size(), active);
+                            }
                         }
-                    }
-                } else if (line.equals(":panes")) {
-                    // Show all panes
-                    final List<Pane> panes = getAllPanes();
-                    LOG.info("{{y}}%d{{X}} pane(s):", panes.size());
-                    for (final Pane p : panes) {
-                        final String active = (p == this.activePane) ? " {{g}}[active]{{X}}" : "";
-                        LOG.info("  [{{y}}%d{{X}}] %s, %d lines%s",
-                                p.id(), p.language().name, p.outputBuffer().size(), active);
                     }
                 } else {
                     this.status.startTimer();

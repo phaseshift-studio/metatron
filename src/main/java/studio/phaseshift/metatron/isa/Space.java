@@ -123,11 +123,15 @@ public interface Space extends Rec, Closeable {
 
     class Helper {
 
+        public static Iterator<IdObj> attachVIDs(final Iterator<IdObj> iterator) {
+            return IteratorUtil.map(iterator, kv -> kv.obj().vid() != null ? kv : new IdObj(kv.furi(), kv.obj().selfVID(kv.furi())));
+        }
+
         public static void spaceCloseLog(final Obj source, final Space space) {
             if (space instanceof InstSet)
                 source.logger().info("closed inst set {{b}}%s", space.vid());
             else
-                source.logger().info("closed space {{b}}%s {{g}}[{{c}}pattern: {{b}}%s{{g}}]", space.vid(),space.pattern());
+                source.logger().info("closed space {{b}}%s {{g}}[{{c}}pattern: {{b}}%s{{g}}]", space.vid(), space.pattern());
         }
 
         public static void spaceOpenLog(final Obj source, final Space space) {

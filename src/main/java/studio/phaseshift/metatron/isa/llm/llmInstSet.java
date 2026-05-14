@@ -36,7 +36,7 @@ import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.q.QCollection.DOCS_TID;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
 import static studio.phaseshift.metatron.isa.llm.space.modelCatalogSpace.LLM_CATALOG_SPACE_TYPE;
-import static studio.phaseshift.metatron.isa.llm.type.mMcpClient.MCP_SERVER_TYPE;
+import static studio.phaseshift.metatron.isa.llm.type.mMcpClient.MCP_CLIENT_TYPE;
 import static studio.phaseshift.metatron.isa.llm.type.mModel.model;
 import static studio.phaseshift.metatron.isa.llm.type.mTool.LLM_TOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
@@ -56,6 +56,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace.staticObjToFile;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.DIR_TID;
 import static studio.phaseshift.metatron.isa.vec.vecInstSet.VEC_TID;
+import static studio.phaseshift.metatron.isa.web.type.mcp_Server.MCP_SERVER_TYPE;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
@@ -96,6 +97,7 @@ public class llmInstSet extends AbstractInstSet {
                 uri(TYPE), lst(
                         LLM_CATALOG_SPACE_TYPE,
                         MCP_SERVER_TYPE,
+                        MCP_CLIENT_TYPE,
                         LLM_TOOL_TYPE,
                         docWrap(LLM_MEMORY_TYPE = Type.Builder.build()
                                 .tid(REC_TID)

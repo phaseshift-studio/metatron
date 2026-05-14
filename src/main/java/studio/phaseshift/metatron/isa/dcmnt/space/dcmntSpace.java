@@ -357,7 +357,7 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
                         // Expand children if the document is a poly (Rec or Lst).
                         if (docObj.isPoly())
                             results.addAll(Space.Helper.unrollPoly(docVID, docObj.as(), nodePattern));
-                        return results.iterator();
+                        return Space.Helper.attachVIDs(results.iterator());
                     }
                 }
                 return IteratorUtil.of();
@@ -393,11 +393,11 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
                 collectionStream = Stream.of(collectionName);
             }
             if (null == documentID) {
-                return collectionStream.map(c -> {
+                return Space.Helper.attachVIDs(collectionStream.map(c -> {
                     final fURI collectionVID = Space.Helper.routeToSpace(f(c), this.routes());
                     LOG.debug("collection lookup: %s", collectionVID);
                     return IdObj.of(collectionVID, uri(collectionVID, COLLECTION_TID, null).selfVID(collectionVID));
-                }).iterator();
+                }).iterator());
             }
 
             final List<IdObj> allResults = new ArrayList<>();
@@ -432,7 +432,7 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
                     }
                 }
             });
-            return allResults.iterator();
+            return Space.Helper.attachVIDs(allResults.iterator());
         };
     }
 
