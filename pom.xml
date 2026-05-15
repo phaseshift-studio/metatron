@@ -449,10 +449,10 @@
                     <include>ansi_headers.txt</include>
                 </includes>
             </resource>
-            <resource>
+            <!--<resource>
                 <directory>src/main/resources/META-INF/services</directory>
                 <targetPath>${project.build.directory}/classes/META-INF/services</targetPath>
-            </resource>
+            </resource>-->
             <!--
              <resource>
                  <directory>src/main/resources</directory>

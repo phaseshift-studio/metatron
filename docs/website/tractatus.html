@@ -2283,7 +2283,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{b}}m{{c}}E{{b}}t{{y}}A{{g}}T{{c}}R{{c}}o{{m}}N{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{m}}M{{g}}e{{c}}T{{r}}a{{g}}T{{b}}R{{g}}O{{c}}N{{X}}.</p>
 </div>
 <h4 id="_cascading_type_constructions" class="discrete">cascading type constructions</h4>
 <h3 id="_mono_types" class="discrete">mono types</h3>
@@ -3267,8 +3267,8 @@ mtron&gt; *#.as[name      =&gt; _,
  postfix=&gt;'',
  pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[
  result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
- prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
- stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0]]@/usr/ui/console
+ stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
+ prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0]]@/usr/ui/console
 mtron&gt; */usr/ui/console
 ==&gt;console::[
  metatron_version=&gt;&lt;0.1-alpha&gt;,
@@ -3279,13 +3279,13 @@ mtron&gt; */usr/ui/console
  postfix=&gt;'',
  pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[
  result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
- prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
- stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0]]
+ stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
+ prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0]]
 mtron&gt; */usr/ui/console/pane/0
 ==&gt;/m/mach/console/pane::[
  result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
- prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
- stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]
+ stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
+ prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]
 mtron&gt; /usr/ui/console/pane/0/result('printed at ==&gt;xyz')</code></pre>
 </div>
 </div>
@@ -4514,50 +4514,76 @@ mtron&gt; *&lt;http://phaseshift.studio&gt;.as(str::T)
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">==&gt;[
  object=&gt;list,
  data=&gt;[
+  [id=&gt;mistralai_devstral-small-2507,object=&gt;model],
+  [id=&gt;qwen3-coder-30b-a3b-instruct,object=&gt;model],
   [id=&gt;qwen3-tts-cpp,object=&gt;model],
   [id=&gt;qwen3:latest,object=&gt;model],
   [id=&gt;'smollm:1.7b',object=&gt;model],
-  [id=&gt;mistralai_devstral-small-2507,object=&gt;model],
-  [id=&gt;qwen3-coder-30b-a3b-instruct,object=&gt;model],
   [id=&gt;MeetAISmall__latest,object=&gt;model],
   [id=&gt;gpt-oss__latest,object=&gt;model]]]
-==&gt;qwen3:latest
+==&gt;mistralai_devstral-small-2507
 ==&gt;[
  parameters=&gt;[
-  model=&gt;qwen3-tts-cpp,
+  model=&gt;'mistralai_Devstral-Small-2507-Q4_K_M.gguf',
   top_p=&gt;0.9500,
-  top_k=&gt;20,
-  min_p=&gt;0,
-  temperature=&gt;0.6000,
+  top_k=&gt;-1,
+  min_p=&gt;0.0100,
+  temperature=&gt;0.7000,
   max_tokens=&gt;0,
   repeat_penalty=&gt;1,
   tfz=&gt;1,
   typical_p=&gt;1,
   seed=&gt;-1,
   logprobs=&gt;false],
- name=&gt;qwen3-tts-cpp,
+ name=&gt;mistralai_devstral-small-2507,
  f16=&gt;false,
  threads=&gt;8,
  debug=&gt;false,
  embeddings=&gt;false,
- backend=&gt;qwen3-tts-cpp,
- template=&gt;[=&gt;],
- known_usecases=&gt;[FLAG_TTS],
+ backend=&gt;llama-cpp,
+ template=&gt;[
+  chat=&gt;"""{{.Input -}}
+""",
+  chat_message=&gt;"""{{if eq .RoleName "user" -}}
+[INST] {{.Content }}...""",
+  completion=&gt;"""{{.Input}}
+""",
+  function=&gt;'[AVAILABLE_TOOLS] [{{range .Functions}}{"type": "...'],
+ known_usecases=&gt;[FLAG_COMPLETION,FLAG_CHAT],
  pipeline=&gt;[=&gt;],
- function=&gt;[grammar=&gt;[=&gt;]],
+ function=&gt;[
+  disable_no_action=&gt;true,
+  grammar=&gt;[parallel_calls=&gt;true,disable_parallel_new_lines=&gt;true,disable=&gt;true],
+  json_regex_match=&gt;['(?s)\[TOOL\_CALLS\](.*)'],
+  replace_function_results=&gt;[
+   [key=&gt;'(?s)^[^{\[]*'],
+   [key=&gt;'(?s)[^}\]]*$'],
+   [key=&gt;'(?s)\[TOOL\_CALLS\]'],
+   [key=&gt;'(?s)\[\/TOOL\_CALLS\]']]],
  reasoning=&gt;[=&gt;],
  mirostat_eta=&gt;0.1000,
  mirostat_tau=&gt;5,
  mirostat=&gt;0,
+ gpu_layers=&gt;99999999,
  mmap=&gt;true,
  mmlock=&gt;false,
  low_vram=&gt;false,
  reranking=&gt;false,
+ stopwords=&gt;[
+  |im_end|,
+  dummy32000,
+  /tool_call,
+  |eot_id|,
+  |end_of_text|,
+  /s,
+  [/TOOL_CALLS],
+  [/ACTIONS]],
  context_size=&gt;8192,
  limit_mm_per_prompt=&gt;[=&gt;],
  diffusers=&gt;[=&gt;],
  grpc=&gt;[=&gt;],
  tts=&gt;[=&gt;],
+ options=&gt;[gpu],
  mcp=&gt;[=&gt;],
  agent=&gt;[=&gt;]]</code></pre>
 </div>
