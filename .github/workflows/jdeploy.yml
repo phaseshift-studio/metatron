@@ -36,6 +36,7 @@ jobs:
         with:
           deploy_target: npm
           github_token: ${{ github.token }}
+          npm_token: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish to npm
         run: |
