@@ -29,11 +29,11 @@ section focuses on `fsspace::T` (file system space). The primary types of this s
 
 ++++
 <!-- 🐖 
-*/sys/space/fs                                          [-- <1>
-*/sys/space/fs/script                                   [-- <2>
-*<local:Desktop/test_bash.bash>                         [-- <3>
-*<local:Desktop/test_bash.bash>.as(bytes::T)            [-- <4>
-*<local:Desktop/test_bash.bash>.as(bytes::T).as(str::T) [-- <5>
+*/sys/space/fs                                          [-- <1> --]
+*/sys/space/fs/script                                   [-- <2> --]
+*<local:Desktop/test_bash.bash>                         [-- <3> --]
+*<local:Desktop/test_bash.bash>.as(bytes::T)            [-- <4> --]
+*<local:Desktop/test_bash.bash>.as(bytes::T).as(str::T) [-- <5> --]
 -->
 ++++
 <1> `fs` is mounted to `/sys` (other deployments may have another mount address).

@@ -14,11 +14,11 @@ https://en.wikipedia.org/wiki/Dangling_pointer[dangling pointers] are possible. 
 
 ++++
 <!-- 🐖 
-a=>b=>c       [-- <1>
+a=>b=>c       [-- <1> --]
 [a=>{b,c}, /
  b=>{a,c}, /
- c=>{a,b}]    [-- <2>
-[a,b,c]       [-- <3>
+ c=>{a,b}]    [-- <2> --]
+[a,b,c]       [-- <3> --]
 -->
 ++++
 <1> a `rel` combines two objs, but due to associative nature of the `\=>` operator, a `rel` can bind an obj to another `rel`.
@@ -33,8 +33,8 @@ Consider the following expressions:
 
 ++++
 <!-- 🐖 
-a=>b=>c       [-- <1>
-a->b->c       [-- <2>
+a=>b=>c       [-- <1> --]
+a->b->c       [-- <2> --]
 -->
 ++++
 <1> a `rel` associates `a` to `b\=>c` and another `rel` associates `b` to `c`.
@@ -42,10 +42,10 @@ a->b->c       [-- <2>
 
 ++++
 <!-- 🐖 
-a=>b=>c.>>       [-- <1>
-a=>b=>c.>>.>>    [-- <2>
-a->b->c.*a       [-- <3>
-a->b->c.**a      [-- <4>
+a=>b=>c.>>       [-- <1> --]
+a=>b=>c.>>.>>    [-- <2> --]
+a->b->c.*a       [-- <3> --]
+a->b->c.**a      [-- <4> --]
 -->
 ++++
 <1> `>>?#\<=rel` maps a `rel` to it's `rng`. 
@@ -60,7 +60,7 @@ This is due to the fact that the stack's pattern is `<+/#>`, and therefore, it m
 
 ++++
 <!-- 🐖 
-[== a->(b->c) ==]      [-- <1>
+[== a->(b->c) ==]      [-- <1> --]
 *a
 **a
 -->

@@ -220,11 +220,11 @@ The two data sources have a very particular understanding of how data should be 
 🧱
 ++++
 <!-- [IGNORE BUGGY] 🐖
-*g:V/1                                                             [-- <1>
-*acme:customers/357                                                [-- <2>
-*g:V/1.addE(consulted,|*acme:customers/357)                        [-- <3>
-*g:V/1.out(consulted)                                              [-- <4>
-*g:V/1.out(consulted).matches(vrtx::T)                             [-- <5>
+*g:V/1                                                             [-- <1> --]
+*acme:customers/357                                                [-- <2> --]
+*g:V/1.addE(consulted,|*acme:customers/357)                        [-- <3> --]
+*g:V/1.out(consulted)                                              [-- <4> --]
+*g:V/1.out(consulted).matches(vrtx::T)                             [-- <5> --]
 -->
 ++++
 <1> vertex `v[1]` in a graph database.

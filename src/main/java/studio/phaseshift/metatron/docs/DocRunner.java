@@ -145,6 +145,8 @@ public class DocRunner {
                     .sorted()
                     .forEach(adocFiles::add);
         }
+        
+        adocFiles.removeIf(f -> f.getFileName().toString().equals("dcmnt-space.adoc") ||f.getFileName().toString().equals("grph-space.adoc"));
 
         if (adocFiles.isEmpty()) {
             LOG.info("no .adoc files found in " + inputPath);

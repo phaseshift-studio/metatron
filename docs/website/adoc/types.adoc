@@ -74,13 +74,13 @@ Example usage of the defined `nat` type is presented below.
 
 ++++
 <!-- 🐖
-nat -> int::T[?>0][-<|[is(lt(0)) => * -1,_ => _]>>]   [-- <1>
-*nat                                                  [-- <2>
-nat::2                                                [-- <3>
-nat::-2                                               [-- <4>
-2.as(nat::T)                                          [-- <5>
-[ERROR] -2.as(nat::T)                                         [-- <6>
-[ERROR] nat::2 * -1                                           [-- <7>
+nat -> int::T[?>0][-<|[is(lt(0)) => * -1,_ => _]>>]   [-- <1> --]
+*nat                                                  [-- <2> --]
+nat::2                                                [-- <3> --]
+nat::-2                                               [-- <4> --]
+2.as(nat::T)                                          [-- <5> --]
+[ERROR] -2.as(nat::T)                                         [-- <6> --]
+[ERROR] nat::2 * -1                                           [-- <7> --]
 -->
 ++++
 
@@ -120,12 +120,12 @@ a🧱
 
 ++++
 <!-- 🐖
-0xabcd + 0x1234    [-- <1>
-true + false       [-- <2>
-1 + 2              [-- <3>
-1.34 + 2.45        [-- <4>
-"abc" + "def"      [-- <5>
-a/b/c * d/e/f      [-- <6>
+0xabcd + 0x1234    [-- <1> --]
+true + false       [-- <2> --]
+1 + 2              [-- <3> --]
+1.34 + 2.45        [-- <4> --]
+"abc" + "def"      [-- <5> --]
+a/b/c * d/e/f      [-- <6> --]
 -->
 ++++
 
@@ -142,8 +142,8 @@ The `bytes` type represents binary data as a sequence of bytes.
 
 ++++
 <!-- 🐖
-'metatron'.as(bytes::T)        [-- <1>
-bytes::'48656c6c6f'            [-- <2>
+'metatron'.as(bytes::T)        [-- <1> --]
+bytes::'48656c6c6f'            [-- <2> --]
 -->
 ++++
 <1> Convert string to bytes
@@ -156,10 +156,10 @@ Byte units can be converted between each other using the `.as()` instruction:
 
 ++++
 <!-- 🐖
-kB::1024.as(mB::T)          [-- <1>
-mB::1.as(kB::T)             [-- <2>
-gB::5.as(mB::T)             [-- <3>
-pB::1.as(tB::T)             [-- <4>
+kB::1024.as(mB::T)          [-- <1> --]
+mB::1.as(kB::T)             [-- <2> --]
+gB::5.as(mB::T)             [-- <3> --]
+pB::1.as(tB::T)             [-- <4> --]
 -->
 ++++
 <1> Convert 1024 kilobytes to megabytes (result: 1 mB)
@@ -173,10 +173,10 @@ Byte units of different types can be compared for equality:
 
 ++++
 <!-- 🐖
-mB::1024.eq(gB::1)          [-- <1>
-kB::1024.eq(mB::1)          [-- <2>
-gB::2.eq(mB::2048)          [-- <3>
-tB::1.eq(gB::1024)          [-- <4>
+mB::1024.eq(gB::1)          [-- <1> --]
+kB::1024.eq(mB::1)          [-- <2> --]
+gB::2.eq(mB::2048)          [-- <3> --]
+tB::1.eq(gB::1024)          [-- <4> --]
 -->
 ++++
 <1> Check if 1024 megabytes equals 1 gigabyte (result: true)
@@ -212,9 +212,9 @@ The two primary poly types are:
 
 ++++
 <!-- 🐖
-[a,b,c]                     [-- <1>
-[1,2,3]                     [-- <2>
-[,]                         [-- <3>
+[a,b,c]                     [-- <1> --]
+[1,2,3]                     [-- <2> --]
+[,]                         [-- <3> --]
 -->
 ++++
 <1> List with three branches: a, b, and c
@@ -225,9 +225,9 @@ The two primary poly types are:
 
 ++++
 <!-- 🐖
-[a=>1,b=>2,c=>3]            [-- <1>
-[name=>'Alice',age=>30]     [-- <2>
-[=>]                        [-- <3>
+[a=>1,b=>2,c=>3]            [-- <1> --]
+[name=>'Alice',age=>30]     [-- <2> --]
+[=>]                        [-- <3> --]
 -->
 ++++
 <1> Record with three branches: a=>1, b=>2, and c=>3
@@ -246,11 +246,11 @@ The two primary poly types are:
 
 ++++
 <!-- 🐖
-[1,2,3]                     [-- <1>
-[1,2,3].count()             [-- <2>
-[1,2,3]>-.count()           [-- <3>
-[a=>1,b=>2].count()         [-- <4>
-[a=>1,b=>2]>-.count()       [-- <5>
+[1,2,3]                     [-- <1> --]
+[1,2,3].count()             [-- <2> --]
+[1,2,3]>-.count()           [-- <3> --]
+[a=>1,b=>2].count()         [-- <4> --]
+[a=>1,b=>2]>-.count()       [-- <5> --]
 -->
 ++++
 <1> List with 3 branches
@@ -263,12 +263,12 @@ The two primary poly types are:
 
 ++++
 <!-- 🐖
-[1,2,3].reverse()           [-- <1>
-[1,2,3].plus([4,5])         [-- <2>
-[1,2,3].merge()             [-- <3>
-[a=>1,b=>2].dom()           [-- <4>
-[a=>1,b=>2].rng()           [-- <5>
-[a=>1,b=>2,c=>3].select([a=>_,b=>_])  [-- <6>
+[1,2,3].reverse()                     [-- <1> --]
+[1,2,3].plus([4,5])                   [-- <2> --]
+[1,2,3].merge()                       [-- <3> --]
+[a=>1,b=>2].dom()                     [-- <4> --]
+[a=>1,b=>2].rng()                     [-- <5> --]
+[a=>1,b=>2,c=>3].select([a=>_,b=>_])  [-- <6> --]
 -->
 ++++
 <1> Reverse list order
@@ -331,10 +331,10 @@ Variables in Metatron can be scoped at different levels: frame stack, thread cac
 
 ++++
 <!-- 🐖
-x -> 42                                                   [-- <1>
-*x                                                        [-- <2>
-y -> [a=>1,b=>2,c=>3]                                     [-- <3>
-*y                                                        [-- <4>
+x -> 42                                                   [-- <1> --]
+*x                                                        [-- <2> --]
+y -> [a=>1,b=>2,c=>3]                                     [-- <3> --]
+*y                                                        [-- <4> --]
 -->
 ++++
 <1> Assign 42 to variable x
@@ -346,9 +346,9 @@ y -> [a=>1,b=>2,c=>3]                                     [-- <3>
 
 ++++
 <!-- 🐖
-base -> 10                                                [-- <1>
-result -> *base.plus(5).mult(2)                          [-- <2>
-*result                                                   [-- <3>
+base -> 10                                                [-- <1> --]
+result -> *base.plus(5).mult(2)                           [-- <2> --]
+*result                                                   [-- <3> --]
 -->
 ++++
 <1> Store base value
@@ -359,9 +359,9 @@ result -> *base.plus(5).mult(2)                          [-- <2>
 
 ++++
 <!-- 🐖
-nums -> {1,2,3,4,5}                                       [-- <1>
-filtered -> *nums-<[?>3 => _, _ => noobj]>>               [-- <2>
-*filtered                                                 [-- <3>
+nums -> {1,2,3,4,5}                                       [-- <1> --]
+filtered -> *nums-<[?>3 => _, _ => noobj]>>               [-- <2> --]
+*filtered                                                 [-- <3> --]
 -->
 ++++
 <1> Store collection
@@ -386,10 +386,10 @@ odd::T ....... nat::T ......even::T
 
 ++++
 <!-- 🐖
-nat  -> int::T[?>0]                 [-- <1>
-age  -> nat::T[?<120]               [-- <2>
-odd  -> int::T[is(mod(2).eq(1))]    [-- <3>
-even -> int::T[is(mod(2).eq(0))]    [-- <4>
+nat  -> int::T[?>0]                 [-- <1> --]
+age  -> nat::T[?<120]               [-- <2> --]
+odd  -> int::T[is(mod(2).eq(1))]    [-- <3> --]
+even -> int::T[is(mod(2).eq(0))]    [-- <4> --]
 -->
 ++++
 

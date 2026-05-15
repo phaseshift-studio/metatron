@@ -69,12 +69,14 @@ public final class MtronDocPreprocessor {
                     "\\R\\h*-->\\R\\h*\\+\\+\\+\\+",
             Pattern.DOTALL);
 
-    private static final Pattern CALLOUT = Pattern.compile("\\s*\\[-- <\\d+>\\s*$");
+    // Pattern: captures the number from [-- <N> --], and the replacement removes it                                                
+    private static final Pattern CALLOUT = Pattern.compile("\\[--\\s*<([0-9]+)>\\s*--]\\s*$");
     private static final Pattern HIDDEN = Pattern.compile("\\[HIDDEN]");
     private static final Pattern HEADER = Pattern.compile("\\[HEADER]\\s*(.*)");
     private static final Pattern NOHDR = Pattern.compile("\\[NO_HEADER]");
     private static final Pattern ERROR = Pattern.compile("\\[ERROR]");
     private static final Pattern NOOUT = Pattern.compile("\\[NO_OUTPUT]");
+   
 
     private static final ObjmtronSerializer SER = ObjmtronSerializer.single();
 
@@ -136,8 +138,12 @@ public final class MtronDocPreprocessor {
         final StringBuilder acc = new StringBuilder();
 
         for (String raw : body.split("\n")) {
-            raw = CALLOUT.matcher(raw.stripTrailing()).replaceAll("");
-
+            final Matcher cm = CALLOUT.matcher(raw.stripTrailing());
+            String calloutNumber = null;
+            if (cm.find()) {
+                calloutNumber = cm.group(1);  // captures "1", "2", "3"                                                                           
+                raw = cm.replaceAll("");  // strips [-- <N> --]                                                                             
+            }
             // Directives
             final Matcher hm = HEADER.matcher(raw);
             if (hm.matches()) {
@@ -155,13 +161,20 @@ public final class MtronDocPreprocessor {
                 acc.append(raw.substring(0, raw.length() - 1).stripTrailing()).append("\n       ");
                 continue;
             }
+            
             acc.append(raw);
             String expr = HIDDEN.matcher(acc).replaceAll("").replace("%", "").strip();
             expr = ERROR.matcher(expr).replaceAll("");
+            expr = CALLOUT.matcher(expr).replaceAll("");
             acc.setLength(0);
             if (expr.isEmpty()) continue;
 
-            if (!hidden) lines.add("mtron> " + expr);
+            if (!hidden) {
+                String newLine = "mtron> " + expr;
+                if(null != calloutNumber)
+                    //newLine += " ".repeat(5) + "<" + calloutNumber + ">";
+                    lines.add(newLine);
+            }
 
             try {
                 final Obj result = ObjmtronSerializer.parse(expr).apply();

@@ -39,7 +39,7 @@ import java.util.stream.Collectors;
  *         │
  *         ▼
  * ┌─────────────────────────────────┐
- * │  ContentRetriever.retrieve()   │◄── This class! Searches Space
+ * │  ContentRetriever.retrieve()   │◄── [this class] Searches Space
  * └─────────────────────────────────┘
  *         │
  *         ▼

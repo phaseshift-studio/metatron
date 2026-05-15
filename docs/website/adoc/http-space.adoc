@@ -27,10 +27,10 @@ The type `html::T < rec::T` (a refinement of `rec::T`) represents an https://en.
 
 ++++
 <!-- 🐖
-html::T                                           [-- <1>
-*<http://phaseshift.studio/>                      [-- <2>
-*<http://phaseshift.studio/html/head/title>       [-- <3>
-*<http://phaseshift.studio>.as(str::T)            [-- <4>
+html::T                                           [-- <1> --]
+*<http://phaseshift.studio/>                      [-- <2> --]
+*<http://phaseshift.studio/html/head/title>       [-- <3> --]
+*<http://phaseshift.studio>.as(str::T)            [-- <4> --]
 -->
 ++++
 <1> The structural definition of `html::T`.

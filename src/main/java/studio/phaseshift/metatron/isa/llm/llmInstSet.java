@@ -142,6 +142,21 @@ public class llmInstSet extends AbstractInstSet {
                                         isaPredicate(rec(
                                                 uri(PROVIDER), LLM_CATALOG_SPACE_TYPE,
                                                 uri(NAME), URI_TYPE,
+                                                uri(FEATURE).maybe(), rec(
+                                                        uri(THINK).maybe().asUri(), ALL_TYPE,
+                                                        uri(MEMORY).maybe(), LLM_MEMORY_TYPE.maybe(),
+                                                        uri(PROMPT).maybe(), ALL_TYPE,
+                                                        uri(RESPONSE).maybe(), rec(
+                                                                uri(TO).maybe().asUri(), INST_TYPE,
+                                                                uri(FORMAT).maybe(), ALL_TYPE,
+                                                                uri(COST).maybe(), MATH_CURRENCY_TYPE).maybe(),
+                                                        uri(TOOL).maybe(), lst(split_(lst(
+                                                                isa_(LLM_TOOL_TYPE),
+                                                                isa_(MCP_SERVER_TYPE))).tryToInst()).maybe(),
+                                                        uri(SKILL).maybe(), LST_TYPE.maybe(),
+                                                        uri(RAG).maybe(), rec(
+                                                                URI_TYPE, isa_(INT_TYPE).else_(jnt(10)).tryToInst()).maybe(),
+                                                        uri(NOTE).maybe(), LST_TYPE.maybe()).maybe(),
                                                 uri(PROMPT).maybe(), ALL_TYPE,
                                                 uri(COST).maybe(), rec(uri(IN), MATH_CURRENCY_TYPE, uri(OUT), MATH_CURRENCY_TYPE).maybe(),
                                                 uri(THINK).maybe(), ALL_TYPE,

@@ -89,6 +89,11 @@
                 <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="download_dropdown">
                     <li>
                         <div class="terminal-box">
+                            <pre><code>npm i -g metatron-vm</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="terminal-box">
                             <pre><code>docker pull docker.phaseshift.studio/metatron:0.1-SNAPSHOT</code></pre>
                         </div>
                     </li>
@@ -118,46 +123,46 @@ bin/metatron</code></pre>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="isa_dropdown">
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='m.html';"><img
+                           onclick="location.href='../instset/m.html';"><img
                             src="../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
                             alt="mtron"/>/m</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='m_mach.html';"><img
+                           onclick="location.href='../instset/m_mach.html';"><img
                             src="../images/icons/space/mach-icon.svg" class="isa-row icon-color me-2" alt="mach"/>/m/mach</a>
                     </li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='m_tble.html';"><img
+                           onclick="location.href='../instset/m_tble.html';"><img
                             src="../images/icons/space/tble-icon.svg" class="isa-row icon-color me-2" alt="tble"/>/m/tble</a>
                     </li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='m_dcmnt.html';"><img
+                           onclick="location.href='../instset/m_dcmnt.html';"><img
                             src="../images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2" alt="dcmnt"/>/m/dcmnt</a>
                     </li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='m_grph.html';"><img
+                           onclick="location.href='../instset/m_grph.html';"><img
                             src="../images/icons/space/grph-icon.svg" class="isa-row icon-color me-2" alt="grph"/>/m/grph</a>
                     </li>
                     <!-- TODO: Add /m/vec docs
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='m_vec.html';"><img
+                           onclick="location.href='instset/m_vec.html';"><img
                             src="../images/icons/space/olap-icon.svg" class="isa-row icon-color me-2"
                             alt="vec"/>/m/vec</a></li>
                     -->
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='m_web.html';"><img
+                           onclick="location.href='../instset/m_web.html';"><img
                             src="../images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
                             alt="web"/>/m/web</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='m_llm.html';"><img
+                           onclick="location.href='../instset/m_llm.html';"><img
                             src="../images/icons/space/llm-icon.svg" class="isa-row icon-color me-2"
                             alt="llm"/>/m/llm</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='m_iot.html';"><img
+                           onclick="location.href='../instset/m_iot.html';"><img
                             src="../images/icons/space/graphql-icon.svg" class="isa-row icon-color me-2" 
                             alt="iot"/>/m/iot</a>
                     </li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='m_math.html';"><img
+                           onclick="location.href='../instset/m_math.html';"><img
                             src="../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
                             alt="math"/>/m/math</a>
                     </li>
@@ -223,8 +228,7 @@ bin/metatron</code></pre>
         </div>
     </div>
 </nav>
-<main class="container my-4 flex-grow-1">
-<div class="container-xxl py-4">
+<main class="container my-4 flex-grow-1"><div class="container-xxl py-4">
     <div class="text-center mb-4">
         <h1 class="text-primary glow-text">
             <span class="text-light">/m/</span>iot
@@ -244,70 +248,68 @@ bin/metatron</code></pre>
             <div id="flush-collapseOne" class="accordion-collapse collapse"
                 aria-labelledby="flush-headingOne" data-bs-parent="#accordianInstSet">
                 <div class="accordion-body">
-                    <pre><code></code></pre>
+                    <pre><code>instset::[
+ pattern=&gt;/m/iot/#,
+ q=&gt;[docq::[
+ pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+ pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+ pattern=&gt;docq,
+ obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+ inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
+ space=&gt;[super=&gt;/m/iot/#],
+ type=&gt;[
+  mqtt::T,
+  haos::T]]@/m/iot</code></pre>
                 </div>
             </div>
         </div>
     </div>
-</div>
-
-<div class="container-xxl mb-4">
+</div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <button class="btn btn-outline-secondary" disabled>Consts <span class="badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">Types <span class="badge bg-secondary">1</span></a><button class="btn btn-outline-secondary" disabled>Insts <span class="badge bg-dark">0</span></button><a href="#spaces" class="btn btn-outline-primary">Spaces <span class="badge bg-secondary">1</span></a><button class="btn btn-outline-secondary" disabled>Rewrites <span class="badge bg-dark">0</span></button>
+        <button class="btn btn-outline-secondary" disabled>Consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">2</span></a><button class="btn btn-outline-secondary" disabled>Insts <span class="pill-label badge bg-dark">0</span></button><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><button class="btn btn-outline-secondary" disabled>Rewrites <span class="pill-label badge bg-dark">0</span></button>
     </div>
-</div>
-
-<div class="container-xxl mb-4">
+</div><div class="container-xxl mb-4">
     <div class="card">
         <div class="card-header"><h5 class="mb-0 text-primary">Index</h5></div>
-        <div class="card-body">
-        <div class="mb-3">
-            <h6 class="text-primary mb-2">Types</h6>
-            <div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;" style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;line-height:1.25;"><div style="font-size:0.6rem;opacity:0.45;font-family:monospace;white-space:nowrap;">haos&thinsp;/</div><div><small class="fw-bold text-secondary" style="font-family:monospace;">space</small></div></div><div class="d-flex flex-wrap"><a href="#type-haos" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;"><span class="code">haos</span><span class="badge bg-primary ms-2">T</span></a></div></div>
-        </div>
-        <div class="mb-3">
-            <h6 class="text-primary mb-2">Spaces</h6>
-            <div class="d-flex flex-wrap"><a href="#space-mqtt" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;"><span class="code">mqtt</span><span class="badge bg-info text-dark ms-2">S</span></a></div>
-        </div></div>
+        <div class="card-body"><div class="mb-3">
+    <h6 class="text-primary mb-2">Types</h6>
+    <div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">space</small></div><div class="d-flex flex-wrap"><a href="#type-mqtt" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">mqtt</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;" style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;line-height:1.25;" class="micro-label"><div style="font-size:0.6rem;opacity:0.45;font-family:monospace;white-space:nowrap;">haos&thinsp;/</div><div><small class="mini-label fw-bold text-secondary" style="font-family:monospace;">space</small></div></div><div class="d-flex flex-wrap"><a href="#type-haos" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">haos</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a></div></div>
+</div></div>
     </div>
-</div>
-
-<div class="container-xxl mb-4" id="types">
-    <h3 class="text-primary mb-3">Types <span class="badge bg-primary">1</span></h3>
-    
-<div class="card mb-3" id="type-haos">
+</div><div class="container-xxl mb-4" id="types">
+    <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">2</span></h3>
+    <div class="card mb-3" id="type-haos">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">haos::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">mqtt::T</span></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m_iot_space.html#type-mqtt" class="instset-doc-small-code text-info code">/m/iot/space/mqtt::T</a></span>
         </span>
         <small class="text-muted code">/m/iot/haos/space/haos</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">mqtt::T[][
-   inst(?[pattern=&gt;uri::T])]</code></pre></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">mqtt::T[][inst(?[pattern=&gt;uri::T])]@/m/iot/haos/space/haos</code></pre></div>
     
-</div>
-</div>
-
-<div class="container-xxl mb-4" id="spaces">
-    <h3 class="text-primary mb-3">Spaces <span class="badge bg-info">1</span></h3>
-    
-<div class="card mb-3" id="space-mqtt">
+</div><div class="card mb-3" id="type-mqtt">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <a href="m_iot_space_mqtt.html"
-           class="code text-primary fw-bold text-decoration-none">mqtt</a>
+        <span>
+            <span class="code text-primary fw-bold">mqtt::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#type-space" class="instset-doc-small-code text-info code">/m/space::T</a></span>
+        </span>
         <small class="text-muted code">/m/iot/space/mqtt</small>
     </div>
-    
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">space::T[][inst?mqtt&lt;=#{?}(rec::T)]@/m/iot/space/mqtt</code></pre></div>
     
 </div>
-</div>
-
-<div class="container-xxl py-3 text-center">
+</div><div class="container-xxl py-3 text-center">
     <hr class="border-secondary">
     <small class="text-muted">
-        generated by metatron instset doc generator on build 0-2026-05-08 03:26:11<br>
-        © PhaseShift Studio, LLC
+        generated by metatron instset doc generator on build 0-2026-05-15 15:43:44<br>
+        (c) PhaseShift Studio, LLC
     </small>
 </div></main>
 <footer class="container-fluid bg-secondary fixed-bottom text-light footer wow fadeIn" data-wow-delay="0.1s">
@@ -325,6 +327,25 @@ bin/metatron</code></pre>
         defaultLanguage: 'mtron', // Set your preferred default language
         ignoreUnescapedHTML: true
     });
+    hljs.addPlugin(new CopyButtonPlugin({
+        callback: function(text, el) {
+            // Strip multi-line [== ... ==] comments
+            text = text.replace(/\[==[\s\S]*?==\]/g, '');
+            // Process line by line
+            return text.split('\n')
+                .map(function(line) {
+                    // Drop result lines (==> ...)
+                    if (/^\s*==>/.test(line)) return null;
+                    // Strip mtron> prompt
+                    line = line.replace(/^\s*mtron>\s*/, '');
+                    // Strip single-line [-- ... --] comments
+                    line = line.replace(/\[--[^\]\[]*--\]/g, '');
+                    return line.trim();
+                })
+                .filter(function(line) { return line !== null && line.length > 0; })
+                .join('\n');
+        }
+    }));
     if (!hljs.initHighlighting.called) {
         hljs.initHighlighting.called = true
         ;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) {

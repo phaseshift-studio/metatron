@@ -140,6 +140,10 @@ public class mModel extends MRec {
     public Optional<Obj> prompt() {
         return Optional.<Obj>ofNullable(this.at(PROMPT).orElse(null)).map(o -> o.autoResolve(this));
     }
+    
+    public Rec features() {
+        return null;
+    }
 
     public void addNote(final Obj note) {
         this.at(NOTE).orElse(lst()).asLst().append(note);
@@ -171,7 +175,7 @@ public class mModel extends MRec {
      * @return Optional rec with 'pattern' (fURI) and optional 'max' (int, default 10)
      */
     public Optional<Rec> rag() {
-        return Optional.<Obj>ofNullable(this.at("rag").orElse(null)).map(o -> o.autoResolve(this)).map(Obj::asRec);
+        return Optional.<Obj>ofNullable(this.at(RAG).orElse(null)).map(o -> o.autoResolve(this)).map(Obj::asRec);
     }
 
     public AiServices<mAgent> agent() {
@@ -193,7 +197,7 @@ public class mModel extends MRec {
             else {
                 service.chatMemory(MessageWindowChatMemory.builder()
                         //.maxMessages(Router.readFromSpace(this.fetchMemory().uriValue().extend(MAX)).orElse(jnt(15)).intValue().intValue())
-                        .maxMessages(this.memory().asRec().at("max").intValue().intValue())
+                        .maxMessages(this.memory().asRec().at(MAX).intValue().intValue())
                         .id(memoryVID)
                         .chatMemoryStore(SpaceChatMemoryStore.single())
                         .build()).storeRetrievedContentInChatMemory(true);

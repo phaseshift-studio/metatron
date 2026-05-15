@@ -9,6 +9,7 @@ The exception handling architecture of metatron leverages a fail monad with some
 
 ^🧱
 *propagating* 🧱 `plus?\<=int(uri::T)` is not a valid instruction and a `fail::T` monad is created.
+
 ++++
 <!-- 🐖 
 [HIDDEN] */sys/fail/+.catch(_)
@@ -64,10 +65,10 @@ The diagram above demonstrates that uncaught `fail::T` objs are routed to _fail 
 ++++
 <!-- 🐖 
 [HIDDEN] */sys/fail/+.catch(_)
-1.plus(b)                  [-- <1>
-*/sys/fail/+               [-- <2>
-*/sys/fail/+.catch(_)      [-- <3>
-*/sys/fail                 [-- <4>
+1.plus(b)                  [-- <1> --]
+*/sys/fail/+               [-- <2> --]
+*/sys/fail/+.catch(_)      [-- <3> --]
+*/sys/fail                 [-- <4> --]
 -->
 ++++
 
@@ -86,9 +87,9 @@ Finally, the `cause()` instruction enables recursive stack walking for reflectiv
 ++++
 <!-- 🐖 
 [HIDDEN] */sys/fail/+.catch(_)
-*cause                               [-- <1>
-1+b.catch(cause())                   [-- <2>
-throw('bad').catch(cause())          [-- <3>
+*cause                               [-- <1> --]
+1+b.catch(cause())                   [-- <2> --]
+throw('bad').catch(cause())          [-- <3> --]
 -->
 ++++
 

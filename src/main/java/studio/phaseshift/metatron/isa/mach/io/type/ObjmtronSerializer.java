@@ -358,14 +358,14 @@ public class ObjmtronSerializer extends AbstractObjSerializer<String> {
         if (type.hasConstructor()) {
             if (!type.hasPredicate())
                 sb.append("[]");
-            sb.append("[\n");
+            sb.append("[");
             StringBuilder temp = new StringBuilder();
-            temp.append(" ".repeat((depth + 1) * INDENT_SIZE));
+           // temp.append(" ".repeat((depth + 1) * INDENT_SIZE));
             renderValue(temp, depth + 1, type.constructor());
             cleanEnding(temp);
             sb.append(temp);
-            sb.append("\n");
-            sb.append(" ".repeat(depth * INDENT_SIZE));
+            //sb.append("\n");
+            //sb.append(" ".repeat(depth * INDENT_SIZE));
             sb.append("]");
         }
         if (type.vid() != null && !type.tid().equals(type.vid()))

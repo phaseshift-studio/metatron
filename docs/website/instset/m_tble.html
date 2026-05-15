@@ -89,6 +89,11 @@
                 <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="download_dropdown">
                     <li>
                         <div class="terminal-box">
+                            <pre><code>npm i -g metatron-vm</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="terminal-box">
                             <pre><code>docker pull docker.phaseshift.studio/metatron:0.1-SNAPSHOT</code></pre>
                         </div>
                     </li>
@@ -118,46 +123,46 @@ bin/metatron</code></pre>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="isa_dropdown">
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='m.html';"><img
+                           onclick="location.href='../instset/m.html';"><img
                             src="../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
                             alt="mtron"/>/m</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='m_mach.html';"><img
+                           onclick="location.href='../instset/m_mach.html';"><img
                             src="../images/icons/space/mach-icon.svg" class="isa-row icon-color me-2" alt="mach"/>/m/mach</a>
                     </li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='m_tble.html';"><img
+                           onclick="location.href='../instset/m_tble.html';"><img
                             src="../images/icons/space/tble-icon.svg" class="isa-row icon-color me-2" alt="tble"/>/m/tble</a>
                     </li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='m_dcmnt.html';"><img
+                           onclick="location.href='../instset/m_dcmnt.html';"><img
                             src="../images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2" alt="dcmnt"/>/m/dcmnt</a>
                     </li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='m_grph.html';"><img
+                           onclick="location.href='../instset/m_grph.html';"><img
                             src="../images/icons/space/grph-icon.svg" class="isa-row icon-color me-2" alt="grph"/>/m/grph</a>
                     </li>
                     <!-- TODO: Add /m/vec docs
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='m_vec.html';"><img
+                           onclick="location.href='instset/m_vec.html';"><img
                             src="../images/icons/space/olap-icon.svg" class="isa-row icon-color me-2"
                             alt="vec"/>/m/vec</a></li>
                     -->
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='m_web.html';"><img
+                           onclick="location.href='../instset/m_web.html';"><img
                             src="../images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
                             alt="web"/>/m/web</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='m_llm.html';"><img
+                           onclick="location.href='../instset/m_llm.html';"><img
                             src="../images/icons/space/llm-icon.svg" class="isa-row icon-color me-2"
                             alt="llm"/>/m/llm</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='m_iot.html';"><img
+                           onclick="location.href='../instset/m_iot.html';"><img
                             src="../images/icons/space/graphql-icon.svg" class="isa-row icon-color me-2" 
                             alt="iot"/>/m/iot</a>
                     </li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='m_math.html';"><img
+                           onclick="location.href='../instset/m_math.html';"><img
                             src="../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
                             alt="math"/>/m/math</a>
                     </li>
@@ -223,8 +228,7 @@ bin/metatron</code></pre>
         </div>
     </div>
 </nav>
-<main class="container my-4 flex-grow-1">
-<div class="container-xxl py-4">
+<main class="container my-4 flex-grow-1"><div class="container-xxl py-4">
     <div class="text-center mb-4">
         <h1 class="text-primary glow-text">
             <span class="text-light">/m/</span>tble
@@ -244,204 +248,186 @@ bin/metatron</code></pre>
             <div id="flush-collapseOne" class="accordion-collapse collapse"
                 aria-labelledby="flush-headingOne" data-bs-parent="#accordianInstSet">
                 <div class="accordion-body">
-                    <pre><code></code></pre>
+                    <pre><code>instset::[
+ pattern=&gt;/m/tble/#,
+ q=&gt;[docq::[
+ pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+ pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+ pattern=&gt;docq,
+ obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+ inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
+ space=&gt;[super=&gt;/m/tble/#],
+ type=&gt;[
+  lrow::T,
+  rrow::T,
+  table::T,
+  tblespace::T],
+ inst=&gt;[
+  as?rrow&lt;=lrow(rrow::T),
+  as?lrow&lt;=rrow(lrow::T),
+  sql?rec{*}&lt;=tblespace(str::T)],
+ rewrite=&gt;[
+  /m/tble/inst/rewrite/sql_count?code{?}&lt;=code(),
+  /m/tble/inst/rewrite/sql_sum?code{?}&lt;=code(),
+  /m/tble/inst/rewrite/sql_mean?code{?}&lt;=code(),
+  /m/tble/inst/rewrite/sql_limit?code{?}&lt;=code(),
+  /m/tble/inst/rewrite/sql_has?code{?}&lt;=code(),
+  /m/tble/inst/rewrite/sql_where?code{?}&lt;=code(),
+  /m/tble/inst/rewrite/sql_where_count?code{?}&lt;=code(),
+  /m/tble/inst/rewrite/sql_select?code{?}&lt;=code()]]@/m/tble</code></pre>
                 </div>
             </div>
         </div>
     </div>
-</div>
-
-<div class="container-xxl mb-4">
+</div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <button class="btn btn-outline-secondary" disabled>Consts <span class="badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">Types <span class="badge bg-secondary">3</span></a><button class="btn btn-outline-secondary" disabled>Insts <span class="badge bg-dark">0</span></button><a href="#spaces" class="btn btn-outline-primary">Spaces <span class="badge bg-secondary">1</span></a><a href="#rewrites" class="btn btn-outline-primary">Rewrites <span class="badge bg-secondary">8</span></a>
+        <button class="btn btn-outline-secondary" disabled>Consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">4</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">1</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><a href="#rewrites" class="btn btn-outline-primary">Rewrites <span class="pill-label badge bg-warning">8</span></a>
     </div>
-</div>
-
-<div class="container-xxl mb-4">
+</div><div class="container-xxl mb-4">
     <div class="card">
         <div class="card-header"><h5 class="mb-0 text-primary">Index</h5></div>
-        <div class="card-body">
-        <div class="mb-3">
-            <h6 class="text-primary mb-2">Types</h6>
-            <div class="d-flex flex-wrap"><a href="#type-lrow" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;"><span class="code">lrow</span><span class="badge bg-primary ms-2">T</span></a><a href="#type-rrow" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;"><span class="code">rrow</span><span class="badge bg-primary ms-2">T</span></a><a href="#type-table" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;"><span class="code">table</span><span class="badge bg-primary ms-2">T</span></a></div>
-        </div>
-        <div class="mb-3">
-            <h6 class="text-primary mb-2">Spaces</h6>
-            <div class="d-flex flex-wrap"><a href="#space-tblespace" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;"><span class="code">tblespace</span><span class="badge bg-info text-dark ms-2">S</span></a></div>
-        </div>
-        <div class="mb-3">
-            <h6 class="text-primary mb-2">Rewrites</h6>
-            <div class="d-flex flex-wrap"><a href="#rewrite-sql_count" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;"><span class="code">sql_count</span><span class="badge bg-warning text-dark ms-2">R</span></a><a href="#rewrite-sql_has" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;"><span class="code">sql_has</span><span class="badge bg-warning text-dark ms-2">R</span></a><a href="#rewrite-sql_limit" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;"><span class="code">sql_limit</span><span class="badge bg-warning text-dark ms-2">R</span></a><a href="#rewrite-sql_mean" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;"><span class="code">sql_mean</span><span class="badge bg-warning text-dark ms-2">R</span></a><a href="#rewrite-sql_select" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;"><span class="code">sql_select</span><span class="badge bg-warning text-dark ms-2">R</span></a><a href="#rewrite-sql_sum" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;"><span class="code">sql_sum</span><span class="badge bg-warning text-dark ms-2">R</span></a><a href="#rewrite-sql_where" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;"><span class="code">sql_where</span><span class="badge bg-warning text-dark ms-2">R</span></a><a href="#rewrite-sql_where_count" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;"><span class="code">sql_where_count</span><span class="badge bg-warning text-dark ms-2">R</span></a></div>
-        </div></div>
+        <div class="card-body"><div class="mb-3">
+    <h6 class="text-primary mb-2">Types</h6>
+    <div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">tble</small></div><div class="d-flex flex-wrap"><a href="#type-lrow" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">lrow</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#type-rrow" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">rrow</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#type-table" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">table</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">space</small></div><div class="d-flex flex-wrap"><a href="#type-tblespace" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">tblespace</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a></div></div>
+</div><div class="mb-3">
+    <h6 class="text-primary mb-2">Instructions</h6>
+    <div class="d-flex flex-wrap"><a href="#inst-sql" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">sql</span>
+    <span class="pill-label badge bg-success ms-2">I</span>
+</a></div>
+</div><div class="mb-3">
+    <h6 class="text-primary mb-2">Rewrites</h6>
+    <div class="d-flex flex-wrap"><a href="#rewrite-sql_count" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">sql_count</span>
+    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
+</a><a href="#rewrite-sql_has" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">sql_has</span>
+    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
+</a><a href="#rewrite-sql_limit" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">sql_limit</span>
+    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
+</a><a href="#rewrite-sql_mean" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">sql_mean</span>
+    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
+</a><a href="#rewrite-sql_select" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">sql_select</span>
+    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
+</a><a href="#rewrite-sql_sum" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">sql_sum</span>
+    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
+</a><a href="#rewrite-sql_where" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">sql_where</span>
+    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
+</a><a href="#rewrite-sql_where_count" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">sql_where_count</span>
+    <span class="pill-label badge bg-warning text-dark ms-2">R</span>
+</a></div>
+</div></div>
     </div>
-</div>
-
-<div class="container-xxl mb-4" id="types">
-    <h3 class="text-primary mb-3">Types <span class="badge bg-primary">3</span></h3>
-    
-<div class="card mb-3" id="type-lrow">
+</div><div class="container-xxl mb-4" id="types">
+    <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">4</span></h3>
+    <div class="card mb-3" id="type-lrow">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">lrow::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">lst::T</span></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#type-lst" class="instset-doc-small-code text-info code">/m/lst::T</a></span>
         </span>
         <small class="text-muted code">/m/tble/lrow</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">lst::T</code></pre></div>
-    <div class="card-body border-top py-2"><p class="mb-0 text-light">a table row indexed by column number</p></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">lst::T@/m/tble/lrow</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">a table row indexed by column number</p>
 </div>
-<div class="card mb-3" id="type-rrow">
+</div><div class="card mb-3" id="type-rrow">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">rrow::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">rec::T</span></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#type-rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
         </span>
         <small class="text-muted code">/m/tble/rrow</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[uri::T=&gt;#::T]]</code></pre></div>
-    <div class="card-body border-top py-2"><p class="mb-0 text-light">a table row indexed by column name</p></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[uri::T=&gt;#::T]]@/m/tble/rrow</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">a table row indexed by column name</p>
 </div>
-<div class="card mb-3" id="type-table">
+</div><div class="card mb-3" id="type-table">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">table::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">uri::T</span></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#type-uri" class="instset-doc-small-code text-info code">/m/uri::T</a></span>
         </span>
         <small class="text-muted code">/m/tble/table</small>
     </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">uri::T[isa(lrow{*}::T)]</code></pre></div>
-    <div class="card-body border-top py-2"><p class="mb-0 text-light">a stream of equally wide rows</p></div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">uri::T[isa(lrow{*}::T)]@/m/tble/table</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">a stream of equally wide rows</p>
 </div>
-</div>
-
-<div class="container-xxl mb-4" id="spaces">
-    <h3 class="text-primary mb-3">Spaces <span class="badge bg-info">1</span></h3>
-    
-<div class="card mb-3" id="space-tblespace">
+</div><div class="card mb-3" id="type-tblespace">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <a href="m_tble_space_tblespace.html"
-           class="code text-primary fw-bold text-decoration-none">tblespace</a>
+        <span>
+            <span class="code text-primary fw-bold">tblespace::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#type-space" class="instset-doc-small-code text-info code">/m/space::T</a></span>
+        </span>
         <small class="text-muted code">/m/tble/space/tblespace</small>
     </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">space::T[?[
+  pattern=&gt;uri::T,
+  host=&gt;uri::T,
+  driver=&gt;uri::T,
+  route=&gt;[uri::T=&gt;uri::T],
+  {?}table=&gt;lst::T,
+  {?}root=&gt;rec::T,
+  {?}schema=&gt;[
+   {?}instset=&gt;instset::T,
+   {?}native=&gt;rec{?}::T]]][/m/tble/space/tblespace/ctor?tblespace&lt;=#{?}(rec::T)]@/m/tble/space/tblespace</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">a metatron realization of a relational database</p>
+</div>
+</div>
+</div><div class="container-xxl mb-4" id="instructions">
+    <h3 class="text-primary mb-3">Instructions <span class="pill-label badge bg-success">1</span></h3>
+    <div class="card mb-3" id="inst-sql">
+    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
+        <span>
+            <span class="code text-primary fw-bold">sql</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m_tble_space.html#type-tblespace" data-bs-toggle="tooltip" title="domain" class="code text-info">tblespace</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-rec" data-bs-toggle="tooltip" title="maybe some range" class="code text-success">rec{*}</a></span></span>
+        </span>
+        <small class="text-muted code">/m/tble/inst/sql?rng=/m/rec{*}&amp;dom=/m/tble/space/tblespace</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-sql-doc-0-tab').click();document.getElementById('inst-sql-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">sql?rng=rec{*}&amp;dom=tblespace(str::T){&lt;j&gt;}</code></pre>
+</div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">query a relational database in native sql and yield an mtron mapped result set</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">a table space typically backed by an sql-compliant relational database <span class="text-light">=&gt;</span> a result set as a stream of rows in mtron</pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  0 <span class="text-light">=&gt;</span> <span class="text-info">&#39;an sql query&#39;</span>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*/sys/space/netflix.sql(&#39;SELECT * FROM movie WHERE runtime &lt; ${*next_event - time(now)&#39;) [-- str templates are useful --]</code></pre>
+</div>
+</div>
+</div><div class="container-xxl mb-4" id="rewrites">
+    <h3 class="text-primary mb-3">Rewrites <span class="pill-label badge bg-warning text-dark">8</span></h3>
     
-    <div class="card-body border-top py-2"><p class="mb-0 text-light">a metatron realization of a relational database</p></div>
-</div>
-</div>
-
-<div class="container-xxl mb-4" id="rewrites">
-    <h3 class="text-primary mb-3">Rewrites <span class="badge bg-warning text-dark">8</span></h3>
-    
-<div class="card mb-3" id="rewrite-sql_count">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-warning fw-bold">sql_count</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#type-code" data-bs-toggle="tooltip" title="domain" class="code text-info">/m/code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-code" data-bs-toggle="tooltip" title="maybe range" class="code text-success">/m/code{?}</a></span></span>
-        </span>
-        <small class="text-muted code">/m/tble/inst/rewrite/sql_count?/m/code{?}&lt;=/m/code</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/sql_count?code{?}&lt;=code(){&lt;j&gt;}</code></pre></div>
-    <div class="card-body border-top py-2"><p class="mb-0 text-light">leverages native SELECT COUNT(*) to count rows in a table</p></div><div class="card-body py-2">
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">"pre-rewrite code" <span class="text-light">=&gt;</span> "post-rewrite code"</pre>
-</div>
-</div>
-<div class="card mb-3" id="rewrite-sql_has">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-warning fw-bold">sql_has</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#type-code" data-bs-toggle="tooltip" title="domain" class="code text-info">/m/code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-code" data-bs-toggle="tooltip" title="maybe range" class="code text-success">/m/code{?}</a></span></span>
-        </span>
-        <small class="text-muted code">/m/tble/inst/rewrite/sql_has?/m/code{?}&lt;=/m/code</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/sql_has?code{?}&lt;=code(){&lt;j&gt;}</code></pre></div>
-    <div class="card-body border-top py-2"><p class="mb-0 text-light">leverages native SELECT EXISTS to check if table has any rows</p></div><div class="card-body py-2">
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">"pre-rewrite code" <span class="text-light">=&gt;</span> "post-rewrite code"</pre>
-</div>
-</div>
-<div class="card mb-3" id="rewrite-sql_limit">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-warning fw-bold">sql_limit</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#type-code" data-bs-toggle="tooltip" title="domain" class="code text-info">/m/code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-code" data-bs-toggle="tooltip" title="maybe range" class="code text-success">/m/code{?}</a></span></span>
-        </span>
-        <small class="text-muted code">/m/tble/inst/rewrite/sql_limit?/m/code{?}&lt;=/m/code</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/sql_limit?code{?}&lt;=code(){&lt;j&gt;}</code></pre></div>
-    <div class="card-body border-top py-2"><p class="mb-0 text-light">leverages native SELECT ... LIMIT to take first n rows from a table</p></div><div class="card-body py-2">
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">"pre-rewrite code" <span class="text-light">=&gt;</span> "post-rewrite code"</pre>
-</div>
-</div>
-<div class="card mb-3" id="rewrite-sql_mean">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-warning fw-bold">sql_mean</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#type-code" data-bs-toggle="tooltip" title="domain" class="code text-info">/m/code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-code" data-bs-toggle="tooltip" title="maybe range" class="code text-success">/m/code{?}</a></span></span>
-        </span>
-        <small class="text-muted code">/m/tble/inst/rewrite/sql_mean?/m/code{?}&lt;=/m/code</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/sql_mean?code{?}&lt;=code(){&lt;j&gt;}</code></pre></div>
-    <div class="card-body border-top py-2"><p class="mb-0 text-light">leverages native SELECT AVG(column) to average entries in a table column</p></div><div class="card-body py-2">
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">"pre-rewrite code" <span class="text-light">=&gt;</span> "post-rewrite code"</pre>
-</div>
-</div>
-<div class="card mb-3" id="rewrite-sql_select">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-warning fw-bold">sql_select</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#type-code" data-bs-toggle="tooltip" title="domain" class="code text-info">/m/code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-code" data-bs-toggle="tooltip" title="maybe range" class="code text-success">/m/code{?}</a></span></span>
-        </span>
-        <small class="text-muted code">/m/tble/inst/rewrite/sql_select?/m/code{?}&lt;=/m/code</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/sql_select?code{?}&lt;=code(){&lt;j&gt;}</code></pre></div>
-    <div class="card-body border-top py-2"><p class="mb-0 text-light">leverages native SELECT col1, col2 FROM table for projections</p></div><div class="card-body py-2">
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">"*table/+&gt;&gt;{name,age}" <span class="text-light">=&gt;</span> "sql_select(table, [name,age])"</pre>
-</div>
-</div>
-<div class="card mb-3" id="rewrite-sql_sum">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-warning fw-bold">sql_sum</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#type-code" data-bs-toggle="tooltip" title="domain" class="code text-info">/m/code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-code" data-bs-toggle="tooltip" title="maybe range" class="code text-success">/m/code{?}</a></span></span>
-        </span>
-        <small class="text-muted code">/m/tble/inst/rewrite/sql_sum?/m/code{?}&lt;=/m/code</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/sql_sum?code{?}&lt;=code(){&lt;j&gt;}</code></pre></div>
-    <div class="card-body border-top py-2"><p class="mb-0 text-light">leverages native SELECT SUM(column) to sum entries in a table column</p></div><div class="card-body py-2">
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">"pre-rewrite code" <span class="text-light">=&gt;</span> "post-rewrite code"</pre>
-</div>
-</div>
-<div class="card mb-3" id="rewrite-sql_where">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-warning fw-bold">sql_where</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#type-code" data-bs-toggle="tooltip" title="domain" class="code text-info">/m/code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-code" data-bs-toggle="tooltip" title="maybe range" class="code text-success">/m/code{?}</a></span></span>
-        </span>
-        <small class="text-muted code">/m/tble/inst/rewrite/sql_where?/m/code{?}&lt;=/m/code</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/sql_where?code{?}&lt;=code(){&lt;j&gt;}</code></pre></div>
-    <div class="card-body border-top py-2"><p class="mb-0 text-light">leverages native SELECT ... WHERE to filter rows in a table</p></div><div class="card-body py-2">
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">"pre-rewrite code" <span class="text-light">=&gt;</span> "post-rewrite code"</pre>
-</div>
-</div>
-<div class="card mb-3" id="rewrite-sql_where_count">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span>
-            <span class="code text-warning fw-bold">sql_where_count</span>
-            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#type-code" data-bs-toggle="tooltip" title="domain" class="code text-info">/m/code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-code" data-bs-toggle="tooltip" title="maybe range" class="code text-success">/m/code{?}</a></span></span>
-        </span>
-        <small class="text-muted code">/m/tble/inst/rewrite/sql_where_count?/m/code{?}&lt;=/m/code</small>
-    </div>
-    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/tble/inst/rewrite/sql_where_count?code{?}&lt;=code(){&lt;j&gt;}</code></pre></div>
-    <div class="card-body border-top py-2"><p class="mb-0 text-light">leverages native SELECT COUNT(*) ... WHERE to count filtered rows</p></div><div class="card-body py-2">
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">"pre-rewrite code" <span class="text-light">=&gt;</span> "post-rewrite code"</pre>
-</div>
-</div>
-</div>
-
-<div class="container-xxl py-3 text-center">
+</div><div class="container-xxl py-3 text-center">
     <hr class="border-secondary">
     <small class="text-muted">
-        generated by metatron instset doc generator on build 0-2026-05-08 03:26:20<br>
-        © PhaseShift Studio, LLC
+        generated by metatron instset doc generator on build 0-2026-05-15 15:43:44<br>
+        (c) PhaseShift Studio, LLC
     </small>
 </div></main>
 <footer class="container-fluid bg-secondary fixed-bottom text-light footer wow fadeIn" data-wow-delay="0.1s">
@@ -459,6 +445,25 @@ bin/metatron</code></pre>
         defaultLanguage: 'mtron', // Set your preferred default language
         ignoreUnescapedHTML: true
     });
+    hljs.addPlugin(new CopyButtonPlugin({
+        callback: function(text, el) {
+            // Strip multi-line [== ... ==] comments
+            text = text.replace(/\[==[\s\S]*?==\]/g, '');
+            // Process line by line
+            return text.split('\n')
+                .map(function(line) {
+                    // Drop result lines (==> ...)
+                    if (/^\s*==>/.test(line)) return null;
+                    // Strip mtron> prompt
+                    line = line.replace(/^\s*mtron>\s*/, '');
+                    // Strip single-line [-- ... --] comments
+                    line = line.replace(/\[--[^\]\[]*--\]/g, '');
+                    return line.trim();
+                })
+                .filter(function(line) { return line !== null && line.length > 0; })
+                .join('\n');
+        }
+    }));
     if (!hljs.initHighlighting.called) {
         hljs.initHighlighting.called = true
         ;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) {

@@ -48,11 +48,11 @@ Modern AI techniques are heavily leveraged across various aspects of metatron, w
 
 ++++
 <!-- 🐖
-wsspace::[host     => <ws://localhost:8555>,
-          pattern  => ws://#,
-          q        => [docq::[=>],subq::[=>]],
-          route    => [/mtron=> mtron_ws,
-                       /mcp  => mcp_mtron_ws]]@/sys/space/web/ws;
+wsspace::[host     => <ws://localhost:8555>,                        /
+          pattern  => ws://#,                                       /
+          q        => [docq::[=>],subq::[=>]],                      /
+          route    => [/mtron=> mtron_ws,                           /
+                       /mcp  => mcp_mtron_ws]]@/sys/space/web/ws
 -->
 ++++
 
@@ -113,16 +113,16 @@ The `size` relation maps to a `gB::T` (gigabytes) while the `where()` clause fil
 
 ++++
 <!-- 🐖
-*/m/math.>>type.>>    [-- <1>
+*/m/math.>>type.>>    [-- <1> --]
 -->
 ++++
 <1> get the types defined in `/m/math` `instset` and then drain that `lst` to a stream to see a more detailed string representation. 
 
 ++++
 <!-- 🐖
-gB::500.0.as(mB::T)    [-- <1>
-gB::500.0.as(kB::T)    [-- <2>
-tB::1.0.as(mB::T)      [-- <3>
+gB::500.0.as(mB::T)    [-- <1> --]
+gB::500.0.as(kB::T)    [-- <2> --]
+tB::1.0.as(mB::T)      [-- <3> --]
 -->
 ++++
 <1> convert gigabytes to megabytes
@@ -134,14 +134,14 @@ The content and metadata associated with the chat interaction are stored at the 
 
 ++++
 <!-- 
-*ollama:+/+                                  /
+*ollama:+/+                                         /
  .where([skill=>has(thinking),size=>?<mB::5000.0])  /
- .order(>>?real<=rec(size).mult(-1.0))     /
- .take(1)                                  /
- .plus?rec<=rec(                           /
-  [memory=>[                               /
-      mem=>/usr/mem,                       /
-      max=>5]])                            /
+ .order(>>?real<=rec(size).mult(-1.0))              /
+ .take(1)                                           /
+ .plus?rec<=rec(                                    /
+  [memory=>[                                        /
+      mem=>/usr/mem,                                /
+      max=>5]])                                     /
   .chat("What was the special word I needed you to recall?")
 -->
 ++++
@@ -204,8 +204,8 @@ The `eval` tool must also be present — the agent uses it to poll and pop notes
 [source,mtron]
 ----
 *<openai:gpt-4o>.at(robotron).
- >>=[tool => [!*eval],           [-- <1>
-     note => [,]]                [-- <2>
+ >>=[tool => [!*eval],           <1>
+     note => [,]]                <2>
 ----
 <1> `eval` is required — the agent calls it internally to read and consume notes.
 <2> `[,]` initializes an empty note list and activates the note-checking instruction in the agent's system message.
@@ -214,7 +214,7 @@ While `robotron` is executing a task, a note can be pushed at any time from any 
 
 [source,mtron]
 ----
-*<robotron/note> + ['Reconsider — the user wants the result in euros, not dollars']   [-- <1>
+*<robotron/note> + ['Reconsider — the user wants the result in euros, not dollars']   <1>
 ----
 <1> `+` concatenates to the note list at `{vid}/note`. Because the list carries its `@vid`, the mutation is automatically persisted to space — no explicit save needed.
 

@@ -89,6 +89,11 @@
                 <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="download_dropdown">
                     <li>
                         <div class="terminal-box">
+                            <pre><code>npm i -g metatron-vm</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="terminal-box">
                             <pre><code>docker pull docker.phaseshift.studio/metatron:0.1-SNAPSHOT</code></pre>
                         </div>
                     </li>
@@ -118,46 +123,46 @@ bin/metatron</code></pre>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="isa_dropdown">
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='m.html';"><img
+                           onclick="location.href='../instset/m.html';"><img
                             src="../images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
                             alt="mtron"/>/m</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='m_mach.html';"><img
+                           onclick="location.href='../instset/m_mach.html';"><img
                             src="../images/icons/space/mach-icon.svg" class="isa-row icon-color me-2" alt="mach"/>/m/mach</a>
                     </li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='m_tble.html';"><img
+                           onclick="location.href='../instset/m_tble.html';"><img
                             src="../images/icons/space/tble-icon.svg" class="isa-row icon-color me-2" alt="tble"/>/m/tble</a>
                     </li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='m_dcmnt.html';"><img
+                           onclick="location.href='../instset/m_dcmnt.html';"><img
                             src="../images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2" alt="dcmnt"/>/m/dcmnt</a>
                     </li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='m_grph.html';"><img
+                           onclick="location.href='../instset/m_grph.html';"><img
                             src="../images/icons/space/grph-icon.svg" class="isa-row icon-color me-2" alt="grph"/>/m/grph</a>
                     </li>
                     <!-- TODO: Add /m/vec docs
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='m_vec.html';"><img
+                           onclick="location.href='instset/m_vec.html';"><img
                             src="../images/icons/space/olap-icon.svg" class="isa-row icon-color me-2"
                             alt="vec"/>/m/vec</a></li>
                     -->
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='m_web.html';"><img
+                           onclick="location.href='../instset/m_web.html';"><img
                             src="../images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
                             alt="web"/>/m/web</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='m_llm.html';"><img
+                           onclick="location.href='../instset/m_llm.html';"><img
                             src="../images/icons/space/llm-icon.svg" class="isa-row icon-color me-2"
                             alt="llm"/>/m/llm</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='m_iot.html';"><img
+                           onclick="location.href='../instset/m_iot.html';"><img
                             src="../images/icons/space/graphql-icon.svg" class="isa-row icon-color me-2" 
                             alt="iot"/>/m/iot</a>
                     </li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='m_math.html';"><img
+                           onclick="location.href='../instset/m_math.html';"><img
                             src="../images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
                             alt="math"/>/m/math</a>
                     </li>
@@ -223,8 +228,7 @@ bin/metatron</code></pre>
         </div>
     </div>
 </nav>
-<main class="container my-4 flex-grow-1">
-<div class="container-xxl py-4">
+<main class="container my-4 flex-grow-1"><div class="container-xxl py-4">
     <div class="text-center mb-4">
         <h1 class="text-primary glow-text">
             <span class="text-light">/m/</span>rdf
@@ -244,105 +248,132 @@ bin/metatron</code></pre>
             <div id="flush-collapseOne" class="accordion-collapse collapse"
                 aria-labelledby="flush-headingOne" data-bs-parent="#accordianInstSet">
                 <div class="accordion-body">
-                    <pre><code></code></pre>
+                    <pre><code>instset::[
+ pattern=&gt;/m/rdf/#,
+ q=&gt;[docq::[
+ pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+ pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+ pattern=&gt;docq,
+ obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+ inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
+ space=&gt;[super=&gt;/m/rdf/#],
+ const=&gt;[!*/m/mach/io/serializer/rdf],
+ type=&gt;[
+  triple::T,
+  quad::T,
+  rdfspace::T],
+ inst=&gt;[sparql?rec{*}&lt;=rdfspace(str::T)]]@/m/rdf</code></pre>
                 </div>
             </div>
         </div>
     </div>
-</div>
-
-<div class="container-xxl mb-4">
+</div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <button class="btn btn-outline-secondary" disabled>Consts <span class="badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">Types <span class="badge bg-secondary">2</span></a><button class="btn btn-outline-secondary" disabled>Insts <span class="badge bg-dark">0</span></button><a href="#spaces" class="btn btn-outline-primary">Spaces <span class="badge bg-secondary">3</span></a><button class="btn btn-outline-secondary" disabled>Rewrites <span class="badge bg-dark">0</span></button>
+        <button class="btn btn-outline-secondary" disabled>Consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">3</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">1</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><button class="btn btn-outline-secondary" disabled>Rewrites <span class="pill-label badge bg-dark">0</span></button>
     </div>
-</div>
-
-<div class="container-xxl mb-4">
+</div><div class="container-xxl mb-4">
     <div class="card">
         <div class="card-header"><h5 class="mb-0 text-primary">Index</h5></div>
-        <div class="card-body">
-        <div class="mb-3">
-            <h6 class="text-primary mb-2">Types</h6>
-            <div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="fw-bold text-secondary" style="font-family:monospace;">space</small></div><div class="d-flex flex-wrap"><a href="#type-quad" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;"><span class="code">quad</span><span class="badge bg-primary ms-2">T</span></a><a href="#type-triple" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;"><span class="code">triple</span><span class="badge bg-primary ms-2">T</span></a></div></div>
-        </div>
-        <div class="mb-3">
-            <h6 class="text-primary mb-2">Spaces</h6>
-            <div class="d-flex flex-wrap"><a href="#space-quad" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;"><span class="code">quad</span><span class="badge bg-info text-dark ms-2">S</span></a><a href="#space-rdfspace" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;"><span class="code">rdfspace</span><span class="badge bg-info text-dark ms-2">S</span></a><a href="#space-triple" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;"><span class="code">triple</span><span class="badge bg-info text-dark ms-2">S</span></a></div>
-        </div></div>
+        <div class="card-body"><div class="mb-3">
+    <h6 class="text-primary mb-2">Types</h6>
+    <div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">space</small></div><div class="d-flex flex-wrap"><a href="#type-quad" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">quad</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#type-rdfspace" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">rdfspace</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#type-triple" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">triple</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a></div></div>
+</div><div class="mb-3">
+    <h6 class="text-primary mb-2">Instructions</h6>
+    <div class="d-flex flex-wrap"><a href="#inst-sparql" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">sparql</span>
+    <span class="pill-label badge bg-success ms-2">I</span>
+</a></div>
+</div></div>
     </div>
-</div>
-
-<div class="container-xxl mb-4" id="types">
-    <h3 class="text-primary mb-3">Types <span class="badge bg-primary">2</span></h3>
-    
-<div class="card mb-3" id="type-quad">
+</div><div class="container-xxl mb-4" id="types">
+    <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">3</span></h3>
+    <div class="card mb-3" id="type-quad">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">quad::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">triple::T</span></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m_rdf_space.html#type-triple" class="instset-doc-small-code text-info code">/m/rdf/space/triple::T</a></span>
         </span>
         <small class="text-muted code">/m/rdf/space/quad</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">triple::T[?[
-        uri::T,
-        uri::T,
-        uri::T,
-        uri::T]]</code></pre></div>
-    <div class="card-body border-top py-2"><p class="mb-0 text-light">an rdf quad as a subject, predicate, object, graph</p></div>
+  uri::T,
+  uri::T,
+  uri::T,
+  uri::T]]@/m/rdf/space/quad</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">an rdf quad as a subject, predicate, object, graph</p>
 </div>
-<div class="card mb-3" id="type-triple">
+</div><div class="card mb-3" id="type-rdfspace">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">rdfspace::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#type-space" class="instset-doc-small-code text-info code">/m/space::T</a></span>
+        </span>
+        <small class="text-muted code">/m/rdf/space/rdfspace</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">space::T[?[
+  pattern=&gt;uri::T,
+  host=&gt;uri::T,
+  route=&gt;[uri::T=&gt;uri::T],
+  {?}root=&gt;rec::T,
+  {?}serializer=&gt;else(!*/m/mach/io/serializer/rdf)]][inst?rdfspace&lt;=#{?}(rec::T)]@/m/rdf/space/rdfspace</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">a metatron realization of an rdf quad/triple store</p>
+</div>
+</div><div class="card mb-3" id="type-triple">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
             <span class="code text-primary fw-bold">triple::T</span>
-            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">lst::T</span></span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#type-lst" class="instset-doc-small-code text-info code">/m/lst::T</a></span>
         </span>
         <small class="text-muted code">/m/rdf/space/triple</small>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">lst::T[?[
-        uri::T,
-        uri::T,
-        uri::T]]</code></pre></div>
-    <div class="card-body border-top py-2"><p class="mb-0 text-light">an rdf triple as a subject, predicate, object</p></div>
+  uri::T,
+  uri::T,
+  uri::T]]@/m/rdf/space/triple</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">an rdf triple as a subject, predicate, object</p>
 </div>
 </div>
-
-<div class="container-xxl mb-4" id="spaces">
-    <h3 class="text-primary mb-3">Spaces <span class="badge bg-info">3</span></h3>
-    
-<div class="card mb-3" id="space-quad">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <a href="m_rdf_space_quad.html"
-           class="code text-primary fw-bold text-decoration-none">quad</a>
-        <small class="text-muted code">/m/rdf/space/quad</small>
+</div><div class="container-xxl mb-4" id="instructions">
+    <h3 class="text-primary mb-3">Instructions <span class="pill-label badge bg-success">1</span></h3>
+    <div class="card mb-3" id="inst-sparql">
+    <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
+        <span>
+            <span class="code text-primary fw-bold">sparql</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m_rdf_space.html#type-rdfspace" data-bs-toggle="tooltip" title="domain" class="code text-info">rdfspace</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-rec" data-bs-toggle="tooltip" title="maybe some range" class="code text-success">rec{*}</a></span></span>
+        </span>
+        <small class="text-muted code">/m/rdf/inst/sparql?rng=/m/rec{*}&amp;dom=/m/rdf/space/rdfspace</small>
     </div>
-    
-    <div class="card-body border-top py-2"><p class="mb-0 text-light">an rdf quad as a subject, predicate, object, graph</p></div>
+    <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-sparql-doc-0-tab').click();document.getElementById('inst-sparql-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">sparql?rng=rec{*}&amp;dom=rdfspace(str::T){&lt;j&gt;}</code></pre>
 </div>
-<div class="card mb-3" id="space-rdfspace">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <a href="m_rdf_space_rdfspace.html"
-           class="code text-primary fw-bold text-decoration-none">rdfspace</a>
-        <small class="text-muted code">/m/rdf/space/rdfspace</small>
-    </div>
-    
-    <div class="card-body border-top py-2"><p class="mb-0 text-light">a metatron realization of an rdf quad/triple store</p></div>
-</div>
-<div class="card mb-3" id="space-triple">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <a href="m_rdf_space_triple.html"
-           class="code text-primary fw-bold text-decoration-none">triple</a>
-        <small class="text-muted code">/m/rdf/space/triple</small>
-    </div>
-    
-    <div class="card-body border-top py-2"><p class="mb-0 text-light">an rdf triple as a subject, predicate, object</p></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">query a triple/quad store in native sparql and yield an mtron mapped result set</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">an rdfspace typically backed by a sparql-compliant triple/quad store <span class="text-light">=&gt;</span> a stream of named bindings</pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  0 <span class="text-light">=&gt;</span> <span class="text-info">&#39;a sparql query&#39;</span>
+</pre>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*/sys/space/wikipedia.sparql(&#39;SELECT ?x ?y WHERE ?x foaf:knows ?y&#39;) [-- a sparql query with named bindings --]</code></pre>
 </div>
 </div>
-
-<div class="container-xxl py-3 text-center">
+</div><div class="container-xxl py-3 text-center">
     <hr class="border-secondary">
     <small class="text-muted">
-        generated by metatron instset doc generator on build 0-2026-05-08 03:26:33<br>
-        © PhaseShift Studio, LLC
+        generated by metatron instset doc generator on build 0-2026-05-15 15:43:44<br>
+        (c) PhaseShift Studio, LLC
     </small>
 </div></main>
 <footer class="container-fluid bg-secondary fixed-bottom text-light footer wow fadeIn" data-wow-delay="0.1s">
@@ -360,6 +391,25 @@ bin/metatron</code></pre>
         defaultLanguage: 'mtron', // Set your preferred default language
         ignoreUnescapedHTML: true
     });
+    hljs.addPlugin(new CopyButtonPlugin({
+        callback: function(text, el) {
+            // Strip multi-line [== ... ==] comments
+            text = text.replace(/\[==[\s\S]*?==\]/g, '');
+            // Process line by line
+            return text.split('\n')
+                .map(function(line) {
+                    // Drop result lines (==> ...)
+                    if (/^\s*==>/.test(line)) return null;
+                    // Strip mtron> prompt
+                    line = line.replace(/^\s*mtron>\s*/, '');
+                    // Strip single-line [-- ... --] comments
+                    line = line.replace(/\[--[^\]\[]*--\]/g, '');
+                    return line.trim();
+                })
+                .filter(function(line) { return line !== null && line.length > 0; })
+                .join('\n');
+        }
+    }));
     if (!hljs.initHighlighting.called) {
         hljs.initHighlighting.called = true
         ;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) {

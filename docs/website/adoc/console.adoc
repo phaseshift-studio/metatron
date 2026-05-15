@@ -36,9 +36,9 @@ The console is also an `obj`.
 ++++
 <!-- 🐖
 console::[=>]@/usr/ui/console                 
-*/usr/ui/console                                     [-- <1>
-*/usr/ui/console/pane/0                              [-- <2>
-/usr/ui/console/pane/0/result('printed at ==>xyz')   [-- <3>
+*/usr/ui/console                                     [-- <1> --]
+*/usr/ui/console/pane/0                              [-- <2> --]
+/usr/ui/console/pane/0/result('printed at ==>xyz')   [-- <3> --]
 -->
 ++++
 

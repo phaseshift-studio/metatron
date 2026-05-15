@@ -33,12 +33,12 @@ tblespace::[pattern => lite:#,                             /
             host    => <sqlite:target/test>,               /
             driver  => <org.sqlite.JDBC>,                  /
             table   => [person,score,award,venue],         /
-            route   => [lite:=><>]]@/sys/space/lite   [-- <1>
-lite:person/1 -> [name=>'marko', age=>29]             [-- <2>
-lite:person/2 -> [name=>'grant', age=>25]             [-- <3>
-*lite:person/                                         [-- <4>
-*lite:person/+/name                                   [-- <5>
-*lite:person/+/id                                     [-- <6>                  
+            route   => [lite:=><>]]@/sys/space/lite   [-- <1> --]
+lite:person/1 -> [name=>'marko', age=>29]             [-- <2> --]
+lite:person/2 -> [name=>'grant', age=>25]             [-- <3> --]
+*lite:person/                                         [-- <4> --]
+*lite:person/+/name                                   [-- <5> --]
+*lite:person/+/id                                     [-- <6> --]              
 -->
 ++++
 <1> a `tblespace` mounted at `/sys/space/lite` and responsible for objs in `lite:#`.
@@ -135,9 +135,9 @@ code''' └────────────────┘ └────�
 
 ++++
 <!-- 🐖
-*lite:person/+.?==[age=>?<30]      [-- <1>
-*lite:person/+/name.count()        [-- <2>
-*lite:person/+.==[name=>_]         [-- <3>
+*lite:person/+.?==[age=>?<30]      [-- <1> --]
+*lite:person/+/name.count()        [-- <2> --]
+*lite:person/+.==[name=>_]         [-- <3> --]
 -->
 ++++
 <1> all people under 30 — rewritten to `SELECT * FROM person WHERE age < 30`.
@@ -148,8 +148,8 @@ Finally, like other database-backed spaces, the backend's native query engine is
 
 ++++
 <!-- 🐖
-*/sys/space/lite.sql("SELECT name,age FROM person WHERE age < 30")            [-- <1>
-*/sys/space/lite.sql("SELECT name,age FROM person WHERE age < 30")>>age.sum() [-- <2>
+*/sys/space/lite.sql("SELECT name,age FROM person WHERE age < 30")            [-- <1> --]
+*/sys/space/lite.sql("SELECT name,age FROM person WHERE age < 30")>>age.sum() [-- <2> --]
 -->
 ++++
 <1> `sql?rec{*}\<=tblespace(str::T)` yields zero or more `rec` objs.
@@ -178,11 +178,11 @@ whose values happen to match `person.name` — the link is purely algorithmic, e
 
 ++++
 <!-- [IGNORE FOR NOW] 🐖
-*/sys/space/lite>>=[table=>[person,score]]                                                              [-- <1>
-lite:score/1 -> [player=>'marko', points=>42]                                                           [-- <2>
-lite:score/2 -> [player=>'grant', points=>99]                                                           [-- <3>
-*lite:score/+.?==[player=>'marko']                                                                      [-- <4>
-*/sys/space/lite.sql("SELECT p.name,p.age,s.points FROM person p JOIN score s ON p.name=s.player")      [-- <5>
+*/sys/space/lite>>=[table=>[person,score]]                                                              [-- <1> --]
+lite:score/1 -> [player=>'marko', points=>42]                                                           [-- <2> --]
+lite:score/2 -> [player=>'grant', points=>99]                                                           [-- <3> --]
+*lite:score/+.?==[player=>'marko']                                                                      [-- <4> --]
+*/sys/space/lite.sql("SELECT p.name,p.age,s.points FROM person p JOIN score s ON p.name=s.player")      [-- <5> --]
 -->
 ++++
 <1> patch the live `table` config to tell the space about the new `score` table — on first write the table is created from the record's field types.
@@ -197,11 +197,11 @@ Unlike a matching column value, the pointer encodes the full address of the link
 
 ++++
 <!-- 🐖
-*/sys/space/lite>>=[table=>[person,score,award]]                                                        [-- <1>
-lite:award/1 -> [trophy=>'gold',   recipient=>!*lite:person/1]                                          [-- <2>
-lite:award/2 -> [trophy=>'silver', recipient=>!*lite:person/2]                                          [-- <3>
-*lite:award/+                                                                                           [-- <4>
-*lite:award/1/recipient                                                                                 [-- <5>
+*/sys/space/lite>>=[table=>[person,score,award]]                                                        [-- <1> --]
+lite:award/1 -> [trophy=>'gold',   recipient=>!*lite:person/1]                                          [-- <2> --]
+lite:award/2 -> [trophy=>'silver', recipient=>!*lite:person/2]                                          [-- <3> --]
+*lite:award/+                                                                                           [-- <4> --]
+*lite:award/1/recipient                                                                                 [-- <5> --]
 -->
 ++++
 <1> extend the `table` list to include `award` — each new table is declared before its first write.
@@ -217,12 +217,12 @@ carries a `!*area:V/1` pointer in its `location` cell — an **inter-space** FK.
 
 ++++
 <!-- 🐖
-memspace::[pattern => area:#]@/sys/space/area                                                 [-- <1>
-area:V/1 -> [label=>'downtown',capacity=>5000]                                                   [-- <2>
-*/sys/space/lite>>=[table=>[person,score,award,venue]]                                        [-- <3>
-lite:venue/1 -> [name=>'main_stage',location=>!*area:V/1]                                     [-- <4>
-*lite:venue/1                                                                                 [-- <5>
-*lite:venue/1/location                                                                        [-- <6>
+memspace::[pattern => area:#]@/sys/space/area                                                 [-- <1> --]
+area:V/1 -> [label=>'downtown',capacity=>5000]                                                [-- <2> --]
+*/sys/space/lite>>=[table=>[person,score,award,venue]]                                        [-- <3> --]
+lite:venue/1 -> [name=>'main_stage',location=>!*area:V/1]                                     [-- <4> --]
+*lite:venue/1                                                                                 [-- <5> --]
+*lite:venue/1/location                                                                        [-- <6> --]
 -->
 ++++
 <1> a `memspace` at `area:` provides the cross-space target — any space type (`grphspace`, `fsspace`, etc.) works the same way.
@@ -237,9 +237,9 @@ pointing back at the row's own table.
 
 ++++
 <!-- [IGNORE FOR NOW]  🐖
-lite:venue/2 -> [name=>'side_hall',location=>!*g:V/1,parent=>!*lite:venue/1]                  [-- <1>
-*lite:venue/2                                                                                 [-- <2>
-*lite:venue/2/parent/location                                                                 [-- <3>
+lite:venue/2 -> [name=>'side_hall',location=>!*g:V/1,parent=>!*lite:venue/1]                  [-- <1> --]
+*lite:venue/2                                                                                 [-- <2> --]
+*lite:venue/2/parent/location                                                                 [-- <3> --]
 -->
 ++++
 <1> `venue/2` mixes cross-space (`g:V/1`) and intra-space self-referencing (`lite:venue/1`) pointers in one row.

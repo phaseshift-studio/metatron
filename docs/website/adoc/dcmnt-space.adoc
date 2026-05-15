@@ -77,10 +77,10 @@ the root is `rec::T[?[collection_name\=>collection_type{*}::T]]`.
 
 ++++
 <!-- 🐖
-animal    -> rec::T[?[name=>str::T,  age=>int::T]]@animal                     [-- <1>  
-chicken   -> animal::T@chicken                                                [-- <2>
-equipment -> rec::T[?[model=>uri::T, year=>int::T]]@equipment                 [-- <3>
-farmset::[type=>[animal::T,equipment::T,chicken::T]]@/m/dcmnt/schema/farmset  [-- <4>
+animal    -> rec::T[?[name=>str::T,  age=>int::T]]@animal                     [-- <1> --]
+chicken   -> animal::T@chicken                                                [-- <2> --]
+equipment -> rec::T[?[model=>uri::T, year=>int::T]]@equipment                 [-- <3> --]
+farmset::[type=>[animal::T,equipment::T,chicken::T]]@/m/dcmnt/schema/farmset  [-- <4> --]
 -->
 ++++
 <1> an `animal::T < rec::T` (**refinement type**) is defined.
@@ -94,17 +94,16 @@ dcmntspace::[pattern     => farm:#,                                           /
              host        => <mongodb://localhost:27017/farm>,                 /
              schema      => !*farmset,                                        /
              root        => rec::T[?[animals   => animal{*}::T,               / 
-                                     equipment => equipment{*}::T]],          /
-             route       => [farm:=><>]]@/sys/space/farm                      [-- <1>
+                                     equipment => equipment{*}::T]], route       => [farm:=><>]]@/sys/space/farm
 -->
 ++++
 <1> a `dcmntspace` with `farmset` as the schema. the root type maps each collection to its element type with `{*}` cardinality.
 
 ++++
 <!-- 🐖
-[ERROR] farm:animals/1 -> 'a chicken named trill'                             [-- <1>
-farm:animals/1 -> chicken::[name=>'trill',age=>7]                             [-- <2>
-*farm:animals/1                                                               [-- <3>
+[ERROR] farm:animals/1 -> 'a chicken named trill'                             [-- <1> --]
+farm:animals/1 -> chicken::[name=>'trill',age=>7]                             [-- <2> --]
+*farm:animals/1                                                               [-- <3> --]
 -->
 ++++
 <1> writing a `str::T` to a collection that expects `animal{*}::T` — rejected at the space level.
@@ -120,10 +119,10 @@ identity. metatron preserves type information transparently on the way in and re
 
 ++++
 <!-- 🐖
-farm:animals/1 -> chicken::[name=>'trill',age=>7]                             [-- <1>
-*farm:animals/1                                                               [-- <2>
-*farm:animals/1/name                                                          [-- <3>
-*farm:animals/                                                                [-- <4>
+farm:animals/1 -> chicken::[name=>'trill',age=>7]                             [-- <1> --]
+*farm:animals/1                                                               [-- <2> --]
+*farm:animals/1/name                                                          [-- <3> --]
+*farm:animals/                                                                [-- <4> --]
 -->
 ++++
 <1> write a `chicken::T` document to the `animals` collection.
@@ -147,14 +146,14 @@ on read, the `loc:` scheme is detected and the reference is routed to the memspa
 
 ++++
 <!-- 🐖
-memspace::[pattern => loc:#]@/sys/space/loc                                       [-- <1>
-loc:barns/1 -> [label=>'old_red_barn',capacity=>12]                               [-- <2>
-farm:animals/1 >>= [shelter=>!*loc:barns/1]                                       [-- <3>
-*farm:animals/1                                                                    [-- <4>
-*farm:animals/1/shelter                                                            [-- <5>
-farm:animals/2 -> chicken::[name=>'cluck',age=>3,shelter=>!*loc:barns/1]          [-- <6>
-*farm:animals/2                                                                    [-- <7>
-*farm:animals/2/shelter                                                            [-- <8>
+memspace::[pattern => loc:#]@/sys/space/loc                                       [-- <1> --]
+loc:barns/1 -> [label=>'old_red_barn',capacity=>12]                               [-- <2> --]
+farm:animals/1 >>= [shelter=>!*loc:barns/1]                                       [-- <3> --]
+*farm:animals/1                                                                    [-- <4> --]
+*farm:animals/1/shelter                                                            [-- <5> --]
+farm:animals/2 -> chicken::[name=>'cluck',age=>3,shelter=>!*loc:barns/1]          [-- <6> --]
+*farm:animals/2                                                                    [-- <7> --]
+*farm:animals/2/shelter                                                            [-- <8> --]
 -->
 ++++
 <1> a `loc:` memspace serves as the cross-space target — any space type (grphSpace, tbleSpace, etc.) works the same way.

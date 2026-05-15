@@ -359,8 +359,8 @@
             <groupId>org.xerial</groupId>
             <artifactId>sqlite-jdbc</artifactId>
             <version>${sqlite.version}</version>
-           <!-- <scope>test</scope>  -->
-                 </dependency>
+            <!-- <scope>test</scope>  -->
+        </dependency>
         <dependency>
             <groupId>org.apache.tinkerpop</groupId>
             <artifactId>gremlin-test</artifactId>
@@ -449,22 +449,19 @@
                     <include>ansi_headers.txt</include>
                 </includes>
             </resource>
-            <!--<resource>
-                <directory>src/main/resources</directory>
-                <targetPath>${project.build.directory}/classes</targetPath>
-                <includes>
-                    <include>META-INF/services/**</include>
-                    <include>logback.xml</include>
-                </includes>
-            </resource>
             <resource>
-                <directory>src/main/resources</directory>
-                <excludes>
-                    <exclude>logback.xml</exclude>
-                    <exclude>ansi_headers.txt</exclude>
-                    <exclude>META-INF/**</exclude>
-                </excludes>
-            </resource>-->
+                <directory>src/main/resources/META-INF/services</directory>
+                <targetPath>${project.build.directory}/classes/META-INF/services</targetPath>
+            </resource>
+            <!--
+             <resource>
+                 <directory>src/main/resources</directory>
+                 <excludes>
+                     <exclude>logback.xml</exclude>
+                     <exclude>ansi_headers.txt</exclude>
+                     <exclude>META-INF/**</exclude>
+                 </excludes>
+             </resource>-->
         </resources>
         <!--
         ####################################################################################################
@@ -533,7 +530,7 @@
                             </arguments>
                         </configuration>
                     </execution>
-                    <!-- Generate Instruction Set Reference Documentation -->
+                    <!-- Generate Instruction Set Reference Documentation (Java, in-process; replaces python instset_doc_generator.py) -->
                     <execution>
                         <id>run-instset-doc-generator</id>
                         <phase>site</phase>
@@ -542,12 +539,32 @@
                         </goals>
                         <configuration>
                             <skip>${skipInstSet}</skip>
-                            <executable>python</executable>
+                            <executable>java</executable>
                             <arguments>
-                                <argument>docs/python/instset_doc_generator.py</argument>
-                                <argument>--host</argument>
-                                <argument>${metatron.host}</argument>
-                                <argument>--link-css</argument>
+                                <argument>--enable-native-access=ALL-UNNAMED</argument>
+                                <argument>--add-modules</argument>
+                                <argument>jdk.incubator.vector</argument>
+                                <argument>--add-opens</argument>
+                                <argument>java.base/java.lang=ALL-UNNAMED</argument>
+                                <argument>--add-opens</argument>
+                                <argument>java.base/java.lang.invoke=ALL-UNNAMED</argument>
+                                <argument>--add-opens</argument>
+                                <argument>java.base/java.lang.reflect=ALL-UNNAMED</argument>
+                                <argument>--add-opens</argument>
+                                <argument>java.base/java.util=ALL-UNNAMED</argument>
+                                <argument>--add-opens</argument>
+                                <argument>java.base/java.util.concurrent.atomic=ALL-UNNAMED</argument>
+                                <argument>--add-opens</argument>
+                                <argument>java.base/java.io=ALL-UNNAMED</argument>
+                                <argument>--add-opens</argument>
+                                <argument>java.base/java.nio=ALL-UNNAMED</argument>
+                                <argument>--add-opens</argument>
+                                <argument>java.base/java.net=ALL-UNNAMED</argument>
+                                <argument>--add-opens</argument>
+                                <argument>java.base/sun.nio.cs=ALL-UNNAMED</argument>
+                                <argument>-classpath</argument>
+                                <classpath/>
+                                <argument>studio.phaseshift.metatron.docs.InstSetDocGenerator</argument>
                                 <argument>--website-template</argument>
                                 <argument>--build</argument>
                                 <argument>${buildNumber}</argument>

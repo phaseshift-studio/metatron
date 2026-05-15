@@ -34,6 +34,7 @@ import java.util.function.Function;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.furi.q.QCollection.DOCQ;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -191,8 +192,8 @@ public interface QProc extends Rec {
             if (vid.hasQ()) {
                 final AtomicBoolean check = new AtomicBoolean(true);
                 final List<String> qSpace = space.qs().lstValue().stream().map(q -> q.asRec().at(PATTERN).uriValue()).map(fURI::toString).toList();
-                vid.qMap().keySet().stream().filter(k -> !k.equals(DOM) && !k.equals(RNG)).forEach(k -> {
-                    if (!qSpace.contains(k)) {
+                vid.qMap().keySet().stream().filter(k -> !k.equals(DOCQ) && !k.equals(DOM) && !k.equals(RNG)).forEach(k -> {
+                    if (!qSpace.contains(k)) { 
                         space.logger().warn("no %s query processor attached", k);
                         check.set(false);
                     }
