@@ -39,18 +39,28 @@ jobs:
 
       - name: Publish to npm
         run: |
-          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
-
           TGZ=$(find ./jdeploy/github-release-files -name "*.tgz" ! -name "*Installer*" -print -quit)
           if [ -z "$TGZ" ] || [ ! -f "$TGZ" ]; then
             echo "No .tgz found"
             exit 1
           fi
 
+          # Extract, bump version, repack
           mkdir -p npm-publish
           tar xzf "$TGZ" -C npm-publish
           cd npm-publish/package
+
+          # Fix bin field and bump version
+          npm pkg set bin.metatron-vm="jdeploy-bundle/jdeploy.js"
           npm version --no-git-tag-version "0.0.0-jdeploy-snapshot.${GITHUB_RUN_NUMBER}"
-          npm publish --access public --tag snapshot
+
+          # Auth file at project root (where we were before cd)
+          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
+
+          npm pack
+          NEW_TGZ=$(ls *.tgz)
+          npm publish "$NEW_TGZ" --access public --tag snapshot
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
