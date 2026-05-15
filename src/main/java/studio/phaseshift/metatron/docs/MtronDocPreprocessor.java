@@ -182,8 +182,9 @@ public final class MtronDocPreprocessor {
                     System.err.printf("ERROR in docs with no [ERROR] specifier (docs are buggy): %s [%s]\n%s\n", expr, result,file.getName());
                     System.exit(1);
                 }
-                if (!hidden && !noOutput && !result.isNoObj())
-                    lines.add("==>" + SER.write(result));
+                if (!hidden && !noOutput && !result.isNoObj()) {
+                    result.stream().forEach(o -> lines.add("==>" + SER.write(o)));
+                }
                 else if (noOutput)
                     lines.add(Graphitty.sillyPrint("...", true, true));
                 // Clear fail stack so errors don't leak across blocks

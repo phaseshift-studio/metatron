@@ -949,7 +949,8 @@ a type structure, a coefficient, and polymorphic generics.</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">==&gt;inst?rng=lst&amp;dom=int{3}(){merge([,])}
-==&gt;{[1,2,3],[4,5,6]}</code></pre>
+==&gt;[1,2,3]
+==&gt;[4,5,6]</code></pre>
 </div>
 </div>
 <div class="admonitionblock note">
@@ -979,7 +980,8 @@ This ensures the uri <code>triple</code> is not applied to the <code>inst</code>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">==&gt;inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}
-==&gt;{[1,2,3],[4,5,6]}</code></pre>
+==&gt;[1,2,3]
+==&gt;[4,5,6]</code></pre>
 </div>
 </div>
 <div class="admonitionblock note">
@@ -1158,8 +1160,10 @@ That is, given <code>rec</code> relations,</p>
 <tr>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">==&gt;{[1=&gt;10],[2=&gt;5]}
-==&gt;{10,5}</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">==&gt;[1=&gt;10]
+==&gt;[2=&gt;5]
+==&gt;10
+==&gt;5</code></pre>
 </div>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="ulist">
@@ -1187,13 +1191,15 @@ That is, given <code>rec</code> relations,</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; {1,2}-&lt;[gte(2),gt(3)]
-==&gt;{[false,false],[true,false]}
+==&gt;[false,false]
+==&gt;[true,false]
 mtron&gt; {1,2}-&lt;[?&gt;=2,?&gt;3]
-==&gt;{[
+==&gt;[
  noobj,
- noobj],[
+ noobj]
+==&gt;[
  2,
- noobj]}
+ noobj]
 mtron&gt; {1,2}-&lt;[?&gt;=2,?&gt;3]&gt;-
 ==&gt;2</code></pre>
 </div>
@@ -1229,7 +1235,11 @@ ultimately dependent on the incoming lhs <code>obj</code>, where</p>
 <div class="content">
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">==&gt;{[1=&gt;'1 is something.'],[2=&gt;'2 is something.'],[3=&gt;{'3 greater than 2','3 is something.'}],[4=&gt;{'4 greater than 2','4 is something.'}],[5=&gt;{'5 greater than 2','5 is something.'}]}</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">==&gt;[1=&gt;'1 is something.']
+==&gt;[2=&gt;'2 is something.']
+==&gt;[3=&gt;{'3 greater than 2','3 is something.'}]
+==&gt;[4=&gt;{'4 greater than 2','4 is something.'}]
+==&gt;[5=&gt;{'5 greater than 2','5 is something.'}]</code></pre>
 </div>
 </div>
 </div>
@@ -1450,19 +1460,21 @@ ultimately dependent on the incoming lhs <code>obj</code>, where</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">==&gt;{model::[
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">==&gt;model::[
  provider=&gt;!*/sys/space/ollama,
  name=&gt;qwen3-coder-next:latest,
  skill=&gt;[completion,tools],
- size=&gt;/m/math/gB::51741611823.0000]@ollama:qwen3-coder-next:latest,model::[
+ size=&gt;/m/math/gB::51741611823.0000]@ollama:qwen3-coder-next:latest
+==&gt;model::[
  provider=&gt;!*/sys/space/ollama,
  name=&gt;llama3-groq-tool-use:latest,
  skill=&gt;[completion,tools],
- size=&gt;/m/math/gB::4661257688.0000]@ollama:llama3-groq-tool-use:latest,model::[
+ size=&gt;/m/math/gB::4661257688.0000]@ollama:llama3-groq-tool-use:latest
+==&gt;model::[
  provider=&gt;!*/sys/space/ollama,
  name=&gt;llava:latest,
  skill=&gt;[completion,vision],
- size=&gt;/m/math/gB::4733363377.0000]@ollama:llava:latest}</code></pre>
+ size=&gt;/m/math/gB::4733363377.0000]@ollama:llava:latest</code></pre>
 </div>
 </div>
 <h3 id="_llm_interactions" class="discrete">llm interactions</h3>
@@ -1538,7 +1550,16 @@ ai -> *ollama:+/+                                             /
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */m/math.&gt;&gt;type.&gt;&gt;
-==&gt;{real::T@/m/math/data_size,data_size::T[][/m/math/bB/ctor?bB&lt;=#{?}(#::T)]@/m/math/bB,data_size::T[][/m/math/kB/ctor?kB&lt;=#{?}(#::T)]@/m/math/kB,data_size::T[][/m/math/mB/ctor?mB&lt;=#{?}(#::T)]@/m/math/mB,data_size::T[][/m/math/gB/ctor?gB&lt;=#{?}(#::T)]@/m/math/gB,data_size::T[][/m/math/tB/ctor?tB&lt;=#{?}(#::T)]@/m/math/tB,data_size::T[][/m/math/pB/ctor?pB&lt;=#{?}(#::T)]@/m/math/pB,real::T@/m/math/currency,currency::T@/m/math/currency/usd,currency::T@/m/math/currency/euro}</code></pre>
+==&gt;real::T@/m/math/data_size
+==&gt;data_size::T[][/m/math/bB/ctor?bB&lt;=#{?}(#::T)]@/m/math/bB
+==&gt;data_size::T[][/m/math/kB/ctor?kB&lt;=#{?}(#::T)]@/m/math/kB
+==&gt;data_size::T[][/m/math/mB/ctor?mB&lt;=#{?}(#::T)]@/m/math/mB
+==&gt;data_size::T[][/m/math/gB/ctor?gB&lt;=#{?}(#::T)]@/m/math/gB
+==&gt;data_size::T[][/m/math/tB/ctor?tB&lt;=#{?}(#::T)]@/m/math/tB
+==&gt;data_size::T[][/m/math/pB/ctor?pB&lt;=#{?}(#::T)]@/m/math/pB
+==&gt;real::T@/m/math/currency
+==&gt;currency::T@/m/math/currency/usd
+==&gt;currency::T@/m/math/currency/euro</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -2283,7 +2304,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{m}}M{{g}}e{{c}}T{{r}}a{{g}}T{{b}}R{{g}}O{{c}}N{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{g}}m{{g}}E{{r}}T{{g}}a{{c}}T{{g}}R{{r}}O{{y}}n{{X}}.</p>
 </div>
 <h4 id="_cascading_type_constructions" class="discrete">cascading type constructions</h4>
 <h3 id="_mono_types" class="discrete">mono types</h3>
@@ -2653,11 +2674,15 @@ mtron&gt; [1,2,3].plus([4,5])
  4,
  5]
 mtron&gt; [1,2,3].merge()
-==&gt;{1,2,3}
+==&gt;1
+==&gt;2
+==&gt;3
 mtron&gt; [a=&gt;1,b=&gt;2].dom()
-==&gt;{a,b}
+==&gt;a
+==&gt;b
 mtron&gt; [a=&gt;1,b=&gt;2].rng()
-==&gt;{1,2}
+==&gt;1
+==&gt;2
 mtron&gt; [a=&gt;1,b=&gt;2,c=&gt;3].select([a=&gt;_,b=&gt;_])
 ==&gt;[a=&gt;1,b=&gt;2]</code></pre>
 </div>
@@ -2827,7 +2852,11 @@ mtron&gt; *result
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; nums -&gt; {1,2,3,4,5}
-==&gt;{1,2,3,4,5}
+==&gt;1
+==&gt;2
+==&gt;3
+==&gt;4
+==&gt;5
 mtron&gt; filtered -&gt; *nums-&lt;[?&gt;3 =&gt; _, _ =&gt; noobj]&gt;&gt;
 ==&gt;ERROR: filtered -&gt; *nums-&lt;[?&gt;3 =&gt; _, _ =&gt; noobj]&gt;&gt;
                   ^ end of input expected
@@ -3267,8 +3296,8 @@ mtron&gt; *#.as[name      =&gt; _,
  postfix=&gt;'',
  pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[
  result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
- stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
- prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0]]@/usr/ui/console
+ prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
+ stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0]]@/usr/ui/console
 mtron&gt; */usr/ui/console
 ==&gt;console::[
  metatron_version=&gt;&lt;0.1-alpha&gt;,
@@ -3279,13 +3308,13 @@ mtron&gt; */usr/ui/console
  postfix=&gt;'',
  pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[
  result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
- stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
- prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0]]
+ prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
+ stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0]]
 mtron&gt; */usr/ui/console/pane/0
 ==&gt;/m/mach/console/pane::[
  result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
- stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
- prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]
+ prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
+ stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]
 mtron&gt; /usr/ui/console/pane/0/result('printed at ==&gt;xyz')</code></pre>
 </div>
 </div>
@@ -3693,9 +3722,14 @@ Three general approaches to embedding a matrix or table into a space are present
 mtron&gt; *m/0/0
 ==&gt;0
 mtron&gt; *m/0/+
-==&gt;{2,3,0,1}
+==&gt;2
+==&gt;3
+==&gt;0
+==&gt;1
 mtron&gt; *m/+/0
-==&gt;{0,4,8}</code></pre>
+==&gt;0
+==&gt;4
+==&gt;8</code></pre>
 </div>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
@@ -3708,9 +3742,14 @@ mtron&gt; *m/+/0
 mtron&gt; *m/0/0
 ==&gt;0
 mtron&gt; *m/0/+
-==&gt;{2,3,0,1}
+==&gt;2
+==&gt;3
+==&gt;0
+==&gt;1
 mtron&gt; *m/+/0
-==&gt;{0,4,8}</code></pre>
+==&gt;0
+==&gt;4
+==&gt;8</code></pre>
 </div>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
@@ -3724,9 +3763,14 @@ mtron&gt; *m/+/0
 mtron&gt; *m/0/0
 ==&gt;0
 mtron&gt; *m/0/+
-==&gt;{2,3,0,1}
+==&gt;2
+==&gt;3
+==&gt;0
+==&gt;1
 mtron&gt; *m/+/0
-==&gt;{0,4,8}</code></pre>
+==&gt;0
+==&gt;4
+==&gt;8</code></pre>
 </div>
 </div></div></td>
 </tr>
@@ -4514,52 +4558,39 @@ mtron&gt; *&lt;http://phaseshift.studio&gt;.as(str::T)
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">==&gt;[
  object=&gt;list,
  data=&gt;[
+  [id=&gt;qwen3:latest,object=&gt;model],
+  [id=&gt;'smollm:1.7b',object=&gt;model],
   [id=&gt;mistralai_devstral-small-2507,object=&gt;model],
   [id=&gt;qwen3-coder-30b-a3b-instruct,object=&gt;model],
   [id=&gt;qwen3-tts-cpp,object=&gt;model],
-  [id=&gt;qwen3:latest,object=&gt;model],
-  [id=&gt;'smollm:1.7b',object=&gt;model],
   [id=&gt;MeetAISmall__latest,object=&gt;model],
   [id=&gt;gpt-oss__latest,object=&gt;model]]]
-==&gt;mistralai_devstral-small-2507
+==&gt;qwen3-coder-30b-a3b-instruct
 ==&gt;[
  parameters=&gt;[
-  model=&gt;'mistralai_Devstral-Small-2507-Q4_K_M.gguf',
+  model=&gt;qwen3__latest,
   top_p=&gt;0.9500,
-  top_k=&gt;-1,
-  min_p=&gt;0.0100,
-  temperature=&gt;0.7000,
+  top_k=&gt;20,
+  min_p=&gt;0,
+  temperature=&gt;0.6000,
   max_tokens=&gt;0,
   repeat_penalty=&gt;1,
   tfz=&gt;1,
   typical_p=&gt;1,
   seed=&gt;-1,
   logprobs=&gt;false],
- name=&gt;mistralai_devstral-small-2507,
+ name=&gt;qwen3:latest,
  f16=&gt;false,
  threads=&gt;8,
  debug=&gt;false,
  embeddings=&gt;false,
  backend=&gt;llama-cpp,
- template=&gt;[
-  chat=&gt;"""{{.Input -}}
-""",
-  chat_message=&gt;"""{{if eq .RoleName "user" -}}
-[INST] {{.Content }}...""",
-  completion=&gt;"""{{.Input}}
-""",
-  function=&gt;'[AVAILABLE_TOOLS] [{{range .Functions}}{"type": "...'],
- known_usecases=&gt;[FLAG_COMPLETION,FLAG_CHAT],
+ template=&gt;[use_tokenizer_template=&gt;true],
+ known_usecases=&gt;[FLAG_CHAT],
  pipeline=&gt;[=&gt;],
  function=&gt;[
-  disable_no_action=&gt;true,
-  grammar=&gt;[parallel_calls=&gt;true,disable_parallel_new_lines=&gt;true,disable=&gt;true],
-  json_regex_match=&gt;['(?s)\[TOOL\_CALLS\](.*)'],
-  replace_function_results=&gt;[
-   [key=&gt;'(?s)^[^{\[]*'],
-   [key=&gt;'(?s)[^}\]]*$'],
-   [key=&gt;'(?s)\[TOOL\_CALLS\]'],
-   [key=&gt;'(?s)\[\/TOOL\_CALLS\]']]],
+  grammar=&gt;[disable=&gt;true],
+  automatic_tool_parsing_fallback=&gt;true],
  reasoning=&gt;[=&gt;],
  mirostat_eta=&gt;0.1000,
  mirostat_tau=&gt;5,
@@ -4569,21 +4600,13 @@ mtron&gt; *&lt;http://phaseshift.studio&gt;.as(str::T)
  mmlock=&gt;false,
  low_vram=&gt;false,
  reranking=&gt;false,
- stopwords=&gt;[
-  |im_end|,
-  dummy32000,
-  /tool_call,
-  |eot_id|,
-  |end_of_text|,
-  /s,
-  [/TOOL_CALLS],
-  [/ACTIONS]],
  context_size=&gt;8192,
  limit_mm_per_prompt=&gt;[=&gt;],
  diffusers=&gt;[=&gt;],
  grpc=&gt;[=&gt;],
  tts=&gt;[=&gt;],
- options=&gt;[gpu],
+ description=&gt;'Imported from ollama://qwen3:latest',
+ options=&gt;[use_jinja:true],
  mcp=&gt;[=&gt;],
  agent=&gt;[=&gt;]]</code></pre>
 </div>
@@ -4666,12 +4689,13 @@ mtron&gt; *&lt;http://phaseshift.studio&gt;.as(str::T)
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">==&gt;{fail::[illegalargumentexception: template cannot be null or blank
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">==&gt;fail::[illegalargumentexception: template cannot be null or blank
   	dev.langchain4j.internal.Exceptions [line 25]
   	dev.langchain4j.internal.ValidationUtils [line 169]
   	dev.langchain4j.internal.ValidationUtils [line 156]
   	dev.langchain4j.model.input.PromptTemplate [line 83]
-  	dev.langchain4j.model.input.PromptTemplate [line 186]][...]@/sys/fail/12,fail::[[
+  	dev.langchain4j.model.input.PromptTemplate [line 186]][...]@/sys/fail/12
+==&gt;fail::[[
  type=&gt;model,
  provider=&gt;!*/sys/space/localai] is not a isa([
   provider=&gt;catalog::T,
@@ -4744,7 +4768,7 @@ mtron&gt; *&lt;http://phaseshift.studio&gt;.as(str::T)
    noobj=&gt;(==&gt;{?}skill)=&gt;noobj=&gt;==&gt;lst{?}::T,
    noobj=&gt;(==&gt;{?}tool)=&gt;noobj=&gt;/=&gt;[split([
    ?tool::T,
-   ?base::T])]]][...]@/sys/fail/6}</code></pre>
+   ?base::T])]]][...]@/sys/fail/6</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -4840,9 +4864,11 @@ mtron&gt; lite:person/2 -&gt; [name=&gt;'grant', age=&gt;25]
 mtron&gt; *lite:person/
 ==&gt;lite:lite:person/=&gt;table::lite:person/@lite:person/
 mtron&gt; *lite:person/+/name
-==&gt;{'grant'@lite:person/2/name,'marko'@lite:person/1/name}
+==&gt;'grant'@lite:person/2/name
+==&gt;'marko'@lite:person/1/name
 mtron&gt; *lite:person/+/id
-==&gt;{1@lite:person/1/id,2@lite:person/2/id}</code></pre>
+==&gt;1@lite:person/1/id
+==&gt;2@lite:person/2/id</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -4951,9 +4977,10 @@ l└─ └───┘└───┘└───┘└───┘└───
 ==&gt;[a=&gt;[b=&gt;[
  c=&gt;2,
  d=&gt;!*lite:kv/nest]]]
-==&gt;{[a=&gt;[b=&gt;[
+==&gt;[a=&gt;[b=&gt;[
  c=&gt;2,
- d=&gt;!*lite:kv/nest]]],2}
+ d=&gt;!*lite:kv/nest]]]
+==&gt;2
 ==&gt;[a=&gt;[b=&gt;[
  c=&gt;2,
  d=&gt;!*lite:kv/nest]]]</code></pre>
@@ -4984,11 +5011,13 @@ code''' └────────────────┘ └────�
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *lite:person/+.?==[age=&gt;?&lt;30]
-==&gt;{rrow::[id=&gt;1,name=&gt;'marko',age=&gt;29]@lite:/sys/space/lite/person/1,rrow::[id=&gt;2,name=&gt;'grant',age=&gt;25]@lite:/sys/space/lite/person/2}
+==&gt;rrow::[id=&gt;1,name=&gt;'marko',age=&gt;29]@lite:/sys/space/lite/person/1
+==&gt;rrow::[id=&gt;2,name=&gt;'grant',age=&gt;25]@lite:/sys/space/lite/person/2
 mtron&gt; *lite:person/+/name.count()
 ==&gt;2
 mtron&gt; *lite:person/+.==[name=&gt;_]
-==&gt;{[name=&gt;'grant'],[name=&gt;'marko']}</code></pre>
+==&gt;[name=&gt;'grant']
+==&gt;[name=&gt;'marko']</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -5013,7 +5042,8 @@ mtron&gt; *lite:person/+.==[name=&gt;_]
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/lite.sql("SELECT name,age FROM person WHERE age &lt; 30")
-==&gt;{[name=&gt;'marko',age=&gt;29],[name=&gt;'grant',age=&gt;25]}
+==&gt;[name=&gt;'marko',age=&gt;29]
+==&gt;[name=&gt;'grant',age=&gt;25]
 mtron&gt; */sys/space/lite.sql("SELECT name,age FROM person WHERE age &lt; 30")&gt;&gt;age.sum()
 ==&gt;54</code></pre>
 </div>
@@ -5131,11 +5161,12 @@ mtron&gt; lite:award/2 -&gt; [trophy=&gt;'silver', recipient=&gt;!*lite:person/2
  trophy=&gt;'silver',
  recipient=&gt;!*lite:person/2]
 mtron&gt; *lite:award/+
-==&gt;{[
+==&gt;[
  trophy=&gt;'gold',
- recipient=&gt;!*lite:person/1]@lite:award/1,[
+ recipient=&gt;!*lite:person/1]@lite:award/1
+==&gt;[
  trophy=&gt;'silver',
- recipient=&gt;!*lite:person/2]@lite:award/2}
+ recipient=&gt;!*lite:person/2]@lite:award/2
 mtron&gt; *lite:award/1/recipient
 ==&gt;[name=&gt;'marko',age=&gt;29]</code></pre>
 </div>
@@ -5451,7 +5482,16 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">==&gt;{/sys/env/GTK3_MODULES=&gt;'xapp-gtk3-module',/sys/env/QT_IM_MODULE=&gt;'ibus',/sys/env/GNOME_DESKTOP_SESSION_ID=&gt;'this-is-deprecated',/sys/env/HOMEBREW_CELLAR=&gt;'/home/linuxbrew/.linuxbrew/Cellar',/sys/env/USER=&gt;'killswitch',/sys/env/HOMEBREW_PREFIX=&gt;'/home/linuxbrew/.linuxbrew',/sys/env/LIBVIRT_DEFAULT_URI=&gt;'qemu:///system',/sys/env/XDG_SEAT=&gt;'seat0',/sys/env/LANGUAGE=&gt;'en_US',/sys/env/CINNAMON_VERSION=&gt;'6.6.7'}</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">==&gt;/sys/env/GTK3_MODULES=&gt;'xapp-gtk3-module'
+==&gt;/sys/env/QT_IM_MODULE=&gt;'ibus'
+==&gt;/sys/env/GNOME_DESKTOP_SESSION_ID=&gt;'this-is-deprecated'
+==&gt;/sys/env/HOMEBREW_CELLAR=&gt;'/home/linuxbrew/.linuxbrew/Cellar'
+==&gt;/sys/env/USER=&gt;'killswitch'
+==&gt;/sys/env/HOMEBREW_PREFIX=&gt;'/home/linuxbrew/.linuxbrew'
+==&gt;/sys/env/LIBVIRT_DEFAULT_URI=&gt;'qemu:///system'
+==&gt;/sys/env/XDG_SEAT=&gt;'seat0'
+==&gt;/sys/env/LANGUAGE=&gt;'en_US'
+==&gt;/sys/env/CINNAMON_VERSION=&gt;'6.6.7'</code></pre>
 </div>
 </div>
 <h3 id="_boot_loader" class="discrete">Boot Loader</h3>
