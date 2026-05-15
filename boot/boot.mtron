@@ -1,9 +1,8 @@
 [== boot args ==]
-[host  => <ws://0.0.0.0:8999>,
- space => /sys/space,
+[space  => /sys/space,
  web    => [
-   http => <http://localhost:8777>,
-   ws   => <ws://localhost:8999>],
+   http/host => <http://localhost:8777>,
+   ws/host   => <ws://localhost:8555>],
  type_check => [inst_dom,inst_rng,type_ctor,obj_write]
 ] 
 [===============]
@@ -56,7 +55,8 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
  fsspace::[pattern  => local:#,
             route   => [local:=><~/>],
             script  => !*boot/script]@/sys/space/fs;
-            
+  fsspace::[pattern  => metatronfs:#,
+             route   => [metatronfs:=><.>]]@/sys/space/metatronfs;
  fsspace::[pattern  => mtronfs:#,
            route   => [mtronfs:=><.metatron>]]@/sys/space/mtronfs;
        
@@ -68,24 +68,24 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
         host     => <ws://127.0.0.1:7777>,
         route    => [</b/cluster>=></shared>],
         peers    => !*boot/peers]@/sys/space/meta2;==]
- httpspace::[host     => <http://localhost:8777>,
+ httpspace::[host     => !*boot/args/web/http/host,
              pattern  => <http://#>,
              route    => [/          => <>,
                           /mcp       => mcp_mtron_http, 
-                          /docs      => target/docs,
-                          /console   => src/main/resources/web/console]]@/sys/space/web/http;
-   wsspace::[host     => <ws://localhost:8555>,
+                          /docs      => <metatronfs:docs/website>,
+                          /console   => <metatronfs:src/main/resources/web/console>]]@/sys/space/web/http;
+   wsspace::[host     => !*boot/args/web/ws/host,
              pattern  => ws://#,
              q        => [docq::[=>],subq::[=>]],
              route    => [/mtron=> mtron_ws,
                           /mcp  => mcp_mtron_ws]]@/sys/space/web/ws;
   [-- support for server->client notifications --]
-   <ws://localhost:8555/mcp/+/notifications/#?subq> -> sub::[                                           
+   !*boot/args/web/ws/host * /mcp/+/notifications/#?subq -> sub::[                                           
       on_recv => inst?#<=lst(message=>?lst::T){                    
         -<json::[jsonrpc => '2.0', 
-           method  => >>0 - <ws://localhost:8555/mcp/${*message>>0>>1}${/}>,              
+           method  => >>0 - ${!*boot/args/web/ws/host}/mcp/${*message>>0>>1}${/},              
            params  => *message>>1](payload=>_){                                        
-             *<ws://localhost:8555/mcp/${*message>>0>>1}>>>send.apply(*payload)}}];
+             *${!*boot/args/web/ws/host}/mcp/${*message>>0>>1}>>send.apply(*payload)}}];
   grphspace::[pattern  => /h/#,
         route    => [</h/+/>=><>],
         native   => [factory  => mfactory::[=>],
@@ -179,6 +179,6 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
 *<mtronfs:agent.mtron>;
 console::[=>]@/usr/ui/console;
 *boot/args.print(_,'\n');
-print('{{y}}mounting {{b}}boot/usr/# {{y}}to {{b}}/usr/# {{g}}(count:{{y}}${*x}{{g}}){{X}}\n');
+print('\n{{y}}mounting {{b}}boot/usr/# {{y}}to {{b}}/usr/# {{g}}(count:{{y}}${*x}{{g}}){{X}}\n');
  
 

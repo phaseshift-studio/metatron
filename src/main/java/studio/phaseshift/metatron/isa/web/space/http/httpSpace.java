@@ -127,8 +127,8 @@ public class httpSpace extends AbstractSpace<HttpServer> {
         this.cache = memSpace.of(rec(uri(PATTERN), config.getOrDefault(uri(PATTERN), noobj())), null);
         try {
             this.at(ROUTE).orElse(rec0()).elements().forEach(r -> {
-                final boolean hostRoute = r.first().uriValue().toString().startsWith(config.get(uri(HOST)).uriValue().toString());
-                final fURI left = hostRoute ? f(r.first().uriValue().toString().replaceFirst(config.get(uri(HOST)).uriValue().toString(), "")) : r.first().uriValue();
+                final boolean hostRoute = r.first().uriValue().toString().startsWith(this.at(HOST).uriValue().toString());
+                final fURI left = hostRoute ? f(r.first().uriValue().toString().replaceFirst(this.at(HOST).uriValue().toString(), "")) : r.first().uriValue();
                 if (!hostRoute && r.first().uriValue().hasHost())
                     return;
                 LOG.info("processing http route: %s => %s => %s", r.first().uriValue().toString(), r.second().uriValue().toString(), left.toString());

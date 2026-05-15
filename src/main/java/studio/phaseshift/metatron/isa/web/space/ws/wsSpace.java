@@ -123,7 +123,9 @@ public class wsSpace extends AbstractSpace<WebSocketServer> {
 
     public static wsSpace of(final Map<Obj, Obj> config, final fURI vid) {
         try {
-            final mWebSocketServer server = new mWebSocketServer(config.get(uri(HOST)).uriValue().host(), config.get(uri(HOST)).uriValue().port());
+            final mWebSocketServer server = new mWebSocketServer(
+                    config.get(uri(HOST)).autoResolve(noobj()).uriValue().host(), 
+                    config.get(uri(HOST)).autoResolve(noobj()).uriValue().port());
             final wsSpace ws = new wsSpace(server, config, vid);
             server.setSpace(ws);
             server.onStart();

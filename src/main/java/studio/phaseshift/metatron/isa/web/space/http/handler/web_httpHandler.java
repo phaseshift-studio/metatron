@@ -140,18 +140,26 @@ public class web_httpHandler extends HttpRec {
 
                 // 4 — 404 if still nothing
                 if (requestObj.isNoObj()) {
-                    try { sendError(404, "Not Found: " + requestURI); } catch (final IOException e) {}
+                    try {
+                        sendError(404, "Not Found: " + requestURI);
+                    } catch (final IOException e) {
+                    }
                     return noobj();
                 }
 
                 // 5 — Detect Content-Type from object type, send response
-                final Content.ContentType contentType = Content.ContentType.fromType(requestObj, Content.ContentType.TEXT_PLAIN);
+                final Content.ContentType contentType = requestURI.hasQ(OUT) ?
+                        Content.ContentType.of(requestURI.q(OUT)) :
+                        Content.ContentType.fromType(requestObj, Content.ContentType.TEXT_PLAIN);
                 this.send(requestObj, contentType);
                 return requestObj;
 
             } catch (final Exception e) {
                 LOG.error("error handling GET: %s", e.getMessage() == null ? e.getClass().getName() : e.getMessage());
-                try { sendError(500, "Internal Server Error"); } catch (final IOException ignored) {}
+                try {
+                    sendError(500, "Internal Server Error");
+                } catch (final IOException ignored) {
+                }
                 return noobj();
             }
         }));
@@ -160,7 +168,10 @@ public class web_httpHandler extends HttpRec {
         this.jvm().put(uri(ON_PUT), instC(vid.extend(ON_PUT).dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> {
             try {
                 if (Boolean.TRUE.equals(this.at(uri(READ_ONLY)).orElse(bool(true)).jvm())) {
-                    try { sendError(403, "Read-only"); } catch (final IOException ignored) {}
+                    try {
+                        sendError(403, "Read-only");
+                    } catch (final IOException ignored) {
+                    }
                     return noobj();
                 }
                 final HttpExchange exchange = this.exchange;
@@ -179,14 +190,23 @@ public class web_httpHandler extends HttpRec {
                     final Content.ContentType ct = Content.ContentType.fromExtension(fileURI.name(), Content.ContentType.TEXT_PLAIN);
                     final Obj bodyObj = ct.serializer().inputBytes(ByteBuffer.wrap(bodyStr.getBytes(StandardCharsets.UTF_8)));
                     Router.writeToSpace(fileURI, bodyObj);
-                    try { this.exchange.sendResponseHeaders(201, -1); } catch (final IOException ignored) {}
+                    try {
+                        this.exchange.sendResponseHeaders(201, -1);
+                    } catch (final IOException ignored) {
+                    }
                 } else {
-                    try { sendError(400, "No body"); } catch (final IOException ignored) {}
+                    try {
+                        sendError(400, "No body");
+                    } catch (final IOException ignored) {
+                    }
                 }
                 return noobj();
             } catch (final Exception e) {
                 LOG.error("error handling PUT: %s", e.getMessage());
-                try { sendError(500, "Internal Server Error"); } catch (final IOException ignored) {}
+                try {
+                    sendError(500, "Internal Server Error");
+                } catch (final IOException ignored) {
+                }
                 return noobj();
             }
         }));
