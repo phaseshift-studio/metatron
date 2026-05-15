@@ -40,11 +40,10 @@ jobs:
       - name: Publish to npm
         run: |
           echo "//registry.npmjs.org/:_authToken=\${NPM_TOKEN}" > ~/.npmrc
-          shopt -s nullglob
-          TGZ=(./jdeploy/github-release-files/*.tgz)
-          if [ \${#TGZ[@]} -gt 0 ]; then
-            echo "Publishing: \${TGZ[0]}"
-            npm publish "\${TGZ[0]}" --access public
+          TGZ=$(find ./jdeploy/github-release-files -name "*.tgz" -print -quit)
+          if [ -n "$TGZ" ] && [ -f "$TGZ" ]; then
+            echo "Publishing: $TGZ"
+            npm publish "$TGZ" --access public
           else
             echo "No .tgz found"
             exit 1
