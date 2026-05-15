@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-# Define colors
+# Colors
 BLACK='\e[0;30m'
 RED='\e[0;31m'
 GREEN='\e[0;32m'
@@ -10,97 +10,95 @@ BLUE='\e[0;34m'
 PURPLE='\e[0;35m'
 CYAN='\e[0;36m'
 WHITE='\e[0;37m'
-NC='\e[0m'  # No Color / Reset
-CHECKMARK="${GREEN}\u2705"
-ERRORMARK="${RED}\u274C"
+NC='\e[0m'
 
-# Configuration
-REPO_URL="https://github.com/phaseshift-studio/metatron.git"
-BUILD_DIR="./metatron"
+REPO="phaseshift-studio/metatron"
 
-echo -e "${BLUE}metatron ${YELLOW}installer"
-echo -e "  ${BLUE}repo:${YELLOW}    ${REPO_URL}"
-echo -e "  ${BLUE}install:${YELLOW} ${BUILD_DIR}${NC}"
+# Detect OS
+case "$(uname -s)" in
+  Linux)  OS="linux" ;;
+  Darwin) OS="mac" ;;
+  CYGWIN*|MINGW*|MSYS*) OS="win" ;;
+  *)      echo "Unsupported OS: $(uname -s)"; exit 1 ;;
+esac
 
-# Function to check if a command exists
-command_exists() {
-    command -v "$1" >/dev/null 2>&1
-}
+# Detect arch
+ARCH=$(uname -m)
+case "$ARCH" in
+  x86_64|amd64)  ARCH="x64" ;;
+  aarch64|arm64) ARCH="arm64" ;;
+  *)             echo "Unsupported arch: $ARCH"; exit 1 ;;
+esac
 
-# Function to install Java 21 and Maven
-install_dependencies() {
-    local package="$1"
-    echo -e "${package} ${RED}not installed${NC}"
-    echo -e "  it is recommended that the user install ${package} manually"
-    read -p "would you like to have ${package} installed automatically now? (y/n): " confirm
-    if [[ "$confirm" =~ ^[Yy]$ ]]; then
-      echo -e "installing ${package}..."
-      sudo apt-get update
-      sudo apt-get install -y ${package}
-      echo -e "${package]} installed"
-    else
-      echo "installation cancelled by user"
-      exit 1
-    fi
-}
+echo -e "${BLUE}metatron-vm ${YELLOW}installer${NC}"
+echo -e "  ${BLUE}platform:${YELLOW} ${OS}-${ARCH}${NC}"
 
-# Check for Java 21
-if ! command_exists java; then
-    install_dependencies "openjdk-21-jdk"
-else
-    # Extract major version (handles both 1.x and x formats)
-    JAVA_MAJOR_VERSION=$(java -version 2>&1 | awk -F '"' '/version/ {split($2, a, "."); gsub(/[^0-9]/, "", a[1]); print a[1]}')
-    # Check if version is 21 or higher
-    if [ "$JAVA_MAJOR_VERSION" -ge 21 ]; then
-        echo -e "${CHECKMARK} java $JAVA_MAJOR_VERSION ${GREEN}already installed${NC}."
-    else
-        echo -e "java version $JAVA_MAJOR_VERSION ${RED}is too low${NC}. java 21 or higher is required."
-        install_dependencies "openjdk-21-jdk"
-    fi
-fi
-
-# Check for Maven
-if ! command_exists mvn; then
-    install_dependencies "maven"
-else
-    echo -e "${CHECKMARK} maven ${GREEN}already installed${NC}."
-fi
-
-# Clone the repository
-echo -e "cloning repository from $REPO_URL..."
-if [ -d "$BUILD_DIR" ]; then
-    echo -e "directory $BUILD_DIR ${YELLOW}already exists${NC}. updating..."
-    cd "$BUILD_DIR"
-    git pull
-else
-    git clone "$REPO_URL"
-    cd "$BUILD_DIR"
-fi
-
-# Build the project with Maven
-echo -e "building project with maven..."
-export MAVEN_OPTS=--add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED
-# defaults
-HOST="ws://0.0.0.0:8555"
-BOOT="boot/boot.mtron"
-LOG="info"
-EXTRAS=""
-while [ $# -gt 0 ]; do
-  case "$1" in
-    --headless) export MTRON_HEADLESS=1       ; shift ;;
-    --log)      LOG="$2"                     ; shift 2 ;;
-    --host)     HOST="$2"                    ; shift 2 ;;
-    --boot)     BOOT="$2"                    ; shift 2 ;;
-    *)          break ;;
-  esac
-done
-
-mvn compile exec:java -o -Dexec.args="[host=><${HOST}>,boot=><${BOOT}>,log=>${LOG}${EXTRAS}]"
-
-# Check build status
-if [ $? -eq 0 ]; then
-    echo "build successful!"
-else
-    echo "build failed!"
+# Get latest release tag (snapshot or stable depending on channel)
+CHANNEL="${1:-snapshot}"
+if [ "$CHANNEL" = "stable" ]; then
+  TAG=$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest" | grep '"tag_name"' | head -1 | cut -d'"' -f4)
+  if [ -z "$TAG" ]; then
+    echo "No stable release found"
     exit 1
+  fi
+else
+  TAG="jdeploy-snapshot"
+fi
+
+API="https://api.github.com/repos/$REPO/releases/tags/$TAG"
+
+# Find matching asset
+ASSET_URL=$(curl -fsSL "$API" \
+  | grep -o "\"browser_download_url\": \"[^\"]*Installer-${OS}-${ARCH}[^\"]*\"" \
+  | head -1 \
+  | cut -d'"' -f4)
+
+if [ -z "$ASSET_URL" ]; then
+  echo "Could not find installer for ${OS}-${ARCH}"
+  exit 1
+fi
+
+echo "  ${BLUE}channel:${YELLOW}  $CHANNEL${NC}"
+echo "  ${BLUE}source:${YELLOW}   $ASSET_URL${NC}"
+
+if [ "$OS" = "win" ]; then
+  curl -fsSL -o metatron-vm-installer.exe "$ASSET_URL"
+  echo ""
+  echo "Downloaded: metatron-vm-installer.exe"
+  echo "Run the installer to complete setup."
+else
+  TMPDIR=$(mktemp -d)
+  trap "rm -rf $TMPDIR" EXIT
+
+  if [ "$OS" = "mac" ]; then
+    curl -fsSL "$ASSET_URL" | tar xz -C "$TMPDIR"
+  else
+    curl -fsSL "$ASSET_URL" | tar xz -C "$TMPDIR"
+  fi
+
+  INSTALL_DIR="${HOME}/.local/bin"
+  mkdir -p "$INSTALL_DIR"
+
+  # Find the metatron-vm binary in extracted files
+  BIN=$(find "$TMPDIR" -name "metatron-vm" -o -name "metatron" | head -1)
+  if [ -z "$BIN" ]; then
+    echo "Binary not found in archive"
+    ls -la "$TMPDIR"
+    exit 1
+  fi
+
+  cp "$BIN" "$INSTALL_DIR/metatron-vm"
+  chmod +x "$INSTALL_DIR/metatron-vm"
+
+  echo ""
+  echo -e "${GREEN}metatron-vm installed to ${INSTALL_DIR}/metatron-vm${NC}"
+  echo ""
+  echo "Add to PATH if needed:"
+  echo "  export PATH=\$HOME/.local/bin:\$PATH"
+  echo ""
+  echo "Usage:"
+  echo "  metatron-vm \"[host=><ws://0.0.0.0:8888>]\""
+  echo ""
+  echo "No arguments start a bare VM (core ISA only):"
+  echo "  metatron-vm"
 fi
