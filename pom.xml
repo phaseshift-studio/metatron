@@ -57,31 +57,31 @@
         <main.class>studio.phaseshift.metatron.BootLoader</main.class>
         <!-- DEPENDENCY VERSIONS -->
         <flexmark.version>0.64.8</flexmark.version>
-        <testcontainers.version>2.0.4</testcontainers.version>
+        <testcontainers.version>2.0.5</testcontainers.version>
         <java-websocket.version>1.6.0</java-websocket.version>
         <mariadb.version>3.5.8</mariadb.version>
-        <mongodb.version>5.6.5</mongodb.version>
-        <langchain4j.version>1.13.0</langchain4j.version>
+        <mongodb.version>5.7.0</mongodb.version>
+        <langchain4j.version>1.15.0</langchain4j.version>
         <jlama.version>0.8.4</jlama.version>
-        <langchain4j.beta.version>1.13.0-beta23</langchain4j.beta.version>
+        <langchain4j.beta.version>1.15.0-beta25</langchain4j.beta.version>
         <langgraph4j.version>1.8.11</langgraph4j.version>
         <junit.version>6.0.3</junit.version>
         <tinkerpop.version>3.8.1</tinkerpop.version>
         <jlama.version>0.8.4</jlama.version>
-        <gson.version>2.13.2</gson.version>
+        <gson.version>2.14.0</gson.version>
         <petitparser.version>2.4.0</petitparser.version>
-        <jline.version>3.30.9</jline.version>
+        <jline.version>3.30.13</jline.version>
         <rdf4j.version>5.3.1</rdf4j.version>
         <logback.version>1.5.32</logback.version>
-        <slf4j.version>2.0.17</slf4j.version>
-        <hive.version>1.3.13</hive.version>
+        <slf4j.version>2.0.18</slf4j.version>
+        <hive.version>1.3.14</hive.version>
         <jakarta.version>2.2.0</jakarta.version>
-        <jsoup.version>1.22.1</jsoup.version>
+        <jsoup.version>1.22.2</jsoup.version>
         <asciidoctor.version>3.2.0</asciidoctor.version>
         <asciidoctorj.version>3.0.1</asciidoctorj.version>
         <exp4j.version>0.4.8</exp4j.version>
         <llama4j.version>0.1.1</llama4j.version>
-        <ollama4j.version>1.1.6</ollama4j.version>
+        <ollama4j.version>1.1.7</ollama4j.version>
         <guice.version>7.0.0</guice.version>
         <moquette.version>0.18.0</moquette.version>
         <dockerfile-maven.version>1.4.13</dockerfile-maven.version>
@@ -89,9 +89,9 @@
         <jserialcomm.version>2.11.4</jserialcomm.version>
         <rhino.version>1.9.1</rhino.version>
         <rhino.j2r223.version>1.7.14</rhino.j2r223.version>
-        <sqlite.version>3.53.0.0</sqlite.version>
+        <sqlite.version>3.53.1.0</sqlite.version>
         <mcp-annotated-java-sdk.version>0.13.0</mcp-annotated-java-sdk.version>
-        <mcp.version>1.1.1</mcp.version>
+        <mcp.version>1.1.2</mcp.version>
         <!-- LOGBACK PROPERTIES -->
     </properties>
     <dependencyManagement>
@@ -399,7 +399,7 @@
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>42.7.1</version>
+            <version>42.7.11</version>
             <scope>test</scope>
         </dependency>
         <!-- in-memory mongodb for testing (BSD-3-Clause license) -->
