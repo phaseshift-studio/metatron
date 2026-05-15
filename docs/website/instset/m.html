@@ -257,15 +257,6 @@ bin/metatron</code></pre>
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
  space=&gt;[sub=&gt;{!*/m/mach,!*/m/math,!*/m/web,!*/m/iot,!*/m/grph,!*/m/llm,!*/m/tble,!*/m/dcmnt,!*/m/rdf}],
- rewrite=&gt;[
-  /m/inst/rewrite/id_removal?code{?}&lt;=code(),
-  /m/inst/rewrite/map_nest?code{?}&lt;=code(),
-  /m/inst/rewrite/else_after_count?code{?}&lt;=code(),
-  /m/inst/rewrite/plus_zero?code{?}&lt;=code(),
-  /m/inst/rewrite/mult_one?code{?}&lt;=code(),
-  /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
-  /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
-  /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()],
  type=&gt;[
   #::T,
   bool::T,
@@ -293,9 +284,15 @@ bin/metatron</code></pre>
   mintq::T,
   incrq::T,
   constq::T],
- const=&gt;[
-  noobj,
-  none@none],
+ rewrite=&gt;[
+  /m/inst/rewrite/id_removal?code{?}&lt;=code(),
+  /m/inst/rewrite/map_nest?code{?}&lt;=code(),
+  /m/inst/rewrite/else_after_count?code{?}&lt;=code(),
+  /m/inst/rewrite/plus_zero?code{?}&lt;=code(),
+  /m/inst/rewrite/mult_one?code{?}&lt;=code(),
+  /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
+  /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
+  /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()],
  inst=&gt;[
   as?bool&lt;=bool(bool::T),
   as?bytes&lt;=bool(bytes::T),
@@ -521,7 +518,10 @@ bin/metatron</code></pre>
   swap?A&lt;=A(B::T),
   rshift?B{*}&lt;=A(C{*}::T),
   lshift?B{*}&lt;=A(),
-  start?A{**}&lt;=noobj{0}(A{**}::T)]]@/m</code></pre>
+  start?A{**}&lt;=noobj{0}(A{**}::T)],
+ const=&gt;[
+  noobj,
+  none@none]]@/m</code></pre>
                 </div>
             </div>
         </div>
@@ -971,15 +971,6 @@ bin/metatron</code></pre>
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
  space=&gt;[sub=&gt;{!*/m/mach,!*/m/math,!*/m/web,!*/m/iot,!*/m/grph,!*/m/llm,!*/m/tble,!*/m/dcmnt,!*/m/rdf}],
- rewrite=&gt;[
-  /m/inst/rewrite/id_removal?code{?}&lt;=code(),
-  /m/inst/rewrite/map_nest?code{?}&lt;=code(),
-  /m/inst/rewrite/else_after_count?code{?}&lt;=code(),
-  /m/inst/rewrite/plus_zero?code{?}&lt;=code(),
-  /m/inst/rewrite/mult_one?code{?}&lt;=code(),
-  /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
-  /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
-  /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()],
  type=&gt;[
   #::T,
   bool::T,
@@ -1007,9 +998,15 @@ bin/metatron</code></pre>
   mintq::T,
   incrq::T,
   constq::T],
- const=&gt;[
-  noobj,
-  none@none],
+ rewrite=&gt;[
+  /m/inst/rewrite/id_removal?code{?}&lt;=code(),
+  /m/inst/rewrite/map_nest?code{?}&lt;=code(),
+  /m/inst/rewrite/else_after_count?code{?}&lt;=code(),
+  /m/inst/rewrite/plus_zero?code{?}&lt;=code(),
+  /m/inst/rewrite/mult_one?code{?}&lt;=code(),
+  /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
+  /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
+  /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()],
  inst=&gt;[
   as?bool&lt;=bool(bool::T),
   as?bytes&lt;=bool(bytes::T),
@@ -1235,7 +1232,10 @@ bin/metatron</code></pre>
   swap?A&lt;=A(B::T),
   rshift?B{*}&lt;=A(C{*}::T),
   lshift?B{*}&lt;=A(),
-  start?A{**}&lt;=noobj{0}(A{**}::T)]]@/m</code></pre></div>
+  start?A{**}&lt;=noobj{0}(A{**}::T)],
+ const=&gt;[
+  noobj,
+  none@none]]@/m</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">the core instruction set of metatron containing the base types and useful instructions to manipulate them</p>
 </div>
@@ -3445,11 +3445,101 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
 </div>
 </div><div class="container-xxl mb-4" id="rewrites">
     <h3 class="text-primary mb-3">Rewrites <span class="pill-label badge bg-warning text-dark">8</span></h3>
+    <div class="card mb-3" id="rewrite-else_after_count">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-warning fw-bold">else_after_count</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-code" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
+        </span>
+        <small style="font-size:0.8rem;" class="text-muted code">/m/inst/rewrite/else_after_count?rng=/m/code{?}&amp;dom=/m/code</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/else_after_count?rng=code{?}&amp;dom=code(){&lt;j&gt;}</code></pre></div>
     
+</div><div class="card mb-3" id="rewrite-id_removal">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-warning fw-bold">id_removal</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-code" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
+        </span>
+        <small style="font-size:0.8rem;" class="text-muted code">/m/inst/rewrite/id_removal?rng=/m/code{?}&amp;dom=/m/code</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/id_removal?rng=code{?}&amp;dom=code(){&lt;j&gt;}</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">removes identity instructions</p>
+</div>
+</div><div class="card mb-3" id="rewrite-map_nest">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-warning fw-bold">map_nest</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-code" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
+        </span>
+        <small style="font-size:0.8rem;" class="text-muted code">/m/inst/rewrite/map_nest?rng=/m/code{?}&amp;dom=/m/code</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/map_nest?rng=code{?}&amp;dom=code(){&lt;j&gt;}</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">flattens nested map instructions</p>
+</div>
+</div><div class="card mb-3" id="rewrite-mult_one">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-warning fw-bold">mult_one</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-code" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
+        </span>
+        <small style="font-size:0.8rem;" class="text-muted code">/m/inst/rewrite/mult_one?rng=/m/code{?}&amp;dom=/m/code</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/mult_one?rng=code{?}&amp;dom=code(){&lt;j&gt;}</code></pre></div>
+    
+</div><div class="card mb-3" id="rewrite-plus_zero">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-warning fw-bold">plus_zero</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-code" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
+        </span>
+        <small style="font-size:0.8rem;" class="text-muted code">/m/inst/rewrite/plus_zero?rng=/m/code{?}&amp;dom=/m/code</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/plus_zero?rng=code{?}&amp;dom=code(){&lt;j&gt;}</code></pre></div>
+    
+</div><div class="card mb-3" id="rewrite-split_merge_collapse">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-warning fw-bold">split_merge_collapse</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-code" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
+        </span>
+        <small style="font-size:0.8rem;" class="text-muted code">/m/inst/rewrite/split_merge_collapse?rng=/m/code{?}&amp;dom=/m/code</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/split_merge_collapse?rng=code{?}&amp;dom=code(){&lt;j&gt;}</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">applies abelian monoid law on split code paths</p>
+</div>
+</div><div class="card mb-3" id="rewrite-split_merge_left_factor">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-warning fw-bold">split_merge_left_factor</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-code" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
+        </span>
+        <small style="font-size:0.8rem;" class="text-muted code">/m/inst/rewrite/split_merge_left_factor?rng=/m/code{?}&amp;dom=/m/code</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/split_merge_left_factor?rng=code{?}&amp;dom=code(){&lt;j&gt;}</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">leverages distributive ring law to pull common monoidally bound components to the right</p>
+</div>
+</div><div class="card mb-3" id="rewrite-split_merge_right_factor">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-warning fw-bold">split_merge_right_factor</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="#type-code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="#type-code" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
+        </span>
+        <small style="font-size:0.8rem;" class="text-muted code">/m/inst/rewrite/split_merge_right_factor?rng=/m/code{?}&amp;dom=/m/code</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/inst/rewrite/split_merge_right_factor?rng=code{?}&amp;dom=code(){&lt;j&gt;}</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">leverages distributive ring law to pull common monoidally bound components to the left</p>
+</div>
+</div>
 </div><div class="container-xxl py-3 text-center">
     <hr class="border-secondary">
     <small class="text-muted">
-        generated by metatron instset doc generator on build 0-2026-05-15 15:43:43<br>
+        generated by metatron instset doc generator on build 0-2026-05-15 16:14:34<br>
         (c) PhaseShift Studio, LLC
     </small>
 </div></main>

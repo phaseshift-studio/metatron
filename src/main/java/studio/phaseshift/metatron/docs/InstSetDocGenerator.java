@@ -49,14 +49,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -762,11 +755,10 @@ public class InstSetDocGenerator {
         if (rewrites.isEmpty()) return "";
         final StringBuilder cards = new StringBuilder();
         for (final Inst rw : rewrites.stream()
-                .filter(r -> r.vid() != null)
-                .sorted((a, b) -> a.vid().name().compareTo(b.vid().name()))
+                .sorted(Comparator.comparing(a -> a.tid().name()))
                 .toList()) {
-            final String name = rw.tid() != null ? rw.tid().name() : "";
-            final String uri = rw.tid() != null ? rw.tid().toString() : "";
+            final String name = rw.tid().name();
+            final String uri = rw.tid().toString();
             final String gid = "rewrite-" + esc(name);
             final String sig = convertShorthand(SER.write(rw));
             final String sigBlock = !sig.isEmpty()
@@ -781,7 +773,7 @@ public class InstSetDocGenerator {
                                      <span class="code text-warning fw-bold">%s</span>
                                      %s
                                  </span>
-                                 <small class="text-muted code">%s</small>
+                                 <small style="font-size:0.8rem;" class="text-muted code">%s</small>
                              </div>
                              %s
                              %s

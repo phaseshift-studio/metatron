@@ -380,12 +380,12 @@ bin/metatron</code></pre>
 </div><div class="card-body py-2">
     <small class="text-muted fw-bold">sig:</small>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">a rec describing a document database connection <span class="text-light">=&gt;</span> a rec with fields for configuring a document database connection</pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  pattern <span class="text-light">=&gt;</span> <span class="text-info">&#39;the pattern for accessing documents&#39;</span>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  {?}schema <span class="text-light">=&gt;</span> <span class="text-info">&#39;an instset of collection types auto-discovered from the live database&#39;</span>
   host <span class="text-light">=&gt;</span> <span class="text-info">&#39;connection uri (mongodb://host:port/database?options)&#39;</span>
-  {?}schema <span class="text-light">=&gt;</span> <span class="text-info">&#39;an instset of collection types auto-discovered from the live database&#39;</span>
-  {?}root <span class="text-light">=&gt;</span> <span class="text-info">&#39;the root type constraint — writes at document root must satisfy this type; defaults to rec::T&#39;</span>
-  route <span class="text-light">=&gt;</span> <span class="text-info">&#39;the route for accessing documents&#39;</span>
+  pattern <span class="text-light">=&gt;</span> <span class="text-info">&#39;the pattern for accessing documents&#39;</span>
   {?}serializer <span class="text-light">=&gt;</span> <span class="text-info">&#39;the serializer for BSON documents&#39;</span>
+  route <span class="text-light">=&gt;</span> <span class="text-info">&#39;the route for accessing documents&#39;</span>
+  {?}root <span class="text-light">=&gt;</span> <span class="text-info">&#39;the root type constraint — writes at document root must satisfy this type; defaults to rec::T&#39;</span>
 </pre>
 </div><div class="card-body border-top py-2">
     <small class="text-muted fw-bold">examples:</small>
@@ -427,11 +427,91 @@ bin/metatron</code></pre>
 </div>
 </div><div class="container-xxl mb-4" id="rewrites">
     <h3 class="text-primary mb-3">Rewrites <span class="pill-label badge bg-warning text-dark">8</span></h3>
+    <div class="card mb-3" id="rewrite-mql_count">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-warning fw-bold">mql_count</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#type-code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-code" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
+        </span>
+        <small style="font-size:0.8rem;" class="text-muted code">/m/dcmnt/inst/rewrite/mql_count?rng=/m/code{?}&amp;dom=/m/code</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/dcmnt/inst/rewrite/mql_count?rng=code{?}&amp;dom=code(){&lt;j&gt;}</code></pre></div>
     
+</div><div class="card mb-3" id="rewrite-mql_has">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-warning fw-bold">mql_has</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#type-code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-code" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
+        </span>
+        <small style="font-size:0.8rem;" class="text-muted code">/m/dcmnt/inst/rewrite/mql_has?rng=/m/code{?}&amp;dom=/m/code</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/dcmnt/inst/rewrite/mql_has?rng=code{?}&amp;dom=code(){&lt;j&gt;}</code></pre></div>
+    
+</div><div class="card mb-3" id="rewrite-mql_limit">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-warning fw-bold">mql_limit</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#type-code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-code" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
+        </span>
+        <small style="font-size:0.8rem;" class="text-muted code">/m/dcmnt/inst/rewrite/mql_limit?rng=/m/code{?}&amp;dom=/m/code</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/dcmnt/inst/rewrite/mql_limit?rng=code{?}&amp;dom=code(){&lt;j&gt;}</code></pre></div>
+    
+</div><div class="card mb-3" id="rewrite-mql_mean">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-warning fw-bold">mql_mean</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#type-code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-code" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
+        </span>
+        <small style="font-size:0.8rem;" class="text-muted code">/m/dcmnt/inst/rewrite/mql_mean?rng=/m/code{?}&amp;dom=/m/code</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/dcmnt/inst/rewrite/mql_mean?rng=code{?}&amp;dom=code(){&lt;j&gt;}</code></pre></div>
+    
+</div><div class="card mb-3" id="rewrite-mql_select">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-warning fw-bold">mql_select</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#type-code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-code" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
+        </span>
+        <small style="font-size:0.8rem;" class="text-muted code">/m/dcmnt/inst/rewrite/mql_select?rng=/m/code{?}&amp;dom=/m/code</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/dcmnt/inst/rewrite/mql_select?rng=code{?}&amp;dom=code(){&lt;j&gt;}</code></pre></div>
+    
+</div><div class="card mb-3" id="rewrite-mql_sum">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-warning fw-bold">mql_sum</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#type-code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-code" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
+        </span>
+        <small style="font-size:0.8rem;" class="text-muted code">/m/dcmnt/inst/rewrite/mql_sum?rng=/m/code{?}&amp;dom=/m/code</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/dcmnt/inst/rewrite/mql_sum?rng=code{?}&amp;dom=code(){&lt;j&gt;}</code></pre></div>
+    
+</div><div class="card mb-3" id="rewrite-mql_where">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-warning fw-bold">mql_where</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#type-code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-code" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
+        </span>
+        <small style="font-size:0.8rem;" class="text-muted code">/m/dcmnt/inst/rewrite/mql_where?rng=/m/code{?}&amp;dom=/m/code</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/dcmnt/inst/rewrite/mql_where?rng=code{?}&amp;dom=code(){&lt;j&gt;}</code></pre></div>
+    
+</div><div class="card mb-3" id="rewrite-mql_where_count">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-warning fw-bold">mql_where_count</span>
+            <span class="ms-1"><span class="instset-doc-small-code"><a href="m.html#type-code" data-bs-toggle="tooltip" title="domain" class="code text-info">code</a></span><span class="text-muted mx-1">=&gt;</span><span class="instset-doc-small-code"><a href="m.html#type-code" data-bs-toggle="tooltip" title="maybe range" class="code text-success">code{?}</a></span></span>
+        </span>
+        <small style="font-size:0.8rem;" class="text-muted code">/m/dcmnt/inst/rewrite/mql_where_count?rng=/m/code{?}&amp;dom=/m/code</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">/m/dcmnt/inst/rewrite/mql_where_count?rng=code{?}&amp;dom=code(){&lt;j&gt;}</code></pre></div>
+    
+</div>
 </div><div class="container-xxl py-3 text-center">
     <hr class="border-secondary">
     <small class="text-muted">
-        generated by metatron instset doc generator on build 0-2026-05-15 15:43:44<br>
+        generated by metatron instset doc generator on build 0-2026-05-15 16:14:35<br>
         (c) PhaseShift Studio, LLC
     </small>
 </div></main>

@@ -60,11 +60,11 @@ h1, h1. h2, h2. h3, h3. h4, h4. {
 }
 
 .mini-label {
-    color: var(--mred) !important;
+    color: #6C7293 !important;
 }
 
 .micro-label {
-    color: var(--mred) !important;
+    color: #6C7293 !important;
     font-size: 0.85rem;
 }
 

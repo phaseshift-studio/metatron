@@ -1538,19 +1538,7 @@ ai -> *ollama:+/+                                             /
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */m/math.&gt;&gt;type.&gt;&gt;
-==&gt;{real::T@/m/math/data_size,data_size::T[][
- /m/math/bB/ctor?bB&lt;=#{?}(#::T)
-]@/m/math/bB,data_size::T[][
- /m/math/kB/ctor?kB&lt;=#{?}(#::T)
-]@/m/math/kB,data_size::T[][
- /m/math/mB/ctor?mB&lt;=#{?}(#::T)
-]@/m/math/mB,data_size::T[][
- /m/math/gB/ctor?gB&lt;=#{?}(#::T)
-]@/m/math/gB,data_size::T[][
- /m/math/tB/ctor?tB&lt;=#{?}(#::T)
-]@/m/math/tB,data_size::T[][
- /m/math/pB/ctor?pB&lt;=#{?}(#::T)
-]@/m/math/pB,real::T@/m/math/currency,currency::T@/m/math/currency/usd,currency::T@/m/math/currency/euro}</code></pre>
+==&gt;{real::T@/m/math/data_size,data_size::T[][/m/math/bB/ctor?bB&lt;=#{?}(#::T)]@/m/math/bB,data_size::T[][/m/math/kB/ctor?kB&lt;=#{?}(#::T)]@/m/math/kB,data_size::T[][/m/math/mB/ctor?mB&lt;=#{?}(#::T)]@/m/math/mB,data_size::T[][/m/math/gB/ctor?gB&lt;=#{?}(#::T)]@/m/math/gB,data_size::T[][/m/math/tB/ctor?tB&lt;=#{?}(#::T)]@/m/math/tB,data_size::T[][/m/math/pB/ctor?pB&lt;=#{?}(#::T)]@/m/math/pB,real::T@/m/math/currency,currency::T@/m/math/currency/usd,currency::T@/m/math/currency/euro}</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -2009,9 +1997,7 @@ can access it accordingly and naturally.</p>
   {?}type=&gt;{?}[#{*}::T],
   {?}inst=&gt;{?}[inst::T],
   {?}rewrite=&gt;{?}[inst::T],
-  {?}sugar=&gt;{?}[lst::T]]][
- /m/instset/ctor?instset&lt;=#{?}(#::T)
-]</code></pre>
+  {?}sugar=&gt;{?}[lst::T]]][/m/instset/ctor?instset&lt;=#{?}(#::T)]</code></pre>
 </div>
 </div>
 <div class="stemblock">
@@ -2251,17 +2237,13 @@ Yield the <em>range</em> (<code>&gt;&gt;</code>) of the relation constructed (th
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; nat -&gt; int::T[?&gt;0][-&lt;|[is(lt(0)) =&gt; * -1,_ =&gt; _]&gt;&gt;]
-==&gt;int::T[is(gt(0))][
- choose([
+==&gt;int::T[is(gt(0))][choose([
   is(lt(0))=&gt;mult(-1),
-  id()=&gt;id()]).rshift()
-]
+  id()=&gt;id()]).rshift()]
 mtron&gt; *nat
-==&gt;int::T[is(gt(0))][
- choose([
+==&gt;int::T[is(gt(0))][choose([
   is(lt(0))=&gt;mult(-1),
-  id()=&gt;id()]).rshift()
-]
+  id()=&gt;id()]).rshift()]
 mtron&gt; nat::2
 ==&gt;nat::2
 mtron&gt; nat::-2
@@ -2272,11 +2254,9 @@ mtron&gt;  -2.as(nat::T)
 ==&gt;fail::[-2 is not a is(gt(0))
   -2=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/36
 mtron&gt;  nat::2 * -1
-==&gt;fail::[nat::-2 is not a int::T[is(gt(0))][
- choose([
+==&gt;fail::[nat::-2 is not a int::T[is(gt(0))][choose([
   is(lt(0))=&gt;mult(-1),
-  id()=&gt;id()]).rshift()
-]][...]@/sys/fail/42</code></pre>
+  id()=&gt;id()]).rshift()]][...]@/sys/fail/42</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -2303,7 +2283,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{g}}M{{r}}e{{y}}t{{y}}A{{b}}T{{m}}r{{r}}o{{r}}n{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{c}}m{{m}}e{{c}}t{{b}}A{{b}}t{{y}}R{{g}}o{{r}}n{{X}}.</p>
 </div>
 <h4 id="_cascading_type_constructions" class="discrete">cascading type constructions</h4>
 <h3 id="_mono_types" class="discrete">mono types</h3>
@@ -4072,15 +4052,13 @@ Once found, it then traverses within the match to resolve the remaining path seg
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">==&gt;rec::T[][
- inst?qproc&lt;=#{?}([
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">==&gt;rec::T[][inst?qproc&lt;=#{?}([
  pattern=&gt;uri::T,
  pre_write{?}=&gt;inst::T,
  post_write{?}=&gt;inst::T,
  qless_write{?}=&gt;inst::T,
  pre_read{?}=&gt;inst::T,
- post_read{?}=&gt;inst::T])
-]</code></pre>
+ post_read{?}=&gt;inst::T])]</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -4536,14 +4514,14 @@ mtron&gt; *&lt;http://phaseshift.studio&gt;.as(str::T)
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">==&gt;[
  object=&gt;list,
  data=&gt;[
-  [id=&gt;qwen3-coder-30b-a3b-instruct,object=&gt;model],
   [id=&gt;qwen3-tts-cpp,object=&gt;model],
   [id=&gt;qwen3:latest,object=&gt;model],
   [id=&gt;'smollm:1.7b',object=&gt;model],
   [id=&gt;mistralai_devstral-small-2507,object=&gt;model],
+  [id=&gt;qwen3-coder-30b-a3b-instruct,object=&gt;model],
   [id=&gt;MeetAISmall__latest,object=&gt;model],
   [id=&gt;gpt-oss__latest,object=&gt;model]]]
-==&gt;qwen3-tts-cpp
+==&gt;mistralai_devstral-small-2507
 ==&gt;[
  parameters=&gt;[
   model=&gt;'Qwen3-Coder-30B-A3B-Instruct-Q4_K_M.gguf',

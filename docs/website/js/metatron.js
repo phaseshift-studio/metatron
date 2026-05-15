@@ -276,7 +276,7 @@
                 // but simpler to hide, update attribute, show, then revert.
                 var originalTitle = $(this).attr('data-bs-original-title') || $(this).attr('title');
                 
-                $(this).attr('data-bs-original-title', 'Copied!').tooltip('show');
+                $(this).attr('data-bs-original-title', 'copied').tooltip('show');
                 
                 var btn = this;
                 setTimeout(function() {
