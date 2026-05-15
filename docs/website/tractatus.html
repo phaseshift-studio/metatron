@@ -2283,7 +2283,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{c}}m{{m}}e{{c}}t{{b}}A{{b}}t{{y}}R{{g}}o{{r}}n{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{b}}m{{c}}E{{b}}t{{y}}A{{g}}T{{c}}R{{c}}o{{m}}N{{X}}.</p>
 </div>
 <h4 id="_cascading_type_constructions" class="discrete">cascading type constructions</h4>
 <h3 id="_mono_types" class="discrete">mono types</h3>
@@ -4521,54 +4521,43 @@ mtron&gt; *&lt;http://phaseshift.studio&gt;.as(str::T)
   [id=&gt;qwen3-coder-30b-a3b-instruct,object=&gt;model],
   [id=&gt;MeetAISmall__latest,object=&gt;model],
   [id=&gt;gpt-oss__latest,object=&gt;model]]]
-==&gt;mistralai_devstral-small-2507
+==&gt;qwen3:latest
 ==&gt;[
  parameters=&gt;[
-  model=&gt;'Qwen3-Coder-30B-A3B-Instruct-Q4_K_M.gguf',
-  top_p=&gt;0.8000,
+  model=&gt;qwen3-tts-cpp,
+  top_p=&gt;0.9500,
   top_k=&gt;20,
   min_p=&gt;0,
-  temperature=&gt;0.7000,
+  temperature=&gt;0.6000,
   max_tokens=&gt;0,
   repeat_penalty=&gt;1,
   tfz=&gt;1,
   typical_p=&gt;1,
   seed=&gt;-1,
   logprobs=&gt;false],
- name=&gt;qwen3-coder-30b-a3b-instruct,
+ name=&gt;qwen3-tts-cpp,
  f16=&gt;false,
  threads=&gt;8,
  debug=&gt;false,
  embeddings=&gt;false,
- backend=&gt;llama-cpp,
- template=&gt;[
-  chat=&gt;"""{{.Input -}}
-&lt;|im_start|&gt;assistant
-""",
-  chat_message=&gt;'&lt;|im_start|&gt;{{if eq .RoleName "tool" }}user{{else...',
-  completion=&gt;"""{{.Input}}
-""",
-  function=&gt;"""&lt;|im_start|&gt;system
-You are a function calling AI ..."""],
- known_usecases=&gt;[FLAG_CHAT,FLAG_COMPLETION],
+ backend=&gt;qwen3-tts-cpp,
+ template=&gt;[=&gt;],
+ known_usecases=&gt;[FLAG_TTS],
  pipeline=&gt;[=&gt;],
  function=&gt;[grammar=&gt;[=&gt;]],
  reasoning=&gt;[=&gt;],
  mirostat_eta=&gt;0.1000,
  mirostat_tau=&gt;5,
  mirostat=&gt;0,
- gpu_layers=&gt;99999999,
  mmap=&gt;true,
  mmlock=&gt;false,
  low_vram=&gt;false,
  reranking=&gt;false,
- stopwords=&gt;[|im_end|,dummy32000,/s,|endoftext|],
  context_size=&gt;8192,
  limit_mm_per_prompt=&gt;[=&gt;],
  diffusers=&gt;[=&gt;],
  grpc=&gt;[=&gt;],
  tts=&gt;[=&gt;],
- options=&gt;[gpu],
  mcp=&gt;[=&gt;],
  agent=&gt;[=&gt;]]</code></pre>
 </div>
@@ -4874,10 +4863,7 @@ mtron&gt; *lite:person/+/id
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">==&gt;[
  instset=&gt;instset::[
   pattern=&gt;/sys/space/lite/schema/instset/#,
-  type=&gt;[
-   award::T,
-   person::T,
-   venue::T],
+  type=&gt;[,],
   q=&gt;[docq::[
  pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
  pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
@@ -4888,44 +4874,8 @@ mtron&gt; *lite:person/+/id
  native=&gt;[
   pattern=&gt;/sys/space/lite/schema/instset/#,
   name=&gt;'instset',
-  tables=&gt;[
-   [
-    name=&gt;'award',
-    uri=&gt;/sys/space/lite/schema/instset/award,
-    schema/schema=&gt;[
-     id=&gt;int::T,
-     trophy=&gt;str::T,
-     recipient=&gt;int::T],
-    type=&gt;award::T],
-   [
-    name=&gt;'person',
-    uri=&gt;/sys/space/lite/schema/instset/person,
-    schema/schema=&gt;[
-     id=&gt;int::T,
-     name=&gt;str::T,
-     age=&gt;int::T],
-    type=&gt;person::T],
-   [
-    name=&gt;'venue',
-    uri=&gt;/sys/space/lite/schema/instset/venue,
-    schema/schema=&gt;[
-     id=&gt;int::T,
-     name=&gt;str::T,
-     location=&gt;int::T],
-    type=&gt;venue::T]],
-  references=&gt;[
-   [
-    from_table=&gt;'award',
-    from_column=&gt;'recipient',
-    to_table=&gt;'person',
-    to_column=&gt;'id',
-    type=&gt;'FOREIGN_KEY'],
-   [
-    from_table=&gt;'venue',
-    from_column=&gt;'location',
-    to_table=&gt;'area:V',
-    to_column=&gt;'id',
-    type=&gt;'FOREIGN_KEY']]]]</code></pre>
+  tables=&gt;[,],
+  references=&gt;[,]]]</code></pre>
 </div>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
@@ -5133,10 +5083,7 @@ Unlike a matching column value, the pointer encodes the full address of the link
  schema=&gt;[
   instset=&gt;instset::[
    pattern=&gt;/sys/space/lite/schema/instset/#,
-   type=&gt;[
-    award::T,
-    person::T,
-    venue::T],
+   type=&gt;[,],
    q=&gt;[docq::[
  pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
  pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
@@ -5147,44 +5094,8 @@ Unlike a matching column value, the pointer encodes the full address of the link
   native=&gt;[
    pattern=&gt;/sys/space/lite/schema/instset/#,
    name=&gt;'instset',
-   tables=&gt;[
-    [
-     name=&gt;'award',
-     uri=&gt;/sys/space/lite/schema/instset/award,
-     schema/schema=&gt;[
-      id=&gt;int::T,
-      trophy=&gt;str::T,
-      recipient=&gt;int::T],
-     type=&gt;award::T],
-    [
-     name=&gt;'person',
-     uri=&gt;/sys/space/lite/schema/instset/person,
-     schema/schema=&gt;[
-      id=&gt;int::T,
-      name=&gt;str::T,
-      age=&gt;int::T],
-     type=&gt;person::T],
-    [
-     name=&gt;'venue',
-     uri=&gt;/sys/space/lite/schema/instset/venue,
-     schema/schema=&gt;[
-      id=&gt;int::T,
-      name=&gt;str::T,
-      location=&gt;int::T],
-     type=&gt;venue::T]],
-   references=&gt;[
-    [
-     from_table=&gt;'award',
-     from_column=&gt;'recipient',
-     to_table=&gt;'person',
-     to_column=&gt;'id',
-     type=&gt;'FOREIGN_KEY'],
-    [
-     from_table=&gt;'venue',
-     from_column=&gt;'location',
-     to_table=&gt;'area:V',
-     to_column=&gt;'id',
-     type=&gt;'FOREIGN_KEY']]]]]
+   tables=&gt;[,],
+   references=&gt;[,]]]]
 mtron&gt; lite:award/1 -&gt; [trophy=&gt;'gold',   recipient=&gt;!*lite:person/1]
 ==&gt;[
  trophy=&gt;'gold',
@@ -5249,10 +5160,7 @@ mtron&gt; */sys/space/lite&gt;&gt;=[table=&gt;[person,score,award,venue]]
  schema=&gt;[
   instset=&gt;instset::[
    pattern=&gt;/sys/space/lite/schema/instset/#,
-   type=&gt;[
-    award::T,
-    person::T,
-    venue::T],
+   type=&gt;[,],
    q=&gt;[docq::[
  pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
  pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
@@ -5263,44 +5171,8 @@ mtron&gt; */sys/space/lite&gt;&gt;=[table=&gt;[person,score,award,venue]]
   native=&gt;[
    pattern=&gt;/sys/space/lite/schema/instset/#,
    name=&gt;'instset',
-   tables=&gt;[
-    [
-     name=&gt;'award',
-     uri=&gt;/sys/space/lite/schema/instset/award,
-     schema/schema=&gt;[
-      id=&gt;int::T,
-      trophy=&gt;str::T,
-      recipient=&gt;int::T],
-     type=&gt;award::T],
-    [
-     name=&gt;'person',
-     uri=&gt;/sys/space/lite/schema/instset/person,
-     schema/schema=&gt;[
-      id=&gt;int::T,
-      name=&gt;str::T,
-      age=&gt;int::T],
-     type=&gt;person::T],
-    [
-     name=&gt;'venue',
-     uri=&gt;/sys/space/lite/schema/instset/venue,
-     schema/schema=&gt;[
-      id=&gt;int::T,
-      name=&gt;str::T,
-      location=&gt;int::T],
-     type=&gt;venue::T]],
-   references=&gt;[
-    [
-     from_table=&gt;'award',
-     from_column=&gt;'recipient',
-     to_table=&gt;'person',
-     to_column=&gt;'id',
-     type=&gt;'FOREIGN_KEY'],
-    [
-     from_table=&gt;'venue',
-     from_column=&gt;'location',
-     to_table=&gt;'area:V',
-     to_column=&gt;'id',
-     type=&gt;'FOREIGN_KEY']]]]]
+   tables=&gt;[,],
+   references=&gt;[,]]]]
 mtron&gt; lite:venue/1 -&gt; [name=&gt;'main_stage',location=&gt;!*area:V/1]
 ==&gt;[
  name=&gt;'main_stage',
