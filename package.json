@@ -1,10 +1,10 @@
 {
-  "name": "metatron",
+  "name": "metatron-vm",
   "jdeploy": {
     "jar": "target/metatron-0.1-SNAPSHOT-jar-with-dependencies.jar",
     "mainClass": "studio.phaseshift.metatron.BootLoader",
     "jvmVersion": "21",
-    "title": "metatron",
+    "title": "metatron-vm",
     "description": "a ring-oriented language and virtual machine",
     "vendor": "PhaseShift Studio, LLC",
     "url": "http://metatron.phaseshift.studio",
