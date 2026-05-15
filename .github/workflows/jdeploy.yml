@@ -34,12 +34,20 @@ jobs:
       - name: Build App Installer Bundles
         uses: shannah/jdeploy@master
         with:
-          deploy_target: github
+          deploy_target: npm
           github_token: ${{ github.token }}
 
       - name: Publish to npm
         run: |
           echo "//registry.npmjs.org/:_authToken=\${NPM_TOKEN}" > ~/.npmrc
-          npm publish ./jdeploy/github-release-files/*.tgz --access public
+          ls -la ./jdeploy/github-release-files/
+          TGZ=$(ls ./jdeploy/github-release-files/*.tgz 2>/dev/null | head -1)
+          if [ -z "$TGZ" ]; then
+            echo "No .tgz found, trying npm publish from current directory"
+            npm publish --access public
+          else
+            echo "Publishing: $TGZ"
+            npm publish "$TGZ" --access public
+          fi
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
