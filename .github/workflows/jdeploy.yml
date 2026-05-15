@@ -50,8 +50,7 @@ jobs:
           tar xzf "$TGZ" -C npm-publish
           cd npm-publish/package
 
-          # Fix bin field and bump version
-          npm pkg set bin.metatron-vm="jdeploy-bundle/jdeploy.js"
+          # Bump version for unique publish
           npm version --no-git-tag-version "0.0.0-jdeploy-snapshot.${GITHUB_RUN_NUMBER}"
 
           # Auth file at project root (where we were before cd)
