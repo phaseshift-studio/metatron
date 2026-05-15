@@ -508,7 +508,7 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
             PREVIOUS_LINE.set(1, make(readExpression));
         if (!expectedExpression.equals("."))
             PREVIOUS_LINE.set(2, make(expectedExpression));
-        Graphitty.log(this.space).debug("\n\twrite [%s => %s]\n\tread [%s => %s]\n\texpected [%s => %s]",
+        Graphitty.log(this.space).warn("\n\twrite [%s => %s]\n\tread [%s => %s]\n\texpected [%s => %s]",
                 make(writeExpression), writeObj,
                 make(readExpression), readObj,
                 make(expectedExpression), resultObj);
@@ -551,11 +551,12 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
             "@$$/people/1 >>= [name=><<.>>name.+'ABC']                            %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'XYZZYXABC',age=>140,title=>'Engineer Specialist']",
             "@$$/people/2 >>= [name=><<.-<[>>name,' the ',>>title]._/sum()\\_>-]  %  *$$/people/2==[name=>_,age=>_,title=>_]                         % [name=>'Bob the Designer',age=>25,title=>'Designer']",
             "@<$$/people/+>                                                       %  *<$$/people/+>.vid()                                            % {$$/people/1,$$/people/2,$$/people/3,$$/people/4}",
+            "@<$$/people/+>.>>= [name=>\"Micky Mouse\"]                           %  *<$$/people/+>.>>name                                              % {4}\"Micky Mouse\"",
+            "@<$$/people/+>.>>= [name=>\"Optimus Prime\"]                         %  *<$$/people/+/name>                                                % \"Optimus Prime\"",
             "@<$$/people/+/name>.>>= \"Dark Wing Duck\"                           %  *<$$/people/+>==[name=>_]>>name                                 % {4}\"Dark Wing Duck\"",
-            "@<$$/people/+>.>>= [name=>\"Micky Mouse\"]                           %  *<$$/people/+/name>                                             % {4}\"Micky Mouse\"",
-            "@<$$/people/+>.>>= [name=>none]                                      %  *<$$/people/+/name>                                             % {4}none",
-            "@<$$/people/+>                                        %  *<$$/people/2>==[active=>_]                                       % [active=>true]",
-            "@<$$/people/+>.>>=[active=>false]                     %  *<$$/people/2>==[active=>_]                                       % [active=>false]",
+            "@<$$/people/+>.>>= [name=>none]                                      %  *<$$/people/+/name>                                             % noobj",
+            "@<$$/people/+>                                                       %  *<$$/people/2>==[active=>_]                                       % [active=>true]",
+            "@<$$/people/+>.>>=[active=>not(_)]                                    %  *<$$/people/2>==[active=>_]                                       % [active=>false]",
             //"noobj                                               %  *$$/people/+.>>company.group([>>name => _])==[_=>count()]       % [\"Acme Corp\"=>3,\"Globex Inc\"=>1]",
             // TODO: write >>= update test cases
             // Format: *$$/people/1 >>= [field=>newVal]   %   *$$/people/1/field   %   expectedValue

@@ -1,6 +1,17 @@
 [discrete]
 == Grph Space
 
+[discrete]
+[%collapsible]
+./m/grph instset import
+====
+++++
+<!-- 🐖
+import(/m/grph)
+-->
+++++
+====
+
 A graph is a data structure composed of a set of vertices latexmath:[V] connected by a set of edges latexmath:[E], denoted
 \[
 G = (V,E),
@@ -26,8 +37,14 @@ where latexmath:[E] is typically a https://en.wikipedia.org/wiki/Partial_functio
 This classic structure has been extended in various ways since its inception in 1736 (by https://en.wikipedia.org/wiki/Leonhard_Euler[Leonard Euler]). Examples include variants where edges are undirected, labeled, can self-loop, can connect more than two vertices, and more. Modern graph database designers approach graphs with a focus on ease of modeling and speed of querying so to compete with contemporary, complementary technologies such as relational, key/value, column, vector, document, etc. They quickly converged on a particular graph data model colloquially known as a *property graph*. This structure is known more formally as a _directed, labeled, attributed, multi-relational binary graph_. The property graph extends latexmath:[G = (V,E)] with properties (key/value pairs) associated with vertices and edges. This extension provides users a convenient path for moving between the dynamic state of a system represented using the constructs of modern object-oriented programming and the persisted state of the system stored in a graph database. As such, property graphs are useful when modeling multi-relational environments, where a heterogeneous set of "things" (different types of vertices) relate to one another via a heterogeneous set of "connections" (different types of edges).
 
 ++++
-<!-- 🐖 
-*/m/grph/space/grphspace
+<!-- 🐖
+grphspace::[pattern => g:#,                              /
+            route   => [<g:> =><>,                       /
+                        <g:V>=><V>,                      / 
+                        <g:E>=><E>,                      /
+                        <g:S>=>/m/grph/schema/modern],   /
+            native  => [factory  => mfactory::[=>],      /
+                        load     => modern]]@/sys/space/modern
 -->
 ++++
 
@@ -106,7 +123,7 @@ A consequence of mtron's uri-oriented id scheme is property keys no longer sit i
 The following examples demonstrate selection and filtering using multi-segment uri pattern matching with wildcards.
 
 ++++
-<!-- 🐖
+<!-- 🐖 role="primary"
 *g:V/1>>=[address/home/city => 'santa fe',        /
           address/work/city => 'nomansland']                    [-- <1>
 *g:V/1/address/home/city                                        [-- <2>
@@ -130,7 +147,7 @@ The following examples demonstrate selection and filtering using multi-segment u
 .nested properties
 =====
 ++++
-<!-- 🐖
+<!-- 🐖 role="secondary"
 [HIDDEN] *g:V/1>>=[address/home/city => noobj]
 [HIDDEN] *g:V/1>>=[address/work/city => noobj]
 *g:V/1==[_=>_]                                                  [-- <1>
@@ -202,7 +219,7 @@ The two data sources have a very particular understanding of how data should be 
 |===
 🧱
 ++++
-<!-- 🐖
+<!-- [IGNORE BUGGY] 🐖
 *g:V/1                                                             [-- <1>
 *acme:customers/357                                                [-- <2>
 *g:V/1.addE(consulted,|*acme:customers/357)                        [-- <3>
@@ -323,34 +340,190 @@ g:V/1?sub -> |process_message?#{*}<=#(msg=>_) { print(*msg/trgt, "received messa
 =====
 
 [discrete]
+=== metatron Encoded Graphs
+
+It is possible to encode an arbitrary graph structure (i.e. any extension of latexmath:[G=(V,E)]) in space. There are three features of 
+mtron that make graph encodings natural and universal.
+
+* `!*` (**auto_from**): ensures that simply accessing a reference yields the references referent. To the user, there is no difference between the graph elements being colocated in the same `poly`, withiin the same space, within the same computer, or across the web as a whole.
+* `>>` (**traverse**): ensures monads move along the underlying data structure, selecting particular branches within the structure as needed to yield desires semantics.
+* `-<` (**split**): ensures that executing monads will split themselves across branching graph paths.
+* `>-` (**merge**): ensures that braching paths will serialize themselves within the execution path of the machine.
+
+[discrete]
+==== directed single-relational binary graph
+
+A directed single-relational binary graph connects vertices by binary edges (a single tail and a single head vertex), where all edges have the same label/meaning (single-relational). An example of such a graph is presented in the code and diagram below.
+
+[cols="8a,6a",separator=🧱,role="table-bordered small center"]
+|===
+🧱
+++++
+<!-- 🐖
+v1 -> [!*v2, !*v3, !*v4]
+v2 -> [,]
+v3 -> [!*v4, !*v5]
+v4 -> [,]
+v5 -> [,]
+v6 -> [!*v4]
+
+v1                 [-- <1> --]
+*v1                [-- <2> --]
+*v1.>>             
+*v1.>>.>>          
+-->
+++++
+<1> `v1` denotes the source vertex (0-step traversal).
+<2> `*v1` references the adjacent vertices to v1 (1-step traversal).
+<3> `*v1>>` traversers the v1 incident edges to the v1 adjanct vertices.
+<4> `*v1>>.>>` traveres the those edges emanating from the 3 adjacent vertices to v1.
+🧱
+
+
+[source,mtron]
+----
+              ┌────┐                                 
+          ┌───► v3 ◄───┐                             
+          │   └───▲┘   │     ┌────┐                  
+ ┌────┐   │       │    └─────│ v5 │                  
+ │ v1 │───┘       │          └────┘                  
+ └────┘           │                                  
+  │  │            │                                  
+  │  │           ┌┴───┐                              
+  │  └───────────│ v4 │                              
+  │              └─┬──┘                              
+  │                │                                 
+  │ ┌────┐         │          ┌────┐                 
+  └─► v2 │         └──────────► v6 │                 
+    └────┘                    └────┘
+----
+
+|===
+
+[discrete]
+==== directed multi-relational binary graph
+
+The previous graph structure can be further enhanced with multiple types of edges (multi-relational). Again, the code and diagram below exemplify this form.
+
+[cols="8a,6a",separator=🧱,role="table-bordered small center"]
+|===
+🧱
+++++
+<!-- 🐖
+v1 -> [knows=>{!*v2, !*v3},created=>!*v4]
+v2 -> [,]
+v3 -> [created=>{!*v4, !*v5}]
+v4 -> [,]
+v5 -> [,]
+v6 -> [created=>{!*v4}]
+
+v1                           [-- <1> --]
+*v1                          [-- <2> --]
+*v1.>>knows                  [-- <3> --]
+*v1.>>knows.>>created        [-- <4> --]
+-->
+++++
+🧱
+[source,mtron]
+----
+              ┌────┐                                 
+          ┌───► v3 ◄───┐                             
+          │   └───▲┘ created ┌────┐                  
+ ┌────┐ created   │    └─────│ v5 │                  
+ │ v1 │───┘       │          └────┘                  
+ └────┘        created                                  
+  │  │            │                                  
+  │  │           ┌┴───┐                              
+  │  └───knows───► v4 │                              
+  │              └─┬──┘
+knows              │                                 
+  │ ┌────┐      created       ┌────┐                 
+  └─► v2 │         └──────────► v6 │                 
+    └────┘                    └────┘
+----
+
+|===
+
+[discrete]
+==== directed attributed multi-relational binary graph
+
+++++
+<!-- 🐖
+v1 -> [name=>'marko',age=>29, outE_=>[knows=>{!*v2, !*v3},created=>!*v4]]
+v2 -> [name=>'vadas',age=>27]
+v3 -> [name=>'josh',age=>32, outE_=>[created=>{!*v4, !*v5}]]
+v4 -> [name=>'lop',lang=>java]
+v5 -> [name=>'ripple',lang=>java]
+v6 -> [name=>'peter',age=>35, outE_=>[created=>{!*v4}]]
+
+v1                                            [-- <1> --]
+*v1                                           [-- <2> --]
+*v1.>>outE_.>>knows                           [-- <3> --]
+*v1.>>outE_.>>knows.>>outE_.>>created         [-- <4> --]
+*v1.>>outE_.>>knows.>>outE_.>>created.>>name  [-- <5> --]
+[HEADER] using multi-segment uris
+*v1.>>outE_/knows                             [-- <3> --]
+*v1.>>outE_/knows.>>outE_/created             [-- <4> --]
+*v1.>>outE_/knows.>>outE_/created.>>name      [-- <5> --]
+-->
+++++
+
+++++
+<!-- 🐖
+outE -> |outE?rec{*}<=rec(label=>uri{*}::T){ >>(outE_).>>(*label) }
+v1                                      [-- <1> --]
+*v1                                     [-- <2> --]
+*v1.outE(knows)                         [-- <3> --]
+*v1.outE(knows).outE(created)           [-- <4> --]
+*v1.outE(knows).outE(created).>>name    [-- <5> --]
+-->
+++++
+
+[discrete]
+=== Multi-Spatial Graph Overlays
+
+[discrete]
 ==== Universal Extensions
 
 mtron's reference-oriented meta-model offers near limitless opportunities for customizing standard data structures to meet specific needs. Customization can alter both the explicit structure (the user facing representation of the data) as well as the implicit structure (the way in which the data is layed out across the memory hierarchy).
 
-Typically, in real-world scenarios, not every vertex and edge of a graph are traversed with equal probability. Moreover, certain relations may require a faster query response time than others. mtron can be configured such that certain subgraphs are stored in an in-memory store while others are stored in a disk-based store. 
+Typically, in real-world scenarios, not every vertex and edge of a graph are traversed with equal probability. Moreover, certain relations may require a faster query response time than others. mtron can be configured such that certain subgraphs are stored in an in-memory store while others are stored in a disk-based store.
 
-[cols="4a,4a",separator=🧱,role="table-bordered small center"]
+[cols="4a,4a,4a",separator=🧱,options="header",role="table-bordered small center"]
 |===
+^🧱 **file system** ^🧱 **in-memory** ^🧱 **database** 
+
 🧱
 [source,mtron]
 ----
-grphspace::[pattern => a:#,
-            route   => [a:V/person => b:V,
-                        a:E/knows  => b:E,
-                        a:V        => V,
-                        a:E        => E,
-                        a:S        => /m/grph/inst/schema/modern],
-            native  => [factory => mfactory::[=>]]]@/sys/space/a
+fsspace::[pattern=>fs:#]@/sys/space/fs
 ----
 🧱
 [source,mtron]
 ----
-grphspace::[pattern => b:#,
-            route   => [b:V => V,
-                        b:E => E,
-                        b:S => /m/grph/inst/schema/modern],
-            native  => [factory => mfactory::[=>]]]@/sys/space/b
+memspace::[pattern=>mem:#]@/sys/space/mem
 ----
+🧱
+[source,mtron]
+----
+dcmtspace::[pattern=>dcmt:#]@/sys/space/dcmt
+----
+🧱
+* slow
+* static
+* stable.
+
+🧱
+* fast
+* dynamic
+* transient.
+
+🧱
+* fast
+* complex
+* stable
+
+🧱
 |===
 
 The space constructor above uses the space route table to route `person`-vertex and `knows`-edge traversals to another space, namely `h:#`. Once specified, any `knows`-edge created between a `person`-vertex in `g:` to a `person`-vertex in `h:` is automatically configured with the appropriate `!*` reference. This ensures a smooth, user agnostic transition between two spaces being leveraged for their particular performance for various subgraphs of the large platonic graph as a whole.

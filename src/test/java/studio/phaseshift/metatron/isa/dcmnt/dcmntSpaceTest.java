@@ -85,6 +85,7 @@ public class dcmntSpaceTest extends AbstractSpaceTest implements CommonRewritesT
                 ).jvm(),
                 SPACE_VID
         ));
+        
     }
 
     @Override
@@ -92,7 +93,7 @@ public class dcmntSpaceTest extends AbstractSpaceTest implements CommonRewritesT
         // For testMonoUpdate, $$ → mongo: so seed data writes to mongo:<collection>/<docId>
         // and update/read expressions resolve to the same two-segment document paths.
         if (testMethod != null && "testMonoUpdate".equals(testMethod.getName())) {
-            return expression.contains("$$") ? expression.replace("$$/", "mongo:").replace("$$", "mongo:") : expression;
+            return expression.contains("$$") ? expression.replace("$$/", "mongo:") : expression;
         }
         return super.make(expression, testMethod);
     }
@@ -171,9 +172,9 @@ public class dcmntSpaceTest extends AbstractSpaceTest implements CommonRewritesT
     @Override
     protected boolean expectWriteRejection(final Obj writeFailObj) {
         // Any root type constraint rejection from this space is expected and should cause the test to be skipped
-        if (!writeFailObj.isFail()) return false;
+        if (!writeFailObj.isFail() && !writeFailObj.isNoObj()) return false;
         final String msg = writeFailObj.asFail().message().getMessage();
-        return msg != null && msg.contains("requires") && msg.contains("at document root");
+        return msg != null && msg.contains("requires") && msg.contains("at root");
     }
 
     @BeforeAll

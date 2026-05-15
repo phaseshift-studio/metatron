@@ -1,6 +1,16 @@
 [discrete]
 == Tble Space
 
+[%collapsible]
+./m/tble instset import
+====
+++++
+<!-- 🐖
+import(/m/tble)
+-->
+++++
+====
+
 A https://en.wikipedia.org/wiki/Relational_database#RDBMS[relational database] (https://en.wikipedia.org/wiki/SQL[SQL]) stores structured data in named **tables**, where each table is a collection of typed
 rows. In metatron, a relational database is a **tblespace** backed by any https://en.wikipedia.org/wiki/Java_Database_Connectivity[JDBC]-compliant driver. Each table maps to a `rec::T` https://en.wikipedia.org/wiki/Refinement_type[refinement] whose `rel::T` elements correspond to columns. The `instset` schema is auto-generated at connection time from live database metadata. As of the time of this writing, metatron has been tested against and is deployed with https://sqlite.org/[SQLite], https://www.postgresql.org/[PostgreSQL],
 https://mariadb.org/[MariaDB], and https://www.mysql.com/[MySQL]. 
@@ -22,7 +32,7 @@ tblespace::T
 tblespace::[pattern => lite:#,                             /
             host    => <sqlite:target/test>,               /
             driver  => <org.sqlite.JDBC>,                  /
-            table   => [person],                           /
+            table   => [person,score,award,venue],         /
             route   => [lite:=><>]]@/sys/space/lite   [-- <1>
 lite:person/1 -> [name=>'marko', age=>29]             [-- <2>
 lite:person/2 -> [name=>'grant', age=>25]             [-- <3>
@@ -167,7 +177,7 @@ whose values happen to match `person.name` — the link is purely algorithmic, e
 `award` holds a `!*` pointer directly in a `recipient` cell — the link is structural and immediately navigable.
 
 ++++
-<!-- 🐖
+<!-- [IGNORE FOR NOW] 🐖
 */sys/space/lite>>=[table=>[person,score]]                                                              [-- <1>
 lite:score/1 -> [player=>'marko', points=>42]                                                           [-- <2>
 lite:score/2 -> [player=>'grant', points=>99]                                                           [-- <3>
@@ -226,7 +236,7 @@ A single row can mix both reference styles. A `self` column demonstrates an **in
 pointing back at the row's own table.
 
 ++++
-<!-- 🐖
+<!-- [IGNORE FOR NOW]  🐖
 lite:venue/2 -> [name=>'side_hall',location=>!*g:V/1,parent=>!*lite:venue/1]                  [-- <1>
 *lite:venue/2                                                                                 [-- <2>
 *lite:venue/2/parent/location                                                                 [-- <3>

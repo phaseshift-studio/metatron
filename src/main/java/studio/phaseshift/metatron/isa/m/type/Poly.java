@@ -235,10 +235,13 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
         /// //////////////////////////////////////////////////////////////////////////
 
         public static Obj updateRecursion(final Obj lhs, final Obj rhs, final BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {
-            if (lhs.isPoly() && rhs.isPoly() && lhs.tid().equals(rhs.tid()))
-                return updatePolyRecursion(lhs.as(), rhs.as(), operation);
-            else
-                return rhs.apply(lhs);
+            if (rhs.isNoObj())
+                return noobj();
+            if (rhs.isNone())
+                return null;
+            if (lhs.isPoly() && rhs.isPoly() && lhs.type().test(rhs.type()))
+                return updatePolyRecursion(lhs.as(), rhs.as(), operation).vid(lhs.vid());
+            return rhs.apply(lhs).vid(lhs.vid());
         }
 
 
@@ -255,42 +258,17 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
         }
 
         private static Obj updateRecRecursion(final Rec lhs, final Rec rhs, final BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {
-          /*  final Rec result = lhs.elements().map(kv -> rel(kv.first().clone(), kv.second().clone())).collect(new CommonUtil.RecCollector());
-            rhs.jvm().forEach((rKey, rValue) -> {
-                final Obj selectValue = result.at(rKey);
-                if (!selectValue.isNoObj()) {
-                    if (selectValue.isPoly() && rValue.isPoly())
-                        result.at(rKey, updatePolyRecursion(rValue.as(), selectValue.as(), operation));
-                    else if (selectValue.isNone())
-                        result.jvm().remove(rKey);
-                    else
-                        result.at(rKey, rValue.apply(selectValue), MUTABLE);
-                }
-            });
-            return result;//.vid(lhs.vid());// operation.apply(lhs, result.jvm());
-*/
-            final Rec lhsClone = lhs.jvm().entrySet().stream().map(kv -> rel(kv.getKey().clone(),kv.getValue().clone())).collect(new CommonUtil.RecCollector());
+            final Rec lhsClone = lhs.jvm().entrySet().stream().map(kv -> rel(kv.getKey().clone(), kv.getValue().clone())).collect(new CommonUtil.RecCollector());
             final Map<Obj, Obj> result = Poly.Helper.selectRecRecursionRaw(lhsClone, rhs, (a, b) -> updatePolyRecursion(a.as(), b.as(), operation));
-            lhsClone.jvm().entrySet().forEach(kv -> result.compute(kv.getKey().c(cInt::one), (a, b) -> {
-                if (null == b) {
-                    if (kv.getValue().isPoly()) {
-                        return updatePolyRecursion(kv.getValue().<Poly<?, ?>>as(), kv.getValue().as(), operation);
-                    } else if (kv.getValue().isNoObj()) {
-                        return noobj();
-                    } else if (kv.getValue().isNone()) {
-                        return null;
-                    } else {
-                        return a.isAutoFrom() ? a : kv.getValue().apply(lhsClone);
-                    }
-                    //return a.isAutoFrom() ? a : updateRecursion(kv.getValue(), a, operation);
-                } else {
-                    if (b.isNoObj()) {
-                        return noobj();
-                    } else if (b.isNone()) {
-                        return null;
-                    }
-                    return b;
-                }
+            lhsClone.jvm().forEach((lhsKey, lhsValue) -> result.compute(lhsKey.c(cInt::one), (rhsKey, rhsValue) -> {
+                if (null == rhsValue)
+                    return lhsValue;
+                if (rhsValue.isNoObj())
+                    return noobj();
+                else if (rhsValue.isNone())
+                    return null;
+                return rhsValue;
+
             }));
             return operation.apply(lhsClone, result);
         }

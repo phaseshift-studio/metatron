@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.dcmnt.space;
 
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.ReplaceOptions;
@@ -45,6 +46,7 @@ import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
@@ -131,11 +133,11 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
     private static final String NATIVE_CONNACK = "native/connack";
     public static final String ID_FIELD = "_id";
     /**
-     * 24-char hex ObjectId pattern, shared across serialiser and rewrite helpers
+     * Pre-compiled 24-char hex ObjectId pattern, shared across serializer and rewrite helpers.
      */
-    public static final String OBJECT_ID_REGEX = "[0-9a-fA-F]{24}";
+    public static final Pattern OBJECT_ID_REGEX = Pattern.compile("[0-9a-fA-F]{24}");
     /**
-     * Internal field used to wrap non-Rec values (Lst, primitives) in a BSON document
+     * Internal field used to wrap non-Rec values (Lst, primitives) in a BSON document.
      */
     public static final String MTRON_VALUE_FIELD = "__mtron_v";
 
@@ -144,6 +146,8 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
     protected Supplier<ObjBSONSerializer> serializer;
     protected ExistingCollectionSchema existingCollectionSchema;
     protected dcmntSpaceSubQ dcmntSpaceSubQ;
+    /** Cached prefix stripped from incoming fURIs during writes. */
+    private final fURI routePrefix;
 
     public static dcmntSpace of(final Map<Obj, Obj> config, final fURI vid) {
         final MongoClient client = MongoClients.create(config.get(uri(HOST)).uriValue().toString());
@@ -226,6 +230,9 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
                 .create();
         this.jvm().put(uri(ROOT), rootType);
 
+        // Cache the write-side route prefix once (routes and pattern are immutable post-construction).
+        this.routePrefix = computeRoutePrefix();
+
         LOG.info("initialized {{g}}collection schema{{X}} for %d collections",
                 this.existingCollectionSchema.getCollectionNames().size());
     }
@@ -238,88 +245,126 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
         return this.serializer.get();
     }
 
+    public String getDatabaseName() {
+        return this.databaseName;
+    }
+
+    // =======================================================================
+    // Collection stream resolution
+    // =======================================================================
+
+    /**
+     * Expand a collection name (possibly wildcard {@code #} or {@code +}) into
+     * a stream of {@link MongoCollection} handles.
+     */
+    private Stream<MongoCollection<Document>> resolveCollectionStream(final String collectionName) {
+        if (collectionName.equals("#") || collectionName.equals("+")) {
+            return IteratorUtil.stream(this.database.listCollectionNames().iterator())
+                    .map(this.database::getCollection);
+        }
+        return Stream.of(this.database.getCollection(collectionName));
+    }
+
+    /**
+     * Compute the prefix to strip from incoming fURIs during writes.
+     * Uses the first route target if available; otherwise falls back to the space pattern.
+     */
+    private fURI computeRoutePrefix() {
+        if (!this.routes().isEmpty()) {
+            final studio.phaseshift.metatron.isa.m.type.Uri routeTarget =
+                    this.routes().values().iterator().next();
+            final fURI prefix = routeTarget.asUri().uriValue().asNode();
+            if (!prefix.path().isEmpty() && prefix.path().stream().anyMatch(s -> !s.isEmpty()))
+                return prefix;
+        }
+        return this.pattern().asNode();
+    }
+
+    // =======================================================================
+    // directWriter / directReader
+    // =======================================================================
+
     @Override
     public BiFunction<fURI, Obj, Obj> directWriter() {
         return (pattern, obj) -> {
             if (pattern.hasPattern()) {
-                // pattern write - write to all matching fURIs
+                // Pattern write: fan out to all matching fURIs via directReader
                 this.directReader().apply(pattern).forEachRemaining(kv -> this.write(kv.furi(), obj));
-            } else {
-                // Strip the space's route prefix to get the relative path
-                final fURI relativePath = stripPatternPrefix(pattern);
-
-                // Determine collection name - either from schema or first segment
-                final String collectionName;
-                final String documentID;
-                final List<String> fieldPath;
-
-                if (this.existingCollectionSchema != null && this.existingCollectionSchema.isCollectionPath(relativePath)) {
-                    // Known collection from schema
-                    collectionName = this.existingCollectionSchema.getCollectionName(relativePath);
-                    documentID = this.existingCollectionSchema.getDocumentId(relativePath);
-                    fieldPath = this.existingCollectionSchema.getFieldPath(relativePath);
-                } else {
-                    // Fall back to segment parsing (for wildcard or non-schema mode)
-                    final List<String> segments = relativePath.segments();
-                    collectionName = segments.isEmpty() ? null : segments.getFirst();
-                    documentID = segments.size() > 1 ? segments.get(1) : null;
-                    fieldPath = segments.size() > 2 ? segments.subList(2, segments.size()) : null;
-                }
-
-                if (collectionName == null)
-                    return noobj();
-                Stream<String> collectionStream;
-                if (collectionName.equals("#") || collectionName.equals("+")) {
-                    collectionStream = IteratorUtil.stream(this.getDatabase().listCollectionNames().iterator());
-                } else {
-                    collectionStream = Stream.of(collectionName);
-                }
-                return collectionStream.map(c -> this.getDatabase().getCollection(c)).flatMap(collection -> {
-                    LOG.debug("WRITING: %s %s", collectionName, documentID);
-                    if (fieldPath == null || fieldPath.isEmpty()) {
-                        if (obj.isNoObj()) {
-                            // Delete entire document
-                            LOG.trace("deleting document %s from collection %s", documentID, collectionName);
-                            collection.deleteOne(Filters.eq(ID_FIELD, parseObjectId(documentID)));
-                        } else if (obj.isRec()) {
-                            // Write entire document as BSON document fields
-                            final Document doc = new Document(this.getSerializer().writeRec(obj.asRec()).asDocument());
-                            doc.put(ID_FIELD, parseObjectId(documentID));
-                            LOG.trace("upserting document %s in collection %s", documentID, collectionName);
-                            collection.replaceOne(Filters.eq(ID_FIELD, parseObjectId(documentID)), doc, new ReplaceOptions().upsert(true));
-                        } else {
-                            // For non-Rec types (Lst, primitives), wrap in special __mtron_v field
-                            final BsonDocument bsonDoc = new BsonDocument();
-                            bsonDoc.put(ID_FIELD, toBsonId(documentID));
-                            bsonDoc.put(MTRON_VALUE_FIELD, this.getSerializer().write(obj));
-                            LOG.trace("upserting wrapped non-rec value for %s in collection %s", documentID, collectionName);
-                            this.getDatabase().getCollection(collection.getNamespace().getCollectionName(), BsonDocument.class)
-                                    .replaceOne(Filters.eq(ID_FIELD, parseObjectId(documentID)), bsonDoc, new ReplaceOptions().upsert(true));
-                        }
-                    } else {
-                        // Write to a specific field within a document
-                        final String fieldPathStr = String.join(".", fieldPath);
-                        if (obj.isNoObj()) {
-                            // $unset is the correct MongoDB operator for field deletion.
-                            // The value ("") is ignored by MongoDB per spec.
-                            LOG.trace("unsetting field %s in document %s", fieldPathStr, documentID);
-                            collection.updateOne(
-                                    Filters.eq(ID_FIELD, parseObjectId(documentID)),
-                                    new Document("$unset", new Document(fieldPathStr, ""))
-                            );
-                        } else {
-                            LOG.trace("updating field %s in document %s", fieldPathStr, documentID);
-                            collection.updateOne(
-                                    Filters.eq(ID_FIELD, parseObjectId(documentID)),
-                                    new Document("$set", new Document(fieldPathStr, this.getSerializer().write(obj)))
-                            );
-                        }
-                    }
-                    return Stream.of(obj);
-                }).iterator().next();
+                return noobj();
             }
-            return noobj();
+
+            // Strip the space's route prefix to get the relative path
+            final fURI relativePath = pattern.removePrefix(this.routePrefix);
+
+            // Determine collection name and document ID
+            final String collectionName;
+            final String documentID;
+            final List<String> fieldPath;
+
+            if (this.existingCollectionSchema != null && this.existingCollectionSchema.isCollectionPath(relativePath)) {
+                // Known collection from schema
+                collectionName = this.existingCollectionSchema.getCollectionName(relativePath);
+                documentID = this.existingCollectionSchema.getDocumentId(relativePath);
+                fieldPath = this.existingCollectionSchema.getFieldPath(relativePath);
+            } else {
+                // Fall back to segment parsing
+                final List<String> segments = relativePath.segments();
+                collectionName = segments.isEmpty() ? null : segments.getFirst();
+                documentID = segments.size() > 1 ? segments.get(1) : null;
+                fieldPath = segments.size() > 2 ? segments.subList(2, segments.size()) : null;
+            }
+
+            if (collectionName == null)
+                return noobj();
+
+            resolveCollectionStream(collectionName).findFirst().ifPresent(collection -> {
+                LOG.debug("WRITING: %s %s", collectionName, documentID);
+                if (fieldPath == null || fieldPath.isEmpty()) {
+                    writeDocument(collection, documentID, obj);
+                } else {
+                    writeField(collection, documentID, String.join(".", fieldPath), obj);
+                }
+            });
+            return obj;
         };
+    }
+
+    /** Write (or delete) an entire document in the given collection. */
+    private void writeDocument(final MongoCollection<Document> collection, final String documentId, final Obj obj) {
+        if (obj.isNoObj()) {
+            LOG.trace("deleting document %s", documentId);
+            collection.deleteOne(Filters.eq(ID_FIELD, parseObjectId(documentId)));
+        } else if (obj.isRec()) {
+            final Document doc = new Document(this.getSerializer().writeRec(obj.asRec()).asDocument());
+            doc.put(ID_FIELD, parseObjectId(documentId));
+            LOG.trace("upserting document %s", documentId);
+            collection.replaceOne(Filters.eq(ID_FIELD, parseObjectId(documentId)), doc,
+                    new ReplaceOptions().upsert(true));
+        } else {
+            final BsonDocument bsonDoc = new BsonDocument();
+            bsonDoc.put(ID_FIELD, toBsonId(documentId));
+            bsonDoc.put(MTRON_VALUE_FIELD, this.getSerializer().write(obj));
+            LOG.trace("upserting wrapped non-rec value for %s", documentId);
+            collection.withDocumentClass(BsonDocument.class)
+                    .replaceOne(Filters.eq(ID_FIELD, parseObjectId(documentId)), bsonDoc,
+                            new ReplaceOptions().upsert(true));
+        }
+    }
+
+    /** Write (or unset) a single field within a document. */
+    private void writeField(final MongoCollection<Document> collection, final String documentId,
+                            final String fieldPathStr, final Obj obj) {
+        if (obj.isNoObj()) {
+            LOG.trace("unsetting field %s in document %s", fieldPathStr, documentId);
+            collection.updateOne(
+                    Filters.eq(ID_FIELD, parseObjectId(documentId)),
+                    new Document("$unset", new Document(fieldPathStr, "")));
+        } else {
+            LOG.trace("updating field %s in document %s", fieldPathStr, documentId);
+            collection.updateOne(
+                    Filters.eq(ID_FIELD, parseObjectId(documentId)),
+                    new Document("$set", new Document(fieldPathStr, this.getSerializer().write(obj))));
+        }
     }
 
     @Override
@@ -340,7 +385,7 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
                 // patterns (e.g. +/+/field) are not yet supported here.
                 if (!collectionName.equals("+") && !collectionName.equals("#") &&
                         !documentID.equals("+") && !documentID.equals("#")) {
-                    final Document doc = this.getDatabase().getCollection(collectionName)
+                    final Document doc = this.database.getCollection(collectionName)
                             .find(Filters.eq(ID_FIELD, parseObjectId(documentID))).first();
                     if (doc != null) {
                         final fURI docVID = f(this.pattern.retractPattern()
@@ -369,7 +414,7 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
             if (alignedPattern.isBranch())
                 return IteratorUtil.of();
 
-            // Determine collection name - either from schema or first segment
+            // Determine collection name and document ID
             final String collectionName;
             final String documentID;
 
@@ -378,7 +423,7 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
                 collectionName = this.existingCollectionSchema.getCollectionName(alignedPattern);
                 documentID = this.existingCollectionSchema.getDocumentId(alignedPattern);
             } else {
-                // Fall back to segment parsing (for wildcard or non-schema mode)
+                // Fall back to segment parsing
                 collectionName = alignedSegments.isEmpty() ? null : alignedSegments.getFirst();
                 documentID = alignedSegments.size() > 1 ? alignedSegments.get(1) : null;
             }
@@ -386,26 +431,24 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
             LOG.debug("searching [collection: %s][document: %s]", collectionName, documentID);
             if (collectionName == null)
                 return IteratorUtil.of();
-            Stream<String> collectionStream;
-            if (collectionName.equals("#") || collectionName.equals("+")) {
-                collectionStream = IteratorUtil.stream(this.getDatabase().listCollectionNames().iterator());
-            } else {
-                collectionStream = Stream.of(collectionName);
-            }
-            if (null == documentID) {
-                return Space.Helper.attachVIDs(collectionStream.map(c -> {
-                    final fURI collectionVID = Space.Helper.routeToSpace(f(c), this.routes());
-                    LOG.debug("collection lookup: %s", collectionVID);
-                    return IdObj.of(collectionVID, uri(collectionVID, COLLECTION_TID, null).selfVID(collectionVID));
-                }).iterator());
+
+            if (documentID == null) {
+                return Space.Helper.attachVIDs(
+                        resolveCollectionStream(collectionName).map(collection -> {
+                            final fURI collectionVID = Space.Helper.routeToSpace(
+                                    f(collection.getNamespace().getCollectionName()), this.routes());
+                            LOG.debug("collection lookup: %s", collectionVID);
+                            return IdObj.of(collectionVID, uri(collectionVID, COLLECTION_TID, null)
+                                    .selfVID(collectionVID));
+                        }).iterator());
             }
 
             final List<IdObj> allResults = new ArrayList<>();
-            collectionStream.map(c -> this.getDatabase().getCollection(c)).forEach(collection -> {
+            resolveCollectionStream(collectionName).forEach(collection -> {
                 final String collName = collection.getNamespace().getCollectionName();
                 LOG.debug("READING: %s %s", collName, documentID);
                 if (documentID.equals("+") || documentID.equals("#")) {
-                    // Pattern query - return all documents in collection
+                    // Wildcard document: return all documents in the collection
                     LOG.debug("reading all documents from collection %s", collName);
                     IteratorUtil.stream(collection.find()).forEach(doc -> {
                         final Object doc_id = doc.get(ID_FIELD);
@@ -413,21 +456,25 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
                             LOG.warn("skipping document with null _id in collection %s", collName);
                             return;
                         }
-                        final String idStr = doc_id instanceof ObjectId ? ((ObjectId) doc_id).toHexString() : doc_id.toString();
-                        final fURI docVID = f(this.pattern.retractPattern().extend(collName).extend(idStr).toString());
+                        final String idStr = doc_id instanceof ObjectId
+                                ? ((ObjectId) doc_id).toHexString()
+                                : doc_id.toString();
+                        final fURI docVID = f(this.pattern.retractPattern()
+                                .extend(collName).extend(idStr).toString());
                         final IdObj idObj = IdObj.of(docVID, processDocument(doc));
                         allResults.add(idObj);
-                        // Add poly unrolling for pattern queries
                         if (pattern.hasPattern() && idObj.obj().isPoly()) {
-                            allResults.addAll(Space.Helper.unrollPoly(idObj.furi(), idObj.obj().as(), pattern.asNode()));
+                            allResults.addAll(Space.Helper.unrollPoly(
+                                    idObj.furi(), idObj.obj().as(), pattern.asNode()));
                         }
                     });
                 } else {
-                    // Specific document ID
                     LOG.debug("reading document %s from collection %s", documentID, collName);
-                    final Document doc = collection.find(Filters.eq(ID_FIELD, parseObjectId(documentID))).first();
+                    final Document doc = collection.find(
+                            Filters.eq(ID_FIELD, parseObjectId(documentID))).first();
                     if (doc != null) {
-                        final fURI docVID = f(this.pattern.retractPattern().extend(collName).extend(documentID).toString());
+                        final fURI docVID = f(this.pattern.retractPattern()
+                                .extend(collName).extend(documentID).toString());
                         allResults.add(IdObj.of(docVID, processDocument(doc)));
                     }
                 }
@@ -435,6 +482,10 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
             return Space.Helper.attachVIDs(allResults.iterator());
         };
     }
+
+    // =======================================================================
+    // Lifecycle
+    // =======================================================================
 
     @Override
     public void close() {
@@ -452,10 +503,14 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
         }
     }
 
+    // =======================================================================
+    // Query support
+    // =======================================================================
+
     public Obj mql(final String collection, final Rec query) {
         try {
             return objs(IteratorUtil
-                    .stream(this.getDatabase()
+                    .stream(this.database
                             .getCollection(collection)
                             .find(this.getSerializer().writeRec(query)))
                     .map(doc -> this.getSerializer().read(doc.toBsonDocument())));
@@ -464,34 +519,10 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
         }
     }
 
-    /**
-     * Strip the space's route prefix from a fURI to get the relative path.
-     * For example, if route maps mongo: to /mongo/ and fURI is /mongo/users/1, returns /users/1
-     */
-    private fURI stripPatternPrefix(final fURI furi) {
-        // If there are routes, use the route target as the prefix to strip
-        if (!this.routes().isEmpty()) {
-            // Get the first route's target (e.g., /mongo/)
-            final studio.phaseshift.metatron.isa.m.type.Uri routeTarget = this.routes().values().iterator().next();
-            final fURI prefix = routeTarget.asUri().uriValue().asNode();
-            // Only use the route if it's not empty (has actual path segments)
-            if (!prefix.path().isEmpty() && prefix.path().stream().anyMatch(s -> !s.isEmpty())) {
-                return furi.removePrefix(prefix);
-            }
-        }
-        // Fallback to using the pattern if no routes or route is empty
-        final fURI patternBase = this.pattern().asNode();
-        return furi.removePrefix(patternBase);
-    }
+    // =======================================================================
+    // Static helpers
+    // =======================================================================
 
-    /**
-     * Process a raw MongoDB document into a Metatron Obj.
-     * <p>
-     * Strips the {@code _id} field (already encoded in the URI path) then delegates to
-     * {@link ObjBSONSerializer#readRec} which transparently handles the hidden
-     * {@code __mtron_tid} field — restoring the nominal TID (e.g. {@code chicken::T})
-     * that was written alongside the document fields for round-trip fidelity.
-     */
     /**
      * Recursively convert {@code com.mongodb.DBRef} objects to embedded {@code {$ref, $id}}
      * Documents. In-memory MongoDB (bwaldvogel) deserialises the DBRef pattern into the
@@ -518,6 +549,14 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
         return value;
     }
 
+    /**
+     * Process a raw MongoDB document into a Metatron Obj.
+     * <p>
+     * Strips the {@code _id} field (already encoded in the URI path) then delegates to
+     * {@link ObjBSONSerializer#readRec} which transparently handles the hidden
+     * {@code __mtron_tid} field — restoring the nominal TID (e.g. {@code chicken::T})
+     * that was written alongside the document fields for round-trip fidelity.
+     */
     private Obj processDocument(final Document doc) {
         final Document normalized = (Document) normalizeDBRefs(doc);
         final BsonDocument bsonDoc = normalized.toBsonDocument();
@@ -525,32 +564,34 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
             // Non-Rec value was wrapped in a special field — unwrap and return directly
             // (VID is tracked via IdObj.furi(); do NOT attach it to the value itself)
             return this.getSerializer().read(bsonDoc.get(MTRON_VALUE_FIELD));
-        } else {
-            // Regular document record — strip _id (already encoded in the URI)
-            bsonDoc.remove(ID_FIELD);
-            return this.getSerializer().readRec(bsonDoc);
         }
+        // Regular document record — strip _id (already encoded in the URI)
+        bsonDoc.remove(ID_FIELD);
+        return this.getSerializer().readRec(bsonDoc);
     }
+
+    // =======================================================================
+    // ID conversion helpers
+    // =======================================================================
 
     /**
      * Convert a document-ID string to the appropriate BsonValue for use in BsonDocument writes.
      */
-    private BsonValue toBsonId(final String id) {
-        if (id != null && id.matches(OBJECT_ID_REGEX))
+    private static BsonValue toBsonId(final String id) {
+        if (id != null && OBJECT_ID_REGEX.matcher(id).matches())
             return new BsonObjectId(new ObjectId(id));
         return new BsonString(id != null ? id : "");
     }
 
     /**
-     * Parse a string as an ObjectId, handling both hex strings and other formats
+     * Parse a string as an ObjectId when it matches the 24-char hex pattern,
+     * otherwise return the string as-is.
      */
-    private Object parseObjectId(final String id) {
-        if (id == null) {
+    private static Object parseObjectId(final String id) {
+        if (id == null)
             return null;
-        }
-        if (id.matches(OBJECT_ID_REGEX)) {
+        if (OBJECT_ID_REGEX.matcher(id).matches())
             return new ObjectId(id);
-        }
         return id;
     }
 }

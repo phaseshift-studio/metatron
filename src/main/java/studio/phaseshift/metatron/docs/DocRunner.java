@@ -23,6 +23,7 @@ import org.asciidoctor.Options;
 import org.asciidoctor.SafeMode;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.TypeCheck;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
@@ -40,6 +41,7 @@ import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.BOOT;
 import static studio.phaseshift.metatron.Tokens.LOGG;
+import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
@@ -93,7 +95,7 @@ public class DocRunner {
         }
 
         LOG.info("\n[Docs Runner v" + VERSION + "]\n\targs: " + String.join(" ", args));
-
+        InstSet.importInstSet(f("#"));
         // ── Load .env files ──────────────────────────────────────────────
         loadDotEnv(Path.of(System.getProperty("user.home"), ".metatron", "env"));
         loadDotEnv(Path.of(".env").toAbsolutePath());
@@ -129,7 +131,7 @@ public class DocRunner {
         List<String> prefixLines = null;
         if (prefix != null) {
             final Path prefixPath = Path.of(prefix);
-            if (Files.exists(prefixPath)) {
+            if (Files.exists(prefixPath) && Files.isRegularFile(prefixPath)) {
                 prefixLines = Files.readAllLines(prefixPath);
                 if (verbose)
                     LOG.info("prefix file: " + prefix + " (" + prefixLines.size() + " lines)");
@@ -184,7 +186,7 @@ public class DocRunner {
                 LOG.info("[docs-runner] " + file.getFileName());
 
             final List<String> originalLines = Files.readAllLines(file);
-            final List<String> newLines = preprocessor.process(originalLines, prefixLines, verbose);
+            final List<String> newLines = preprocessor.process(file.toFile(),originalLines, prefixLines, verbose);
             Files.writeString(outFile, String.join("\n", newLines).stripTrailing());
         }
 
@@ -225,6 +227,8 @@ public class DocRunner {
 
         if (verbose)
             LOG.info("done");
+        BootLoader.close();
+        System.exit(0);
     }
 
     /** Constructor for {@code ProcessEnvironment$Variable}, used to safely inject

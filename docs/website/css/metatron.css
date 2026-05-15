@@ -26,6 +26,11 @@
     color: var(--white);
 }
 
+h1, h1. h2, h2. h3, h3. h4, h4. {
+    color: var(--mred) !important;
+    scale: 1.5 !important;
+}
+
 .float-left-code {
     float: left;
     background-color: transparent;

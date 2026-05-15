@@ -1,6 +1,19 @@
 [discrete]
 == FS Space
 
+[%collapsible]
+./m/mach instset import and space constructions
+====
+++++
+<!-- 🐖
+import(/m/mach)
+fsspace::[pattern  => local:#,                     /
+           route   => [local:=><~/>],              /
+           script  => !*boot/script]@/sys/space/fs
+-->
+++++
+====
+
 The underlying operating system's resources are explicitly accessible to metatron: threads, files, network, etc. This
 section focuses on `fsspace::T` (file system space). The primary types of this space are `file::T` and `dir::T`.
 

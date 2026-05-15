@@ -8,4 +8,4 @@ echo "  metatron w/
       ░█░█░█░█░█░░░█▀▄░█▀▀░█▀▄
       ░▀▀░░▀▀▀░▀▀▀░▀░▀░▀▀▀░▀░▀"
 echo "metatron-docker entrypoint arguments: $*"
-docker run -it -p 8999:8999 -p 8777:8777 metatron:0.1-SNAPSHOT "$@"
+docker run -it -p 8999:8999 -p 8555:8555 -p 8777:8777 metatron:0.1-SNAPSHOT "$@"

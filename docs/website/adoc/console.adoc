@@ -3,6 +3,25 @@
 [discrete]
 == Console
 
+[%collapsible]
+./m/mach instset import and space constructions
+====
+++++
+<!-- 🐖
+import(/m/mach)
+memspace::[               /
+ pattern   => /usr/#,     /                           
+ q         => [           /
+  typeq::[=>],            /
+  mintq::[=>],            /
+  docq::[=>],             /
+  subq::[=>],             /
+  incrq::[=>]]]@/sys/space/usr
+-->
+++++
+====
+
+
 The https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop[console] offers an integrated user experience. Features include:
 
  . mtron https://en.wikipedia.org/wiki/Syntax_highlighting[syntax highlighting]
@@ -16,9 +35,10 @@ The https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop[console] 
 The console is also an `obj`.
 ++++
 <!-- 🐖
-*/sys/ui/console                                     [-- <1>
-*/sys/ui/console/pane/0                              [-- <2>
-/sys/ui/console/pane/0/result('printed at ==>xyz')   [-- <3>
+console::[=>]@/usr/ui/console                 
+*/usr/ui/console                                     [-- <1>
+*/usr/ui/console/pane/0                              [-- <2>
+/usr/ui/console/pane/0/result('printed at ==>xyz')   [-- <3>
 -->
 ++++
 

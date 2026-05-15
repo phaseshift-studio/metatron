@@ -1,6 +1,16 @@
 [discrete]
 == Dcmnt Space
 
+[%collapsible]
+./m/dcmnt instset import
+====
+++++
+<!-- 🐖
+import(/m/dcmnt)
+-->
+++++
+====
+
 A https://en.wikipedia.org/wiki/Document-oriented_database[document database] models a domain as a set of "https://www.json.org/[JSON]"-ish documents -- in the lexicon of formality, such databases are understood as a collection of https://en.wikipedia.org/wiki/Associative_array[associative arrays]/dictionary/hashmap composed of string keys and object values, where values can be nested indefinitely. In metatron, a document database is best captured by a  **dcmntspace** of type `rec::T`. The mapping between JSON and metatron is quite natural. Two semantically equivalent structures are provided below.
 
 [cols=".^6a,.^6a",separator=🧱,options=header,role="table-bordered small",role="mx-auto"]
@@ -92,7 +102,7 @@ dcmntspace::[pattern     => farm:#,                                           /
 
 ++++
 <!-- 🐖
-farm:animals/1 -> 'a chicken named trill'                                     [-- <1>
+[ERROR] farm:animals/1 -> 'a chicken named trill'                             [-- <1>
 farm:animals/1 -> chicken::[name=>'trill',age=>7]                             [-- <2>
 *farm:animals/1                                                               [-- <3>
 -->

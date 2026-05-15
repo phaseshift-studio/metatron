@@ -64,7 +64,7 @@ public class agentInstSet extends AbstractInstSet {
                                                 Router.global().read(inst.arg(0).uriValue()) :
                                                 Router.global().write(inst.arg(0).uriValue(), inst.arg(1))),
                                 "dom is ignored", "the written note", Map.of(jnt(0), "the entry key", jnt(1), "the note"),
-                                CommonUtil.readResource(agentInstSet.class, "NOTE.md", "%s", "/usr/ai/note"),
+                              //  CommonUtil.readResource(agentInstSet.class, "NOTE.md", "%s", "/usr/ai/note"),
                                 "note(</usr/ai/note/an_entry>, 'this is a note')")
                 )));
         docWrap(this, "an agent-oriented instruction set to aid them in the manipulation and analysis of their environment");

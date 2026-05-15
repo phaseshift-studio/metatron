@@ -449,14 +449,15 @@
                     <include>ansi_headers.txt</include>
                 </includes>
             </resource>
-           <!-- <resource>
+            <!--<resource>
                 <directory>src/main/resources</directory>
                 <targetPath>${project.build.directory}/classes</targetPath>
                 <includes>
                     <include>META-INF/services/**</include>
+                    <include>logback.xml</include>
                 </includes>
-            </resource>-->
-            <!--<resource>
+            </resource>
+            <resource>
                 <directory>src/main/resources</directory>
                 <excludes>
                     <exclude>logback.xml</exclude>

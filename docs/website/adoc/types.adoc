@@ -31,7 +31,7 @@ such that the lhs `A` is inspected by the `code` of `pred` and emits either an `
 <!-- 🐖
 [-- refining int::T --]
 4.as(int::T[?>0]@nat)
--4.as(nat::T)
+[ERROR] -4.as(nat::T)
 [-- refining rec::T  --]
 [name=>'snowbutt',age=>7].as(rec::T[?[name=>str::T,age=>int::T]@chicken)
 [name=>'punky',age=>'four'].as(chicken::T)
@@ -79,8 +79,8 @@ nat -> int::T[?>0][-<|[is(lt(0)) => * -1,_ => _]>>]   [-- <1>
 nat::2                                                [-- <3>
 nat::-2                                               [-- <4>
 2.as(nat::T)                                          [-- <5>
--2.as(nat::T)                                         [-- <6>
-nat::2 * -1                                           [-- <7>
+[ERROR] -2.as(nat::T)                                         [-- <6>
+[ERROR] nat::2 * -1                                           [-- <7>
 -->
 ++++
 
@@ -142,8 +142,8 @@ The `bytes` type represents binary data as a sequence of bytes.
 
 ++++
 <!-- 🐖
-'Hello'.as(bytes::T)        [-- <1>
-bytes::'48656c6c6f'         [-- <2>
+'metatron'.as(bytes::T)        [-- <1>
+bytes::'48656c6c6f'            [-- <2>
 -->
 ++++
 <1> Convert string to bytes
@@ -426,10 +426,10 @@ The `int::T` (`int` type) is being constrained by the predicate `?>0` (or `is(gt
 
 ++++
 <!-- 🐖
-nat -> int::T[?>0]
+nat -> int::T[?>0]@nat
 nat::10
-nat::-10
-int::-10.as(nat::T)
+[ERROR] nat::-10
+[ERROR] int::-10.as(nat::T)
 -->
 ++++
 
@@ -462,10 +462,10 @@ A natural number is a positive integer greater than zero. In order to constrain 
 
 ++++
 <!-- 🐖
-nat -> int::T[?>0]
+nat -> int::T[?>0]@nat 
 nat::10
-nat::-10
-int::-10.as(nat::T)
+[ERROR] nat::-10
+[ERROR] int::-10.as(nat::T)
 -->
 ++++
 
@@ -481,10 +481,10 @@ int::T
 ++++
 
 ++++
-<!-- 🐖
-nat:125
-age:125
-nat:125.as(age::T)
+<!-- [IGNORE FOR NOW] 🐖
+nat::125
+age::125
+nat::125.as(age::T)
 125.as(nat::T).as(age::T)
 -->
 ++++
@@ -492,7 +492,7 @@ nat:125.as(age::T)
 
 ++++
 <!-- 🐖
-name   -> str::T[-<''>-count().?<30]
+name    -> str::T[-<''>-count().?<30]
 personx -> rec::T[?[name  => str::T, /
                     age   => age::T, /
                     knows => personx{*}::T]]

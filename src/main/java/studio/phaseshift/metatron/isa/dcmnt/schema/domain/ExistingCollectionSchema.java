@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.util.DatabasePath;
 
 import java.util.*;
 
@@ -216,25 +217,84 @@ public class ExistingCollectionSchema {
         return collectionSchemas.get(collectionName.toLowerCase());
     }
 
+    // =======================================================================
+    // Path resolution via DatabasePath
+    // =======================================================================
+
     /**
-     * Parse a fURI to extract collection name and document identifier.
-     * Format: /collection_name/doc_id or /collection_name/+ for all documents
-     * Returns null if not a collection path (i.e., first segment is not a known collection)
+     * Parse a fURI (route prefix already stripped) into a {@link DatabasePath},
+     * prepending the MongoDB database name so the canonical
+     * {@code /db/aggregate/element/field/value...} hierarchy is preserved.
      */
-    private List<String> parseCollectionPath(final fURI furi) {
-        final List<String> segments = furi.segments();
-        if (segments.isEmpty())
-            return null;
-        // First segment should be the collection name
-        final String collectionName = segments.getFirst();
-        if (!this.collectionSchemas.containsKey(collectionName.toLowerCase()))
-            return null;
-        final List<String> collectionPath = new ArrayList<>(segments);
-        // Default to wildcard if only collection name is provided
-        //if (segments.size() == 1)
-        //    collectionPath.add("+");
-        return collectionPath;
+    public DatabasePath resolvePath(final fURI furi) {
+        final List<String> segs = furi.segments();
+        final List<String> fullSegs = new ArrayList<>(segs.size() + 1);
+        fullSegs.add(this.space.getDatabase().getName());
+        fullSegs.addAll(segs);
+        return new DatabasePath(f("/" + String.join("/", fullSegs)));
     }
+
+    /**
+     * Like {@link #resolvePath(fURI)} but returns {@code null} when the aggregate
+     * (collection) name is not a known collection in this schema.  The wildcard
+     * {@code +} is always accepted so collection-listing queries work.
+     */
+    public DatabasePath resolveCollectionPath(final fURI furi) {
+        final DatabasePath path = resolvePath(furi);
+        if (path.getAggregateName() == null)
+            return null;
+        if (!path.getAggregateName().equals("+")
+                && !this.collectionSchemas.containsKey(path.getAggregateName().toLowerCase()))
+            return null;
+        return path;
+    }
+
+    /**
+     * Check if a fURI path refers to a collection managed by this schema.
+     */
+    public boolean isCollectionPath(final fURI furi) {
+        return resolveCollectionPath(furi.asNode()) != null;
+    }
+
+    /**
+     * Extract the collection name from a fURI path.
+     * Returns {@code null} when the path does not map to a known collection.
+     */
+    public String getCollectionName(final fURI furi) {
+        final DatabasePath path = resolveCollectionPath(furi.asNode());
+        return path != null ? path.getAggregateName() : null;
+    }
+
+    /**
+     * Extract the document identifier from a fURI path.
+     * Returns {@code null} when the path does not map to a known collection.
+     */
+    public String getDocumentId(final fURI furi) {
+        final DatabasePath path = resolveCollectionPath(furi.asNode());
+        if (path == null || path.getElementName() == null)
+            return null;
+        return path.getElementName();
+    }
+
+    /**
+     * Get the remaining path segments after collection/document.
+     * Used for field-level access like /collection/doc/field/subfield.
+     * Returns {@code null} if no additional segments.
+     */
+    public List<String> getFieldPath(final fURI furi) {
+        final DatabasePath path = resolveCollectionPath(furi.asNode());
+        if (path == null || path.getFieldName() == null)
+            return null;
+        final List<String> fieldPath = new ArrayList<>();
+        fieldPath.add(path.getFieldName());
+        if (path.getValuePath() != null)
+            fieldPath.addAll(path.getValuePath().segments());
+        return fieldPath;
+    }
+
+    // =======================================================================
+    // Schema generation
+    // =======================================================================
 
     /**
      * Generate a {@link CollectionSchemaInstSet} for all discovered collections.
@@ -255,7 +315,6 @@ public class ExistingCollectionSchema {
      * @return a fully-populated {@link CollectionSchemaInstSet}
      */
     public CollectionSchemaInstSet generateSchemaInstset(final fURI schemaVID) {
-        //  final fURI typeBase = schemaVID.extend(TYPE);
         final List<Type> types = new ArrayList<>();
 
         for (final CollectionMetadata collection : this.collectionSchemas.values()) {
@@ -296,32 +355,5 @@ public class ExistingCollectionSchema {
                 .vid(typeVid)
                 .isaPredicate(rec(fields))
                 .create();
-    }
-
-    public boolean isCollectionPath(final fURI furi) {
-        return parseCollectionPath(furi.asNode()) != null;
-    }
-
-
-    public String getCollectionName(final fURI furi) {
-        final List<String> parsed = parseCollectionPath(furi.asNode());
-        return parsed != null ? parsed.getFirst() : null;
-    }
-
-    public String getDocumentId(final fURI furi) {
-        final List<String> parsed = parseCollectionPath(furi.asNode());
-        return parsed != null && parsed.size() > 1 ? parsed.get(1) : null;
-    }
-
-    /**
-     * Get the remaining path segments after collection/document.
-     * Used for field-level access like /collection/doc/field/subfield
-     * Returns null if no additional segments.
-     */
-    public List<String> getFieldPath(final fURI furi) {
-        final List<String> parsed = parseCollectionPath(furi.asNode());
-        if (parsed == null || parsed.size() <= 2)
-            return null;
-        return parsed.subList(2, parsed.size());
     }
 }

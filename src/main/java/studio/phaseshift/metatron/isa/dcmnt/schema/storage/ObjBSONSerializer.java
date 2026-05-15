@@ -386,7 +386,7 @@ public class ObjBSONSerializer extends AbstractObjSerializer<BsonValue> {
                 collection = segs.getFirst();
             }
             // 24-char hex → BsonObjectId (native MongoDB); otherwise BsonString
-            final BsonValue idValue = (id != null && id.matches(dcmntSpace.OBJECT_ID_REGEX))
+            final BsonValue idValue = (id != null && dcmntSpace.OBJECT_ID_REGEX.matcher(id).matches())
                     ? new BsonObjectId(new org.bson.types.ObjectId(id))
                     : new BsonString(id != null ? id : "");
             return new BsonDocument(List.of(

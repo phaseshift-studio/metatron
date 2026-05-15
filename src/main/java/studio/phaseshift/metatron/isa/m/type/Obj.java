@@ -506,7 +506,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         return this.isInst() && (base.equals(AUTO_FROM_INST_TID) || base.equals(AUTO_AT_INST_TID) || base.equals(AUTO_INST_TID)) ?
                 this.apply(obj) :
                 this;
-     //   return Obj.Helper.getAutoPointer(this).map(Router::readFromSpace).orElse(this);
+        //   return Obj.Helper.getAutoPointer(this).map(Router::readFromSpace).orElse(this);
     }
 
     default Obj dereference() {
@@ -1008,10 +1008,10 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                     }),
                     instC(AUTO_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL.maybe())), (lhs, inst) -> inst.arg(0).apply(lhs)),
                     /*docWrap(*/instC(AUTO_FROM_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL.maybe()), T(ALL.maybe())), (lhs, inst) -> (!inst.arg(1).isNoObj() ? inst.arg(1) : Router.readFromSpace(inst.arg(0).uriValue()).autoResolve(lhs)).vid(null)),
-                            //"any obj", "the obj referred to by the uri arg", Map.of(jnt(0), "the uri to dereference"),"like from(uri), except that dereferencing happens immediately upon accessing the instruction (no inst apply required)."),
+                    //"any obj", "the obj referred to by the uri arg", Map.of(jnt(0), "the uri to dereference"),"like from(uri), except that dereferencing happens immediately upon accessing the instruction (no inst apply required)."),
                     instC(AUTO_AT_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL.maybe()), T(ALL.maybe())), (lhs, inst) -> !inst.arg(1).isNoObj() ? inst.arg(1) : Router.readFromSpace(inst.arg(0).uriValue()).orSupply(() -> inst.arg(1).vid(inst.arg(0).uriValue())).autoResolve(lhs).selfVID(inst.arg(0).uriValue())),
                     docWrap(instC(AUTO_TO_INST_TID.dom(ALL.maybe()).rng(ALL), lst(ALL_TYPE), (lhs, inst) -> (null == lhs.vid() || lhs.isAutoFrom()) ? lhs : auto_from_(lhs.vid()).tryToInst()),
-                            "any obj", "the uri (if possible) that refers to the obj arg", Map.of(jnt(0), "the obj to reference"),"like !*(vid), except that the obj arg is converted to an !* reference (an inverse dereference) immediately upon inst access (no inst apply required)."),
+                            "any obj", "the uri (if possible) that refers to the obj arg", Map.of(jnt(0), "the obj to reference"), "like !*(vid), except that the obj arg is converted to an !* reference (an inverse dereference) immediately upon inst access (no inst apply required)."),
                     docWrap(instC(CATCH_INST_TID.dom(A).rng(C.maybeSome()), lst(T(B.maybeSome())), (lhs, inst) -> lhs.isFail() && !lhs.isCaughtFail() ? inst.arg(0).apply(lhs.asFail().caught()).c(c -> c.mult(lhs.c())) : lhs),
                             "any obj", "uncaught fails go to arg, others mapped by identity", Map.of(jnt(0), "the obj triggered on an uncaught fail"), "a catch function f(x)->x"),
                     docWrap(instC(END_INST_TID.dom(ALL_STAR).rng(NOOBJ_TID.zero()), lst(), (lhs, inst) -> noobj()),
@@ -1020,7 +1020,13 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                             "the rhs obj", "the lhs obj", Map.of(jnt(0), "concatenated args followed by newline written to stdout"), "a side-effect function \\(f(x)\\nearrow x\\)"),
                     docWrap(instC(PRINT_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL_STAR)), (lhs, inst) -> objs(inst.args().elements().peek(o -> inst.logger().none("%s", o.isStr() ? o.strValue() : o.toString())).filter(x -> false).findAny().orElse(lhs))),
                             "the rhs obj", "the lhs obj", Map.of(jnt(0), "concatenated args followed by newline written to stdout"), "a side-effect function \\(f(x)\\nearrow x\\)"),
-                    instC(AT_INST_TID.dom(ALL.maybe()).rng(A.maybeSome()), lst(T(URI_TID)), (lhs, inst) -> Router.readFromSpace(inst.arg(0).uriValue()).selfVID(inst.arg(0).uriValue())),
+                    instC(AT_INST_TID.dom(ALL.maybe()).rng(A.maybeSome()), lst(T(URI_TID)), (lhs, inst) -> {
+                        final fURI pattern = inst.arg(0).uriValue();
+                        if (pattern.hasPattern()) {
+                            return objs(Router.readFromSpace(pattern.asBranch()).stream().map(x -> x.asRel().second().selfVID(x.asRel().first().uriValue())));
+                        } else
+                           return Router.readFromSpace(pattern).selfVID(pattern);
+                    }),
                     docWrap(instC(ID_INST_TID.dom(A).rng(A), lst(), (lhs, inst) -> lhs),
                             "an rhs obj", "an lhs obj", Map.of(), "the obj identity function \\(f(x)\\to x\\)"),
                     docWrap(instC(ID_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(), (lhs, inst) -> lhs),
@@ -1103,23 +1109,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                             "any objs", "the objs after skipping", Map.of(jnt(0), "the number of objs to skip"), "skips the first n objs"),
                     docWrap(instC(TAKE_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(INT_TID)), (lhs, inst) -> lhs.take(cInt.of(inst.arg(0).intValue())).get0()), // remaining
                             "any objs", "the objs before skipping", Map.of(jnt(0), "the number of objs to take"), "takes the first n objs"),
-                    instC(UPDATE_INST_TID.dom(A).rng(B), lst(T(B)), (lhs, inst) -> {
-                        final fURI vid = Obj.Helper.getPointer(lhs).orElse(lhs.vid());
-                        if (null == vid) {
-                            return lhs.isPoly() ? Poly.Helper.updatePolyRecursion(lhs.as(), inst.arg(0).as(), MUTABLE) : inst.arg(0);
-                        } else {
-                            final Obj resolvedLHS = Obj.Helper.isPointer(lhs) ? lhs.apply(noobj()) : lhs;
-                            final boolean applyVID = null != lhs.vid();
-                            Obj newObj;
-                            if (resolvedLHS.isPoly()) {
-                                newObj = Poly.Helper.updatePolyRecursion(resolvedLHS.as(), inst.arg(0).as(), MUTABLE);
-                            } else {
-                                newObj = inst.arg(0).apply(resolvedLHS);
-                            }
-                            Router.global().write(vid, newObj);
-                            return applyVID ? newObj.selfVID(lhs.vid()) : newObj;
-                        }
-                    }),
+                    instC(UPDATE_INST_TID.dom(A).rng(B), lst(T(B)), (lhs, inst) -> Poly.Helper.updateRecursion(lhs.as(), inst.arg(0).as(), MUTABLE)),
                     instC(REIFY_INST_TID.dom(A).rng(REC_TID), lst(), (lhs, inst) -> rec(
                             "type", rec(
                                     "tid", rec(

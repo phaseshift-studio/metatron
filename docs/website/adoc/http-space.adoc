@@ -1,6 +1,25 @@
 [discrete]
 == HTTP Space
 
+[%collapsible]
+./m/web instset import and space constructions
+====
+++++
+<!-- 🐖
+[HIDDEN] import(/m/llm)
+import(/m/web)
+httpspace::[                                                                        /
+ host     => <http://localhost:8777>,                                               /
+ pattern  => <http://#>,                                                            /
+ route    => [/          => <>,                                                     /
+              /mcp       => mcp_mtron_http,                                         /
+              /docs      => target/docs,                                            /
+              /console   => src/main/resources/web/console]]@/sys/space/web/http
+-->
+++++
+====
+
+
 [discrete]
 === HTML Type
 
@@ -28,12 +47,12 @@ When a https://en.wikipedia.org/wiki/REST[REST] endpoint has a URL address that 
 A https://localai.io/[LocalAI] service will serve to demonstrate how to leverage foreign resources in metatron. LocalAI exposes an https://www.openapis.org/[OpenAPI]-compliant endpoint at `http://localhost:8088/v1` (this is specific to the author's local deployment of LocalAI).
 
 ++++
-<!-- 🐖 
-*<http://localhost:8088/v1>                        [-- <1>
-*<http://localhost:8088/v1/models>                 [-- <2>
-*<http://localhost:8088/v1/models/data/0/id>       [-- <3>
+<!-- 🐖
+*<http://localhost:8088/v1>                       
+*<http://localhost:8088/v1/models>               
+*<http://localhost:8088/v1/models/data/0/id>      
 *<http://localhost:8088/api/models/config-json/${  /
-  *<http://localhost:8088/v1/models/data/0/id>}>   [-- <4>
+  *<http://localhost:8088/v1/models/data/0/id>}>   
 -->
 ++++
 <1> No result, but also no connection `fail::T`. The endpoint is alive.
@@ -45,7 +64,7 @@ Once the desired REST resource has been accessed, it's possible to map the resou
 
 ++++
 <!-- 🐖
-*/m/llm/model                      [-- <1>
+*/m/llm/model                   
 */m/llm/inst/+?dom=model
 -->
 ++++
@@ -56,12 +75,12 @@ When the REST resource is manipulated to fit the structural specification of `mo
 
 
 ++++
-<!-- 
+<!-- 🐖
 *<http://localhost:8088/v1/models/data/0>>-.           /
   -<[name=>>>id.as(uri::T),                            /
      type=>>>object.as(uri::T),                        /
      provider=>|!*/sys/space/localai].as(model::T)     /
-  .chat('are you there?')                       [-- <1>
+  .chat('are you there?')                             
 -->
 ++++
 <1> The OpenAPI `application/json` resource is morphed into a metatron `model::T` and then the model is `chat`ted with.

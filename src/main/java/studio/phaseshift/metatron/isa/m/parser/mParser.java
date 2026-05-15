@@ -208,7 +208,7 @@ public class mParser {
         }));
 
         // Cache the main parser to avoid rebuilding it on every parse() call
-        cachedMainParser = seq(choice(m_call_prefix(START_INST_TID), m_obj(false)), opt(m_comment(), null))
+        cachedMainParser = seq(choice(m_call_prefix(START_INST_TID), m_obj(false)), opt(m_comment().trim(), null))
                 .map(t -> pick(t, 0))
                 .end();
     }
@@ -417,8 +417,8 @@ public class mParser {
 
     public static Parser m_comment() {
         return choice(
-                seq(of("[--"), noneOf("\n\r").star(), opt(choice(anyOf("\n\r"), of("--]")), "")),
-                seq(of("[==").trim(), any().starGreedy(of("==]")), of("==]"))).map(t -> noobj());
+                seq(of("[--").trim(),any().starGreedy(of("--")), of("--]").trim()),
+                seq(of("[==").trim(), any().starGreedy(of("==]")), of("==]").trim())).trim();
     }
 
     public static Parser m_furi() {

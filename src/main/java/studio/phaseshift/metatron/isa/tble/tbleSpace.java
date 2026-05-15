@@ -134,6 +134,7 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
     protected TableSchema schema;
     protected ExistingTableSchema existingTableSchema;
     protected SQLSchemaGenerator schemaGenerator;
+    protected String databaseName;
 
     // =========================================================================
     //  Factory
@@ -168,6 +169,7 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
         super(sjvm, config, tid, vid);
         LOG.info("connected {{b}}%s{{X}}", config.get(uri(HOST)));
         try {
+            this.databaseName = sjvm.getCatalog() != null ? sjvm.getCatalog() : "db";
             initializeSchema(sjvm);
             initializeTableMapping(sjvm);
         } catch (final SQLException ex) {
@@ -175,8 +177,9 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
         }
     }
 
-    
-
+    public String getDatabaseName() {
+        return this.databaseName;
+    }
 
     @Override
     public void close() {
@@ -320,6 +323,9 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
     }
 
     // =========================================================================
+    //  Path resolution
+    // =========================================================================
+    // =========================================================================
     //  I/O — Writer
     // =========================================================================
 
@@ -339,21 +345,20 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
                         // ── table-mapped path (existing table) ──
                         this.existingTableSchema.write(this.sjvm(), aligned, obj);
 
-                    } else if (obj.isRec()
-                            && aligned.segments().size() >= 2
-                            && !aligned.segments().get(1).equals("+")
-                            && !aligned.segments().get(1).equals("#")
+                    } else if (obj.isRec() && aligned.segments().size() >= 2
                             && isConfiguredTable(aligned.segments().getFirst())) {
-                        // ── create-on-first-write (whitelisted table, not yet in DB) ──
-                        lazyInitExistingTableSchema();
                         final String tableName = aligned.segments().getFirst();
-                        if (!this.existingTableSchema.getTableNames()
-                                .contains(tableName.toLowerCase())) {
-                            this.existingTableSchema.createTableFromRecord(
-                                    this.sjvm(), tableName, obj.asRec());
-                            syncTableConfig(List.of(tableName));
+                        final String elementName = aligned.segments().get(1);
+                        if (!elementName.equals("+") && !elementName.equals("#")) {
+                            lazyInitExistingTableSchema();
+                            if (!this.existingTableSchema.getTableNames()
+                                    .contains(tableName.toLowerCase())) {
+                                this.existingTableSchema.createTableFromRecord(
+                                        this.sjvm(), tableName, obj.asRec());
+                                syncTableConfig(List.of(tableName));
+                            }
+                            this.existingTableSchema.write(this.sjvm(), aligned, obj);
                         }
-                        this.existingTableSchema.write(this.sjvm(), aligned, obj);
 
                     } else {
                         // ── key-value path ──

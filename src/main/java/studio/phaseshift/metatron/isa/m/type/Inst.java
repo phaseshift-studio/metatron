@@ -191,6 +191,7 @@ public interface Inst extends Call {
                 this.tid().basePath().equals(WITHIN_INST_TID) ||
                 this.tid().basePath().equals(ISA_INST_TID) ||
                 this.tid().basePath().equals(SELECT_INST_TID) ||
+                this.tid().basePath().equals(UPDATE_INST_TID) ||
                 this.tid().basePath().equals(WHERE_INST_TID) ||
                 this.tid().basePath().equals(GROUP_INST_TID) ||
                 this.tid().basePath().equals(REPEAT_INST_TID) ||
