@@ -39,7 +39,7 @@ jobs:
 
       - name: Publish to npm
         run: |
-          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> .npmrc
+          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
 
           TGZ=$(find ./jdeploy/github-release-files -name "*.tgz" ! -name "*Installer*" -print -quit)
           if [ -z "$TGZ" ] || [ ! -f "$TGZ" ]; then
