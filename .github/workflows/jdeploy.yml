@@ -40,13 +40,17 @@ jobs:
       - name: Publish to npm
         run: |
           echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> .npmrc
+
           TGZ=$(find ./jdeploy/github-release-files -name "*.tgz" ! -name "*Installer*" -print -quit)
-          if [ -n "$TGZ" ] && [ -f "$TGZ" ]; then
-            echo "Publishing: $TGZ"
-            npm publish "$TGZ" --access public --tag snapshot
-          else
+          if [ -z "$TGZ" ] || [ ! -f "$TGZ" ]; then
             echo "No .tgz found"
             exit 1
           fi
+
+          mkdir -p npm-publish
+          tar xzf "$TGZ" -C npm-publish
+          cd npm-publish/package
+          npm version --no-git-tag-version "0.0.0-jdeploy-snapshot.${GITHUB_RUN_NUMBER}"
+          npm publish --access public --tag snapshot
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
