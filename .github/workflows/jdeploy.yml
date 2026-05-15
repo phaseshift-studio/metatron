@@ -34,6 +34,12 @@ jobs:
       - name: Build App Installer Bundles
         uses: shannah/jdeploy@master
         with:
-          deploy_target: npm
+          deploy_target: github
           github_token: ${{ github.token }}
-          npm_token: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish to npm
+        run: |
+          echo "//registry.npmjs.org/:_authToken=\${NPM_TOKEN}" > ~/.npmrc
+          npm publish ./jdeploy/github-release-files/*.tgz --access public
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
