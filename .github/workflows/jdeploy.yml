@@ -43,7 +43,7 @@ jobs:
           TGZ=$(find ./jdeploy/github-release-files -name "*.tgz" ! -name "*Installer*" -print -quit)
           if [ -n "$TGZ" ] && [ -f "$TGZ" ]; then
             echo "Publishing: $TGZ"
-            npm publish "$TGZ" --access public
+            npm publish "$TGZ" --access public --tag snapshot
           else
             echo "No .tgz found"
             exit 1
