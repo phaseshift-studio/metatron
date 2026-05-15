@@ -1,5 +1,5 @@
 {
-  "name": "@phaseshift-studio/metatron-vm",
+  "name": "metatron-vm",
   "jdeploy": {
     "jar": "target/metatron-0.1-SNAPSHOT-jar-with-dependencies.jar",
     "mainClass": "studio.phaseshift.metatron.BootLoader",
