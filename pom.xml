@@ -294,12 +294,6 @@
             <artifactId>asciidoctorj</artifactId>
             <version>${asciidoctorj.version}</version>
         </dependency>
-        <dependency>
-            <groupId>com.bmuschko</groupId>
-            <artifactId>asciidoctorj-tabbed-code-extension</artifactId>
-            <version>0.3</version>
-            <scope>runtime</scope>
-        </dependency>
         <!-- CONSOLE -->
         <dependency>
             <groupId>org.jline</groupId>
@@ -765,12 +759,6 @@
                         <artifactId>asciidoctorj</artifactId>
                         <version>${asciidoctorj.version}</version>
                         <scope>compile</scope>
-                    </dependency>
-                    <dependency>
-                        <groupId>com.bmuschko</groupId>
-                        <artifactId>asciidoctorj-tabbed-code-extension</artifactId>
-                        <version>0.3</version>
-                        <scope>runtime</scope>
                     </dependency>
                 </dependencies>
                 <executions>
