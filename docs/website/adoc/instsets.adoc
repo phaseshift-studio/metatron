@@ -8,11 +8,10 @@
 
 An instruction set is defined as a **record** (`rec`) of the form:
 
-++++
-<!-- 🐖
+[mtron]
+----
 *instset
--->
-++++
+----
 
 [stem]
 ++++

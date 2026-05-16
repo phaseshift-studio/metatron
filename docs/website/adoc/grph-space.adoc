@@ -5,11 +5,10 @@
 [%collapsible]
 ./m/grph instset import
 ====
-++++
-<!-- 🐖
+[mtron]
+----
 import(/m/grph)
--->
-++++
+----
 ====
 
 A graph is a data structure composed of a set of vertices latexmath:[V] connected by a set of edges latexmath:[E], denoted
@@ -36,8 +35,8 @@ where latexmath:[E] is typically a https://en.wikipedia.org/wiki/Partial_functio
 
 This classic structure has been extended in various ways since its inception in 1736 (by https://en.wikipedia.org/wiki/Leonhard_Euler[Leonard Euler]). Examples include variants where edges are undirected, labeled, can self-loop, can connect more than two vertices, and more. Modern graph database designers approach graphs with a focus on ease of modeling and speed of querying so to compete with contemporary, complementary technologies such as relational, key/value, column, vector, document, etc. They quickly converged on a particular graph data model colloquially known as a *property graph*. This structure is known more formally as a _directed, labeled, attributed, multi-relational binary graph_. The property graph extends latexmath:[G = (V,E)] with properties (key/value pairs) associated with vertices and edges. This extension provides users a convenient path for moving between the dynamic state of a system represented using the constructs of modern object-oriented programming and the persisted state of the system stored in a graph database. As such, property graphs are useful when modeling multi-relational environments, where a heterogeneous set of "things" (different types of vertices) relate to one another via a heterogeneous set of "connections" (different types of edges).
 
-++++
-<!-- 🐖
+[mtron]
+----
 grphspace::[pattern => g:#,                              /
             route   => [<g:> =><>,                       /
                         <g:V>=><V>,                      / 
@@ -45,22 +44,20 @@ grphspace::[pattern => g:#,                              /
                         <g:S>=>/m/grph/schema/modern],   /
             native  => [factory  => mfactory::[=>],      /
                         load     => modern]]@/sys/space/modern
--->
-++++
+----
 
 
 An assortment of example property graph traversals written in mtron is provided below.
 
-++++
-<!-- 🐖 
-*g:V/1                                [-- <1>
-*g:V/1.outE()                         [-- <2>
-*g:V/1.outE().inV()                   [-- <3>
-*g:V/1.out()                          [-- <4>
-*g:V/1.out(knows).out(created)        [-- <5>
-*g:V/1.out(knows).out(created)>>name  [-- <6>
--->
-++++
+[mtron]
+----
+*g:V/1                                [-- <1> --]
+*g:V/1.outE()                         [-- <2> --]
+*g:V/1.outE().inV()                   [-- <3> --]
+*g:V/1.out()                          [-- <4> --]
+*g:V/1.out(knows).out(created)        [-- <5> --]
+*g:V/1.out(knows).out(created)>>name  [-- <6> --]
+----
 
 <1> Vertex `1` with associated properties.
 <2> The incident outgoing edges of vertex `1`.
@@ -122,18 +119,17 @@ traversals.
 A consequence of mtron's uri-oriented id scheme is property keys no longer sit in a flat address space. 
 The following examples demonstrate selection and filtering using multi-segment uri pattern matching with wildcards.
 
-++++
-<!-- 🐖 role="primary"
+[mtron,role="primary"]
+----
 *g:V/1>>=[address/home/city => 'santa fe',        /
-          address/work/city => 'nomansland']                    [-- <1>
-*g:V/1/address/home/city                                        [-- <2>
-*g:V/+.?==[address/+/city => 'santa fe']                        [-- <3>
-*g:V/+.==[address/+/city/ => _]                                 [-- <4>
-*g:V/+.>>address/+/city/                                        [-- <5>
-*g:V/+.>>address/+/city                                         [-- <6>
-*g:V/+.>>address/#                                              [-- <7>
--->
-++++
+          address/work/city => 'nomansland']                    [-- <1> --]
+*g:V/1/address/home/city                                        [-- <2> --]
+*g:V/+.?==[address/+/city => 'santa fe']                        [-- <3> --]
+*g:V/+.==[address/+/city/ => _]                                 [-- <4> --]
+*g:V/+.>>address/+/city/                                        [-- <5> --]
+*g:V/+.>>address/+/city                                         [-- <6> --]
+*g:V/+.>>address/#                                              [-- <7> --]
+----
 <1> add two properties keyed with 3 segment uris to vertex `1` .
 <2> uri properties uniquely identify values in the vertex.
 <3> for all vertices, return those that have an address in Santa Fe.
@@ -146,20 +142,19 @@ The following examples demonstrate selection and filtering using multi-segment u
 [indent=0,subs="verbatim,attributes",role="secondary"]
 .nested properties
 =====
-++++
-<!-- 🐖 role="secondary"
+[mtron,role="secondary"]
+----
 [HIDDEN] *g:V/1>>=[address/home/city => noobj]
 [HIDDEN] *g:V/1>>=[address/work/city => noobj]
-*g:V/1==[_=>_]                                                  [-- <1>
+*g:V/1==[_=>_]                                                  [-- <1> --]
 *g:V/1>>=[address=>[                        /
              home => [city =>'santa fe',    /
                       state=>NM],           /
-             work => !*<../home>]]                              [-- <2>
-*g:V/1/address/home/city                                        [-- <3>
-*g:V/+.?==[address=>[_ => [state=>NM]]]                         [-- <4>
-*g:V/+.?==[address=>[_ => [state=>NM]]].>>address/+/city        [-- <5>
--->
-++++
+             work => !*<../home>]]                              [-- <2> --]
+*g:V/1/address/home/city                                        [-- <3> --]
+*g:V/+.?==[address=>[_ => [state=>NM]]]                         [-- <4> --]
+*g:V/+.?==[address=>[_ => [state=>NM]]].>>address/+/city        [-- <5> --]
+----
 <1> select the properties of vertex 1.
 <2> update the properties of vertex 1 with a nested address `rec`.
 <3> the new address `rec` components have a unique URI.
@@ -218,15 +213,14 @@ The two data sources have a very particular understanding of how data should be 
 [cols="7a,6a",separator=🧱,role="table-bordered small center"]
 |===
 🧱
-++++
-<!-- [IGNORE BUGGY] 🐖
+[mtron]
+----
 *g:V/1                                                             [-- <1> --]
 *acme:customers/357                                                [-- <2> --]
 *g:V/1.addE(consulted,|*acme:customers/357)                        [-- <3> --]
 *g:V/1.out(consulted)                                              [-- <4> --]
 *g:V/1.out(consulted).matches(vrtx::T)                             [-- <5> --]
--->
-++++
+----
 <1> vertex `v[1]` in a graph database.
 <2> row `357` in a relational database.
 <3> an edge is created in the graph linking vertex `v[1]` and row `357`.
@@ -240,8 +234,8 @@ accessed, immediately resolves the monad's data pointer to the respective relati
 Some more expressions are provided below that extend what has been constructed in the previous example thus far.
 These expressions highlight the nested structural pattern matching and data manipulation capabilities of mtron.
 
-++++
-<!-- 🐖
+[mtron]
+----
 *g:V/1.out(consulted).-<[                                  /
   name    =>"${>>contactFirstName} ${>>contactLastName}",  /
   address =>==[city=>_,country=>_]]
@@ -250,8 +244,7 @@ These expressions highlight the nested structural pattern matching and data mani
       .out(reportsTo)-<[                               /
         name=>"${>>firstName} ${>>lastName}",          /
         job=>-<[title=>>>jobTitle,email=>>>email]]            
--->
-++++
+----
 
 The examples highlight important concepts necessary to understand 
  in order to be effective at traversing and manipulating complex, 
@@ -358,8 +351,8 @@ A directed single-relational binary graph connects vertices by binary edges (a s
 [cols="8a,6a",separator=🧱,role="table-bordered small center"]
 |===
 🧱
-++++
-<!-- 🐖
+[mtron]
+----
 v1 -> [!*v2, !*v3, !*v4]
 v2 -> [,]
 v3 -> [!*v4, !*v5]
@@ -371,8 +364,7 @@ v1                 [-- <1> --]
 *v1                [-- <2> --]
 *v1.>>             
 *v1.>>.>>          
--->
-++++
+----
 <1> `v1` denotes the source vertex (0-step traversal).
 <2> `*v1` references the adjacent vertices to v1 (1-step traversal).
 <3> `*v1>>` traversers the v1 incident edges to the v1 adjanct vertices.
@@ -408,8 +400,8 @@ The previous graph structure can be further enhanced with multiple types of edge
 [cols="8a,6a",separator=🧱,role="table-bordered small center"]
 |===
 🧱
-++++
-<!-- 🐖
+[mtron]
+----
 v1 -> [knows=>{!*v2, !*v3},created=>!*v4]
 v2 -> [,]
 v3 -> [created=>{!*v4, !*v5}]
@@ -421,8 +413,7 @@ v1                           [-- <1> --]
 *v1                          [-- <2> --]
 *v1.>>knows                  [-- <3> --]
 *v1.>>knows.>>created        [-- <4> --]
--->
-++++
+----
 🧱
 [source,mtron]
 ----
@@ -447,8 +438,10 @@ knows              │
 [discrete]
 ==== directed attributed multi-relational binary graph
 
-++++
-<!-- 🐖
+using multi-segment uris
+
+[mtron]
+----
 v1 -> [name=>'marko',age=>29, outE_=>[knows=>{!*v2, !*v3},created=>!*v4]]
 v2 -> [name=>'vadas',age=>27]
 v3 -> [name=>'josh',age=>32, outE_=>[created=>{!*v4, !*v5}]]
@@ -461,23 +454,20 @@ v1                                            [-- <1> --]
 *v1.>>outE_.>>knows                           [-- <3> --]
 *v1.>>outE_.>>knows.>>outE_.>>created         [-- <4> --]
 *v1.>>outE_.>>knows.>>outE_.>>created.>>name  [-- <5> --]
-[HEADER] using multi-segment uris
 *v1.>>outE_/knows                             [-- <3> --]
 *v1.>>outE_/knows.>>outE_/created             [-- <4> --]
 *v1.>>outE_/knows.>>outE_/created.>>name      [-- <5> --]
--->
-++++
+----
 
-++++
-<!-- 🐖
+[mtron]
+----
 outE -> |outE?rec{*}<=rec(label=>uri{*}::T){ >>(outE_).>>(*label) }
 v1                                      [-- <1> --]
 *v1                                     [-- <2> --]
 *v1.outE(knows)                         [-- <3> --]
 *v1.outE(knows).outE(created)           [-- <4> --]
 *v1.outE(knows).outE(created).>>name    [-- <5> --]
--->
-++++
+----
 
 [discrete]
 === Multi-Spatial Graph Overlays

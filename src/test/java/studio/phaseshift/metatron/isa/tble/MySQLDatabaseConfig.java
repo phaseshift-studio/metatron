@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.tble;
 
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.containers.wait.strategy.WaitStrategy;
 import org.testcontainers.utility.DockerImageName;
 
 import java.sql.Connection;
@@ -54,8 +55,7 @@ public class MySQLDatabaseConfig implements DatabaseConfig {
 
     @Override
     public String getDriverClass() {
-        // Use MariaDB driver which is already in pom.xml and supports MySQL
-        return "org.mariadb.jdbc.Driver";
+       return "com.mysql.cj.jdbc.Driver";
     }
 
     @Override
@@ -65,7 +65,9 @@ public class MySQLDatabaseConfig implements DatabaseConfig {
         }
         String url = "jdbc:mysql://" + mysqlContainer.getHost() + ":" + mysqlContainer.getMappedPort(3306) +
                      "/" + DB_NAME + "?allowPublicKeyRetrieval=true&useSSL=false";
-        return DriverManager.getConnection(url, DB_USER, DB_PASS);
+        final Connection conn = DriverManager.getConnection(url, DB_USER, DB_PASS);
+        Wait.forListeningPorts(mysqlContainer.getMappedPort(3306));
+        return conn;
     }
 
     @Override

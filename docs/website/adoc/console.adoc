@@ -6,8 +6,8 @@
 [%collapsible]
 ./m/mach instset import and space constructions
 ====
-++++
-<!-- 🐖
+[mtron]
+----
 import(/m/mach)
 memspace::[               /
  pattern   => /usr/#,     /                           
@@ -17,8 +17,7 @@ memspace::[               /
   docq::[=>],             /
   subq::[=>],             /
   incrq::[=>]]]@/sys/space/usr
--->
-++++
+----
 ====
 
 
@@ -33,14 +32,13 @@ The https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop[console] 
  . llm https://en.wikipedia.org/wiki/Pair_programming[pair programming] kbd:[ctrl+shift+A]
 
 The console is also an `obj`.
-++++
-<!-- 🐖
+[mtron]
+----
 console::[=>]@/usr/ui/console                 
 */usr/ui/console                                     [-- <1> --]
 */usr/ui/console/pane/0                              [-- <2> --]
 /usr/ui/console/pane/0/result('printed at ==>xyz')   [-- <3> --]
--->
-++++
+----
 
 <1> The console `obj` is typically referenced by `/sys/ui/console`.
 <2> The console's pane system allows for multiple parallel views.

@@ -23,10 +23,19 @@ import org.asciidoctor.Options;
 import org.asciidoctor.SafeMode;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.TypeCheck;
+import studio.phaseshift.metatron.isa.dcmnt.dcmntInstSet;
+import studio.phaseshift.metatron.isa.grph.grphInstSet;
+import studio.phaseshift.metatron.isa.iot.iotInstSet;
+import studio.phaseshift.metatron.isa.llm.llmInstSet;
+import studio.phaseshift.metatron.isa.m.math.mathInstSet;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.rdf.rdfInstSet;
+import studio.phaseshift.metatron.isa.tble.tbleInstSet;
+import studio.phaseshift.metatron.isa.web.webInstSet;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -34,14 +43,10 @@ import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static studio.phaseshift.metatron.Tokens.BOOT;
 import static studio.phaseshift.metatron.Tokens.LOGG;
-import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /**
@@ -95,7 +100,6 @@ public class DocRunner {
         }
 
         LOG.info("\n[Docs Runner v" + VERSION + "]\n\targs: " + String.join(" ", args));
-        InstSet.importInstSet(f("#"));
         // ── Load .env files ──────────────────────────────────────────────
         loadDotEnv(Path.of(System.getProperty("user.home"), ".metatron", "env"));
         loadDotEnv(Path.of(".env").toAbsolutePath());
@@ -145,8 +149,6 @@ public class DocRunner {
                     .sorted()
                     .forEach(adocFiles::add);
         }
-        
-        adocFiles.removeIf(f -> f.getFileName().toString().equals("dcmnt-space.adoc") ||f.getFileName().toString().equals("grph-space.adoc"));
 
         if (adocFiles.isEmpty()) {
             LOG.info("no .adoc files found in " + inputPath);
@@ -176,20 +178,27 @@ public class DocRunner {
         BootLoader.BOOTING = true;
         BootLoader.TESTING = true;
         BootLoader.load(MRec.rec(uri(LOGG), uri("info"), uri(BOOT), uri(boot)));
+        for (final InstSet is : new InstSet[] {
+                new mathInstSet(), new webInstSet(), new iotInstSet(),
+                new grphInstSet(), new llmInstSet(), new tbleInstSet(),
+                new dcmntInstSet(), new rdfInstSet()
+        }) {
+            Router.global().addSpace(is);
+            Router.writeToSpace(is);
+            is.setup();
+        }
 
-        // ── Process each file ────────────────────────────────────────────
+        // ── Evaluate prefix expressions for side-effects ───────────
+        MtronDocPreprocessor.evalPrefixBlocks(prefixLines);
+
+        // ── Copy adoc files and preprocess ──────────────────────
         final MtronDocPreprocessor preprocessor = new MtronDocPreprocessor();
-        LOG.info("[docs-runner] processing " + adocFiles.size() + " file(s) (timeout=" + timeout + "s)");
         for (final Path file : adocFiles) {
             final Path outFile = outputPath.resolve(file.getFileName());
-            if (verbose)
-                LOG.info("processing " + file.getFileName() + " -> " + outFile);
-            else
-                LOG.info("[docs-runner] " + file.getFileName());
-
-            final List<String> originalLines = Files.readAllLines(file);
-            final List<String> newLines = preprocessor.process(file.toFile(),originalLines, prefixLines, verbose);
-            Files.writeString(outFile, String.join("\n", newLines).stripTrailing());
+            final String content = Files.readString(file);
+            final String processed = preprocessor.process(content);
+            Files.writeString(outFile, processed.stripTrailing());
+            if (verbose) LOG.info("  processed " + file.getFileName());
         }
 
         // ── Copy supporting files (header.html, footer.html, images) ────
@@ -201,7 +210,10 @@ public class DocRunner {
             try (var stream = Files.list(dir)) {
                 stream.filter(f -> Files.isRegularFile(f) && !f.getFileName().toString().endsWith(".adoc"))
                         .forEach(f -> {
-                            try { Files.copy(f, outputPath.resolve(f.getFileName()), StandardCopyOption.REPLACE_EXISTING); } catch (IOException ignored) { }
+                            try {
+                                Files.copy(f, outputPath.resolve(f.getFileName()), StandardCopyOption.REPLACE_EXISTING);
+                            } catch (IOException ignored) {
+                            }
                         });
             }
         }
@@ -210,7 +222,7 @@ public class DocRunner {
         if (htmlPath != null) {
             final Path tractatusAdoc = outputPath.resolve("tractatus.adoc");
             if (!Files.exists(tractatusAdoc)) {
-                LOG.info("[docs-runner] tractatus.adoc not found — skipping HTML");
+                LOG.warn("[docs-runner] tractatus.adoc not found — skipping HTML");
             } else {
                 LOG.info("[docs-runner] tractatus.adoc -> " + htmlPath.resolve("tractatus.html"));
                 try (final Asciidoctor asciidoctor = Asciidoctor.Factory.create()) {
@@ -233,10 +245,14 @@ public class DocRunner {
         System.exit(0);
     }
 
-    /** Constructor for {@code ProcessEnvironment$Variable}, used to safely inject
-     *  env entries so {@code System.getenv()} iteration doesn't crash. */
+    /**
+     * Constructor for {@code ProcessEnvironment$Variable}, used to safely inject
+     * env entries so {@code System.getenv()} iteration doesn't crash.
+     */
     private static final Constructor<?> ENV_VAR_CTOR = findEnvVarCtor();
-    /** Mutable OS environment map (populated via reflection once). */
+    /**
+     * Mutable OS environment map (populated via reflection once).
+     */
     @SuppressWarnings("unchecked")
     private static final Map<String, Object> OS_ENV = initEnvMap();
 
@@ -268,7 +284,8 @@ public class DocRunner {
             final Field f = pe.getDeclaredField("theEnvironment");
             f.setAccessible(true);
             return (Map<String, Object>) f.get(null);
-        } catch (final Exception ignored) { }
+        } catch (final Exception ignored) {
+        }
         // Fallback: unwrap UnmodifiableMap from System.getenv()
         try {
             final Map<String, String> env = System.getenv();
@@ -278,11 +295,14 @@ public class DocRunner {
                     return (Map<String, Object>) field.get(env);
                 }
             }
-        } catch (final Exception ignored) { }
+        } catch (final Exception ignored) {
+        }
         return Collections.emptyMap();
     }
 
-    /** Inject a KEY=value into the OS environment, wrapping the value properly. */
+    /**
+     * Inject a KEY=value into the OS environment, wrapping the value properly.
+     */
     private static void injectEnv(final String key, final String val) {
         System.setProperty(key, val);
         if (!OS_ENV.isEmpty() && ENV_VAR_CTOR != null) {
@@ -301,10 +321,10 @@ public class DocRunner {
                     final Class<?> pe = Class.forName("java.lang.ProcessEnvironment");
                     final Field ci = pe.getDeclaredField("theCaseInsensitiveEnvironment");
                     ci.setAccessible(true);
-                    @SuppressWarnings("unchecked")
-                    final Map<String, Object> ciEnv = (Map<String, Object>) ci.get(null);
+                    @SuppressWarnings("unchecked") final Map<String, Object> ciEnv = (Map<String, Object>) ci.get(null);
                     ciEnv.put(key, varObj);
-                } catch (final Exception ignored) { }
+                } catch (final Exception ignored) {
+                }
             } catch (final Exception e) {
                 System.err.println("[env] WARNING: cannot inject " + key + ": " + e.getMessage());
             }
@@ -342,7 +362,9 @@ public class DocRunner {
         }
     }
 
-    /** Mask an API key for display: show first 4 and last 4 chars. */
+    /**
+     * Mask an API key for display: show first 4 and last 4 chars.
+     */
     private static String mask(final String s) {
         if (s == null) return "null";
         if (s.length() <= 8) return "***";

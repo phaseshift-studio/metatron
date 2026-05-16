@@ -4,8 +4,8 @@
 [%collapsible]
 ./m/web instset import and space constructions
 ====
-++++
-<!-- 🐖
+[mtron]
+----
 [HIDDEN] import(/m/llm)
 import(/m/web)
 httpspace::[                                                                        /
@@ -15,8 +15,7 @@ httpspace::[                                                                    
               /mcp       => mcp_mtron_http,                                         /
               /docs      => target/docs,                                            /
               /console   => src/main/resources/web/console]]@/sys/space/web/http
--->
-++++
+----
 ====
 
 
@@ -25,14 +24,13 @@ httpspace::[                                                                    
 
 The type `html::T < rec::T` (a refinement of `rec::T`) represents an https://en.wikipedia.org/wiki/HTML[HTML] document.
 
-++++
-<!-- 🐖
+[mtron]
+----
 html::T                                           [-- <1> --]
-*<http://phaseshift.studio/>                      [-- <2> --]
-*<http://phaseshift.studio/html/head/title>       [-- <3> --]
-*<http://phaseshift.studio>.as(str::T)            [-- <4> --]
--->
-++++
+[ERROR] *<http://phaseshift.studio/>                      [-- <2> --]
+[ERROR] *<http://phaseshift.studio/html/head/title>       [-- <3> --]
+[ERROR] *<http://phaseshift.studio>.as(str::T)            [-- <4> --]
+----
 <1> The structural definition of `html::T`.
 <2> Retrieve the `index.html` of the website. Content-type yields `text/html` which for metatron maps to `html::T`.
 <3> The `title` element of the `index.html` of the website.
@@ -46,15 +44,14 @@ When a https://en.wikipedia.org/wiki/REST[REST] endpoint has a URL address that 
 
 A https://localai.io/[LocalAI] service will serve to demonstrate how to leverage foreign resources in metatron. LocalAI exposes an https://www.openapis.org/[OpenAPI]-compliant endpoint at `http://localhost:8088/v1` (this is specific to the author's local deployment of LocalAI).
 
-++++
-<!-- 🐖
+[mtron]
+----
 *<http://localhost:8088/v1>                       
 *<http://localhost:8088/v1/models>               
 *<http://localhost:8088/v1/models/data/0/id>      
 *<http://localhost:8088/api/models/config-json/${  /
   *<http://localhost:8088/v1/models/data/0/id>}>   
--->
-++++
+----
 <1> No result, but also no connection `fail::T`. The endpoint is alive.
 <2> The `/models` resource contains a list of all LLM models available for use in LocalAI.
 <3> Traversing the data within the resource is a function of extending the URI accordingly.
@@ -62,27 +59,25 @@ A https://localai.io/[LocalAI] service will serve to demonstrate how to leverage
 
 Once the desired REST resource has been accessed, it's possible to map the resource into a form that meets the structural requirements of an mtron `type`. In doing so, the resource then acquires the behaviors defined in the type's respective `instset`. For this example, that `instset` is `/m/llm`.
 
-++++
-<!-- 🐖
+[mtron]
+----
 */m/llm/model                   
 */m/llm/inst/+?dom=model
--->
-++++
+----
 <1> The `model::T` type in `/m/llm`.
 <2> The `/m/llm` instructions with a domain of `model::T`  (an object oriented perspective -- `obj.f()`).
 
 When the REST resource is manipulated to fit the structural specification of `model::T`, then  `http://localhost:8088/v1/models/data/0` can be the source of `chat?#\<=model`.
 
 
-++++
-<!-- 🐖
+[mtron]
+----
 *<http://localhost:8088/v1/models/data/0>>-.           /
   -<[name=>>>id.as(uri::T),                            /
      type=>>>object.as(uri::T),                        /
      provider=>|!*/sys/space/localai].as(model::T)     /
   .chat('are you there?')                             
--->
-++++
+----
 <1> The OpenAPI `application/json` resource is morphed into a metatron `model::T` and then the model is `chat`ted with.
 
 

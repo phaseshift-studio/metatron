@@ -198,7 +198,6 @@ public class InstSetDocGenerator {
     }
 
     private static void boot(final String bootFile) {
-        InstSet.importInstSet(f("#"));
         TypeCheck.disable(TypeCheck.code_resolve);
         BootLoader.BOOTING = true;
         BootLoader.TESTING = true;

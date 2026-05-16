@@ -12,15 +12,14 @@ The obvious application of a `poly` is as the scaffolding for a data structure. 
 together. Via the colocation of two objs within the confines of a `poly`, two objs are bound. This primordial glue is fundamental to the structuring of data into a data structure. Another way to bind two objs together is via explicit uri referencing. This method is a form of https://en.wikipedia.org/wiki/Lazy_evaluation[lazy binding] in that "colocation" is computed through dereferencing, and as such,
 https://en.wikipedia.org/wiki/Dangling_pointer[dangling pointers] are possible. With `poly`, there can be no "dangling pointers" -- either two objs are colocated in the `poly` or not.
 
-++++
-<!-- 🐖 
+[mtron]
+----
 a=>b=>c       [-- <1> --]
 [a=>{b,c}, /
  b=>{a,c}, /
  c=>{a,b}]    [-- <2> --]
 [a,b,c]       [-- <3> --]
--->
-++++
+----
 <1> a `rel` combines two objs, but due to associative nature of the `\=>` operator, a `rel` can bind an obj to another `rel`.
 <2> a `rec` can be understood as a "bag of `rels`", but this conceptualization looses its hold when considering control and query.
 <3> a `lst` combines objs via positional association.
@@ -31,23 +30,21 @@ a=>b=>c       [-- <1> --]
 ==== rel/>> vs. to/from
 Consider the following expressions:
 
-++++
-<!-- 🐖 
+[mtron]
+----
 a=>b=>c       [-- <1> --]
 a->b->c       [-- <2> --]
--->
-++++
+----
 <1> a `rel` associates `a` to `b\=>c` and another `rel` associates `b` to `c`.
 <2> `to?uri\<=uri` associates `a` to `b` and another `to?uri\<=uri` associates `b` to `c`.
 
-++++
-<!-- 🐖 
+[mtron]
+----
 a=>b=>c.>>       [-- <1> --]
 a=>b=>c.>>.>>    [-- <2> --]
 a->b->c.*a       [-- <3> --]
 a->b->c.**a      [-- <4> --]
--->
-++++
+----
 <1> `>>?#\<=rel` maps a `rel` to it's `rng`. 
 <2> Two `>>` yields the tail of the relational chain, `c`.
 <3> `*?#\<=uri` maps a `uri` to an obj. 
@@ -58,13 +55,12 @@ The fourth expression constructs and traverses its data structure in space.
 It just so happens that the space the fourth expression is operating in is the stack.
 This is due to the fact that the stack's pattern is `<+/#>`, and therefore, it matches `a`, `b`, `c`.
 
-++++
-<!-- 🐖 
+[mtron]
+----
 [== a->(b->c) ==]      [-- <1> --]
 *a
 **a
--->
-++++
+----
 <1> `a` references the instruction `b->c`.
 <2> `*a` resolves to the instruction `b->c` which, as an auto (`!`), immediately applies `a` to `b` yielding `c`.
 --

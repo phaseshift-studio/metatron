@@ -11,80 +11,72 @@ in the system.
 
 🧱 `space`
 🧱
-++++
-<!-- 🐖
+[mtron]
+----
 *space
--->
-++++
+----
 
 🧱 `memspace`
 🧱 an in-memory associative array. non-persistent, O(1) read/write, used extensively in testing and as the backing
 store for the system namespace (`/sys/`).
 
-++++
-<!-- 🐖
+[mtron]
+----
 *memspace
--->
-++++
+----
 
 🧱 `fsspace`
 🧱 the local file system. the hierarchical `uri` address maps naturally to the file/folder tree.
 
-++++
-<!-- 🐖
+[mtron]
+----
 *fsspace
--->
-++++
+----
 
 🧱 `dcmntspace`
 🧱 a document database (MongoDB). each collection maps to a `rec::T` refinement type; the `root` field declares
 the per-collection type contract and the `schema` field holds the full type vocabulary as an `instset`.
 
-++++
-<!-- 🐖
+[mtron]
+----
 *dcmntspace
--->
-++++
+----
 
 🧱 `tblespace`
 🧱 a relational (SQL) database. each table is a `rec::T` refinement with columns as fields; the `schema` instset
 contains one type per table.
 
-++++
-<!-- 🐖
+[mtron]
+----
 *tblespace
--->
-++++
+----
 
 🧱 `grphspace`
 🧱 a property graph database (Apache TinkerPop / JanusGraph). vertices and edges are `rec::T` objs with typed
 properties; graph traversal instructions (`out`, `in`, `outE`, `inE`, etc.) extend the base instruction set.
 
-++++
-<!-- 🐖
+[mtron]
+----
 *grphspace
--->
-++++
+----
 
 🧱 `httpspace`
 🧱 an HTTP endpoint. resources identified by URL map to `obj` through content-type negotiation
 (`application/json` → `rec::T`, `text/html` → `html::T`, etc.).
 
-++++
-<!-- 🐖
+[mtron]
+----
 *httpspace
--->
-++++
+----
 
 🧱 `mqttspace`
 🧱 an MQTT broker subscription. the wildcard-based MQTT topic hierarchy maps to the metatron URI address space.
 writes publish; reads query the local cache.
 
-++++
-<!-- 🐖
+[mtron]
+----
 *mqttspace
--->
-++++
+----
 
 |===
 

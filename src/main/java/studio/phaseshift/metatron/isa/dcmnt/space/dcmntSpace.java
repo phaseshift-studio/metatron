@@ -26,6 +26,7 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.ReplaceOptions;
 import org.bson.*;
 import org.bson.types.ObjectId;
+import org.javatuples.Pair;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.SchemaSpace;
@@ -403,6 +404,25 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
                         if (docObj.isPoly())
                             results.addAll(Space.Helper.unrollPoly(docVID, docObj.as(), nodePattern));
                         return results.iterator();
+                    }
+                } else {
+                    if(!collectionName.equals("+") && !collectionName.equals("#")) {
+                       return IteratorUtil.stream(this.database.getCollection(collectionName).find()).map(x -> {
+                            final String idStr = x.getObjectId(ID_FIELD).toHexString();
+                            final fURI docVID = this.pattern.retractPattern().extend(collectionName).extend(idStr);
+                            final Obj docObj = processDocument(x);
+                            return IdObj.of(docVID, docObj);
+                        }).iterator();
+                    } else {
+                        return IteratorUtil.stream(this.database.listCollectionNames().iterator())
+                                .map(this.database::getCollection)
+                                .flatMap(collection -> IteratorUtil.stream(collection.find()).map(x -> Pair.with(collection,x)))
+                                .map(pair -> {
+                                    final String idStr = pair.getValue1().getObjectId(ID_FIELD).toHexString();
+                                    final fURI docVID = this.pattern.retractPattern().extend(pair.getValue0().getNamespace().getCollectionName()).extend(idStr);
+                                    final Obj docObj = processDocument(pair.getValue1());
+                                    return IdObj.of(docVID, docObj);
+                                }).iterator();
                     }
                 }
                 return IteratorUtil.of();

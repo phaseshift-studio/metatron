@@ -127,10 +127,14 @@ public class MTronException extends RuntimeException {
     }
 
     public static void wrap(final ThrowingRunnable function) {
+        wrap(function, false);
+    }
+
+    public static void wrap(final ThrowingRunnable function, final boolean ignore) {
         try {
             function.run();
         } catch (final Exception e) {
-            throw MTronException.of(convert(e));
+            if (!ignore) throw MTronException.of(convert(e));
         }
     }
 

@@ -257,6 +257,9 @@ bin/metatron</code></pre>
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
  space=&gt;[sub=&gt;{!*/m/mach,!*/m/math,!*/m/web,!*/m/iot,!*/m/grph,!*/m/llm,!*/m/tble,!*/m/dcmnt,!*/m/rdf}],
+ const=&gt;[
+  noobj,
+  none@none],
  inst=&gt;[
   as?bool&lt;=bool(bool::T),
   as?bytes&lt;=bool(bytes::T),
@@ -483,9 +486,15 @@ bin/metatron</code></pre>
   rshift?B{*}&lt;=A(C{*}::T),
   lshift?B{*}&lt;=A(),
   start?A{**}&lt;=noobj{0}(A{**}::T)],
- const=&gt;[
-  noobj,
-  none@none],
+ rewrite=&gt;[
+  /m/inst/rewrite/id_removal?code{?}&lt;=code(),
+  /m/inst/rewrite/map_nest?code{?}&lt;=code(),
+  /m/inst/rewrite/else_after_count?code{?}&lt;=code(),
+  /m/inst/rewrite/plus_zero?code{?}&lt;=code(),
+  /m/inst/rewrite/mult_one?code{?}&lt;=code(),
+  /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
+  /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
+  /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()],
  type=&gt;[
   #::T,
   bool::T,
@@ -501,7 +510,7 @@ bin/metatron</code></pre>
   inst::T,
   code::T,
   fail::T,
-  space{*}::T,
+  space::T,
   memspace::T,
   stack::T,
   qproc::T,
@@ -512,23 +521,14 @@ bin/metatron</code></pre>
   docq::T,
   mintq::T,
   incrq::T,
-  constq::T],
- rewrite=&gt;[
-  /m/inst/rewrite/id_removal?code{?}&lt;=code(),
-  /m/inst/rewrite/map_nest?code{?}&lt;=code(),
-  /m/inst/rewrite/else_after_count?code{?}&lt;=code(),
-  /m/inst/rewrite/plus_zero?code{?}&lt;=code(),
-  /m/inst/rewrite/mult_one?code{?}&lt;=code(),
-  /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
-  /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
-  /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()]]@/m</code></pre>
+  constq::T]]@/m</code></pre>
                 </div>
             </div>
         </div>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">12</span></a><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">26</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">243</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><a href="#rewrites" class="btn btn-outline-primary">Rewrites <span class="pill-label badge bg-warning">8</span></a>
+        <a href="#consts" class="btn btn-outline-primary">Consts <span class="pill-label badge bg-secondary">12</span></a><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">40</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">261</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><a href="#rewrites" class="btn btn-outline-primary">Rewrites <span class="pill-label badge bg-warning">8</span></a>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -577,6 +577,24 @@ bin/metatron</code></pre>
 </a><a href="#type-uri" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">uri</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">math</small></div><div class="d-flex flex-wrap"><a href="#type-bB" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">bB</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#type-gB" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">gB</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#type-kB" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">kB</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#type-mB" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">mB</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#type-pB" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">pB</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#type-tB" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">tB</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
 </a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">space</small></div><div class="d-flex flex-wrap"><a href="#type-memspace" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">memspace</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
@@ -585,6 +603,30 @@ bin/metatron</code></pre>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#type-stack" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">stack</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">tble</small></div><div class="d-flex flex-wrap"><a href="#type-rrow" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">rrow</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#type-table" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">table</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">vec</small></div><div class="d-flex flex-wrap"><a href="#type-cmplx" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">cmplx</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">web</small></div><div class="d-flex flex-wrap"><a href="#type-content_type" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">content_type</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#type-html" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">html</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#type-json" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">json</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;" style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;line-height:1.25;" class="micro-label"><div style="font-size:0.6rem;opacity:0.45;font-family:monospace;white-space:nowrap;">rdf&thinsp;/</div><div><small class="mini-label fw-bold text-secondary" style="font-family:monospace;">space</small></div></div><div class="d-flex flex-wrap"><a href="#type-quad" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">quad</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#type-triple" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">triple</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a></div></div><div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;" style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;line-height:1.25;" class="micro-label"><div style="font-size:0.6rem;opacity:0.45;font-family:monospace;white-space:nowrap;">space&thinsp;/</div><div><small class="mini-label fw-bold text-secondary" style="font-family:monospace;">qproc</small></div></div><div class="d-flex flex-wrap"><a href="#type-constq" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">constq</span>
@@ -971,6 +1013,9 @@ bin/metatron</code></pre>
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
  space=&gt;[sub=&gt;{!*/m/mach,!*/m/math,!*/m/web,!*/m/iot,!*/m/grph,!*/m/llm,!*/m/tble,!*/m/dcmnt,!*/m/rdf}],
+ const=&gt;[
+  noobj,
+  none@none],
  inst=&gt;[
   as?bool&lt;=bool(bool::T),
   as?bytes&lt;=bool(bytes::T),
@@ -1197,9 +1242,15 @@ bin/metatron</code></pre>
   rshift?B{*}&lt;=A(C{*}::T),
   lshift?B{*}&lt;=A(),
   start?A{**}&lt;=noobj{0}(A{**}::T)],
- const=&gt;[
-  noobj,
-  none@none],
+ rewrite=&gt;[
+  /m/inst/rewrite/id_removal?code{?}&lt;=code(),
+  /m/inst/rewrite/map_nest?code{?}&lt;=code(),
+  /m/inst/rewrite/else_after_count?code{?}&lt;=code(),
+  /m/inst/rewrite/plus_zero?code{?}&lt;=code(),
+  /m/inst/rewrite/mult_one?code{?}&lt;=code(),
+  /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
+  /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
+  /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()],
  type=&gt;[
   #::T,
   bool::T,
@@ -1215,7 +1266,7 @@ bin/metatron</code></pre>
   inst::T,
   code::T,
   fail::T,
-  space{*}::T,
+  space::T,
   memspace::T,
   stack::T,
   qproc::T,
@@ -1226,16 +1277,7 @@ bin/metatron</code></pre>
   docq::T,
   mintq::T,
   incrq::T,
-  constq::T],
- rewrite=&gt;[
-  /m/inst/rewrite/id_removal?code{?}&lt;=code(),
-  /m/inst/rewrite/map_nest?code{?}&lt;=code(),
-  /m/inst/rewrite/else_after_count?code{?}&lt;=code(),
-  /m/inst/rewrite/plus_zero?code{?}&lt;=code(),
-  /m/inst/rewrite/mult_one?code{?}&lt;=code(),
-  /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
-  /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
-  /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()]]@/m</code></pre></div>
+  constq::T]]@/m</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">the core instruction set of metatron containing the base types and useful instructions to manipulate them</p>
 </div>
@@ -1255,7 +1297,7 @@ bin/metatron</code></pre>
     
 </div>
 </div><div class="container-xxl mb-4" id="types">
-    <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">26</span></h3>
+    <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">40</span></h3>
     <div class="card mb-3" id="type-#">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -1266,6 +1308,18 @@ bin/metatron</code></pre>
     </div>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">#::T</code></pre></div>
     
+</div><div class="card mb-3" id="type-bB">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">bB::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m_math.html#type-data_size" class="instset-doc-small-code text-info code">/m/math/data_size::T</a></span>
+        </span>
+        <small class="text-muted code">/m/math/bB</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data_size::T[][/m/math/bB/ctor?bB&lt;=#{?}(#::T)]@/m/math/bB</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">a byte of data</p>
+</div>
 </div><div class="card mb-3" id="type-bool">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -1301,6 +1355,18 @@ true.or(_,not(_))  [-- true -- ]</code></pre>
 0xab + 0x12                            [-- 0xab12 --]
 0x6d+0x74+0x72+0x6f+0x6e.as(str::T)    [-- mtron  --]</code></pre>
 </div>
+</div><div class="card mb-3" id="type-cmplx">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">cmplx::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">/m/lst::T</span></span>
+        </span>
+        <small class="text-muted code">/m/vec/cmplx</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">lst::T[?[
+  real::T,
+  real::T]]@/m/vec/cmplx</code></pre></div>
+    
 </div><div class="card mb-3" id="type-code">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -1328,6 +1394,26 @@ true.or(_,not(_))  [-- true -- ]</code></pre>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">qproc::T[][/m/space/qproc/constq/ctor?constq&lt;=#{?}()]@/m/space/qproc/constq</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">a query that returns a constant</p>
+</div>
+</div><div class="card mb-3" id="type-content_type">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">content_type::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">/m/uri::T</span></span>
+        </span>
+        <small class="text-muted code">/m/web/content_type</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">uri::T[isa(inside([
+ text/plain,
+ text/html,
+ text/css,
+ text/markdown,
+ text/javascript,
+ application/mtron,
+ text/x-shellscript,
+ application/json]))]@/m/web/content_type</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">indicates the media type of the data as specified by RFC-9110</p>
 </div>
 </div><div class="card mb-3" id="type-docq">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1377,6 +1463,42 @@ true.or(_,not(_))  [-- true -- ]</code></pre>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">fail::[ouch]                [-- a fail obj with message --]
 fail::[doh] + 2             [-- plus(2) skipped over    --]
 fail::[dah] + 2 + catch(9)  [-- fail flattened to 9       --]</code></pre>
+</div>
+</div><div class="card mb-3" id="type-gB">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">gB::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m_math.html#type-data_size" class="instset-doc-small-code text-info code">/m/math/data_size::T</a></span>
+        </span>
+        <small class="text-muted code">/m/math/gB</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data_size::T[][/m/math/gB/ctor?gB&lt;=#{?}(#::T)]@/m/math/gB</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">a gigabyte (1024 megabytes) of data</p>
+</div>
+</div><div class="card mb-3" id="type-html">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">html::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m_web.html#type-xml" class="instset-doc-small-code text-info code">/m/web/xml::T</a></span>
+        </span>
+        <small class="text-muted code">/m/web/html</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">xml::T[?[html=&gt;[
+ head=&gt;[{?}title=&gt;str::T],
+ body=&gt;rec::T]]]@/m/web/html</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">a rec encoding of an html document</p>
+</div><div class="card-body border-top py-2">
+    <small class="text-muted fw-bold">examples:</small>
+    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;http://metatron.phaseshift.studio&gt; [-- yields an html::T --]
+html::[html=&gt;
+       [head=&gt;
+        [title=&gt;&quot;metatron&quot;]],
+        body=&gt;
+         [out=&gt;[
+          [tag=&gt;a,href=&gt;...],
+          [tag...]]]]</code></pre>
 </div>
 </div><div class="card mb-3" id="type-incrq">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1453,6 +1575,37 @@ abc(a=&gt;?int::T,b=&gt;|(*a +10)){ _.*b }       [-- dependent arg inst    --]
 -234
 123+(-234) [-- -111 --]</code></pre>
 </div>
+</div><div class="card mb-3" id="type-json">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">json::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">/m/rec::T</span></span>
+        </span>
+        <small class="text-muted code">/m/web/json</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[uri::T=&gt;inside([
+  noobj{0}::T,
+  bool::T,
+  int::T,
+  str::T,
+  uri::T,
+  lst::T,
+  rec::T])]]@/m/web/json</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">a rec encoding of a json document</p>
+</div>
+</div><div class="card mb-3" id="type-kB">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">kB::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m_math.html#type-data_size" class="instset-doc-small-code text-info code">/m/math/data_size::T</a></span>
+        </span>
+        <small class="text-muted code">/m/math/kB</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data_size::T[][/m/math/kB/ctor?kB&lt;=#{?}(#::T)]@/m/math/kB</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">a kilobyte (1024 bytes) of data</p>
+</div>
 </div><div class="card mb-3" id="type-lst">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -1470,6 +1623,18 @@ abc(a=&gt;?int::T,b=&gt;|(*a +10)){ _.*b }       [-- dependent arg inst    --]
 [a,b,c]          [-- 3 uri lst  --]
 [&#39;a&#39;,&#39;b&#39;,&#39;c&#39;]    [-- 3 str lst  --]
 [a,[b,[c,d],e]]  [-- nested lst --]</code></pre>
+</div>
+</div><div class="card mb-3" id="type-mB">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">mB::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m_math.html#type-data_size" class="instset-doc-small-code text-info code">/m/math/data_size::T</a></span>
+        </span>
+        <small class="text-muted code">/m/math/mB</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data_size::T[][/m/math/mB/ctor?mB&lt;=#{?}(#::T)]@/m/math/mB</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">a megabyte (1024 kilobytes) of data</p>
 </div>
 </div><div class="card mb-3" id="type-memspace">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1500,6 +1665,18 @@ abc(a=&gt;?int::T,b=&gt;|(*a +10)){ _.*b }       [-- dependent arg inst    --]
     <small class="text-muted fw-bold">examples:</small>
     <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">1@abc?mintq [-- 1@abc/235ae3 --]</code></pre>
 </div>
+</div><div class="card mb-3" id="type-pB">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">pB::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m_math.html#type-data_size" class="instset-doc-small-code text-info code">/m/math/data_size::T</a></span>
+        </span>
+        <small class="text-muted code">/m/math/pB</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data_size::T[][/m/math/pB/ctor?pB&lt;=#{?}(#::T)]@/m/math/pB</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">a petabyte (1024 terabytes) of data</p>
+</div>
 </div><div class="card mb-3" id="type-qproc">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -1523,6 +1700,22 @@ qprocs must be attached to a space before use. a space&#39;s qprocs are accessib
 
      \(\texttt{*space/vid/qProc =&gt; lst[qProc]::T}\)
 </p>
+</div>
+</div><div class="card mb-3" id="type-quad">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">quad::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m_rdf_space.html#type-triple" class="instset-doc-small-code text-info code">/m/rdf/space/triple::T</a></span>
+        </span>
+        <small class="text-muted code">/m/rdf/space/quad</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">triple::T[?[
+  uri::T,
+  uri::T,
+  uri::T,
+  uri::T]]@/m/rdf/space/quad</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">an rdf quad as a subject, predicate, object, graph</p>
 </div>
 </div><div class="card mb-3" id="type-real">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1580,6 +1773,18 @@ a=&gt;b=&gt;c=&gt;d&gt;&gt;.&gt;&gt;  [-- c=&gt;d           --]
 (a=&gt;b)(b=&gt;c)     [-- a=&gt;c           --]
 {a,b}=&gt;{c,d}     [-- 2-2 hyper-rel  --]
 {a=&gt;b}=&gt;{e=&gt;f}   [-- functor rel    --]</code></pre>
+</div>
+</div><div class="card mb-3" id="type-rrow">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">rrow::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">/m/rec::T</span></span>
+        </span>
+        <small class="text-muted code">/m/tble/rrow</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[uri::T=&gt;#::T]]@/m/tble/rrow</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">a table row indexed by column name</p>
 </div>
 </div><div class="card mb-3" id="type-space">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
@@ -1670,6 +1875,45 @@ so as to store the inst and not its evaluation in the assignment.
 a?subq         -&gt; |(&gt;&gt;1+1.println(_).to(a)) [-- infinite incr loop     --]
 *+?subq                                     [-- all subs for addr tree --]</code></pre>
 </div>
+</div><div class="card mb-3" id="type-tB">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">tB::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m_math.html#type-data_size" class="instset-doc-small-code text-info code">/m/math/data_size::T</a></span>
+        </span>
+        <small class="text-muted code">/m/math/tB</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">data_size::T[][/m/math/tB/ctor?tB&lt;=#{?}(#::T)]@/m/math/tB</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">a terabyte (1024 gigabytes) of data</p>
+</div>
+</div><div class="card mb-3" id="type-table">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">table::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">/m/uri::T</span></span>
+        </span>
+        <small class="text-muted code">/m/tble/table</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">uri::T[isa(lrow{*}::T)]@/m/tble/table</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">a stream of equally wide rows</p>
+</div>
+</div><div class="card mb-3" id="type-triple">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">triple::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <span class="code instset-doc-small-code text-info">/m/lst::T</span></span>
+        </span>
+        <small class="text-muted code">/m/rdf/space/triple</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">lst::T[?[
+  uri::T,
+  uri::T,
+  uri::T]]@/m/rdf/space/triple</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">an rdf triple as a subject, predicate, object</p>
+</div>
 </div><div class="card mb-3" id="type-typeq">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -1707,7 +1951,7 @@ a/b/c/                           [-- relative/branch uri            --]
 </div>
 </div>
 </div><div class="container-xxl mb-4" id="instructions">
-    <h3 class="text-primary mb-3">Instructions <span class="pill-label badge bg-success">243</span></h3>
+    <h3 class="text-primary mb-3">Instructions <span class="pill-label badge bg-success">261</span></h3>
     <div class="card mb-3" id="inst-and">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
@@ -1782,9 +2026,9 @@ a/b/c/                           [-- relative/branch uri            --]
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=lst&amp;dom=rel(lst::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=rec&amp;dom=rel(rec::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=lst&amp;dom=lst(lst::T){&lt;j&gt;}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-1-tab').click();document.getElementById('inst-as-doc-1').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=rec&amp;dom=lst(rec::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=rec&amp;dom=lst(rec::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=code&amp;dom=lst(code::T){&lt;j&gt;}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-2-tab').click();document.getElementById('inst-as-doc-2').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=lst&amp;dom=rec(lst::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=lst&amp;dom=rec(lst::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=uri&amp;dom=rec(uri::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=lst&amp;dom=code(lst::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=noobj{0}&amp;dom=A(){&lt;j&gt;}</code></pre>
@@ -1802,110 +2046,30 @@ a/b/c/                           [-- relative/branch uri            --]
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=html&amp;dom=markdown(html::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=json&amp;dom=str(json::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&amp;dom=#(json_str::T){&lt;j&gt;}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-3-tab').click();document.getElementById('inst-as-doc-3').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=tool&amp;dom=docs(tool::T){&lt;j&gt;}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-4-tab').click();document.getElementById('inst-as-doc-4').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=tool&amp;dom=inst(tool::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=tool&amp;dom=docs(tool::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=tool&amp;dom=inst(tool::T){&lt;j&gt;}</code></pre>
 <pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=skill&amp;dom=dir(skill::T){&lt;j&gt;}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-1-tab').click();document.getElementById('inst-as-doc-1').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=rrow&amp;dom=lrow(rrow::T){&lt;j&gt;}</code></pre>
-<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-2-tab').click();document.getElementById('inst-as-doc-2').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=lrow&amp;dom=rrow(lrow::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=rrow&amp;dom=lrow(rrow::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=lrow&amp;dom=rrow(lrow::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=file&amp;dom=uri(file::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=image&amp;dom=bytes(image::T,else(1.0000)){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=file&amp;dom=uri(file::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=bytes&amp;dom=file(bytes::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=xml&amp;dom=str(xml::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=html&amp;dom=str(html::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=markdown&amp;dom=str(markdown::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&amp;dom=html(str::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&amp;dom=markdown(str::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=html&amp;dom=markdown(html::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=json&amp;dom=str(json::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=str&amp;dom=#(json_str::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=tool&amp;dom=docs(tool::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=tool&amp;dom=inst(tool::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=skill&amp;dom=dir(skill::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=rrow&amp;dom=lrow(rrow::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-as-doc-0-tab').click();document.getElementById('inst-as-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">as?rng=lrow&amp;dom=rrow(lrow::T){&lt;j&gt;}</code></pre>
 </div>
-    <div class="card-body border-top p-0">
-    <ul class="nav nav-pills p-2 bg-dark" id="inst-as-pills" role="tablist">
-        <li class="nav-item disabled me-2">
-            <span class="nav-link disabled py-1 px-0 text-muted" style="font-size:0.75rem;">polymorph:</span>
-        </li>
-        <li class="nav-item" role="presentation">
-    <button class="nav-link py-1 px-2 active text-start h-100"
-        id="inst-as-doc-0-tab" data-bs-toggle="pill" data-bs-target="#inst-as-doc-0"
-        type="button" role="tab" aria-selected="true"
-        style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 1
-    </button>
-</li><li class="nav-item" role="presentation">
-    <button class="nav-link py-1 px-2  text-start h-100"
-        id="inst-as-doc-1-tab" data-bs-toggle="pill" data-bs-target="#inst-as-doc-1"
-        type="button" role="tab" aria-selected="false"
-        style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 2
-    </button>
-</li><li class="nav-item" role="presentation">
-    <button class="nav-link py-1 px-2  text-start h-100"
-        id="inst-as-doc-2-tab" data-bs-toggle="pill" data-bs-target="#inst-as-doc-2"
-        type="button" role="tab" aria-selected="false"
-        style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 3
-    </button>
-</li><li class="nav-item" role="presentation">
-    <button class="nav-link py-1 px-2  text-start h-100"
-        id="inst-as-doc-3-tab" data-bs-toggle="pill" data-bs-target="#inst-as-doc-3"
-        type="button" role="tab" aria-selected="false"
-        style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 4
-    </button>
-</li><li class="nav-item" role="presentation">
-    <button class="nav-link py-1 px-2  text-start h-100"
-        id="inst-as-doc-4-tab" data-bs-toggle="pill" data-bs-target="#inst-as-doc-4"
-        type="button" role="tab" aria-selected="false"
-        style="font-size:0.75rem;max-width:60px;">
-        <i class="fas fa-info-circle me-1"></i> 5
-    </button>
-</li>
-    </ul>
-    <div class="tab-content" id="inst-as-content">
-        <div class="tab-pane fade show active" id="inst-as-doc-0" role="tabpanel" aria-labelledby="inst-as-doc-0-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">maps a directory to an llm skill where the dir follows the standard SKILL.md structure</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">a dir containing the llm SKILL.md file <span class="text-light">=&gt;</span> a mtron encoding of the specified skill</pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  0 <span class="text-light">=&gt;</span> <span class="text-info">&#39;the skill type&#39;</span>
-</pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*&lt;local:.agent/skills&gt;.as(skill::T)</code></pre>
-</div>
-</div><div class="tab-pane fade " id="inst-as-doc-1" role="tabpanel" aria-labelledby="inst-as-doc-1-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">maps a lst row to a rec row</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">a table row indexed by column number <span class="text-light">=&gt;</span> a table row indexed by column name</pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"></pre>
-</div>
-</div><div class="tab-pane fade " id="inst-as-doc-2" role="tabpanel" aria-labelledby="inst-as-doc-2-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">maps a rec row to a lst row</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">a table row indexed by column name <span class="text-light">=&gt;</span> a table row indexed by column number</pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;"></pre>
-</div>
-</div><div class="tab-pane fade " id="inst-as-doc-3" role="tabpanel" aria-labelledby="inst-as-doc-3-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">maps an instruction doc to a tool specification for llm use</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">instruction documentation <span class="text-light">=&gt;</span> a tool specification</pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  0 <span class="text-light">=&gt;</span> <span class="text-info">&#39;the tool type&#39;</span>
-</pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*eval?docq.as(tool::T)</code></pre>
-</div>
-</div><div class="tab-pane fade " id="inst-as-doc-4" role="tabpanel" aria-labelledby="inst-as-doc-4-tab">
-    <div class="card-body border-top py-2">
-    <p class="mb-0 text-light">maps an instruction to a tool specification for llm use</p>
-</div><div class="card-body py-2">
-    <small class="text-muted fw-bold">sig:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">an instruction <span class="text-light">=&gt;</span> a tool specification</pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
-    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  0 <span class="text-light">=&gt;</span> <span class="text-info">&#39;the tool type&#39;</span>
-</pre>
-</div><div class="card-body border-top py-2">
-    <small class="text-muted fw-bold">examples:</small>
-    <pre><code class="language-mtron" style="padding:0 0.75rem 0 !important">*eval.as(tool::T)</code></pre>
-</div>
-</div>
-    </div>
-</div>
+    
 </div><div class="card mb-3" id="inst-at">
     <div class="card-header d-flex justify-content-between align-items-center py-2     text-light border-bottom border-secondary">
         <span>
@@ -3230,6 +3394,7 @@ from(abc)   [-- obj at abc non-sugar form             --]</code></pre>
         <small class="text-muted code">/m/inst/thread?rng=/m/mach/thread&amp;dom=#</small>
     </div>
     <div class="card-body p-2"><pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-thread-doc-0-tab').click();document.getElementById('inst-thread-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">/m/inst/thread?rng=/m/mach/thread&amp;dom=#(#::T){&lt;j&gt;}</code></pre>
+<pre class="mb-1 clickable-signature" style="font-size:0.85rem;cursor:pointer;" onclick="document.getElementById('inst-thread-doc-0-tab').click();document.getElementById('inst-thread-doc-0').scrollIntoView({behavior:'smooth',block:'center'});"><code class="language-mtron">/m/inst/thread?rng=/m/mach/thread&amp;dom=#(#::T){&lt;j&gt;}</code></pre>
 </div>
     
 </div><div class="card mb-3" id="inst-throw">
@@ -3539,7 +3704,7 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
 </div><div class="container-xxl py-3 text-center">
     <hr class="border-secondary">
     <small class="text-muted">
-        generated by metatron instset doc generator on build 0-2026-05-15 17:18:51<br>
+        generated by metatron instset doc generator on build 0-2026-05-16 14:55:16<br>
         (c) PhaseShift Studio, LLC
     </small>
 </div></main>

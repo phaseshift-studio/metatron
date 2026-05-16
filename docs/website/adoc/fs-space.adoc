@@ -4,14 +4,13 @@
 [%collapsible]
 ./m/mach instset import and space constructions
 ====
-++++
-<!-- 🐖
+[mtron]
+----
 import(/m/mach)
 fsspace::[pattern  => local:#,                     /
            route   => [local:=><~/>],              /
            script  => !*boot/script]@/sys/space/fs
--->
-++++
+----
 ====
 
 The underlying operating system's resources are explicitly accessible to metatron: threads, files, network, etc. This
@@ -27,15 +26,14 @@ section focuses on `fsspace::T` (file system space). The primary types of this s
 <2> `local` is a special furi that references the local filesystem (see space routes for root directory).
 <3> listing file contents of a directory — returns a `uri\=>obj` map of all entries.
 
-++++
-<!-- 🐖 
+[mtron]
+----
 */sys/space/fs                                          [-- <1> --]
 */sys/space/fs/script                                   [-- <2> --]
 *<local:Desktop/test_bash.bash>                         [-- <3> --]
 *<local:Desktop/test_bash.bash>.as(bytes::T)            [-- <4> --]
 *<local:Desktop/test_bash.bash>.as(bytes::T).as(str::T) [-- <5> --]
--->
-++++
+----
 <1> `fs` is mounted to `/sys` (other deployments may have another mount address).
 <2> set of scripting environments accessible to metatron.
 <3> files and directories are accessible through dereferencing.

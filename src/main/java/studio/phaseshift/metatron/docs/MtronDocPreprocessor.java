@@ -18,133 +18,134 @@
 
 package studio.phaseshift.metatron.docs;
 
-import studio.phaseshift.metatron.isa.m.parser.mParser;
-import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
-
 /**
- * Processes mtron code blocks within AsciiDoc content.
+ * Pre-processes adoc text, evaluating {@code [mtron]----...----} blocks
+ * and replacing each block's content with the mtron input/output listing.
  *
- * <p>Scans for {@code <!-- 🐖 -->} blocks wrapped in {@code ++++} passthrough
- * markers, evaluates each mtron expression via {@code ObjmtronSerializer.parse().apply()},
- * and replaces the block with {@code [source,mtron]----...----} output.</p>
+ * <p>Use {@code [source,mtron]} for display-only mtron code (no evaluation).</p>
  *
- * <p>All result formatting delegates entirely to {@link ObjmtronSerializer} —
- * no manual string-surgery on evaluated output.</p>
- *
- * <h3>Directives</h3>
+ * <h3>Inline directives (within block content)</h3>
  * <ul>
  *   <li>{@code [HIDDEN]} — evaluate, suppress from output</li>
- *   <li>{@code [HEADER] text} — insert header before source block</li>
- *   <li>{@code [NO_HEADER]} — suppress {@code [source,mtron]} wrapper</li>
- *   <li>{@code /} at end-of-line — continue on next line</li>
+ *   <li>{@code [NO_HEADER]} — suppress listing wrapper</li>
+ *   <li>{@code [HEADER] text} — add header line above the block output</li>
+ *   <li>{@code [ERROR]} — expect evaluation errors</li>
+ *   <li>{@code [NO_OUTPUT]} — suppress output (show {@code ...})</li>
+ *   <li>{@code /} at end-of-line — continue expression on next line</li>
+ *   <li>{@code [-- <N> --]} — callout number marker (stripped, preserved in adoc colist)</li>
  * </ul>
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public final class MtronDocPreprocessor {
 
-    // ── Patterns ────────────────────────────────────────────────────
+    // ── Mtron block regex ───────────────────────────────────────────
 
-    /**
-     * Picks out a full pig block: {@code ++++ • <!-- 🐖 [role="X"]? • body • --> • ++++}.
-     * Leading whitespace is tolerated so blocks work inside nested containers.
-     * An optional {@code role="name"} after 🐖 is captured and transferred to
-     * the output {@code [source,mtron,role="name"]} block for tabbed-code rendering.
-     */
-    private static final Pattern PIG = Pattern.compile(
-            "\\+\\+\\+\\+\\h*\\R" +
-                    "\\h*<!-- \\uD83D\\uDC16(?:\\h+([^\\r\\n]+))?\\R" +
-                    "(.*?)" +
-                    "\\R\\h*-->\\R\\h*\\+\\+\\+\\+",
+    /** Matches {@code [mtron]----...----} blocks. Group(1)=role, Group(2)=body. */
+    private static final Pattern MTRON_BLOCK = Pattern.compile(
+            "\\[mtron](?:,role=\"([^\"]+)\")?\\R----\\R(.*?)\\R----",
             Pattern.DOTALL);
 
-    // Pattern: captures the number from [-- <N> --], and the replacement removes it                                                
+    // ── Inline directive patterns ───────────────────────────────────
+
     private static final Pattern CALLOUT = Pattern.compile("\\[--\\s*<([0-9]+)>\\s*--]\\s*$");
-    private static final Pattern HIDDEN = Pattern.compile("\\[HIDDEN]");
-    private static final Pattern HEADER = Pattern.compile("\\[HEADER]\\s*(.*)");
-    private static final Pattern NOHDR = Pattern.compile("\\[NO_HEADER]");
-    private static final Pattern ERROR = Pattern.compile("\\[ERROR]");
-    private static final Pattern NOOUT = Pattern.compile("\\[NO_OUTPUT]");
-   
+    private static final Pattern HIDDEN  = Pattern.compile("\\[HIDDEN]");
+    private static final Pattern HEADER  = Pattern.compile("\\[HEADER]\\s*(.*)");
+    private static final Pattern NOHDR   = Pattern.compile("\\[NO_HEADER]");
+    private static final Pattern ERROR   = Pattern.compile("\\[ERROR]");
+    private static final Pattern NOOUT   = Pattern.compile("\\[NO_OUTPUT]");
 
     private static final ObjmtronSerializer SER = ObjmtronSerializer.single();
 
-    // ── Rainbow metatron ─────────────────────────────────────────────
-
-    private static final List<String> COLORS = List.of(
-            "red", "blue", "lime", "yellow", "fuchsia", "aqua", "green", "orange"
-    );
-
-    // ── Public API ──────────────────────────────────────────────────
+    // ── Process entry point ─────────────────────────────────────────
 
     /**
-     * Process AsciiDoc text, evaluating all mtron code blocks.
+     * Process adoc text, evaluating all {@code [mtron]} blocks.
+     * Each block is replaced with the same {@code [mtron]} wrapper but with
+     * evaluated input/output content (mtron&gt; ... / ==&gt; ... lines).
      *
-     * @param content     lines of the .adoc file
-     * @param prefixLines optional prefix whose blocks run first (output
-     *                    discarded; used for {@code [HIDDEN]} setup)
-     * @param verbose     dump block output to stdout
-     * @return processed lines
+     * @param adocText raw adoc source text
+     * @return processed adoc text with evaluated mtron blocks
      */
-    public List<String> process(final File file,
-                                final List<String> content,
-                                final List<String> prefixLines,
-                                final boolean verbose) {
-        // Evaluate prefix blocks for side-effects
-        if (prefixLines != null)
-            evalAll(PIG.matcher(String.join("\n", prefixLines)));
-
-        final String text = String.join("\n", content);
-        final Matcher m = PIG.matcher(text);
-        final StringBuilder out = new StringBuilder();
+    public String process(final String adocText) {
+        final Matcher m = MTRON_BLOCK.matcher(adocText);
+        final StringBuilder sb = new StringBuilder();
         while (m.find()) {
-            final String role = m.group(1);  // optional role="primary" etc.
-            m.appendReplacement(out, Matcher.quoteReplacement(evalBody(file,m.group(2), role, verbose)));
+            final String role = m.group(1);
+            final String body = m.group(2);
+            final EvalResult result = evaluateBlock(body);
+
+            final String replacement;
+            if (result.noHeader) {
+                // [NO_HEADER] → output just the evaluated lines, no wrapper
+                replacement = String.join("\n", result.lines);
+            } else {
+                // Build a [source,mtron] block with evaluated content so
+                // AsciidoctorJ produces highlight.js-compatible markup
+                final StringBuilder block = new StringBuilder();
+                block.append("[source,mtron");
+                if (role != null)
+                    block.append(",role=\"").append(role).append("\"");
+                block.append("]\n----\n");
+                for (final String line : result.lines) {
+                    block.append(line).append('\n');
+                }
+                block.append("----");
+                replacement = block.toString();
+            }
+            m.appendReplacement(sb, Matcher.quoteReplacement(replacement));
         }
-        m.appendTail(out);
+        m.appendTail(sb);
 
-        // [metatron] → rainbow only in non-block text
-        final String result = out.toString().contains("[metatron]")
-                ? out.toString().replace("[metatron]", Graphitty.sillyPrint("metatron", true, true))
-                : out.toString();
-
-        return List.of(result.split("\n", -1));
+        // Rainbow [metatron] replacement
+        final String result = sb.toString().contains("[metatron]")
+                ? sb.toString().replace("[metatron]", Graphitty.sillyPrint("metatron", true, true))
+                : sb.toString();
+        return result;
     }
 
     // ── Block evaluation ────────────────────────────────────────────
 
+    private static class EvalResult {
+        final List<String> lines;
+        final boolean noHeader;
+
+        EvalResult(final List<String> lines, final boolean noHeader) {
+            this.lines = lines;
+            this.noHeader = noHeader;
+        }
+    }
+
     /**
-     * Evaluate a single pig body → {@code [source,mtron]----…----}.
-     *
-     * @param role optional role attribute captured from the 🐖 marker line,
-     *             e.g. {@code role="primary"}; emitted as
-     *             {@code [source,mtron,role="primary"]} for tabbed-code
+     * Evaluate a single {@code [mtron]} block's body content.
+     * Returns the evaluated input/output lines.
      */
-    private static String evalBody(final File file, final String body, final String role, final boolean verbose) {
+    private EvalResult evaluateBlock(final String body) {
         final var headers = new ArrayList<String>();
         final var lines = new ArrayList<String>();
         boolean noHeader = false;
         final StringBuilder acc = new StringBuilder();
 
         for (String raw : body.split("\n")) {
-            final Matcher cm = CALLOUT.matcher(raw.stripTrailing());
+            raw = raw.stripTrailing();
+            // ── Callout number: [-- <N> --] ──
+            final Matcher cm = CALLOUT.matcher(raw);
             String calloutNumber = null;
             if (cm.find()) {
-                calloutNumber = cm.group(1);  // captures "1", "2", "3"                                                                           
-                raw = cm.replaceAll("");  // strips [-- <N> --]                                                                             
+                calloutNumber = cm.group(1);
+                raw = cm.replaceAll("").stripTrailing();
             }
-            // Directives
+
+            // ── Directives ──
             final Matcher hm = HEADER.matcher(raw);
             if (hm.matches()) {
                 headers.add(hm.group(1));
@@ -156,94 +157,84 @@ public final class MtronDocPreprocessor {
             if (ERROR.matcher(raw).find()) error = true;
             if (NOOUT.matcher(raw).find()) noOutput = true;
             final boolean hidden = HIDDEN.matcher(raw).find();
-            // Line continuation
+
+            // ── Line continuation ──
             if (raw.endsWith("/")) {
                 acc.append(raw.substring(0, raw.length() - 1).stripTrailing()).append("\n       ");
                 continue;
             }
-            
+
             acc.append(raw);
             String expr = HIDDEN.matcher(acc).replaceAll("").replace("%", "").strip();
             expr = ERROR.matcher(expr).replaceAll("");
+            expr = NOHDR.matcher(expr).replaceAll("");
+            expr = NOOUT.matcher(expr).replaceAll("");
             expr = CALLOUT.matcher(expr).replaceAll("");
             acc.setLength(0);
             if (expr.isEmpty()) continue;
 
+            // ── Build input line ──
             if (!hidden) {
-                String newLine = "mtron> " + expr;
-                if(null != calloutNumber)
-                    //newLine += " ".repeat(5) + "<" + calloutNumber + ">";
-                    lines.add(newLine);
+                String prefix = "mtron> " + expr;
+                if (calloutNumber != null)
+                    prefix += " ".repeat(5) + "<" + calloutNumber + ">";
+                lines.add(prefix);
             }
 
+            // ── Evaluate ──
             try {
                 final Obj result = ObjmtronSerializer.parse(expr).apply();
                 if (result.isFail() && !error) {
-                    System.err.printf("ERROR in docs with no [ERROR] specifier (docs are buggy): %s [%s]\n%s\n", expr, result,file.getName());
-                    System.exit(1);
+                    System.err.printf("ERROR in docs with no [ERROR] specifier (docs are buggy): %s\n", expr);
+                    //System.exit(1);
                 }
                 if (!hidden && !noOutput && !result.isNoObj()) {
                     result.stream().forEach(o -> lines.add("==>" + SER.write(o)));
-                }
-                else if (noOutput)
+                } else if (noOutput) {
                     lines.add(Graphitty.sillyPrint("...", true, true));
+                }
                 // Clear fail stack so errors don't leak across blocks
                 if (!hidden) ObjmtronSerializer.parse("/sys/fail/+ -> noobj").apply();
             } catch (final Exception e) {
                 if (!hidden) lines.add("==>ERROR: " + e.getMessage());
-                // TODO if(!error) System.exit(0);
             }
         }
 
-        if (verbose) System.out.println(lines);
-
-        final StringBuilder sb = new StringBuilder();
-        if (!noHeader) {
-            if (!headers.isEmpty()) sb.append('\n');
-            headers.forEach(h -> sb.append(h).append('\n'));
-            sb.append("[source,mtron");
-            if (role != null)
-                sb.append(',').append(role);
-            sb.append("]\n");
+        // ── Prepend headers ──
+        if (!headers.isEmpty()) {
+            final var all = new ArrayList<String>(headers);
+            all.addAll(lines);
+            return new EvalResult(all, noHeader);
         }
-        sb.append("----\n");
-        lines.forEach(l -> sb.append(l).append('\n'));
-        sb.append("----");
-        return sb.toString();
+        return new EvalResult(lines, noHeader);
     }
 
+    // ── Public helpers (used by DocRunner) ──────────────────────────
+
     /**
-     * Evaluate pig blocks purely for side-effects (prefix).
+     * Evaluate prefix expressions (piggy-format blocks) for side-effects.
      */
-    private static void evalAll(final Matcher m) {
+    public static void evalPrefixBlocks(final List<String> prefixLines) {
+        if (prefixLines == null || prefixLines.isEmpty()) return;
+        final Matcher m = PIggy.matcher(String.join("\n", prefixLines));
         while (m.find()) {
             for (String raw : m.group(2).split("\n")) {
                 final String expr = HIDDEN.matcher(raw).replaceAll("").replace("%", "").strip();
                 if (!expr.isEmpty()) {
                     try {
                         ObjmtronSerializer.parse(expr).apply();
-                    } catch (final Exception ignored) {
-                    }
+                    } catch (final Exception ignored) {}
                 }
             }
         }
     }
 
-    // ── Rainbow ─────────────────────────────────────────────────────
+    // ── Piggy-block pattern (prefix only) ───────────────────────
 
-    private static String rainbow() {
-        final String chars = "metatron";
-        final Random rng = new Random();
-        final var avail = new ArrayList<>(COLORS);
-        final StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < chars.length(); i++) {
-            if (avail.isEmpty()) avail.addAll(COLORS);
-            final String color = avail.remove(rng.nextInt(avail.size()));
-            final boolean upper = rng.nextBoolean();
-            final String sep = rng.nextBoolean() ? "#" : "*";
-            final char c = upper ? Character.toUpperCase(chars.charAt(i)) : chars.charAt(i);
-            sb.append('[').append(color).append(']').append(sep).append(c).append(sep);
-        }
-        return sb.toString();
-    }
+    private static final Pattern PIggy = Pattern.compile(
+            "\\+\\+\\+\\+\\h*\\R" +
+                    "\\h*<!-- \\uD83D\\uDC16(?:\\h+([^\\r\\n]+))?\\R" +
+                    "(.*?)" +
+                    "\\R\\h*-->\\R\\h*\\+\\+\\+\\+",
+            Pattern.DOTALL);
 }

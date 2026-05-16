@@ -39,6 +39,11 @@
     color: var(--white);
 }
 
+h1, h1. h2, h2. h3, h3. h4, h4. {
+    color: var(--mred) !important;
+    scale: 1.5 !important;
+}
+
 .float-left-code {
     float: left;
     background-color: transparent;
@@ -54,9 +59,26 @@
     background-color: transparent;
 }
 
+.bg-warning {
+    background-color: #b98b00 !important
+}
+
 .btn:disabled {
     border-color: var(--bs-gray-dark);
     color: var(--bs-gray);
+}
+
+.pill-label {
+    font-size: 0.85rem;
+}
+
+.mini-label {
+    color: #6C7293 !important;
+}
+
+.micro-label {
+    color: #6C7293 !important;
+    font-size: 0.85rem;
 }
 
 main {
@@ -72,7 +94,7 @@ table .paragraph {
 }
 
 table .ulist {
-   line-height: 0.9rem;
+    line-height: 0.9rem;
 }
 
 .card {
@@ -272,37 +294,44 @@ table {
     margin-left: -10px;
     transform: scale(1.5);
 }
+
 #console_feature .flip-box-back img {
     margin-top: -20px;
     margin-left: -10px;
     transform: scale(1.75);
 }
+
 #oltp_feature .flip-box-back img {
     transform: scale(1.25);
     margin-top: -20px;
     margin-left: -30px;
 }
+
 #olrp_feature .flip-box-back img {
     transform: scale(1.15);
     margin-top: -20px;
     margin-left: -15px;
 }
+
 #iot_feature .flip-box-back img {
     transform: scale(1.50);
     margin-top: -20px;
     margin-left: -15px;
 }
+
 #mtron_feature .flip-box-back img,
 #uri_feature .flip-box-back img {
     transform: scale(2);
     margin-top: -20px;
     margin-left: -10px;
 }
+
 #llm_feature .flip-box-back img {
     transform: scale(1.6);
     margin-top: -20px;
     margin-left: -15px;
 }
+
 #web_feature .flip-box-back img {
     transform: scale(1.85);
     margin-top: -10px;
@@ -329,7 +358,7 @@ table {
     max-width: 90vw;
     max-height: 90vh;
     cursor: zoom-out;
-    box-shadow: 0 0 50px rgba(0,0,0,0.8);
+    box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
     background-color: var(--maincolor);
 }
 
@@ -654,7 +683,7 @@ body {
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
-    line-height: 1.45rem;
+    line-height: 1.4rem;
     font-size: 1.2rem;
 }
 
@@ -1013,7 +1042,7 @@ body {
     .hljs-emphasis {
         font-style: italic !important;
     }
-    
+
     .hljs-mtron-template {
         color: var(--tertiarycolor);
     }
@@ -1481,6 +1510,11 @@ $(addBlockSwitches);
                 <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="download_dropdown">
                     <li>
                         <div class="terminal-box">
+                            <pre><code>npm i -g metatron-vm</code></pre>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="terminal-box">
                             <pre><code>docker pull docker.phaseshift.studio/metatron:0.1-SNAPSHOT</code></pre>
                         </div>
                     </li>
@@ -1510,23 +1544,23 @@ bin/metatron</code></pre>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="isa_dropdown">
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='instset/m.html';"><img
+                           onclick="location.href='./instset/m.html';"><img
                             src="./images/icons/space/mtron-icon.svg" class="isa-row icon-color me-2"
                             alt="mtron"/>/m</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='instset/m_mach.html';"><img
+                           onclick="location.href='./instset/m_mach.html';"><img
                             src="./images/icons/space/mach-icon.svg" class="isa-row icon-color me-2" alt="mach"/>/m/mach</a>
                     </li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='instset/m_tble.html';"><img
+                           onclick="location.href='./instset/m_tble.html';"><img
                             src="./images/icons/space/tble-icon.svg" class="isa-row icon-color me-2" alt="tble"/>/m/tble</a>
                     </li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='instset/m_dcmnt.html';"><img
+                           onclick="location.href='./instset/m_dcmnt.html';"><img
                             src="./images/icons/space/dcmnt-icon.svg" class="isa-row icon-color me-2" alt="dcmnt"/>/m/dcmnt</a>
                     </li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='instset/m_grph.html';"><img
+                           onclick="location.href='./instset/m_grph.html';"><img
                             src="./images/icons/space/grph-icon.svg" class="isa-row icon-color me-2" alt="grph"/>/m/grph</a>
                     </li>
                     <!-- TODO: Add /m/vec docs
@@ -1536,20 +1570,20 @@ bin/metatron</code></pre>
                             alt="vec"/>/m/vec</a></li>
                     -->
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='instset/m_web.html';"><img
+                           onclick="location.href='./instset/m_web.html';"><img
                             src="./images/icons/space/web-icon.svg" class="isa-row icon-color me-2"
                             alt="web"/>/m/web</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='instset/m_llm.html';"><img
+                           onclick="location.href='./instset/m_llm.html';"><img
                             src="./images/icons/space/llm-icon.svg" class="isa-row icon-color me-2"
                             alt="llm"/>/m/llm</a></li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='instset/m_iot.html';"><img
+                           onclick="location.href='./instset/m_iot.html';"><img
                             src="./images/icons/space/graphql-icon.svg" class="isa-row icon-color me-2" 
                             alt="iot"/>/m/iot</a>
                     </li>
                     <li><a class="code dropdown-item d-flex align-items-center" href="#"
-                           onclick="location.href='instset/m_math.html';"><img
+                           onclick="location.href='./instset/m_math.html';"><img
                             src="./images/icons/space/math-icon.svg" class="isa-row icon-color me-2"
                             alt="math"/>/m/math</a>
                     </li>
@@ -1710,7 +1744,7 @@ bin/metatron</code></pre>
                 the typical functional programming monad/monoid is extended with a <b class="metatron-name">"ringad"/ringoid</b> processor, where <b class="metatron-name">*</b> is function composition and <b class="metatron-name">+</b> is function branching
             </div>
             <div class="feature-modal">
-                <p><b class="metatron-name">Ring theory</b> describes the underlying algebra of metatron. The virtual machine's instructions can be serially composed (<pre>*</pre>) and parallelly branched (<pre>+</pre>) to form program structures that are subject to the axioms and theorems of <a href="https://metatron.phaseshift.studio/articles/stream-ring-theory.pdf">stream ring theory</a> (a Turing Complete stream computing algebra). Ring theorems realize execution optimization strategies (bulking coefficients), program compiler rewrites (ring equalities), and evaluation semantics (parallel, reducing, and serial execution stages).</p>
+                <p><b class="metatron-name">Ring theory</b> describes the underlying algebra of metatron. The virtual machine's instructions can be serially composed (<b>*</b>) and parallelly branched (<b>+</b>) to form program structures that are subject to the axioms and theorems of <a href="https://metatron.phaseshift.studio/articles/stream-ring-theory.pdf">stream ring theory</a> (a Turing Complete stream computing algebra). Ring theorems realize execution optimization strategies (bulking coefficients), program compiler rewrites (ring equalities), and evaluation semantics (parallel, reducing, and serial execution stages).</p>
                 <img src="images/modal/ring-modal.svg" class="img-fluid mb-3 icon-color" style="width: 500px; display: block; margin: auto;"/>
             </div>
             <script type="text/javascript">featurePanel("ring_feature");</script>
@@ -1905,6 +1939,25 @@ rec::T[?[
         defaultLanguage: 'mtron', // Set your preferred default language
         ignoreUnescapedHTML: true
     });
+    hljs.addPlugin(new CopyButtonPlugin({
+        callback: function(text, el) {
+            // Strip multi-line [== ... ==] comments
+            text = text.replace(/\[==[\s\S]*?==\]/g, '');
+            // Process line by line
+            return text.split('\n')
+                .map(function(line) {
+                    // Drop result lines (==> ...)
+                    if (/^\s*==>/.test(line)) return null;
+                    // Strip mtron> prompt
+                    line = line.replace(/^\s*mtron>\s*/, '');
+                    // Strip single-line [-- ... --] comments
+                    line = line.replace(/\[--[^\]\[]*--\]/g, '');
+                    return line.trim();
+                })
+                .filter(function(line) { return line !== null && line.length > 0; })
+                .join('\n');
+        }
+    }));
     if (!hljs.initHighlighting.called) {
         hljs.initHighlighting.called = true
         ;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) {

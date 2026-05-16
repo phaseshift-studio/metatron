@@ -27,29 +27,26 @@ A type predicate is any `inst` of the form
 ++++
 such that the lhs `A` is inspected by the `code` of `pred` and emits either an `A::T` (pass) or `A{0}::T` (fail) as the rhs obj. The most overloaded instruction in mtron is `as()`. This instruction alters the https://en.wikipedia.org/wiki/Nominal_type_system[nominal type] of an obj. This doesn't change it's existential type as an obj has an infinite amount of types and such naming is practical as the "working type" of the obj. Examples of `pred()` and `as()` in action are presented below.
 
-++++
-<!-- 🐖
+[mtron]
+----
 [-- refining int::T --]
 4.as(int::T[?>0]@nat)
 [ERROR] -4.as(nat::T)
 [-- refining rec::T  --]
 [name=>'snowbutt',age=>7].as(rec::T[?[name=>str::T,age=>int::T]@chicken)
 [name=>'punky',age=>'four'].as(chicken::T)
--->
-++++
+----
 
 [discrete]
 ==== hierarchical type checking
 
 `C::T < B::T < A::T`.
 
-++++
-<!-- 🐖
+[mtron]
+----
 int::T[?>0]@nat
 nat::T[?<120]@age
-
--->
-++++
+----
 
 [discrete]
 === type constructors (ctor)
@@ -72,8 +69,8 @@ Yield the _range_ (`>>`) of the relation constructed (the specifics of `>>` will
 
 Example usage of the defined `nat` type is presented below.
 
-++++
-<!-- 🐖
+[mtron]
+----
 nat -> int::T[?>0][-<|[is(lt(0)) => * -1,_ => _]>>]   [-- <1> --]
 *nat                                                  [-- <2> --]
 nat::2                                                [-- <3> --]
@@ -81,8 +78,7 @@ nat::-2                                               [-- <4> --]
 2.as(nat::T)                                          [-- <5> --]
 [ERROR] -2.as(nat::T)                                         [-- <6> --]
 [ERROR] nat::2 * -1                                           [-- <7> --]
--->
-++++
+----
 
 <1> A natural number (`nat`) is a positive `int`.
 The predicate component of the type definition tests an `int` to determine if it's a `nat` and the constructor component will generate a positive `int` given any `int` (i.e. the absolute value).
@@ -118,16 +114,15 @@ a🧱
 !===
 a🧱
 
-++++
-<!-- 🐖
+[mtron]
+----
 0xabcd + 0x1234    [-- <1> --]
 true + false       [-- <2> --]
 1 + 2              [-- <3> --]
 1.34 + 2.45        [-- <4> --]
 "abc" + "def"      [-- <5> --]
 a/b/c * d/e/f      [-- <6> --]
--->
-++++
+----
 
 |===
 
@@ -140,12 +135,11 @@ The `bytes` type represents binary data as a sequence of bytes.
 
 **Examples:**
 
-++++
-<!-- 🐖
+[mtron]
+----
 'metatron'.as(bytes::T)        [-- <1> --]
 bytes::'48656c6c6f'            [-- <2> --]
--->
-++++
+----
 <1> Convert string to bytes
 <2> Create bytes from hexadecimal representation
 
@@ -154,14 +148,13 @@ bytes::'48656c6c6f'            [-- <2> --]
 
 Byte units can be converted between each other using the `.as()` instruction:
 
-++++
-<!-- 🐖
+[mtron]
+----
 kB::1024.as(mB::T)          [-- <1> --]
 mB::1.as(kB::T)             [-- <2> --]
 gB::5.as(mB::T)             [-- <3> --]
 pB::1.as(tB::T)             [-- <4> --]
--->
-++++
+----
 <1> Convert 1024 kilobytes to megabytes (result: 1 mB)
 <2> Convert 1 megabyte to kilobytes (result: 1024 kB)
 <3> Convert 5 gigabytes to megabytes (result: 5120 mB)
@@ -171,14 +164,13 @@ pB::1.as(tB::T)             [-- <4> --]
 
 Byte units of different types can be compared for equality:
 
-++++
-<!-- 🐖
+[mtron]
+----
 mB::1024.eq(gB::1)          [-- <1> --]
 kB::1024.eq(mB::1)          [-- <2> --]
 gB::2.eq(mB::2048)          [-- <3> --]
 tB::1.eq(gB::1024)          [-- <4> --]
--->
-++++
+----
 <1> Check if 1024 megabytes equals 1 gigabyte (result: true)
 <2> Check if 1024 kilobytes equals 1 megabyte (result: true)
 <3> Check if 2 gigabytes equals 2048 megabytes (result: true)
@@ -210,26 +202,24 @@ The two primary poly types are:
 
 **lst (List)** - Ordered collection where each element is a branch:
 
-++++
-<!-- 🐖
+[mtron]
+----
 [a,b,c]                     [-- <1> --]
 [1,2,3]                     [-- <2> --]
 [,]                         [-- <3> --]
--->
-++++
+----
 <1> List with three branches: a, b, and c
 <2> List with three integer branches
 <3> Empty list (no branches)
 
 **rec (Record)** - Key-value pairs where each entry is a branch:
 
-++++
-<!-- 🐖
+[mtron]
+----
 [a=>1,b=>2,c=>3]            [-- <1> --]
 [name=>'Alice',age=>30]     [-- <2> --]
 [=>]                        [-- <3> --]
--->
-++++
+----
 <1> Record with three branches: a=>1, b=>2, and c=>3
 <2> Record representing a person
 <3> Empty record (no branches)
@@ -244,15 +234,14 @@ The two primary poly types are:
 
 **Branching in Action:**
 
-++++
-<!-- 🐖
+[mtron]
+----
 [1,2,3]                     [-- <1> --]
 [1,2,3].count()             [-- <2> --]
 [1,2,3]>-.count()           [-- <3> --]
 [a=>1,b=>2].count()         [-- <4> --]
 [a=>1,b=>2]>-.count()       [-- <5> --]
--->
-++++
+----
 <1> List with 3 branches
 <2> Returns 1 (the list object itself)
 <3> Returns 3 (merges branches, counts elements)
@@ -261,16 +250,15 @@ The two primary poly types are:
 
 **Operations on Poly Types:**
 
-++++
-<!-- 🐖
+[mtron]
+----
 [1,2,3].reverse()                     [-- <1> --]
 [1,2,3].plus([4,5])                   [-- <2> --]
 [1,2,3].merge()                       [-- <3> --]
 [a=>1,b=>2].dom()                     [-- <4> --]
 [a=>1,b=>2].rng()                     [-- <5> --]
 [a=>1,b=>2,c=>3].select([a=>_,b=>_])  [-- <6> --]
--->
-++++
+----
 <1> Reverse list order
 <2> Concatenate lists
 <3> Merge list into a set
@@ -329,14 +317,13 @@ Variables in Metatron can be scoped at different levels: frame stack, thread cac
 
 **Variable Assignment and Dereferencing:**
 
-++++
-<!-- 🐖
+[mtron]
+----
 x -> 42                                                   [-- <1> --]
 *x                                                        [-- <2> --]
 y -> [a=>1,b=>2,c=>3]                                     [-- <3> --]
 *y                                                        [-- <4> --]
--->
-++++
+----
 <1> Assign 42 to variable x
 <2> Dereference x with `*x`
 <3> Assign record to variable y
@@ -344,26 +331,24 @@ y -> [a=>1,b=>2,c=>3]                                     [-- <3> --]
 
 **Variables in Computations:**
 
-++++
-<!-- 🐖
+[mtron]
+----
 base -> 10                                                [-- <1> --]
 result -> *base.plus(5).mult(2)                           [-- <2> --]
 *result                                                   [-- <3> --]
--->
-++++
+----
 <1> Store base value
 <2> Compute and store result
 <3> Retrieve computed result
 
 **Variables with Collections:**
 
-++++
-<!-- 🐖
+[mtron]
+----
 nums -> {1,2,3,4,5}                                       [-- <1> --]
 filtered -> *nums-<[?>3 => _, _ => noobj]>>               [-- <2> --]
 *filtered                                                 [-- <3> --]
--->
-++++
+----
 <1> Store collection
 <2> Filter and store results
 <3> Retrieve filtered collection
@@ -384,14 +369,13 @@ odd::T ....... nat::T ......even::T
 ----
 
 
-++++
-<!-- 🐖
+[mtron]
+----
 nat  -> int::T[?>0]                 [-- <1> --]
 age  -> nat::T[?<120]               [-- <2> --]
 odd  -> int::T[is(mod(2).eq(1))]    [-- <3> --]
 even -> int::T[is(mod(2).eq(0))]    [-- <4> --]
--->
-++++
+----
 
 <1> A `nat` is an `int` greater than 0.
 <2> A `age` is a `nat` (is an `int` greater than 0) less than 120.
@@ -408,11 +392,10 @@ even -> int::T[is(mod(2).eq(0))]    [-- <4> --]
 ----
 
 
-++++
-<!-- 🐖
+[mtron]
+----
 age::T[?even::T]
--->
-++++
+----
 
 For instance, it is possible to define the type `nat` which represents the set of natural numbers -- integers greater than zero. In mtron, this is written:
 
@@ -424,14 +407,13 @@ For instance, it is possible to define the type `nat` which represents the set o
 The `int::T` (`int` type) is being constrained by the predicate `?>0` (or `is(gt(0))`). This constraint is a refinement of `int` (a well defined subset).
 
 
-++++
-<!-- 🐖
+[mtron]
+----
 nat -> int::T[?>0]@nat
 nat::10
 [ERROR] nat::-10
 [ERROR] int::-10.as(nat::T)
--->
-++++
+----
 
 
 If `a` is an `obj` When a `tid` is specified for an `obj`, the `tid` is resolved to an `obj` denoting the type of `A`.
@@ -460,38 +442,35 @@ The fundamental types are organized into the 5 categories presented in the table
 
 A natural number is a positive integer greater than zero. In order to constrain an `int` to this definition, a **refinement type** can be constructed.
 
-++++
-<!-- 🐖
+[mtron]
+----
 nat -> int::T[?>0]@nat 
 nat::10
 [ERROR] nat::-10
 [ERROR] int::-10.as(nat::T)
--->
-++++
+----
 
 Type inheritance is possible through type chaining. In the example below, the `age` type has a value id of `age`, but a type id of `nat`. Moreover, `nat` has a value id of `nat` and a type id of `int`. In this way, when `age` is resolved, its associated predicate (`?<120`) and inherited predicates (`?>0`) must hold for the respective value to be considered an `age`.
 
-++++
-<!-- 🐖
+[mtron]
+----
 age -> nat::T[?<120]
 age::T
 nat::T
 int::T
--->
-++++
+----
 
-++++
-<!-- [IGNORE FOR NOW] 🐖
+[mtron]
+----
 nat::125
 age::125
-nat::125.as(age::T)
-125.as(nat::T).as(age::T)
--->
-++++
+[ERROR] nat::125.as(age::T)
+[ERROR] 125.as(nat::T).as(age::T)
+----
 
 
-++++
-<!-- 🐖
+[mtron]
+----
 name    -> str::T[-<''>-count().?<30]
 personx -> rec::T[?[name  => str::T, /
                     age   => age::T, /
@@ -501,8 +480,7 @@ grant -> personx::[name=>'grant',age=>23,knows=>!*marko]
 *marko>>knows>>name
 *marko>>knows>>knows>>name
 *marko>>knows>>knows
--->
-++++
+----
 
 [discrete]
 === instruction set architecture types

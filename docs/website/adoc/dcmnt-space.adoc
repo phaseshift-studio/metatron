@@ -4,11 +4,10 @@
 [%collapsible]
 ./m/dcmnt instset import
 ====
-++++
-<!-- 🐖
+[mtron]
+----
 import(/m/dcmnt)
--->
-++++
+----
 ====
 
 A https://en.wikipedia.org/wiki/Document-oriented_database[document database] models a domain as a set of "https://www.json.org/[JSON]"-ish documents -- in the lexicon of formality, such databases are understood as a collection of https://en.wikipedia.org/wiki/Associative_array[associative arrays]/dictionary/hashmap composed of string keys and object values, where values can be nested indefinitely. In metatron, a document database is best captured by a  **dcmntspace** of type `rec::T`. The mapping between JSON and metatron is quite natural. Two semantically equivalent structures are provided below.
@@ -53,11 +52,10 @@ one nicety that immediately jumps out when comparing JSON and mtron is mtron's l
 * URIs support **wildcards and templates** for pattern matching and bulk read/writes.
 --
 
-++++
-<!-- 🐖
+[mtron]
+----
 */m/dcmnt/space/dcmntspace
--->
-++++
+----
 
 [cols="6a,6a",separator=🧱,role="table-bordered center"]
 |===
@@ -67,45 +65,42 @@ the root should simply be `rec::T`. should the database enforce closed-world sem
 the root is `rec::T[?[collection_name\=>collection_type{*}::T]]`.
 
 🧱
-++++
-<!-- 🐖
+[mtron]
+----
 *instset
--->
-++++
+----
 |===
 
 
-++++
-<!-- 🐖
+[mtron]
+----
 animal    -> rec::T[?[name=>str::T,  age=>int::T]]@animal                     [-- <1> --]
 chicken   -> animal::T@chicken                                                [-- <2> --]
 equipment -> rec::T[?[model=>uri::T, year=>int::T]]@equipment                 [-- <3> --]
 farmset::[type=>[animal::T,equipment::T,chicken::T]]@/m/dcmnt/schema/farmset  [-- <4> --]
--->
-++++
+----
 <1> an `animal::T < rec::T` (**refinement type**) is defined.
 <2> a `chicken::T == animal::T` (**nominal type**) is defined.
 <3> an `equipment::T < rec::T` (**refinement type**) is defined.
 <4> a `farmset` instset is defined containing `animal::T`, `equipment::T`, and `chicken::T`.
 
-++++
-<!-- 🐖
+[mtron]
+----
 dcmntspace::[pattern     => farm:#,                                           /
-             host        => <mongodb://localhost:27017/farm>,                 /
+             host        => mongodb://localhost:27017/farm,                   /
              schema      => !*farmset,                                        /
              root        => rec::T[?[animals   => animal{*}::T,               / 
-                                     equipment => equipment{*}::T]], route       => [farm:=><>]]@/sys/space/farm
--->
-++++
+                                     equipment => equipment{*}::T]],          /
+             route       => [farm:=><>]]@/sys/space/farm
+----
 <1> a `dcmntspace` with `farmset` as the schema. the root type maps each collection to its element type with `{*}` cardinality.
 
-++++
-<!-- 🐖
+[mtron]
+----
 [ERROR] farm:animals/1 -> 'a chicken named trill'                             [-- <1> --]
 farm:animals/1 -> chicken::[name=>'trill',age=>7]                             [-- <2> --]
 *farm:animals/1                                                               [-- <3> --]
--->
-++++
+----
 <1> writing a `str::T` to a collection that expects `animal{*}::T` — rejected at the space level.
 <2> a `chicken::T` document satisfies `animal::T` (chicken is-a animal) — accepted.
 <3> reading the document back.
@@ -117,14 +112,13 @@ BSON (MongoDB's binary JSON format) has no concept of a type--for example, `chic
 stored in MongoDB would ordinarily come back as a plain `rec::[name\=>'trill', age\=>7]`, losing the `chicken::T`
 identity. metatron preserves type information transparently on the way in and restores it on the way out.
 
-++++
-<!-- 🐖
+[mtron]
+----
 farm:animals/1 -> chicken::[name=>'trill',age=>7]                             [-- <1> --]
 *farm:animals/1                                                               [-- <2> --]
 *farm:animals/1/name                                                          [-- <3> --]
 *farm:animals/                                                                [-- <4> --]
--->
-++++
+----
 <1> write a `chicken::T` document to the `animals` collection.
 <2> read it back — `chicken::T` is preserved through the round-trip.
 <3> subfield reads navigate into the document without loading the whole record.
@@ -144,8 +138,8 @@ updated with a `shelter` cell pointing at `loc:barns/1` — a **cross-space** re
 On write, the serializer encodes the external pointer as `$ref: "loc:barns"` in MongoDB;
 on read, the `loc:` scheme is detected and the reference is routed to the memspace.
 
-++++
-<!-- 🐖
+[mtron]
+----
 memspace::[pattern => loc:#]@/sys/space/loc                                       [-- <1> --]
 loc:barns/1 -> [label=>'old_red_barn',capacity=>12]                               [-- <2> --]
 farm:animals/1 >>= [shelter=>!*loc:barns/1]                                       [-- <3> --]
@@ -154,8 +148,7 @@ farm:animals/1 >>= [shelter=>!*loc:barns/1]                                     
 farm:animals/2 -> chicken::[name=>'cluck',age=>3,shelter=>!*loc:barns/1]          [-- <6> --]
 *farm:animals/2                                                                    [-- <7> --]
 *farm:animals/2/shelter                                                            [-- <8> --]
--->
-++++
+----
 <1> a `loc:` memspace serves as the cross-space target — any space type (grphSpace, tbleSpace, etc.) works the same way.
 <2> write the barn record into `loc:` memspace.
 <3> update the existing `animals/1` document (`>>=`) with a `shelter` reference — `!*loc:barns/1` is an `auto_from` pointer.

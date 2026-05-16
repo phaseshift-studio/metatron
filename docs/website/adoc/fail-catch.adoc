@@ -10,12 +10,11 @@ The exception handling architecture of metatron leverages a fail monad with some
 ^🧱
 *propagating* 🧱 `plus?\<=int(uri::T)` is not a valid instruction and a `fail::T` monad is created.
 
-++++
-<!-- 🐖 
+[source,mtron]
+----
 [HIDDEN] */sys/fail/+.catch(_)
 1.plus(b).plus(3).mult(5)
--->
-++++
+----
 
 🧱
 [source,mtron]
@@ -30,12 +29,11 @@ The exception handling architecture of metatron leverages a fail monad with some
 *caught* 🧱 `catch?A{+*+}\<=A(A{+*+}::T)` passes all `objs` from lhs to rhs except for a `fail::T`. A lhs `fail::T` is applied to the
 `catch()` args the result of the `catch()` body is emitted rhs.
 
-++++
-<!-- 🐖 
+[mtron]
+----
 [HIDDEN] */sys/fail/+.catch(_)
 1.plus(b).plus(3).catch(2).mult(5)
--->
-++++
+----
 
 🧱
 [source,mtron]
@@ -62,15 +60,14 @@ The diagram above demonstrates that uncaught `fail::T` objs are routed to _fail 
 . The exception hasn't been handled and can be resumed at a later time in a coroutine-esque manner. This is possible even after the underlying machine has completed execution of the instruction graph.
 . The exception stack trace can be clipped to reduce visual clutter, and only when accessed and caught from fail space will the fail's trace be unrolled and available to introspection.
 
-++++
-<!-- 🐖 
+[mtron]
+----
 [HIDDEN] */sys/fail/+.catch(_)
-1.plus(b)                  [-- <1> --]
+[ERROR] 1.plus(b)                  [-- <1> --]
 */sys/fail/+               [-- <2> --]
 */sys/fail/+.catch(_)      [-- <3> --]
 */sys/fail                 [-- <4> --]
--->
-++++
+----
 
 <1> A `fail::T` monad is generated and is not caught.
 <2> The uncaught `fail::T` is written to `/sys/fail` using the `incrq` query processor.
@@ -84,14 +81,13 @@ The diagram above demonstrates that uncaught `fail::T` objs are routed to _fail 
 
 Finally, the `cause()` instruction enables recursive stack walking for reflective exception handling.
 
-++++
-<!-- 🐖 
+[mtron]
+----
 [HIDDEN] */sys/fail/+.catch(_)
 *cause                               [-- <1> --]
 1+b.catch(cause())                   [-- <2> --]
 throw('bad').catch(cause())          [-- <3> --]
--->
-++++
+----
 
 <1> The `cause()` instruction has a domain of `fail::T` and range of `fail{?}::T`. The range being potentially a previous underlying `fail::T` to the current/domain `fail::T`.
 <2> Once a `fail::T` is caught, it can be applied to `cause()` for introspection.

@@ -111,7 +111,8 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     private static Terminal terminal;
     private final LineReader reader;
     private final StatusLine status;
-    private final ColonMenu colonMenu = new ColonMenu(this);
+    @JRecElement(key="menu", rng="/m/rec")
+    public ColonMenu colonMenu = new ColonMenu(this);
     private final static ConfigurationPath configurations = new ConfigurationPath(
             Paths.get("conf"),                                     // application-wide settings
             Paths.get(System.getProperty("user.home"), ".metatron") // user-specific settings
@@ -799,28 +800,6 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     }
 
     protected void executeMtron(final String line) {
-        /// ///////////////////////////////////////////////////
-        ////////////////// PANEL SUBSCRIPTIONS ////////////////
-        /// ///////////////////////////////////////////////////
-        if (line.trim().startsWith(":" + SUBQ)) {
-            final String strip = line.substring(5).trim();
-            final fURI subURI = strip.isEmpty() ?
-                    this.vid().extend("pane").extend(this.activePane.id() + "") :
-                    f(strip);
-            final Pane pane = this.getAllPanes()
-                    .stream()
-                    .filter(p -> p.id() == this.activePane.id())
-                    .findFirst()
-                    .orElse(null);
-            if (pane == null) {
-                LOG.error("unable to find active pane: %d", this.activePane.id());
-            } else {
-                pane.unsubscribe();
-                pane.vid(subURI);
-                pane.subscribe();
-            }
-            return;
-        }
         /// /////////////////////////////////////////////////////
         CommonUtil.splitOnNonQuotedSequence(this.prefix + line + this.postfix, ';', false).forEach(l -> {
             try {
@@ -912,123 +891,12 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                 // start fresh in the new pane).  Skip evaluation entirely.
                 if (line.isEmpty()) continue;
                 if (line.startsWith(":")) {
-                    if (this.colonMenu.has(line.substring(1))) {
-                        this.colonMenu.at(line.substring(1)).apply(noobj());
-                    } else {
-                        if (line.startsWith(":chat")) {
-                            final String chatLine = line.substring(5).trim();
-                            Rec.wrap(Router.global().read("testy"), mModel.class).chat(chatLine);
-                        } else if (line.equals(":connect")) {
-                            Router.writeToSpace("abc", block_(MInst.instLambda((lhs, inst) -> {
-                                reader.getBuffer().write(lhs.asLst().at(1).strValue());
-                                return lhs;
-                            })));
-                        } else if (line.equals(":header"))
-                            this.outputHeader(line.substring(7).trim());
-                        else if (line.equals(":quit"))
-                            break;
-                        else if (line.equals(":clear")) {
-                            Graphitty.out(terminal.output(), "{{XX}}");
-                            this.status.refresh();
-                        } else if (line.startsWith(":log")) {
-                            if (!line.substring(4).trim().isBlank()) {
-                                //LOG.none("updating log level: %s\n",  line.substring(4).trim());
-                                final String[] args = line.substring(4).trim().split(" ");
-                                LogObj.setSLF4J(args[0]);
-                                if (args.length > 1)
-                                    GraphittyLogger.setDefaultTargetPane(Integer.parseInt(args[1]));
-                            }
-                            LOG.none("log level: %s [target pane: %s]\n", LogObj.getSLF4J().toString().toLowerCase(), GraphittyLogger.getDefaultTargetPane());
-                        } else if (line.startsWith(":check")) {
-                            Arrays.stream(line.substring(6).trim().split(" ")).forEach(s -> {
-                                if (!s.trim().isEmpty()) {
-                                    if (s.startsWith("-"))
-                                        TypeCheck.disable(TypeCheck.valueOf(s.substring(1).toLowerCase()));
-                                    else
-                                        TypeCheck.enable(TypeCheck.valueOf(s.toLowerCase()));
-                                }
-                            });
-                            LOG.info("type check stages {{%s}}%s{{X}}", TypeCheck.colorLevel(), TypeCheck.getEnabled());
-                        } else if (line.startsWith(":top")) {
-                            TTop.ttop(terminal, new PrintStream(terminal.output()), System.err, new String[0]);
-                        } else if (line.startsWith(":less")) {
-                            Commands.less(terminal, terminal.input(), new PrintStream(terminal.output()), System.err, Paths.get(""), new String[0]);
-                        } else if (line.startsWith(":subs")) {
-                            final SubsWidget selector = new SubsWidget(this);
-                            selector.run();
-                            selector.close();
-                        } else if (line.startsWith(":justify")) {
-                            final boolean leftJustify = line.substring(8).trim().equalsIgnoreCase("left");
-                            ((Highlighter) this.reader.getHighlighter()).justify(leftJustify);
-                            LOG.info("%s justifying nested polys", leftJustify ? "{{y}}left{{X}}" : "{{y}}right{{X}}");
-                        } else if (line.startsWith(":state")) {
-                            this.status.setState(Level.valueOf(line.substring(6).trim().toUpperCase()));
-                        } else if (line.startsWith(":lang")) {
-                            final String langName = line.substring(5).trim().toLowerCase();
-                            try {
-                                final Language newLang = Language.valueOf(langName.toUpperCase());
-                                this.setLanguage(newLang);
-                            } catch (IllegalArgumentException e) {
-                                LOG.error("unknown language: {{r}}%s{{X}}. Available: mtron, gremlin, sql", langName);
-                            }
-                        } else if (line.startsWith(":prefix")) {
-                            this.prefix = line.substring(7).trim();
-                            if (this.prefix.startsWith("\""))
-                                this.prefix = this.prefix.substring(1);
-                            if (this.prefix.endsWith("\""))
-                                this.prefix = this.prefix.substring(0, this.prefix.length() - 1);
-                        } else if (line.startsWith(":postfix")) {
-                            this.postfix = line.substring(8).trim();
-                            if (this.postfix.startsWith("\""))
-                                this.postfix = this.postfix.substring(1);
-                            if (this.postfix.endsWith("\""))
-                                this.postfix = this.postfix.substring(0, this.postfix.length() - 1);
-                        }
-                        // ========== Split Pane Commands ==========
-                        else if (line.startsWith(":split")) {
-                            final String arg = line.substring(6).trim();
-                            try {
-                                final SplitLayout direction = arg.isEmpty()
-                                        ? SplitLayout.VERTICAL  // Default to vertical
-                                        : SplitLayout.parse(arg);
-                                this.split(direction);
-                                this.renderPanes();
-                            } catch (IllegalArgumentException e) {
-                                LOG.error(e.getMessage());
-                            }
-                        } else if (line.equals(":unsplit") || line.equals(":close")) {
-                            this.closeActivePane();
-                            if (this.splitMode) {
-                                this.renderPanes();
-                            } else {
-                                Graphitty.out(terminal.output(), "{{XX}}"); // Clear screen
-                            }
-                        } else if (line.startsWith(":focus")) {
-                            final String arg = line.substring(6).trim();
-                            if (arg.isEmpty()) {
-                                // List all panes
-                                LOG.info("panes: %s, active: {{y}}%d{{X}}",
-                                        getAllPanes().stream().map(p -> String.valueOf(p.id())).toList(),
-                                        this.activePane.id());
-                            } else {
-                                try {
-                                    final int paneId = Integer.parseInt(arg);
-                                    this.focusPane(paneId);
-                                    if (this.splitMode) this.renderPanes();
-                                } catch (NumberFormatException e) {
-                                    LOG.error("invalid pane id: {{r}}%s{{X}}", arg);
-                                }
-                            }
-                        } else if (line.equals(":panes")) {
-                            // Show all panes
-                            final List<Pane> panes = getAllPanes();
-                            LOG.info("{{y}}%d{{X}} pane(s):", panes.size());
-                            for (final Pane p : panes) {
-                                final String active = (p == this.activePane) ? " {{g}}[active]{{X}}" : "";
-                                LOG.info("  [{{y}}%d{{X}}] %s, %d lines%s",
-                                        p.id(), p.language().name, p.outputBuffer().size(), active);
-                            }
-                        }
+                    final String cmd = line.substring(1).trim();
+                    final int spaceIdx = cmd.indexOf(' ');
+                    final String cmdName = spaceIdx > 0 ? cmd.substring(0, spaceIdx) : cmd;
+                    final String cmdArgs = spaceIdx > 0 ? cmd.substring(spaceIdx + 1).trim() : "";
+                    if (this.colonMenu.has(cmdName)) {
+                        this.colonMenu.at(cmdName).apply(cmdArgs.isEmpty() ? noobj() : str(cmdArgs));
                     }
                 } else {
                     this.status.startTimer();
@@ -1073,7 +941,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
         System.exit(0);
     }
 
-    protected void outputHeader(final String name) {
+    public void outputHeader(final String name) {
         try {
             terminal.writer().print(CommonUtil.getHeader(HEADER_FILE, name, true));
             terminal.writer().flush();

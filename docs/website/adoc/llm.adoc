@@ -4,8 +4,8 @@
 [%collapsible]
 ./m/llm instset import and space constructions
 ====
-++++
-<!-- 🐖
+[mtron]
+----
 [HIDDEN] import(/m/web)
 import(/m/llm)
 catalog::[host     => <http://localhost:11434>,             /
@@ -28,8 +28,7 @@ catalog::[host         => <http://localhost:8088/v1>,      /
            name         => <localai>,                      /
            route        => [<localai:>=><>]]@/sys/space/localai
 import(/m/web)
--->
-++++
+----
 ====
 
 Modern AI techniques are heavily leveraged across various aspects of metatron, with popular cloud service providers (e.g. link:https://www.anthropic.com/[Anthropic] and/or link:https://openai.com/[OpenAI]) and local providers (e.g. link:https://ollama.com/[Ollama] and/or http://localai.io[LocalAI]) serving as the compute-intensive inferencing backends.
@@ -46,32 +45,29 @@ Modern AI techniques are heavily leveraged across various aspects of metatron, w
  - **gguff vector files**: ...
 . **MCP Servers**: Developing and deploying MCP servers in mtron as well as interacting with remote MCP servers as a client is straightforward. Such simplicity provides a countless number of ways in which LLMs can interact with the underlying spaces.
 
-++++
-<!-- 🐖
+[mtron]
+----
 wsspace::[host     => <ws://localhost:8555>,                        /
           pattern  => ws://#,                                       /
           q        => [docq::[=>],subq::[=>]],                      /
           route    => [/mtron=> mtron_ws,                           /
                        /mcp  => mcp_mtron_ws]]@/sys/space/web/ws
--->
-++++
+----
 
 [discrete]
 === llm space embedding
 
 An LLM is a `model::T < rec::T` with the following type definition:
 
-++++
-<!-- 🐖
+[mtron]
+----
 */m/llm/model
--->
-++++
+----
 
-++++
-<!-- 🐖
-*ollama:+.take(3)
--->
-++++
+[mtron]
+----
+[ERROR] *ollama:+.take(3)
+----
 
 [discrete]
 === llm interactions
@@ -102,29 +98,26 @@ ai -> *ollama:+/+                                             /
 [%collapsible]
 ./m/math instset import
 ====
-++++
-<!-- 🐖
+[mtron]
+----
 import(/m/math)
--->
-++++
+----
 ====
 
 The `size` relation maps to a `gB::T` (gigabytes) while the `where()` clause filtered on `mB::T` (megabytes). The conversion between the different data size units is handled automatically by the type constructors of those data size types. These types are distributed in the `/m/math` instruction set and imported via `import(/m/math)` (or `import(/m/math,math:)` if naming conflicts may emerge).
 
-++++
-<!-- 🐖
+[mtron]
+----
 */m/math.>>type.>>    [-- <1> --]
--->
-++++
+----
 <1> get the types defined in `/m/math` `instset` and then drain that `lst` to a stream to see a more detailed string representation. 
 
-++++
-<!-- 🐖
+[mtron]
+----
 gB::500.0.as(mB::T)    [-- <1> --]
 gB::500.0.as(kB::T)    [-- <2> --]
 tB::1.0.as(mB::T)      [-- <3> --]
--->
-++++
+----
 <1> convert gigabytes to megabytes
 <2> convert gigabytes to kilobytes
 <3> convert terabytes to megabytes
@@ -149,15 +142,14 @@ The content and metadata associated with the chat interaction are stored at the 
 [discrete]
 === llm tools, skills, and mcp servers
 
-++++
-<!-- 🐖
+[mtron]
+----
 mcp_mtron_ws::[host => <ws://localhost:8555/mcp>]@/usr/ai/mcp/mtron
 mcp_ws::[host => <http://127.0.0.1:29170/index-mcp/streamable-http>]@/usr/ai/mcp/mtron
--->
-++++
+----
 
-++++
-<!-- 🐖
+[mtron]
+----
 *<openai:gpt-4o>.at(robotron).                                   /  
  side([,].at(<local:.agent/robotron/memory>)).                   /  
  >>=[think=>print(_),                                            /  
@@ -167,8 +159,7 @@ mcp_ws::[host => <http://127.0.0.1:29170/index-mcp/streamable-http>]@/usr/ai/mcp
      response=>[to=>print(_)],                                   / 
      memory=>[mem=>!*<local:.agent/robotron/memory>,max=>20]].   / 
  >>=[_=>^*_]                                                       
--->
-++++
+----
 <1> clone the base model to the `robotron` address
 <2> as a side-effect, create a blank memory structure and store it on the local file system
 <3> print robotron's thoughts to the terminal
@@ -178,15 +169,14 @@ mcp_ws::[host => <http://127.0.0.1:29170/index-mcp/streamable-http>]@/usr/ai/mcp
 <7> pass robotron a reference to the memory structure and cap its growth to 15 entries.
 <8> re-reference any resolved `!\*` (`auto_from`) references using `^*` (`auto_to`).
 
-++++
-<!-- 🐖 
+[mtron]
+----
 *robotron.chat('what tools do you have access to?',          /
             [number_of_tools=>int::T,tool_names=>str::T])        
 *robotron.chat('what skills do you have?')                        
 *robotron>>memory                                                 
 *robotron>>memory/mem/2/attributes/format                        
--->
-++++
+----
 <1> providing a response format `rec` yields a structured response.
 <2> without a response format, the agent replies in free, unstructured text.
 <3> the agent's memory records structured responses.
@@ -226,14 +216,13 @@ Any `obj` that carries a `@vid` annotation is _space-aware_: mutations to it (vi
 
 The difference between `.to()` and `.at()` is critical here:
 
-++++
-<!-- 🐖 
+[mtron]
+----
 1.to(a) + 2 + 3    
 *a                 
 1.at(a) + 2 + 3    
 *a                 
--->
-++++
+----
 <1> `.to()` saves a snapshot at `a` but the `@vid` is **not** carried through the chain.
 <2> `a` still holds the original snapshot.
 <3> `.at()` binds `@vid` to the result, so every subsequent operation in the chain auto-persists.
@@ -261,8 +250,8 @@ Notes form a **FIFO queue** — `remove(0)` pops the oldest note, leaving newer 
 
 Typically, a client will request services from an MCP server -- tool listing, tool evaluations, etc. It's important to note that the https://modelcontextprotocol.io/docs/learn/architecture#notifications[MCP specification] has a little known feature that allows the server to initiate communication with the client. This feature is called **notifications** and it can be implemented in pure mtron.
 
-++++
-<!-- [IGNORE FOR NOW] 🐖   
+[mtron]
+----
 <ws://localhost:8555/mcp/+/notifications/#?subq> -> sub::[                /           
  on_recv => inst?#<=lst(message=>?lst::T){                                /
   -<json::[                                                               /
@@ -270,8 +259,7 @@ Typically, a client will request services from an MCP server -- tool listing, to
    method  => >>0 - <ws://localhost:8555/mcp/${*message>>0>>1}${/}>,      /         
    params  => *message>>1](payload=>_){                                   /     
     *<ws://localhost:8555/mcp/${*message>>0>>1}>>>send.apply(*payload)}}]
--->
-++++
+----
 <1> Add the `subq` query processor to the websocket space. This extends the space with pub/sub sematics.
 
 [source,mtron,role="center-code"]
@@ -340,8 +328,8 @@ can access it accordingly and naturally.
 
 The mtron example below contains two structured response calls to the agent used in the running examples thus far. Note the use of the tools provided to the agent.
 
-++++
-<!-- [IGNORE FOR NOW] 🐖
+[mtron,source]
+----
 *robotron                                                                         
 *robotron.chat('what is 6 + 23?',[answer=>int::T])                                 /
        .where([answer => ?>20])                                                    /  
@@ -350,8 +338,7 @@ The mtron example below contains two structured response calls to the agent used
        .-<|[?>23 => print('a big answer'),                                         /
                _ => print('a small answer')].>>.mult(1000)                         
 *<local:.agent/robotron/memory>                                                   
--->
-++++
+----
 
 <1> The agent used in the previous examples.
 <2> Treat `chat()` like any other instruction within a larger mtron composition.

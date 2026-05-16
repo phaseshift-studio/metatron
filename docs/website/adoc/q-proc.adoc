@@ -17,11 +17,10 @@ Currently, metarton provides the following qprocs in the core distribution.
 
 The q-processor type is defined as
 
-++++
-<!-- 🐖
+[mtron]
+----
 *qproc
--->
-++++
+----
 
 where a qproc may implement any of the associated read/write interception stages.
 
@@ -64,26 +63,24 @@ where a qproc may implement any of the associated read/write interception stages
 [discrete]
 ==== subq: publish and subscribe to patterns in space
 
-++++
-<!-- 🐖
+[mtron]
+----
 */sys/space/usr
 /usr/notes/#?subq -> sub::[on_recv=>print('${>>1} written to ${>>0}')]
 */usr/notes/#?subq
 /usr/notes/#?subq -> none
 */usr/notes/#?subq
--->
-++++
+----
 
 For target removal of subscriptions, place the subscription in space by vid. Then use `subq` value to match on the vid.
 
-++++
-<!-- 🐖
+[mtron]
+----
 /usr/notes/#?subq -> sub::[on_recv=>print('${>>1} written to ${>>0}')]@abc
 */usr/notes/#?subq
 /usr/notes/#?subq=abc -> none
 */usr/notes/#?subq
--->
-++++
+----
 
 [discrete]
 ==== docq: documentation for human and agent

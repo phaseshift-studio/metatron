@@ -105,23 +105,21 @@ applied to it -- indiscriminately. Selective discrimination is a consequence of 
 Given that a `rec` relation can not have a `noobj` domain nor range, then selective branching is achieved programmatically through *filtering*.
 That is, given `rec` relations,
 
-++++
-<!-- 🐖 
+[mtron]
+----
 [a=>1,b=>noobj,noobj=>3]
--->
-++++
+----
 
 then,
 
-++++
-<!-- 🐖 
+[mtron]
+----
 {1,2}                                          [-- <1> --]
-{1,2}.split([is(lt(2))  => plus(9), /        
-             is(gte(2)) => plus(3)])         
+{1,2}.split([is(lt(2))  => plus(9), /
+             is(gte(2)) => plus(3)])
 {1,2}.split([is(lt(2))  => plus(9), /
              is(gte(2)) => plus(3)]).rshift()  [-- <2> --]
--->
-++++
+----
 
 <1> two `int` objs in a stream.
 <2> each `int` obj is split (copied) across the branch arguments (the `rels` of the `rec` arg).
@@ -136,12 +134,11 @@ The above written once more using sugar syntax:
 
 🧱
 
-++++
-<!-- 🐖
+[mtron]
+----
 {1,2}-<[?<2=>+9,?>=2=>+3]
 {1,2}-<[?<2=>+9,?>=2=>+3]>>
--->
-++++ 
+----
 
 🧱
 
@@ -154,13 +151,12 @@ The above written once more using sugar syntax:
 
 Unlike `rec`, `lst` can have `noobj` elements. However, when merged into a single stream, `noobj` are discarded.
 
-++++
-<!-- 🐖
+[mtron]
+----
 {1,2}-<[gte(2),gt(3)]            [-- <1> --]
 {1,2}-<[?>=2,?>3]                [-- <2> --]
 {1,2}-<[?>=2,?>3]>-              [-- <3> --]
--->
-++++
+----
 
 <1> Each incoming `obj` is split across each "branch" (position) of the `lst`.
 <2> a `lst` can have `noobj` elements (empty positions).
@@ -180,13 +176,13 @@ ultimately dependent on the incoming lhs `obj`, where
 .if/else
 =====
 
-++++
-<!-- 🐖 [NO_HEADER]
+[mtron]
+----
+[NO_HEADER]
 {1,2,3,4,5}-<[?>2 => '${_} greater than 2', /
               ?>5 => '${_} greater than 5', /
               _   => '${_} is something.']
--->
-++++
+----
 
 =====
 
@@ -194,11 +190,11 @@ ultimately dependent on the incoming lhs `obj`, where
 .switch
 =====
 
-++++
-<!-- 🐖 [NO_HEADER]
+[mtron]
+----
+[NO_HEADER]
 1.plus(10)
--->
-++++
+----
 
 =====
 
@@ -209,12 +205,11 @@ ultimately dependent on the incoming lhs `obj`, where
 
 
 [discrete]
-=== If/Then/Else 
+=== If/Then/Else
 
-++++
-<!-- 🐖 
+[mtron]
+----
 {1,2,3,4,5}-<[?>2 => '${_} greater than 2', /
               ?>5 => '${_} greater than 5', /
               _   => '${_} is something.']>>
--->
-++++
+----

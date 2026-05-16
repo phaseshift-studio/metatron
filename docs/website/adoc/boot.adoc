@@ -16,11 +16,10 @@ a🧱
 . *`/sys/router` space*: a fundamental component that marshalls read/write requests across spaces both inter- and intra- machine. The router indexes spaces and provides namespace services such as routes and redirects.
 . *`/sys` space*: a `/m/space/mem` in-memory space necessary for hosting the aforementioned components.
 
-++++
-<!-- 🐖
+[mtron]
+----
 */sys
--->
-++++
+----
 
 a🧱
 [.boot sequence]
@@ -64,19 +63,17 @@ The boot process maintains provides access to some information that can be usefu
 2. The boot loader file reference is stored at `boot/file`.
 3. Other "workspace" related data may also find its way into `boot/+`.
 
-++++
-<!-- 🐖
+[mtron]
+----
 *boot/
--->
-++++
+----
 
 The environmental variables of the underlying operating system are available at `/sys/env/+/`.
 
-++++
-<!-- 🐖
+[mtron]
+----
 */sys/env/+/.take(10)
--->
-++++
+----
 
 [discrete]
 === Boot Loader

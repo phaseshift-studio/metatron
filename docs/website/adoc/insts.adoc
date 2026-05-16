@@ -50,8 +50,8 @@ Every instruction maps a **left hand side** `obj` (lhs) to a **right hand side**
 
 It is important to understand the mechanics of instruction evaluation. Every instruction follows the same pattern. When a lhs `obj` is applied to an `inst` obj, the first thing that happens is the arguments of the `inst` are resolved. This is perhaps best described with an example.
 
-++++
-<!-- 🐖 
+[mtron]
+----
 1.plus(2)                  [-- <1> --]
 1.plus(id())               [-- <2> --]
 1.plus(plus(2))            [-- <3> --]
@@ -59,8 +59,7 @@ It is important to understand the mechanics of instruction evaluation. Every ins
 1.map(isa(bool::T))        [-- <5> --]
 1.as(bool::T)              [-- <6> --]
 1.isa(as(bool::T))         [-- <7> --]
--->
-++++
+----
 
 <1> `1` is applied to `2` and then `1` is added to `2` to yield `3`.
 <2> `1` is applied to the identity function to yield `1` and then `1` is added to `1` to yield `2`.
@@ -94,11 +93,10 @@ Every logical thread has a `/m/space/stack` patterned `<+/#>`. This pattern capt
 [%collapsible]
 ====
 
-++++
-<!-- 🐖 
+[mtron]
+----
 *<+/#/>
--->
-++++
+----
 
 ====
 
@@ -149,14 +147,13 @@ Given the filtering behavior of the instruction, the signature of `band` is `int
 ----
 
 
-++++
-<!-- 🐖 
+[mtron]
+----
 |inst?int{?}<=int(_,_){ is(and(gte(*0),lte(*1))) }@band  [-- <1> --]
 *band                                                    [-- <2> --]
 3.band(2,8)                                              [-- <3> --]
 10.band(2,8)                                             [-- <4> --]
--->
-++++
+----
 <1> The `|` is the `block` instruction and is necessary so the `inst` isn't evaluated but instead yielded as an `inst`.
 <1> dereference the uri `band` to yield the `inst` definition.
 <1> `3` is within the band `[2,8]` and thus, `3` is the result, satisfying the `inst` range `int{?}`.
@@ -186,15 +183,14 @@ arguments are resolved from the stack via their furi name.
 └────────────┴────────────────────┴────────────┘
 ----
 
-++++
-<!-- 🐖 
+[mtron]
+----
 |inst?int{?}<=int(min=>_,max=>_){ is(and(gte(*min),lte(*max))) }@band
 3.band(min=>2,max=>4)                 [-- <1> --]
 3.band(2,8)                           [-- <2> --] 
 3.band(max=>8,min=>2)                 [-- <3> --]
 'abc'.band(2,8)                       [-- <4> --]
--->
-++++
+----
 <1> The argument's name is it's reference on the stack.
 <2> If the argument name isn't provided, then it's position in the argument list determines its name.
 <3> When arguments are named, they can be written in any order.
@@ -227,14 +223,13 @@ If the incoming `obj` to `else` is `noobj`, then `else` returns it's argument, o
 └────────────┴────────────────────┴────────────┘
 ----
 
-++++
-<!-- 🐖 
+[mtron]
+----
 |inst?int{?}<=int(min=>else(2),max=>else(8)){ is(and(gte(*min),lte(*max))) }@band
 1.band(min=>1)                        [-- <1> --]
 10.band()                             [-- <2> --]
 {2,3,4,5}.band(min=>3,max=>4)         [-- <3> --]
--->
-++++
+----
 
 <1> No `max` is provided, so the default value of `8` is used.
 <2> No `min` nor `max` is provided, so the defaults `2` and `8`, respectively are used.
@@ -265,8 +260,8 @@ can be any arbitrary `obj` (thus, `code`). Type arguments are the means by which
             ?>0 ───────────────────────────────⮞                    
 ----
 
-++++
-<!-- 🐖 
+[mtron]
+----
 nat  -> int::T[?>0]@nat     [-- <1> --]
 |inst?int{?}<=int(min=>?nat::T,max=>?nat::T){ is(and(gte(*min),lte(*max))) }@band
 15.band(10,20)              [-- <2> --]
@@ -280,8 +275,7 @@ band -> |inst?int{?}<=int(min=>?nat::T.else(throw()),max=>?nat::T.else(throw()))
 band -> |inst?int{?}<=int(min=>?nat::T.else(-100),max=>?nat::T.else(100)){ is(and(gte(*min),lte(*max))) }
 15.band(10,20)              [-- <8> --]
 -15.band(-20,-10)           [-- <9> --]
--->
-++++
+----
 
 <1> A `nat` is an `int` greater than zero.
 <2> Argument name uniqueness does not consider query parameters.
@@ -308,15 +302,14 @@ Like any `inst`, anonymous `inst` arguments are scoped to the value of the `inst
 https://en.wikipedia.org/wiki/Scope_(computer_science)#Block_scope[block-scope] semantics.
 Finally, a degenerate anonymous `inst` with no specified variable frame is simply `bcode`.
 
-++++
-<!-- 🐖 
-10.(min=>2,max=>8){ is(and(gte(*min),lte(*max))) }                [-- <1> --]
-10.(min=>minus(1),max=>plus(1)){ is(and(gte(*min),lte(*max))) }   [-- <2> --]
-10.(min=>2,max=>8){ is(and(gte(*bad_min),lte(*bad_max))) }        [-- <3> --]
-10.(){ is(and(gte(*min),lte(*max))) }                             [-- <4> --]
+[mtron]
+----
+[ERROR] 10.(min=>2,max=>8){ is(and(gte(*min),lte(*max))) }                [-- <1> --]
+[ERROR] 10.(min=>minus(1),max=>plus(1)){ is(and(gte(*min),lte(*max))) }   [-- <2> --]
+[ERROR] 10.(min=>2,max=>8){ is(and(gte(*bad_min),lte(*bad_max))) }        [-- <3> --]
+[ERROR] 10.(){ is(and(gte(*min),lte(*max))) }                             [-- <4> --]
 10.is(and(gte(minus(1)),lte(plus(1))))                            [-- <5> --]
--->
-++++
+----
 
 <1> The unnamed "band" `inst` is evaluated in line.
 <2> `min` and `max` are computed dynamically relative to the input.
@@ -353,12 +346,11 @@ is_divisible -> |is_divisble?bool<=int(by?int=>_)[mod(*by).eq(0)]
 
 If an argument's type is dependent on the value of another argument, then the argument is a https://en.m.wikipedia.org/wiki/Dependent_type[dependent argument].
 
-++++
-<!-- 🐖 
+[mtron]
+----
 band -> |band?int{?}<=int(min=>_,max=>is(gt(*min)).else(*min.plus(1)))[is(gte(*min)).is(lte(*max))]
 2.band(min=>1,max=>1)                 [-- <1> --]
--->
-++++
+----
 
 <1> ...
 =====
@@ -367,13 +359,12 @@ band -> |band?int{?}<=int(min=>_,max=>is(gt(*min)).else(*min.plus(1)))[is(gte(*m
 .refined args
 =====
 
-++++
-<!-- 🐖 
+[mtron]
+----
 is_divisible -> |is_divisble?bool<=int(by?int=>is(neq(0)).else(print('error').map(1)))[mod(*by).eq(0)]
-10.is_divisible(2)
-10.is_divisible('abc')
--->
-++++
+[ERROR] 10.is_divisible(2)
+[ERROR] 10.is_divisible('abc')
+----
 =====
 
 [discrete]
@@ -396,34 +387,31 @@ a type structure, a coefficient, and polymorphic generics.
 
 An `inst` to create `int` triples can be written:
 
-++++
-<!-- 🐖
+[mtron]
+----
 triple -> |inst?lst<=int{3}(){>-[,]}
 {1,2,3,4,5,6}.triple()
--->
-++++
+----
 
 [NOTE]
 --
 The `|` token is synatic sugar for the `block` inst. A blocked instruction prevents the application of the `lhs` to the `inst` args and `inst` code.
 This ensures the uri `triple` is not applied to the `inst` prior to the uri being bound as the reference (`->`). Without block, the result of applying `triple` to `inst` would be what `triple` is bound to. In this particular instance, `triple` would reference a `fail` obj.
 
-++++
-<!-- 🐖
+[mtron]
+----
 triple -> |inst?lst[int,int,int]<=int{3}(){>-[,]}
 *triple
--->
-++++
+----
 --
 
 A stricter representation leveraging polymorphic type constructions is expressed as follows:
 
-++++
-<!-- 🐖
+[mtron]
+----
 triple -> |inst?lst[int,int,int]<=int{3}(){>-[,]}
 {1,2,3,4,5,6}.triple()
--->
-++++
+----
 
 [NOTE]
 --
