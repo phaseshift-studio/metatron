@@ -592,6 +592,27 @@ function run(_javaHome) {
     javaArgs.push('-Djdeploy.base='+__dirname);
     javaArgs.push('-Djdeploy.port='+port);
     javaArgs.push('-Djdeploy.war.path='+warPath);
+    javaArgs.push('--enable-native-access=ALL-UNNAMED');
+    javaArgs.push('--add-modules');
+    javaArgs.push('jdk.incubator.vector');
+    javaArgs.push('--add-opens');
+    javaArgs.push('java.base/java.lang=ALL-UNNAMED');
+    javaArgs.push('--add-opens');
+    javaArgs.push('java.base/java.lang.invoke=ALL-UNNAMED');
+    javaArgs.push('--add-opens');
+    javaArgs.push('java.base/java.lang.reflect=ALL-UNNAMED');
+    javaArgs.push('--add-opens');
+    javaArgs.push('java.base/java.util=ALL-UNNAMED');
+    javaArgs.push('--add-opens');
+    javaArgs.push('java.base/java.util.concurrent.atomic=ALL-UNNAMED');
+    javaArgs.push('--add-opens');
+    javaArgs.push('java.base/java.io=ALL-UNNAMED');
+    javaArgs.push('--add-opens');
+    javaArgs.push('java.base/java.nio=ALL-UNNAMED');
+    javaArgs.push('--add-opens');
+    javaArgs.push('java.base/java.net=ALL-UNNAMED');
+    javaArgs.push('--add-opens');
+    javaArgs.push('java.base/sun.nio.cs=ALL-UNNAMED');
     var programArgs = [];
     userArgs.forEach(function(arg) {
         if (arg.startsWith('-D') || arg.startsWith('-X')) {

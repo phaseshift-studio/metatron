@@ -56,6 +56,7 @@ jobs:
           sed -i 's/var javaVersionString = "11";/var javaVersionString = "21";/' jdeploy-bundle/jdeploy.js
           sed -i 's/var mainClass = "{{MAIN_CLASS}}";/var mainClass = "studio.phaseshift.metatron.BootLoader";/' jdeploy-bundle/jdeploy.js
           sed -i 's/var classPath = "{{CLASSPATH}}";/var classPath = "";/' jdeploy-bundle/jdeploy.js
+          sed -i 's/cmd += '\'' -jar "/cmd += '\'' --enable-native-access=ALL-UNNAMED --add-modules jdk.incubator.vector --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.lang.invoke=ALL-UNNAMED --add-opens java.base/java.lang.reflect=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/java.util.concurrent.atomic=ALL-UNNAMED --add-opens java.base/java.io=ALL-UNNAMED --add-opens java.base/java.nio=ALL-UNNAMED --add-opens java.base/java.net=ALL-UNNAMED --add-opens java.base/sun.nio.cs=ALL-UNNAMED -jar "/' jdeploy-bundle/jdeploy.js
 
           if [ "$GITHUB_REF_TYPE" = "tag" ]; then
             VERSION="${GITHUB_REF_NAME#v}"
