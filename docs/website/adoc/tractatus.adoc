@@ -44,306 +44,131 @@ include::header.html[]
                 <button id="clear-search" class="btn btn-link text-primary position-absolute end-0 top-50 translate-middle-y me-2" style="display: none; text-decoration: none;">&times;</button>
             </div>
         </div>
-        <div class="row mb-4 justify-content-center">
-            <div class="col text-center">
-                <div class="btn-group" role="group" aria-label="Topic navigation">
-                    <button type="button" class="btn btn-outline-primary carousel-jump active" data-bs-slide-to="0">All</button>
-                    <button type="button" class="btn btn-outline-primary carousel-jump" data-bs-slide-to="1">Theory</button>
-                    <button type="button" class="btn btn-outline-primary carousel-jump" data-bs-slide-to="2">Core</button>
-                    <button type="button" class="btn btn-outline-primary carousel-jump" data-bs-slide-to="3">Space</button>
-                    <button type="button" class="btn btn-outline-primary carousel-jump" data-bs-slide-to="4">InstSet</button>
-                </div>
-            </div>
-        </div>
-        <div id="tutorial-carousel" class="carousel slide" data-bs-ride="false" data-bs-interval="falses">
-            <div class="carousel-inner">
-                <!-- All Slide -->
-                <div class="carousel-item active" data-topic="All">
-                    <div class="row row-cols-5 g-3 tutorial-grid">
+                    <div class="row row-cols-8 g-3 tutorial-grid">
 ++++
 
 :card-id: 0
-:card-title: Algebra
+:card-title: ring
 :card-disabled:
 include::grid-button.adoc[]
 
 :card-id: 1
-:card-title: Instructions
+:card-title: inst
 :card-disabled:
 include::grid-button.adoc[]
 
 :card-id: 2
-:card-title: Control Structures
+:card-title: split/merge
 :card-disabled:
 include::grid-button.adoc[]
 
 :card-id: 3
-:card-title: Large Language Models
+:card-title: llm
 :card-disabled:
 include::grid-button.adoc[]
 
 :card-id: 4
-:card-title: Instruction Sets
+:card-title: instset
 :card-disabled:
 include::grid-button.adoc[]
 
 :card-id: 5
-:card-title: Fail and Catch
+:card-title: fail/catch
 :card-disabled:
 include::grid-button.adoc[]
 
 :card-id: 6
-:card-title: Types
+:card-title: type
 :card-disabled:
 include::grid-button.adoc[]
 
 :card-id: 7
-:card-title: Console
+:card-title: console
 :card-disabled:
 include::grid-button.adoc[]
 
 :card-id: 8
-:card-title: Poly Obj
+:card-title: poly
 :card-disabled:
 include::grid-button.adoc[]
 
 :card-id: 9
-:card-title: Uniform Resource Identifiers
+:card-title: uri
 :card-disabled:
 include::grid-button.adoc[]
 
 :card-id: 10
-:card-title: Q Processors
+:card-title: qproc
 :card-disabled:
 include::grid-button.adoc[]
 
 :card-id: 11
-:card-title: MQTT Space
+:card-title: mqtt
 :card-disabled:
 include::grid-button.adoc[]
 
 :card-id: 12
-:card-title: FS Space
+:card-title: fs
 :card-disabled:
 include::grid-button.adoc[]
 
 :card-id: 13
-:card-title: The Router
+:card-title: router
 :card-disabled: disabled
 include::grid-button.adoc[]
 
 :card-id: 14
-:card-title: Grph Space
+:card-title: grph
 :card-disabled:
 include::grid-button.adoc[]
 
 :card-id: 15
-:card-title: Coefficients
+:card-title: c
 :card-disabled: disabled
 include::grid-button.adoc[]
 
 :card-id: 16
-:card-title: The Router
+:card-title: router
 :card-disabled: disabled
 include::grid-button.adoc[]
 
 :card-id: 17
-:card-title: Parallelization
+:card-title: thread
 :card-disabled: disabled
 include::grid-button.adoc[]
 
 :card-id: 18
-:card-title: Serial Space
+:card-title: serial
 :card-disabled: disabled
 include::grid-button.adoc[]
 
 :card-id: 19
-:card-title: HTTP Space
+:card-title: web
 :card-disabled:
 include::grid-button.adoc[]
 
 :card-id: 20
-:card-title: Dcmnt Space
+:card-title: dcmnt
 :card-disabled:
 include::grid-button.adoc[]
 
 :card-id: 21
-:card-title: Tble Space
+:card-title: tble
 :card-disabled:
 include::grid-button.adoc[]
 
 :card-id: 22
-:card-title: Boot
+:card-title: boot
 :card-disabled:
 include::grid-button.adoc[]
 
 :card-id: 23
-:card-title: RDF Space
+:card-title: rdf
 :card-disabled:
 include::grid-button.adoc[]
 
 ++++
                     </div>
-                </div>
-                <!-- Theory Slide -->
-                <div class="carousel-item" data-topic="Theory">
-                    <div class="row row-cols-4 g-3 tutorial-grid">
-++++
-
-:card-id: 0
-:card-title: Algebra
-:card-disabled:
-include::grid-button.adoc[]
-
-:card-id: 6
-:card-title: Types
-:card-disabled:
-include::grid-button.adoc[]
-
-:card-id: 8
-:card-title: Poly Obj
-:card-disabled:
-include::grid-button.adoc[]
-
-:card-id: 10
-:card-title: Q Processors
-:card-disabled:
-include::grid-button.adoc[]
-
-:card-id: 15
-:card-title: Coefficients
-:card-disabled: disabled
-include::grid-button.adoc[]
-
-:card-id: 9
-:card-title: Uniform Resource Identifiers
-:card-disabled:
-include::grid-button.adoc[]
-
-:card-id: 23
-:card-title: RDF Space
-:card-disabled:
-include::grid-button.adoc[]
-
-++++
-                        <div class="col"></div>
-                        <div class="col"></div>
-                        <div class="col"></div>
-                    </div>
-                </div>
-                <!-- Core Slide -->
-                <div class="carousel-item" data-topic="Core">
-                    <div class="row row-cols-4 g-3 tutorial-grid">
-++++
-
-:card-id: 1
-:card-title: Instructions
-:card-disabled:
-include::grid-button.adoc[]
-
-:card-id: 2
-:card-title: Control Structures
-:card-disabled:
-include::grid-button.adoc[]
-
-:card-id: 5
-:card-title: Fail and Catch
-:card-disabled:
-include::grid-button.adoc[]
-
-:card-id: 17
-:card-title: Parallelization
-:card-disabled: disabled
-include::grid-button.adoc[]
-
-:card-id: 13
-:card-title: The Router
-:card-disabled: disabled
-include::grid-button.adoc[]
-
-:card-id: 16
-:card-title: The Router
-:card-disabled: disabled
-include::grid-button.adoc[]
-
-++++
-                        <div class="col"></div>
-                        <div class="col"></div>
-                    </div>
-                </div>
-                <!-- Space Slide -->
-                <div class="carousel-item" data-topic="Space">
-                    <div class="row row-cols-4 g-3 tutorial-grid">
-++++
-
-:card-id: 14
-:card-title: Grph Space
-:card-disabled:
-include::grid-button.adoc[]
-
-:card-id: 12
-:card-title: FS Space
-:card-disabled: disabled
-include::grid-button.adoc[]
-
-:card-id: 18
-:card-title: Serial Space
-:card-disabled: disabled
-include::grid-button.adoc[]
-
-:card-id: 19
-:card-title: HTTP Space
-:card-disabled:
-include::grid-button.adoc[]
-
-:card-id: 11
-:card-title: MQTT Space
-:card-disabled:
-include::grid-button.adoc[]
-
-++++
-                        <div class="col"></div>
-                        <div class="col"></div>
-                    </div>
-                </div>
-                <!-- InstSet Slide -->
-                <div class="carousel-item" data-topic="InstSet">
-                    <div class="row row-cols-4 g-3 tutorial-grid">
-++++
-
-:card-id: 4
-:card-title: Instruction Sets
-:card-disabled:
-include::grid-button.adoc[]
-
-:card-id: 3
-:card-title: Large Language Models
-:card-disabled:
-include::grid-button.adoc[]
-
-:card-id: 7
-:card-title: Console
-:card-disabled:
-include::grid-button.adoc[]
-
-++++
-                        <div class="col"></div>
-                        <div class="col"></div>
-                        <div class="col"></div>
-                        <div class="col"></div>
-                        <div class="col"></div>
-                    </div>
-                </div>
-            </div>
-            <button class="carousel-control-prev" type="button" data-bs-target="#tutorial-carousel" data-bs-slide="prev" style="width: 2%; filter: invert(100%);">
-                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                <span class="visually-hidden">Previous</span>
-            </button>
-            <button class="carousel-control-next" type="button" data-bs-target="#tutorial-carousel" data-bs-slide="next" style="width: 2%; filter: invert(100%);">
-                <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                <span class="visually-hidden">Next</span>
-            </button>
-        </div>
     </div>
 <hr/>
 <div class="d-grid gap-2 d-md-flex justify-content-md-end" id="pdf-export-container" style="display: none;">

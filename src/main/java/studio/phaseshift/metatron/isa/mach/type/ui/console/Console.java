@@ -111,8 +111,6 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     private static Terminal terminal;
     private final LineReader reader;
     private final StatusLine status;
-    @JRecElement(key="menu", rng="/m/rec")
-    public ColonMenu colonMenu = new ColonMenu(this);
     private final static ConfigurationPath configurations = new ConfigurationPath(
             Paths.get("conf"),                                     // application-wide settings
             Paths.get(System.getProperty("user.home"), ".metatron") // user-specific settings
@@ -133,16 +131,24 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     private static final long PANE_RENDER_THROTTLE_MS = 80;
     private volatile long lastPaneRenderMs = 0;
 
-    /** While true, non-active-pane rendering is deferred until the keyboard has been
+    /**
+     * While true, non-active-pane rendering is deferred until the keyboard has been
      * idle for {@link #INPUT_IDLE_THRESHOLD_MS}.  Set at the top of the REPL loop,
-     * cleared when readLine() returns. */
+     * cleared when readLine() returns.
+     */
     private volatile boolean inReadLine = false;
-    /** Timestamp of the last detected keystroke (buffer-length change). */
+    /**
+     * Timestamp of the last detected keystroke (buffer-length change).
+     */
     private volatile long lastKeyActivityMs = 0;
-    /** Snapshot of buffer length used to detect keystrokes via polling. */
+    /**
+     * Snapshot of buffer length used to detect keystrokes via polling.
+     */
     private volatile int lastBufferLength = 0;
     private volatile boolean pendingPaneFlush = false;
-    /** Milliseconds of keyboard inactivity after which non-active panes may render. */
+    /**
+     * Milliseconds of keyboard inactivity after which non-active panes may render.
+     */
     private static final long INPUT_IDLE_THRESHOLD_MS = 500;
 
     // Language mode for multi-language support
@@ -168,6 +174,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
             .isaPredicate(rec())
             .constructor(instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(CONSOLE_TID), lst(T(REC_TID)), (lhs, inst) -> {
                 final Console console = new Console(inst.arg(0).as(), inst.arg(0).vid());
+                new ColonMenu(console).attach(rec(), "help", "quit", "clear", "header", "log", "check", "top", "chat", "connect");
                 BootLoader.getExecutor().submit(console);
                 return console;
             })).create();
@@ -890,13 +897,13 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                 // calls accept-line to break out of readLine so the next iteration can
                 // start fresh in the new pane).  Skip evaluation entirely.
                 if (line.isEmpty()) continue;
-                if (line.startsWith(":")) {
+                if (line.startsWith(COLON)) {
                     final String cmd = line.substring(1).trim();
                     final int spaceIdx = cmd.indexOf(' ');
                     final String cmdName = spaceIdx > 0 ? cmd.substring(0, spaceIdx) : cmd;
                     final String cmdArgs = spaceIdx > 0 ? cmd.substring(spaceIdx + 1).trim() : "";
-                    if (this.colonMenu.has(cmdName)) {
-                        this.colonMenu.at(cmdName).apply(cmdArgs.isEmpty() ? noobj() : str(cmdArgs));
+                    if (!this.at("menu" + "/" + cmdName).isNoObj()) {
+                        this.at("menu" + "/" + cmdName).apply(cmdArgs.isEmpty() ? noobj() : str(cmdArgs));
                     }
                 } else {
                     this.status.startTimer();
@@ -1103,42 +1110,46 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
             getKeyMap().bind((Widget) () -> {
                 try {
                     final String bufferText = this.reader.getBuffer().toString();
-                    // Check if buffer ends with '.' for instruction completion
-                    if (bufferText.trim().endsWith(".")) {
-                        final Obj parsed = ObjmtronSerializer.parse(bufferText.trim().substring(0, bufferText.trim().length() - 1));
-                        if (parsed.isCode()) {
-                            terminal.writer().write("\n");
-                            final InstSelector selector = new InstSelector(parsed.resolve(noobj()).as(), bufferText);
-                            if (selector.hasInstructions()) {
-                                // Constrain the selector to the active pane when in split mode
+                    if (bufferText.trim().startsWith(COLON)) {
+                        // add completer on : colon menu items
+                    } else {
+                        // Check if buffer ends with '.' for instruction completion
+                        if (bufferText.trim().endsWith(".")) {
+                            final Obj parsed = ObjmtronSerializer.parse(bufferText.trim().substring(0, bufferText.trim().length() - 1));
+                            if (parsed.isCode()) {
+                                terminal.writer().write("\n");
+                                final InstSelector selector = new InstSelector(parsed.resolve(noobj()).as(), bufferText);
+                                if (selector.hasInstructions()) {
+                                    // Constrain the selector to the active pane when in split mode
+                                    if (Console.this.splitMode && Console.this.activePane != null) {
+                                        final int[] pos = Console.this.calculatePanePosition(Console.this.activePane);
+                                        if (pos != null) selector.setPaneBounds(pos[0], pos[1], pos[2], pos[3]);
+                                    }
+                                    Utilities.runCursorLessWidget(selector, true);
+                                    // Restore the full pane layout after the widget closes
+                                    if (Console.this.splitMode) {
+                                        Console.this.renderPanes(false); // restore after fullscreen widget
+                                    }
+                                }
+                            }
+                        } else {
+                            // Original behavior: show explain widget for code
+                            final Obj code = ObjmtronSerializer.parse(bufferText);
+                            if (code.isCode()) {
+                                terminal.writer().write("\n");
+                                final Explain explain = new Explain(code.as());
+                                // Constrain the widget to the active pane when in split mode
                                 if (Console.this.splitMode && Console.this.activePane != null) {
                                     final int[] pos = Console.this.calculatePanePosition(Console.this.activePane);
-                                    if (pos != null) selector.setPaneBounds(pos[0], pos[1], pos[2], pos[3]);
+                                    if (pos != null) explain.setPaneBounds(pos[0], pos[1], pos[2], pos[3]);
                                 }
-                                Utilities.runCursorLessWidget(selector, true);
+                                Utilities.runCursorLessWidget(explain, true);
                                 // Restore the full pane layout after the widget closes
                                 if (Console.this.splitMode) {
                                     Console.this.renderPanes(false); // restore after fullscreen widget
                                 }
+                                redrawBuffer();
                             }
-                        }
-                    } else {
-                        // Original behavior: show explain widget for code
-                        final Obj code = ObjmtronSerializer.parse(bufferText);
-                        if (code.isCode()) {
-                            terminal.writer().write("\n");
-                            final Explain explain = new Explain(code.as());
-                            // Constrain the widget to the active pane when in split mode
-                            if (Console.this.splitMode && Console.this.activePane != null) {
-                                final int[] pos = Console.this.calculatePanePosition(Console.this.activePane);
-                                if (pos != null) explain.setPaneBounds(pos[0], pos[1], pos[2], pos[3]);
-                            }
-                            Utilities.runCursorLessWidget(explain, true);
-                            // Restore the full pane layout after the widget closes
-                            if (Console.this.splitMode) {
-                                Console.this.renderPanes(false); // restore after fullscreen widget
-                            }
-                            redrawBuffer();
                         }
                     }
                 } catch (final Exception e) {

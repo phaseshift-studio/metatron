@@ -313,7 +313,6 @@ public final class QCollection {
                 .preWrite((vid, obj) -> {
                     final Obj subscription;
                     final fURI subID = vid.qValue(SUBQ, fURI.class);
-                    obj.logger().info("removing: %s", subID);
                     if (obj.isNoObj() || obj.isNone()) {
                         subscription = noobj();
                         subscriptions.lstValue().removeIf(existingSub ->

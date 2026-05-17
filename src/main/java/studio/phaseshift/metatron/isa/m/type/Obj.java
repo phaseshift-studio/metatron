@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.impl.*;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.mach.type.Monad;
 import studio.phaseshift.metatron.isa.mach.type.PCMonad;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.web.type.Content;
@@ -42,8 +43,7 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static java.lang.System.lineSeparator;
-import static studio.phaseshift.metatron.Tokens.BLOCK;
-import static studio.phaseshift.metatron.Tokens.MONAD;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
@@ -74,7 +74,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer.OBJ_SERIAL_TID;
+import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MONAD_TID;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MONAD_TYPE;
+import static studio.phaseshift.metatron.isa.mach.type.monad.BasicPCMonad.pcmonad;
 import static studio.phaseshift.metatron.util.CommonUtil.indent;
 import static studio.phaseshift.metatron.util.CommonUtil.nullOrElse;
 import static studio.phaseshift.metatron.util.Tuple.Pair;
@@ -977,24 +979,22 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                             "any objs", "the objs appended to the arg objs", Map.of(jnt(0), "the objs to append"), "an append function \\(f(X)\\to X\\)"),
                     docWrap(instC(AS_INST_TID.dom(A).rng(A), lst(T(A)), (lhs, inst) -> lhs.as(inst.arg(0).asType())),
                             "any obj", "the lhs obj as the arg type", Map.of(jnt(0), "the type to construct from the lhs"), "a type construction function \\(f(x)\\to x\\)"),
-                  /*  instC(REPEAT_INST_TID.dom(A).rng(A.maybeSome()).q(MONAD, null), lst(ALL_TYPE, ALL_TYPE), (lhs, inst) -> {
+                    instC(REPEAT_INST_TID.dom(A).rng(A.maybeSome()).addQ(MONAD), rec(uri(CODE), T(A.maybeSome()), uri(UNTIL), BOOL_TYPE), (lhs, inst) -> {
                         try {
-                            Obj current = lhs.asMonad().obj();
-                            if (current.isNoObj()) return lhs.asMonad().nextInst();
+                            final PCMonad monad = lhs.isMonad() ? lhs.asMonad() : pcmonad(lhs);
+                            if (monad.isNoObj() || monad.obj().isNoObj()) return monad.nextInst();
                             final Obj breakPredicate = inst.arg(1);
-                            if (breakPredicate.tid().dom().test(MACH_MONAD_TID)) {
-                                if (breakPredicate.apply(lhs).booleanCheck())
-                                    return lhs.asMonad().updateLoop(0).nextInst();
-                            } else if (breakPredicate.apply(current).booleanCheck())
-                                return lhs.asMonad().updateLoop(0).nextInst();
+                            if (breakPredicate.apply(monad.obj()).booleanCheck()) {
+                                return monad.updateLoop(0).nextInst();
+                            }
                             final Obj repeatedApply = inst.arg(0);
-                            return lhs.asMonad().updateLoop(1).obj(repeatedApply.apply(current));
+                            return monad.updateLoop(1).obj(repeatedApply.apply(monad.obj()));
                         } catch (final Exception e) {
                             e.printStackTrace();
                             throw e;
                         }
-                    }),*/
-                    instC(REPEAT_INST_TID.dom(A).rng(A.maybeSome()).addQ(MONAD), lst(ALL_TYPE, ALL_TYPE), (lhs, inst) -> {
+                    }),
+                   /* instC(REPEAT_INST_TID.dom(A).rng(A.maybeSome()).addQ(MONAD), lst(ALL_TYPE, ALL_TYPE), (lhs, inst) -> {
                         Obj current = ((PCMonad) lhs).obj();
                         final Obj repeatedApply = inst.arg(0);
                         final int times = inst.arg(1).apply(current).intValue().intValue();
@@ -1005,7 +1005,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                                     objs(current.stream().map(repeatedApply::apply));
                         }
                         return current;
-                    }),
+                    }),*/
                     instC(AUTO_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL.maybe())), (lhs, inst) -> inst.arg(0).apply(lhs)),
                     /*docWrap(*/instC(AUTO_FROM_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL.maybe()), T(ALL.maybe())), (lhs, inst) -> (!inst.arg(1).isNoObj() ? inst.arg(1) : Router.readFromSpace(inst.arg(0).uriValue()).autoResolve(lhs)).vid(null)),
                     //"any obj", "the obj referred to by the uri arg", Map.of(jnt(0), "the uri to dereference"),"like from(uri), except that dereferencing happens immediately upon accessing the instruction (no inst apply required)."),
@@ -1025,7 +1025,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                         if (pattern.hasPattern()) {
                             return objs(Router.readFromSpace(pattern.asBranch()).stream().map(x -> x.asRel().second().selfVID(x.asRel().first().uriValue())));
                         } else
-                           return Router.readFromSpace(pattern).selfVID(pattern);
+                            return Router.readFromSpace(pattern).selfVID(pattern);
                     }),
                     docWrap(instC(ID_INST_TID.dom(A).rng(A), lst(), (lhs, inst) -> lhs),
                             "an rhs obj", "an lhs obj", Map.of(), "the obj identity function \\(f(x)\\to x\\)"),

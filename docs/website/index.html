@@ -901,10 +901,15 @@ body {
 .conum + b {
     float: right !important;
     width: 26px !important;
-    font-size: 12px !important;
     height: 20px !important;
+    font-size: 12px !important;
     line-height: 20px !important;
     text-align: center !important;
+    background: var(--mred) !important;
+    color: var(--myellow);
+    font-weight: bold;
+    border-radius: 100px;
+    transform: translateX(-5px);
 }
 
 pre.highlight {
@@ -1284,7 +1289,7 @@ th {
     margin-bottom: 2em;
 }
 
-.hljs-mtron-doc-callout, .conum + b {
+.hljs-mtron-doc-callout {
     display: inline-block;
     color: var(--myellow);
     background: var(--mred) !important;
@@ -1306,12 +1311,6 @@ th {
 
 strong {
     color: var(--mred);
-}
-
-.conum + b {
-    transform: translateX(-5px);
-    position: static;
-    color: var(--myellow);
 }
 
 .hljs-fos-docs-if-else-then-case-do,

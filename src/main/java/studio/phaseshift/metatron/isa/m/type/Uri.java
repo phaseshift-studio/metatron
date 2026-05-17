@@ -31,7 +31,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.Tokens.C;
+import static studio.phaseshift.metatron.Tokens.COEFF;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.NOOBJ;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.docWrap;
@@ -74,7 +74,7 @@ public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
             return jnt(this.uriValue().port());
         else if (k.equals(f(PATH)))
             return lst(this.uriValue().path().stream().map(MUri::uri).map(Obj::<Obj>as).toList());
-        else if (k.equals(f(C)))
+        else if (k.equals(f(COEFF)))
             return rec(
                     MIN, null == this.uriValue().c().min() ? noobj() : jnt((Long) this.uriValue().c().min()),
                     MAX, null == this.uriValue().c().max() ? noobj() : jnt((Long) this.uriValue().c().max()));
@@ -321,7 +321,7 @@ public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
                                 HOST, lhsUri.host() == null ? noobj() : uri(lhsUri.host()),
                                 PORT, lhsUri.port() == -1 ? noobj() : jnt(lhsUri.port()),
                                 PATH, lhsUri.path().isEmpty() ? noobj() : lst(lhsUri.path().stream().map(MUri::uri)),
-                                C, rec(MIN, null == lhsUri.c().min() ? noobj() : jnt(lhsUri.c().min()), MAX, null == lhsUri.c().max() ? noobj() : jnt(lhsUri.c().max())),
+                                COEFF, rec(MIN, null == lhsUri.c().min() ? noobj() : jnt(lhsUri.c().min()), MAX, null == lhsUri.c().max() ? noobj() : jnt(lhsUri.c().max())),
                                 QPROC, lhsUri.qMap().isEmpty() ? noobj() : rec(lhsUri.qMap().entrySet().stream().map(kv -> rel(uri(kv.getKey()), uri(kv.getValue())))));
                     }),
                     instC(REVERSE_INST_TID.dom(URI_TID).rng(URI_TID), lst(), (lhs, inst) -> lhs.jvm(lhs.uriValue().path(lhs.asUri().uriValue().path().reversed()))),
@@ -415,7 +415,7 @@ public interface Uri extends Mono, Ring.O<Uri>, Comparable<Uri> {
                         case PORT -> lhs.uriValue().port();
                         case AUTHORITY -> lhs.uriValue().authority();
                         case PATH -> lhs.uriValue().pathString();
-                        case C -> lst(jnt(lhs.uriValue().c().min()), jnt(lhs.uriValue().c().max()));
+                        case COEFF -> lst(jnt(lhs.uriValue().c().min()), jnt(lhs.uriValue().c().max()));
                         case QPROC -> lhs.uriValue().qMap().entrySet().stream()
                                 .map(kv -> rel(MObjFactory.single().toObjFromString(kv.getKey()), MObjFactory.single().toObjFromString(kv.getValue())))
                                 .collect(new CommonUtil.RecCollector());

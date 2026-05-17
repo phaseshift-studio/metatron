@@ -72,63 +72,24 @@
                 tokens.push(match[1] || match[2] || match[0]);
             }
 
-            var firstMatchingSlide = -1;
-            $('.carousel-item').each(function (slideIndex) {
-                var slideHasVisible = false;
-                $(this).find('.tutorial-grid button').each(function () {
-                    var btnText = $(this).text().toLowerCase();
-                    var targetId = $(this).attr('data-bs-target');
-                    var contentText = $(targetId).text().toLowerCase();
-                    var fullSearchableText = btnText + " " + contentText;
-                    
-                    var toggle = true;
-                    if (tokens.length > 0) {
-                        // All tokens must be present (AND logic)
-                        for (var i = 0; i < tokens.length; i++) {
-                            if (fullSearchableText.indexOf(tokens[i]) === -1) {
-                                toggle = false;
-                                break;
-                            }
+            $('.tutorial-grid button').each(function () {
+                var btnText = $(this).text().toLowerCase();
+                var targetId = $(this).attr('data-bs-target');
+                var contentText = $(targetId).text().toLowerCase();
+                var fullSearchableText = btnText + " " + contentText;
+
+                var toggle = true;
+                if (tokens.length > 0) {
+                    for (var i = 0; i < tokens.length; i++) {
+                        if (fullSearchableText.indexOf(tokens[i]) === -1) {
+                            toggle = false;
+                            break;
                         }
                     }
-
-                    $(this).toggle(toggle);
-                    if (toggle) slideHasVisible = true;
-                });
-
-                if (slideHasVisible && firstMatchingSlide === -1) {
-                    firstMatchingSlide = slideIndex;
                 }
+
+                $(this).toggle(toggle);
             });
-
-            if (tokens.length > 0 && firstMatchingSlide !== -1) {
-                // If there's a match, prefer jumping to a topic slide (index > 0)
-                // if it's the first match, but if we only match in 'All', that's fine too.
-                // Actually, the current logic finds the FIRST matching slide.
-                // Since 'All' is index 0, it will always match 'All' first if it matches anything.
-                // We might want to jump to the specific topic instead if it's not 'All'.
-                
-                var bestMatch = firstMatchingSlide;
-                if (bestMatch === 0) {
-                    // Look if there's a match in subsequent slides (the specific topics)
-                    $('.carousel-item').each(function(idx) {
-                        if (idx > 0) {
-                            var matchInTopic = false;
-                            $(this).find('.tutorial-grid button').each(function() {
-                                if ($(this).css('display') !== 'none') {
-                                    matchInTopic = true;
-                                    return false;
-                                }
-                            });
-                            if (matchInTopic) {
-                                bestMatch = idx;
-                                return false;
-                            }
-                        }
-                    });
-                }
-                $('#tutorial-carousel').carousel(bestMatch);
-            }
         });
 
         // Clear search button functionality
@@ -137,18 +98,6 @@
             $('#lecture-search').val('').keyup().focus();
         });
 
-        // CAROUSEL JUMP BUTTONS
-        $('.carousel-jump').on('click', function() {
-            var slideTo = $(this).attr('data-bs-slide-to');
-            $('#tutorial-carousel').carousel(parseInt(slideTo));
-        });
-
-        // UPDATE ACTIVE BUTTON ON CAROUSEL SLIDE
-        $('#tutorial-carousel').on('slid.bs.carousel', function (e) {
-            var index = e.to;
-            $('.carousel-jump').removeClass('active');
-            $('.carousel-jump[data-bs-slide-to="' + index + '"]').addClass('active');
-        });
 
         // REORDER PANELS BY CLICK ORDER
         $('.tutorial-grid button').on('click', function () {
@@ -195,13 +144,6 @@
                         // Only click if it's not already open (aria-expanded="false")
                         if ($(this).attr('aria-expanded') === 'false') {
                             $(this).click();
-                        }
-                        
-                        // Also jump to the slide containing this button if it's not the active slide
-                        var $carouselItem = $(this).closest('.carousel-item');
-                        if ($carouselItem.length > 0 && !$carouselItem.hasClass('active')) {
-                            var slideIndex = $carouselItem.index();
-                            $('#tutorial-carousel').carousel(slideIndex);
                         }
                         
                         found = true;

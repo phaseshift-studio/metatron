@@ -67,13 +67,20 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class ColonMenu extends MRec {
+public final class ColonMenu extends MRec {
 
     public static final fURI COLON_MENU_TID = CONSOLE_TID.extend("colon_menu");
-
-    private final Console console;
     private final GraphittyLogger LOG = Graphitty.log(this);
-
+    private final Console console;
+    
+    public Rec attach(final Rec menuRec, final String... menuItemsToAdd) {
+        for (final String item : menuItemsToAdd) {
+            menuRec.at(item, this.at(item).clone(), MUTABLE);
+        }
+        return this.console.at("menu", menuRec, MUTABLE);
+    }
+    
+    
     public ColonMenu(final Console console) {
         super(mutableMap(uri("console"), auto_from_(console.vid()).tryToInst()), COLON_MENU_TID, console.vid().extend("colon_menu"));
         this.console = console;

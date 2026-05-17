@@ -169,10 +169,13 @@ public interface PCMonad extends Monad<Lst> {
         if (this.halted())
             return this;
         final boolean monadicInst = this.inst().tid().hasQ(MONAD);
-        final Obj nextObj = this.inst().apply(monadicInst ?
-                this :
+        //if(monadicInst)
+        //   System.out.println("MONADIC INST: " + this.inst() + ":::" + this);
+        final Obj nextObj = this.inst().apply(monadicInst ? 
+                this :        // don't unwrap monad (lhs)
                 this.obj());
-        return this.next(nextObj);
+        return monadicInst ? nextObj.asMonad() : this.next(nextObj);
+        //return this.next(monadicInst ? nextObj.asMonad().obj(): nextObj); // wrap monad (rhs)
     }
 
     class Helpers {

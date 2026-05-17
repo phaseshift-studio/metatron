@@ -1,0 +1,22 @@
+[discrete]
+== thread
+
+mtron's threading model is a function of the underlying machine used to evaluate the program. However, there does exist types and instructions that express concurrent behavior, agnostic to mechanistic underpinnings.
+
+The types invovled in threading are `thread` (unrefined type) and it's two refinements: 'virtual` and `core`.
+
+[mtron]
+----
+*virtual
+*core
+----
+
+A https://en.wikipedia.org/wiki/Virtual_thread[virtual thread] is a lightweight, serializable cooperative concurrency structure that shares a cpu's resources with other executing virtual threads. On the other hand, core threads (aka OS threads) are bound to a processor core of the underlying physical (or virtualized) machine.
+
+Threads encapsulate `code` that is evaluating independent of the thread that spawned it. When the `code` completes, the thread stores the resultant obj (the rhs obj of the code). Threads have similar semantics to https://en.wikipedia.org/wiki/Futures_and_promises[futures] in that they are objs that can be interacted with, but their value (the result of their code's computation) is accessed either through blocking, subscribing, polling, or otherwise ignoring (implicitly accessing value through side effects).
+
+[source,mtron]
+----
+virtual::[code=>repeat(code=>+1,until=>?>=2026)]
+----
+

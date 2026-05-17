@@ -164,7 +164,7 @@ farm:animals/2 -> chicken::[name=>'cluck',age=>3,shelter=>!*loc:barns/1]        
 ==== bson dbref encoding
 metatron serializes `auto_from` references as native
 https://www.mongodb.com/docs/manual/reference/database-references/#dbrefs[MongoDB DBRef] documents.
-A DBRef is a plain BSON `\{$ref, $id\}` object — no custom fields, no proprietary envelope — so collections with references remain fully compatible with external MongoDB tooling.
+A DBRef is a plain BSON `{$ref, $id}` object (no custom fields, no proprietary envelope) so collections with references remain fully compatible with external MongoDB tooling.
 
 **intra-space references** store a bare collection name in `$ref` and the document id in `$id`:
 
@@ -178,7 +178,7 @@ A DBRef is a plain BSON `\{$ref, $id\}` object — no custom fields, no propriet
 }
 ----
 
-**cross-space references** prefix the `$ref` field with the target scheme — the colon is the
+**inter-space references** prefix the `$ref` field with the target scheme — the colon is the
 discriminator that tells the serializer to route through metatron's router rather than the local database:
 
 [source,json,role="center-code"]

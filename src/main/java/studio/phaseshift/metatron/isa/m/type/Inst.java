@@ -37,8 +37,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import static studio.phaseshift.metatron.Tokens.LHS;
-import static studio.phaseshift.metatron.Tokens.MONAD;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
@@ -186,6 +185,7 @@ public interface Inst extends Call {
         return this.tid().basePath().equals(BLOCK_INST_TID) ||
                 // this.tid().basePath().equals(AUTO_TID) ||
                 this.tid().basePath().equals(FORK_INST_TID) ||
+                this.tid().basePath().equals(THREAD_INST_TID) ||
                 this.tid().basePath().equals(ORDER_INST_TID) ||
                 this.tid().basePath().equals(AS_INST_TID) ||
                 this.tid().basePath().equals(WITHIN_INST_TID) ||
@@ -289,7 +289,7 @@ public interface Inst extends Call {
     default Obj apply(final Obj lhs) {
         final boolean isMonadicInst = this.tid().hasQ(MONAD);
         //final String monadUpDown = this.tid().queryValue(fURI.of(MONAD), String.class);
-        Obj clhs = FutureObj.resolveFuture(isMonadicInst ? lhs.asMonad() : lhs);
+        Obj clhs = lhs;
         //boolean reself = !this.args().isEmpty() && this.args().argElements().noneMatch(e -> e.vid() != null || e.isObjCall());
         Inst cinst = this.resolve(clhs); // TODO: this isn't a general solution (multi slotted args won't work).
         //if (false && reself) // TODO: why do type predicates get rewritten?
@@ -302,7 +302,7 @@ public interface Inst extends Call {
 
         Obj rhs;
         boolean modulateC = false;
-        if (TypeCheck.inst_dom.enabled() && !lhs.isFail() && !lhs.isCaughtFail() && !clhs.test(cinst.dom()) && clhs.unique()) {
+        if (TypeCheck.inst_dom.enabled() && !isMonadicInst && !lhs.isFail() && !lhs.isCaughtFail() && !clhs.test(cinst.dom()) && clhs.unique()) {
             // if (clhs.uniqueC().isOne() && !clhs.c().isOne()) { // && cinst.dom().c().within(cInt.SOME())) {
             clhs = clhs.c(cInt::one);
             cinst = this.resolve(clhs);
@@ -326,7 +326,7 @@ public interface Inst extends Call {
                 Router.stack().push(cinst.args());
                 //Router.stack().push(rec("lhs",clhs));
                 try {
-                    rhs = Objs.trySingleton(FutureObj.resolveFuture(cinst.f().apply(isMonadicInst ? lhs.asMonad().obj(clhs) : clhs, cinst)));
+                    rhs = Objs.trySingleton(FutureObj.resolveFuture(cinst.f().apply(clhs, cinst)));
                     rhs = null == rhs ? noobj() : rhs;
                     if (rhs.isUncaughtFail())
                         return rhs;
@@ -350,7 +350,7 @@ public interface Inst extends Call {
                 if (e.getCause() != null)
                     rhs = fail(e.getCause(), (Fail) rhs);
             }
-            if (TypeCheck.inst_rng.enabled() && !rhs.isType() && !rhs.isFail() && !clhs.isCaughtFail() && !rhs.test(cinst.rng()))
+            if (TypeCheck.inst_rng.enabled() && !isMonadicInst && !rhs.isType() && !rhs.isFail() && !clhs.isCaughtFail() && !rhs.test(cinst.rng()))
                 //rhs = fail(MTronException.of("inst resolution failure: %s", cinst, fail(MTronException.of("rhs does not match inst range:\n\t%s", Poly.Helper.diffObjRecursion(rhs, cinst.rng())))));
                 rhs = fail(MTronException.of("rhs does not match inst range:\n\t%s", Poly.Helper.diffObjRecursion(rhs, cinst.rng())));
         } else {

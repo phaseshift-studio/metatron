@@ -294,7 +294,7 @@ public class machInstSet extends AbstractInstSet {
                         }),
                         instC(THREAD_INST_TID.dom(ALL).rng(MACH_THREAD_TID), lst(T(ALL)), (lhs, inst) -> {
                             final fURI baseVID = f("/sys/thread");
-                            final VirtualThread thread = new VirtualThread(mutableMap(uri(CODE), inst.arg(0)), MACH_VIRTUAL_THREAD_TID, CommonUtil.mintShortUUID(baseVID, true));
+                            final VirtualThread thread = new VirtualThread(mutableMap(uri(START), lhs.clone(), uri(CODE), inst.arg(0)), MACH_VIRTUAL_THREAD_TID, CommonUtil.mintShortUUID(baseVID, true));
                             thread.apply(lhs);
                             return thread;
                         }),

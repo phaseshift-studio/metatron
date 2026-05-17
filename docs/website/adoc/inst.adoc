@@ -320,7 +320,7 @@ Finally, a degenerate anonymous `inst` with no specified variable frame is simpl
 
 
 [indent=0,subs="verbatim,attributes",role="secondary"]
-.contextualargs
+.contextual args
 =====
 
 ++++
@@ -371,8 +371,8 @@ is_divisible -> |is_divisble?bool<=int(by?int=>is(neq(0)).else(print('error').ma
 === dom/rng coefficients
 
 Every `inst` has a `dom` and `rng` encoded in their key/value query parameters. The dom/rng query parameter values are
-any fURI minus query parameters (ie. recursive `?`s are not allowed). What is possible is the specification of 
-a type structure, a coefficient, and polymorphic generics.
+any fURI minus query parameters (ie. recursive `?` is not allowed). What is possible is the specification of 
+a type structure, a coefficient, and polymorphic https://en.wikipedia.org/wiki/Generic_programming[generics].
 
 [source,mtron,role="center-code"]
 ----
@@ -385,7 +385,7 @@ a type structure, a coefficient, and polymorphic generics.
 ----
 
 
-An `inst` to create `int` trpls can be written:
+An `inst` to create `int` triples can be written:
 
 [mtron]
 ----
@@ -395,17 +395,29 @@ trpl -> |inst?lst<=int{3}(){>-[,]}
 
 [NOTE]
 --
-The `|` token is synatic sugar for the `block` inst. A blocked instruction prevents the application of the `lhs` to the `inst` args and `inst` code.
+The `|` token is https://en.wikipedia.org/wiki/Syntactic_sugar[syntactic sugar] for the `block` inst. 
+
+[source,mtron]
+----
+block?A<=#{?}(A::T)
+----
+
+A blocked instruction prevents the application of the `lhs` to the `inst` args and `inst` code.
 This ensures the uri `trpl` is not applied to the `inst` prior to the uri being bound as the reference (`->`). Without block, the result of applying `trpl` to `inst` would be what `trpl` is bound to. In this particular instance, `trpl` would reference a `fail` obj.
 
 [mtron]
 ----
-trpl -> |inst?lst[int,int,int]<=int{3}(){>-[,]}
-*trpl
+[ERROR] trpl -> inst?lst[int,int,int]<=int{3}(){>-[,]}    [-- <1> --]
+trpl -> |inst?lst[int,int,int]<=int{3}(){>-[,]}           [-- <2> --]
+*trpl                                                     [-- <3> --]
 ----
+<1> if the `inst` specification is not blocked, then `trple` is the failure.
+<2> the `inst` specification blocked, enabling `trple` to be bound to the spec.
+<3> dereferencing `trple` yields the `inst` specification.  
+
 --
 
-A stricter representation leveraging polymorphic type constructions is expressed as follows:
+A stricter, more specific expression of `trpl` tha leverages https://en.wikipedia.org/wiki/Polymorphism_(computer_science)[polymorphic] type constructions is as follows:
 
 [mtron]
 ----

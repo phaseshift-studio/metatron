@@ -77,17 +77,18 @@ public class InstTest extends AbstractObjTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "1         % test?str<=int()                  % test()           % test?str<=int()",
-            "1         % test?str<=A()                    % test()           % test?str<=int()",
-            "1         % test?A<=A()                      % test()           % test?int<=int()",
-            "1         % test?A<=A(A::T)                  % test(2)          % test?int<=int(int::T)",
-            "1         % test?A<=A(A::T)                  % test(plus(2))    % test?int<=int(plus::T)",
-            "{1,2}     % test?A{*}<=A{*}(A{*}::T)         % test({3,4})      % test?int{4}<=int{2}(int{2}::T)",
-            "{1,2}     % test?A{+}<=A{+}(A{+}::T)         % test({3,4})      % test?int{4}<=int{2}(int{2}::T)",
-            "{1,2}     % test?A{*}<=A{+}(A{*}::T)         % test({3,4})      % test?int{4}<=int{2}(int{2}::T)",
-            "noobj     % test?A<=noobj(A::T)              % test(3)          % test?int<=noobj(int::T)",
-            "noobj     % test?A<=A{0}(A::T)               % test(3)          % test?int<=int{0}(int::T)",
-            "noobj     % test?A{*}<=A{0}(A{*}::T)         % test({1,2,3})    % test?int{3}<=int{0}(int{3}::T)",
+            "1         % test?str<=int()                                   % test()           % test?str<=int()",
+            "1         % test?str<=A()                                     % test()           % test?str<=int()",
+            "1         % test?A<=A()                                       % test()           % test?int<=int()",
+            "1         % test?A<=A(A::T)                                   % test(2)          % test?int<=int(int::T)",
+            "1         % test?A<=A(A::T)                                   % test(plus(2))    % test?int<=int(plus::T)",
+            "{1,2}     % test?A{*}<=A{*}(A{*}::T)                          % test({3,4})      % test?int{4}<=int{2}(int{2}::T)",
+            "{1,2}     % test?A{+}<=A{+}(A{+}::T)                          % test({3,4})      % test?int{4}<=int{2}(int{2}::T)",
+            "{1,2}     % test?A{*}<=A{+}(A{*}::T)                          % test({3,4})      % test?int{4}<=int{2}(int{2}::T)",
+            "noobj     % test?A<=noobj(A::T)                               % test(3)          % test?int<=noobj(int::T)",
+            "noobj     % test?A<=A{0}(A::T)                                % test(3)          % test?int<=int{0}(int::T)",
+            "noobj     % test?A{*}<=A{0}(A{*}::T)                          % test({1,2,3})    % test?int{3}<=int{0}(int{3}::T)",
+            "1         % test?int<=#{?}(a=>?int::T,b=>?int::T.else(10))    % test(2)          % test?int<=int(a=>str::T,b=>10)"
     }, delimiter = '%')
     public void testResolution(final String lhs, final String def, final String spec, final String resolution) {
         final Obj lhsA = ObjmtronSerializer.parse(lhs);

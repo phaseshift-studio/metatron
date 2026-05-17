@@ -49,8 +49,8 @@ public class VirtualThread extends AbstractThread {
                 .name(this.vid() == null ? "metatron-virtual-thread" : this.vid().toString())
                 .unstarted(() -> {
                     this.at(STATE, uri("running"), MUTABLE);
-                    final Obj result = this.at(CODE).apply(this.at(START));
-                    this.at(RESULT, result.isNoObj() ? Obj.none() : result, MUTABLE);
+                    final Obj result = this.jvm().get(uri(CODE)).apply(this.at(START));
+                    this.at(RESULT, result, MUTABLE);
                     this.future.setObj(result);
                     this.at(STATE, uri("stopped"), MUTABLE);
                 });

@@ -76,7 +76,7 @@ public class JRec<OBJECT> extends MObj implements Rec {
 
     @Override
     public <O extends Obj> O at(final Obj key) {
-        final Obj o = objs(Stream.concat(this.findField(key).stream().map(f -> {
+        final Obj o = objs(Stream.concat(Stream.concat(this.findField(key).stream().map(f -> {
             final O temp = (O) JObjFactory.single().toObj(MTronException.wrap(() -> f.field().get(this.sjvm)), f(f.annotation().rng()), null);
             this.jvm().put(key, temp);
             return temp;
@@ -93,7 +93,7 @@ public class JRec<OBJECT> extends MObj implements Rec {
             } catch (final Exception e) {
                 throw MTronException.of(e);
             }
-        })));
+        })), Rec.super.at(key).stream()));
         return (O) o;
     }
 

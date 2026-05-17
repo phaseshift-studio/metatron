@@ -90,6 +90,7 @@ public final class Tokens {
     public static final String TYPE = "type";
     public static final String THINKING = "thinking";
     public static final String TEXT = "text";
+    public static final String UNTIL = "until";
     public static final String MONAD = "monad";
     public static final String REPEAT = "repeat";
     public static final String SHORT = "short";
@@ -130,7 +131,8 @@ public final class Tokens {
     public static final String QPROC = "q";
     public static final String ICON = "icon";
     public static final String T = "T";
-    public static final String C = "c";
+    public static final String COLON = ":";
+    public static final String COEFF = "c";
     public static final String MQL = "mql";
     public static final String MIN = "min";
     public static final String MAX = "max";

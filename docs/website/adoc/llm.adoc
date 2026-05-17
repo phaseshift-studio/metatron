@@ -125,19 +125,16 @@ tB::1.0.as(mB::T)      [-- <3> --]
 
 The content and metadata associated with the chat interaction are stored at the specified location, where it is both read (the previous interaction) and written to (the current interaction).
 
-++++
-<!-- 
+[mtron]
+----
 *ollama:+/+                                         /
  .where([skill=>has(thinking),size=>?<mB::5000.0])  /
- .order(>>?real<=rec(size).mult(-1.0))              /
+ .order(>>?real<=rec(size) * -1.0)                  /
  .take(1)                                           /
  .plus?rec<=rec(                                    /
-  [memory=>[                                        /
-      mem=>/usr/mem,                                /
-      max=>5]])                                     /
+  [memory=>[mem=>/usr/mem,max=>5]])                 /
   .chat("What was the special word I needed you to recall?")
--->
-++++
+----
 
 [discrete]
 === llm tools, skills, and mcp servers
@@ -204,7 +201,7 @@ While `robotron` is executing a task, a note can be pushed at any time from any 
 
 [source,mtron]
 ----
-*<robotron/note> + ['Reconsider — the user wants the result in euros, not dollars']   <1>
+*<robotron/note> + ['actually, can you provide the result in euros, not dollars']   <1>
 ----
 <1> `+` concatenates to the note list at `{vid}/note`. Because the list carries its `@vid`, the mutation is automatically persisted to space — no explicit save needed.
 

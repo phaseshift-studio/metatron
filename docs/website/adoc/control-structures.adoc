@@ -29,10 +29,9 @@ instructions: *split* and *merge* (enabled through their respective coefficients
 
 [stem]
 ++++
-
 \begin{align*}
-\color{darkred}{\tt{split}}&\color{yellow}{?}\color{purple}{A}\color{orange}{\{*\}}\color{yellow}{\tt{<=}}\color{purple}{A} & \\
-\color{darkred}{\tt{merge}}&\color{yellow}{?}\color{purple}{A}\color{orange}{\{*\}}\color{yellow}{\tt{<=}}\color{purple}{A}\color{orange}{\{*\}} &
+\tt{split}&\tt{?}A\{*\} \Leftarrow A & \\ 
+\tt{merge}&\tt{?}A\{*\} \Leftarrow A\{*\} &
 \end{align*}
 ++++
 
@@ -48,14 +47,13 @@ is perhaps best conceptualized by Feynman's https://en.wikipedia.org/wiki/Path_i
 [stem]
 ++++
 \begin{align*}
-\color{darkred}{\tt{apply}}&\color{yellow}{?}\color{purple}{B}\color{orange}{\{\tt{*}\}}\color{yellow}{\tt{<=}}\color{purple}{A}\color{orange}{\{\tt{*}\}}
+\tt{apply}&\tt{?} B\{\tt{*}\}\Leftarrow A \{\tt{*}\}
 \end{align*}
 ++++
 
-The additive component of the mtron ring, `split/merge` (sugar'd `-<`/`>-`), is distributive over the ring's
-multiplicative monoid, `apply` (sugar'd `.`). The relationship between `split/merge` and `apply` is significant, with mtron coefficients serving as the glue which renders
-this coupling algebraically sound. A complete analysis of this algebra is discussed elsewhere. For now, when seen in isolation as a commutative group,
-the following axioms hold.
+The additive component of the mtron ring, `split/merge` (sugar'd `-<`/`>-`), is https://en.wikipedia.org/wiki/Distributive_property[distributive] over the ring's
+multiplicative https://en.wikipedia.org/wiki/Monoid[monoid], `apply` (sugar'd `.`). The relationship between `split/merge` and `apply` is significant, with mtron coefficients serving as the glue which renders
+this coupling algebraically sound (closed under the ring operators). A complete analysis of this algebra is discussed elsewhere. For now, when seen in isolation as a https://en.wikipedia.org/wiki/Abelian_group[commutative group], the following axioms hold.
 
 [stem]
 \[
@@ -144,7 +142,7 @@ The above written once more using sugar syntax:
 
 * `-<` split.
 * `?<` is less than.
-* `>?` is greater than.
+* `?>` is greater than.
 * `>-` merge.
 |===
 
@@ -172,6 +170,9 @@ ultimately dependent on the incoming lhs `obj`, where
 \tt{obj} \cdot \tt{gte}(\_ ) \cdot \tt{is}(\_ ) => obj\{?\} \in \{\tt{obj},\tt{noobj}\}.
 ++++
 
+In this way, the mechanics of `inst` lhs-resolution, `noobj` as the `0`-element of the `obj` ring, and it's dual usage in both `*` (filter) and `+` (clone) provide sufficient infrastructure to render branch semantics in mtron.
+
+
 [indent=0,subs="verbatim,attributes",role="primary"]
 .if/else
 =====
@@ -185,31 +186,3 @@ ultimately dependent on the incoming lhs `obj`, where
 ----
 
 =====
-
-[indent=0,subs="verbatim,attributes",role="secondary"]
-.switch
-=====
-
-[mtron]
-----
-[NO_HEADER]
-1.plus(10)
-----
-
-=====
-
-
-[discrete]
-=== switch behavior 
-
-
-
-[discrete]
-=== If/Then/Else
-
-[mtron]
-----
-{1,2,3,4,5}-<[?>2 => '${_} greater than 2', /
-              ?>5 => '${_} greater than 5', /
-              _   => '${_} is something.']>>
-----
