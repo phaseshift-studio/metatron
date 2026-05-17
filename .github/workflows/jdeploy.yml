@@ -51,6 +51,12 @@ jobs:
           tar xzf "$TGZ" -C npm-publish
           cd npm-publish/package
 
+          # jDeploy regenerates jdeploy.js from its own template during
+          # release, ignoring our committed version. Patch it back.
+          sed -i 's/var javaVersionString = "11";/var javaVersionString = "21";/' jdeploy-bundle/jdeploy.js
+          sed -i 's/var mainClass = "{{MAIN_CLASS}}";/var mainClass = "studio.phaseshift.metatron.BootLoader";/' jdeploy-bundle/jdeploy.js
+          sed -i 's/var classPath = "{{CLASSPATH}}";/var classPath = "";/' jdeploy-bundle/jdeploy.js
+
           if [ "$GITHUB_REF_TYPE" = "tag" ]; then
             VERSION="${GITHUB_REF_NAME#v}"
             npm version --no-git-tag-version "$VERSION"
