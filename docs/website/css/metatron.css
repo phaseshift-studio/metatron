@@ -889,10 +889,12 @@ body {
     border: 1px solid #000 !important;
 }
 
-/* ── Callout badge alignment ──────────────────────────────────── */
+/* ── Callout badge in colist / annotation tables ──────────────────── */
 
 .conum + b {
-    float: right !important;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
     width: 26px !important;
     height: 20px !important;
     font-size: 12px !important;
@@ -902,7 +904,7 @@ body {
     color: var(--myellow);
     font-weight: bold;
     border-radius: 100px;
-    transform: translateX(-5px);
+    margin-right: 6px;
 }
 
 pre.highlight {
@@ -1282,24 +1284,23 @@ th {
     margin-bottom: 2em;
 }
 
+/* ── Callout badge in code blocks (via highlight.js mtron-doc-callout) ── */
+
 .hljs-mtron-doc-callout {
-    display: inline-block;
-    color: var(--myellow);
+    float: right !important;
+    width: 26px !important;
+    height: 20px !important;
+    font-size: 12px !important;
+    line-height: 20px !important;
+    text-align: center !important;
     background: var(--mred) !important;
-    transform: translateX(-20px);
-    -webkit-border-radius: 100px;
-    -moz-border-radius: 100px;
-    -o-border-radius: 100px;
-    border-radius: 100px;
-    text-align: center;
-    opacity: 1.0;
-    float: right;
-    width: 20px;
-    height: 20px;
-    font-size: 13px;
+    color: var(--myellow);
     font-weight: bold;
-    line-height: 22px;
-    /*font-family: Arial;*/
+    border-radius: 100px;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    margin-right: -2px;
 }
 
 strong {
