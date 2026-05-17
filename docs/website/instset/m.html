@@ -62,8 +62,6 @@
     .switch--item:first-child { border-radius: 3px 0 0 0; }
     .switch--item:last-child  { border-radius: 0 3px 0 0; }
     .switch--item.selected { background-color: #7a2519; color: #ffffff; }
-    .conum + b { width: auto !important; min-width: 22px !important; height: 20px !important; line-height: 20px !important; }
-    pre.highlight > code[data-lang] { padding-right: 40px; }
     </style>
     <script src="../js/metatron.js" type="text/javascript"></script>
     <link rel="stylesheet" href="../css/instset_doc.css">
@@ -267,6 +265,45 @@ bin/metatron</code></pre>
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
  space=&gt;[sub=&gt;{!*/m/mach,!*/m/math,!*/m/web,!*/m/iot,!*/m/grph,!*/m/llm,!*/m/tble,!*/m/dcmnt,!*/m/rdf}],
+ const=&gt;[
+  noobj,
+  none@none],
+ type=&gt;[
+  #::T,
+  bool::T,
+  int::T,
+  real::T,
+  bytes::T,
+  str::T,
+  uri::T,
+  rel::T,
+  lst::T,
+  rec::T,
+  instset::T,
+  inst::T,
+  code::T,
+  fail::T,
+  space::T,
+  memspace::T,
+  stack::T,
+  qproc::T,
+  subq::T,
+  sub::T,
+  typeq::T,
+  docs::T,
+  docq::T,
+  mintq::T,
+  incrq::T,
+  constq::T],
+ rewrite=&gt;[
+  /m/inst/rewrite/id_removal?code{?}&lt;=code(),
+  /m/inst/rewrite/map_nest?code{?}&lt;=code(),
+  /m/inst/rewrite/else_after_count?code{?}&lt;=code(),
+  /m/inst/rewrite/plus_zero?code{?}&lt;=code(),
+  /m/inst/rewrite/mult_one?code{?}&lt;=code(),
+  /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
+  /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
+  /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()],
  inst=&gt;[
   as?bool&lt;=bool(bool::T),
   as?bytes&lt;=bool(bytes::T),
@@ -492,46 +529,7 @@ bin/metatron</code></pre>
   swap?A&lt;=A(B::T),
   rshift?B{*}&lt;=A(C{*}::T),
   lshift?B{*}&lt;=A(),
-  start?A{**}&lt;=noobj{0}(A{**}::T)],
- rewrite=&gt;[
-  /m/inst/rewrite/id_removal?code{?}&lt;=code(),
-  /m/inst/rewrite/map_nest?code{?}&lt;=code(),
-  /m/inst/rewrite/else_after_count?code{?}&lt;=code(),
-  /m/inst/rewrite/plus_zero?code{?}&lt;=code(),
-  /m/inst/rewrite/mult_one?code{?}&lt;=code(),
-  /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
-  /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
-  /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()],
- type=&gt;[
-  #::T,
-  bool::T,
-  int::T,
-  real::T,
-  bytes::T,
-  str::T,
-  uri::T,
-  rel::T,
-  lst::T,
-  rec::T,
-  instset::T,
-  inst::T,
-  code::T,
-  fail::T,
-  space::T,
-  memspace::T,
-  stack::T,
-  qproc::T,
-  subq::T,
-  sub::T,
-  typeq::T,
-  docs::T,
-  docq::T,
-  mintq::T,
-  incrq::T,
-  constq::T],
- const=&gt;[
-  noobj,
-  none@none]]@/m</code></pre>
+  start?A{**}&lt;=noobj{0}(A{**}::T)]]@/m</code></pre>
                 </div>
             </div>
         </div>
@@ -1023,6 +1021,45 @@ bin/metatron</code></pre>
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
  space=&gt;[sub=&gt;{!*/m/mach,!*/m/math,!*/m/web,!*/m/iot,!*/m/grph,!*/m/llm,!*/m/tble,!*/m/dcmnt,!*/m/rdf}],
+ const=&gt;[
+  noobj,
+  none@none],
+ type=&gt;[
+  #::T,
+  bool::T,
+  int::T,
+  real::T,
+  bytes::T,
+  str::T,
+  uri::T,
+  rel::T,
+  lst::T,
+  rec::T,
+  instset::T,
+  inst::T,
+  code::T,
+  fail::T,
+  space::T,
+  memspace::T,
+  stack::T,
+  qproc::T,
+  subq::T,
+  sub::T,
+  typeq::T,
+  docs::T,
+  docq::T,
+  mintq::T,
+  incrq::T,
+  constq::T],
+ rewrite=&gt;[
+  /m/inst/rewrite/id_removal?code{?}&lt;=code(),
+  /m/inst/rewrite/map_nest?code{?}&lt;=code(),
+  /m/inst/rewrite/else_after_count?code{?}&lt;=code(),
+  /m/inst/rewrite/plus_zero?code{?}&lt;=code(),
+  /m/inst/rewrite/mult_one?code{?}&lt;=code(),
+  /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
+  /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
+  /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()],
  inst=&gt;[
   as?bool&lt;=bool(bool::T),
   as?bytes&lt;=bool(bytes::T),
@@ -1248,46 +1285,7 @@ bin/metatron</code></pre>
   swap?A&lt;=A(B::T),
   rshift?B{*}&lt;=A(C{*}::T),
   lshift?B{*}&lt;=A(),
-  start?A{**}&lt;=noobj{0}(A{**}::T)],
- rewrite=&gt;[
-  /m/inst/rewrite/id_removal?code{?}&lt;=code(),
-  /m/inst/rewrite/map_nest?code{?}&lt;=code(),
-  /m/inst/rewrite/else_after_count?code{?}&lt;=code(),
-  /m/inst/rewrite/plus_zero?code{?}&lt;=code(),
-  /m/inst/rewrite/mult_one?code{?}&lt;=code(),
-  /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
-  /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
-  /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()],
- type=&gt;[
-  #::T,
-  bool::T,
-  int::T,
-  real::T,
-  bytes::T,
-  str::T,
-  uri::T,
-  rel::T,
-  lst::T,
-  rec::T,
-  instset::T,
-  inst::T,
-  code::T,
-  fail::T,
-  space::T,
-  memspace::T,
-  stack::T,
-  qproc::T,
-  subq::T,
-  sub::T,
-  typeq::T,
-  docs::T,
-  docq::T,
-  mintq::T,
-  incrq::T,
-  constq::T],
- const=&gt;[
-  noobj,
-  none@none]]@/m</code></pre></div>
+  start?A{**}&lt;=noobj{0}(A{**}::T)]]@/m</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">the core instruction set of metatron containing the base types and useful instructions to manipulate them</p>
 </div>
@@ -3714,7 +3712,7 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
 </div><div class="container-xxl py-3 text-center">
     <hr class="border-secondary">
     <small class="text-muted">
-        generated by metatron instset doc generator on build 0-2026-05-16 18:16:49<br>
+        generated by metatron instset doc generator on build 0-2026-05-16 18:47:01<br>
         (c) PhaseShift Studio, LLC
     </small>
 </div></main>
@@ -3779,7 +3777,7 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
 
             var titles = primary.getElementsByClassName('title');
             var primaryTitle = titles.length > 0 ? titles[0] : null;
-            var primaryContent = primary.getElementsByClassName('content')[0];
+            var primaryContent = primary.querySelectorAll(':scope > .content')[0];
 
             var item = document.createElement('div');
             item.className = 'switch--item selected';
@@ -3790,7 +3788,7 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
                 for (var i = 0; i < allItems.length; i++)
                     allItems[i].classList.remove('selected');
                 item.classList.add('selected');
-                var allContent = primary.getElementsByClassName('content');
+                var allContent = primary.querySelectorAll(':scope > .content');
                 for (var j = 0; j < allContent.length; j++)
                     allContent[j].classList.add('hidden');
                 if (primaryContent) {
@@ -3812,7 +3810,7 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
             var sw = primary.querySelector('.switch');
             if (!sw) return;
 
-            var contents = secondary.getElementsByClassName('content');
+            var contents = secondary.querySelectorAll(':scope > .content');
             if (contents.length === 0) return;
             var content = contents[0];
             content.classList.add('hidden');
@@ -3829,7 +3827,7 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
                 for (var i = 0; i < allItems.length; i++)
                     allItems[i].classList.remove('selected');
                 item.classList.add('selected');
-                var allContent = primary.getElementsByClassName('content');
+                var allContent = primary.querySelectorAll(':scope > .content');
                 for (var j = 0; j < allContent.length; j++)
                     allContent[j].classList.add('hidden');
                 content.classList.remove('hidden');
@@ -3842,13 +3840,10 @@ nat::6.type()-&lt;[tid(),vid()] [-- [/m/int, nat] non-base types tids are the ty
         });
     }
 
-    // Defer until after MathJax typesetting, so stem blocks in visible tabs render
-    document.addEventListener('DOMContentLoaded', function() {
-        if (window.MathJax && MathJax.Hub) {
-            MathJax.Hub.Queue(initTabs);
-        } else {
-            initTabs();
-        }
+    // Run after MathJax v2 finishes typesetting (loaded sync at page bottom,
+    // typesetting is queued, so 'load' + small delay ensures it completes)
+    window.addEventListener('load', function() {
+        setTimeout(initTabs, 200);
     });
 </script>
 </body>

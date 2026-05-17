@@ -896,6 +896,37 @@ body {
     border: 1px solid #000 !important;
 }
 
+/* ── Callout badge alignment ──────────────────────────────────── */
+
+.conum + b {
+    float: right !important;
+    width: 26px !important;
+    font-size: 12px !important;
+    height: 20px !important;
+    line-height: 20px !important;
+    text-align: center !important;
+}
+
+pre.highlight {
+    position: relative !important;
+}
+
+pre.highlight > code[data-lang] {
+    display: block !important;
+    padding-right: 44px;
+}
+
+/* ── Result-line dimming / input brightness ──────────────────── */
+
+.hljs-mtron-result-line {
+    opacity: 0.65;
+}
+
+.hljs-mtron-prompt-begin,
+.hljs-mtron-prompt-end {
+    filter: brightness(1.4);
+}
+
 /* Linearize Tabs for PDF Export */
 .pdf-export-mode .primary {
     display: block !important;
@@ -1408,8 +1439,6 @@ strong {
     .switch--item:first-child { border-radius: 3px 0 0 0; }
     .switch--item:last-child  { border-radius: 0 3px 0 0; }
     .switch--item.selected { background-color: #7a2519; color: #ffffff; }
-    .conum + b { width: auto !important; min-width: 22px !important; height: 20px !important; line-height: 20px !important; }
-    pre.highlight > code[data-lang] { padding-right: 40px; }
     </style>
     <script src="js/metatron.js" type="text/javascript"></script>
 </head>
@@ -2448,19 +2477,15 @@ a type structure, a coefficient, and polymorphic generics.</p>
 </div>
 </div>
 <div class="paragraph">
-<p>An <code>inst</code> to create <code>int</code> triples can be written:</p>
+<p>An <code>inst</code> to create <code>int</code> trpls can be written:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; triple -&gt; |inst?lst&lt;=int{3}(){&gt;-[,]}
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; trpl -&gt; |inst?lst&lt;=int{3}(){&gt;-[,]}
 ==&gt;inst?rng=lst&amp;dom=int{3}(){merge([,])}
-mtron&gt; {1,2,3,4,5,6}.triple()
-==&gt;fail::[unable to evaluate inst: triple?dom=int()@&lt;1&gt;][...]@/sys/fail/154
-==&gt;fail::[unable to evaluate inst: triple?dom=int()@&lt;1&gt;][...]@/sys/fail/158
-==&gt;fail::[unable to evaluate inst: triple?dom=int()@&lt;1&gt;][...]@/sys/fail/162
-==&gt;fail::[unable to evaluate inst: triple?dom=int()@&lt;1&gt;][...]@/sys/fail/166
-==&gt;fail::[unable to evaluate inst: triple?dom=int()@&lt;1&gt;][...]@/sys/fail/170
-==&gt;fail::[unable to evaluate inst: triple?dom=int()@&lt;1&gt;][...]@/sys/fail/174</code></pre>
+mtron&gt; {1,2,3,4,5,6}.trpl()
+==&gt;[1,2,3]
+==&gt;[4,5,6]</code></pre>
 </div>
 </div>
 <div class="admonitionblock note">
@@ -2472,13 +2497,13 @@ mtron&gt; {1,2,3,4,5,6}.triple()
 <td class="content">
 <div class="paragraph">
 <p>The <code>|</code> token is synatic sugar for the <code>block</code> inst. A blocked instruction prevents the application of the <code>lhs</code> to the <code>inst</code> args and <code>inst</code> code.
-This ensures the uri <code>triple</code> is not applied to the <code>inst</code> prior to the uri being bound as the reference (<code>&#8594;</code>). Without block, the result of applying <code>triple</code> to <code>inst</code> would be what <code>triple</code> is bound to. In this particular instance, <code>triple</code> would reference a <code>fail</code> obj.</p>
+This ensures the uri <code>trpl</code> is not applied to the <code>inst</code> prior to the uri being bound as the reference (<code>&#8594;</code>). Without block, the result of applying <code>trpl</code> to <code>inst</code> would be what <code>trpl</code> is bound to. In this particular instance, <code>trpl</code> would reference a <code>fail</code> obj.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; triple -&gt; |inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; trpl -&gt; |inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}
 ==&gt;inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}
-mtron&gt; *triple
+mtron&gt; *trpl
 ==&gt;inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}</code></pre>
 </div>
 </div>
@@ -2491,15 +2516,11 @@ mtron&gt; *triple
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; triple -&gt; |inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; trpl -&gt; |inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}
 ==&gt;inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}
-mtron&gt; {1,2,3,4,5,6}.triple()
-==&gt;fail::[unable to evaluate inst: triple?dom=int()@&lt;1&gt;][...]@/sys/fail/178
-==&gt;fail::[unable to evaluate inst: triple?dom=int()@&lt;1&gt;][...]@/sys/fail/182
-==&gt;fail::[unable to evaluate inst: triple?dom=int()@&lt;1&gt;][...]@/sys/fail/186
-==&gt;fail::[unable to evaluate inst: triple?dom=int()@&lt;1&gt;][...]@/sys/fail/190
-==&gt;fail::[unable to evaluate inst: triple?dom=int()@&lt;1&gt;][...]@/sys/fail/194
-==&gt;fail::[unable to evaluate inst: triple?dom=int()@&lt;1&gt;][...]@/sys/fail/198</code></pre>
+mtron&gt; {1,2,3,4,5,6}.trpl()
+==&gt;[1,2,3]
+==&gt;[4,5,6]</code></pre>
 </div>
 </div>
 <div class="admonitionblock note">
@@ -2510,7 +2531,7 @@ mtron&gt; {1,2,3,4,5,6}.triple()
 </td>
 <td class="content">
 <div class="paragraph">
-<p>The <code>triple</code> instruction code is composed of a single instruction: <code>&gt;-[,]</code>. This syntactic sugar resolves <code>merge([,])</code>. The instruction signature of <code>merge</code> is  <code>A&lt;=#{*}(A::T)</code>. This states that <code>merge</code> is a <strong>barrier instruction</strong> that maps the entire lhs stream of objs (<code>#{*}</code>) to a single <code>A</code>, where <code>A</code> is a generic bound to <code>lst</code> given the resolution of the argument <code>A::T</code>. Thus, this instance of <code>merge</code> yields a single <code>lst</code> whose elements are the three (<code>int{3}</code>) incoming lhs objs.</p>
+<p>The <code>trpl</code> instruction code is composed of a single instruction: <code>&gt;-[,]</code>. This syntactic sugar resolves <code>merge([,])</code>. The instruction signature of <code>merge</code> is  <code>A&lt;=#{*}(A::T)</code>. This states that <code>merge</code> is a <strong>barrier instruction</strong> that maps the entire lhs stream of objs (<code>#{*}</code>) to a single <code>A</code>, where <code>A</code> is a generic bound to <code>lst</code> given the resolution of the argument <code>A::T</code>. Thus, this instance of <code>merge</code> yields a single <code>lst</code> whose elements are the three (<code>int{3}</code>) incoming lhs objs.</p>
 </div>
 </td>
 </tr>
@@ -3868,7 +3889,7 @@ mtron&gt;  -2.as(nat::T)     <i class="conum" data-value="6"></i><b>(6)</b>
 mtron&gt;  nat::2 * -1     <i class="conum" data-value="7"></i><b>(7)</b>
 ==&gt;fail::[nat::-2 is not a int::T[is(gt(0))][choose([
   is(lt(0))=&gt;mult(-1),
-  id()=&gt;id()]).rshift()]][...]@/sys/fail/552</code></pre>
+  id()=&gt;id()]).rshift()]][...]@/sys/fail/504</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3895,7 +3916,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{g}}M{{m}}E{{r}}T{{c}}a{{b}}T{{b}}r{{m}}o{{r}}N{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{b}}M{{y}}E{{r}}t{{y}}A{{b}}t{{c}}R{{r}}o{{m}}n{{X}}.</p>
 </div>
 <h4 id="_cascading_type_constructions" class="discrete">cascading type constructions</h4>
 <h3 id="_mono_types" class="discrete">mono types</h3>
@@ -4934,9 +4955,9 @@ mtron&gt; memspace::[
   panes=&gt;inst?noobj&lt;=#{?}(),
   subq=&gt;inst?noobj&lt;=#{?}()]@/usr/ui/console/colon_menu,
  pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[
- result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
  prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
- stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0]]@/usr/ui/console
+ stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
+ result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0]]@/usr/ui/console
 mtron&gt; */usr/ui/console     <i class="conum" data-value="1"></i><b>(1)</b>
 ==&gt;console::[
  metatron_version=&gt;&lt;0.1-alpha&gt;,
@@ -4970,14 +4991,14 @@ mtron&gt; */usr/ui/console     <i class="conum" data-value="1"></i><b>(1)</b>
   panes=&gt;inst?noobj&lt;=#{?}(),
   subq=&gt;inst?noobj&lt;=#{?}()]@/usr/ui/console/colon_menu,
  pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[
- result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
  prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
- stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0]]
+ stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
+ result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0]]
 mtron&gt; */usr/ui/console/pane/0     <i class="conum" data-value="2"></i><b>(2)</b>
 ==&gt;/m/mach/console/pane::[
- result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
  prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
- stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]
+ stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
+ result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]
 mtron&gt; /usr/ui/console/pane/0/result('printed at ==&gt;xyz')     <i class="conum" data-value="3"></i><b>(3)</b></code></pre>
 </div>
 </div>
@@ -7178,15 +7199,15 @@ mtron&gt; *&lt;http://localhost:8088/v1/models&gt;
   [id=&gt;MeetAISmall__latest,object=&gt;model],
   [id=&gt;gpt-oss__latest,object=&gt;model]]]
 mtron&gt; *&lt;http://localhost:8088/v1/models/data/0/id&gt;
-==&gt;qwen3-tts-cpp
+==&gt;mistralai_devstral-small-2507
 mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
          *&lt;http://localhost:8088/v1/models/data/0/id&gt;}&gt;
 ==&gt;[
  parameters=&gt;[
-  model=&gt;'Qwen3-Coder-30B-A3B-Instruct-Q4_K_M.gguf',
-  top_p=&gt;0.8000,
-  top_k=&gt;20,
-  min_p=&gt;0,
+  model=&gt;'mistralai_Devstral-Small-2507-Q4_K_M.gguf',
+  top_p=&gt;0.9500,
+  top_k=&gt;-1,
+  min_p=&gt;0.0100,
   temperature=&gt;0.7000,
   max_tokens=&gt;0,
   repeat_penalty=&gt;1,
@@ -7194,7 +7215,7 @@ mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
   typical_p=&gt;1,
   seed=&gt;-1,
   logprobs=&gt;false],
- name=&gt;qwen3-coder-30b-a3b-instruct,
+ name=&gt;mistralai_devstral-small-2507,
  f16=&gt;false,
  threads=&gt;8,
  debug=&gt;false,
@@ -7202,16 +7223,23 @@ mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
  backend=&gt;llama-cpp,
  template=&gt;[
   chat=&gt;"""{{.Input -}}
-&lt;|im_start|&gt;assistant
 """,
-  chat_message=&gt;'&lt;|im_start|&gt;{{if eq .RoleName "tool" }}user{{else...',
+  chat_message=&gt;"""{{if eq .RoleName "user" -}}
+[INST] {{.Content }}...""",
   completion=&gt;"""{{.Input}}
 """,
-  function=&gt;"""&lt;|im_start|&gt;system
-You are a function calling AI ..."""],
- known_usecases=&gt;[FLAG_CHAT,FLAG_COMPLETION],
+  function=&gt;'[AVAILABLE_TOOLS] [{{range .Functions}}{"type": "...'],
+ known_usecases=&gt;[FLAG_COMPLETION,FLAG_CHAT],
  pipeline=&gt;[=&gt;],
- function=&gt;[grammar=&gt;[=&gt;]],
+ function=&gt;[
+  disable_no_action=&gt;true,
+  grammar=&gt;[parallel_calls=&gt;true,disable_parallel_new_lines=&gt;true,disable=&gt;true],
+  json_regex_match=&gt;['(?s)\[TOOL\_CALLS\](.*)'],
+  replace_function_results=&gt;[
+   [key=&gt;'(?s)^[^{\[]*'],
+   [key=&gt;'(?s)[^}\]]*$'],
+   [key=&gt;'(?s)\[TOOL\_CALLS\]'],
+   [key=&gt;'(?s)\[\/TOOL\_CALLS\]']]],
  reasoning=&gt;[=&gt;],
  mirostat_eta=&gt;0.1000,
  mirostat_tau=&gt;5,
@@ -7221,7 +7249,15 @@ You are a function calling AI ..."""],
  mmlock=&gt;false,
  low_vram=&gt;false,
  reranking=&gt;false,
- stopwords=&gt;[|im_end|,dummy32000,/s,|endoftext|],
+ stopwords=&gt;[
+  |im_end|,
+  dummy32000,
+  /tool_call,
+  |eot_id|,
+  |end_of_text|,
+  /s,
+  [/TOOL_CALLS],
+  [/ACTIONS]],
  context_size=&gt;8192,
  limit_mm_per_prompt=&gt;[=&gt;],
  diffusers=&gt;[=&gt;],
@@ -7816,7 +7852,7 @@ if one is found, the reference is routed to the named scheme&#8217;s space.</p>
   	java.util.stream.ForEachOps$ForEachOp$OfRef [line 186]
   	java.util.stream.ReferencePipeline$2$1 [line 197]
   	java.util.ArrayList$ArrayListSpliterator [line 1716]
-  	java.util.stream.AbstractPipeline [line 570]][...]@/sys/fail/222</code></pre>
+  	java.util.stream.AbstractPipeline [line 570]][...]@/sys/fail/174</code></pre>
 </div>
 </div>
 </div>
@@ -7844,7 +7880,7 @@ rows. In metatron, a relational database is a <strong>tblespace</strong> backed 
   	java.util.stream.ReferencePipeline$2$1 [line 196]
   	java.util.Spliterators$IteratorSpliterator [line 1950]
   	java.util.stream.StreamSpliterators$WrappingSpliterator [line 297]
-  	java.util.stream.StreamSpliterators$AbstractWrappingSpliterator [line 206]][...]@/sys/fail/228</code></pre>
+  	java.util.stream.StreamSpliterators$AbstractWrappingSpliterator [line 206]][...]@/sys/fail/180</code></pre>
 </div>
 </div></div></td>
 </tr>
@@ -7859,14 +7895,14 @@ rows. In metatron, a relational database is a <strong>tblespace</strong> backed 
                    route   =&gt; [lite:=&gt;&lt;&gt;]]@/sys/space/lite     <i class="conum" data-value="1"></i><b>(1)</b>
 ==&gt;ERROR: null
 mtron&gt; lite:person/1 -&gt; [name=&gt;'marko', age=&gt;29]     <i class="conum" data-value="2"></i><b>(2)</b>
-==&gt;fail::[no active space supports pattern lite:person/1][...]@/sys/fail/234
+==&gt;fail::[no active space supports pattern lite:person/1][...]@/sys/fail/186
 mtron&gt; lite:person/2 -&gt; [name=&gt;'grant', age=&gt;25]     <i class="conum" data-value="3"></i><b>(3)</b>
-==&gt;fail::[no active space supports pattern lite:person/2][...]@/sys/fail/240
+==&gt;fail::[no active space supports pattern lite:person/2][...]@/sys/fail/192
 mtron&gt; *lite:person
        *lite:person/+/name     <i class="conum" data-value="5"></i><b>(5)</b>
-==&gt;fail::[no active space supports pattern lite:person][...]@/sys/fail/246
+==&gt;fail::[no active space supports pattern lite:person][...]@/sys/fail/198
 mtron&gt; *lite:person/+/id     <i class="conum" data-value="6"></i><b>(6)</b>
-==&gt;fail::[no active space supports pattern lite:person/+/id][...]@/sys/fail/252</code></pre>
+==&gt;fail::[no active space supports pattern lite:person/+/id][...]@/sys/fail/204</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -7947,9 +7983,9 @@ l└─ └───┘└───┘└───┘└───┘└───
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; lite:kv/single -&gt; 651.02
-==&gt;fail::[no active space supports pattern lite:kv/single][...]@/sys/fail/258
+==&gt;fail::[no active space supports pattern lite:kv/single][...]@/sys/fail/210
 mtron&gt; *lite:kv/single
-==&gt;fail::[no active space supports pattern lite:kv/single][...]@/sys/fail/264</code></pre>
+==&gt;fail::[no active space supports pattern lite:kv/single][...]@/sys/fail/216</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -7958,13 +7994,13 @@ mtron&gt; *lite:kv/single
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; lite:kv/nest -&gt; [a=&gt;[b=&gt;[c=&gt;2,d=&gt;!*lite:kv/nest]]]
-==&gt;fail::[no active space supports pattern lite:kv/nest][...]@/sys/fail/324
+==&gt;fail::[no active space supports pattern lite:kv/nest][...]@/sys/fail/276
 mtron&gt; *lite:kv/nest
-==&gt;fail::[no active space supports pattern lite:kv/nest][...]@/sys/fail/330
+==&gt;fail::[no active space supports pattern lite:kv/nest][...]@/sys/fail/282
 mtron&gt; *lite:kv/nest/a/b/+
-==&gt;fail::[no active space supports pattern lite:kv/nest/a/b/+][...]@/sys/fail/336
+==&gt;fail::[no active space supports pattern lite:kv/nest/a/b/+][...]@/sys/fail/288
 mtron&gt; *lite:kv/nest/a/b/d
-==&gt;fail::[no active space supports pattern lite:kv/nest/a/b/d][...]@/sys/fail/342</code></pre>
+==&gt;fail::[no active space supports pattern lite:kv/nest/a/b/d][...]@/sys/fail/294</code></pre>
 </div>
 </div>
 </div>
@@ -7996,7 +8032,7 @@ code''' └────────────────┘ └────�
 mtron&gt; *lite:person/+/name.count()     <i class="conum" data-value="2"></i><b>(2)</b>
 ==&gt;ERROR: null
 mtron&gt; *lite:person/+.==[name=&gt;_]     <i class="conum" data-value="3"></i><b>(3)</b>
-==&gt;fail::[no active space supports pattern lite:person/+][...]@/sys/fail/360</code></pre>
+==&gt;fail::[no active space supports pattern lite:person/+][...]@/sys/fail/312</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -8072,9 +8108,9 @@ whose values happen to match <code>person.name</code> — the link is purely alg
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/lite&gt;&gt;=[table=&gt;[person,score]]     <i class="conum" data-value="1"></i><b>(1)</b>
 mtron&gt; lite:score/1 -&gt; [player=&gt;'marko', points=&gt;42]     <i class="conum" data-value="2"></i><b>(2)</b>
-==&gt;fail::[no active space supports pattern lite:score/1][...]@/sys/fail/366
+==&gt;fail::[no active space supports pattern lite:score/1][...]@/sys/fail/318
 mtron&gt; lite:score/2 -&gt; [player=&gt;'grant', points=&gt;99]     <i class="conum" data-value="3"></i><b>(3)</b>
-==&gt;fail::[no active space supports pattern lite:score/2][...]@/sys/fail/372
+==&gt;fail::[no active space supports pattern lite:score/2][...]@/sys/fail/324
 mtron&gt; *lite:score/+.?==[player=&gt;'marko']     <i class="conum" data-value="4"></i><b>(4)</b>
 ==&gt;ERROR: null
 mtron&gt; */sys/space/lite.sql("SELECT p.name,p.age,s.points FROM person p JOIN score s ON p.name=s.player")     <i class="conum" data-value="5"></i><b>(5)</b>
@@ -8114,13 +8150,13 @@ Unlike a matching column value, the pointer encodes the full address of the link
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/lite&gt;&gt;=[table=&gt;[person,score,award]]     <i class="conum" data-value="1"></i><b>(1)</b>
 mtron&gt; lite:award/1 -&gt; [trophy=&gt;'gold',   recipient=&gt;!*lite:person/1]     <i class="conum" data-value="2"></i><b>(2)</b>
-==&gt;fail::[no active space supports pattern lite:award/1][...]@/sys/fail/438
+==&gt;fail::[no active space supports pattern lite:award/1][...]@/sys/fail/390
 mtron&gt; lite:award/2 -&gt; [trophy=&gt;'silver', recipient=&gt;!*lite:person/2]     <i class="conum" data-value="3"></i><b>(3)</b>
-==&gt;fail::[no active space supports pattern lite:award/2][...]@/sys/fail/498
+==&gt;fail::[no active space supports pattern lite:award/2][...]@/sys/fail/450
 mtron&gt; *lite:award/+     <i class="conum" data-value="4"></i><b>(4)</b>
-==&gt;fail::[no active space supports pattern lite:award/+][...]@/sys/fail/504
+==&gt;fail::[no active space supports pattern lite:award/+][...]@/sys/fail/456
 mtron&gt; *lite:award/1/recipient     <i class="conum" data-value="5"></i><b>(5)</b>
-==&gt;fail::[no active space supports pattern lite:award/1/recipient][...]@/sys/fail/510</code></pre>
+==&gt;fail::[no active space supports pattern lite:award/1/recipient][...]@/sys/fail/462</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -8160,11 +8196,11 @@ mtron&gt; area:V/1 -&gt; [label=&gt;'downtown',capacity=&gt;5000]     <i class="
 ==&gt;[label=&gt;'downtown',capacity=&gt;5000]
 mtron&gt; */sys/space/lite&gt;&gt;=[table=&gt;[person,score,award,venue]]     <i class="conum" data-value="3"></i><b>(3)</b>
 mtron&gt; lite:venue/1 -&gt; [name=&gt;'main_stage',location=&gt;!*area:V/1]     <i class="conum" data-value="4"></i><b>(4)</b>
-==&gt;fail::[no active space supports pattern lite:venue/1][...]@/sys/fail/516
+==&gt;fail::[no active space supports pattern lite:venue/1][...]@/sys/fail/468
 mtron&gt; *lite:venue/1     <i class="conum" data-value="5"></i><b>(5)</b>
-==&gt;fail::[no active space supports pattern lite:venue/1][...]@/sys/fail/522
+==&gt;fail::[no active space supports pattern lite:venue/1][...]@/sys/fail/474
 mtron&gt; *lite:venue/1/location     <i class="conum" data-value="6"></i><b>(6)</b>
-==&gt;fail::[no active space supports pattern lite:venue/1/location][...]@/sys/fail/528</code></pre>
+==&gt;fail::[no active space supports pattern lite:venue/1/location][...]@/sys/fail/480</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -8202,11 +8238,11 @@ pointing back at the row&#8217;s own table.</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; lite:venue/2 -&gt; [name=&gt;'side_hall',location=&gt;!*g:V/1,parent=&gt;!*lite:venue/1]     <i class="conum" data-value="1"></i><b>(1)</b>
-==&gt;fail::[no active space supports pattern lite:venue/2][...]@/sys/fail/534
+==&gt;fail::[no active space supports pattern lite:venue/2][...]@/sys/fail/486
 mtron&gt; *lite:venue/2     <i class="conum" data-value="2"></i><b>(2)</b>
-==&gt;fail::[no active space supports pattern lite:venue/2][...]@/sys/fail/540
+==&gt;fail::[no active space supports pattern lite:venue/2][...]@/sys/fail/492
 mtron&gt; *lite:venue/2/parent/location     <i class="conum" data-value="3"></i><b>(3)</b>
-==&gt;fail::[no active space supports pattern lite:venue/2/parent/location][...]@/sys/fail/546</code></pre>
+==&gt;fail::[no active space supports pattern lite:venue/2/parent/location][...]@/sys/fail/498</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -8621,7 +8657,7 @@ console::[        =&gt; ]@/sys/console;
 
             var titles = primary.getElementsByClassName('title');
             var primaryTitle = titles.length > 0 ? titles[0] : null;
-            var primaryContent = primary.getElementsByClassName('content')[0];
+            var primaryContent = primary.querySelectorAll(':scope > .content')[0];
 
             var item = document.createElement('div');
             item.className = 'switch--item selected';
@@ -8632,7 +8668,7 @@ console::[        =&gt; ]@/sys/console;
                 for (var i = 0; i < allItems.length; i++)
                     allItems[i].classList.remove('selected');
                 item.classList.add('selected');
-                var allContent = primary.getElementsByClassName('content');
+                var allContent = primary.querySelectorAll(':scope > .content');
                 for (var j = 0; j < allContent.length; j++)
                     allContent[j].classList.add('hidden');
                 if (primaryContent) {
@@ -8654,7 +8690,7 @@ console::[        =&gt; ]@/sys/console;
             var sw = primary.querySelector('.switch');
             if (!sw) return;
 
-            var contents = secondary.getElementsByClassName('content');
+            var contents = secondary.querySelectorAll(':scope > .content');
             if (contents.length === 0) return;
             var content = contents[0];
             content.classList.add('hidden');
@@ -8671,7 +8707,7 @@ console::[        =&gt; ]@/sys/console;
                 for (var i = 0; i < allItems.length; i++)
                     allItems[i].classList.remove('selected');
                 item.classList.add('selected');
-                var allContent = primary.getElementsByClassName('content');
+                var allContent = primary.querySelectorAll(':scope > .content');
                 for (var j = 0; j < allContent.length; j++)
                     allContent[j].classList.add('hidden');
                 content.classList.remove('hidden');
@@ -8684,13 +8720,10 @@ console::[        =&gt; ]@/sys/console;
         });
     }
 
-    // Defer until after MathJax typesetting, so stem blocks in visible tabs render
-    document.addEventListener('DOMContentLoaded', function() {
-        if (window.MathJax && MathJax.Hub) {
-            MathJax.Hub.Queue(initTabs);
-        } else {
-            initTabs();
-        }
+    // Run after MathJax v2 finishes typesetting (loaded sync at page bottom,
+    // typesetting is queued, so 'load' + small delay ensures it completes)
+    window.addEventListener('load', function() {
+        setTimeout(initTabs, 200);
     });
 </script>
 </body>

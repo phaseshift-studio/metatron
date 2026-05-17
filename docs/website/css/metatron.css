@@ -883,6 +883,37 @@ body {
     border: 1px solid #000 !important;
 }
 
+/* ── Callout badge alignment ──────────────────────────────────── */
+
+.conum + b {
+    float: right !important;
+    width: 26px !important;
+    font-size: 12px !important;
+    height: 20px !important;
+    line-height: 20px !important;
+    text-align: center !important;
+}
+
+pre.highlight {
+    position: relative !important;
+}
+
+pre.highlight > code[data-lang] {
+    display: block !important;
+    padding-right: 44px;
+}
+
+/* ── Result-line dimming / input brightness ──────────────────── */
+
+.hljs-mtron-result-line {
+    opacity: 0.65;
+}
+
+.hljs-mtron-prompt-begin,
+.hljs-mtron-prompt-end {
+    filter: brightness(1.4);
+}
+
 /* Linearize Tabs for PDF Export */
 .pdf-export-mode .primary {
     display: block !important;

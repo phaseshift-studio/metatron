@@ -60,7 +60,7 @@
 
             var titles = primary.getElementsByClassName('title');
             var primaryTitle = titles.length > 0 ? titles[0] : null;
-            var primaryContent = primary.getElementsByClassName('content')[0];
+            var primaryContent = primary.querySelectorAll(':scope > .content')[0];
 
             var item = document.createElement('div');
             item.className = 'switch--item selected';
@@ -71,7 +71,7 @@
                 for (var i = 0; i < allItems.length; i++)
                     allItems[i].classList.remove('selected');
                 item.classList.add('selected');
-                var allContent = primary.getElementsByClassName('content');
+                var allContent = primary.querySelectorAll(':scope > .content');
                 for (var j = 0; j < allContent.length; j++)
                     allContent[j].classList.add('hidden');
                 if (primaryContent) {
@@ -93,7 +93,7 @@
             var sw = primary.querySelector('.switch');
             if (!sw) return;
 
-            var contents = secondary.getElementsByClassName('content');
+            var contents = secondary.querySelectorAll(':scope > .content');
             if (contents.length === 0) return;
             var content = contents[0];
             content.classList.add('hidden');
@@ -110,7 +110,7 @@
                 for (var i = 0; i < allItems.length; i++)
                     allItems[i].classList.remove('selected');
                 item.classList.add('selected');
-                var allContent = primary.getElementsByClassName('content');
+                var allContent = primary.querySelectorAll(':scope > .content');
                 for (var j = 0; j < allContent.length; j++)
                     allContent[j].classList.add('hidden');
                 content.classList.remove('hidden');
@@ -123,13 +123,10 @@
         });
     }
 
-    // Defer until after MathJax typesetting, so stem blocks in visible tabs render
-    document.addEventListener('DOMContentLoaded', function() {
-        if (window.MathJax && MathJax.Hub) {
-            MathJax.Hub.Queue(initTabs);
-        } else {
-            initTabs();
-        }
+    // Run after MathJax v2 finishes typesetting (loaded sync at page bottom,
+    // typesetting is queued, so 'load' + small delay ensures it completes)
+    window.addEventListener('load', function() {
+        setTimeout(initTabs, 200);
     });
 </script>
 </body>

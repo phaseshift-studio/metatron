@@ -896,6 +896,37 @@ body {
     border: 1px solid #000 !important;
 }
 
+/* ── Callout badge alignment ──────────────────────────────────── */
+
+.conum + b {
+    float: right !important;
+    width: 26px !important;
+    font-size: 12px !important;
+    height: 20px !important;
+    line-height: 20px !important;
+    text-align: center !important;
+}
+
+pre.highlight {
+    position: relative !important;
+}
+
+pre.highlight > code[data-lang] {
+    display: block !important;
+    padding-right: 44px;
+}
+
+/* ── Result-line dimming / input brightness ──────────────────── */
+
+.hljs-mtron-result-line {
+    opacity: 0.65;
+}
+
+.hljs-mtron-prompt-begin,
+.hljs-mtron-prompt-end {
+    filter: brightness(1.4);
+}
+
 /* Linearize Tabs for PDF Export */
 .pdf-export-mode .primary {
     display: block !important;
@@ -1408,8 +1439,6 @@ strong {
     .switch--item:first-child { border-radius: 3px 0 0 0; }
     .switch--item:last-child  { border-radius: 0 3px 0 0; }
     .switch--item.selected { background-color: #7a2519; color: #ffffff; }
-    .conum + b { width: auto !important; min-width: 22px !important; height: 20px !important; line-height: 20px !important; }
-    pre.highlight > code[data-lang] { padding-right: 40px; }
     </style>
     <script src="js/metatron.js" type="text/javascript"></script>
 </head>
@@ -1919,7 +1948,7 @@ rec::T[?[
 
             var titles = primary.getElementsByClassName('title');
             var primaryTitle = titles.length > 0 ? titles[0] : null;
-            var primaryContent = primary.getElementsByClassName('content')[0];
+            var primaryContent = primary.querySelectorAll(':scope > .content')[0];
 
             var item = document.createElement('div');
             item.className = 'switch--item selected';
@@ -1930,7 +1959,7 @@ rec::T[?[
                 for (var i = 0; i < allItems.length; i++)
                     allItems[i].classList.remove('selected');
                 item.classList.add('selected');
-                var allContent = primary.getElementsByClassName('content');
+                var allContent = primary.querySelectorAll(':scope > .content');
                 for (var j = 0; j < allContent.length; j++)
                     allContent[j].classList.add('hidden');
                 if (primaryContent) {
@@ -1952,7 +1981,7 @@ rec::T[?[
             var sw = primary.querySelector('.switch');
             if (!sw) return;
 
-            var contents = secondary.getElementsByClassName('content');
+            var contents = secondary.querySelectorAll(':scope > .content');
             if (contents.length === 0) return;
             var content = contents[0];
             content.classList.add('hidden');
@@ -1969,7 +1998,7 @@ rec::T[?[
                 for (var i = 0; i < allItems.length; i++)
                     allItems[i].classList.remove('selected');
                 item.classList.add('selected');
-                var allContent = primary.getElementsByClassName('content');
+                var allContent = primary.querySelectorAll(':scope > .content');
                 for (var j = 0; j < allContent.length; j++)
                     allContent[j].classList.add('hidden');
                 content.classList.remove('hidden');
@@ -1982,13 +2011,10 @@ rec::T[?[
         });
     }
 
-    // Defer until after MathJax typesetting, so stem blocks in visible tabs render
-    document.addEventListener('DOMContentLoaded', function() {
-        if (window.MathJax && MathJax.Hub) {
-            MathJax.Hub.Queue(initTabs);
-        } else {
-            initTabs();
-        }
+    // Run after MathJax v2 finishes typesetting (loaded sync at page bottom,
+    // typesetting is queued, so 'load' + small delay ensures it completes)
+    window.addEventListener('load', function() {
+        setTimeout(initTabs, 200);
     });
 </script>
 </body>
