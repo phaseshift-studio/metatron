@@ -951,7 +951,6 @@
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>3.5.5</version>
                     <configuration>
-                        <jvm>${user.home}/.sdkman/candidates/java/current/bin/java</jvm>
                         <argLine>
                             --sun-misc-unsafe-memory-access=allow
                             --enable-native-access=ALL-UNNAMED
