@@ -1401,6 +1401,16 @@ strong {
     <!-- <script src="data/console.txt"></script>-->
     <!-- CUSTOM CSS/JAVASCRIPT -->
     <link href="css/metatron.css" rel="stylesheet">
+    <style>
+    .hidden { display: none; }
+    .switch { border-width: 1px 1px 0 1px; border-style: solid; border-color: #7a2518; display: inline-block; border-radius: 4px 4px 0 0; }
+    .switch--item { padding: 4px 14px; font-size: 0.85rem; background-color: #ffffff; color: #7a2518; display: inline-block; cursor: pointer; }
+    .switch--item:first-child { border-radius: 3px 0 0 0; }
+    .switch--item:last-child  { border-radius: 0 3px 0 0; }
+    .switch--item.selected { background-color: #7a2519; color: #ffffff; }
+    .conum + b { width: auto !important; min-width: 22px !important; height: 20px !important; line-height: 20px !important; }
+    pre.highlight > code[data-lang] { padding-right: 40px; }
+    </style>
     <script src="js/metatron.js" type="text/javascript"></script>
 </head>
 <body class="d-flex flex-column min-vh-100" spellcheck="false">
@@ -3858,7 +3868,7 @@ mtron&gt;  -2.as(nat::T)     <i class="conum" data-value="6"></i><b>(6)</b>
 mtron&gt;  nat::2 * -1     <i class="conum" data-value="7"></i><b>(7)</b>
 ==&gt;fail::[nat::-2 is not a int::T[is(gt(0))][choose([
   is(lt(0))=&gt;mult(-1),
-  id()=&gt;id()]).rshift()]][...]@/sys/fail/546</code></pre>
+  id()=&gt;id()]).rshift()]][...]@/sys/fail/552</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3885,7 +3895,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{g}}m{{y}}E{{g}}t{{m}}a{{c}}t{{r}}R{{m}}o{{b}}n{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{g}}M{{m}}E{{r}}T{{c}}a{{b}}T{{b}}r{{m}}o{{r}}N{{X}}.</p>
 </div>
 <h4 id="_cascading_type_constructions" class="discrete">cascading type constructions</h4>
 <h3 id="_mono_types" class="discrete">mono types</h3>
@@ -7160,23 +7170,23 @@ mtron&gt; *&lt;http://localhost:8088/v1/models&gt;
 ==&gt;[
  object=&gt;list,
  data=&gt;[
-  [id=&gt;'smollm:1.7b',object=&gt;model],
   [id=&gt;mistralai_devstral-small-2507,object=&gt;model],
   [id=&gt;qwen3-coder-30b-a3b-instruct,object=&gt;model],
   [id=&gt;qwen3-tts-cpp,object=&gt;model],
   [id=&gt;qwen3:latest,object=&gt;model],
+  [id=&gt;'smollm:1.7b',object=&gt;model],
   [id=&gt;MeetAISmall__latest,object=&gt;model],
   [id=&gt;gpt-oss__latest,object=&gt;model]]]
 mtron&gt; *&lt;http://localhost:8088/v1/models/data/0/id&gt;
-==&gt;mistralai_devstral-small-2507
+==&gt;qwen3-tts-cpp
 mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
          *&lt;http://localhost:8088/v1/models/data/0/id&gt;}&gt;
 ==&gt;[
  parameters=&gt;[
-  model=&gt;'mistralai_Devstral-Small-2507-Q4_K_M.gguf',
-  top_p=&gt;0.9500,
-  top_k=&gt;-1,
-  min_p=&gt;0.0100,
+  model=&gt;'Qwen3-Coder-30B-A3B-Instruct-Q4_K_M.gguf',
+  top_p=&gt;0.8000,
+  top_k=&gt;20,
+  min_p=&gt;0,
   temperature=&gt;0.7000,
   max_tokens=&gt;0,
   repeat_penalty=&gt;1,
@@ -7184,7 +7194,7 @@ mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
   typical_p=&gt;1,
   seed=&gt;-1,
   logprobs=&gt;false],
- name=&gt;mistralai_devstral-small-2507,
+ name=&gt;qwen3-coder-30b-a3b-instruct,
  f16=&gt;false,
  threads=&gt;8,
  debug=&gt;false,
@@ -7192,23 +7202,16 @@ mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
  backend=&gt;llama-cpp,
  template=&gt;[
   chat=&gt;"""{{.Input -}}
+&lt;|im_start|&gt;assistant
 """,
-  chat_message=&gt;"""{{if eq .RoleName "user" -}}
-[INST] {{.Content }}...""",
+  chat_message=&gt;'&lt;|im_start|&gt;{{if eq .RoleName "tool" }}user{{else...',
   completion=&gt;"""{{.Input}}
 """,
-  function=&gt;'[AVAILABLE_TOOLS] [{{range .Functions}}{"type": "...'],
+  function=&gt;"""&lt;|im_start|&gt;system
+You are a function calling AI ..."""],
  known_usecases=&gt;[FLAG_CHAT,FLAG_COMPLETION],
  pipeline=&gt;[=&gt;],
- function=&gt;[
-  disable_no_action=&gt;true,
-  grammar=&gt;[parallel_calls=&gt;true,disable_parallel_new_lines=&gt;true,disable=&gt;true],
-  json_regex_match=&gt;['(?s)\[TOOL\_CALLS\](.*)'],
-  replace_function_results=&gt;[
-   [key=&gt;'(?s)^[^{\[]*'],
-   [key=&gt;'(?s)[^}\]]*$'],
-   [key=&gt;'(?s)\[TOOL\_CALLS\]'],
-   [key=&gt;'(?s)\[\/TOOL\_CALLS\]']]],
+ function=&gt;[grammar=&gt;[=&gt;]],
  reasoning=&gt;[=&gt;],
  mirostat_eta=&gt;0.1000,
  mirostat_tau=&gt;5,
@@ -7218,15 +7221,7 @@ mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
  mmlock=&gt;false,
  low_vram=&gt;false,
  reranking=&gt;false,
- stopwords=&gt;[
-  |im_end|,
-  dummy32000,
-  /tool_call,
-  |eot_id|,
-  |end_of_text|,
-  /s,
-  [/TOOL_CALLS],
-  [/ACTIONS]],
+ stopwords=&gt;[|im_end|,dummy32000,/s,|endoftext|],
  context_size=&gt;8192,
  limit_mm_per_prompt=&gt;[=&gt;],
  diffusers=&gt;[=&gt;],
@@ -7843,8 +7838,13 @@ rows. In metatron, a relational database is a <strong>tblespace</strong> backed 
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; tblespace::T
-==&gt;ERROR: Cannot invoke "studio.phaseshift.metatron.furi.fURI.test(studio.phaseshift.metatron.furi.fURI)" because the return value of "java.util.Map$Entry.getKey()" is null</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *tblespace
+==&gt;fail::[nullpointerexception: Cannot invoke "studio.phaseshift.metatron.furi.fURI.test(studio.phaseshift.metatron.furi.fURI)" because the return value of "java.util.Map$Entry.getKey()" is null
+  	studio.phaseshift.metatron.isa.AbstractInstSet [line 235]
+  	java.util.stream.ReferencePipeline$2$1 [line 196]
+  	java.util.Spliterators$IteratorSpliterator [line 1950]
+  	java.util.stream.StreamSpliterators$WrappingSpliterator [line 297]
+  	java.util.stream.StreamSpliterators$AbstractWrappingSpliterator [line 206]][...]@/sys/fail/228</code></pre>
 </div>
 </div></div></td>
 </tr>
@@ -7857,16 +7857,16 @@ rows. In metatron, a relational database is a <strong>tblespace</strong> backed 
                    driver  =&gt; &lt;org.sqlite.JDBC&gt;,
                    table   =&gt; [person,score,award,venue],
                    route   =&gt; [lite:=&gt;&lt;&gt;]]@/sys/space/lite     <i class="conum" data-value="1"></i><b>(1)</b>
-==&gt;ERROR: Cannot invoke "studio.phaseshift.metatron.furi.fURI.test(studio.phaseshift.metatron.furi.fURI)" because the return value of "java.util.Map$Entry.getKey()" is null
+==&gt;ERROR: null
 mtron&gt; lite:person/1 -&gt; [name=&gt;'marko', age=&gt;29]     <i class="conum" data-value="2"></i><b>(2)</b>
-==&gt;fail::[no active space supports pattern lite:person/1][...]@/sys/fail/228
+==&gt;fail::[no active space supports pattern lite:person/1][...]@/sys/fail/234
 mtron&gt; lite:person/2 -&gt; [name=&gt;'grant', age=&gt;25]     <i class="conum" data-value="3"></i><b>(3)</b>
-==&gt;fail::[no active space supports pattern lite:person/2][...]@/sys/fail/234
+==&gt;fail::[no active space supports pattern lite:person/2][...]@/sys/fail/240
 mtron&gt; *lite:person
        *lite:person/+/name     <i class="conum" data-value="5"></i><b>(5)</b>
-==&gt;fail::[no active space supports pattern lite:person][...]@/sys/fail/240
+==&gt;fail::[no active space supports pattern lite:person][...]@/sys/fail/246
 mtron&gt; *lite:person/+/id     <i class="conum" data-value="6"></i><b>(6)</b>
-==&gt;fail::[no active space supports pattern lite:person/+/id][...]@/sys/fail/246</code></pre>
+==&gt;fail::[no active space supports pattern lite:person/+/id][...]@/sys/fail/252</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -7947,9 +7947,9 @@ l└─ └───┘└───┘└───┘└───┘└───
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; lite:kv/single -&gt; 651.02
-==&gt;fail::[no active space supports pattern lite:kv/single][...]@/sys/fail/252
+==&gt;fail::[no active space supports pattern lite:kv/single][...]@/sys/fail/258
 mtron&gt; *lite:kv/single
-==&gt;fail::[no active space supports pattern lite:kv/single][...]@/sys/fail/258</code></pre>
+==&gt;fail::[no active space supports pattern lite:kv/single][...]@/sys/fail/264</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -7958,13 +7958,13 @@ mtron&gt; *lite:kv/single
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; lite:kv/nest -&gt; [a=&gt;[b=&gt;[c=&gt;2,d=&gt;!*lite:kv/nest]]]
-==&gt;fail::[no active space supports pattern lite:kv/nest][...]@/sys/fail/318
-mtron&gt; *lite:kv/nest
 ==&gt;fail::[no active space supports pattern lite:kv/nest][...]@/sys/fail/324
+mtron&gt; *lite:kv/nest
+==&gt;fail::[no active space supports pattern lite:kv/nest][...]@/sys/fail/330
 mtron&gt; *lite:kv/nest/a/b/+
-==&gt;fail::[no active space supports pattern lite:kv/nest/a/b/+][...]@/sys/fail/330
+==&gt;fail::[no active space supports pattern lite:kv/nest/a/b/+][...]@/sys/fail/336
 mtron&gt; *lite:kv/nest/a/b/d
-==&gt;fail::[no active space supports pattern lite:kv/nest/a/b/d][...]@/sys/fail/336</code></pre>
+==&gt;fail::[no active space supports pattern lite:kv/nest/a/b/d][...]@/sys/fail/342</code></pre>
 </div>
 </div>
 </div>
@@ -7996,7 +7996,7 @@ code''' └────────────────┘ └────�
 mtron&gt; *lite:person/+/name.count()     <i class="conum" data-value="2"></i><b>(2)</b>
 ==&gt;ERROR: null
 mtron&gt; *lite:person/+.==[name=&gt;_]     <i class="conum" data-value="3"></i><b>(3)</b>
-==&gt;fail::[no active space supports pattern lite:person/+][...]@/sys/fail/354</code></pre>
+==&gt;fail::[no active space supports pattern lite:person/+][...]@/sys/fail/360</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -8072,9 +8072,9 @@ whose values happen to match <code>person.name</code> — the link is purely alg
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/lite&gt;&gt;=[table=&gt;[person,score]]     <i class="conum" data-value="1"></i><b>(1)</b>
 mtron&gt; lite:score/1 -&gt; [player=&gt;'marko', points=&gt;42]     <i class="conum" data-value="2"></i><b>(2)</b>
-==&gt;fail::[no active space supports pattern lite:score/1][...]@/sys/fail/360
+==&gt;fail::[no active space supports pattern lite:score/1][...]@/sys/fail/366
 mtron&gt; lite:score/2 -&gt; [player=&gt;'grant', points=&gt;99]     <i class="conum" data-value="3"></i><b>(3)</b>
-==&gt;fail::[no active space supports pattern lite:score/2][...]@/sys/fail/366
+==&gt;fail::[no active space supports pattern lite:score/2][...]@/sys/fail/372
 mtron&gt; *lite:score/+.?==[player=&gt;'marko']     <i class="conum" data-value="4"></i><b>(4)</b>
 ==&gt;ERROR: null
 mtron&gt; */sys/space/lite.sql("SELECT p.name,p.age,s.points FROM person p JOIN score s ON p.name=s.player")     <i class="conum" data-value="5"></i><b>(5)</b>
@@ -8114,13 +8114,13 @@ Unlike a matching column value, the pointer encodes the full address of the link
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/lite&gt;&gt;=[table=&gt;[person,score,award]]     <i class="conum" data-value="1"></i><b>(1)</b>
 mtron&gt; lite:award/1 -&gt; [trophy=&gt;'gold',   recipient=&gt;!*lite:person/1]     <i class="conum" data-value="2"></i><b>(2)</b>
-==&gt;fail::[no active space supports pattern lite:award/1][...]@/sys/fail/432
+==&gt;fail::[no active space supports pattern lite:award/1][...]@/sys/fail/438
 mtron&gt; lite:award/2 -&gt; [trophy=&gt;'silver', recipient=&gt;!*lite:person/2]     <i class="conum" data-value="3"></i><b>(3)</b>
-==&gt;fail::[no active space supports pattern lite:award/2][...]@/sys/fail/492
+==&gt;fail::[no active space supports pattern lite:award/2][...]@/sys/fail/498
 mtron&gt; *lite:award/+     <i class="conum" data-value="4"></i><b>(4)</b>
-==&gt;fail::[no active space supports pattern lite:award/+][...]@/sys/fail/498
+==&gt;fail::[no active space supports pattern lite:award/+][...]@/sys/fail/504
 mtron&gt; *lite:award/1/recipient     <i class="conum" data-value="5"></i><b>(5)</b>
-==&gt;fail::[no active space supports pattern lite:award/1/recipient][...]@/sys/fail/504</code></pre>
+==&gt;fail::[no active space supports pattern lite:award/1/recipient][...]@/sys/fail/510</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -8160,11 +8160,11 @@ mtron&gt; area:V/1 -&gt; [label=&gt;'downtown',capacity=&gt;5000]     <i class="
 ==&gt;[label=&gt;'downtown',capacity=&gt;5000]
 mtron&gt; */sys/space/lite&gt;&gt;=[table=&gt;[person,score,award,venue]]     <i class="conum" data-value="3"></i><b>(3)</b>
 mtron&gt; lite:venue/1 -&gt; [name=&gt;'main_stage',location=&gt;!*area:V/1]     <i class="conum" data-value="4"></i><b>(4)</b>
-==&gt;fail::[no active space supports pattern lite:venue/1][...]@/sys/fail/510
-mtron&gt; *lite:venue/1     <i class="conum" data-value="5"></i><b>(5)</b>
 ==&gt;fail::[no active space supports pattern lite:venue/1][...]@/sys/fail/516
+mtron&gt; *lite:venue/1     <i class="conum" data-value="5"></i><b>(5)</b>
+==&gt;fail::[no active space supports pattern lite:venue/1][...]@/sys/fail/522
 mtron&gt; *lite:venue/1/location     <i class="conum" data-value="6"></i><b>(6)</b>
-==&gt;fail::[no active space supports pattern lite:venue/1/location][...]@/sys/fail/522</code></pre>
+==&gt;fail::[no active space supports pattern lite:venue/1/location][...]@/sys/fail/528</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -8202,11 +8202,11 @@ pointing back at the row&#8217;s own table.</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; lite:venue/2 -&gt; [name=&gt;'side_hall',location=&gt;!*g:V/1,parent=&gt;!*lite:venue/1]     <i class="conum" data-value="1"></i><b>(1)</b>
-==&gt;fail::[no active space supports pattern lite:venue/2][...]@/sys/fail/528
-mtron&gt; *lite:venue/2     <i class="conum" data-value="2"></i><b>(2)</b>
 ==&gt;fail::[no active space supports pattern lite:venue/2][...]@/sys/fail/534
+mtron&gt; *lite:venue/2     <i class="conum" data-value="2"></i><b>(2)</b>
+==&gt;fail::[no active space supports pattern lite:venue/2][...]@/sys/fail/540
 mtron&gt; *lite:venue/2/parent/location     <i class="conum" data-value="3"></i><b>(3)</b>
-==&gt;fail::[no active space supports pattern lite:venue/2/parent/location][...]@/sys/fail/540</code></pre>
+==&gt;fail::[no active space supports pattern lite:venue/2/parent/location][...]@/sys/fail/546</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -8607,6 +8607,90 @@ console::[        =&gt; ]@/sys/console;
     });
     document.querySelectorAll('code').forEach(block => {
         hljs.highlightBlock(block);
+    });
+
+    // ── Vanilla JS tab switching (replaces Zepto) ─────────────────
+    function initTabs() {
+        var primaries = document.querySelectorAll('.primary');
+        if (primaries.length === 0) return;
+
+        primaries.forEach(function(primary) {
+            var sw = document.createElement('div');
+            sw.className = 'switch';
+            primary.insertBefore(sw, primary.firstChild);
+
+            var titles = primary.getElementsByClassName('title');
+            var primaryTitle = titles.length > 0 ? titles[0] : null;
+            var primaryContent = primary.getElementsByClassName('content')[0];
+
+            var item = document.createElement('div');
+            item.className = 'switch--item selected';
+            item.textContent = primaryTitle ? primaryTitle.textContent : '';
+            // Click handler for the primary tab
+            item.addEventListener('click', function() {
+                var allItems = sw.querySelectorAll('.switch--item');
+                for (var i = 0; i < allItems.length; i++)
+                    allItems[i].classList.remove('selected');
+                item.classList.add('selected');
+                var allContent = primary.getElementsByClassName('content');
+                for (var j = 0; j < allContent.length; j++)
+                    allContent[j].classList.add('hidden');
+                if (primaryContent) {
+                    primaryContent.classList.remove('hidden');
+                    if (window.MathJax) MathJax.Hub.Queue(['Typeset', MathJax.Hub, primaryContent]);
+                }
+            });
+            sw.appendChild(item);
+            if (primaryTitle) primaryTitle.style.display = 'none';
+        });
+
+        document.querySelectorAll('.secondary').forEach(function(secondary) {
+            var candidate = secondary.previousElementSibling;
+            while (candidate && !candidate.classList.contains('primary'))
+                candidate = candidate.previousElementSibling;
+            if (!candidate) return;
+
+            var primary = candidate;
+            var sw = primary.querySelector('.switch');
+            if (!sw) return;
+
+            var contents = secondary.getElementsByClassName('content');
+            if (contents.length === 0) return;
+            var content = contents[0];
+            content.classList.add('hidden');
+            primary.appendChild(content);
+
+            var titles = secondary.getElementsByClassName('title');
+            var title = titles.length > 0 ? titles[0] : null;
+            var item = document.createElement('div');
+            item.className = 'switch--item';
+            item.textContent = title ? title.textContent : '';
+
+            item.addEventListener('click', function() {
+                var allItems = sw.querySelectorAll('.switch--item');
+                for (var i = 0; i < allItems.length; i++)
+                    allItems[i].classList.remove('selected');
+                item.classList.add('selected');
+                var allContent = primary.getElementsByClassName('content');
+                for (var j = 0; j < allContent.length; j++)
+                    allContent[j].classList.add('hidden');
+                content.classList.remove('hidden');
+                // Re-render math in newly visible content
+                if (window.MathJax) MathJax.Hub.Queue(['Typeset', MathJax.Hub, content]);
+            });
+
+            sw.appendChild(item);
+            secondary.parentNode.removeChild(secondary);
+        });
+    }
+
+    // Defer until after MathJax typesetting, so stem blocks in visible tabs render
+    document.addEventListener('DOMContentLoaded', function() {
+        if (window.MathJax && MathJax.Hub) {
+            MathJax.Hub.Queue(initTabs);
+        } else {
+            initTabs();
+        }
     });
 </script>
 </body>
