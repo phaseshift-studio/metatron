@@ -2,6 +2,7 @@
 !.metatron/
 target/
 jdeploy-bundle/node_modules/
+node_modules/
 .metatron.history
 *.iml
 /.venv/
