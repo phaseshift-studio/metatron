@@ -1,6 +1,7 @@
 .*
 !.metatron/
 target/
+jdeploy-bundle/node_modules/
 .metatron.history
 *.iml
 /.venv/
@@ -23,6 +24,7 @@ benchmark/*.json
 
 # Package Files #
 *.jar
+!jdeploy-bundle/jar-runner.jar
 *.war
 *.nar
 *.ear

@@ -1,0 +1,9 @@
+{
+  "name": "metatron-vm-launcher",
+  "private": true,
+  "description": "jDeploy launcher for metatron-vm — downloads JRE and runs the metatron JAR",
+  "dependencies": {
+    "njre": "^1.5.4",
+    "shelljs": "^0.8.5"
+  }
+}
