@@ -50,9 +50,18 @@ jobs:
           mkdir -p npm-publish
           tar xzf "$TGZ" -C npm-publish
           cd npm-publish/package
-          npm version --no-git-tag-version "0.0.0-jdeploy-snapshot.${GITHUB_RUN_NUMBER}"
-          npm pack
-          cd "$GITHUB_WORKSPACE"
-          npm publish ./npm-publish/package/*.tgz --access public --tag snapshot
+
+          if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+            npm version --no-git-tag-version "$VERSION"
+            npm pack
+            cd "$GITHUB_WORKSPACE"
+            npm publish ./npm-publish/package/*.tgz --access public
+          else
+            npm version --no-git-tag-version "0.0.0-jdeploy-snapshot.${GITHUB_RUN_NUMBER}"
+            npm pack
+            cd "$GITHUB_WORKSPACE"
+            npm publish ./npm-publish/package/*.tgz --access public --tag snapshot
+          fi
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

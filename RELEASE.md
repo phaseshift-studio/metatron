@@ -82,33 +82,18 @@ full GitHub release. Users install with `npm install -g metatron-vm`.
     ```
 
 4.  Monitor the action — the same `jdeploy.yml` workflow runs. The
-    jDeploy step creates a GitHub release named after the tag.
+    npm publish step detects the tag trigger and uses the tag version
+    (with the `v` prefix stripped) and the `latest` tag.
 
-    **Note:** The npm publish step currently hardcodes the snapshot
-    version pattern (`0.0.0-jdeploy-snapshot.<run>`) and `--tag snapshot`
-    regardless of whether the trigger was a branch push or a tag push.
-    This needs a workflow update before versioned npm releases work
-    correctly — see the section below.
+5.  After the workflow completes, verify:
 
-5.  After the workflow completes, verify the GitHub release at
+    ```bash
+    npm install -g metatron-vm
+    metatron-vm
+    ```
+
+    And check the GitHub release at
     `https://github.com/phaseshift-studio/metatron/releases`.
-
-### Versioned npm publish (workflow change needed)
-
-To enable proper versioned npm publishes from `v*` tags, the npm publish
-step in `.github/workflows/jdeploy.yml` needs to distinguish between
-snapshot and versioned triggers. Something like:
-
-```bash
-if [ "$GITHUB_REF_TYPE" = "tag" ]; then
-  TAG_VERSION="${GITHUB_REF_NAME#v}"
-  npm version --no-git-tag-version "$TAG_VERSION"
-  npm publish ./npm-publish/package/*.tgz --access public
-else
-  npm version --no-git-tag-version "0.0.0-jdeploy-snapshot.${GITHUB_RUN_NUMBER}"
-  npm publish ./npm-publish/package/*.tgz --access public --tag snapshot
-fi
-```
 
 ## Quick Reference
 

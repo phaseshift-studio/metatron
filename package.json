@@ -1,6 +1,11 @@
 {
   "name": "metatron-vm",
+  "description": "a ring-oriented language and virtual machine",
   "bin": "jdeploy-bundle/jdeploy.js",
+  "dependencies": {
+    "njre": "^1.5.4",
+    "shelljs": "^0.8.5"
+  },
   "jdeploy": {
     "jar": "target/metatron-0.1-SNAPSHOT-jar-with-dependencies.jar",
     "mainClass": "studio.phaseshift.metatron.BootLoader",
