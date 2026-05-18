@@ -418,7 +418,7 @@ public class mParser {
     public static Parser m_comment() {
         return choice(
                 seq(of("[--").trim(),any().starGreedy(of("--")), of("--]").trim()),
-                seq(of("[==").trim(), any().starGreedy(of("==]")), of("==]").trim())).trim();
+                seq(of("[==").trim(), any().starGreedy(of("==]")), of("==]").trim())).trim();//.map(t-> noobj());
     }
 
     public static Parser m_furi() {

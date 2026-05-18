@@ -234,15 +234,15 @@ include::grid-button.adoc[]
 ++++
 
 :card-id: 0
-:card-file: data-manipulation-panel.adoc
+:card-file: ring.adoc
 include::card.adoc[]
 
 :card-id: 1
-:card-file: insts.adoc
+:card-file: inst.adoc
 include::card.adoc[]
 
 :card-id: 2
-:card-file: control-structures.adoc
+:card-file: split-merge.adoc
 include::card.adoc[]
 
 :card-id: 3
@@ -250,7 +250,7 @@ include::card.adoc[]
 include::card.adoc[]
 
 :card-id: 4
-:card-file: instsets.adoc
+:card-file: instset.adoc
 include::card.adoc[]
 
 :card-id: 5
@@ -258,7 +258,7 @@ include::card.adoc[]
 include::card.adoc[]
 
 :card-id: 6
-:card-file: types.adoc
+:card-file: type.adoc
 include::card.adoc[]
 
 :card-id: 7
@@ -266,39 +266,39 @@ include::card.adoc[]
 include::card.adoc[]
 
 :card-id: 8
-:card-file: poly-obj.adoc
+:card-file: poly.adoc
 include::card.adoc[]
 
 :card-id: 9
-:card-file: uris.adoc
+:card-file: uri.adoc
 include::card.adoc[]
 
 :card-id: 10
-:card-file: q-proc.adoc
+:card-file: qproc.adoc
 include::card.adoc[]
 
 :card-id: 11
-:card-file: mqtt-space.adoc
+:card-file: mqtt.adoc
 include::card.adoc[]
 
 :card-id: 12
-:card-file: fs-space.adoc
+:card-file: fs.adoc
 include::card.adoc[]
 
 :card-id: 14
-:card-file: grph-space.adoc
+:card-file: grph.adoc
 include::card.adoc[]
 
 :card-id: 19
-:card-file: http-space.adoc
+:card-file: web.adoc
 include::card.adoc[]
 
 :card-id: 20
-:card-file: dcmnt-space.adoc
+:card-file: dcmnt.adoc
 include::card.adoc[]
 
 :card-id: 21
-:card-file: tble-space.adoc
+:card-file: tble.adoc
 include::card.adoc[]
 
 :card-id: 22
@@ -306,7 +306,7 @@ include::card.adoc[]
 include::card.adoc[]
 
 :card-id: 23
-:card-file: rdf-space.adoc
+:card-file: rdf.adoc
 include::card.adoc[]
 
 ++++

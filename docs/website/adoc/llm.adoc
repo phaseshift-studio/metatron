@@ -74,21 +74,20 @@ An LLM is a `model::T < rec::T` with the following type definition:
 
 The following example demonstrates how to search for an appropriate LLM for the given task, then query it, and finally, have its memory of the interaction stored in space for future use (to provide the agent context over longer interactions).
 
-++++
+[mtron]
+----
 <!-- 
 ai -> *ollama:+/+                                             /
       .where([skill=>has(thinking),                           /
               size =>is(and(gt(mB::1000.0),lt(mB::5000.0)))]) /
        .order(>>size.mult(-1.0))                              /
        .take(1)                                               
-*ai>>=[think=>true,                                           /
-       memory=>[mem=>/usr/mem,max=>5],                        /
-       tools =>[!*eval]
-*ai.+[think=>print(_),response=>to(/usr/ai/response)]         /
+*ai>>=+[memory=>[mem=>/usr/mem,max=>5],                        /
+        tools =>[!*eval]
+*ai.+[think=>print(_),response=>to(/usr/ai/response)]          /
    .chat("Remember the word 'metatron'. I'll ask you to recall this word later.")
 */usr/ai/response
--->
-++++
+----
 
 [.card]
 --
@@ -129,7 +128,7 @@ The content and metadata associated with the chat interaction are stored at the 
 ----
 *ollama:+/+                                         /
  .where([skill=>has(thinking),size=>?<mB::5000.0])  /
- .order(>>?real<=rec(size) * -1.0)                  /
+ .order(>>size * -1.0)                              /
  .take(1)                                           /
  .plus?rec<=rec(                                    /
   [memory=>[mem=>/usr/mem,max=>5]])                 /

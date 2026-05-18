@@ -111,6 +111,14 @@ traversals.
 . *process encodings*: graph databases have historically been used for structuring data, where processing exists exogenous graph and executing only at query time. mtron's `inst` objs make possible the graph encoding of processes, where, for example, vertices can become active objects within the larger application.
 . *sympathetic partitions*: an mtron `poly` is not constrained to a single space nor within a single space, does an operation on the poly imply a particular physical layout of underlying data. In this way, mtron conveniently supports language agnostic retrieval of data across different physical layouts.
 
+[mtron]
+----
+tblespace::[pattern => acme:#,                                                              /
+       host         => <mariadb://localhost:3306/acme?user=mtron&password=mtron>,  /
+       route        => [<acme:>=><>],                                                       /
+       table        => [,],                                                                 /
+       driver       => <org.mariadb.jdbc.Driver>]@/sys/space/acme;
+----
 
 [indent=0,subs="verbatim,attributes",role="primary"]
 .hierarchical properties
@@ -119,10 +127,10 @@ traversals.
 A consequence of mtron's uri-oriented id scheme is property keys no longer sit in a flat address space. 
 The following examples demonstrate selection and filtering using multi-segment uri pattern matching with wildcards.
 
-[mtron,role="primary"]
+[mtron]
 ----
-*g:V/1>>=[address/home/city => 'santa fe',        /
-          address/work/city => 'nomansland']                    [-- <1> --]
+*g:V/1>>=+[address/home/city => 'santa fe',        /
+           address/work/city => 'nomansland']                   [-- <1> --]
 *g:V/1/address/home/city                                        [-- <2> --]
 *g:V/+.?==[address/+/city => 'santa fe']                        [-- <3> --]
 *g:V/+.==[address/+/city/ => _]                                 [-- <4> --]
@@ -142,14 +150,15 @@ The following examples demonstrate selection and filtering using multi-segment u
 [indent=0,subs="verbatim,attributes",role="secondary"]
 .nested properties
 =====
-[mtron,role="secondary"]
+
+[mtron]
 ----
-[HIDDEN] *g:V/1>>=[address/home/city => noobj]
-[HIDDEN] *g:V/1>>=[address/work/city => noobj]
+[HIDDEN] *g:V/1>>=+[address/home/city => noobj]
+[HIDDEN] *g:V/1>>=+[address/work/city => noobj]
 *g:V/1==[_=>_]                                                  [-- <1> --]
-*g:V/1>>=[address=>[                        /
-             home => [city =>'santa fe',    /
-                      state=>NM],           /
+*g:V/1>>=+[address=>[                        /
+             home => [city =>'santa fe',     /
+                      state=>NM],            /
              work => !*<../home>]]                              [-- <2> --]
 *g:V/1/address/home/city                                        [-- <3> --]
 *g:V/+.?==[address=>[_ => [state=>NM]]]                         [-- <4> --]
@@ -186,21 +195,23 @@ The schemas for the respective data stores are provided in the expandable accord
 🧱
 [source,mtron]
 ----
-grphspace::[pattern => g:#,
-            route   => [g:V => V,
-                        g:E => E,
-                        g:S => /m/grph/inst/schema/modern],
-            native  => [factory => mfactory::[=>],
-                        load    => modern]]@/sys/space/modern
+grphspace::
+ [pattern => g:#,
+  route   => [g:V => V,
+              g:E => E,
+              g:S => /m/grph/inst/schema/modern],
+  native  => [factory => mfactory::[=>],
+              load    => modern]]@/sys/space/modern
 ----
 🧱
 [source,mtron]
 ----
-tblespace::[pattern => acme:#,
-            host    => <mariadb://localhost:3306/classicmodels>,
-            route   => [acme: => <>],
-            table   => [,],
-            driver  => <org.mariadb.jdbc.Driver>]@/sys/space/netflix
+tblespace::
+ [pattern => acme:#,
+  host    => <mariadb://localhost:3306/acme>,
+  route   => [acme: => <>],
+  table   => [,],
+  driver  => <org.mariadb.jdbc.Driver>]@/sys/space/netflix
 ----
 |===
 
@@ -259,18 +270,20 @@ nested structures existing across heterogeneous data sources.
 🧱        
 [source,mtron]
 ----
-      grph                         tble           
-┌───────────────┐            ┌───────────────┐
-│               │            │┌─────────────┐│
-│ ┌──┐          │            │├─────────────┤│
-│ │  ├──────────┼────────────►├─────────────┤│
-│ └─┬┘          │            │├─────────────┤│
-│   │           │            │├─────────────┤│
-│   │    ┌──┐   │            │├─────────────┤│
-│   └───►│  │◄──┼────────────┤├─────────────┤│
-│        └──┘   │            │├─────────────┤│
-│               │            │└─────────────┘│
-└───────────────┘            └───────────────┘
+
+
+
+
+      grph          tble           
+┌──────────┐    ┌───────────┐ 
+│┌──┐      │    │┌─────────┐│
+││  ├──────┼────►├─────────┤│
+│└─┬┘      │    │├─────────┤│
+│  │       │    │├─────────┤│
+│  │  ┌──┐ │    │├─────────┤│
+│  └─►│  │◄┼────┤├─────────┤│
+│     └──┘ │    │└─────────┘│
+└──────────┘    └───────────┘
 
 
 
@@ -302,12 +315,12 @@ nested structures existing across heterogeneous data sources.
 
 
 
-                                   foreign key
-                            tableA ┌───────┐ tableB
-vertexA vertexB   redirect  ┌─┬─┬─┬┼┬─┐   ┌┼┬─┬─┬─┐
-  ┌───┐    ┌───┐┌──────────►├─┼─├─┼┼┼─┤   ├▼┼─┼─┼─┤
-  │   │───►│   ├┘           ├─┼─┼─┼─┼─┤   ├─┼─┼─┼─┤
-  └───┘    └───┘            └─┴─┴─┴─┴─┘   └─┴─┴─┴─┘    
+                              foreign key
+                        tableA ┌───────┐ tableB
+  v[A]   v[B]  redirect ┌─┬─┬─┬┼┬─┐   ┌┼┬─┬─┬─┐
+ ┌───┐   ┌───┐┌────────►├─┼─├─┼┼┼─┤   ├▼┼─┼─┼─┤
+ │   │──►│   ├┘         ├─┼─┼─┼─┼─┤   ├─┼─┼─┼─┤
+ └───┘   └───┘          └─┴─┴─┴─┴─┘   └─┴─┴─┴─┘    
                                                              
                                                          
 
@@ -436,32 +449,110 @@ knows              │
 |===
 
 [discrete]
-==== directed attributed multi-relational binary graph
+==== directed vertex-attributed multi-relational binary graph
 
-using multi-segment uris
 
+[cols="8a,6a",separator=🧱,role="table-bordered small center"]
+|===
+🧱
 [mtron]
 ----
-v1 -> [name=>'marko',age=>29, outE_=>[knows=>{!*v2, !*v3},created=>!*v4]]
+v1 -> [name=>'marko',age=>29, /
+       out_=>[knows=>{!*v2, !*v3},created=>!*v4]]
 v2 -> [name=>'vadas',age=>27]
-v3 -> [name=>'josh',age=>32, outE_=>[created=>{!*v4, !*v5}]]
+v3 -> [name=>'josh',age=>32, /
+       out_=>[created=>{!*v4, !*v5}]]
 v4 -> [name=>'lop',lang=>java]
 v5 -> [name=>'ripple',lang=>java]
-v6 -> [name=>'peter',age=>35, outE_=>[created=>{!*v4}]]
+v6 -> [name=>'peter',age=>35, /
+       out_=>[created=>{!*v4}]]
 
 v1                                            [-- <1> --]
 *v1                                           [-- <2> --]
-*v1.>>outE_.>>knows                           [-- <3> --]
-*v1.>>outE_.>>knows.>>outE_.>>created         [-- <4> --]
-*v1.>>outE_.>>knows.>>outE_.>>created.>>name  [-- <5> --]
-*v1.>>outE_/knows                             [-- <3> --]
-*v1.>>outE_/knows.>>outE_/created             [-- <4> --]
-*v1.>>outE_/knows.>>outE_/created.>>name      [-- <5> --]
+*v1.>>out_.>>knows                            [-- <3> --]
+*v1.>>out_.>>knows.>>out_.>>created           [-- <4> --]
+*v1.>>out_.>>knows.>>out_.>>created.>>name    [-- <5> --]
+*v1.>>out_/knows                              [-- <3> --]
+*v1.>>out_/knows.>>out_/created               [-- <4> --]
+*v1.>>out_/knows.>>out_/created.>>name        [-- <5> --]
 ----
+🧱
+[source,mtron]
+----
+               lop
+              ┌────┐                                 
+          ┌───► v3 ◄───┐      peter                        
+ marko    │   └───▲┘ created ┌────┐                  
+ ┌────┐ created   │    └─────│ v5 │                  
+ │ v1 │───┘       │          └────┘                  
+ └────┘        created                                  
+  │  │            │                                  
+  │  │           ┌┴───┐                              
+  │  └───knows───► v4 │ josh                              
+  │              └─┬──┘
+knows  vadas       │          ripple                       
+  │ ┌────┐      created       ┌────┐                 
+  └─► v2 │         └──────────► v6 │                 
+    └────┘                    └────┘
+----
+|===
+
+To achieve a similar look and feel to Gremlin syntax, an `out` instruction can be defined to perform the respective `>>.>>` concatenation.
 
 [mtron]
 ----
-outE -> |outE?rec{*}<=rec(label=>uri{*}::T){ >>(outE_).>>(*label) }
+out -> |outE?rec{*}<=rec(label=>uri{*}::T){ >>(out_).>>(*label) }
+v1                                      [-- <1> --]
+*v1                                     [-- <2> --]
+*v1.outE(knows)                         [-- <3> --]
+*v1.outE(knows).outE(created)           [-- <4> --]
+*v1.outE(knows).outE(created).>>name    [-- <5> --]
+----
+
+[discrete]
+==== directed attributed multi-relational binary graph
+
+
+[cols="8a,6a",separator=🧱,role="table-bordered small center"]
+|===
+🧱
+[mtron]
+----
+v1 -> [name=>'marko',age=>29, /
+       outE_=>[knows=>{[weight=>0.5,inV_=>!*v2, outV_=>!*v1],   /
+                       [weight=>0.5,inV_=>!*v4, outV_=>!*v1]]}, /
+               created=>[weight=>0.2,inV_=>!*v3, outV_=>!*v1]]]
+v1                                            [-- <1> --]
+*v1                                           [-- <2> --]
+*v1.>>outE_.>>knows.>>_inV                    [-- <3> --]
+*v1.>>outE_.>>created.>>_inV                  [-- <4> --]
+----
+🧱
+[source,mtron]
+----
+               lop
+              ┌────┐                                 
+          ┌───► v3 ◄───┐      peter                        
+ marko    │   └───▲┘ created ┌────┐                  
+ ┌────┐ created   │    └─────│ v5 │                  
+ │ v1 │───┘       │          └────┘                  
+ └────┘        created                                  
+  │  │            │                                  
+  │  │           ┌┴───┐                              
+  │  └───knows───► v4 │ josh                              
+  │              └─┬──┘
+knows  vadas       │          ripple                       
+  │ ┌────┐      created       ┌────┐                 
+  └─► v2 │         └──────────► v6 │                 
+    └────┘                    └────┘
+----
+|===
+
+To achieve a similar look and feel to Gremlin syntax, an `out` instruction can be defined to perform the respective `>>.>>` concatenation.
+
+[mtron]
+----
+out -> |outE?rec{*}<=rec(label=>uri{*}::T){ >>(out_).>>(*label) }
 v1                                      [-- <1> --]
 *v1                                     [-- <2> --]
 *v1.outE(knows)                         [-- <3> --]

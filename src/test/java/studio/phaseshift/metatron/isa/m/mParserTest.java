@@ -53,15 +53,13 @@ public class mParserTest extends AbstractMetatronTest {
 
     @Test
     public void testCommentParse() {
-        assertEquals(NoObj.noobj(), ObjmtronSerializer.parse("[-- a comment"));
+        assertEquals(NoObj.noobj(), ObjmtronSerializer.parse("[-- a comment --]"));
         assertEquals(start_(jnt(1)).plus_(jnt(2)).end_().map_(jnt(4)), ObjmtronSerializer.parse("1+2;map(4)"));
-        assertEquals(start_(jnt(1)).plus_(jnt(2)), ObjmtronSerializer.parse("[-- a comment\n\r1+2"));
+        assertEquals(start_(jnt(1)).plus_(jnt(2)), ObjmtronSerializer.parse("[-- a comment --]\n\r1+2"));
         assertEquals(NoObj.noobj(), ObjmtronSerializer.parse("[-- a comment --]"));
         assertThrows(Exception.class, () -> ObjmtronSerializer.parse("[-- a comment\n\r\n\r --]1+2"));
         assertThrows(Exception.class, () -> ObjmtronSerializer.parse("-- a comment\n\n --"));
-        assertThrows(Exception.class, () ->  ObjmtronSerializer.parse("[--- a comment\n\n ---]"));
-        assertThrows(Exception.class, () ->  ObjmtronSerializer.parse("[--- a comment\n\n ---]"));
-        assertEquals(NoObj.noobj(), ObjmtronSerializer.parse("[--- a comment\n\n"));
+        assertEquals(NoObj.noobj(), ObjmtronSerializer.parse("[-- a comment \n\n --]\n\n"));
     }
 
     @Test

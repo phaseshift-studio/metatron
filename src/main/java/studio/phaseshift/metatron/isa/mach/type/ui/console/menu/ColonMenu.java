@@ -72,14 +72,17 @@ public final class ColonMenu extends MRec {
     public static final fURI COLON_MENU_TID = CONSOLE_TID.extend("colon_menu");
     private final GraphittyLogger LOG = Graphitty.log(this);
     private final Console console;
-    
+
     public Rec attach(final Rec menuRec, final String... menuItemsToAdd) {
-        for (final String item : menuItemsToAdd) {
+        for (final String item : menuItemsToAdd.length == 0 ? this.getMenuItems() : menuItemsToAdd) {
             menuRec.at(item, this.at(item).clone(), MUTABLE);
         }
         return this.console.at("menu", menuRec, MUTABLE);
     }
-    
+
+    public String[] getMenuItems() {
+        return this.keys().map(x -> x.uriValue().toString()).toArray(String[]::new);
+    }
     
     public ColonMenu(final Console console) {
         super(mutableMap(uri("console"), auto_from_(console.vid()).tryToInst()), COLON_MENU_TID, console.vid().extend("colon_menu"));
@@ -192,17 +195,17 @@ public final class ColonMenu extends MRec {
 
         // ===== top =====
         this.at("top", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
-           try {
+            try {
                 TTop.ttop(Console.getTerminal(), new PrintStream(Console.getTerminal().output()), System.err, new String[0]);
             } catch (Exception e) {
-               throw MTronException.of(e);
+                throw MTronException.of(e);
             }
             return noobj();
         }), MUTABLE);
 
         // ===== less =====
         this.at("less", instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(NOOBJ_TID), lst(), (lhs, inst) -> {
-          try{
+            try {
                 Commands.less(Console.getTerminal(), Console.getTerminal().input(), new PrintStream(Console.getTerminal().output()), System.err, Paths.get(""), new String[0]);
             } catch (Exception e) {
                 throw MTronException.of(e);

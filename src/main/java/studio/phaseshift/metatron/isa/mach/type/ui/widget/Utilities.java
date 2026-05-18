@@ -47,9 +47,10 @@ public class Utilities {
     }
 
     public static void runCursorLessWidget(final Widget<?> widget, final boolean close) {
+        int height=widget.height();
         Graphitty.log(Widget.class).none("{{.}}");
         widget.run();
-        Graphitty.log(Widget.class).none("{{*}}");
+        Graphitty.log(Widget.class).none("{{*}}{{^%d}}", height);
         if (close)
             widget.close();
     }

@@ -885,7 +885,7 @@ public class mInstSetTest extends AbstractInstSetTest {
             "true.as(int::T)                                                                                             % 1",
             "false.as(int::T)                                                                                            % 0",
             /// ////////////////////////////////////
-            "1.as(bytes::T)                                                                                              % 1.as(bytes::T) [-- 0x0000000000000001", // TODO: whats going on here?!?!
+            "1.as(bytes::T)                                                                                              % 1.as(bytes::T) [-- 0x0000000000000001 --]",
             "1.as(int::T)                                                                                                % 1",
             "1.as(str::T)                                                                                                % \"1\"",
             "1.as(real::T)                                                                                               % 1.0",

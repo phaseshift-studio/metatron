@@ -44,24 +44,27 @@ public class MCompleter implements Completer {
         this.console = console;
     }
 
-    public void complete(LineReader reader, ParsedLine commandLine, final List<Candidate> candidates) {
+    public void complete(final LineReader reader, final ParsedLine commandLine, final List<Candidate> candidates) {
         try {
             final Buffer buffer = reader.getBuffer();
-            if (!buffer.toString().isEmpty() && buffer.toString().endsWith(". ")) {
-                final String b = buffer.toString().substring(0, buffer.toString().length() - 2);
-                final Obj o = ObjmtronSerializer.parse(b);
-                if (o.isCode()) {
-                    final Inst lastInst = o.resolve(noobj()).codeValue().getLast();
-                    final Obj insts = Router.readFromSpace(f("/m/inst/#?dom=" + lastInst.tid().rng()));
-                    insts.forEach(i -> candidates.add(new Candidate(i.<Inst>as().tid().basePath() + "(" + (i.<Inst>as().args().isEmpty() ? ")" : ""), Graphitty.string(i.toString()), null, null, "", null, false)));
+            final String bufferString = buffer.toString();
+            if (!bufferString.isEmpty()) {
+                if (bufferString.trim().endsWith(".")) {
+                    final String b = bufferString.substring(0, bufferString.length() - 1);
+                    final Obj o = ObjmtronSerializer.parse(b);
+                    if (o.isCode()) {
+                        final Inst lastInst = o.resolve(noobj()).codeValue().getLast();
+                        final Obj insts = Router.readFromSpace(f("/m/inst/#?dom=" + lastInst.tid().rng()));
+                        insts.forEach(i -> candidates.add(new Candidate(i.<Inst>as().tid().basePath() + "(" + (i.<Inst>as().args().isEmpty() ? ")" : ""), Graphitty.string(i.toString()), null, null, "", null, false)));
+                    }
+                } else if (bufferString.startsWith("*") && bufferString.trim().endsWith("/")) {
+                    final Obj rels = Router.readFromSpace(f(bufferString.substring(1) + "+/"));
+                    rels.forEach(r -> candidates.add(new Candidate("*" + r.<Rel>as().first().uriValue().toString(), Graphitty.string(r.toString()), null, null, "", null, false)));
+                } else  {
+                    final Obj o = ObjmtronSerializer.parse(bufferString);
+                    if (o.isCode())
+                        candidates.add(new Candidate("", new Explain(o.as()).format(), null, null, "", null, false));
                 }
-            } else if (!buffer.toString().isEmpty() && buffer.toString().charAt(buffer.toString().length() - 1) == ' ') {
-                final Obj o = ObjmtronSerializer.parse(buffer.toString());
-                if (o.isCode())
-                    candidates.add(new Candidate("", new Explain(o.as()).format(), null, null, "", null, false));
-            } else {
-                final Obj results = ObjmtronSerializer.parse(buffer.toString()).apply();
-                results.forEach(obj -> candidates.addAll(makeCandidate(obj, results.unique())));
             }
         } catch (final Exception e) {
             // do nothing

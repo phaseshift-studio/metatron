@@ -87,12 +87,28 @@ public class fURIAwareIndexedSchema implements TableSchema {
                             ELSE SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 6), '/', -1)
                         END
                     ) VIRTUAL,
+                     seg6 VARCHAR(128) AS (
+                        CASE
+                            WHEN SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 7), '/', -1) = '' THEN NULL
+                            WHEN SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 7), '/', -1) = SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 6), '/', -1) THEN NULL
+                            ELSE SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 7), '/', -1)
+                        END
+                    ) VIRTUAL,
+                     seg7 VARCHAR(128) AS (
+                        CASE
+                            WHEN SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 8), '/', -1) = '' THEN NULL
+                            WHEN SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 8), '/', -1) = SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 7), '/', -1) THEN NULL
+                            ELSE SUBSTRING_INDEX(SUBSTRING_INDEX(furi, '/', 8), '/', -1)
+                        END
+                    ) VIRTUAL,
                     -- Indexes on virtual columns for fast pattern matching
                     INDEX idx_seg1 (seg1),
                     INDEX idx_seg2 (seg2),
                     INDEX idx_seg3 (seg3),
                     INDEX idx_seg4 (seg4),
                     INDEX idx_seg5 (seg5),
+                    INDEX idx_seg6 (seg6),
+                    INDEX idx_seg7 (seg7),
                     -- Composite indexes for common multi-segment patterns
                     INDEX idx_seg1_seg2 (seg1, seg2),
                     INDEX idx_seg1_seg2_seg3 (seg1, seg2, seg3)

@@ -50,7 +50,9 @@ public final class MtronDocPreprocessor {
 
     // ── Mtron block regex ───────────────────────────────────────────
 
-    /** Matches {@code [mtron]----...----} blocks. Group(1)=role, Group(2)=body. */
+    /**
+     * Matches {@code [mtron]----...----} blocks. Group(1)=role, Group(2)=body.
+     */
     private static final Pattern MTRON_BLOCK = Pattern.compile(
             "\\[mtron](?:,role=\"([^\"]+)\")?\\R----\\R(.*?)\\R----",
             Pattern.DOTALL);
@@ -58,11 +60,11 @@ public final class MtronDocPreprocessor {
     // ── Inline directive patterns ───────────────────────────────────
 
     private static final Pattern CALLOUT = Pattern.compile("\\[--\\s*<([0-9]+)>\\s*--]\\s*$");
-    private static final Pattern HIDDEN  = Pattern.compile("\\[HIDDEN]");
-    private static final Pattern HEADER  = Pattern.compile("\\[HEADER]\\s*(.*)");
-    private static final Pattern NOHDR   = Pattern.compile("\\[NO_HEADER]");
-    private static final Pattern ERROR   = Pattern.compile("\\[ERROR]");
-    private static final Pattern NOOUT   = Pattern.compile("\\[NO_OUTPUT]");
+    private static final Pattern HIDDEN = Pattern.compile("\\[HIDDEN]");
+    private static final Pattern HEADER = Pattern.compile("\\[HEADER]\\s*(.*)");
+    private static final Pattern NOHDR = Pattern.compile("\\[NO_HEADER]");
+    private static final Pattern ERROR = Pattern.compile("\\[ERROR]");
+    private static final Pattern NOOUT = Pattern.compile("\\[NO_OUTPUT]");
 
     private static final ObjmtronSerializer SER = ObjmtronSerializer.single();
 
@@ -185,7 +187,7 @@ public final class MtronDocPreprocessor {
             try {
                 final Obj result = ObjmtronSerializer.parse(expr).apply();
                 if (result.isFail() && !error) {
-                    System.err.printf("ERROR in docs with no [ERROR] specifier (docs are buggy): %s\n", expr);
+                    System.err.printf("ERROR in docs with no [ERROR] specifier (docs are buggy): %s\nfor expression:\n%s\n", result, expr);
                     //System.exit(1);
                 }
                 if (!hidden && !noOutput && !result.isNoObj()) {
@@ -223,7 +225,8 @@ public final class MtronDocPreprocessor {
                 if (!expr.isEmpty()) {
                     try {
                         ObjmtronSerializer.parse(expr).apply();
-                    } catch (final Exception ignored) {}
+                    } catch (final Exception ignored) {
+                    }
                 }
             }
         }

@@ -245,6 +245,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
             // JVM stays alive until SIGTERM triggers close() → SHUTDOWN_LATCH.countDown().
             final String surefireClassPath = System.getProperty(SUREFIRE_REAL_CLASS_PATH);
             if (!TESTING && (surefireClassPath == null || surefireClassPath.isEmpty())) {
+                Thread.currentThread().setName("metatron-main");
                 try {
                     SHUTDOWN_LATCH.await();
                 } catch (final InterruptedException e) {

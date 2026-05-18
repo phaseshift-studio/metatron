@@ -26,6 +26,7 @@ import org.jline.console.impl.Builtins;
 import org.jline.console.impl.SystemRegistryImpl;
 import org.jline.reader.*;
 import org.jline.reader.impl.DefaultParser;
+import org.jline.reader.impl.completer.SystemCompleter;
 import org.jline.reader.impl.history.DefaultHistory;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
@@ -92,7 +93,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     public static final fURI CONSOLE_TID = MACH_ISA_TID.extend("console");
     @JRecElement(key = "metatron_version", rng = "/m/uri")
     public static final String METATRON_VERSION = "0.1-alpha";
-    @JRecElement(key = "mtron", rng = "/m/uri")
+    //@JRecElement(key = "mtron", rng = "/m/uri")
     public static final String MTRON = "mtron";
     // @JRecElement(tid = FILE_TID_STRING)
     public static final String MTRON_NANORC = "mtron.nanorc";
@@ -174,7 +175,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
             .isaPredicate(rec())
             .constructor(instC(M_ISA_INST_TID.dom(ALL.maybe()).rng(CONSOLE_TID), lst(T(REC_TID)), (lhs, inst) -> {
                 final Console console = new Console(inst.arg(0).as(), inst.arg(0).vid());
-                new ColonMenu(console).attach(rec(), "help", "quit", "clear", "header", "log", "check", "top", "chat", "connect");
+                new ColonMenu(console).attach(rec());
                 BootLoader.getExecutor().submit(console);
                 return console;
             })).create();
@@ -247,7 +248,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                     .option(LineReader.Option.DISABLE_EVENT_EXPANSION, true)
                     .variable(LineReader.SECONDARY_PROMPT_PATTERN, Graphitty.string("{{-X&v1&^1&m}}     {{g}}| {{X}}"))
                     .variable(LineReader.INDENTATION, 0)
-                    //  .completer(new MCompleter(this))
+                    .completer(new MCompleter(this))
                     .build();
             new CustomWidgets(this.reader);
             this.status = new StatusLine(this);
@@ -1119,7 +1120,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                             if (parsed.isCode()) {
                                 terminal.writer().write("\n");
                                 final InstSelector selector = new InstSelector(parsed.resolve(noobj()).as(), bufferText);
-                                if (selector.hasInstructions()) {
+                                if (selector.hasItems()) {
                                     // Constrain the selector to the active pane when in split mode
                                     if (Console.this.splitMode && Console.this.activePane != null) {
                                         final int[] pos = Console.this.calculatePanePosition(Console.this.activePane);
@@ -1132,8 +1133,23 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                                     }
                                 }
                             }
+                        } else if (bufferText.trim().startsWith("*") && bufferText.trim().endsWith("/")) {
+                            terminal.writer().write("\n");
+                            final fURISelector selector = new fURISelector(bufferText);
+                            if (selector.hasItems()) {
+                                // Constrain the selector to the active pane when in split mode
+                                if (Console.this.splitMode && Console.this.activePane != null) {
+                                    final int[] pos = Console.this.calculatePanePosition(Console.this.activePane);
+                                    if (pos != null) selector.setPaneBounds(pos[0], pos[1], pos[2], pos[3]);
+                                }
+                                Utilities.runCursorLessWidget(selector, true);
+                                // Restore the full pane layout after the widget closes
+                                if (Console.this.splitMode) {
+                                    Console.this.renderPanes(false); // restore after fullscreen widget
+                                }
+                            }
                         } else {
-                            // Original behavior: show explain widget for code
+                            // show explain widget for code
                             final Obj code = ObjmtronSerializer.parse(bufferText);
                             if (code.isCode()) {
                                 terminal.writer().write("\n");
