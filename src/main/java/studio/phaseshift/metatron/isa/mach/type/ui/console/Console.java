@@ -223,6 +223,13 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                     }
                 }
             }).encoding(StandardCharsets.UTF_8).system(true).build();
+            // Request extended key reporting so terminals that support it (kitty, ghostty,
+            // xterm with modifyOtherKeys, iTerm2, etc.) will send distinguishable
+            // sequences for Shift+Backspace and other modified keys.
+            // Backward-compatible: terminals that don't understand these sequences ignore them.
+            terminal.writer().print("\033[>1u");   // kitty progressive enhancement 1 (disambiguate)
+            terminal.writer().print("\033[>4;2m"); // xterm modifyOtherKeys level 2
+            terminal.writer().flush();
             this.outputHeader("");
             final Supplier<Path> currentDir = () -> Paths.get("");
             final Builtins builtins = new Builtins(currentDir, Console.configurations, null);
@@ -264,6 +271,11 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
     public void close() {
         try {
             this.reader.getBuffer().clear();
+            // Disable extended key reporting before exit so we don't leave the
+            // terminal in a state that confuses subsequent applications.
+            terminal.writer().print("\033[<u");    // kitty: pop keyboard enhancement
+            terminal.writer().print("\033[>4m");  // xterm: reset modifyOtherKeys
+            terminal.writer().flush();
             terminal.close();
         } catch (final IOException e) {
             LOG.error(e);
