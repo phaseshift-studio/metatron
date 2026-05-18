@@ -16,16 +16,26 @@
     "url": "http://metatron.phaseshift.studio",
     "javaArgs": [
       "--enable-native-access=ALL-UNNAMED",
-      "--add-modules", "jdk.incubator.vector",
-      "--add-opens", "java.base/java.lang=ALL-UNNAMED",
-      "--add-opens", "java.base/java.lang.invoke=ALL-UNNAMED",
-      "--add-opens", "java.base/java.lang.reflect=ALL-UNNAMED",
-      "--add-opens", "java.base/java.util=ALL-UNNAMED",
-      "--add-opens", "java.base/java.util.concurrent.atomic=ALL-UNNAMED",
-      "--add-opens", "java.base/java.io=ALL-UNNAMED",
-      "--add-opens", "java.base/java.nio=ALL-UNNAMED",
-      "--add-opens", "java.base/java.net=ALL-UNNAMED",
-      "--add-opens", "java.base/sun.nio.cs=ALL-UNNAMED"
+      "--add-modules",
+      "jdk.incubator.vector",
+      "--add-opens",
+      "java.base/java.lang=ALL-UNNAMED",
+      "--add-opens",
+      "java.base/java.lang.invoke=ALL-UNNAMED",
+      "--add-opens",
+      "java.base/java.lang.reflect=ALL-UNNAMED",
+      "--add-opens",
+      "java.base/java.util=ALL-UNNAMED",
+      "--add-opens",
+      "java.base/java.util.concurrent.atomic=ALL-UNNAMED",
+      "--add-opens",
+      "java.base/java.io=ALL-UNNAMED",
+      "--add-opens",
+      "java.base/java.nio=ALL-UNNAMED",
+      "--add-opens",
+      "java.base/java.net=ALL-UNNAMED",
+      "--add-opens",
+      "java.base/sun.nio.cs=ALL-UNNAMED"
     ]
   }
 }

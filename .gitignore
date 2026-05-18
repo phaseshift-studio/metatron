@@ -1,4 +1,5 @@
 .*
+opencode.json
 !.metatron/
 target/
 jdeploy-bundle/node_modules/
