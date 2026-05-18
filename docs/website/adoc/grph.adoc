@@ -1,5 +1,5 @@
 [discrete]
-== Grph Space
+== grph
 
 [discrete]
 [%collapsible]

@@ -36,6 +36,7 @@ import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.nio.ByteBuffer;
@@ -61,6 +62,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.OBJ_SERIAL_TYPE;
 import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.OBJ_SIMPLE_JSON_SERIALIZER_VID;
 
 
@@ -72,7 +74,7 @@ public class mqttSpace extends AbstractSpace<Mqtt5Client> {
     public static final Rec MQTT_SPACE_CONFIG = rec(
             uri(PATTERN), URI_TYPE,
             uri(HOST), URI_TYPE,
-            uri(SERIALIZER).maybe(), else_(block_(auto_from_(uri(OBJ_SIMPLE_JSON_SERIALIZER_VID)).tryToInst()).tryToInst()).tryToInst(),
+            uri(SERIALIZER).maybe(), OBJ_SERIAL_TYPE,
             //uri(CLIENT).maybe(), T(URI_TID).maybe(),
             uri(ROUTE), REC_TYPE,
             uri(Tokens.QPROC).c(cInt::maybe), isa_(LST_TYPE));
@@ -82,13 +84,12 @@ public class mqttSpace extends AbstractSpace<Mqtt5Client> {
                             mqttSpace.of(Poly.Helper.applyObjRecursion(inst.arg(0).asRec(), MQTT_SPACE_CONFIG).asRec(), inst.arg(0).vid()))).create();
 
     protected final fURI broker;
-    protected final ObjSerializer<?> serializer;
     protected final memSpace cache;
 
     protected Mqtt5Client createConnection(final Map<Obj, Obj> config, final boolean cleanStart) {
         try {
             final Mqtt5Client client = MqttClient.builder()
-                    .identifier(config.getOrDefault(uri(CLIENT), uri("mtron-" + Math.abs(UUID.randomUUID().getMostSignificantBits()))).uriValue().toString())
+                    .identifier(config.getOrDefault(uri(CLIENT), uri("mtron-" + CommonUtil.mintShortUUID(f(""), true))).uriValue().toString())
                     .serverHost(this.broker.host())
                     .serverPort(this.broker.port() == -1 ? 1833 : this.broker.port())
                     .useMqttVersion5()
@@ -127,8 +128,9 @@ public class mqttSpace extends AbstractSpace<Mqtt5Client> {
         super(client, config, null == tid ? MQTT_SPACE_TID : tid, vid);
         LOG.info("{{y}}mtron{{g}}<=>{{y}}mqtt{{X}} route established: %s {{g}}<=> ({{b}}%s {{g}}<=>{{X}} %s{{g}}){{X}}", this.pattern().toUri(), config.getOrDefault(uri(ROUTE), rec()), uri(this.redirect(this.pattern(), false)));
         this.cache = memSpace.of(this.pattern(), null);
-        this.serializer = this.at(SERIALIZER).orElse(new ObjSimpleJSONSerializer());
-        LOG.info("%s serializer loaded: %s", this.tid(), this.serializer);
+        if(this.at(SERIALIZER).isNoObj())
+            this.at(uri(SERIALIZER),new ObjSimpleJSONSerializer(), MUTABLE);
+        LOG.info("%s serializer loaded: %s", this.tid(), this.at(SERIALIZER));
         this.broker = this.at(uri(HOST)).orThrow(new IllegalArgumentException("config must have a host key")).uriValue();
         try {
             this.sjvm = this.createConnection(config, false);
@@ -144,7 +146,7 @@ public class mqttSpace extends AbstractSpace<Mqtt5Client> {
                                 final String json = StandardCharsets.UTF_8.decode(p.getPayload().get()).toString();
                                 this.cache.write(
                                         this.redirect(f(p.getTopic().toString()), false),
-                                        this.serializer.inputBytes(ByteBuffer.wrap(json.getBytes(StandardCharsets.UTF_8))));
+                                        this.at(SERIALIZER).<ObjSerializer<?>>as().inputBytes(ByteBuffer.wrap(json.getBytes(StandardCharsets.UTF_8))));
                             } else {
                                 this.cache.write(
                                         this.redirect(f(p.getTopic().toString()), false),
@@ -205,7 +207,7 @@ public class mqttSpace extends AbstractSpace<Mqtt5Client> {
 
     private void send(final fURI pattern, final Obj obj) {
         try {
-            final byte[] payload = obj.isNoObj() ? new byte[0] : this.serializer.outputBytes(obj).array();
+            final byte[] payload = obj.isNoObj() ? new byte[0] : this.at(SERIALIZER).<ObjSerializer<?>>as().outputBytes(obj).array();
             if (pattern.hasQ(Tokens.SUB))
                 return;
             this.sjvm

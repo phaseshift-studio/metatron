@@ -593,7 +593,7 @@ public abstract class AbstractfURI implements fURI {
     public fURI rng() {
         if (this.hasQ(RNG))
             return this.qValue(RNG, fURI.class);
-        return ALL;
+        return ALL.maybe();
     }
 
 

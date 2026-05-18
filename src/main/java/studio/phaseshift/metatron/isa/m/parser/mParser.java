@@ -417,7 +417,7 @@ public class mParser {
 
     public static Parser m_comment() {
         return choice(
-                seq(of("[--").trim(),any().starGreedy(of("--")), of("--]").trim()),
+                seq(of("[--").trim(), any().starGreedy(of("--")), of("--]").trim()),
                 seq(of("[==").trim(), any().starGreedy(of("==]")), of("==]").trim())).trim();//.map(t-> noobj());
     }
 
@@ -691,7 +691,7 @@ public class mParser {
 
 
     public static final Pattern BLOCK_COMMENT_PATTERN = Pattern.compile("(\\[==).*?(==])", Pattern.DOTALL);
-    public static final Pattern LINE_COMMENT_PATTERN = Pattern.compile("(\\[--).*");
+    public static final Pattern LINE_COMMENT_PATTERN = Pattern.compile("(\\[--).*?(--])", Pattern.DOTALL);
 
     public static String removeBlockComments(final String source) {
         return BLOCK_COMMENT_PATTERN.matcher(source).replaceAll("");

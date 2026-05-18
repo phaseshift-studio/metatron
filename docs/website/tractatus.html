@@ -2363,16 +2363,10 @@ Finally, a degenerate anonymous <code>inst</code> with no specified variable fra
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;  10.(min=&gt;2,max=&gt;8){ is(and(gte(*min),lte(*max))) }     <i class="conum" data-value="1"></i><b>(1)</b>
-==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/94
 mtron&gt;  10.(min=&gt;minus(1),max=&gt;plus(1)){ is(and(gte(*min),lte(*max))) }     <i class="conum" data-value="2"></i><b>(2)</b>
 ==&gt;10
 mtron&gt;  10.(min=&gt;2,max=&gt;8){ is(and(gte(*bad_min),lte(*bad_max))) }     <i class="conum" data-value="3"></i><b>(3)</b>
-==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/96
 mtron&gt;  10.(){ is(and(gte(*min),lte(*max))) }     <i class="conum" data-value="4"></i><b>(4)</b>
-==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/98
 mtron&gt; 10.is(and(gte(minus(1)),lte(plus(1))))     <i class="conum" data-value="5"></i><b>(5)</b>
 ==&gt;10</code></pre>
 </div>
@@ -2457,9 +2451,9 @@ mtron&gt; 2.band(min=&gt;1,max=&gt;1)     <i class="conum" data-value="1"></i><b
                                       ^ end of input expected
 
 mtron&gt;  10.is_divisible(2)
-==&gt;fail::[unable to locate inst-f of is_divisible(2)@&lt;1&gt;][...]@/sys/fail/100
+==&gt;fail::[unable to locate inst-f of is_divisible(2)@&lt;1&gt;][...]@/sys/fail/254
 mtron&gt;  10.is_divisible('abc')
-==&gt;fail::[unable to locate inst-f of is_divisible('abc')@&lt;1&gt;][...]@/sys/fail/102</code></pre>
+==&gt;fail::[unable to locate inst-f of is_divisible('abc')@&lt;1&gt;][...]@/sys/fail/256</code></pre>
 </div>
 </div>
 </div>
@@ -2514,7 +2508,7 @@ This ensures the uri <code>trpl</code> is not applied to the <code>inst</code> p
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;  trpl -&gt; inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}     <i class="conum" data-value="1"></i><b>(1)</b>
-==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}]][...]@/sys/fail/104
+==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}]][...]@/sys/fail/258
 mtron&gt; trpl -&gt; |inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}     <i class="conum" data-value="2"></i><b>(2)</b>
 ==&gt;inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}
 mtron&gt; *trpl     <i class="conum" data-value="3"></i><b>(3)</b>
@@ -3148,7 +3142,7 @@ mtron&gt; ai -&gt; *ollama:+/+
  ?tool::T,
  ?base::T])]]] ==&gt; [[
  skill=&gt;has(thinking),
- size=&gt;is(and(gt(mB::1000.0000),lt(mB::5000.0000)))]]   |  \_args][...]@/sys/fail/224]][...]@/sys/fail/492
+ size=&gt;is(and(gt(mB::1000.0000),lt(mB::5000.0000)))]]   |  \_args][...]@/sys/fail/454]][...]@/sys/fail/950
 mtron&gt; *ai&gt;&gt;=+[memory=&gt;[mem=&gt;/usr/mem,max=&gt;5],
                tools =&gt;[!*eval]
 ==&gt;ERROR: *ai&gt;&gt;=+[memory=&gt;[mem=&gt;/usr/mem,max=&gt;5],
@@ -3157,7 +3151,7 @@ mtron&gt; *ai&gt;&gt;=+[memory=&gt;[mem=&gt;/usr/mem,max=&gt;5],
 
 mtron&gt; *ai.+[think=&gt;print(_),response=&gt;to(/usr/ai/response)]
           .chat("Remember the word 'metatron'. I'll ask you to recall this word later.")
-==&gt;fail::[MAcHiNe fAIleD][...]@/sys/fail/526
+==&gt;fail::[MachINE FAiLED][...]@/sys/fail/984
 mtron&gt; */usr/ai/response
 ==&gt;[completion,tools,thinking]</code></pre>
 </div>
@@ -3359,7 +3353,7 @@ mtron&gt; tB::1.0.as(mB::T)     <i class="conum" data-value="3"></i><b>(3)</b>
  ?tool::T,
  ?base::T])]]] ==&gt; [[
  skill=&gt;has(thinking),
- size=&gt;is(lt(mB::5000.0000))]]   |  \_args][...]@/sys/fail/550]][...]@/sys/fail/626</code></pre>
+ size=&gt;is(lt(mB::5000.0000))]]   |  \_args][...]@/sys/fail/1070]][...]@/sys/fail/1302</code></pre>
 </div>
 </div>
 <h3 id="_llm_tools_skills_and_mcp_servers" class="discrete">llm tools, skills, and mcp servers</h3>
@@ -3879,7 +3873,7 @@ can access it accordingly and naturally.</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;  1.plus(b)     <i class="conum" data-value="1"></i><b>(1)</b>
-==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/46
+==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/186
 mtron&gt; */sys/fail/+     <i class="conum" data-value="2"></i><b>(2)</b>
 mtron&gt; */sys/fail/+.catch(_)     <i class="conum" data-value="3"></i><b>(3)</b>
 mtron&gt; */sys/fail     <i class="conum" data-value="4"></i><b>(4)</b></code></pre>
@@ -3986,7 +3980,7 @@ mtron&gt; 4.as(int::T[?&gt;0]@nat)
 ==&gt;nat::4
 mtron&gt;  -4.as(nat::T)
 ==&gt;fail::[-4 is not a is(gt(0))
-  -4=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/656
+  -4=&gt;(==&gt;is(gt(0)))][...]@/sys/fail/1380
 mtron&gt; [-- refining rec::T  --]
 ==&gt;ERROR: class java.util.ArrayList cannot be cast to class studio.phaseshift.metatron.isa.m.type.Obj (java.util.ArrayList is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.m.type.Obj is in unnamed module of loader 'app')
 mtron&gt; [name=&gt;'snowbutt',age=&gt;7].as(rec::T[?[name=&gt;str::T,age=&gt;int::T]@chicken)
@@ -4053,11 +4047,11 @@ mtron&gt; 2.as(nat::T)     <i class="conum" data-value="5"></i><b>(5)</b>
 ==&gt;2
 mtron&gt;  -2.as(nat::T)     <i class="conum" data-value="6"></i><b>(6)</b>
 ==&gt;fail::[-2 is not a is(gt(0))
-  -2=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/662
+  -2=&gt;(==&gt;is(gt(0)))][...]@/sys/fail/1402
 mtron&gt;  nat::2 * -1     <i class="conum" data-value="7"></i><b>(7)</b>
 ==&gt;fail::[nat::-2 is not a int::T[is(gt(0))][choose([
   is(lt(0))=&gt;mult(-1),
-  id()=&gt;id()]).rshift()]][...]@/sys/fail/668</code></pre>
+  id()=&gt;id()]).rshift()]][...]@/sys/fail/1408</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -4084,7 +4078,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{b}}M{{g}}E{{r}}T{{b}}a{{y}}T{{r}}r{{r}}O{{r}}n{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{r}}m{{g}}E{{y}}T{{r}}a{{g}}T{{b}}R{{b}}O{{b}}N{{X}}.</p>
 </div>
 <h4 id="_cascading_type_constructions" class="discrete">cascading type constructions</h4>
 <h3 id="_mono_types" class="discrete">mono types</h3>
@@ -4157,7 +4151,7 @@ mtron&gt; 1.34 + 2.45     <i class="conum" data-value="4"></i><b>(4)</b>
 mtron&gt; "abc" + "def"     <i class="conum" data-value="5"></i><b>(5)</b>
 ==&gt;'abcdef'
 mtron&gt; a/b/c * d/e/f     <i class="conum" data-value="6"></i><b>(6)</b>
-==&gt;a/b/c/d/e/f</code></pre>
+==&gt;a/b/c</code></pre>
 </div>
 </div></div></td>
 </tr>
@@ -4740,7 +4734,7 @@ mtron&gt;  nat::-10
 ==&gt;ERROR: nat::-10 is not a int::T[is(gt(0))]
 mtron&gt;  int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/790</code></pre>
+  -10=&gt;(==&gt;is(gt(0)))][...]@/sys/fail/1566</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -4839,7 +4833,7 @@ mtron&gt;  nat::-10
 ==&gt;ERROR: nat::-10 is not a int::T[is(gt(0))]
 mtron&gt;  int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/796</code></pre>
+  -10=&gt;(==&gt;is(gt(0)))][...]@/sys/fail/1588</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -4862,10 +4856,10 @@ mtron&gt; age::125
 ==&gt;ERROR: age::125 is not a int::T[is(lt(120))]
 mtron&gt;  nat::125.as(age::T)
 ==&gt;fail::[nat::125 is not a is(lt(120))
-  nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/802
+  nat::125=&gt;(==&gt;is(lt(120)))][...]@/sys/fail/1610
 mtron&gt;  125.as(nat::T).as(age::T)
 ==&gt;fail::[125 is not a is(lt(120))
-  125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/808</code></pre>
+  125=&gt;(==&gt;is(lt(120)))][...]@/sys/fail/1616</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -5291,7 +5285,8 @@ together. Via the colocation of two objs within the confines of a <code>poly</co
  noobj]
 mtron&gt; 1-&lt;[?&gt;0,?&gt;2,*/usr/${_}]&gt;-     <i class="conum" data-value="2"></i><b>(2)</b>
 ==&gt;1
-mtron&gt; 1-&lt;[?&gt;0,?&gt;2,*/usr/${_}]&gt;-.map(&lt;${g:V/_}&gt;)&gt;&gt;+     <i class="conum" data-value="3"></i><b>(3)</b></code></pre>
+mtron&gt; 1-&lt;[?&gt;0,?&gt;2,*/usr/${_}]&gt;-.map(&lt;${g:V/_}&gt;)&gt;&gt;+     <i class="conum" data-value="3"></i><b>(3)</b>
+==&gt;ERROR: null</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -6182,7 +6177,31 @@ mtron&gt; */usr/notes/#?subq
 <div class="collapse position-relative" id="card-11">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-11" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
 <button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
-<h2 id="_mqtt_space" class="discrete">MQTT Space</h2>
+<h2 id="_iot" class="discrete">iot</h2>
+<details>
+<summary class="title">/m/iot instset import</summary>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; import(/m/iot)
+==&gt;[
+ pattern=&gt;/m/iot/#,
+ q=&gt;[docq::[
+ pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+ pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+ pattern=&gt;docq,
+ obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+ inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
+ space=&gt;[super=&gt;!*/m],
+ type=&gt;[
+  mqtt::T,
+  haos::T]]@/m/iot
+mtron&gt;  import(/m/llm)
+{{b}}.{{r}}.{{m}}.{{X}}</code></pre>
+</div>
+</div>
+</div>
+</details>
 <div class="paragraph">
 <p><a href="https://mqtt.org/">MQTT</a> is a lightweight messaging protocol commonly used for IoT (<a href="https://en.wikipedia.org/wiki/Internet_of_things">Internet of Things</a>) applications.
 The protocol offers <a href="https://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern">publish-subscribe</a> messaging and a wildcard-based addressing scheme that conveniently maps to the
@@ -6198,46 +6217,49 @@ URI address space.</p>
 <p>The MQTT space is a client of the MQTT broker referenced by <code>host</code>. This client maintains a router-detached caching space
 (default is <code>mem::T</code>) which maintains synchronization with that subset of the broker identified in the MQTT space&#8217;s routing table.</p>
 </div>
-<table class="tableblock frame-all grid-all stretch">
-<colgroup>
-<col style="width: 50%;">
-<col style="width: 50%;">
-</colgroup>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
+<div class="listingblock">
 <div class="content">
-<pre>mqtt::[pattern =&gt; &lt;esp32:#&gt;,                                /
-       host    =&gt; mqtt://localhost:1883,                    /
-       route   =&gt; [esp32:=&gt;&lt;/home/chips&gt;]]@/sys/space/esp32        [-- &lt;1&gt; --]
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; mqtt::[pattern =&gt; &lt;esp32:#&gt;,
+              host    =&gt; mqtt://localhost:1883,
+              route   =&gt; [esp32:=&gt;&lt;/home/chips&gt;]]@/sys/space/esp32     <i class="conum" data-value="1"></i><b>(1)</b>
+mtron&gt; *esp32:main_field/sensor/+.-&lt;|[
+         &gt;&gt;temp.?&lt;50  =&gt; print('too cold for watering'),
+         &gt;&gt;humid.?&gt;30 =&gt; print('too humid for watering'),
+         _            =&gt; print('starting drip system').
+                         esp32:main_field/actuator/drip.run(minutes::25)]     <i class="conum" data-value="2"></i><b>(2)</b>
+==&gt;ERROR: *esp32:main_field/sensor/+.-&lt;|[
+         &gt;&gt;temp.?&lt;50  =&gt; print('too cold for watering'),
+         &gt;&gt;humid.?&gt;30 =&gt; print('too humid for watering'),
+         _            =&gt; print('starting drip system').
+                         esp32:main_field/actuator/drip.run(minutes::25)]
+                           ^ end of input expected
 
-
-*esp32:main_field/sensor/+.-&lt;|[                             /
-  &gt;&gt;temp.?&lt;50  =&gt; print('too cold for watering'),           /
-  &gt;&gt;humid.?&gt;30 =&gt; print('too humid for watering'),          /
-  _            =&gt; print('starting drip system').            /
-                  esp32:main_field/actuator/drip.run(minutes::25)] [-- &lt;2&gt; --]
-
-*esp32:main_field/actuator/+/active?subq -&gt; |print(_)              [-- &lt;3&gt; --]</pre>
+mtron&gt; esp32:main_field/actuator/+/active?subq -&gt; sub::[on_recv=&gt;print(_)]     <i class="conum" data-value="3"></i><b>(3)</b>
+==&gt;sub::[on_recv=&gt;print(id())]
+mtron&gt; *esp32:main_field/actuator/#?subq     <i class="conum" data-value="4"></i><b>(4)</b></code></pre>
 </div>
 </div>
 <div class="colist arabic">
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>the <code>mqtt:T</code> space maintains a subset of the larger address space of the broker.</td>
+<td>the <code>mqtt::T</code> space maintains a subset of the larger address space of the broker.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>the <code>mqtt:T</code> space can be queried like a database due to mqtt persist being enabled by default.</td>
+<td>the <code>mqtt::T</code> space can be queried like a database due to mqtt persist being enabled by default.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="3"></i><b>3</b></td>
-<td>the <code>mqtt:T</code> space addresses can be subscribed to and receive updates via <code>inst</code> callbacks.</td>
+<td>the <code>mqtt::T</code> space addresses can be subscribed to and receive updates via <code>inst</code> callbacks.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>query the for all subscriptions whose target uri matches <code>esp32:main_field/actuator/#</code>.</td>
 </tr>
 </table>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
+</div>
+<div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">        mqtt broker
        ┌──────────────────────────┐
@@ -6252,10 +6274,11 @@ URI address space.</p>
 └────┘ └────┘ └────┘ └────┘ └────┘ └────┘
 └───────────── mqtt clients ────────────┘</code></pre>
 </div>
-</div></div></td>
-</tr>
-</tbody>
-</table>
+</div>
+<h3 id="_building_a_home_automation_system" class="discrete">building a home automation system</h3>
+<div class="paragraph">
+<p>metatron provides all the necessary (digital) plumbing to create a home automation system. With the inclusion of the <code>/m/llm</code> instruction set, a world of opportunities presents itself.</p>
+</div>
 </div>
 <div class="collapse position-relative" id="card-12">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-12" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
@@ -6385,7 +6408,7 @@ mtron&gt; *&lt;local:Desktop/test_bash.bash&gt;.as(bytes::T).as(str::T)     <i c
 <div class="collapse position-relative" id="card-14">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-14" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
 <button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
-<h2 id="_grph_space" class="discrete">Grph Space</h2>
+<h2 id="_grph" class="discrete">grph</h2>
 <details>
 <summary class="title">/m/grph instset import</summary>
 <div class="content">
@@ -6472,7 +6495,7 @@ mtron&gt; *g:V/1.outE()     <i class="conum" data-value="2"></i><b>(2)</b>
 ==&gt;fail::[rhs does not match inst range:
 	{created::[weight=&gt;0.4000]@g:E/9,knows::[weight=&gt;0.5000]@g:E/7,knows::[weight=&gt;1.0000]@g:E/8}=&gt;(X=&gt;elmt::T[?[
   IN=&gt;vrtx::T,
-  OUT=&gt;vrtx::T]]@/m/grph/edge)][...]@/sys/fail/74
+  OUT=&gt;vrtx::T]]@/m/grph/edge)][...]@/sys/fail/214
 mtron&gt; *g:V/1.outE().inV()     <i class="conum" data-value="3"></i><b>(3)</b>
 ==&gt;software::[name=&gt;'lop',lang=&gt;'java']@g:V/3
 ==&gt;person::[name=&gt;'vadas',age=&gt;27]@g:V/2
@@ -6819,7 +6842,7 @@ mtron&gt; *g:V/1.addE(consulted,|*acme:customers/357)     <i class="conum" data-
 ==&gt;fail::[rhs does not match inst range:
 	consulted::[=&gt;]@g:E/14=&gt;(X=&gt;elmt::T[?[
   IN=&gt;vrtx::T,
-  OUT=&gt;vrtx::T]]@/m/grph/edge)][...]@/sys/fail/76
+  OUT=&gt;vrtx::T]]@/m/grph/edge)][...]@/sys/fail/216
 mtron&gt; *g:V/1.out(consulted)     <i class="conum" data-value="4"></i><b>(4)</b>
 ==&gt;[
  customerName=&gt;'GiftsForHim.com',
@@ -7433,7 +7456,7 @@ mtron&gt; *v1.outE(knows).outE(created).&gt;&gt;name     <i class="conum" data-v
   	java.util.stream.ForEachOps$ForEachOp$OfRef [line 186]
   	java.util.stream.ReferencePipeline$2$1 [line 197]
   	java.util.ArrayList$ArrayListSpliterator [line 1716]
-  	java.util.stream.AbstractPipeline [line 570]][...]@/sys/fail/830
+  	java.util.stream.AbstractPipeline [line 570]][...]@/sys/fail/1638
 mtron&gt; httpspace::[
         host     =&gt; &lt;http://localhost:8777&gt;,
         pattern  =&gt; &lt;http://#&gt;,
@@ -7455,9 +7478,9 @@ mtron&gt; httpspace::[
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; html::T     <i class="conum" data-value="1"></i><b>(1)</b>
 ==&gt;ERROR: Cannot invoke "studio.phaseshift.metatron.furi.fURI.test(studio.phaseshift.metatron.furi.fURI)" because the return value of "java.util.Map$Entry.getKey()" is null
 mtron&gt;  *&lt;http://phaseshift.studio/&gt;     <i class="conum" data-value="2"></i><b>(2)</b>
-==&gt;fail::[no active space supports pattern &lt;http://phaseshift.studio&gt;][...]@/sys/fail/836
+==&gt;fail::[no active space supports pattern &lt;http://phaseshift.studio&gt;][...]@/sys/fail/1644
 mtron&gt;  *&lt;http://phaseshift.studio/html/head/title&gt;     <i class="conum" data-value="3"></i><b>(3)</b>
-==&gt;fail::[no active space supports pattern &lt;http://phaseshift.studio/html/head/title&gt;][...]@/sys/fail/842
+==&gt;fail::[no active space supports pattern &lt;http://phaseshift.studio/html/head/title&gt;][...]@/sys/fail/1650
 mtron&gt;  *&lt;http://phaseshift.studio&gt;.as(str::T)     <i class="conum" data-value="4"></i><b>(4)</b>
 ==&gt;ERROR: null</code></pre>
 </div>
@@ -7492,14 +7515,14 @@ mtron&gt;  *&lt;http://phaseshift.studio&gt;.as(str::T)     <i class="conum" dat
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *&lt;http://localhost:8088/v1&gt;
-==&gt;fail::[no active space supports pattern http://localhost:8088/v1][...]@/sys/fail/854
+==&gt;fail::[no active space supports pattern http://localhost:8088/v1][...]@/sys/fail/1662
 mtron&gt; *&lt;http://localhost:8088/v1/models&gt;
-==&gt;fail::[no active space supports pattern http://localhost:8088/v1/models][...]@/sys/fail/860
+==&gt;fail::[no active space supports pattern http://localhost:8088/v1/models][...]@/sys/fail/1668
 mtron&gt; *&lt;http://localhost:8088/v1/models/data/0/id&gt;
-==&gt;fail::[no active space supports pattern http://localhost:8088/v1/models/data/0/id][...]@/sys/fail/866
+==&gt;fail::[no active space supports pattern http://localhost:8088/v1/models/data/0/id][...]@/sys/fail/1674
 mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
          *&lt;http://localhost:8088/v1/models/data/0/id&gt;}&gt;
-==&gt;fail::[no active space supports pattern &lt;http://localhost:8088/api/models/config-json/fail::[no active space supports pattern http://localhost:8088/v1/models/data/0/id][...]@/sys/fail/872&gt;][...]@/sys/fail/878</code></pre>
+==&gt;fail::[no active space supports pattern &lt;http://localhost:8088/api/models/config-json/fail::[no active space supports pattern http://localhost:8088/v1/models/data/0/id][...]@/sys/fail/1680&gt;][...]@/sys/fail/1686</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -7806,7 +7829,7 @@ mtron&gt; farmset::[type=&gt;[animal::T,equipment::T,chicken::T]]@/m/dcmnt/schem
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;  farm:animals/1 -&gt; 'a chicken named trill'     <i class="conum" data-value="1"></i><b>(1)</b>
-==&gt;fail::[space /sys/space/farm requires rec::T[?[{?}animals=&gt;animals::T]] at root; got str::T][...]@/sys/fail/2
+==&gt;fail::[space /sys/space/farm requires rec::T[?[{?}animals=&gt;animals::T]] at root; got str::T][...]@/sys/fail/142
 mtron&gt; farm:animals/1 -&gt; chicken::[name=&gt;'trill',age=&gt;7]     <i class="conum" data-value="2"></i><b>(2)</b>
 ==&gt;chicken::[name=&gt;'trill',age=&gt;7]
 mtron&gt; *farm:animals/1     <i class="conum" data-value="3"></i><b>(3)</b>
@@ -8131,7 +8154,11 @@ mtron&gt; *lite:person/+/id     <i class="conum" data-value="6"></i><b>(6)</b>
 ==&gt;[
  instset=&gt;instset::[
   pattern=&gt;/sys/space/lite/schema/instset/#,
-  type=&gt;[,],
+  type=&gt;[
+   award::T,
+   person::T,
+   score::T,
+   venue::T],
   q=&gt;[docq::[
  pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
  pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
@@ -8142,8 +8169,52 @@ mtron&gt; *lite:person/+/id     <i class="conum" data-value="6"></i><b>(6)</b>
  native=&gt;[
   pattern=&gt;/sys/space/lite/schema/instset/#,
   name=&gt;'instset',
-  tables=&gt;[,],
-  references=&gt;[,]]]
+  tables=&gt;[
+   [
+    name=&gt;'award',
+    uri=&gt;/sys/space/lite/schema/instset/award,
+    schema/schema=&gt;[
+     id=&gt;int::T,
+     trophy=&gt;str::T,
+     recipient=&gt;int::T],
+    type=&gt;award::T],
+   [
+    name=&gt;'person',
+    uri=&gt;/sys/space/lite/schema/instset/person,
+    schema/schema=&gt;[
+     id=&gt;int::T,
+     name=&gt;str::T,
+     age=&gt;int::T],
+    type=&gt;person::T],
+   [
+    name=&gt;'score',
+    uri=&gt;/sys/space/lite/schema/instset/score,
+    schema/schema=&gt;[
+     id=&gt;int::T,
+     player=&gt;str::T,
+     points=&gt;int::T],
+    type=&gt;score::T],
+   [
+    name=&gt;'venue',
+    uri=&gt;/sys/space/lite/schema/instset/venue,
+    schema/schema=&gt;[
+     id=&gt;int::T,
+     name=&gt;str::T,
+     location=&gt;int::T],
+    type=&gt;venue::T]],
+  references=&gt;[
+   [
+    from_table=&gt;'award',
+    from_column=&gt;'recipient',
+    to_table=&gt;'person',
+    to_column=&gt;'id',
+    type=&gt;'FOREIGN_KEY'],
+   [
+    from_table=&gt;'venue',
+    from_column=&gt;'location',
+    to_table=&gt;'area:V',
+    to_column=&gt;'id',
+    type=&gt;'FOREIGN_KEY']]]]
 mtron&gt; */sys/space/lite/schema/type/+</code></pre>
 </div>
 </div></div></td>
@@ -8326,7 +8397,11 @@ whose values happen to match <code>person.name</code> — the link is purely alg
  schema=&gt;[
   instset=&gt;instset::[
    pattern=&gt;/sys/space/lite/schema/instset/#,
-   type=&gt;[,],
+   type=&gt;[
+    award::T,
+    person::T,
+    score::T,
+    venue::T],
    q=&gt;[docq::[
  pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
  pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
@@ -8337,14 +8412,58 @@ whose values happen to match <code>person.name</code> — the link is purely alg
   native=&gt;[
    pattern=&gt;/sys/space/lite/schema/instset/#,
    name=&gt;'instset',
-   tables=&gt;[,],
-   references=&gt;[,]]]]
+   tables=&gt;[
+    [
+     name=&gt;'award',
+     uri=&gt;/sys/space/lite/schema/instset/award,
+     schema/schema=&gt;[
+      id=&gt;int::T,
+      trophy=&gt;str::T,
+      recipient=&gt;int::T],
+     type=&gt;award::T],
+    [
+     name=&gt;'person',
+     uri=&gt;/sys/space/lite/schema/instset/person,
+     schema/schema=&gt;[
+      id=&gt;int::T,
+      name=&gt;str::T,
+      age=&gt;int::T],
+     type=&gt;person::T],
+    [
+     name=&gt;'score',
+     uri=&gt;/sys/space/lite/schema/instset/score,
+     schema/schema=&gt;[
+      id=&gt;int::T,
+      player=&gt;str::T,
+      points=&gt;int::T],
+     type=&gt;score::T],
+    [
+     name=&gt;'venue',
+     uri=&gt;/sys/space/lite/schema/instset/venue,
+     schema/schema=&gt;[
+      id=&gt;int::T,
+      name=&gt;str::T,
+      location=&gt;int::T],
+     type=&gt;venue::T]],
+   references=&gt;[
+    [
+     from_table=&gt;'award',
+     from_column=&gt;'recipient',
+     to_table=&gt;'person',
+     to_column=&gt;'id',
+     type=&gt;'FOREIGN_KEY'],
+    [
+     from_table=&gt;'venue',
+     from_column=&gt;'location',
+     to_table=&gt;'area:V',
+     to_column=&gt;'id',
+     type=&gt;'FOREIGN_KEY']]]]]
 mtron&gt; lite:score/1 -&gt; [player=&gt;'marko', points=&gt;42]     <i class="conum" data-value="2"></i><b>(2)</b>
 ==&gt;[player=&gt;'marko',points=&gt;42]
 mtron&gt; lite:score/2 -&gt; [player=&gt;'grant', points=&gt;99]     <i class="conum" data-value="3"></i><b>(3)</b>
 ==&gt;[player=&gt;'grant',points=&gt;99]
 mtron&gt; *lite:score/+.?==[player=&gt;'marko']     <i class="conum" data-value="4"></i><b>(4)</b>
-==&gt;fail::[failed to execute native where operation[studio.phaseshift.metatron.util.MTronException:52]][...]@/sys/fail/644
+==&gt;fail::[failed to execute native where operation[studio.phaseshift.metatron.util.MTronException:52]][...]@/sys/fail/1326
 mtron&gt; */sys/space/lite.sql("SELECT p.name,p.age,s.points FROM person p JOIN score s ON p.name=s.player")     <i class="conum" data-value="5"></i><b>(5)</b>
 ==&gt;[name=&gt;'marko',age=&gt;29,points=&gt;42]
 ==&gt;[name=&gt;'grant',age=&gt;25,points=&gt;99]</code></pre>
@@ -8392,7 +8511,11 @@ Unlike a matching column value, the pointer encodes the full address of the link
  schema=&gt;[
   instset=&gt;instset::[
    pattern=&gt;/sys/space/lite/schema/instset/#,
-   type=&gt;[,],
+   type=&gt;[
+    award::T,
+    person::T,
+    score::T,
+    venue::T],
    q=&gt;[docq::[
  pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
  pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
@@ -8403,8 +8526,52 @@ Unlike a matching column value, the pointer encodes the full address of the link
   native=&gt;[
    pattern=&gt;/sys/space/lite/schema/instset/#,
    name=&gt;'instset',
-   tables=&gt;[,],
-   references=&gt;[,]]]]
+   tables=&gt;[
+    [
+     name=&gt;'award',
+     uri=&gt;/sys/space/lite/schema/instset/award,
+     schema/schema=&gt;[
+      id=&gt;int::T,
+      trophy=&gt;str::T,
+      recipient=&gt;int::T],
+     type=&gt;award::T],
+    [
+     name=&gt;'person',
+     uri=&gt;/sys/space/lite/schema/instset/person,
+     schema/schema=&gt;[
+      id=&gt;int::T,
+      name=&gt;str::T,
+      age=&gt;int::T],
+     type=&gt;person::T],
+    [
+     name=&gt;'score',
+     uri=&gt;/sys/space/lite/schema/instset/score,
+     schema/schema=&gt;[
+      id=&gt;int::T,
+      player=&gt;str::T,
+      points=&gt;int::T],
+     type=&gt;score::T],
+    [
+     name=&gt;'venue',
+     uri=&gt;/sys/space/lite/schema/instset/venue,
+     schema/schema=&gt;[
+      id=&gt;int::T,
+      name=&gt;str::T,
+      location=&gt;int::T],
+     type=&gt;venue::T]],
+   references=&gt;[
+    [
+     from_table=&gt;'award',
+     from_column=&gt;'recipient',
+     to_table=&gt;'person',
+     to_column=&gt;'id',
+     type=&gt;'FOREIGN_KEY'],
+    [
+     from_table=&gt;'venue',
+     from_column=&gt;'location',
+     to_table=&gt;'area:V',
+     to_column=&gt;'id',
+     type=&gt;'FOREIGN_KEY']]]]]
 mtron&gt; lite:award/1 -&gt; [trophy=&gt;'gold',   recipient=&gt;!*lite:person/1]     <i class="conum" data-value="2"></i><b>(2)</b>
 ==&gt;[
  trophy=&gt;'gold',
@@ -8470,7 +8637,11 @@ mtron&gt; */sys/space/lite&gt;&gt;=[table=&gt;[person,score,award,venue]]     <i
  schema=&gt;[
   instset=&gt;instset::[
    pattern=&gt;/sys/space/lite/schema/instset/#,
-   type=&gt;[,],
+   type=&gt;[
+    award::T,
+    person::T,
+    score::T,
+    venue::T],
    q=&gt;[docq::[
  pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
  pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
@@ -8481,8 +8652,52 @@ mtron&gt; */sys/space/lite&gt;&gt;=[table=&gt;[person,score,award,venue]]     <i
   native=&gt;[
    pattern=&gt;/sys/space/lite/schema/instset/#,
    name=&gt;'instset',
-   tables=&gt;[,],
-   references=&gt;[,]]]]
+   tables=&gt;[
+    [
+     name=&gt;'award',
+     uri=&gt;/sys/space/lite/schema/instset/award,
+     schema/schema=&gt;[
+      id=&gt;int::T,
+      trophy=&gt;str::T,
+      recipient=&gt;int::T],
+     type=&gt;award::T],
+    [
+     name=&gt;'person',
+     uri=&gt;/sys/space/lite/schema/instset/person,
+     schema/schema=&gt;[
+      id=&gt;int::T,
+      name=&gt;str::T,
+      age=&gt;int::T],
+     type=&gt;person::T],
+    [
+     name=&gt;'score',
+     uri=&gt;/sys/space/lite/schema/instset/score,
+     schema/schema=&gt;[
+      id=&gt;int::T,
+      player=&gt;str::T,
+      points=&gt;int::T],
+     type=&gt;score::T],
+    [
+     name=&gt;'venue',
+     uri=&gt;/sys/space/lite/schema/instset/venue,
+     schema/schema=&gt;[
+      id=&gt;int::T,
+      name=&gt;str::T,
+      location=&gt;int::T],
+     type=&gt;venue::T]],
+   references=&gt;[
+    [
+     from_table=&gt;'award',
+     from_column=&gt;'recipient',
+     to_table=&gt;'person',
+     to_column=&gt;'id',
+     type=&gt;'FOREIGN_KEY'],
+    [
+     from_table=&gt;'venue',
+     from_column=&gt;'location',
+     to_table=&gt;'area:V',
+     to_column=&gt;'id',
+     type=&gt;'FOREIGN_KEY']]]]]
 mtron&gt; lite:venue/1 -&gt; [name=&gt;'main_stage',location=&gt;!*area:V/1]     <i class="conum" data-value="4"></i><b>(4)</b>
 ==&gt;[
  name=&gt;'main_stage',
@@ -8544,7 +8759,7 @@ mtron&gt; *lite:venue/2/parent/location     <i class="conum" data-value="3"></i>
   	org.sqlite.core.DB [line 1193]
   	org.sqlite.core.DB [line 1153]
   	org.sqlite.core.NativeDB [line -2]
-  	org.sqlite.core.NativeDB [line 135]][...]@/sys/fail/650</code></pre>
+  	org.sqlite.core.NativeDB [line 135]][...]@/sys/fail/1374</code></pre>
 </div>
 </div>
 <div class="colist arabic">
