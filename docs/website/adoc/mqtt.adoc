@@ -22,28 +22,28 @@ NOTE: The inspiration for metatron's URI addressing schema was inspired by the v
 */m/iot/space/mqtt
 ----
 
-The MQTT space is a client of the MQTT broker referenced by `host`. This client maintains a router-detached caching space (default is `memspace::T`) which maintains synchronization with that subset of the broker identified in the MQTT space's routing table.
+The MQTT space is a client of the MQTT broker referenced by `host`. This client maintains a router-detached caching space (default is `memspace::T`) which maintains synchronization with that subset of the broker identified in the MQTT space's routing table. In the examples to follow, the pattern prefix `ha:` stands for "home automation."
 
 [mtron]
 ----
-mqtt::[pattern => <esp32:#>,                                /
+mqtt::[pattern => <ha:#>,                                /
        host    => mqtt://localhost:1883,                    /
-       route   => [esp32:=></home/chips>]]@/sys/space/esp32          [-- <1> --]
+       route   => [ha:=></home/chips>]]@/sys/space/esp32          [-- <1> --]
 
 
-*esp32:main_field/sensor/+.-<|[                             /
+*ha:main_field/sensor/+.-<|[                             /
   >>temp.?<50  => print('too cold for watering'),           /
   >>humid.?>30 => print('too humid for watering'),          /
   _            => print('starting drip system').            /
-                  esp32:main_field/actuator/drip.run(minutes::25)]    [-- <2> --]
+                  ha:main_field/actuator/drip.run(minutes::25)]    [-- <2> --]
 
-esp32:main_field/actuator/+/active?subq -> sub::[on_recv=>print(_)]   [-- <3> --]
-*esp32:main_field/actuator/#?subq                                     [-- <4> --]
+ha:main_field/actuator/+/active?subq -> sub::[on_recv=>print(_)]   [-- <3> --]
+*ha:main_field/actuator/#?subq                                     [-- <4> --]
 ----
 <1> the `mqtt::T` space maintains a subset of the larger address space of the broker.
 <2> the `mqtt::T` space can be queried like a database due to mqtt persist being enabled by default.
 <3> the `mqtt::T` space addresses can be subscribed to and receive updates via `inst` callbacks.
-<4> query the for all subscriptions whose target uri matches `esp32:main_field/actuator/#`.
+<4> query the for all subscriptions whose target uri matches `ha:main_field/actuator/#`.
 
 [source,mtron]
 ----

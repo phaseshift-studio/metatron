@@ -76,15 +76,16 @@ The following example demonstrates how to search for an appropriate LLM for the 
 
 [mtron]
 ----
-<!-- 
-ai -> *ollama:+/+                                             /
-      .where([skill=>has(thinking),                           /
-              size =>is(and(gt(mB::1000.0),lt(mB::5000.0)))]) /
-       .order(>>size.mult(-1.0))                              /
-       .take(1)                                               
-*ai>>=+[memory=>[mem=>/usr/mem,max=>5],                        /
-        tools =>[!*eval]
-*ai.+[think=>print(_),response=>to(/usr/ai/response)]          /
+[,]@/usr/mem
+*ollama:+/+                                               /
+ .where([feature/skill=>has(thinking),                    /
+         size=>is(and(gt(mB::1000.0),lt(mB::5000.0)))])  /
+ .order(>>size * -1.0)                                    /
+ .take(1).to(ai)                                               
+@ai>>=+[feature=>[                                            /
+        memory=>[mem=>!@/usr/mem,max=>5],                     /
+        tools =>[!*eval]]]
+*ai.+[feature=>[think=>print(_),response=>to(/usr/ai/response)]]           /
    .chat("Remember the word 'metatron'. I'll ask you to recall this word later.")
 */usr/ai/response
 ----
@@ -126,12 +127,12 @@ The content and metadata associated with the chat interaction are stored at the 
 
 [mtron]
 ----
-*ollama:+/+                                         /
- .where([skill=>has(thinking),size=>?<mB::5000.0])  /
+*ollama:+/+                                                 /
+ .where([feature/skill=>has(thinking),size=>?<mB::5000.0])  /
  .order(>>size * -1.0)                              /
  .take(1)                                           /
  .plus?rec<=rec(                                    /
-  [memory=>[mem=>/usr/mem,max=>5]])                 /
+  [feature=>[memory=>[mem=>!@/usr/mem,max=>5]]])               /
   .chat("What was the special word I needed you to recall?")
 ----
 
@@ -148,12 +149,12 @@ mcp_ws::[host => <http://127.0.0.1:29170/index-mcp/streamable-http>]@/usr/ai/mcp
 ----
 *<openai:gpt-4o>.at(robotron).                                   /  
  side([,].at(<local:.agent/robotron/memory>)).                   /  
- >>=[think=>print(_),                                            /  
+ >>=[feature=>[think=>print(_),                                            /  
      tool=>[!*eval],                                             / 
      skill=>[                                                    /  
   !*<local:.agent/skills/mtron>.as(skill::T)],                   / 
      response=>[to=>print(_)],                                   / 
-     memory=>[mem=>!*<local:.agent/robotron/memory>,max=>20]].   / 
+     memory=>[mem=>!@<local:.agent/robotron/memory>,max=>20]]].  / 
  >>=[_=>^*_]                                                       
 ----
 <1> clone the base model to the `robotron` address
@@ -167,11 +168,11 @@ mcp_ws::[host => <http://127.0.0.1:29170/index-mcp/streamable-http>]@/usr/ai/mcp
 
 [mtron]
 ----
-*robotron.chat('what tools do you have access to?',          /
+@robotron.chat('what tools do you have access to?',          /
             [number_of_tools=>int::T,tool_names=>str::T])        
-*robotron.chat('what skills do you have?')                        
-*robotron>>memory                                                 
-*robotron>>memory/mem/2/attributes/format                        
+@robotron.chat('what skills do you have?')                        
+*robotron>>feature/memory                                                 
+*robotron>>feature/memory/mem/2/attributes/format                        
 ----
 <1> providing a response format `rec` yields a structured response.
 <2> without a response format, the agent replies in free, unstructured text.
@@ -189,9 +190,9 @@ The `eval` tool must also be present — the agent uses it to poll and pop notes
 
 [source,mtron]
 ----
-*<openai:gpt-4o>.at(robotron).
- >>=[tool => [!*eval],           <1>
-     note => [,]]                <2>
+@<openai:gpt-4o>.at(robotron).
+ >>=[feature=>[tool => [!*eval],           <1>
+     note => [,]]]                         <2>
 ----
 <1> `eval` is required — the agent calls it internally to read and consume notes.
 <2> `[,]` initializes an empty note list and activates the note-checking instruction in the agent's system message.

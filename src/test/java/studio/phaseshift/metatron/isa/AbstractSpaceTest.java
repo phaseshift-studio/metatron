@@ -539,6 +539,7 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
     @CsvSource(value = {
             "*$$/people/1                                                         %  *$$/people/1/name.map(*$$/people/1/name)                        % \"Alice\"",
             "*$$/people/1                                                         %  *$$/people/1>>name                                              % \"Alice\"",
+            "*$$/people/1                                                         %  *$$/people/1/name                                               % \"Alice\"",
             "*$$/people/1                                                         %  *$$/people/1/age                                                % 30",
             "@$$/people/1 >>= [age=>29,title=> +' Specialist']                    %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'Alice',age=>29,title=>'Engineer Specialist']",
             "*$$/people/1 >>= [age=>30,title=>'NONE']                             %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'Alice',age=>29,title=>'Engineer Specialist']",

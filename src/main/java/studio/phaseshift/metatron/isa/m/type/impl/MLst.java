@@ -58,7 +58,7 @@ public class MLst extends MObj implements Lst {
 
     @Override
     public Lst clone(final Object jvm, final fURI tid, final fURI vid) {
-        return super.clone(jvm, tid, vid);
+        return super.clone(((List<Obj>)jvm).stream()/*.map(Obj::clone)*/.collect(Collectors.toCollection(ArrayList::new)), tid, vid);
     }
 
     @Override

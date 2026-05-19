@@ -464,10 +464,10 @@ public class fURITest extends AbstractMetatronTest {
             "//x/a/b/c                  |  x        | false",
             "a/b/c/d                    |  a        | true",
             "a/b/c/d                    |  a/b     | true",
-            //   "a/b/c/d                    |  a/b/     | true",
-            "a/b/c/d                    |  a/+      | false",
+           // "a/b/c/d                    |  a/b/     | true",
+            "a/b/c/d                    |  a/+      | true",
             "a/b/c/d                    |  a/d      | false",
-            "a/b/c/d                    |  a/+/c    | false",
+            "a/b/c/d                    |  a/+/c    | true",
     }, delimiter = '|')
     public void testHasPrefix(final String a, final String b, final boolean hasPrefix) {
         LOG.debug("testing {{b}}%s{{X}} has prefix {{b}}%s{{X}} [expected: %s]", f(a), f(b), hasPrefix);
@@ -1331,14 +1331,26 @@ public class fURITest extends AbstractMetatronTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "test:/a/b/c     | a/b/c",
-            "test:/a         | a",
+            "test:/a/b/c     | #               | ",
+            "test:/a/b/c     | test:/a/b/c     | ",
+            "test:/a         | test:/a         | ",
+            "test:/a/b/c     | test:/a/b       | /c",
+            "test:/a/b/c     | test:#          | ",
+            "test:/a/b/c     | test:/d/#       | test:/a/b/c",
+            "test:/a/b/c     | test:/a/b/      | c",
+            "test:/a/b/c     | test:/a/+/      | c",
+            "test:/a/b/c     | test:/+/+/      | c",
+            "test:/a/b/c?x=1 | test:/+/+/+?x=1 | ",
+            "test:/a/b/c?x=1 | #               | ",
+           // TODO: query params "test:/a/b/c?x=1 | #?+=+           | "
     }, delimiter = '|')
-    public void testRemovePrefix(final String vid, final String base) {
+    public void testRemovePrefix(final String vid, final String base, final String expected) {
         final fURI vidF = f(vid);
         final fURI baseF = f(base);
         final fURI remainder = vidF.removePrefix(baseF);
-        LOG.warn("removePrefix: %s - %s = %s", vidF, baseF, remainder);
+        LOG.warn("removePrefix: %s - %s = %s [actual: %s]", vidF, baseF, expected, remainder);
+        assertEquals(f(expected), remainder);
+
     }
 
 }

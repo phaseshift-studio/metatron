@@ -73,7 +73,7 @@
      public static final String GRAPH_CONFIGURATION_KEY = "mtron.grph.vid";
      public static final ObjSerializer<String> SERIALIZER = new ObjmtronSerializer();
      public static final Rec GRAPH_CONFIG = rec(uri(GRAPH).maybe().asUri(), URI_TYPE);
-     
+
 
      protected static ObjFactory FACTORY = null;
      private static final fURI V_SOME = f("V/+");
@@ -213,7 +213,7 @@
              if (pattern.equals(ALL)) {
                  throw MTronException.of("cannot read all tp3 space");
              } else {
-                 final fURI routed = Space.Helper.routeFromSpace(pattern, this.routes()).asRelative().asNode();
+                 final fURI routed = Space.Helper.routeFromSpace(pattern, this.routes());
                  LOG.debug("reading tp3 vid: %s => %s", pattern, routed);
                  if (routed.hasScheme()) {
                      return new IdObj(routed, Router.global().read(routed)).iterator();
@@ -235,7 +235,8 @@
                          if (routed.pathLength() > 2) {
                              LOG.debug("searching for %s and %s", idobj.furi().extend(routed.pretract(2)), routed.pretract(2));
                              // CommonUtil.sleepThread(10000);
-                             return IdObj.of(idobj.furi().extend(routed.pretract(2)), idobj.obj().<VertexMap>jvmAs().get(uri(routed.pretract(2))));
+                             fURI remaining = routed.pretract(2);
+                             return IdObj.of(idobj.furi().extend(remaining), idobj.obj().asRec().at(remaining));
                          } else {
                              return idobj;
                          }
@@ -268,13 +269,14 @@
                  });
                  return noobj();
              } else {
-                 if (obj.jvm() instanceof ElementMap) // vertex already exists, all updates already occurred, no need to write it again
+                 if (obj.jvm() instanceof ElementMap) { // vertex already exists, all updates already occurred, no need to write it again
                      return obj;
+                 }
                  final fURI routed = Space.Helper.routeFromSpace(pattern, this.routes());
                  LOG.debug("writing tp3 vid: %s => %s", pattern, routed);
                  if (routed.test(V_SOME)) {
                      final Integer id = Integer.parseInt(routed.name());
-                     try { //  a newly created vertex from a rec
+                     try { //  a newly created vertex from a rec (if vertex doesn't exist)
                          final Vertex vertex = IteratorUtil.stream(this.sjvm.vertices(id)).findFirst().orElseGet(() ->
                                  this.sjvm.addVertex(
                                          org.apache.tinkerpop.gremlin.structure.T.label, obj.tid().basePath().toString(),
@@ -286,9 +288,11 @@
                                  .forEach(e -> {
                                      LOG.debug("writing vertex property %s =%s=> %s", vertex, e.getKey(), e.getValue());
                                      ElementMap.Helper.tp3KeyValue kv = new ElementMap.Helper.tp3KeyValue(e.getKey(), e.getValue());
-                                     vertex.property((String) kv.key()).remove();
-                                     if (!e.getValue().equals(Obj.none()))
-                                         vertex.property((String) kv.key(), kv.value());
+                                     if (e.getValue().isNone()) {
+                                         vertex.property(kv.key().toString()).remove();
+                                     } else {
+                                         vertex.property(kv.key().toString(), kv.value());
+                                     }
                                  });
                          /// SET VERTEX OUT EDGES
                          obj.asRec().elements().filter(e -> e.first().equals(grphInstSet.OUT))
@@ -369,7 +373,7 @@
             }
         }
     }*/
-     
+
      @Override
      public void close() {
          try {

@@ -160,28 +160,28 @@ public interface Space extends Rec, Closeable {
         }
 
         public static fURI routeToSpace(final fURI vid, Map<Uri, Uri> routes) {
+            final Uri vidURI = uri(vid);
             return routes.entrySet().stream()
                     //.sorted(Map.Entry.comparingByKey(Comparator.reverseOrder()))
-                    .filter(e -> vid.toString().startsWith(e.getValue().uriValue().toString()))
-                    .map(e -> e.getKey().autoResolve(noobj()).uriValue().extend(vid.toString().replaceFirst(e.getValue().autoResolve(noobj()).uriValue().toString(), "")).q(vid.qMap()))
+                    .filter(e -> vid.hasPrefix(e.getValue().apply(vidURI).uriValue()))
+                    .map(e -> e.getKey().apply(vidURI).uriValue().extend(vid.toString().replaceFirst(e.getValue().apply(vidURI).uriValue().toString(), "")).q(vid.qMap()))
                     .findFirst()
                     .orElse(vid);
         }
 
         public static fURI routeFromSpace(final fURI vid, Map<Uri, Uri> routes) {
+            final Uri vidURI = uri(vid);
             return routes.entrySet().stream()
                     //.sorted(Map.Entry.comparingByKey(Comparator.reverseOrder()))
-                    .filter(e -> vid.toString().startsWith(e.getKey().autoResolve(noobj()).uriValue().toString()))
+                    .filter(e -> vid.hasPrefix(e.getKey().apply(vidURI).uriValue()))
                     .map(e -> {
-                        String remainder = vid.toString().replaceFirst(
-                                e.getKey().autoResolve(noobj()).uriValue().toString(), "");
+                        fURI remainder = vid.removePrefix(e.getKey().apply(vidURI).uriValue());
                         // When the scheme prefix is stripped (e.g. "db:" → "") the
                         // remainder often starts with "/" ("/people/+").  fURI.extend()
                         // on an empty base preserves that leading slash as an empty
                         // first path segment, which breaks isTablePath() and hasPattern().
-                        if (remainder.startsWith("/")) remainder = remainder.substring(1);
-                        return e.getValue().autoResolve(noobj()).uriValue()
-                                .extend(remainder).q(vid.qMap());
+                       // if (remainder.startsWith("/")) remainder = remainder.substring(1);
+                        return e.getValue().apply(vidURI).uriValue().extend(remainder).q(vid.qMap());
                     })
                     .findFirst()
                     .orElse(vid);
@@ -241,6 +241,11 @@ public interface Space extends Rec, Closeable {
                     if (!nestRec.isEmpty())
                         listing.add(UriObj.of(uri(pattern), nestRec));
                 } else {
+                    /*if(pattern.hasPattern()) {
+                        directReader.apply(pattern.retractPattern()).forEachRemaining(kv -> {
+                            listing.add(UriObj.of(kv.furi().toUri(), kv.obj()));
+                        });
+                    }*/
                     directReader.apply((pattern.isBranch() ? pattern.extend(fURI.Singleton.WILD_ONE) : pattern.asBranch())).forEachRemaining(kv -> {
                         listing.add(UriObj.of(kv.furi().toUri(), kv.obj()));
                     });

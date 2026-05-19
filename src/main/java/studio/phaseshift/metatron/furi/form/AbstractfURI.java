@@ -409,21 +409,32 @@ public abstract class AbstractfURI implements fURI {
     }
 
     @Override
-    public boolean hasPrefix(final String prefix) {
+    public boolean hasPrefix(final fURI prefix) {
         if (null == prefix)
             return false;
-        final fURI prefixURI = f(prefix);
-        if (prefixURI.hasScheme() && (!this.hasScheme() || !this.scheme().equals(prefixURI.scheme())))
+        if (prefix.hasPattern()) {
+            fURI running = this;
+            while (!running.isEmpty() && running.segmentLength() > 0) {
+                //System.out.println("running: " + running + " prefix: " + prefix);
+                if (running.bimatches(prefix))
+                    return this.hasPrefix(running);
+                running = running.isBranch() ? running.asNode() : running.retract(1).asBranch();
+            }
             return false;
-        if (prefixURI.hasAuthority() && (!this.hasAuthority() || !this.authority().equals(prefixURI.authority())))
-            return false;
-        for (int i = 0; i < prefixURI.pathLength(); i++) {
-            if (this.pathLength() <= i)
+        } else {
+            final fURI prefixURI = prefix;
+            if (prefixURI.hasScheme() && (!this.hasScheme() || !this.scheme().equals(prefixURI.scheme())))
                 return false;
-            if (!this.path().get(i).equals(prefixURI.path().get(i)))
+            if (prefixURI.hasAuthority() && (!this.hasAuthority() || !this.authority().equals(prefixURI.authority())))
                 return false;
+            for (int i = 0; i < prefixURI.pathLength(); i++) {
+                if (this.pathLength() <= i)
+                    return false;
+                if (!this.path().get(i).equals(prefixURI.path().get(i)))
+                    return false;
+            }
+            return true;
         }
-        return true;
     }
 
     @Override
@@ -593,7 +604,7 @@ public abstract class AbstractfURI implements fURI {
     public fURI rng() {
         if (this.hasQ(RNG))
             return this.qValue(RNG, fURI.class);
-        return ALL.maybe();
+        return ALL;
     }
 
 

@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -25,12 +25,14 @@ import studio.phaseshift.metatron.furi.q.BaseQ;
 import studio.phaseshift.metatron.furi.q.QCollection;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Optional;
 
+import static studio.phaseshift.metatron.Tokens.SERIALIZER;
 import static studio.phaseshift.metatron.Tokens.SUBQ;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.furi.q.QCollection.SUBQ_TID;
@@ -48,18 +50,18 @@ public class MqttPubSubQ extends BaseQ {
     protected final QProc subq = QCollection.subq();
 
     public MqttPubSubQ(final mqttSpace space) {
-        super(new HashMap<>(),f(SUBQ), SUBQ_TID);
+        super(new HashMap<>(), f(SUBQ), SUBQ_TID);
         this.space = space;
         this.onWrite = new MqttPubSubQ.OnWrite();
-        this.onRead =   this.subq.onRead().get();
+        this.onRead = this.subq.onRead().get();
     }
 
     public class OnWrite extends BaseOnWrite {
-        
+
         public OnWrite() {
             super(noobj(), noobj(), noobj());
         }
-        
+
         @Override
         public Optional<Obj> qlessWrite(final fURI vid, final Obj obj) {
             return Optional.empty();
@@ -89,14 +91,14 @@ public class MqttPubSubQ extends BaseQ {
                 } else {
                     space.sjvm().toAsync()
                             .subscribeWith()
-                            .topicFilter(space.redirect(vid.basePath(), false).toString())
+                            .topicFilter(space.redirect(vid.basePath(), true).toString())
                             .callback(p -> {
                                 LOG.trace("received %s", p);
                                 final fURI topic = space.redirect(f(p.getTopic().toString()), false);
                                 Obj o;
                                 if (p.getPayload().isPresent()) {
                                     Router.global().stats().ioStats().incrBytesRecv(p.toString().length());
-                                    o = space.serializer.inputBytes(ByteBuffer.wrap(p.getPayloadAsBytes()));
+                                    o = space.at(SERIALIZER).<ObjSerializer<?>>as().inputBytes(ByteBuffer.wrap(p.getPayloadAsBytes()));
                                 } else
                                     o = noobj();
                                 super.qlessWrite(topic, o);

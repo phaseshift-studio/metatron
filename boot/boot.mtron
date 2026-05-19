@@ -46,28 +46,16 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
    
 [== mount computing spaces ==]
  memspace::[pattern   => /usr/#,                                 
-       q         => [mintq::[=>],docq::[=>],subq::[=>],incrq::[=>]]]@/sys/space/usr;
- /usr/ai/pattern/template -> [think=>[to=>print(_)],response=>[to=>print(_)],memory=>[from=>/usr/ai/memory]];
-       
+                  q   => [mintq::[=>],docq::[=>],subq::[=>],incrq::[=>]]]@/sys/space/usr;       
  memspace::[pattern   => /shared/#,
-       persist   => </tmp/shared.mtron>]@/sys/space/shared;
- fs_prefix     -> *boot/args/local.as(str::T).plus(':#').as(uri::T);
+            persist   => </tmp/shared.mtron>]@/sys/space/shared;
  fsspace::[pattern  => local:#,
             route   => [local:=><~/>],
             script  => !*boot/script]@/sys/space/fs;
   fsspace::[pattern  => metatronfs:#,
              route   => [metatronfs:=><.>]]@/sys/space/metatronfs;
- fsspace::[pattern  => mtronfs:#,
-           route   => [mtronfs:=><.metatron>]]@/sys/space/mtronfs;
-       
- [==meta::[pattern  => </a/cluster/#>,
-        host     => <ws://localhost:6666>,
-        route    => [</a/cluster>=></shared>],
-        peers    => !*boot/peers]@/sys/space/meta1;
- meta::[pattern  => </b/cluster/#>,
-        host     => <ws://127.0.0.1:7777>,
-        route    => [</b/cluster>=></shared>],
-        peers    => !*boot/peers]@/sys/space/meta2;==]
+  fsspace::[pattern  => mtronfs:#,
+             route   => [mtronfs:=><.metatron>]]@/sys/space/mtronfs;
  httpspace::[host     => !*boot/args/web/http/host,
              pattern  => <http://#>,
              route    => [/          => <>,
@@ -90,24 +78,26 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
         route    => [</h/+/>=><>],
         native   => [factory  => mfactory::[=>],
                      load     => grateful]]@/sys/space/grateful;                    
+  memspace::[pattern => /storage/mail/#]@/sys/space/mail;
   grphspace::[pattern  => g:#,
-        route    => [<g:> =><>,
-                     <g:V>=><V>,
-                     <g:E>=><E>,
-                     <g:S>=>/m/grph/schema/modern],
+        route    => [g:V/+/mail => </storage/mail/${>>1}>,
+                     g:V        => V,
+                     g:E        => E,
+                     g:S        => /m/grph/schema/modern],
         native   => [factory  => mfactory::[=>],
                      load     => modern]]@/sys/space/modern;
-mqttspace::[pattern => <esp32:#>,
-         host    => <mqtt://localhost:1833>,
-         route   => [esp32:=><>]]@/sys/space/mqtt;
+mqttspace::[pattern => <ha:#>,
+            host    => <mqtt://localhost:1883>,
+            q       => [subq::[=>]],
+            route   => [ha:=><>]]@/sys/space/mqtt;
 [==  miot::[pattern    => <mtron:#>,
          host       => !*boot/args/mqtt/broker,
          serializer => !*</m/mach/io/serializer/json/simple>,
          route      => [mtron:=>metatron/]]@/sys/space/mqtt/metatron;
   mqttspace::[pattern    => <z2m:#>,
-         host       => !*boot/args/mqtt/broker,
-         serializer => !*</m/mach/io/serializer/json/simple>,
-         route      => [z2m:=>zigbee2mqtt/]]@/sys/space/mqtt/zigbee2mqtt;
+            host       => !*boot/args/mqtt/broker,
+            serializer => !*</m/mach/io/serializer/json/simple>,
+            route      => [z2m:=>zigbee2mqtt/]]@/sys/space/mqtt/zigbee2mqtt;
   haos::[pattern       => <ha:#>,
          host          => !*boot/args/mqtt/broker,
          serializer    => !*</m/mach/io/serializer/json/simple>,
@@ -131,42 +121,42 @@ mqttspace::[pattern => <esp32:#>,
            name         => <openai>,
            route        => [<deep:>=><>]]@/sys/space/deepseek;
  catalog::[host         => <http://localhost:8088/v1>,
-            pattern      => <localai:#>,
-            name         => <localai>,
-            route        => [<localai:>=><>]]@/sys/space/localai;
+           pattern      => <localai:#>,
+           name         => <localai>,
+           route        => [<localai:>=><>]]@/sys/space/localai;
  tblespace::[pattern => nw:#,
              host    => <mariadb://localhost:3306/northwind?user=mtron&password=mtron>,
              table   => [,],
              route   => [nw:schema => /sys/space/play/schema,
                          nw:       => <>],
              driver  => <org.mariadb.jdbc.Driver>]@/sys/space/nw;
- tblespace::[pattern => netflix:#,
-        host       => <mariadb://localhost:3306/netflix?user=mtron&password=mtron>,
-        route      => [<netflix:schema>=>/sys/space/netflix/schema,
-                       <netflix:>=><>],
-        serializer => !*</m/mach/io/serializer/json/simple>,
-        table      => [,],
-        driver     => <org.mariadb.jdbc.Driver>]@/sys/space/netflix;
- tblespace::[pattern => acme:#,
-        host       => <mariadb://localhost:3306/acme?user=mtron&password=mtron>,
-        route      => [<acme:>=><>],
-        serializer => !*</m/mach/io/serializer/string/clean>,
-        table      => [,],
-        driver     => <org.mariadb.jdbc.Driver>]@/sys/space/acme;
+ tblespace::[pattern    => netflix:#,
+             host       => <mariadb://localhost:3306/netflix?user=mtron&password=mtron>,
+             route      => [<netflix:schema>=>/sys/space/netflix/schema,
+                            <netflix:>=><>],
+             serializer => !*</m/mach/io/serializer/json/simple>,
+             table      => [,],
+             driver     => <org.mariadb.jdbc.Driver>]@/sys/space/netflix;
+ tblespace::[pattern    => acme:#,
+             host       => <mariadb://localhost:3306/acme?user=mtron&password=mtron>,
+             route      => [<acme:>=><>],
+             serializer => !*</m/mach/io/serializer/string/clean>,
+             table      => [,],
+             driver     => <org.mariadb.jdbc.Driver>]@/sys/space/acme;
  tblespace::[pattern => db:#,
-        host       => <mariadb://localhost:3306/tble_space?user=mtron&password=mtron>,
-        route      => [db:=><>],
-        root        => rec::T,
-        table      => [play],
-        schema      => instset::[type=>[rec::T]],
-        driver     => <org.mariadb.jdbc.Driver>]@/sys/space/db;
- dcmntspace::[pattern   => mongo:#,
-       host        => <mongodb://localhost:27017/mflix>,
-       serializer  => !*</m/mach/io/serializer/bson>,
-       root        => rec::T,
-       schema      => instset::[type=>[rec::T]],
-       route       => [mongo:=><>]]@/sys/space/mongo;
- rdfspace::[pattern => <wikidata:#>,
+        host         => <mariadb://localhost:3306/tble_space?user=mtron&password=mtron>,
+        route        => [db:=><>],
+        root         => rec::T,
+        table        => [play],
+        schema       => instset::[type=>[rec::T]],
+        driver       => <org.mariadb.jdbc.Driver>]@/sys/space/db;
+ dcmntspace::[pattern    => mongo:#,
+              host       => <mongodb://localhost:27017/mflix>,
+              serializer => !*</m/mach/io/serializer/bson>,
+              root       => rec::T,
+              schema     => instset::[type=>[rec::T]],
+              route      => [mongo:=><>]]@/sys/space/mongo;
+[== rdfspace::[pattern => <wikidata:#>,
             host    => <https://query.wikidata.org/sparql>,
             serializer => !*</m/mach/io/serializer/rdf>,
             route   => [
@@ -174,7 +164,7 @@ mqttspace::[pattern => <esp32:#>,
               wikibase: =><http://wikiba.se/ontology#>,
               wd:       =><http://www.wikidata.org/entity/>,
               wdt:      =><http://www.wikidata.org/prop/direct/>,
-              wikidata: =><>]]@/sys/space/wikidata;                  
+              wikidata: =><>]]@/sys/space/wikidata;       ==]           
 *<mtronfs:instset/ai.mtron>;
 *<mtronfs:agent.mtron>;
 console::[=>]@/usr/ui/console;

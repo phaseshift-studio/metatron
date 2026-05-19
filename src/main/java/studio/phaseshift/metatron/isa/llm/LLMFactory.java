@@ -188,7 +188,7 @@ public final class LLMFactory {
     public static StreamingChatModel createChatInteraction(final mModel model, String modelName, final Rec responseFormat) {
         final fURI provider = model.at(f(PROVIDER)).asRec().at(NAME).uriValue();
         final String host = model.at(f(PROVIDER)).asRec().at(HOST).uriValue().toString();
-        final boolean thinking = model.has(THINK);
+        final boolean thinking = model.feature(THINK).isPresent();
         final Str api_key = model.at(f(PROVIDER)).asRec().at(API_KEY).orElse(str0());
         final Str organization = model.at(f(PROVIDER)).asRec().at(ORG).orElse(str0());
         final String name = model.at(NAME).uriValue().toString();
@@ -222,7 +222,7 @@ public final class LLMFactory {
                 final String orgId = organization.strValue().isBlank() ? null : organization.strValue();
                 final String baseUrl = (host != null && !host.isBlank() && !host.equals("https://api.openai.com/v1")) ? host : null;
                 // Fail early if a response format was requested but the model can't honor it
-                if (hasResponseFormat && !openAiSupportsJsonObject(modelName))
+                if (hasResponseFormat && host != null && host.contains("api.openai.com") && !openAiSupportsJsonObject(modelName))
                     throw MTronException.of("response format not supported by %s — use gpt-4-turbo, gpt-4o, or newer", modelName);
                 // Pick the best response_format the model actually supports:
                 //   gpt-4o+ / o-series  → json_schema (Structured Outputs)

@@ -105,7 +105,7 @@ public class mModel extends MRec {
     }
 
     public Obj processThought(final Str thought) {
-        return this.at(THINK).apply(thought);
+        return this.at(f(FEATURE).extend(THINK)).apply(thought);
     }
 
     public Obj processResponse(final Str response, final boolean responseFormatted) {
@@ -117,12 +117,16 @@ public class mModel extends MRec {
             memObj.asLst().lstValue().getLast().asRec().recValue().put(uri("attributes"), rec(uri(FORMAT), result));
             memObj.save();
         }
-        this.asRec().at(f(RESPONSE).extend(TO)).apply(result);
+        this.asRec().at(f(FEATURE).extend(RESPONSE).extend(TO)).apply(result);
         return result;
     }
 
+    public <T extends Obj> Optional<T> feature(final String feature) {
+        return Optional.<Obj>ofNullable(this.at(f(FEATURE).extend(feature)).orElse(null)).map(o -> o.autoResolve(this)).map(o -> (T) o);
+    }
+
     public Optional<Lst> tools() {
-        return Optional.<Obj>ofNullable(this.at(TOOL).orElse(null)).map(o -> o.autoResolve(this)).map(Obj::asLst);
+        return this.feature(TOOL);
     }
 
     public Optional<Rec> cost() {
@@ -130,35 +134,35 @@ public class mModel extends MRec {
     }
 
     public Optional<Lst> skills() {
-        return Optional.<Obj>ofNullable(this.at(SKILL).orElse(null)).map(o -> o.autoResolve(this)).map(Obj::asLst);
+        return this.feature(SKILL);
     }
 
     public Optional<Lst> notes() {
-        return Optional.<Obj>ofNullable(this.at(NOTE).orElse(null)).map(o -> o.autoResolve(this)).map(Obj::asLst);
+        return this.feature(NOTE);
     }
 
     public Optional<Obj> prompt() {
-        return Optional.<Obj>ofNullable(this.at(PROMPT).orElse(null)).map(o -> o.autoResolve(this));
+        return this.feature(PROMPT);
     }
-    
+
     public Rec features() {
-        return null;
+        return this.at(f(FEATURE)).orElse(noobjRec());
     }
 
     public void addNote(final Obj note) {
-        this.at(NOTE).orElse(lst()).asLst().append(note);
+        this.feature(NOTE).orElse(lst()).ifPresent(l -> l.asLst().add(note, MUTABLE));
     }
 
     public Optional<Rec> responseFormat() {
-        return Optional.ofNullable(this.at(RESPONSE + "/" + FORMAT).orElse(null));
+        return this.feature(RESPONSE);
     }
 
     public Rec memory() {
-        return this.at(MEMORY).orElse(noobjRec());
+        return this.at(f(FEATURE).extend(MEMORY)).orElse(noobjRec());
     }
 
     public Optional<Rec> lastResponse() {
-        return Optional.<Obj>ofNullable(this.at(RESPONSE).orElse(null)).map(o -> o.autoResolve(this)).map(Obj::asRec);
+        return Optional.<Obj>ofNullable(this.at(f(FEATURE).extend(RESPONSE)).orElse(null)).map(o -> o.autoResolve(this)).map(Obj::asRec);
     }
 
 
@@ -175,32 +179,31 @@ public class mModel extends MRec {
      * @return Optional rec with 'pattern' (fURI) and optional 'max' (int, default 10)
      */
     public Optional<Rec> rag() {
-        return Optional.<Obj>ofNullable(this.at(RAG).orElse(null)).map(o -> o.autoResolve(this)).map(Obj::asRec);
+        return this.feature(RAG);
     }
 
     public AiServices<mAgent> agent() {
-        List<String> systemMessage = new ArrayList<>();
+        final List<String> systemMessage = new ArrayList<>();
         final AiServices<mAgent> service = AiServices.builder(mAgent.class);
         //////////////////////////////////////////
         /////////////// PROMPT ///////////////////
         //////////////////////////////////////////
-        /*if (this.prompt().isPresent()) {
-            service.userMessage(this.prompt().get().as(STR_TYPE).strValue());
-        }*/
+        this.prompt().ifPresent(p -> service.userMessage(p.isStr() ?  p.strValue() : p.toString()));
         //////////////////////////////////////////
         /////////////// MEMORY ///////////////////
         //////////////////////////////////////////
-        if (!this.memory().isNoObj()) {
+        if (!this.memory().isRec()) {
             final fURI memoryVID = this.memory().at("mem").vid();
             if (memoryVID == null)
                 this.logger().warn("llm memory has no vid (ignoring): %s", this.memory());
             else {
                 service.chatMemory(MessageWindowChatMemory.builder()
                         //.maxMessages(Router.readFromSpace(this.fetchMemory().uriValue().extend(MAX)).orElse(jnt(15)).intValue().intValue())
-                        .maxMessages(this.memory().asRec().at(MAX).intValue().intValue())
+                        .maxMessages(this.memory().at(MAX).intValue().intValue())
                         .id(memoryVID)
                         .chatMemoryStore(SpaceChatMemoryStore.single())
-                        .build()).storeRetrievedContentInChatMemory(true);
+                        .build())
+                        .storeRetrievedContentInChatMemory(true);
             }
         }
         //////////////////////////////////////////
@@ -345,7 +348,7 @@ public class mModel extends MRec {
                     })
                     .onPartialThinking(t -> {
                         STAGE.set("THINKING");
-                        if (this.has(THINK) && !isThinking.getAndSet(true))
+                        if (this.has(f(FEATURE).extend(THINK)) && !isThinking.getAndSet(true))
                             this.logger().none(Graphitty.sillyPrint("thinking...\n", true, true));
                         this.processThought(str(t.text()));
                         Router.global().stats().ioStats().incrBytesRecv(t.text().getBytes().length);

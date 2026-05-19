@@ -208,8 +208,11 @@ public class mParser {
         }));
 
         // Cache the main parser to avoid rebuilding it on every parse() call
-        cachedMainParser = seq(choice(m_call_prefix(START_INST_TID), m_obj(false)), opt(m_comment().trim(), null))
-                .map(t -> pick(t, 0))
+        cachedMainParser = seq(m_comment().star(), choice(m_call_prefix(START_INST_TID), m_obj(false)), opt(m_comment().trim(), null))
+                .map(t -> {
+                    final Obj x = pick(t, 1);
+                    return null == x ? noobj() : x;
+                })
                 .end();
     }
 
@@ -336,6 +339,10 @@ public class mParser {
 
     public static Parser m_call_prefix(final Parser objParser, final fURI headTID) {
         return seq(opt(objParser, null), opt(of(".").trim(), '.'), opt(m_code(), null), m_vid_postfix()).map(t -> {
+            if (((List) t).get(0) instanceof List) {
+                System.out.println(t);
+                return noobj();
+            }
             final Obj first = mParser.pick(t, 0);
             final Obj second = mParser.pick(t, 2);
             if (null == first)
@@ -417,8 +424,8 @@ public class mParser {
 
     public static Parser m_comment() {
         return choice(
-                seq(of("[--").trim(), any().starGreedy(of("--")), of("--]").trim()),
-                seq(of("[==").trim(), any().starGreedy(of("==]")), of("==]").trim())).trim();//.map(t-> noobj());
+                seq(of("[--").trim(), any().starGreedy(of("--]")), of("--]").trim()),
+                seq(of("[==").trim(), any().starGreedy(of("==]")), of("==]").trim())).trim().map(t -> noobj());
     }
 
     public static Parser m_furi() {

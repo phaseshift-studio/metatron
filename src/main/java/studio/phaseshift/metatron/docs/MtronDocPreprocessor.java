@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.docs;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -67,6 +68,7 @@ public final class MtronDocPreprocessor {
     private static final Pattern NOOUT = Pattern.compile("\\[NO_OUTPUT]");
 
     private static final ObjmtronSerializer SER = ObjmtronSerializer.single();
+    private static final GraphittyLogger LOG = Graphitty.log(MtronDocPreprocessor.class);
 
     // ── Process entry point ─────────────────────────────────────────
 
@@ -187,7 +189,7 @@ public final class MtronDocPreprocessor {
             try {
                 final Obj result = ObjmtronSerializer.parse(expr).apply();
                 if (result.isFail() && !error) {
-                    System.err.printf("ERROR in docs with no [ERROR] specifier (docs are buggy): %s\nfor expression:\n%s\n", result, expr);
+                    LOG.error("no [ERROR] modifier in code block (docs are buggy): %s\nfor expression:\n%s\n", result, expr);
                     //System.exit(1);
                 }
                 if (!hidden && !noOutput && !result.isNoObj()) {

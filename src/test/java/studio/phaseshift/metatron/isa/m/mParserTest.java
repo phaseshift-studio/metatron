@@ -33,11 +33,14 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.plus_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.start_;
 import static studio.phaseshift.metatron.isa.m.parser.mParser.m_bool;
 import static studio.phaseshift.metatron.isa.m.parser.mParser.m_bytes;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -53,13 +56,14 @@ public class mParserTest extends AbstractMetatronTest {
 
     @Test
     public void testCommentParse() {
-        assertEquals(NoObj.noobj(), ObjmtronSerializer.parse("[-- a comment --]"));
+        assertEquals(noobj(), ObjmtronSerializer.parse("[-- a comment --]"));
         assertEquals(start_(jnt(1)).plus_(jnt(2)).end_().map_(jnt(4)), ObjmtronSerializer.parse("1+2;map(4)"));
         assertEquals(start_(jnt(1)).plus_(jnt(2)), ObjmtronSerializer.parse("[-- a comment --]\n\r1+2"));
-        assertEquals(NoObj.noobj(), ObjmtronSerializer.parse("[-- a comment --]"));
-        assertThrows(Exception.class, () -> ObjmtronSerializer.parse("[-- a comment\n\r\n\r --]1+2"));
+        assertEquals(plus_(jnt(2)).tryToInst(), ObjmtronSerializer.parse("[-- a comment --]\n\rplus(2)"));
+        assertEquals(noobj(), ObjmtronSerializer.parse("[-- a comment --]"));
+        assertEquals(start_(jnt(1)).plus_(jnt(2)), ObjmtronSerializer.parse("[-- a comment\n\r\n\r --]1+2"));
         assertThrows(Exception.class, () -> ObjmtronSerializer.parse("-- a comment\n\n --"));
-        assertEquals(NoObj.noobj(), ObjmtronSerializer.parse("[-- a comment \n\n --]\n\n"));
+        assertEquals(noobj(), ObjmtronSerializer.parse("[-- a comment \n\n --]\n\n"));
     }
 
     @Test

@@ -112,6 +112,17 @@ table .ulist {
     border-radius: 2px;
 }
 
+.service-item,
+.flip-box-back {
+    border: 1px solid rgba(122, 37, 24, 0.35);
+    transition: border-color 0.3s ease;
+}
+
+.service-item:hover,
+.flip-box-back:hover {
+    border-color: rgba(151, 2, 7, 0.5);
+}
+
 .card-tight {
     padding: 0;
     margin: 0.25rem;
@@ -685,12 +696,44 @@ body {
     margin: 0;
     padding: 0;
     min-height: 100vh;
-    background-image: linear-gradient(rgba(0, 0, 0, .925), rgba(0, 0, 0, .925)), url(../images/angel-wings.png);
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
+    background: var(--dark);
     line-height: 1.4rem;
     font-size: 1.2rem;
+}
+
+/* ── atmospheric backdrop: radial glows + dot-grid ── */
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+        /* red glow bleeding down from top-center */
+        radial-gradient(ellipse 80% 42% at 50% 0%, rgba(151, 2, 7, 0.24) 0%, transparent 58%),
+        /* warm accent from right */
+        radial-gradient(ellipse 30% 35% at 85% 55%, rgba(151, 2, 7, 0.06) 0%, transparent 70%),
+        /* teal whisper bottom-left */
+        radial-gradient(circle at 15% 85%, rgba(77, 182, 172, 0.04) 0%, transparent 50%);
+}
+
+body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.7;
+    background-image: radial-gradient(circle, rgba(108, 114, 147, 0.2) 0.65px, transparent 0.65px);
+    background-size: 22px 22px;
+}
+
+/* ensure content sits above the backdrop pseudo-elements */
+#content,
+main,
+footer {
+    position: relative;
+    z-index: 1;
 }
 
 /*** Footer ***/
@@ -932,7 +975,7 @@ pre.highlight > code[data-lang] {
 /* ── Result-line dimming / input brightness ──────────────────── */
 
 .hljs-mtron-result-line {
-    opacity: 0.65;
+    opacity: 0.45;
 }
 
 .hljs-mtron-prompt-begin,
@@ -1329,6 +1372,31 @@ strong {
     color: var(--mred);
 }
 
+/* ── highlight.js copy button ── */
+.hljs-copy-button {
+    color: transparent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 24px;
+}
+.hljs-copy-button::before {
+    content: '🦇';
+    font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
+    color: var(--mlightgray);
+    font-size: 12px;
+}
+.hljs-copy-button[data-copied="true"]::before {
+    content: 'copied';
+    font-family: var(--font-mono);
+    color: var(--light);
+    font-size: 8px;
+}
+.hljs-copy-button:hover::before {
+    color: var(--mred);
+}
+
 /* PAGE SWEEP EFFECT */
 .page-sweep {
     position: fixed;
@@ -1460,7 +1528,7 @@ strong {
 <!-- NAVIGATION BAR -->
 <nav class="navbar navbar-expand-lg bg-secondary navbar-dark sticky-top py-lg-0 px-lg-5 wow fadeIn"
      data-wow-delay="0.1s">
-    <a href="index.html" class="navbar-brand ms-4 ms-lg-0">
+    <a href="http://phaseshift.studio" class="navbar-brand ms-4 ms-lg-0">
         <h2 class="mb-0 text-primary logo-text">
             <i class="bi bi-soundwave me-3 icon-color"></i>
             PhaseShift Studio
@@ -1907,20 +1975,82 @@ lhs =&gt; inst(arg1,...,argN){ inst1...instN } =&gt; rhs
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *&lt;+/#/&gt;
 ==&gt;boot/args/boot=&gt;&lt;/home/killswitch/software/metatron/boot/docs.mtron&gt;
+==&gt;customers=&gt;rrow::T[?[
+  customerNumber=&gt;int::T,
+  customerName=&gt;str::T,
+  contactLastName=&gt;str::T,
+  contactFirstName=&gt;str::T,
+  phone=&gt;str::T,
+  addressLine1=&gt;str::T,
+  addressLine2=&gt;str::T,
+  city=&gt;str::T,
+  state=&gt;str::T,
+  postalCode=&gt;str::T,
+  country=&gt;str::T,
+  salesRepEmployeeNumber=&gt;int::T,
+  creditLimit=&gt;real::T]]@customers
 ==&gt;boot/args=&gt;[
  log=&gt;info,
  boot=&gt;&lt;/home/killswitch/software/metatron/boot/docs.mtron&gt;,
  local=&gt;booger]
+==&gt;employees=&gt;rrow::T[?[
+  employeeNumber=&gt;int::T,
+  lastName=&gt;str::T,
+  firstName=&gt;str::T,
+  extension=&gt;str::T,
+  email=&gt;str::T,
+  officeCode=&gt;str::T,
+  reportsTo=&gt;int::T,
+  jobTitle=&gt;str::T]]@employees
+==&gt;v5/name=&gt;'ripple'
 ==&gt;v1/out_=&gt;[
  knows=&gt;{!*v2,!*v3},
  created=&gt;!*v4]
-==&gt;boot/args/local=&gt;booger
 ==&gt;testy/name=&gt;!*deep:deepseek-v4-pro/name
+==&gt;boot/args/local=&gt;booger
 ==&gt;v6/age=&gt;35
+==&gt;&lt;1&gt;=&gt;plus?rng=int&amp;dom=int(3){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
+==&gt;orders=&gt;rrow::T[?[
+  orderNumber=&gt;int::T,
+  orderDate=&gt;str::T,
+  requiredDate=&gt;str::T,
+  shippedDate=&gt;str::T,
+  status=&gt;str::T,
+  comments=&gt;str::T,
+  customerNumber=&gt;int::T]]@orders
+==&gt;v5/lang=&gt;java
+==&gt;animals=&gt;rec::T[?[
+  __mtron_tid=&gt;str::T,
+  name=&gt;str::T,
+  age=&gt;int::T,
+  {?}shelter=&gt;rec::T]]@animals
+==&gt;productlines=&gt;rrow::T[?[
+  productLine=&gt;str::T,
+  textDescription=&gt;str::T,
+  htmlDescription=&gt;str::T,
+  image=&gt;str::T]]@productlines
 ==&gt;testy/desc=&gt;'testy the agent'
+==&gt;testy=&gt;model::[
+ desc=&gt;'testy the agent',
+ provider=&gt;!*deep:deepseek-v4-pro/provider,
+ name=&gt;!*deep:deepseek-v4-pro/name,
+ feature=&gt;[
+  think=&gt;block(/usr/ui/console/pane/0/stream(id())),
+  memory=&gt;memory::[
+   max=&gt;20,
+   mem=&gt;!@/usr/agent/memory],
+  tool=&gt;[
+   !*eval,
+   !*sql,
+   !*/usr/ai/mcp/intellij,
+   !*/usr/ai/mcp/mtron],
+  note=&gt;!@/usr/agent/notes,
+  skill=&gt;[!@&lt;local:software/metatron/.metatron/skills/mtron&gt;.as(skill::T)],
+  response=&gt;[to=&gt;print(id())]]]@testy
 ==&gt;v2/name=&gt;'vadas'
-==&gt;out=&gt;outE?rng=rec{*}&amp;dom=rec(label=&gt;uri{*}::T){rshift(out_).rshift(*label)}
-==&gt;v3/age=&gt;32
+==&gt;v4=&gt;[name=&gt;'lop']
+==&gt;v6/out_=&gt;[created=&gt;!*v4]
+==&gt;v1/name=&gt;'marko'
 ==&gt;offices=&gt;rrow::T[?[
   officeCode=&gt;str::T,
   city=&gt;str::T,
@@ -1941,7 +2071,17 @@ lhs =&gt; inst(arg1,...,argN){ inst1...instN } =&gt; rhs
   quantityInStock=&gt;int::T,
   buyPrice=&gt;real::T,
   MSRP=&gt;real::T]]@products
-==&gt;v3/out_=&gt;[created=&gt;{!*v4,!*v5}]
+==&gt;payments=&gt;rrow::T[?[
+  customerNumber=&gt;int::T,
+  checkNumber=&gt;str::T,
+  paymentDate=&gt;str::T,
+  amount=&gt;real::T]]@payments
+==&gt;fs_prefix=&gt;booger
+==&gt;chicken=&gt;animal::T@chicken
+==&gt;boot/file=&gt;&lt;/home/killswitch/software/metatron/boot/docs.mtron&gt;@boot/file
+==&gt;equipment=&gt;rec::T[?[
+  model=&gt;uri::T,
+  year=&gt;int::T]]@equipment
 ==&gt;v1=&gt;[
  name=&gt;'marko',
  age=&gt;29,
@@ -1955,16 +2095,22 @@ lhs =&gt; inst(arg1,...,argN){ inst1...instN } =&gt; rhs
 ==&gt;animal=&gt;rec::T[?[
   name=&gt;str::T,
   age=&gt;int::T]]@animal
+==&gt;v2=&gt;[name=&gt;'vadas']
+==&gt;v4/name=&gt;'lop'
+==&gt;orderdetails=&gt;rrow::T[?[
+  orderNumber=&gt;int::T,
+  productCode=&gt;str::T,
+  quantityOrdered=&gt;int::T,
+  priceEach=&gt;real::T,
+  orderLineNumber=&gt;int::T]]@orderdetails
+==&gt;v1/age=&gt;29
+==&gt;boot/args/log=&gt;info
+==&gt;v3=&gt;[name=&gt;'josh']
 ==&gt;testy/provider=&gt;!*deep:deepseek-v4-pro/provider
 ==&gt;v6/name=&gt;'peter'
-==&gt;testy/think=&gt;block(/usr/ui/console/pane/0/stream(id()))
 ==&gt;v3/name=&gt;'josh'
-==&gt;v5=&gt;[name=&gt;'ripple',lang=&gt;java]
-==&gt;testy=&gt;model::[
+==&gt;testy/feature=&gt;[
  think=&gt;block(/usr/ui/console/pane/0/stream(id())),
- desc=&gt;'testy the agent',
- provider=&gt;!*deep:deepseek-v4-pro/provider,
- name=&gt;!*deep:deepseek-v4-pro/name,
  memory=&gt;memory::[
   max=&gt;20,
   mem=&gt;!@/usr/agent/memory],
@@ -1975,102 +2121,9 @@ lhs =&gt; inst(arg1,...,argN){ inst1...instN } =&gt; rhs
   !*/usr/ai/mcp/mtron],
  note=&gt;!@/usr/agent/notes,
  skill=&gt;[!@&lt;local:software/metatron/.metatron/skills/mtron&gt;.as(skill::T)],
- response=&gt;[to=&gt;print(id())]]@testy
-==&gt;customers=&gt;rrow::T[?[
-  customerNumber=&gt;int::T,
-  customerName=&gt;str::T,
-  contactLastName=&gt;str::T,
-  contactFirstName=&gt;str::T,
-  phone=&gt;str::T,
-  addressLine1=&gt;str::T,
-  addressLine2=&gt;str::T,
-  city=&gt;str::T,
-  state=&gt;str::T,
-  postalCode=&gt;str::T,
-  country=&gt;str::T,
-  salesRepEmployeeNumber=&gt;int::T,
-  creditLimit=&gt;real::T]]@customers
-==&gt;employees=&gt;rrow::T[?[
-  employeeNumber=&gt;int::T,
-  lastName=&gt;str::T,
-  firstName=&gt;str::T,
-  extension=&gt;str::T,
-  email=&gt;str::T,
-  officeCode=&gt;str::T,
-  reportsTo=&gt;int::T,
-  jobTitle=&gt;str::T]]@employees
-==&gt;v5/name=&gt;'ripple'
-==&gt;testy/response=&gt;[to=&gt;print(id())]
-==&gt;&lt;1&gt;=&gt;plus?rng=int&amp;dom=int(3){&lt;j&gt;}@<i class="conum" data-value="1"></i><b>(1)</b>
-==&gt;orders=&gt;rrow::T[?[
-  orderNumber=&gt;int::T,
-  orderDate=&gt;str::T,
-  requiredDate=&gt;str::T,
-  shippedDate=&gt;str::T,
-  status=&gt;str::T,
-  comments=&gt;str::T,
-  customerNumber=&gt;int::T]]@orders
-==&gt;v5/lang=&gt;java
-==&gt;productlines=&gt;rrow::T[?[
-  productLine=&gt;str::T,
-  textDescription=&gt;str::T,
-  htmlDescription=&gt;str::T,
-  image=&gt;str::T]]@productlines
-==&gt;animals=&gt;rec::T[?[
-  __mtron_tid=&gt;str::T,
-  name=&gt;str::T,
-  age=&gt;int::T,
-  {?}shelter=&gt;rec::T]]@animals
-==&gt;testy/tool=&gt;[
- !*eval,
- !*sql,
- !*/usr/ai/mcp/intellij,
- !*/usr/ai/mcp/mtron]
-==&gt;v3=&gt;[
- name=&gt;'josh',
- age=&gt;32,
- out_=&gt;[created=&gt;{!*v4,!*v5}]]
-==&gt;v6/out_=&gt;[created=&gt;!*v4]
-==&gt;v2/age=&gt;27
-==&gt;&lt;2&gt;=&gt;matches?rng=bool&amp;dom=#{?}([
-  customerName=&gt;'GiftsForHim.com',
-  contactLastName=&gt;'MacKinlay',
-  contactFirstName=&gt;'Wales',
-  phone=&gt;'64-9-3763555',
-  addressLine1=&gt;'199 Great North Road',
-  city=&gt;'Auckland',
-  country=&gt;'New Zealand',
-  salesRepEmployeeNumber=&gt;!*acme:employees/1612,
-  creditLimit=&gt;77700.0000]){&lt;j&gt;}@<i class="conum" data-value="2"></i><b>(2)</b>
-==&gt;v4/lang=&gt;java
-==&gt;testy/memory=&gt;memory::[
- max=&gt;20,
- mem=&gt;!@/usr/agent/memory]
-==&gt;testy/note=&gt;!@/usr/agent/notes
-==&gt;testy/skill=&gt;[!@&lt;local:software/metatron/.metatron/skills/mtron&gt;.as(skill::T)]
-==&gt;v1/name=&gt;'marko'
-==&gt;v4=&gt;[name=&gt;'lop',lang=&gt;java]
-==&gt;payments=&gt;rrow::T[?[
-  customerNumber=&gt;int::T,
-  checkNumber=&gt;str::T,
-  paymentDate=&gt;str::T,
-  amount=&gt;real::T]]@payments
-==&gt;fs_prefix=&gt;booger
-==&gt;chicken=&gt;animal::T@chicken
-==&gt;boot/file=&gt;&lt;/home/killswitch/software/metatron/boot/docs.mtron&gt;@boot/file
-==&gt;equipment=&gt;rec::T[?[
-  model=&gt;uri::T,
-  year=&gt;int::T]]@equipment
-==&gt;v4/name=&gt;'lop'
-==&gt;orderdetails=&gt;rrow::T[?[
-  orderNumber=&gt;int::T,
-  productCode=&gt;str::T,
-  quantityOrdered=&gt;int::T,
-  priceEach=&gt;real::T,
-  orderLineNumber=&gt;int::T]]@orderdetails
-==&gt;boot/args/log=&gt;info
-==&gt;v1/age=&gt;29
-==&gt;v2=&gt;[name=&gt;'vadas',age=&gt;27]</code></pre>
+ response=&gt;[to=&gt;print(id())]]
+==&gt;out=&gt;out?rng=rec{*}&amp;dom=rec(label=&gt;uri{*}::T){rshift(outE_).rshift(*label).rshift(inV_)}
+==&gt;v5=&gt;[name=&gt;'ripple',lang=&gt;java]</code></pre>
 </div>
 </div>
 </div>
@@ -2363,10 +2416,16 @@ Finally, a degenerate anonymous <code>inst</code> with no specified variable fra
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;  10.(min=&gt;2,max=&gt;8){ is(and(gte(*min),lte(*max))) }     <i class="conum" data-value="1"></i><b>(1)</b>
+==&gt;fail::[rhs does not match inst range:
+	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/102
 mtron&gt;  10.(min=&gt;minus(1),max=&gt;plus(1)){ is(and(gte(*min),lte(*max))) }     <i class="conum" data-value="2"></i><b>(2)</b>
 ==&gt;10
 mtron&gt;  10.(min=&gt;2,max=&gt;8){ is(and(gte(*bad_min),lte(*bad_max))) }     <i class="conum" data-value="3"></i><b>(3)</b>
+==&gt;fail::[rhs does not match inst range:
+	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/104
 mtron&gt;  10.(){ is(and(gte(*min),lte(*max))) }     <i class="conum" data-value="4"></i><b>(4)</b>
+==&gt;fail::[rhs does not match inst range:
+	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/106
 mtron&gt; 10.is(and(gte(minus(1)),lte(plus(1))))     <i class="conum" data-value="5"></i><b>(5)</b>
 ==&gt;10</code></pre>
 </div>
@@ -2451,9 +2510,9 @@ mtron&gt; 2.band(min=&gt;1,max=&gt;1)     <i class="conum" data-value="1"></i><b
                                       ^ end of input expected
 
 mtron&gt;  10.is_divisible(2)
-==&gt;fail::[unable to locate inst-f of is_divisible(2)@&lt;1&gt;][...]@/sys/fail/254
+==&gt;fail::[unable to locate inst-f of is_divisible(2)@&lt;1&gt;][...]@/sys/fail/108
 mtron&gt;  10.is_divisible('abc')
-==&gt;fail::[unable to locate inst-f of is_divisible('abc')@&lt;1&gt;][...]@/sys/fail/256</code></pre>
+==&gt;fail::[unable to locate inst-f of is_divisible('abc')@&lt;1&gt;][...]@/sys/fail/110</code></pre>
 </div>
 </div>
 </div>
@@ -2508,7 +2567,7 @@ This ensures the uri <code>trpl</code> is not applied to the <code>inst</code> p
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;  trpl -&gt; inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}     <i class="conum" data-value="1"></i><b>(1)</b>
-==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}]][...]@/sys/fail/258
+==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}]][...]@/sys/fail/112
 mtron&gt; trpl -&gt; |inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}     <i class="conum" data-value="2"></i><b>(2)</b>
 ==&gt;inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}
 mtron&gt; *trpl     <i class="conum" data-value="3"></i><b>(3)</b>
@@ -2852,6 +2911,7 @@ ultimately dependent on the incoming lhs <code>obj</code>, where</p>
   user::T,
   AI::T,
   skill::T,
+  feature::T,
   model::T],
  inst=&gt;[
   as?tool&lt;=docs(tool::T),
@@ -2994,37 +3054,12 @@ mtron&gt; import(/m/web)
 ==&gt;rec::T[?[
   provider=&gt;catalog::T,
   name=&gt;uri::T,
-  {?}feature=&gt;{?}[
-   {?}think=&gt;#::T,
-   {?}memory=&gt;memory::T,
-   {?}prompt=&gt;#::T,
-   {?}response=&gt;{?}[
-    {?}to=&gt;inst::T,
-    {?}format=&gt;#::T,
-    {?}cost=&gt;currency::T],
-   {?}tool=&gt;{?}[split([
- isa(tool::T),
- isa(base::T)])],
-   {?}skill=&gt;lst{?}::T,
-   {?}rag=&gt;{?}[uri::T=&gt;isa(int::T).else(10)],
-   {?}note=&gt;lst{?}::T],
-  {?}prompt=&gt;#::T,
+  {?}desc=&gt;str::T,
   {?}cost=&gt;{?}[
    in=&gt;currency::T,
    out=&gt;currency::T],
-  {?}think=&gt;#::T,
-  {?}note=&gt;lst{?}::T,
-  {?}response=&gt;{?}[
-   {?}to=&gt;inst::T,
-   {?}format=&gt;#::T,
-   {?}cost=&gt;currency::T],
   {?}size=&gt;bB::T,
-  {?}memory=&gt;memory::T,
-  {?}desc=&gt;str::T,
-  {?}skill=&gt;lst{?}::T,
-  {?}tool=&gt;[split([
- ?tool::T,
- ?base::T])]]]</code></pre>
+  {?}feature=&gt;feature::T]]</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -3053,107 +3088,19 @@ mtron&gt; import(/m/web)
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; &lt;!--
-==&gt;ERROR: &lt;!--
-^ end of input expected
-
-mtron&gt; ai -&gt; *ollama:+/+
-             .where([skill=&gt;has(thinking),
-                     size =&gt;is(and(gt(mB::1000.0),lt(mB::5000.0)))])
-              .order(&gt;&gt;size.mult(-1.0))
-              .take(1)
-==&gt;fail::[selector rshift(size).mult(-1.0000) does not return a comparable value for [unable to evaluate inst: where?dom=rec([
-  skill=&gt;has(thinking),
-  size=&gt;is(and(gt(mB::1000.0000),lt(mB::5000.0000)))])@&lt;2&gt;, fail::[unable to determine inst function:
-	model::[
- provider=&gt;!*/sys/space/ollama,
- name=&gt;MeetSolanki/MeetAISmall:latest,
- think=&gt;[=&gt;],
- skill=&gt;[completion,tools,thinking],
- size=&gt;gB::0.4868]@ollama:MeetSolanki/MeetAISmall:latest  =&gt; where?dom=rec([
-  skill=&gt;has(thinking),
-  size=&gt;is(and(gt(mB::1000.0000),lt(mB::5000.0000)))])@&lt;2&gt;   | [inst]
-	rec::T[?[
-  provider=&gt;catalog::T,
-  name=&gt;uri::T,
-  {?}feature=&gt;{?}[
-   {?}think=&gt;#::T,
-   {?}memory=&gt;memory::T,
-   {?}prompt=&gt;#::T,
-   {?}response=&gt;{?}[
-    {?}to=&gt;inst::T,
-    {?}format=&gt;#::T,
-    {?}cost=&gt;currency::T],
-   {?}tool=&gt;{?}[split([
- isa(tool::T),
- isa(base::T)])],
-   {?}skill=&gt;lst{?}::T,
-   {?}rag=&gt;{?}[uri::T=&gt;isa(int::T).else(10)],
-   {?}note=&gt;lst{?}::T],
-  {?}prompt=&gt;#::T,
-  {?}cost=&gt;{?}[
-   in=&gt;currency::T,
-   out=&gt;currency::T],
-  {?}think=&gt;#::T,
-  {?}note=&gt;lst{?}::T,
-  {?}response=&gt;{?}[
-   {?}to=&gt;inst::T,
-   {?}format=&gt;#::T,
-   {?}cost=&gt;currency::T],
-  {?}size=&gt;bB::T,
-  {?}memory=&gt;memory::T,
-  {?}desc=&gt;str::T,
-  {?}skill=&gt;lst{?}::T,
-  {?}tool=&gt;[split([
- ?tool::T,
- ?base::T])]]]  =&gt; rec::T       |  \_dom
-	rec::T[?[
-  provider=&gt;catalog::T,
-  name=&gt;uri::T,
-  {?}feature=&gt;{?}[
-   {?}think=&gt;#::T,
-   {?}memory=&gt;memory::T,
-   {?}prompt=&gt;#::T,
-   {?}response=&gt;{?}[
-    {?}to=&gt;inst::T,
-    {?}format=&gt;#::T,
-    {?}cost=&gt;currency::T],
-   {?}tool=&gt;{?}[split([
- isa(tool::T),
- isa(base::T)])],
-   {?}skill=&gt;lst{?}::T,
-   {?}rag=&gt;{?}[uri::T=&gt;isa(int::T).else(10)],
-   {?}note=&gt;lst{?}::T],
-  {?}prompt=&gt;#::T,
-  {?}cost=&gt;{?}[
-   in=&gt;currency::T,
-   out=&gt;currency::T],
-  {?}think=&gt;#::T,
-  {?}note=&gt;lst{?}::T,
-  {?}response=&gt;{?}[
-   {?}to=&gt;inst::T,
-   {?}format=&gt;#::T,
-   {?}cost=&gt;currency::T],
-  {?}size=&gt;bB::T,
-  {?}memory=&gt;memory::T,
-  {?}desc=&gt;str::T,
-  {?}skill=&gt;lst{?}::T,
-  {?}tool=&gt;[split([
- ?tool::T,
- ?base::T])]]] ==&gt; [[
- skill=&gt;has(thinking),
- size=&gt;is(and(gt(mB::1000.0000),lt(mB::5000.0000)))]]   |  \_args][...]@/sys/fail/454]][...]@/sys/fail/950
-mtron&gt; *ai&gt;&gt;=+[memory=&gt;[mem=&gt;/usr/mem,max=&gt;5],
-               tools =&gt;[!*eval]
-==&gt;ERROR: *ai&gt;&gt;=+[memory=&gt;[mem=&gt;/usr/mem,max=&gt;5],
-               tools =&gt;[!*eval]
-       ^ end of input expected
-
-mtron&gt; *ai.+[think=&gt;print(_),response=&gt;to(/usr/ai/response)]
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; [,]@/usr/mem
+==&gt;[,]@/usr/mem
+mtron&gt; *ollama:+/+
+        .where([feature/skill=&gt;has(thinking),
+                size=&gt;is(and(gt(mB::1000.0),lt(mB::5000.0)))])
+        .order(&gt;&gt;size * -1.0)
+        .take(1).to(ai)
+mtron&gt; @ai&gt;&gt;=+[feature=&gt;[
+               memory=&gt;[mem=&gt;!@/usr/mem,max=&gt;5],
+               tools =&gt;[!*eval]]]
+mtron&gt; *ai.+[feature=&gt;[think=&gt;print(_),response=&gt;to(/usr/ai/response)]]
           .chat("Remember the word 'metatron'. I'll ask you to recall this word later.")
-==&gt;fail::[MachINE FAiLED][...]@/sys/fail/984
-mtron&gt; */usr/ai/response
-==&gt;[completion,tools,thinking]</code></pre>
+mtron&gt; */usr/ai/response</code></pre>
 </div>
 </div>
 <div class="openblock card">
@@ -3267,93 +3214,12 @@ mtron&gt; tB::1.0.as(mB::T)     <i class="conum" data-value="3"></i><b>(3)</b>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *ollama:+/+
-        .where([skill=&gt;has(thinking),size=&gt;?&lt;mB::5000.0])
+        .where([feature/skill=&gt;has(thinking),size=&gt;?&lt;mB::5000.0])
         .order(&gt;&gt;size * -1.0)
         .take(1)
         .plus?rec&lt;=rec(
-         [memory=&gt;[mem=&gt;/usr/mem,max=&gt;5]])
-         .chat("What was the special word I needed you to recall?")
-==&gt;fail::[selector rshift(size).mult(-1.0000) does not return a comparable value for [unable to evaluate inst: where?dom=rec([
-  skill=&gt;has(thinking),
-  size=&gt;is(lt(mB::5000.0000))])@&lt;1&gt;, fail::[unable to determine inst function:
-	model::[
- provider=&gt;!*/sys/space/ollama,
- name=&gt;MeetSolanki/MeetAISmall:latest,
- think=&gt;[=&gt;],
- skill=&gt;[completion,tools,thinking],
- size=&gt;gB::0.4868]@ollama:MeetSolanki/MeetAISmall:latest  =&gt; where?dom=rec([
-  skill=&gt;has(thinking),
-  size=&gt;is(lt(mB::5000.0000))])@&lt;1&gt;   | [inst]
-	rec::T[?[
-  provider=&gt;catalog::T,
-  name=&gt;uri::T,
-  {?}feature=&gt;{?}[
-   {?}think=&gt;#::T,
-   {?}memory=&gt;memory::T,
-   {?}prompt=&gt;#::T,
-   {?}response=&gt;{?}[
-    {?}to=&gt;inst::T,
-    {?}format=&gt;#::T,
-    {?}cost=&gt;currency::T],
-   {?}tool=&gt;{?}[split([
- isa(tool::T),
- isa(base::T)])],
-   {?}skill=&gt;lst{?}::T,
-   {?}rag=&gt;{?}[uri::T=&gt;isa(int::T).else(10)],
-   {?}note=&gt;lst{?}::T],
-  {?}prompt=&gt;#::T,
-  {?}cost=&gt;{?}[
-   in=&gt;currency::T,
-   out=&gt;currency::T],
-  {?}think=&gt;#::T,
-  {?}note=&gt;lst{?}::T,
-  {?}response=&gt;{?}[
-   {?}to=&gt;inst::T,
-   {?}format=&gt;#::T,
-   {?}cost=&gt;currency::T],
-  {?}size=&gt;bB::T,
-  {?}memory=&gt;memory::T,
-  {?}desc=&gt;str::T,
-  {?}skill=&gt;lst{?}::T,
-  {?}tool=&gt;[split([
- ?tool::T,
- ?base::T])]]]  =&gt; rec::T       |  \_dom
-	rec::T[?[
-  provider=&gt;catalog::T,
-  name=&gt;uri::T,
-  {?}feature=&gt;{?}[
-   {?}think=&gt;#::T,
-   {?}memory=&gt;memory::T,
-   {?}prompt=&gt;#::T,
-   {?}response=&gt;{?}[
-    {?}to=&gt;inst::T,
-    {?}format=&gt;#::T,
-    {?}cost=&gt;currency::T],
-   {?}tool=&gt;{?}[split([
- isa(tool::T),
- isa(base::T)])],
-   {?}skill=&gt;lst{?}::T,
-   {?}rag=&gt;{?}[uri::T=&gt;isa(int::T).else(10)],
-   {?}note=&gt;lst{?}::T],
-  {?}prompt=&gt;#::T,
-  {?}cost=&gt;{?}[
-   in=&gt;currency::T,
-   out=&gt;currency::T],
-  {?}think=&gt;#::T,
-  {?}note=&gt;lst{?}::T,
-  {?}response=&gt;{?}[
-   {?}to=&gt;inst::T,
-   {?}format=&gt;#::T,
-   {?}cost=&gt;currency::T],
-  {?}size=&gt;bB::T,
-  {?}memory=&gt;memory::T,
-  {?}desc=&gt;str::T,
-  {?}skill=&gt;lst{?}::T,
-  {?}tool=&gt;[split([
- ?tool::T,
- ?base::T])]]] ==&gt; [[
- skill=&gt;has(thinking),
- size=&gt;is(lt(mB::5000.0000))]]   |  \_args][...]@/sys/fail/1070]][...]@/sys/fail/1302</code></pre>
+         [feature=&gt;[memory=&gt;[mem=&gt;!@/usr/mem,max=&gt;5]]])
+         .chat("What was the special word I needed you to recall?")</code></pre>
 </div>
 </div>
 <h3 id="_llm_tools_skills_and_mcp_servers" class="discrete">llm tools, skills, and mcp servers</h3>
@@ -3388,12 +3254,12 @@ mtron&gt; mcp_ws::[host =&gt; &lt;http://127.0.0.1:29170/index-mcp/streamable-ht
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *&lt;openai:gpt-4o&gt;.at(robotron).
         side([,].at(&lt;local:.agent/robotron/memory&gt;)).
-        &gt;&gt;=[think=&gt;print(_),
+        &gt;&gt;=[feature=&gt;[think=&gt;print(_),
             tool=&gt;[!*eval],
             skill=&gt;[
          !*&lt;local:.agent/skills/mtron&gt;.as(skill::T)],
             response=&gt;[to=&gt;print(_)],
-            memory=&gt;[mem=&gt;!*&lt;local:.agent/robotron/memory&gt;,max=&gt;20]].
+            memory=&gt;[mem=&gt;!@&lt;local:.agent/robotron/memory&gt;,max=&gt;20]]].
         &gt;&gt;=[_=&gt;^*_]</code></pre>
 </div>
 </div>
@@ -3435,11 +3301,11 @@ mtron&gt; mcp_ws::[host =&gt; &lt;http://127.0.0.1:29170/index-mcp/streamable-ht
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *robotron.chat('what tools do you have access to?',
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @robotron.chat('what tools do you have access to?',
                    [number_of_tools=&gt;int::T,tool_names=&gt;str::T])
-mtron&gt; *robotron.chat('what skills do you have?')
-mtron&gt; *robotron&gt;&gt;memory
-mtron&gt; *robotron&gt;&gt;memory/mem/2/attributes/format</code></pre>
+mtron&gt; @robotron.chat('what skills do you have?')
+mtron&gt; *robotron&gt;&gt;feature/memory
+mtron&gt; *robotron&gt;&gt;feature/memory/mem/2/attributes/format</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3478,9 +3344,9 @@ The <code>eval</code> tool must also be present — the agent uses it to poll an
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">*&lt;openai:gpt-4o&gt;.at(robotron).
- &gt;&gt;=[tool =&gt; [!*eval],           <i class="conum" data-value="1"></i><b>(1)</b>
-     note =&gt; [,]]                <i class="conum" data-value="2"></i><b>(2)</b></code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">@&lt;openai:gpt-4o&gt;.at(robotron).
+ &gt;&gt;=[feature=&gt;[tool =&gt; [!*eval],           <i class="conum" data-value="1"></i><b>(1)</b>
+     note =&gt; [,]]]                         <i class="conum" data-value="2"></i><b>(2)</b></code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3873,7 +3739,7 @@ can access it accordingly and naturally.</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;  1.plus(b)     <i class="conum" data-value="1"></i><b>(1)</b>
-==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/186
+==&gt;fail::[1 [int::T] unable to convert uri::T][...]@/sys/fail/46
 mtron&gt; */sys/fail/+     <i class="conum" data-value="2"></i><b>(2)</b>
 mtron&gt; */sys/fail/+.catch(_)     <i class="conum" data-value="3"></i><b>(3)</b>
 mtron&gt; */sys/fail     <i class="conum" data-value="4"></i><b>(4)</b></code></pre>
@@ -3975,14 +3841,12 @@ mtron&gt; throw('bad').catch(cause())     <i class="conum" data-value="3"></i><b
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; [-- refining int::T --]
-==&gt;ERROR: class java.util.ArrayList cannot be cast to class studio.phaseshift.metatron.isa.m.type.Obj (java.util.ArrayList is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.m.type.Obj is in unnamed module of loader 'app')
 mtron&gt; 4.as(int::T[?&gt;0]@nat)
 ==&gt;nat::4
 mtron&gt;  -4.as(nat::T)
 ==&gt;fail::[-4 is not a is(gt(0))
-  -4=&gt;(==&gt;is(gt(0)))][...]@/sys/fail/1380
+  -4=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/220
 mtron&gt; [-- refining rec::T  --]
-==&gt;ERROR: class java.util.ArrayList cannot be cast to class studio.phaseshift.metatron.isa.m.type.Obj (java.util.ArrayList is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.m.type.Obj is in unnamed module of loader 'app')
 mtron&gt; [name=&gt;'snowbutt',age=&gt;7].as(rec::T[?[name=&gt;str::T,age=&gt;int::T]@chicken)
 ==&gt;ERROR: [name=&gt;'snowbutt',age=&gt;7].as(rec::T[?[name=&gt;str::T,age=&gt;int::T]@chicken)
                           ^ end of input expected
@@ -4047,11 +3911,11 @@ mtron&gt; 2.as(nat::T)     <i class="conum" data-value="5"></i><b>(5)</b>
 ==&gt;2
 mtron&gt;  -2.as(nat::T)     <i class="conum" data-value="6"></i><b>(6)</b>
 ==&gt;fail::[-2 is not a is(gt(0))
-  -2=&gt;(==&gt;is(gt(0)))][...]@/sys/fail/1402
+  -2=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/226
 mtron&gt;  nat::2 * -1     <i class="conum" data-value="7"></i><b>(7)</b>
 ==&gt;fail::[nat::-2 is not a int::T[is(gt(0))][choose([
   is(lt(0))=&gt;mult(-1),
-  id()=&gt;id()]).rshift()]][...]@/sys/fail/1408</code></pre>
+  id()=&gt;id()]).rshift()]][...]@/sys/fail/232</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -4078,7 +3942,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{r}}m{{g}}E{{y}}T{{r}}a{{g}}T{{b}}R{{b}}O{{b}}N{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{r}}m{{b}}E{{m}}T{{m}}A{{g}}T{{c}}r{{y}}O{{r}}N{{X}}.</p>
 </div>
 <h4 id="_cascading_type_constructions" class="discrete">cascading type constructions</h4>
 <h3 id="_mono_types" class="discrete">mono types</h3>
@@ -4151,7 +4015,7 @@ mtron&gt; 1.34 + 2.45     <i class="conum" data-value="4"></i><b>(4)</b>
 mtron&gt; "abc" + "def"     <i class="conum" data-value="5"></i><b>(5)</b>
 ==&gt;'abcdef'
 mtron&gt; a/b/c * d/e/f     <i class="conum" data-value="6"></i><b>(6)</b>
-==&gt;a/b/c</code></pre>
+==&gt;a/b/c/d/e/f</code></pre>
 </div>
 </div></div></td>
 </tr>
@@ -4734,7 +4598,7 @@ mtron&gt;  nat::-10
 ==&gt;ERROR: nat::-10 is not a int::T[is(gt(0))]
 mtron&gt;  int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-  -10=&gt;(==&gt;is(gt(0)))][...]@/sys/fail/1566</code></pre>
+  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/354</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -4833,7 +4697,7 @@ mtron&gt;  nat::-10
 ==&gt;ERROR: nat::-10 is not a int::T[is(gt(0))]
 mtron&gt;  int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-  -10=&gt;(==&gt;is(gt(0)))][...]@/sys/fail/1588</code></pre>
+  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/360</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -4856,10 +4720,10 @@ mtron&gt; age::125
 ==&gt;ERROR: age::125 is not a int::T[is(lt(120))]
 mtron&gt;  nat::125.as(age::T)
 ==&gt;fail::[nat::125 is not a is(lt(120))
-  nat::125=&gt;(==&gt;is(lt(120)))][...]@/sys/fail/1610
+  nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/366
 mtron&gt;  125.as(nat::T).as(age::T)
 ==&gt;fail::[125 is not a is(lt(120))
-  125=&gt;(==&gt;is(lt(120)))][...]@/sys/fail/1616</code></pre>
+  125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/372</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -5096,9 +4960,9 @@ mtron&gt; memspace::[
  prefix=&gt;'',
  postfix=&gt;'',
  pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[
- result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
  prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
- stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0],
+ stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
+ result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0],
  menu=&gt;[
   console=&gt;console::[
    metatron_version=&gt;&lt;0.1-alpha&gt;,
@@ -5107,9 +4971,9 @@ mtron&gt; memspace::[
    prefix=&gt;'',
    postfix=&gt;'',
    pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[
- result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
  prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
- stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0]]@/usr/ui/console,
+ stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
+ result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0]]@/usr/ui/console,
   help=&gt;inst?noobj&lt;=#{?}(),
   chat=&gt;inst?noobj&lt;=#{?}(),
   connect=&gt;inst?noobj&lt;=#{?}(),
@@ -5140,9 +5004,9 @@ mtron&gt; */usr/ui/console     <i class="conum" data-value="1"></i><b>(1)</b>
  prefix=&gt;'',
  postfix=&gt;'',
  pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[
- result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
  prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
- stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0],
+ stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
+ result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0],
  menu=&gt;[
   console=&gt;console::[
    metatron_version=&gt;&lt;0.1-alpha&gt;,
@@ -5151,9 +5015,9 @@ mtron&gt; */usr/ui/console     <i class="conum" data-value="1"></i><b>(1)</b>
    prefix=&gt;'',
    postfix=&gt;'',
    pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[
- result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
  prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
- stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0]]@/usr/ui/console,
+ stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
+ result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0]]@/usr/ui/console,
   help=&gt;inst?noobj&lt;=#{?}(),
   chat=&gt;inst?noobj&lt;=#{?}(),
   connect=&gt;inst?noobj&lt;=#{?}(),
@@ -5178,9 +5042,9 @@ mtron&gt; */usr/ui/console     <i class="conum" data-value="1"></i><b>(1)</b>
   subq=&gt;inst?noobj&lt;=#{?}()]]
 mtron&gt; */usr/ui/console/pane/0     <i class="conum" data-value="2"></i><b>(2)</b>
 ==&gt;/m/mach/console/pane::[
- result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
  prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
- stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]
+ stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
+ result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]
 mtron&gt; /usr/ui/console/pane/0/result('printed at ==&gt;xyz')     <i class="conum" data-value="3"></i><b>(3)</b></code></pre>
 </div>
 </div>
@@ -5285,8 +5149,7 @@ together. Via the colocation of two objs within the confines of a <code>poly</co
  noobj]
 mtron&gt; 1-&lt;[?&gt;0,?&gt;2,*/usr/${_}]&gt;-     <i class="conum" data-value="2"></i><b>(2)</b>
 ==&gt;1
-mtron&gt; 1-&lt;[?&gt;0,?&gt;2,*/usr/${_}]&gt;-.map(&lt;${g:V/_}&gt;)&gt;&gt;+     <i class="conum" data-value="3"></i><b>(3)</b>
-==&gt;ERROR: null</code></pre>
+mtron&gt; 1-&lt;[?&gt;0,?&gt;2,*/usr/${_}]&gt;-.map(&lt;${g:V/_}&gt;)&gt;&gt;+     <i class="conum" data-value="3"></i><b>(3)</b></code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -5402,7 +5265,6 @@ This is due to the fact that <code>&lt;+/#&gt;</code> is the stack&#8217;s patte
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; [== a-&gt;(b-&gt;c) ==]     <i class="conum" data-value="1"></i><b>(1)</b>
-==&gt;ERROR: class java.util.ArrayList cannot be cast to class studio.phaseshift.metatron.isa.m.type.Obj (java.util.ArrayList is in module java.base of loader 'bootstrap'; studio.phaseshift.metatron.isa.m.type.Obj is in unnamed module of loader 'app')
 mtron&gt; *a
 ==&gt;b
 mtron&gt; **a
@@ -6197,15 +6059,26 @@ mtron&gt; */usr/notes/#?subq
   mqtt::T,
   haos::T]]@/m/iot
 mtron&gt;  import(/m/llm)
-{{b}}.{{r}}.{{m}}.{{X}}</code></pre>
+{{c}}.{{g}}.{{c}}.{{X}}</code></pre>
 </div>
 </div>
 </div>
 </details>
 <div class="paragraph">
 <p><a href="https://mqtt.org/">MQTT</a> is a lightweight messaging protocol commonly used for IoT (<a href="https://en.wikipedia.org/wiki/Internet_of_things">Internet of Things</a>) applications.
-The protocol offers <a href="https://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern">publish-subscribe</a> messaging and a wildcard-based addressing scheme that conveniently maps to the
-URI address space.</p>
+The protocol offers <a href="https://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern">publish-subscribe</a> messaging and a wildcard-based addressing scheme that conveniently maps to the URI address space.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The inspiration for metatron&#8217;s URI addressing schema was inspired by the various standards developed by the Semantic Web community and the MQTT standard developed by the IoT community. The integration of these worlds into programming language and compiler design as it applies to distributed data management is the driving force behind metatron.
+</td>
+</tr>
+</table>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -6214,29 +6087,28 @@ URI address space.</p>
 </div>
 </div>
 <div class="paragraph">
-<p>The MQTT space is a client of the MQTT broker referenced by <code>host</code>. This client maintains a router-detached caching space
-(default is <code>mem::T</code>) which maintains synchronization with that subset of the broker identified in the MQTT space&#8217;s routing table.</p>
+<p>The MQTT space is a client of the MQTT broker referenced by <code>host</code>. This client maintains a router-detached caching space (default is <code>memspace::T</code>) which maintains synchronization with that subset of the broker identified in the MQTT space&#8217;s routing table. In the examples to follow, the pattern prefix <code>ha:</code> stands for "home automation."</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; mqtt::[pattern =&gt; &lt;esp32:#&gt;,
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; mqtt::[pattern =&gt; &lt;ha:#&gt;,
               host    =&gt; mqtt://localhost:1883,
-              route   =&gt; [esp32:=&gt;&lt;/home/chips&gt;]]@/sys/space/esp32     <i class="conum" data-value="1"></i><b>(1)</b>
-mtron&gt; *esp32:main_field/sensor/+.-&lt;|[
+              route   =&gt; [ha:=&gt;&lt;/home/chips&gt;]]@/sys/space/esp32     <i class="conum" data-value="1"></i><b>(1)</b>
+mtron&gt; *ha:main_field/sensor/+.-&lt;|[
          &gt;&gt;temp.?&lt;50  =&gt; print('too cold for watering'),
          &gt;&gt;humid.?&gt;30 =&gt; print('too humid for watering'),
          _            =&gt; print('starting drip system').
-                         esp32:main_field/actuator/drip.run(minutes::25)]     <i class="conum" data-value="2"></i><b>(2)</b>
-==&gt;ERROR: *esp32:main_field/sensor/+.-&lt;|[
+                         ha:main_field/actuator/drip.run(minutes::25)]     <i class="conum" data-value="2"></i><b>(2)</b>
+==&gt;ERROR: *ha:main_field/sensor/+.-&lt;|[
          &gt;&gt;temp.?&lt;50  =&gt; print('too cold for watering'),
          &gt;&gt;humid.?&gt;30 =&gt; print('too humid for watering'),
          _            =&gt; print('starting drip system').
-                         esp32:main_field/actuator/drip.run(minutes::25)]
-                           ^ end of input expected
+                         ha:main_field/actuator/drip.run(minutes::25)]
+                        ^ end of input expected
 
-mtron&gt; esp32:main_field/actuator/+/active?subq -&gt; sub::[on_recv=&gt;print(_)]     <i class="conum" data-value="3"></i><b>(3)</b>
+mtron&gt; ha:main_field/actuator/+/active?subq -&gt; sub::[on_recv=&gt;print(_)]     <i class="conum" data-value="3"></i><b>(3)</b>
 ==&gt;sub::[on_recv=&gt;print(id())]
-mtron&gt; *esp32:main_field/actuator/#?subq     <i class="conum" data-value="4"></i><b>(4)</b></code></pre>
+mtron&gt; *ha:main_field/actuator/#?subq     <i class="conum" data-value="4"></i><b>(4)</b></code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -6255,7 +6127,7 @@ mtron&gt; *esp32:main_field/actuator/#?subq     <i class="conum" data-value="4">
 </tr>
 <tr>
 <td><i class="conum" data-value="4"></i><b>4</b></td>
-<td>query the for all subscriptions whose target uri matches <code>esp32:main_field/actuator/#</code>.</td>
+<td>query the for all subscriptions whose target uri matches <code>ha:main_field/actuator/#</code>.</td>
 </tr>
 </table>
 </div>
@@ -6408,7 +6280,7 @@ mtron&gt; *&lt;local:Desktop/test_bash.bash&gt;.as(bytes::T).as(str::T)     <i c
 <div class="collapse position-relative" id="card-14">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-14" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
 <button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
-<h2 id="_grph" class="discrete">grph</h2>
+<h2 id="_graph_instruction_set" class="discrete">graph instruction set</h2>
 <details>
 <summary class="title">/m/grph instset import</summary>
 <div class="content">
@@ -6492,24 +6364,10 @@ where \(E\) is typically a <a href="https://en.wikipedia.org/wiki/Partial_functi
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *g:V/1     <i class="conum" data-value="1"></i><b>(1)</b>
 ==&gt;person::[age=&gt;29,name=&gt;'marko']
 mtron&gt; *g:V/1.outE()     <i class="conum" data-value="2"></i><b>(2)</b>
-==&gt;fail::[rhs does not match inst range:
-	{created::[weight=&gt;0.4000]@g:E/9,knows::[weight=&gt;0.5000]@g:E/7,knows::[weight=&gt;1.0000]@g:E/8}=&gt;(X=&gt;elmt::T[?[
-  IN=&gt;vrtx::T,
-  OUT=&gt;vrtx::T]]@/m/grph/edge)][...]@/sys/fail/214
 mtron&gt; *g:V/1.outE().inV()     <i class="conum" data-value="3"></i><b>(3)</b>
-==&gt;software::[name=&gt;'lop',lang=&gt;'java']@g:V/3
-==&gt;person::[name=&gt;'vadas',age=&gt;27]@g:V/2
-==&gt;person::[age=&gt;32,name=&gt;'josh']@g:V/4
 mtron&gt; *g:V/1.out()     <i class="conum" data-value="4"></i><b>(4)</b>
-==&gt;software::[name=&gt;'lop',lang=&gt;'java']@g:V/3
-==&gt;person::[name=&gt;'vadas',age=&gt;27]@g:V/2
-==&gt;person::[age=&gt;32,name=&gt;'josh']@g:V/4
 mtron&gt; *g:V/1.out(knows).out(created)     <i class="conum" data-value="5"></i><b>(5)</b>
-==&gt;software::[lang=&gt;'java',name=&gt;'ripple']@g:V/5
-==&gt;software::[name=&gt;'lop',lang=&gt;'java']@g:V/3
-mtron&gt; *g:V/1.out(knows).out(created)&gt;&gt;name     <i class="conum" data-value="6"></i><b>(6)</b>
-==&gt;'ripple'
-==&gt;'lop'</code></pre>
+mtron&gt; *g:V/1.out(knows).out(created)&gt;&gt;name     <i class="conum" data-value="6"></i><b>(6)</b></code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -6567,13 +6425,14 @@ graph encodings (discussed later when presenting hypergraphs).</p>
 <td class="tableblock halign-left valign-middle"><p class="tableblock">traverse to the outgoing adjacent vertices of the lhs vertex</p></td>
 <td class="tableblock halign-left valign-middle" rowspan="8"><div class="content"><div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">   vertex       ┌─────────┐       vertex
-┌─────────┐     │k1 =&gt; v1 │     ┌─────────┐
-│k1 =&gt; v1 │     │k2 =&gt; v2 │     │k1 =&gt; v1 │
-│k2 =&gt; v2 │outE └─────────┘ inV │k2 =&gt; v2 │
-│  ...    ├────────────────────►│  ...    │
-│k3 =&gt; v3 │outV     edge    inE │k3 =&gt; v3 │
-└─────────┘                     └─────────┘</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">  vertex          edge           vertex
+┌────────┐     ┌─────────┐     ┌────────┐
+│k1 =&gt; v1│     │k1 =&gt; v1 │     │k1 =&gt; v1│
+│k2 =&gt; v2│     │k2 =&gt; v2 │     │k2 =&gt; v2│
+│  ...   ├─────└─────────┘────►│  ...   │
+│k3 =&gt; v3│outE             inE │k3 =&gt; v3│
+└────────┘                     └────────┘
+   outV                            inV</code></pre>
 </div>
 </div></div></td>
 </tr>
@@ -6664,15 +6523,22 @@ The following examples demonstrate selection and filtering using multi-segment u
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *g:V/1&gt;&gt;=+[address/home/city =&gt; 'santa fe',
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; @g:V/1&gt;&gt;=+[address/home/city =&gt; 'santa fe',
                   address/work/city =&gt; 'nomansland']     <i class="conum" data-value="1"></i><b>(1)</b>
-==&gt;person::[age=&gt;29,name=&gt;'marko',address/home/city=&gt;'santa fe',address/work/city=&gt;'nomansland']
+==&gt;person::[address/work/city=&gt;'nomansland',age=&gt;29,name=&gt;'marko',address/home/city=&gt;'santa fe']@g:V/1
 mtron&gt; *g:V/1/address/home/city     <i class="conum" data-value="2"></i><b>(2)</b>
+==&gt;'santa fe'
 mtron&gt; *g:V/+.?==[address/+/city =&gt; 'santa fe']     <i class="conum" data-value="3"></i><b>(3)</b>
+==&gt;person::[address/work/city=&gt;'nomansland',age=&gt;29,name=&gt;'marko',address/home/city=&gt;'santa fe']@g:V/1
 mtron&gt; *g:V/+.==[address/+/city/ =&gt; _]     <i class="conum" data-value="4"></i><b>(4)</b>
+==&gt;[address/+/city/=&gt;{address/work/city=&gt;'nomansland',address/home/city=&gt;'santa fe'}]
 mtron&gt; *g:V/+.&gt;&gt;address/+/city
        *g:V/+.&gt;&gt;address/+/city     <i class="conum" data-value="6"></i><b>(6)</b>
-mtron&gt; *g:V/+.&gt;&gt;address/#     <i class="conum" data-value="7"></i><b>(7)</b></code></pre>
+==&gt;{7}'nomansland'
+==&gt;{7}'santa fe'
+mtron&gt; *g:V/+.&gt;&gt;address/#     <i class="conum" data-value="7"></i><b>(7)</b>
+==&gt;'nomansland'
+==&gt;'santa fe'</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -6715,20 +6581,32 @@ mtron&gt; *g:V/+.&gt;&gt;address/#     <i class="conum" data-value="7"></i><b>(7
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *g:V/1==[_=&gt;_]     <i class="conum" data-value="1"></i><b>(1)</b>
-==&gt;[age=&gt;29,name=&gt;'marko']
-mtron&gt; *g:V/1&gt;&gt;=+[address=&gt;[
+==&gt;[address/work/city=&gt;'nomansland',age=&gt;29,name=&gt;'marko',address/home/city=&gt;'santa fe']
+mtron&gt; @g:V/1&gt;&gt;=+[address=&gt;[
                     home =&gt; [city =&gt;'santa fe',
                              state=&gt;NM],
                     work =&gt; !*&lt;../home&gt;]]     <i class="conum" data-value="2"></i><b>(2)</b>
 ==&gt;person::[
+ :address=&gt;[
+  home=&gt;[city=&gt;'santa fe',state=&gt;NM],
+  work=&gt;!*&lt;../home&gt;],
+ address/work/city=&gt;'nomansland',
  age=&gt;29,
  name=&gt;'marko',
- address=&gt;[
-  home=&gt;[city=&gt;'santa fe',state=&gt;NM],
-  work=&gt;!*&lt;../home&gt;]]
+ address/home/city=&gt;'santa fe']@g:V/1
 mtron&gt; *g:V/1/address/home/city     <i class="conum" data-value="3"></i><b>(3)</b>
+==&gt;'santa fe'
 mtron&gt; *g:V/+.?==[address=&gt;[_ =&gt; [state=&gt;NM]]]     <i class="conum" data-value="4"></i><b>(4)</b>
-mtron&gt; *g:V/+.?==[address=&gt;[_ =&gt; [state=&gt;NM]]].&gt;&gt;address/+/city     <i class="conum" data-value="5"></i><b>(5)</b></code></pre>
+==&gt;person::[
+ :address=&gt;[
+  home=&gt;[city=&gt;'santa fe',state=&gt;NM],
+  work=&gt;!*&lt;../home&gt;],
+ address/work/city=&gt;'nomansland',
+ age=&gt;29,
+ name=&gt;'marko',
+ address/home/city=&gt;'santa fe']@g:V/1
+mtron&gt; *g:V/+.?==[address=&gt;[_ =&gt; [state=&gt;NM]]].&gt;&gt;address/+/city     <i class="conum" data-value="5"></i><b>(5)</b>
+==&gt;'santa fe'</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -6826,7 +6704,14 @@ mtron&gt; *g:V/+.?==[address=&gt;[_ =&gt; [state=&gt;NM]]].&gt;&gt;address/+/cit
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *g:V/1     <i class="conum" data-value="1"></i><b>(1)</b>
-==&gt;person::[age=&gt;29,name=&gt;'marko']
+==&gt;person::[
+ :address=&gt;[
+  home=&gt;[city=&gt;'santa fe',state=&gt;NM],
+  work=&gt;!*&lt;../home&gt;],
+ address/work/city=&gt;'nomansland',
+ age=&gt;29,
+ name=&gt;'marko',
+ address/home/city=&gt;'santa fe']
 mtron&gt; *acme:customers/357     <i class="conum" data-value="2"></i><b>(2)</b>
 ==&gt;[
  customerName=&gt;'GiftsForHim.com',
@@ -6839,23 +6724,10 @@ mtron&gt; *acme:customers/357     <i class="conum" data-value="2"></i><b>(2)</b>
  salesRepEmployeeNumber=&gt;!*acme:employees/1612,
  creditLimit=&gt;77700.0000]
 mtron&gt; *g:V/1.addE(consulted,|*acme:customers/357)     <i class="conum" data-value="3"></i><b>(3)</b>
-==&gt;fail::[rhs does not match inst range:
-	consulted::[=&gt;]@g:E/14=&gt;(X=&gt;elmt::T[?[
-  IN=&gt;vrtx::T,
-  OUT=&gt;vrtx::T]]@/m/grph/edge)][...]@/sys/fail/216
+==&gt;fail::[unable to convert linkedhashmap to vertexmap[studio.phaseshift.metatron.isa.grph.grphInstSet:222]][...]@/sys/fail/78
 mtron&gt; *g:V/1.out(consulted)     <i class="conum" data-value="4"></i><b>(4)</b>
-==&gt;[
- customerName=&gt;'GiftsForHim.com',
- contactLastName=&gt;'MacKinlay',
- contactFirstName=&gt;'Wales',
- phone=&gt;'64-9-3763555',
- addressLine1=&gt;'199 Great North Road',
- city=&gt;'Auckland',
- country=&gt;'New Zealand',
- salesRepEmployeeNumber=&gt;!*acme:employees/1612,
- creditLimit=&gt;77700.0000]
 mtron&gt; *g:V/1.out(consulted).matches(vrtx::T)     <i class="conum" data-value="5"></i><b>(5)</b>
-==&gt;true</code></pre>
+==&gt;false</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -6896,19 +6768,11 @@ These expressions highlight the nested structural pattern matching and data mani
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *g:V/1.out(consulted).-&lt;[
          name    =&gt;"${&gt;&gt;contactFirstName} ${&gt;&gt;contactLastName}",
          address =&gt;==[city=&gt;_,country=&gt;_]]
-==&gt;[
- name=&gt;'Wales MacKinlay',
- address=&gt;[city=&gt;'Auckland',country=&gt;'New Zealand']]
 mtron&gt; *g:V/1.out(consulted)
              .out(salesRepEmployeeNumber)
              .out(reportsTo)-&lt;[
                name=&gt;"${&gt;&gt;firstName} ${&gt;&gt;lastName}",
-               job=&gt;-&lt;[title=&gt;&gt;&gt;jobTitle,email=&gt;&gt;&gt;email]]
-==&gt;[
- name=&gt;'William Patterson',
- job=&gt;[
-  title=&gt;'Sales Manager (APAC)',
-  email=&gt;'wpatterson@classicmodelcars.com']]</code></pre>
+               job=&gt;-&lt;[title=&gt;&gt;&gt;jobTitle,email=&gt;&gt;&gt;email]]</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -6998,26 +6862,27 @@ nested structures existing across heterogeneous data sources.</p>
 </div>
 <h3 id="_metatron_encoded_graphs" class="discrete">metatron Encoded Graphs</h3>
 <div class="paragraph">
-<p>It is possible to encode an arbitrary graph structure (i.e. any extension of \(G=(V,E)\)) in space. There are three features of
-mtron that make graph encodings natural and universal.</p>
+<p>It is possible to encode an arbitrary graph structure (i.e. any extension of \(G=(V,E)\)) in space. There are four aaspects of mtron that make graph encodings natural and universal&#8201;&#8212;&#8201;applicable in any metatron space, regardless of the underlying storage system.</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p><code>!*</code> (<strong>auto_from</strong>): ensures that simply accessing a reference yields the references referent. To the user, there is no difference between the graph elements being colocated in the same <code>poly</code>, withiin the same space, within the same computer, or across the web as a whole.</p>
+<p><code>!*</code> (<strong>auto_from</strong>): ensures that simply accessing a reference yields the reference&#8217;s referent. To the user, there is no difference between the graph elements being colocated in the same <code>poly</code>, within the same space, within the same computer, or across the web as a whole.</p>
 </li>
 <li>
-<p><code>&gt;&gt;</code> (<strong>traverse</strong>): ensures monads move along the underlying data structure, selecting particular branches within the structure as needed to yield desires semantics.</p>
+<p><code>&gt;&gt;</code> (<strong>forward</strong>): ensures monads move along the underlying data structure in a selective manner as needed to yield the desired resultant semantics.</p>
 </li>
 <li>
-<p><code>-&lt;</code> (<strong>split</strong>): ensures that executing monads will split themselves across branching graph paths.</p>
+<p><code>-&lt;</code> (<strong>split</strong>): ensures that executing monads will split themselves across branching graph paths and branching code paths.</p>
 </li>
 <li>
-<p><code>&gt;-</code> (<strong>merge</strong>): ensures that braching paths will serialize themselves within the execution path of the machine.</p>
+<p><code>&gt;-</code> (<strong>merge</strong>): ensures that branching graph and code paths will linearize themselves within the execution path of the machine.</p>
 </li>
 </ul>
 </div>
-<h4 id="_directed_single_relational_binary_graph" class="discrete">directed single-relational binary graph</h4>
+<div class="exampleblock primary">
+<div class="title">directed single-relational binary graph</div>
+<div class="content">
 <div class="paragraph">
 <p>A directed single-relational binary graph connects vertices by binary edges (a single tail and a single head vertex), where all edges have the same label/meaning (single-relational). An example of such a graph is presented in the code and diagram below.</p>
 </div>
@@ -7104,7 +6969,11 @@ mtron&gt; *v1.&gt;&gt;.&gt;&gt;
 </tr>
 </tbody>
 </table>
-<h4 id="_directed_multi_relational_binary_graph" class="discrete">directed multi-relational binary graph</h4>
+</div>
+</div>
+<div class="exampleblock secondary">
+<div class="title">directed multi-relational binary graph</div>
+<div class="content">
 <div class="paragraph">
 <p>The previous graph structure can be further enhanced with multiple types of edges (multi-relational). Again, the code and diagram below exemplify this form.</p>
 </div>
@@ -7165,7 +7034,11 @@ knows              │
 </tr>
 </tbody>
 </table>
-<h4 id="_directed_vertex_attributed_multi_relational_binary_graph" class="discrete">directed vertex-attributed multi-relational binary graph</h4>
+</div>
+</div>
+<div class="exampleblock secondary">
+<div class="title">directed vertex-attributed multi-relational binary graph</div>
+<div class="content">
 <table class="tableblock frame-all grid-all stretch table-bordered small center">
 <colgroup>
 <col style="width: 57.1428%;">
@@ -7279,7 +7152,16 @@ mtron&gt; *v1.outE(knows).outE(created)     <i class="conum" data-value="4"></i>
 mtron&gt; *v1.outE(knows).outE(created).&gt;&gt;name     <i class="conum" data-value="5"></i><b>(5)</b></code></pre>
 </div>
 </div>
-<h4 id="_directed_attributed_multi_relational_binary_graph" class="discrete">directed attributed multi-relational binary graph</h4>
+</div>
+</div>
+<div class="exampleblock secondary">
+<div class="title">directed attributed multi-relational binary graph</div>
+<div class="content">
+<div class="paragraph">
+<p>A graph can have both its vertices and edges annotated with attributes.
+This form is the classic <strong>property graph</strong> data model. For the sake of brevity, only vertex 1 and its incident edges
+will be developed and diagrammed.</p>
+</div>
 <table class="tableblock frame-all grid-all stretch table-bordered small center">
 <colgroup>
 <col style="width: 57.1428%;">
@@ -7289,11 +7171,24 @@ mtron&gt; *v1.outE(knows).outE(created).&gt;&gt;name     <i class="conum" data-v
 <tr>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; v1 -&gt; [name=&gt;'marko',age=&gt;29,
-              outE_=&gt;[knows=&gt;{[weight=&gt;0.5,inV_=&gt;!*v2, outV_=&gt;!*v1],
-                              [weight=&gt;0.5,inV_=&gt;!*v4, outV_=&gt;!*v1]]},
-                      created=&gt;[weight=&gt;0.2,inV_=&gt;!*v3, outV_=&gt;!*v1]]]
-==&gt;ERROR: null
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; v1 -&gt; [
+         name=&gt;'marko',age=&gt;29,
+         outE_=&gt;[knows=&gt;{[weight=&gt;0.5,inV_=&gt;!*v2, outV_=&gt;!*v1],
+                         [weight=&gt;0.5,inV_=&gt;!*v4, outV_=&gt;!*v1]}],
+                 created=&gt;[weight=&gt;0.2,inV_=&gt;!*v3, outV_=&gt;!*v1]]]
+==&gt;ERROR: v1 -&gt; [
+         name=&gt;'marko',age=&gt;29,
+         outE_=&gt;[knows=&gt;{[weight=&gt;0.5,inV_=&gt;!*v2, outV_=&gt;!*v1],
+                         [weight=&gt;0.5,inV_=&gt;!*v4, outV_=&gt;!*v1]}],
+                 created=&gt;[weight=&gt;0.2,inV_=&gt;!*v3, outV_=&gt;!*v1]]]
+                                                                                                                                                                                                                                          ^ end of input expected
+
+mtron&gt; v2 -&gt; [name=&gt;'vadas']
+==&gt;[name=&gt;'vadas']
+mtron&gt; v3 -&gt; [name=&gt;'josh']
+==&gt;[name=&gt;'josh']
+mtron&gt; v4 -&gt; [name=&gt;'lop']
+==&gt;[name=&gt;'lop']
 mtron&gt; v1     <i class="conum" data-value="1"></i><b>(1)</b>
 ==&gt;v1
 mtron&gt; *v1     <i class="conum" data-value="2"></i><b>(2)</b>
@@ -7303,32 +7198,26 @@ mtron&gt; *v1     <i class="conum" data-value="2"></i><b>(2)</b>
  out_=&gt;[
   knows=&gt;{!*v2,!*v3},
   created=&gt;!*v4]]
-mtron&gt; *v1.&gt;&gt;outE_.&gt;&gt;knows.&gt;&gt;_inV     <i class="conum" data-value="3"></i><b>(3)</b>
-==&gt;ERROR: *v1.&gt;&gt;outE_.&gt;&gt;knows.&gt;&gt;_inV
-                       ^ end of input expected
-
-mtron&gt; *v1.&gt;&gt;outE_.&gt;&gt;created.&gt;&gt;_inV     <i class="conum" data-value="4"></i><b>(4)</b>
-==&gt;ERROR: *v1.&gt;&gt;outE_.&gt;&gt;created.&gt;&gt;_inV
-                         ^ end of input expected</code></pre>
+mtron&gt; *v1.&gt;&gt;outE_.&gt;&gt;knows.&gt;&gt;inV_     <i class="conum" data-value="3"></i><b>(3)</b>
+mtron&gt; *v1.&gt;&gt;outE_.&gt;&gt;created.&gt;&gt;inV_     <i class="conum" data-value="4"></i><b>(4)</b></code></pre>
 </div>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">               lop
-              ┌────┐
-          ┌───► v3 ◄───┐      peter
- marko    │   └───▲┘ created ┌────┐
- ┌────┐ created   │    └─────│ v5 │
- │ v1 │───┘       │          └────┘
- └────┘        created
-  │  │            │
-  │  │           ┌┴───┐
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">              ┌────┐
+          ┌───► v3 │ lop
+ marko    │   └────┘
+ ┌────┐ created
+ │ v1 │───┘0.2
+ └────┘
+  │  │
+  │  │           ┌────┐
   │  └───knows───► v4 │ josh
-  │              └─┬──┘
-knows  vadas       │          ripple
-  │ ┌────┐      created       ┌────┐
-  └─► v2 │         └──────────► v6 │
-    └────┘                    └────┘</code></pre>
+knows     0.5    └────┘
+ 0.5
+  │ ┌────┐
+  └─► v2 │ vadas
+    └────┘</code></pre>
 </div>
 </div></div></td>
 </tr>
@@ -7339,8 +7228,9 @@ knows  vadas       │          ripple
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; out -&gt; |outE?rec{*}&lt;=rec(label=&gt;uri{*}::T){ &gt;&gt;(out_).&gt;&gt;(*label) }
-==&gt;outE?rng=rec{*}&amp;dom=rec(label=&gt;uri{*}::T){rshift(out_).rshift(*label)}
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; out -&gt; |out?rec{*}&lt;=rec(label=&gt;uri{*}::T){
+                 &gt;&gt;(outE_).&gt;&gt;(*label).&gt;&gt;(inV_) }
+==&gt;out?rng=rec{*}&amp;dom=rec(label=&gt;uri{*}::T){rshift(outE_).rshift(*label).rshift(inV_)}
 mtron&gt; v1     <i class="conum" data-value="1"></i><b>(1)</b>
 ==&gt;v1
 mtron&gt; *v1     <i class="conum" data-value="2"></i><b>(2)</b>
@@ -7350,9 +7240,11 @@ mtron&gt; *v1     <i class="conum" data-value="2"></i><b>(2)</b>
  out_=&gt;[
   knows=&gt;{!*v2,!*v3},
   created=&gt;!*v4]]
-mtron&gt; *v1.outE(knows)     <i class="conum" data-value="3"></i><b>(3)</b>
-mtron&gt; *v1.outE(knows).outE(created)     <i class="conum" data-value="4"></i><b>(4)</b>
-mtron&gt; *v1.outE(knows).outE(created).&gt;&gt;name     <i class="conum" data-value="5"></i><b>(5)</b></code></pre>
+mtron&gt; *v1.out(knows)     <i class="conum" data-value="3"></i><b>(3)</b>
+mtron&gt; *v1.out(knows).out(created)     <i class="conum" data-value="4"></i><b>(4)</b>
+mtron&gt; *v1.out(knows).out(created).&gt;&gt;name     <i class="conum" data-value="5"></i><b>(5)</b></code></pre>
+</div>
+</div>
 </div>
 </div>
 <h3 id="_multi_spatial_graph_overlays" class="discrete">Multi-Spatial Graph Overlays</h3>
@@ -7451,20 +7343,60 @@ mtron&gt; *v1.outE(knows).outE(created).&gt;&gt;name     <i class="conum" data-v
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; import(/m/web)
-==&gt;fail::[nullpointerexception: Cannot invoke "studio.phaseshift.metatron.furi.fURI.name()" because the return value of "studio.phaseshift.metatron.isa.m.type.Obj.vid()" is null
-  	studio.phaseshift.metatron.isa.AbstractInstSet [line 160]
-  	java.util.stream.ForEachOps$ForEachOp$OfRef [line 186]
-  	java.util.stream.ReferencePipeline$2$1 [line 197]
-  	java.util.ArrayList$ArrayListSpliterator [line 1716]
-  	java.util.stream.AbstractPipeline [line 570]][...]@/sys/fail/1638
+==&gt;[
+ pattern=&gt;/m/web/#,
+ q=&gt;[docq::[
+ pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+ pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+ pattern=&gt;docq,
+ obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+ inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
+ space=&gt;[super=&gt;!*/m],
+ const=&gt;[
+  !*/m/mach/io/serializer/xml,
+  !*/m/mach/io/serializer/html,
+  !*/m/mach/io/serializer/json,
+  !*/m/mach/io/serializer/markdown,
+  !*/m/mach/io/serializer/plain/text],
+ type=&gt;[
+  content_type::T,
+  xml::T,
+  html::T,
+  json::T,
+  css::T,
+  markdown::T,
+  httpspace::T,
+  wsspace::T,
+  websocket::T,
+  wshandler::T,
+  wsclient::T,
+  mtron_ws::T,
+  mcp_ws::T,
+  mcp_mtron_ws::T,
+  socket::T,
+  http_handler::T,
+  http_client::T,
+  mtron_http::T,
+  mcp_http::T,
+  mcp_mtron_http::T,
+  base::T],
+ inst=&gt;[
+  format?str&lt;=markdown(),
+  as?xml&lt;=str(xml::T),
+  as?html&lt;=str(html::T),
+  as?markdown&lt;=str(markdown::T),
+  as?str&lt;=html(str::T),
+  as?str&lt;=markdown(str::T),
+  as?html&lt;=markdown(html::T),
+  as?json&lt;=str(json::T),
+  as(json_str::T)]]@/m/web
 mtron&gt; httpspace::[
         host     =&gt; &lt;http://localhost:8777&gt;,
         pattern  =&gt; &lt;http://#&gt;,
         route    =&gt; [/          =&gt; &lt;&gt;,
                      /mcp       =&gt; mcp_mtron_http,
                      /docs      =&gt; target/docs,
-                     /console   =&gt; src/main/resources/web/console]]@/sys/space/web/http
-==&gt;ERROR: Cannot invoke "studio.phaseshift.metatron.furi.fURI.test(studio.phaseshift.metatron.furi.fURI)" because the return value of "java.util.Map$Entry.getKey()" is null</code></pre>
+                     /console   =&gt; src/main/resources/web/console]]@/sys/space/web/http</code></pre>
 </div>
 </div>
 </div>
@@ -7476,13 +7408,1454 @@ mtron&gt; httpspace::[
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; html::T     <i class="conum" data-value="1"></i><b>(1)</b>
-==&gt;ERROR: Cannot invoke "studio.phaseshift.metatron.furi.fURI.test(studio.phaseshift.metatron.furi.fURI)" because the return value of "java.util.Map$Entry.getKey()" is null
 mtron&gt;  *&lt;http://phaseshift.studio/&gt;     <i class="conum" data-value="2"></i><b>(2)</b>
-==&gt;fail::[no active space supports pattern &lt;http://phaseshift.studio&gt;][...]@/sys/fail/1644
+==&gt;html::[html=&gt;[
+ head=&gt;[
+  title=&gt;'PhaseShift Studio — Systems Software &amp; Language D...',
+  out=&gt;[
+   [tag=&gt;meta,charset=&gt;'UTF-8'],
+   [
+    tag=&gt;meta,
+    name=&gt;'viewport',
+    content=&gt;'width=device-width, initial-scale=1.0'],
+   [tag=&gt;link,rel=&gt;'icon',href=&gt;&lt;images/favicon-32x32.png&gt;,type=&gt;'image/png'],
+   [
+    tag=&gt;link,
+    href=&gt;&lt;https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css&gt;,
+    rel=&gt;'stylesheet'],
+   [
+    tag=&gt;link,
+    href=&gt;&lt;https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700;JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&amp;display=swap&gt;,
+    rel=&gt;'stylesheet'],
+   [tag=&gt;link,href=&gt;&lt;css/metatron.css&gt;,rel=&gt;'stylesheet'],
+   [
+    tag=&gt;style,
+    data=&gt;"""
+        :root {
+            --bg: #000000;
+     ..."""]]],
+ body=&gt;[out=&gt;[
+ [
+  tag=&gt;nav,
+  class=&gt;'nav',
+  id=&gt;'navbar',
+  out=&gt;[
+   [
+    tag=&gt;a,
+    href=&gt;&lt;#&gt;,
+    class=&gt;'nav-brand',
+    style=&gt;'color:var(--accent);',
+    out=&gt;[
+     [tag=&gt;img,src=&gt;&lt;images/favicon-32x32.png&gt;,alt=&gt;'PS'],
+     [tag=&gt;span,text=&gt;'SHIFT']],
+    text=&gt;'PHASE'],
+   [
+    tag=&gt;button,
+    class=&gt;'nav-toggle',
+    id=&gt;'navToggle',
+    aria-label=&gt;'Toggle navigation',
+    out=&gt;[[tag=&gt;i,class=&gt;'bi bi-list']]],
+   [
+    tag=&gt;ul,
+    class=&gt;'nav-links',
+    id=&gt;'navLinks',
+    out=&gt;[
+     [
+      tag=&gt;li,
+      out=&gt;[[tag=&gt;a,href=&gt;&lt;#hero&gt;,class=&gt;'active',text=&gt;'Home']]],
+     [
+      tag=&gt;li,
+      out=&gt;[[tag=&gt;a,href=&gt;&lt;#products&gt;,text=&gt;'Product']]],
+     [
+      tag=&gt;li,
+      out=&gt;[[tag=&gt;a,href=&gt;&lt;#capabilities&gt;,text=&gt;'Capabilities']]],
+     [
+      tag=&gt;li,
+      out=&gt;[[tag=&gt;a,href=&gt;&lt;#code&gt;,text=&gt;'Explore']]],
+     [
+      tag=&gt;li,
+      out=&gt;[[tag=&gt;a,href=&gt;&lt;#footer&gt;,text=&gt;'Contact']]]]]]],
+ [
+  tag=&gt;section,
+  class=&gt;'hero',
+  id=&gt;'hero',
+  out=&gt;[[
+ tag=&gt;div,
+ class=&gt;'hero-inner',
+ out=&gt;[
+  [
+   tag=&gt;div,
+   class=&gt;'hero-text',
+   out=&gt;[
+    [
+     tag=&gt;span,
+     class=&gt;'hero-eyebrow',
+     text=&gt;'Systems Software &amp; Language Design'],
+    [
+     tag=&gt;h1,
+     out=&gt;[
+      [tag=&gt;span,class=&gt;'red',text=&gt;'Shift'],
+      [tag=&gt;br]],
+     text=&gt;'Phase Studio'],
+    [
+     tag=&gt;p,
+     class=&gt;'hero-tagline',
+     out=&gt;[
+      [
+       tag=&gt;strong,
+       out=&gt;[[tag=&gt;span,class=&gt;'red',text=&gt;'data infrastructure']]],
+      [tag=&gt;strong,text=&gt;'metatron']],
+     text=&gt;'Building for the boundary between languages, data...'],
+    [
+     tag=&gt;div,
+     class=&gt;'hero-actions',
+     out=&gt;[
+      [
+       tag=&gt;a,
+       href=&gt;&lt;http://metatron.phaseshift.studio&gt;,
+       class=&gt;'btn-primary',
+       out=&gt;[[tag=&gt;i,class=&gt;'bi bi-arrow-right']],
+       text=&gt;'Explore metatron'],
+      [tag=&gt;a,href=&gt;&lt;#products&gt;,class=&gt;'btn-ghost',text=&gt;'PhaseShift Studio capabilities']]]]],
+  [
+   tag=&gt;div,
+   class=&gt;'hero-visual',
+   out=&gt;[[tag=&gt;img,src=&gt;&lt;images/metatron-character.png&gt;,alt=&gt;'metatron']]]]]]],
+ [tag=&gt;div,class=&gt;'section-divider'],
+ [
+  tag=&gt;section,
+  id=&gt;'products',
+  out=&gt;[[
+ tag=&gt;div,
+ class=&gt;'section-inner',
+ out=&gt;[
+  [
+   tag=&gt;div,
+   class=&gt;'section-header reveal',
+   out=&gt;[
+    [tag=&gt;span,class=&gt;'eyebrow',text=&gt;'Flagship Product'],
+    [
+     tag=&gt;h2,
+     out=&gt;[[tag=&gt;span,class=&gt;'accent',text=&gt;'metatron']]],
+    [
+     tag=&gt;p,
+     text=&gt;'A concatenative, flow-oriented traversal language...']]],
+  [
+   tag=&gt;div,
+   class=&gt;'product-card reveal',
+   out=&gt;[
+    [
+     tag=&gt;div,
+     out=&gt;[
+      [tag=&gt;span,class=&gt;'product-badge',text=&gt;'v0.1-snapshot'],
+      [
+       tag=&gt;h3,
+       out=&gt;[[tag=&gt;span,class=&gt;'dot',text=&gt;'.']],
+       text=&gt;'metatron'],
+      [
+       tag=&gt;p,
+       text=&gt;'A Turing-complete language for composing data flo...'],
+      [
+       tag=&gt;ul,
+       class=&gt;'feature-list',
+       out=&gt;[
+        [
+         tag=&gt;li,
+         text=&gt;'Concatenative, stack-based execution model'],
+        [
+         tag=&gt;li,
+         text=&gt;'Structural type system with refinement types'],
+        [
+         tag=&gt;li,
+         text=&gt;'URI-addressable instruction space'],
+        [
+         tag=&gt;li,
+         text=&gt;'Pluggable storage backends via embeddings'],
+        [
+         tag=&gt;li,
+         text=&gt;'Streaming analytical processing modes'],
+        [
+         tag=&gt;li,
+         text=&gt;'Novel integation of large language models']]],
+      [
+       tag=&gt;a,
+       href=&gt;&lt;http://metatron.phaseshift.studio&gt;,
+       class=&gt;'btn-primary',
+       out=&gt;[[tag=&gt;i,class=&gt;'bi bi-arrow-right']],
+       text=&gt;'Visit metatron']]],
+    [
+     tag=&gt;div,
+     class=&gt;'product-terminal',
+     out=&gt;[
+      [
+       tag=&gt;div,
+       class=&gt;'terminal-chrome',
+       out=&gt;[
+        [tag=&gt;span,class=&gt;'dot red'],
+        [tag=&gt;span,class=&gt;'dot yellow'],
+        [tag=&gt;span,class=&gt;'dot green'],
+        [tag=&gt;span,class=&gt;'title',text=&gt;'metatron — console']]],
+      [
+       tag=&gt;div,
+       class=&gt;'terminal-body',
+       out=&gt;[[
+ tag=&gt;pre,
+ out=&gt;[[
+ tag=&gt;code,
+ class=&gt;'language-mtron',
+ text=&gt;'*milky_way&gt;&gt;bodies.?star::T.where(&gt;&gt;planets.count...']]]]]]]]]]]]],
+ [tag=&gt;div,class=&gt;'section-divider'],
+ [
+  tag=&gt;section,
+  id=&gt;'capabilities',
+  out=&gt;[[
+ tag=&gt;div,
+ class=&gt;'section-inner',
+ out=&gt;[
+  [
+   tag=&gt;div,
+   class=&gt;'section-header reveal',
+   out=&gt;[
+    [tag=&gt;span,class=&gt;'eyebrow',text=&gt;'Expertise'],
+    [
+     tag=&gt;h2,
+     out=&gt;[[tag=&gt;span,class=&gt;'accent',text=&gt;'possible']],
+     text=&gt;'what is'],
+    [
+     tag=&gt;p,
+     text=&gt;'Deep engineering across the systems stack, from l...']]],
+  [
+   tag=&gt;div,
+   class=&gt;'cap-grid',
+   out=&gt;[
+    [
+     tag=&gt;div,
+     class=&gt;'cap-card reveal reveal-delay-1',
+     out=&gt;[
+      [tag=&gt;i,class=&gt;'bi bi-diagram-3 cap-icon'],
+      [tag=&gt;h4,text=&gt;'Language Design'],
+      [
+       tag=&gt;p,
+       text=&gt;'Grammar design, type system theory, compiler cons...']]],
+    [
+     tag=&gt;div,
+     class=&gt;'cap-card reveal reveal-delay-2',
+     out=&gt;[
+      [tag=&gt;i,class=&gt;'bi bi-grid-3x3-gap cap-icon'],
+      [tag=&gt;h4,text=&gt;'Distributed Systems'],
+      [
+       tag=&gt;p,
+       text=&gt;'data partitioning, replication and fault-tolerant...']]],
+    [
+     tag=&gt;div,
+     class=&gt;'cap-card reveal reveal-delay-3',
+     out=&gt;[
+      [tag=&gt;i,class=&gt;'bi bi-database cap-icon'],
+      [tag=&gt;h4,text=&gt;'Query Optimization'],
+      [
+       tag=&gt;p,
+       text=&gt;'Cost-based optimization, logical and physical pla...']]],
+    [
+     tag=&gt;div,
+     class=&gt;'cap-card reveal reveal-delay-4',
+     out=&gt;[
+      [tag=&gt;i,class=&gt;'bi bi-cpu cap-icon'],
+      [tag=&gt;h4,text=&gt;'Database Theory'],
+      [
+       tag=&gt;p,
+       text=&gt;'Relational algebra, graph data models, storage en...']]]]]]]]],
+ [tag=&gt;div,class=&gt;'section-divider'],
+ [
+  tag=&gt;section,
+  id=&gt;'code',
+  out=&gt;[[
+ tag=&gt;div,
+ class=&gt;'section-inner',
+ out=&gt;[[
+ tag=&gt;div,
+ class=&gt;'showcase-grid',
+ out=&gt;[
+  [
+   tag=&gt;div,
+   class=&gt;'showcase-text reveal',
+   out=&gt;[
+    [tag=&gt;span,class=&gt;'hero-eyebrow',style=&gt;'margin-bottom:1rem;',text=&gt;'Language Preview'],
+    [
+     tag=&gt;h3,
+     out=&gt;[[tag=&gt;br]],
+     text=&gt;'Traversal-Oriented Programming'],
+    [
+     tag=&gt;p,
+     out=&gt;[[
+ tag=&gt;strong,
+ out=&gt;[[tag=&gt;span,class=&gt;'red',text=&gt;'traversals']]]],
+     text=&gt;'metatron programs are — sequences of instructions...'],
+    [
+     tag=&gt;p,
+     out=&gt;[[
+ tag=&gt;strong,
+ out=&gt;[[tag=&gt;span,class=&gt;'red',text=&gt;'uri address space']]]],
+     text=&gt;'Types, instructions, and even data exist within a...'],
+    [
+     tag=&gt;a,
+     href=&gt;&lt;http://metatron.phaseshift.studio&gt;,
+     class=&gt;'btn-ghost',
+     out=&gt;[[tag=&gt;i,class=&gt;'bi bi-arrow-right']],
+     text=&gt;'Read the docs']]],
+  [
+   tag=&gt;div,
+   class=&gt;'showcase-terminal reveal reveal-delay-2',
+   out=&gt;[
+    [
+     tag=&gt;div,
+     class=&gt;'terminal-chrome',
+     out=&gt;[
+      [tag=&gt;span,class=&gt;'dot red'],
+      [tag=&gt;span,class=&gt;'dot yellow'],
+      [tag=&gt;span,class=&gt;'dot green'],
+      [
+       tag=&gt;span,
+       class=&gt;'title',
+       text=&gt;'type definitions — mtron console']]],
+    [
+     tag=&gt;div,
+     class=&gt;'terminal-body',
+     out=&gt;[[
+ tag=&gt;pre,
+ out=&gt;[[
+ tag=&gt;code,
+ class=&gt;'language-mtron',
+ text=&gt;"""// Type definitions
+nat    -&gt; int::T[?&gt;0]
+person ..."""]]]]]]]]]]]]],
+ [
+  tag=&gt;footer,
+  class=&gt;'footer',
+  id=&gt;'footer',
+  out=&gt;[
+   [
+    tag=&gt;div,
+    class=&gt;'footer-inner',
+    out=&gt;[
+     [
+      tag=&gt;div,
+      class=&gt;'footer-brand',
+      out=&gt;[[tag=&gt;span,text=&gt;'Shift']],
+      text=&gt;'Phase Studio'],
+     [
+      tag=&gt;div,
+      class=&gt;'footer-links',
+      out=&gt;[
+       [
+        tag=&gt;a,
+        href=&gt;&lt;http://metatron.phaseshift.studio&gt;,
+        class=&gt;'footer-main-link',
+        text=&gt;'metatron'],
+       [
+        tag=&gt;span,
+        class=&gt;'footer-subs',
+        out=&gt;[
+         [tag=&gt;a,href=&gt;&lt;#&gt;,text=&gt;'Documentation'],
+         [tag=&gt;a,href=&gt;&lt;#&gt;,text=&gt;'Instruction Sets']]]]],
+     [tag=&gt;a,href=&gt;&lt;mailto:info@phaseshift.studio&gt;,class=&gt;'footer-email',text=&gt;'info@phaseshift.studio']]],
+   [
+    tag=&gt;div,
+    class=&gt;'footer-bottom',
+    out=&gt;[[
+ tag=&gt;span,
+ text=&gt;'© 2026 PhaseShift Studio. All rights reserved.']]]]],
+ [tag=&gt;script,src=&gt;&lt;highlight/highlight.min.js&gt;],
+ [
+  tag=&gt;script,
+  src=&gt;&lt;highlight/languages/mtron.min.js&gt;],
+ [
+  tag=&gt;script,
+  data=&gt;"""
+        hljs.highlightAll();
+        const obser..."""]]],
+ lang=&gt;'en']]
 mtron&gt;  *&lt;http://phaseshift.studio/html/head/title&gt;     <i class="conum" data-value="3"></i><b>(3)</b>
-==&gt;fail::[no active space supports pattern &lt;http://phaseshift.studio/html/head/title&gt;][...]@/sys/fail/1650
+==&gt;'PhaseShift Studio — Systems Software &amp; Language Design'
 mtron&gt;  *&lt;http://phaseshift.studio&gt;.as(str::T)     <i class="conum" data-value="4"></i><b>(4)</b>
-==&gt;ERROR: null</code></pre>
+==&gt;"""&lt;html lang="en"&gt;
+ &lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+  &lt;link rel="icon" href="images/favicon-32x32.png" type="image/png"&gt;
+  &lt;link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet"&gt;
+  &lt;link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700;JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&amp;amp;display=swap" rel="stylesheet"&gt;
+  &lt;link href="css/metatron.css" rel="stylesheet"&gt;
+  &lt;style&gt;
+        :root {
+            --bg: #000000;
+            --bg-panel: #191C24;
+            --bg-elevated: #282c34;
+            --bg-medium: #202020;
+            --accent: #970207;
+            --accent-glow: #b00208;
+            --teal: #4db6ac;
+            --blue: #2652e5;
+            --magenta: #825181;
+            --green: #4d8813;
+            --yellow: #bac008;
+            --aqua: #167a96;
+            --text: #FFFFFF;
+            --text-muted: #6C7293;
+            --text-dim: #494554;
+            --border: rgba(108, 114, 147, 0.15);
+            --font-mono: 'JetBrains Mono', 'Fira Mono', Consolas, Menlo, Monaco, monospace;
+            --font-display: 'Oswald', sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html {
+            scroll-behavior: smooth;
+            background: var(--bg);
+        }
+
+        body {
+            font-family: var(--font-mono);
+            background: var(--bg);
+            color: var(--text-muted);
+            line-height: 1.6;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ---- background atmosphere ---- */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            background:
+                radial-gradient(ellipse 80% 60% at 50% 0%, rgba(151, 2, 7, 0.06) 0%, transparent 70%),
+                radial-gradient(ellipse 40% 50% at 80% 60%, rgba(22, 122, 150, 0.04) 0%, transparent 70%),
+                radial-gradient(circle at 20% 80%, rgba(77, 182, 172, 0.03) 0%, transparent 50%);
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0.4;
+            background-image: radial-gradient(circle, rgba(108, 114, 147, 0.12) 0.5px, transparent 0.5px);
+            background-size: 24px 24px;
+        }
+
+        /* ---- nav ---- */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+            height: 56px;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+
+        .nav.scrolled {
+            border-bottom-color: rgba(151, 2, 7, 0.3);
+            box-shadow: 0 1px 20px rgba(151, 2, 7, 0.08);
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--text);
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .nav-brand img {
+            height: 24px;
+            width: 24px;
+        }
+
+        .nav-brand span {
+            color: var(--accent);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-family: var(--font-display);
+            font-size: 0.85rem;
+            font-weight: 500;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            transition: color 0.2s;
+            position: relative;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: var(--accent);
+            transition: width 0.2s ease;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: var(--text);
+        }
+
+        .nav-links a:hover::after,
+        .nav-links a.active::after {
+            width: 100%;
+        }
+
+        .nav-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 4px;
+        }
+
+        /* ---- hero ---- */
+        .hero {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 6rem 2rem 4rem;
+        }
+
+        .hero-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .hero-text {
+            position: relative;
+        }
+
+        .hero-eyebrow {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 1.5rem;
+            display: block;
+        }
+
+        .hero-eyebrow::before {
+            content: '&gt; ';
+            color: var(--text-dim);
+        }
+
+        .hero h1 {
+            font-family: var(--font-display);
+            font-size: clamp(3rem, 6vw, 5.5rem);
+            font-weight: 700;
+            line-height: 1.05;
+            color: var(--text);
+            margin-bottom: 1.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+        }
+
+        .hero h1 .red {
+            color: var(--accent);
+            text-shadow: 0 0 40px rgba(151, 2, 7, 0.5), 0 0 80px rgba(151, 2, 7, 0.25);
+        }
+
+        .hero-tagline {
+            font-family: var(--font-mono);
+            font-size: 1.05rem;
+            color: var(--text-muted);
+            max-width: 480px;
+            margin-bottom: 2.5rem;
+            line-height: 1.7;
+        }
+
+        .hero-tagline strong {
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 28px;
+            background: var(--accent);
+            color: #fff;
+            font-family: var(--font-display);
+            font-size: 0.9rem;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            position: relative;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-glow);
+            box-shadow: 0 0 30px rgba(151, 2, 7, 0.4), 0 0 60px rgba(151, 2, 7, 0.15);
+            transform: translateY(-1px);
+            color: #fff;
+        }
+
+        .btn-ghost {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 28px;
+            background: transparent;
+            color: var(--text-muted);
+            font-family: var(--font-display);
+            font-size: 0.9rem;
+            font-weight: 500;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            text-decoration: none;
+            border: 1px solid rgba(108, 114, 147, 0.3);
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .btn-ghost:hover {
+            border-color: var(--accent);
+            color: var(--text);
+            box-shadow: 0 0 20px rgba(151, 2, 7, 0.15);
+        }
+
+        .hero-visual {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hero-visual img {
+            width: 100%;
+            max-width: 480px;
+            height: auto;
+            filter: drop-shadow(0 0 80px rgba(151, 2, 7, 0.3)) drop-shadow(0 0 160px rgba(151, 2, 7, 0.12)) drop-shadow(0 0 240px rgba(151, 2, 7, 0.06));
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-16px); }
+        }
+
+        .hero-visual::after {
+            content: '';
+            position: absolute;
+            bottom: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60%;
+            height: 20px;
+            background: radial-gradient(ellipse, rgba(151, 2, 7, 0.3) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: shadow-pulse 6s ease-in-out infinite;
+        }
+
+        @keyframes shadow-pulse {
+            0%, 100% { opacity: 0.5; transform: translateX(-50%) scale(1); }
+            50% { opacity: 0.8; transform: translateX(-50%) scale(1.1); }
+        }
+
+        /* ---- section headers ---- */
+        .section-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .section-header .eyebrow {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 0.75rem;
+            display: block;
+        }
+
+        .section-header h2 {
+            font-family: var(--font-display);
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 700;
+            color: var(--text);
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            line-height: 1.2;
+        }
+
+        .section-header h2 .accent {
+            color: var(--accent);
+        }
+
+        .section-header p {
+            max-width: 560px;
+            margin: 1rem auto 0;
+            font-size: 0.95rem;
+            color: var(--text-muted);
+        }
+
+        section {
+            position: relative;
+            z-index: 1;
+            padding: 6rem 2rem;
+        }
+
+        .section-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* ---- products ---- */
+        #products {
+            background: linear-gradient(180deg, transparent 0%, rgba(25, 28, 36, 0.5) 50%, transparent 100%);
+        }
+
+        .product-card {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            align-items: center;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            padding: 3rem;
+            position: relative;
+            overflow: hidden;
+            transition: border-color 0.3s ease;
+        }
+
+        .product-card:hover {
+            border-color: rgba(151, 2, 7, 0.3);
+        }
+
+        .product-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .product-card:hover::before {
+            opacity: 1;
+        }
+
+        .product-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: rgba(151, 2, 7, 0.15);
+            color: var(--accent);
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            margin-bottom: 1.25rem;
+        }
+
+        .product-card h3 {
+            font-family: var(--font-display);
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 1rem;
+        }
+
+        .product-card h3 .dot {
+            color: var(--accent);
+        }
+
+        .product-card p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.7;
+            margin-bottom: 1.5rem;
+        }
+
+        .feature-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            margin-bottom: 2rem;
+        }
+
+        .feature-list li {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .feature-list li::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: var(--accent);
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .product-terminal {
+            background: #0a0a0f;
+            border: 1px solid rgba(108, 114, 147, 0.2);
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .terminal-chrome {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 14px;
+            background: rgba(25, 28, 36, 0.8);
+            border-bottom: 1px solid rgba(108, 114, 147, 0.1);
+        }
+
+        .terminal-chrome .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .terminal-chrome .dot.red    { background: #970207; }
+        .terminal-chrome .dot.yellow { background: #bac008; }
+        .terminal-chrome .dot.green  { background: #4d8813; }
+
+        .terminal-chrome .title {
+            margin-left: 10px;
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            letter-spacing: 0.05em;
+        }
+
+        .terminal-body {
+            padding: 1.25rem 1.5rem;
+            font-family: var(--font-mono);
+            font-size: 0.78rem;
+            line-height: 1.75;
+            color: var(--text-muted);
+            overflow-x: auto;
+            white-space: pre;
+        }
+
+        .terminal-body .hljs {
+            background: transparent;
+            padding: 0;
+            font-size: inherit;
+            line-height: inherit;
+        }
+
+        /* ---- capabilities ---- */
+        #capabilities {
+            background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.4) 40%, rgba(0, 0, 0, 0.4) 60%, transparent 100%);
+        }
+
+        .cap-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1px;
+            background: var(--border);
+            border: 1px solid var(--border);
+        }
+
+        .cap-card {
+            background: var(--bg-panel);
+            padding: 2.5rem 2rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cap-card::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--accent);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .cap-card:hover {
+            background: var(--bg-elevated);
+        }
+
+        .cap-card:hover::after {
+            transform: scaleX(1);
+        }
+
+        .cap-icon {
+            font-size: 1.6rem;
+            color: var(--accent);
+            margin-bottom: 1.25rem;
+            display: block;
+            opacity: 0.8;
+        }
+
+        .cap-card h4 {
+            font-family: var(--font-display);
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.75rem;
+        }
+
+        .cap-card p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        /* ---- code showcase ---- */
+        .showcase-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            align-items: center;
+        }
+
+        .showcase-text h3 {
+            font-family: var(--font-display);
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text);
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            margin-bottom: 1rem;
+        }
+
+        .showcase-text p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.7;
+            margin-bottom: 1.5rem;
+        }
+
+        .showcase-terminal {
+            background: #0a0a0f;
+            border: 1px solid rgba(108, 114, 147, 0.2);
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba(151, 2, 7, 0.06);
+        }
+
+        .showcase-terminal .terminal-body {
+            max-height: 420px;
+            overflow-y: auto;
+        }
+
+        .showcase-terminal .terminal-body::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .showcase-terminal .terminal-body::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .showcase-terminal .terminal-body::-webkit-scrollbar-thumb {
+            background: rgba(108, 114, 147, 0.2);
+            border-radius: 2px;
+        }
+
+        /* ---- footer ---- */
+        .footer {
+            position: relative;
+            z-index: 1;
+            background: var(--bg-panel);
+            border-top: 1px solid var(--border);
+            padding: 2.5rem 2rem 1.5rem;
+        }
+
+        .footer-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-brand {
+            font-family: var(--font-display);
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            white-space: nowrap;
+        }
+
+        .footer-brand span {
+            color: var(--accent);
+        }
+
+        .footer-links {
+            display: flex;
+            align-items: baseline;
+            gap: 1.25rem;
+        }
+
+        .footer-main-link {
+            font-family: var(--font-display);
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text);
+            text-decoration: none;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            transition: color 0.2s;
+        }
+
+        .footer-main-link:hover {
+            color: var(--accent);
+        }
+
+        .footer-subs {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .footer-subs a {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .footer-subs a:hover {
+            color: var(--text);
+        }
+
+        .footer-email {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .footer-email:hover {
+            color: var(--accent);
+        }
+
+        .footer-bottom {
+            max-width: 1200px;
+            margin: 1.5rem auto 0;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            font-size: 0.7rem;
+            color: var(--text-dim);
+        }
+
+        /* ---- reveal animations ---- */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.7s ease, transform 0.7s ease;
+        }
+
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .reveal-delay-1 { transition-delay: 0.05s; }
+        .reveal-delay-2 { transition-delay: 0.15s; }
+        .reveal-delay-3 { transition-delay: 0.25s; }
+        .reveal-delay-4 { transition-delay: 0.35s; }
+
+        /* ---- divider ---- */
+        .section-divider {
+            position: relative;
+            z-index: 1;
+            height: 1px;
+            max-width: 1200px;
+            margin: 0 auto;
+            background: linear-gradient(90deg, transparent, rgba(108, 114, 147, 0.15), transparent);
+        }
+
+        /* ---- mobile ---- */
+        @media (max-width: 968px) {
+            .hero-inner {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .hero-tagline {
+                max-width: 100%;
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            .hero-actions {
+                justify-content: center;
+            }
+
+            .hero-visual img {
+                max-width: 300px;
+            }
+
+            .product-card {
+                grid-template-columns: 1fr;
+                padding: 2rem;
+            }
+
+            .cap-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .showcase-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-inner {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .nav-links {
+                position: fixed;
+                top: 56px;
+                left: 0;
+                right: 0;
+                background: rgba(0, 0, 0, 0.95);
+                backdrop-filter: blur(16px);
+                -webkit-backdrop-filter: blur(16px);
+                flex-direction: column;
+                gap: 0;
+                padding: 1rem 0;
+                border-bottom: 1px solid var(--border);
+                transform: translateY(-100%);
+                opacity: 0;
+                pointer-events: none;
+                transition: all 0.3s ease;
+            }
+
+            .nav-links.open {
+                transform: translateY(0);
+                opacity: 1;
+                pointer-events: auto;
+            }
+
+            .nav-links a {
+                display: block;
+                padding: 0.75rem 2rem;
+                font-size: 0.9rem;
+            }
+
+            .nav-toggle {
+                display: block;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .cap-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-inner {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            section {
+                padding: 4rem 1.25rem;
+            }
+
+            .hero {
+                padding: 5rem 1.25rem 3rem;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .product-card {
+                padding: 1.5rem;
+            }
+        }
+    &lt;/style&gt;
+ &lt;/head&gt;
+ &lt;body&gt;
+  &lt;nav class="nav" id="navbar"&gt;
+   &lt;a href="#" class="nav-brand" style="color:var(--accent);"&gt;PHASE&lt;img src="images/favicon-32x32.png" alt="PS"&gt;&lt;span&gt;SHIFT&lt;/span&gt;&lt;/a&gt;&lt;button class="nav-toggle" id="navToggle" aria-label="Toggle navigation"&gt;&lt;i class="bi bi-list"&gt;&lt;/i&gt;&lt;/button&gt;
+   &lt;ul class="nav-links" id="navLinks"&gt;
+    &lt;li&gt;&lt;a href="#hero" class="active"&gt;Home&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="#products"&gt;Product&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="#capabilities"&gt;Capabilities&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="#code"&gt;Explore&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="#footer"&gt;Contact&lt;/a&gt;&lt;/li&gt;
+   &lt;/ul&gt;
+  &lt;/nav&gt;
+  &lt;section class="hero" id="hero"&gt;
+   &lt;div class="hero-inner"&gt;
+    &lt;div class="hero-text"&gt;
+     &lt;span class="hero-eyebrow"&gt;Systems Software &amp;amp; Language Design&lt;/span&gt;
+     &lt;h1&gt;Phase Studio&lt;span class="red"&gt;Shift&lt;/span&gt;
+      &lt;br&gt;&lt;/h1&gt;
+     &lt;p class="hero-tagline"&gt;Building for the boundary between languages, databases, artificial intelligence models, and distributed systems. The flagship product, , reimagines how heterogeneous data is interconnected, queried, and transformed.&lt;strong&gt;&lt;span class="red"&gt;data infrastructure&lt;/span&gt;&lt;/strong&gt;&lt;strong&gt;metatron&lt;/strong&gt;&lt;/p&gt;
+     &lt;div class="hero-actions"&gt;
+      &lt;a href="http://metatron.phaseshift.studio" class="btn-primary"&gt;Explore metatron&lt;i class="bi bi-arrow-right"&gt;&lt;/i&gt;&lt;/a&gt;&lt;a href="#products" class="btn-ghost"&gt;PhaseShift Studio capabilities&lt;/a&gt;
+     &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class="hero-visual"&gt;
+     &lt;img src="images/metatron-character.png" alt="metatron"&gt;
+    &lt;/div&gt;
+   &lt;/div&gt;
+  &lt;/section&gt;
+  &lt;div class="section-divider"&gt;&lt;/div&gt;
+  &lt;section id="products"&gt;
+   &lt;div class="section-inner"&gt;
+    &lt;div class="section-header reveal"&gt;
+     &lt;span class="eyebrow"&gt;Flagship Product&lt;/span&gt;
+     &lt;h2&gt;&lt;span class="accent"&gt;metatron&lt;/span&gt;&lt;/h2&gt;
+     &lt;p&gt;A concatenative, flow-oriented traversal language that operates over heterogeneous data sources.&lt;/p&gt;
+    &lt;/div&gt;
+    &lt;div class="product-card reveal"&gt;
+     &lt;div&gt;
+      &lt;span class="product-badge"&gt;v0.1-snapshot&lt;/span&gt;
+      &lt;h3&gt;metatron&lt;span class="dot"&gt;.&lt;/span&gt;&lt;/h3&gt;
+      &lt;p&gt;A Turing-complete language for composing data flow instructions across relational, graph, document, and streaming data sources. metatron's instruction sets provide domain-specific views over the underlying data, enabling expressive, composable, and type-safe traversals.&lt;/p&gt;
+      &lt;ul class="feature-list"&gt;
+       &lt;li&gt;Concatenative, stack-based execution model&lt;/li&gt;
+       &lt;li&gt;Structural type system with refinement types&lt;/li&gt;
+       &lt;li&gt;URI-addressable instruction space&lt;/li&gt;
+       &lt;li&gt;Pluggable storage backends via embeddings&lt;/li&gt;
+       &lt;li&gt;Streaming analytical processing modes&lt;/li&gt;
+       &lt;li&gt;Novel integation of large language models&lt;/li&gt;
+      &lt;/ul&gt;
+      &lt;a href="http://metatron.phaseshift.studio" class="btn-primary"&gt;Visit metatron&lt;i class="bi bi-arrow-right"&gt;&lt;/i&gt;&lt;/a&gt;
+     &lt;/div&gt;
+     &lt;div class="product-terminal"&gt;
+      &lt;div class="terminal-chrome"&gt;
+       &lt;span class="dot red"&gt;&lt;/span&gt;&lt;span class="dot yellow"&gt;&lt;/span&gt;&lt;span class="dot green"&gt;&lt;/span&gt;&lt;span class="title"&gt;metatron — console&lt;/span&gt;
+      &lt;/div&gt;
+      &lt;div class="terminal-body"&gt;
+       &lt;pre&gt;&lt;code class="language-mtron"&gt;*milky_way&amp;gt;&amp;gt;bodies.?star::T.where(&amp;gt;&amp;gt;planets.count().?&amp;gt;(0)).-&amp;lt;[
+       name            =&amp;gt; &amp;gt;&amp;gt;name,
+       stats           =&amp;gt; -&amp;lt;[kilos =&amp;gt; &amp;gt;&amp;gt;mass.as(kg::T),
+                             area =&amp;gt; _(s=&amp;gt;?star::T){ *pi.mult(*s.&amp;gt;&amp;gt;radius.pow(2.0)).as(km::T) }],
+       primary_planets =&amp;gt; &amp;gt;&amp;gt;planets.order(&amp;gt;&amp;gt;mass).take(1).&amp;gt;&amp;gt;name]
+==&amp;gt;[name=&amp;gt;'Sol', stats=&amp;gt;[kilos=&amp;gt;1.989e30, area=&amp;gt;6.0877e12],
+    primary_planets=&amp;gt;['Jupiter']]&lt;/code&gt;&lt;/pre&gt;
+      &lt;/div&gt;
+     &lt;/div&gt;
+    &lt;/div&gt;
+   &lt;/div&gt;
+  &lt;/section&gt;
+  &lt;div class="section-divider"&gt;&lt;/div&gt;
+  &lt;section id="capabilities"&gt;
+   &lt;div class="section-inner"&gt;
+    &lt;div class="section-header reveal"&gt;
+     &lt;span class="eyebrow"&gt;Expertise&lt;/span&gt;
+     &lt;h2&gt;what is&lt;span class="accent"&gt;possible&lt;/span&gt;&lt;/h2&gt;
+     &lt;p&gt;Deep engineering across the systems stack, from language design to distributed runtime infrastructure.&lt;/p&gt;
+    &lt;/div&gt;
+    &lt;div class="cap-grid"&gt;
+     &lt;div class="cap-card reveal reveal-delay-1"&gt;
+      &lt;i class="bi bi-diagram-3 cap-icon"&gt;&lt;/i&gt;
+      &lt;h4&gt;Language Design&lt;/h4&gt;
+      &lt;p&gt;Grammar design, type system theory, compiler construction, and runtime optimization for domain-specific and general-purpose languages.&lt;/p&gt;
+     &lt;/div&gt;
+     &lt;div class="cap-card reveal reveal-delay-2"&gt;
+      &lt;i class="bi bi-grid-3x3-gap cap-icon"&gt;&lt;/i&gt;
+      &lt;h4&gt;Distributed Systems&lt;/h4&gt;
+      &lt;p&gt;data partitioning, replication and fault-tolerant service topologies.&lt;/p&gt;
+     &lt;/div&gt;
+     &lt;div class="cap-card reveal reveal-delay-3"&gt;
+      &lt;i class="bi bi-database cap-icon"&gt;&lt;/i&gt;
+      &lt;h4&gt;Query Optimization&lt;/h4&gt;
+      &lt;p&gt;Cost-based optimization, logical and physical plan rewriting, cardinality estimation, and adaptive execution engines.&lt;/p&gt;
+     &lt;/div&gt;
+     &lt;div class="cap-card reveal reveal-delay-4"&gt;
+      &lt;i class="bi bi-cpu cap-icon"&gt;&lt;/i&gt;
+      &lt;h4&gt;Database Theory&lt;/h4&gt;
+      &lt;p&gt;Relational algebra, graph data models, storage engine design, indexing structures, and multi-model data integration.&lt;/p&gt;
+     &lt;/div&gt;
+    &lt;/div&gt;
+   &lt;/div&gt;
+  &lt;/section&gt;
+  &lt;div class="section-divider"&gt;&lt;/div&gt;
+  &lt;section id="code"&gt;
+   &lt;div class="section-inner"&gt;
+    &lt;div class="showcase-grid"&gt;
+     &lt;div class="showcase-text reveal"&gt;
+      &lt;span class="hero-eyebrow" style="margin-bottom:1rem;"&gt;Language Preview&lt;/span&gt;
+      &lt;h3&gt;Traversal-Oriented Programming
+       &lt;br&gt;&lt;/h3&gt;
+      &lt;p&gt;metatron programs are — sequences of instructions that navigate, filter, and transform data. The language is concatenative: instructions compose by stacking, enabling a natural pipe-forward style where data flows through successive transformations.&lt;strong&gt;&lt;span class="red"&gt;traversals&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+      &lt;p&gt;Types, instructions, and even data exist within a unified , enabling reflection, memoization, and serialization as first-class language features.&lt;strong&gt;&lt;span class="red"&gt;uri address space&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+      &lt;a href="http://metatron.phaseshift.studio" class="btn-ghost"&gt;Read the docs&lt;i class="bi bi-arrow-right"&gt;&lt;/i&gt;&lt;/a&gt;
+     &lt;/div&gt;
+     &lt;div class="showcase-terminal reveal reveal-delay-2"&gt;
+      &lt;div class="terminal-chrome"&gt;
+       &lt;span class="dot red"&gt;&lt;/span&gt;&lt;span class="dot yellow"&gt;&lt;/span&gt;&lt;span class="dot green"&gt;&lt;/span&gt;&lt;span class="title"&gt;type definitions — mtron console&lt;/span&gt;
+      &lt;/div&gt;
+      &lt;div class="terminal-body"&gt;
+       &lt;pre&gt;&lt;code class="language-mtron"&gt;// Type definitions
+nat    -&amp;gt; int::T[?&amp;gt;0]
+person -&amp;gt; rec::T[?[name        =&amp;gt; str::T,
+                   age{?}::nat =&amp;gt; nat::T,
+                   knows       =&amp;gt; person{*}::T]]
+people -&amp;gt; person{*}::T
+
+// Instance data
+sumer -&amp;gt; people::{
+  enoch -&amp;gt; person::[name=&amp;gt;'enoch', age=&amp;gt;29],
+  enki  -&amp;gt; person::[name=&amp;gt;'enki', knows=&amp;gt;!*enoch]}
+
+// Traversals
+metatron&amp;gt; *enki&amp;gt;&amp;gt;knows&amp;gt;&amp;gt;name
+==&amp;gt;'enoch'
+
+metatron&amp;gt; *#.as[name      =&amp;gt; _,
+               coauthor  =&amp;gt; &amp;gt;&amp;gt;knows.where[&amp;gt;&amp;gt;age.?&amp;gt;21]&amp;gt;&amp;gt;name]
+==&amp;gt;[name=&amp;gt;'enki', coauthor=&amp;gt;'enoch']&lt;/code&gt;&lt;/pre&gt;
+      &lt;/div&gt;
+     &lt;/div&gt;
+    &lt;/div&gt;
+   &lt;/div&gt;
+  &lt;/section&gt;
+  &lt;footer class="footer" id="footer"&gt;
+   &lt;div class="footer-inner"&gt;
+    &lt;div class="footer-brand"&gt;
+     Phase Studio&lt;span&gt;Shift&lt;/span&gt;
+    &lt;/div&gt;
+    &lt;div class="footer-links"&gt;
+     &lt;a href="http://metatron.phaseshift.studio" class="footer-main-link"&gt;metatron&lt;/a&gt;&lt;span class="footer-subs"&gt;&lt;a href="#"&gt;Documentation&lt;/a&gt;&lt;a href="#"&gt;Instruction Sets&lt;/a&gt;&lt;/span&gt;
+    &lt;/div&gt;
+    &lt;a href="mailto:info@phaseshift.studio" class="footer-email"&gt;info@phaseshift.studio&lt;/a&gt;
+   &lt;/div&gt;
+   &lt;div class="footer-bottom"&gt;
+    &lt;span&gt;© 2026 PhaseShift Studio. All rights reserved.&lt;/span&gt;
+   &lt;/div&gt;
+  &lt;/footer&gt;
+  &lt;script src="highlight/highlight.min.js"&gt;&lt;/script&gt;
+  &lt;script src="highlight/languages/mtron.min.js"&gt;&lt;/script&gt;
+  &lt;script&gt;
+        hljs.highlightAll();
+        const observer = new IntersectionObserver((entries) =&gt; {
+            entries.forEach(entry =&gt; {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+
+        document.querySelectorAll('.reveal').forEach(el =&gt; observer.observe(el));
+
+        // ---- sticky nav shadow ----
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () =&gt; {
+            navbar.classList.toggle('scrolled', window.scrollY &gt; 20);
+
+            // update active nav link based on scroll position
+            const sections = document.querySelectorAll('section[id], footer[id]');
+            const navLinks = document.querySelectorAll('.nav-links a');
+            let current = 'hero';
+
+            sections.forEach(section =&gt; {
+                const top = section.offsetTop - 100;
+                if (window.scrollY &gt;= top) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link =&gt; {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        });
+
+        // ---- mobile nav toggle ----
+        const navToggle = document.getElementById('navToggle');
+        const navLinks = document.getElementById('navLinks');
+
+        navToggle.addEventListener('click', () =&gt; {
+            navLinks.classList.toggle('open');
+            const icon = navToggle.querySelector('i');
+            icon.classList.toggle('bi-list');
+            icon.classList.toggle('bi-x-lg');
+        });
+
+        // close mobile nav on link click
+        navLinks.querySelectorAll('a').forEach(link =&gt; {
+            link.addEventListener('click', () =&gt; {
+                navLinks.classList.remove('open');
+                const icon = navToggle.querySelector('i');
+                icon.classList.add('bi-list');
+                icon.classList.remove('bi-x-lg');
+            });
+        });
+    &lt;/script&gt;
+ &lt;/body&gt;
+&lt;/html&gt;"""</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -7515,14 +8888,59 @@ mtron&gt;  *&lt;http://phaseshift.studio&gt;.as(str::T)     <i class="conum" dat
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *&lt;http://localhost:8088/v1&gt;
-==&gt;fail::[no active space supports pattern http://localhost:8088/v1][...]@/sys/fail/1662
 mtron&gt; *&lt;http://localhost:8088/v1/models&gt;
-==&gt;fail::[no active space supports pattern http://localhost:8088/v1/models][...]@/sys/fail/1668
+==&gt;[
+ object=&gt;list,
+ data=&gt;[
+  [id=&gt;qwen3-tts-cpp,object=&gt;model],
+  [id=&gt;qwen3:latest,object=&gt;model],
+  [id=&gt;'smollm:1.7b',object=&gt;model],
+  [id=&gt;mistralai_devstral-small-2507,object=&gt;model],
+  [id=&gt;qwen3-coder-30b-a3b-instruct,object=&gt;model],
+  [id=&gt;MeetAISmall__latest,object=&gt;model],
+  [id=&gt;gpt-oss__latest,object=&gt;model]]]
 mtron&gt; *&lt;http://localhost:8088/v1/models/data/0/id&gt;
-==&gt;fail::[no active space supports pattern http://localhost:8088/v1/models/data/0/id][...]@/sys/fail/1674
+==&gt;mistralai_devstral-small-2507
 mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
          *&lt;http://localhost:8088/v1/models/data/0/id&gt;}&gt;
-==&gt;fail::[no active space supports pattern &lt;http://localhost:8088/api/models/config-json/fail::[no active space supports pattern http://localhost:8088/v1/models/data/0/id][...]@/sys/fail/1680&gt;][...]@/sys/fail/1686</code></pre>
+==&gt;[
+ parameters=&gt;[
+  model=&gt;qwen3-tts-cpp,
+  top_p=&gt;0.9500,
+  top_k=&gt;20,
+  min_p=&gt;0,
+  temperature=&gt;0.6000,
+  max_tokens=&gt;0,
+  repeat_penalty=&gt;1,
+  tfz=&gt;1,
+  typical_p=&gt;1,
+  seed=&gt;-1,
+  logprobs=&gt;false],
+ name=&gt;qwen3-tts-cpp,
+ f16=&gt;false,
+ threads=&gt;8,
+ debug=&gt;false,
+ embeddings=&gt;false,
+ backend=&gt;qwen3-tts-cpp,
+ template=&gt;[=&gt;],
+ known_usecases=&gt;[FLAG_TTS],
+ pipeline=&gt;[=&gt;],
+ function=&gt;[grammar=&gt;[=&gt;]],
+ reasoning=&gt;[=&gt;],
+ mirostat_eta=&gt;0.1000,
+ mirostat_tau=&gt;5,
+ mirostat=&gt;0,
+ mmap=&gt;true,
+ mmlock=&gt;false,
+ low_vram=&gt;false,
+ reranking=&gt;false,
+ context_size=&gt;8192,
+ limit_mm_per_prompt=&gt;[=&gt;],
+ diffusers=&gt;[=&gt;],
+ grpc=&gt;[=&gt;],
+ tts=&gt;[=&gt;],
+ mcp=&gt;[=&gt;],
+ agent=&gt;[=&gt;]]</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -7554,37 +8972,12 @@ mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
 ==&gt;rec::T[?[
   provider=&gt;catalog::T,
   name=&gt;uri::T,
-  {?}feature=&gt;{?}[
-   {?}think=&gt;#::T,
-   {?}memory=&gt;memory::T,
-   {?}prompt=&gt;#::T,
-   {?}response=&gt;{?}[
-    {?}to=&gt;inst::T,
-    {?}format=&gt;#::T,
-    {?}cost=&gt;currency::T],
-   {?}tool=&gt;{?}[split([
- isa(tool::T),
- isa(base::T)])],
-   {?}skill=&gt;lst{?}::T,
-   {?}rag=&gt;{?}[uri::T=&gt;isa(int::T).else(10)],
-   {?}note=&gt;lst{?}::T],
-  {?}prompt=&gt;#::T,
+  {?}desc=&gt;str::T,
   {?}cost=&gt;{?}[
    in=&gt;currency::T,
    out=&gt;currency::T],
-  {?}think=&gt;#::T,
-  {?}note=&gt;lst{?}::T,
-  {?}response=&gt;{?}[
-   {?}to=&gt;inst::T,
-   {?}format=&gt;#::T,
-   {?}cost=&gt;currency::T],
   {?}size=&gt;bB::T,
-  {?}memory=&gt;memory::T,
-  {?}desc=&gt;str::T,
-  {?}skill=&gt;lst{?}::T,
-  {?}tool=&gt;[split([
- ?tool::T,
- ?base::T])]]]
+  {?}feature=&gt;feature::T]]
 mtron&gt; */m/llm/inst/+?dom=model</code></pre>
 </div>
 </div>
@@ -7610,7 +9003,43 @@ mtron&gt; */m/llm/inst/+?dom=model</code></pre>
             type=&gt;&gt;&gt;object.as(uri::T),
             provider=&gt;|!*/sys/space/localai].as(model::T)
          .chat('are you there?')
-==&gt;ERROR: null</code></pre>
+==&gt;fail::[illegalargumentexception: template cannot be null or blank
+  	dev.langchain4j.internal.Exceptions [line 25]
+  	dev.langchain4j.internal.ValidationUtils [line 169]
+  	dev.langchain4j.internal.ValidationUtils [line 156]
+  	dev.langchain4j.model.input.PromptTemplate [line 83]
+  	dev.langchain4j.model.input.PromptTemplate [line 186]][...]@/sys/fail/400
+==&gt;fail::[[
+ type=&gt;model,
+ provider=&gt;!*/sys/space/localai] is not a isa([
+  provider=&gt;catalog::T,
+  name=&gt;uri::T,
+  {?}desc=&gt;str::T,
+  {?}cost=&gt;{?}[
+   in=&gt;currency::T,
+   out=&gt;currency::T],
+  {?}size=&gt;bB::T,
+  {?}feature=&gt;feature::T])
+  [
+   provider=&gt;(==&gt;provider)=&gt;catalog::[
+   host=&gt;http://localhost:8088/v1,
+   pattern=&gt;localai:#,
+   name=&gt;localai,
+   route=&gt;[localai:=&gt;&lt;&gt;],
+   space=&gt;[=&gt;],
+   q=&gt;[subq::[
+   pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+   pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+   qless_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+   pattern=&gt;subq,
+   obj=&gt;[,]]]]=&gt;==&gt;catalog::T,
+   noobj=&gt;(X=&gt;name)=&gt;noobj=&gt;X=&gt;uri::T,
+   noobj=&gt;(==&gt;{?}desc)=&gt;noobj=&gt;/=&gt;str::T,
+   noobj=&gt;(==&gt;{?}cost)=&gt;noobj=&gt;==&gt;{?}[
+   in=&gt;currency::T,
+   out=&gt;currency::T],
+   noobj=&gt;(==&gt;{?}size)=&gt;noobj=&gt;/=&gt;bB::T,
+   noobj=&gt;(==&gt;{?}feature)=&gt;noobj=&gt;/=&gt;feature::T]][...]@/sys/fail/394</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -7829,7 +9258,7 @@ mtron&gt; farmset::[type=&gt;[animal::T,equipment::T,chicken::T]]@/m/dcmnt/schem
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;  farm:animals/1 -&gt; 'a chicken named trill'     <i class="conum" data-value="1"></i><b>(1)</b>
-==&gt;fail::[space /sys/space/farm requires rec::T[?[{?}animals=&gt;animals::T]] at root; got str::T][...]@/sys/fail/142
+==&gt;fail::[space /sys/space/farm requires rec::T[?[{?}animals=&gt;animals::T]] at root; got str::T][...]@/sys/fail/2
 mtron&gt; farm:animals/1 -&gt; chicken::[name=&gt;'trill',age=&gt;7]     <i class="conum" data-value="2"></i><b>(2)</b>
 ==&gt;chicken::[name=&gt;'trill',age=&gt;7]
 mtron&gt; *farm:animals/1     <i class="conum" data-value="3"></i><b>(3)</b>
@@ -8387,83 +9816,18 @@ whose values happen to match <code>person.name</code> — the link is purely alg
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/lite&gt;&gt;=[table=&gt;[person,score]]     <i class="conum" data-value="1"></i><b>(1)</b>
-==&gt;[
- table=&gt;[person,score,award,venue],
- pattern=&gt;lite:#,
- host=&gt;sqlite:target/test,
- driver=&gt;&lt;org.sqlite.JDBC&gt;,
- route=&gt;[lite:=&gt;&lt;&gt;],
- space=&gt;[=&gt;],
- schema=&gt;[
-  instset=&gt;instset::[
-   pattern=&gt;/sys/space/lite/schema/instset/#,
-   type=&gt;[
-    award::T,
-    person::T,
-    score::T,
-    venue::T],
-   q=&gt;[docq::[
- pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
- pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
- pattern=&gt;docq,
- obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
- inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
-   space=&gt;[super=&gt;!*/sys]]@/sys/space/lite/schema/instset,
-  native=&gt;[
-   pattern=&gt;/sys/space/lite/schema/instset/#,
-   name=&gt;'instset',
-   tables=&gt;[
-    [
-     name=&gt;'award',
-     uri=&gt;/sys/space/lite/schema/instset/award,
-     schema/schema=&gt;[
-      id=&gt;int::T,
-      trophy=&gt;str::T,
-      recipient=&gt;int::T],
-     type=&gt;award::T],
-    [
-     name=&gt;'person',
-     uri=&gt;/sys/space/lite/schema/instset/person,
-     schema/schema=&gt;[
-      id=&gt;int::T,
-      name=&gt;str::T,
-      age=&gt;int::T],
-     type=&gt;person::T],
-    [
-     name=&gt;'score',
-     uri=&gt;/sys/space/lite/schema/instset/score,
-     schema/schema=&gt;[
-      id=&gt;int::T,
-      player=&gt;str::T,
-      points=&gt;int::T],
-     type=&gt;score::T],
-    [
-     name=&gt;'venue',
-     uri=&gt;/sys/space/lite/schema/instset/venue,
-     schema/schema=&gt;[
-      id=&gt;int::T,
-      name=&gt;str::T,
-      location=&gt;int::T],
-     type=&gt;venue::T]],
-   references=&gt;[
-    [
-     from_table=&gt;'award',
-     from_column=&gt;'recipient',
-     to_table=&gt;'person',
-     to_column=&gt;'id',
-     type=&gt;'FOREIGN_KEY'],
-    [
-     from_table=&gt;'venue',
-     from_column=&gt;'location',
-     to_table=&gt;'area:V',
-     to_column=&gt;'id',
-     type=&gt;'FOREIGN_KEY']]]]]
+==&gt;fail::[nullpointerexception: Cannot invoke "studio.phaseshift.metatron.furi.fURI.extend(String)" because the return value of "studio.phaseshift.metatron.isa.tble.tbleSpace.vid()" is null
+  	studio.phaseshift.metatron.isa.tble.tbleSpace [line 250]
+  	studio.phaseshift.metatron.isa.tble.tbleSpace [line 174]
+  	studio.phaseshift.metatron.isa.tble.tbleSpace [line 157]
+  	studio.phaseshift.metatron.isa.tble.tbleSpace [line 128]
+  	studio.phaseshift.metatron.isa.m.type.Inst$f [line 683]][...]@/sys/fail/136
 mtron&gt; lite:score/1 -&gt; [player=&gt;'marko', points=&gt;42]     <i class="conum" data-value="2"></i><b>(2)</b>
 ==&gt;[player=&gt;'marko',points=&gt;42]
 mtron&gt; lite:score/2 -&gt; [player=&gt;'grant', points=&gt;99]     <i class="conum" data-value="3"></i><b>(3)</b>
 ==&gt;[player=&gt;'grant',points=&gt;99]
 mtron&gt; *lite:score/+.?==[player=&gt;'marko']     <i class="conum" data-value="4"></i><b>(4)</b>
-==&gt;fail::[failed to execute native where operation[studio.phaseshift.metatron.util.MTronException:52]][...]@/sys/fail/1326
+==&gt;fail::[failed to execute native where operation[studio.phaseshift.metatron.util.MTronException:52]][...]@/sys/fail/142
 mtron&gt; */sys/space/lite.sql("SELECT p.name,p.age,s.points FROM person p JOIN score s ON p.name=s.player")     <i class="conum" data-value="5"></i><b>(5)</b>
 ==&gt;[name=&gt;'marko',age=&gt;29,points=&gt;42]
 ==&gt;[name=&gt;'grant',age=&gt;25,points=&gt;99]</code></pre>
@@ -8501,77 +9865,12 @@ Unlike a matching column value, the pointer encodes the full address of the link
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/lite&gt;&gt;=[table=&gt;[person,score,award]]     <i class="conum" data-value="1"></i><b>(1)</b>
-==&gt;[
- table=&gt;[person,score,award,venue],
- pattern=&gt;lite:#,
- host=&gt;sqlite:target/test,
- driver=&gt;&lt;org.sqlite.JDBC&gt;,
- route=&gt;[lite:=&gt;&lt;&gt;],
- space=&gt;[=&gt;],
- schema=&gt;[
-  instset=&gt;instset::[
-   pattern=&gt;/sys/space/lite/schema/instset/#,
-   type=&gt;[
-    award::T,
-    person::T,
-    score::T,
-    venue::T],
-   q=&gt;[docq::[
- pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
- pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
- pattern=&gt;docq,
- obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
- inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
-   space=&gt;[super=&gt;!*/sys]]@/sys/space/lite/schema/instset,
-  native=&gt;[
-   pattern=&gt;/sys/space/lite/schema/instset/#,
-   name=&gt;'instset',
-   tables=&gt;[
-    [
-     name=&gt;'award',
-     uri=&gt;/sys/space/lite/schema/instset/award,
-     schema/schema=&gt;[
-      id=&gt;int::T,
-      trophy=&gt;str::T,
-      recipient=&gt;int::T],
-     type=&gt;award::T],
-    [
-     name=&gt;'person',
-     uri=&gt;/sys/space/lite/schema/instset/person,
-     schema/schema=&gt;[
-      id=&gt;int::T,
-      name=&gt;str::T,
-      age=&gt;int::T],
-     type=&gt;person::T],
-    [
-     name=&gt;'score',
-     uri=&gt;/sys/space/lite/schema/instset/score,
-     schema/schema=&gt;[
-      id=&gt;int::T,
-      player=&gt;str::T,
-      points=&gt;int::T],
-     type=&gt;score::T],
-    [
-     name=&gt;'venue',
-     uri=&gt;/sys/space/lite/schema/instset/venue,
-     schema/schema=&gt;[
-      id=&gt;int::T,
-      name=&gt;str::T,
-      location=&gt;int::T],
-     type=&gt;venue::T]],
-   references=&gt;[
-    [
-     from_table=&gt;'award',
-     from_column=&gt;'recipient',
-     to_table=&gt;'person',
-     to_column=&gt;'id',
-     type=&gt;'FOREIGN_KEY'],
-    [
-     from_table=&gt;'venue',
-     from_column=&gt;'location',
-     to_table=&gt;'area:V',
-     to_column=&gt;'id',
-     type=&gt;'FOREIGN_KEY']]]]]
+==&gt;fail::[nullpointerexception: Cannot invoke "studio.phaseshift.metatron.furi.fURI.extend(String)" because the return value of "studio.phaseshift.metatron.isa.tble.tbleSpace.vid()" is null
+  	studio.phaseshift.metatron.isa.tble.tbleSpace [line 250]
+  	studio.phaseshift.metatron.isa.tble.tbleSpace [line 174]
+  	studio.phaseshift.metatron.isa.tble.tbleSpace [line 157]
+  	studio.phaseshift.metatron.isa.tble.tbleSpace [line 128]
+  	studio.phaseshift.metatron.isa.m.type.Inst$f [line 683]][...]@/sys/fail/154
 mtron&gt; lite:award/1 -&gt; [trophy=&gt;'gold',   recipient=&gt;!*lite:person/1]     <i class="conum" data-value="2"></i><b>(2)</b>
 ==&gt;[
  trophy=&gt;'gold',
@@ -8627,77 +9926,12 @@ carries a <code>!*area:V/1</code> pointer in its <code>location</code> cell — 
 mtron&gt; area:V/1 -&gt; [label=&gt;'downtown',capacity=&gt;5000]     <i class="conum" data-value="2"></i><b>(2)</b>
 ==&gt;[label=&gt;'downtown',capacity=&gt;5000]
 mtron&gt; */sys/space/lite&gt;&gt;=[table=&gt;[person,score,award,venue]]     <i class="conum" data-value="3"></i><b>(3)</b>
-==&gt;[
- table=&gt;[person,score,award,venue],
- pattern=&gt;lite:#,
- host=&gt;sqlite:target/test,
- driver=&gt;&lt;org.sqlite.JDBC&gt;,
- route=&gt;[lite:=&gt;&lt;&gt;],
- space=&gt;[=&gt;],
- schema=&gt;[
-  instset=&gt;instset::[
-   pattern=&gt;/sys/space/lite/schema/instset/#,
-   type=&gt;[
-    award::T,
-    person::T,
-    score::T,
-    venue::T],
-   q=&gt;[docq::[
- pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
- pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
- pattern=&gt;docq,
- obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
- inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
-   space=&gt;[super=&gt;!*/sys]]@/sys/space/lite/schema/instset,
-  native=&gt;[
-   pattern=&gt;/sys/space/lite/schema/instset/#,
-   name=&gt;'instset',
-   tables=&gt;[
-    [
-     name=&gt;'award',
-     uri=&gt;/sys/space/lite/schema/instset/award,
-     schema/schema=&gt;[
-      id=&gt;int::T,
-      trophy=&gt;str::T,
-      recipient=&gt;int::T],
-     type=&gt;award::T],
-    [
-     name=&gt;'person',
-     uri=&gt;/sys/space/lite/schema/instset/person,
-     schema/schema=&gt;[
-      id=&gt;int::T,
-      name=&gt;str::T,
-      age=&gt;int::T],
-     type=&gt;person::T],
-    [
-     name=&gt;'score',
-     uri=&gt;/sys/space/lite/schema/instset/score,
-     schema/schema=&gt;[
-      id=&gt;int::T,
-      player=&gt;str::T,
-      points=&gt;int::T],
-     type=&gt;score::T],
-    [
-     name=&gt;'venue',
-     uri=&gt;/sys/space/lite/schema/instset/venue,
-     schema/schema=&gt;[
-      id=&gt;int::T,
-      name=&gt;str::T,
-      location=&gt;int::T],
-     type=&gt;venue::T]],
-   references=&gt;[
-    [
-     from_table=&gt;'award',
-     from_column=&gt;'recipient',
-     to_table=&gt;'person',
-     to_column=&gt;'id',
-     type=&gt;'FOREIGN_KEY'],
-    [
-     from_table=&gt;'venue',
-     from_column=&gt;'location',
-     to_table=&gt;'area:V',
-     to_column=&gt;'id',
-     type=&gt;'FOREIGN_KEY']]]]]
+==&gt;fail::[nullpointerexception: Cannot invoke "studio.phaseshift.metatron.furi.fURI.extend(String)" because the return value of "studio.phaseshift.metatron.isa.tble.tbleSpace.vid()" is null
+  	studio.phaseshift.metatron.isa.tble.tbleSpace [line 250]
+  	studio.phaseshift.metatron.isa.tble.tbleSpace [line 174]
+  	studio.phaseshift.metatron.isa.tble.tbleSpace [line 157]
+  	studio.phaseshift.metatron.isa.tble.tbleSpace [line 128]
+  	studio.phaseshift.metatron.isa.m.type.Inst$f [line 683]][...]@/sys/fail/166
 mtron&gt; lite:venue/1 -&gt; [name=&gt;'main_stage',location=&gt;!*area:V/1]     <i class="conum" data-value="4"></i><b>(4)</b>
 ==&gt;[
  name=&gt;'main_stage',
@@ -8759,7 +9993,7 @@ mtron&gt; *lite:venue/2/parent/location     <i class="conum" data-value="3"></i>
   	org.sqlite.core.DB [line 1193]
   	org.sqlite.core.DB [line 1153]
   	org.sqlite.core.NativeDB [line -2]
-  	org.sqlite.core.NativeDB [line 135]][...]@/sys/fail/1374</code></pre>
+  	org.sqlite.core.NativeDB [line 135]][...]@/sys/fail/214</code></pre>
 </div>
 </div>
 <div class="colist arabic">

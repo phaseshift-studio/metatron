@@ -1,5 +1,5 @@
 [discrete]
-== grph
+== graph instruction set
 
 [discrete]
 [%collapsible]
@@ -80,13 +80,15 @@ graph encodings (discussed later when presenting hypergraphs).
 🧱 `out?vrtx{+*+}\<=vrtx(uri{+*+}::T})`   🧱 traverse to the outgoing adjacent vertices of the lhs vertex 1.8+a🧱
 [source,mtron]
 ----
-   vertex       ┌─────────┐       vertex  
-┌─────────┐     │k1 => v1 │     ┌─────────┐ 
-│k1 => v1 │     │k2 => v2 │     │k1 => v1 │ 
-│k2 => v2 │outE └─────────┘ inV │k2 => v2 │ 
-│  ...    ├────────────────────►│  ...    │
-│k3 => v3 │outV     edge    inE │k3 => v3 │
-└─────────┘                     └─────────┘
+                
+  vertex          edge           vertex  
+┌────────┐     ┌─────────┐     ┌────────┐ 
+│k1 => v1│     │k1 => v1 │     │k1 => v1│
+│k2 => v2│     │k2 => v2 │     │k2 => v2│ 
+│  ...   ├─────└─────────┘────►│  ...   │
+│k3 => v3│outE             inE │k3 => v3│
+└────────┘                     └────────┘
+   outV                            inV
 ----
 🧱 `in?vrtx{+*+}\<=vrtx(uri{+*+}::T})`    🧱 traverse to the incoming adjacent vertices of the lhs vertex         
 🧱 `both?vrtx{+*+}\<=vrtx(uri{+*+}::T})`  🧱 traverse to both the incoming and outgoing adjacent vertex of the lhs vertex   
@@ -129,7 +131,7 @@ The following examples demonstrate selection and filtering using multi-segment u
 
 [mtron]
 ----
-*g:V/1>>=+[address/home/city => 'santa fe',        /
+@g:V/1>>=+[address/home/city => 'santa fe',        /
            address/work/city => 'nomansland']                   [-- <1> --]
 *g:V/1/address/home/city                                        [-- <2> --]
 *g:V/+.?==[address/+/city => 'santa fe']                        [-- <3> --]
@@ -156,7 +158,7 @@ The following examples demonstrate selection and filtering using multi-segment u
 [HIDDEN] *g:V/1>>=+[address/home/city => noobj]
 [HIDDEN] *g:V/1>>=+[address/work/city => noobj]
 *g:V/1==[_=>_]                                                  [-- <1> --]
-*g:V/1>>=+[address=>[                        /
+@g:V/1>>=+[address=>[                        /
              home => [city =>'santa fe',     /
                       state=>NM],            /
              work => !*<../home>]]                              [-- <2> --]
@@ -348,16 +350,16 @@ g:V/1?sub -> |process_message?#{*}<=#(msg=>_) { print(*msg/trgt, "received messa
 [discrete]
 === metatron Encoded Graphs
 
-It is possible to encode an arbitrary graph structure (i.e. any extension of latexmath:[G=(V,E)]) in space. There are three features of 
-mtron that make graph encodings natural and universal.
+It is possible to encode an arbitrary graph structure (i.e. any extension of latexmath:[G=(V,E)]) in space. There are four aaspects of mtron that make graph encodings natural and universal -- applicable in any metatron space, regardless of the underlying storage system.
 
-* `!*` (**auto_from**): ensures that simply accessing a reference yields the references referent. To the user, there is no difference between the graph elements being colocated in the same `poly`, withiin the same space, within the same computer, or across the web as a whole.
-* `>>` (**traverse**): ensures monads move along the underlying data structure, selecting particular branches within the structure as needed to yield desires semantics.
-* `-<` (**split**): ensures that executing monads will split themselves across branching graph paths.
-* `>-` (**merge**): ensures that braching paths will serialize themselves within the execution path of the machine.
+* `!*` (**auto_from**): ensures that simply accessing a reference yields the reference's referent. To the user, there is no difference between the graph elements being colocated in the same `poly`, within the same space, within the same computer, or across the web as a whole.
+* `>>` (**forward**): ensures monads move along the underlying data structure in a selective manner as needed to yield the desired resultant semantics.
+* `-<` (**split**): ensures that executing monads will split themselves across branching graph paths and branching code paths.
+* `>-` (**merge**): ensures that branching graph and code paths will linearize themselves within the execution path of the machine.
 
-[discrete]
-==== directed single-relational binary graph
+[indent=0,subs="verbatim,attributes",role="primary"]
+.directed single-relational binary graph
+=====
 
 A directed single-relational binary graph connects vertices by binary edges (a single tail and a single head vertex), where all edges have the same label/meaning (single-relational). An example of such a graph is presented in the code and diagram below.
 
@@ -404,9 +406,11 @@ v1                 [-- <1> --]
 ----
 
 |===
+=====
 
-[discrete]
-==== directed multi-relational binary graph
+[indent=0,subs="verbatim,attributes",role="secondary"]
+.directed multi-relational binary graph
+=====
 
 The previous graph structure can be further enhanced with multiple types of edges (multi-relational). Again, the code and diagram below exemplify this form.
 
@@ -447,9 +451,11 @@ knows              │
 ----
 
 |===
+=====
 
-[discrete]
-==== directed vertex-attributed multi-relational binary graph
+[indent=0,subs="verbatim,attributes",role="secondary"]
+.directed vertex-attributed multi-relational binary graph
+=====
 
 
 [cols="8a,6a",separator=🧱,role="table-bordered small center"]
@@ -508,43 +514,52 @@ v1                                      [-- <1> --]
 *v1.outE(knows).outE(created)           [-- <4> --]
 *v1.outE(knows).outE(created).>>name    [-- <5> --]
 ----
+=====
 
-[discrete]
-==== directed attributed multi-relational binary graph
+[indent=0,subs="verbatim,attributes",role="secondary"]
+.directed attributed multi-relational binary graph
+=====
 
+A graph can have both its vertices and edges annotated with attributes. 
+This form is the classic **property graph** data model. For the sake of brevity, only vertex 1 and its incident edges
+will be developed and diagrammed.
 
 [cols="8a,6a",separator=🧱,role="table-bordered small center"]
 |===
 🧱
 [mtron]
 ----
-v1 -> [name=>'marko',age=>29, /
-       outE_=>[knows=>{[weight=>0.5,inV_=>!*v2, outV_=>!*v1],   /
-                       [weight=>0.5,inV_=>!*v4, outV_=>!*v1]]}, /
-               created=>[weight=>0.2,inV_=>!*v3, outV_=>!*v1]]]
+v1 -> [                                                    /
+  name=>'marko',age=>29,                                   /
+  outE_=>[knows=>{[weight=>0.5,inV_=>!*v2, outV_=>!*v1],   /
+                  [weight=>0.5,inV_=>!*v4, outV_=>!*v1]}], /
+          created=>[weight=>0.2,inV_=>!*v3, outV_=>!*v1]]]
+v2 -> [name=>'vadas']
+v3 -> [name=>'josh']
+v4 -> [name=>'lop']
+
 v1                                            [-- <1> --]
 *v1                                           [-- <2> --]
-*v1.>>outE_.>>knows.>>_inV                    [-- <3> --]
-*v1.>>outE_.>>created.>>_inV                  [-- <4> --]
+*v1.>>outE_.>>knows.>>inV_                    [-- <3> --]
+*v1.>>outE_.>>created.>>inV_                  [-- <4> --]
 ----
 🧱
 [source,mtron]
 ----
-               lop
               ┌────┐                                 
-          ┌───► v3 ◄───┐      peter                        
- marko    │   └───▲┘ created ┌────┐                  
- ┌────┐ created   │    └─────│ v5 │                  
- │ v1 │───┘       │          └────┘                  
- └────┘        created                                  
-  │  │            │                                  
-  │  │           ┌┴───┐                              
+          ┌───► v3 │ lop                  
+ marko    │   └────┘           
+ ┌────┐ created               
+ │ v1 │───┘0.2                    
+ └────┘                                       
+  │  │                                           
+  │  │           ┌────┐                              
   │  └───knows───► v4 │ josh                              
-  │              └─┬──┘
-knows  vadas       │          ripple                       
-  │ ┌────┐      created       ┌────┐                 
-  └─► v2 │         └──────────► v6 │                 
-    └────┘                    └────┘
+knows     0.5    └────┘
+ 0.5                             
+  │ ┌────┐      
+  └─► v2 │ vadas              
+    └────┘        
 ----
 |===
 
@@ -552,13 +567,15 @@ To achieve a similar look and feel to Gremlin syntax, an `out` instruction can b
 
 [mtron]
 ----
-out -> |outE?rec{*}<=rec(label=>uri{*}::T){ >>(out_).>>(*label) }
+out -> |out?rec{*}<=rec(label=>uri{*}::T){ /
+          >>(outE_).>>(*label).>>(inV_) }
 v1                                      [-- <1> --]
 *v1                                     [-- <2> --]
-*v1.outE(knows)                         [-- <3> --]
-*v1.outE(knows).outE(created)           [-- <4> --]
-*v1.outE(knows).outE(created).>>name    [-- <5> --]
+*v1.out(knows)                          [-- <3> --]
+*v1.out(knows).out(created)             [-- <4> --]
+*v1.out(knows).out(created).>>name      [-- <5> --]
 ----
+=====
 
 [discrete]
 === Multi-Spatial Graph Overlays

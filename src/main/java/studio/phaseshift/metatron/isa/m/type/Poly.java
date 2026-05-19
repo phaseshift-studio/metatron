@@ -270,7 +270,7 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
                 return rhsValue;
 
             }));
-            return operation.apply(lhsClone, result);
+            return operation.apply(lhsClone, result).tid(lhs.tid());
         }
 
         private static Obj updateLstRecursion(final Lst lhs, final Lst rhs, BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {
@@ -286,7 +286,7 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
                 if (!newElement.isNone())
                     result.add(newElement);
             }*/
-            return operation.apply(lhs, result);
+            return operation.apply(lhs, result).tid(lhs.tid());
         }
 
         private static Obj updateRelRecursion(final Rel lhs, final Rel rhs, BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {

@@ -43,6 +43,7 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.math.mathInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.split_;
+import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Inst.INST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
@@ -72,6 +73,7 @@ public class llmInstSet extends AbstractInstSet {
     public static final fURI LLM_MEMORY_TID = LLM_ISA_TID.extend(MEMORY);
     public static final fURI MCP_SERVER_TID = LLM_ISA_TID.extend(MCP);
     public static final fURI LLM_SKILL_TID = LLM_ISA_TID.extend(SKILL);
+    public static final fURI LLM_FEATURE_TID = LLM_ISA_TID.extend(FEATURE);
     public static final fURI AI_MEMORY_TID = LLM_ISA_TID.extend(AI);
     public static final fURI USER_MEMORY_TID = LLM_ISA_TID.extend(USER);
     //public static final fURI MCP_TOOL_TID = LLM_ISA_TID.extend("mcp");
@@ -84,6 +86,7 @@ public class llmInstSet extends AbstractInstSet {
     public static Type LLM_MEMORY_TYPE;
     public static Type LLM_NOTES_TYPE;
     public static ObjFactory LLM_OBJ_FACTORY = MObjFactory.of().addExtension(MVec.class, x -> lst(x.jvm().stream().toList()));
+    public static Type LLM_FEATURE_TYPE;
 
     public llmInstSet() {
         super(mutableMap(uri(PATTERN), uri(LLM_ISA_TID.extend(ALL))), INSTSET_TID, LLM_ISA_TID);
@@ -92,7 +95,7 @@ public class llmInstSet extends AbstractInstSet {
     @Override
     public void setup() {
         this.jvm().putAll(mutableMap(
-                uri(PATTERN), uri(LLM_ISA_TID.extend(ALL)),
+                //uri(PATTERN), uri(LLM_ISA_TID.extend(ALL)),
                 //  uri(CONST), lst(MTRON_EVAL_TOOL)),
                 uri(TYPE), lst(
                         LLM_CATALOG_SPACE_TYPE,
@@ -136,96 +139,93 @@ public class llmInstSet extends AbstractInstSet {
                                         uri(ENTRY).maybe(), "skill assets, references, and scripts"),
                                 "a skill.md specification to augment llm with specialized abilities",
                                 "*<local:.agent/skills>.as(skill::T)   [-- see as?skill<=dir() --]"),
-                        docWrap(Type.Builder.build()
+                        docWrap(LLM_FEATURE_TYPE = Type.Builder.build()
                                         .tid(REC_TID)
-                                        .vid(MODEL_TID).
-                                        isaPredicate(rec(
-                                                uri(PROVIDER), LLM_CATALOG_SPACE_TYPE,
-                                                uri(NAME), URI_TYPE,
-                                                uri(FEATURE).maybe(), rec(
-                                                        uri(THINK).maybe().asUri(), ALL_TYPE,
-                                                        uri(MEMORY).maybe(), LLM_MEMORY_TYPE.maybe(),
-                                                        uri(PROMPT).maybe(), ALL_TYPE,
-                                                        uri(RESPONSE).maybe(), rec(
-                                                                uri(TO).maybe().asUri(), INST_TYPE,
-                                                                uri(FORMAT).maybe(), ALL_TYPE,
-                                                                uri(COST).maybe(), MATH_CURRENCY_TYPE).maybe(),
-                                                        uri(TOOL).maybe(), lst(split_(lst(
-                                                                isa_(LLM_TOOL_TYPE),
-                                                                isa_(MCP_SERVER_TYPE))).tryToInst()).maybe(),
-                                                        uri(SKILL).maybe(), LST_TYPE.maybe(),
-                                                        uri(RAG).maybe(), rec(
-                                                                URI_TYPE, isa_(INT_TYPE).else_(jnt(10)).tryToInst()).maybe(),
-                                                        uri(NOTE).maybe(), LST_TYPE.maybe()).maybe(),
+                                        .vid(LLM_FEATURE_TID)
+                                        .isaPredicate(rec(
+                                                uri(THINK).maybe().asUri(), ALL_TYPE,
+                                                uri(MEMORY).maybe(), LLM_MEMORY_TYPE.maybe(),
                                                 uri(PROMPT).maybe(), ALL_TYPE,
-                                                uri(COST).maybe(), rec(uri(IN), MATH_CURRENCY_TYPE, uri(OUT), MATH_CURRENCY_TYPE).maybe(),
-                                                uri(THINK).maybe(), ALL_TYPE,
-                                                uri(NOTE).maybe(), LST_TYPE.maybe(),
                                                 uri(RESPONSE).maybe(), rec(
                                                         uri(TO).maybe().asUri(), INST_TYPE,
                                                         uri(FORMAT).maybe(), ALL_TYPE,
                                                         uri(COST).maybe(), MATH_CURRENCY_TYPE).maybe(),
-                                                uri(SIZE).maybe().asUri(), BYTE_TYPE,
-                                                uri(MEMORY).maybe(), LLM_MEMORY_TYPE.maybe(),
+                                                uri(TOOL).maybe(), lst(split_(lst(
+                                                        isa_(LLM_TOOL_TYPE),
+                                                        isa_(MCP_SERVER_TYPE))).tryToInst()).maybe(),
+                                                uri(SKILL).maybe(), LST_TYPE.maybe(),
+                                                uri(RAG).maybe(), rec(
+                                                        URI_TYPE, isa_(INT_TYPE).else_(jnt(10)).tryToInst()).maybe(),
+                                                uri(NOTE).maybe(), LST_TYPE.maybe()).maybe()).create(),
+                                "llm features", "", mutableMap(
+                                        uri(RESPONSE).maybe(), "an obj to process llm responses",
+                                        uri(THINK).maybe(), "an obj to process llm thoughts",
+                                        uri(NOTE).maybe(), "a lst of notes llm will read and react to mid-chat",
+                                        uri(PROMPT).maybe(), "a user prompt to prefix chat messages with",
+                                        uri(MEMORY).maybe(), "llm's memory of previous interactions",
+                                        uri(RAG).maybe(), "retrieval augmented generation configuration",
+                                        uri(SKILL).maybe(), "skills to extend the llm's abilities",
+                                        uri(TOOL).maybe(), "tool functions the llm can use to solve problems"),
+                                "llm features"),
+                        docWrap(Type.Builder.build().tid(REC_TID).vid(MODEL_TID).
+                                        isaPredicate(rec(
+                                                uri(PROVIDER), LLM_CATALOG_SPACE_TYPE,
+                                                uri(NAME), URI_TYPE,
                                                 uri(DESC).maybe(), STR_TYPE,
-                                                uri(SKILL).maybe(), LST_TYPE.maybe(),//lst(LLM_SKILL_TYPE).maybe(),
-                                                uri(TOOL).maybe(), lst(split_(lst(isa_(LLM_TOOL_TYPE).tryToInst(), isa_(MCP_SERVER_TYPE).tryToInst())).tryToInst()))).create(),
+                                                uri(COST).maybe(), rec(uri(IN), MATH_CURRENCY_TYPE, uri(OUT), MATH_CURRENCY_TYPE).maybe(),
+                                                uri(SIZE).maybe().asUri(), BYTE_TYPE,
+                                                uri(FEATURE).maybe(), LLM_FEATURE_TYPE)).create(),
                                 "a large language model", "the model construction", mutableMap(
                                         uri(PROVIDER), "provider catalog containing llm model",
                                         uri(NAME), "the model name from the host catalog",
                                         uri(COST).maybe(), "the cost per million tokens to use this llm (in/out costs)",
-                                        uri(HOST).maybe(), "the llm inferencing provider endpoint",
-                                        uri(THINK).maybe(), "whether the llm should think before responding",
-                                        uri(NOTE).maybe(), "a lst of notes llm will read and react to mid-chat",
-                                        uri(SIZE).maybe(), "the size of the model in bytes",
-                                        uri(MEMORY).maybe(), "llm's memory of previous interactions",
-                                        uri(SKILL).maybe(), "skill to extend the llm's abilities",
-                                        uri(TOOL).maybe(), "tool functions the llm can use to solve problems"), "an mtron interface to a large language model")),
-                uri(INST), lst(
-                        docWrap(instC(AS_INST_TID.dom(DOCS_TID).rng(LLM_TOOL_TID),
-                                        lst(LLM_TOOL_TYPE),
-                                        (lhs, inst) -> mTool.mtronDocToTool(QCollection.Docs.doc(lhs.asRec()))),
-                                "instruction documentation",
-                                "a tool specification",
-                                mutableMap(jnt(0), "the tool type"),
-                                "maps an instruction doc to a tool specification for llm use",
-                                "*eval?docq.as(tool::T)"),
-                        docWrap(instC(AS_INST_TID.dom(M_ISA_INST_TID).rng(LLM_TOOL_TID), lst(LLM_TOOL_TYPE), (lhs, inst) -> mTool.mtronInstToTool(inst.asInst())),
-                                "an instruction",
-                                "a tool specification",
-                                mutableMap(jnt(0), "the tool type"),
-                                "maps an instruction to a tool specification for llm use",
-                                "*eval.as(tool::T)"),
-                        docWrap(instC(AS_INST_TID.dom(DIR_TID).rng(LLM_SKILL_TID), lst(LLM_SKILL_TYPE), (lhs, inst) -> mSkill.of(staticObjToFile(lhs))),
-                                "a dir containing the llm SKILL.md file",
-                                "a mtron encoding of the specified skill",
-                                mutableMap(jnt(0), "the skill type"),
-                                "maps a directory to an llm skill where the dir follows the standard SKILL.md structure",
-                                "*<local:.agent/skills>.as(skill::T)"),
-                        // CHAT INSTRUCTION        
-                        docWrap(instC(LLM_INST_TID.extend("chat").dom(MODEL_TID).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> model(lhs.asRec()).chat(inst.arg(0).strValue())),
-                                "a model to chat with",  // dom
-                                "the models chat response", // rng
-                                mutableMap(jnt(0), "the message to send the model"), // args
-                                "communicate with an llm that may be enriched with a tool, skill, etc.", // desc
-                                "*<ollama:qwen3:latest>+[response=>[to=>print(_)],think=>to(/ai/thoughts?incrq)].chat('what is a database?')"),
-                        docWrap(instC(LLM_INST_TID.extend("embed").dom(MODEL_TID).rng(VEC_TID), lst(ALL_TYPE), (lhs, inst) -> model(lhs.asRec()).embed(inst.arg(0))),
-                                "a model to embed arg into",  // dom
-                                "the obj as a vector embedding", // rng
-                                mutableMap(jnt(0), "the object to embed"), // args
-                                "embed an object with an llm", // desc
-                                "*<ollama:qwen3:latest>.embed('what is a database?')"),
+                                        uri(FEATURE).maybe(), "llm features can be moved or shared between multiple models"),
+                                "an mtron interface to a large language model")),
+                        uri(INST), lst(
+                                docWrap(instC(AS_INST_TID.dom(DOCS_TID).rng(LLM_TOOL_TID),
+                                                lst(LLM_TOOL_TYPE),
+                                                (lhs, inst) -> mTool.mtronDocToTool(QCollection.Docs.doc(lhs.asRec()))),
+                                        "instruction documentation",
+                                        "a tool specification",
+                                        mutableMap(jnt(0), "the tool type"),
+                                        "maps an instruction doc to a tool specification for llm use",
+                                        "*eval?docq.as(tool::T)"),
+                                docWrap(instC(AS_INST_TID.dom(M_ISA_INST_TID).rng(LLM_TOOL_TID), lst(LLM_TOOL_TYPE), (lhs, inst) -> mTool.mtronInstToTool(inst.asInst())),
+                                        "an instruction",
+                                        "a tool specification",
+                                        mutableMap(jnt(0), "the tool type"),
+                                        "maps an instruction to a tool specification for llm use",
+                                        "*eval.as(tool::T)"),
+                                docWrap(instC(AS_INST_TID.dom(DIR_TID).rng(LLM_SKILL_TID), lst(LLM_SKILL_TYPE), (lhs, inst) -> mSkill.of(staticObjToFile(lhs))),
+                                        "a dir containing the llm SKILL.md file",
+                                        "a mtron encoding of the specified skill",
+                                        mutableMap(jnt(0), "the skill type"),
+                                        "maps a directory to an llm skill where the dir follows the standard SKILL.md structure",
+                                        "*<local:.agent/skills>.as(skill::T)"),
+                                // CHAT INSTRUCTION        
+                                docWrap(instC(LLM_INST_TID.extend("chat").dom(MODEL_TID).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> model(lhs.asRec()).chat(inst.arg(0).strValue())),
+                                        "a model to chat with",  // dom
+                                        "the models chat response", // rng
+                                        mutableMap(jnt(0), "the message to send the model"), // args
+                                        "communicate with an llm that may be enriched with a tool, skill, etc.", // desc
+                                        "*<ollama:qwen3:latest>+[response=>[to=>print(_)],think=>to(/ai/thoughts?incrq)].chat('what is a database?')"),
+                                docWrap(instC(LLM_INST_TID.extend("embed").dom(MODEL_TID).rng(VEC_TID), lst(ALL_TYPE), (lhs, inst) -> model(lhs.asRec()).embed(inst.arg(0))),
+                                        "a model to embed arg into",  // dom
+                                        "the obj as a vector embedding", // rng
+                                        mutableMap(jnt(0), "the object to embed"), // args
+                                        "embed an object with an llm", // desc
+                                        "*<ollama:qwen3:latest>.embed('what is a database?')"),
                         /*instC(LLM_INST_TID.extend("chat").dom(MODEL_TID).rng(A.maybe()),
                                 lst(STR_TYPE),
                                 (lhs, inst) -> model(lhs.asRec()).chat(inst.arg(0).strValue())),*/
-                        docWrap(instC(LLM_INST_TID.extend("chat").dom(MODEL_TID).rng(REC_TID),
-                                        lst(STR_TYPE, REC_TYPE),
-                                        (lhs, inst) -> model(lhs.asRec()).chat(inst.arg(0).strValue(), inst.arg(1).asRec())),
-                                "a model to chat with",  // dom
-                                "the models chat response", // rng
-                                mutableMap(jnt(0), "the message to send the model", jnt(1), "the desired response format"), // args
-                                "communicate with am llm enriched by tools, skills, etc. and receive response in particular format", // desc
-                                "*<ollama:qwen3:latest>+[response=>[to=>print(_)],think=>to(/ai/thoughts?incrq)].chat('what is 4+2?',[answer=>int::T])"))));
+                                docWrap(instC(LLM_INST_TID.extend("chat").dom(MODEL_TID).rng(REC_TID),
+                                                lst(STR_TYPE, REC_TYPE),
+                                                (lhs, inst) -> model(lhs.asRec()).chat(inst.arg(0).strValue(), inst.arg(1).asRec())),
+                                        "a model to chat with",  // dom
+                                        "the models chat response", // rng
+                                        mutableMap(jnt(0), "the message to send the model", jnt(1), "the desired response format"), // args
+                                        "communicate with am llm enriched by tools, skills, etc. and receive response in particular format", // desc
+                                        "*<ollama:qwen3:latest>+[response=>[to=>print(_)],think=>to(/ai/thoughts?incrq)].chat('what is 4+2?',[answer=>int::T])"))));
         docWrap(this, "large language model think and reason within the metatron");
         super.setup();
     }

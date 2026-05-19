@@ -320,7 +320,7 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
 
     fURI pretract(final int steps);
 
-    default fURI removePrefix(final fURI prefix) {
+    /*default fURI removePrefix(final fURI prefix) {
         if (null == prefix)
             return this;
         final String newPath = this.toString();
@@ -330,17 +330,43 @@ public interface fURI extends Cloneable, Ring<fURI>, Comparable<fURI>, Predicate
             return this;
         final fURI newURI = Singleton.of(newPath.substring(pre.length() + (newPath.charAt(pre.length()) == '/' ? 1 : 0)));
         return newURI;
+    }*/
+
+    default fURI removePrefix(final fURI prefix) {
+        if (null == prefix)
+            return this;
+        if (prefix.hasPattern()) {
+            fURI running = this;
+            while (!running.isEmpty() && running.segmentLength() > 0) {
+                //System.out.println("running: " + running + " prefix: " + prefix);
+                if (running.bimatches(prefix))
+                    return this.removePrefix(running);
+                running = running.isBranch() ? running.asNode() : running.retract(1).asBranch();
+            }
+            return this;
+        } else {
+            final String newPath = this.toString();
+            final String pre = prefix.toString();
+            //return new fURI(newPath.startsWith(prefix.toString()) ? newPath.substring(prefix.send ? prefix.toString().length() +1 : prefix.toString().length()) : newPath);
+            if (!newPath.startsWith(pre))
+                return this;
+            if (f(pre).equals(this))
+                return f("");
+            final fURI newURI = Singleton.of(newPath.substring(pre.length() + (newPath.charAt(pre.length()) == '/' ? 1 : 0)));
+           // final fURI newURI = f(newPath.substring(pre.length()));
+            return newURI;
+        }
     }
 
     default boolean hasPoly() {
         return null != this.poly() && !this.poly().isEmpty();
     }
 
-    boolean hasPrefix(final String prefix);
-
-    default boolean hasPrefix(final fURI prefix) {
-        return this.hasPrefix(prefix.toString());
+    default boolean hasPrefix(final String prefix) {
+        return this.hasPrefix(f(prefix));
     }
+
+    boolean hasPrefix(final fURI prefix);
 
     boolean hasPostfix(final String postfix);
 

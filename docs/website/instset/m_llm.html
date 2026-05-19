@@ -78,7 +78,7 @@
 <!-- NAVIGATION BAR -->
 <nav class="navbar navbar-expand-lg bg-secondary navbar-dark sticky-top py-lg-0 px-lg-5 wow fadeIn"
      data-wow-delay="0.1s">
-    <a href="../index.html" class="navbar-brand ms-4 ms-lg-0">
+    <a href="http://phaseshift.studio" class="navbar-brand ms-4 ms-lg-0">
         <h2 class="mb-0 text-primary logo-text">
             <i class="bi bi-soundwave me-3 icon-color"></i>
             PhaseShift Studio
@@ -274,6 +274,7 @@ bin/metatron</code></pre>
   user::T,
   AI::T,
   skill::T,
+  feature::T,
   model::T],
  inst=&gt;[
   as?tool&lt;=docs(tool::T),
@@ -288,7 +289,7 @@ bin/metatron</code></pre>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="d-flex justify-content-center gap-2 flex-wrap">
-        <button class="btn btn-outline-secondary" disabled>Consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">8</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">3</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><button class="btn btn-outline-secondary" disabled>Rewrites <span class="pill-label badge bg-dark">0</span></button>
+        <button class="btn btn-outline-secondary" disabled>Consts <span class="pill-label badge bg-dark">0</span></button><a href="#types" class="btn btn-outline-primary">Types <span class="pill-label badge bg-primary">9</span></a><a href="#instructions" class="btn btn-outline-primary">Insts <span class="pill-label badge bg-success">3</span></a><button class="btn btn-outline-secondary" disabled>Spaces <span class="pill-label badge bg-dark">0</span></button><button class="btn btn-outline-secondary" disabled>Rewrites <span class="pill-label badge bg-dark">0</span></button>
     </div>
 </div><div class="container-xxl mb-4">
     <div class="card">
@@ -297,6 +298,9 @@ bin/metatron</code></pre>
     <h6 class="text-primary mb-2">Types</h6>
     <div class="d-flex align-items-start mb-1"><div style="min-width:6rem;max-width:6rem;text-align:right;padding-right:0.6rem;flex-shrink:0;"><small class="micro-label fw-bold text-secondary" style="font-family:monospace;">llm</small></div><div class="d-flex flex-wrap"><a href="#type-AI" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">AI</span>
+    <span class="pill-label badge bg-primary ms-2">T</span>
+</a><a href="#type-feature" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
+    <span class="code" style="font-size:1.2rem;">feature</span>
     <span class="pill-label badge bg-primary ms-2">T</span>
 </a><a href="#type-memory" class="d-inline-flex justify-content-between align-items-center bg-dark text-light border border-secondary text-decoration-none px-2 py-1 me-1 mb-1" style="min-width:180px;font-size:0.8rem;">
     <span class="code" style="font-size:1.2rem;">memory</span>
@@ -332,7 +336,7 @@ bin/metatron</code></pre>
 </div></div>
     </div>
 </div><div class="container-xxl mb-4" id="types">
-    <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">8</span></h3>
+    <h3 class="text-primary mb-3">Types <span class="pill-label badge bg-primary">9</span></h3>
     <div class="card mb-3" id="type-AI">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -361,6 +365,43 @@ bin/metatron</code></pre>
   {?}host=&gt;uri::T,
   route=&gt;[uri::T=&gt;uri::T]]][inst?catalog&lt;=#{?}(rec::T)]@/m/llm/space/catalog</code></pre></div>
     
+</div><div class="card mb-3" id="type-feature">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span>
+            <span class="code text-primary fw-bold">feature::T</span>
+            <span class="ms-2 text-muted instset-doc-small-code">refines <a href="m.html#type-rec" class="instset-doc-small-code text-info code">/m/rec::T</a></span>
+        </span>
+        <small class="text-muted code">/m/llm/feature</small>
+    </div>
+    <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?{?}[
+  {?}think=&gt;#::T,
+  {?}memory=&gt;memory::T,
+  {?}prompt=&gt;#::T,
+  {?}response=&gt;{?}[
+   {?}to=&gt;inst::T,
+   {?}format=&gt;#::T,
+   {?}cost=&gt;currency::T],
+  {?}tool=&gt;{?}[split([
+ isa(tool::T),
+ isa(base::T)])],
+  {?}skill=&gt;lst{?}::T,
+  {?}rag=&gt;{?}[uri::T=&gt;isa(int::T).else(10)],
+  {?}note=&gt;lst{?}::T]]@/m/llm/feature</code></pre></div>
+    <div class="card-body border-top py-2">
+    <p class="mb-0 text-light">llm features</p>
+</div><div class="card-body py-2">
+    <small class="text-muted fw-bold">sig:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">llm features <span class="text-light">=&gt;</span> ?</pre><small class="text-muted fw-bold mt-2 d-block">args:</small>
+    <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  {?}response <span class="text-light">=&gt;</span> <span class="text-info">&#39;an obj to process llm responses&#39;</span>
+  {?}think <span class="text-light">=&gt;</span> <span class="text-info">&#39;an obj to process llm thoughts&#39;</span>
+  {?}note <span class="text-light">=&gt;</span> <span class="text-info">&#39;a lst of notes llm will read and react to mid-chat&#39;</span>
+  {?}prompt <span class="text-light">=&gt;</span> <span class="text-info">&#39;a user prompt to prefix chat messages with&#39;</span>
+  {?}memory <span class="text-light">=&gt;</span> <span class="text-info">&quot;llm&#39;s memory of previous interactions&quot;</span>
+  {?}rag <span class="text-light">=&gt;</span> <span class="text-info">&#39;retrieval augmented generation configuration&#39;</span>
+  {?}skill <span class="text-light">=&gt;</span> <span class="text-info">&quot;skills to extend the llm&#39;s abilities&quot;</span>
+  {?}tool <span class="text-light">=&gt;</span> <span class="text-info">&#39;tool functions the llm can use to solve problems&#39;</span>
+</pre>
+</div>
 </div><div class="card mb-3" id="type-mcp_client">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
         <span>
@@ -399,37 +440,12 @@ bin/metatron</code></pre>
     <div class="card-body p-2"><pre class="mb-0"><code class="language-mtron">rec::T[?[
   provider=&gt;catalog::T,
   name=&gt;uri::T,
-  {?}feature=&gt;{?}[
-   {?}think=&gt;#::T,
-   {?}memory=&gt;memory::T,
-   {?}prompt=&gt;#::T,
-   {?}response=&gt;{?}[
-    {?}to=&gt;inst::T,
-    {?}format=&gt;#::T,
-    {?}cost=&gt;currency::T],
-   {?}tool=&gt;{?}[split([
- isa(tool::T),
- isa(base::T)])],
-   {?}skill=&gt;lst{?}::T,
-   {?}rag=&gt;{?}[uri::T=&gt;isa(int::T).else(10)],
-   {?}note=&gt;lst{?}::T],
-  {?}prompt=&gt;#::T,
+  {?}desc=&gt;str::T,
   {?}cost=&gt;{?}[
    in=&gt;currency::T,
    out=&gt;currency::T],
-  {?}think=&gt;#::T,
-  {?}note=&gt;lst{?}::T,
-  {?}response=&gt;{?}[
-   {?}to=&gt;inst::T,
-   {?}format=&gt;#::T,
-   {?}cost=&gt;currency::T],
   {?}size=&gt;bB::T,
-  {?}memory=&gt;memory::T,
-  {?}desc=&gt;str::T,
-  {?}skill=&gt;lst{?}::T,
-  {?}tool=&gt;[split([
- ?tool::T,
- ?base::T])]]]@/m/llm/model</code></pre></div>
+  {?}feature=&gt;feature::T]]@/m/llm/model</code></pre></div>
     <div class="card-body border-top py-2">
     <p class="mb-0 text-light">an mtron interface to a large language model</p>
 </div><div class="card-body py-2">
@@ -438,13 +454,7 @@ bin/metatron</code></pre>
     <pre class="mb-0 text-bright" style="font-family:monospace;font-size:0.8em;">  provider <span class="text-light">=&gt;</span> <span class="text-info">&#39;provider catalog containing llm model&#39;</span>
   name <span class="text-light">=&gt;</span> <span class="text-info">&#39;the model name from the host catalog&#39;</span>
   {?}cost <span class="text-light">=&gt;</span> <span class="text-info">&#39;the cost per million tokens to use this llm (in/out costs)&#39;</span>
-  {?}host <span class="text-light">=&gt;</span> <span class="text-info">&#39;the llm inferencing provider endpoint&#39;</span>
-  {?}think <span class="text-light">=&gt;</span> <span class="text-info">&#39;whether the llm should think before responding&#39;</span>
-  {?}note <span class="text-light">=&gt;</span> <span class="text-info">&#39;a lst of notes llm will read and react to mid-chat&#39;</span>
-  {?}size <span class="text-light">=&gt;</span> <span class="text-info">&#39;the size of the model in bytes&#39;</span>
-  {?}memory <span class="text-light">=&gt;</span> <span class="text-info">&quot;llm&#39;s memory of previous interactions&quot;</span>
-  {?}skill <span class="text-light">=&gt;</span> <span class="text-info">&quot;skill to extend the llm&#39;s abilities&quot;</span>
-  {?}tool <span class="text-light">=&gt;</span> <span class="text-info">&#39;tool functions the llm can use to solve problems&#39;</span>
+  {?}feature <span class="text-light">=&gt;</span> <span class="text-info">&#39;llm features can be moved or shared between multiple models&#39;</span>
 </pre>
 </div>
 </div><div class="card mb-3" id="type-skill">
@@ -591,7 +601,7 @@ bin/metatron</code></pre>
 </div><div class="container-xxl py-3 text-center">
     <hr class="border-secondary">
     <small class="text-muted">
-        generated by metatron instset doc generator on build 0-2026-05-18 14:48:37<br>
+        generated by metatron instset doc generator on build 0-2026-05-19 05:41:44<br>
         (c) PhaseShift Studio, LLC
     </small>
 </div></main>

@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.web.type;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
@@ -122,7 +123,10 @@ public final class mMCPUtility {
             tools.at(uri("list_space"), docWrap(instC(
                             vid.extend("list_space").dom(NOOBJ_TID.zero()).rng(ALL.maybe()),
                             lst(), (lhs, inst) -> {
-                                final Map<Obj, Obj> spaces = new LinkedHashMap<>(Router.global().spaces().jvm());
+                                final Map<Obj, Obj> spaces = new LinkedHashMap<>();
+                                Router.global().spaces().jvm().entrySet().forEach(kv -> {
+                                    spaces.put(kv.getKey(), uri(kv.getValue().<Space>as().pattern()));
+                                });
                                 return rec(spaces);
                             }), "noobj lhs", "a rec index of currently accessible spaces",
                     Map.of(), "returns a rec identifying all active metatron spaces"), MUTABLE);
