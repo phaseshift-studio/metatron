@@ -147,8 +147,6 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
     protected Supplier<ObjBSONSerializer> serializer;
     protected ExistingCollectionSchema existingCollectionSchema;
     protected dcmntSpaceSubQ dcmntSpaceSubQ;
-    /** Cached prefix stripped from incoming fURIs during writes. */
-    private final fURI routePrefix;
 
     public static dcmntSpace of(final Map<Obj, Obj> config, final fURI vid) {
         final MongoClient client = MongoClients.create(config.get(uri(HOST)).uriValue().toString());
@@ -231,9 +229,6 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
                 .create();
         this.jvm().put(uri(ROOT), rootType);
 
-        // Cache the write-side route prefix once (routes and pattern are immutable post-construction).
-        this.routePrefix = computeRoutePrefix();
-
         LOG.info("initialized {{g}}collection schema{{X}} for %d collections",
                 this.existingCollectionSchema.getCollectionNames().size());
     }
@@ -266,21 +261,6 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
         return Stream.of(this.database.getCollection(collectionName));
     }
 
-    /**
-     * Compute the prefix to strip from incoming fURIs during writes.
-     * Uses the first route target if available; otherwise falls back to the space pattern.
-     */
-    private fURI computeRoutePrefix() {
-        if (!this.routes().isEmpty()) {
-            final studio.phaseshift.metatron.isa.m.type.Uri routeTarget =
-                    this.routes().values().iterator().next();
-            final fURI prefix = routeTarget.asUri().uriValue().asNode();
-            if (!prefix.path().isEmpty() && prefix.path().stream().anyMatch(s -> !s.isEmpty()))
-                return prefix;
-        }
-        return this.pattern().asNode();
-    }
-
     // =======================================================================
     // directWriter / directReader
     // =======================================================================
@@ -294,8 +274,8 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
                 return noobj();
             }
 
-            // Strip the space's route prefix to get the relative path
-            final fURI relativePath = pattern.removePrefix(this.routePrefix);
+            // Route from the space's external address pattern to the internal relative path
+            final fURI relativePath = Space.Helper.routeFromSpace(pattern, this.routes());
 
             // Determine collection name and document ID
             final String collectionName;
