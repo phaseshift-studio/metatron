@@ -38,7 +38,7 @@ Modern AI techniques are heavily leveraged across various aspects of metatron, w
  - **tools**: every mtron `inst` has an `as()`-mapping to `tool`, where the `docq` q processor of the `inst` provides the name, description, and argument notes necessary for LLM tool selection. While most mtron instructions are low-level and not necessarily "tool-oriented," user-defined custom instructions can be defined and offered as tools/services to llms as needed.
  - **thoughts**: when enabling internal reasoning with a supporting LLM, the stream of thought is published streamed and can be directed to system output, to a memory structure, to another LLM for review, etc.  
  - **memory**: an LLMs interaction/thought history can be stored and retrieved at a later time to enable long-term memory and context awareness.
- - **skills**: an LLM can be trained on a wide range of skills and domains, allowing them to perform complex tasks and solve domain-specific problems. Skills can be pulled from the Anthropic-designed `.agent` directory that has a corresponding `SKILL.md` file and associated resources. Or, can be created programmatically in metaron.
+ - **skills**: an LLM can be trained on a wide range of skills and domains, allowing them to perform complex tasks and solve domain-specific problems. Skills can be pulled from the Anthropic-specified `.agent` directory that has a corresponding `SKILL.md` file and associated resources. Or, can be created programmatically in metaron.
  - **notes**: pass information to an LLM during a chat iteration without interrupting them. LLMs will periodically check their note stack for any advice/information from the user about their task at hand.
  - **prompts**: specific prompts or instructions can be stored and retrieved to help guide an LLM's response.
  - **response formats**: a mtron `rec` can serve as a schema object instructing the LLM to populate the `rec` with their answer to avoid arbitrary string responses in favor of structured responses.
@@ -55,7 +55,7 @@ wsspace::[host     => <ws://localhost:8555>,                        /
 ----
 
 [discrete]
-=== llm space embedding
+=== llm space encoding
 
 An LLM is a `model::T < rec::T` with the following type definition:
 
@@ -64,9 +64,19 @@ An LLM is a `model::T < rec::T` with the following type definition:
 */m/llm/model
 ----
 
+The design makes a distinction between the **LLM** (general-purpose reasoning engine) and its **features** (accessories that can be attached to the LLM). Example features include tools, skills, memory, thinking, response formats, and other similar enrichments. Features are agnostic to the underlying LLM and can be shared between LLMs making it easy to assemble new LLMs from a library of stored features. In `.metatron`, there exists an `agent.mtron` file that provides a sample library.
+
 [mtron]
 ----
-[ERROR] *ollama:+.take(3)
+*<mtronfs:agent.mtron>           [-- <1> --]
+*/usr/agent/feature
+
+
+----
+
+[mtron]
+----
+*ollama:+.take(3)
 ----
 
 [discrete]
@@ -76,18 +86,20 @@ The following example demonstrates how to search for an appropriate LLM for the 
 
 [mtron]
 ----
-[,]@/usr/mem
+[,]@/usr/mem                                              [-- <1> --]
 *ollama:+/+                                               /
- .where([feature/skill=>has(thinking),                    /
-         size=>is(and(gt(mB::1000.0),lt(mB::5000.0)))])  /
+ .where([skill=>has(thinking),                            /
+         size=>?>mB::1000.0.?<mB::5000.0])                /
  .order(>>size * -1.0)                                    /
- .take(1).to(ai)                                               
-@ai>>=+[feature=>[                                            /
-        memory=>[mem=>!@/usr/mem,max=>5],                     /
-        tools =>[!*eval]]]
-*ai.+[feature=>[think=>print(_),response=>to(/usr/ai/response)]]           /
-   .chat("Remember the word 'metatron'. I'll ask you to recall this word later.")
-*/usr/ai/response
+ .take(1).to(ai)                                          [-- <2> --]     
+@ai>>=+[feature=>[                                        /
+         memory=>[mem=>!@/usr/mem,max=>5],                /
+         tools =>[!*eval],                                /
+         think=>print(_),                                 /
+         response=>[to=>to(/usr/ai/response)]]]           [-- <3> --]            
+@ai.chat("Remember the word 'metatron'.                   /
+          I'll ask you to recall this word later.")       [-- <4> --]
+*/usr/ai/response                                         [-- <5> --]
 ----
 
 [.card]
@@ -127,13 +139,7 @@ The content and metadata associated with the chat interaction are stored at the 
 
 [mtron]
 ----
-*ollama:+/+                                                 /
- .where([feature/skill=>has(thinking),size=>?<mB::5000.0])  /
- .order(>>size * -1.0)                              /
- .take(1)                                           /
- .plus?rec<=rec(                                    /
-  [feature=>[memory=>[mem=>!@/usr/mem,max=>5]]])               /
-  .chat("What was the special word I needed you to recall?")
+@ai.chat("What was the special word I needed you to recall?")
 ----
 
 [discrete]

@@ -125,7 +125,6 @@ public class memSpace extends AbstractSpace<TopicTrie> {
                         }*/
                     }
                     return Stream.concat(directMatches.stream(), polyParents)
-                            //.flatMap(kv -> kv.getValue().isObjs() ? kv.getValue().stream().map(vv -> new AbstractMap.SimpleEntry<>(kv.getKey(), vv)) : Stream.of(kv))
                             .flatMap(kv -> Stream.concat(
                                     kv.getKey().test(nodePattern) ?
                                             Stream.of(IdObj.of(kv.getKey(), kv.getValue())) :
@@ -160,6 +159,54 @@ public class memSpace extends AbstractSpace<TopicTrie> {
             }
             return obj;
         };
+    }
+
+    @Override
+    public Stream<IdObj> readStream(final fURI pattern) {
+        if (pattern.equals(ALL))
+            return this.sjvm().entrySet().stream().map(kv -> IdObj.of(kv.getKey(), kv.getValue()));
+        if (pattern.hasPattern()) {
+            final fURI nodePattern = pattern.asNode();
+            final List<Map.Entry<fURI, Obj>> directMatches = this.sjvm().match(nodePattern);
+            Stream<Map.Entry<fURI, Obj>> polyParents = Stream.empty();
+            if (directMatches.isEmpty() && nodePattern.hasPattern()) {
+                fURI parent = nodePattern.retract(1);
+                while (parent.segmentLength() > 0) {
+                    final Obj parentValue = this.sjvm().get(parent);
+                    if (parentValue != null && parentValue.isPoly()) {
+                        polyParents = Stream.of(new AbstractMap.SimpleEntry<>(parent, parentValue));
+                        break;
+                    }
+                    parent = parent.retract(1);
+                }
+            }
+            return Stream.concat(directMatches.stream(), polyParents)
+                    .flatMap(kv -> Stream.concat(
+                            kv.getKey().test(nodePattern) ?
+                                    Stream.of(IdObj.of(kv.getKey(), kv.getValue())) :
+                                    Stream.empty(),
+                            kv.getValue().isPoly() ?
+                                    Space.Helper.unrollPoly(kv.getKey(), kv.getValue().as(), nodePattern).stream() :
+                                    Stream.empty()));
+        }
+        final Obj value = this.sjvm().get(pattern);
+        return null == value ? Stream.empty() : Stream.of(IdObj.of(pattern, value));
+    }
+
+    @Override
+    public Stream<IdObj> writeStream(final fURI pattern, final Obj obj) {
+        if (pattern.hasPattern()) {
+            final List<IdObj> results = new ArrayList<>();
+            this.directReader().apply(pattern).forEachRemaining(kv -> {
+                this.write(kv.furi(), obj);
+                results.add(IdObj.of(kv.furi(), obj));
+            });
+            return results.stream();
+        }
+        final Obj result = this.write(pattern, obj);
+        if (result.isNoObj())
+            return Stream.empty();
+        return Stream.of(IdObj.of(pattern, result));
     }
 
     public Obj load() {

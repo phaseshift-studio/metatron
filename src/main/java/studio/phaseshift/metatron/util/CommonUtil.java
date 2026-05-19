@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.util;
 
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Rel;
@@ -174,6 +175,10 @@ public final class CommonUtil {
         return lines.length;
     }
 
+    public static String removeComments(final String mtron) {
+        return mParser.removeLineComments(mParser.removeBlockComments(mtron));
+    }
+
     public static List<String> splitOnNonQuotedSequence(final String sequence, final char split, boolean includeSplitCharacter) {
         List<String> result = new ArrayList<>();
         StringBuilder current = new StringBuilder();
@@ -213,7 +218,7 @@ public final class CommonUtil {
         do {
             final UUID uuid = UUID.randomUUID();
             shortId = baseURI.extend(Long.toHexString(uuid.getMostSignificantBits())
-                      .substring(0, 8) // Take first 8 hex chars of the MSB
+                    .substring(0, 8) // Take first 8 hex chars of the MSB
             );
         } while (retryIfCollision && !Router.readFromSpace(shortId).isNoObj());
         return shortId;

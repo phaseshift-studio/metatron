@@ -154,7 +154,7 @@ public class mModel extends MRec {
     }
 
     public Optional<Rec> responseFormat() {
-        return this.feature(RESPONSE);
+        return this.feature(f(RESPONSE).extend(FORMAT).toString());
     }
 
     public Rec memory() {
@@ -188,22 +188,32 @@ public class mModel extends MRec {
         //////////////////////////////////////////
         /////////////// PROMPT ///////////////////
         //////////////////////////////////////////
-        this.prompt().ifPresent(p -> service.userMessage(p.isStr() ?  p.strValue() : p.toString()));
+        this.prompt().ifPresent(p -> {
+            try {
+                service.userMessage(p.isStr() ? p.strValue() : p.toString());
+            } catch(Exception e) {
+                throw MTronException.of("unable to setup prompt: %s", e);
+            }
+        });
         //////////////////////////////////////////
         /////////////// MEMORY ///////////////////
         //////////////////////////////////////////
-        if (!this.memory().isRec()) {
-            final fURI memoryVID = this.memory().at("mem").vid();
-            if (memoryVID == null)
-                this.logger().warn("llm memory has no vid (ignoring): %s", this.memory());
-            else {
-                service.chatMemory(MessageWindowChatMemory.builder()
-                        //.maxMessages(Router.readFromSpace(this.fetchMemory().uriValue().extend(MAX)).orElse(jnt(15)).intValue().intValue())
-                        .maxMessages(this.memory().at(MAX).intValue().intValue())
-                        .id(memoryVID)
-                        .chatMemoryStore(SpaceChatMemoryStore.single())
-                        .build())
-                        .storeRetrievedContentInChatMemory(true);
+        if (!this.memory().isNoObj()) {
+            try {
+                final fURI memoryVID = this.memory().at("mem").vid();
+                if (memoryVID == null)
+                    this.logger().warn("llm memory has no vid (ignoring): %s", this.memory());
+                else {
+                    service.chatMemory(MessageWindowChatMemory.builder()
+                                    //.maxMessages(Router.readFromSpace(this.fetchMemory().uriValue().extend(MAX)).orElse(jnt(15)).intValue().intValue())
+                                    .maxMessages(this.memory().at(MAX).intValue().intValue())
+                                    .id(memoryVID)
+                                    .chatMemoryStore(SpaceChatMemoryStore.single())
+                                    .build())
+                            .storeRetrievedContentInChatMemory(true);
+                }
+            } catch (Exception e) {
+                throw MTronException.of("unable to setup memory: %s", e);
             }
         }
         //////////////////////////////////////////
@@ -214,15 +224,19 @@ public class mModel extends MRec {
         ///////////////   SKILLS /////////////////
         //////////////////////////////////////////
         if (this.skills().isPresent() && !this.skills().get().elements().allMatch(Obj::isUri)) {
-            final Skills skills = new Skills.Builder().skills(
-                    this.skills().get()
-                            .elements()
-                            .filter(s -> !s.isUri())
-                            .map(s -> mSkill.of(s.apply().asRec()).toSkill())
-                            .toList()).build();
-            service.toolProvider(skills.toolProvider());
-            systemMessage.add("You have access to the following skills:\n" + skills.formatAvailableSkills()
-                    + "\nWhen the user's request relates to one of these skills, activate it first using the `activate_skill` tool before proceeding.");
+            try {
+                final Skills skills = new Skills.Builder().skills(
+                        this.skills().get()
+                                .elements()
+                                .filter(s -> !s.isUri())
+                                .map(s -> mSkill.of(s.apply().asRec()).toSkill())
+                                .toList()).build();
+                service.toolProvider(skills.toolProvider());
+                systemMessage.add("You have access to the following skills:\n" + skills.formatAvailableSkills()
+                        + "\nWhen the user's request relates to one of these skills, activate it first using the `activate_skill` tool before proceeding.");
+            } catch (Exception e) {
+                throw MTronException.of("unable to setup skills: %s", e);
+            }
         }
 
         //////////////////////////////////////////
@@ -230,46 +244,54 @@ public class mModel extends MRec {
         //////////////////////////////////////////
         service.hallucinatedToolNameStrategy(tool -> new ToolExecutionResultMessage(ToolExecutionResultMessage.builder().toolName(tool.name()).text("unknown or inaccessible tool")));
         if (this.tools().isPresent()) {
-            final Map<ToolSpecification, ToolExecutor> tools = new HashMap<>();
-            this.tools().get()
-                    .elements()
-                    .flatMap(e -> e.isObjs() ? e.elements() : Stream.of(e))
-                    .map(e -> e.autoResolve(this))
-                    .filter(t -> !t.isNoObj())
-                    .forEach(t -> {
-                        if (t.isRec() && t.test(MCP_CLIENT_TYPE)) {
-                            service.toolProvider(McpToolProvider.builder().mcpClients(Rec.wrap(t.as(), mMcpClient.class).client()).build()).executeToolsConcurrently(BootLoader.getExecutor());
-                        } else if (t.isObjInst()) {
-                            if (QCollection.isNoDocs(Router.global().read(t.tid().addQ(DOCQ))))
-                                t.logger().warn("ignoring inst as it has no associated ?docq: %s", t);
-                            else {
-                                final Tuple.Pair<ToolSpecification, ToolExecutor> pair = mTool.mtronInstToolSpecification(mTool.mtronInstToTool(t.asInst()));
+            try {
+                final Map<ToolSpecification, ToolExecutor> tools = new HashMap<>();
+                this.tools().get()
+                        .elements()
+                        .flatMap(e -> e.isObjs() ? e.elements() : Stream.of(e))
+                        .map(e -> e.autoResolve(this))
+                        .filter(t -> !t.isNoObj())
+                        .forEach(t -> {
+                            if (t.isRec() && t.test(MCP_CLIENT_TYPE)) {
+                                service.toolProvider(McpToolProvider.builder().mcpClients(Rec.wrap(t.as(), mMcpClient.class).client()).build()).executeToolsConcurrently(BootLoader.getExecutor());
+                            } else if (t.isObjInst()) {
+                                if (QCollection.isNoDocs(Router.global().read(t.tid().addQ(DOCQ))))
+                                    t.logger().warn("ignoring inst as it has no associated ?docq: %s", t);
+                                else {
+                                    final Tuple.Pair<ToolSpecification, ToolExecutor> pair = mTool.mtronInstToolSpecification(mTool.mtronInstToTool(t.asInst()));
+                                    tools.put(pair.get0(), pair.get1());
+                                }
+                            } else if (t.isRec() && t.test(LLM_TOOL_TYPE)) {
+                                final Tuple.Pair<ToolSpecification, ToolExecutor> pair = mTool.mtronInstToolSpecification(t.asRec());
                                 tools.put(pair.get0(), pair.get1());
                             }
-                        } else if (t.isRec() && t.test(LLM_TOOL_TYPE)) {
-                            final Tuple.Pair<ToolSpecification, ToolExecutor> pair = mTool.mtronInstToolSpecification(t.asRec());
-                            tools.put(pair.get0(), pair.get1());
-                        }
-                    });
-            if (!tools.isEmpty())
-                service.tools(tools).executeToolsConcurrently(BootLoader.getExecutor());
+                        });
+                if (!tools.isEmpty())
+                    service.tools(tools).executeToolsConcurrently(BootLoader.getExecutor());
+            } catch (Exception e) {
+                throw MTronException.of("unable to setup tools: %s", e);
+            }
         }
         /////////////////////////////////////////////
         ///////////////   NOTES   //////////////////
         ////////////////////////////////////////////
         if (this.notes().isPresent()) {
-            if (null == this.vid())
-                this.logger().warn("llm has no vid (ignoring): %s", this.notes());
-            else
-                systemMessage.add("""
-                                  ### IMPORTANT ###
-                                  Always check for any notes the user has provided you.
-                                  Do this before, during, and after completing your task.
-                                  The contents of the notes should be deemed of crucial importance.
-                                  To check for notes, use your provided mtron `eval` tool with the following argument:
-                                    `*<%s/note>.remove(0)`
-                                  A result of `noobj` means "no note" at this time, but do check again periodically.
-                                  """.formatted(this.vid()));
+            try {
+                if (null == this.vid())
+                    this.logger().warn("llm has no vid (ignoring): %s", this.notes());
+                else
+                    systemMessage.add("""
+                                      ### IMPORTANT ###
+                                      Always check for any notes the user has provided you.
+                                      Do this before, during, and after completing your task.
+                                      The contents of the notes should be deemed of crucial importance.
+                                      To check for notes, use your provided mtron `eval` tool with the following argument:
+                                        `@<%s/feature/note>.remove(0)`
+                                      A result of `noobj` means "no note" at this time, but do check again periodically.
+                                      """.formatted(this.vid()));
+            } catch (Exception e) {
+                throw MTronException.of("unable to setup notes: %s", e);
+            }
         }
         //////////////////////////////////////////
         ///////////////   RAG   //////////////////
@@ -277,14 +299,22 @@ public class mModel extends MRec {
         // RAG = Retrieval Augmented Generation
         // Before sending to LLM, search Space for relevant context and inject it into the prompt
         if (this.rag().isPresent()) {
-            final Rec ragConfig = this.rag().get();
-            final fURI pattern = ragConfig.at(PATTERN).uriValue();
-            final int maxResults = ragConfig.at(MAX).orElse(jnt(10)).intValue().intValue();
-            this.logger().info("RAG enabled: pattern=%s, max=%d", pattern, maxResults);
-            service.contentRetriever(new SpaceContentRetriever(pattern, maxResults));
+            try {
+                final Rec ragConfig = this.rag().get();
+                final fURI pattern = ragConfig.at(PATTERN).uriValue();
+                final int maxResults = ragConfig.at(MAX).orElse(jnt(10)).intValue().intValue();
+                this.logger().info("rag enabled: pattern=%s, max=%d", pattern, maxResults);
+                service.contentRetriever(new SpaceContentRetriever(pattern, maxResults));
+            } catch (Exception e) {
+                throw MTronException.of("unable to setup rag: %s", e);
+            }
         }
         // merge all system messages into a single system message
-        service.systemMessage(String.join("\n", systemMessage));
+        try {
+            service.systemMessage(String.join("\n", systemMessage));
+        } catch(Exception e) {
+            throw MTronException.of("unable to setup system message: %s", e);
+        }
         /// ////////////////////////////////////////////////////////////////////////////////////////
         return service;
     }

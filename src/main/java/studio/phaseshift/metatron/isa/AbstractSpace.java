@@ -33,9 +33,14 @@ import studio.phaseshift.metatron.isa.mach.type.Stats;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
+
+import studio.phaseshift.metatron.isa.m.type.Rel;
+import studio.phaseshift.metatron.util.IteratorUtil;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
@@ -75,6 +80,40 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
             Obj result = Space.Helper.resolveRead(this, vid, directReader());
             return QProc.Helper.processPostRead(this.qs(), vid, result).orElse(result);
         });
+    }
+
+    @Override
+    public Stream<IdObj> readStream(final fURI pattern) {
+        QProc.Helper.checkSpaceQProcs(this, pattern);
+        final java.util.Optional<Obj> preRead = QProc.Helper.processPreRead(this.qs(), pattern);
+        if (preRead.isPresent())
+            return Stream.of(IdObj.of(pattern, preRead.get()));
+        final Obj result = Space.Helper.resolveRead(this, pattern, directReader());
+        final Obj postResult = QProc.Helper.processPostRead(this.qs(), pattern, result).orElse(result);
+        if (postResult.isNoObj())
+            return Stream.empty();
+        if (postResult.isObjs())
+            return IteratorUtil.stream(postResult.objsValue().iterator())
+                    .map(o -> o.isRel()
+                            ? IdObj.of(o.asRel().first().uriValue(), o.asRel().second())
+                            : IdObj.of(null != o.vid() ? o.vid() : pattern, o));
+        return Stream.of(IdObj.of(pattern, postResult));
+    }
+
+    @Override
+    public Stream<IdObj> writeStream(final fURI pattern, final Obj obj) {
+        if (pattern.hasPattern()) {
+            final List<IdObj> results = new ArrayList<>();
+            this.readStream(pattern).forEach(kv -> {
+                final Obj result = this.directWriter().apply(kv.furi(), obj);
+                results.add(IdObj.of(kv.furi(), result));
+            });
+            return results.stream();
+        }
+        final Obj result = this.write(pattern, obj);
+        if (result.isNoObj())
+            return Stream.empty();
+        return Stream.of(IdObj.of(pattern, result));
     }
 
     @Override

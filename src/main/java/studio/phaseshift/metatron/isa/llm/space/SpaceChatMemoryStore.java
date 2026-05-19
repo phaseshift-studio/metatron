@@ -61,6 +61,7 @@ public class SpaceChatMemoryStore implements ChatMemoryStore {
 
     public List<ChatMessage> getMessages(final Object memoryId) {
         final Lst messages = Router.readFromSpace((fURI) memoryId).orSupply(() -> lst(new ArrayList<>(), LST_TID, (fURI) memoryId));
+        LOG.info("reading existing memory [messages:%d]",messages.count());
         final List<ChatMessage> llmMessages = messages.isEmpty() ?
                 new ArrayList<>() :
                 messages.elements().map(e -> {
@@ -101,7 +102,7 @@ public class SpaceChatMemoryStore implements ChatMemoryStore {
             }
         }
         final Lst objMessages = lst(jsonMessages, LST_TID, (fURI) memoryId);
-        LOG.debug("updating messages for %s [count: %d]", memoryId, objMessages.count());
+        LOG.info("updating messages for %s [count: %d]", memoryId, objMessages.count());
     }
 
     @Override

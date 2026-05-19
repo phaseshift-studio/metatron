@@ -233,7 +233,7 @@ public class mInstSet extends AbstractInstSet {
              .vid(POLY_TID)
              .predicate((lhs, inst) -> bool(lhs.isLst() || lhs.isRec() || lhs.isRel() || lhs.isCode()))
              .create();*/
-    public static final Uri NONE = uri(f("none"), URI_TID, f("none"));
+    public static final Uri NONE = uri(f("none"), URI_TID, M_ISA_TID.extend("none"));
 
 
     public mInstSet() {
