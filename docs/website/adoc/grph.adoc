@@ -213,7 +213,7 @@ grphspace::
               g:E => E,
               g:S => /m/grph/inst/schema/modern],
   native  => [factory => mfactory::[=>],
-              load    => modern]]
+              load    => modern]]@/sys/space/modern
 ----
 🧱
 [source,mtron]

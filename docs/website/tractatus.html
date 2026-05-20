@@ -2045,7 +2045,7 @@ lhs =&gt; inst(arg1,...,argN){ inst1...instN } =&gt; rhs
    !*/usr/ai/mcp/intellij,
    !*/usr/ai/mcp/mtron],
   note=&gt;!@/usr/agent/notes,
-  skill=&gt;[!@&lt;local:software/metatron/.metatron/skills/mtron&gt;.as(skill::T)],
+  skill=&gt;[!@mtronfs:skills/mtron.as(skill::T)],
   response=&gt;[to=&gt;print(id())]]]@testy
 ==&gt;v2/name=&gt;'vadas'
 ==&gt;v4=&gt;[name=&gt;'lop']
@@ -2120,7 +2120,7 @@ lhs =&gt; inst(arg1,...,argN){ inst1...instN } =&gt; rhs
   !*/usr/ai/mcp/intellij,
   !*/usr/ai/mcp/mtron],
  note=&gt;!@/usr/agent/notes,
- skill=&gt;[!@&lt;local:software/metatron/.metatron/skills/mtron&gt;.as(skill::T)],
+ skill=&gt;[!@mtronfs:skills/mtron.as(skill::T)],
  response=&gt;[to=&gt;print(id())]]
 ==&gt;out=&gt;out?rng=rec{*}&amp;dom=rec(label=&gt;uri{*}::T){rshift(outE_).rshift(*label).rshift(inV_)}
 ==&gt;v5=&gt;[name=&gt;'ripple',lang=&gt;java]</code></pre>
@@ -3063,7 +3063,7 @@ mtron&gt; import(/m/web)
 </div>
 </div>
 <div class="paragraph">
-<p>The design makes a distinction between the <strong>LLM</strong> (general-purpose reasoning engine) and its <strong>features</strong> (accessories that can be attached to the LLM). Example features include tools, skills, memory, thinking, response formats, and other similar enrichments. Features are agnostic to the underlying LLM and can be shared between LLMs making it easy to assemble new LLMs from a library of stored features. In <code>.metatron</code>, there exists an <code>agent.mtron</code> file that provides a sample library.</p>
+<p>The design makes a distinction between the <strong>LLM</strong> (general-purpose reasoning engine) and its <strong>features</strong> (accessories that can be attached to the LLM). Example features include tools, skills, memory, thinking, response formats, and other similar enrichme. Features are agnostic to the underlying LLM and can be shared between LLMs making it easy to assemble new LLMs from a library of stored features. In <code>.metatron</code>, there exists an <code>agent.mtron</code> file that provides a sample library.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -3883,7 +3883,7 @@ mtron&gt; 4.as(int::T[?&gt;0]@nat)
 ==&gt;nat::4
 mtron&gt;  -4.as(nat::T)
 ==&gt;fail::[-4 is not a is(gt(0))
-  -4=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/244
+  -4=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/286
 mtron&gt; [-- refining rec::T  --]
 mtron&gt; [name=&gt;'snowbutt',age=&gt;7].as(rec::T[?[name=&gt;str::T,age=&gt;int::T]@chicken)
 ==&gt;ERROR: [name=&gt;'snowbutt',age=&gt;7].as(rec::T[?[name=&gt;str::T,age=&gt;int::T]@chicken)
@@ -3949,11 +3949,11 @@ mtron&gt; 2.as(nat::T)     <i class="conum" data-value="5"></i><b>(5)</b>
 ==&gt;2
 mtron&gt;  -2.as(nat::T)     <i class="conum" data-value="6"></i><b>(6)</b>
 ==&gt;fail::[-2 is not a is(gt(0))
-  -2=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/250
+  -2=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/292
 mtron&gt;  nat::2 * -1     <i class="conum" data-value="7"></i><b>(7)</b>
 ==&gt;fail::[nat::-2 is not a int::T[is(gt(0))][choose([
   is(lt(0))=&gt;mult(-1),
-  id()=&gt;id()]).rshift()]][...]@/sys/fail/256</code></pre>
+  id()=&gt;id()]).rshift()]][...]@/sys/fail/298</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -3980,7 +3980,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{y}}m{{r}}E{{r}}t{{g}}a{{b}}t{{m}}r{{r}}O{{m}}n{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{y}}M{{c}}E{{c}}t{{b}}A{{y}}t{{g}}R{{g}}O{{m}}N{{X}}.</p>
 </div>
 <h4 id="_cascading_type_constructions" class="discrete">cascading type constructions</h4>
 <h3 id="_mono_types" class="discrete">mono types</h3>
@@ -4636,7 +4636,7 @@ mtron&gt;  nat::-10
 ==&gt;ERROR: nat::-10 is not a int::T[is(gt(0))]
 mtron&gt;  int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/378</code></pre>
+  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/420</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -4735,7 +4735,7 @@ mtron&gt;  nat::-10
 ==&gt;ERROR: nat::-10 is not a int::T[is(gt(0))]
 mtron&gt;  int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/384</code></pre>
+  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/426</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -4758,10 +4758,10 @@ mtron&gt; age::125
 ==&gt;ERROR: age::125 is not a int::T[is(lt(120))]
 mtron&gt;  nat::125.as(age::T)
 ==&gt;fail::[nat::125 is not a is(lt(120))
-  nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/390
+  nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/432
 mtron&gt;  125.as(nat::T).as(age::T)
 ==&gt;fail::[125 is not a is(lt(120))
-  125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/396</code></pre>
+  125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/438</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -4998,8 +4998,8 @@ mtron&gt; memspace::[
  prefix=&gt;'',
  postfix=&gt;'',
  pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[
- prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
  stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
+ prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
  result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0],
  menu=&gt;[
   console=&gt;console::[
@@ -5009,8 +5009,8 @@ mtron&gt; memspace::[
    prefix=&gt;'',
    postfix=&gt;'',
    pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[
- prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
  stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
+ prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
  result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0]]@/usr/ui/console,
   help=&gt;inst?noobj&lt;=#{?}(),
   chat=&gt;inst?noobj&lt;=#{?}(),
@@ -5042,8 +5042,8 @@ mtron&gt; */usr/ui/console     <i class="conum" data-value="1"></i><b>(1)</b>
  prefix=&gt;'',
  postfix=&gt;'',
  pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[
- prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
  stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
+ prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
  result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0],
  menu=&gt;[
   console=&gt;console::[
@@ -5053,8 +5053,8 @@ mtron&gt; */usr/ui/console     <i class="conum" data-value="1"></i><b>(1)</b>
    prefix=&gt;'',
    postfix=&gt;'',
    pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[
- prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
  stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
+ prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
  result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0]]@/usr/ui/console,
   help=&gt;inst?noobj&lt;=#{?}(),
   chat=&gt;inst?noobj&lt;=#{?}(),
@@ -5080,8 +5080,8 @@ mtron&gt; */usr/ui/console     <i class="conum" data-value="1"></i><b>(1)</b>
   subq=&gt;inst?noobj&lt;=#{?}()]]
 mtron&gt; */usr/ui/console/pane/0     <i class="conum" data-value="2"></i><b>(2)</b>
 ==&gt;/m/mach/console/pane::[
- prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
  stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
+ prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
  result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]
 mtron&gt; /usr/ui/console/pane/0/result('printed at ==&gt;xyz')     <i class="conum" data-value="3"></i><b>(3)</b></code></pre>
 </div>
@@ -6097,7 +6097,7 @@ mtron&gt; */usr/notes/#?subq
   mqtt::T,
   haos::T]]@/m/iot
 mtron&gt;  import(/m/llm)
-{{b}}.{{m}}.{{b}}.{{X}}</code></pre>
+{{r}}.{{c}}.{{c}}.{{X}}</code></pre>
 </div>
 </div>
 </div>
@@ -6724,7 +6724,7 @@ mtron&gt; *g:V/+.?==[address=&gt;[_ =&gt; [state=&gt;NM]]].&gt;&gt;address/+/cit
               g:E =&gt; E,
               g:S =&gt; /m/grph/inst/schema/modern],
   native  =&gt; [factory =&gt; mfactory::[=&gt;],
-              load    =&gt; modern]]</code></pre>
+              load    =&gt; modern]]@/sys/space/modern</code></pre>
 </div>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
@@ -7395,7 +7395,7 @@ mtron&gt; *v1.out(knows).out(created).&gt;&gt;name     <i class="conum" data-val
 <div class="collapse position-relative" id="card-19">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-19" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
 <button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
-<h2 id="_http_space" class="discrete">HTTP Space</h2>
+<h2 id="_web_technologies_with_mweb" class="discrete">Web Technologies with /m/web</h2>
 <details>
 <summary class="title">/m/web instset import and space constructions</summary>
 <div class="content">
@@ -7448,24 +7448,26 @@ mtron&gt; *v1.out(knows).out(created).&gt;&gt;name     <i class="conum" data-val
   as?str&lt;=markdown(str::T),
   as?html&lt;=markdown(html::T),
   as?json&lt;=str(json::T),
-  as(json_str::T)]]@/m/web
-mtron&gt; httpspace::[
-        host     =&gt; &lt;http://localhost:8777&gt;,
-        pattern  =&gt; &lt;http://#&gt;,
-        route    =&gt; [/          =&gt; &lt;&gt;,
-                     /mcp       =&gt; mcp_mtron_http,
-                     /docs      =&gt; target/docs,
-                     /console   =&gt; src/main/resources/web/console]]@/sys/space/web/http
-==&gt;ERROR: bindexception: Address already in use
-  	sun.nio.ch.Net [line -2]
-  	sun.nio.ch.Net [line 522]
-  	sun.nio.ch.ServerSocketChannelImpl [line 335]
-  	sun.nio.ch.ServerSocketChannelImpl [line 297]
-  	sun.nio.ch.ServerSocketAdaptor [line 80]</code></pre>
+  as(json_str::T)]]@/m/web</code></pre>
 </div>
 </div>
 </div>
 </details>
+<h3 id="_http_space" class="discrete">HTTP Space</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; httpspace::[
+        host     =&gt; http://localhost:8777,
+        pattern  =&gt; http://#,
+        route    =&gt; [/        =&gt; &lt;&gt;,
+                     /mcp     =&gt; mcp_mtron_http,
+                     /docs    =&gt; target/docs,
+                     /console =&gt; src/main/resources/web/console]
+       ]@/sys/space/web/http</code></pre>
+</div>
+</div>
+<div class="exampleblock">
+<div class="content">
 <h3 id="_html_type" class="discrete">HTML Type</h3>
 <div class="paragraph">
 <p>The type <code>html::T &lt; rec::T</code> (a refinement of <code>rec::T</code>) represents an <a href="https://en.wikipedia.org/wiki/HTML">HTML</a> document.</p>
@@ -7474,11 +7476,1458 @@ mtron&gt; httpspace::[
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; html::T     <i class="conum" data-value="1"></i><b>(1)</b>
 mtron&gt;  *&lt;http://phaseshift.studio/&gt;     <i class="conum" data-value="2"></i><b>(2)</b>
-==&gt;fail::[no active space supports pattern &lt;http://phaseshift.studio&gt;][...]@/sys/fail/424
+==&gt;html::[html=&gt;[
+ head=&gt;[
+  title=&gt;'PhaseShift Studio — Systems Software &amp; Language D...',
+  out=&gt;[
+   [tag=&gt;meta,charset=&gt;'UTF-8'],
+   [
+    tag=&gt;meta,
+    name=&gt;'viewport',
+    content=&gt;'width=device-width, initial-scale=1.0'],
+   [tag=&gt;link,rel=&gt;'icon',href=&gt;&lt;images/favicon-32x32.png&gt;,type=&gt;'image/png'],
+   [
+    tag=&gt;link,
+    href=&gt;&lt;https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css&gt;,
+    rel=&gt;'stylesheet'],
+   [
+    tag=&gt;link,
+    href=&gt;&lt;https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700;JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&amp;display=swap&gt;,
+    rel=&gt;'stylesheet'],
+   [tag=&gt;link,href=&gt;&lt;css/metatron.css&gt;,rel=&gt;'stylesheet'],
+   [
+    tag=&gt;style,
+    data=&gt;"""
+        :root {
+            --bg: #000000;
+     ..."""]]],
+ body=&gt;[out=&gt;[
+ [
+  tag=&gt;nav,
+  class=&gt;'nav',
+  id=&gt;'navbar',
+  out=&gt;[
+   [
+    tag=&gt;a,
+    href=&gt;&lt;#&gt;,
+    class=&gt;'nav-brand',
+    style=&gt;'color:var(--accent);',
+    out=&gt;[[tag=&gt;img,src=&gt;&lt;images/favicon-32x32.png&gt;,alt=&gt;'PS']],
+    text=&gt;'PHASESHIFT STUDIO'],
+   [
+    tag=&gt;button,
+    class=&gt;'nav-toggle',
+    id=&gt;'navToggle',
+    aria-label=&gt;'Toggle navigation',
+    out=&gt;[[tag=&gt;i,class=&gt;'bi bi-list']]],
+   [
+    tag=&gt;ul,
+    class=&gt;'nav-links',
+    id=&gt;'navLinks',
+    out=&gt;[
+     [
+      tag=&gt;li,
+      out=&gt;[[tag=&gt;a,href=&gt;&lt;#hero&gt;,class=&gt;'active',text=&gt;'Home']]],
+     [
+      tag=&gt;li,
+      out=&gt;[[tag=&gt;a,href=&gt;&lt;#products&gt;,text=&gt;'Product']]],
+     [
+      tag=&gt;li,
+      out=&gt;[[tag=&gt;a,href=&gt;&lt;#capabilities&gt;,text=&gt;'Capabilities']]],
+     [
+      tag=&gt;li,
+      out=&gt;[[tag=&gt;a,href=&gt;&lt;#code&gt;,text=&gt;'Explore']]],
+     [
+      tag=&gt;li,
+      out=&gt;[[tag=&gt;a,href=&gt;&lt;mailto:info@phaseshift.studio&gt;,text=&gt;'Contact']]]]]]],
+ [
+  tag=&gt;section,
+  class=&gt;'hero',
+  id=&gt;'hero',
+  out=&gt;[[
+ tag=&gt;div,
+ class=&gt;'hero-inner',
+ out=&gt;[
+  [
+   tag=&gt;div,
+   class=&gt;'hero-text',
+   out=&gt;[
+    [
+     tag=&gt;span,
+     class=&gt;'hero-eyebrow',
+     text=&gt;'Systems Software &amp; Language Design'],
+    [
+     tag=&gt;h1,
+     out=&gt;[
+      [tag=&gt;span,class=&gt;'red',text=&gt;'Shift'],
+      [tag=&gt;br]],
+     text=&gt;'Phase Studio'],
+    [
+     tag=&gt;p,
+     class=&gt;'hero-tagline',
+     out=&gt;[
+      [
+       tag=&gt;strong,
+       out=&gt;[[tag=&gt;span,class=&gt;'red',text=&gt;'data infrastructure']]],
+      [tag=&gt;strong,text=&gt;'metatron']],
+     text=&gt;'Building for the boundary between languages, data...'],
+    [
+     tag=&gt;div,
+     class=&gt;'hero-actions',
+     out=&gt;[
+      [
+       tag=&gt;a,
+       href=&gt;&lt;http://metatron.phaseshift.studio&gt;,
+       class=&gt;'btn-primary',
+       out=&gt;[[tag=&gt;i,class=&gt;'bi bi-arrow-right']],
+       text=&gt;'Explore metatron'],
+      [tag=&gt;a,href=&gt;&lt;#products&gt;,class=&gt;'btn-ghost',text=&gt;'PhaseShift Studio capabilities']]]]],
+  [
+   tag=&gt;div,
+   class=&gt;'hero-visual',
+   out=&gt;[[tag=&gt;img,src=&gt;&lt;images/metatron-character.png&gt;,alt=&gt;'metatron']]]]]]],
+ [tag=&gt;div,class=&gt;'section-divider'],
+ [
+  tag=&gt;section,
+  id=&gt;'products',
+  out=&gt;[[
+ tag=&gt;div,
+ class=&gt;'section-inner',
+ out=&gt;[
+  [
+   tag=&gt;div,
+   class=&gt;'section-header reveal',
+   out=&gt;[
+    [tag=&gt;span,class=&gt;'eyebrow',text=&gt;'Flagship Product'],
+    [
+     tag=&gt;h2,
+     out=&gt;[
+      [tag=&gt;span,class=&gt;'accent',text=&gt;'metatron'],
+      [
+       tag=&gt;sup,
+       out=&gt;[[
+ tag=&gt;small,
+ out=&gt;[[
+ tag=&gt;small,
+ out=&gt;[[tag=&gt;small,text=&gt;'™']]]]]]]]],
+    [
+     tag=&gt;p,
+     text=&gt;'A concatenative, flow-oriented traversal language...']]],
+  [
+   tag=&gt;div,
+   class=&gt;'product-card reveal',
+   out=&gt;[
+    [
+     tag=&gt;div,
+     out=&gt;[
+      [tag=&gt;span,class=&gt;'product-badge',text=&gt;'v0.1-snapshot'],
+      [
+       tag=&gt;h3,
+       out=&gt;[[tag=&gt;span,class=&gt;'dot',text=&gt;'.']],
+       text=&gt;'metatron'],
+      [
+       tag=&gt;p,
+       text=&gt;'A Turing-complete language for composing data flo...'],
+      [
+       tag=&gt;ul,
+       class=&gt;'feature-list',
+       out=&gt;[
+        [
+         tag=&gt;li,
+         text=&gt;'Concatenative, stack-based execution model'],
+        [
+         tag=&gt;li,
+         text=&gt;'Structural type system with refinement types'],
+        [
+         tag=&gt;li,
+         text=&gt;'URI-addressable instruction space'],
+        [
+         tag=&gt;li,
+         text=&gt;'Pluggable storage backends via embeddings'],
+        [
+         tag=&gt;li,
+         text=&gt;'Streaming analytical processing modes'],
+        [
+         tag=&gt;li,
+         text=&gt;'Novel integation of large language models']]],
+      [
+       tag=&gt;a,
+       href=&gt;&lt;http://metatron.phaseshift.studio&gt;,
+       class=&gt;'btn-primary',
+       out=&gt;[[tag=&gt;i,class=&gt;'bi bi-arrow-right']],
+       text=&gt;'Visit metatron']]],
+    [
+     tag=&gt;div,
+     class=&gt;'product-terminal',
+     out=&gt;[
+      [
+       tag=&gt;div,
+       class=&gt;'terminal-chrome',
+       out=&gt;[
+        [tag=&gt;span,class=&gt;'dot red'],
+        [tag=&gt;span,class=&gt;'dot yellow'],
+        [tag=&gt;span,class=&gt;'dot green'],
+        [tag=&gt;span,class=&gt;'title',text=&gt;'metatron — console']]],
+      [
+       tag=&gt;div,
+       class=&gt;'terminal-body',
+       out=&gt;[[
+ tag=&gt;pre,
+ out=&gt;[[
+ tag=&gt;code,
+ class=&gt;'language-mtron',
+ text=&gt;'*milky_way&gt;&gt;bodies.?star::T.where(&gt;&gt;planets.count...']]]]]]]]]]]]],
+ [tag=&gt;div,class=&gt;'section-divider'],
+ [
+  tag=&gt;section,
+  id=&gt;'capabilities',
+  out=&gt;[[
+ tag=&gt;div,
+ class=&gt;'section-inner',
+ out=&gt;[
+  [
+   tag=&gt;div,
+   class=&gt;'section-header reveal',
+   out=&gt;[
+    [tag=&gt;span,class=&gt;'eyebrow',text=&gt;'Expertise'],
+    [
+     tag=&gt;h2,
+     out=&gt;[[tag=&gt;span,class=&gt;'accent',text=&gt;'possible']],
+     text=&gt;'what is'],
+    [
+     tag=&gt;p,
+     text=&gt;'Deep engineering across the systems stack, from l...']]],
+  [
+   tag=&gt;div,
+   class=&gt;'cap-grid',
+   out=&gt;[
+    [
+     tag=&gt;div,
+     class=&gt;'cap-card reveal reveal-delay-1',
+     out=&gt;[
+      [tag=&gt;i,class=&gt;'bi bi-diagram-3 cap-icon'],
+      [tag=&gt;h4,text=&gt;'Language Design'],
+      [
+       tag=&gt;p,
+       text=&gt;'Grammar design, type system theory, compiler cons...']]],
+    [
+     tag=&gt;div,
+     class=&gt;'cap-card reveal reveal-delay-2',
+     out=&gt;[
+      [tag=&gt;i,class=&gt;'bi bi-grid-3x3-gap cap-icon'],
+      [tag=&gt;h4,text=&gt;'Distributed Systems'],
+      [
+       tag=&gt;p,
+       text=&gt;'data partitioning, replication and fault-tolerant...']]],
+    [
+     tag=&gt;div,
+     class=&gt;'cap-card reveal reveal-delay-3',
+     out=&gt;[
+      [tag=&gt;i,class=&gt;'bi bi-database cap-icon'],
+      [tag=&gt;h4,text=&gt;'Query Optimization'],
+      [
+       tag=&gt;p,
+       text=&gt;'Cost-based optimization, logical and physical pla...']]],
+    [
+     tag=&gt;div,
+     class=&gt;'cap-card reveal reveal-delay-4',
+     out=&gt;[
+      [tag=&gt;i,class=&gt;'bi bi-cpu cap-icon'],
+      [tag=&gt;h4,text=&gt;'Database Theory'],
+      [
+       tag=&gt;p,
+       text=&gt;'Relational algebra, graph data models, storage en...']]]]]]]]],
+ [tag=&gt;div,class=&gt;'section-divider'],
+ [
+  tag=&gt;section,
+  id=&gt;'code',
+  out=&gt;[[
+ tag=&gt;div,
+ class=&gt;'section-inner',
+ out=&gt;[[
+ tag=&gt;div,
+ class=&gt;'showcase-grid',
+ out=&gt;[
+  [
+   tag=&gt;div,
+   class=&gt;'showcase-text reveal',
+   out=&gt;[
+    [tag=&gt;span,class=&gt;'hero-eyebrow',style=&gt;'margin-bottom:1rem;',text=&gt;'Language Preview'],
+    [
+     tag=&gt;h3,
+     out=&gt;[[tag=&gt;br]],
+     text=&gt;'Traversal-Oriented Programming'],
+    [
+     tag=&gt;p,
+     out=&gt;[[
+ tag=&gt;strong,
+ out=&gt;[[tag=&gt;span,class=&gt;'red',text=&gt;'traversals']]]],
+     text=&gt;'metatron programs are — sequences of instructions...'],
+    [
+     tag=&gt;p,
+     out=&gt;[[
+ tag=&gt;strong,
+ out=&gt;[[tag=&gt;span,class=&gt;'red',text=&gt;'uri address space']]]],
+     text=&gt;'Types, instructions, and even data exist within a...'],
+    [
+     tag=&gt;a,
+     href=&gt;&lt;http://metatron.phaseshift.studio&gt;,
+     class=&gt;'btn-ghost',
+     out=&gt;[[tag=&gt;i,class=&gt;'bi bi-arrow-right']],
+     text=&gt;'Read the docs']]],
+  [
+   tag=&gt;div,
+   class=&gt;'showcase-terminal reveal reveal-delay-2',
+   out=&gt;[
+    [
+     tag=&gt;div,
+     class=&gt;'terminal-chrome',
+     out=&gt;[
+      [tag=&gt;span,class=&gt;'dot red'],
+      [tag=&gt;span,class=&gt;'dot yellow'],
+      [tag=&gt;span,class=&gt;'dot green'],
+      [
+       tag=&gt;span,
+       class=&gt;'title',
+       text=&gt;'type definitions — mtron console']]],
+    [
+     tag=&gt;div,
+     class=&gt;'terminal-body',
+     out=&gt;[[
+ tag=&gt;pre,
+ out=&gt;[[
+ tag=&gt;code,
+ class=&gt;'language-mtron',
+ text=&gt;"""// Type definitions
+nat    -&gt; int::T[?&gt;0]
+person ..."""]]]]]]]]]]]]],
+ [
+  tag=&gt;footer,
+  class=&gt;'footer',
+  id=&gt;'footer',
+  out=&gt;[
+   [
+    tag=&gt;div,
+    class=&gt;'footer-inner',
+    out=&gt;[
+     [
+      tag=&gt;div,
+      class=&gt;'footer-brand',
+      out=&gt;[[tag=&gt;span,text=&gt;'PhaseShift Studio']]],
+     [
+      tag=&gt;div,
+      class=&gt;'footer-links',
+      out=&gt;[
+       [
+        tag=&gt;a,
+        href=&gt;&lt;http://metatron.phaseshift.studio&gt;,
+        class=&gt;'footer-main-link',
+        text=&gt;'metatron'],
+       [
+        tag=&gt;span,
+        class=&gt;'footer-subs',
+        out=&gt;[
+         [tag=&gt;a,href=&gt;&lt;#&gt;,text=&gt;'Documentation'],
+         [tag=&gt;a,href=&gt;&lt;#&gt;,text=&gt;'Instruction Sets']]]]],
+     [tag=&gt;a,href=&gt;&lt;mailto:info@phaseshift.studio&gt;,class=&gt;'footer-email',text=&gt;'info@phaseshift.studio']]],
+   [
+    tag=&gt;div,
+    class=&gt;'footer-bottom',
+    out=&gt;[[
+ tag=&gt;span,
+ text=&gt;'© 2026 PhaseShift Studio. All rights reserved.']]]]],
+ [tag=&gt;script,src=&gt;&lt;highlight/highlight.min.js&gt;],
+ [
+  tag=&gt;script,
+  src=&gt;&lt;highlight/languages/mtron.min.js&gt;],
+ [
+  tag=&gt;script,
+  data=&gt;"""
+        hljs.highlightAll();
+        const obser..."""]]],
+ lang=&gt;'en']]
 mtron&gt;  *&lt;http://phaseshift.studio/html/head/title&gt;     <i class="conum" data-value="3"></i><b>(3)</b>
-==&gt;fail::[no active space supports pattern &lt;http://phaseshift.studio/html/head/title&gt;][...]@/sys/fail/430
+==&gt;'PhaseShift Studio — Systems Software &amp; Language Design'
 mtron&gt;  *&lt;http://phaseshift.studio&gt;.as(str::T)     <i class="conum" data-value="4"></i><b>(4)</b>
-==&gt;fail::[no active space supports pattern &lt;http://phaseshift.studio&gt;][...]@/sys/fail/436</code></pre>
+==&gt;"""&lt;html lang="en"&gt;
+ &lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+  &lt;link rel="icon" href="images/favicon-32x32.png" type="image/png"&gt;
+  &lt;link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet"&gt;
+  &lt;link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700;JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&amp;amp;display=swap" rel="stylesheet"&gt;
+  &lt;link href="css/metatron.css" rel="stylesheet"&gt;
+  &lt;style&gt;
+        :root {
+            --bg: #000000;
+            --bg-panel: #191C24;
+            --bg-elevated: #282c34;
+            --bg-medium: #202020;
+            --accent: #970207;
+            --accent-glow: #b00208;
+            --teal: #4db6ac;
+            --blue: #2652e5;
+            --magenta: #825181;
+            --green: #4d8813;
+            --yellow: #bac008;
+            --aqua: #167a96;
+            --text: #FFFFFF;
+            --text-muted: #6C7293;
+            --text-dim: #494554;
+            --border: rgba(108, 114, 147, 0.15);
+            --font-mono: 'JetBrains Mono', 'Fira Mono', Consolas, Menlo, Monaco, monospace;
+            --font-display: 'Oswald', sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html {
+            scroll-behavior: smooth;
+            background: var(--bg);
+        }
+
+        body {
+            font-family: var(--font-mono);
+            background: var(--bg);
+            color: var(--text-muted);
+            line-height: 1.6;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ---- background atmosphere ---- */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            background:
+                radial-gradient(ellipse 80% 60% at 50% 0%, rgba(151, 2, 7, 0.06) 0%, transparent 70%),
+                radial-gradient(ellipse 40% 50% at 80% 60%, rgba(22, 122, 150, 0.04) 0%, transparent 70%),
+                radial-gradient(circle at 20% 80%, rgba(77, 182, 172, 0.03) 0%, transparent 50%);
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0.4;
+            background-image: radial-gradient(circle, rgba(108, 114, 147, 0.12) 0.5px, transparent 0.5px);
+            background-size: 24px 24px;
+        }
+
+        /* ---- nav ---- */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+            height: 56px;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+
+        .nav.scrolled {
+            border-bottom-color: rgba(151, 2, 7, 0.3);
+            box-shadow: 0 1px 20px rgba(151, 2, 7, 0.08);
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--text);
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .nav-brand img {
+            height: 24px;
+            width: 24px;
+        }
+
+        .nav-brand span {
+            color: var(--accent);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-family: var(--font-display);
+            font-size: 0.85rem;
+            font-weight: 500;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            transition: color 0.2s;
+            position: relative;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: var(--accent);
+            transition: width 0.2s ease;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: var(--text);
+        }
+
+        .nav-links a:hover::after,
+        .nav-links a.active::after {
+            width: 100%;
+        }
+
+        .nav-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 4px;
+        }
+
+        /* ---- hero ---- */
+        .hero {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 6rem 2rem 4rem;
+        }
+
+        .hero-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .hero-text {
+            position: relative;
+        }
+
+        .hero-eyebrow {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 1.5rem;
+            display: block;
+        }
+
+        .hero-eyebrow::before {
+            content: '&gt; ';
+            color: var(--text-dim);
+        }
+
+        .hero h1 {
+            font-family: var(--font-display);
+            font-size: clamp(3rem, 6vw, 5.5rem);
+            font-weight: 700;
+            line-height: 1.05;
+            color: var(--text);
+            margin-bottom: 1.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+        }
+
+        .hero h1 .red {
+            color: var(--accent);
+            text-shadow: 0 0 40px rgba(151, 2, 7, 0.5), 0 0 80px rgba(151, 2, 7, 0.25);
+        }
+
+        .hero-tagline {
+            font-family: var(--font-mono);
+            font-size: 1.05rem;
+            color: var(--text-muted);
+            max-width: 480px;
+            margin-bottom: 2.5rem;
+            line-height: 1.7;
+        }
+
+        .hero-tagline strong {
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 28px;
+            background: var(--accent);
+            color: #fff;
+            font-family: var(--font-display);
+            font-size: 0.9rem;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            position: relative;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-glow);
+            box-shadow: 0 0 30px rgba(151, 2, 7, 0.4), 0 0 60px rgba(151, 2, 7, 0.15);
+            transform: translateY(-1px);
+            color: #fff;
+        }
+
+        .btn-ghost {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 28px;
+            background: transparent;
+            color: var(--text-muted);
+            font-family: var(--font-display);
+            font-size: 0.9rem;
+            font-weight: 500;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            text-decoration: none;
+            border: 1px solid rgba(108, 114, 147, 0.3);
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .btn-ghost:hover {
+            border-color: var(--accent);
+            color: var(--text);
+            box-shadow: 0 0 20px rgba(151, 2, 7, 0.15);
+        }
+
+        .hero-visual {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hero-visual img {
+            width: 100%;
+            max-width: 480px;
+            height: auto;
+            filter: drop-shadow(0 0 80px rgba(151, 2, 7, 0.3)) drop-shadow(0 0 160px rgba(151, 2, 7, 0.12)) drop-shadow(0 0 240px rgba(151, 2, 7, 0.06));
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-16px); }
+        }
+
+        .hero-visual::after {
+            content: '';
+            position: absolute;
+            bottom: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60%;
+            height: 20px;
+            background: radial-gradient(ellipse, rgba(151, 2, 7, 0.3) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: shadow-pulse 6s ease-in-out infinite;
+        }
+
+        @keyframes shadow-pulse {
+            0%, 100% { opacity: 0.5; transform: translateX(-50%) scale(1); }
+            50% { opacity: 0.8; transform: translateX(-50%) scale(1.1); }
+        }
+
+        /* ---- section headers ---- */
+        .section-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .section-header .eyebrow {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 0.75rem;
+            display: block;
+        }
+
+        .section-header h2 {
+            font-family: var(--font-display);
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 700;
+            color: var(--text);
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            line-height: 1.2;
+        }
+
+        .section-header h2 .accent {
+            color: var(--accent);
+        }
+
+        .section-header p {
+            max-width: 560px;
+            margin: 1rem auto 0;
+            font-size: 0.95rem;
+            color: var(--text-muted);
+        }
+
+        section {
+            position: relative;
+            z-index: 1;
+            padding: 6rem 2rem;
+        }
+
+        .section-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* ---- products ---- */
+        #products {
+            background: linear-gradient(180deg, transparent 0%, rgba(25, 28, 36, 0.5) 50%, transparent 100%);
+        }
+
+        .product-card {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            align-items: center;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            padding: 3rem;
+            position: relative;
+            overflow: hidden;
+            transition: border-color 0.3s ease;
+        }
+
+        .product-card:hover {
+            border-color: rgba(151, 2, 7, 0.3);
+        }
+
+        .product-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .product-card:hover::before {
+            opacity: 1;
+        }
+
+        .product-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: rgba(151, 2, 7, 0.15);
+            color: var(--accent);
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            margin-bottom: 1.25rem;
+        }
+
+        .product-card h3 {
+            font-family: var(--font-display);
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 1rem;
+        }
+
+        .product-card h3 .dot {
+            color: var(--accent);
+        }
+
+        .product-card p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.7;
+            margin-bottom: 1.5rem;
+        }
+
+        .feature-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            margin-bottom: 2rem;
+        }
+
+        .feature-list li {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .feature-list li::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: var(--accent);
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .product-terminal {
+            background: #0a0a0f;
+            border: 1px solid rgba(108, 114, 147, 0.2);
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .terminal-chrome {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 14px;
+            background: rgba(25, 28, 36, 0.8);
+            border-bottom: 1px solid rgba(108, 114, 147, 0.1);
+        }
+
+        .terminal-chrome .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .terminal-chrome .dot.red    { background: #970207; }
+        .terminal-chrome .dot.yellow { background: #bac008; }
+        .terminal-chrome .dot.green  { background: #4d8813; }
+
+        .terminal-chrome .title {
+            margin-left: 10px;
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            letter-spacing: 0.05em;
+        }
+
+        .terminal-body {
+            padding: 1.25rem 1.5rem;
+            font-family: var(--font-mono);
+            font-size: 0.78rem;
+            line-height: 1.75;
+            color: var(--text-muted);
+            overflow-x: auto;
+            white-space: pre;
+        }
+
+        .terminal-body .hljs {
+            background: transparent;
+            padding: 0;
+            font-size: inherit;
+            line-height: inherit;
+        }
+
+        /* ---- capabilities ---- */
+        #capabilities {
+            background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.4) 40%, rgba(0, 0, 0, 0.4) 60%, transparent 100%);
+        }
+
+        .cap-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1px;
+            background: var(--border);
+            border: 1px solid var(--border);
+        }
+
+        .cap-card {
+            background: var(--bg-panel);
+            padding: 2.5rem 2rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cap-card::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--accent);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .cap-card:hover {
+            background: var(--bg-elevated);
+        }
+
+        .cap-card:hover::after {
+            transform: scaleX(1);
+        }
+
+        .cap-icon {
+            font-size: 1.6rem;
+            color: var(--accent);
+            margin-bottom: 1.25rem;
+            display: block;
+            opacity: 0.8;
+        }
+
+        .cap-card h4 {
+            font-family: var(--font-display);
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.75rem;
+        }
+
+        .cap-card p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        /* ---- code showcase ---- */
+        .showcase-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            align-items: center;
+        }
+
+        .showcase-text h3 {
+            font-family: var(--font-display);
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text);
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            margin-bottom: 1rem;
+        }
+
+        .showcase-text p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.7;
+            margin-bottom: 1.5rem;
+        }
+
+        .showcase-terminal {
+            background: #0a0a0f;
+            border: 1px solid rgba(108, 114, 147, 0.2);
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba(151, 2, 7, 0.06);
+        }
+
+        .showcase-terminal .terminal-body {
+            max-height: 420px;
+            overflow-y: auto;
+        }
+
+        .showcase-terminal .terminal-body::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .showcase-terminal .terminal-body::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .showcase-terminal .terminal-body::-webkit-scrollbar-thumb {
+            background: rgba(108, 114, 147, 0.2);
+            border-radius: 2px;
+        }
+
+        /* ---- footer ---- */
+        .footer {
+            position: relative;
+            z-index: 1;
+            background: var(--bg-panel);
+            border-top: 1px solid var(--border);
+            padding: 2.5rem 2rem 1.5rem;
+        }
+
+        .footer-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-brand {
+            font-family: var(--font-display);
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            white-space: nowrap;
+        }
+
+        .footer-brand span {
+            color: var(--accent);
+        }
+
+        .footer-links {
+            display: flex;
+            align-items: baseline;
+            gap: 1.25rem;
+        }
+
+        .footer-main-link {
+            font-family: var(--font-display);
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text);
+            text-decoration: none;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            transition: color 0.2s;
+        }
+
+        .footer-main-link:hover {
+            color: var(--accent);
+        }
+
+        .footer-subs {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .footer-subs a {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .footer-subs a:hover {
+            color: var(--text);
+        }
+
+        .footer-email {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .footer-email:hover {
+            color: var(--accent);
+        }
+
+        .footer-bottom {
+            max-width: 1200px;
+            margin: 1.5rem auto 0;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            font-size: 0.7rem;
+            color: var(--text-dim);
+        }
+
+        /* ---- reveal animations ---- */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.7s ease, transform 0.7s ease;
+        }
+
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .reveal-delay-1 { transition-delay: 0.05s; }
+        .reveal-delay-2 { transition-delay: 0.15s; }
+        .reveal-delay-3 { transition-delay: 0.25s; }
+        .reveal-delay-4 { transition-delay: 0.35s; }
+
+        /* ---- divider ---- */
+        .section-divider {
+            position: relative;
+            z-index: 1;
+            height: 1px;
+            max-width: 1200px;
+            margin: 0 auto;
+            background: linear-gradient(90deg, transparent, rgba(108, 114, 147, 0.15), transparent);
+        }
+
+        /* ---- mobile ---- */
+        @media (max-width: 968px) {
+            .hero-inner {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .hero-tagline {
+                max-width: 100%;
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            .hero-actions {
+                justify-content: center;
+            }
+
+            .hero-visual img {
+                max-width: 300px;
+            }
+
+            .product-card {
+                grid-template-columns: 1fr;
+                padding: 2rem;
+            }
+
+            .cap-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .showcase-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-inner {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .nav-links {
+                position: fixed;
+                top: 56px;
+                left: 0;
+                right: 0;
+                background: rgba(0, 0, 0, 0.95);
+                backdrop-filter: blur(16px);
+                -webkit-backdrop-filter: blur(16px);
+                flex-direction: column;
+                gap: 0;
+                padding: 1rem 0;
+                border-bottom: 1px solid var(--border);
+                transform: translateY(-100%);
+                opacity: 0;
+                pointer-events: none;
+                transition: all 0.3s ease;
+            }
+
+            .nav-links.open {
+                transform: translateY(0);
+                opacity: 1;
+                pointer-events: auto;
+            }
+
+            .nav-links a {
+                display: block;
+                padding: 0.75rem 2rem;
+                font-size: 0.9rem;
+            }
+
+            .nav-toggle {
+                display: block;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .cap-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-inner {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            section {
+                padding: 4rem 1.25rem;
+            }
+
+            .hero {
+                padding: 5rem 1.25rem 3rem;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .product-card {
+                padding: 1.5rem;
+            }
+        }
+    &lt;/style&gt;
+ &lt;/head&gt;
+ &lt;body&gt;
+  &lt;nav class="nav" id="navbar"&gt;
+   &lt;a href="#" class="nav-brand" style="color:var(--accent);"&gt;PHASESHIFT STUDIO&lt;img src="images/favicon-32x32.png" alt="PS"&gt;&lt;/a&gt;&lt;button class="nav-toggle" id="navToggle" aria-label="Toggle navigation"&gt;&lt;i class="bi bi-list"&gt;&lt;/i&gt;&lt;/button&gt;
+   &lt;ul class="nav-links" id="navLinks"&gt;
+    &lt;li&gt;&lt;a href="#hero" class="active"&gt;Home&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="#products"&gt;Product&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="#capabilities"&gt;Capabilities&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="#code"&gt;Explore&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="mailto:info@phaseshift.studio"&gt;Contact&lt;/a&gt;&lt;/li&gt;
+   &lt;/ul&gt;
+  &lt;/nav&gt;
+  &lt;section class="hero" id="hero"&gt;
+   &lt;div class="hero-inner"&gt;
+    &lt;div class="hero-text"&gt;
+     &lt;span class="hero-eyebrow"&gt;Systems Software &amp;amp; Language Design&lt;/span&gt;
+     &lt;h1&gt;Phase Studio&lt;span class="red"&gt;Shift&lt;/span&gt;
+      &lt;br&gt;&lt;/h1&gt;
+     &lt;p class="hero-tagline"&gt;Building for the boundary between languages, databases, artificial intelligence models, and distributed systems. The flagship product, , reimagines how heterogeneous data is interconnected, queried, and transformed.&lt;strong&gt;&lt;span class="red"&gt;data infrastructure&lt;/span&gt;&lt;/strong&gt;&lt;strong&gt;metatron&lt;/strong&gt;&lt;/p&gt;
+     &lt;div class="hero-actions"&gt;
+      &lt;a href="http://metatron.phaseshift.studio" class="btn-primary"&gt;Explore metatron&lt;i class="bi bi-arrow-right"&gt;&lt;/i&gt;&lt;/a&gt;&lt;a href="#products" class="btn-ghost"&gt;PhaseShift Studio capabilities&lt;/a&gt;
+     &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class="hero-visual"&gt;
+     &lt;img src="images/metatron-character.png" alt="metatron"&gt;
+    &lt;/div&gt;
+   &lt;/div&gt;
+  &lt;/section&gt;
+  &lt;div class="section-divider"&gt;&lt;/div&gt;
+  &lt;section id="products"&gt;
+   &lt;div class="section-inner"&gt;
+    &lt;div class="section-header reveal"&gt;
+     &lt;span class="eyebrow"&gt;Flagship Product&lt;/span&gt;
+     &lt;h2&gt;&lt;span class="accent"&gt;metatron&lt;/span&gt;&lt;sup&gt;&lt;small&gt;&lt;small&gt;&lt;small&gt;™&lt;/small&gt;&lt;/small&gt;&lt;/small&gt;&lt;/sup&gt;&lt;/h2&gt;
+     &lt;p&gt;A concatenative, flow-oriented traversal language that operates over heterogeneous data sources.&lt;/p&gt;
+    &lt;/div&gt;
+    &lt;div class="product-card reveal"&gt;
+     &lt;div&gt;
+      &lt;span class="product-badge"&gt;v0.1-snapshot&lt;/span&gt;
+      &lt;h3&gt;metatron&lt;span class="dot"&gt;.&lt;/span&gt;&lt;/h3&gt;
+      &lt;p&gt;A Turing-complete language for composing data flow instructions across relational, graph, document, and streaming data sources. metatron's instruction sets provide domain-specific views over the underlying data, enabling expressive, composable, and type-safe traversals.&lt;/p&gt;
+      &lt;ul class="feature-list"&gt;
+       &lt;li&gt;Concatenative, stack-based execution model&lt;/li&gt;
+       &lt;li&gt;Structural type system with refinement types&lt;/li&gt;
+       &lt;li&gt;URI-addressable instruction space&lt;/li&gt;
+       &lt;li&gt;Pluggable storage backends via embeddings&lt;/li&gt;
+       &lt;li&gt;Streaming analytical processing modes&lt;/li&gt;
+       &lt;li&gt;Novel integation of large language models&lt;/li&gt;
+      &lt;/ul&gt;
+      &lt;a href="http://metatron.phaseshift.studio" class="btn-primary"&gt;Visit metatron&lt;i class="bi bi-arrow-right"&gt;&lt;/i&gt;&lt;/a&gt;
+     &lt;/div&gt;
+     &lt;div class="product-terminal"&gt;
+      &lt;div class="terminal-chrome"&gt;
+       &lt;span class="dot red"&gt;&lt;/span&gt;&lt;span class="dot yellow"&gt;&lt;/span&gt;&lt;span class="dot green"&gt;&lt;/span&gt;&lt;span class="title"&gt;metatron — console&lt;/span&gt;
+      &lt;/div&gt;
+      &lt;div class="terminal-body"&gt;
+       &lt;pre&gt;&lt;code class="language-mtron"&gt;*milky_way&amp;gt;&amp;gt;bodies.?star::T.where(&amp;gt;&amp;gt;planets.count().?&amp;gt;(0)).-&amp;lt;[
+       name            =&amp;gt; &amp;gt;&amp;gt;name,
+       stats           =&amp;gt; -&amp;lt;[kilos =&amp;gt; &amp;gt;&amp;gt;mass.as(kg::T),
+                             area =&amp;gt; _(s=&amp;gt;?star::T){ *pi.mult(*s.&amp;gt;&amp;gt;radius.pow(2.0)).as(km::T) }],
+       primary_planets =&amp;gt; &amp;gt;&amp;gt;planets.order(&amp;gt;&amp;gt;mass).take(1).&amp;gt;&amp;gt;name]
+==&amp;gt;[name=&amp;gt;'Sol', stats=&amp;gt;[kilos=&amp;gt;1.989e30, area=&amp;gt;6.0877e12],
+    primary_planets=&amp;gt;['Jupiter']]&lt;/code&gt;&lt;/pre&gt;
+      &lt;/div&gt;
+     &lt;/div&gt;
+    &lt;/div&gt;
+   &lt;/div&gt;
+  &lt;/section&gt;
+  &lt;div class="section-divider"&gt;&lt;/div&gt;
+  &lt;section id="capabilities"&gt;
+   &lt;div class="section-inner"&gt;
+    &lt;div class="section-header reveal"&gt;
+     &lt;span class="eyebrow"&gt;Expertise&lt;/span&gt;
+     &lt;h2&gt;what is&lt;span class="accent"&gt;possible&lt;/span&gt;&lt;/h2&gt;
+     &lt;p&gt;Deep engineering across the systems stack, from language design to distributed runtime infrastructure.&lt;/p&gt;
+    &lt;/div&gt;
+    &lt;div class="cap-grid"&gt;
+     &lt;div class="cap-card reveal reveal-delay-1"&gt;
+      &lt;i class="bi bi-diagram-3 cap-icon"&gt;&lt;/i&gt;
+      &lt;h4&gt;Language Design&lt;/h4&gt;
+      &lt;p&gt;Grammar design, type system theory, compiler construction, and runtime optimization for domain-specific and general-purpose languages.&lt;/p&gt;
+     &lt;/div&gt;
+     &lt;div class="cap-card reveal reveal-delay-2"&gt;
+      &lt;i class="bi bi-grid-3x3-gap cap-icon"&gt;&lt;/i&gt;
+      &lt;h4&gt;Distributed Systems&lt;/h4&gt;
+      &lt;p&gt;data partitioning, replication and fault-tolerant service topologies.&lt;/p&gt;
+     &lt;/div&gt;
+     &lt;div class="cap-card reveal reveal-delay-3"&gt;
+      &lt;i class="bi bi-database cap-icon"&gt;&lt;/i&gt;
+      &lt;h4&gt;Query Optimization&lt;/h4&gt;
+      &lt;p&gt;Cost-based optimization, logical and physical plan rewriting, cardinality estimation, and adaptive execution engines.&lt;/p&gt;
+     &lt;/div&gt;
+     &lt;div class="cap-card reveal reveal-delay-4"&gt;
+      &lt;i class="bi bi-cpu cap-icon"&gt;&lt;/i&gt;
+      &lt;h4&gt;Database Theory&lt;/h4&gt;
+      &lt;p&gt;Relational algebra, graph data models, storage engine design, indexing structures, and multi-model data integration.&lt;/p&gt;
+     &lt;/div&gt;
+    &lt;/div&gt;
+   &lt;/div&gt;
+  &lt;/section&gt;
+  &lt;div class="section-divider"&gt;&lt;/div&gt;
+  &lt;section id="code"&gt;
+   &lt;div class="section-inner"&gt;
+    &lt;div class="showcase-grid"&gt;
+     &lt;div class="showcase-text reveal"&gt;
+      &lt;span class="hero-eyebrow" style="margin-bottom:1rem;"&gt;Language Preview&lt;/span&gt;
+      &lt;h3&gt;Traversal-Oriented Programming
+       &lt;br&gt;&lt;/h3&gt;
+      &lt;p&gt;metatron programs are — sequences of instructions that navigate, filter, and transform data. The language is concatenative: instructions compose by stacking, enabling a natural pipe-forward style where data flows through successive transformations.&lt;strong&gt;&lt;span class="red"&gt;traversals&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+      &lt;p&gt;Types, instructions, and even data exist within a unified , enabling reflection, memoization, and serialization as first-class language features.&lt;strong&gt;&lt;span class="red"&gt;uri address space&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+      &lt;a href="http://metatron.phaseshift.studio" class="btn-ghost"&gt;Read the docs&lt;i class="bi bi-arrow-right"&gt;&lt;/i&gt;&lt;/a&gt;
+     &lt;/div&gt;
+     &lt;div class="showcase-terminal reveal reveal-delay-2"&gt;
+      &lt;div class="terminal-chrome"&gt;
+       &lt;span class="dot red"&gt;&lt;/span&gt;&lt;span class="dot yellow"&gt;&lt;/span&gt;&lt;span class="dot green"&gt;&lt;/span&gt;&lt;span class="title"&gt;type definitions — mtron console&lt;/span&gt;
+      &lt;/div&gt;
+      &lt;div class="terminal-body"&gt;
+       &lt;pre&gt;&lt;code class="language-mtron"&gt;// Type definitions
+nat    -&amp;gt; int::T[?&amp;gt;0]
+person -&amp;gt; rec::T[?[name        =&amp;gt; str::T,
+                   age{?}::nat =&amp;gt; nat::T,
+                   knows       =&amp;gt; person{*}::T]]
+people -&amp;gt; person{*}::T
+
+// Instance data
+sumer -&amp;gt; people::{
+  enoch -&amp;gt; person::[name=&amp;gt;'enoch', age=&amp;gt;29],
+  enki  -&amp;gt; person::[name=&amp;gt;'enki', knows=&amp;gt;!*enoch]}
+
+// Traversals
+metatron&amp;gt; *enki&amp;gt;&amp;gt;knows&amp;gt;&amp;gt;name
+==&amp;gt;'enoch'
+
+metatron&amp;gt; *#.as[name      =&amp;gt; _,
+               coauthor  =&amp;gt; &amp;gt;&amp;gt;knows.where[&amp;gt;&amp;gt;age.?&amp;gt;21]&amp;gt;&amp;gt;name]
+==&amp;gt;[name=&amp;gt;'enki', coauthor=&amp;gt;'enoch']&lt;/code&gt;&lt;/pre&gt;
+      &lt;/div&gt;
+     &lt;/div&gt;
+    &lt;/div&gt;
+   &lt;/div&gt;
+  &lt;/section&gt;
+  &lt;footer class="footer" id="footer"&gt;
+   &lt;div class="footer-inner"&gt;
+    &lt;div class="footer-brand"&gt;
+     &lt;span&gt;PhaseShift Studio&lt;/span&gt;
+    &lt;/div&gt;
+    &lt;div class="footer-links"&gt;
+     &lt;a href="http://metatron.phaseshift.studio" class="footer-main-link"&gt;metatron&lt;/a&gt;&lt;span class="footer-subs"&gt;&lt;a href="#"&gt;Documentation&lt;/a&gt;&lt;a href="#"&gt;Instruction Sets&lt;/a&gt;&lt;/span&gt;
+    &lt;/div&gt;
+    &lt;a href="mailto:info@phaseshift.studio" class="footer-email"&gt;info@phaseshift.studio&lt;/a&gt;
+   &lt;/div&gt;
+   &lt;div class="footer-bottom"&gt;
+    &lt;span&gt;© 2026 PhaseShift Studio. All rights reserved.&lt;/span&gt;
+   &lt;/div&gt;
+  &lt;/footer&gt;
+  &lt;script src="highlight/highlight.min.js"&gt;&lt;/script&gt;
+  &lt;script src="highlight/languages/mtron.min.js"&gt;&lt;/script&gt;
+  &lt;script&gt;
+        hljs.highlightAll();
+        const observer = new IntersectionObserver((entries) =&gt; {
+            entries.forEach(entry =&gt; {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+
+        document.querySelectorAll('.reveal').forEach(el =&gt; observer.observe(el));
+
+        // ---- sticky nav shadow ----
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () =&gt; {
+            navbar.classList.toggle('scrolled', window.scrollY &gt; 20);
+
+            // update active nav link based on scroll position
+            const sections = document.querySelectorAll('section[id], footer[id]');
+            const navLinks = document.querySelectorAll('.nav-links a');
+            let current = 'hero';
+
+            sections.forEach(section =&gt; {
+                const top = section.offsetTop - 100;
+                if (window.scrollY &gt;= top) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link =&gt; {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        });
+
+        // ---- mobile nav toggle ----
+        const navToggle = document.getElementById('navToggle');
+        const navLinks = document.getElementById('navLinks');
+
+        navToggle.addEventListener('click', () =&gt; {
+            navLinks.classList.toggle('open');
+            const icon = navToggle.querySelector('i');
+            icon.classList.toggle('bi-list');
+            icon.classList.toggle('bi-x-lg');
+        });
+
+        // close mobile nav on link click
+        navLinks.querySelectorAll('a').forEach(link =&gt; {
+            link.addEventListener('click', () =&gt; {
+                navLinks.classList.remove('open');
+                const icon = navToggle.querySelector('i');
+                icon.classList.add('bi-list');
+                icon.classList.remove('bi-x-lg');
+            });
+        });
+    &lt;/script&gt;
+ &lt;/body&gt;
+&lt;/html&gt;"""</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -7511,14 +8960,64 @@ mtron&gt;  *&lt;http://phaseshift.studio&gt;.as(str::T)     <i class="conum" dat
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *&lt;http://localhost:8088/v1&gt;
-==&gt;fail::[no active space supports pattern http://localhost:8088/v1][...]@/sys/fail/442
 mtron&gt; *&lt;http://localhost:8088/v1/models&gt;
-==&gt;fail::[no active space supports pattern http://localhost:8088/v1/models][...]@/sys/fail/448
+==&gt;[
+ object=&gt;list,
+ data=&gt;[
+  [id=&gt;mistralai_devstral-small-2507,object=&gt;model],
+  [id=&gt;qwen3-coder-30b-a3b-instruct,object=&gt;model],
+  [id=&gt;qwen3-tts-cpp,object=&gt;model],
+  [id=&gt;qwen3:latest,object=&gt;model],
+  [id=&gt;'smollm:1.7b',object=&gt;model],
+  [id=&gt;MeetAISmall__latest,object=&gt;model],
+  [id=&gt;gpt-oss__latest,object=&gt;model]]]
 mtron&gt; *&lt;http://localhost:8088/v1/models/data/0/id&gt;
-==&gt;fail::[no active space supports pattern http://localhost:8088/v1/models/data/0/id][...]@/sys/fail/454
+==&gt;qwen3-coder-30b-a3b-instruct
 mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
          *&lt;http://localhost:8088/v1/models/data/0/id&gt;}&gt;
-==&gt;fail::[no active space supports pattern &lt;http://localhost:8088/api/models/config-json/fail::[no active space supports pattern http://localhost:8088/v1/models/data/0/id][...]@/sys/fail/460&gt;][...]@/sys/fail/466</code></pre>
+==&gt;[
+ parameters=&gt;[
+  model=&gt;qwen3__latest,
+  top_p=&gt;0.9500,
+  top_k=&gt;20,
+  min_p=&gt;0,
+  temperature=&gt;0.6000,
+  max_tokens=&gt;0,
+  repeat_penalty=&gt;1,
+  tfz=&gt;1,
+  typical_p=&gt;1,
+  seed=&gt;-1,
+  logprobs=&gt;false],
+ name=&gt;qwen3:latest,
+ f16=&gt;false,
+ threads=&gt;8,
+ debug=&gt;false,
+ embeddings=&gt;false,
+ backend=&gt;llama-cpp,
+ template=&gt;[use_tokenizer_template=&gt;true],
+ known_usecases=&gt;[FLAG_CHAT],
+ pipeline=&gt;[=&gt;],
+ function=&gt;[
+  grammar=&gt;[disable=&gt;true],
+  automatic_tool_parsing_fallback=&gt;true],
+ reasoning=&gt;[=&gt;],
+ mirostat_eta=&gt;0.1000,
+ mirostat_tau=&gt;5,
+ mirostat=&gt;0,
+ gpu_layers=&gt;99999999,
+ mmap=&gt;true,
+ mmlock=&gt;false,
+ low_vram=&gt;false,
+ reranking=&gt;false,
+ context_size=&gt;8192,
+ limit_mm_per_prompt=&gt;[=&gt;],
+ diffusers=&gt;[=&gt;],
+ grpc=&gt;[=&gt;],
+ tts=&gt;[=&gt;],
+ description=&gt;'Imported from ollama://qwen3:latest',
+ options=&gt;[use_jinja:true],
+ mcp=&gt;[=&gt;],
+ agent=&gt;[=&gt;]]</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -7581,7 +9080,43 @@ mtron&gt; */m/llm/inst/+?dom=model</code></pre>
             type=&gt;&gt;&gt;object.as(uri::T),
             provider=&gt;|!*/sys/space/localai].as(model::T)
          .chat('are you there?')
-==&gt;fail::[no active space supports pattern http://localhost:8088/v1/models/data/0][...]@/sys/fail/472</code></pre>
+==&gt;fail::[illegalargumentexception: template cannot be null or blank
+  	dev.langchain4j.internal.Exceptions [line 25]
+  	dev.langchain4j.internal.ValidationUtils [line 169]
+  	dev.langchain4j.internal.ValidationUtils [line 156]
+  	dev.langchain4j.model.input.PromptTemplate [line 83]
+  	dev.langchain4j.model.input.PromptTemplate [line 186]][...]@/sys/fail/466
+==&gt;fail::[[
+ type=&gt;model,
+ provider=&gt;!*/sys/space/localai] is not a isa([
+  provider=&gt;catalog::T,
+  name=&gt;uri::T,
+  {?}desc=&gt;str::T,
+  {?}cost=&gt;{?}[
+   in=&gt;currency::T,
+   out=&gt;currency::T],
+  {?}size=&gt;bB::T,
+  {?}feature=&gt;feature::T])
+  [
+   provider=&gt;(==&gt;provider)=&gt;catalog::[
+   host=&gt;http://localhost:8088/v1,
+   pattern=&gt;localai:#,
+   name=&gt;localai,
+   route=&gt;[localai:=&gt;&lt;&gt;],
+   space=&gt;[=&gt;],
+   q=&gt;[subq::[
+   pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+   pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+   qless_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+   pattern=&gt;subq,
+   obj=&gt;[,]]]]=&gt;==&gt;catalog::T,
+   noobj=&gt;(X=&gt;name)=&gt;noobj=&gt;X=&gt;uri::T,
+   noobj=&gt;(==&gt;{?}desc)=&gt;noobj=&gt;/=&gt;str::T,
+   noobj=&gt;(==&gt;{?}cost)=&gt;noobj=&gt;==&gt;{?}[
+   in=&gt;currency::T,
+   out=&gt;currency::T],
+   noobj=&gt;(==&gt;{?}size)=&gt;noobj=&gt;/=&gt;bB::T,
+   noobj=&gt;(==&gt;{?}feature)=&gt;noobj=&gt;/=&gt;feature::T]][...]@/sys/fail/460</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -7596,15 +9131,14 @@ mtron&gt; */m/llm/inst/+?dom=model</code></pre>
 <div class="collapse position-relative" id="card-20">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-20" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
 <button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
-<h2 id="_dcmnt_space" class="discrete">Dcmnt Space</h2>
-<details>
-<summary class="title">/m/dcmnt instset import</summary>
-<div class="content">
+<h2 id="_web_technologies_with_mweb_2" class="discrete">Web Technologies with /m/web</h2>
+</div>
+</div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; import(/m/dcmnt)
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; import(/m/web)
 ==&gt;[
- pattern=&gt;/m/dcmnt/#,
+ pattern=&gt;/m/web/#,
  q=&gt;[docq::[
  pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
  pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
@@ -7612,378 +9146,1721 @@ mtron&gt; */m/llm/inst/+?dom=model</code></pre>
  obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
  inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
  space=&gt;[super=&gt;!*/m],
- constq=&gt;[
-  !*/m/mach/io/serializer/json/simple,
-  _id@/m/dcmnt/_id],
+ const=&gt;[
+  !*/m/mach/io/serializer/xml,
+  !*/m/mach/io/serializer/html,
+  !*/m/mach/io/serializer/json,
+  !*/m/mach/io/serializer/markdown,
+  !*/m/mach/io/serializer/plain/text],
  type=&gt;[
-  collection::T,
-  dcmntspace::T],
+  content_type::T,
+  xml::T,
+  html::T,
+  json::T,
+  css::T,
+  markdown::T,
+  httpspace::T,
+  wsspace::T,
+  websocket::T,
+  wshandler::T,
+  wsclient::T,
+  mtron_ws::T,
+  mcp_ws::T,
+  mcp_mtron_ws::T,
+  socket::T,
+  http_handler::T,
+  http_client::T,
+  mtron_http::T,
+  mcp_http::T,
+  mcp_mtron_http::T,
+  base::T],
  inst=&gt;[
-  mql?rec{*}&lt;=dcmntspace(uri::T,rec::T),
-  mql?rec{*}&lt;=collection(rec::T)],
- rewrite=&gt;[
-  /m/dcmnt/inst/rewrite/mql_count?code{?}&lt;=code(),
-  /m/dcmnt/inst/rewrite/mql_sum?code{?}&lt;=code(),
-  /m/dcmnt/inst/rewrite/mql_mean?code{?}&lt;=code(),
-  /m/dcmnt/inst/rewrite/mql_limit?code{?}&lt;=code(),
-  /m/dcmnt/inst/rewrite/mql_has?code{?}&lt;=code(),
-  /m/dcmnt/inst/rewrite/mql_where?code{?}&lt;=code(),
-  /m/dcmnt/inst/rewrite/mql_where_count?code{?}&lt;=code(),
-  /m/dcmnt/inst/rewrite/mql_select?code{?}&lt;=code()]]@/m/dcmnt</code></pre>
+  format?str&lt;=markdown(),
+  as?xml&lt;=str(xml::T),
+  as?html&lt;=str(html::T),
+  as?markdown&lt;=str(markdown::T),
+  as?str&lt;=html(str::T),
+  as?str&lt;=markdown(str::T),
+  as?html&lt;=markdown(html::T),
+  as?json&lt;=str(json::T),
+  as(json_str::T)]]@/m/web</code></pre>
+</div>
+</div>
+<div class="exampleblock">
+<div class="content">
+<h3 id="_http_space_2" class="discrete">HTTP Space</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; httpspace::[
+        host     =&gt; http://localhost:8777,
+        pattern  =&gt; http://#,
+        route    =&gt; [/        =&gt; &lt;&gt;,
+                     /mcp     =&gt; mcp_mtron_http,
+                     /docs    =&gt; target/docs,
+                     /console =&gt; src/main/resources/web/console]
+       ]@/sys/space/web/http</code></pre>
 </div>
 </div>
 </div>
-</details>
+</div>
+<h3 id="_html_type_2" class="discrete">HTML Type</h3>
 <div class="paragraph">
-<p>A <a href="https://en.wikipedia.org/wiki/Document-oriented_database">document database</a> models a domain as a set of "<a href="https://www.json.org/">JSON</a>"-ish documents&#8201;&#8212;&#8201;in the lexicon of formality, such databases are understood as a collection of <a href="https://en.wikipedia.org/wiki/Associative_array">associative arrays</a>/dictionary/hashmap composed of string keys and object values, where values can be nested indefinitely. In metatron, a document database is best captured by a  <strong>dcmntspace</strong> of type <code>rec::T</code>. The mapping between JSON and metatron is quite natural. Two semantically equivalent structures are provided below.</p>
-</div>
-<table class="tableblock frame-all grid-all stretch mx-auto">
-<colgroup>
-<col style="width: 50%;">
-<col style="width: 50%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-center valign-middle">JSON</th>
-<th class="tableblock halign-center valign-middle">mtron</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-middle"><div class="content"><div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-json" data-lang="json">{ "databases" : {
-  "graphdb": {"vertices":10234,"edges":1234545 },
-  "docdb": {"collections": 2, "documents":{
-   "users": 102,
-   "data": 234335
-  }},
-  "tabledb": {"tables": 2,"rows": [1334,34345]}
-}}</code></pre>
-</div>
-</div></div></td>
-<td class="tableblock halign-left valign-middle"><div class="content"><div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">[ databases =&gt; [
-  graphdb =&gt; [vertices =&gt; 10234, edges =&gt; 1234545],
-  docdb =&gt; [collections =&gt; 2, documents =&gt; [
-    users =&gt; 102,
-    data =&gt; 234335
-  ]],
-  tabledb =&gt; [tables =&gt; 2, rows =&gt; [1334,34345]]
-]]</code></pre>
-</div>
-</div></div></td>
-</tr>
-</tbody>
-</table>
-<div class="openblock card">
-<div class="content">
-<h4 id="_uri_keys_vs_str_keys" class="discrete">uri keys vs str keys</h4>
-<div class="paragraph">
-<p>one nicety that immediately jumps out when comparing JSON and mtron is mtron&#8217;s lack of quotes. this is because the mtron keys are not strings, but URIs. it is typically best to use URIs over strings for the following reasons:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>URIs are <strong>less verbose</strong> as they don&#8217;t require quotes.</p>
-</li>
-<li>
-<p>URIs have a well-defined <strong>hierarchical structure</strong> that is useful for referencing nested structures.</p>
-</li>
-<li>
-<p>URIs support <strong>wildcards and templates</strong> for pattern matching and bulk read/writes.</p>
-</li>
-</ul>
-</div>
-</div>
+<p>The type <code>html::T &lt; rec::T</code> (a refinement of <code>rec::T</code>) represents an <a href="https://en.wikipedia.org/wiki/HTML">HTML</a> document.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */m/dcmnt/space/dcmntspace
-==&gt;space::T[?[
-  pattern=&gt;uri::T,
-  host=&gt;uri::T,
-  {?}serializer=&gt;uri::T,
-  route=&gt;[uri::T=&gt;uri::T],
-  {?}root=&gt;type::T,
-  {?}schema=&gt;[
-   {?}instset=&gt;instset::T,
-   {?}native=&gt;rec{?}::T]]][inst?dcmntspace&lt;=#{?}(rec::T)]</code></pre>
-</div>
-</div>
-<table class="tableblock frame-all grid-all stretch table-bordered center">
-<colgroup>
-<col style="width: 50%;">
-<col style="width: 50%;">
-</colgroup>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>when creating a <code>dcmntspace</code>, it is useful to define a <strong>schema</strong>. a schema is simply an <code>instset</code> by another name. a
-type from the schema is selected to be the root. for schemaless behavior (where arbitrary collections can be created),
-the root should simply be <code>rec::T</code>. should the database enforce closed-world semantics,
-the root is <code>rec::T[?[collection_name=&gt;collection_type{*}::T]]</code>.</p>
-</div></div></td>
-<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *instset
-==&gt;rec::T[?[
-  {?}pattern=&gt;uri::T,
-  {?}constq=&gt;[#{?}::T],
-  {?}type=&gt;{?}[#{*}::T],
-  {?}inst=&gt;{?}[inst::T],
-  {?}rewrite=&gt;{?}[inst::T],
-  {?}sugar=&gt;{?}[lst::T]]][/m/instset/ctor?instset&lt;=#{?}(#::T)]</code></pre>
-</div>
-</div></div></td>
-</tr>
-</tbody>
-</table>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; animal    -&gt; rec::T[?[name=&gt;str::T,  age=&gt;int::T]]@animal     <i class="conum" data-value="1"></i><b>(1)</b>
-==&gt;rec::T[?[
-  name=&gt;str::T,
-  age=&gt;int::T]]@animal
-mtron&gt; chicken   -&gt; animal::T@chicken     <i class="conum" data-value="2"></i><b>(2)</b>
-==&gt;animal::T@chicken
-mtron&gt; equipment -&gt; rec::T[?[model=&gt;uri::T, year=&gt;int::T]]@equipment     <i class="conum" data-value="3"></i><b>(3)</b>
-==&gt;rec::T[?[
-  model=&gt;uri::T,
-  year=&gt;int::T]]@equipment
-mtron&gt; farmset::[type=&gt;[animal::T,equipment::T,chicken::T]]@/m/dcmnt/schema/farmset     <i class="conum" data-value="4"></i><b>(4)</b>
-==&gt;farmset::[type=&gt;[
- animal::T,
- equipment::T,
- chicken::T]]@/m/dcmnt/schema/farmset</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; html::T     <i class="conum" data-value="1"></i><b>(1)</b>
+mtron&gt;  *&lt;http://phaseshift.studio/&gt;     <i class="conum" data-value="2"></i><b>(2)</b>
+==&gt;html::[html=&gt;[
+ head=&gt;[
+  title=&gt;'PhaseShift Studio — Systems Software &amp; Language D...',
+  out=&gt;[
+   [tag=&gt;meta,charset=&gt;'UTF-8'],
+   [
+    tag=&gt;meta,
+    name=&gt;'viewport',
+    content=&gt;'width=device-width, initial-scale=1.0'],
+   [tag=&gt;link,rel=&gt;'icon',href=&gt;&lt;images/favicon-32x32.png&gt;,type=&gt;'image/png'],
+   [
+    tag=&gt;link,
+    href=&gt;&lt;https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css&gt;,
+    rel=&gt;'stylesheet'],
+   [
+    tag=&gt;link,
+    href=&gt;&lt;https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700;JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&amp;display=swap&gt;,
+    rel=&gt;'stylesheet'],
+   [tag=&gt;link,href=&gt;&lt;css/metatron.css&gt;,rel=&gt;'stylesheet'],
+   [
+    tag=&gt;style,
+    data=&gt;"""
+        :root {
+            --bg: #000000;
+     ..."""]]],
+ body=&gt;[out=&gt;[
+ [
+  tag=&gt;nav,
+  class=&gt;'nav',
+  id=&gt;'navbar',
+  out=&gt;[
+   [
+    tag=&gt;a,
+    href=&gt;&lt;#&gt;,
+    class=&gt;'nav-brand',
+    style=&gt;'color:var(--accent);',
+    out=&gt;[[tag=&gt;img,src=&gt;&lt;images/favicon-32x32.png&gt;,alt=&gt;'PS']],
+    text=&gt;'PHASESHIFT STUDIO'],
+   [
+    tag=&gt;button,
+    class=&gt;'nav-toggle',
+    id=&gt;'navToggle',
+    aria-label=&gt;'Toggle navigation',
+    out=&gt;[[tag=&gt;i,class=&gt;'bi bi-list']]],
+   [
+    tag=&gt;ul,
+    class=&gt;'nav-links',
+    id=&gt;'navLinks',
+    out=&gt;[
+     [
+      tag=&gt;li,
+      out=&gt;[[tag=&gt;a,href=&gt;&lt;#hero&gt;,class=&gt;'active',text=&gt;'Home']]],
+     [
+      tag=&gt;li,
+      out=&gt;[[tag=&gt;a,href=&gt;&lt;#products&gt;,text=&gt;'Product']]],
+     [
+      tag=&gt;li,
+      out=&gt;[[tag=&gt;a,href=&gt;&lt;#capabilities&gt;,text=&gt;'Capabilities']]],
+     [
+      tag=&gt;li,
+      out=&gt;[[tag=&gt;a,href=&gt;&lt;#code&gt;,text=&gt;'Explore']]],
+     [
+      tag=&gt;li,
+      out=&gt;[[tag=&gt;a,href=&gt;&lt;mailto:info@phaseshift.studio&gt;,text=&gt;'Contact']]]]]]],
+ [
+  tag=&gt;section,
+  class=&gt;'hero',
+  id=&gt;'hero',
+  out=&gt;[[
+ tag=&gt;div,
+ class=&gt;'hero-inner',
+ out=&gt;[
+  [
+   tag=&gt;div,
+   class=&gt;'hero-text',
+   out=&gt;[
+    [
+     tag=&gt;span,
+     class=&gt;'hero-eyebrow',
+     text=&gt;'Systems Software &amp; Language Design'],
+    [
+     tag=&gt;h1,
+     out=&gt;[
+      [tag=&gt;span,class=&gt;'red',text=&gt;'Shift'],
+      [tag=&gt;br]],
+     text=&gt;'Phase Studio'],
+    [
+     tag=&gt;p,
+     class=&gt;'hero-tagline',
+     out=&gt;[
+      [
+       tag=&gt;strong,
+       out=&gt;[[tag=&gt;span,class=&gt;'red',text=&gt;'data infrastructure']]],
+      [tag=&gt;strong,text=&gt;'metatron']],
+     text=&gt;'Building for the boundary between languages, data...'],
+    [
+     tag=&gt;div,
+     class=&gt;'hero-actions',
+     out=&gt;[
+      [
+       tag=&gt;a,
+       href=&gt;&lt;http://metatron.phaseshift.studio&gt;,
+       class=&gt;'btn-primary',
+       out=&gt;[[tag=&gt;i,class=&gt;'bi bi-arrow-right']],
+       text=&gt;'Explore metatron'],
+      [tag=&gt;a,href=&gt;&lt;#products&gt;,class=&gt;'btn-ghost',text=&gt;'PhaseShift Studio capabilities']]]]],
+  [
+   tag=&gt;div,
+   class=&gt;'hero-visual',
+   out=&gt;[[tag=&gt;img,src=&gt;&lt;images/metatron-character.png&gt;,alt=&gt;'metatron']]]]]]],
+ [tag=&gt;div,class=&gt;'section-divider'],
+ [
+  tag=&gt;section,
+  id=&gt;'products',
+  out=&gt;[[
+ tag=&gt;div,
+ class=&gt;'section-inner',
+ out=&gt;[
+  [
+   tag=&gt;div,
+   class=&gt;'section-header reveal',
+   out=&gt;[
+    [tag=&gt;span,class=&gt;'eyebrow',text=&gt;'Flagship Product'],
+    [
+     tag=&gt;h2,
+     out=&gt;[
+      [tag=&gt;span,class=&gt;'accent',text=&gt;'metatron'],
+      [
+       tag=&gt;sup,
+       out=&gt;[[
+ tag=&gt;small,
+ out=&gt;[[
+ tag=&gt;small,
+ out=&gt;[[tag=&gt;small,text=&gt;'™']]]]]]]]],
+    [
+     tag=&gt;p,
+     text=&gt;'A concatenative, flow-oriented traversal language...']]],
+  [
+   tag=&gt;div,
+   class=&gt;'product-card reveal',
+   out=&gt;[
+    [
+     tag=&gt;div,
+     out=&gt;[
+      [tag=&gt;span,class=&gt;'product-badge',text=&gt;'v0.1-snapshot'],
+      [
+       tag=&gt;h3,
+       out=&gt;[[tag=&gt;span,class=&gt;'dot',text=&gt;'.']],
+       text=&gt;'metatron'],
+      [
+       tag=&gt;p,
+       text=&gt;'A Turing-complete language for composing data flo...'],
+      [
+       tag=&gt;ul,
+       class=&gt;'feature-list',
+       out=&gt;[
+        [
+         tag=&gt;li,
+         text=&gt;'Concatenative, stack-based execution model'],
+        [
+         tag=&gt;li,
+         text=&gt;'Structural type system with refinement types'],
+        [
+         tag=&gt;li,
+         text=&gt;'URI-addressable instruction space'],
+        [
+         tag=&gt;li,
+         text=&gt;'Pluggable storage backends via embeddings'],
+        [
+         tag=&gt;li,
+         text=&gt;'Streaming analytical processing modes'],
+        [
+         tag=&gt;li,
+         text=&gt;'Novel integation of large language models']]],
+      [
+       tag=&gt;a,
+       href=&gt;&lt;http://metatron.phaseshift.studio&gt;,
+       class=&gt;'btn-primary',
+       out=&gt;[[tag=&gt;i,class=&gt;'bi bi-arrow-right']],
+       text=&gt;'Visit metatron']]],
+    [
+     tag=&gt;div,
+     class=&gt;'product-terminal',
+     out=&gt;[
+      [
+       tag=&gt;div,
+       class=&gt;'terminal-chrome',
+       out=&gt;[
+        [tag=&gt;span,class=&gt;'dot red'],
+        [tag=&gt;span,class=&gt;'dot yellow'],
+        [tag=&gt;span,class=&gt;'dot green'],
+        [tag=&gt;span,class=&gt;'title',text=&gt;'metatron — console']]],
+      [
+       tag=&gt;div,
+       class=&gt;'terminal-body',
+       out=&gt;[[
+ tag=&gt;pre,
+ out=&gt;[[
+ tag=&gt;code,
+ class=&gt;'language-mtron',
+ text=&gt;'*milky_way&gt;&gt;bodies.?star::T.where(&gt;&gt;planets.count...']]]]]]]]]]]]],
+ [tag=&gt;div,class=&gt;'section-divider'],
+ [
+  tag=&gt;section,
+  id=&gt;'capabilities',
+  out=&gt;[[
+ tag=&gt;div,
+ class=&gt;'section-inner',
+ out=&gt;[
+  [
+   tag=&gt;div,
+   class=&gt;'section-header reveal',
+   out=&gt;[
+    [tag=&gt;span,class=&gt;'eyebrow',text=&gt;'Expertise'],
+    [
+     tag=&gt;h2,
+     out=&gt;[[tag=&gt;span,class=&gt;'accent',text=&gt;'possible']],
+     text=&gt;'what is'],
+    [
+     tag=&gt;p,
+     text=&gt;'Deep engineering across the systems stack, from l...']]],
+  [
+   tag=&gt;div,
+   class=&gt;'cap-grid',
+   out=&gt;[
+    [
+     tag=&gt;div,
+     class=&gt;'cap-card reveal reveal-delay-1',
+     out=&gt;[
+      [tag=&gt;i,class=&gt;'bi bi-diagram-3 cap-icon'],
+      [tag=&gt;h4,text=&gt;'Language Design'],
+      [
+       tag=&gt;p,
+       text=&gt;'Grammar design, type system theory, compiler cons...']]],
+    [
+     tag=&gt;div,
+     class=&gt;'cap-card reveal reveal-delay-2',
+     out=&gt;[
+      [tag=&gt;i,class=&gt;'bi bi-grid-3x3-gap cap-icon'],
+      [tag=&gt;h4,text=&gt;'Distributed Systems'],
+      [
+       tag=&gt;p,
+       text=&gt;'data partitioning, replication and fault-tolerant...']]],
+    [
+     tag=&gt;div,
+     class=&gt;'cap-card reveal reveal-delay-3',
+     out=&gt;[
+      [tag=&gt;i,class=&gt;'bi bi-database cap-icon'],
+      [tag=&gt;h4,text=&gt;'Query Optimization'],
+      [
+       tag=&gt;p,
+       text=&gt;'Cost-based optimization, logical and physical pla...']]],
+    [
+     tag=&gt;div,
+     class=&gt;'cap-card reveal reveal-delay-4',
+     out=&gt;[
+      [tag=&gt;i,class=&gt;'bi bi-cpu cap-icon'],
+      [tag=&gt;h4,text=&gt;'Database Theory'],
+      [
+       tag=&gt;p,
+       text=&gt;'Relational algebra, graph data models, storage en...']]]]]]]]],
+ [tag=&gt;div,class=&gt;'section-divider'],
+ [
+  tag=&gt;section,
+  id=&gt;'code',
+  out=&gt;[[
+ tag=&gt;div,
+ class=&gt;'section-inner',
+ out=&gt;[[
+ tag=&gt;div,
+ class=&gt;'showcase-grid',
+ out=&gt;[
+  [
+   tag=&gt;div,
+   class=&gt;'showcase-text reveal',
+   out=&gt;[
+    [tag=&gt;span,class=&gt;'hero-eyebrow',style=&gt;'margin-bottom:1rem;',text=&gt;'Language Preview'],
+    [
+     tag=&gt;h3,
+     out=&gt;[[tag=&gt;br]],
+     text=&gt;'Traversal-Oriented Programming'],
+    [
+     tag=&gt;p,
+     out=&gt;[[
+ tag=&gt;strong,
+ out=&gt;[[tag=&gt;span,class=&gt;'red',text=&gt;'traversals']]]],
+     text=&gt;'metatron programs are — sequences of instructions...'],
+    [
+     tag=&gt;p,
+     out=&gt;[[
+ tag=&gt;strong,
+ out=&gt;[[tag=&gt;span,class=&gt;'red',text=&gt;'uri address space']]]],
+     text=&gt;'Types, instructions, and even data exist within a...'],
+    [
+     tag=&gt;a,
+     href=&gt;&lt;http://metatron.phaseshift.studio&gt;,
+     class=&gt;'btn-ghost',
+     out=&gt;[[tag=&gt;i,class=&gt;'bi bi-arrow-right']],
+     text=&gt;'Read the docs']]],
+  [
+   tag=&gt;div,
+   class=&gt;'showcase-terminal reveal reveal-delay-2',
+   out=&gt;[
+    [
+     tag=&gt;div,
+     class=&gt;'terminal-chrome',
+     out=&gt;[
+      [tag=&gt;span,class=&gt;'dot red'],
+      [tag=&gt;span,class=&gt;'dot yellow'],
+      [tag=&gt;span,class=&gt;'dot green'],
+      [
+       tag=&gt;span,
+       class=&gt;'title',
+       text=&gt;'type definitions — mtron console']]],
+    [
+     tag=&gt;div,
+     class=&gt;'terminal-body',
+     out=&gt;[[
+ tag=&gt;pre,
+ out=&gt;[[
+ tag=&gt;code,
+ class=&gt;'language-mtron',
+ text=&gt;"""// Type definitions
+nat    -&gt; int::T[?&gt;0]
+person ..."""]]]]]]]]]]]]],
+ [
+  tag=&gt;footer,
+  class=&gt;'footer',
+  id=&gt;'footer',
+  out=&gt;[
+   [
+    tag=&gt;div,
+    class=&gt;'footer-inner',
+    out=&gt;[
+     [
+      tag=&gt;div,
+      class=&gt;'footer-brand',
+      out=&gt;[[tag=&gt;span,text=&gt;'PhaseShift Studio']]],
+     [
+      tag=&gt;div,
+      class=&gt;'footer-links',
+      out=&gt;[
+       [
+        tag=&gt;a,
+        href=&gt;&lt;http://metatron.phaseshift.studio&gt;,
+        class=&gt;'footer-main-link',
+        text=&gt;'metatron'],
+       [
+        tag=&gt;span,
+        class=&gt;'footer-subs',
+        out=&gt;[
+         [tag=&gt;a,href=&gt;&lt;#&gt;,text=&gt;'Documentation'],
+         [tag=&gt;a,href=&gt;&lt;#&gt;,text=&gt;'Instruction Sets']]]]],
+     [tag=&gt;a,href=&gt;&lt;mailto:info@phaseshift.studio&gt;,class=&gt;'footer-email',text=&gt;'info@phaseshift.studio']]],
+   [
+    tag=&gt;div,
+    class=&gt;'footer-bottom',
+    out=&gt;[[
+ tag=&gt;span,
+ text=&gt;'© 2026 PhaseShift Studio. All rights reserved.']]]]],
+ [tag=&gt;script,src=&gt;&lt;highlight/highlight.min.js&gt;],
+ [
+  tag=&gt;script,
+  src=&gt;&lt;highlight/languages/mtron.min.js&gt;],
+ [
+  tag=&gt;script,
+  data=&gt;"""
+        hljs.highlightAll();
+        const obser..."""]]],
+ lang=&gt;'en']]
+mtron&gt;  *&lt;http://phaseshift.studio/html/head/title&gt;     <i class="conum" data-value="3"></i><b>(3)</b>
+==&gt;'PhaseShift Studio — Systems Software &amp; Language Design'
+mtron&gt;  *&lt;http://phaseshift.studio&gt;.as(str::T)     <i class="conum" data-value="4"></i><b>(4)</b>
+==&gt;"""&lt;html lang="en"&gt;
+ &lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+  &lt;link rel="icon" href="images/favicon-32x32.png" type="image/png"&gt;
+  &lt;link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet"&gt;
+  &lt;link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700;JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&amp;amp;display=swap" rel="stylesheet"&gt;
+  &lt;link href="css/metatron.css" rel="stylesheet"&gt;
+  &lt;style&gt;
+        :root {
+            --bg: #000000;
+            --bg-panel: #191C24;
+            --bg-elevated: #282c34;
+            --bg-medium: #202020;
+            --accent: #970207;
+            --accent-glow: #b00208;
+            --teal: #4db6ac;
+            --blue: #2652e5;
+            --magenta: #825181;
+            --green: #4d8813;
+            --yellow: #bac008;
+            --aqua: #167a96;
+            --text: #FFFFFF;
+            --text-muted: #6C7293;
+            --text-dim: #494554;
+            --border: rgba(108, 114, 147, 0.15);
+            --font-mono: 'JetBrains Mono', 'Fira Mono', Consolas, Menlo, Monaco, monospace;
+            --font-display: 'Oswald', sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html {
+            scroll-behavior: smooth;
+            background: var(--bg);
+        }
+
+        body {
+            font-family: var(--font-mono);
+            background: var(--bg);
+            color: var(--text-muted);
+            line-height: 1.6;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ---- background atmosphere ---- */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            background:
+                radial-gradient(ellipse 80% 60% at 50% 0%, rgba(151, 2, 7, 0.06) 0%, transparent 70%),
+                radial-gradient(ellipse 40% 50% at 80% 60%, rgba(22, 122, 150, 0.04) 0%, transparent 70%),
+                radial-gradient(circle at 20% 80%, rgba(77, 182, 172, 0.03) 0%, transparent 50%);
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0.4;
+            background-image: radial-gradient(circle, rgba(108, 114, 147, 0.12) 0.5px, transparent 0.5px);
+            background-size: 24px 24px;
+        }
+
+        /* ---- nav ---- */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+            height: 56px;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+
+        .nav.scrolled {
+            border-bottom-color: rgba(151, 2, 7, 0.3);
+            box-shadow: 0 1px 20px rgba(151, 2, 7, 0.08);
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--text);
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .nav-brand img {
+            height: 24px;
+            width: 24px;
+        }
+
+        .nav-brand span {
+            color: var(--accent);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-family: var(--font-display);
+            font-size: 0.85rem;
+            font-weight: 500;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            transition: color 0.2s;
+            position: relative;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: var(--accent);
+            transition: width 0.2s ease;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: var(--text);
+        }
+
+        .nav-links a:hover::after,
+        .nav-links a.active::after {
+            width: 100%;
+        }
+
+        .nav-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 4px;
+        }
+
+        /* ---- hero ---- */
+        .hero {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 6rem 2rem 4rem;
+        }
+
+        .hero-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .hero-text {
+            position: relative;
+        }
+
+        .hero-eyebrow {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 1.5rem;
+            display: block;
+        }
+
+        .hero-eyebrow::before {
+            content: '&gt; ';
+            color: var(--text-dim);
+        }
+
+        .hero h1 {
+            font-family: var(--font-display);
+            font-size: clamp(3rem, 6vw, 5.5rem);
+            font-weight: 700;
+            line-height: 1.05;
+            color: var(--text);
+            margin-bottom: 1.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+        }
+
+        .hero h1 .red {
+            color: var(--accent);
+            text-shadow: 0 0 40px rgba(151, 2, 7, 0.5), 0 0 80px rgba(151, 2, 7, 0.25);
+        }
+
+        .hero-tagline {
+            font-family: var(--font-mono);
+            font-size: 1.05rem;
+            color: var(--text-muted);
+            max-width: 480px;
+            margin-bottom: 2.5rem;
+            line-height: 1.7;
+        }
+
+        .hero-tagline strong {
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 28px;
+            background: var(--accent);
+            color: #fff;
+            font-family: var(--font-display);
+            font-size: 0.9rem;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            position: relative;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-glow);
+            box-shadow: 0 0 30px rgba(151, 2, 7, 0.4), 0 0 60px rgba(151, 2, 7, 0.15);
+            transform: translateY(-1px);
+            color: #fff;
+        }
+
+        .btn-ghost {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 28px;
+            background: transparent;
+            color: var(--text-muted);
+            font-family: var(--font-display);
+            font-size: 0.9rem;
+            font-weight: 500;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            text-decoration: none;
+            border: 1px solid rgba(108, 114, 147, 0.3);
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .btn-ghost:hover {
+            border-color: var(--accent);
+            color: var(--text);
+            box-shadow: 0 0 20px rgba(151, 2, 7, 0.15);
+        }
+
+        .hero-visual {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hero-visual img {
+            width: 100%;
+            max-width: 480px;
+            height: auto;
+            filter: drop-shadow(0 0 80px rgba(151, 2, 7, 0.3)) drop-shadow(0 0 160px rgba(151, 2, 7, 0.12)) drop-shadow(0 0 240px rgba(151, 2, 7, 0.06));
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-16px); }
+        }
+
+        .hero-visual::after {
+            content: '';
+            position: absolute;
+            bottom: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60%;
+            height: 20px;
+            background: radial-gradient(ellipse, rgba(151, 2, 7, 0.3) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: shadow-pulse 6s ease-in-out infinite;
+        }
+
+        @keyframes shadow-pulse {
+            0%, 100% { opacity: 0.5; transform: translateX(-50%) scale(1); }
+            50% { opacity: 0.8; transform: translateX(-50%) scale(1.1); }
+        }
+
+        /* ---- section headers ---- */
+        .section-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .section-header .eyebrow {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 0.75rem;
+            display: block;
+        }
+
+        .section-header h2 {
+            font-family: var(--font-display);
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 700;
+            color: var(--text);
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            line-height: 1.2;
+        }
+
+        .section-header h2 .accent {
+            color: var(--accent);
+        }
+
+        .section-header p {
+            max-width: 560px;
+            margin: 1rem auto 0;
+            font-size: 0.95rem;
+            color: var(--text-muted);
+        }
+
+        section {
+            position: relative;
+            z-index: 1;
+            padding: 6rem 2rem;
+        }
+
+        .section-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* ---- products ---- */
+        #products {
+            background: linear-gradient(180deg, transparent 0%, rgba(25, 28, 36, 0.5) 50%, transparent 100%);
+        }
+
+        .product-card {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            align-items: center;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            padding: 3rem;
+            position: relative;
+            overflow: hidden;
+            transition: border-color 0.3s ease;
+        }
+
+        .product-card:hover {
+            border-color: rgba(151, 2, 7, 0.3);
+        }
+
+        .product-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .product-card:hover::before {
+            opacity: 1;
+        }
+
+        .product-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: rgba(151, 2, 7, 0.15);
+            color: var(--accent);
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            margin-bottom: 1.25rem;
+        }
+
+        .product-card h3 {
+            font-family: var(--font-display);
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 1rem;
+        }
+
+        .product-card h3 .dot {
+            color: var(--accent);
+        }
+
+        .product-card p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.7;
+            margin-bottom: 1.5rem;
+        }
+
+        .feature-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            margin-bottom: 2rem;
+        }
+
+        .feature-list li {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .feature-list li::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: var(--accent);
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .product-terminal {
+            background: #0a0a0f;
+            border: 1px solid rgba(108, 114, 147, 0.2);
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .terminal-chrome {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 14px;
+            background: rgba(25, 28, 36, 0.8);
+            border-bottom: 1px solid rgba(108, 114, 147, 0.1);
+        }
+
+        .terminal-chrome .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .terminal-chrome .dot.red    { background: #970207; }
+        .terminal-chrome .dot.yellow { background: #bac008; }
+        .terminal-chrome .dot.green  { background: #4d8813; }
+
+        .terminal-chrome .title {
+            margin-left: 10px;
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            letter-spacing: 0.05em;
+        }
+
+        .terminal-body {
+            padding: 1.25rem 1.5rem;
+            font-family: var(--font-mono);
+            font-size: 0.78rem;
+            line-height: 1.75;
+            color: var(--text-muted);
+            overflow-x: auto;
+            white-space: pre;
+        }
+
+        .terminal-body .hljs {
+            background: transparent;
+            padding: 0;
+            font-size: inherit;
+            line-height: inherit;
+        }
+
+        /* ---- capabilities ---- */
+        #capabilities {
+            background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.4) 40%, rgba(0, 0, 0, 0.4) 60%, transparent 100%);
+        }
+
+        .cap-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1px;
+            background: var(--border);
+            border: 1px solid var(--border);
+        }
+
+        .cap-card {
+            background: var(--bg-panel);
+            padding: 2.5rem 2rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cap-card::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--accent);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .cap-card:hover {
+            background: var(--bg-elevated);
+        }
+
+        .cap-card:hover::after {
+            transform: scaleX(1);
+        }
+
+        .cap-icon {
+            font-size: 1.6rem;
+            color: var(--accent);
+            margin-bottom: 1.25rem;
+            display: block;
+            opacity: 0.8;
+        }
+
+        .cap-card h4 {
+            font-family: var(--font-display);
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.75rem;
+        }
+
+        .cap-card p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        /* ---- code showcase ---- */
+        .showcase-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            align-items: center;
+        }
+
+        .showcase-text h3 {
+            font-family: var(--font-display);
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text);
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            margin-bottom: 1rem;
+        }
+
+        .showcase-text p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.7;
+            margin-bottom: 1.5rem;
+        }
+
+        .showcase-terminal {
+            background: #0a0a0f;
+            border: 1px solid rgba(108, 114, 147, 0.2);
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba(151, 2, 7, 0.06);
+        }
+
+        .showcase-terminal .terminal-body {
+            max-height: 420px;
+            overflow-y: auto;
+        }
+
+        .showcase-terminal .terminal-body::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .showcase-terminal .terminal-body::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .showcase-terminal .terminal-body::-webkit-scrollbar-thumb {
+            background: rgba(108, 114, 147, 0.2);
+            border-radius: 2px;
+        }
+
+        /* ---- footer ---- */
+        .footer {
+            position: relative;
+            z-index: 1;
+            background: var(--bg-panel);
+            border-top: 1px solid var(--border);
+            padding: 2.5rem 2rem 1.5rem;
+        }
+
+        .footer-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-brand {
+            font-family: var(--font-display);
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            white-space: nowrap;
+        }
+
+        .footer-brand span {
+            color: var(--accent);
+        }
+
+        .footer-links {
+            display: flex;
+            align-items: baseline;
+            gap: 1.25rem;
+        }
+
+        .footer-main-link {
+            font-family: var(--font-display);
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text);
+            text-decoration: none;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            transition: color 0.2s;
+        }
+
+        .footer-main-link:hover {
+            color: var(--accent);
+        }
+
+        .footer-subs {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .footer-subs a {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .footer-subs a:hover {
+            color: var(--text);
+        }
+
+        .footer-email {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .footer-email:hover {
+            color: var(--accent);
+        }
+
+        .footer-bottom {
+            max-width: 1200px;
+            margin: 1.5rem auto 0;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            font-size: 0.7rem;
+            color: var(--text-dim);
+        }
+
+        /* ---- reveal animations ---- */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.7s ease, transform 0.7s ease;
+        }
+
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .reveal-delay-1 { transition-delay: 0.05s; }
+        .reveal-delay-2 { transition-delay: 0.15s; }
+        .reveal-delay-3 { transition-delay: 0.25s; }
+        .reveal-delay-4 { transition-delay: 0.35s; }
+
+        /* ---- divider ---- */
+        .section-divider {
+            position: relative;
+            z-index: 1;
+            height: 1px;
+            max-width: 1200px;
+            margin: 0 auto;
+            background: linear-gradient(90deg, transparent, rgba(108, 114, 147, 0.15), transparent);
+        }
+
+        /* ---- mobile ---- */
+        @media (max-width: 968px) {
+            .hero-inner {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .hero-tagline {
+                max-width: 100%;
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            .hero-actions {
+                justify-content: center;
+            }
+
+            .hero-visual img {
+                max-width: 300px;
+            }
+
+            .product-card {
+                grid-template-columns: 1fr;
+                padding: 2rem;
+            }
+
+            .cap-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .showcase-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-inner {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .nav-links {
+                position: fixed;
+                top: 56px;
+                left: 0;
+                right: 0;
+                background: rgba(0, 0, 0, 0.95);
+                backdrop-filter: blur(16px);
+                -webkit-backdrop-filter: blur(16px);
+                flex-direction: column;
+                gap: 0;
+                padding: 1rem 0;
+                border-bottom: 1px solid var(--border);
+                transform: translateY(-100%);
+                opacity: 0;
+                pointer-events: none;
+                transition: all 0.3s ease;
+            }
+
+            .nav-links.open {
+                transform: translateY(0);
+                opacity: 1;
+                pointer-events: auto;
+            }
+
+            .nav-links a {
+                display: block;
+                padding: 0.75rem 2rem;
+                font-size: 0.9rem;
+            }
+
+            .nav-toggle {
+                display: block;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .cap-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-inner {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            section {
+                padding: 4rem 1.25rem;
+            }
+
+            .hero {
+                padding: 5rem 1.25rem 3rem;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .product-card {
+                padding: 1.5rem;
+            }
+        }
+    &lt;/style&gt;
+ &lt;/head&gt;
+ &lt;body&gt;
+  &lt;nav class="nav" id="navbar"&gt;
+   &lt;a href="#" class="nav-brand" style="color:var(--accent);"&gt;PHASESHIFT STUDIO&lt;img src="images/favicon-32x32.png" alt="PS"&gt;&lt;/a&gt;&lt;button class="nav-toggle" id="navToggle" aria-label="Toggle navigation"&gt;&lt;i class="bi bi-list"&gt;&lt;/i&gt;&lt;/button&gt;
+   &lt;ul class="nav-links" id="navLinks"&gt;
+    &lt;li&gt;&lt;a href="#hero" class="active"&gt;Home&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="#products"&gt;Product&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="#capabilities"&gt;Capabilities&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="#code"&gt;Explore&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="mailto:info@phaseshift.studio"&gt;Contact&lt;/a&gt;&lt;/li&gt;
+   &lt;/ul&gt;
+  &lt;/nav&gt;
+  &lt;section class="hero" id="hero"&gt;
+   &lt;div class="hero-inner"&gt;
+    &lt;div class="hero-text"&gt;
+     &lt;span class="hero-eyebrow"&gt;Systems Software &amp;amp; Language Design&lt;/span&gt;
+     &lt;h1&gt;Phase Studio&lt;span class="red"&gt;Shift&lt;/span&gt;
+      &lt;br&gt;&lt;/h1&gt;
+     &lt;p class="hero-tagline"&gt;Building for the boundary between languages, databases, artificial intelligence models, and distributed systems. The flagship product, , reimagines how heterogeneous data is interconnected, queried, and transformed.&lt;strong&gt;&lt;span class="red"&gt;data infrastructure&lt;/span&gt;&lt;/strong&gt;&lt;strong&gt;metatron&lt;/strong&gt;&lt;/p&gt;
+     &lt;div class="hero-actions"&gt;
+      &lt;a href="http://metatron.phaseshift.studio" class="btn-primary"&gt;Explore metatron&lt;i class="bi bi-arrow-right"&gt;&lt;/i&gt;&lt;/a&gt;&lt;a href="#products" class="btn-ghost"&gt;PhaseShift Studio capabilities&lt;/a&gt;
+     &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class="hero-visual"&gt;
+     &lt;img src="images/metatron-character.png" alt="metatron"&gt;
+    &lt;/div&gt;
+   &lt;/div&gt;
+  &lt;/section&gt;
+  &lt;div class="section-divider"&gt;&lt;/div&gt;
+  &lt;section id="products"&gt;
+   &lt;div class="section-inner"&gt;
+    &lt;div class="section-header reveal"&gt;
+     &lt;span class="eyebrow"&gt;Flagship Product&lt;/span&gt;
+     &lt;h2&gt;&lt;span class="accent"&gt;metatron&lt;/span&gt;&lt;sup&gt;&lt;small&gt;&lt;small&gt;&lt;small&gt;™&lt;/small&gt;&lt;/small&gt;&lt;/small&gt;&lt;/sup&gt;&lt;/h2&gt;
+     &lt;p&gt;A concatenative, flow-oriented traversal language that operates over heterogeneous data sources.&lt;/p&gt;
+    &lt;/div&gt;
+    &lt;div class="product-card reveal"&gt;
+     &lt;div&gt;
+      &lt;span class="product-badge"&gt;v0.1-snapshot&lt;/span&gt;
+      &lt;h3&gt;metatron&lt;span class="dot"&gt;.&lt;/span&gt;&lt;/h3&gt;
+      &lt;p&gt;A Turing-complete language for composing data flow instructions across relational, graph, document, and streaming data sources. metatron's instruction sets provide domain-specific views over the underlying data, enabling expressive, composable, and type-safe traversals.&lt;/p&gt;
+      &lt;ul class="feature-list"&gt;
+       &lt;li&gt;Concatenative, stack-based execution model&lt;/li&gt;
+       &lt;li&gt;Structural type system with refinement types&lt;/li&gt;
+       &lt;li&gt;URI-addressable instruction space&lt;/li&gt;
+       &lt;li&gt;Pluggable storage backends via embeddings&lt;/li&gt;
+       &lt;li&gt;Streaming analytical processing modes&lt;/li&gt;
+       &lt;li&gt;Novel integation of large language models&lt;/li&gt;
+      &lt;/ul&gt;
+      &lt;a href="http://metatron.phaseshift.studio" class="btn-primary"&gt;Visit metatron&lt;i class="bi bi-arrow-right"&gt;&lt;/i&gt;&lt;/a&gt;
+     &lt;/div&gt;
+     &lt;div class="product-terminal"&gt;
+      &lt;div class="terminal-chrome"&gt;
+       &lt;span class="dot red"&gt;&lt;/span&gt;&lt;span class="dot yellow"&gt;&lt;/span&gt;&lt;span class="dot green"&gt;&lt;/span&gt;&lt;span class="title"&gt;metatron — console&lt;/span&gt;
+      &lt;/div&gt;
+      &lt;div class="terminal-body"&gt;
+       &lt;pre&gt;&lt;code class="language-mtron"&gt;*milky_way&amp;gt;&amp;gt;bodies.?star::T.where(&amp;gt;&amp;gt;planets.count().?&amp;gt;(0)).-&amp;lt;[
+       name            =&amp;gt; &amp;gt;&amp;gt;name,
+       stats           =&amp;gt; -&amp;lt;[kilos =&amp;gt; &amp;gt;&amp;gt;mass.as(kg::T),
+                             area =&amp;gt; _(s=&amp;gt;?star::T){ *pi.mult(*s.&amp;gt;&amp;gt;radius.pow(2.0)).as(km::T) }],
+       primary_planets =&amp;gt; &amp;gt;&amp;gt;planets.order(&amp;gt;&amp;gt;mass).take(1).&amp;gt;&amp;gt;name]
+==&amp;gt;[name=&amp;gt;'Sol', stats=&amp;gt;[kilos=&amp;gt;1.989e30, area=&amp;gt;6.0877e12],
+    primary_planets=&amp;gt;['Jupiter']]&lt;/code&gt;&lt;/pre&gt;
+      &lt;/div&gt;
+     &lt;/div&gt;
+    &lt;/div&gt;
+   &lt;/div&gt;
+  &lt;/section&gt;
+  &lt;div class="section-divider"&gt;&lt;/div&gt;
+  &lt;section id="capabilities"&gt;
+   &lt;div class="section-inner"&gt;
+    &lt;div class="section-header reveal"&gt;
+     &lt;span class="eyebrow"&gt;Expertise&lt;/span&gt;
+     &lt;h2&gt;what is&lt;span class="accent"&gt;possible&lt;/span&gt;&lt;/h2&gt;
+     &lt;p&gt;Deep engineering across the systems stack, from language design to distributed runtime infrastructure.&lt;/p&gt;
+    &lt;/div&gt;
+    &lt;div class="cap-grid"&gt;
+     &lt;div class="cap-card reveal reveal-delay-1"&gt;
+      &lt;i class="bi bi-diagram-3 cap-icon"&gt;&lt;/i&gt;
+      &lt;h4&gt;Language Design&lt;/h4&gt;
+      &lt;p&gt;Grammar design, type system theory, compiler construction, and runtime optimization for domain-specific and general-purpose languages.&lt;/p&gt;
+     &lt;/div&gt;
+     &lt;div class="cap-card reveal reveal-delay-2"&gt;
+      &lt;i class="bi bi-grid-3x3-gap cap-icon"&gt;&lt;/i&gt;
+      &lt;h4&gt;Distributed Systems&lt;/h4&gt;
+      &lt;p&gt;data partitioning, replication and fault-tolerant service topologies.&lt;/p&gt;
+     &lt;/div&gt;
+     &lt;div class="cap-card reveal reveal-delay-3"&gt;
+      &lt;i class="bi bi-database cap-icon"&gt;&lt;/i&gt;
+      &lt;h4&gt;Query Optimization&lt;/h4&gt;
+      &lt;p&gt;Cost-based optimization, logical and physical plan rewriting, cardinality estimation, and adaptive execution engines.&lt;/p&gt;
+     &lt;/div&gt;
+     &lt;div class="cap-card reveal reveal-delay-4"&gt;
+      &lt;i class="bi bi-cpu cap-icon"&gt;&lt;/i&gt;
+      &lt;h4&gt;Database Theory&lt;/h4&gt;
+      &lt;p&gt;Relational algebra, graph data models, storage engine design, indexing structures, and multi-model data integration.&lt;/p&gt;
+     &lt;/div&gt;
+    &lt;/div&gt;
+   &lt;/div&gt;
+  &lt;/section&gt;
+  &lt;div class="section-divider"&gt;&lt;/div&gt;
+  &lt;section id="code"&gt;
+   &lt;div class="section-inner"&gt;
+    &lt;div class="showcase-grid"&gt;
+     &lt;div class="showcase-text reveal"&gt;
+      &lt;span class="hero-eyebrow" style="margin-bottom:1rem;"&gt;Language Preview&lt;/span&gt;
+      &lt;h3&gt;Traversal-Oriented Programming
+       &lt;br&gt;&lt;/h3&gt;
+      &lt;p&gt;metatron programs are — sequences of instructions that navigate, filter, and transform data. The language is concatenative: instructions compose by stacking, enabling a natural pipe-forward style where data flows through successive transformations.&lt;strong&gt;&lt;span class="red"&gt;traversals&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+      &lt;p&gt;Types, instructions, and even data exist within a unified , enabling reflection, memoization, and serialization as first-class language features.&lt;strong&gt;&lt;span class="red"&gt;uri address space&lt;/span&gt;&lt;/strong&gt;&lt;/p&gt;
+      &lt;a href="http://metatron.phaseshift.studio" class="btn-ghost"&gt;Read the docs&lt;i class="bi bi-arrow-right"&gt;&lt;/i&gt;&lt;/a&gt;
+     &lt;/div&gt;
+     &lt;div class="showcase-terminal reveal reveal-delay-2"&gt;
+      &lt;div class="terminal-chrome"&gt;
+       &lt;span class="dot red"&gt;&lt;/span&gt;&lt;span class="dot yellow"&gt;&lt;/span&gt;&lt;span class="dot green"&gt;&lt;/span&gt;&lt;span class="title"&gt;type definitions — mtron console&lt;/span&gt;
+      &lt;/div&gt;
+      &lt;div class="terminal-body"&gt;
+       &lt;pre&gt;&lt;code class="language-mtron"&gt;// Type definitions
+nat    -&amp;gt; int::T[?&amp;gt;0]
+person -&amp;gt; rec::T[?[name        =&amp;gt; str::T,
+                   age{?}::nat =&amp;gt; nat::T,
+                   knows       =&amp;gt; person{*}::T]]
+people -&amp;gt; person{*}::T
+
+// Instance data
+sumer -&amp;gt; people::{
+  enoch -&amp;gt; person::[name=&amp;gt;'enoch', age=&amp;gt;29],
+  enki  -&amp;gt; person::[name=&amp;gt;'enki', knows=&amp;gt;!*enoch]}
+
+// Traversals
+metatron&amp;gt; *enki&amp;gt;&amp;gt;knows&amp;gt;&amp;gt;name
+==&amp;gt;'enoch'
+
+metatron&amp;gt; *#.as[name      =&amp;gt; _,
+               coauthor  =&amp;gt; &amp;gt;&amp;gt;knows.where[&amp;gt;&amp;gt;age.?&amp;gt;21]&amp;gt;&amp;gt;name]
+==&amp;gt;[name=&amp;gt;'enki', coauthor=&amp;gt;'enoch']&lt;/code&gt;&lt;/pre&gt;
+      &lt;/div&gt;
+     &lt;/div&gt;
+    &lt;/div&gt;
+   &lt;/div&gt;
+  &lt;/section&gt;
+  &lt;footer class="footer" id="footer"&gt;
+   &lt;div class="footer-inner"&gt;
+    &lt;div class="footer-brand"&gt;
+     &lt;span&gt;PhaseShift Studio&lt;/span&gt;
+    &lt;/div&gt;
+    &lt;div class="footer-links"&gt;
+     &lt;a href="http://metatron.phaseshift.studio" class="footer-main-link"&gt;metatron&lt;/a&gt;&lt;span class="footer-subs"&gt;&lt;a href="#"&gt;Documentation&lt;/a&gt;&lt;a href="#"&gt;Instruction Sets&lt;/a&gt;&lt;/span&gt;
+    &lt;/div&gt;
+    &lt;a href="mailto:info@phaseshift.studio" class="footer-email"&gt;info@phaseshift.studio&lt;/a&gt;
+   &lt;/div&gt;
+   &lt;div class="footer-bottom"&gt;
+    &lt;span&gt;© 2026 PhaseShift Studio. All rights reserved.&lt;/span&gt;
+   &lt;/div&gt;
+  &lt;/footer&gt;
+  &lt;script src="highlight/highlight.min.js"&gt;&lt;/script&gt;
+  &lt;script src="highlight/languages/mtron.min.js"&gt;&lt;/script&gt;
+  &lt;script&gt;
+        hljs.highlightAll();
+        const observer = new IntersectionObserver((entries) =&gt; {
+            entries.forEach(entry =&gt; {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+
+        document.querySelectorAll('.reveal').forEach(el =&gt; observer.observe(el));
+
+        // ---- sticky nav shadow ----
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () =&gt; {
+            navbar.classList.toggle('scrolled', window.scrollY &gt; 20);
+
+            // update active nav link based on scroll position
+            const sections = document.querySelectorAll('section[id], footer[id]');
+            const navLinks = document.querySelectorAll('.nav-links a');
+            let current = 'hero';
+
+            sections.forEach(section =&gt; {
+                const top = section.offsetTop - 100;
+                if (window.scrollY &gt;= top) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link =&gt; {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        });
+
+        // ---- mobile nav toggle ----
+        const navToggle = document.getElementById('navToggle');
+        const navLinks = document.getElementById('navLinks');
+
+        navToggle.addEventListener('click', () =&gt; {
+            navLinks.classList.toggle('open');
+            const icon = navToggle.querySelector('i');
+            icon.classList.toggle('bi-list');
+            icon.classList.toggle('bi-x-lg');
+        });
+
+        // close mobile nav on link click
+        navLinks.querySelectorAll('a').forEach(link =&gt; {
+            link.addEventListener('click', () =&gt; {
+                navLinks.classList.remove('open');
+                const icon = navToggle.querySelector('i');
+                icon.classList.add('bi-list');
+                icon.classList.remove('bi-x-lg');
+            });
+        });
+    &lt;/script&gt;
+ &lt;/body&gt;
+&lt;/html&gt;"""</code></pre>
 </div>
 </div>
 <div class="colist arabic">
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>an <code>animal::T &lt; rec::T</code> (<strong>refinement type</strong>) is defined.</td>
+<td>The structural definition of <code>html::T</code>.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>a <code>chicken::T == animal::T</code> (<strong>nominal type</strong>) is defined.</td>
+<td>Retrieve the <code>index.html</code> of the website. Content-type yields <code>text/html</code> which for metatron maps to <code>html::T</code>.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="3"></i><b>3</b></td>
-<td>an <code>equipment::T &lt; rec::T</code> (<strong>refinement type</strong>) is defined.</td>
+<td>The <code>title</code> element of the <code>index.html</code> of the website.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="4"></i><b>4</b></td>
-<td>a <code>farmset</code> instset is defined containing <code>animal::T</code>, <code>equipment::T</code>, and <code>chicken::T</code>.</td>
+<td>The <code>index.html</code> of the website as a <code>str::T</code> (<code>string &#8658; rec &#8658; string</code>).</td>
 </tr>
 </table>
 </div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; dcmntspace::[pattern     =&gt; farm:#,
-                    host        =&gt; mongodb://localhost:27017/farm,
-                    schema      =&gt; !*farmset,
-                    root        =&gt; rec::T[?[animals   =&gt; animal{*}::T,
-                                            equipment =&gt; equipment{*}::T]],
-                    route       =&gt; [farm:=&gt;&lt;&gt;]]@/sys/space/farm</code></pre>
-</div>
-</div>
-<div class="colist arabic">
-<table>
-<tr>
-<td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>a <code>dcmntspace</code> with <code>farmset</code> as the schema. the root type maps each collection to its element type with <code>{*}</code> cardinality.</td>
-</tr>
-</table>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;  farm:animals/1 -&gt; 'a chicken named trill'     <i class="conum" data-value="1"></i><b>(1)</b>
-==&gt;fail::[space /sys/space/farm requires rec::T[?[{?}animals=&gt;animals::T]] at root; got str::T][...]@/sys/fail/2
-mtron&gt; farm:animals/1 -&gt; chicken::[name=&gt;'trill',age=&gt;7]     <i class="conum" data-value="2"></i><b>(2)</b>
-==&gt;chicken::[name=&gt;'trill',age=&gt;7]
-mtron&gt; *farm:animals/1     <i class="conum" data-value="3"></i><b>(3)</b>
-==&gt;chicken::[name=&gt;'trill',age=&gt;7]</code></pre>
-</div>
-</div>
-<div class="colist arabic">
-<table>
-<tr>
-<td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>writing a <code>str::T</code> to a collection that expects <code>animal{*}::T</code> — rejected at the space level.</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>a <code>chicken::T</code> document satisfies <code>animal::T</code> (chicken is-a animal) — accepted.</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="3"></i><b>3</b></td>
-<td>reading the document back.</td>
-</tr>
-</table>
-</div>
-<h3 id="_typing_documents" class="discrete">Typing Documents</h3>
+<h3 id="_accessing_rest_apis_2" class="discrete">Accessing REST APIs</h3>
 <div class="paragraph">
-<p>BSON (MongoDB&#8217;s binary JSON format) has no concept of a type&#8212;&#8203;for example, <code>chicken::[name=&gt;'trill', age=&gt;7]</code>
-stored in MongoDB would ordinarily come back as a plain <code>rec::[name=&gt;'trill', age=&gt;7]</code>, losing the <code>chicken::T</code>
-identity. metatron preserves type information transparently on the way in and restores it on the way out.</p>
+<p>When a <a href="https://en.wikipedia.org/wiki/REST">REST</a> endpoint has a URL address that matches an <code>httpspace</code> pattern, the REST resources can be used in metatron. This is possible because <code>httpspace</code> transforms data "in the wild" (e.g. <code>application/json</code>) into an isomorphic <code>obj</code>. If the newly mapped <code>obj</code> is typed, then it inherits the instructions for that type as defined by the <code>instset</code> of the type. As such, REST resources can be enriched/typed to serve as active computational objs in metatron.</p>
+</div>
+<div class="paragraph">
+<p>A <a href="https://localai.io/">LocalAI</a> service will serve to demonstrate how to leverage foreign resources in metatron. LocalAI exposes an <a href="https://www.openapis.org/">OpenAPI</a>-compliant endpoint at <code><a href="http://localhost:8088/v1" class="bare">http://localhost:8088/v1</a></code> (this is specific to the author&#8217;s local deployment of LocalAI).</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; farm:animals/1 -&gt; chicken::[name=&gt;'trill',age=&gt;7]     <i class="conum" data-value="1"></i><b>(1)</b>
-==&gt;chicken::[name=&gt;'trill',age=&gt;7]
-mtron&gt; *farm:animals/1     <i class="conum" data-value="2"></i><b>(2)</b>
-==&gt;chicken::[name=&gt;'trill',age=&gt;7]
-mtron&gt; *farm:animals/1/name     <i class="conum" data-value="3"></i><b>(3)</b>
-==&gt;'trill'</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *&lt;http://localhost:8088/v1&gt;
+mtron&gt; *&lt;http://localhost:8088/v1/models&gt;
+==&gt;[
+ object=&gt;list,
+ data=&gt;[
+  [id=&gt;mistralai_devstral-small-2507,object=&gt;model],
+  [id=&gt;qwen3-coder-30b-a3b-instruct,object=&gt;model],
+  [id=&gt;qwen3-tts-cpp,object=&gt;model],
+  [id=&gt;qwen3:latest,object=&gt;model],
+  [id=&gt;'smollm:1.7b',object=&gt;model],
+  [id=&gt;MeetAISmall__latest,object=&gt;model],
+  [id=&gt;gpt-oss__latest,object=&gt;model]]]
+mtron&gt; *&lt;http://localhost:8088/v1/models/data/0/id&gt;
+==&gt;qwen3-coder-30b-a3b-instruct
+mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
+         *&lt;http://localhost:8088/v1/models/data/0/id&gt;}&gt;
+==&gt;[
+ parameters=&gt;[
+  model=&gt;qwen3__latest,
+  top_p=&gt;0.9500,
+  top_k=&gt;20,
+  min_p=&gt;0,
+  temperature=&gt;0.6000,
+  max_tokens=&gt;0,
+  repeat_penalty=&gt;1,
+  tfz=&gt;1,
+  typical_p=&gt;1,
+  seed=&gt;-1,
+  logprobs=&gt;false],
+ name=&gt;qwen3:latest,
+ f16=&gt;false,
+ threads=&gt;8,
+ debug=&gt;false,
+ embeddings=&gt;false,
+ backend=&gt;llama-cpp,
+ template=&gt;[use_tokenizer_template=&gt;true],
+ known_usecases=&gt;[FLAG_CHAT],
+ pipeline=&gt;[=&gt;],
+ function=&gt;[
+  grammar=&gt;[disable=&gt;true],
+  automatic_tool_parsing_fallback=&gt;true],
+ reasoning=&gt;[=&gt;],
+ mirostat_eta=&gt;0.1000,
+ mirostat_tau=&gt;5,
+ mirostat=&gt;0,
+ gpu_layers=&gt;99999999,
+ mmap=&gt;true,
+ mmlock=&gt;false,
+ low_vram=&gt;false,
+ reranking=&gt;false,
+ context_size=&gt;8192,
+ limit_mm_per_prompt=&gt;[=&gt;],
+ diffusers=&gt;[=&gt;],
+ grpc=&gt;[=&gt;],
+ tts=&gt;[=&gt;],
+ description=&gt;'Imported from ollama://qwen3:latest',
+ options=&gt;[use_jinja:true],
+ mcp=&gt;[=&gt;],
+ agent=&gt;[=&gt;]]</code></pre>
 </div>
 </div>
 <div class="colist arabic">
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>write a <code>chicken::T</code> document to the <code>animals</code> collection.</td>
+<td>No result, but also no connection <code>fail::T</code>. The endpoint is alive.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>read it back — <code>chicken::T</code> is preserved through the round-trip.</td>
+<td>The <code>/models</code> resource contains a list of all LLM models available for use in LocalAI.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="3"></i><b>3</b></td>
-<td>subfield reads navigate into the document without loading the whole record.</td>
+<td>Traversing the data within the resource is a function of extending the URI accordingly.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="4"></i><b>4</b></td>
-<td>a branch read lists all documents in <code>animals</code> as a <code>uri=&gt;obj</code> map.</td>
+<td>Using URI template parameters to fetch more information about the model.</td>
 </tr>
 </table>
 </div>
 <div class="paragraph">
-<p>An <code>auto_from</code> cell in a dcmntspace document is stored as a native MongoDB
-<a href="https://www.mongodb.com/docs/manual/reference/database-references/#dbrefs">DBRef</a> — <code>$ref</code> carries the collection
-(or <code>scheme:collection</code> for external targets) and <code>$id</code> carries the document id.
-No metatron-specific footprint is left in the stored data.</p>
-</div>
-<h3 id="_inter_space_references" class="discrete">Inter-Space References</h3>
-<div class="paragraph">
-<p>A <code>dcmntspace</code> cell can carry an <code>!*</code> pointer to any URI in metatron.
-Below, a <code>loc:</code> memspace holds barn information, and <code>farm:animals/1</code> (the chicken named Trill) is
-updated with a <code>shelter</code> cell pointing at <code>loc:barns/1</code> — a <strong>cross-space</strong> reference.
-On write, the serializer encodes the external pointer as <code>$ref: "loc:barns"</code> in MongoDB;
-on read, the <code>loc:</code> scheme is detected and the reference is routed to the memspace.</p>
+<p>Once the desired REST resource has been accessed, it&#8217;s possible to map the resource into a form that meets the structural requirements of an mtron <code>type</code>. In doing so, the resource then acquires the behaviors defined in the type&#8217;s respective <code>instset</code>. For this example, that <code>instset</code> is <code>/m/llm</code>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; memspace::[pattern =&gt; loc:#]@/sys/space/loc     <i class="conum" data-value="1"></i><b>(1)</b>
-mtron&gt; loc:barns/1 -&gt; [label=&gt;'old_red_barn',capacity=&gt;12]     <i class="conum" data-value="2"></i><b>(2)</b>
-==&gt;[label=&gt;'old_red_barn',capacity=&gt;12]
-mtron&gt; farm:animals/1 &gt;&gt;= [shelter=&gt;!*loc:barns/1]     <i class="conum" data-value="3"></i><b>(3)</b>
-==&gt;[shelter=&gt;!*loc:barns/1]
-mtron&gt; *farm:animals/1     <i class="conum" data-value="4"></i><b>(4)</b>
-==&gt;chicken::[name=&gt;'trill',age=&gt;7]
-mtron&gt; *farm:animals/1/shelter     <i class="conum" data-value="5"></i><b>(5)</b>
-mtron&gt; farm:animals/2 -&gt; chicken::[name=&gt;'cluck',age=&gt;3,shelter=&gt;!*loc:barns/1]     <i class="conum" data-value="6"></i><b>(6)</b>
-==&gt;chicken::[
- name=&gt;'cluck',
- age=&gt;3,
- shelter=&gt;!*loc:barns/1]
-mtron&gt; *farm:animals/2     <i class="conum" data-value="7"></i><b>(7)</b>
-==&gt;chicken::[
- name=&gt;'cluck',
- age=&gt;3,
- shelter=&gt;!*loc:barns/1]
-mtron&gt; *farm:animals/2/shelter     <i class="conum" data-value="8"></i><b>(8)</b>
-==&gt;[label=&gt;'old_red_barn',capacity=&gt;12]</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */m/llm/model
+==&gt;rec::T[?[
+  provider=&gt;catalog::T,
+  name=&gt;uri::T,
+  {?}desc=&gt;str::T,
+  {?}cost=&gt;{?}[
+   in=&gt;currency::T,
+   out=&gt;currency::T],
+  {?}size=&gt;bB::T,
+  {?}feature=&gt;feature::T]]
+mtron&gt; */m/llm/inst/+?dom=model</code></pre>
 </div>
 </div>
 <div class="colist arabic">
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>a <code>loc:</code> memspace serves as the cross-space target — any space type (grphSpace, tbleSpace, etc.) works the same way.</td>
+<td>The <code>model::T</code> type in <code>/m/llm</code>.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>write the barn record into <code>loc:</code> memspace.</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="3"></i><b>3</b></td>
-<td>update the existing <code>animals/1</code> document (<code>&gt;&gt;=</code>) with a <code>shelter</code> reference — <code>!*loc:barns/1</code> is an <code>auto_from</code> pointer.</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="4"></i><b>4</b></td>
-<td>read the updated document — <code>shelter</code> renders as <code>!*loc:barns/1</code> with the <code>loc:</code> scheme intact (not rewritten to <code>farm:</code>).</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="5"></i><b>5</b></td>
-<td>traversing the cross-space FK: the <code>shelter</code> path segment forces <code>auto_from</code> to read from <code>loc:barns/1</code> via the router, returning the full barn record.</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="6"></i><b>6</b></td>
-<td>create a second animal with both a nominal <code>chicken::T</code> type and a cross-space reference in a single write.</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="7"></i><b>7</b></td>
-<td>both the type and the reference are preserved through the BSON round-trip.</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="8"></i><b>8</b></td>
-<td>the same <code>shelter</code> traversal resolves identically — cross-space routing is transparent to the reader.</td>
+<td>The <code>/m/llm</code> instructions with a domain of <code>model::T</code>  (an object oriented perspective&#8201;&#8212;&#8201;<code>obj.f()</code>).</td>
 </tr>
 </table>
 </div>
-<div class="openblock card">
+<div class="paragraph">
+<p>When the REST resource is manipulated to fit the structural specification of <code>model::T</code>, then  <code><a href="http://localhost:8088/v1/models/data/0" class="bare">http://localhost:8088/v1/models/data/0</a></code> can be the source of <code>chat?#&lt;=model</code>.</p>
+</div>
+<div class="listingblock">
 <div class="content">
-<h4 id="_bson_dbref_encoding" class="discrete">bson dbref encoding</h4>
-<div class="paragraph">
-<p>metatron serializes <code>auto_from</code> references as native
-<a href="https://www.mongodb.com/docs/manual/reference/database-references/#dbrefs">MongoDB DBRef</a> documents.
-A DBRef is a plain BSON <code>{$ref, $id}</code> object (no custom fields, no proprietary envelope) so collections with references remain fully compatible with external MongoDB tooling.</p>
-</div>
-<div class="paragraph">
-<p><strong>intra-space references</strong> store a bare collection name in <code>$ref</code> and the document id in <code>$id</code>:</p>
-</div>
-<div class="listingblock center-code">
-<div class="content">
-<pre class="highlight"><code class="language-json" data-lang="json">{
-  "_id": "trill",
-  "name": "Trill",
-  "age": 7,
-  "shelter": { "$ref": "barns", "$id": 1 }
-}</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p><strong>inter-space references</strong> prefix the <code>$ref</code> field with the target scheme — the colon is the
-discriminator that tells the serializer to route through metatron&#8217;s router rather than the local database:</p>
-</div>
-<div class="listingblock center-code">
-<div class="content">
-<pre class="highlight"><code class="language-json" data-lang="json">{
-  "_id": "trill",
-  "name": "Trill",
-  "age": 7,
-  "shelter": { "$ref": "loc:barns", "$id": 1 }
-}</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p><code>$id</code> can be an <code>ObjectId</code> (24-char hex), a string, or most numeric types — the
-serializer auto-detects the format and the deserializer recovers the original id value.
-<code>$db</code> is deliberately left unused so that existing MongoDB drivers interpret cross-space
-refs as ordinary references to a collection named <code>"loc:barns"</code> (valid under
-<a href="https://www.mongodb.com/docs/manual/reference/limits/#naming-restrictions">MongoDB naming rules</a>)
-until metatron traverses them.</p>
-</div>
-<div class="paragraph">
-<p>The <code>loc:</code> prefix in <code>$ref</code> is the <strong>only place</strong> metatron stores cross-space routing
-information. There is no <code>_mtron_meta</code> table, no side-channel metadata, and no
-proprietary BSON type. The reference is a standard DBRef — metatron simply reads
-the <code>$ref</code> field and checks for a colon. If none is found, the space-local pattern is used;
-if one is found, the reference is routed to the named scheme&#8217;s space.</p>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; *&lt;http://localhost:8088/v1/models/data/0&gt;&gt;-.
+         -&lt;[name=&gt;&gt;&gt;id.as(uri::T),
+            type=&gt;&gt;&gt;object.as(uri::T),
+            provider=&gt;|!*/sys/space/localai].as(model::T)
+         .chat('are you there?')
+==&gt;fail::[illegalargumentexception: template cannot be null or blank
+  	dev.langchain4j.internal.Exceptions [line 25]
+  	dev.langchain4j.internal.ValidationUtils [line 169]
+  	dev.langchain4j.internal.ValidationUtils [line 156]
+  	dev.langchain4j.model.input.PromptTemplate [line 83]
+  	dev.langchain4j.model.input.PromptTemplate [line 186]][...]@/sys/fail/466
+==&gt;fail::[[
+ type=&gt;model,
+ provider=&gt;!*/sys/space/localai] is not a isa([
+  provider=&gt;catalog::T,
+  name=&gt;uri::T,
+  {?}desc=&gt;str::T,
+  {?}cost=&gt;{?}[
+   in=&gt;currency::T,
+   out=&gt;currency::T],
+  {?}size=&gt;bB::T,
+  {?}feature=&gt;feature::T])
+  [
+   provider=&gt;(==&gt;provider)=&gt;catalog::[
+   host=&gt;http://localhost:8088/v1,
+   pattern=&gt;localai:#,
+   name=&gt;localai,
+   route=&gt;[localai:=&gt;&lt;&gt;],
+   space=&gt;[=&gt;],
+   q=&gt;[subq::[
+   pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+   pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+   qless_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+   pattern=&gt;subq,
+   obj=&gt;[,]]]]=&gt;==&gt;catalog::T,
+   noobj=&gt;(X=&gt;name)=&gt;noobj=&gt;X=&gt;uri::T,
+   noobj=&gt;(==&gt;{?}desc)=&gt;noobj=&gt;/=&gt;str::T,
+   noobj=&gt;(==&gt;{?}cost)=&gt;noobj=&gt;==&gt;{?}[
+   in=&gt;currency::T,
+   out=&gt;currency::T],
+   noobj=&gt;(==&gt;{?}size)=&gt;noobj=&gt;/=&gt;bB::T,
+   noobj=&gt;(==&gt;{?}feature)=&gt;noobj=&gt;/=&gt;feature::T]][...]@/sys/fail/460</code></pre>
 </div>
 </div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>The OpenAPI <code>application/json</code> resource is morphed into a metatron <code>model::T</code> and then the model is `chat`ted with.</td>
+</tr>
+</table>
 </div>
 </div>
 <div class="collapse position-relative" id="card-21">
@@ -8073,11 +10950,11 @@ mtron&gt; lite:person/2 -&gt; [name=&gt;'grant', age=&gt;25]     <i class="conum
 ==&gt;[name=&gt;'grant',age=&gt;25]
 mtron&gt; *lite:person
        *lite:person/+/name     <i class="conum" data-value="5"></i><b>(5)</b>
-==&gt;'grant'@lite:person/2/name
-==&gt;'marko'@lite:person/1/name
+==&gt;'grant'
+==&gt;'marko'
 mtron&gt; *lite:person/+/id     <i class="conum" data-value="6"></i><b>(6)</b>
-==&gt;1@lite:person/1/id
-==&gt;2@lite:person/2/id</code></pre>
+==&gt;1
+==&gt;2</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -8125,7 +11002,11 @@ mtron&gt; *lite:person/+/id     <i class="conum" data-value="6"></i><b>(6)</b>
 ==&gt;[
  instset=&gt;instset::[
   pattern=&gt;/sys/space/lite/schema/instset/#,
-  type=&gt;[,],
+  type=&gt;[
+   award::T,
+   person::T,
+   score::T,
+   venue::T],
   q=&gt;[docq::[
  pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
  pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
@@ -8136,8 +11017,52 @@ mtron&gt; *lite:person/+/id     <i class="conum" data-value="6"></i><b>(6)</b>
  native=&gt;[
   pattern=&gt;/sys/space/lite/schema/instset/#,
   name=&gt;'instset',
-  tables=&gt;[,],
-  references=&gt;[,]]]
+  tables=&gt;[
+   [
+    name=&gt;'award',
+    uri=&gt;/sys/space/lite/schema/instset/award,
+    schema/schema=&gt;[
+     id=&gt;int::T,
+     trophy=&gt;str::T,
+     recipient=&gt;int::T],
+    type=&gt;award::T],
+   [
+    name=&gt;'person',
+    uri=&gt;/sys/space/lite/schema/instset/person,
+    schema/schema=&gt;[
+     id=&gt;int::T,
+     name=&gt;str::T,
+     age=&gt;int::T],
+    type=&gt;person::T],
+   [
+    name=&gt;'score',
+    uri=&gt;/sys/space/lite/schema/instset/score,
+    schema/schema=&gt;[
+     id=&gt;int::T,
+     player=&gt;str::T,
+     points=&gt;int::T],
+    type=&gt;score::T],
+   [
+    name=&gt;'venue',
+    uri=&gt;/sys/space/lite/schema/instset/venue,
+    schema/schema=&gt;[
+     id=&gt;int::T,
+     name=&gt;str::T,
+     location=&gt;int::T],
+    type=&gt;venue::T]],
+  references=&gt;[
+   [
+    from_table=&gt;'award',
+    from_column=&gt;'recipient',
+    to_table=&gt;'person',
+    to_column=&gt;'id',
+    type=&gt;'FOREIGN_KEY'],
+   [
+    from_table=&gt;'venue',
+    from_column=&gt;'location',
+    to_table=&gt;'area:V',
+    to_column=&gt;'id',
+    type=&gt;'FOREIGN_KEY']]]]
 mtron&gt; */sys/space/lite/schema/type/+</code></pre>
 </div>
 </div></div></td>
@@ -8311,10 +11236,10 @@ whose values happen to match <code>person.name</code> — the link is purely alg
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/lite&gt;&gt;=[table=&gt;[person,score]]     <i class="conum" data-value="1"></i><b>(1)</b>
 ==&gt;fail::[nullpointerexception: Cannot invoke "studio.phaseshift.metatron.furi.fURI.extend(String)" because the return value of "studio.phaseshift.metatron.isa.tble.tbleSpace.vid()" is null
-  	studio.phaseshift.metatron.isa.tble.tbleSpace [line 250]
-  	studio.phaseshift.metatron.isa.tble.tbleSpace [line 174]
-  	studio.phaseshift.metatron.isa.tble.tbleSpace [line 157]
-  	studio.phaseshift.metatron.isa.tble.tbleSpace [line 128]
+  	studio.phaseshift.metatron.isa.tble.tbleSpace [line 244]
+  	studio.phaseshift.metatron.isa.tble.tbleSpace [line 168]
+  	studio.phaseshift.metatron.isa.tble.tbleSpace [line 151]
+  	studio.phaseshift.metatron.isa.tble.tbleSpace [line 122]
   	studio.phaseshift.metatron.isa.m.type.Inst$f [line 683]][...]@/sys/fail/202
 mtron&gt; lite:score/1 -&gt; [player=&gt;'marko', points=&gt;42]     <i class="conum" data-value="2"></i><b>(2)</b>
 ==&gt;[player=&gt;'marko',points=&gt;42]
@@ -8360,10 +11285,10 @@ Unlike a matching column value, the pointer encodes the full address of the link
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/lite&gt;&gt;=[table=&gt;[person,score,award]]     <i class="conum" data-value="1"></i><b>(1)</b>
 ==&gt;fail::[nullpointerexception: Cannot invoke "studio.phaseshift.metatron.furi.fURI.extend(String)" because the return value of "studio.phaseshift.metatron.isa.tble.tbleSpace.vid()" is null
-  	studio.phaseshift.metatron.isa.tble.tbleSpace [line 250]
-  	studio.phaseshift.metatron.isa.tble.tbleSpace [line 174]
-  	studio.phaseshift.metatron.isa.tble.tbleSpace [line 157]
-  	studio.phaseshift.metatron.isa.tble.tbleSpace [line 128]
+  	studio.phaseshift.metatron.isa.tble.tbleSpace [line 244]
+  	studio.phaseshift.metatron.isa.tble.tbleSpace [line 168]
+  	studio.phaseshift.metatron.isa.tble.tbleSpace [line 151]
+  	studio.phaseshift.metatron.isa.tble.tbleSpace [line 122]
   	studio.phaseshift.metatron.isa.m.type.Inst$f [line 683]][...]@/sys/fail/220
 mtron&gt; lite:award/1 -&gt; [trophy=&gt;'gold',   recipient=&gt;!*lite:person/1]     <i class="conum" data-value="2"></i><b>(2)</b>
 ==&gt;[
@@ -8376,10 +11301,10 @@ mtron&gt; lite:award/2 -&gt; [trophy=&gt;'silver', recipient=&gt;!*lite:person/2
 mtron&gt; *lite:award/+     <i class="conum" data-value="4"></i><b>(4)</b>
 ==&gt;[
  trophy=&gt;'gold',
- recipient=&gt;!*lite:person/1]@lite:award/1
+ recipient=&gt;!*lite:person/1]
 ==&gt;[
  trophy=&gt;'silver',
- recipient=&gt;!*lite:person/2]@lite:award/2
+ recipient=&gt;!*lite:person/2]
 mtron&gt; *lite:award/1/recipient     <i class="conum" data-value="5"></i><b>(5)</b>
 ==&gt;[name=&gt;'marko',age=&gt;29]</code></pre>
 </div>
@@ -8421,10 +11346,10 @@ mtron&gt; area:V/1 -&gt; [label=&gt;'downtown',capacity=&gt;5000]     <i class="
 ==&gt;[label=&gt;'downtown',capacity=&gt;5000]
 mtron&gt; */sys/space/lite&gt;&gt;=[table=&gt;[person,score,award,venue]]     <i class="conum" data-value="3"></i><b>(3)</b>
 ==&gt;fail::[nullpointerexception: Cannot invoke "studio.phaseshift.metatron.furi.fURI.extend(String)" because the return value of "studio.phaseshift.metatron.isa.tble.tbleSpace.vid()" is null
-  	studio.phaseshift.metatron.isa.tble.tbleSpace [line 250]
-  	studio.phaseshift.metatron.isa.tble.tbleSpace [line 174]
-  	studio.phaseshift.metatron.isa.tble.tbleSpace [line 157]
-  	studio.phaseshift.metatron.isa.tble.tbleSpace [line 128]
+  	studio.phaseshift.metatron.isa.tble.tbleSpace [line 244]
+  	studio.phaseshift.metatron.isa.tble.tbleSpace [line 168]
+  	studio.phaseshift.metatron.isa.tble.tbleSpace [line 151]
+  	studio.phaseshift.metatron.isa.tble.tbleSpace [line 122]
   	studio.phaseshift.metatron.isa.m.type.Inst$f [line 683]][...]@/sys/fail/232
 mtron&gt; lite:venue/1 -&gt; [name=&gt;'main_stage',location=&gt;!*area:V/1]     <i class="conum" data-value="4"></i><b>(4)</b>
 ==&gt;[
@@ -8487,7 +11412,7 @@ mtron&gt; *lite:venue/2/parent/location     <i class="conum" data-value="3"></i>
   	org.sqlite.core.DB [line 1193]
   	org.sqlite.core.DB [line 1153]
   	org.sqlite.core.NativeDB [line -2]
-  	org.sqlite.core.NativeDB [line 135]][...]@/sys/fail/238</code></pre>
+  	org.sqlite.core.NativeDB [line 135]][...]@/sys/fail/280</code></pre>
 </div>
 </div>
 <div class="colist arabic">

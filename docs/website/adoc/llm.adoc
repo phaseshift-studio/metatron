@@ -64,7 +64,7 @@ An LLM is a `model::T < rec::T` with the following type definition:
 */m/llm/model
 ----
 
-The design makes a distinction between the **LLM** (general-purpose reasoning engine) and its **features** (accessories that can be attached to the LLM). Example features include tools, skills, memory, thinking, response formats, and other similar enrichments. Features are agnostic to the underlying LLM and can be shared between LLMs making it easy to assemble new LLMs from a library of stored features. In `.metatron`, there exists an `agent.mtron` file that provides a sample library.
+The design makes a distinction between the **LLM** (general-purpose reasoning engine) and its **features** (accessories that can be attached to the LLM). Example features include tools, skills, memory, thinking, response formats, and other similar enrichme. Features are agnostic to the underlying LLM and can be shared between LLMs making it easy to assemble new LLMs from a library of stored features. In `.metatron`, there exists an `agent.mtron` file that provides a sample library.
 
 [mtron]
 ----

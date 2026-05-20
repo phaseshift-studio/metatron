@@ -1,5 +1,5 @@
 [discrete]
-== HTTP Space
+== Web Technologies with /m/web
 
 [%collapsible]
 ./m/web instset import and space constructions
@@ -8,13 +8,22 @@
 ----
 [HIDDEN] import(/m/llm)
 import(/m/web)
-httpspace::[                                                                        /
- host     => <http://localhost:8777>,                                               /
- pattern  => <http://#>,                                                            /
- route    => [/          => <>,                                                     /
-              /mcp       => mcp_mtron_http,                                         /
-              /docs      => target/docs,                                            /
-              /console   => src/main/resources/web/console]]@/sys/space/web/http
+----
+====
+
+[discrete]
+=== HTTP Space
+
+[mtron]
+----
+httpspace::[                                                   /
+ host     => http://localhost:8777,                            /
+ pattern  => http://#,                                         /
+ route    => [/        => <>,                                  /
+              /mcp     => mcp_mtron_http,                      /
+              /docs    => target/docs,                         /
+              /console => src/main/resources/web/console]      /
+]@/sys/space/web/http
 ----
 ====
 
