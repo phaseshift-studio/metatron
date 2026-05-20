@@ -103,6 +103,7 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
         });
         this.dbConfig = dbConfig;
     }
+    
 
     // =========================================================================
     //  Lifecycle
@@ -306,10 +307,10 @@ public abstract class AbstractTbleSpaceTest extends AbstractSpaceTest implements
 
     @Override
     public String make(final String expression, final Method testMethod) {
-        // For table-mapped tests, $$ → db: (table path: db:people/1, db:companies/101)
-        // For key-value tests, $$ → db:kv/test (kv path: db:kv/test/key)
-        if (testMethod != null && "testMonoUpdate".equals(testMethod.getName())) {
-            return expression.contains("$$") ? expression.replace("$$/", "db:").replace("$$", "db:") : expression;
+        // For testMonoUpdate, $$ → mongo: so seed data writes to mongo:<collection>/<docId>
+        // and update/read expressions resolve to the same two-segment document paths.
+        if (testMethod != null && ("testMonoUpdate".equals(testMethod.getName()) || "testMonoDepth".equals(testMethod.getName()))) {
+            return expression.contains("$$") ? expression.replace("$$/", "db:") : expression;
         }
         return super.make(expression, testMethod);
     }

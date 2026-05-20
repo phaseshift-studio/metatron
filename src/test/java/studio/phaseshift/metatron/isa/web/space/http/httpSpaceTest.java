@@ -18,16 +18,27 @@
 
 package studio.phaseshift.metatron.isa.web.space.http;
 
+import okio.FileSystem;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.SkipInheritedTests;
 import studio.phaseshift.metatron.SkipInheritedTestsExtension;
 import studio.phaseshift.metatron.TestTag;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
+import studio.phaseshift.metatron.isa.mach.io.space.fs.fsSpace;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 
+import java.nio.file.FileSystems;
+
+import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -53,10 +64,15 @@ public class httpSpaceTest extends AbstractSpaceTest {
     public httpSpaceTest() {
         super(f(BASE_URL), () -> {
             InstSet.importInstSet(WEB_ISA_TID);
-            return httpSpace.of(rec(
+            final fsSpace fs = fsSpace.of(FileSystems.getDefault(), rec(
+                    uri(PATTERN), uri("local:#"),
+                    uri(ROUTE), rec(uri("local:"), uri("src/test/resources/"))), f("/sys/space/fs"));
+            final httpSpace space = httpSpace.of(rec(
                     uri(HOST), uri(BASE_URL),
                     uri(PATTERN), uri("http://#"),
-                    uri(ROUTE), rec(uri("/"), uri("local:src/test/resources/web"))), f("/sys/space/web"));
+                    uri(ROUTE), rec(uri("/"), uri("local:web"))), f("/sys/space/web"));
+            
+            return space;
         });
 
     }
@@ -71,7 +87,7 @@ public class httpSpaceTest extends AbstractSpaceTest {
         return f(BASE_URL + "/test/");
     }
 
-/*
+
     @ParameterizedTest
     @CsvSource(value = {
             // "/|notnoobj",
@@ -83,7 +99,7 @@ public class httpSpaceTest extends AbstractSpaceTest {
             "/test.json/hello|world",
             "/test.txt|\"This is a plain text file for httpSpaceTest.\"",
             "/missing.html|noobj"
-    }, delimiter = '|')
+    }, delimiter = '|', quoteCharacter = '\'')
     public void testResourceAccess(final String path, final String expected) {
         String url = BASE_URL + path;
         var result = Router.readFromSpace(url);
@@ -143,6 +159,6 @@ public class httpSpaceTest extends AbstractSpaceTest {
         assertEquals(str("a1.b1.c1.text"), Router.readFromSpace(BASE_URL + "/html/body/out/0/out/+/out/+/text"));
         assertEquals(str("a2.b2.c2.text"), Router.readFromSpace(BASE_URL + "/html/body/out/1/out/0/out/0/text"));
         assertEquals(str("a2.b2.c2.text"), Router.readFromSpace(BASE_URL + "/html/body/out/1/out/+/out/+/text"));
-    }*/
+    }
 
 }

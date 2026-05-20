@@ -155,7 +155,7 @@ public class httpSpace extends AbstractSpace<HttpServer> {
             server.start();
         } catch (final Exception e) {
             LOG.error(MTronException.of(e));
-            LOG.warn("%s server not started", this);
+            LOG.warn("%s server not started: %s", this, e.getMessage());
         }
     }
 

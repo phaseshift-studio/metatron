@@ -359,7 +359,7 @@ public final class QCollection {
             return;
         }
         final Docs doc = Docs.doc(obj, domDesc, rngDesc, argDescription, description, examples);
-        final Space objSpace = Router.global().getSpace(objID);
+        final Space objSpace = Router.global().getSpaceFor(objID);
         final Optional<QProc> docq = objSpace.qs().jvm().stream().filter(q -> q.tid().basePath().equals(DOCQ_TID)).map(Obj::<QProc>as).findAny();
         if (docq.isEmpty())
             objSpace.logger().warn("no doc query attachment mounted on %s for %s", objSpace, objID);

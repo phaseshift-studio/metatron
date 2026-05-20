@@ -21,7 +21,6 @@ package studio.phaseshift.metatron.isa.web.space.http.handler;
 import com.sun.net.httpserver.HttpExchange;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
-import studio.phaseshift.metatron.isa.m.type.Fail;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.type.Router;
@@ -116,7 +115,7 @@ public class web_httpHandler extends HttpRec {
 
                 // 2 — locateBaseObj: walk up the URI path to find a containing object, then navigate into it
                 if (requestObj.isNoObj()) {
-                    final Space space = Router.global().getSpace(requestURI);
+                    final Space space = Router.global().getSpaceFor(requestURI);
                     if (space != null) {
                         final Space.IdObj baseObj = Space.Helper.locateBaseObj(space, requestURI, f(""));
                         if (baseObj != null) {

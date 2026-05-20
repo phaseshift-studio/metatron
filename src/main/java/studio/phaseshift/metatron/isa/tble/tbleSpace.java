@@ -22,7 +22,6 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.SchemaSpace;
 import studio.phaseshift.metatron.isa.Space;
-import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
@@ -38,7 +37,6 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.function.BiFunction;
@@ -47,12 +45,8 @@ import java.util.function.Function;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
-import static studio.phaseshift.metatron.isa.Space.Helper.attachVIDs;
-import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TID;
-import static studio.phaseshift.metatron.isa.m.type.InstSet.instset0;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -412,11 +406,11 @@ public class tbleSpace extends AbstractSpace<Connection> implements SchemaSpace 
                             all.addAll(Space.Helper.unrollPoly(
                                     external, kv.obj().as(), pattern.asNode()));
                     });
-                    return attachVIDs(all.iterator());
+                    return all.iterator();
                 }
 
                 // ── key-value path ──
-                return collectResults(attachVIDs(this.schema.read(this.sjvm(), pattern)), pattern);
+                return collectResults(this.schema.read(this.sjvm(), pattern), pattern);
 
             } catch (final Exception e) {
                 throw MTronException.of(e);

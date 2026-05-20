@@ -158,7 +158,7 @@ public class BasicRouter extends AbstractSpace<Map<Obj, Obj>> implements Router 
         if (external) {
             final Set<fURI> set = this.smallToBigRoutes.getOrDefaultRaw(furi.basePath(), Set.of(furi));
             if (set.isEmpty()) {
-                temp = this.getSpace(furi).redirect(furi, true);
+                temp = this.getSpaceFor(furi).redirect(furi, true);
             } else if (set.size() > 1) {
                 // when multiple redirects exist, prefer shorter paths (closer to primary instruction set)
                 // this ensures /m/inst/zero is preferred over /m/mach/inst/ring/const/zero
@@ -199,7 +199,7 @@ public class BasicRouter extends AbstractSpace<Map<Obj, Obj>> implements Router 
                     if (spc.vid() != null)
                         this.spaces().jvm().remove(spc.vid().toUri());
                 });
-        final Space superSpace = this.hasSpaceFor(space.pattern()) ? this.getSpace(space.pattern()) : noobjSpace.single();
+        final Space superSpace = this.hasSpaceFor(space.pattern()) ? this.getSpaceFor(space.pattern()) : noobjSpace.single();
         final Rec subSpaces = space.jvm().getOrDefault(uri(SPACE), rec()).as();
         if (!(superSpace instanceof noobjSpace)) {
             final Rec superSpaces = superSpace.jvm().getOrDefault(uri(SPACE), rec()).as();
@@ -233,7 +233,7 @@ public class BasicRouter extends AbstractSpace<Map<Obj, Obj>> implements Router 
     }
 
     @Override
-    public <S extends Space> S getSpace(final fURI match) {
+    public <S extends Space> S getSpaceFor(final fURI match) {
         if (match.test(NOOBJ))
             return noobjSpace.single();
         // using jvm() for speed (given the heavy use of this method)
@@ -286,7 +286,7 @@ public class BasicRouter extends AbstractSpace<Map<Obj, Obj>> implements Router 
             if (!stackObj.isNoObj())
                 return stackObj;
         }
-        final Space space = this.getSpace(readableVID);
+        final Space space = this.getSpaceFor(readableVID);
         final Obj obj = space.read(readableVID);
         if (obj.isNoObj()) {
             final fURI bigVID = readableVID.big();
@@ -309,7 +309,7 @@ public class BasicRouter extends AbstractSpace<Map<Obj, Obj>> implements Router 
         }
         final fURI writableVID = this.alignPrefix(vid);
         /// ///////////////
-        final Space space = this.getSpace(writableVID);
+        final Space space = this.getSpaceFor(writableVID);
         LOG.trace("writing %s {{g}}=>{{b}} %s{{X}} in %s", obj, vid, space.vid());
         return space.write(writableVID, obj);
     }
@@ -318,6 +318,11 @@ public class BasicRouter extends AbstractSpace<Map<Obj, Obj>> implements Router 
     public boolean hasSpaceFor(final fURI vid) {
         final fURI alignedVID = this.alignPrefix(vid);
         return this.spaces().jvm().values().stream().map(Obj::<Space>as).anyMatch(s -> alignedVID.test(s.pattern()));
+    }
+
+    @Override
+    public <SPACE extends Space> SPACE getSpace(final fURI vid) {
+        return (SPACE) this.spaces().jvm().values().stream().map(Obj::<Space>as).filter(s -> s.vid().test(vid)).findFirst().orElse(null);
     }
 
     @Override

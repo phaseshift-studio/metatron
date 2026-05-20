@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 
+import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.Statement;
 import java.util.stream.Stream;
@@ -67,7 +68,7 @@ public class SqliteTbleSpaceTest extends AbstractTbleSpaceTest {
     public static void cleanupSqliteDatabase() throws Exception {
         cleanupDatabase();
     }
-
+    
     // All common tests are inherited from AbstractTbleSpaceTest
     // Add SQLite-specific tests below if needed
 

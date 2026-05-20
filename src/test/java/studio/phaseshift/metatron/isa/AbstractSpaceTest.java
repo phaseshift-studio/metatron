@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -28,7 +29,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.TestCategory;
 import studio.phaseshift.metatron.TestData;
-import studio.phaseshift.metatron.TestScope;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -65,14 +65,12 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
     protected int sleepBetweenReads = 0;
     protected Space space;
     protected final Supplier<Space> spaceSupplier;
-    protected Space spaceStorage = null;
     protected static final List<String> PREVIOUS_LINE = new ArrayList<>(List.of("", "", ""));
     /**
      * Set to true when a seed write is skipped (rejected by root enforcement); cleared on next non-"." row.
      */
     protected static boolean seedWriteSkipped = false;
     protected final fURI baseURI;
-    public AtomicBoolean inScope = new AtomicBoolean(false);
 
     public AbstractSpaceTest(final Supplier<Space> spaceSupplier) {
         this(f("/t"), spaceSupplier);
@@ -103,35 +101,25 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
 
     @BeforeEach
     protected void setup() {
-        if (!this.inScope.get()) {
-            //if (!Router.global().hasSpaceFor(this.baseURI))
-            //    this.spaceStorage = memSpace.of(rec(uri(PATTERN), uri(this.baseURI.retract(1).extend("#"))), f("/sys/space").extend(this.baseURI.retractPattern().name()));
-            this.space = this.spaceSupplier.get();
-            if (null == this.space)
-                Assertions.fail("space supplier yielded a null space");
-            if (this.space.vid() == null)
-                LOG.debug("provided space has no vid and thus can not be shutdown automatically");
-        }
+        this.space = this.spaceSupplier.get();
+        if (null == this.space)
+            Assertions.fail("space supplier yielded a null space");
+        if (this.space.vid() == null)
+            LOG.debug("provided space has no vid and thus can not be shutdown automatically");
+
     }
 
     @AfterEach
     protected void stop() {
-        if (!this.inScope.get()) {
-            if (null == this.space) {
-                Assertions.fail("space nullified over course of testing");
-                return;
-            }
-            if (null != this.space.vid()) {
-                Router.global().removeSpace(this.space.vid());
-                assertDoesNotThrow(this.space::close);
-            }
-            if (null != this.spaceStorage) {
-                Router.global().removeSpace(this.spaceStorage.vid());
-                this.spaceStorage.close();
-                this.spaceStorage = null;
-            }
-            this.space = null;
+        if (null == this.space) {
+            Assertions.fail("space nullified over course of testing");
+            return;
         }
+        if (null != this.space.vid()) {
+            Router.global().removeSpace(this.space.vid());
+            assertDoesNotThrow(this.space::close);
+        }
+        this.space = null;
     }
 
     public static Map<fURI, Obj> generateRandomData(final fURI furiPrefix, int size) {
@@ -166,7 +154,6 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
     @TestCategory.Crud
     @TestCategory.ReadWrite
     @ParameterizedTest
-    @TestData(oneTime = false, value = {""})
     @CsvSource(value = {
             "1.to(a)                                               % *a                                % 1",
             "$$ -> [a,b,c]                                         % *<$$>                              % [a,b,c]",
@@ -508,7 +495,7 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
             PREVIOUS_LINE.set(1, make(readExpression));
         if (!expectedExpression.equals("."))
             PREVIOUS_LINE.set(2, make(expectedExpression));
-        Graphitty.log(this.space).warn("\n\twrite [%s => %s]\n\tread [%s => %s]\n\texpected [%s => %s]",
+        Graphitty.log(this.space).debug("\n\twrite [%s => %s]\n\tread [%s => %s]\n\texpected [%s => %s]",
                 make(writeExpression), writeObj,
                 make(readExpression), readObj,
                 make(expectedExpression), resultObj);
@@ -519,14 +506,8 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
         }
     }
 
-    /**
-     * WARNING: The original dataset mutates over the course of the test cases being added.
-     */
-    @TestCategory.Crud
-    @TestCategory.ReadWrite
-    @ParameterizedTest
-    @TestScope 
-    @TestData(oneTime = true, value = {
+    @Test
+    @TestData(value = {
             // --- people (4 rows) ---
             "$$/people/1 -> [name=>'Alice', age=>30, title=>'Engineer', salary=>75000.0, company=>101, active=>true]",
             "$$/people/2 -> [name=>'Bob', age=>25, title=>'Designer', salary=>60000.0, company=>101, active=>true]",
@@ -536,53 +517,101 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
             "$$/companies/101 -> [name=>'Acme Corp', city=>'NYC', employees=>50, public=>false];",
             "$$/companies/102 -> [name=>'Globex Inc', city=>'LA', employees=>200, public=>true];",
     })
+    public void testMonoUpdate() {
+        final String[] value = {
+                "*$$/people/1                                                         %  *$$/people/1/name.map(*$$/people/1/name)                        % \"Alice\"",
+                "*$$/people/1                                                         %  *$$/people/1>>name                                              % \"Alice\"",
+                "*$$/people/1                                                         %  *$$/people/1/name                                               % \"Alice\"",
+                "*$$/people/1                                                         %  *$$/people/1/age                                                % 30",
+                "@$$/people/1 >>= [age=>29,title=> +' Specialist']                    %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'Alice',age=>29,title=>'Engineer Specialist']",
+                "*$$/people/1 >>= [age=>30,title=>'NONE']                             %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'Alice',age=>29,title=>'Engineer Specialist']",
+                "@$$/people/1/age >>= 45                                              %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'Alice',age=>45,title=>'Engineer Specialist']",
+                "*$$/people/1/age >>= 55                                              %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'Alice',age=>45,title=>'Engineer Specialist']",
+                "@$$/people/1/age >>=(+ 12 * 2)                                       %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'Alice',age=>114,title=>'Engineer Specialist']",
+                "@$$/people/1/age >>= 140                 %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'Alice',age=>140,title=>'Engineer Specialist']",
+                "@$$/people/1 >>= [name=>'XYZ']                                       %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'XYZ',age=>140,title=>'Engineer Specialist']",
+                "@$$/people/1 >>= [name=>+'ZYX']                                      %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'XYZZYX',age=>140,title=>'Engineer Specialist']",
+                "@$$/people/1 >>= [name=><<.>>name.+'ABC']                            %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'XYZZYXABC',age=>140,title=>'Engineer Specialist']",
+                "@$$/people/2 >>= [name=><<.-<[>>name,' the ',>>title]._/sum()\\_>-]  %  *$$/people/2==[name=>_,age=>_,title=>_]                         % [name=>'Bob the Designer',age=>25,title=>'Designer']",
+                "@<$$/people/+>                                                       %  *<$$/people/+>.vid()                                            % {$$/people/1,$$/people/2,$$/people/3,$$/people/4}",
+                "@<$$/people/+>.>>= [name=>\"Micky Mouse\"]                           %  *<$$/people/+>.>>name                                           % {4}\"Micky Mouse\"",
+                "@<$$/people/+>.>>= [name=>\"Optimus Prime\"]                         %  *<$$/people/+/name>                                             % {4}\"Optimus Prime\"",
+                "@<$$/people/+/name>.>>= \"Dark Wing Duck\"                           %  *<$$/people/+>==[name=>_]>>name                                 % {4}\"Dark Wing Duck\"",
+                "@<$$/people/+>.>>= [name=>none]                                      %  *<$$/people/+/name>                                             % noobj",
+                "@<$$/people/+>                                                       %  *<$$/people/2>==[active=>_]                                     % [active=>true]",
+                "@<$$/people/+>.>>=[active=>not(_)]                                   %  *<$$/people/2>==[active=>_]                                     % [active=>false]",
+                "@<$$/companies/102>.>>=[name=> _ + ' ' + (<<.>>city)]                %  *<$$/companies/102/name>                                        % \"Globex Inc LA\"",
+                //"noobj                                                              %  *$$/people/+.>>company.group([>>name => _])==[_=>count()]       % [\"Acme Corp\"=>3,\"Globex Inc\"=>1]",
+                // TODO: write >>= update test cases
+                // Format: *$$/people/1 >>= [field=>newVal]   %   *$$/people/1/field   %   expectedValue
+                // Foreign-key dereference: !*$$/people/1/company reads the linked company record
+        };
+        int counter = 0;
+        for (final String expression : value) {
+            counter++;
+            final String[] parts = expression.split("%");
+            final String updateExpression = parts[0].trim();
+            final String readExpression = parts[1].trim();
+            final String expectedExpression = parts[2].trim();
+
+            ObjmtronSerializer.parse(make(updateExpression)).apply();
+
+            if (this.sleepBetweenReads > 0)
+                CommonUtil.sleepThread(this.sleepBetweenReads);
+
+            final Obj readObj = ObjmtronSerializer.parse(make(readExpression)).apply();
+            final Obj expectedObj = ObjmtronSerializer.parse(make(expectedExpression)).apply();
+
+            if (!updateExpression.equals("."))
+                PREVIOUS_LINE.set(0, make(updateExpression));
+            if (!readExpression.equals("."))
+                PREVIOUS_LINE.set(1, make(readExpression));
+            if (!expectedExpression.equals("."))
+                PREVIOUS_LINE.set(2, make(expectedExpression));
+
+            LOG.none("{{G}}TEST[%d]{{X}}\n\tupdate [%s]\n\tread [%s]\n\texpected [%s]\n",
+                    counter, make(updateExpression), make(readExpression), make(expectedExpression));
+            assertEquals(expectedObj, readObj, Graphitty.string("{{R}}TEST[" + counter + "]{{X}}: update: " + make(updateExpression) + " | read: " + make(readExpression)));
+        }
+    }
+
+    @TestCategory.Crud
+    @TestCategory.ReadWrite
+    @ParameterizedTest
+    @TestData(value = {
+            // --- nested org structure with cross-references ---
+            "$$/org/acme -> [name=>'Acme Corp', hq=>[city=>'NYC',zip=>10001]]",
+            "$$/org/glb -> [name=>'Globex Inc', hq=>[city=>'LA',zip=>90001]]",
+            // --- people with nested address and cross-reference ---
+            "$$/ppl/1 -> [name=>'Alice', age=>30, address=>[street=>'123 Main',city=>'NYC',zip=>10001], worksFor=>!*$$/org/acme]",
+            "$$/ppl/2 -> [name=>'Bob', age=>25, address=>[street=>'456 Oak',city=>'LA',zip=>90001], worksFor=>!*$$/org/acme]",
+            "$$/ppl/3 -> [name=>'Charlie', age=>35, address=>[street=>'789 Pine',city=>'NYC',zip=>10001], worksFor=>!*$$/org/glb]",
+    })
+
     @CsvSource(value = {
-            "*$$/people/1                                                         %  *$$/people/1/name.map(*$$/people/1/name)                        % \"Alice\"",
-            "*$$/people/1                                                         %  *$$/people/1>>name                                              % \"Alice\"",
-            "*$$/people/1                                                         %  *$$/people/1/name                                               % \"Alice\"",
-            "*$$/people/1                                                         %  *$$/people/1/age                                                % 30",
-            "@$$/people/1 >>= [age=>29,title=> +' Specialist']                    %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'Alice',age=>29,title=>'Engineer Specialist']",
-            "*$$/people/1 >>= [age=>30,title=>'NONE']                             %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'Alice',age=>29,title=>'Engineer Specialist']",
-            "@$$/people/1/age >>= 45                                              %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'Alice',age=>45,title=>'Engineer Specialist']",
-            "*$$/people/1/age >>= 55                                              %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'Alice',age=>45,title=>'Engineer Specialist']",
-            "@$$/people/1/age >>=(+ 12 * 2)                                       %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'Alice',age=>114,title=>'Engineer Specialist']",
-            "@$$/people/1/age >>= 140                 %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'Alice',age=>140,title=>'Engineer Specialist']",
-            "@$$/people/1 >>= [name=>'XYZ']                                       %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'XYZ',age=>140,title=>'Engineer Specialist']",
-            "@$$/people/1 >>= [name=>+'ZYX']                                      %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'XYZZYX',age=>140,title=>'Engineer Specialist']",
-            "@$$/people/1 >>= [name=><<.>>name.+'ABC']                            %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'XYZZYXABC',age=>140,title=>'Engineer Specialist']",
-            "@$$/people/2 >>= [name=><<.-<[>>name,' the ',>>title]._/sum()\\_>-]  %  *$$/people/2==[name=>_,age=>_,title=>_]                         % [name=>'Bob the Designer',age=>25,title=>'Designer']",
-            "@<$$/people/+>                                                       %  *<$$/people/+>.vid()                                            % {$$/people/1,$$/people/2,$$/people/3,$$/people/4}",
-            "@<$$/people/+>.>>= [name=>\"Micky Mouse\"]                           %  *<$$/people/+>.>>name                                              % {4}\"Micky Mouse\"",
-            "@<$$/people/+>.>>= [name=>\"Optimus Prime\"]                         %  *<$$/people/+/name>                                                % \"Optimus Prime\"",
-            "@<$$/people/+/name>.>>= \"Dark Wing Duck\"                           %  *<$$/people/+>==[name=>_]>>name                                 % {4}\"Dark Wing Duck\"",
-            "@<$$/people/+>.>>= [name=>none]                                      %  *<$$/people/+/name>                                             % noobj",
-            "@<$$/people/+>                                                       %  *<$$/people/2>==[active=>_]                                       % [active=>true]",
-            "@<$$/people/+>.>>=[active=>not(_)]                                    %  *<$$/people/2>==[active=>_]                                       % [active=>false]",
-            //"noobj                                               %  *$$/people/+.>>company.group([>>name => _])==[_=>count()]       % [\"Acme Corp\"=>3,\"Globex Inc\"=>1]",
-            // TODO: write >>= update test cases
-            // Format: *$$/people/1 >>= [field=>newVal]   %   *$$/people/1/field   %   expectedValue
-            // Foreign-key dereference: !*$$/people/1/company reads the linked company record
+            // ── direct field reads ──
+            "*$$/ppl/1/name                      % \"Alice\"",
+            "*$$/ppl/1>>name                     % \"Alice\"",
+            "*$$/ppl/1/age                       % 30",
+            // ── multi-field wildcard ──
+            "*$$/ppl/1>>{name,age}               % {30,\"Alice\"}",
+            "*$$/ppl/1/+                         % {30,\"Alice\",[name=>'Acme Corp', hq=>[city=>'NYC',zip=>10001]],[street=>'123 Main',city=>'NYC',zip=>10001]}",
+            // ── nested sub-document walk ──
+            "*$$/ppl/1/address/city              % \"NYC\"",
+            "*$$/ppl/1/address/+                 % {'123 Main','NYC',10001}",
+            // ── cross-reference dereference ──
+            "*$$/ppl/1/worksFor/name             % \"Acme Corp\"",
+            "*$$/ppl/1/worksFor/hq/city          % \"NYC\"",
+            "*$$/ppl/1/worksFor/hq               % [city=>\"NYC\",zip=>10001]",
+            "*$$/ppl/1/worksFor/hq.>>{city,zip}  % {\"NYC\",10001}",
+            // ── deeper walk through cross-ref ──
+            "*$$/ppl/3/worksFor/name             % \"Globex Inc\"",
+            "*$$/ppl/3/address/city              % \"NYC\"",
     }, delimiter = '%')
-    public void testMonoUpdate(final String updateExpression, final String readExpression, final String expectedExpression) {
-        ObjmtronSerializer.parse(make(updateExpression)).apply();
-
-        if (this.sleepBetweenReads > 0)
-            CommonUtil.sleepThread(this.sleepBetweenReads);
-
-        final Obj readObj = ObjmtronSerializer.parse(make(readExpression)).apply();
-        final Obj expectedObj = ObjmtronSerializer.parse(make(expectedExpression)).apply();
-
-        if (!updateExpression.equals("."))
-            PREVIOUS_LINE.set(0, make(updateExpression));
-        if (!readExpression.equals("."))
-            PREVIOUS_LINE.set(1, make(readExpression));
-        if (!expectedExpression.equals("."))
-            PREVIOUS_LINE.set(2, make(expectedExpression));
-        /*LOG.error("\n\tupdate [%s => %s]\n\tread [%s => %s]\n\texpected [%s => %s]",
-                make(updateExpression), ObjmtronSerializer.parse(make(updateExpression)).resolve(noobj()),
-                make(readExpression), readObj,
-                make(expectedExpression), expectedObj);*/
-        assertEquals(expectedObj, readObj, "update: " + make(updateExpression) + " | read: " + make(readExpression));
+    public void testMonoDepth(final String lookupExpression, final String expectedResult) {
+        final Obj lookup = ObjmtronSerializer.parse(make(lookupExpression)).apply();
+        final Obj result = ObjmtronSerializer.parse(make(expectedResult)).apply();
+        assertEquals(result, lookup, "lookup: " + make(lookupExpression) + " | expected: " + make(expectedResult));
     }
 
     @ParameterizedTest

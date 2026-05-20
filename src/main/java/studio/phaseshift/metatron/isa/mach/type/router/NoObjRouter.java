@@ -95,6 +95,11 @@ public final class NoObjRouter extends MRec implements Router {
     }
 
     @Override
+    public <SPACE extends Space> SPACE getSpace(final fURI pattern) {
+        return null;
+    }
+
+    @Override
     public void registerRedirect(fURI small, fURI big) {
 
     }
@@ -115,7 +120,7 @@ public final class NoObjRouter extends MRec implements Router {
     }
 
     @Override
-    public <SPACE extends Space> SPACE getSpace(fURI vid) {
+    public <SPACE extends Space> SPACE getSpaceFor(fURI vid) {
         return noobjSpace.single();
     }
 }

@@ -33,8 +33,14 @@ public class stackSpaceTest extends AbstractSpaceTest {
     }
     
     @Override
-    public void testMonoUpdate(final String updateExpression, final String readExpression, final String expectedExpression) {
-           super.testMonoUpdate(updateExpression, readExpression, expectedExpression);
+    public void testMonoUpdate() {
+           super.testMonoUpdate();
            this.space.close(); // this is necessary due to TestScope not closing on test completion (need to move to JUnit listener model).
+    }
+
+    @Override
+    public void testMonoReadWrite(final String writeExpression, final String readExpression, final String expectedExpression) {
+        super.testMonoReadWrite(writeExpression, readExpression, expectedExpression);
+        this.space.close(); // this is necessary due to TestScope not closing on test completion (need to move to JUnit listener model).
     }
 }

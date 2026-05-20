@@ -66,7 +66,7 @@ Every test class must extend `AbstractMetatronTest`. In `@BeforeAll`:
 ### Run Metatron
 ```bash
 # bin/metatron script (recommended)
-bin/metatron "[boot=><conf/boot.mtron>,log=>info,host=><ws://0.0.0.0:8888>]"
+bin/metatron "[boot=><boot/boot.mtron>,log=>info]"
 ```
 The `bin/metatron` script wraps the jar with JVM flags. Do not run the jar directly without these flags.
 

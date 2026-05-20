@@ -88,7 +88,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
 
     public static File staticObjToFile(final Obj obj) {
         try {
-            final fsSpace space = Router.global().getSpace(obj.uriValue().basePath()).as();
+            final fsSpace space = Router.global().getSpaceFor(obj.uriValue().basePath()).as();
             return new File(space.redirect(obj.uriValue().basePath(), true).toString());
         } catch (final Exception e) {
             throw MTronException.of(e);
@@ -112,12 +112,12 @@ public class fsSpace extends AbstractSpace<FileSystem> {
         try {
             if (file.exists()) {
                 if (file.isFile()) {
-                    return readFileAsObj(file, qMap);
+                    return readFileAsObj(file, qMap).vid(null);
                 } else if (file.isDirectory()) {
                     // A directory's value is stored in a hidden .mtron file
                     final File hidden = new File(file, ".mtron");
                     if (hidden.exists() && hidden.isFile())
-                        return readFileAsObj(hidden, qMap);
+                        return readFileAsObj(hidden, qMap).vid(null);
                     return uri(this.redirect(f(file.getPath()), false), DIR_TID, null);
                 }
             }
@@ -140,7 +140,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
         final fURI vid = source.startsWith("[-- @<") ? f(source.substring(6, source.indexOf("> --]\n")).trim()) : null;
         if (vid != null) contentType = Content.ContentType.APPLICATION_MTRON;
         LOG.debug("fileToObj: %s => %s", file.getPath(), vid);
-        return contentType.hasSerializer() ? contentType.fromBytes(fileBytes) : uri(this.redirect(f(file.getPath()), false), FILE_TID, null);
+        return contentType.hasSerializer() ? contentType.fromBytes(fileBytes) : uri(this.redirect(f(file.getPath()), false), FILE_TID, null).selfVID(vid);
     }
 
     @Override
@@ -160,8 +160,8 @@ public class fsSpace extends AbstractSpace<FileSystem> {
             final fURI selfVID = obj.vid();
             try (final FileOutputStream writer = new FileOutputStream(file, vid.hasQ("append"))) {
                 if (contentType.isMtron() && !vid.hasQ("append")) {
-                    final String at_vid = selfVID == null ? null : "[-- @<" + selfVID + "> --]\n";
-                    if (null != at_vid) writer.write(at_vid.getBytes(StandardCharsets.UTF_8));
+                  //  final String at_vid = selfVID == null ? null : "[-- @<" + selfVID + "> --]\n";
+                   // if (null != at_vid) writer.write(at_vid.getBytes(StandardCharsets.UTF_8));
                 }
                 writer.write(contentType.toBytes(obj.selfVID(null)));
                 writer.flush();

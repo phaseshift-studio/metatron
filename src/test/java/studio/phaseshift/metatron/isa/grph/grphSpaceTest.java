@@ -18,10 +18,7 @@
 
 package studio.phaseshift.metatron.isa.grph;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
@@ -67,8 +64,6 @@ public class grphSpaceTest extends AbstractSpaceTest {
     public grphSpaceTest() {
         super(() -> {
             // Example: TinkerGraph with modern dataset (legacy format - still supported)
-            InstSet.importInstSet(GRPH_ISA_TID);
-            InstSet.importInstSet(MODERN_SCHEMA_TID);
             return grphSpace.of(rec(
                             PATTERN, uri("/g/#"),
                             ROUTE, rec(
@@ -266,7 +261,12 @@ public class grphSpaceTest extends AbstractSpaceTest {
     // Disable all abstract tests - grphSpace is for graph traversals, not general CRUD
     @Override
     @Disabled
-    public void testMonoUpdate(String writeExpression, String readExpression, String expectedExpression) {
+    public void testMonoUpdate() {
+    }
+
+    @Override
+    @Disabled
+    public void testMonoDepth(String writeExpression, String readExpression) {
     }
 
 

@@ -96,12 +96,7 @@ public class fsSpaceTest extends AbstractSpaceTest {
     public void testMonoReadWrite(final String writeExpression, final String readExpression, final String expectedExpression) {
         // fsSpace .mtron files persist between test rows — needs recursive # delete
     }
-
-    @Override
-    public void testMonoUpdate(final String updateExpression, final String readExpression, final String expectedExpression) {
-        // fsSpace .mtron files persist between test rows — needs recursive # delete
-    }
-
+    
     @ParameterizedTest
     @CsvSource(value = {
             "*<test:file/+>.count().?>3        % 4",

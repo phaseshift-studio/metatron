@@ -280,7 +280,7 @@ public class machInstSet extends AbstractInstSet {
                         //instC(RING_BINARY.dom(A).rng(ALL.dom(A).rng(A)), lst(T(A)), (lhs, inst) -> instB(mtronInstSet.INST_TID.extend(inst.tid().name()), inst.args()).apply(lhs)),
                         instC(WHICH_INST_TID.dom(ALL).rng(A), lst(URI_TYPE), (lhs, inst) -> {
                             if (inst.arg(0).uriValue().big().equals(SPACE_TID))
-                                return null == lhs.vid() ? noobjSpace.single() : Router.global().getSpace(lhs.vid());
+                                return null == lhs.vid() ? noobjSpace.single() : Router.global().getSpaceFor(lhs.vid());
                             else
                                 throw MTronException.of("unsupported which %s for %s", inst.arg(0), lhs);
                         }),

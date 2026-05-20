@@ -238,7 +238,7 @@ public interface Inst extends Call {
         */
 
         try {
-            final Space space = Router.global().getSpace(this.tid().basePath());
+            final Space space = Router.global().getSpaceFor(this.tid().basePath());
             Obj fetched = space.read(this.tid().basePath());
             /// //////////////////////////////////////////////////
             /*if (fetched.stream().noneMatch(Obj::isInstObj)) {

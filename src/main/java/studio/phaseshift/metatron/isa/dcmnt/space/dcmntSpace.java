@@ -433,14 +433,13 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
                 return IteratorUtil.of();
 
             if (documentID == null) {
-                return Space.Helper.attachVIDs(
-                        resolveCollectionStream(collectionName).map(collection -> {
+                return resolveCollectionStream(collectionName).map(collection -> {
                             final fURI collectionVID = Space.Helper.routeToSpace(
                                     f(collection.getNamespace().getCollectionName()), this.routes());
                             LOG.debug("collection lookup: %s", collectionVID);
                             return IdObj.of(collectionVID, uri(collectionVID, COLLECTION_TID, null)
                                     .selfVID(collectionVID));
-                        }).iterator());
+                        }).iterator();
             }
 
             final List<IdObj> allResults = new ArrayList<>();
@@ -479,7 +478,7 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
                     }
                 }
             });
-            return Space.Helper.attachVIDs(allResults.iterator());
+            return allResults.iterator();
         };
     }
 

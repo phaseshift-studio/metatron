@@ -30,14 +30,21 @@ import studio.phaseshift.metatron.isa.mach.type.router.NoObjRouter;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.SPACE;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.ALL;
 import static studio.phaseshift.metatron.furi.fURI.Singleton.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 public interface Router extends Space {
+
+    enum Reference {
+        ATTACHED,
+        DETACHED
+    }
 
     fURI STACK_PATTERN = f("+/#");
     ThreadLocal<stackSpace> THREAD_STACK = ThreadLocal.withInitial(() -> new stackSpace(STACK_PATTERN));
@@ -48,6 +55,17 @@ public interface Router extends Space {
 
     static Router global() {
         return null == BootLoader.ROUTER ? NoObjRouter.single() : BootLoader.ROUTER;
+    }
+
+    static Stream<Obj> streamFromSpace(final fURI vid, final Reference type) {
+        if (!Router.loaded())
+            return Stream.empty();
+        final Stream<IdObj> stream = BootLoader.ROUTER.readStream(vid);
+        if (vid.isBranch())
+            return stream.map(pair -> rel(uri(pair.furi()), type == Reference.ATTACHED
+                    ? pair.obj().vid(pair.furi()) : pair.obj().vid(null)));
+        return stream.map(pair -> type == Reference.ATTACHED
+                ? pair.obj().vid(pair.furi()) : pair.obj().vid(null));
     }
 
     static Obj readFromSpace(final fURI vid) {
@@ -111,6 +129,8 @@ public interface Router extends Space {
     void addSpace(final Space space);
 
     void removeSpace(final fURI vid);
+    
+    <SPACE extends Space> SPACE getSpace(final fURI pattern);
 
     void registerRedirect(final fURI small, final fURI big);
 
@@ -120,7 +140,7 @@ public interface Router extends Space {
 
     fURI redirect(final fURI furi, final boolean big);
 
-    <SPACE extends Space> SPACE getSpace(final fURI vid);
+    <SPACE extends Space> SPACE getSpaceFor(final fURI vid);
 
     class Helper {
         public static String routerToString(final Router router) {

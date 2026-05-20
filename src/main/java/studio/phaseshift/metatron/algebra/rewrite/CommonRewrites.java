@@ -252,7 +252,7 @@ public final class CommonRewrites {
                 final Inst takeInst = matchedInsts.get(1);
 
                 final fURI oldfURI = fromInst.arg(0).asUri().uriValue();
-                final Space space = studio.phaseshift.metatron.isa.mach.type.Router.global().getSpace(oldfURI);
+                final Space space = studio.phaseshift.metatron.isa.mach.type.Router.global().getSpaceFor(oldfURI);
 
                 // Check if this is the correct space type
                 if (this.spaceType.isInstance(space) && (this.matchPredicate == null || this.matchPredicate.test(matchedInsts))) {
@@ -420,7 +420,7 @@ public final class CommonRewrites {
                 final Inst rshiftInst = matchedInsts.get(1);
 
                 final fURI oldfURI = fromInst.arg(0).asUri().uriValue();
-                final Space space = studio.phaseshift.metatron.isa.mach.type.Router.global().getSpace(oldfURI);
+                final Space space = studio.phaseshift.metatron.isa.mach.type.Router.global().getSpaceFor(oldfURI);
 
                 if (!this.spaceType.isInstance(space)) {
                     return matchedInsts.stream().map(Obj::asInst).toList();
@@ -592,7 +592,7 @@ public final class CommonRewrites {
                 final Inst whereInst = matchedInsts.get(1);
 
                 final fURI oldfURI = fromInst.arg(0).asUri().uriValue();
-                final Space space = studio.phaseshift.metatron.isa.mach.type.Router.global().getSpace(oldfURI);
+                final Space space = studio.phaseshift.metatron.isa.mach.type.Router.global().getSpaceFor(oldfURI);
 
                 if (!this.spaceType.isInstance(space)) {
                     return matchedInsts.stream().map(Obj::asInst).toList();
@@ -829,7 +829,7 @@ public final class CommonRewrites {
                 final fURI furi = args.asLst().at(0).asUri().uriValue();
                 final String sqlWhere = args.asLst().at(1).asStr().jvm();
 
-                final Space space = studio.phaseshift.metatron.isa.mach.type.Router.global().getSpace(furi);
+                final Space space = studio.phaseshift.metatron.isa.mach.type.Router.global().getSpaceFor(furi);
 
                 if (!this.spaceType.isInstance(space)) {
                     return matchedInsts.stream().map(Obj::asInst).toList();

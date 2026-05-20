@@ -34,6 +34,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjmtronSerializer;
+import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -65,6 +66,7 @@ public class mqttSpaceTest extends AbstractSpaceTest implements SubQTest {
                         uri(QPROC), lst(QCollection.subq()),
                         uri(HOST), uri("mqtt://127.0.0.1:" + PORT),
                         uri(PATTERN), uri("/t/#"),
+                        uri(SERIALIZER), ObjmtronSerializer.single(), // USING MTRON SERIALIZER (JSON SERIALIZER ISN'T ONE-TO-ONE WITH TEST EXPECTATION TYPES)
                         uri(REWRITE), rel(uri("/t"), uri("/t"))), f("/sys/router/space/t"));
                 //space.directWriter().apply(f("#"), noobj());
             } catch (Exception e) {
@@ -87,7 +89,7 @@ public class mqttSpaceTest extends AbstractSpaceTest implements SubQTest {
         CommonUtil.sleepThread(1000);
         AbstractMetatronTest.end();
     }
-    @Override @Disabled public void testMonoUpdate(String description, String value, String temp) {}
+    @Override @Disabled public void testMonoUpdate() {}
     // Disable all abstract tests - mqttSpace uses pub/sub model, not traditional CRUD
 //    @Override @Disabled public void testMonoReadWrite(String writeExpression, String readExpression, String expectedExpression) {}
     @Override @Disabled public void testStringCornerCases(String description, String value) {}

@@ -38,7 +38,6 @@ public class PostgreSQLTbleSpaceTest extends AbstractTbleSpaceTest {
 
     @BeforeAll
     public static void setupPostgreSQLDatabase() throws Exception {
-        // Initialize the static config before calling setupDatabase
         staticDbConfig = new PostgreSQLDatabaseConfig();
         setupDatabase();
     }
