@@ -35,10 +35,10 @@ The type `html::T < rec::T` (a refinement of `rec::T`) represents an https://en.
 
 [mtron]
 ----
-html::T                                           [-- <1> --]
-[ERROR] *<http://phaseshift.studio/>                      [-- <2> --]
-[ERROR] *<http://phaseshift.studio/html/head/title>       [-- <3> --]
-[ERROR] *<http://phaseshift.studio>.as(str::T)            [-- <4> --]
+html::T                                                    [-- <1> --]
+*<http://phaseshift.studio/splash.html>                    [-- <2> --]
+*<http://phaseshift.studio/splash.html/html/head/title>    [-- <3> --]
+*<http://phaseshift.studio/splash.html>.as(str::T)         [-- <4> --]
 ----
 <1> The structural definition of `html::T`.
 <2> Retrieve the `index.html` of the website. Content-type yields `text/html` which for metatron maps to `html::T`.
