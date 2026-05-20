@@ -112,20 +112,12 @@ public class fsSpace extends AbstractSpace<FileSystem> {
         try {
             if (file.exists()) {
                 if (file.isFile()) {
-                    Content.ContentType contentType = qMap.containsKey("content_type") ?
-                            Content.ContentType.of(qMap.get("content_type")) :
-                            Content.ContentType.fromProbe(file, null);
-                    contentType = null == contentType ? 
-                            Content.ContentType.fromExtension(file.getName(), Content.ContentType.APPLICATION_MTRON) : contentType;
-                    final FileInputStream fs = new FileInputStream(file);
-                    byte[] fileBytes = fs.readAllBytes();
-                    fs.close();
-                    final String source = new String(fileBytes, StandardCharsets.UTF_8);
-                    final fURI vid = source.startsWith("[-- @<") ? f(source.substring(6, source.indexOf("> --]\n")).trim()) : null;
-                    if (vid != null) contentType = Content.ContentType.APPLICATION_MTRON;
-                    LOG.debug("fileToObj: %s => %s", file.getPath(), vid);
-                    return contentType.hasSerializer() ? contentType.fromBytes(fileBytes) : uri(this.redirect(f(file.getPath()), false), FILE_TID, null);
-                } else {
+                    return readFileAsObj(file, qMap);
+                } else if (file.isDirectory()) {
+                    // A directory's value is stored in a hidden .mtron file
+                    final File hidden = new File(file, ".mtron");
+                    if (hidden.exists() && hidden.isFile())
+                        return readFileAsObj(hidden, qMap);
                     return uri(this.redirect(f(file.getPath()), false), DIR_TID, null);
                 }
             }
@@ -133,6 +125,22 @@ public class fsSpace extends AbstractSpace<FileSystem> {
             throw MTronException.of(e);
         }
         return noobj();
+    }
+
+    private Obj readFileAsObj(final File file, final Map<String, String> qMap) throws IOException {
+        Content.ContentType contentType = qMap.containsKey("content_type") ?
+                Content.ContentType.of(qMap.get("content_type")) :
+                Content.ContentType.fromProbe(file, null);
+        contentType = null == contentType ?
+                Content.ContentType.fromExtension(file.getName(), Content.ContentType.APPLICATION_MTRON) : contentType;
+        final FileInputStream fs = new FileInputStream(file);
+        byte[] fileBytes = fs.readAllBytes();
+        fs.close();
+        final String source = new String(fileBytes, StandardCharsets.UTF_8);
+        final fURI vid = source.startsWith("[-- @<") ? f(source.substring(6, source.indexOf("> --]\n")).trim()) : null;
+        if (vid != null) contentType = Content.ContentType.APPLICATION_MTRON;
+        LOG.debug("fileToObj: %s => %s", file.getPath(), vid);
+        return contentType.hasSerializer() ? contentType.fromBytes(fileBytes) : uri(this.redirect(f(file.getPath()), false), FILE_TID, null);
     }
 
     @Override
@@ -173,7 +181,10 @@ public class fsSpace extends AbstractSpace<FileSystem> {
                 throw MTronException.of("infinite recursive walks on file system currently prohibited");
             else {
                 if (key.hasPattern()) {
-                    try (final Stream<Path> walk = Files.walk(Path.of(Space.Helper.routeFromSpace(keyQless.retractPattern(), this.routes()).toString()), keyQless.hasPattern("#") ? Integer.MAX_VALUE : keyQless.asNode().path().size())) {
+                    final Path walkRoot = Path.of(Space.Helper.routeFromSpace(keyQless.retractPattern(), this.routes()).toString());
+                    if (!Files.exists(walkRoot))
+                        return IteratorUtil.of();
+                    try (final Stream<Path> walk = Files.walk(walkRoot, keyQless.hasPattern("#") ? Integer.MAX_VALUE : keyQless.asNode().path().size())) {
                         return walk
                                 .filter(p -> {
                                     try {
@@ -183,13 +194,17 @@ public class fsSpace extends AbstractSpace<FileSystem> {
                                         return false;
                                     }
                                 })
-                                .collect(Collectors.toMap(p -> Space.Helper.routeFromSpace(f(p.toString()), this.routes()), p -> {
+                                .collect(Collectors.toMap(p -> Space.Helper.routeToSpace(f(p.toString()), this.routes()), p -> {
                                     final File file = p.toFile();
                                     return fileToObj(file, key.qMap());
                                 }, Obj::append, LinkedHashMap::new))
                                 .entrySet()
                                 .stream()
-                                .map(kv -> IdObj.of(kv.getKey(), kv.getValue()))
+                                .flatMap(kv -> {
+                                    if (kv.getValue().isPoly())
+                                        return Space.Helper.unrollPoly(kv.getKey(), kv.getValue().as(), key.asNode().asRelative()).stream();
+                                    return Stream.of(IdObj.of(kv.getKey(), kv.getValue()));
+                                })
                                 .iterator();
                     } catch (IOException e) {
                         throw MTronException.of(e);
@@ -199,6 +214,8 @@ public class fsSpace extends AbstractSpace<FileSystem> {
                     try {
                         final Path vidPath = Path.of(Space.Helper.routeFromSpace(keyQless.name().equals("apply") ? keyQless.retract(1) : keyQless, this.routes()).toString());
                         final File file = vidPath.toFile();
+                        if (!file.exists())
+                            return IteratorUtil.of();
                         return IteratorUtil.of(IdObj.of(key, keyQless.name().equals("apply") ?
                                 instC(keyQless.retract(1).dom(ALL.maybe()).rng(ALL_STAR), lst(T(ALL_STAR)), (lhs, inst) -> {
                                     LOG.debug("applying: %s => %s", lhs, inst);
@@ -285,6 +302,81 @@ public class fsSpace extends AbstractSpace<FileSystem> {
     }
 
     @Override
+    public Stream<IdObj> readStream(final fURI pattern) {
+        final fURI keyQless = pattern.qLess();
+        if (pattern.equals(ALL))
+            throw MTronException.of("infinite recursive walks on file system currently prohibited");
+        if (pattern.hasPattern()) {
+            final Path walkRoot = Path.of(Space.Helper.routeFromSpace(keyQless.retractPattern(), this.routes()).toString());
+            if (!Files.exists(walkRoot))
+                return Stream.empty();
+            try (final Stream<Path> walk = Files.walk(walkRoot,
+                    keyQless.hasPattern("#") ? Integer.MAX_VALUE : keyQless.asNode().path().size())) {
+                final Map<fURI, Obj> collected = walk
+                        .filter(p -> {
+                            try {
+                                return this.redirect(f(p.toString()), false).test(f("#"));
+                            } catch (final Exception e) {
+                                LOG.error(e);
+                                return false;
+                            }
+                        })
+                        .collect(Collectors.toMap(
+                                p -> Space.Helper.routeToSpace(f(p.toString()), this.routes()),
+                                p -> fileToObj(p.toFile(), pattern.qMap()),
+                                Obj::append,
+                                LinkedHashMap::new));
+                return collected.entrySet().stream()
+                        .flatMap(kv -> {
+                            final Stream<IdObj> direct = Stream.of(IdObj.of(kv.getKey(), kv.getValue()));
+                            if (kv.getValue().isPoly())
+                                return Stream.concat(direct,
+                                        Space.Helper.unrollPoly(kv.getKey(), kv.getValue().as(), pattern.asNode().asRelative()).stream());
+                            return direct;
+                        });
+            } catch (IOException e) {
+                throw MTronException.of(e);
+            }
+        }
+        try {
+            final Path vidPath = Path.of(Space.Helper.routeFromSpace(
+                    keyQless.name().equals("apply") ? keyQless.retract(1) : keyQless,
+                    this.routes()).toString());
+            final File file = vidPath.toFile();
+            if (keyQless.name().equals("apply")) {
+                return file.exists() && file.canExecute()
+                        ? Stream.of(IdObj.of(pattern,
+                            instC(keyQless.retract(1).dom(ALL.maybe()).rng(ALL_STAR),
+                                    lst(T(ALL_STAR)), (lhs, inst) -> {
+                                        final Uri toExec = makeFile(vidPath);
+                                        return this.internalApply(toExec, inst.args());
+                                    })))
+                        : Stream.empty();
+            }
+            final Obj value = this.fileToObj(file, pattern.qMap());
+            return value.isNoObj() ? Stream.empty() : Stream.of(IdObj.of(pattern, value));
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
+    }
+
+    @Override
+    public Stream<IdObj> writeStream(final fURI pattern, final Obj obj) {
+        if (pattern.hasPattern()) {
+            final List<IdObj> results = new ArrayList<>();
+            readStream(pattern).forEach(kv -> {
+                this.directWriter().apply(kv.furi(), obj);
+                results.add(IdObj.of(kv.furi(), obj));
+            });
+            return results.stream();
+        }
+        final Obj result = this.directWriter().apply(pattern, obj);
+        if (result.isNoObj())
+            return Stream.empty();
+        return Stream.of(IdObj.of(pattern, result));
+    }
+
+    @Override
     public BiFunction<fURI, Obj, Obj> directWriter() {
         return (pattern, obj) -> {
             if (pattern.hasPattern()) {
@@ -301,6 +393,8 @@ public class fsSpace extends AbstractSpace<FileSystem> {
                         if (file.isDirectory()) {
                             if (!file.exists())
                                 file.mkdirs();
+                            if (obj.isPoly())
+                                this.objToFile(f(new File(file, ".mtron").getPath()), obj);
                         } else {
                             this.objToFile(f(path.toString()), obj);
                             if (pattern.hasQ("p")) {

@@ -74,4 +74,9 @@ public class memSpaceTest extends AbstractSpaceTest implements SubQTest {
         data.forEach((k, v) -> assertEquals(v, Router.readFromSpace(k)));
         space2.close();
     }
+
+    @Override
+    protected boolean skipBasicOperations() {
+        return false;
+    }
 }

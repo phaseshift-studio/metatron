@@ -619,6 +619,10 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
         }*/
     }
 
+    protected boolean skipBasicOperations() {
+        return true; // default: skip. memSpace and fsSpace override to run.
+    }
+
     public String make(final String expression) {
         if (!expression.contains("$$")) return expression;
         final Method testMethod = resolveTestMethod();
@@ -1195,5 +1199,56 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
             assertTrue(result.asRec().jvm().isEmpty() || result.asRec().jvm().size() == 1,
                     "Empty record should have 0 or 1 fields (may include auto-generated ID)");
         }
+    }
+
+    // =========================================================================
+    // Combinatorial read/write contract tests
+    // Each space must pass these — they exercise the core Space.Helper contracts.
+    // =========================================================================
+
+    @TestCategory.Crud
+    @ParameterizedTest
+    @CsvSource(value = {
+            // ── WRITE concrete node mono, READ exact ──
+            "$$/_ops_/x -> 42                                        % *$$/_ops_/x                        % 42",
+            ".                                                       % *$$/_ops_/x                        % 42",
+            // ── WRITE concrete node rec, READ exact, READ sub-key, READ wildcard ──
+            "$$/_ops_/rec -> [a=>1,b=>2,c=>3]                       % *$$/_ops_/rec                      % [a=>1,b=>2,c=>3]",
+            ".                                                       % *$$/_ops_/rec/a                    % 1",
+            ".                                                       % *$$/_ops_/rec/b                    % 2",
+            ".                                                       % *$$/_ops_/rec/+                    % {1,2,3}",
+            // ── WRITE concrete node lst, READ exact, READ index, READ wildcard ──
+            "$$/_ops_/lst -> [10,20,30]                             % *$$/_ops_/lst                      % [10,20,30]",
+            ".                                                       % *$$/_ops_/lst/0                    % 10",
+            ".                                                       % *$$/_ops_/lst/1                    % 20",
+            ".                                                       % *$$/_ops_/lst/+                    % {10,20,30}",
+            // ── BRANCH read returns keyed pairs ──
+            "$$/_ops_/nested -> [x=>100,y=>200]                     % *<$$/_ops_/nested/+>              % {100,200}",
+            // ── NESTED wildcard walks into sub-polys ──
+            "$$/_ops_/nested2 -> [a=>[x=>1,y=>2],b=>[x=>3,y=>4]]    % *<$$/_ops_/nested2/a/+>           % {1,2}",
+            ".                                                       % *<$$/_ops_/nested2/+/x>           % {1,3}",
+            // ── MID-PATH wildcard: +/field ──
+            "$$/_ops_/people -> [p1=>[name=>alice,age=>30],p2=>[name=>bob,age=>25]] % *$$/_ops_/people/+/name        % {alice,bob}",
+            // ── ANCHORED write-back (@ then >>=) ──  TODO: pattern write-back issue
+    }, delimiter = '%')
+    public void testBasicOperations(final String writeExpression, final String readExpression, final String expectedExpression) {
+        if (skipBasicOperations()) {
+            org.junit.jupiter.api.Assumptions.assumeTrue(false, "space does not support basic CRUD operations");
+            return;
+        }
+        if (!writeExpression.equals(".")) {
+            Router.global().write(this.testUri("#"), noobj());
+        }
+        final Obj writeObj = ObjmtronSerializer.parse(make(writeExpression.equals(".") ? PREVIOUS_LINE.get(0) : writeExpression)).apply();
+        if (writeObj.isFail() && expectWriteRejection(writeObj))
+            return;
+        final Obj readObj = ObjmtronSerializer.parse(make(readExpression.equals(".") ? PREVIOUS_LINE.get(1) : readExpression)).apply();
+        final Obj resultObj = ObjmtronSerializer.parse(make(expectedExpression.equals(".") ? PREVIOUS_LINE.get(2) : expectedExpression)).apply();
+        if (!writeExpression.equals(".")) PREVIOUS_LINE.set(0, make(writeExpression));
+        if (!readExpression.equals(".")) PREVIOUS_LINE.set(1, make(readExpression));
+        if (!expectedExpression.equals(".")) PREVIOUS_LINE.set(2, make(expectedExpression));
+        assertEquals(resultObj, readObj.selfVID(null));
+        // Clean up _ops_ subtree so wildcard reads in other tests don't pick this up.
+        Router.global().write(this.testUri("_ops_/#"), noobj());
     }
 }

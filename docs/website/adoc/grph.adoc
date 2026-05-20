@@ -35,21 +35,28 @@ where latexmath:[E] is typically a https://en.wikipedia.org/wiki/Partial_functio
 
 This classic structure has been extended in various ways since its inception in 1736 (by https://en.wikipedia.org/wiki/Leonhard_Euler[Leonard Euler]). Examples include variants where edges are undirected, labeled, can self-loop, can connect more than two vertices, and more. Modern graph database designers approach graphs with a focus on ease of modeling and speed of querying so to compete with contemporary, complementary technologies such as relational, key/value, column, vector, document, etc. They quickly converged on a particular graph data model colloquially known as a *property graph*. This structure is known more formally as a _directed, labeled, attributed, multi-relational binary graph_. The property graph extends latexmath:[G = (V,E)] with properties (key/value pairs) associated with vertices and edges. This extension provides users a convenient path for moving between the dynamic state of a system represented using the constructs of modern object-oriented programming and the persisted state of the system stored in a graph database. As such, property graphs are useful when modeling multi-relational environments, where a heterogeneous set of "things" (different types of vertices) relate to one another via a heterogeneous set of "connections" (different types of edges).
 
-NOTE: The `graphspace` of `/m/grph` leverage http://tinkerpop.apache.org[Apache TinkerPop] as it's underlying storage framework. While useful for the time being, once metatron's approach to graphs is fully understood, the constraints imposed by Apache TinkerPop will be made salient. At such time, a generalization will be presented which demonstrates the depth of modeling, storage, and processing control one can wield, that graph constructs are seen as a pervasive structure (in all of its permutations) throughout metatron. In short, metatron blurs the lines between data structures such that multi-modal distinctions appear prosaic – a relic of the past.
+NOTE: The `graphspace` of `/m/grph` uses http://tinkerpop.apache.org[Apache TinkerPop] as it's underlying storage framework. While useful for the time being, once metatron's approach to graphs is fully understood, the constraints imposed by Apache TinkerPop will be made salient. When that time arrives, a generalization will be presented demonstrating the depth of modeling, storage, and processing control one can wield with metatron. This fluidity, a naturalness of form, permeates throughout. It is here where the lines previously drawn between data structures/databases begin to blur, and what emerges renders concepts such as __multi-modal__, prosaic – a relic of the past.
+
+The following mtron snippet constructs a `grphspace`. A few routes are provided separating the elements of the graph into their common categories of vertics and edges. Moreover, with metatron's type system, schemas and type checking are available. `g:S` routes extending uris to the graph's schema (should one exist).
+
+[discrete]
+=== /m/grph/space
 
 [mtron]
 ----
-grphspace::[pattern => g:#,                              /
-            route   => [<g:> =><>,                       /
-                        <g:V>=><V>,                      / 
-                        <g:E>=><E>,                      /
-                        <g:S>=>/m/grph/schema/modern],   /
-            native  => [factory  => mfactory::[=>],      /
-                        load     => modern]]@/sys/space/modern
+grphspace::[                                   /
+  pattern => g:#,                              /
+  route   => [ g:=><>,                         /
+              g:V=>V,                          / 
+              g:E=>E,                          /
+              g:S=>/m/grph/schema/modern],     /
+  native  => [factory  => mfactory::[=>],      /
+              load     => modern]              /
+]@/sys/space/modern                        [-- <1> --]
+*g:S                                       [-- <2> --]
 ----
 
-
-An assortment of example property graph traversals written in mtron is provided below.
+For those familiar with graph database and Gremlin graph traversal language, an assortment of common property graph traversals is provided below -- written in mtron.
 
 [mtron]
 ----
@@ -69,11 +76,12 @@ An assortment of example property graph traversals written in mtron is provided 
 <6> The incident name property value of the vertices 2 steps away.
 
 
-
 The `/m/grph` instruction extends the core `/m` instruction set with the following graph-oriented instructions. These
 navigations primitives hide the graph encoding specifics, enabling the same instructions to be used across different
 graph encodings (discussed later when presenting hypergraphs).
 
+[discrete]
+=== /m/grph/inst
 
 .`/m/grph` instructions
 [cols=".^3a,.^4,.^4a",separator=🧱,options=header,role="table-bordered small center"]
@@ -205,7 +213,7 @@ grphspace::
               g:E => E,
               g:S => /m/grph/inst/schema/modern],
   native  => [factory => mfactory::[=>],
-              load    => modern]]@/sys/space/modern
+              load    => modern]]
 ----
 🧱
 [source,mtron]
@@ -215,7 +223,7 @@ tblespace::
   host    => <mariadb://localhost:3306/acme>,
   route   => [acme: => <>],
   table   => [,],
-  driver  => <org.mariadb.jdbc.Driver>]@/sys/space/netflix
+  driver  => <org.mariadb.jdbc.Driver>]
 ----
 |===
 

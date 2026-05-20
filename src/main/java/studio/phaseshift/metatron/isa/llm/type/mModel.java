@@ -252,18 +252,22 @@ public class mModel extends MRec {
                         .map(e -> e.autoResolve(this))
                         .filter(t -> !t.isNoObj())
                         .forEach(t -> {
-                            if (t.isRec() && t.test(MCP_CLIENT_TYPE)) {
-                                service.toolProvider(McpToolProvider.builder().mcpClients(Rec.wrap(t.as(), mMcpClient.class).client()).build()).executeToolsConcurrently(BootLoader.getExecutor());
-                            } else if (t.isObjInst()) {
-                                if (QCollection.isNoDocs(Router.global().read(t.tid().addQ(DOCQ))))
-                                    t.logger().warn("ignoring inst as it has no associated ?docq: %s", t);
-                                else {
-                                    final Tuple.Pair<ToolSpecification, ToolExecutor> pair = mTool.mtronInstToolSpecification(mTool.mtronInstToTool(t.asInst()));
+                            try {
+                                if (t.isRec() && t.test(MCP_CLIENT_TYPE)) {
+                                    service.toolProvider(McpToolProvider.builder().mcpClients(Rec.wrap(t.as(), mMcpClient.class).client()).build()).executeToolsConcurrently(BootLoader.getExecutor());
+                                } else if (t.isObjInst()) {
+                                    if (QCollection.isNoDocs(Router.global().read(t.tid().addQ(DOCQ))))
+                                        t.logger().warn("ignoring inst as it has no associated ?docq: %s", t);
+                                    else {
+                                        final Tuple.Pair<ToolSpecification, ToolExecutor> pair = mTool.mtronInstToolSpecification(mTool.mtronInstToTool(t.asInst()));
+                                        tools.put(pair.get0(), pair.get1());
+                                    }
+                                } else if (t.isRec() && t.test(LLM_TOOL_TYPE)) {
+                                    final Tuple.Pair<ToolSpecification, ToolExecutor> pair = mTool.mtronInstToolSpecification(t.asRec());
                                     tools.put(pair.get0(), pair.get1());
                                 }
-                            } else if (t.isRec() && t.test(LLM_TOOL_TYPE)) {
-                                final Tuple.Pair<ToolSpecification, ToolExecutor> pair = mTool.mtronInstToolSpecification(t.asRec());
-                                tools.put(pair.get0(), pair.get1());
+                            } catch(final Exception e) {
+                                this.logger().error("unable to set up tool: %s [%s]",t,e);
                             }
                         });
                 if (!tools.isEmpty())
