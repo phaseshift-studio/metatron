@@ -506,7 +506,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     default Obj autoResolve(final Obj obj) {
         final fURI base = this.tid().basePath();
         return this.isInst() && (base.equals(AUTO_FROM_INST_TID) || base.equals(AUTO_AT_INST_TID) || base.equals(AUTO_INST_TID)) ?
-                this.apply(obj) :
+                this.apply(obj).c(c->obj.isNoObj() ? c : c.mult(obj.c())) :
                 this;
         //   return Obj.Helper.getAutoPointer(this).map(Router::readFromSpace).orElse(this);
     }
@@ -1148,7 +1148,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                         lhs.stream().forEach(e -> inst.arg(0).asRec().elements().forEach(kv -> {
                             final Obj kk = kv.first().isObjCall() ? kv.first().apply(e) : (e.isRec() ? e.asRec().at(kv.first()) : e);
                             if (!kk.isNoObj()) // TODO: if the group value is not a barrier, then process immediately.
-                                result.compute(kk, (k, v) -> (v == null) ? lst(kv.second(), e) : v.asLst().at(jnt(1), e, MUTABLE));
+                                result.compute(kk, (k, v) -> (v == null) ? lst(kv.second(), e) : v.asLst().at(jnt(1), v.asLst().at(jnt(1)).append(e), MUTABLE));
                         }));
                         return result.entrySet().stream()
                                 .map(kv -> rel(

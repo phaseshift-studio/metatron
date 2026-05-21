@@ -39,12 +39,17 @@ public class RealTest extends AbstractAlgebraTest<Real> {
 
     @ParameterizedTest
     @CsvSource(value = {
+            "-2.0.as(real::T)                         % -2.0",
             "-2.0.as(int::T)                          % -2",
             "-102.1.as(int::T)                        % -102",
             "2.0.as(int::T)                           % 2",
             "2.1.as(int::T)                           % 2",
             "2.9.as(int::T)                           % 2",
             "3.9.as(int::T)                           % 3",
+            "\"metatron\".as(real::T)                 % <ERROR>",
+            "\"12.3\".as(real::T)                     % 12.3",
+            "false.as(real::T)                        % 0.0",
+            "true.as(real::T)                         % 1.0"
     }, delimiter = '%')
     public void testAs(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);

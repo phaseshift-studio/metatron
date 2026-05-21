@@ -1,7 +1,7 @@
 # metatron — AGENTS.md
 
 ## What is metatron?
-A JVM-based distributed computing language and VM. Two key terms:
+A distributed data-oriented computing language and virtual machine built in Java. Two key terms:
 - **metatron** (lowercase): the runtime system / VM environment
 - **mtron** (lowercase): the functional programming language (like Java to JVM)
 
@@ -32,8 +32,7 @@ mvn clean package
 ```
 
 ### Requirements
-- **Java**: JDK 21+ to compile, JDK 24+ to run tests (CI uses Oracle JDK 24, jdeploy uses Temurin JDK 25)
-- **surefire `jvm` path**: Hardcoded to `${user.home}/.sdkman/candidates/java/current/bin/java` in `pom.xml` — non-SDKMAN setups may need to edit the pom or override
+- **Java**: JDK 21+ to compile and run (CI uses Oracle JDK 24, jDeploy uses Temurin JDK 25)
 
 ### Test Framework
 - **JUnit 5** (Jupiter), surefire 3.5.5
@@ -49,10 +48,10 @@ Every test class must extend `AbstractMetatronTest`. In `@BeforeAll`:
 
 ### Test Annotations
 - **`@SkipInheritedTests(methods = {...})`** — skip specific inherited method names
-- **`@SkipInheritedTests(tags = {...})`** — skip by test category tag
+- **`@SkipInheritedTests(tags = {...})`** — skip by test category tag (use `TestTag.CRUD`, `TestTag.BOUNDARY`, etc.)
 - **`@ExtendWith(TestSkip.TestSkipExtension.class)`** — enables skip behavior
 - **`@ExtendWith(TestData.TestDataExtension.class)`** — provides test data fixtures
-- **`@TestCategory.X`** — categorize tests (`Crud`, `Type`, `Boundary`, `Concurrent`, `ReadWrite`, `Nested`, `List`, `Special`)
+- **`@TestCategory.Crud`** etc. — nested annotations for categorizing tests (`@Crud`, `@Type`, `@Boundary`, `@Concurrent`, `@ReadWrite`, `@Nested`, `@List`, `@Special`); defined in `TestCategory` class but currently unused in the test suite
 
 ### Test Infrastructure
 - **Test containers**: MySQL (3306), PostgreSQL (5432), MariaDB (3307) — run in CI
@@ -63,7 +62,7 @@ Every test class must extend `AbstractMetatronTest`. In `@BeforeAll`:
 
 ## Running
 
-### Run Metatron
+### Run metatron
 ```bash
 # bin/metatron script (recommended)
 bin/metatron "[boot=><boot/boot.mtron>,log=>info]"
@@ -131,7 +130,6 @@ src/main/java/studio/phaseshift/metatron/
 | Push/PR to `main` | Push to `*-snapshot` branches, `v*` tags |
 | Oracle JDK 24 | Temurin JDK 25 |
 | `mvn install -Dtest='!httpSpaceTest,!fsSpaceTest'` | `mvn package` + jDeploy bundler |
-| Installs ijhttp for HTTP testing | Creates native installers |
 
 Docker build is **disabled by default** (`skipDocker=true` in pom). Enable with `-DskipDocker=false`.
 

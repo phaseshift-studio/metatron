@@ -131,6 +131,10 @@ public class ObjSimpleJSONSerializer extends AbstractObjSerializer<JsonElement> 
                     try {
                         if (jpstr.startsWith("<") && jpstr.endsWith(">"))
                             return uri(jpstr.substring(1, jpstr.length() - 1));
+                        else if (jpstr.startsWith("'") && jpstr.endsWith("'"))
+                            return str(jpstr.substring(1, jpstr.length() - 1));
+                        else if (jpstr.startsWith("\"") && jpstr.endsWith("\""))
+                            return str(jpstr.substring(1, jpstr.length() - 1));
                         else
                             return ObjmtronSerializer.parse(jpstr);
                     } catch (final Exception e) {

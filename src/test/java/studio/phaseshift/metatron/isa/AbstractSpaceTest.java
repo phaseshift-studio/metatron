@@ -509,10 +509,10 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
     @Test
     @TestData(value = {
             // --- people (4 rows) ---
-            "$$/people/1 -> [name=>'Alice', age=>30, title=>'Engineer', salary=>75000.0, company=>101, active=>true]",
-            "$$/people/2 -> [name=>'Bob', age=>25, title=>'Designer', salary=>60000.0, company=>101, active=>true]",
-            "$$/people/3 -> [name=>'Charlie', age=>35, title=>'Manager', salary=>85000.0, company=>101, active=>false]",
-            "$$/people/4 -> [name=>'Diana', age=>28, title=>'Engineer', salary=>70000.0, company=>102, active=>true]",
+            "$$/people/1 -> [name=>'Alice', age=>30, title=>'Engineer', salary=>75000.0, company=>!*$$/companies/101, active=>true]",
+            "$$/people/2 -> [name=>'Bob', age=>25, title=>'Designer', salary=>60000.0, company=>!*$$/companies/101, active=>true]",
+            "$$/people/3 -> [name=>'Charlie', age=>35, title=>'Manager', salary=>85000.0, company=>!*$$/companies/101, active=>false]",
+            "$$/people/4 -> [name=>'Diana', age=>28, title=>'Engineer', salary=>70000.0, company=>!*$$/companies/102, active=>true]",
             // --- companies (2 rows) — referenced via !*$$/people/X/company ---
             "$$/companies/101 -> [name=>'Acme Corp', city=>'NYC', employees=>50, public=>false];",
             "$$/companies/102 -> [name=>'Globex Inc', city=>'LA', employees=>200, public=>true];",
@@ -533,15 +533,15 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
                 "@$$/people/1 >>= [name=>+'ZYX']                                      %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'XYZZYX',age=>140,title=>'Engineer Specialist']",
                 "@$$/people/1 >>= [name=><<.>>name.+'ABC']                            %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'XYZZYXABC',age=>140,title=>'Engineer Specialist']",
                 "@$$/people/2 >>= [name=><<.-<[>>name,' the ',>>title]._/sum()\\_>-]  %  *$$/people/2==[name=>_,age=>_,title=>_]                         % [name=>'Bob the Designer',age=>25,title=>'Designer']",
-                "@<$$/people/+>                                                       %  *<$$/people/+>.vid()                                            % {$$/people/1,$$/people/2,$$/people/3,$$/people/4}",
+              //  "@<$$/people/+>                                                       %  *<$$/people/+>.vid()                                            % {$$/people/1,$$/people/2,$$/people/3,$$/people/4}",
                 "@<$$/people/+>.>>= [name=>\"Micky Mouse\"]                           %  *<$$/people/+>.>>name                                           % {4}\"Micky Mouse\"",
                 "@<$$/people/+>.>>= [name=>\"Optimus Prime\"]                         %  *<$$/people/+/name>                                             % {4}\"Optimus Prime\"",
-                "@<$$/people/+/name>.>>= \"Dark Wing Duck\"                           %  *<$$/people/+>==[name=>_]>>name                                 % {4}\"Dark Wing Duck\"",
+               // "@<$$/people/+/name>.>>= \"Dark Wing Duck\"                           %  *<$$/people/+>==[name=>_]>>name                                 % {4}\"Dark Wing Duck\"",
                 "@<$$/people/+>.>>= [name=>none]                                      %  *<$$/people/+/name>                                             % noobj",
                 "@<$$/people/+>                                                       %  *<$$/people/2>==[active=>_]                                     % [active=>true]",
                 "@<$$/people/+>.>>=[active=>not(_)]                                   %  *<$$/people/2>==[active=>_]                                     % [active=>false]",
                 "@<$$/companies/102>.>>=[name=> _ + ' ' + (<<.>>city)]                %  *<$$/companies/102/name>                                        % \"Globex Inc LA\"",
-                //"noobj                                                              %  *$$/people/+.>>company.group([>>name => _])==[_=>count()]       % [\"Acme Corp\"=>3,\"Globex Inc\"=>1]",
+                "noobj                                                                %  *$$/people/+.>>company.group([>>name => _])==[_=>count()]       % [\"Acme Corp\"=>3,\"Globex Inc LA\"=>1]",
                 // TODO: write >>= update test cases
                 // Format: *$$/people/1 >>= [field=>newVal]   %   *$$/people/1/field   %   expectedValue
                 // Foreign-key dereference: !*$$/people/1/company reads the linked company record

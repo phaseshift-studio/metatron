@@ -181,6 +181,7 @@ public class memSpace extends AbstractSpace<TopicTrie> {
                 }
             }
             return Stream.concat(directMatches.stream(), polyParents)
+                    .flatMap(kv -> kv.getValue().stream().map(kk -> new AbstractMap.SimpleEntry<>(kv.getKey(),kk)))
                     .flatMap(kv -> Stream.concat(
                             kv.getKey().test(nodePattern) ?
                                     Stream.of(IdObj.of(kv.getKey(), kv.getValue())) :

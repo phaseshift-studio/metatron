@@ -215,7 +215,7 @@ public interface Space extends Rec, Closeable {
                         // remainder often starts with "/" ("/people/+").  fURI.extend()
                         // on an empty base preserves that leading slash as an empty
                         // first path segment, which breaks isTablePath() and hasPattern().
-                       // if (remainder.startsWith("/")) remainder = remainder.substring(1);
+                        // if (remainder.startsWith("/")) remainder = remainder.substring(1);
                         return e.getValue().apply(vidURI).uriValue().extend(remainder).q(vid.qMap());
                     })
                     .findFirst()
@@ -287,12 +287,11 @@ public interface Space extends Rec, Closeable {
                 }
             }
             if (listing.isEmpty() || pattern.hasPattern()) {
-                final IdObj base = Helper.locateBasePoly(space, pattern.basePath());
-                if (null != base) {
-                    final Poly<?, ?> poly = base.obj().as();
+                Helper.locateBasePoly(space, pattern.basePath()).forEach(base -> {
+                    final Poly<?, ?> poly = base.poly();
                     Graphitty.log(space).trace("base poly found at %s: %s", base.furi(), poly);
                     unrollPoly(base.furi(), poly, pattern).forEach(kv -> listing.add(UriObj.of(kv.furi().toUri(), kv.obj())));
-                }
+                });
             }
             final Stream<UriObj> prefix = listing.stream().filter(kv -> !kv.obj().isNoObj() && !kv.uri().isNoObj());
             return pattern.isNode() ?
@@ -320,8 +319,8 @@ public interface Space extends Rec, Closeable {
                 writeComplete(obj, current.next().obj());
                 return directWriter.apply(vid, obj);
             } else {
-                final IdObj base = Helper.locateBasePoly(space, vid.basePath());
-                if (null == base) {
+                final Iterator<IdPoly> itty = Helper.locateBasePoly(space, vid.basePath()).iterator();
+                if (!itty.hasNext()) {
                     if (vid.isNode() || !obj.isPoly()) {
                         return directWriter.apply(vid, obj);
                     } else if (obj.isRec()) { // branch
@@ -333,29 +332,34 @@ public interface Space extends Rec, Closeable {
                             Helper.resolveWrite(LOG, space, vid.extend(String.valueOf(i)), obj.lstValue().get(i), directWriter, directReader);
                         }
                     }
-                } else if (vid.isNode() || !obj.isPoly()) {
-                    if (base.obj().isRec())
-                        Helper.resolveWrite(LOG, space, base.furi(), base.obj().asRec().at(uri(vid.removePrefix(base.furi())), obj), directWriter, directReader);
-                    else if (base.obj().isLst())
-                        Helper.resolveWrite(LOG, space, base.furi(), base.obj().asLst().append(obj), directWriter, directReader);
-                    else {
-                        writeComplete(obj, base.obj());
-                        return directWriter.apply(vid, obj);
-                    }
-                } else if (base.obj().isRec()) {
-                    if (obj.isRec()) {
-                        obj.recValue()
-                                .entrySet()
-                                .stream()
-                                .filter(kv -> !kv.getValue().isNoObj())
-                                .forEach(kv -> Helper.resolveWrite(LOG, space, kv.getKey().uriValue(), kv.getValue(), directWriter, directReader));
-                    } else {
-                        writeComplete(obj, base.obj());
-                        return directWriter.apply(vid, obj);
-                    }
-                } else if (base.obj().isLst()) {
-                    Lst newLst = base.obj().asLst().at(uri(vid.removePrefix(base.furi()).pretract(1)), obj, Lst.IMMUTABLE);
-                    Helper.resolveWrite(LOG, space, vid, newLst, directWriter, directReader);
+                } else {
+                    return IteratorUtil.stream(itty).map(base -> {
+                        if (vid.isNode() || !obj.isPoly()) {
+                            if (base.poly().isRec())
+                                Helper.resolveWrite(LOG, space, base.furi(), base.poly().asRec().at(uri(vid.removePrefix(base.furi())), obj), directWriter, directReader);
+                            else if (base.poly().isLst())
+                                Helper.resolveWrite(LOG, space, base.furi(), base.poly().asLst().append(obj), directWriter, directReader);
+                            else {
+                                writeComplete(obj, base.poly());
+                                return directWriter.apply(vid, obj);
+                            }
+                        } else if (base.poly().isRec()) {
+                            if (obj.isRec()) {
+                                obj.recValue()
+                                        .entrySet()
+                                        .stream()
+                                        .filter(kv -> !kv.getValue().isNoObj())
+                                        .forEach(kv -> Helper.resolveWrite(LOG, space, kv.getKey().uriValue(), kv.getValue(), directWriter, directReader));
+                            } else {
+                                writeComplete(obj, base.poly());
+                                return directWriter.apply(vid, obj);
+                            }
+                        } else if (base.poly().isLst()) {
+                            Lst newLst = base.poly().asLst().at(uri(vid.removePrefix(base.furi()).pretract(1)), obj, Lst.IMMUTABLE);
+                            Helper.resolveWrite(LOG, space, vid, newLst, directWriter, directReader);
+                        }
+                        return obj;
+                    }).findFirst().orElse(obj);
                 }
             }
             return obj;
@@ -373,15 +377,15 @@ public interface Space extends Rec, Closeable {
          * concrete address — making it trivial for callers to compute the remaining
          * path segments with {@code originalFuri.removePrefix(poly.furi())}.
          */
-        public static IdObj locateBasePoly(final Space space, final fURI furi) {
+        public static Stream<IdPoly> locateBasePoly(final Space space, final fURI furi) {
             fURI newFuri = furi.retract(1).asNode();
             while (!newFuri.segments().isEmpty()) {
-                Obj obj = space.read(newFuri);
-                if (obj.isPoly())
-                    return IdObj.of(newFuri, obj.as());
+                final List<IdPoly> polys = space.readStream(newFuri).filter(oi -> oi.obj().isPoly()).map(IdPoly::from).toList();
+                if (!polys.isEmpty())
+                    return polys.stream();
                 newFuri = newFuri.retract(1);
             }
-            return null;
+            return Stream.empty();
         }
 
         public static IdObj locateBaseObj(final Space space, final fURI furi, final fURI stopURI) {
@@ -451,6 +455,10 @@ public interface Space extends Rec, Closeable {
 
         public Iterator<IdPoly> iterator() {
             return IteratorUtil.of(this);
+        }
+
+        public Stream<IdPoly> stream() {
+            return Stream.of(this);
         }
     }
 

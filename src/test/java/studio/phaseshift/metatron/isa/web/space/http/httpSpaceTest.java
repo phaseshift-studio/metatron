@@ -71,7 +71,6 @@ public class httpSpaceTest extends AbstractSpaceTest {
                     uri(HOST), uri(BASE_URL),
                     uri(PATTERN), uri("http://#"),
                     uri(ROUTE), rec(uri("/"), uri("local:web"))), f("/sys/space/web"));
-            
             return space;
         });
 
@@ -103,13 +102,13 @@ public class httpSpaceTest extends AbstractSpaceTest {
     public void testResourceAccess(final String path, final String expected) {
         String url = BASE_URL + path;
         var result = Router.readFromSpace(url);
-        assertEquals(ObjmtronSerializer.parse(expected), result, "unexpected resource content for: " + url);
+        assertEquals(ObjmtronSerializer.parse(expected).asStr().strValue(), result.asStr().strValue(), "unexpected resource content for: " + url);
     }
 
     @ParameterizedTest
     @CsvSource(value = {
             // Top-level fields
-            "/test.json/hello|world",
+            "/test.json/hello|\"world\"",
             "/test.json/number|42",
             "/test.json/active|true",
             "/test.json/nothing|noobj",

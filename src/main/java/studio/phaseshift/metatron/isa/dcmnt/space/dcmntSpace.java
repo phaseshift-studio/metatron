@@ -381,7 +381,7 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
                         if (docVID.test(nodePattern))
                             results.add(IdObj.of(docVID, docObj));
                         // Expand children if the document is a poly (Rec or Lst).
-                        if (docObj.isPoly())
+                        else if (docObj.isPoly())
                             results.addAll(Space.Helper.unrollPoly(docVID, docObj.as(), nodePattern));
                         return results.iterator();
                     }
