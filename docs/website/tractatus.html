@@ -1562,7 +1562,7 @@ strong {
 }
 
 .back-to-top.show {
-    opacity: 1;
+    opacity: 0.45;
     visibility: visible;
 }
 
@@ -4019,7 +4019,7 @@ mtron&gt; 4.as(int::T[?&gt;0]@nat)
 ==&gt;nat::4
 mtron&gt;  -4.as(nat::T)
 ==&gt;fail::[-4 is not a is(gt(0))
-  -4=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/286
+  -4=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/244
 mtron&gt; [-- refining rec::T  --]
 mtron&gt; [name=&gt;'snowbutt',age=&gt;7].as(rec::T[?[name=&gt;str::T,age=&gt;int::T]@chicken)
 ==&gt;ERROR: [name=&gt;'snowbutt',age=&gt;7].as(rec::T[?[name=&gt;str::T,age=&gt;int::T]@chicken)
@@ -4085,11 +4085,11 @@ mtron&gt; 2.as(nat::T)     <i class="conum" data-value="5"></i><b>(5)</b>
 ==&gt;2
 mtron&gt;  -2.as(nat::T)     <i class="conum" data-value="6"></i><b>(6)</b>
 ==&gt;fail::[-2 is not a is(gt(0))
-  -2=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/292
+  -2=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/250
 mtron&gt;  nat::2 * -1     <i class="conum" data-value="7"></i><b>(7)</b>
 ==&gt;fail::[nat::-2 is not a int::T[is(gt(0))][choose([
   is(lt(0))=&gt;mult(-1),
-  id()=&gt;id()]).rshift()]][...]@/sys/fail/298</code></pre>
+  id()=&gt;id()]).rshift()]][...]@/sys/fail/256</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -4116,7 +4116,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{g}}m{{b}}E{{g}}T{{c}}a{{c}}t{{g}}R{{g}}o{{m}}N{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{m}}M{{c}}E{{c}}t{{g}}A{{r}}T{{m}}r{{m}}o{{c}}N{{X}}.</p>
 </div>
 <h4 id="_cascading_type_constructions" class="discrete">cascading type constructions</h4>
 <h3 id="_mono_types" class="discrete">mono types</h3>
@@ -4772,7 +4772,7 @@ mtron&gt;  nat::-10
 ==&gt;ERROR: nat::-10 is not a int::T[is(gt(0))]
 mtron&gt;  int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/420</code></pre>
+  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/378</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -4871,7 +4871,7 @@ mtron&gt;  nat::-10
 ==&gt;ERROR: nat::-10 is not a int::T[is(gt(0))]
 mtron&gt;  int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/426</code></pre>
+  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/384</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -4894,10 +4894,10 @@ mtron&gt; age::125
 ==&gt;ERROR: age::125 is not a int::T[is(lt(120))]
 mtron&gt;  nat::125.as(age::T)
 ==&gt;fail::[nat::125 is not a is(lt(120))
-  nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/432
+  nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/390
 mtron&gt;  125.as(nat::T).as(age::T)
 ==&gt;fail::[125 is not a is(lt(120))
-  125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/438</code></pre>
+  125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/396</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -5134,9 +5134,9 @@ mtron&gt; memspace::[
  prefix=&gt;'',
  postfix=&gt;'',
  pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[
- stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
+ result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
  prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
- result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0],
+ stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0],
  menu=&gt;[
   console=&gt;console::[
    metatron_version=&gt;&lt;0.1-alpha&gt;,
@@ -5145,9 +5145,9 @@ mtron&gt; memspace::[
    prefix=&gt;'',
    postfix=&gt;'',
    pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[
- stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
+ result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
  prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
- result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0]]@/usr/ui/console,
+ stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0]]@/usr/ui/console,
   help=&gt;inst?noobj&lt;=#{?}(),
   chat=&gt;inst?noobj&lt;=#{?}(),
   connect=&gt;inst?noobj&lt;=#{?}(),
@@ -5178,9 +5178,9 @@ mtron&gt; */usr/ui/console     <i class="conum" data-value="1"></i><b>(1)</b>
  prefix=&gt;'',
  postfix=&gt;'',
  pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[
- stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
+ result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
  prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
- result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0],
+ stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0],
  menu=&gt;[
   console=&gt;console::[
    metatron_version=&gt;&lt;0.1-alpha&gt;,
@@ -5189,9 +5189,9 @@ mtron&gt; */usr/ui/console     <i class="conum" data-value="1"></i><b>(1)</b>
    prefix=&gt;'',
    postfix=&gt;'',
    pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[
- stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
+ result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
  prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
- result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0]]@/usr/ui/console,
+ stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0]]@/usr/ui/console,
   help=&gt;inst?noobj&lt;=#{?}(),
   chat=&gt;inst?noobj&lt;=#{?}(),
   connect=&gt;inst?noobj&lt;=#{?}(),
@@ -5216,9 +5216,9 @@ mtron&gt; */usr/ui/console     <i class="conum" data-value="1"></i><b>(1)</b>
   subq=&gt;inst?noobj&lt;=#{?}()]]
 mtron&gt; */usr/ui/console/pane/0     <i class="conum" data-value="2"></i><b>(2)</b>
 ==&gt;/m/mach/console/pane::[
- stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
+ result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
  prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
- result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]
+ stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]
 mtron&gt; /usr/ui/console/pane/0/result('printed at ==&gt;xyz')     <i class="conum" data-value="3"></i><b>(3)</b></code></pre>
 </div>
 </div>
@@ -6233,7 +6233,7 @@ mtron&gt; */usr/notes/#?subq
   mqtt::T,
   haos::T]]@/m/iot
 mtron&gt;  import(/m/llm)
-{{b}}.{{b}}.{{c}}.{{X}}</code></pre>
+{{g}}.{{m}}.{{c}}.{{X}}</code></pre>
 </div>
 </div>
 </div>
@@ -7692,7 +7692,7 @@ mtron&gt; *&lt;http://localhost:8088/v1/models&gt;
   [id=&gt;MeetAISmall__latest,object=&gt;model],
   [id=&gt;gpt-oss__latest,object=&gt;model]]]
 mtron&gt; *&lt;http://localhost:8088/v1/models/data/0/id&gt;
-==&gt;qwen3:latest
+==&gt;mistralai_devstral-small-2507
 mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
          *&lt;http://localhost:8088/v1/models/data/0/id&gt;}&gt;
 ==&gt;[
@@ -7826,7 +7826,7 @@ mtron&gt; */m/llm/inst/+?dom=model</code></pre>
   	dev.langchain4j.internal.ValidationUtils [line 169]
   	dev.langchain4j.internal.ValidationUtils [line 156]
   	dev.langchain4j.model.input.PromptTemplate [line 83]
-  	dev.langchain4j.model.input.PromptTemplate [line 186]][...]@/sys/fail/466
+  	dev.langchain4j.model.input.PromptTemplate [line 186]][...]@/sys/fail/424
 ==&gt;fail::[[
  type=&gt;model,
  provider=&gt;!*/sys/space/localai] is not a isa([
@@ -7857,7 +7857,7 @@ mtron&gt; */m/llm/inst/+?dom=model</code></pre>
    in=&gt;currency::T,
    out=&gt;currency::T],
    noobj=&gt;(==&gt;{?}size)=&gt;noobj=&gt;/=&gt;bB::T,
-   noobj=&gt;(==&gt;{?}feature)=&gt;noobj=&gt;/=&gt;feature::T]][...]@/sys/fail/460</code></pre>
+   noobj=&gt;(==&gt;{?}feature)=&gt;noobj=&gt;/=&gt;feature::T]][...]@/sys/fail/418</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -8032,7 +8032,7 @@ mtron&gt; *&lt;http://localhost:8088/v1/models&gt;
   [id=&gt;MeetAISmall__latest,object=&gt;model],
   [id=&gt;gpt-oss__latest,object=&gt;model]]]
 mtron&gt; *&lt;http://localhost:8088/v1/models/data/0/id&gt;
-==&gt;qwen3:latest
+==&gt;mistralai_devstral-small-2507
 mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
          *&lt;http://localhost:8088/v1/models/data/0/id&gt;}&gt;
 ==&gt;[
@@ -8166,7 +8166,7 @@ mtron&gt; */m/llm/inst/+?dom=model</code></pre>
   	dev.langchain4j.internal.ValidationUtils [line 169]
   	dev.langchain4j.internal.ValidationUtils [line 156]
   	dev.langchain4j.model.input.PromptTemplate [line 83]
-  	dev.langchain4j.model.input.PromptTemplate [line 186]][...]@/sys/fail/466
+  	dev.langchain4j.model.input.PromptTemplate [line 186]][...]@/sys/fail/424
 ==&gt;fail::[[
  type=&gt;model,
  provider=&gt;!*/sys/space/localai] is not a isa([
@@ -8197,7 +8197,7 @@ mtron&gt; */m/llm/inst/+?dom=model</code></pre>
    in=&gt;currency::T,
    out=&gt;currency::T],
    noobj=&gt;(==&gt;{?}size)=&gt;noobj=&gt;/=&gt;bB::T,
-   noobj=&gt;(==&gt;{?}feature)=&gt;noobj=&gt;/=&gt;feature::T]][...]@/sys/fail/460</code></pre>
+   noobj=&gt;(==&gt;{?}feature)=&gt;noobj=&gt;/=&gt;feature::T]][...]@/sys/fail/418</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -8348,11 +8348,7 @@ mtron&gt; *lite:person/+/id     <i class="conum" data-value="6"></i><b>(6)</b>
 ==&gt;[
  instset=&gt;instset::[
   pattern=&gt;/sys/space/lite/schema/instset/#,
-  type=&gt;[
-   award::T,
-   person::T,
-   score::T,
-   venue::T],
+  type=&gt;[,],
   q=&gt;[docq::[
  pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
  pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
@@ -8363,52 +8359,8 @@ mtron&gt; *lite:person/+/id     <i class="conum" data-value="6"></i><b>(6)</b>
  native=&gt;[
   pattern=&gt;/sys/space/lite/schema/instset/#,
   name=&gt;'instset',
-  tables=&gt;[
-   [
-    name=&gt;'award',
-    uri=&gt;/sys/space/lite/schema/instset/award,
-    schema/schema=&gt;[
-     id=&gt;int::T,
-     trophy=&gt;str::T,
-     recipient=&gt;int::T],
-    type=&gt;award::T],
-   [
-    name=&gt;'person',
-    uri=&gt;/sys/space/lite/schema/instset/person,
-    schema/schema=&gt;[
-     id=&gt;int::T,
-     name=&gt;str::T,
-     age=&gt;int::T],
-    type=&gt;person::T],
-   [
-    name=&gt;'score',
-    uri=&gt;/sys/space/lite/schema/instset/score,
-    schema/schema=&gt;[
-     id=&gt;int::T,
-     player=&gt;str::T,
-     points=&gt;int::T],
-    type=&gt;score::T],
-   [
-    name=&gt;'venue',
-    uri=&gt;/sys/space/lite/schema/instset/venue,
-    schema/schema=&gt;[
-     id=&gt;int::T,
-     name=&gt;str::T,
-     location=&gt;int::T],
-    type=&gt;venue::T]],
-  references=&gt;[
-   [
-    from_table=&gt;'award',
-    from_column=&gt;'recipient',
-    to_table=&gt;'person',
-    to_column=&gt;'id',
-    type=&gt;'FOREIGN_KEY'],
-   [
-    from_table=&gt;'venue',
-    from_column=&gt;'location',
-    to_table=&gt;'area:V',
-    to_column=&gt;'id',
-    type=&gt;'FOREIGN_KEY']]]]
+  tables=&gt;[,],
+  references=&gt;[,]]]
 mtron&gt; */sys/space/lite/schema/type/+</code></pre>
 </div>
 </div></div></td>
@@ -8758,7 +8710,7 @@ mtron&gt; *lite:venue/2/parent/location     <i class="conum" data-value="3"></i>
   	org.sqlite.core.DB [line 1193]
   	org.sqlite.core.DB [line 1153]
   	org.sqlite.core.NativeDB [line -2]
-  	org.sqlite.core.NativeDB [line 135]][...]@/sys/fail/280</code></pre>
+  	org.sqlite.core.NativeDB [line 135]][...]@/sys/fail/238</code></pre>
 </div>
 </div>
 <div class="colist arabic">

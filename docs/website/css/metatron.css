@@ -1549,7 +1549,7 @@ strong {
 }
 
 .back-to-top.show {
-    opacity: 1;
+    opacity: 0.45;
     visibility: visible;
 }
 
