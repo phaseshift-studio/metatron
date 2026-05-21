@@ -33,16 +33,24 @@
 include::header.html[]
 ++++
 
+++++
+<br><br>
+++++
+
 [discrete]
 = Quick Start
+
+WARNING: **metatron** is a large, involved software system composed of many interacting parts. Many of these components are packaged with the main metatron distribution while others are custom extensions written in mtron (the core language of metatron).
 
 ++++
 <img src="images/metatron-character-ansi.png" width="150px" style="float:left; margin:10px;"></a>
 ++++
 
-**metatron** is a large, involved software system composed of many interacting components distributed with the main metatron distributed while supporting custom extensions written in mtron (the core language of metatron) or Java (via the exposed public Java API).
+Software is an endless maze of unique perspectives on the nature of computing, codified in sharable artifacts known generally as __code__. This world is endlessly engaging to those who enjoy discovering and manipulating novel conceptual structures via mechanical processes -- controlling massive amounts of energy and data without breaking a sweat nor leaving the comfort of one's home. From web technologies, to database technologies, to AI technologies, and so forth, millions of developers are __clickity clacking__ away collectively writing a story of a wholly different sort. metatron offers a realization of this medley by means of a distillation of fundamental patterns that renders all these technologies almost laughably similar, enabling technological compositions that are naturally expressed in what can only honestly be said to be an extremely terse language. 
 
-In short, metatron is a __world__.
+Exploring metatron takes the user through the wonderful world of computing touching on fundamental concepts in languages, compilers, operating systems, networks, databases, web technologies, and more –– all from the vantage point of a perspective codified in mtron that enables one to speak to this world, using simple, utilitarian terms.
+
+In short, metatron is an __experience__ –– an experience that offers a delightful merging of mathematics, computer science, and the mind.
 
 With that said, a short whirlwind introduction to metatron will now be presented.
 
@@ -64,19 +72,19 @@ In metatron, everything is an **obj** (an object). There are 3 kinds of core typ
 ** **inst** and **code**.
 
 \[
-\tt lhs \Rightarrow call(arg0,arg1,...,argN) \Rightarrow rhs
+\tt lhs \underbrace{\Rightarrow}_* call(\underbrace{arg0,arg1,...,argN}_+) \Rightarrow rhs
 \]
 
-Finally, there is one psuedo-obj that is a mono, a poly, and a call. It is named `noobj` and serves a similar role to `null` in other programming environments save that it has an operational semantic aligned with its role as the 0-object (zero) of the algebraic ring formed by the set of all objs along with two meta operators: `*` and `+` (apply/compose and branch/split, respectively).
+Finally, there is one "psuedo-obj" that is a mono, a poly, and a call. It is named `noobj` and it can be seen as the `null` in other programming environments save that it has an operational semantic aligned with its role as the 0-object (zero) of the algebraic ring formed by the set of all objs along with two meta operators: `*` and `+` (apply/compose and branch/split, respectively).
 
 [discrete]
 === Router and Space
 
-There are 2 "special" `rec` structures called **router** and **space**. They are special in that while they appear as `rec` objs, they maintain an auxiliary data structure accessible only through a particular api not available to other objs.
+There are 2 "special" `rec` structures called **router** and **space**. They are special in that while they appear as `rec` objs, they maintain auxiliary data structures (with little reflection enabling reification) accessible only through a particular api not available to other objs.
 
 **router**: the purpose of the router is to handle namespace prefix rewrites for local and remote dispatching of read and write calls to spaces. Every instance of metatron has a single running router.
 
-**space**: the purpose of a space is to store objs and manage process execution. It is up to the space to determine how objs will be indexed and persisted. However, within metatron, all spaces behave in the same manner as dictated by a read/write contract.
+**space**: the purpose of a space is to store objs and manage process execution. It is up to the space to determine how objs will be indexed and persisted. However, within metatron, all spaces behave in the same manner as dictated by a well-defined read/write contract.
 
 == Installation
 
@@ -98,7 +106,7 @@ console::[=>]@/usr/ui/console;
 
 To start a metatron instance with `start.boot`, in a terminal, execute:
 
-[source,bash]
+[source,mtron]
 ----
 $ bin/metatron "[boot=>start.mtron,log=>info]"
 ----
@@ -110,7 +118,7 @@ After metatron boots, the cursor should be to the right of a `mtron>` prompt. Th
 [source,mtron]
 ----
 1 + 2
-1-<[_,+2,*5]>-.print(_).sum()
+1-<[_,+2,*5]>-.sum()
 ----
 
 == Space
@@ -124,6 +132,9 @@ Up to this point, there are currently 4 spaces maintained by metatron.
 */sys/space/+.-<[>>pattern=>>>route]
 ----
 
+++++
+<br><br>
+++++
 
 ++++
 include::footer.html[]
