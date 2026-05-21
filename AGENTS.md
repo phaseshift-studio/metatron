@@ -146,8 +146,8 @@ Docker build is **disabled by default** (`skipDocker=true` in pom). Enable with 
 
 ## MCP (Model Context Protocol)
 - WebSocket handler: `mcp_mtron_wsHandler`
-- Test client: `scripts/mtron_ws_client.py`
+- Test client: `.metatron/skills/mtron/scripts/mtron_ws_client.py`
 
 ## References
 - mtron language skills: `.metatron/skills/mtron/`
-- Agent memory: `.claude/agent-memory/metatron-developer/`
+- Agent memory: `.claude/memory/`

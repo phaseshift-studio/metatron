@@ -286,7 +286,7 @@ public interface Space extends Rec, Closeable {
                     });
                 }
             }
-            if (listing.isEmpty() || pattern.hasPattern()) {
+            if (listing.isEmpty() || pattern.hasPattern("#")) {
                 Helper.locateBasePoly(space, pattern.basePath()).forEach(base -> {
                     final Poly<?, ?> poly = base.poly();
                     Graphitty.log(space).trace("base poly found at %s: %s", base.furi(), poly);

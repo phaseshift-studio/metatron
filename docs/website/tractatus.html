@@ -608,7 +608,9 @@ em {
     max-height: 50px;
     padding: 2rem 2rem;
     padding-bottom: 1rem;
-    background-color: var(--dark);
+    background: linear-gradient(to bottom, #040404, #000000 85%);
+    border-bottom: 1px solid rgba(122, 37, 24, 0.28);
+    box-shadow: 0 1px 18px rgba(151, 2, 7, 0.06);
 }
 
 .dropdown {
@@ -637,6 +639,13 @@ em {
 
 .navbar .navbar-nav .nav-link:hover,
 .navbar .navbar-nav .nav-link.active {
+    color: var(--primary);
+}
+
+.navbar .navbar-nav .quickstart-link {
+    color: #754900;
+}
+.navbar .navbar-nav .quickstart-link:hover {
     color: var(--primary);
 }
 
@@ -764,10 +773,16 @@ footer {
     box-shadow: none;
 }
 
+.footer {
+    background: linear-gradient(to top, #040404, #000000 85%);
+    border-top: 1px solid rgba(122, 37, 24, 0.28);
+    box-shadow: 0 -1px 18px rgba(151, 2, 7, 0.06);
+}
+
 .footer .copyright {
     padding: 1.5rem;
     font-size: 15px;
-    background: var(--dark);
+    background: transparent;
 }
 
 .footer .copyright a {
@@ -1526,7 +1541,7 @@ strong {
     </div>
 </div>
 <!-- NAVIGATION BAR -->
-<nav class="navbar navbar-expand-lg bg-secondary navbar-dark sticky-top py-lg-0 px-lg-5 wow fadeIn"
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top py-lg-0 px-lg-5 wow fadeIn"
      data-wow-delay="0.1s">
     <a href="http://phaseshift.studio" class="navbar-brand ms-4 ms-lg-0">
         <h2 class="mb-0 text-primary logo-text">
@@ -1570,6 +1585,14 @@ bin/metatron</code></pre>
                         </div>
                     </li>
                 </ul>
+            </li>
+            <!----------------------------------------------------------------------------------------------------------
+            --------------------------------------- QUICK START LINK ----------------------------------------------------
+            ----------------------------------------------------------------------------------------------------------->
+            <li class="nav-item">
+                <a class="nav-link quickstart-link" href="#" onclick="location.href='start.html';">
+                    <i class="bi bi-book me-1"></i> quick start
+                </a>
             </li>
             <!----------------------------------------------------------------------------------------------------------
             -------------------------------- INSTRUCTION SET ARCHITECTURES DROPDOWN ------------------------------------
@@ -2079,7 +2102,7 @@ lhs =&gt; inst(arg1,...,argN){ inst1...instN } =&gt; rhs
 ==&gt;fs_prefix=&gt;booger
 ==&gt;chicken=&gt;animal::T@chicken
 ==&gt;boot/file=&gt;&lt;/home/killswitch/software/metatron/boot/docs.mtron&gt;@boot/file
-==&gt;equipment=&gt;rec::T[?[
+==&gt;equipment=&gt;rec{*}::T[?[
   model=&gt;uri::T,
   year=&gt;int::T]]@equipment
 ==&gt;v1=&gt;[
@@ -2092,7 +2115,7 @@ lhs =&gt; inst(arg1,...,argN){ inst1...instN } =&gt; rhs
  name=&gt;'peter',
  age=&gt;35,
  out_=&gt;[created=&gt;!*v4]]
-==&gt;animal=&gt;rec::T[?[
+==&gt;animal=&gt;rec{*}::T[?[
   name=&gt;str::T,
   age=&gt;int::T]]@animal
 ==&gt;v2=&gt;[name=&gt;'vadas']
@@ -3980,7 +4003,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{c}}M{{b}}e{{m}}T{{g}}A{{c}}t{{m}}r{{c}}O{{y}}n{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{m}}M{{g}}E{{g}}t{{y}}a{{b}}t{{g}}r{{m}}o{{r}}n{{X}}.</p>
 </div>
 <h4 id="_cascading_type_constructions" class="discrete">cascading type constructions</h4>
 <h3 id="_mono_types" class="discrete">mono types</h3>
@@ -6097,7 +6120,7 @@ mtron&gt; */usr/notes/#?subq
   mqtt::T,
   haos::T]]@/m/iot
 mtron&gt;  import(/m/llm)
-{{y}}.{{g}}.{{g}}.{{X}}</code></pre>
+{{y}}.{{c}}.{{r}}.{{X}}</code></pre>
 </div>
 </div>
 </div>
@@ -7485,17 +7508,19 @@ mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;     <i class="conum" dat
     href=&gt;&lt;https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css&gt;,
     rel=&gt;'stylesheet'],
    [tag=&gt;link,href=&gt;&lt;css/metatron.css&gt;,rel=&gt;'stylesheet']]],
- body=&gt;[out=&gt;[
- [tag=&gt;p],
- [
-  tag=&gt;h1,
-  style=&gt;'padding-left:125px;color:var(--primary)',
-  text=&gt;'PhaseShift Studio'],
- [
-  tag=&gt;img,
-  style=&gt;'padding-left:100px',
-  src=&gt;&lt;http://metatron.phaseshift.studio/images/metatron-character.png&gt;,
-  width=&gt;'500px']]]]]
+ body=&gt;[
+  out=&gt;[
+   [tag=&gt;p],
+   [
+    tag=&gt;h1,
+    style=&gt;'padding-left:125px;color:var(--primary)',
+    text=&gt;'PhaseShift Studio'],
+   [
+    tag=&gt;img,
+    style=&gt;'padding-left:100px',
+    src=&gt;&lt;http://metatron.phaseshift.studio/images/metatron-character.png&gt;,
+    width=&gt;'500px']],
+  style=&gt;'background-color: black;']]]
 mtron&gt; *&lt;http://phaseshift.studio/splash.html/html/head/title&gt;     <i class="conum" data-value="3"></i><b>(3)</b>
 ==&gt;'PhaseShift Studio'
 mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(str::T)     <i class="conum" data-value="4"></i><b>(4)</b>
@@ -7504,7 +7529,7 @@ mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(str::T)     <i class=
   &lt;link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet"&gt;
   &lt;link href="css/metatron.css" rel="stylesheet"&gt;
  &lt;/head&gt;
- &lt;body&gt;
+ &lt;body style="background-color: black;"&gt;
   &lt;p&gt;&lt;/p&gt;
   &lt;h1 style="padding-left:125px;color:var(--primary)"&gt;PhaseShift Studio&lt;/h1&gt;
   &lt;img style="padding-left:100px" src="http://metatron.phaseshift.studio/images/metatron-character.png" width="500px"&gt;
@@ -7554,12 +7579,12 @@ mtron&gt; *&lt;http://localhost:8088/v1/models&gt;
   [id=&gt;MeetAISmall__latest,object=&gt;model],
   [id=&gt;gpt-oss__latest,object=&gt;model]]]
 mtron&gt; *&lt;http://localhost:8088/v1/models/data/0/id&gt;
-==&gt;qwen3-tts-cpp
+==&gt;qwen3:latest
 mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
          *&lt;http://localhost:8088/v1/models/data/0/id&gt;}&gt;
 ==&gt;[
  parameters=&gt;[
-  model=&gt;'mistralai_Devstral-Small-2507-Q4_K_M.gguf',
+  model=&gt;'smollm__1.7b',
   top_p=&gt;0.9500,
   top_k=&gt;-1,
   min_p=&gt;0.0100,
@@ -7570,31 +7595,18 @@ mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
   typical_p=&gt;1,
   seed=&gt;-1,
   logprobs=&gt;false],
- name=&gt;mistralai_devstral-small-2507,
+ name=&gt;'smollm:1.7b',
  f16=&gt;false,
  threads=&gt;8,
  debug=&gt;false,
  embeddings=&gt;false,
  backend=&gt;llama-cpp,
- template=&gt;[
-  chat=&gt;"""{{.Input -}}
-""",
-  chat_message=&gt;"""{{if eq .RoleName "user" -}}
-[INST] {{.Content }}...""",
-  completion=&gt;"""{{.Input}}
-""",
-  function=&gt;'[AVAILABLE_TOOLS] [{{range .Functions}}{"type": "...'],
- known_usecases=&gt;[FLAG_CHAT,FLAG_COMPLETION],
+ template=&gt;[use_tokenizer_template=&gt;true],
+ known_usecases=&gt;[FLAG_CHAT],
  pipeline=&gt;[=&gt;],
  function=&gt;[
-  disable_no_action=&gt;true,
-  grammar=&gt;[parallel_calls=&gt;true,disable_parallel_new_lines=&gt;true,disable=&gt;true],
-  json_regex_match=&gt;['(?s)\[TOOL\_CALLS\](.*)'],
-  replace_function_results=&gt;[
-   [key=&gt;'(?s)^[^{\[]*'],
-   [key=&gt;'(?s)[^}\]]*$'],
-   [key=&gt;'(?s)\[TOOL\_CALLS\]'],
-   [key=&gt;'(?s)\[\/TOOL\_CALLS\]']]],
+  grammar=&gt;[disable=&gt;true],
+  automatic_tool_parsing_fallback=&gt;true],
  reasoning=&gt;[=&gt;],
  mirostat_eta=&gt;0.1000,
  mirostat_tau=&gt;5,
@@ -7604,21 +7616,13 @@ mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
  mmlock=&gt;false,
  low_vram=&gt;false,
  reranking=&gt;false,
- stopwords=&gt;[
-  |im_end|,
-  dummy32000,
-  /tool_call,
-  |eot_id|,
-  |end_of_text|,
-  /s,
-  [/TOOL_CALLS],
-  [/ACTIONS]],
  context_size=&gt;8192,
  limit_mm_per_prompt=&gt;[=&gt;],
  diffusers=&gt;[=&gt;],
  grpc=&gt;[=&gt;],
  tts=&gt;[=&gt;],
- options=&gt;[gpu],
+ description=&gt;'Imported from ollama://smollm:1.7b',
+ options=&gt;[use_jinja:true],
  mcp=&gt;[=&gt;],
  agent=&gt;[=&gt;]]</code></pre>
 </div>
@@ -7823,17 +7827,19 @@ mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;     <i class="conum" dat
     href=&gt;&lt;https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css&gt;,
     rel=&gt;'stylesheet'],
    [tag=&gt;link,href=&gt;&lt;css/metatron.css&gt;,rel=&gt;'stylesheet']]],
- body=&gt;[out=&gt;[
- [tag=&gt;p],
- [
-  tag=&gt;h1,
-  style=&gt;'padding-left:125px;color:var(--primary)',
-  text=&gt;'PhaseShift Studio'],
- [
-  tag=&gt;img,
-  style=&gt;'padding-left:100px',
-  src=&gt;&lt;http://metatron.phaseshift.studio/images/metatron-character.png&gt;,
-  width=&gt;'500px']]]]]
+ body=&gt;[
+  out=&gt;[
+   [tag=&gt;p],
+   [
+    tag=&gt;h1,
+    style=&gt;'padding-left:125px;color:var(--primary)',
+    text=&gt;'PhaseShift Studio'],
+   [
+    tag=&gt;img,
+    style=&gt;'padding-left:100px',
+    src=&gt;&lt;http://metatron.phaseshift.studio/images/metatron-character.png&gt;,
+    width=&gt;'500px']],
+  style=&gt;'background-color: black;']]]
 mtron&gt; *&lt;http://phaseshift.studio/splash.html/html/head/title&gt;     <i class="conum" data-value="3"></i><b>(3)</b>
 ==&gt;'PhaseShift Studio'
 mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(str::T)     <i class="conum" data-value="4"></i><b>(4)</b>
@@ -7842,7 +7848,7 @@ mtron&gt; *&lt;http://phaseshift.studio/splash.html&gt;.as(str::T)     <i class=
   &lt;link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet"&gt;
   &lt;link href="css/metatron.css" rel="stylesheet"&gt;
  &lt;/head&gt;
- &lt;body&gt;
+ &lt;body style="background-color: black;"&gt;
   &lt;p&gt;&lt;/p&gt;
   &lt;h1 style="padding-left:125px;color:var(--primary)"&gt;PhaseShift Studio&lt;/h1&gt;
   &lt;img style="padding-left:100px" src="http://metatron.phaseshift.studio/images/metatron-character.png" width="500px"&gt;
@@ -7892,12 +7898,12 @@ mtron&gt; *&lt;http://localhost:8088/v1/models&gt;
   [id=&gt;MeetAISmall__latest,object=&gt;model],
   [id=&gt;gpt-oss__latest,object=&gt;model]]]
 mtron&gt; *&lt;http://localhost:8088/v1/models/data/0/id&gt;
-==&gt;qwen3-tts-cpp
+==&gt;qwen3:latest
 mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
          *&lt;http://localhost:8088/v1/models/data/0/id&gt;}&gt;
 ==&gt;[
  parameters=&gt;[
-  model=&gt;'mistralai_Devstral-Small-2507-Q4_K_M.gguf',
+  model=&gt;'smollm__1.7b',
   top_p=&gt;0.9500,
   top_k=&gt;-1,
   min_p=&gt;0.0100,
@@ -7908,31 +7914,18 @@ mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
   typical_p=&gt;1,
   seed=&gt;-1,
   logprobs=&gt;false],
- name=&gt;mistralai_devstral-small-2507,
+ name=&gt;'smollm:1.7b',
  f16=&gt;false,
  threads=&gt;8,
  debug=&gt;false,
  embeddings=&gt;false,
  backend=&gt;llama-cpp,
- template=&gt;[
-  chat=&gt;"""{{.Input -}}
-""",
-  chat_message=&gt;"""{{if eq .RoleName "user" -}}
-[INST] {{.Content }}...""",
-  completion=&gt;"""{{.Input}}
-""",
-  function=&gt;'[AVAILABLE_TOOLS] [{{range .Functions}}{"type": "...'],
- known_usecases=&gt;[FLAG_CHAT,FLAG_COMPLETION],
+ template=&gt;[use_tokenizer_template=&gt;true],
+ known_usecases=&gt;[FLAG_CHAT],
  pipeline=&gt;[=&gt;],
  function=&gt;[
-  disable_no_action=&gt;true,
-  grammar=&gt;[parallel_calls=&gt;true,disable_parallel_new_lines=&gt;true,disable=&gt;true],
-  json_regex_match=&gt;['(?s)\[TOOL\_CALLS\](.*)'],
-  replace_function_results=&gt;[
-   [key=&gt;'(?s)^[^{\[]*'],
-   [key=&gt;'(?s)[^}\]]*$'],
-   [key=&gt;'(?s)\[TOOL\_CALLS\]'],
-   [key=&gt;'(?s)\[\/TOOL\_CALLS\]']]],
+  grammar=&gt;[disable=&gt;true],
+  automatic_tool_parsing_fallback=&gt;true],
  reasoning=&gt;[=&gt;],
  mirostat_eta=&gt;0.1000,
  mirostat_tau=&gt;5,
@@ -7942,21 +7935,13 @@ mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
  mmlock=&gt;false,
  low_vram=&gt;false,
  reranking=&gt;false,
- stopwords=&gt;[
-  |im_end|,
-  dummy32000,
-  /tool_call,
-  |eot_id|,
-  |end_of_text|,
-  /s,
-  [/TOOL_CALLS],
-  [/ACTIONS]],
  context_size=&gt;8192,
  limit_mm_per_prompt=&gt;[=&gt;],
  diffusers=&gt;[=&gt;],
  grpc=&gt;[=&gt;],
  tts=&gt;[=&gt;],
- options=&gt;[gpu],
+ description=&gt;'Imported from ollama://smollm:1.7b',
+ options=&gt;[use_jinja:true],
  mcp=&gt;[=&gt;],
  agent=&gt;[=&gt;]]</code></pre>
 </div>
@@ -8972,7 +8957,7 @@ console::[        =&gt; ]@/sys/console;
 </div>
 </div>
 </main>
-<footer class="container-fluid bg-secondary fixed-bottom text-light footer wow fadeIn" data-wow-delay="0.1s">
+<footer class="container-fluid fixed-bottom text-light footer wow fadeIn" data-wow-delay="0.1s">
     <div class="d-flex pt-1 mb-0">
         <a class="btn btn-lg-square btn-dark text-primary m-1 center" href="mailto:info@phaseshift.studio"><i
                 class="fa fa-envelope-open text-primary"></i></a>

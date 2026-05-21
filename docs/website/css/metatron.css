@@ -595,7 +595,9 @@ em {
     max-height: 50px;
     padding: 2rem 2rem;
     padding-bottom: 1rem;
-    background-color: var(--dark);
+    background: linear-gradient(to bottom, #040404, #000000 85%);
+    border-bottom: 1px solid rgba(122, 37, 24, 0.28);
+    box-shadow: 0 1px 18px rgba(151, 2, 7, 0.06);
 }
 
 .dropdown {
@@ -624,6 +626,13 @@ em {
 
 .navbar .navbar-nav .nav-link:hover,
 .navbar .navbar-nav .nav-link.active {
+    color: var(--primary);
+}
+
+.navbar .navbar-nav .quickstart-link {
+    color: #754900;
+}
+.navbar .navbar-nav .quickstart-link:hover {
     color: var(--primary);
 }
 
@@ -751,10 +760,16 @@ footer {
     box-shadow: none;
 }
 
+.footer {
+    background: linear-gradient(to top, #040404, #000000 85%);
+    border-top: 1px solid rgba(122, 37, 24, 0.28);
+    box-shadow: 0 -1px 18px rgba(151, 2, 7, 0.06);
+}
+
 .footer .copyright {
     padding: 1.5rem;
     font-size: 15px;
-    background: var(--dark);
+    background: transparent;
 }
 
 .footer .copyright a {

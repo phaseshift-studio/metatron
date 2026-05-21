@@ -777,6 +777,7 @@
                         <configuration>
                             <sourceDirectory>${project.build.directory}/temp</sourceDirectory>
                             <sourceDocumentName>index.adoc</sourceDocumentName>
+                            <sourceDocumentName>start.adoc</sourceDocumentName>
                             <outputDirectory>${project.basedir}/docs/website</outputDirectory>
                             <skip>${skipAdoc}</skip>
                             <backend>html</backend>

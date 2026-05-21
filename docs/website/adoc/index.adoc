@@ -78,7 +78,7 @@ include::header.html[]
                 </div>-->
             </div>
             <div class="col-lg-4 wow fadeIn" data-wow-delay="0.1s">
-                <img src="images/metatron-character.png" width="100%"/>
+                <img src="images/metatron-character.png" width="100%" style="opacity:75%"/>
             </div>
         </div>
     </div>

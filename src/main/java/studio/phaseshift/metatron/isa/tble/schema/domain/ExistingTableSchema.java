@@ -296,7 +296,7 @@ public class ExistingTableSchema extends ObjSQLSerializer implements TableSchema
             return writeField(conn, metadata, rowId, segments.get(2), obj);
         }
 
-        if (obj.isNoObj()) {
+        if (obj.isNoObj() || obj.isNone()) {
             return delete(conn, furi);
         }
         if (obj.isRec()) {

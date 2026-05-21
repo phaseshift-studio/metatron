@@ -1,0 +1,130 @@
+:copyright: PhaseShift Studio
+:author: Marko A. Rodriguez
+:email: marko@markorodriguez.com
+:revnumber: 0.1-alpha
+:stylesheet: ./src/css/metatron.css
+:imagesdir: images
+:favicon: ./favicon.ico
+:highlightjsdir: highlight
+:source-highlighter: ./highlight.js
+:highlightjs-languages: mtron,sql
+:highlightjs-theme: monokai
+:source-language: mtron
+:icons: font
+:icon-set: fas
+:stem: latexmath
+:experimental:
+:sectnums!:
+:toc: none
+:linkcss!:
+:license-url: https://www.gnu.org/licenses/agpl-3.0.html
+:license-title: AGPLv3
+:lang: en
+:max-width: 100%
+:app-name: metatron
+:version-label: ring-oriented computing
+:docname: metatron documentation
+:L: latexmath
+:title: Quick Start — metatron
+:nofooter:
+:noheader:
+
+++++
+include::header.html[]
+++++
+
+[discrete]
+= Quick Start
+
+++++
+<img src="images/metatron-character-ansi.png" width="150px" style="float:left; margin:10px;"></a>
+++++
+
+**metatron** is a large, involved software system composed of many interacting components distributed with the main metatron distributed while supporting custom extensions written in mtron (the core language of metatron) or Java (via the exposed public Java API).
+
+In short, metatron is a __world__.
+
+With that said, a short whirlwind introduction to metatron will now be presented.
+
+[discrete]
+== Core Concepts
+
+metatron is a data-oriented programming environment with its own data-flow language called **mtron**.
+
+[discrete]
+=== Core Data Types
+
+In metatron, everything is an **obj** (an object). There are 3 kinds of core types of objs.
+
+. **mono**: objs not composed of other objs:
+** **bytes**, **bool**, **int**, **real**, **str**, and **uri**.
+. **poly**: objs composed of other objs in support of nested structures:
+** **rel**, **lst**, and **rec**.
+. **call**: objs that can be evaluated by a __lhs__ obj (left-hand side) and an __arg__ obj (lst or rec) to yield a __rhs__ obj (right-hand side):
+** **inst** and **code**.
+
+\[
+\tt lhs \Rightarrow call(arg0,arg1,...,argN) \Rightarrow rhs
+\]
+
+Finally, there is one psuedo-obj that is a mono, a poly, and a call. It is named `noobj` and serves a similar role to `null` in other programming environments save that it has an operational semantic aligned with its role as the 0-object (zero) of the algebraic ring formed by the set of all objs along with two meta operators: `*` and `+` (apply/compose and branch/split, respectively).
+
+[discrete]
+=== Router and Space
+
+There are 2 "special" `rec` structures called **router** and **space**. They are special in that while they appear as `rec` objs, they maintain an auxiliary data structure accessible only through a particular api not available to other objs.
+
+**router**: the purpose of the router is to handle namespace prefix rewrites for local and remote dispatching of read and write calls to spaces. Every instance of metatron has a single running router.
+
+**space**: the purpose of a space is to store objs and manage process execution. It is up to the space to determine how objs will be indexed and persisted. However, within metatron, all spaces behave in the same manner as dictated by a read/write contract.
+
+== Installation
+
+. Download metatron either as an `npm` package, a `docker` container, or a `maven` project.
+. Load metatron using a boot file. To run a headless boot in the background, don't add any UI objs to your boot file. For now, create the following boot loader as plain text -- it will spawn a `console::T`.
+
+.start.mtron boot loader
+[source,mtron]
+----
+import(/m/web);
+memspace::[pattern  =>/usr/#, q     =>[docq::[=>],subq::[=>]]]@/sys/space/usr;
+memspace::[pattern  =>g:#,    q     =>[subq::[=>]]]           @/sys/space/graph;
+fsspace::[pattern   =>local:#,route =>[local: => <~/>]]       @/sys/space/fs;
+httpspace::[pattern =>http://#,
+            host    =>http://localhost:8765,
+            route   =>[/            =>local:]]@/sys/space/http;
+console::[=>]@/usr/ui/console;
+----
+
+To start a metatron instance with `start.boot`, in a terminal, execute:
+
+[source,bash]
+----
+$ bin/metatron "[boot=>start.mtron,log=>info]"
+----
+
+== Console
+
+After metatron boots, the cursor should be to the right of a `mtron>` prompt. This is a `console::T`. The console takes mtron expressions and creates **machines** to execute them. A machine can be thought of as an executing process.
+
+[source,mtron]
+----
+1 + 2
+1-<[_,+2,*5]>-.print(_).sum()
+----
+
+== Space
+
+Up to this point, there are currently 4 spaces maintained by metatron.
+
+[mtron]
+----
+*/sys/space/+.count()
+*/sys/space/+.>>pattern
+*/sys/space/+.-<[>>pattern=>>>route]
+----
+
+
+++++
+include::footer.html[]
+++++
