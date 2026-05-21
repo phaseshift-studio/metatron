@@ -161,7 +161,16 @@ table .ulist {
 }
 
 .logo-text {
+    opacity: 0.45;
     -webkit-text-stroke: 0.5px gray;
+}
+
+.logo-text a {
+    text-decoration: none;
+}
+
+.logo-text a:hover {
+    color: var(--primary);
 }
 
 .page-header {
@@ -193,16 +202,42 @@ table {
 }
 
 .glow-text {
+    opacity: 0.45;
     text-shadow: 0 0 1px rgba(255, 255, 255, 0.7), 0 0 5px rgba(255, 255, 255, 0.5), 0 0 8px rgba(255, 255, 255, 0.3);
+    margin-bottom: 0 !important;
+    padding-bottom: 0.5rem !important;
+}
+
+/* unified red-leather glow bridging title through grid */
+.container-fluid.wow.fadeIn {
+    background: radial-gradient(ellipse at 50% 38%, transparent 25%, rgba(160, 60, 30, 0.025) 45%, rgba(180, 75, 45, 0.05) 65%, transparent 85%);
+}
+
+/* bridge the title glow and parchment */
+.glow-text + hr {
+    border: none;
+    height: 1px;
+    background: linear-gradient(to right, transparent, rgba(180, 75, 45, 0.10) 20%, rgba(180, 75, 45, 0.10) 80%, transparent);
+    margin: 0 0 3rem 0;
 }
 
 .tutorial-grid .btn {
+    font-family: 'Fira Mono', Consolas, Menlo, Monaco, 'Courier New', Courier, monospace;
     box-shadow: 0 0 5px rgba(255, 255, 255, 0.5), 0 0 10px rgba(200, 0, 0, 0.4);
     transition: box-shadow 0.3s ease-in-out;
 }
 
 .tutorial-grid .btn:hover {
+    color: #000 !important;
     box-shadow: 0 0 10px rgba(255, 255, 255, 0.7), 0 0 20px rgba(200, 0, 0, 0.6);
+}
+
+.tutorial-grid .btn[aria-expanded="true"] {
+    color: #000 !important;
+}
+
+#custom-docs-button {
+    color: #6C7293;
 }
 
 /* Bootstrap 5 only ships row-cols-1..6; extend to 8 */
@@ -593,6 +628,7 @@ em {
 }
 
 .btn-dark:has(.bi-terminal) {
+    opacity: 0.45;
     font-size: 1.75rem;
     background-color: transparent;
     border: none;
@@ -643,7 +679,7 @@ em {
 }
 
 .navbar .navbar-nav .quickstart-link {
-    color: #754900;
+    color: #796c6c;
 }
 .navbar .navbar-nav .quickstart-link:hover {
     color: var(--primary);
@@ -677,12 +713,14 @@ em {
 
     .navbar .nav-item .dropdown-menu {
         display: block;
-        border: none;
+        border: 1px solid rgba(122, 37, 24, 0.3);
         margin-top: 0;
         top: 150%;
         opacity: 0;
         visibility: hidden;
         transition: .5s;
+        background: linear-gradient(180deg, rgba(15, 12, 12, 0.98), rgba(0, 0, 0, 0.98));
+        box-shadow: 0 4px 24px rgba(151, 2, 7, 0.12), 0 0 8px rgba(180, 75, 45, 0.08);
     }
 
     .navbar .nav-item:hover .dropdown-menu {
@@ -691,6 +729,18 @@ em {
         transition: .5s;
         opacity: 1;
     }
+}
+
+.dropdown-menu-dark .dropdown-item {
+    color: var(--white);
+    font-size: 1rem;
+    padding: 0.5rem 1.4rem;
+    transition: background 0.15s, color 0.15s;
+}
+
+.dropdown-menu-dark .dropdown-item:hover {
+    background: rgba(122, 37, 24, 0.2);
+    color: var(--primary);
 }
 
 .breadcrumb-item + .breadcrumb-item::before {
@@ -774,9 +824,34 @@ footer {
 }
 
 .footer {
-    background: linear-gradient(to top, #040404, #000000 85%);
+    background: linear-gradient(to top, #040404, #000000 85%) #000 !important;
     border-top: 1px solid rgba(122, 37, 24, 0.28);
     box-shadow: 0 -1px 18px rgba(151, 2, 7, 0.06);
+}
+
+.footer .btn-dark {
+    opacity: 0.45;
+    position: relative;
+    top: -3px;
+    background: transparent;
+    border: none;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    font-size: 0.9rem;
+}
+
+.footer .small {
+    font-size: 0.85rem;
+}
+
+.footer .d-flex {
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
+}
+
+.footer .small {
+    opacity: 0.45;
 }
 
 .footer .copyright {
@@ -818,6 +893,13 @@ footer {
     padding: 20px;
     background: var(--secondarycolor);
     border: 1px solid var(--mred);
+}
+
+.discrete {
+    color: #796c6c !important;
+    border-bottom: 1px solid #7a2518;
+    padding-bottom: 0.35rem;
+    margin-bottom: 0.75rem;
 }
 
 .custom-docs .collapse {
@@ -990,7 +1072,7 @@ pre.highlight > code[data-lang] {
 /* ── Result-line dimming / input brightness ──────────────────── */
 
 .hljs-mtron-result-line {
-    opacity: 0.45;
+    opacity: 0.62;
 }
 
 .hljs-mtron-prompt-begin,
@@ -1208,12 +1290,43 @@ pre {
 }
 
 details {
-    border-style: solid;
-    border-width: 1px;
-    border-color: var(--light);
-    margin: 1em;
-    padding: 1em;
-    color: var(--mred);
+    float: right;
+    display: inline-block;
+    max-width: max-content;
+    border: 1px solid #7a2518;
+    margin: 0 0 0.75em 1em;
+    padding: 0.5em 0.85em;
+    background: rgba(122, 37, 24, 0.06);
+    cursor: pointer;
+    transition: background 0.2s, box-shadow 0.2s;
+}
+
+details:hover {
+    background: rgba(122, 37, 24, 0.12);
+    box-shadow: 0 0 8px rgba(180, 75, 45, 0.15);
+}
+
+details summary {
+    color: #796c6c;
+    list-style: none;
+    font-size: 0.85rem;
+    font-weight: bold;
+}
+
+details summary::-webkit-details-marker {
+    display: none;
+}
+
+details summary::before {
+    content: '\25B8';
+    color: #7a2518;
+    font-size: 0.75rem;
+    margin-right: 8px;
+    transition: transform 0.2s;
+}
+
+details[open] summary::before {
+    content: '\25BE ';
 }
 
 .switch ~ div:nth-of-type(2),
@@ -1543,12 +1656,10 @@ strong {
 <!-- NAVIGATION BAR -->
 <nav class="navbar navbar-expand-lg navbar-dark sticky-top py-lg-0 px-lg-5 wow fadeIn"
      data-wow-delay="0.1s">
-    <a href="http://phaseshift.studio" class="navbar-brand ms-4 ms-lg-0">
-        <h2 class="mb-0 text-primary logo-text">
-            <i class="bi bi-soundwave me-3 icon-color"></i>
-            PhaseShift Studio
-        </h2>
-    </a>
+    <h2 class="mb-0 text-primary logo-text navbar-brand ms-4 ms-lg-0">
+        <a href="index.html" class="text-primary" title="metatron"><i class="bi bi-soundwave me-3 icon-color"></i></a>
+        <a href="http://phaseshift.studio" class="text-primary">PhaseShift Studio</a>
+    </h2>
     <div class="collapse navbar-collapse" id="navbarCollapse">
         <div class="navbar-nav ms-auto p-4 p-lg-0">
             <!----------------------------------------------------------------------------------------------------------
@@ -1714,6 +1825,7 @@ bin/metatron</code></pre>
     <div class="container-fluid wow fadeIn" data-wow-delay="0.5s">
         <h1 class="text-primary text-center p-5 glow-text">Tractatus Algebraicus Metatronicus</h1>
         <hr/>
+        <div class="parchment-section">
         <div class="row mt-3 mb-4 justify-content-center">
             <div class="col-md-6 position-relative">
                 <input type="text" id="lecture-search" class="form-control bg-dark text-light border-primary" placeholder="keyword search">
@@ -1747,6 +1859,7 @@ bin/metatron</code></pre>
 <div class="col"><button class="w-100 btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#card-23" aria-expanded="false" aria-controls="card-23" >rdf</button></div>
                     </div>
     </div>
+        </div>
 <hr/>
 <div class="d-grid gap-2 d-md-flex justify-content-md-end" id="pdf-export-container" style="display: none;">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -4003,7 +4116,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{m}}M{{y}}e{{m}}T{{c}}a{{c}}T{{c}}r{{g}}o{{y}}n{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{g}}m{{b}}E{{g}}T{{c}}a{{c}}t{{g}}R{{g}}o{{m}}N{{X}}.</p>
 </div>
 <h4 id="_cascading_type_constructions" class="discrete">cascading type constructions</h4>
 <h3 id="_mono_types" class="discrete">mono types</h3>
@@ -5021,9 +5134,9 @@ mtron&gt; memspace::[
  prefix=&gt;'',
  postfix=&gt;'',
  pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[
- result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
+ stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
  prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
- stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0],
+ result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0],
  menu=&gt;[
   console=&gt;console::[
    metatron_version=&gt;&lt;0.1-alpha&gt;,
@@ -5032,9 +5145,9 @@ mtron&gt; memspace::[
    prefix=&gt;'',
    postfix=&gt;'',
    pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[
- result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
+ stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
  prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
- stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0]]@/usr/ui/console,
+ result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0]]@/usr/ui/console,
   help=&gt;inst?noobj&lt;=#{?}(),
   chat=&gt;inst?noobj&lt;=#{?}(),
   connect=&gt;inst?noobj&lt;=#{?}(),
@@ -5065,9 +5178,9 @@ mtron&gt; */usr/ui/console     <i class="conum" data-value="1"></i><b>(1)</b>
  prefix=&gt;'',
  postfix=&gt;'',
  pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[
- result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
+ stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
  prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
- stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0],
+ result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0],
  menu=&gt;[
   console=&gt;console::[
    metatron_version=&gt;&lt;0.1-alpha&gt;,
@@ -5076,9 +5189,9 @@ mtron&gt; */usr/ui/console     <i class="conum" data-value="1"></i><b>(1)</b>
    prefix=&gt;'',
    postfix=&gt;'',
    pane=&gt;lst[/m/mach/console/pane{*}]::[/m/mach/console/pane::[
- result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
+ stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
  prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
- stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0]]@/usr/ui/console,
+ result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]@/usr/ui/console/pane/0]]@/usr/ui/console,
   help=&gt;inst?noobj&lt;=#{?}(),
   chat=&gt;inst?noobj&lt;=#{?}(),
   connect=&gt;inst?noobj&lt;=#{?}(),
@@ -5103,9 +5216,9 @@ mtron&gt; */usr/ui/console     <i class="conum" data-value="1"></i><b>(1)</b>
   subq=&gt;inst?noobj&lt;=#{?}()]]
 mtron&gt; */usr/ui/console/pane/0     <i class="conum" data-value="2"></i><b>(2)</b>
 ==&gt;/m/mach/console/pane::[
- result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
+ stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
  prompt=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}(),
- stream=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]
+ result=&gt;/m/inst/lambda?noobj{0}&lt;=#{?}()]
 mtron&gt; /usr/ui/console/pane/0/result('printed at ==&gt;xyz')     <i class="conum" data-value="3"></i><b>(3)</b></code></pre>
 </div>
 </div>
@@ -6120,7 +6233,7 @@ mtron&gt; */usr/notes/#?subq
   mqtt::T,
   haos::T]]@/m/iot
 mtron&gt;  import(/m/llm)
-{{m}}.{{g}}.{{y}}.{{X}}</code></pre>
+{{b}}.{{b}}.{{c}}.{{X}}</code></pre>
 </div>
 </div>
 </div>
@@ -7579,7 +7692,7 @@ mtron&gt; *&lt;http://localhost:8088/v1/models&gt;
   [id=&gt;MeetAISmall__latest,object=&gt;model],
   [id=&gt;gpt-oss__latest,object=&gt;model]]]
 mtron&gt; *&lt;http://localhost:8088/v1/models/data/0/id&gt;
-==&gt;mistralai_devstral-small-2507
+==&gt;qwen3:latest
 mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
          *&lt;http://localhost:8088/v1/models/data/0/id&gt;}&gt;
 ==&gt;[
@@ -7919,7 +8032,7 @@ mtron&gt; *&lt;http://localhost:8088/v1/models&gt;
   [id=&gt;MeetAISmall__latest,object=&gt;model],
   [id=&gt;gpt-oss__latest,object=&gt;model]]]
 mtron&gt; *&lt;http://localhost:8088/v1/models/data/0/id&gt;
-==&gt;mistralai_devstral-small-2507
+==&gt;qwen3:latest
 mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
          *&lt;http://localhost:8088/v1/models/data/0/id&gt;}&gt;
 ==&gt;[

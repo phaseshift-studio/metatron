@@ -41,7 +41,7 @@ ENV PATH="$JAVA_HOME/bin:$PATH"
 COPY --from=jre-build /javaruntime $JAVA_HOME
 COPY target/metatron-${METATRON}-jar-with-dependencies.jar target/metatron-${METATRON}-jar-with-dependencies.jar
 RUN chmod +x target/metatron-${METATRON}-jar-with-dependencies.jar
-COPY examples/ examples/
+# COPY examples/ examples/
 COPY conf/ conf/
 COPY boot/ boot/
 RUN touch .metatron.history
