@@ -29,6 +29,7 @@ import studio.phaseshift.metatron.isa.mach.type.machine.SwarmMachine;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -46,7 +47,7 @@ public class CoreThread extends AbstractThread {
         super(jvm, tid, vid);
     }
 
-    @Override
+    /*@Override
     public Fail stop() {
         return this.machine.interrupt();
     }
@@ -54,11 +55,16 @@ public class CoreThread extends AbstractThread {
     @Override
     public NoObj pause() {
         return this.machine.pause();
-    }
+    }*/
 
     @Override
     public Obj result() {
         return this.at(RESULT);
+    }
+
+    @Override
+    public Obj result(long timeout, TimeUnit unit) {
+        throw new UnsupportedOperationException();
     }
 
     @Override

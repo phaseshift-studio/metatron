@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -53,7 +53,7 @@ public class FutureObj<T extends Obj> extends MObj implements Future<T> {
         super();
         this.jvm = new AtomicReference<T>();
         this.tid = FUTURE_TID;
-        this.vid =null;
+        this.vid = null;
         this.tag = tag;
         this.isCanceled = false;
     }
@@ -132,12 +132,11 @@ public class FutureObj<T extends Obj> extends MObj implements Future<T> {
     public T get() throws InterruptedException, ExecutionException {
         if (this.isCanceled)
             throw new InterruptedException("future has already been canceled");
-        if (null == ((AtomicReference<T>) this.jvm).get())
-            throw new ExecutionException(MTronException.of("future obj isn't manifest"));
-        final T o = ((AtomicReference<T>) this.jvm).get();
-        if (o == null)
-            this.logger().error("future contains a null obj: %s", this);
-        return o;
+        while (true) {
+            if (null != ((AtomicReference<T>) this.jvm).get())
+                return ((AtomicReference<T>) this.jvm).get();
+            Thread.yield();
+        }
     }
 
     @Override

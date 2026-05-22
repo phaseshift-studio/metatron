@@ -100,7 +100,7 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
     }
 
     public F repeat_(final Obj obj) {
-        return this.addInst(instB(mInstSet.REPEAT_INST_TID, lst(obj)));
+        return this.addInst(instB(mInstSet.REPEAT_INST_TID, obj.<Poly<?,?>>as()));
     }
 
     public F end_() {

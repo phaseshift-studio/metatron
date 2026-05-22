@@ -64,6 +64,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
 import static org.jline.keymap.KeyMap.*;
@@ -809,12 +810,13 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
 
     protected void executeMtron(final String line) {
         /// /////////////////////////////////////////////////////
+        AtomicReference<Obj> running = new AtomicReference<>(noobj());
         CommonUtil.splitOnNonQuotedSequence(this.prefix + line + this.postfix, ';', false).forEach(l -> {
             try {
                 final Obj parseResult = ObjmtronSerializer.parse(l);
                 final Level startLevel = this.status.getState();
                 if (null != parseResult && !parseResult.isNoObj()) {
-                    final Obj resolvedResult = parseResult.isCall() ? Call.Helper.resolveInspection(parseResult.asCall(), unresolved -> {
+                    final Obj resolvedResult = parseResult.isCall() ? Call.Helper.resolveInspection(running.get(), parseResult.asCall(), unresolved -> {
                         if (TypeCheck.code_resolve.enabled()) {
                             throw MTronException.of("unable to fully resolve code. execution will require dynamic inst resolution for:\n\t%s", unresolved.stream().map(Obj::tid).toList());
                         } else {
@@ -830,6 +832,7 @@ public class Console extends JRec<Console> implements Closeable, Runnable {
                     }
 
                     final Obj computeResult = mach.apply();
+                    running.set(computeResult);
                     computeResult.stream().forEach(this::printResult);
                     this.status.setState(startLevel);
                 }

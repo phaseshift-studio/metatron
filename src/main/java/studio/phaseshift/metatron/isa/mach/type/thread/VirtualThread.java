@@ -21,73 +21,86 @@ package studio.phaseshift.metatron.isa.mach.type.thread;
 import dev.langchain4j.agent.tool.P;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.Fail;
-import studio.phaseshift.metatron.isa.m.type.NoObj;
-import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.util.MTronException;
 
+import java.time.Duration;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_VIRTUAL_THREAD_TID;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 
-public class VirtualThread extends AbstractThread {
+public class VirtualThread extends AbstractThread implements NotDetachable {
 
-    private Thread thread;
-    volatile FutureObj<Obj> future = new FutureObj<>(UUID.randomUUID());
+    //private FutureObj<Obj> future;
 
     public VirtualThread(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
-        super(jvm, tid, vid);
-        this.thread = Thread.ofVirtual()
-                .name(this.vid() == null ? "metatron-virtual-thread" : this.vid().toString())
-                .unstarted(() -> {
-                    this.at(STATE, uri("running"), MUTABLE);
-                    final Obj result = this.jvm().get(uri(CODE)).apply(this.at(START));
-                    this.at(RESULT, result, MUTABLE);
-                    this.future.setObj(result);
-                    this.at(STATE, uri("stopped"), MUTABLE);
-                });
+        super(mutableMap(jvm), tid, vid);
+    }
+
+    private void createUnstartedThread() {
+        if (null == this.thread)
+            this.thread = Thread.ofVirtual()
+                    .name(this.vid() == null ? "metatron-virtual-thread" : this.vid().toString())
+                    .unstarted(() -> {
+                        try {
+                            this.jvm().put(uri(STATE), uri(RUNNING));
+                            final Obj result = this.jvm().getOrDefault(uri(CODE), noobj()).apply(this.at(START));
+                            this.jvm().put(uri(RESULT), result);
+                        } catch (final Throwable e) {
+                            this.jvm().put(uri(RESULT), fail(e));
+                            this.logger().error("thread execution failed: {}", e.getMessage(), e);
+                        } finally {
+                            this.jvm().put(uri(STATE), uri(STOPPED));
+                            synchronized (VirtualThread.this) {
+                                VirtualThread.this.notifyAll();
+                            }
+                        }
+                    });
     }
 
 
-    @Override
+   /* @Override
     public Fail stop() {
         try {
             this.thread.interrupt();
-            return fail("interrupted").c(cInt.ZERO()).asFail();
+            this.jvm().put(uri(STATE), uri(HALTED));
+            return fail("interrupted").asFail();
         } catch (final Exception e) {
             return fail(e);
         }
-    }
-    
-    @Override
+    }*/
+
+   /* @Override
     public Obj at(final Obj key) {
-        if(!key.equals(uri(RESULT)))
+        if (!key.equals(uri(RESULT)))
             return super.at(key);
         else {
             try {
-                if (this.future.isDone())
-                    return this.future.get();
-                else {
-                    return Obj.none();
-                }
-            } catch(final Exception e) {
+                return this;
+            } catch (final Exception e) {
                 throw MTronException.of(e);
             }
         }
-    }
+    }*/
 
-    @Override
+    /*@Override
     public NoObj pause() {
         return noobj(); // use semaphone that wraps the run task
-    }
+    }*/
 
     @Override
     public Obj result() {
@@ -95,9 +108,63 @@ public class VirtualThread extends AbstractThread {
     }
 
     @Override
-    public FutureObj<Obj> apply(final Obj other) {
-        this.jvm().put(uri(START), other);
-        this.thread.start();
-        return this.future;
+    public Obj result(final long timeout, final TimeUnit unit) {
+        synchronized (this) {
+            final long endTime = System.currentTimeMillis() + unit.toMillis(timeout);
+            while (System.currentTimeMillis() < endTime) {
+                if (this.jvm().getOrDefault(uri(STATE), noobj()).equals(uri(STOPPED))) {
+                    return this.jvm().getOrDefault(uri(RESULT), noobj());
+                }
+                try {
+                    final long waitTime = Math.min(10, endTime - System.currentTimeMillis());
+                    if (waitTime > 0) {
+                        this.wait(waitTime);
+                    }
+                } catch (final InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw MTronException.of("interrupted while waiting for result");
+                }
+            }
+        }
+        throw MTronException.of("result wait timeout for thread %s", this.vid());
     }
+    
+    public static VirtualThread of(final Rec vrec) {
+        if(vrec instanceof VirtualThread)
+            return (VirtualThread) vrec;
+        else {
+            return new VirtualThread(vrec.jvm(),MACH_VIRTUAL_THREAD_TID,vrec.vid());
+        }
+    } 
+
+
+    @Override
+    public Obj apply(final Obj other) {
+        synchronized (this) {
+            if (null != this.thread && this.thread.getState() != Thread.State.NEW) {
+                this.logger().warn("thread currently running, ignoring %s", other);
+                return this;
+            }
+            this.createUnstartedThread();
+            this.jvm().put(uri(START), other);
+            this.thread.start();
+        }
+        return this;
+    }
+
+    @Override
+    public VirtualThread clone(final Object jvm, final fURI tid, final fURI vid) {
+        return (VirtualThread) super.clone(jvm, tid, null == this.vid() ? vid : this.vid());
+    }
+
+    @Override
+    public VirtualThread self(final Object jvm, final fURI tid, final fURI vid) {
+        return (VirtualThread) super.self(jvm, tid, null == this.vid() ? vid : this.vid());
+    }
+
+    @Override
+    public VirtualThread clone() {
+        return this;
+    }
+
 }

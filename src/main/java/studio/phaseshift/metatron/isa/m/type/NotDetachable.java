@@ -16,26 +16,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.util.thread;
+package studio.phaseshift.metatron.isa.m.type;
+
+import studio.phaseshift.metatron.furi.fURI;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class mCoreThread<T> extends mThread<T> {
-
-    public mCoreThread(final mThreadFactory factory, final mRunnable.mCoreRunnable<T> runnable) {
-        super(factory, runnable);
-    }
-
-    @Override
-    public void run() {
-        this.runnable.run();
-    }
-
-    @Override
-    public boolean isVirtualThread() {
-        return false;
-    }
+public interface NotDetachable extends Obj {
 }
-
-

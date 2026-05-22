@@ -376,6 +376,10 @@ public final class CommonUtil {
         }
     }
 
+    public static <K, V> Map<K, V> mutableMap(final Map<K, V> map) {
+        return new LinkedHashMap<>(map);
+    }
+
     public static <K, V> Map<K, V> mutableMap(final Object... args) {
         return mapBuilder(LinkedHashMap::new, args);
     }

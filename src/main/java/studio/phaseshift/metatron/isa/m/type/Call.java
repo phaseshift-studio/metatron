@@ -178,8 +178,8 @@ public interface Call extends Obj, Ring<Call> {
             return call.insts().stream().filter(i -> !i.isResolved(true)).toList();
         }
 
-        public static Call resolveInspection(final Call call, final Consumer<List<Inst>> consumer) {
-            final Call resolvedCall = call.resolve(noobj());
+        public static Call resolveInspection(final Obj lhs, final Call call, final Consumer<List<Inst>> consumer) {
+            final Call resolvedCall = call.resolve(lhs);
             final List<Inst> unresolved = Helper.getUnresolvedInsts(resolvedCall);
             if (!unresolved.isEmpty())
                 consumer.accept(unresolved);
