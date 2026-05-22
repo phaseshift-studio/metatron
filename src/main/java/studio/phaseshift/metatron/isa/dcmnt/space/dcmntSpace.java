@@ -362,48 +362,58 @@ public class dcmntSpace extends AbstractSpace<MongoClient> implements SchemaSpac
             if (alignedSegments.size() > 2) {
                 final String collectionName = alignedSegments.get(0);
                 final String documentID = alignedSegments.get(1);
-                // Only handle specific collection + document; wildcard collection/doc
-                // patterns (e.g. +/+/field) are not yet supported here.
+                // Mirror memSpace.directReader: for each candidate document,
+                // test its VID against the pattern, then expand children via
+                // unrollPoly if the document is a poly (Rec or Lst).
+                final fURI nodePattern = pattern.asNode();
                 if (!collectionName.equals("+") && !collectionName.equals("#") &&
                         !documentID.equals("+") && !documentID.equals("#")) {
+                    // Specific collection + specific document
                     final Document doc = this.database.getCollection(collectionName)
                             .find(Filters.eq(ID_FIELD, parseObjectId(documentID))).first();
                     if (doc != null) {
                         final fURI docVID = f(this.pattern.retractPattern()
                                 .extend(collectionName).extend(documentID).toString());
                         final Obj docObj = processDocument(doc);
-                        // Always use the node form so that test() can compare node to
-                        // node; branch patterns (trailing slash) cause test() to fail.
-                        final fURI nodePattern = pattern.asNode();
                         final List<IdObj> results = new ArrayList<>();
-                        // Include the document itself if its URI matches the pattern
-                        // (e.g. '#' recursive wildcard matches the containing node too).
                         if (docVID.test(nodePattern))
                             results.add(IdObj.of(docVID, docObj));
-                        // Expand children if the document is a poly (Rec or Lst).
                         else if (docObj.isPoly())
                             results.addAll(Space.Helper.unrollPoly(docVID, docObj.as(), nodePattern));
                         return results.iterator();
                     }
+                } else if (!collectionName.equals("+") && !collectionName.equals("#")) {
+                    // Specific collection, wildcard document — expand sub-pattern
+                    // within each matching document (e.g. col/+/field)
+                    return IteratorUtil.stream(this.database.getCollection(collectionName).find()).flatMap(x -> {
+                        final String idStr = x.getObjectId(ID_FIELD).toHexString();
+                        final fURI docVID = this.pattern.retractPattern().extend(collectionName).extend(idStr);
+                        final Obj docObj = processDocument(x);
+                        final List<IdObj> results = new ArrayList<>();
+                        if (docVID.test(nodePattern))
+                            results.add(IdObj.of(docVID, docObj));
+                        else if (docObj.isPoly())
+                            results.addAll(Space.Helper.unrollPoly(docVID, docObj.as(), nodePattern));
+                        return results.stream();
+                    }).iterator();
                 } else {
-                    if(!collectionName.equals("+") && !collectionName.equals("#")) {
-                       return IteratorUtil.stream(this.database.getCollection(collectionName).find()).map(x -> {
-                            final String idStr = x.getObjectId(ID_FIELD).toHexString();
-                            final fURI docVID = this.pattern.retractPattern().extend(collectionName).extend(idStr);
-                            final Obj docObj = processDocument(x);
-                            return IdObj.of(docVID, docObj);
-                        }).iterator();
-                    } else {
-                        return IteratorUtil.stream(this.database.listCollectionNames().iterator())
-                                .map(this.database::getCollection)
-                                .flatMap(collection -> IteratorUtil.stream(collection.find()).map(x -> Pair.with(collection,x)))
-                                .map(pair -> {
-                                    final String idStr = pair.getValue1().getObjectId(ID_FIELD).toHexString();
-                                    final fURI docVID = this.pattern.retractPattern().extend(pair.getValue0().getNamespace().getCollectionName()).extend(idStr);
-                                    final Obj docObj = processDocument(pair.getValue1());
-                                    return IdObj.of(docVID, docObj);
-                                }).iterator();
-                    }
+                    // Wildcard collection, wildcard document — expand sub-pattern
+                    // within every document in every collection (e.g. +/+/field)
+                    return IteratorUtil.stream(this.database.listCollectionNames().iterator())
+                            .map(this.database::getCollection)
+                            .flatMap(collection -> IteratorUtil.stream(collection.find()).map(x -> Pair.with(collection, x)))
+                            .flatMap(pair -> {
+                                final String idStr = pair.getValue1().getObjectId(ID_FIELD).toHexString();
+                                final fURI docVID = this.pattern.retractPattern().extend(
+                                        pair.getValue0().getNamespace().getCollectionName()).extend(idStr);
+                                final Obj docObj = processDocument(pair.getValue1());
+                                final List<IdObj> results = new ArrayList<>();
+                                if (docVID.test(nodePattern))
+                                    results.add(IdObj.of(docVID, docObj));
+                                else if (docObj.isPoly())
+                                    results.addAll(Space.Helper.unrollPoly(docVID, docObj.as(), nodePattern));
+                                return results.stream();
+                            }).iterator();
                 }
                 return IteratorUtil.of();
             }

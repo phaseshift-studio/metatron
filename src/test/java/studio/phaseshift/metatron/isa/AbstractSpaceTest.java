@@ -476,13 +476,12 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
                     "skipping: depends on a seed write that was rejected by this space's root constraint");
             return;
         }
-        final Obj writeObj = ObjmtronSerializer.parse(make(writeExpression.equals(".") ? PREVIOUS_LINE.get(0) : writeExpression)).apply();
+        final Obj writeObj = ObjmtronSerializer.parse(make(writeExpression.equals(".") ? PREVIOUS_LINE.getFirst() : writeExpression)).apply();
         // If the write was explicitly rejected by the space (e.g. root type enforcement),
         // allow subclasses to declare this failure expected and skip the test gracefully.
         if (writeObj.isFail() && expectWriteRejection(writeObj)) {
             seedWriteSkipped = true;
-            org.junit.jupiter.api.Assumptions.assumeTrue(false,
-                    "space rejected write (root type constraint): " + writeObj);
+            org.junit.jupiter.api.Assumptions.assumeTrue(false, "space rejected write (root type constraint): " + writeObj);
             return;
         }
         if (this.sleepBetweenReads > 0)
@@ -533,10 +532,10 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
                 "@$$/people/1 >>= [name=>+'ZYX']                                      %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'XYZZYX',age=>140,title=>'Engineer Specialist']",
                 "@$$/people/1 >>= [name=><<.>>name.+'ABC']                            %  *$$/people/1==[name=>_,age=>_,title=>_]                         % [name=>'XYZZYXABC',age=>140,title=>'Engineer Specialist']",
                 "@$$/people/2 >>= [name=><<.-<[>>name,' the ',>>title]._/sum()\\_>-]  %  *$$/people/2==[name=>_,age=>_,title=>_]                         % [name=>'Bob the Designer',age=>25,title=>'Designer']",
-              //  "@<$$/people/+>                                                       %  *<$$/people/+>.vid()                                            % {$$/people/1,$$/people/2,$$/people/3,$$/people/4}",
+                //  "@<$$/people/+>                                                       %  *<$$/people/+>.vid()                                            % {$$/people/1,$$/people/2,$$/people/3,$$/people/4}",
                 "@<$$/people/+>.>>= [name=>\"Micky Mouse\"]                           %  *<$$/people/+>.>>name                                           % {4}\"Micky Mouse\"",
                 "@<$$/people/+>.>>= [name=>\"Optimus Prime\"]                         %  *<$$/people/+/name>                                             % {4}\"Optimus Prime\"",
-               // "@<$$/people/+/name>.>>= \"Dark Wing Duck\"                           %  *<$$/people/+>==[name=>_]>>name                                 % {4}\"Dark Wing Duck\"",
+                // "@<$$/people/+/name>.>>= \"Dark Wing Duck\"                           %  *<$$/people/+>==[name=>_]>>name                                 % {4}\"Dark Wing Duck\"",
                 "@<$$/people/+>.>>= [name=>none]                                      %  *<$$/people/+/name>                                             % noobj",
                 "@<$$/people/+>                                                       %  *<$$/people/2>==[active=>_]                                     % [active=>true]",
                 "@<$$/people/+>.>>=[active=>not(_)]                                   %  *<$$/people/2>==[active=>_]                                     % [active=>false]",

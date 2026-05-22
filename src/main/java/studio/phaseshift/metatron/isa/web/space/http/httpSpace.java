@@ -61,6 +61,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.web.space.http.handler.web_httpHandler.WEB_HTTP_TID;
@@ -282,13 +283,21 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                         steps++;
                         runningPattern = runningPattern.asRelativeNode().retract(1).asAbsolute();
                     } else {
-                        final Content.ContentType contentType = Content.ContentType.of(response.contentType());
-                        final Obj docObj = contentType.fromBytes(response.body());
+                        // Use file extension as a hint when the server sends text/plain
+                        // (e.g. .json files served without application/json content type)
+                        Content.ContentType contentType = Content.ContentType.of(response.contentType());
+                        if (null == contentType || contentType == Content.ContentType.TEXT_PLAIN) {
+                            contentType = Content.ContentType.fromExtension(runningPattern.name(), contentType);
+                        }
+                        final Obj docObj = null != contentType ? contentType.fromBytes(response.body()) : str(response.body());
                         final Uri key = uri(pattern.scheme(null).host(null).tail(steps).asRelative());
-                        final Obj subDocObj = key.uriValue().toString().trim().isEmpty()
-                                ? docObj
-                                : docObj.asRec().at(key);
-                        return subDocObj.isNoObj() ? IteratorUtil.of() : IteratorUtil.of(IdObj.of(pattern, subDocObj));
+                        if (key.uriValue().toString().trim().isEmpty())
+                            return docObj.isNoObj() ? IteratorUtil.of() : IteratorUtil.of(IdObj.of(pattern, docObj));
+                        if (docObj.isRec()) {
+                            final Obj subDocObj = docObj.asRec().at(key);
+                            return subDocObj.isNoObj() ? IteratorUtil.of() : IteratorUtil.of(IdObj.of(pattern, subDocObj));
+                        }
+                        return IteratorUtil.of();
                     }
                 }
             } catch (final Exception e) {

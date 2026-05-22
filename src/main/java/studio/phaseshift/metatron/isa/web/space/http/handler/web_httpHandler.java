@@ -110,6 +110,14 @@ public class web_httpHandler extends HttpRec {
                 if (query != null && !query.isEmpty())
                     requestURI = requestURI.qString(query);
 
+                // Walk up the URI to find a path segment with a known file extension
+                // for content-type detection (e.g. /test.json/number → test.json → application/json)
+                fURI contentTypeHint = requestURI;
+                while (contentTypeHint.segmentLength() > 0
+                        && Content.ContentType.fromExtension(contentTypeHint.name(), null) == null) {
+                    contentTypeHint = contentTypeHint.retract(1);
+                }
+
                 // 1 — Direct read from Router (space-agnostic: fsSpace, memSpace, etc.)
                 Obj requestObj = Router.global().read(requestURI);
 
@@ -146,10 +154,12 @@ public class web_httpHandler extends HttpRec {
                     return noobj();
                 }
 
-                // 5 — Detect Content-Type from object type, send response
+                // 5 — Detect Content-Type: query param > object type > file extension > text/plain
                 final Content.ContentType contentType = requestURI.hasQ(OUT) ?
                         Content.ContentType.of(requestURI.q(OUT)) :
-                        Content.ContentType.fromType(requestObj, Content.ContentType.TEXT_PLAIN);
+                        Content.ContentType.fromType(requestObj,
+                                Content.ContentType.fromExtension(contentTypeHint.name(),
+                                        Content.ContentType.TEXT_PLAIN));
                 this.send(requestObj, contentType);
                 return requestObj;
 

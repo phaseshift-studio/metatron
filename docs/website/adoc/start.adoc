@@ -46,7 +46,7 @@ WARNING: **metatron** is a large, involved software system composed of many inte
 <img src="images/metatron-character-ansi.png" width="150px" style="float:left; margin:10px;"></a>
 ++++
 
-Software is an endless maze of unique perspectives on the nature of computing, codified in sharable artifacts known generally as __code__. This world is endlessly engaging to those who enjoy discovering and manipulating novel conceptual structures via mechanical processes -- controlling massive amounts of energy and data without breaking a sweat nor leaving the comfort of one's home. From web technologies, to database technologies, to AI technologies, and so forth, millions of developers are __clickity clacking__ away collectively writing a story of a wholly different sort. metatron offers a realization of this medley by means of a distillation of fundamental patterns that renders all these technologies almost laughably similar, enabling technological compositions that are naturally expressed in what can only honestly be said to be an extremely terse language. 
+Software is an endless maze of attempts to organize and understand the nature of data and processes that act upon it -- encapsulated in sharable artifacts generally known as __code__. This world is the epitome of rational human thought and in being so, acts as a "legoland" for the well tuned mind that finds joy in discovering and manipulating novel conceptual structures via cold, discrete mechanical processes, where one is able to control a massive amounts of energy and data without breaking a sweat nor leaving the comfort of one's home. From web technologies, to database technologies, to AI technologies, and so forth, millions of developers are __clickity clacking__ away collectively writing a story of a wholly different sort. metatron offers one such realization of this world via a distillation of a few fundamental patterns that seems to render a seemingly morass of technologies to almost laughably similar expression that's repeated over and over. This focused interpretation enables technological compositions that are naturally expressed in what can only honestly be said to be an extremely terse language known as mtron.
 
 Exploring metatron takes the user through the wonderful world of computing touching on fundamental concepts in languages, compilers, operating systems, networks, databases, web technologies, and more –– all from the vantage point of a perspective codified in mtron that enables one to speak to this world, using simple, utilitarian terms.
 
@@ -122,6 +122,28 @@ After metatron boots, the cursor should be to the right of a `mtron>` prompt. Th
 ----
 
 == Space
+
+[.card]
+--
+[discrete,.center]
+==== The Nature of Space
+Simply put, metatron provides a distributed address space for reading and writing objs, where the values can have different internal structures (**a key/value store**), such that the internals are still uniquely identified globally (**a column store**). An address space that can address structures at various scales of complexity implies a single self-referential space: the address space formed by the set of all uniform resource identifiers (**a web server**). The particular uri scheme used offers more than just the ability to denote the location of an obj, it can also refer to an obj type (**a relational database**), an instruction obj's signature (**a lambda server**), and read/write modulators (**a semantic web**). Atop a global address space, `poly` objs add an interesting twist in that they maintain an internal NAT-like address scheme for routing requests to the objs contained therein (**an ldap server**). In this way, polys control not just a point in space, but regions of space that can overlap, blurring the line between where one poly ends and another begins (**an mqtt broker**). But the objs in space aren't just static datum (monos) or diffuse collections (polys) either, they are also active processes (calls) (**a lisp interpreter**). Amongst the set of calls, there is a particular kind of instruction known as an `auto` which has the peculiar behavior of dereferencing itself to its referent upon access which yields colocation semantics amongst physically distributed objs (**a graph database**). And that's just the beginning...
+--
+
+The above description may lead one to conclude that metatron, if functional, is too complex to be of practical value. Note that the features articular above are simply epiphenomena of a more fundamental notion of reference. In metatron, the uri is called a __fURI__ (**functional uniform resource identifier**) and an extreme example of sucj a fURI is presented below.
+
+[source,mtron]
+----
+abc://phaseshift.studio:8777/seg1/+/segN[a,b,c]{*}?q0=a&q1=b
+ |              |           |     |   |    |    |      |___
+ |              |           |     |   |    |    |__________
+ |              |           |     |   |    |_______________
+ |              |           |     |   |____________________
+ |              |           |     |________________________
+ |              |           |______________________________
+ |              |__________________________________________
+ |_________________________________________________________
+----
 
 Up to this point, there are currently 4 spaces maintained by metatron.
 

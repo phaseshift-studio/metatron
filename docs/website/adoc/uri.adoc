@@ -16,19 +16,34 @@ file://domain.local:22/usr/data/abc{*}?sub
 |===
 🧱
 
-metatron was designed to support the creation and manipulation of _abstract data types_ in a manner that affords the user a concise, fluid means of maneuvering through a heterogeneous set of data structures, where each is embedded within and across any number of spaces, while being respectfully agnostic to each space's espoused perspective on the data maintained therein: e.g., key/value, document, relational, vector, graph, file system, and the various nooks and crannies between.
+metatron was designed to support the creation and manipulation of _abstract data types_ in a manner that affords the user a concise, fluid means of maneuvering through a heterogeneous set of data structures, where each is embedded within and across any number of spaces, while being respectfully agnostic to each space's espoused perspective on the data maintained therein: e.g., key/value, document, relational, vector, graph, file system, and the various peculiarities between.
 
-metatron's URI addressing scheme makes it possible to encode arbitrary data types into a metatron-specific construct called "space". A space is where URI/obj pairs are written to and read from. Coupling occurs when a URI references an obj.
+metatron's URI addressing scheme makes it possible to encode arbitrary data types into a metatron-specific construct called "space". A space is where URI/obj pairs are written to and read from. Coupling occurs when a URI references an obj. The most basic form of read/write is to dereference/reference using the instructions `from` and `to` with signatures
+
+[source,mtron]
+----
+from?B{*}<=A{?}(?uri::T)
+to?A{?}<=A{?}(?uri::T)
+----
+
+and example usages
 
 [source,mtron]
 ----
 1.to(a) [-- write 1 to a  --]
 from(a) [-- read 1 from a --]
+----
 
-[== sugar form ==]
+along with their respective sugar forms:
+
+[source,mtron]
+----
 a -> 1  [-- write 1 to a --]
 *a      [-- read 1 from a --]
 ----
+
+From `to` and `from` more complex read/write patterns are realized such `select` and `update` (discussed elsewhere in the Tractatus).
+
 
 🧱
 [source,mtron]
@@ -56,7 +71,7 @@ a -> 1  [-- write 1 to a --]
 
 Any obj can be referenced by a URI. From simple **mono** objs such as `bool`, `int`, etc. to complex nested **poly** objs such as `rec`, `lst`, etc. Poly objs provide another layer of addressing in that once a poly obj has a URI reference, the internal objs that make up the poly inherit that reference and extend it with any internal references necessary to find the objs within the poly.
 
-[cols="5a,7a",separator=🧱]
+[cols="8a,6a",separator=🧱]
 |===
 🧱
 [source,mtron]
@@ -87,27 +102,129 @@ a/b/c -> [x,[y=>[z=>2]]]
 <5> the uri `a/b/c/1/y/z` references an doubly internal `int` mono.
 |===
 
-In summary, metatron's global, distributed memory system can be understood as a bag of binary relations mapping URIs to objs.
-
-[.center]
-[stem]
-++++
-\tt{SPACE} \in \left(\tt{URI} \times \tt{OBJ}\right)
-++++
 
 [discrete]
-=== spatial embeddings
+=== Spatial Embeddings
 
-The following considerations apply when performing
+[discrete]
+==== The Poly Read/Write SubRing
 
-. **spatial encodings**
-. **schema encodings**
-. **language encodings**
+When a poly containing nested poly structures is written to space an ambiguity emerges. A example will elucidate this point. Assume the two ways in which to encode "the same" data in space.
+
+[cols="6a,8a"]
+|===
+|
+
+[cols="3a,3a",option="header"]
+!===
+^!
+**form A**
+^!
+**form B**
+!
+[mtron,source]
+----
+a->[b=>1,c=>2] 
+----
+!
+[mtron,source]
+----
+a/b->1
+a/c->2  
+----
+!
+[mtron,source]
+----
+a->[b=>1,c=>2]
+----
+!
+[mtron,source]
+----
+a__b->1
+ \_c->2
+----
+!===
+<1> the uri ring defines multiplcation as "extension", where \$ a \cdot b \$ is `a/b`.
+<2> the uri ring defines addition as "branching", where \$ab + ac\$ is `{a/b,a/c}`. 
+
+|
+The two examples represent the equivalent data because there exists a bijection that maps **A** to **B** and **B** to **A**. In other words, they are isomorphic structures within the category of ring. The first form is the equation:
+
+\[
+a \cdot (b + c)
+\]
+
+The second is written:
+
+\[
+(a + b) \cdot (a + c)
+\]
+
+Thus, due to the fact that multiplication distributes over addition, the two equations, while typographically different are in fact the same data.
+
+\[
+a \cdot (b + c) = (a + b) \cdot (a + c)
+\]
+
+|
+[cols="3a,3a",option="header"]
+!===
+^!
+**form A**
+^!
+**form B**
+!
+[mtron,source]
+----
+*a/
+----
+!
+[mtron,source]
+----
+*a/b/
+*a/c/
+----
+!
+[mtron,source]
+----
+a=>[b=1,c=>2]
+----
+!
+[mtron,source]
+----
+{a/b=>1,a/c=>2}
+----
+!===
+
+|
+The two examples are "equal" because they can be rewritten into each using the ring algebra. The first form is the equation:
+
+\[
+a \cdot (b + c)
+\]
+
+The second is written:
+
+\[
+(a + b) \cdot (a + c)
+\]
+
+Thus, due to the fact that multiplication distributes over addition, the two equations, while typographically different are in fact the same data.
+
+\[
+a \cdot (b + c) = (a + b) \cdot (a + c)
+\]
+
+|===
+
+[discrete]
+==== Isomorphic \$ \ne \$ Identical
+
 
 A _matrix_ is an \$n \times m\$ data structure composed of \$n\$ vectors/row, each with \$m\$ elements/columns. A relational database _table_ is an example of a matrix, where the entries typically span numeric and non-numeric data types.
-Three general approaches to embedding a matrix or table into a space are presented below, where each makes different space/time tradeoffs.
+Three general approaches to embedding a matrix or table into a space are presented below, where each makes different space/time tradeoffs, while remaining isomorphic in the stream ring.
 
-[cols="5,5,8",frame=none,subs="+macros",separator=🧱,grid=cols, role="center"]
+[cols="5,5,5",frame=none,subs="+macros",separator=🧱,grid=cols, role="center"]
 |===
 
 ^a🧱
@@ -191,7 +308,9 @@ a🧱
 
 [mtron]
 ----
-m -> [[0,1,2,3],[4,5,6,7],[8,9,10,11]]
+m -> [[0,1,2,3],  /
+      [4,5,6,7],  /
+      [8,9,10,11]]
 
 *m/0/0       [-- <1> --]
 *m/0/+       [-- <2> --]
@@ -233,7 +352,7 @@ The different embeddings also have different space costs, where space is defined
 |===
 
 [discrete]
-=== coefficients
+=== Coefficients
 
 [cols="3a,3a,3",separator=🧱,options=header,role="table-bordered small center"]
 |===

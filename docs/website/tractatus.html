@@ -1701,7 +1701,7 @@ bin/metatron</code></pre>
             --------------------------------------- QUICK START LINK ----------------------------------------------------
             ----------------------------------------------------------------------------------------------------------->
             <li class="nav-item">
-                <a class="nav-link quickstart-link" href="#" onclick="location.href='start.html';">
+                <a class="nav-link quickstart-link" href="start.html" onclick="location.href=location.href.replace(/(\/instset)?\/[^/]*\.html$/,'/start.html');return false;">
                     <i class="bi bi-book me-1"></i> quick start
                 </a>
             </li>
@@ -1764,7 +1764,7 @@ bin/metatron</code></pre>
              ----------------------------------- TRACTATUS LINK --------------------------------------------------------
              ---------------------------------------------------------------------------------------------------------->
             <li class="nav-item">
-                <a class="nav-link" href="#" onclick="location.href='tractatus.html';">the tractatus</a>
+                <a class="nav-link" href="tractatus.html" onclick="location.href=location.href.replace(/(\/instset)?\/[^/]*\.html$/,'/tractatus.html');return false;">the tractatus</a>
             </li>
             <!----------------------------------------------------------------------------------------------------------
             ----------------------------------- ARTICLES DROPDOWN ------------------------------------------------------
@@ -2553,15 +2553,15 @@ Finally, a degenerate anonymous <code>inst</code> with no specified variable fra
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;  10.(min=&gt;2,max=&gt;8){ is(and(gte(*min),lte(*max))) }     <i class="conum" data-value="1"></i><b>(1)</b>
 ==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/102
+	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/108
 mtron&gt;  10.(min=&gt;minus(1),max=&gt;plus(1)){ is(and(gte(*min),lte(*max))) }     <i class="conum" data-value="2"></i><b>(2)</b>
 ==&gt;10
 mtron&gt;  10.(min=&gt;2,max=&gt;8){ is(and(gte(*bad_min),lte(*bad_max))) }     <i class="conum" data-value="3"></i><b>(3)</b>
 ==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/104
+	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/110
 mtron&gt;  10.(){ is(and(gte(*min),lte(*max))) }     <i class="conum" data-value="4"></i><b>(4)</b>
 ==&gt;fail::[rhs does not match inst range:
-	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/106
+	noobj=&gt;(X=&gt;#::T)][...]@/sys/fail/112
 mtron&gt; 10.is(and(gte(minus(1)),lte(plus(1))))     <i class="conum" data-value="5"></i><b>(5)</b>
 ==&gt;10</code></pre>
 </div>
@@ -2646,9 +2646,9 @@ mtron&gt; 2.band(min=&gt;1,max=&gt;1)     <i class="conum" data-value="1"></i><b
                                       ^ end of input expected
 
 mtron&gt;  10.is_divisible(2)
-==&gt;fail::[unable to locate inst-f of is_divisible(2)@&lt;1&gt;][...]@/sys/fail/108
+==&gt;fail::[unable to locate inst-f of is_divisible(2)@&lt;1&gt;][...]@/sys/fail/114
 mtron&gt;  10.is_divisible('abc')
-==&gt;fail::[unable to locate inst-f of is_divisible('abc')@&lt;1&gt;][...]@/sys/fail/110</code></pre>
+==&gt;fail::[unable to locate inst-f of is_divisible('abc')@&lt;1&gt;][...]@/sys/fail/116</code></pre>
 </div>
 </div>
 </div>
@@ -2703,7 +2703,7 @@ This ensures the uri <code>trpl</code> is not applied to the <code>inst</code> p
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt;  trpl -&gt; inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}     <i class="conum" data-value="1"></i><b>(1)</b>
-==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}]][...]@/sys/fail/112
+==&gt;fail::[lhs range does not match inst domain: uri::T =&gt; int{3}::T [inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}]][...]@/sys/fail/118
 mtron&gt; trpl -&gt; |inst?lst[int,int,int]&lt;=int{3}(){&gt;-[,]}     <i class="conum" data-value="2"></i><b>(2)</b>
 ==&gt;inst?rng=lst[int,int,int]&amp;dom=int{3}(){merge([,])}
 mtron&gt; *trpl     <i class="conum" data-value="3"></i><b>(3)</b>
@@ -3272,7 +3272,7 @@ mtron&gt; @ai.chat("Remember the word 'metatron'.
   	dev.langchain4j.internal.ValidationUtils [line 169]
   	dev.langchain4j.internal.ValidationUtils [line 156]
   	dev.langchain4j.model.input.PromptTemplate [line 83]
-  	dev.langchain4j.model.input.PromptTemplate [line 186]][...]@/sys/fail/172
+  	dev.langchain4j.model.input.PromptTemplate [line 186]][...]@/sys/fail/178
 mtron&gt; */usr/ai/response     <i class="conum" data-value="5"></i><b>(5)</b>
 ==&gt;5</code></pre>
 </div>
@@ -3393,7 +3393,7 @@ mtron&gt; tB::1.0.as(mB::T)     <i class="conum" data-value="3"></i><b>(3)</b>
   	dev.langchain4j.internal.ValidationUtils [line 169]
   	dev.langchain4j.internal.ValidationUtils [line 156]
   	dev.langchain4j.model.input.PromptTemplate [line 83]
-  	dev.langchain4j.model.input.PromptTemplate [line 186]][...]@/sys/fail/178</code></pre>
+  	dev.langchain4j.model.input.PromptTemplate [line 186]][...]@/sys/fail/184</code></pre>
 </div>
 </div>
 <h3 id="_llm_tools_skills_and_mcp_servers" class="discrete">llm tools, skills, and mcp servers</h3>
@@ -4019,7 +4019,7 @@ mtron&gt; 4.as(int::T[?&gt;0]@nat)
 ==&gt;nat::4
 mtron&gt;  -4.as(nat::T)
 ==&gt;fail::[-4 is not a is(gt(0))
-  -4=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/244
+  -4=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/292
 mtron&gt; [-- refining rec::T  --]
 mtron&gt; [name=&gt;'snowbutt',age=&gt;7].as(rec::T[?[name=&gt;str::T,age=&gt;int::T]@chicken)
 ==&gt;ERROR: [name=&gt;'snowbutt',age=&gt;7].as(rec::T[?[name=&gt;str::T,age=&gt;int::T]@chicken)
@@ -4085,11 +4085,11 @@ mtron&gt; 2.as(nat::T)     <i class="conum" data-value="5"></i><b>(5)</b>
 ==&gt;2
 mtron&gt;  -2.as(nat::T)     <i class="conum" data-value="6"></i><b>(6)</b>
 ==&gt;fail::[-2 is not a is(gt(0))
-  -2=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/250
+  -2=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/298
 mtron&gt;  nat::2 * -1     <i class="conum" data-value="7"></i><b>(7)</b>
 ==&gt;fail::[nat::-2 is not a int::T[is(gt(0))][choose([
   is(lt(0))=&gt;mult(-1),
-  id()=&gt;id()]).rshift()]][...]@/sys/fail/256</code></pre>
+  id()=&gt;id()]).rshift()]][...]@/sys/fail/304</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -4116,7 +4116,7 @@ The predicate component of the type definition tests an <code>int</code> to dete
 <div class="paragraph">
 <p>While every <code>type</code> is an <code>obj</code>, not every <code>obj</code> is a <code>type</code>.
 Those <code>objs</code> that are not <code>types</code> are <em>instances</em> of some <code>type</code>.
-This is the foundation for all other <code>objs</code> in {{m}}M{{c}}E{{c}}t{{g}}A{{r}}T{{m}}r{{m}}o{{c}}N{{X}}.</p>
+This is the foundation for all other <code>objs</code> in {{r}}m{{r}}e{{y}}t{{r}}a{{c}}t{{c}}r{{g}}O{{c}}n{{X}}.</p>
 </div>
 <h4 id="_cascading_type_constructions" class="discrete">cascading type constructions</h4>
 <h3 id="_mono_types" class="discrete">mono types</h3>
@@ -4772,7 +4772,7 @@ mtron&gt;  nat::-10
 ==&gt;ERROR: nat::-10 is not a int::T[is(gt(0))]
 mtron&gt;  int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/378</code></pre>
+  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/426</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -4871,7 +4871,7 @@ mtron&gt;  nat::-10
 ==&gt;ERROR: nat::-10 is not a int::T[is(gt(0))]
 mtron&gt;  int::-10.as(nat::T)
 ==&gt;fail::[-10 is not a is(gt(0))
-  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/384</code></pre>
+  -10=&gt;(X=&gt;is(gt(0)))][...]@/sys/fail/432</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -4894,10 +4894,10 @@ mtron&gt; age::125
 ==&gt;ERROR: age::125 is not a int::T[is(lt(120))]
 mtron&gt;  nat::125.as(age::T)
 ==&gt;fail::[nat::125 is not a is(lt(120))
-  nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/390
+  nat::125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/438
 mtron&gt;  125.as(nat::T).as(age::T)
 ==&gt;fail::[125 is not a is(lt(120))
-  125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/396</code></pre>
+  125=&gt;(X=&gt;is(lt(120)))][...]@/sys/fail/444</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -5486,20 +5486,37 @@ mtron&gt; **a
 <tbody>
 <tr>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
-<p>metatron was designed to support the creation and manipulation of <em>abstract data types</em> in a manner that affords the user a concise, fluid means of maneuvering through a heterogeneous set of data structures, where each is embedded within and across any number of spaces, while being respectfully agnostic to each space&#8217;s espoused perspective on the data maintained therein: e.g., key/value, document, relational, vector, graph, file system, and the various nooks and crannies between.</p>
+<p>metatron was designed to support the creation and manipulation of <em>abstract data types</em> in a manner that affords the user a concise, fluid means of maneuvering through a heterogeneous set of data structures, where each is embedded within and across any number of spaces, while being respectfully agnostic to each space&#8217;s espoused perspective on the data maintained therein: e.g., key/value, document, relational, vector, graph, file system, and the various peculiarities between.</p>
 </div>
 <div class="paragraph">
-<p>metatron&#8217;s URI addressing scheme makes it possible to encode arbitrary data types into a metatron-specific construct called "space". A space is where URI/obj pairs are written to and read from. Coupling occurs when a URI references an obj.</p>
+<p>metatron&#8217;s URI addressing scheme makes it possible to encode arbitrary data types into a metatron-specific construct called "space". A space is where URI/obj pairs are written to and read from. Coupling occurs when a URI references an obj. The most basic form of read/write is to dereference/reference using the instructions <code>from</code> and <code>to</code> with signatures</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">from?B{*}&lt;=A{?}(?uri::T)
+to?A{?}&lt;=A{?}(?uri::T)</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>and example usages</p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-mtron" data-lang="mtron">1.to(a) [-- write 1 to a  --]
-from(a) [-- read 1 from a --]
-
-[== sugar form ==]
-a -&gt; 1  [-- write 1 to a --]
+from(a) [-- read 1 from a --]</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>along with their respective sugar forms:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">a -&gt; 1  [-- write 1 to a --]
 *a      [-- read 1 from a --]</code></pre>
 </div>
+</div>
+<div class="paragraph">
+<p>From <code>to</code> and <code>from</code> more complex read/write patterns are realized such <code>select</code> and <code>update</code> (discussed elsewhere in the Tractatus).</p>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
@@ -5530,8 +5547,8 @@ a -&gt; 1  [-- write 1 to a --]
 </div>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
-<col style="width: 41.6666%;">
-<col style="width: 58.3334%;">
+<col style="width: 57.1428%;">
+<col style="width: 42.8572%;">
 </colgroup>
 <tbody>
 <tr>
@@ -5593,40 +5610,176 @@ mtron&gt; *a/b/c/1/y/z     <i class="conum" data-value="5"></i><b>(5)</b>
 </tr>
 </tbody>
 </table>
+<h3 id="_spatial_embeddings" class="discrete">Spatial Embeddings</h3>
+<h4 id="_the_poly_readwrite_subring" class="discrete">The Poly Read/Write SubRing</h4>
 <div class="paragraph">
-<p>In summary, metatron&#8217;s global, distributed memory system can be understood as a bag of binary relations mapping URIs to objs.</p>
+<p>When a poly containing nested poly structures is written to space an ambiguity emerges. A example will elucidate this point. Assume the two ways in which to encode "the same" data in space.</p>
 </div>
-<div class="stemblock center">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 42.8571%;">
+<col style="width: 57.1429%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-center valign-top"><div class="content"><div class="paragraph">
+<p><strong>form A</strong></p>
+</div></div></td>
+<td class="tableblock halign-center valign-top"><div class="content"><div class="paragraph">
+<p><strong>form B</strong></p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
-\[\tt{SPACE} \in \left(\tt{URI} \times \tt{OBJ}\right)\]
+<pre>a-&gt;[b=&gt;1,c=&gt;2]</pre>
 </div>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
+<div class="content">
+<pre>a/b-&gt;1
+a/c-&gt;2</pre>
 </div>
-<h3 id="_spatial_embeddings" class="discrete">spatial embeddings</h3>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
+<div class="content">
+<pre>a-&gt;[b=&gt;1,c=&gt;2]</pre>
+</div>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
+<div class="content">
+<pre>a__b-&gt;1
+ \_c-&gt;2</pre>
+</div>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>the uri ring defines multiplcation as "extension", where \$ a \cdot b \$ is <code>a/b</code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>the uri ring defines addition as "branching", where \$ab + ac\$ is <code>{a/b,a/c}</code>.</td>
+</tr>
+</table>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>The two examples represent the equivalent data because there exists a bijection that maps <strong>A</strong> to <strong>B</strong> and <strong>B</strong> to <strong>A</strong>. In other words, they are isomorphic structures within the category of ring. The first form is the equation:</p>
+</div>
 <div class="paragraph">
-<p>The following considerations apply when performing</p>
+<p>\[
+a \cdot (b + c)
+\]</p>
 </div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p><strong>spatial encodings</strong></p>
-</li>
-<li>
-<p><strong>schema encodings</strong></p>
-</li>
-<li>
-<p><strong>language encodings</strong></p>
-</li>
-</ol>
+<div class="paragraph">
+<p>The second is written:</p>
 </div>
+<div class="paragraph">
+<p>\[
+(a + b) \cdot (a + c)
+\]</p>
+</div>
+<div class="paragraph">
+<p>Thus, due to the fact that multiplication distributes over addition, the two equations, while typographically different are in fact the same data.</p>
+</div>
+<div class="paragraph">
+<p>\[
+a \cdot (b + c) = (a + b) \cdot (a + c)
+\]</p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-center valign-top"><div class="content"><div class="paragraph">
+<p><strong>form A</strong></p>
+</div></div></td>
+<td class="tableblock halign-center valign-top"><div class="content"><div class="paragraph">
+<p><strong>form B</strong></p>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
+<div class="content">
+<pre>*a/</pre>
+</div>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
+<div class="content">
+<pre>*a/b/
+*a/c/</pre>
+</div>
+</div></div></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
+<div class="content">
+<pre>a=&gt;[b=1,c=&gt;2]</pre>
+</div>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
+<div class="content">
+<pre>{a/b=&gt;1,a/c=&gt;2}</pre>
+</div>
+</div></div></td>
+</tr>
+</tbody>
+</table></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="paragraph">
+<p>The two examples are "equal" because they can be rewritten into each using the ring algebra. The first form is the equation:</p>
+</div>
+<div class="paragraph">
+<p>\[
+a \cdot (b + c)
+\]</p>
+</div>
+<div class="paragraph">
+<p>The second is written:</p>
+</div>
+<div class="paragraph">
+<p>\[
+(a + b) \cdot (a + c)
+\]</p>
+</div>
+<div class="paragraph">
+<p>Thus, due to the fact that multiplication distributes over addition, the two equations, while typographically different are in fact the same data.</p>
+</div>
+<div class="paragraph">
+<p>\[
+a \cdot (b + c) = (a + b) \cdot (a + c)
+\]</p>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+<h4 id="_isomorphic_ne_identical" class="discrete">Isomorphic \$ \ne \$ Identical</h4>
 <div class="paragraph">
 <p>A <em>matrix</em> is an \$n \times m\$ data structure composed of \$n\$ vectors/row, each with \$m\$ elements/columns. A relational database <em>table</em> is an example of a matrix, where the entries typically span numeric and non-numeric data types.
-Three general approaches to embedding a matrix or table into a space are presented below, where each makes different space/time tradeoffs.</p>
+Three general approaches to embedding a matrix or table into a space are presented below, where each makes different space/time tradeoffs, while remaining isomorphic in the stream ring.</p>
 </div>
 <table class="tableblock frame-none grid-cols stretch center">
 <colgroup>
-<col style="width: 27.7777%;">
-<col style="width: 27.7777%;">
-<col style="width: 44.4446%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
 </colgroup>
 <tbody>
 <tr>
@@ -5727,7 +5880,9 @@ mtron&gt; *m/+/0     <i class="conum" data-value="3"></i><b>(3)</b>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; m -&gt; [[0,1,2,3],[4,5,6,7],[8,9,10,11]]
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; m -&gt; [[0,1,2,3],
+             [4,5,6,7],
+             [8,9,10,11]]
 ==&gt;[
  [0,1,2,3],
  [4,5,6,7],
@@ -5849,7 +6004,7 @@ Once found, it then traverses within the match to resolve the remaining path seg
 </tr>
 </tbody>
 </table>
-<h3 id="_coefficients" class="discrete">coefficients</h3>
+<h3 id="_coefficients" class="discrete">Coefficients</h3>
 <table class="tableblock frame-all grid-all stretch table-bordered small center">
 <colgroup>
 <col style="width: 33.3333%;">
@@ -6233,7 +6388,7 @@ mtron&gt; */usr/notes/#?subq
   mqtt::T,
   haos::T]]@/m/iot
 mtron&gt;  import(/m/llm)
-{{g}}.{{m}}.{{c}}.{{X}}</code></pre>
+{{c}}.{{c}}.{{m}}.{{X}}</code></pre>
 </div>
 </div>
 </div>
@@ -6329,7 +6484,7 @@ mtron&gt; *ha:main_field/actuator/#?subq     <i class="conum" data-value="4"></i
 <div class="collapse position-relative" id="card-12">
 <button type="button" class="btn-close btn-close-white position-absolute top-0 start-0 m-2" data-bs-toggle="collapse" data-bs-target="#card-12" aria-label="Close" data-bs-toggle="tooltip" data-bs-placement="top" title="close"></button>
 <button type="button" class="btn btn-link btn-sm text-white position-absolute top-0 start-0 m-2 btn-copy-url" data-bs-toggle="tooltip" data-bs-placement="top" title="copy link"><i class="fas fa-link"></i></button>
-<h2 id="_fs_space" class="discrete">FS Space</h2>
+<h2 id="_filesystems" class="discrete">FileSystems</h2>
 <details>
 <summary class="title">/m/mach instset import and space constructions</summary>
 <div class="content">
@@ -6377,60 +6532,131 @@ mtron&gt; *ha:main_field/actuator/#?subq     <i class="conum" data-value="4"></i
   inject(int::T,#::T),
   /m/inst/thread(#::T),
   stop?/m/mach/thread&lt;=/m/mach/thread(),
-  pause?/m/mach/thread&lt;=/m/mach/thread()]]@/m/mach
-mtron&gt; fsspace::[pattern  =&gt; local:#,
-                  route   =&gt; [local:=&gt;&lt;~/&gt;],
-                  script  =&gt; !*boot/script]@/sys/space/fs</code></pre>
+  pause?/m/mach/thread&lt;=/m/mach/thread()]]@/m/mach</code></pre>
 </div>
 </div>
 </div>
 </details>
 <div class="paragraph">
-<p>The underlying operating system&#8217;s resources are explicitly accessible to metatron: threads, files, network, etc. This
-section focuses on <code>fsspace::T</code> (file system space). The primary types of this space are <code>file::T</code> and <code>dir::T</code>.</p>
+<p>The underlying operating system&#8217;s resources are explicitly accessible to metatron: threads, files, network, etc. This section focuses on <code>fsspace::T</code> (file system space) and the types <code>file::T</code> and <code>dir::T</code>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">*/sys/space/fs                                          <i class="conum" data-value="1"></i><b>(1)</b>
-*local:Desktop                                          <i class="conum" data-value="2"></i><b>(2)</b>
-*local:Desktop/+                                        <i class="conum" data-value="3"></i><b>(3)</b></code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; fsspace::[pattern  =&gt; fs:#,
+                 route    =&gt; [fs:m =&gt; &lt;~/software/metatron&gt;,
+                              fs:  =&gt; &lt;~/&gt; ],
+                 script   =&gt; !*boot/script]@/sys/space/localfs     <i class="conum" data-value="1"></i><b>(1)</b></code></pre>
 </div>
 </div>
 <div class="colist arabic">
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td><code>fs</code> is mounted to <code>/sys</code> (other deployments may have another mount address).</td>
+<td>The <code>fs:m</code> prefix is mapped to the users local metatron repo.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
-<td><code>local</code> is a special furi that references the local filesystem (see space routes for root directory).</td>
+<td>The <code>fs:</code> prefix is mapped to the users home directory.</td>
+</tr>
+</table>
+</div>
+<div class="openblock card">
+<div class="content">
+<h4 id="_space_mount_vs_space_pattern" class="discrete">space mount vs. space pattern</h4>
+<div class="paragraph">
+<p>The type <code>space::T &lt; rec::T</code>. Thus, each space is an obj that can be referenced. The space itself is a referencing structure responsible for objs with uris matching the spaces pattern. The space&#8217;s pattern is what the space controls. The spaces mount is the address used to refer to the space (which is typically another space). In short, mounts are different than patterns.</p>
+</div>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/localfs     <i class="conum" data-value="1"></i><b>(1)</b>
+==&gt;fsspace::[
+ pattern=&gt;fs:#,
+ route=&gt;[
+  fs:m=&gt;/home/killswitch/software/metatron,
+  fs:=&gt;/home/killswitch/],
+ script=&gt;!*boot/script,
+ space=&gt;[=&gt;]]
+mtron&gt; *fs:software/metatron     <i class="conum" data-value="2"></i><b>(2)</b>
+==&gt;dir::fs:m
+mtron&gt; *fs:m     <i class="conum" data-value="3"></i><b>(3)</b>
+==&gt;dir::fs:m</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td><code>localfs</code> is mounted to <code>/sys</code> (other deployments may have another mount address).</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td><code>fs:</code> is an arbitrarily choosen moniker to denote the filesystem.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="3"></i><b>3</b></td>
-<td>listing file contents of a directory — returns a <code>uri=&gt;obj</code> map of all entries.</td>
+<td><code>fs:m</code> provides a short hand to accessing the user&#8217;s local metatron repo.</td>
 </tr>
 </table>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/fs     <i class="conum" data-value="1"></i><b>(1)</b>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/space/localfs     <i class="conum" data-value="1"></i><b>(1)</b>
 ==&gt;fsspace::[
- pattern=&gt;local:#,
- route=&gt;[local:=&gt;/home/killswitch/],
+ pattern=&gt;fs:#,
+ route=&gt;[
+  fs:m=&gt;/home/killswitch/software/metatron,
+  fs:=&gt;/home/killswitch/],
  script=&gt;!*boot/script,
  space=&gt;[=&gt;]]
-mtron&gt; */sys/space/fs/script     <i class="conum" data-value="2"></i><b>(2)</b>
-mtron&gt; *&lt;local:Desktop/test_bash.bash&gt;     <i class="conum" data-value="3"></i><b>(3)</b>
-mtron&gt; *&lt;local:Desktop/test_bash.bash&gt;.as(bytes::T)     <i class="conum" data-value="4"></i><b>(4)</b>
-mtron&gt; *&lt;local:Desktop/test_bash.bash&gt;.as(bytes::T).as(str::T)     <i class="conum" data-value="5"></i><b>(5)</b></code></pre>
+mtron&gt; */sys/space/localfs/script     <i class="conum" data-value="2"></i><b>(2)</b>
+mtron&gt; *&lt;fs:m/bin/metatron&gt;     <i class="conum" data-value="3"></i><b>(3)</b>
+==&gt;fail::[#!/bin/sh
+
+set -e
+echo "booting as:"
+echo "metatron ${@}"
+java -Dlogback.configurationFile=conf/logback.xml \
+    --add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED \
+    --enable-native-access=ALL-UNNAMED \
+    -cp target/metatron-0.1-SNAPSHOT-jar-with-dependencies.jar \
+        studio.phaseshift.metatron.BootLoader "$1"
+         ^ end of input expected
+]
+mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T)     <i class="conum" data-value="4"></i><b>(4)</b>
+==&gt;fail::[#!/bin/sh
+
+set -e
+echo "booting as:"
+echo "metatron ${@}"
+java -Dlogback.configurationFile=conf/logback.xml \
+    --add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED \
+    --enable-native-access=ALL-UNNAMED \
+    -cp target/metatron-0.1-SNAPSHOT-jar-with-dependencies.jar \
+        studio.phaseshift.metatron.BootLoader "$1"
+         ^ end of input expected
+]
+mtron&gt; *&lt;fs:m/bin/metatron&gt;.as(bytes::T).as(str::T)     <i class="conum" data-value="5"></i><b>(5)</b>
+==&gt;fail::[#!/bin/sh
+
+set -e
+echo "booting as:"
+echo "metatron ${@}"
+java -Dlogback.configurationFile=conf/logback.xml \
+    --add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED \
+    --enable-native-access=ALL-UNNAMED \
+    -cp target/metatron-0.1-SNAPSHOT-jar-with-dependencies.jar \
+        studio.phaseshift.metatron.BootLoader "$1"
+         ^ end of input expected
+]</code></pre>
 </div>
 </div>
 <div class="colist arabic">
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td><code>fs</code> is mounted to <code>/sys</code> (other deployments may have another mount address).</td>
+<td><code>localfs</code> is mounted to <code>/sys</code> (other deployments may have another mount address).</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
@@ -6919,7 +7145,7 @@ mtron&gt; *acme:customers/357     <i class="conum" data-value="2"></i><b>(2)</b>
  salesRepEmployeeNumber=&gt;!*acme:employees/1612,
  creditLimit=&gt;77700.0000]
 mtron&gt; *g:V/1.addE(consulted,|*acme:customers/357)     <i class="conum" data-value="3"></i><b>(3)</b>
-==&gt;fail::[unable to convert linkedhashmap to vertexmap[studio.phaseshift.metatron.isa.grph.grphInstSet:222]][...]@/sys/fail/78
+==&gt;fail::[unable to convert linkedhashmap to vertexmap[studio.phaseshift.metatron.isa.grph.grphInstSet:222]][...]@/sys/fail/84
 mtron&gt; *g:V/1.out(consulted)     <i class="conum" data-value="4"></i><b>(4)</b>
 mtron&gt; *g:V/1.out(consulted).matches(vrtx::T)     <i class="conum" data-value="5"></i><b>(5)</b>
 ==&gt;false</code></pre>
@@ -7684,15 +7910,15 @@ mtron&gt; *&lt;http://localhost:8088/v1/models&gt;
 ==&gt;[
  object=&gt;list,
  data=&gt;[
+  [id=&gt;qwen3:latest,object=&gt;model],
+  [id=&gt;'smollm:1.7b',object=&gt;model],
   [id=&gt;mistralai_devstral-small-2507,object=&gt;model],
   [id=&gt;qwen3-coder-30b-a3b-instruct,object=&gt;model],
   [id=&gt;qwen3-tts-cpp,object=&gt;model],
-  [id=&gt;qwen3:latest,object=&gt;model],
-  [id=&gt;'smollm:1.7b',object=&gt;model],
   [id=&gt;MeetAISmall__latest,object=&gt;model],
   [id=&gt;gpt-oss__latest,object=&gt;model]]]
 mtron&gt; *&lt;http://localhost:8088/v1/models/data/0/id&gt;
-==&gt;mistralai_devstral-small-2507
+==&gt;'smollm:1.7b'
 mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
          *&lt;http://localhost:8088/v1/models/data/0/id&gt;}&gt;
 ==&gt;[
@@ -7722,7 +7948,7 @@ mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
   completion=&gt;"""{{.Input}}
 """,
   function=&gt;'[AVAILABLE_TOOLS] [{{range .Functions}}{"type": "...'],
- known_usecases=&gt;[FLAG_CHAT,FLAG_COMPLETION],
+ known_usecases=&gt;[FLAG_COMPLETION,FLAG_CHAT],
  pipeline=&gt;[=&gt;],
  function=&gt;[
   disable_no_action=&gt;true,
@@ -7826,7 +8052,7 @@ mtron&gt; */m/llm/inst/+?dom=model</code></pre>
   	dev.langchain4j.internal.ValidationUtils [line 169]
   	dev.langchain4j.internal.ValidationUtils [line 156]
   	dev.langchain4j.model.input.PromptTemplate [line 83]
-  	dev.langchain4j.model.input.PromptTemplate [line 186]][...]@/sys/fail/424
+  	dev.langchain4j.model.input.PromptTemplate [line 186]][...]@/sys/fail/472
 ==&gt;fail::[[
  type=&gt;model,
  provider=&gt;!*/sys/space/localai] is not a isa([
@@ -7857,7 +8083,7 @@ mtron&gt; */m/llm/inst/+?dom=model</code></pre>
    in=&gt;currency::T,
    out=&gt;currency::T],
    noobj=&gt;(==&gt;{?}size)=&gt;noobj=&gt;/=&gt;bB::T,
-   noobj=&gt;(==&gt;{?}feature)=&gt;noobj=&gt;/=&gt;feature::T]][...]@/sys/fail/418</code></pre>
+   noobj=&gt;(==&gt;{?}feature)=&gt;noobj=&gt;/=&gt;feature::T]][...]@/sys/fail/466</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -8024,15 +8250,15 @@ mtron&gt; *&lt;http://localhost:8088/v1/models&gt;
 ==&gt;[
  object=&gt;list,
  data=&gt;[
+  [id=&gt;qwen3:latest,object=&gt;model],
+  [id=&gt;'smollm:1.7b',object=&gt;model],
   [id=&gt;mistralai_devstral-small-2507,object=&gt;model],
   [id=&gt;qwen3-coder-30b-a3b-instruct,object=&gt;model],
   [id=&gt;qwen3-tts-cpp,object=&gt;model],
-  [id=&gt;qwen3:latest,object=&gt;model],
-  [id=&gt;'smollm:1.7b',object=&gt;model],
   [id=&gt;MeetAISmall__latest,object=&gt;model],
   [id=&gt;gpt-oss__latest,object=&gt;model]]]
 mtron&gt; *&lt;http://localhost:8088/v1/models/data/0/id&gt;
-==&gt;mistralai_devstral-small-2507
+==&gt;'smollm:1.7b'
 mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
          *&lt;http://localhost:8088/v1/models/data/0/id&gt;}&gt;
 ==&gt;[
@@ -8062,7 +8288,7 @@ mtron&gt; *&lt;http://localhost:8088/api/models/config-json/${
   completion=&gt;"""{{.Input}}
 """,
   function=&gt;'[AVAILABLE_TOOLS] [{{range .Functions}}{"type": "...'],
- known_usecases=&gt;[FLAG_CHAT,FLAG_COMPLETION],
+ known_usecases=&gt;[FLAG_COMPLETION,FLAG_CHAT],
  pipeline=&gt;[=&gt;],
  function=&gt;[
   disable_no_action=&gt;true,
@@ -8166,7 +8392,7 @@ mtron&gt; */m/llm/inst/+?dom=model</code></pre>
   	dev.langchain4j.internal.ValidationUtils [line 169]
   	dev.langchain4j.internal.ValidationUtils [line 156]
   	dev.langchain4j.model.input.PromptTemplate [line 83]
-  	dev.langchain4j.model.input.PromptTemplate [line 186]][...]@/sys/fail/424
+  	dev.langchain4j.model.input.PromptTemplate [line 186]][...]@/sys/fail/472
 ==&gt;fail::[[
  type=&gt;model,
  provider=&gt;!*/sys/space/localai] is not a isa([
@@ -8197,7 +8423,7 @@ mtron&gt; */m/llm/inst/+?dom=model</code></pre>
    in=&gt;currency::T,
    out=&gt;currency::T],
    noobj=&gt;(==&gt;{?}size)=&gt;noobj=&gt;/=&gt;bB::T,
-   noobj=&gt;(==&gt;{?}feature)=&gt;noobj=&gt;/=&gt;feature::T]][...]@/sys/fail/418</code></pre>
+   noobj=&gt;(==&gt;{?}feature)=&gt;noobj=&gt;/=&gt;feature::T]][...]@/sys/fail/466</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -8348,7 +8574,11 @@ mtron&gt; *lite:person/+/id     <i class="conum" data-value="6"></i><b>(6)</b>
 ==&gt;[
  instset=&gt;instset::[
   pattern=&gt;/sys/space/lite/schema/instset/#,
-  type=&gt;[,],
+  type=&gt;[
+   award::T,
+   person::T,
+   score::T,
+   venue::T],
   q=&gt;[docq::[
  pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
  pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
@@ -8359,8 +8589,52 @@ mtron&gt; *lite:person/+/id     <i class="conum" data-value="6"></i><b>(6)</b>
  native=&gt;[
   pattern=&gt;/sys/space/lite/schema/instset/#,
   name=&gt;'instset',
-  tables=&gt;[,],
-  references=&gt;[,]]]
+  tables=&gt;[
+   [
+    name=&gt;'award',
+    uri=&gt;/sys/space/lite/schema/instset/award,
+    schema/schema=&gt;[
+     id=&gt;int::T,
+     trophy=&gt;str::T,
+     recipient=&gt;int::T],
+    type=&gt;award::T],
+   [
+    name=&gt;'person',
+    uri=&gt;/sys/space/lite/schema/instset/person,
+    schema/schema=&gt;[
+     id=&gt;int::T,
+     name=&gt;str::T,
+     age=&gt;int::T],
+    type=&gt;person::T],
+   [
+    name=&gt;'score',
+    uri=&gt;/sys/space/lite/schema/instset/score,
+    schema/schema=&gt;[
+     id=&gt;int::T,
+     player=&gt;str::T,
+     points=&gt;int::T],
+    type=&gt;score::T],
+   [
+    name=&gt;'venue',
+    uri=&gt;/sys/space/lite/schema/instset/venue,
+    schema/schema=&gt;[
+     id=&gt;int::T,
+     name=&gt;str::T,
+     location=&gt;int::T],
+    type=&gt;venue::T]],
+  references=&gt;[
+   [
+    from_table=&gt;'award',
+    from_column=&gt;'recipient',
+    to_table=&gt;'person',
+    to_column=&gt;'id',
+    type=&gt;'FOREIGN_KEY'],
+   [
+    from_table=&gt;'venue',
+    from_column=&gt;'location',
+    to_table=&gt;'area:V',
+    to_column=&gt;'id',
+    type=&gt;'FOREIGN_KEY']]]]
 mtron&gt; */sys/space/lite/schema/type/+</code></pre>
 </div>
 </div></div></td>
@@ -8538,13 +8812,13 @@ whose values happen to match <code>person.name</code> — the link is purely alg
   	studio.phaseshift.metatron.isa.tble.tbleSpace [line 168]
   	studio.phaseshift.metatron.isa.tble.tbleSpace [line 151]
   	studio.phaseshift.metatron.isa.tble.tbleSpace [line 122]
-  	studio.phaseshift.metatron.isa.m.type.Inst$f [line 683]][...]@/sys/fail/202
+  	studio.phaseshift.metatron.isa.m.type.Inst$f [line 683]][...]@/sys/fail/208
 mtron&gt; lite:score/1 -&gt; [player=&gt;'marko', points=&gt;42]     <i class="conum" data-value="2"></i><b>(2)</b>
 ==&gt;[player=&gt;'marko',points=&gt;42]
 mtron&gt; lite:score/2 -&gt; [player=&gt;'grant', points=&gt;99]     <i class="conum" data-value="3"></i><b>(3)</b>
 ==&gt;[player=&gt;'grant',points=&gt;99]
 mtron&gt; *lite:score/+.?==[player=&gt;'marko']     <i class="conum" data-value="4"></i><b>(4)</b>
-==&gt;fail::[failed to execute native where operation[studio.phaseshift.metatron.util.MTronException:52]][...]@/sys/fail/208
+==&gt;fail::[failed to execute native where operation[studio.phaseshift.metatron.util.MTronException:52]][...]@/sys/fail/214
 mtron&gt; */sys/space/lite.sql("SELECT p.name,p.age,s.points FROM person p JOIN score s ON p.name=s.player")     <i class="conum" data-value="5"></i><b>(5)</b>
 ==&gt;[name=&gt;'marko',age=&gt;29,points=&gt;42]
 ==&gt;[name=&gt;'grant',age=&gt;25,points=&gt;99]</code></pre>
@@ -8587,7 +8861,7 @@ Unlike a matching column value, the pointer encodes the full address of the link
   	studio.phaseshift.metatron.isa.tble.tbleSpace [line 168]
   	studio.phaseshift.metatron.isa.tble.tbleSpace [line 151]
   	studio.phaseshift.metatron.isa.tble.tbleSpace [line 122]
-  	studio.phaseshift.metatron.isa.m.type.Inst$f [line 683]][...]@/sys/fail/220
+  	studio.phaseshift.metatron.isa.m.type.Inst$f [line 683]][...]@/sys/fail/226
 mtron&gt; lite:award/1 -&gt; [trophy=&gt;'gold',   recipient=&gt;!*lite:person/1]     <i class="conum" data-value="2"></i><b>(2)</b>
 ==&gt;[
  trophy=&gt;'gold',
@@ -8648,7 +8922,7 @@ mtron&gt; */sys/space/lite&gt;&gt;=[table=&gt;[person,score,award,venue]]     <i
   	studio.phaseshift.metatron.isa.tble.tbleSpace [line 168]
   	studio.phaseshift.metatron.isa.tble.tbleSpace [line 151]
   	studio.phaseshift.metatron.isa.tble.tbleSpace [line 122]
-  	studio.phaseshift.metatron.isa.m.type.Inst$f [line 683]][...]@/sys/fail/232
+  	studio.phaseshift.metatron.isa.m.type.Inst$f [line 683]][...]@/sys/fail/238
 mtron&gt; lite:venue/1 -&gt; [name=&gt;'main_stage',location=&gt;!*area:V/1]     <i class="conum" data-value="4"></i><b>(4)</b>
 ==&gt;[
  name=&gt;'main_stage',
@@ -8710,7 +8984,7 @@ mtron&gt; *lite:venue/2/parent/location     <i class="conum" data-value="3"></i>
   	org.sqlite.core.DB [line 1193]
   	org.sqlite.core.DB [line 1153]
   	org.sqlite.core.NativeDB [line -2]
-  	org.sqlite.core.NativeDB [line 135]][...]@/sys/fail/238</code></pre>
+  	org.sqlite.core.NativeDB [line 135]][...]@/sys/fail/286</code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -8853,7 +9127,876 @@ and <code>_mtron_meta</code> is a readable lookup table — nothing is opaque or
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys</code></pre>
+<pre class="highlight"><code class="language-mtron" data-lang="mtron">mtron&gt; */sys/+
+==&gt;/m/mach/log::[level=&gt;[info=&gt;[&lt;#&gt;]]]@/sys/log
+==&gt;router::[
+ primary=&gt;/m,
+ space=&gt;[
+  /m/dcmnt=&gt;instset::[
+   pattern=&gt;/m/dcmnt/#,
+   q=&gt;[docq::[
+ pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+ pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+ pattern=&gt;docq,
+ obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+ inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
+   space=&gt;[super=&gt;!*/m],
+   constq=&gt;[
+    !*/m/mach/io/serializer/json/simple,
+    _id@/m/dcmnt/_id],
+   type=&gt;[
+    collection::T,
+    dcmntspace::T],
+   inst=&gt;[
+    mql?rec{*}&lt;=dcmntspace(uri::T,rec::T),
+    mql?rec{*}&lt;=collection(rec::T)],
+   rewrite=&gt;[
+    /m/dcmnt/inst/rewrite/mql_count?code{?}&lt;=code(),
+    /m/dcmnt/inst/rewrite/mql_sum?code{?}&lt;=code(),
+    /m/dcmnt/inst/rewrite/mql_mean?code{?}&lt;=code(),
+    /m/dcmnt/inst/rewrite/mql_limit?code{?}&lt;=code(),
+    /m/dcmnt/inst/rewrite/mql_has?code{?}&lt;=code(),
+    /m/dcmnt/inst/rewrite/mql_where?code{?}&lt;=code(),
+    /m/dcmnt/inst/rewrite/mql_where_count?code{?}&lt;=code(),
+    /m/dcmnt/inst/rewrite/mql_select?code{?}&lt;=code()]]@/m/dcmnt,
+  /sys/space/usr=&gt;memspace::[
+   pattern=&gt;/usr/#,
+   q=&gt;[
+    typeq::[
+     pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+     pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+     qless_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+     pattern=&gt;&lt;T&gt;],
+    mintq::[
+     pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+     pattern=&gt;mintq],
+    docq::[
+     pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+     pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+     pattern=&gt;docq,
+     obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+     inst=&gt;instset::[pattern=&gt;&lt;#&gt;]],
+    subq::[
+     pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+     pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+     qless_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+     pattern=&gt;subq,
+     obj=&gt;[,]],
+    incrq::[
+     pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+     pattern=&gt;incrq]],
+   space=&gt;[=&gt;]]@/sys/space/usr,
+  /m/grph=&gt;instset::[
+   pattern=&gt;/m/grph/#,
+   q=&gt;[docq::[
+ pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+ pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+ pattern=&gt;docq,
+ obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+ inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
+   space=&gt;[super=&gt;!*/m],
+   constq=&gt;[!*/m/mach/io/serializer/tp3],
+   type=&gt;[
+    elmt::T,
+    vrtx::T,
+    edge::T,
+    grphspace::T,
+    modern::T],
+   inst=&gt;[
+    gremlin?#{*}&lt;=grphspace(str::T),
+    label?uri&lt;=elmt(),
+    values?#{*}&lt;=elmt(uri{*}::T),
+    inV?vrtx&lt;=edge(),
+    outV?vrtx&lt;=edge(),
+    bothV?vrtx&lt;=edge(),
+    out?vrtx{*}&lt;=vrtx(uri{*}::T),
+    in?vrtx{*}&lt;=vrtx(uri{*}::T),
+    both?vrtx{*}&lt;=vrtx(uri{*}::T),
+    outE?edge{*}&lt;=vrtx(uri{*}::T),
+    inE?edge{*}&lt;=vrtx(uri{*}::T),
+    bothE?edge{*}&lt;=vrtx(uri{*}::T),
+    addE?edge&lt;=vrtx(uri::T,vrtx{+}::T,rec{?}::T)],
+   rewrite=&gt;[
+    /m/grph/inst/rewrite/out_incident_adjacent?code{?}&lt;=code(),
+    /m/grph/inst/rewrite/in_incident_adjacent?code{?}&lt;=code()]]@/m/grph,
+  /m/llm=&gt;instset::[
+   pattern=&gt;/m/llm/#,
+   q=&gt;[docq::[
+ pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+ pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+ pattern=&gt;docq,
+ obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+ inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
+   space=&gt;[super=&gt;!*/m],
+   type=&gt;[
+    catalog::T,
+    base::T,
+    mcp_client::T,
+    tool::T,
+    memory::T,
+    user::T,
+    AI::T,
+    skill::T,
+    feature::T,
+    model::T],
+   inst=&gt;[
+    as?tool&lt;=docs(tool::T),
+    as?tool&lt;=inst(tool::T),
+    as?skill&lt;=dir(skill::T),
+    chat?str&lt;=model(str::T),
+    embed?/m/vec/vec&lt;=model(#::T),
+    chat?rec&lt;=model(str::T,rec::T)]]@/m/llm,
+  /sys=&gt;memspace::[
+   pattern=&gt;/sys/#,
+   q=&gt;[
+    docq::[
+     pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+     pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+     pattern=&gt;docq,
+     obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+     inst=&gt;instset::[pattern=&gt;&lt;#&gt;]],
+    subq::[
+     pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+     pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+     qless_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+     pattern=&gt;subq,
+     obj=&gt;[,]],
+    incrq::[
+     pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+     pattern=&gt;incrq]],
+   space=&gt;[=&gt;]]@/sys,
+  /m/tble=&gt;instset::[
+   pattern=&gt;/m/tble/#,
+   q=&gt;[docq::[
+ pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+ pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+ pattern=&gt;docq,
+ obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+ inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
+   space=&gt;[super=&gt;!*/m],
+   type=&gt;[
+    lrow::T,
+    rrow::T,
+    table::T,
+    tblespace::T],
+   inst=&gt;[
+    as?rrow&lt;=lrow(rrow::T),
+    as?lrow&lt;=rrow(lrow::T),
+    sql?rec{*}&lt;=tblespace(str::T)],
+   rewrite=&gt;[
+    /m/tble/inst/rewrite/sql_count?code{?}&lt;=code(),
+    /m/tble/inst/rewrite/sql_sum?code{?}&lt;=code(),
+    /m/tble/inst/rewrite/sql_mean?code{?}&lt;=code(),
+    /m/tble/inst/rewrite/sql_limit?code{?}&lt;=code(),
+    /m/tble/inst/rewrite/sql_has?code{?}&lt;=code(),
+    /m/tble/inst/rewrite/sql_where?code{?}&lt;=code(),
+    /m/tble/inst/rewrite/sql_where_count?code{?}&lt;=code(),
+    /m/tble/inst/rewrite/sql_select?code{?}&lt;=code()]]@/m/tble,
+  &lt;+/#&gt;=&gt;stack::[
+   pattern=&gt;&lt;+/#&gt;,
+   q=&gt;[mintq::[
+ pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+ pattern=&gt;mintq]]],
+  /m/rdf=&gt;instset::[
+   pattern=&gt;/m/rdf/#,
+   q=&gt;[docq::[
+ pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+ pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+ pattern=&gt;docq,
+ obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+ inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
+   space=&gt;[super=&gt;!*/m],
+   const=&gt;[!*/m/mach/io/serializer/rdf],
+   type=&gt;[
+    triple::T,
+    quad::T,
+    rdfspace::T],
+   inst=&gt;[sparql?rec{*}&lt;=rdfspace(str::T)]]@/m/rdf,
+  /sys/space/mtronfs=&gt;fsspace::[
+   pattern=&gt;mtronfs:#,
+   route=&gt;[mtronfs:=&gt;&lt;.metatron&gt;],
+   space=&gt;[=&gt;]]@/sys/space/mtronfs,
+  /sys/space/shared=&gt;memspace::[
+   pattern=&gt;/shared/#,
+   persist=&gt;&lt;/tmp/shared.mtron&gt;,
+   space=&gt;[=&gt;]]@/sys/space/shared,
+  /sys/space/serial=&gt;serial::[
+   pattern=&gt;serial:#,
+   route=&gt;[serial:=&gt;&lt;&gt;],
+   space=&gt;[=&gt;]]@/sys/space/serial,
+  /m=&gt;instset::[
+   pattern=&gt;/m/#,
+   q=&gt;[docq::[
+ pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+ pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+ pattern=&gt;docq,
+ obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+ inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
+   space=&gt;[sub=&gt;{!*/m/mach,!*/m/math,!*/m/web,!*/m/iot,!*/m/grph,!*/m/llm,!*/m/tble,!*/m/dcmnt,!*/m/rdf}],
+   rewrite=&gt;[
+    /m/inst/rewrite/id_removal?code{?}&lt;=code(),
+    /m/inst/rewrite/map_nest?code{?}&lt;=code(),
+    /m/inst/rewrite/else_after_count?code{?}&lt;=code(),
+    /m/inst/rewrite/plus_zero?code{?}&lt;=code(),
+    /m/inst/rewrite/mult_one?code{?}&lt;=code(),
+    /m/inst/rewrite/split_merge_collapse?code{?}&lt;=code(),
+    /m/inst/rewrite/split_merge_left_factor?code{?}&lt;=code(),
+    /m/inst/rewrite/split_merge_right_factor?code{?}&lt;=code()],
+   inst=&gt;[
+    as?bool&lt;=bool(bool::T),
+    as?bytes&lt;=bool(bytes::T),
+    as?int&lt;=bool(int::T),
+    as?real&lt;=bool(real::T),
+    as?str&lt;=bool(str::T),
+    plus?bool&lt;=bool(bool::T),
+    mult?bool&lt;=bool(bool::T),
+    not?bool&lt;=bool(),
+    as?bool&lt;=bytes(bool::T),
+    as?str&lt;=bytes(str::T),
+    zero?bytes&lt;=bytes(),
+    plus?bytes&lt;=bytes(bytes::T),
+    within?B&lt;=bytes(B::T),
+    as?bool&lt;=int(bool::T),
+    as?bytes&lt;=int(bytes::T),
+    as?real&lt;=int(real::T),
+    as?str&lt;=int(str::T),
+    as?uri&lt;=int(uri::T),
+    zero?int&lt;=int(),
+    one?int&lt;=int(),
+    neg?int&lt;=int(),
+    mult?int&lt;=int(int::T),
+    minus?int&lt;=int(int::T),
+    plus?int&lt;=int(int::T),
+    gt?bool&lt;=int(int::T),
+    gte?bool&lt;=int(int::T),
+    lt?bool&lt;=int(int::T),
+    lte?bool&lt;=int(int::T),
+    sum?int&lt;=int{*}(),
+    prod?int&lt;=int{*}(),
+    pow?int&lt;=int(int::T),
+    mod?int&lt;=int(int::T),
+    order?lst&lt;=int{*}(),
+    as?int&lt;=real(int::T),
+    as?str&lt;=real(str::T),
+    gt?bool&lt;=real(real::T),
+    gte?bool&lt;=real(real::T),
+    lt?bool&lt;=real(real::T),
+    lte?bool&lt;=real(real::T),
+    neg?real&lt;=real(),
+    plus?real&lt;=real(real::T),
+    mult?real&lt;=real(real::T),
+    div?real&lt;=real(real::T),
+    zero?real&lt;=real(),
+    one?real&lt;=real(),
+    inv?real&lt;=real(),
+    minus?real&lt;=real(real::T),
+    sum?real&lt;=real{*}(),
+    prod?real&lt;=real{*}(),
+    mean?real&lt;=real{*}(),
+    pow?real&lt;=real(real::T),
+    math?real&lt;=#{?}(str::T),
+    order?lst&lt;=real{*}(),
+    as?str&lt;=str(str::T),
+    as?bytes&lt;=str(bytes::T),
+    as?bool&lt;=str(bool::T),
+    as?int&lt;=str(int::T),
+    as?real&lt;=str(real::T),
+    as?uri&lt;=str(uri::T),
+    reverse?str&lt;=str(),
+    zero?str&lt;=str(),
+    has?str{?}&lt;=str(str::T),
+    split?lst&lt;=str(str::T),
+    merge?str&lt;=str{*}(str::T),
+    regex?lst&lt;=str(str::T),
+    gt?bool&lt;=str(str::T),
+    gte?bool&lt;=str(str::T),
+    lt?bool&lt;=str(str::T),
+    lte?bool&lt;=str(str::T),
+    plus?str&lt;=str(str::T),
+    sum?str&lt;=str{*}(str{?}::T),
+    ucase?str&lt;=str(),
+    lcase?str&lt;=str(),
+    within?B&lt;=str(B::T),
+    as?int&lt;=uri(int::T),
+    as?uri&lt;=uri(uri::T),
+    as?str&lt;=uri(str::T),
+    as?rec&lt;=uri(rec::T),
+    reverse?uri&lt;=uri(),
+    has?uri{?}&lt;=uri(str::T),
+    has?uri{?}&lt;=uri(uri::T),
+    split?lst&lt;=uri(uri::T),
+    merge?uri&lt;=uri{*}(uri::T),
+    minus?uri&lt;=uri(uri::T),
+    plus?uri{?}&lt;=uri(uri{?}::T),
+    mult?uri{?}&lt;=uri(uri{?}::T),
+    sum?uri&lt;=uri{*}(),
+    prod?uri&lt;=uri{*}(),
+    path?uri&lt;=uri(uri::T),
+    q?uri&lt;=uri(rec::T),
+    uri:c?lst&lt;=uri(uri::T),
+    pow?uri&lt;=uri(int::T),
+    scheme?uri{?}&lt;=uri(),
+    scheme?uri&lt;=uri(uri::T),
+    authority?uri{?}&lt;=uri(),
+    host?uri{?}&lt;=uri(),
+    host?uri&lt;=uri(uri::T),
+    port?int{?}&lt;=uri(),
+    port?uri&lt;=uri(int::T),
+    select?uri{?}&lt;=uri(uri::T),
+    where?uri{?}&lt;=uri(uri::T),
+    args?lst&lt;=inst(),
+    as?lst&lt;=rel(lst::T),
+    as?rec&lt;=rel(rec::T),
+    merge?rec&lt;=rel{*}(rec::T),
+    split?rel&lt;=A(rel::T),
+    dom?#{*}&lt;=rel(),
+    rng?#{*}&lt;=rel(),
+    get?A{?}&lt;=rel(#::T),
+    select?rel{?}&lt;=rel(rel::T),
+    plus?rel{*}&lt;=rel(rel{*}::T),
+    mult?rel{*}&lt;=rel(rel{*}::T),
+    neg?rel&lt;=rel(),
+    one?rel&lt;=rel(),
+    zero?rel&lt;=rel(),
+    as?lst&lt;=lst(lst::T),
+    as?rec&lt;=lst(rec::T),
+    as?code&lt;=lst(code::T),
+    reverse?lst&lt;=lst(),
+    plus?lst&lt;=lst(lst::T),
+    mult?lst&lt;=lst(lst::T),
+    zero?lst&lt;=lst(),
+    split?lst&lt;=A(lst::T),
+    merge?A{*}&lt;=lst(),
+    merge?A{*}&lt;=lst(uri::T),
+    merge?A{*}&lt;=lst(str::T),
+    has?lst{?}&lt;=lst(#::T),
+    within?lst&lt;=lst(#{*}::T),
+    sum?lst&lt;=lst{*}(),
+    select?lst{?}&lt;=lst(lst::T),
+    remove?A{*}&lt;=lst(int::T),
+    pow?lst&lt;=lst(int::T),
+    as?lst&lt;=rec(lst::T),
+    as?uri&lt;=rec(uri::T),
+    zero?rec&lt;=rec(),
+    reverse?rec&lt;=rec(),
+    has?rec{?}&lt;=rec(#::T,#::T),
+    has?rec{?}&lt;=rec(#::T),
+    get?A{*}&lt;=rec(uri::T),
+    split?rec&lt;=A(rec::T),
+    merge?rel{*}&lt;=rec(),
+    dom?A{*}&lt;=rec(),
+    rng?A{*}&lt;=rec(),
+    lshift?A{*}&lt;=rec(),
+    plus?rec&lt;=rec(rec{??}::T),
+    mplus?rec&lt;=rec(rec::T),
+    select?rec{?}&lt;=rec(rec::T),
+    select?#{?}&lt;=rec(uri::T),
+    select?rec{?}&lt;=rec(uri{2,}::T),
+    within?rec&lt;=rec(#{*}::T),
+    sum?rec&lt;=rec{*}(),
+    as?lst&lt;=code(lst::T),
+    cause?fail{?}&lt;=fail(),
+    reify?rec&lt;=fail(),
+    inside?A{?}&lt;=A(lst::T),
+    serialize?B&lt;=A(io::T),
+    fork?A{*}&lt;=A{*}(#::T),
+    range?A{*}&lt;=A{*}(int::T,isa(int::T).else(0)),
+    order?A{*}&lt;=A{*}(#::T),
+    as?noobj{0}&lt;=A(),
+    as?B&lt;=A(#::T),
+    import?space{*}&lt;=#{?}(uri::T,uri{?}::T),
+    dedup?A{*}&lt;=A{*}(),
+    barrier?lst&lt;=#{*}(lst::T),
+    barrier?rec&lt;=rel{*}(rec::T),
+    barrier?A{*}&lt;=A{*}(),
+    barrier?A{*}&lt;=A{*}(A{*}::T),
+    as?A&lt;=A(A::T),
+    repeat?A{*}&lt;=A(code=&gt;A{*}::T,until=&gt;bool::T),
+    !#{?}::T,
+    !*#{?}::T,
+    auto_at?#{*}&lt;=#{?}(#{?}::T,#{?}::T),
+    auto_to(#::T),
+    catch?C{*}&lt;=A(B{*}::T),
+    end?noobj{0}&lt;=#{*}(),
+    println?#{*}&lt;=#{?}(#{*}::T),
+    print?#{*}&lt;=#{?}(#{*}::T),
+    at?A{*}&lt;=#{?}(uri::T),
+    id?A&lt;=A(),
+    id?A{*}&lt;=A{*}(),
+    and?bool&lt;=A(bool::T,bool::T,bool{?}::T,bool{?}::T,bool{?}::T,bool{?}::T,bool{?}::T,bool{?}::T),
+    or?bool&lt;=A(bool::T,bool::T,bool{?}::T,bool{?}::T,bool{?}::T,bool{?}::T,bool{?}::T,bool{?}::T),
+    apply(#{*}::T),
+    map?B&lt;=A(B::T),
+    map?B{?}&lt;=A{?}(B{?}::T),
+    filter?A{?}&lt;=A(#{?}::T),
+    side?A&lt;=A(#::T),
+    tid(),
+    vid?uri{?}&lt;=A(),
+    vid?A&lt;=A(uri::T),
+    else(#{?}::T),
+    is?A{?}&lt;=A{?}(isa(bool::T).else(false)),
+    ?#::T,
+    matches?bool&lt;=#{?}(#{?}::T),
+    block?B{+}&lt;=A{?}(B{+}::T),
+    split(#{+}::T),
+    choose(rec::T),
+    merge?lst&lt;=A{*}(lst::T),
+    merge?#{*}&lt;=A{*}(#{*}::T),
+    merge?A{*}&lt;=A{*}(A{*}::T),
+    not(bool::T),
+    eq?bool&lt;=A(A::T),
+    neq?bool&lt;=A(A::T),
+    to?A{?}&lt;=A{?}(uri::T),
+    *uri::T,
+    ref(#{*}::T),
+    source?B{*}&lt;=A{?}(str::T),
+    type(),
+    cc?int&lt;=A{*}(),
+    cc?A{*}&lt;=A(int::T),
+    throw?fail&lt;=#{*}(#{?}::T),
+    parent(),
+    count?int&lt;=A{*}(),
+    skip?A{*}&lt;=A{*}(int::T),
+    take?A{*}&lt;=A{*}(int::T),
+    update?B&lt;=A(B::T),
+    reify?rec&lt;=A(),
+    reduce(#::T),
+    where?A{?}&lt;=A(B::T),
+    group?rec&lt;=#{*}(rec::T),
+    eval?#{*}&lt;=#{?}(#::T),
+    swap?A&lt;=A(B::T),
+    rshift?B{*}&lt;=A(C{*}::T),
+    lshift?B{*}&lt;=A(),
+    start?A{**}&lt;=noobj{0}(A{**}::T)],
+   const=&gt;[
+    noobj,
+    none@none],
+   type=&gt;[
+    #::T,
+    bool::T,
+    int::T,
+    real::T,
+    bytes::T,
+    str::T,
+    uri::T,
+    rel::T,
+    lst::T,
+    rec::T,
+    instset::T,
+    inst::T,
+    code::T,
+    fail::T,
+    space{*}::T,
+    memspace::T,
+    stack::T,
+    qproc::T,
+    subq::T,
+    sub::T,
+    typeq::T,
+    docs::T,
+    docq::T,
+    mintq::T,
+    incrq::T,
+    constq::T]]@/m,
+  /m/iot=&gt;instset::[
+   pattern=&gt;/m/iot/#,
+   q=&gt;[docq::[
+ pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+ pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+ pattern=&gt;docq,
+ obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+ inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
+   space=&gt;[super=&gt;!*/m],
+   type=&gt;[
+    mqtt::T,
+    haos::T]]@/m/iot,
+  /m/mach=&gt;instset::[
+   pattern=&gt;/m/mach/#,
+   q=&gt;[docq::[
+ pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+ pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+ pattern=&gt;docq,
+ obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+ inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
+   space=&gt;[super=&gt;!*/m],
+   type=&gt;[
+    router::T,
+    space{*}::T,
+    console::T,
+    fsspace::T,
+    serial::T,
+    file::T,
+    dir::T,
+    image::T,
+    factory::T,
+    mfactory::T,
+    core::T,
+    virtual::T,
+    monad::T,
+    machine::T,
+    swarm::T],
+   inst=&gt;[
+    lift(#{?}::T),
+    rewrite?rec[short=&gt;uri,long=&gt;uri]&lt;=#{?}(uri::T),
+    close?noobj&lt;=router(),
+    nano?#{?}&lt;=#{?}(),
+    less?noobj{0}&lt;=str(isa(int::T).else(10)),
+    as?file&lt;=uri(file::T),
+    as?image&lt;=bytes(image::T,else(1.0000)),
+    as?file&lt;=uri(file::T),
+    as?bytes&lt;=file(bytes::T),
+    zero?A&lt;=A(),
+    one?A&lt;=A(),
+    which(uri::T),
+    inject(int::T,#::T),
+    /m/inst/thread(#::T),
+    stop?/m/mach/thread&lt;=/m/mach/thread(),
+    pause?/m/mach/thread&lt;=/m/mach/thread()]]@/m/mach,
+  /m/web=&gt;instset::[
+   pattern=&gt;/m/web/#,
+   q=&gt;[docq::[
+ pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+ pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+ pattern=&gt;docq,
+ obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+ inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
+   space=&gt;[super=&gt;!*/m],
+   const=&gt;[
+    !*/m/mach/io/serializer/xml,
+    !*/m/mach/io/serializer/html,
+    !*/m/mach/io/serializer/json,
+    !*/m/mach/io/serializer/markdown,
+    !*/m/mach/io/serializer/plain/text],
+   type=&gt;[
+    content_type::T,
+    xml::T,
+    html::T,
+    json::T,
+    css::T,
+    markdown::T,
+    httpspace::T,
+    wsspace::T,
+    websocket::T,
+    wshandler::T,
+    wsclient::T,
+    mtron_ws::T,
+    mcp_ws::T,
+    mcp_mtron_ws::T,
+    socket::T,
+    http_handler::T,
+    http_client::T,
+    mtron_http::T,
+    mcp_http::T,
+    mcp_mtron_http::T,
+    base::T],
+   inst=&gt;[
+    format?str&lt;=markdown(),
+    as?xml&lt;=str(xml::T),
+    as?html&lt;=str(html::T),
+    as?markdown&lt;=str(markdown::T),
+    as?str&lt;=html(str::T),
+    as?str&lt;=markdown(str::T),
+    as?html&lt;=markdown(html::T),
+    as?json&lt;=str(json::T),
+    as(json_str::T)]]@/m/web,
+  /m/math=&gt;instset::[
+   pattern=&gt;/m/math/#,
+   q=&gt;[docq::[
+ pre_read=&gt;inst?#{*}&lt;=#{?}(uri::T),
+ pre_write=&gt;inst?#{*}&lt;=#{?}(uri::T,#::T),
+ pattern=&gt;docq,
+ obj=&gt;memspace::[pattern=&gt;&lt;#&gt;],
+ inst=&gt;instset::[pattern=&gt;&lt;#&gt;]]],
+   space=&gt;[super=&gt;!*/m],
+   type=&gt;[
+    data_size::T,
+    bB::T,
+    kB::T,
+    mB::T,
+    gB::T,
+    tB::T,
+    pB::T,
+    currency::T,
+    usd::T,
+    euro::T],
+   inst=&gt;[
+    cos?real&lt;=#{?}(as(real::T)),
+    sin?real&lt;=#{?}(real::T),
+    tan?real&lt;=#{?}(real::T),
+    sqrt?real&lt;=#{?}(real::T),
+    pow?real&lt;=#{?}(real::T),
+    atan?real&lt;=#{?}(real::T),
+    atan2?real&lt;=#{?}(real{2}::T),
+    log?real&lt;=#{?}(real::T),
+    log10?real&lt;=#{?}(real::T),
+    exp?real&lt;=#{?}(real::T),
+    abs?real&lt;=#{?}(real::T),
+    ceil?real&lt;=#{?}(real::T),
+    floor?real&lt;=#{?}(real::T),
+    round?int&lt;=#{?}(real::T)],
+   const=&gt;[
+    2.7183@/m/math/e?constq,
+    3.1416@/m/math/pi?constq]]@/m/math,
+  /sys/space/fs=&gt;fsspace::[
+   pattern=&gt;local:#,
+   route=&gt;[local:=&gt;/home/killswitch/],
+   script=&gt;!*boot/script,
+   space=&gt;[=&gt;]]@/sys/space/fs],
+ pattern=&gt;&lt;#&gt;,
+ route=&gt;[
+  pB=&gt;[/m/math/pB],
+  mql=&gt;[/m/dcmnt/inst/mql],
+  kB=&gt;[/m/math/kB],
+  e=&gt;[/m/math/e],
+  sub=&gt;[/m/space/qproc/subq/sub],
+  data_size=&gt;[/m/math/data_size],
+  mB=&gt;[/m/math/mB],
+  pi=&gt;[/m/math/pi],
+  mcp_client=&gt;[/m/llm/mcp/mcp_client],
+  tB=&gt;[/m/math/tB],
+  lift=&gt;[/m/mach/inst/lift],
+  sqrt=&gt;[/m/math/inst/sqrt],
+  table=&gt;[/m/tble/table],
+  virtual=&gt;[/m/mach/thread/virtual],
+  currency=&gt;[/m/math/currency],
+  uri:c=&gt;[/m/inst/uri:c],
+  bB=&gt;[/m/math/bB],
+  which=&gt;[/m/mach/inst/which],
+  base=&gt;[/m/web/space/wsspace/mcp_server/base],
+  zero=&gt;[/m/mach/inst/ring/const/zero,/m/inst/zero],
+  atan2=&gt;[/m/math/inst/atan2],
+  type=&gt;[/m/inst/type],
+  httpspace=&gt;[/m/web/space/httpspace],
+  log10=&gt;[/m/math/inst/log10],
+  elmt=&gt;[/m/grph/elmt],
+  group=&gt;[/m/inst/group],
+  exp=&gt;[/m/math/inst/exp],
+  auto_from=&gt;[/m/inst/auto_from],
+  skill=&gt;[/m/llm/skill],
+  content_type=&gt;[/m/web/content_type],
+  mtron_http=&gt;[/m/web/space/httpspace/mtron_http],
+  pow=&gt;[/m/inst/pow,/m/math/inst/pow],
+  gB=&gt;[/m/math/gB],
+  memory=&gt;[/m/llm/memory],
+  count=&gt;[/m/inst/count],
+  within=&gt;[/m/inst/within],
+  plus=&gt;[/m/inst/plus],
+  less=&gt;[/m/mach/inst/less],
+  values=&gt;[/m/grph/inst/values],
+  inV=&gt;[/m/grph/inst/inV],
+  eval=&gt;[/m/inst/eval],
+  console=&gt;[/m/mach/console],
+  is=&gt;[/m/inst/is],
+  neg=&gt;[/m/inst/neg],
+  print=&gt;[/m/inst/print],
+  bothE=&gt;[/m/grph/inst/bothE],
+  http_handler=&gt;[/m/web/space/httpspace/http_handler],
+  inv=&gt;[/m/inst/inv],
+  out=&gt;[/m/grph/inst/out],
+  in=&gt;[/m/grph/inst/in],
+  dedup=&gt;[/m/inst/dedup],
+  swap=&gt;[/m/inst/swap],
+  catch=&gt;[/m/inst/catch],
+  choose=&gt;[/m/inst/choose],
+  cause=&gt;[/m/inst/cause],
+  isa=&gt;[/m/inst/isa],
+  one=&gt;[/m/mach/inst/ring/const/one,/m/inst/one],
+  dir=&gt;[/m/mach/dir],
+  html=&gt;[/m/web/html],
+  lt=&gt;[/m/inst/lt],
+  side=&gt;[/m/inst/side],
+  addE=&gt;[/m/grph/inst/addE],
+  or=&gt;[/m/inst/or],
+  mod=&gt;[/m/inst/mod],
+  auto_at=&gt;[/m/inst/auto_at],
+  rdfspace=&gt;[/m/rdf/space/rdfspace],
+  collection=&gt;[/m/dcmnt/collection],
+  docs=&gt;[/m/space/qproc/docq/docs],
+  authority=&gt;[/m/inst/authority],
+  repeat=&gt;[/m/inst/repeat],
+  source=&gt;[/m/inst/source],
+  mplus=&gt;[/m/inst/mplus],
+  outV=&gt;[/m/grph/inst/outV],
+  auto_to=&gt;[/m/inst/auto_to],
+  id=&gt;[/m/inst/id],
+  neq=&gt;[/m/inst/neq],
+  order=&gt;[/m/inst/order],
+  args=&gt;[/m/inst/args],
+  file=&gt;[/m/mach/file],
+  mcp_http=&gt;[/m/web/space/httpspace/mcp_http],
+  serialize=&gt;[/m/inst/serialize],
+  parent=&gt;[/m/inst/parent],
+  AI=&gt;[/m/llm/AI],
+  http_client=&gt;[/m/web/space/httpspace/http_client],
+  mcp_mtron_http=&gt;[/m/web/space/httpspace/mcp_mtron_http],
+  q=&gt;[/m/inst/q],
+  user=&gt;[/m/llm/user],
+  qproc=&gt;[/m/space/qproc],
+  model=&gt;[/m/llm/model],
+  where=&gt;[/m/inst/where],
+  not=&gt;[/m/inst/not],
+  reverse=&gt;[/m/inst/reverse],
+  throw=&gt;[/m/inst/throw],
+  filter=&gt;[/m/inst/filter],
+  lte=&gt;[/m/inst/lte],
+  cos=&gt;[/m/math/inst/cos],
+  nano=&gt;[/m/mach/inst/nano],
+  sql_where=&gt;[/m/tble/inst/rewrite/sql_where],
+  outE=&gt;[/m/grph/inst/outE],
+  map=&gt;[/m/inst/map],
+  select=&gt;[/m/inst/select],
+  range=&gt;[/m/inst/range],
+  cc=&gt;[/m/inst/cc],
+  int=&gt;[/m/int],
+  wsclient=&gt;[/m/web/space/wsspace/wsclient],
+  catalog=&gt;[/m/llm/space/catalog],
+  atan=&gt;[/m/math/inst/atan],
+  tan=&gt;[/m/math/inst/tan],
+  ceil=&gt;[/m/math/inst/ceil],
+  stack=&gt;[/m/space/stack],
+  triple=&gt;[/m/rdf/space/triple],
+  edge=&gt;[/m/grph/edge],
+  sql=&gt;[/m/tble/inst/sql],
+  constq=&gt;[/m/space/qproc/constq],
+  lrow=&gt;[/m/tble/lrow],
+  monad=&gt;[/m/mach/monad],
+  auto=&gt;[/m/inst/auto],
+  inst=&gt;[/m/inst],
+  machine=&gt;[/m/mach/machine],
+  dcmntspace=&gt;[/m/dcmnt/space/dcmntspace],
+  rshift=&gt;[/m/inst/rshift],
+  gt=&gt;[/m/inst/gt],
+  map_nest=&gt;[/m/inst/rewrite/map_nest],
+  none=&gt;[/m/none],
+  eq=&gt;[/m/inst/eq],
+  mfactory=&gt;[/m/mach/mfactory],
+  label=&gt;[/m/grph/inst/label],
+  tool=&gt;[/m/llm/tool],
+  at=&gt;[/m/inst/at],
+  as=&gt;[/m/inst/as],
+  split_merge_right_factor=&gt;[/m/inst/rewrite/split_merge_right_factor],
+  euro=&gt;[/m/math/currency/euro],
+  factory=&gt;[/m/mach/factory],
+  typeq=&gt;[/m/space/qproc/typeq],
+  docq=&gt;[/m/space/qproc/docq],
+  xml=&gt;[/m/web/xml],
+  json=&gt;[/m/web/json],
+  uri=&gt;[/m/uri],
+  id_removal=&gt;[/m/inst/rewrite/id_removal],
+  wshandler=&gt;[/m/web/space/wsspace/wshandler],
+  markdown=&gt;[/m/web/markdown],
+  core=&gt;[/m/mach/thread/core],
+  mtron_ws=&gt;[/m/web/space/wsspace/mtron_ws],
+  modern=&gt;[/m/grph/schema/modern],
+  bool=&gt;[/m/bool],
+  bytes=&gt;[/m/bytes],
+  mcp_ws=&gt;[/m/web/space/wsspace/mcp_ws],
+  floor=&gt;[/m/math/inst/floor],
+  fail=&gt;[/m/fail],
+  sql_count=&gt;[/m/tble/inst/rewrite/sql_count],
+  vrtx=&gt;[/m/grph/vrtx],
+  mcp_mtron_ws=&gt;[/m/web/space/wsspace/mcp_mtron_ws],
+  has=&gt;[/m/inst/has],
+  haos=&gt;[/m/iot/haos/space/haos],
+  sql_where_count=&gt;[/m/tble/inst/rewrite/sql_where_count],
+  sql_has=&gt;[/m/tble/inst/rewrite/sql_has],
+  sql_select=&gt;[/m/tble/inst/rewrite/sql_select],
+  code=&gt;[/m/code],
+  inject=&gt;[/m/mach/inst/inject],
+  lst=&gt;[/m/lst],
+  subq=&gt;[/m/space/qproc/subq],
+  embed=&gt;[/m/llm/inst/embed],
+  remove=&gt;[/m/inst/remove],
+  fork=&gt;[/m/inst/fork],
+  reduce=&gt;[/m/inst/reduce],
+  to=&gt;[/m/inst/to],
+  skip=&gt;[/m/inst/skip],
+  port=&gt;[/m/inst/port],
+  space=&gt;[/m/space],
+  bothV=&gt;[/m/grph/inst/bothV],
+  inE=&gt;[/m/grph/inst/inE],
+  println=&gt;[/m/inst/println],
+  instset=&gt;[/m/instset],
+  gte=&gt;[/m/inst/gte],
+  scheme=&gt;[/m/inst/scheme],
+  real=&gt;[/m/real],
+  rrow=&gt;[/m/tble/rrow],
+  start=&gt;[/m/inst/start],
+  tblespace=&gt;[/m/tble/space/tblespace],
+  block=&gt;[/m/inst/block],
+  mintq=&gt;[/m/space/qproc/mintq],
+  incrq=&gt;[/m/space/qproc/incrq],
+  apply=&gt;[/m/inst/apply],
+  rng=&gt;[/m/inst/rng],
+  thread=&gt;[/m/inst/thread],
+  minus=&gt;[/m/inst/minus],
+  tid=&gt;[/m/inst/tid],
+  end=&gt;[/m/inst/end],
+  pause=&gt;[/m/mach/inst/pause],
+  close=&gt;[/m/mach/inst/close],
+  socket=&gt;[/m/web/space/httpspace/socket],
+  quad=&gt;[/m/rdf/space/quad],
+  div=&gt;[/m/inst/div],
+  update=&gt;[/m/inst/update],
+  fsspace=&gt;[/m/mach/space/fsspace],
+  merge=&gt;[/m/inst/merge],
+  ref=&gt;[/m/inst/ref],
+  reify=&gt;[/m/inst/reify],
+  prod=&gt;[/m/inst/prod],
+  import=&gt;[/m/inst/import],
+  sparql=&gt;[/m/rdf/inst/sparql],
+  dom=&gt;[/m/inst/dom],
+  mean=&gt;[/m/inst/mean],
+  take=&gt;[/m/inst/take],
+  ucase=&gt;[/m/inst/ucase],
+  regex=&gt;[/m/inst/regex],
+  get=&gt;[/m/inst/get],
+  lshift=&gt;[/m/inst/lshift],
+  swarm=&gt;[/m/mach/machine/swarm],
+  websocket=&gt;[/m/web/space/wsspace/websocket],
+  mqtt=&gt;[/m/iot/space/mqtt],
+  from=&gt;[/m/inst/from],
+  image=&gt;[/m/mach/file/image],
+  split_merge_left_factor=&gt;[/m/inst/rewrite/split_merge_left_factor],
+  split_merge_collapse=&gt;[/m/inst/rewrite/split_merge_collapse],
+  usd=&gt;[/m/math/currency/usd],
+  lcase=&gt;[/m/inst/lcase],
+  sum=&gt;[/m/inst/sum],
+  feature=&gt;[/m/llm/feature],
+  memspace=&gt;[/m/space/memspace],
+  rewrite=&gt;[/m/mach/inst/rewrite],
+  stop=&gt;[/m/mach/inst/stop],
+  format=&gt;[/m/web/inst/format],
+  both=&gt;[/m/grph/inst/both],
+  grphspace=&gt;[/m/grph/space/grphspace],
+  else=&gt;[/m/inst/else],
+  sql_sum=&gt;[/m/tble/inst/rewrite/sql_sum],
+  and=&gt;[/m/inst/and],
+  math=&gt;[/m/inst/math],
+  host=&gt;[/m/inst/host],
+  gremlin=&gt;[/m/grph/inst/gremlin],
+  barrier=&gt;[/m/inst/barrier],
+  log=&gt;[/m/math/inst/log],
+  sql_limit=&gt;[/m/tble/inst/rewrite/sql_limit],
+  split=&gt;[/m/inst/split],
+  wsspace=&gt;[/m/web/space/wsspace],
+  serial=&gt;[/m/mach/space/serial],
+  round=&gt;[/m/math/inst/round],
+  sql_mean=&gt;[/m/tble/inst/rewrite/sql_mean],
+  rec=&gt;[/m/rec],
+  router=&gt;[/m/mach/router],
+  sin=&gt;[/m/math/inst/sin],
+  vid=&gt;[/m/inst/vid],
+  abs=&gt;[/m/math/inst/abs],
+  css=&gt;[/m/web/css],
+  inside=&gt;[/m/inst/inside],
+  mult=&gt;[/m/inst/mult],
+  str=&gt;[/m/str],
+  path=&gt;[/m/inst/path],
+  matches=&gt;[/m/inst/matches],
+  chat=&gt;[/m/llm/inst/chat],
+  rel=&gt;[/m/rel]],
+ prefix=&gt;[math:=&gt;noobj,web:=&gt;noobj]]@/sys/router</code></pre>
 </div>
 </div></div></td>
 <td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">

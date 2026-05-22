@@ -85,7 +85,7 @@ public class dcmntSpaceTest extends AbstractSpaceTest implements CommonRewritesT
                 ).jvm(),
                 SPACE_VID
         ));
-        
+
     }
 
     @Override
@@ -1618,11 +1618,11 @@ public class dcmntSpaceTest extends AbstractSpaceTest implements CommonRewritesT
             // Write target record
             Router.writeToSpace(f("mongo:locations/1"),
                     rec(uri(NAME), str("downtown"),
-                        uri("capacity"), jnt(5000)));
+                            uri("capacity"), jnt(5000)));
 
             // Write record with intra-space auto_from → mongo:locations/1
             Router.writeToSpace(f("mongo:arenas/1"), rec(
-                    uri(NAME),    str("main_stage"),
+                    uri(NAME), str("main_stage"),
                     uri("venue"), auto_from_(f("mongo:locations/1")).tryToInst()));
 
             // Read back: auto_from reconstructs from DBRef with bare collection name
@@ -1665,11 +1665,11 @@ public class dcmntSpaceTest extends AbstractSpaceTest implements CommonRewritesT
             // Write the cross-space target into memSpace
             Router.writeToSpace(f("grph:vertices/42"),
                     rec(uri("label"), str("plaza"),
-                        uri("zone"),  str("A")));
+                            uri("zone"), str("A")));
 
             // Write dcmntSpace record with cross-space auto_from → grph:vertices/42
             Router.writeToSpace(f("mongo:stages/1"), rec(
-                    uri(NAME),   str("open_air"),
+                    uri(NAME), str("open_air"),
                     uri("spot"), auto_from_(f("grph:vertices/42")).tryToInst()));
 
             // Read back: auto_from reconstructs from $ref: "grph:vertices" → grph:vertices/42

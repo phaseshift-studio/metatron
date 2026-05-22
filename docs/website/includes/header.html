@@ -122,7 +122,7 @@ bin/metatron</code></pre>
             --------------------------------------- QUICK START LINK ----------------------------------------------------
             ----------------------------------------------------------------------------------------------------------->
             <li class="nav-item">
-                <a class="nav-link quickstart-link" href="#" onclick="location.href='start.html';">
+                <a class="nav-link quickstart-link" href="start.html" onclick="location.href=location.href.replace(/(\/instset)?\/[^/]*\.html$/,'/start.html');return false;">
                     <i class="bi bi-book me-1"></i> quick start
                 </a>
             </li>
@@ -185,7 +185,7 @@ bin/metatron</code></pre>
              ----------------------------------- TRACTATUS LINK --------------------------------------------------------
              ---------------------------------------------------------------------------------------------------------->
             <li class="nav-item">
-                <a class="nav-link" href="#" onclick="location.href='tractatus.html';">the tractatus</a>
+                <a class="nav-link" href="tractatus.html" onclick="location.href=location.href.replace(/(\/instset)?\/[^/]*\.html$/,'/tractatus.html');return false;">the tractatus</a>
             </li>
             <!----------------------------------------------------------------------------------------------------------
             ----------------------------------- ARTICLES DROPDOWN ------------------------------------------------------
